@@ -35,8 +35,12 @@ The routes under `diffs/` belong to the
 [comparison serving contract](./mokly-comparison-serving.md), those under
 `components/` to the [component controls contract](./mokly-component-controls.md),
 and rendering on first request to the [on-demand contract](./mokly-on-demand.md).
-Every JSON route answers GET and HEAD with `application/json; charset=utf-8`
-and `X-Content-Type-Options: nosniff`. Serve sends no
+Every JSON route answers GET and HEAD with `application/json; charset=utf-8`,
+`X-Content-Type-Options: nosniff`, and `Vary: Accept-Encoding`. When the
+request's `Accept-Encoding` accepts gzip, Serve sends the body with
+`Content-Encoding: gzip`. Decision: compression was chosen over a smaller
+index format and over a publication delta, because it keeps every canonical
+byte and every read of the viewer. Serve sends no
 `Access-Control-Allow-Origin` header on any route; a host that serves the
 static output to another origin applies the
 [cross-origin rules](./mokly-export-delivery.md#headers-caching-and-revalidation)

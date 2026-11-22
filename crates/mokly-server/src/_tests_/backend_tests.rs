@@ -41,7 +41,7 @@ fn authored_reads_check_one_membership_and_open_one_handle_per_request() {
                 Arc::new(Unimock::new(())),
             );
             for _ in 0..count {
-                assert!(documents.authored("assets/large.bin").is_none());
+                assert!(documents.authored("assets/large.bin").unwrap().is_none());
             }
         }
     }

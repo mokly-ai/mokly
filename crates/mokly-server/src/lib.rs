@@ -7,6 +7,7 @@ pub mod application;
 mod application_evidence;
 mod asset_response;
 pub mod assets;
+mod authored_assets;
 pub mod backend;
 mod backend_assets;
 mod backend_preview;
@@ -30,6 +31,9 @@ mod changes_seed;
 pub mod changes_signal;
 mod clients;
 pub mod clock;
+#[cfg(test)]
+#[path = "_tests_/comparison_cache_tests.rs"]
+mod comparison_cache_tests;
 pub mod comparison_capture;
 mod comparison_collector;
 mod comparison_files;
@@ -39,6 +43,9 @@ mod comparison_metadata;
 mod comparison_requests;
 mod comparison_routes;
 pub mod comparison_store;
+#[cfg(test)]
+#[path = "_tests_/delivery_support.rs"]
+mod delivery_support;
 mod detail_encoding;
 pub mod detail_publication;
 mod detail_slot;
@@ -48,20 +55,28 @@ pub mod error;
 pub mod evidence;
 pub mod foreground;
 pub mod generation;
+mod json_delivery;
+#[cfg(test)]
+#[path = "_tests_/json_delivery_tests.rs"]
+mod json_delivery_tests;
 mod live;
 pub mod preview;
+mod preview_route;
 mod priority;
 pub mod public_read;
 pub mod publication;
 pub mod render_request;
 mod replacement;
+mod requested_routes;
 mod response;
 pub mod revision;
 pub mod revision_file;
 pub mod runtime;
 mod security;
+mod shared_publication;
 pub mod shutdown;
 pub mod snapshot;
+mod validator;
 pub mod warnings;
 pub mod work;
 mod work_page;

@@ -227,6 +227,7 @@ impl MemoryComparisons {
                 id.clone(),
                 Bundle {
                     files,
+                    gzip: Arc::default(),
                     accepted: None,
                     touched: self.clock.milliseconds(),
                 },

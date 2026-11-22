@@ -4,7 +4,7 @@ use std::io;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use axum::body::{Body, Bytes, to_bytes};
+use axum::body::{Body, Bytes};
 use axum::extract::{Request, State};
 use axum::http::{Method, StatusCode};
 use axum::response::Response;
@@ -15,12 +15,14 @@ use tokio::sync::watch;
 
 use crate::application_evidence::{CompletionQueue, EvidencePublisher};
 use crate::diagnostics::Diagnostics;
-use crate::preview::{Lookup, PreviewStore};
+use crate::json_delivery::JsonBody;
+use crate::preview::PreviewStore;
 use crate::publication::Publications;
-use crate::render_request::{Rejection, RenderRequest};
 use crate::snapshot::Snapshot;
 use crate::work::Work;
-use crate::{generated_routes, live, render_request, response, security};
+use crate::{
+    asset_response, comparison_routes, generated_routes, live, preview_route, response, security,
+};
 
 /// Application services are independent of socket and signal ownership.
 pub struct Application {
@@ -120,81 +122,8 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         return response::missing();
     };
     if path == viewer("components/render") {
-        if request.method() != Method::POST {
-            return response::method("POST");
-        }
-        let render_token = app.publications.current().render_token.clone();
-        if !security::authorized(request.headers(), &render_token) {
-            return response::error(
-                StatusCode::FORBIDDEN,
-                "forbidden",
-                "Reload the catalogue to continue editing.",
-            );
-        }
-        let content_type = request
-            .headers()
-            .get("content-type")
-            .and_then(|value| value.to_str().ok())
-            .unwrap_or("");
-        if !matches!(
-            content_type,
-            "application/json" | "application/json; charset=utf-8"
-        ) {
-            return response::reject(Rejection::InvalidInput);
-        }
-        let bytes = match to_bytes(request.into_body(), 64 * 1024).await {
-            Ok(bytes) => bytes,
-            Err(_) => {
-                return response::error(
-                    StatusCode::PAYLOAD_TOO_LARGE,
-                    "too-large",
-                    "The prop values are too large.",
-                );
-            }
-        };
-        let request: RenderRequest = match serde_json::from_slice(&bytes) {
-            Ok(request) => request,
-            Err(_) => return response::reject(Rejection::InvalidInput),
-        };
-        let snapshot = app.publications.current();
-        let validated = match render_request::validate_prepared(
-            &request,
-            &snapshot.index,
-            &snapshot.prop_validators,
-        ) {
-            Ok(validated) => validated,
-            Err(rejection) => return response::reject(rejection),
-        };
-        let result = app
-            .work
-            .preview(
-                snapshot.documents.clone(),
-                request.page_id,
-                validated.route,
-                validated.props.clone(),
-                snapshot.lease.clone(),
-            )
-            .await;
-        if app.publications.current().index.revision != snapshot.index.revision
-            || app.publications.current().index.deployment_id != snapshot.index.deployment_id
-        {
-            return response::reject(Rejection::StaleRevision);
-        }
-        return match result {
-            Ok(preview) => match app
-                .previews
-                .insert(preview, &validated.props, request.revision)
-            {
-                Ok(response) => {
-                    let file = crate::snapshot::encode(&response);
-                    response::bytes(StatusCode::OK, &file.content_type, file.bytes)
-                }
-                Err(rejection) => response::reject(rejection),
-            },
-            Err(rejection) => response::reject(rejection),
-        };
+        return preview_route::render(app, request).await;
     }
-    let snapshot = app.publications.current();
     if request.method() != Method::GET && request.method() != Method::HEAD {
         return response::method("GET, HEAD");
     }
@@ -205,41 +134,50 @@ async fn route(app: &Application, request: Request, stop: watch::Receiver<bool>)
         return live::events(app.publications.subscribe(), stop);
     }
     if let Some(rest) = path.strip_prefix(&viewer("components/renders/")) {
-        let Some((id, file)) = rest.split_once('/') else {
-            return response::missing();
-        };
-        return match app.previews.get(id, file) {
-            Lookup::File(file) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
-            Lookup::Expired => response::error(
-                StatusCode::GONE,
-                "expired",
-                "The temporary preview expired. Try again.",
-            ),
-            Lookup::Missing => response::missing(),
-        };
+        return preview_route::file(app, rest, request.headers()).await;
     }
-    if let Some(response) = crate::comparison_routes::route(app, &path, request.uri()).await {
+    if let Some(response) =
+        comparison_routes::route(app, &path, request.uri(), request.headers()).await
+    {
         return response;
     }
-    if let Some(status) = shell(&path, &snapshot) {
+    let document = path.strip_prefix(&generated(""));
+    let delivery = app.publications.delivery(document);
+    let snapshot = &delivery.snapshot;
+    if let Some(status) = shell(&path, snapshot) {
         return response::bytes(status, "text/html; charset=utf-8", snapshot.stub.clone());
     }
     if let Some(file) = snapshot.files.get(&path) {
-        return file.response(snapshot.index.revision);
+        let body = file.body(snapshot.index.revision);
+        return delivery.gzip.response(&path, request.headers(), body).await;
     }
     if let Some(file) = snapshot.assets.get(&path) {
+        if response::is_json(&file.content_type) {
+            let body = JsonBody::Whole(file.bytes.clone());
+            return delivery.gzip.response(&path, request.headers(), body).await;
+        }
         return response::bytes(StatusCode::OK, &file.content_type, file.bytes.clone());
     }
-    if let Some(route) = path.strip_prefix(&generated("")) {
-        return generated_routes::route(app, &snapshot, route).await;
+    if let Some(route) = document {
+        return generated_routes::route(app, snapshot, route, request.headers()).await;
     }
-    if let Some(path) = path.strip_prefix("static/")
-        && let Some(file) = app
+    if let Some(path) = path.strip_prefix("static/") {
+        return match app
             .work
             .authored(snapshot.documents.clone(), path.into())
             .await
-    {
-        return response::stream(file);
+        {
+            Ok(Some(file)) => asset_response::deliver(file, request.headers()).await,
+            Ok(None) => response::missing(),
+            Err(error) => {
+                app.diagnostics.failed(&error);
+                response::error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "render-failed",
+                    "The asset could not be rendered. Try again.",
+                )
+            }
+        };
     }
     response::missing()
 }

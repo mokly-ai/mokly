@@ -1,4 +1,4 @@
-//! A sliding window of background renders that start and report in catalogue order.
+//! The render window starts work in priority order and reports in catalogue order.
 
 use std::collections::BTreeMap;
 use std::future::{Future, poll_fn};
@@ -34,15 +34,19 @@ pub(crate) struct Window<'a> {
     limit: usize,
     renders: Vec<Pending<'a>>,
     held: BTreeMap<usize, Result<Vec<Warning>>>,
+    settled: Vec<bool>,
+    next_report: usize,
 }
 
 impl<'a> Window<'a> {
     /// An empty window; a zero limit admits one render.
-    pub(crate) fn new(limit: usize) -> Self {
+    pub(crate) fn new(limit: usize, routes: usize) -> Self {
         Self {
             limit: limit.max(1),
             renders: Vec::new(),
             held: BTreeMap::new(),
+            settled: vec![false; routes],
+            next_report: 0,
         }
     }
 
@@ -65,7 +69,7 @@ impl<'a> Window<'a> {
         self.renders.is_empty()
     }
 
-    /// Start the render at a catalogue position after every position already started.
+    /// Queue the render in start order and keep its position for catalogue-ordered reports.
     pub(crate) fn start_dispatched(
         &mut self,
         position: usize,
@@ -132,8 +136,8 @@ impl<'a> Window<'a> {
         .await
     }
 
-    /// Hold an outcome with warnings or a failure until every earlier render has ended,
-    /// then release the held outcomes in catalogue order.
+    /// Release reports only when all earlier catalogue positions have settled, including
+    /// positions that start later and views with already-published evidence.
     pub(crate) fn settle(
         &mut self,
         position: usize,
@@ -142,15 +146,15 @@ impl<'a> Window<'a> {
         if !result.as_ref().is_ok_and(Vec::is_empty) {
             self.held.insert(position, result);
         }
-        let earliest = self
-            .renders
-            .first()
-            .map_or(usize::MAX, |pending| pending.position);
+        if let Some(settled) = self.settled.get_mut(position) {
+            *settled = true;
+        }
         let mut ready = Vec::new();
-        while let Some(entry) = self.held.first_entry()
-            && *entry.key() < earliest
-        {
-            ready.push(entry.remove());
+        while self.settled.get(self.next_report) == Some(&true) {
+            if let Some(outcome) = self.held.remove(&self.next_report) {
+                ready.push(outcome);
+            }
+            self.next_report += 1;
         }
         ready
     }

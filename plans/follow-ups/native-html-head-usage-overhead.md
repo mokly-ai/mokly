@@ -132,7 +132,7 @@
   - The user forbade another main merge and another performance matrix before this pull request. So no record measures this change on the merged tree.
   - Output stays equal: documents, usage, resources, warnings, diagnostics, and their order. No fragment request repeats. Source: `docs/protocol/mokly-on-demand-background.md`.
   - Both stages keep their bound: the smaller of the worker count and the sidecar capacity, at least one. Each batch entry and each completion entry reads the current capacity. A view start reads none, and a view that the cache or the render store serves needs no capacity reading for either stage. Source: that page and "Capacity" in `docs/protocol/mokly-sidecar-memory.md`.
-  - A view with an HTML template takes no completion place. Every miss, native views included, takes a batch place. Foreground renders keep priority. Views start and report in catalogue order.
+  - A view with an HTML template takes no completion place. Every miss, native views included, takes a batch place. Foreground renders keep priority. Views start in request order and then in catalogue order, as the user decided on 2026-11-22, and they report in catalogue order.
   - The handoff budget stays 4 MiB, outside the 256 MiB render cache. The cache total does not grow, and no allocator option changes. Source: the protocol and the performance orchestrator's calls of 2026-11-20.
   - The path of a view depends on that view only. The performance orchestrator rejected a catalogue-wide switch on 2026-11-20. The Cloud and React handoff gains stay.
   - Step 4's acceptance required memory within 2% of main on basic, large HTML, and large React. A later fix keeps that bound unless the performance orchestrator sets another.

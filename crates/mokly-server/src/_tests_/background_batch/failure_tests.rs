@@ -79,7 +79,7 @@ async fn the_window_releases_each_outcome_once_every_earlier_render_ends() {
         Err(error) => error.to_string(),
     };
     for order in end_orders() {
-        let mut window = Window::new(4);
+        let mut window = Window::new(4, 4);
         let mut senders = Vec::new();
         for position in 0..4 {
             let (sender, receiver) = oneshot::channel::<Result<Vec<Warning>>>();

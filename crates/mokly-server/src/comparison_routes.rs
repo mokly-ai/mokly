@@ -1,6 +1,7 @@
 //! Strict selected-query parsing and immutable comparison HTTP responses.
 
-use axum::http::{HeaderValue, StatusCode, Uri};
+use axum::http::header::CACHE_CONTROL;
+use axum::http::{HeaderMap, HeaderValue, StatusCode, Uri};
 use axum::response::Response;
 use mokly_model::namespace::viewer;
 use mokly_model::paths::is_entry_path;
@@ -8,9 +9,15 @@ use mokly_model::routes;
 use percent_encoding::percent_decode_str;
 
 use crate::application::Application;
+use crate::json_delivery::{self, JsonBody};
 use crate::{response, security};
 
-pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Response> {
+pub(crate) async fn route(
+    app: &Application,
+    path: &str,
+    uri: &Uri,
+    headers: &HeaderMap,
+) -> Option<Response> {
     let rest = path.strip_prefix(&viewer("diffs/"))?;
     let Some(store) = &app.comparisons else {
         return Some(response::missing());
@@ -55,8 +62,27 @@ pub(crate) async fn route(app: &Application, path: &str, uri: &Uri) -> Option<Re
             response::missing()
         });
     }
-    Some(match store.file(generation, file).await {
-        Ok(Some(file)) => response::bytes(StatusCode::OK, &file.content_type, file.bytes),
+    let file = if json_delivery::accepts_gzip(headers) {
+        store.gzip_file(generation, file).await
+    } else {
+        store
+            .file(generation, file)
+            .await
+            .map(|file| file.map(|file| (file, None)))
+    };
+    Some(match file {
+        Ok(Some((file, gzip))) => {
+            let mut response = if response::is_json(&file.content_type) {
+                JsonBody::Whole(file.bytes).response(gzip)
+            } else {
+                response::bytes(StatusCode::OK, &file.content_type, file.bytes)
+            };
+            response.headers_mut().insert(
+                CACHE_CONTROL,
+                HeaderValue::from_static("private, max-age=31536000, immutable"),
+            );
+            response
+        }
         Ok(None) => response::missing(),
         Err(_) => unavailable(),
     })

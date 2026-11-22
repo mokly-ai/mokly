@@ -17,6 +17,10 @@ Design calls (mine, 2026-11-22):
 
 - P3b also narrows the sentence of `mokly-comparison-serving.md` that gives `no-store` for every generation route to the generation root, and `mokly-runtime.md` links the generation rule, so that the pages do not contradict P3b.
 - Error responses keep the identity encoding. P2 covers the JSON content of the routes, and an error body is not publication content.
+- The runtime page passed 250 lines with P3, so its unchanged "Sidecar Pool" section moved to the linked page `docs/protocol/mokly-sidecar-pool.md`. The "Shutdown" section stayed, because five pages link its anchor.
+- Two more sentences gave `no-store` for generation files and so contradicted P3b: `mokly-removed-previews.md` (the generation's routes) and `mokly-shell-fences.md` (Serve JSON). Both now point to the generation rule of the comparison serving contract, and the fences page names the read-model JSON (the index, the details, and the live descriptor) for `no-store`, because P3 gives authored JSON files validators.
+- `crates/mokly-cli/src/serve_errors.rs` gets one arm for the new internal error `EntityTag`. The match is exhaustive, so the CLI does not compile without it.
+- Follow-up items that state the catalogue start order of the pass or cite moved protocol lines are updated: `serve-pass-rereads-unchanged-pages.md`, `background-walk-records-from-kept-facts.md`, `native-html-head-usage-overhead.md`, `git-helpers-outlive-commands.md`, `macos-stop-mid-walk-orphans.md`, and `early-base-capture-evicted-results.md`.
 
 Contract owners:
 
@@ -32,39 +36,40 @@ Depends on: none
 
 The approved protocol text P2, P3, P3b, and P4 goes into the four pages.
 
-- [ ] P2 in `docs/protocol/mokly-shell-delivery.md`, Routes.
-- [ ] P3 in `docs/protocol/mokly-runtime.md`, Routes, with a link to the generation rule. Split the page into linked pages if it passes 250 lines.
-- [ ] P3b in `docs/protocol/mokly-comparison-serving.md`, with the generation-route sentence narrowed to the root.
-- [ ] P4 in `docs/protocol/mokly-on-demand-background.md`, Window And Lookup.
+- [x] P2 in `docs/protocol/mokly-shell-delivery.md`, Routes.
+- [x] P3 in `docs/protocol/mokly-runtime.md`, Routes, with a link to the generation rule. Split the page into linked pages if it passes 250 lines.
+- [x] P3b in `docs/protocol/mokly-comparison-serving.md`, with the generation-route sentence narrowed to the root.
+- [x] P4 in `docs/protocol/mokly-on-demand-background.md`, Window And Lookup.
 
 ## Milestone 2: Compressed JSON
 
 Depends on: 1
 
-- [ ] Red tests: a JSON route answers with `Content-Encoding: gzip` and `Vary: Accept-Encoding` when the request accepts gzip, and its body decompresses to the identity bytes; `gzip;q=0` and a missing `Accept-Encoding` get the identity body with `Vary`; HEAD gives the same headers without a body; one publication compresses each body at most once.
-- [ ] Compress lazily, once for each publication and file, at a fast level, off the publication path, and drop the bytes with the publication.
+- [x] Red tests: a JSON route answers with `Content-Encoding: gzip` and `Vary: Accept-Encoding` when the request accepts gzip, and its body decompresses to the identity bytes; `gzip;q=0` and a missing `Accept-Encoding` get the identity body with `Vary`; HEAD gives the same headers without a body; one publication compresses each body at most once.
+- [x] Compress lazily, once for each publication and file, at a fast level, off the publication path, and drop the bytes with the publication.
 
 ## Milestone 3: Validators and cached generation files
 
 Depends on: 1
 
-- [ ] Red tests: generated stylesheets and assets and authored assets carry a strong `ETag` and `Cache-Control: no-cache`; a matching `If-None-Match` gets 304 without a body on GET and HEAD; a changed stylesheet at the same URL never gets a 304 for its old `ETag`; generation files carry `Cache-Control: private, max-age=31536000, immutable`, and the generation root keeps `no-store`; generated documents keep `no-store`.
-- [ ] Compute each `ETag` once for each resource version.
+- [x] Red tests: generated stylesheets and assets and authored assets carry a strong `ETag` and `Cache-Control: no-cache`; a matching `If-None-Match` gets 304 without a body on GET and HEAD; a changed stylesheet at the same URL never gets a 304 for its old `ETag`; generation files carry `Cache-Control: private, max-age=31536000, immutable`, and the generation root keeps `no-store`; generated documents keep `no-store`.
+- [x] Compute each `ETag` once for each resource version.
 
 ## Milestone 4: Requested routes first
 
 Depends on: 1
 
-- [ ] Red tests: after a rebuild, a view whose document was requested since the previous rebuild starts first, the most recent first; the final publication and the warnings follow catalogue order; the set of rendered views is the same; the requested-route list holds only routes of the catalogue.
-- [ ] Record the requested document routes, bounded by the catalogue, and start the pass with them.
+- [x] Red tests: after a rebuild, a view whose document was requested since the previous rebuild starts first, the most recent first; the final publication and the warnings follow catalogue order; the set of rendered views is the same; the requested-route list holds only routes of the catalogue.
+- [x] Record the requested document routes, bounded by the catalogue, and start the pass with them.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: 2, 3, 4
 
-- [ ] Update the [mokly-server README](../crates/mokly-server/README.md) Key Code for the new entry points.
-- [ ] Run the targeted tests, the early repository check, and a Serve smoke test.
-- [ ] Prove the same static output of `examples/basic` against `main`, and save the diff under `.context/viewer-live-update/`.
+- [x] Update the [mokly-server README](../crates/mokly-server/README.md) Key Code for the new entry points.
+- [ ] Run a Serve smoke test.
+- [x] Run the targeted tests and the early repository check.
+- [x] Prove the same static output of `examples/basic` against `main`, and save the diff under `.context/viewer-live-update/`.
 - [ ] Measure the branch against `main` on mokly-cloud with probe v3: bytes, first and last frame paint, Changes pane paint, published Changes, core CPU, memory peak.
 - [ ] Commit with Conventional Commits and push the branch. Send the SHA to the performance orchestrator.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.

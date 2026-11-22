@@ -36,6 +36,7 @@ tracing = "0.1.44"
 unimock = "0.6.8"
 cap-fs-ext = "4.0.3"
 tempfile = "3.27.0"
+flate2 = "1.1.11"
 
 [dev-dependencies]
 mokly-test-support = { workspace = true }

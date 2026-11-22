@@ -3312,6 +3312,7 @@ dependencies = [
  "axum",
  "cap-fs-ext",
  "cap-std",
+ "flate2",
  "hmac",
  "hyper",
  "hyper-util",

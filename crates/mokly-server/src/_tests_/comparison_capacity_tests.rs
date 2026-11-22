@@ -28,6 +28,7 @@ fn generation_and_total_byte_bounds_charge_shared_bytes_without_eviction() {
         "one".into(),
         Bundle {
             files: full.clone(),
+            gzip: Arc::default(),
             accepted: None,
             touched: 0,
         },
@@ -41,6 +42,7 @@ fn generation_and_total_byte_bounds_charge_shared_bytes_without_eviction() {
         "two".into(),
         Bundle {
             files: full.clone(),
+            gzip: Arc::default(),
             accepted: None,
             touched: 0,
         },

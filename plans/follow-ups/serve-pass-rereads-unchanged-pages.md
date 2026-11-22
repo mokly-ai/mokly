@@ -25,8 +25,9 @@
 - **Category:** Performance.
 - **Terms:**
   - **Background pass:** the Serve work after each edit, the
-    `serve.background` span, which reads each route of the new state in
-    catalogue order and skips each route whose usage is completed.
+    `serve.background` span, which reads each route of the new state, the
+    routes that requests asked for since the previous rebuild first and then
+    catalogue order, and skips each route whose usage is completed.
   - **Page and Markdown document:** a catalogue entry whose document has no
     viewport. Its route has no usage to complete.
   - **Walk record:** the read set of one background closure walk, which the

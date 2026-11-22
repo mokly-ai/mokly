@@ -4,17 +4,16 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 use crate::asset_streams::AssetResult;
-use crate::assets::File;
 use crate::backend::Documents;
 use crate::error::{InternalError, Result};
 use crate::work::Workers;
 
 impl Workers {
-    pub(crate) async fn generated_delivery(
+    /// Admit one foreground file read, including its validation, to a blocking worker.
+    pub(crate) async fn file_delivery<T: Send + 'static>(
         &self,
-        documents: Arc<dyn Documents>,
-        route: String,
-    ) -> Result<Option<File>> {
+        read: impl FnOnce() -> Result<Option<T>> + Send + 'static,
+    ) -> Result<Option<T>> {
         let activity = self.activity.as_ref().map(|activity| activity.enter());
         let guard = self.priority.enter(true);
         if self.closed.load(Ordering::SeqCst) {
@@ -32,8 +31,7 @@ impl Workers {
             parent.in_scope(|| {
                 let _guard = guard;
                 let _permit = permit;
-                let documents = documents;
-                documents.generated(&route)
+                read()
             })
         })
         .await
