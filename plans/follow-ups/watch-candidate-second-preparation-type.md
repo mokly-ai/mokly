@@ -6,7 +6,7 @@
   finding 6 of round 2: the wider fix that the agent split off.
 - **Location:** `crates/mokly-cli/src/serve_watch.rs` (`WatchInputs::recheck`,
   `WatchedInputs::recheck`, `WatchedInputs::adopt`, `CandidateWatch`),
-  `crates/mokly-cli/src/serve_watch_plan.rs` (`PlanRecord::candidate`),
+  `crates/mokly-cli/src/serve_watch_resources.rs` (`WatchedInputs::subscribe`),
   `crates/mokly-cli/src/serve_preparation.rs:51` and `:61`, and
   `crates/mokly-cli/src/serve_rebuild_action.rs:86` and `:101`.
 - **Reason:** The fix changes the `WatchInputs` trait and two callers outside
@@ -17,8 +17,10 @@
 - **Terms:**
   - **Watch candidate:** `CandidateWatch`, the watch state that one Serve
     rebuild prepares and adopts after the publication. It holds an observer,
-    a `recheck` flag, and a plan record (`PlanRecord`: the plan, its inputs,
-    and its targets).
+    a resource subscriber, a `recheck` flag, and a plan record (`PlanRecord`:
+    the plan, its inputs, and its targets).
+  - **Resource subscriber:** a callback that attaches a referenced resource's
+    directory before the generation reads the resource.
   - **Second preparation:** a second catalogue preparation under the
     candidate's new observer. Serve runs it when a new watch root reaches a
     directory that the old observer did not watch, under the readiness rule
@@ -29,7 +31,8 @@
     again, and calls `recheck` with the candidate.
   - `recheck` builds a plan record from the second preparation, attaches its
     plan, runs the replay check, and then stores the record in the
-    candidate with `candidate.record = record;`.
+    candidate with `candidate.record = record;`. It binds the second
+    generation to a new resource subscriber.
   - `adopt` installs the plan of the candidate's record as the live plan, and
     the next candidate compares its plan inputs with that record.
   - The test `the_adoption_after_a_second_preparation_installs_its_plan` in
@@ -49,7 +52,7 @@
   - **A.** Change nothing. The test above guards the store step. Effort:
     Small.
   - **B.** `recheck` takes the candidate by value and returns the candidate
-    that `PlanRecord::candidate` builds from the second record. The return
+    that `WatchedInputs::subscribe` builds from the second record. The return
     type can still carry the first record. Effort: Medium.
   - **C.** Split the candidate into two types. `candidate` returns a ready
     candidate, with its observer and plan record, or a candidate that needs a
