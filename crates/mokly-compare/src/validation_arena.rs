@@ -6,35 +6,44 @@ use std::sync::atomic::Ordering;
 
 use mokly_graph::closure::ClosureBuilder;
 use mokly_graph::comparison_proof::ContentIdentity;
-use mokly_graph::head_validation::ClosureFacts;
+use mokly_graph::head_validation::{ClosureFacts, DocumentChecks};
 use mokly_graph::types::RenderGeneration;
 
 use crate::reuse_budget::Resident;
 use crate::reuse_optional::Arena;
-use crate::validation_facts::{Fact, Pending, Step, closure_bytes};
+use crate::validation_facts::{Fact, Pending, Read, Step, checks_bytes, closure_bytes};
 
-impl Arena {
-    pub(crate) fn reuse(
+/// The current reads that prove kept facts, shared through the current arena when it exists.
+pub(crate) struct Replay<'a> {
+    pub(crate) current: Option<&'a Arena>,
+    pub(crate) resident: &'a Arc<Resident>,
+    pub(crate) generation: &'a dyn RenderGeneration,
+}
+
+impl Replay<'_> {
+    /// Read one input's current identity, shared with the other views of this attempt.
+    pub(crate) fn identity(
         &self,
-        current: Option<&Arena>,
-        resident: &Arc<Resident>,
-        generation: &dyn RenderGeneration,
-        route: &str,
-        key: ContentIdentity,
-        observer: &dyn ClosureBuilder,
-    ) -> Option<ClosureFacts> {
-        let guard = self.data.read().unwrap_or_else(|error| error.into_inner());
-        let data = guard.as_ref()?;
-        let fact = data
-            .facts
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get(route)?
-            .clone();
-        if fact.key != key {
-            return None;
+        read: &Read,
+        previous: Option<&Arc<Read>>,
+    ) -> Option<ContentIdentity> {
+        match self.current {
+            Some(current) => current
+                .input(
+                    self.resident,
+                    self.generation,
+                    read.kind,
+                    &read.route,
+                    previous,
+                )
+                .map(|input| input.identity),
+            None => self.generation.validation_identity(read.kind, &read.route),
         }
-        let valid = fact.steps.iter().all(|step| {
+    }
+
+    /// Replay the walk order and stop at the first read whose identity changed.
+    pub(crate) fn closure(&self, fact: &Fact, route: &str, observer: &dyn ClosureBuilder) -> bool {
+        fact.steps.iter().all(|step| {
             let read = match step {
                 Step::Read(index) => &fact.reads[*index],
                 Step::Observe(index) => {
@@ -42,18 +51,42 @@ impl Arena {
                     return true;
                 }
             };
-            let identity = match current {
-                Some(current) => current
-                    .input(resident, generation, read.kind, &read.route, Some(read))
-                    .map(|input| input.identity),
-                None => generation.validation_identity(read.kind, &read.route),
-            };
-            identity == Some(read.identity)
-        });
-        if !valid {
+            self.identity(read, Some(read)) == Some(read.identity)
+        })
+    }
+}
+
+impl Arena {
+    /// Borrow the kept fact of a route whose document key and policy are unchanged.
+    pub(crate) fn fact(&self, route: &str, key: ContentIdentity) -> Option<Arc<Fact>> {
+        let guard = self.data.read().unwrap_or_else(|error| error.into_inner());
+        let fact = guard
+            .as_ref()?
+            .facts
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(route)?
+            .clone();
+        (fact.key == key).then_some(fact)
+    }
+
+    /// Prove a kept closure after the checked read whose current checks the caller passes.
+    pub(crate) fn reuse(
+        &self,
+        replay: &Replay<'_>,
+        route: &str,
+        key: ContentIdentity,
+        observer: &dyn ClosureBuilder,
+        checks: Option<&DocumentChecks>,
+    ) -> Option<ClosureFacts> {
+        let fact = self.fact(route, key)?;
+        if fact.checks.is_some() && fact.checks.as_ref() != checks {
             return None;
         }
-        if let Some(current) = current {
+        if !replay.closure(&fact, route, observer) {
+            return None;
+        }
+        if let Some(current) = replay.current {
             current.keep(route, &fact);
         }
         Some(ClosureFacts {
@@ -63,7 +96,7 @@ impl Arena {
         })
     }
 
-    fn keep(&self, route: &str, fact: &Arc<Fact>) {
+    pub(crate) fn keep(&self, route: &str, fact: &Arc<Fact>) {
         let guard = self.data.read().unwrap_or_else(|error| error.into_inner());
         let Some(data) = &*guard else {
             return;
@@ -81,7 +114,13 @@ impl Arena {
         }
     }
 
-    pub(crate) fn finish(&self, route: &str, key: Option<ContentIdentity>, closure: &ClosureFacts) {
+    pub(crate) fn finish(
+        &self,
+        route: &str,
+        key: Option<ContentIdentity>,
+        closure: &ClosureFacts,
+        checks: Option<DocumentChecks>,
+    ) {
         let guard = self.data.read().unwrap_or_else(|error| error.into_inner());
         let Some(data) = &*guard else {
             return;
@@ -98,10 +137,8 @@ impl Arena {
             return;
         };
         pending.charge.shrink(mem::size_of::<Pending>());
-        if !pending
-            .charge
-            .grow(mem::size_of::<Fact>() + 64 + closure_bytes(closure))
-        {
+        let bytes = mem::size_of::<Fact>() + 64 + closure_bytes(closure);
+        if !pending.charge.grow(bytes + checks_bytes(checks.as_ref())) {
             return;
         }
         let fact = Arc::new(Fact {
@@ -113,6 +150,7 @@ impl Arena {
             },
             reads: pending.reads,
             steps: pending.steps,
+            checks,
             _charge: pending.charge,
         });
         data.facts
@@ -139,6 +177,10 @@ impl Arena {
                 .clear();
             if !data.consistent.load(Ordering::Relaxed) {
                 data.facts
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .clear();
+                data.outputs
                     .lock()
                     .unwrap_or_else(|error| error.into_inner())
                     .clear();

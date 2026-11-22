@@ -1,5 +1,7 @@
 //! Equal phase records avoid repeated hash and encoding work after source edits.
 
+use std::sync::Arc;
+
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_test_support::capture::Trace;
 
@@ -72,6 +74,7 @@ fn repeated_edit_phases_do_not_build_equal_details_again_at_either_catalogue_siz
                     "{count} entries, edit {edit}: ready Changes"
                 );
                 let before = builds();
+                let mut statuses = Vec::new();
                 for status in [
                     ChangesStatus::Preparing,
                     ChangesStatus::Pending,
@@ -83,18 +86,19 @@ fn repeated_edit_phases_do_not_build_equal_details_again_at_either_catalogue_siz
                             .unwrap()
                     );
                     current = shared.current();
+                    statuses.push(current.clone());
                 }
                 assert_eq!(
                     builds() - before,
                     0,
                     "{count} entries, edit {edit}: status Changes"
                 );
-                assert!(
-                    current
-                        .details
-                        .values()
-                        .all(|detail| detail.revision == Some(current.index.revision))
-                );
+                for (path, detail) in &current.details {
+                    assert!(
+                        Arc::ptr_eq(detail, &statuses[0].details[path]),
+                        "{count} entries, edit {edit}: {path} shares the equal status detail"
+                    );
+                }
             }
         });
     }

@@ -1,4 +1,4 @@
-# Ready publication rebuilds the index and every detail
+# First warm-start edit builds every detail
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
@@ -6,13 +6,15 @@
   problem that the options check of its design calls found outside the
   scope. Updated on 2026-11-21 from the branch
   `calummoore/mokly-edit-comparison-cost-bo07`, which timed the warm edits of
-  the `mokly-cloud` catalogue.
-- **Location:** `crates/mokly-server/src/changes.rs:150` (`project`), line
-  189, line 196, and line 207, `crates/mokly-server/src/changes_detail.rs:13`
-  (`apply`), `crates/mokly-server/src/detail_publication.rs:38`
+  the `mokly-cloud` catalogue. Updated on 2026-11-22 from the branch
+  `calummoore/mokly-edit-background-render-olos`, which shares unchanged
+  details.
+- **Location:** `crates/mokly-server/src/changes.rs:158` (`project`),
+  `crates/mokly-server/src/changes_detail.rs:29` (`apply`),
+  `crates/mokly-server/src/detail_publication.rs:38`
   (`RecentDetails::publish`), `crates/mokly-server/src/snapshot.rs:254`
-  (`encode_index`), `crates/mokly-server/src/changes_execution.rs:154`
-  (`ChangesPass::publish`) and line 183 (`install_ready`),
+  (`encode_index`), `crates/mokly-server/src/changes_execution.rs:162`
+  (`ChangesPass::publish`) and line 191 (`install_ready`),
   `crates/mokly-server/src/publication.rs:205` (`SharedPublication::changes`),
   `crates/mokly-model/src/projection.rs:76` (`index`), and
   `crates/mokly-compare/src/projection_index.rs:23` (`apply`).
@@ -46,6 +48,11 @@
       line, the previous examples, the recommendation, and the action
       changed. Options B and C keep their text of 2026-11-19 and gain notes.
       Options D to G are new.
+    - On 2026-11-22 the serial work cuts of branch
+      `calummoore/mokly-edit-background-render-olos` applied options B and E
+      and changed the typed revision rule, as the parts below say. This item
+      then took in the cost of the first edit after a warm start, and its
+      problem, recommendation, and action changed.
   - Mokly Serve serves a mockup catalogue for development and watches its
     sources. After each source edit, it prepares a new head generation from
     the working tree.
@@ -67,14 +74,20 @@
       the view keys.
     - `projection_index::apply` adds the comparison result. The records and
       the detail ids of removed entries follow.
-    - `changes_detail::apply` clones each detail and clears its comparison
-      fields. It computes the usage workspaces of all details again, adds the
-      comparison evidence, and puts each detail in a new `Arc`.
-    - A loop over all details calls
-      `Arc::make_mut(detail).revision = Some(next.index.revision)`. Then
-      `RecentDetails::publish` reuses the bytes of an equivalent earlier
-      detail, or encodes the detail again.
-    - `encode_index` encodes the index.
+    - `changes_detail::apply` computes the inputs of each detail: the source
+      detail, the workspace projection of the entry, and its Changes
+      evidence. When they equal the inputs of the record of the previous
+      Changes publication, it shares that record and its file, with no copy
+      and no build. Otherwise it builds the detail. Until 2026-11-22 it
+      cloned each detail, cleared its comparison fields, computed the usage
+      workspaces of all details again, and put each detail in a new `Arc`.
+    - Only a built or changed detail takes
+      `Some(next.index.revision)`. Then `RecentDetails::publish` reuses the
+      bytes of an equivalent earlier detail, or encodes the detail. Until
+      2026-11-22 a loop stamped the revision on every detail.
+    - `encode_index` encodes the index. Since 2026-11-22 the canonical
+      encoder sorts the keys of each object while it writes, with no second
+      value tree.
   - After `project`, the publication installs the comparison metadata files.
     Then it swaps the snapshot and sends one event.
   - The copy question of 2026-11-19 and the current code:
@@ -86,9 +99,29 @@
     - So the copy premise of 2026-11-19 is unproved. The clone of each detail
       happens in `changes_detail::apply` instead. Nobody has timed the stamp
       alone.
+    - Since 2026-11-22 an unchanged detail is shared, so this question is
+      closed.
   - The `README.md` of `mokly-server` says that each response inserts the
-    current revision into the stored bytes. It also says that reuse never
-    changes the typed `revision` that a phase stamps on its details.
+    current revision into the stored bytes. A decision of 2026-11-22 of the
+    performance orchestrator changed its second rule: a shared detail keeps
+    the typed `revision` of the publication that built it, because every
+    served response takes the current revision from `RevisionFile`. Until
+    then, reuse never changed the typed `revision` that a phase stamps on its
+    details.
+  - The first edit after a warm start, measured by the performance
+    orchestrator on 2026-11-22 in 12 Serve sessions on mokly-cloud, on `main`
+    and with the cuts of that date: the first edit of each session had 366
+    `detail.build` spans between the end of `graph.prepare` and the start of
+    `index.build`, with a mean of 125 ms, in a range of 92 to 205 ms. Edits 2
+    and 3 had no `detail.build` there and took 15 to 16 ms. The startup
+    restores its state from the store, so the core probably holds no encoded
+    details of the startup generation to share. Candidate fixes: encode or
+    keep the details of the startup generation at idle after the first ready
+    Changes, or reuse the stored bytes of the unchanged details.
+  - The gate of the performance orchestrator on 2026-11-22 measured
+    `changes.classify` per warm mokly-cloud edit at 181 ms on `main` and
+    140 ms with the cuts of that date, which also include two cuts outside
+    this phase.
   - Requirements that stay:
     - Each publication replaces the index and the details in one step and
       raises `revision` by one. Source:
@@ -170,13 +203,15 @@
       `changes.classify` span also includes the probe's event output.
     - One machine, one catalogue, and one edit shape. No change was tried, so
       no saving was measured.
-- **Problem:** On the measured catalogue, each warm edit spends a mean of
-  55.6 ms in the ready publication after the comparison ends. Almost all of it
-  is `changes::project`, which builds the whole index and every detail again.
-  No split names its most costly part yet.
-- **Impact if no action:** Each warm edit keeps this cost on the path to
-  published Changes. On the measured catalogue, it is the largest phase
-  outside the comparison, about a seventh of the coarse classification time.
+- **Problem:** The first edit after a warm start builds all 366 entry details
+  of mokly-cloud, with a mean of 125 ms, because Serve holds no encoded detail
+  of the startup generation to share. Later warm edits share their unchanged
+  details since 2026-11-22. No split names the parts of the 125 ms yet. Until
+  2026-11-22 the problem was: each warm edit spends a mean of 55.6 ms in the
+  ready publication, almost all of it in `changes::project`, which built the
+  whole index and every detail again.
+- **Impact if no action:** The first edit after each warm start keeps about
+  125 ms more on the path to published Changes than the later edits.
 - **Root question:** How can Serve publish the ready Changes state sooner
   after a warm edit, with the same index, details, bytes, revision, and event?
   Until 2026-11-21 the root question was: how does a Changes publication give
@@ -191,11 +226,16 @@
     [large fixture](../../tests/fixtures/large/README.md). Keep the probe and
     its results out of the repository, and add no test. Then record the split
     here, and recommend the option for the largest part. On 2026-11-19, A
-    timed only the stamp loop, at effort Small. Effort: Medium.
+    timed only the stamp loop, at effort Small. Since 2026-11-22, A splits
+    the first edit after a warm start with one clock, before any code, as the
+    performance orchestrator asked: the 366 `detail.build` spans and the work
+    around them. Effort: Medium.
   - **B.** Copy and stamp only the details that change in this publication,
     and keep the shared `Arc` of the others, if the reuse rule allows it. It
     acts after the complete projection, so it keeps the projection rule. It
     helps only if A shows that the stamp copies details. Effort: Medium.
+    Applied on 2026-11-22: an unchanged detail is shared with its typed
+    revision, and only a built or changed detail takes the new revision.
   - **C.** Stamp the revision only at the encoding, and keep the typed
     details free of it, if every typed consumer can take the revision from
     the snapshot. It also acts after the complete projection. It helps only
@@ -211,7 +251,8 @@
     For example, remove the clone of each detail in `changes_detail::apply`,
     and encode the index with fewer copies. Each classification still
     projects every view. Cost: it helps only the parts that a split names.
-    Effort: Medium.
+    Effort: Medium. Applied on 2026-11-22: no clone of an unchanged detail,
+    and an index encoder with no second value tree.
   - **F.** Start the projection parts that do not read the comparison result
     while the comparison runs, such as `projection::index`. Apply the
     comparison result after it ends. Each classification still runs every
@@ -224,6 +265,11 @@
     `--debug-timings` run then shows the split. Cost: more timing records for
     each classification. Stage names are diagnostic details under
     `docs/protocol/mokly-timings.md`. Effort: Small.
+  - **H.** Give the first edit after a warm start details to share: encode or
+    keep the details of the startup generation at idle after the first ready
+    Changes, or reuse the stored bytes of the unchanged details. Each needs
+    the same published bytes and a whole-tree memory peak within 2% of
+    `main`. Cost: idle work or memory after each start. Effort: Medium.
 - **Left out:**
   - Change nothing. It fails the goal of a shorter warm edit.
   - Publish `ready` before the projection ends, or publish the index and the
@@ -252,9 +298,14 @@
   - [kept-base-freshness-edit-cost.md](./kept-base-freshness-edit-cost.md):
     the same measurement. It records the kept-base freshness check, the other
     deferred phase outside the comparison.
-- **Recommendation:** A. No option is clearly best until a split names the
-  costly part of the phase, and A names it without a product change. Until
-  2026-11-21 the recommendation was A, then B if the measurement showed a
-  cost.
-- **Action:** fix after merge, apply A, because the code lies outside both
-  finding branches, and the user asked on 2026-11-21 for a later task.
+  - [serve-edit-background-pass-split.md](./serve-edit-background-pass-split.md):
+    the next speed pull request ranks the fix of the first edit after a warm
+    start with the safe CPU cuts of the pass.
+- **Recommendation:** A, on the first edit after a warm start, and then H if
+  the split shows that the detail builds are its largest part. No option is
+  clearly best until a split names the costly part. Until 2026-11-22 the
+  recommendation was A on every warm edit, and until 2026-11-21 it was A,
+  then B if the measurement showed a cost.
+- **Action:** fix after merge, apply A, because the performance orchestrator
+  asked on 2026-11-22 for the split after the pull request of the cuts of
+  that date opens, before any code.

@@ -4,7 +4,6 @@ use std::sync::{Arc, Mutex};
 
 use mokly_compare::base_freshness::{Freshness, FreshnessChecks};
 use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory};
-use mokly_compare::base_selection::GitBaseLookup;
 use mokly_compare::cache_types::Reporter;
 use mokly_compare::comparison_steps::Steps;
 use mokly_compare::comparison_types::ComparisonResult;
@@ -25,6 +24,7 @@ use crate::serve_changes::Source;
 use crate::serve_changes_base::{
     AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies, RunSteps,
 };
+use crate::serve_changes_native::AttemptLookup;
 use crate::serve_eager_base::AdoptingBase;
 use crate::serve_eager_lifetime::{LifetimeSelection, SelectedLifetime};
 use crate::serve_eager_reporting::CurrentPreparation;
@@ -34,6 +34,7 @@ impl Source {
         &self,
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
+        merge_base: &str,
     ) -> Result<ComparisonResult> {
         let comparison = self.comparison_attempt();
         self.pending
@@ -87,11 +88,12 @@ impl Source {
             }),
         });
         let changes: &dyn ChangesService = &Changes {
-            lookup: Arc::new(GitBaseLookup {
+            lookup: Arc::new(AttemptLookup {
                 repositories: Arc::new(GitRepositories {
                     runner: self.services.git.runner(lifetime.clone()),
                     disk: Arc::new(SystemDisk),
                 }),
+                merge_base: merge_base.into(),
             }),
             pinned: None,
             sources: Arc::new(GitSourceFactory {

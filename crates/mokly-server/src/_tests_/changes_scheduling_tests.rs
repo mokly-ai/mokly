@@ -58,7 +58,7 @@ async fn snapshot_mode_classifies_once_and_never_polls_refs() {
             .next_call(matching!(_))
             .returns(Ok("refs".into())),
         ChangeSourceMock::classify
-            .next_call(matching!(_, _))
+            .next_call(matching!(_, _, _))
             .returns(Err(ServerError::ChangesUnavailable)),
         ChangeSourceMock::finished
             .next_call(matching!(_, _))
@@ -95,8 +95,8 @@ async fn a_ref_change_drains_the_replaced_attempt_and_reuses_the_polled_refs() {
             .next_call(matching!(_))
             .returns(Ok("first".into())),
         ChangeSourceMock::classify
-            .next_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, cancel, _| {
+            .next_call(matching!(_, _, _))
+            .answers_arc(Arc::new(move |_, cancel, _, _| {
                 entered
                     .lock()
                     .unwrap()
@@ -118,7 +118,7 @@ async fn a_ref_change_drains_the_replaced_attempt_and_reuses_the_polled_refs() {
                 None
             })),
         ChangeSourceMock::classify
-            .next_call(matching!(_, _))
+            .next_call(matching!(_, _, _))
             .returns(Err(ServerError::ChangesUnavailable)),
         ChangeSourceMock::finished
             .next_call(matching!(_, _))
