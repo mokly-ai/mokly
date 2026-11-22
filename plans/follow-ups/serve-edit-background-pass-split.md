@@ -168,9 +168,9 @@
     their CPU slows the CPU-bound pass. So D gains about 5 to 25 ms net after
     B. Effort: Large, with high risk.
   - **E.** Evaluate only the modules that the rendered views need on a cold
-    sidecar. About 25 to 45 ms. It changes `describe.ts`, which another branch
-    owns until it merges, and it needs proof that module order cannot change
-    any output. Effort: Large.
+    sidecar. About 25 to 45 ms. It changes `describe.ts`, which PR #468, the
+    export-name cache, merged on 2026-11-22, so no other branch owns it now. It
+    needs proof that module order cannot change any output. Effort: Large.
   - **F.** B without B3, and C. About 55 to 95 ms, central about 75. With B3,
     about 70 to 110 ms. Effort: Large.
 - **Left out:**

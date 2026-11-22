@@ -143,6 +143,16 @@ Contract owners:
 - 2026-11-22, my call: the three cuts are three milestones, B4 first, then
   B1, then B2. Reason: they change separate subsystems, and B2 is the largest
   and builds on the facts of PR #466.
+- 2026-11-22, implementor's call, accepted by me: the classification keeps
+  `Changes.pinned` empty and uses an `AttemptLookup` that pins the merge base
+  of the attempt. Reason: a pinned base would open the repository before the
+  `Reading` step, and an existing test requires the step first.
+- 2026-11-22, implementor's call, accepted by me: the reference read runs
+  `merge-base` with the base commit first, as the pin does. Reason: Git picks
+  among equal merge bases by argument order, so the old order could change the
+  base commit in a criss-cross history.
+- 2026-11-22, implementor's call, accepted by me: `PinnedBase::resolved` lives
+  in `mokly-compare`, so the Git error mapping of that crate has one copy.
 
 ## Milestone 1: Documentation and protocol
 
@@ -170,12 +180,13 @@ README files change only where an entry point moves.
 
 Depends on: 1
 
-- [ ] Red test: a Serve classification resolves the base once, with the same
+- [x] Red test: a Serve classification resolves the base once, with the same
       pinned commit as today.
-- [ ] Red test: the errors of a failed reference read and of a moved
+- [x] Red test: the errors of a failed reference read and of a moved
       reference stay the same.
-- [ ] Implement B4.
-- [ ] Run the targeted tests of the changed crates.
+- [x] Implement B4.
+- [x] Run the targeted tests of the changed crates. Evidence:
+      `.context/edit-background-render/m2-b4/`.
 
 ## Milestone 3: Publications that share unchanged details
 

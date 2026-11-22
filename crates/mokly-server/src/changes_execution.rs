@@ -134,7 +134,7 @@ impl ChangesPass {
             return Err(ServerError::ChangesReplaced);
         }
         let references = references?;
-        let result = source.classify(cancel.clone(), progress)?;
+        let result = source.classify(cancel.clone(), progress, &references)?;
         if cancel.cancelled() || !self.current(&origin) {
             return Err(ServerError::ChangesReplaced);
         }
@@ -259,3 +259,7 @@ mod changes_trace_tests;
 #[cfg(test)]
 #[path = "_tests_/changes_completion_tests.rs"]
 mod changes_completion_tests;
+
+#[cfg(test)]
+#[path = "_tests_/changes_reference_tests.rs"]
+mod changes_reference_tests;

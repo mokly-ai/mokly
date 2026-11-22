@@ -520,7 +520,8 @@ development dependencies, and no test uses the internet.
   `Steps`, the comparison steps that a command shows while Changes runs.
 - [`src/base_selection.rs`](./src/base_selection.rs) defines `BaseLookup`,
   `GitBaseLookup`, and `PinnedBase`, the one pinned repository, ref, and merge
-  base.
+  base. `PinnedBase::resolved` pins a merge base that the caller already
+  resolved, with the repository errors of a lookup.
 - [`src/sources.rs`](./src/sources.rs) and
   [`src/git_tree.rs`](./src/git_tree.rs) define `GitSources` and `GitTree`,
   the commit-pinned source reader and its `SourceTree` adapter.

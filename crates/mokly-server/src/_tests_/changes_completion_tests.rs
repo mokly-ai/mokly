@@ -47,7 +47,7 @@ async fn completion_follows_committed_ready_or_unavailable_and_excludes_replacem
                     .some_call(matching!(_))
                     .returns(Ok("refs".into())),
                 ChangeSourceMock::classify
-                    .some_call(matching!(_, _))
+                    .some_call(matching!(_, _, _))
                     .returns(match outcome {
                         Outcome::Ready => Ok(result.unwrap()),
                         Outcome::Unavailable => Err(ServerError::ChangesUnavailable),

@@ -125,11 +125,13 @@ pub trait ChangeSource: Send + Sync {
     }
     /// Poll HEAD and base tips and return their merge base without rendering either side.
     fn references(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String>;
-    /// Pin the base once and classify through the command's shared render runtime.
+    /// Classify against `merge_base`, the result of the reference read of the same attempt,
+    /// through the command's shared render runtime, without resolving the base again.
     fn classify(
         &self,
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
+        merge_base: &str,
     ) -> Result<ComparisonResult>;
     /// Release unaccepted staging when an execution ends, without terminal output.
     fn discarded(&self) {}
