@@ -107,19 +107,20 @@ export function useWorkspaceInspection(
     if (focus) focusWorkspaceHighlightControl(state.input.highlightRef.current);
   }, []);
 
+  // Each shown frame of the viewport, in either scheme, scrolls to the
+  // instance.
   const reveal = useCallback(
     (key: string, viewport: "desktop" | "mobile"): void => {
       const state = latest.current;
-      const target = state.sessions.find(
-        (session) =>
-          session.identity.viewport === viewport &&
-          frameHasInstance(session, key),
-      );
-      const instance = target ? frameInstanceRef(target, key) : undefined;
-      if (!state.registry || !target || !instance) return;
-      void state.registry.inspection
-        .scrollToInstance(instance, [target])
-        .catch(() => undefined);
+      if (!state.registry) return;
+      for (const target of state.sessions) {
+        if (target.identity.viewport !== viewport) continue;
+        const instance = frameInstanceRef(target, key);
+        if (!instance) continue;
+        void state.registry.inspection
+          .scrollToInstance(instance, [target])
+          .catch(() => undefined);
+      }
     },
     [],
   );

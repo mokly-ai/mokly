@@ -32,7 +32,8 @@ const CHANGED_PAGE = {
 
 test("a changed document shows its status and each stylesheet once in Details", () => {
   const markup = renderPage(createCatalogue(published(CHANGED_PAGE, CHANGED)));
-  assert.deepEqual(status(markup), ["Changed"]);
+  // The head band and the section on the canvas both name the page.
+  assert.deepEqual(status(markup), ["Changed", "Changed"]);
   assert.ok(markup.includes(`${CHANGED_SECTION}</details>`), markup);
   assert.doesNotMatch(
     markup,
@@ -46,7 +47,7 @@ test("a changed document shows its status and each stylesheet once in Details", 
 
 test("an unchanged document lists examined stylesheets, then its terminal line", () => {
   const markup = renderPage(createCatalogue(fixture));
-  assert.deepEqual(status(markup), ["Unmodified"]);
+  assert.deepEqual(status(markup), ["Unmodified", "Unmodified"]);
   assert.equal(
     section(markup),
     '<section class="mbk-comparison-evidence mbk-reset" data-page-evidence="">' +
@@ -66,7 +67,7 @@ test("an added document shows Added without a terminal line", () => {
       }),
     ),
   );
-  assert.deepEqual(status(markup), ["Added"]);
+  assert.deepEqual(status(markup), ["Added", "Added"]);
   assert.equal(
     section(markup),
     '<section class="mbk-comparison-evidence mbk-reset" data-page-evidence="">' +
@@ -133,6 +134,6 @@ test("the standalone shell renders the page evidence of the held detail", () => 
     details: publishedDetails(CHANGED, CHANGED_REASONS),
     path: "/view/guide/",
   });
-  assert.deepEqual(status(html), ["Changed"]);
+  assert.deepEqual(status(html), ["Changed", "Changed"]);
   assert.ok(html.includes(`${CHANGED_SECTION}</details>`));
 });

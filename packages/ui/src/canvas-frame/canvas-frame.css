@@ -1,14 +1,28 @@
 /* One frame on the canvas: its box takes its nominal size times the canvas's
    zoom, --mbk-canvas-zoom, and its document keeps the nominal size, scaled.
-   The ring and the shadow mix the Canvas roles of the interface appearance:
-   the shadow's shade is the ink in a light appearance and the canvas in a
-   dark one. The label and the size tag keep their size at every zoom. */
+   The ring and the shadow mix the Canvas roles of the interface appearance,
+   through the colour scheme that the shell root states: the shadow shades
+   with the ink in a light appearance and with the canvas in a dark one. The
+   label and the size tag keep their size at every zoom. */
 .mbk-canvas-frame {
   --mbk-canvas-frame-scale: var(--mbk-canvas-zoom, 1);
   --mbk-canvas-frame-ring: color-mix(in srgb, var(--cv-text) 8%, transparent);
   --mbk-canvas-frame-lift:
-    0 1px 2px color-mix(in srgb, var(--cv-text) 5%, transparent),
-    0 14px 30px -14px color-mix(in srgb, var(--cv-text) 24%, transparent);
+    0 1px 2px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 5%, transparent),
+        color-mix(in srgb, var(--cv-background) 50%, transparent)
+      ),
+    0 14px 30px -14px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 24%, transparent),
+        transparent
+      ),
+    0 18px 36px -14px
+      light-dark(
+        transparent,
+        color-mix(in srgb, var(--cv-background) 70%, transparent)
+      );
   position: relative;
   width: calc(
     var(--mbk-canvas-frame-width) * var(--mbk-canvas-frame-scale) * 1px
@@ -17,21 +31,6 @@
     var(--mbk-canvas-frame-height) * var(--mbk-canvas-frame-scale) * 1px
   );
   margin: 0;
-}
-
-.mbk[data-mokly-theme="dark"] .mbk-canvas-frame {
-  --mbk-canvas-frame-lift:
-    0 1px 2px color-mix(in srgb, var(--cv-background) 50%, transparent),
-    0 18px 36px -14px color-mix(in srgb, var(--cv-background) 70%, transparent);
-}
-
-@media (prefers-color-scheme: dark) {
-  .mbk[data-mokly-theme="auto"] .mbk-canvas-frame {
-    --mbk-canvas-frame-lift:
-      0 1px 2px color-mix(in srgb, var(--cv-background) 50%, transparent),
-      0 18px 36px -14px
-        color-mix(in srgb, var(--cv-background) 70%, transparent);
-  }
 }
 
 /* The label: the glyph and the name, then the size tag at the right edge.

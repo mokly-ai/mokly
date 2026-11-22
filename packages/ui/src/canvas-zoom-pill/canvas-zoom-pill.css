@@ -1,12 +1,41 @@
 /* The canvas zoom: a raised 36px pill on the surface, with a hairline ring
    and the Canvas design's second shadow, holding Zoom out, the zoom level in
-   the mono face, Zoom in, a rule, and Fit. Its shadow takes the ink as its
-   shade in a light appearance and the canvas in a dark one. */
+   the mono face, Zoom in, a rule, and Fit. The shadow follows the colour
+   scheme that the shell root states for its appearance: the light layers
+   shade with the ink, and the dark layers with the canvas, each clear in the
+   other appearance. */
 .mbk-zoom-pill {
   --mbk-zoom-pill-lift:
-    0 1px 1px color-mix(in srgb, var(--cv-text) 4%, transparent),
-    0 4px 10px -2px color-mix(in srgb, var(--cv-text) 6%, transparent),
-    0 18px 36px -14px color-mix(in srgb, var(--cv-text) 14%, transparent);
+    0 1px 1px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 4%, transparent),
+        transparent
+      ),
+    0 4px 10px -2px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 6%, transparent),
+        transparent
+      ),
+    0 18px 36px -14px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 14%, transparent),
+        transparent
+      ),
+    0 0 0 1px
+      light-dark(
+        transparent,
+        color-mix(in srgb, var(--cv-text) 4%, transparent)
+      ),
+    0 6px 14px -4px
+      light-dark(
+        transparent,
+        color-mix(in srgb, var(--cv-background) 50%, transparent)
+      ),
+    0 22px 44px -16px
+      light-dark(
+        transparent,
+        color-mix(in srgb, var(--cv-background) 60%, transparent)
+      );
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -19,23 +48,6 @@
     var(--mbk-zoom-pill-lift);
   color: var(--cv-text-secondary);
   font-family: var(--cv-sans);
-}
-
-.mbk[data-mokly-theme="dark"] .mbk-zoom-pill {
-  --mbk-zoom-pill-lift:
-    0 0 0 1px color-mix(in srgb, var(--cv-text) 4%, transparent),
-    0 6px 14px -4px color-mix(in srgb, var(--cv-background) 50%, transparent),
-    0 22px 44px -16px color-mix(in srgb, var(--cv-background) 60%, transparent);
-}
-
-@media (prefers-color-scheme: dark) {
-  .mbk[data-mokly-theme="auto"] .mbk-zoom-pill {
-    --mbk-zoom-pill-lift:
-      0 0 0 1px color-mix(in srgb, var(--cv-text) 4%, transparent),
-      0 6px 14px -4px color-mix(in srgb, var(--cv-background) 50%, transparent),
-      0 22px 44px -16px
-        color-mix(in srgb, var(--cv-background) 60%, transparent);
-  }
 }
 
 .mbk-zoom-step,

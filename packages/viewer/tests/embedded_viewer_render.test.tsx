@@ -119,8 +119,11 @@ test("the embedded viewer renders its default selection and host slots", () => {
   assert.match(html, /data-mokly-color-scheme="dark"/);
   assert.match(html, /<option class="mbk-reset" value="mobile" selected="">/);
   assert.match(html, /value="phrase tag:forms"/);
-  // The selected viewport reaches the stage once the entry's detail is held.
-  assert.match(heldEmbeddedMarkup({ selection }), /data-viewport="mobile"/);
+  // The selected viewport reaches the stage once the entry's detail is held:
+  // the canvas shows the Mobile frames alone.
+  const held = heldEmbeddedMarkup({ selection });
+  assert.match(held, /data-workspace-frame="mobile"/);
+  assert.doesNotMatch(held, /data-workspace-frame="desktop"/);
 });
 
 /** The prefix every id of one root carries: its main region's id less `mb-main`. */

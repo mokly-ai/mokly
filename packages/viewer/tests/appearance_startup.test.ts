@@ -6,7 +6,7 @@ import { fireEvent, act } from "@testing-library/react";
 import { environment } from "./appearance_fixture.js";
 
 test("startup assigns each preview's browser context before its first source", async (t) => {
-  const world = await environment(t, { search: "?scheme=dark" });
+  const world = await environment(t, { search: "?scheme=dark", narrow: true });
   await world.start();
   const frames = world.frames();
   assert.ok(frames.length > 0);
@@ -55,7 +55,7 @@ test("a pin outranks storage and is never saved", async (t) => {
 });
 
 test("a dark start mounts the dark sources once and repeated mounting is inert", async (t) => {
-  const world = await environment(t, { search: "?scheme=dark" });
+  const world = await environment(t, { search: "?scheme=dark", narrow: true });
   await world.start();
   const frames = world.frames();
   const sources = frames.map((frame) => frame.src);
@@ -83,7 +83,7 @@ test("restoration keeps frames whose sources already match", async (t) => {
 });
 
 test("a light start mounts light sources directly", async (t) => {
-  const world = await environment(t, { search: "?scheme=light" });
+  const world = await environment(t, { search: "?scheme=light", narrow: true });
   await world.start();
   assert.equal(world.scheme(), "light");
   assert.ok(world.frames().length > 0);
@@ -200,7 +200,11 @@ test("a storage failure never loses the choice the reader made", async (t) => {
 });
 
 test("the root is set before frames exist, and the first rendered frames follow", async (t) => {
-  const world = await environment(t, { search: "?scheme=dark", pending: true });
+  const world = await environment(t, {
+    search: "?scheme=dark",
+    pending: true,
+    narrow: true,
+  });
   await world.start();
   assert.equal(world.theme(), "dark");
   assert.equal(world.frames().length, 0);
@@ -250,5 +254,42 @@ test("the control names the appearance it set", async (t) => {
   assert.equal(
     world.select().closest("label")?.getAttribute("data-appearance-value"),
     "light",
+  );
+});
+
+test("on the canvas each frame mounts its own scheme's document once, whatever the appearance", async (t) => {
+  const world = await environment(t, { search: "?scheme=dark" });
+  await world.start();
+  const frames = world.frames();
+  // Home shows Desktop beside Mobile, its Light row above its Dark row.
+  assert.deepEqual(
+    frames.map((frame) => [
+      frame.getAttribute("data-workspace-frame"),
+      frame.getAttribute("data-workspace-color-scheme"),
+    ]),
+    [
+      ["desktop", "light"],
+      ["mobile", "light"],
+      ["desktop", "dark"],
+      ["mobile", "dark"],
+    ],
+  );
+  for (const frame of frames) {
+    const scheme = frame.getAttribute("data-workspace-color-scheme");
+    assert.equal(
+      frame
+        .closest("[data-preview-color-scheme]")
+        ?.getAttribute("data-preview-color-scheme"),
+      scheme,
+    );
+    assert.equal(/\.dark\.html/.test(frame.src), scheme === "dark");
+  }
+  const sources = frames.map((frame) => frame.src);
+  await world.choose("light");
+  assert.equal(world.scheme(), "light");
+  assert.deepEqual(world.frames(), frames);
+  assert.deepEqual(
+    world.frames().map((frame) => frame.src),
+    sources,
   );
 });

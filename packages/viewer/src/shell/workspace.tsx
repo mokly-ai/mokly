@@ -6,6 +6,8 @@ import { ChangeStatus } from "@mokly/ui/change-status";
 import type { InspectorHandle } from "@mokly/ui/inspector";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
+import { framesViews, workspaceFrames } from "./canvas_frames.js";
+import { useCanvasLayout } from "./canvas_layout.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
@@ -105,6 +107,19 @@ export function ComponentWorkspace({
       ),
     [colorScheme, controls.previewViews, data, variantPath, viewport],
   );
+  // In the wide layout the canvas shows every chosen frame, and the
+  // highlights draw on each of them.
+  const wide = useCanvasLayout();
+  const canvasFrames = useMemo(
+    () =>
+      wide ? workspaceFrames(data, viewport, controls.previewViews) : undefined,
+    [controls.previewViews, data, viewport, wide],
+  );
+  const shownViews = useMemo(
+    () =>
+      canvasFrames ? framesViews(controls.previewViews, canvasFrames) : views,
+    [canvasFrames, controls.previewViews, views],
+  );
   const sizing = useInspectorResize(inspectorRef, panesRef, store.interactive);
   const {
     selectedInstance,
@@ -122,7 +137,7 @@ export function ComponentWorkspace({
     invalidSelection: Boolean(data.removed || variant?.removed),
     onSelect: selectInstance,
     ...(selectedKey ? { selectedKey } : {}),
-    views,
+    views: shownViews,
   });
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
@@ -133,6 +148,18 @@ export function ComponentWorkspace({
     : undefined;
   const stage = (
     <WorkspaceStage
+      canvas={
+        canvasFrames
+          ? {
+              fitKey:
+                entry.kind === "screen"
+                  ? `${entry.path}:${viewport}`
+                  : (data.component?.path ?? entry.path),
+              frames: canvasFrames,
+              status: headStatus,
+            }
+          : undefined
+      }
       catalogue={catalogue}
       context={context}
       data={data}
