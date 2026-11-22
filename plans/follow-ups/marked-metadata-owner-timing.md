@@ -130,8 +130,12 @@
 - **Related:**
   - [marked-post-build-coherence.md](./marked-post-build-coherence.md): its
     option A leaves this residual.
-  - [overlapping-reachable-pnp-roots.md](./overlapping-reachable-pnp-roots.md):
-    its reachable superset decides which PnP roots the checks keep.
+  - [overlapping-reachable-pnp-roots.md at `6ef5bc42c`](https://github.com/mokly-ai/mokly/blob/6ef5bc42c9f8704c300b9f94a6f2d01e48586bf7/plans/follow-ups/overlapping-reachable-pnp-roots.md):
+    the full record of the overlap measurement of 2026-11-20. Its reachable
+    superset decides which PnP roots the checks keep. On 2026-11-20 the
+    performance orchestrator chose its option A, which kept the reachable
+    superset. With the user's approval, a commit of 2026-11-22 deleted that
+    item.
 - **Recommendation:** A, for the current branch only, as answered on
   2026-11-20. It keeps the stale result of `main` and fixes nothing. No option
   for the separate work is chosen or approved. The options check rates F as
