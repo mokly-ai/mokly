@@ -135,7 +135,8 @@ Contract owners:
   its needed rules without a parse. A memo keeps the output for each set of
   needed nodes; a miss prunes a clone of the parsed tree by today's algorithm.
   A fixed cap counts the texts and the memo entries. Today's filter stays as
-  the fallback, so the output of each filter stays byte-equal.
+  the fallback for a text that the index cannot read, and both paths share
+  its rules, so the output of each filter stays byte-equal.
 
 ### Design calls
 
@@ -181,6 +182,25 @@ Contract owners:
   registry text first, and the generation object owns the index. Reasons: the
   gain of an index keyed by the whole text depends on an unmeasured hit rate,
   and an index that the generation owns needs no release path of its own.
+- 2026-11-22, implementor's call, accepted by me: an index holds one registry
+  text, `REGISTRY_TEXT_LIMIT`, and 64 outputs for each text,
+  `REGISTRY_OUTPUT_LIMIT`, and the least recently used entry leaves first.
+  Reasons: each measured sidecar filtered one text, the React Native Web sheet
+  of a generation only grows, and a warm mokly-cloud edit makes 44 filter
+  calls.
+- 2026-11-22, my call: the caps count entries, not bytes. Reason: an index
+  holds about 23 times its text, 297 KiB on mokly-cloud, and each output is a
+  part of its text, so the caps bound the index of a generation by its
+  registry text, and the sidecar memory limit bounds the process.
+- 2026-11-22, my call: `collectStyles` always filters through the index of
+  the generation, and `registryStyles` stays the fallback for a text that the
+  index cannot read. Reason: a branch for a caller without an index would run
+  only in tests, and the tests of `collectStyles` then run the indexed path.
+- 2026-11-22, implementor's call, accepted by me: no test reads the session to
+  show that `dispose` drops the index. Reason: the index is a field of the
+  generation that `restore` creates, nothing else refers to it, and the
+  session code that drops a generation does not change. A test would read the
+  private generation map or assert an incidental error.
 
 ## Milestone 1: Documentation and items
 
@@ -234,11 +254,14 @@ Depends on: 1
       text repeats on the same sidecar, and the parse time of
       `registryStyles`. Evidence under `.context/`. Choose the index by it.
       Evidence: `.context/edit-background-render/pr2-c1/`.
-- [ ] Red test: the indexed filter and today's filter, which stays as the
+- [x] Red test: the indexed filter and today's filter, which stays as the
       fallback, write the same bytes over a set of registries and fragments.
-- [ ] Bound test: the index never holds more entries than its cap, and
-      `dispose` releases it.
-- [ ] Implement C1. Update the package README.
+- [x] Bound test: the index never holds more entries than its cap, and
+      `dispose` releases it. The release follows from the ownership test;
+      see the design call of 2026-11-22.
+- [x] Implement C1. Update the package README. The sidecar README holds the
+      index; the package README does not describe the style filter.
+      Evidence: `.context/edit-background-render/pr2-c1/`.
 
 ## Milestone 5: Verification, review, and pull request
 

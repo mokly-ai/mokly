@@ -19,6 +19,7 @@ import {
   PhysicalInputReader,
 } from "./physical-input-reader.js";
 import { checkRecipeSize } from "./recipe-size.js";
+import { RegistryIndex } from "./registry-index.js";
 import { directoryFiles } from "./resolution-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
 
@@ -91,6 +92,7 @@ export function restore(
     savedSlots: new Map(),
     stories: new Map(),
     require,
+    registryIndex: new RegistryIndex(),
   };
 }
 
