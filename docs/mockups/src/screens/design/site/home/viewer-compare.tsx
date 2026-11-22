@@ -66,6 +66,7 @@ export function ViewerCompare() {
               <SiteIcon name="caret" size={13} />
             </span>
           </span>
+          {/* status: "ahead" (presence) */}
           <SiteCursor className="site-home-compare-sam" person="sam" />
         </div>
       </div>

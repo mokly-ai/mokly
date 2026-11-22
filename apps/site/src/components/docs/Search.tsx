@@ -13,6 +13,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { closeOnBackdrop } from "../dialog-backdrop.js";
+
 import { CanvasIcon } from "./CanvasIcon.js";
 import { keyHint, opensSearch } from "./search-keys.js";
 
@@ -40,43 +42,6 @@ const DIALOG = "site-search";
 const RESULTS = 6;
 
 let index: Promise<SearchIndex> | undefined;
-
-/** Whether a press on a modal dialog fell outside its box, on the backdrop. */
-function onBackdrop(dialog: HTMLDialogElement, event: MouseEvent): boolean {
-  if (event.target !== dialog) return false;
-  const box = dialog.getBoundingClientRect();
-  return (
-    event.clientX < box.left ||
-    event.clientX > box.right ||
-    event.clientY < box.top ||
-    event.clientY > box.bottom
-  );
-}
-
-/**
- * Close the dialog on a press on the dimmed page where the browser does not
- * implement `closedby="any"`. A press on the backdrop targets the dialog
- * itself, as a press on the dialog's own box does, so only a press outside
- * the box counts. As with `closedby`, a press that starts inside the dialog
- * and ends on the dimmed page, such as a text selection in the field, keeps
- * it open. Answers the function that removes the listeners.
- */
-function closeOnBackdrop(dialog: HTMLDialogElement): () => void {
-  let pressed = false;
-  const onPointerDown = (event: PointerEvent) => {
-    pressed = onBackdrop(dialog, event);
-  };
-  const onClick = (event: MouseEvent) => {
-    if (pressed && onBackdrop(dialog, event)) dialog.close();
-    pressed = false;
-  };
-  dialog.addEventListener("pointerdown", onPointerDown);
-  dialog.addEventListener("click", onClick);
-  return () => {
-    dialog.removeEventListener("pointerdown", onPointerDown);
-    dialog.removeEventListener("click", onClick);
-  };
-}
 
 async function load(): Promise<SearchIndex> {
   index ??= (async () => {
@@ -121,16 +86,15 @@ export default function Search() {
       if (key) key.textContent = hint;
     }
     document.addEventListener("keydown", onKey);
-    const stopBackdrop =
-      "closedBy" in HTMLDialogElement.prototype
-        ? undefined
-        : closeOnBackdrop(element);
+    // `closedby="any"` closes the dialog on a press on the dimmed page, and
+    // `closeOnBackdrop` does where the browser does not implement it.
+    const stopBackdrop = closeOnBackdrop(element);
     return () => {
       for (const control of controls) {
         control.removeEventListener("click", open);
       }
       document.removeEventListener("keydown", onKey);
-      stopBackdrop?.();
+      stopBackdrop();
     };
   }, []);
 

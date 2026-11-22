@@ -241,26 +241,34 @@ Claude and Codex.
 
 Each drawing of such a feature carries a source comment that holds
 `status: "ahead"` and the names of its features, so the search for the ahead
-pages finds it too. A template block takes
-`{/* status: "ahead" (presence) */}` on the line above it. A component that
-only draws the features, such as `AgentChat.astro`, takes
-`// status: "ahead" (agent sessions, Claude)` in its frontmatter, and a data
-entry takes that line above it. The names are `comments`, `approvals`,
-`agent sessions`, `presence`, `Claude` and `Codex`. A person's cursor outside
-a depicted Mokly screen, such as Maya's on the hero heading, and the pricing
-questions are fiction of the design file, so they carry no mark.
+pages finds it too. The site mockups under
+`docs/mockups/src/screens/design/site/` draw the same features, and each
+mockup drawing carries the same mark as its site drawing. A template or JSX
+block takes `{/* status: "ahead" (presence) */}` on the line above it. A
+component that only draws the features, such as `AgentChat.astro`, takes
+`// status: "ahead" (agent sessions, Claude)` in its frontmatter. Its mockup
+module, such as `home/agent.tsx`, takes that line under its doc comment, and
+a data entry takes that line above it. The names are `comments`,
+`approvals`, `agent sessions`, `presence`, `Claude` and `Codex`. A person's
+cursor outside a depicted Mokly screen, such as Maya's on the hero heading,
+and the pricing questions are fiction of the design file, so they carry no
+mark.
 
 Before go-live, run the alignment pass of the ahead pages and the marks:
 
-1. From the repository root, run `grep -rn 'status: "ahead"' apps/site/src`.
+1. From the repository root, run
+   `grep -rn 'status: "ahead"' apps/site/src docs/mockups/src/screens/design/site`.
 2. Check each named feature against the deployed product. A named agent
    stays only when agent sessions support it.
 3. Remove each drawing of a feature that did not ship, and the copy that
-   names the feature, in the page and in
-   [Site home copy](../../docs/protocol/cloud/site-copy.md). Removing an agent
-   from `src/components/people.ts` makes the type check fail at each `person`
-   that still names it.
-4. Remove the mark of each drawing whose features all shipped.
+   names the feature, from the site mockups first, because they are the
+   visual source of truth. Then remove them from the page and from
+   [Site home copy](../../docs/protocol/cloud/site-copy.md). Removing an
+   agent from `src/components/people.ts`, or from the mockups'
+   `parts/people.tsx`, makes the type check fail at each `person` that still
+   names it.
+4. Remove the mark of each drawing whose features all shipped, in the
+   mockups and on the site.
 
 The Pricing page states only the plan facts of
 [Billing](../../docs/protocol/cloud/billing.md) and
@@ -317,14 +325,15 @@ Pages project and attach the domain are in the
 - `src/docs/headings.ts` — stable heading ids, the duplicate-heading check and the on-this-page list.
 - `src/layouts/Docs.astro` — every documentation page: the workspace with the Layers panel, the page frame and the Inspect panel, the sub-bar and the tree sheet below 1024px, the one search island, the docs scroll spy and the sample island.
 - `src/components/docs/Layers.astro`, `TreeSections.astro`, `TreeFoot.astro`, `VersionRow.astro` and `SearchControl.astro` — the Layers panel, a `Panel` whose tree rows are `PanelRow` parts, and the version row, sections and Changelog row that the tree sheet shares.
-- `src/components/docs/Subbar.astro`, `TreeSheet.astro` and `tree-sheet.ts` — the sub-bar below 1024px and the modal tree sheet that its Layers control opens.
+- `src/components/docs/Subbar.astro`, `TreeSheet.astro` and `tree-sheet.ts` — the sub-bar below 1024px and the modal tree sheet that its Layers control opens, with `closeOnBackdrop` where the browser lacks `closedby`.
 - `src/components/docs/Inspect.astro`, `Facts.astro`, `OnThisPage.astro`, `Outline.astro` and `scroll-spy.ts` — the Inspect panel, a `Panel` named by the page's file, the On this page disclosure below 1280px, and the scroll spy that marks the heading in view and moves the reading progress.
 - `src/components/docs/page-source.ts` — each page's tracked source, which the frame label names and Edit on GitHub opens, and the page facts.
 - `src/components/docs/Pager.astro`, `pager-entries.ts` and `Trail.astro` — previous and next with each neighbour's section and description, and the location trail.
-- `src/components/docs/Search.tsx`, `search-keys.ts`, `CanvasIcon.tsx` and `scripts/index-search.mjs` — the search dialog island, which binds the page's search controls, owns ⌘K, Ctrl K and `/`, names the key hint and closes on a press on the dimmed page, with a fallback where the browser lacks `closedby`, the island's drawing of an `icons.ts` icon, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
+- `src/components/docs/Search.tsx`, `search-keys.ts`, `CanvasIcon.tsx` and `scripts/index-search.mjs` — the search dialog island, which binds the page's search controls, owns ⌘K, Ctrl K and `/`, names the key hint and closes on a press on the dimmed page, with `closeOnBackdrop` where the browser lacks `closedby`, the island's drawing of an `icons.ts` icon, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
 - `src/components/docs/tree-scroll.ts` and `tree-reveal.ts` — the Layers panel's tab-scoped tree scroll memory from 1024px, and the current-page reveal that the tree sheet shares.
 - `src/components/Header.astro` and `src/components/page-name.ts` — the tool bar of every page, and the page name of each route, which its file title shows after `mokly.ai —`.
-- `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens.
+- `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens, with `closeOnBackdrop` where the browser lacks `closedby`.
+- `src/components/dialog-backdrop.ts` — `closeOnBackdrop`, which the menu, the tree sheet and docs search share. Each dialog has `closedby="any"`, and where the browser lacks it, `closeOnBackdrop` closes the dialog on a press that starts and ends outside the dialog's box. `tests/browser/menu.spec.ts` checks it in a page without `closedby`.
 - `src/components/Footer.astro`, `SchemeControl.astro` and `StatusBar.astro` — the footer frame of every page, the Light and Dark control in its brand column, and the depicted status bar under the frame.
 - `src/components/scheme-island.js` — the scheme island, a checked classic script that `src/layouts/Site.astro` emits first in every page head: it applies `?scheme=` or the choice kept under `mokly.site.scheme` in `localStorage` before the first paint, and it runs the scheme control. `tests/scheme_island.test.ts` runs this file in `node:vm` against the stub page of `tests/helpers/scheme-island.ts`.
 - The shared Canvas parts, each documented in its own comment: `Icon.astro` with the `icons.ts` drawings, `Mark.astro`, `Brand.astro`, `Button.astro`, `Chip.astro`, `Kicker.astro`, `SectionBox.astro`, `FrameLabel.astro`, `Selection.astro`, `SizeTag.astro`, `Redline.astro`, `PageFrame.astro`, which frames a document with a `FrameLabel` and a `Selection` and, given `measure`, a size tag of the sheet, and `Avatar.astro`, `Presence.astro` and `Cursor.astro` with the people of `people.ts`, all under `src/components/`. A `Selection`, `SizeTag` or `Redline` that measures a part renders `Measurements.astro`, which loads the measurements island: `measurements-island.ts` calls `startMeasurements` of `measurements.ts`, and `tests/measurements.test.ts` runs it against a stub page.

@@ -1,19 +1,19 @@
 /**
- * The focus glow of the site mockups and the site, from their sheets: every
+ * The focus glow of the site and of its mockups, from their sheets: every
  * focus rule draws one of the glows of docs/protocol/cloud/site-design.md,
  * ranks above the shadow that its control draws at rest and under the
  * pointer, and keeps the resting shadow under the glow; only the glow
- * removes the outline, and forced colours keep a system outline. The site's
- * browser walk checks the drawn glow of every control on every route.
+ * removes the outline, and forced colours keep a system outline. The
+ * mockup sheets are the ones that `mokly.config.json` links into every site
+ * mockup. The browser walk checks the drawn glow of every control on every
+ * route, and `contrast.test.ts` checks that the glow keeps 3:1.
  */
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { basename, resolve } from "node:path";
-import { test } from "node:test";
+import path from "node:path";
+import test from "node:test";
 
-import { tokens } from "@mokly-cloud/tokens/tokens";
-
-import { repositoryRoot, siteStylesheets } from "./design-site-test-helpers";
+import { repositoryRoot } from "./helpers/fixture.js";
 
 /** The two glows: the signal ink on the page, the signal in the code panel. */
 const GLOW = "color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent)";
@@ -23,6 +23,9 @@ const CODE_GLOW = "color-mix(in srgb, var(--mk-color-signal) 75%, transparent)";
 const HALOS = [`0 0 0 4px ${GLOW}`, `inset 0 0 0 4px ${GLOW}`];
 const CODE_HALO = `inset 0 0 0 4px ${CODE_GLOW}`;
 
+/** The rule of `mokly.config.json` that gives every site mockup its sheets. */
+const MOCKUP_SHEETS = "design/site/**/index.html";
+
 interface Rule {
   readonly declarations: readonly string[];
   /** Whether the rule sits in a forced-colors media query. */
@@ -30,6 +33,51 @@ interface Rule {
   readonly order: number;
   readonly selector: string;
   readonly sheet: string;
+}
+
+/** Whether a parsed JSON value is an object with named fields. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Whether a parsed JSON value is a list of strings. */
+function isStringList(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
+}
+
+/**
+ * The site mockup sheets as absolute paths, in link order, read from the one
+ * rule of `mokly.config.json` that gives every site mockup its sheets, as
+ * the mockup tests read them.
+ */
+function mockupSheets(): string[] {
+  const config: unknown = JSON.parse(
+    readFileSync(path.resolve(repositoryRoot, "mokly.config.json"), "utf8"),
+  );
+  const rules: unknown[] =
+    isRecord(config) && Array.isArray(config.stylesheets)
+      ? config.stylesheets
+      : [];
+  const rule = rules.find(
+    (candidate) => isRecord(candidate) && candidate.match === MOCKUP_SHEETS,
+  );
+  const sheets: unknown = isRecord(rule) ? rule.stylesheets : undefined;
+  assert.ok(
+    isStringList(sheets),
+    `mokly.config.json has no stylesheet list for ${MOCKUP_SHEETS}`,
+  );
+  return sheets.map((sheet) => path.resolve(repositoryRoot, sheet));
+}
+
+/** Every site sheet as an absolute path, in name order. */
+function siteSheets(): string[] {
+  const directory = path.resolve(import.meta.dirname, "..", "src", "styles");
+  return readdirSync(directory)
+    .filter((name) => name.endsWith(".css"))
+    .sort()
+    .map((name) => path.resolve(directory, name));
 }
 
 /** Every style rule of the named sheets, in their order, with its context. */
@@ -56,7 +104,7 @@ function rules(files: readonly string[]): Rule[] {
           .trim()
           .replace(/\s+/g, " ")
           .replace(/\( | \)/g, (space) => space.trim()),
-        sheet: basename(file),
+        sheet: path.basename(file),
       });
     }
   }
@@ -76,21 +124,8 @@ function shadow(rule: Rule): string | undefined {
 }
 
 const sides = {
-  mockup: {
-    global: ".site-root :focus-visible",
-    rules: rules(
-      siteStylesheets().map((path) => resolve(repositoryRoot, path)),
-    ),
-  },
-  site: {
-    global: ":focus-visible",
-    rules: rules(
-      readdirSync(resolve(repositoryRoot, "apps/site/src/styles"))
-        .filter((name) => name.endsWith(".css"))
-        .sort()
-        .map((name) => resolve(repositoryRoot, "apps/site/src/styles", name)),
-    ),
-  },
+  mockup: { global: ".site-root :focus-visible", rules: rules(mockupSheets()) },
+  site: { global: ":focus-visible", rules: rules(siteSheets()) },
 };
 
 for (const [side, { global, rules: all }] of Object.entries(sides)) {
@@ -159,55 +194,3 @@ for (const [side, { global, rules: all }] of Object.entries(sides)) {
     }
   });
 }
-
-/** A colour role of the token palette. */
-type Role = {
-  [
-    Key in keyof typeof tokens.color.light
-  ]: (typeof tokens.color.light)[Key] extends string ? Key : never;
-}[keyof typeof tokens.color.light];
-
-/** The relative luminance of sRGB channels. */
-function luminance(colour: readonly number[]): number {
-  const [red = 0, green = 0, blue = 0] = colour.map((channel) => {
-    const value = channel / 255;
-    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-}
-
-/** The channels of a `#rrggbb` token value. */
-function channels(value: string): number[] {
-  return [1, 3, 5].map((at) => Number.parseInt(value.slice(at, at + 2), 16));
-}
-
-test("the glow keeps 3:1 against every surface it draws on, in both schemes", () => {
-  // Each glow with the surface it sits on in light and in dark: the page
-  // glow on the canvas and the page's surfaces, and the code glow on the
-  // code panel, which text fills in light and the muted surface in dark.
-  const backdrops: ReadonlyArray<readonly [Role, Role, Role]> = [
-    ["signalDeep", "background", "background"],
-    ["signalDeep", "surface", "surface"],
-    ["signalDeep", "surfaceMuted", "surfaceMuted"],
-    ["signalDeep", "surfaceRaised", "surfaceRaised"],
-    ["signalDeep", "signalSoft", "signalSoft"],
-    ["signal", "text", "surfaceMuted"],
-  ];
-  for (const [glow, light, dark] of backdrops) {
-    for (const [scheme, behind] of [
-      ["light", light],
-      ["dark", dark],
-    ] as const) {
-      // The glow at 75% over an opaque fill, as the browser composites it.
-      const fill = channels(tokens.color[scheme][behind]);
-      const halo = channels(tokens.color[scheme][glow]).map(
-        (channel, at) => channel * 0.75 + (fill[at] ?? 0) * 0.25,
-      );
-      const [high = 0, low = 0] = [luminance(halo), luminance(fill)].sort(
-        (a, b) => b - a,
-      );
-      const ratio = (high + 0.05) / (low + 0.05);
-      assert.ok(ratio >= 3, `${scheme}: ${glow} on ${behind}, ${ratio}:1`);
-    }
-  }
-});

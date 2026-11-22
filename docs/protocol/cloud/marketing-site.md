@@ -100,8 +100,9 @@ before the cloud ships. [Site](./site.md#ahead-of-release-pages) owns the
 domain goes live. The [source rule](./site.md#boundary) lets the site draw a
 fictional demo app and the people of the design file, also after go-live.
 Until go-live it also lets the site depict features that the product does not
-have yet. The site source marks each such drawing, and the alignment pass
-checks every marked drawing.
+have yet. The site source and the site mockups mark each such drawing. The
+alignment pass checks every marked drawing, and it changes the mockups before
+the site.
 
 ## Mockups
 

@@ -4,6 +4,7 @@
  * request it keeps in step with, and Approve. Maya's cursor rests under it.
  * A depiction, so its controls are text.
  */
+// status: "ahead" (comments, approvals)
 
 import { SiteIcon } from "../parts/icons.js";
 import { SiteAvatar, SiteCursor, type SitePerson } from "../parts/people.js";
@@ -22,6 +23,7 @@ const MESSAGES: ReadonlyArray<{
     role: "Design",
     text: "Padding feels tight on mobile.",
   },
+  // status: "ahead" (agent sessions, Claude)
   {
     age: "1m",
     name: "Sam",
@@ -68,6 +70,7 @@ export function Thread() {
           Approve
         </span>
       </div>
+      {/* status: "ahead" (presence) */}
       <SiteCursor className="site-home-review-maya" person="maya" />
     </div>
   );

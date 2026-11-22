@@ -34,7 +34,7 @@
     - Gap: no site test asks Git about every docs page. A new page kind, or a rule that points at an ignored build copy, passes.
     - Check: for every page of `DOCS_PAGES` in `apps/site/src/docs/pages.ts` and for the docs landing, run `git ls-files --error-unmatch` on the path of its Edit on GitHub target.
   - **Contrast of every site page.**
-    - Today: `apps/site/tests/contrast.test.ts` checks 25 documented token pairs in both schemes. The mockup test "a dimmed code line keeps its text, tokens and line number at 4.5:1 in both schemes" checks the dimmed line in the mockup sheets. The parity test keeps the dimmed-line rules of the site equal to those of the mockups. `apps/site/tests/browser/docs-sample.spec.ts` checks which lines dim, not their contrast.
+    - Today: `apps/site/tests/contrast.test.ts` checks 23 documented token pairs and the 3:1 of the focus glow in both schemes. The mockup test "a dimmed code line keeps its text, tokens and line number at 4.5:1 in both schemes" checks the dimmed line in the mockup sheets. The parity test keeps the dimmed-line rules of the site equal to those of the mockups. `apps/site/tests/browser/docs-sample.spec.ts` checks which lines dim, not their contrast.
     - Gap: text in a pair outside the documented pairs, or text with opacity, can fall below 4.5:1 on a route that Lighthouse does not audit.
     - Check: in the page walk, measure the text contrast of every route in both schemes, for example with the color-contrast rule of axe-core.
   - **Tool bar widths.**
@@ -46,8 +46,8 @@
     - Gap: an export or a whole module of the cloud mockups that nothing imports stays without a failure.
     - Check: add `docs/mockups/src` to the roots of the ratchet. Treat the entry modules under `docs/mockups/src/entries` and the renderer that `mokly.config.json` names as public entry points.
   - **200% text at 320px.**
-    - Today: the page walk opens every route at 320px with the default text size. No test sets 200% text.
-    - Gap: a later part with one-line text can bring sideways scroll back at 200% text, and no check fails.
+    - Today: the page walk opens every route at 320px with the default text size. `apps/site/tests/browser/large-text.ts` opens one route in a 320px window at 200% text, and the specs that import it check the parts that the 200% text pass changed. `home.spec.ts`, `pricing.spec.ts` and `changelog-layout.spec.ts` fail when the home, pricing or the changelog scrolls sideways. `chrome.spec.ts` checks the bar on a docs page, `footer.spec.ts` the footer links on the Terms page, `docs-sheet.spec.ts` the rows of the tree sheet, `docs-code.spec.ts` the line numbers of the sample, and `changelog-layout.spec.ts` also the filter options. `docs/mockups/src/_tests_/design-site-containers.test.ts` keeps each container query of the site, such as the one that hides the bar's wordmark at large text, equal to that of the mockups.
+    - Gap: no test walks every route at 200% text. A later part with one-line text on another route, such as a docs page, a legal page or the 404 page, can bring sideways scroll back at 200% text, and no check fails.
     - Check: repeat the 320px page walk with the root text at 200%, and fail when a page scrolls sideways.
 - **Problem:** Each class produced a real defect during the Canvas redesign, and no check fails on a new case of the class. The tests that exist cover the case that one milestone rebuilt.
 - **Impact if no action:** Later site work can bring each defect back: an unhosted face, an edit link to an ignored path, text below 4.5:1, a broken tool bar, dead mockup modules or sideways scroll at 200% text.

@@ -42,13 +42,17 @@ router and the app on the one public origin.
   have yet: comments, approvals, agent sessions and presence. Presence inside a
   depicted Mokly screen counts as such a feature, and so does each named agent,
   Claude and Codex, wherever the site draws it.
-- The site source marks each drawing of such a feature. The mark names the
-  features of its drawing, and the page never renders it. One search finds
-  every mark together with the [ahead pages](#ahead-of-release-pages).
+- The site source marks each drawing of such a feature, and the
+  [site mockups](./site-mockups.md#mockups) mark the same drawing. The mark
+  names the features of its drawing, and no page or mockup renders it. One
+  search finds every mark in both, together with the
+  [ahead pages](#ahead-of-release-pages).
 - Before go-live, the [alignment pass](#ahead-of-release-pages) checks every
   marked drawing against the deployed product. A drawing of a feature that did
-  not ship is removed, together with the copy that names the feature. A
-  drawing whose features all shipped loses its mark.
+  not ship is removed, together with the copy that names the feature. The
+  removal changes the site mockups first, because they are the visual source
+  of truth, and then the site. A drawing whose features all shipped loses its
+  mark in both.
 - Decision 2 draws the demo app as static components at build time. A real
   example catalogue that Mokly renders was rejected, because it turns the
   redesign into catalogue work. Decision 20 keeps the demo app and the people

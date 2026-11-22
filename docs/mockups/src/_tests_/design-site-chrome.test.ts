@@ -233,7 +233,7 @@ test("every promised chrome control changes more than color on hover", () => {
   assertHoverChangesMoreThanColor(hoverClasses);
 });
 
-// design-site-focus.test.ts checks the focus glow of every control.
+// apps/site/tests/styles-focus.test.ts checks the focus glow of every control.
 test("meaningful control boundaries use the strong border role", () => {
   // The chosen segment of the footer's scheme control is a control boundary
   // too: it sits raised with a strong ring.

@@ -111,6 +111,7 @@ export function Foundation({ viewport }: { viewport: "mobile" | "desktop" }) {
           >
             <AcmePricingPhone />
           </Artboard>
+          {/* status: "ahead" (Codex) */}
           <SiteCursor className="site-home-source-codex" person="codex" />
         </div>
         {viewport === "desktop" ? (

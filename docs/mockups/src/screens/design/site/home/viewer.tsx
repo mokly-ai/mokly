@@ -31,6 +31,7 @@ function BarDetails() {
         #482
       </span>
       <span className="site-home-viewer-commit">9c2f5ae</span>
+      {/* status: "ahead" (presence) */}
       <SitePresence
         className="site-home-viewer-people"
         people={["maya", "sam"]}
