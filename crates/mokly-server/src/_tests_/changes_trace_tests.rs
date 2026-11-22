@@ -20,7 +20,8 @@ use crate::comparison_support::{accepted, files, snapshot};
 use crate::diagnostics::DiagnosticsMock;
 use crate::entropy::EntropyMock;
 use crate::error::ServerError;
-use crate::publication::{FixedPublication, Publications, PublicationsMock, SharedPublication};
+use crate::fixed_publication::FixedPublication;
+use crate::publication::{Publications, PublicationsMock, SharedPublication};
 
 async fn classify(case: &str) {
     let (origin, result, _graph) = if case == "ready" {

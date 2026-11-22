@@ -121,12 +121,18 @@ Contract owners:
   comes first: on warm mokly-cloud edits, the share of renders whose registry
   text equals one that the same sidecar filtered before, and the time of the
   parse inside `registryStyles`.
-- With C1, each generation object owns its index, so `dispose` and `shutdown`
-  release it with the generation. By the measurement, the index holds either
-  the analysis of each registry text, or the analysis of each top-level rule,
-  keyed by its text, so that only new rules are analysed. A fixed cap counts
-  its entries. Today's filter stays as the fallback for each part that the
-  index does not handle, so the output of each filter stays byte-equal.
+- Measured on 2026-11-22 on three warm mokly-cloud sessions: of 2,049 filter
+  calls on 16 sidecars, 2,033 (99%) filtered a registry text that the same
+  sidecar had filtered before. The text stayed one 12,821-byte text with 8 or
+  9 top-level nodes. The filter took a median of 1.88 ms and a mean of 2.8 ms,
+  and its parse a median of 0.34 ms.
+- With C1, each generation object owns an index for each registry text that it
+  filters, so `dispose` and `shutdown` release it with the generation. The
+  index holds the parsed tree and the analysis of its rules, so a call computes
+  its needed rules without a parse. A memo keeps the output for each set of
+  needed nodes; a miss prunes a clone of the parsed tree by today's algorithm.
+  A fixed cap counts the texts and the memo entries. Today's filter stays as
+  the fallback, so the output of each filter stays byte-equal.
 
 ### Design calls
 
@@ -145,6 +151,17 @@ Contract owners:
   workspace step, and it installs after each chunk. Reasons: one function then
   builds both records, and a stopped step keeps the work of its finished
   chunks.
+- 2026-11-22, implementor's call, accepted by me: a failed rebuild candidate
+  also ends the step. Reason: a held lease that resumes the step after a
+  failure costs more and helps only a rare case, whose next edit encodes as
+  before this change.
+- 2026-11-22, implementor's call, accepted by me: the step starts at the end
+  of the ready Changes publication and runs beside the seed work that follows
+  it. Reason: a wait for the seed work needs a signal from `ChangesPass`, and
+  both are idle work that yields to edits.
+- 2026-11-22, implementor's call, accepted by me: the step skips an entry with
+  a view that is not ready. Reason: its rebuilt detail has a pending view, and
+  the step writes only the ready shape.
 - 2026-11-22, my call after the options check: W1 changes the record only
   after the observer update returns `Ok`, through a `PlanRecord` copy method.
   Reason: a candidate between the plan change and the attach would otherwise
@@ -171,17 +188,19 @@ Depends on: none
 
 Depends on: 1
 
-- [ ] Red test: after the first ready Changes and the idle step, the first
+- [x] Red test: after the first ready Changes and the idle step, the first
       edit encodes no detail of an unchanged entry, for a narrow edit and for
       an edit that moves every view. The byte oracles of PR #472 and the byte
       proofs of Milestone 5 keep the bytes equal.
-- [ ] Red test: the step does not start before the first ready Changes; it
+- [x] Red test: the step does not start before the first ready Changes; it
       stops on a rebuild candidate, a cancellation, or a shutdown; a
       publication without a rebuild pauses it until the next ready Changes; and
       it installs nothing into a snapshot that it did not read or install.
-- [ ] Implement H. Update the `mokly-server` README.
-- [ ] Measure the CPU time of the step and the growth of the rebuild slot on
-      mokly-cloud. Evidence under `.context/`.
+- [x] Implement H. Update the `mokly-server` README. Evidence:
+      `.context/edit-background-render/pr2-h/`.
+- [x] Measure the CPU time of the step and the growth of the rebuild slot on
+      mokly-cloud. Evidence under `.context/`. Evidence:
+      `.context/edit-background-render/pr2-h/measure.txt`.
 
 ## Milestone 3: W1
 
@@ -196,9 +215,10 @@ Depends on: 1
 
 Depends on: 1
 
-- [ ] Measure on warm mokly-cloud edits the share of renders whose registry
+- [x] Measure on warm mokly-cloud edits the share of renders whose registry
       text repeats on the same sidecar, and the parse time of
       `registryStyles`. Evidence under `.context/`. Choose the index by it.
+      Evidence: `.context/edit-background-render/pr2-c1/`.
 - [ ] Red test: the indexed filter and today's filter, which stays as the
       fallback, write the same bytes over a set of registries and fragments.
 - [ ] Bound test: the index never holds more entries than its cap, and

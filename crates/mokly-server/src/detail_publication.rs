@@ -4,24 +4,47 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use mokly_model::public_detail::{EntryDetailV4, Workspace};
+use mokly_model::usage::CatalogueUsage;
 
 use crate::detail_encoding::DetailEncoder;
 use crate::error::Result;
 use crate::revision_file::RevisionFile;
 
-/// Shared detail values and byte slices, with four fixed slots for each current path.
+/// Shared detail values and byte slices, with five fixed slots for each current path.
 /// This value owns no snapshots, generations, backends, or publication history.
 #[derive(Clone, Default)]
 pub struct RecentDetails {
-    records: BTreeMap<String, [Option<PublishedDetail>; 4]>,
+    records: BTreeMap<String, [Option<PublishedDetail>; 5]>,
 }
 
-#[derive(Clone, Copy)]
+/// The slot of a record. A rebuild keeps two records for each path, one for each usage shape.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum PublicationKind {
-    Rebuild,
+    /// A rebuilt detail whose views all have ready usage.
+    RebuildReady,
+    /// A rebuilt detail with a view whose usage is not ready.
+    RebuildPending,
+    /// A detail of a usage completion.
     Usage,
+    /// A detail of a Changes status update.
     ChangesStatus,
+    /// A detail of ready Changes evidence.
     ChangesEvidence,
+}
+
+impl PublicationKind {
+    /// The rebuild record of `detail`: ready when every view has ready usage.
+    pub(crate) fn rebuild(detail: &EntryDetailV4) -> Self {
+        if detail
+            .views
+            .iter()
+            .all(|view| matches!(view.usage, CatalogueUsage::Ready { .. }))
+        {
+            Self::RebuildReady
+        } else {
+            Self::RebuildPending
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -45,12 +68,7 @@ impl RecentDetails {
         let equal = adjacent
             .filter(|(old, _)| equivalent(detail, old))
             .or_else(|| {
-                self.records
-                    .get(&detail.entry.path)
-                    .into_iter()
-                    .flatten()
-                    .flatten()
-                    .find(|record| equivalent(detail, &record.detail))
+                self.find(detail)
                     .map(|record| (&record.detail, &record.file))
             });
         let file = if let Some((old, file)) = equal {
@@ -78,6 +96,25 @@ impl RecentDetails {
     ) -> Option<(&Arc<EntryDetailV4>, &RevisionFile)> {
         let record = self.records.get(path)?[kind as usize].as_ref()?;
         Some((&record.detail, &record.file))
+    }
+
+    /// Whether a record of the detail's path equals it, as `publish` compares.
+    pub(crate) fn holds(&self, detail: &EntryDetailV4) -> bool {
+        self.find(detail).is_some()
+    }
+
+    /// Keep an encoded detail as the ready rebuild record of its path.
+    pub(crate) fn prime(&mut self, detail: Arc<EntryDetailV4>, file: RevisionFile) {
+        self.keep(PublicationKind::RebuildReady, &detail, &file);
+    }
+
+    fn find(&self, detail: &EntryDetailV4) -> Option<&PublishedDetail> {
+        self.records
+            .get(&detail.entry.path)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .find(|record| equivalent(detail, &record.detail))
     }
 
     fn keep(&mut self, kind: PublicationKind, detail: &Arc<EntryDetailV4>, file: &RevisionFile) {

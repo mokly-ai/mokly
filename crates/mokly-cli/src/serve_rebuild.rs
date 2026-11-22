@@ -118,6 +118,7 @@ impl ServeActions for ManualRebuilds {
             let Some(permit) = self.candidates.enter() else {
                 continue;
             };
+            self.writer.candidate();
             let attempt = if batch.action == Some(Action::Reload) {
                 self.warnings.current()
             } else {
@@ -197,3 +198,7 @@ mod serve_watch_burst_tests;
 #[cfg(test)]
 #[path = "_tests_/rebuild_warning_tests.rs"]
 mod rebuild_warning_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_candidate_tests.rs"]
+mod serve_candidate_tests;

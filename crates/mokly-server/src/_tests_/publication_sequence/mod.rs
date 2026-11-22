@@ -4,4 +4,4 @@ mod oracle_tests;
 mod retention_tests;
 mod reuse_tests;
 mod slot_tests;
-mod support;
+pub(crate) mod support;

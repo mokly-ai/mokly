@@ -50,10 +50,15 @@ replacement is prepared. `Snapshot::detail` supplies the matching revision to
 typed consumers.
 
 Rebuild, usage completion, and Changes publish details through one reuse rule.
-Each snapshot keeps at most four recent records for each current path, one for
-each publication kind: rebuild, usage completion, a Changes status update, and
-ready Changes evidence. A record shares a typed detail, its `detailId`, and its
-encoded payload. A new detail takes that id and payload only when it equals the
+Each snapshot keeps at most five recent records for each current path: two
+rebuild records, and one record for each other publication kind: usage
+completion, a Changes status update, and ready Changes evidence. One rebuild
+record holds a detail whose views all have ready usage, and the other holds a
+detail with a view whose usage is not ready. A rebuild writes the record that
+matches the shape of each detail. So an edit that moves every view still finds
+the pending records of the startup, and a narrow edit after it still finds the
+ready records. A record shares a typed detail, its `detailId`, and its encoded
+payload. A new detail takes that id and payload only when it equals the
 record apart from `detailId` and `revision`, and both details have or both
 lack `revision`. A supplied id alone never proves equality.
 
@@ -95,6 +100,27 @@ Changes work ends, so a replaced pass cancels it and waits for it. The
 [background work](./background.md) page holds the guidance for their window,
 the lookup and the miss of each view, the `Stages` bounds and budget, the ready
 state, and the write leases of the Changes reference probes.
+
+`IdleRecords` fills the ready rebuild record of each current path after the
+first ready Changes of a Serve session. Its detail is the detail that the next
+rebuild builds for an unchanged entry: the projected pending detail, with the
+ready usage of each view and no settled workspace. The step encodes such a
+detail only when all its views have ready usage and no record of its path
+equals it. It works in chunks of 32 details, as idle jobs of `Work::idle` on
+the shared workers. So it starts a chunk only while no foreground request is
+active, and it yields within a chunk when a foreground request starts. It holds
+no lock while it encodes. After each chunk, it installs its records through
+`Publications::install_records`, under the build lock and the state lock. The
+install goes only into the snapshot that the step read or installed last, while
+that snapshot is current. The install publishes nothing: no revision, no event,
+and no changed byte. These events end the step: a rebuild candidate, which
+calls `PublicationWriter::candidate` after the debounce of the rebuild loop and
+before its preparation; shutdown; the close of the publications; and a
+cancelled classification. A publication without a rebuild, such as the Changes
+of a moved Git reference, pauses the step until the next ready Changes. The
+step then resumes from the newest snapshot. A rebuild ends the step for the
+session, because each rebuild writes the records of the entries that it does
+not change. One complete pass also ends it.
 
 `MemoryComparisons` implements `dyn Comparisons`, the store of the
 [selected comparison contract](../../docs/protocol/mokly-selected-comparisons.md).
@@ -187,9 +213,10 @@ cargo run -p mokly-cli --bin mokly -- serve --config crates/mokly-graph/tests/fi
 
 The composition root supplies `dyn Publications`, `dyn PreviewStore`,
 `dyn Work`, and `dyn Diagnostics` to `Application`. Serve also supplies
-`dyn Comparisons` and a Changes continuation to `UsagePass`. It reserves a
-listener through `dyn ServerRuntime` and calls its `dyn BoundServer::run`
-method with a stop channel and `dyn Lifecycle` hooks.
+`dyn Comparisons` and a Changes continuation to `UsagePass`, and it runs
+`IdleRecords::new` over the same publications and work beside that pass. It
+reserves a listener through `dyn ServerRuntime` and calls its
+`dyn BoundServer::run` method with a stop channel and `dyn Lifecycle` hooks.
 
 ## Development
 
@@ -217,13 +244,19 @@ generations.
 - [`src/application.rs`](./src/application.rs) defines `Application`, which
   dispatches every HTTP route over the current publication.
 - [`src/publication.rs`](./src/publication.rs) defines `Publications`,
-  `FixedPublication`, and `SharedPublication`, the atomic public state and its
-  ordered updates.
+  `PublicationWriter`, and `SharedPublication`, the atomic public state and its
+  ordered updates. `SharedPublication::install_records` installs idle rebuild
+  records without a publication.
+  [`src/fixed_publication.rs`](./src/fixed_publication.rs) defines
+  `FixedPublication`, and
+  [`src/publication_event.rs`](./src/publication_event.rs) defines
+  `PublicationEvent` and `Subscription`.
 - [`src/snapshot.rs`](./src/snapshot.rs) defines `Snapshot`,
   `SnapshotFactory`, and `Projector`, the canonical bytes of one revision.
 - [`src/replacement.rs`](./src/replacement.rs) provides `reuse_usage` and
   `encode_details`, which retain ready usage and reuse equal details when a
-  rebuild projects a new snapshot.
+  rebuild projects a new snapshot. `copy_usage` is the view usage copy of
+  `reuse_usage` without its workspace step.
 - [`src/evidence.rs`](./src/evidence.rs) and
   [`src/changes.rs`](./src/changes.rs) provide `complete` and `project`, which
   publish usage completion and Changes from the current snapshot.
@@ -234,6 +267,11 @@ generations.
   matches no recent record.
 - [`src/detail_publication.rs`](./src/detail_publication.rs) defines
   `RecentDetails`, the bounded equality records shared by the publication paths.
+  `PublicationKind::rebuild` gives the rebuild record of a detail's usage shape.
+- [`src/idle_records.rs`](./src/idle_records.rs) defines `IdleRecords`, the
+  idle rebuild record step, which implements `Background`.
+  [`src/idle_chunk.rs`](./src/idle_chunk.rs) builds the details of one chunk
+  with the code of a rebuild and encodes them on a worker.
 - [`src/revision_file.rs`](./src/revision_file.rs) defines `RevisionFile`, the
   shared payload that each response completes with the current revision.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
@@ -308,7 +346,10 @@ generations.
   [`src/work_active.rs`](./src/work_active.rs) pass from the lookup job to the
   resumed job, so `Workers::stop` waits for both jobs. The
   [lookup and miss](./background.md#lookup-and-miss) guidance gives their
-  order.
+  order. [`src/work_idle.rs`](./src/work_idle.rs) defines `IdleJob`, which
+  `Work::idle` runs on a worker after the same admission as a background
+  render. `Workers` keeps that worker until the job's join, and
+  `Workers::stop` waits for the job.
 - [`src/comparison_store.rs`](./src/comparison_store.rs) defines `Comparisons`
   and `MemoryComparisons`, the bounded selected comparison generations.
   `MemoryComparisons::with_activity` takes the same activity, and each queued

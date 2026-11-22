@@ -14,7 +14,8 @@ use crate::background_stage::Stages;
 use crate::changes_background::{AfterUsage, PendingChanges};
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
-use crate::publication::{PublicationEvent, Publications};
+use crate::publication::Publications;
+use crate::publication_event::PublicationEvent;
 use crate::snapshot::Snapshot;
 use crate::work::Work;
 

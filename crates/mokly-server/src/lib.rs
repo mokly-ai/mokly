@@ -46,13 +46,17 @@ pub mod diagnostics;
 pub mod entropy;
 pub mod error;
 pub mod evidence;
+pub mod fixed_publication;
 pub mod foreground;
 pub mod generation;
+mod idle_chunk;
+pub mod idle_records;
 mod live;
 pub mod preview;
 mod priority;
 pub mod public_read;
 pub mod publication;
+pub mod publication_event;
 pub mod render_request;
 mod replacement;
 mod response;
@@ -84,6 +88,7 @@ mod generated_routes;
 mod work_active;
 mod work_background;
 mod work_delivery;
+pub mod work_idle;
 
 #[cfg(test)]
 #[path = "_tests_/replacement_publication_tests.rs"]

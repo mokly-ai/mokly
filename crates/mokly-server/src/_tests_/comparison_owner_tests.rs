@@ -12,7 +12,7 @@ use crate::comparison_capture::CapturerMock;
 use crate::comparison_store::{Comparisons, MemoryComparisons};
 use crate::comparison_support::{files, historical, historical_inputs, snapshot};
 use crate::error::ServerError;
-use crate::publication::FixedPublication;
+use crate::fixed_publication::FixedPublication;
 
 #[tokio::test]
 async fn an_identical_replacement_uses_its_live_owner_for_historical_capture() {

@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::grammar::Common;
 use mokly_cli::output::Style;
@@ -19,10 +20,12 @@ use mokly_server::comparison_store::MemoryComparisons;
 use mokly_server::diagnostics::Diagnostics;
 use mokly_server::entropy::Entropy;
 use mokly_server::error::{Result, ServerError};
+use mokly_server::idle_records::IdleRecords;
 use mokly_server::preview::MemoryPreviews;
 use mokly_server::publication::SharedPublication;
 use mokly_server::snapshot::{Projector, Snapshot};
 use mokly_server::work::Workers;
+use tokio::sync::watch;
 
 use crate::serve_changes::ServeChanges;
 use crate::serve_eager_native::NativeEagerFactory;
@@ -141,18 +144,21 @@ pub(super) fn create(
         )
         .with_activity(activity.clone()),
     );
-    let background: Arc<dyn Background> = Arc::new(UsagePass {
-        capacity,
-        changes: Some(Arc::new(ChangesPass {
+    let background: Arc<dyn Background> = Arc::new(ServeBackground {
+        usage: UsagePass {
+            capacity,
+            changes: Some(Arc::new(ChangesPass {
+                publications: publications.clone(),
+                comparisons: comparisons.clone(),
+                diagnostics: diagnostics.clone(),
+                activity,
+                watching,
+            })),
             publications: publications.clone(),
-            comparisons: comparisons.clone(),
+            work: work.clone(),
             diagnostics: diagnostics.clone(),
-            activity,
-            watching,
-        })),
-        publications: publications.clone(),
-        work: work.clone(),
-        diagnostics: diagnostics.clone(),
+        },
+        records: IdleRecords::new(publications.clone(), work.clone()),
     });
     let mut app = Application::new(
         publications.clone(),
@@ -168,6 +174,19 @@ pub(super) fn create(
         publications,
         background,
         app: Arc::new(app),
+    }
+}
+
+/// The usage and Changes pass and the idle rebuild record step run until Serve stops.
+struct ServeBackground {
+    usage: UsagePass,
+    records: IdleRecords,
+}
+
+#[async_trait]
+impl Background for ServeBackground {
+    async fn run(&self, stop: watch::Receiver<bool>) {
+        tokio::join!(self.usage.run(stop.clone()), self.records.run(stop));
     }
 }
 

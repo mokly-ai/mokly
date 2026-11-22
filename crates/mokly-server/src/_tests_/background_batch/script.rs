@@ -8,7 +8,8 @@ use unimock::{MockFn, Unimock, matching};
 use crate::background::UsagePass;
 use crate::background_capacity::FixedCapacity;
 use crate::diagnostics::{Diagnostics, DiagnosticsMock};
-use crate::publication::{PublicationEvent, PublicationsMock, Subscription};
+use crate::publication::PublicationsMock;
+use crate::publication_event::{PublicationEvent, Subscription};
 use crate::snapshot::Snapshot;
 use crate::work::Work;
 

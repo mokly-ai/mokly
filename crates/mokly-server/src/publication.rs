@@ -1,6 +1,7 @@
 //! Atomic public state and ordered event delivery for rebuild integrations.
 
 use std::cell::Cell;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use mokly_model::public_metadata::ChangesStatus;
@@ -10,33 +11,11 @@ use crate::changes::{self, Accepted, ChangeCancellation, ChangeCommit, Commit};
 use crate::changes_install::ChangeInstallation;
 
 use crate::detail_encoding::{DetailEncoder, EncodedDetails};
+use crate::detail_publication::RecentDetails;
 use crate::error::Result;
 use crate::evidence;
+use crate::publication_event::{PublicationEvent, Subscription, event};
 use crate::snapshot::Snapshot;
-
-/// The only data retained by an update stream; it holds no render generation.
-#[derive(Clone)]
-pub struct PublicationEvent {
-    /// Publication counter.
-    pub revision: u64,
-    /// Process deployment identity.
-    pub deployment_id: String,
-}
-
-fn event(snapshot: &Snapshot) -> PublicationEvent {
-    PublicationEvent {
-        revision: snapshot.index.revision,
-        deployment_id: snapshot.index.deployment_id.clone(),
-    }
-}
-
-/// A race-free handshake followed by each publication after it.
-pub struct Subscription {
-    /// Current state captured while the update receiver was installed.
-    pub current: PublicationEvent,
-    /// Bounded ordered updates; a lagging stream reconnects for a new handshake.
-    pub updates: broadcast::Receiver<PublicationEvent>,
-}
 
 /// Atomic state source for watch and Changes publications.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PublicationsMock))]
@@ -71,39 +50,18 @@ pub trait Publications: Send + Sync {
     }
     /// Fence late evidence before shutdown releases its generation.
     fn close(&self) {}
-}
-
-/// An immutable Serve publication for hosts without rebuild actions.
-pub struct FixedPublication {
-    snapshot: Arc<Snapshot>,
-    updates: broadcast::Sender<PublicationEvent>,
-}
-impl FixedPublication {
-    /// Create a state without rendering or starting background work.
-    pub fn new(snapshot: Arc<Snapshot>) -> Self {
-        Self {
-            snapshot,
-            updates: broadcast::channel(64).0,
-        }
+    /// Install idle rebuild records into `origin` without a publication, only while `origin`
+    /// is current, Serve is open, and no rebuild candidate started.
+    fn install_records(
+        &self,
+        _origin: &Arc<Snapshot>,
+        _records: RecentDetails,
+    ) -> Option<Arc<Snapshot>> {
+        None
     }
-}
-impl Publications for FixedPublication {
-    fn with_changes(&self, accepted: &Arc<Accepted>, commit: &dyn ChangeCommit) -> bool {
-        self.snapshot
-            .changes
-            .as_ref()
-            .is_some_and(|current| Arc::ptr_eq(current, accepted))
-            && commit.apply()
-    }
-
-    fn current(&self) -> Arc<Snapshot> {
-        self.snapshot.clone()
-    }
-    fn subscribe(&self) -> Subscription {
-        Subscription {
-            current: event(&self.snapshot),
-            updates: self.updates.subscribe(),
-        }
+    /// Whether idle rebuild records can still be installed in this session.
+    fn accepts_records(&self) -> bool {
+        false
     }
 }
 
@@ -112,6 +70,8 @@ impl Publications for FixedPublication {
 pub trait PublicationWriter: Send + Sync {
     /// Atomically install only the next revision of this process.
     fn replace(&self, snapshot: Arc<Snapshot>) -> bool;
+    /// Mark the start of a rebuild candidate: idle rebuild records stop for the session.
+    fn candidate(&self) {}
 }
 
 struct State {
@@ -125,6 +85,8 @@ pub struct SharedPublication {
     state: Mutex<State>,
     build: Mutex<()>,
     pub(crate) encoder: Arc<dyn DetailEncoder>,
+    /// Cleared when a rebuild candidate starts or Serve closes; no idle record installs then.
+    records: AtomicBool,
 }
 impl SharedPublication {
     /// Install the already validated first publication.
@@ -132,6 +94,7 @@ impl SharedPublication {
         Self {
             build: Mutex::new(()),
             encoder: Arc::new(EncodedDetails),
+            records: AtomicBool::new(true),
             state: Mutex::new(State {
                 closed: false,
                 snapshot,
@@ -253,6 +216,7 @@ impl Publications for SharedPublication {
         }
     }
     fn close(&self) {
+        self.records.store(false, Ordering::SeqCst);
         {
             let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
             state.closed = true;
@@ -274,6 +238,28 @@ impl Publications for SharedPublication {
             updates: state.updates.subscribe(),
         }
     }
+    fn install_records(
+        &self,
+        origin: &Arc<Snapshot>,
+        records: RecentDetails,
+    ) -> Option<Arc<Snapshot>> {
+        let _build = self.build.lock().unwrap_or_else(|error| error.into_inner());
+        if !self.accepts_records() {
+            return None;
+        }
+        let mut next = (**origin).clone();
+        next.recent_details = records;
+        let next = Arc::new(next);
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if state.closed || !self.accepts_records() || !Arc::ptr_eq(&state.snapshot, origin) {
+            return None;
+        }
+        state.snapshot = next.clone();
+        Some(next)
+    }
+    fn accepts_records(&self) -> bool {
+        self.records.load(Ordering::SeqCst)
+    }
 }
 impl PublicationWriter for SharedPublication {
     fn replace(&self, snapshot: Arc<Snapshot>) -> bool {
@@ -290,5 +276,8 @@ impl PublicationWriter for SharedPublication {
         state.snapshot = snapshot.clone();
         let _ = state.updates.send(event(&snapshot));
         true
+    }
+    fn candidate(&self) {
+        self.records.store(false, Ordering::SeqCst);
     }
 }

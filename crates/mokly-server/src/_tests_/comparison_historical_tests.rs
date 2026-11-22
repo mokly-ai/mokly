@@ -13,7 +13,7 @@ use crate::clock::ClockMock;
 use crate::comparison_capture::SnapshotCapture;
 use crate::comparison_store::{Comparisons, MemoryComparisons};
 use crate::comparison_support::{accepted, files, historical_inputs, snapshot};
-use crate::publication::FixedPublication;
+use crate::fixed_publication::FixedPublication;
 
 #[tokio::test]
 async fn removed_documents_use_base_plans_without_classified_document_records() {
