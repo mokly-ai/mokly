@@ -239,6 +239,8 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   Milestone 13 builds the account menu. The package bar takes two optional
   consumer properties, `--mokly-top-bar-inset-start` and `-end` (default 0),
   so its mark clears the Mac window buttons that the cloud reports.
+  The registered Button gains a muted lead text, so the project trigger
+  mutes the workspace and stays one control. History gets a `history` icon.
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
 

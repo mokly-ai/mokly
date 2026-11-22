@@ -1,4 +1,4 @@
-# Canvas redesign: decisions 33 to 36
+# Canvas redesign: decisions 33 to 36 and 39
 
 These decisions came from Milestone 18, one Canvas family of Browse designs,
 and Milestone 17, the Canvas default in the open-source shell, of the [Canvas redesign plan](./canvas-redesign.md). This file is a part of
@@ -153,3 +153,38 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
 - **Action:** ask the user, because A changes a requirement and C adds
   delivery behaviour that no requirement covers.
 - **Answer:** Cal chose **C** on 2026-11-22. Milestone 19 does the work.
+
+## 39. The branch name in the publication pill
+
+- **Severity:** Low. **Effort:** Large.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `docs/protocol/cloud/shared-controls.md`,
+  `docs/protocol/cloud/shared-control-registrations.md`, the cloud bar in
+  `packages/app/src/viewer/bar.tsx`
+- **Background:** Milestone 22 brings the viewer bar to the prototype. Every
+  cloud bar control is the registered `@firna/ui` Button, whose label has one
+  ink and one bold sans face. The prototype's publication pill draws the
+  branch name, `feat/checkout-v2`, in regular mono. A new prop lets the
+  project trigger mute the workspace name, but it cannot change the face.
+- **Problem:** The pill shows the branch in bold sans, not in the
+  prototype's regular mono.
+- **Impact if no action:** One small typographic difference from the
+  prototype in the bar.
+- **Root question:** Does the bar's pill draw its branch in mono, as the
+  prototype does?
+- **Options:**
+  - **A.** Keep the branch in bold sans. Effort: Small.
+  - **B.** Give the registered Button an optional content node, so a control
+    can draw any parts inside it, the mono branch too. The mockup catalogue
+    cannot record a node as an input, and two control contracts change.
+    Milestone 13 does it with the bar rebuild. Effort: Large.
+- **Left out:** A second control for the branch, because one action would
+  then have two tab stops.
+- **Wider fix:** B, because any control could then mix faces.
+- **Previous examples:** The muted workspace prop of Milestone 22, which
+  covers inks only.
+- **Recommendation:** A. The difference is small, and B changes two shared
+  contracts for one label.
+- **Action:** ask the user, because A leaves a part of the prototype out and
+  B changes shared contracts.
