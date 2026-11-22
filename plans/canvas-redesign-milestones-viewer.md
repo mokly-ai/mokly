@@ -71,6 +71,9 @@ Depends on: 10, 11
       document size, as the canvas frames contract says (Milestone 18,
       item 9): for example the Action's own example at 148 × 86 and the
       Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`.
+- [ ] Comparison panes measure each version with
+      `measureContentBox(doc)` from `@mokly/frame/internal` (Milestone 23),
+      for decision 23 below.
 - [ ] Size a component's frame during a compare at the larger width and
       height of its two versions, measured once when both load (decision 23,
       option A). Change the measurement rule for component frames in
