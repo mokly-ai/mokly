@@ -4,7 +4,9 @@ import { artboardStates } from "../../parts/artboards.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { actionFrames, frameOf } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
+import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
+import { CanvasStage } from "../parts/stage.js";
 
 import {
   CHANGED_DEFAULT,
@@ -12,6 +14,7 @@ import {
   actionBranchChanges,
 } from "./parts/branch.js";
 import {
+  DEFAULT_FRAME,
   DEFAULT_MODES,
   DefaultChanges,
   type DefaultMode,
@@ -19,7 +22,11 @@ import {
 import { EXPLORER_PAGES as E } from "./parts/destinations.js";
 import { DefaultInspect } from "./parts/inspect_default.js";
 import { explorerChangesMetadata, explorerState } from "./parts/metadata.js";
-import { actionCompareFrames } from "./parts/sketches.js";
+import {
+  PAIR_PHONE_FIT,
+  actionCompareFrames,
+  actionSideFrames,
+} from "./parts/sketches.js";
 
 /**
  * The Action's saved variant Default on the Changes tab of the Action
@@ -33,7 +40,7 @@ function DefaultCompare({
   mode,
   viewport,
 }: {
-  mode: DefaultMode;
+  mode: Exclude<DefaultMode, "side-by-side">;
   viewport: ArtboardViewport;
 }) {
   return (
@@ -49,6 +56,37 @@ function DefaultCompare({
       viewport={viewport}
       zoom={FITS.action}
     />
+  );
+}
+
+/**
+ * Default's Changes tab in Side by side: its Light frame's version before
+ * beside its current version, at the set's fitted zoom, where the pair fits
+ * at full size. The stage holds every frame's pair, and the compact frame
+ * picker picks another pair in place. In Changes the canvas draws no
+ * selection. On a phone, the compared pair.
+ */
+function DefaultSideBySide({ viewport }: { viewport: ArtboardViewport }) {
+  return (
+    <CanvasShell
+      catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
+      compactZoom={PAIR_PHONE_FIT}
+      design={E.explorerCompareSide}
+      entry={CHANGED_DEFAULT}
+      panel={<DefaultChanges mode="side-by-side" />}
+      tab="changes"
+      viewport={viewport}
+      zoom={FITS.action}
+    >
+      <CanvasStage
+        compare="side-by-side"
+        entry={CHANGED_DEFAULT}
+        frames={actionSideFrames()}
+        pickable={actionFrames()}
+        picked={DEFAULT_FRAME}
+        zoom={FITS.action}
+      />
+    </CanvasShell>
   );
 }
 
@@ -95,6 +133,12 @@ export const canvasExplorerCompareScreen = defineScreen({
         "Current",
         "Default's Changes tab in Current: the set shows its current version, as Inspect does. On a phone, the Changes sheet is open.",
         (viewport) => <DefaultCompare mode="current" viewport={viewport} />,
+      ),
+      explorerState(
+        "side-by-side",
+        "Side by side",
+        "Side by side on the set: Default · Light's version before stands beside its current version, at the same frame size, and a chip names each frame of the set by its variant and scheme. On a phone, the frame picker picks the pair.",
+        (viewport) => <DefaultSideBySide viewport={viewport} />,
       ),
       explorerState(
         "difference",

@@ -19,6 +19,7 @@ export const PROPS_PAGES = {
   propsPublishedDisabled: "design/canvas/props/read-only/disabled",
   propsNoProps: "design/canvas/props/read-only/no-props",
   propsLoading: "design/canvas/props/loading",
+  propsLoadingFailed: "design/canvas/props/loading/failed",
 } as const;
 
 export type PropsDestination = (typeof PROPS_PAGES)[keyof typeof PROPS_PAGES];

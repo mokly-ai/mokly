@@ -257,7 +257,9 @@ error. An optional field draws both its control and its Not set line under
 the Set check box. `TextButton` with an `href` is a link with the button's
 look, and the controls panels take `resetHref`, `retryHref`, `startHref`, and
 `currentHref`, which draw Reset while the props differ, the alert's action, a
-failed start's action, and Switch to Current as links. `InstanceTree` draws an
+failed start's action, and Switch to Current as links. `PropsStatus` and
+`UsageStatus` take `retryHref`, which draws Try again of a failed load as a
+link. `InstanceTree` draws an
 instance with an `href` as a link with the button's look, whose selected one is
 the current page, and starts with the nested lists that `initiallyExpanded`
 names open.
@@ -425,10 +427,11 @@ override the desktop layout rules.
   `EditStatus`, the status of a render of edited props over the preview
 - [`src/props-panel/props-panel.tsx`](./src/props-panel/props-panel.tsx) —
   `PropsPanel`, `PropValues`, `PropSlots`, `PropsMessage`, and `PropsStatus`:
-  the supplied props and slots, the line of an empty tab, and its loading
+  the supplied props and slots, the line of an empty tab, and its loading and
+  failed states
 - [`src/usage-list/usage-list.tsx`](./src/usage-list/usage-list.tsx) —
   `UsageList` and `UsageStatus`: the Used by and affected consumers, and the
-  tab's loading and unchecked states
+  tab's loading, failed, and unchecked states
 - [`src/instance-tree/instance-tree.tsx`](./src/instance-tree/instance-tree.tsx)
   — `InstanceTree`: the viewport choice and the instances, whose nested lists
   keep their open state

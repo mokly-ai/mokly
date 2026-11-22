@@ -11,14 +11,19 @@ import { FITS, WELCOME_VIEW, welcomeFrames } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
 
 /**
- * The catalogue in the Changes filter with Welcome selected. On a phone, the
- * catalogue sheet is open over the Welcome frame.
+ * The catalogue in the Changes filter with Welcome selected on Inspect. A
+ * row keeps the right panel's tab, so the moved Invoice's row opens it on
+ * Inspect. On a phone, the catalogue sheet is open over the Welcome frame.
  */
 function Catalogue({ viewport }: { viewport: ArtboardViewport }) {
   const entry = CANVAS_ENTRIES.welcome;
   return (
     <CanvasShell
-      catalogue={{ filter: "changes", activeKey: "welcome" }}
+      catalogue={{
+        filter: "changes",
+        activeKey: "welcome",
+        targets: { invoice: CANVAS_PAGES.movedInspect },
+      }}
       compactZoom={FITS.phone}
       design={CANVAS_PAGES.catalogue}
       entry={entry}

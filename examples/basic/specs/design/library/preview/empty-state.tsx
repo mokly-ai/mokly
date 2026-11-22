@@ -1,6 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
-import { DESTINATIONS } from "../../parts/destinations.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, flag, text, type LibraryProps } from "../schemas.js";
 
@@ -19,11 +19,17 @@ const propSchema = {
   },
 } as const;
 export type EmptyStateProps = LibraryProps<typeof propSchema>;
+
+/**
+ * The catalogue home's guidance. Each sample's action opens the Canvas
+ * artboard of its outcome: the first screen and every screen open the
+ * overview, and the catalogue home opens the Canvas home.
+ */
 const home = {
   title: "Mokly",
   body: "Browse the mockup catalogue generated from this repository.",
   actionLabel: "Open the first screen",
-  destination: DESTINATIONS.welcome,
+  destination: CANVAS_PAGES.overview,
 } as const;
 export const emptyState = defineComponent({
   ...libraryMetadata(
@@ -55,7 +61,7 @@ export const emptyState = defineComponent({
         body: "Nothing in the catalogue matches",
         code: "view/unknown/",
         actionLabel: "Go to the catalogue home",
-        destination: DESTINATIONS.home,
+        destination: CANVAS_PAGES.home,
       },
     },
     {
@@ -65,7 +71,7 @@ export const emptyState = defineComponent({
         title: "No changed screens",
         body: "Your screens match the comparison baseline.",
         actionLabel: "Browse all screens →",
-        destination: DESTINATIONS.welcome,
+        destination: CANVAS_PAGES.overview,
       },
     },
   ],

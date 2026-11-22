@@ -2,3 +2,44 @@
    comparison in the Changes tab, and the evidence that an entry without
    Changes keeps in Inspect. Each Canvas part keeps its own sheet; this sheet
    holds only the layout and the states of these artboards. */
+
+/* ---- The evidence card's spacing ------------------------------------- */
+
+/* Evidence that lists files or stylesheets, and the evidence that Inspect
+   keeps after the head, space their sentences as the approved evidence card
+   does, whatever other sheet the page links: eight pixels above each
+   paragraph and list, the sentences and lists in a file's item included, and
+   fourteen between a list and the paragraph that follows it. */
+:is(.cv-evidence:has(ul), .cv-ev-inspect)
+  .mbk-comparison-evidence
+  :is(p, ul, dl) {
+  margin: 8px 0 0;
+}
+
+:is(.cv-evidence:has(ul), .cv-ev-inspect)
+  .mbk-comparison-evidence
+  :is(ul, dl)
+  + p {
+  margin-top: 14px;
+}
+
+/* ---- Files and stylesheets ------------------------------------------- */
+
+/* Each changed file, and each examined stylesheet, as an item of a list in
+   the panel's type: a compact indent and quiet markers, the path in the
+   primary text, wrapping anywhere in the narrow panel, with the file's
+   sentences and selector lists nested under it. */
+.cv-evidence .mbk-comparison-evidence ul {
+  padding-left: 18px;
+}
+
+.cv-evidence .mbk-comparison-evidence li {
+  color: var(--cv-text);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.cv-evidence .mbk-comparison-evidence li::marker {
+  color: var(--cv-text-muted);
+}

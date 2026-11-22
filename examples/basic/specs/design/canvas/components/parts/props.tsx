@@ -66,7 +66,7 @@ export function DefaultSavedProps() {
 }
 
 /** The saved props of the removed Compact, which set no hint. */
-const COMPACT_SAVED = {
+export const COMPACT_SAVED = {
   label: "Continue",
   disabled: false,
   radius: 4,

@@ -1,7 +1,4 @@
 import { InstanceTree } from "../../../../../../../packages/ui/src/instance-tree/instance-tree.js";
-import { PropsStatus } from "../../../../../../../packages/ui/src/props-panel/props-panel.js";
-import { UsageStatus } from "../../../../../../../packages/ui/src/usage-list/usage-list.js";
-import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
 import { ScreenControls } from "../../../components/controls/parts/screen_controls.js";
 import { SUBJECTS } from "../../../parts/subjects.js";
 import { CANVAS_ENTRIES } from "../../parts/entries.js";
@@ -17,14 +14,8 @@ import { ScreenInspect } from "../../parts/inspect_screen.js";
 import { InspectVariants } from "../../parts/inspect_variants.js";
 import { WELCOME_INSTANCES } from "../../parts/instance_records.js";
 
+import { PendingProps, PendingUsage, type PendingDetails } from "./details.js";
 import { WELCOME_UNCLASSIFIED, WELCOME_VARIANTS } from "./welcome.js";
-
-/** The settled wording of the Props tab while its data loads. */
-const PROPS_WORDING = {
-  failed: CONTROLS_COPY.loadFailed,
-  loading: CONTROLS_COPY.loading,
-  retry: CONTROLS_COPY.retry,
-} as const;
 
 /** What the Components section says while the view's records load. */
 const WAITING = "Waiting for the component preview.";
@@ -42,15 +33,15 @@ const WELCOME_FILTER = {
 /**
  * Inspect for Welcome while its stage waits for the entry's detail, or after
  * that detail failed. The catalogue index gives the head, the rationale, the
- * variants, and the frames, so they show at once; the Frames filter
- * disables Highlight components with the shell's reason. While the detail
- * loads, the folded sections hold their loading states. Once it failed, they
- * stay closed without a body: the stage holds the one Try again that this
- * static artboard draws.
+ * variants, and the frames, so they show at once. Props and Usage wait for
+ * the detail. Once it failed, each says so, and its Try again loads the
+ * detail again, as the stage's does: it opens the loading stage. The view's
+ * usage comes with the detail and no frame mounts without it, so Components
+ * and Highlight components wait for the component preview in both states,
+ * as the shell's do, and a failed detail never shows the empty view's copy.
  */
-export function StageStateInspect({ state }: { state: "failed" | "loading" }) {
+export function StageStateInspect({ details }: { details: PendingDetails }) {
   const subject = SUBJECTS.welcome;
-  const loading = state === "loading";
   return (
     <>
       <InspectHead
@@ -63,25 +54,21 @@ export function StageStateInspect({ state }: { state: "failed" | "loading" }) {
       <InspectVariants variants={WELCOME_VARIANTS} />
       <InspectFrames
         count={4}
-        filter={{ ...WELCOME_FILTER, unavailable: state }}
+        filter={{ ...WELCOME_FILTER, unavailable: "loading" }}
       />
       <InspectSelection />
       <InspectFold name="props" title="Props">
-        {loading ? (
-          <PropsStatus status="loading" wording={PROPS_WORDING} />
-        ) : undefined}
+        <PendingProps details={details} />
       </InspectFold>
       <InspectFold name="usage" title="Usage">
-        {loading ? <UsageStatus status="loading" /> : undefined}
+        <PendingUsage details={details} />
       </InspectFold>
       <InspectFold name="components" title="Components">
-        {loading ? (
-          <InstanceTree
-            usage={{ status: "waiting", text: WAITING }}
-            viewport="desktop"
-            viewports={[]}
-          />
-        ) : undefined}
+        <InstanceTree
+          usage={{ status: "waiting", text: WAITING }}
+          viewport="desktop"
+          viewports={[]}
+        />
       </InspectFold>
     </>
   );

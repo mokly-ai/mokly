@@ -331,6 +331,12 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/components/compare/side-by-side",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/compare"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/components/inspection",
     "colorSchemes": ["light", "dark"]
   },
@@ -358,9 +364,65 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/components/usage/failed",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/usage"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/components/usage/loading",
     "colorSchemes": ["light", "dark"],
     "variantOf": "design/canvas/components/usage"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/ignored",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/page",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/page/inspect",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/evidence/page"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/styles",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/styles/excluded",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/evidence/styles"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/styles/unnamed",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/evidence/styles"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/styles/unresolved",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/evidence/styles"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/unchanged",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/evidence/unchanged/action",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/evidence/unchanged"
   },
   {
     "kind": "screen",
@@ -545,6 +607,12 @@
     "kind": "screen",
     "path": "design/canvas/props/loading",
     "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/loading/failed",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/loading"
   },
   {
     "kind": "screen",

@@ -1,10 +1,7 @@
 import { mockLink } from "@mokly/mokly";
 
 import { SavedPropsPanel } from "../../../../../../../packages/ui/src/controls-panel/controls-panel.js";
-import {
-  PropsStatus,
-  PropValues,
-} from "../../../../../../../packages/ui/src/props-panel/props-panel.js";
+import { PropValues } from "../../../../../../../packages/ui/src/props-panel/props-panel.js";
 import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
 import {
   actionFields,
@@ -147,20 +144,3 @@ export function PublishedProps({
 
 /** The number of props that the published panel lists. */
 export const PUBLISHED_COUNT = ACTION_PROPS.length;
-
-/**
- * The shipped Props status while the route's details load: the fields wait
- * for the details, which alone carry their declared order.
- */
-export function LoadingProps() {
-  return (
-    <PropsStatus
-      status="loading"
-      wording={{
-        failed: CONTROLS_COPY.loadFailed,
-        loading: CONTROLS_COPY.loading,
-        retry: CONTROLS_COPY.retry,
-      }}
-    />
-  );
-}

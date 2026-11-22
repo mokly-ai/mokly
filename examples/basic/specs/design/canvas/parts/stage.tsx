@@ -51,7 +51,7 @@ function PickerGlyph({ glyph }: { glyph: "component" | "desktop" | "mobile" }) {
  * frames over a drawn pill, which shows the picked frame in place, with the
  * picked screen frame's viewport glyph, or a variant set's component glyph.
  */
-function FramePicker({
+export function FramePicker({
   frames,
   kind,
   picked,

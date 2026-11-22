@@ -2,53 +2,79 @@ import { defineScreen } from "@mokly/mokly";
 
 import { artboardStates } from "../../parts/artboards.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
-import type { PanelTab } from "../parts/panel.js";
 import { frameOf } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
+import { CanvasShell } from "../parts/shell.js";
+import { FITS } from "../parts/sketches.js";
+import { CanvasStage } from "../parts/stage.js";
 
 import {
   REMOVAL_CHANGES,
   REMOVED_COMPACT,
   REMOVED_FIT,
 } from "./parts/branch.js";
-import { RemovedChanges } from "./parts/changes.js";
+import { COMPACT_FRAME, RemovedChanges } from "./parts/changes.js";
 import { EXPLORER_PAGES as E } from "./parts/destinations.js";
 import { RemovedInspect } from "./parts/inspect_states.js";
 import { explorerChangesMetadata, explorerState } from "./parts/metadata.js";
-import { removedSetFrames } from "./parts/sketches.js";
+import {
+  PAIR_PHONE_FIT,
+  compactFrames,
+  removedSetFrames,
+  removedSideFrames,
+} from "./parts/sketches.js";
 
 /**
- * The removed Compact on the removal branch, opened from the Changes filter:
- * its parent's variant set with the Compact row after the current variants,
- * whose frames hold the missing current version. On Inspect, its Light
- * frame is selected; on a phone, that frame alone. On the Changes tab, the
- * canvas draws no selection, and a phone shows the Changes sheet open.
+ * The removed Compact on the removal branch, opened from the Changes filter
+ * on Inspect: its parent's variant set with the Compact row after the
+ * current variants, whose frames hold the missing current version, and its
+ * Light frame selected; on a phone, that frame alone.
  */
-function Removed({
-  tab,
-  viewport,
-}: {
-  tab: PanelTab;
-  viewport: ArtboardViewport;
-}) {
+function RemovedOnInspect({ viewport }: { viewport: ArtboardViewport }) {
   const frames = removedSetFrames();
-  const changes = tab === "changes";
   return (
     <VariantSetArtboard
       catalogue={REMOVAL_CHANGES}
-      compare={changes ? "current" : undefined}
-      design={changes ? E.explorerRemovedChanges : E.explorerRemoved}
+      design={E.explorerRemoved}
       entry={REMOVED_COMPACT}
       frames={frames}
-      panel={changes ? <RemovedChanges /> : <RemovedInspect />}
-      selection={
-        changes ? undefined : { frame: frameOf(frames, "compact-light") }
-      }
-      sheet={changes ? "panel" : undefined}
-      tab={tab}
+      panel={<RemovedInspect />}
+      selection={{ frame: frameOf(frames, "compact-light") }}
       viewport={viewport}
       zoom={REMOVED_FIT}
     />
+  );
+}
+
+/**
+ * Compact's comparison on its Changes tab: its missing current side makes
+ * the comparison fall back to Side by side, which shows Compact · Light's
+ * version before beside the explicit message of its missing current
+ * version, at full size. Only Compact's frames compare, so the stage holds
+ * their pairs, and the compact frame picker picks the other pair in place.
+ * In Changes the canvas draws no selection. On a phone, the compared pair.
+ */
+function RemovedComparison({ viewport }: { viewport: ArtboardViewport }) {
+  return (
+    <CanvasShell
+      catalogue={REMOVAL_CHANGES}
+      compactZoom={PAIR_PHONE_FIT}
+      design={E.explorerRemovedChanges}
+      entry={REMOVED_COMPACT}
+      panel={<RemovedChanges />}
+      tab="changes"
+      viewport={viewport}
+      zoom={FITS.action}
+    >
+      <CanvasStage
+        compare="side-by-side"
+        entry={REMOVED_COMPACT}
+        frames={removedSideFrames()}
+        pickable={compactFrames()}
+        picked={COMPACT_FRAME}
+        zoom={FITS.action}
+      />
+    </CanvasShell>
   );
 }
 
@@ -60,15 +86,15 @@ export const canvasExplorerRemovedScreen = defineScreen({
     {
       state: "inspect",
       title: "Removed variant",
-      desktop: <Removed tab="inspect" viewport="desktop" />,
-      mobile: <Removed tab="inspect" viewport="mobile" />,
+      desktop: <RemovedOnInspect viewport="desktop" />,
+      mobile: <RemovedOnInspect viewport="mobile" />,
     },
     [
       explorerState(
         "changes",
-        "Changes",
-        "Compact's Changes tab: a removed component variant stays eligible for comparison, so the rail names both versions and every compare mode is offered, while the comparison details say that the branch removed it.",
-        (viewport) => <Removed tab="changes" viewport={viewport} />,
+        "Side by side",
+        "Compact's comparison: a removed component variant stays eligible for comparison with a missing current side, so the rail names both versions, every compare mode is offered, and the comparison falls back to Side by side. Compact's version before stands beside the message of its missing current version, and the comparison details say that the branch removed it.",
+        (viewport) => <RemovedComparison viewport={viewport} />,
       ),
     ],
   ),

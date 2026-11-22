@@ -35,4 +35,5 @@ export const PROPS_NAVIGATION_STATES = {
     canvas: { changesTab: C.addedChanges, fit: P.propsNoProps, close: C.added },
   },
   [P.propsLoading]: fitted(P.propsLoading),
+  [P.propsLoadingFailed]: fitted(P.propsLoadingFailed),
 } satisfies Record<PropsDestination, NavigationState>;

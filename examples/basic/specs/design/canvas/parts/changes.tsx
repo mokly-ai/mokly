@@ -1,4 +1,8 @@
-import { ComparisonEvidence } from "../../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
+import {
+  ComparisonEvidence,
+  type EvidenceExclusions,
+  type EvidenceFiles,
+} from "../../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
 import { optional, useDesignInstance } from "../../library/composition.js";
 import { changeStepper } from "../../library/panels/change-stepper.js";
 import { compareModes } from "../../library/panels/compare-modes.js";
@@ -49,22 +53,42 @@ export function ChangesCompared({ added = false }: { added?: boolean }) {
 /**
  * The comparison details of today's inspector: the shipped evidence with one
  * sentence for each reason, after the previous path of a moved entry, which
- * the evidence names as the earlier side. The rail above names the base, so
- * the evidence leaves out its branch-point sentence.
+ * the evidence names as the earlier side, then each changed file with its
+ * outcomes and the stylesheets that were examined and excluded. The rail
+ * above names the base, so the evidence leaves out its branch-point
+ * sentence.
  */
 export function ChangesEvidence({
+  excluded,
+  files,
+  initial,
+  mark = "data-workspace-evidence",
   previousPath,
   reasons,
 }: {
+  /** The stylesheets that were examined and excluded. */
+  excluded?: EvidenceExclusions | undefined;
+  /** The changed files, each named once with its outcomes. */
+  files?: EvidenceFiles | undefined;
+  /** The panel opens scrolled to the comparison details. */
+  initial?: boolean | undefined;
+  /** The mark of the evidence: a whole-document page has its own. */
+  mark?: "data-page-evidence" | "data-workspace-evidence";
   /** The path that a moved entry had at the branch point. */
   previousPath?: string | undefined;
   reasons: readonly ChangeReasonKind[];
 }) {
   return (
-    <div className="cv-sec cv-evidence">
+    <div
+      className={
+        initial ? "cv-sec cv-evidence cv-initial" : "cv-sec cv-evidence"
+      }
+    >
       <ComparisonEvidence
         base=""
-        mark="data-workspace-evidence"
+        excluded={excluded}
+        files={files}
+        mark={mark}
         previousPath={previousPath}
         reasons={reasonEvidence(reasons)}
       />

@@ -32,10 +32,15 @@
   padding: 3px 9px;
 }
 
-/* The Props status while the route's details load reads as the section's
-   other lines. */
+/* The Props status while the route's details load, or after their load
+   failed, reads as the section's other lines. After a failure, Try again
+   follows the alert at the gap that Usage keeps above its Try again. */
 .cv-fold-body [data-props-section="status"] > p {
   color: var(--cv-text-secondary);
   font-size: 12px;
   margin: 0;
+}
+
+.cv-fold-body [data-props-section="status"] > p[role="alert"] {
+  margin-bottom: 6px;
 }

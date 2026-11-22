@@ -18,7 +18,12 @@ export interface CanvasEntry {
   kind: CanvasEntryKind;
   /** The status pill; absent for an unmodified or a moved entry. */
   status?: ChangeStatus | undefined;
-  /** Whether the branch changed, added, removed, or moved the entry. */
+  /**
+   * Whether the right panel has the Changes tab: the branch changed, added,
+   * removed, or moved the entry, or the entry is unmodified and outside
+   * Changes, yet its comparison is eligible, because a changed component
+   * renders in it.
+   */
   changed: boolean;
 }
 

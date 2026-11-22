@@ -6,10 +6,16 @@
 /* A stage that holds no section stands its state in the home guidance's
    card, in the middle of the stage. In the compact form, the card stands in
    the middle of the canvas, between the entry bar and the dock, instead of
-   below the entry bar where a frame would start. */
+   below the entry bar where a frame would start. Under an open panel sheet,
+   it stands where a frame would start, so it shows above the sheet. */
 @container cv (width < 56.25rem) {
   .cv-work .cv-view[data-cv-state] {
     align-items: center;
     padding: 52px 16px 88px;
+  }
+
+  .cv-work:has(> .cv-float[data-sheet]) .cv-view[data-cv-state] {
+    align-items: flex-start;
+    padding-top: 60px;
   }
 }

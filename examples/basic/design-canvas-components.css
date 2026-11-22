@@ -59,6 +59,40 @@
   padding: 8px;
 }
 
+/* A frame of Side by side names its version in its tag, so the pane of the
+   missing version keeps its message alone. */
+.cv-frame[data-cv-side] .cv-cx-missing .mb-pane-label {
+  display: none;
+}
+
+/* The removed Compact at the branch point: the Action's button with its
+   saved 4px corners. */
+.mbk-shot-action.cv-cx-compact {
+  border-radius: 4px;
+}
+
+/* ---- Side by side on a variant set ----------------------------------- */
+
+/* The stage holds the pair of each frame that compares and shows the
+   compared frame's: the version before in the set's first column and the
+   current version in its second, whatever the frame's scheme. */
+.cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"]
+  .cv-frame[data-cv-side="before"] {
+  grid-column: 1;
+}
+
+.cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"]
+  .cv-frame[data-cv-side="after"] {
+  grid-column: 2;
+}
+
+.cv-frames[data-cv-chosen="default-light"]
+  .cv-frame:not([data-cv-frame="default-light"]),
+.cv-frames[data-cv-chosen="compact-light"]
+  .cv-frame:not([data-cv-frame="compact-light"]) {
+  display: none;
+}
+
 /* ---- Comparison details ---------------------------------------------- */
 
 /* The shipped evidence names the saved variant in property rows and links
@@ -94,8 +128,23 @@
 /* The removed Compact's frames join the frames that the compact picker
    swaps in place. A component's entry bar that holds a change status beside
    the frame picker keeps its kind tag's glyph alone, so the status stays
-   clear of the picker; the tag keeps its words for assistive technology. */
+   clear of the picker; the tag keeps its words for assistive technology.
+   Side by side shows the picked frame's two versions next to each other,
+   each small enough that both fit. */
 @container cv (width < 56.25rem) {
+  .cv-work:has([data-cv-frame-pick])
+    .cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"] {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+  }
+
+  .cv-work:has([data-cv-frame-pick])
+    .cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"]
+    .cv-frame {
+    --cv-zoom: 0.54;
+  }
+
   .cv-work:has(option[value="compact-light"]:checked)
     .cv-frame[data-cv-frame="compact-light"],
   .cv-work:has(option[value="compact-dark"]:checked)

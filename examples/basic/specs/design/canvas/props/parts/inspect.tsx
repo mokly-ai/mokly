@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 
-import { UsageStatus } from "../../../../../../../packages/ui/src/usage-list/usage-list.js";
 import { optional } from "../../../library/composition.js";
+import {
+  PendingUsage,
+  type PendingDetails,
+} from "../../loading/parts/details.js";
 import { COMPONENT_IDENTITIES } from "../../parts/component_identity.js";
 import type { CanvasDestination } from "../../parts/destinations.js";
 import { CANVAS_ENTRIES } from "../../parts/entries.js";
@@ -33,20 +36,22 @@ interface PropsSection {
  * Props section unfolded with the body of the depicted state, which the
  * panel opens scrolled to, and Usage. The Action renders no registered
  * component, so Highlight components is unavailable. Until the route's
- * details arrive, the frames have no usage yet and Usage has no count.
+ * details arrive, no frame mounts, so Highlight components waits for the
+ * component preview, also after a failed load, and Usage has no count.
+ * After a failed load, Usage says so, with Try again.
  */
 export function ChosenVariantInspect({
   chosen,
+  details,
   frame,
-  loading = false,
   props,
   variants,
 }: {
   chosen: ChosenVariant;
+  /** The route's details while they load or failed; they arrived by default. */
+  details?: PendingDetails | undefined;
   /** The chosen variant's Light frame, which the reader selected. */
   frame: CanvasFrameSpec;
-  /** The route's details are loading. */
-  loading?: boolean | undefined;
   props: PropsSection;
   /** The artboard that shows each variant chosen, from this state. */
   variants: Partial<Record<ChosenVariant, CanvasDestination>>;
@@ -71,14 +76,25 @@ export function ChosenVariantInspect({
       />
       <InspectFrames
         count={6}
-        filter={{ ...SET_FILTER, unavailable: loading ? "loading" : "empty" }}
+        filter={{
+          ...SET_FILTER,
+          unavailable: details === undefined ? "empty" : "loading",
+        }}
       />
       <InspectFrameSelected frame={frame} variant={VARIANT_TITLES[chosen]} />
       <InspectFold count={props.count} initial name="props" open title="Props">
         {props.body}
       </InspectFold>
-      <InspectFold count={loading ? undefined : 3} name="usage" title="Usage">
-        {loading ? <UsageStatus status="loading" /> : <ActionUsage />}
+      <InspectFold
+        count={details === undefined ? 3 : undefined}
+        name="usage"
+        title="Usage"
+      >
+        {details === undefined ? (
+          <ActionUsage />
+        ) : (
+          <PendingUsage details={details} />
+        )}
       </InspectFold>
     </>
   );

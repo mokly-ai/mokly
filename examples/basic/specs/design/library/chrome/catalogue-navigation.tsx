@@ -1,9 +1,9 @@
 import { defineComponent } from "@mokly/mokly";
 
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
+import { CANVAS_ALL_ROWS, retarget } from "../../canvas/parts/nav_rows.js";
 import { PROFILE_CHANGES_ROWS } from "../../parts/account_nav_data.js";
-import { DESTINATIONS } from "../../parts/destinations.js";
 import {
-  NAV_TREE,
   NAV_TREE_PROFILE_OPEN,
   NAV_TREE_VARIANTS_OPEN,
 } from "../../parts/nav_data.js";
@@ -64,18 +64,44 @@ const propSchema = {
   },
 } as const;
 export type CatalogueNavigationProps = LibraryProps<typeof propSchema>;
-/** Own props hold only keys that every variant sets, so no variant inherits a selection. */
+type NavigationRows = CatalogueNavigationProps["rows"];
+
+/** The Canvas artboard that each canonical row opens from All, by its key. */
+const ALL_TARGETS = new Map(
+  CANVAS_ALL_ROWS.flatMap((row) =>
+    row.to === undefined ? [] : [[row.key, row.to] as const],
+  ),
+);
+
+/**
+ * Rows in All, each opening the Canvas artboard of its entry, as the Canvas
+ * catalogue's rows do; a row that no Canvas artboard shows is a picture.
+ */
+function inAll(rows: NavigationRows): NavigationRows {
+  return rows.map((row) => retarget(row, ALL_TARGETS.get(row.key)));
+}
+
+/** Rows that no Canvas artboard shows, each a picture of itself. */
+function pictures(rows: NavigationRows): NavigationRows {
+  return rows.map((row) => retarget(row, undefined));
+}
+
+/**
+ * Own props hold only keys that every variant sets, so no variant inherits a
+ * selection. Welcome's catalogue opens the Canvas artboards: each filter the
+ * other view with Welcome selected, and each row its entry.
+ */
 const base = {
-  rows: NAV_TREE,
+  rows: CANVAS_ALL_ROWS,
   changedCount: 1,
   changedOnly: false,
   presentation: "responsive",
-  allDestination: "design/browse/views/screen",
-  changesDestination: "design/changes/diff-controls/current",
+  allDestination: CANVAS_PAGES.overview,
+  changesDestination: CANVAS_PAGES.catalogue,
 } as const;
 const sample = {
   ...base,
-  activeDestination: "design/browse/views/screen",
+  activeDestination: CANVAS_PAGES.overview,
 } as const;
 export const catalogueNavigation = defineComponent({
   ...libraryMetadata(
@@ -119,7 +145,11 @@ export const catalogueNavigation = defineComponent({
     {
       slug: "changes",
       title: "Changes",
-      props: { ...sample, changedOnly: true, rows: NAV_TREE.slice(0, 3) },
+      props: {
+        ...sample,
+        changedOnly: true,
+        rows: CANVAS_ALL_ROWS.slice(0, 3),
+      },
     },
     {
       slug: "empty",
@@ -146,13 +176,18 @@ export const catalogueNavigation = defineComponent({
       title: "Changes unavailable",
       props: { ...sample, changedOnly: true, changesStatus: "unavailable" },
     },
+    // No Canvas artboard shows a Welcome variant, Welcome's changed variant,
+    // or Profile's members selected, nor these states in the other filter,
+    // so those rows and filters are pictures.
     {
       slug: "variants",
       title: "Screen variants",
       props: {
-        ...sample,
-        activeDestination: DESTINATIONS.variantSelected,
-        rows: NAV_TREE_VARIANTS_OPEN,
+        activeKey: "welcome-empty",
+        changedCount: 1,
+        changedOnly: false,
+        presentation: "responsive",
+        rows: inAll(NAV_TREE_VARIANTS_OPEN),
       },
     },
     {
@@ -160,25 +195,21 @@ export const catalogueNavigation = defineComponent({
       title: "Changed variant",
       props: {
         activeLabel: "Save failed",
-        allDestination: DESTINATIONS.variantSelected,
         changedCount: 1,
         changedOnly: true,
-        changesDestination: DESTINATIONS.variantChanges,
         presentation: "responsive",
-        rows: CHANGED_VARIANT_ROWS,
+        rows: pictures(CHANGED_VARIANT_ROWS),
       },
     },
     {
       slug: "folder-screen",
       title: "Folder screen",
       props: {
-        activeDestination: DESTINATIONS.indexEntry,
-        allDestination: DESTINATIONS.indexEntry,
+        activeDestination: CANVAS_PAGES.unchanged,
         changedCount: 1,
         changedOnly: false,
-        changesDestination: DESTINATIONS.indexEntryChanges,
         presentation: "responsive",
-        rows: NAV_TREE_PROFILE_OPEN,
+        rows: inAll(NAV_TREE_PROFILE_OPEN),
       },
     },
     {
@@ -186,12 +217,10 @@ export const catalogueNavigation = defineComponent({
       title: "Changed folder member",
       props: {
         activeKey: "profile-security",
-        allDestination: DESTINATIONS.indexMember,
         changedCount: 1,
         changedOnly: true,
-        changesDestination: DESTINATIONS.indexMemberChanges,
         presentation: "responsive",
-        rows: PROFILE_CHANGES_ROWS,
+        rows: pictures(PROFILE_CHANGES_ROWS),
       },
     },
   ],

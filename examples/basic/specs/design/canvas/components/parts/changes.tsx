@@ -14,23 +14,45 @@ import type {
   CompareMode,
 } from "../../parts/changes_sketches.js";
 import type { CanvasDestination } from "../../parts/destinations.js";
+import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { InspectSection } from "../../parts/inspect.js";
+import { actionFrames } from "../../parts/set_sketches.js";
 
 import { BRANCH_CHANGES } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
+import { compactFrames } from "./sketches.js";
 
 /** The modes that the changed Default variant's artboards show. */
 export type DefaultMode = Extract<
   CompareMode,
-  "current" | "difference" | "overlay"
+  "current" | "difference" | "overlay" | "side-by-side"
 >;
 
 /** The artboard of the changed Default variant in each mode that one shows. */
 export const DEFAULT_MODES = {
   current: E.explorerCompareCurrent,
+  "side-by-side": E.explorerCompareSide,
   overlay: E.explorerCompare,
   difference: E.explorerCompareDifference,
 } as const satisfies Record<DefaultMode, CanvasDestination>;
+
+/** The frame of the Action's set that Side by side compares on Default's page. */
+export const DEFAULT_FRAME = "default-light";
+
+/** The frame of the removed Compact that its comparison compares. */
+export const COMPACT_FRAME = "compact-light";
+
+/**
+ * A variant set's frames as Side by side's chips: each frame by its saved
+ * variant and scheme, with the component glyph.
+ */
+function setChips(frames: readonly CanvasFrameSpec[]) {
+  return frames.map(({ id, label }) => ({
+    id,
+    kind: "component" as const,
+    label,
+  }));
+}
 
 /**
  * The comparison details: the shipped evidence in Inspect's type. The rail
@@ -51,10 +73,11 @@ function ChangesDetails(
  * The Changes tab of the Action's saved variant Default, the second of the
  * Action branch's four changes: the stepper, Compared, the compare modes in
  * the shown mode, and the comparison details, which name the saved variant
- * and its unchanged saved props. No artboard shows the Action's own changes
- * or Disabled's, so Previous change and Next change are pictures, and no
- * artboard shows a variant set in Side by side or Swipe, so their tiles are
- * pictures too.
+ * and its unchanged saved props. Side by side offers a chip for each frame
+ * of the set and compares Default · Light. No artboard shows the Action's
+ * own changes or Disabled's, so Previous change and Next change are
+ * pictures, and no artboard shows the set in Swipe or another frame's pair,
+ * so that tile and those chips are pictures too.
  */
 export function DefaultChanges({ mode }: { mode: DefaultMode }) {
   return (
@@ -72,6 +95,13 @@ export function DefaultChanges({ mode }: { mode: DefaultMode }) {
           comparable
           scrollTogether
           destinations={DEFAULT_MODES}
+          {...(mode === "side-by-side"
+            ? {
+                frame: DEFAULT_FRAME,
+                frames: setChips(actionFrames()),
+                frameDestination: E.explorerCompareSide,
+              }
+            : {})}
         />
       </InspectSection>
       <ChangesDetails
@@ -128,10 +158,13 @@ export function AffectedChanges({
 
 /**
  * The Changes tab of the removed Compact, the one change of the removal
- * branch: a removed component variant stays eligible for comparison, so the
- * rail names both versions and every mode is offered. Its missing current
- * side makes a comparison fall back to Side by side, which no artboard shows
- * for a variant set, so every mode but Current is a picture.
+ * branch: a removed component variant stays eligible for comparison with a
+ * missing current side, so the rail names both versions and every mode is
+ * offered, and its comparison falls back to Side by side. Only Compact's
+ * frames compare, so Side by side offers their chips and compares
+ * Compact · Light. No artboard shows this tab in Current, Compact · Dark's
+ * pair, or another mode, which falls back to Side by side, so those tiles
+ * and that chip are pictures.
  */
 export function RemovedChanges() {
   return (
@@ -145,10 +178,13 @@ export function RemovedChanges() {
       <InspectSection title="Compare">
         <compareModes.Component
           moklyInstance={useDesignInstance("modes")}
-          mode="current"
+          mode="side-by-side"
           comparable
           scrollTogether
-          destinations={{ current: E.explorerRemovedChanges }}
+          destinations={{ "side-by-side": E.explorerRemovedChanges }}
+          frame={COMPACT_FRAME}
+          frames={setChips(compactFrames())}
+          frameDestination={E.explorerRemovedChanges}
         />
       </InspectSection>
       <ChangesDetails

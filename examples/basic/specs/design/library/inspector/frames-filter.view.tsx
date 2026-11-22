@@ -1,8 +1,23 @@
 import { FRAME_SIZES } from "../canvas/frame_sizes.js";
 import { CanvasGlyph, type CanvasGlyphName } from "../canvas/glyphs.js";
-import { HIGHLIGHT_REASONS } from "../controls/view-controls.view.js";
 
 import type { FramesFilterProps } from "./frames-filter.js";
+
+/**
+ * The shell's own sentence for each reason that disables Highlight
+ * components, word for word, so a depicted switch reads as the shell's does.
+ */
+export const HIGHLIGHT_REASONS = {
+  empty: "No registered components are used in this view.",
+  unavailable: "Component inspection is unavailable for this view.",
+  loading: "Waiting for the component preview.",
+  failed: "This preview could not be loaded.",
+  comparison: "A comparison is selected. Highlighting is available in Current.",
+  removed: "This preview is unavailable.",
+} as const satisfies Record<
+  NonNullable<FramesFilterProps["unavailable"]>,
+  string
+>;
 
 /** One frame toggle: the frames it shows, its glyph, its name, its size. */
 interface FrameToggle {

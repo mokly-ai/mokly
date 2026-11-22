@@ -280,6 +280,20 @@
       "target": "design/canvas/loading/entry"
     },
     {
+      "source": "design/canvas/loading/entry/failed",
+      "viewports": ["desktop"],
+      "within": "[data-props-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/loading/entry"
+    },
+    {
+      "source": "design/canvas/loading/entry/failed",
+      "viewports": ["desktop"],
+      "within": "[data-usage-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/loading/entry"
+    },
+    {
       "source": "design/canvas/loading/entry",
       "viewports": ["desktop"],
       "within": "cv-ptabs",
@@ -784,6 +798,12 @@
       "target": "design/canvas/outcomes/added"
     },
     {
+      "source": "design/canvas/stage/catalogue",
+      "within": "mbk-nav",
+      "namePattern": "^Invoice",
+      "target": "design/canvas/outcomes/moved/inspect"
+    },
+    {
       "source": "design/canvas/changes/difference",
       "viewports": ["desktop"],
       "within": "mbk-nav",
@@ -850,7 +870,7 @@
       "viewports": ["desktop"],
       "within": "cv-variants",
       "name": "Default",
-      "target": null
+      "target": "design/canvas/props/editing"
     },
     {
       "source": "design/canvas/stage/component-set",
@@ -864,6 +884,12 @@
       "within": "cv-variants",
       "name": "Disabled",
       "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/stage/component-set/disabled",
+      "within": "cv-variants",
+      "name": "Default",
+      "target": "design/canvas/props/editing"
     },
     {
       "source": "design/canvas/stage/component-set/disabled",
@@ -1164,6 +1190,24 @@
       "target": "design/canvas/props/preparing"
     },
     {
+      "source": "design/canvas/props/loading/failed",
+      "within": "[data-props-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/props/loading"
+    },
+    {
+      "source": "design/canvas/props/loading/failed",
+      "within": "[data-usage-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/props/loading"
+    },
+    {
+      "source": "design/canvas/props/loading/failed",
+      "within": "cv-home",
+      "name": "Try again",
+      "target": "design/canvas/props/loading"
+    },
+    {
       "source": "design/canvas/props/preparing",
       "within": "cv-variants",
       "name": "Disabled",
@@ -1213,6 +1257,24 @@
       "target": "design/canvas/components/compare/current"
     },
     {
+      "source": "design/canvas/components/usage/failed",
+      "within": "[data-usage-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/components/usage/loading"
+    },
+    {
+      "source": "design/canvas/components/usage/failed",
+      "within": "[data-props-section=status]",
+      "name": "Try again",
+      "target": "design/canvas/components/usage/loading"
+    },
+    {
+      "source": "design/canvas/components/usage/failed",
+      "within": "cv-home",
+      "name": "Try again",
+      "target": "design/canvas/components/usage/loading"
+    },
+    {
       "source": "design/canvas/components/compare/current",
       "within": "cv-ptabs",
       "name": "Inspect",
@@ -1237,6 +1299,27 @@
       "viewports": ["desktop"],
       "within": "cv-modes",
       "name": "Side by side",
+      "target": "design/canvas/components/compare/side-by-side"
+    },
+    {
+      "source": "design/canvas/components/compare/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Overlay",
+      "target": "design/canvas/components/compare"
+    },
+    {
+      "source": "design/canvas/components/compare/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Default · Light",
+      "target": "design/canvas/components/compare/side-by-side"
+    },
+    {
+      "source": "design/canvas/components/compare/side-by-side",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Disabled · Light",
       "target": null
     },
     {
@@ -1273,15 +1356,79 @@
     },
     {
       "source": "design/canvas/components/removed/changes",
+      "viewports": ["desktop"],
       "within": "cv-ptabs",
       "name": "Inspect",
       "target": "design/canvas/components/removed"
+    },
+    {
+      "source": "design/canvas/components/removed/changes",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Compact · Light",
+      "target": "design/canvas/components/removed/changes"
+    },
+    {
+      "source": "design/canvas/components/removed/changes",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Current",
+      "target": null
     },
     {
       "source": "design/canvas/components/inspection",
       "within": "cv-ptabs",
       "name": "Changes",
       "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/evidence/styles",
+      "viewports": ["desktop"],
+      "name": "All",
+      "target": "design/canvas/evidence/styles/excluded"
+    },
+    {
+      "source": "design/canvas/evidence/styles",
+      "within": "cv-modes",
+      "name": "Current",
+      "target": null
+    },
+    {
+      "source": "design/canvas/evidence/styles/excluded",
+      "viewports": ["desktop"],
+      "namePattern": "^Changes\\d+$",
+      "target": "design/canvas/evidence/styles"
+    },
+    {
+      "source": "design/canvas/evidence/styles/excluded",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Details",
+      "target": "design/canvas/evidence/unchanged"
+    },
+    {
+      "source": "design/canvas/evidence/unchanged",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": null
+    },
+    {
+      "source": "design/canvas/evidence/page",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/evidence/page/inspect"
+    },
+    {
+      "source": "design/canvas/evidence/page",
+      "name": "Next change",
+      "target": null
+    },
+    {
+      "source": "design/canvas/evidence/page/inspect",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/evidence/page"
     }
   ],
   "tagStates": [

@@ -8,10 +8,12 @@
 export const EXPLORER_PAGES = {
   explorerCompare: "design/canvas/components/compare",
   explorerCompareCurrent: "design/canvas/components/compare/current",
+  explorerCompareSide: "design/canvas/components/compare/side-by-side",
   explorerCompareDifference: "design/canvas/components/compare/difference",
   explorerCompareProps: "design/canvas/components/compare/props",
   explorerUsage: "design/canvas/components/usage",
   explorerUsageLoading: "design/canvas/components/usage/loading",
+  explorerUsageFailed: "design/canvas/components/usage/failed",
   explorerAffected: "design/canvas/components/affected",
   explorerAffectedDetails: "design/canvas/components/affected/details",
   explorerInspection: "design/canvas/components/inspection",

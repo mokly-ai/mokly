@@ -16,6 +16,14 @@ import {
 } from "../../parts/frames.js";
 import { ACTION_DOCUMENT, actionFrames } from "../../parts/set_sketches.js";
 
+import { COMPACT_SAVED } from "./props.js";
+
+/**
+ * The zoom in percent of a variant set's compared pair on a phone, where
+ * both versions of the picked frame stand next to each other.
+ */
+export const PAIR_PHONE_FIT = 54;
+
 /**
  * The version before the Action branch: the Action's button with its
  * earlier, smaller corner radius and narrower padding, wherever it renders.
@@ -39,6 +47,27 @@ function actionVariant(slug: string | undefined): MiniActionVariant {
   return variant;
 }
 
+/** A frame's version before the Action branch: its saved variant, earlier. */
+function actionBefore(frame: CanvasFrameSpec): ReactNode {
+  return (
+    <Before>
+      <MiniAction variant={actionVariant(frame.variant)} />
+    </Before>
+  );
+}
+
+/** A frame's version before, in an instance scope of its own. */
+function beforeOf(
+  frame: CanvasFrameSpec,
+  render: (frame: CanvasFrameSpec) => ReactNode,
+) {
+  return (
+    <DesignInstances name={`${frame.id}-before`}>
+      {render(frame)}
+    </DesignInstances>
+  );
+}
+
 /**
  * The Action's variant set on the Action branch in a comparison that applies
  * to every frame: each frame holds the version before under the current
@@ -48,14 +77,36 @@ export function actionCompareFrames(compare: FrameCompare): CanvasFrameSpec[] {
   return actionFrames().map((frame) => ({
     ...frame,
     compare,
-    before: (
-      <DesignInstances name={`${frame.id}-before`}>
-        <Before>
-          <MiniAction variant={actionVariant(frame.variant)} />
-        </Before>
-      </DesignInstances>
-    ),
+    before: beforeOf(frame, actionBefore),
   }));
+}
+
+/**
+ * A variant set's frames in Side by side: each frame as a pair, the version
+ * before beside the current version, both at the frame's size and named by
+ * its saved variant and scheme. The stage shows the compared frame's pair.
+ */
+function sidePairs(
+  frames: readonly CanvasFrameSpec[],
+  before: (frame: CanvasFrameSpec) => ReactNode,
+): CanvasFrameSpec[] {
+  return frames.flatMap((frame) => [
+    {
+      ...frame,
+      id: `${frame.id}-before`,
+      side: "before" as const,
+      content: beforeOf(frame, before),
+    },
+    { ...frame, id: `${frame.id}-after`, side: "after" as const },
+  ]);
+}
+
+/**
+ * The Action's variant set on the Action branch in Side by side: every
+ * saved variant changed, so each frame has its pair.
+ */
+export function actionSideFrames(): CanvasFrameSpec[] {
+  return sidePairs(actionFrames(), actionBefore);
 }
 
 /**
@@ -72,18 +123,49 @@ function RemovedVersion() {
 }
 
 /**
+ * The removed Compact's frames, at the size of its siblings' documents,
+ * which hold its missing current version.
+ */
+export function compactFrames(): CanvasFrameSpec[] {
+  return componentFrames(
+    [{ slug: "compact", title: "Compact", render: () => <RemovedVersion /> }],
+    ACTION_DOCUMENT,
+  );
+}
+
+/**
  * The Action's variant set on the removal branch: its current saved
- * variants, then the removed Compact after them, at the size of its
- * siblings' documents.
+ * variants, then the removed Compact after them.
  */
 export function removedSetFrames(): CanvasFrameSpec[] {
-  return [
-    ...actionFrames(),
-    ...componentFrames(
-      [{ slug: "compact", title: "Compact", render: () => <RemovedVersion /> }],
-      ACTION_DOCUMENT,
-    ),
-  ];
+  return [...actionFrames(), ...compactFrames()];
+}
+
+/**
+ * The removed Compact as the branch point rendered it, from its saved
+ * props: the Action's button with its 4px corners and no hint.
+ */
+function CompactBefore() {
+  return (
+    <div className="mbk-shot mbk-shot--action">
+      <div className="mbk-shot-pad">
+        <span
+          className={`mbk-shot-action mbk-shot-action--${COMPACT_SAVED.tone} cv-cx-compact`}
+        >
+          {COMPACT_SAVED.label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The removed Compact in Side by side: in each of its frames, its version
+ * before beside the explicit message of its missing current version. Only
+ * Compact changed on the removal branch, so only its frames have a pair.
+ */
+export function removedSideFrames(): CanvasFrameSpec[] {
+  return sidePairs(compactFrames(), () => <CompactBefore />);
 }
 
 /** A screen that the changed Action affects on the Action branch. */
