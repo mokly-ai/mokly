@@ -2,7 +2,7 @@ import nodeFs from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { Loader, Plugin } from "esbuild";
+import type { Loader, OnResolveArgs, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
@@ -12,7 +12,7 @@ import { detail } from "./errors.js";
 import { resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { plannedResult } from "./native-plan.js";
-import { nativeResolution, planKey } from "./native-resolution.js";
+import { importCallbackKey, nativeResolution } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
 import { inside, logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
@@ -32,6 +32,8 @@ export function consumerPlugins(
   runtimeKey = "mokly:runtime",
   resolution: Resolution = { mode: "full" },
   reads = inputs.files,
+  resolveFilters: readonly RegExp[] = [/.*/],
+  handledImports?: Set<string>,
 ): Plugin[] {
   const root = params.sourceRoot;
   const ownPackage = path.resolve(import.meta.dirname, "../..");
@@ -176,7 +178,7 @@ export function consumerPlugins(
             return { errors: [{ text: detail(error) }] };
           }
         });
-        build.onResolve({ filter: /.*/ }, async (args) => {
+        const resolve = async (args: OnResolveArgs) => {
           if (
             ["repository-resolved", "css-resolved", "consumer-peer"].includes(
               args.pluginData,
@@ -188,13 +190,21 @@ export function consumerPlugins(
           // module after the compile and can plan a second compile.
           if (resolution.mode === "native" && nativeResolution(paths, args))
             return;
+          if (args.pluginData === undefined)
+            handledImports?.add(
+              importCallbackKey(args.importer, args.path, args.kind),
+            );
           const planned =
             resolution.mode === "planned" && args.pluginData === undefined
-              ? resolution.plan.get(
-                  planKey(args.importer, args.path, args.kind),
-                )
+              ? resolution.plan.get(args.importer, args.path, args.kind)
               : undefined;
-          if (planned) return await plannedResult(paths, args, planned);
+          if (planned && resolution.mode === "planned")
+            return await plannedResult(
+              paths,
+              args,
+              resolution.plan.plan,
+              planned,
+            );
           const resolved = await resolveImport(paths, build, args.path, {
             resolveDir: args.resolveDir,
             importer: args.importer,
@@ -218,7 +228,9 @@ export function consumerPlugins(
           } catch (error) {
             return { errors: [{ text: detail(error) }] };
           }
-        });
+        };
+        for (const filter of resolveFilters)
+          build.onResolve({ filter }, resolve);
         build.onLoad({ filter: /.*/, namespace: "mokly-css" }, async (args) => {
           const file = paths.name(args.path);
           let contents = reads.get(args.path);

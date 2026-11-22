@@ -108,6 +108,23 @@ impl Visit for Fields {
                 };
                 self.values.insert(name.into(), json!(value));
             }
+            "validation_fact_bytes"
+            | "validation_fact_peak_bytes"
+            | "comparison_kept_bytes"
+            | "validation_reused"
+            | "validation_walks"
+            | "validation_documents" => {
+                let name = match field.name() {
+                    "validation_fact_bytes" => "validationFactBytes",
+                    "validation_fact_peak_bytes" => "validationFactPeakBytes",
+                    "comparison_kept_bytes" => "comparisonKeptBytes",
+                    "validation_reused" => "validationReused",
+                    "validation_walks" => "validationWalks",
+                    "validation_documents" => "validationDocuments",
+                    _ => return,
+                };
+                self.values.insert(name.into(), json!(value));
+            }
             _ => {}
         }
     }

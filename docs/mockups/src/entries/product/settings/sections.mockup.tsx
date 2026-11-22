@@ -4,6 +4,7 @@ import {
   SettingsSectionsEmptyScreen,
   SettingsSectionsErrorScreen,
   SettingsSectionsLoadingScreen,
+  SettingsSectionsMacAppScreen,
   SettingsSectionsScreen,
 } from "../../../screens/product/settings/sections-pane";
 
@@ -13,6 +14,7 @@ const screens = {
   empty: SettingsSectionsEmptyScreen,
   loading: SettingsSectionsLoadingScreen,
   error: SettingsSectionsErrorScreen,
+  "mac-app": SettingsSectionsMacAppScreen,
 };
 
 export default defineScreen({
@@ -29,7 +31,9 @@ export default defineScreen({
     type: "object",
     additionalProperties: false,
     required: ["state"],
-    properties: { state: { enum: ["default", "empty", "loading", "error"] } },
+    properties: {
+      state: { enum: ["default", "empty", "loading", "error", "mac-app"] },
+    },
   } as const,
   props: { state: "default" },
   render: ({ state }, context) => {
@@ -60,6 +64,19 @@ export default defineScreen({
         "Settings — error scenario. Static controls depict the documented action; no live writes occur.",
       tags: ["product", "folio", "settings", "error"],
       props: { state: "error" },
+    },
+    {
+      slug: "mac-app",
+      title: "Settings · Mac app",
+      description:
+        "Settings in the Mac app, whose window has no title bar. The desktop view is a wide window with the dialog over the stage and the window buttons above its backdrop; the mobile view is a narrow window whose layer bar starts after the buttons. Static controls depict the documented action; no live writes occur.",
+      relatedDocs: [
+        "docs/protocol/cloud/product-mockups.md",
+        "docs/protocol/cloud/settings-dialog.md",
+        "docs/protocol/cloud/desktop-bundle.md",
+      ],
+      tags: ["product", "folio", "settings", "mac-app"],
+      props: { state: "mac-app" },
     },
   ],
 });

@@ -13,8 +13,8 @@ use crate::postcss_inventory::Inventory;
 use crate::side::SideInputs;
 use crate::source_paths::SOURCE_INPUT_PREFIX;
 
-/// The late digests of one context's modules. The attempt's tree keeps each answer, so a
-/// context projects and hashes each module once. The tree calls run outside the map lock.
+/// The late digests of one context's modules and other private reads. The attempt's tree
+/// keeps each answer, so a context hashes each input once, outside the map lock.
 #[derive(Default)]
 pub(crate) struct ModuleDigests(Mutex<BTreeMap<String, Arc<ModuleCell>>>);
 
@@ -180,19 +180,72 @@ pub(crate) fn collect(
             ),
         };
         let physical = normalize(Path::new(path));
-        if physical.starts_with(&side.source_root) {
-            let name = relative(&physical, &side.source_root);
-            if inventory.inputs.contains_key(&name) {
-                result.insert(format!("{SOURCE_INPUT_PREFIX}{name}"), baseline.clone());
-            }
+        let inventoried = physical
+            .starts_with(&side.source_root)
+            .then(|| relative(&physical, &side.source_root))
+            .filter(|name| inventory.inputs.contains_key(name));
+        if let Some(name) = &inventoried {
+            result.insert(format!("{SOURCE_INPUT_PREFIX}{name}"), baseline.clone());
         }
         if let Some(name) = logical(path, side)
-            && modules.contains(&name)
+            && (inventoried.is_none() || modules.contains(&name))
         {
+            let known_module = modules.contains(&name);
+            let name = if known_module {
+                name
+            } else {
+                private_alias(&physical, side).unwrap_or(name)
+            };
+            if !known_module {
+                if !mapped_read(tree, root, side, &name, &baseline) {
+                    continue;
+                }
+                if let Some(digest) = digests.late(tree, root, &name) {
+                    result.insert(name.clone(), ReadBaseline::Late(digest));
+                }
+            }
             result.insert(name, baseline);
         }
     }
     result
+}
+
+/// Resolve authored aliases before a plain `node_modules` name selects the primary install.
+fn private_alias(path: &Path, side: &SideInputs) -> Option<String> {
+    let name = path
+        .strip_prefix(&side.source_root)
+        .ok()?
+        .to_string_lossy()
+        .replace('\\', "/");
+    side.dependency_aliases
+        .iter()
+        .filter(|(alias, _)| {
+            name.strip_prefix(alias.as_str())
+                .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+        })
+        .max_by_key(|(alias, _)| alias.len())
+        .map(|(alias, logical)| format!("{logical}{}", &name[alias.len()..]))
+}
+
+fn mapped_read(
+    tree: &dyn SourceTree,
+    root: &Path,
+    side: &SideInputs,
+    name: &str,
+    baseline: &ReadBaseline,
+) -> bool {
+    if let Some(canonical) = baseline
+        .identity()
+        .and_then(|identity| identity.canonical.as_ref())
+    {
+        return logical(&canonical.to_string_lossy(), side).is_some();
+    }
+    match tree.project(&root.join(name)) {
+        Ok(Some(node)) => {
+            node.identity.starts_with(root) || side.logical_dependency(&node.identity).is_some()
+        }
+        _ => true,
+    }
 }
 
 fn file_identity(identity: &mokly_sidecar::postcss_evidence::FileIdentity) -> FileIdentity {
@@ -224,3 +277,7 @@ mod postcss_module_digest_tests;
 #[cfg(test)]
 #[path = "_tests_/postcss_module_flight_tests.rs"]
 mod postcss_module_flight_tests;
+
+#[cfg(test)]
+#[path = "_tests_/postcss_private_read_tests.rs"]
+mod postcss_private_read_tests;

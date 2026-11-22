@@ -14,6 +14,13 @@ export const workspaceOwners = {
       ...shared,
     ],
   },
+  // Settings in the Mac app draws the same index in the same frames; only the
+  // space the window buttons take is new, and it carries no label. The index
+  // rows are links, so the page declares the sentence its first row says.
+  "product/settings/sections/mac-app": {
+    region: "pane",
+    files: ["settings/panes/sections-pane.tsx", "settings/panes.ts"],
+  },
   "product/settings/account": {
     region: "pane",
     files: ["settings/panes/account-pane.tsx", ...shared],

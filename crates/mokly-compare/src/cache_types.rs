@@ -132,9 +132,16 @@ pub trait Storage: Send + Sync {
 /// Terminal boundary. A process shares one reporter across both cache kinds.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ReporterMock))]
 pub trait Reporter: Send + Sync {
+    /// Bind synchronous cache notifications to the immutable source root of one operation.
+    fn scope(&self, _source_root: &Path) -> Option<Box<dyn ReportScope>> {
+        None
+    }
     /// Name the cache directory when it is first opened.
     fn opened(&self, directory: &Path);
 }
+
+/// Dropping this owner restores the previous synchronous cache reporting scope.
+pub trait ReportScope {}
 
 impl fmt::Debug for dyn Builder + '_ {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

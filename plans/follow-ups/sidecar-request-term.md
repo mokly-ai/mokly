@@ -7,7 +7,7 @@
 - **Location:** `docs/protocol/mokly-sidecar-root-scheduling.md:17` (the warm
   head rule), `docs/protocol/mokly-sidecar-return-warmup.md:11` (the recorded
   renders), `docs/protocol/mokly-sidecar.md:39` (the request frame), and
-  `crates/mokly-sidecar/README.md:91`.
+  `crates/mokly-sidecar/README.md:98`.
 - **Reason:** The direct fix put a warm-up exception next to each rule, and a
   defined term rewords the request across the sidecar protocol pages, outside
   that branch's diff.

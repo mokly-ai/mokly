@@ -1,0 +1,43 @@
+/* The Mac app window, drawn as illustration material for the catalogue's Mac
+   drawings. Only the drawings' modules import this file, so the application
+   never loads it. */
+/* Window controls: the native macOS buttons. The app draws none of them,
+   because macOS draws them over the window. */
+.fo-window-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.fo-window-controls i {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--mk-color-border);
+}
+.fo-window-controls-focused .fo-window-close {
+  background: var(--mk-color-window-close);
+}
+.fo-window-controls-focused .fo-window-minimize {
+  background: var(--mk-color-window-minimize);
+}
+.fo-window-controls-focused .fo-window-zoom {
+  background: var(--mk-color-window-zoom);
+}
+/* A screen that draws the Mac app window. macOS centres the buttons in the
+   48px top bar, 16px in from the edge, above everything the page draws, and
+   reports the 86px that they take. Every top bar keeps that width clear. */
+.fo-mac-window {
+  --fo-window-inset: 86px;
+}
+.fo-mac-window-controls {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: var(--mk-layout-topbar);
+  padding-left: 17px;
+  pointer-events: none;
+}

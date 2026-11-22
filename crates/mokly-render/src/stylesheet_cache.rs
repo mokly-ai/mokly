@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, MutexGuard, Weak};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 
 use mokly_css::error::{CssError, InternalError, Result};
 use mokly_css::types::{Bundle, StylesheetBundler, StylesheetRoot};
@@ -15,13 +15,22 @@ use crate::stylesheet_store::{Miss, StylesheetCache};
 
 /// One attempt's stylesheet bundler: an attempt-local store in front of the shared store.
 pub(crate) struct CachedStylesheets {
-    inner: Arc<dyn RootCompiler>,
-    tree: Arc<dyn SourceTree>,
-    root: PathBuf,
-    settings: String,
-    shared: Arc<Mutex<StylesheetCache>>,
-    head: Weak<Mutex<StylesheetCache>>,
-    local: Mutex<StylesheetCache>,
+    /// The raw compiler prepares optional plain-CSS forks with buffered usage.
+    pub(super) inner: Arc<dyn RootCompiler>,
+    /// Ordered record stamps and observations use the original attempt tree.
+    pub(super) tree: Arc<dyn SourceTree>,
+    /// Logical paths in records are relative to this repository root.
+    pub(super) root: PathBuf,
+    /// Every root key starts with these effective configuration settings.
+    pub(super) settings: String,
+    /// A cold parallel batch holds this store's guard through its final commit.
+    pub(super) shared: Arc<Mutex<StylesheetCache>>,
+    /// A live borrowed head store requires serial lookups.
+    pub(super) head: Weak<Mutex<StylesheetCache>>,
+    /// An attempt's local records and miss reasons must be empty for a batch.
+    pub(super) local: Mutex<StylesheetCache>,
+    /// The eligibility probe stops at its first stale root, so its miss needs one key.
+    pub(super) probe: OnceLock<Mutex<Option<String>>>,
     /// Non-owning indexes let the bounded stores control context payload lifetimes.
     contexts: Mutex<BTreeMap<String, Weak<ContextEvidence>>>,
     /// The stored context entries whose stamp this attempt checked, with the result.
@@ -47,6 +56,7 @@ impl CachedStylesheets {
             shared,
             head: Weak::new(),
             local,
+            probe: OnceLock::new(),
             contexts: Mutex::default(),
             checked: Mutex::default(),
             replayed: Mutex::default(),
@@ -60,9 +70,16 @@ impl CachedStylesheets {
     }
 
     /// A record that this attempt may deliver, or the reason why the cache cannot serve `key`.
-    fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
+    pub(super) fn lookup(&self, key: &str) -> std::result::Result<Arc<Record>, Miss> {
         if let Some(record) = lock(&self.local).record(key) {
             return Ok(record);
+        }
+        if self
+            .probe
+            .get()
+            .is_some_and(|probe| lock(probe).as_deref() == Some(key))
+        {
+            return Err(Miss::StampMismatch);
         }
         let mut miss = lock(&self.shared).miss(key);
         for source in [Some(self.shared.clone()), self.head.upgrade()]
@@ -108,7 +125,7 @@ impl CachedStylesheets {
 
     /// The entry for a new bundle's module evidence: this attempt's entry, a stored entry
     /// whose stamp holds, or a new entry.
-    fn context(&self, digest: String, evidence: ReadEvidence) -> Arc<ContextEvidence> {
+    pub(super) fn context(&self, digest: String, evidence: ReadEvidence) -> Arc<ContextEvidence> {
         let mut contexts = lock(&self.contexts);
         contexts.retain(|_, entry| entry.strong_count() != 0);
         if let Some(entry) = contexts.get(&digest).and_then(Weak::upgrade) {
@@ -147,12 +164,17 @@ impl CachedStylesheets {
     }
 
     #[tracing::instrument(name = "css.bundle", skip_all, err, fields(cache = miss.as_str()))]
-    fn compile(&self, root: &StylesheetRoot, miss: Miss) -> Result<Compilation> {
-        self.inner.compile(root)
+    pub(super) fn compile(
+        &self,
+        root: &StylesheetRoot,
+        miss: Miss,
+        compiler: &dyn RootCompiler,
+    ) -> Result<Compilation> {
+        compiler.compile(root)
     }
 
     /// Replay a record's observations into this attempt's tree. Context evidence replays once.
-    fn deliver(&self, record: &Record) -> Result<Bundle> {
+    pub(super) fn deliver(&self, record: &Record) -> Result<Bundle> {
         self.observe(record.evidence())?;
         self.observe(record.core_evidence())?;
         if let Some(context) = &record.context {
@@ -185,32 +207,23 @@ impl CachedStylesheets {
 
 impl StylesheetBundler for CachedStylesheets {
     fn bundle(&self, root: &StylesheetRoot) -> Result<Bundle> {
-        let key = format!("{}:{root:?}", self.settings);
+        let key = self.key(root);
         let miss = match self.lookup(&key) {
             Ok(record) => return self.deliver(&record),
             Err(miss) => miss,
         };
-        let bundle = self.compile(root, miss)?;
-        let record = Arc::new(Record::new(
-            self.tree.as_ref(),
-            &self.root,
-            bundle,
-            |digest, evidence| self.context(digest, evidence),
-        ));
-        {
-            let mut shared = lock(&self.shared);
-            if record.shareable() {
-                shared.insert(key.clone(), record.clone());
-            } else {
-                shared.reject(key.clone());
+        let compilation = self.compile(root, miss, self.inner.as_ref())?;
+        if let Some(probe) = self.probe.get() {
+            let mut probe = lock(probe);
+            if probe.as_deref() == Some(key.as_str()) {
+                *probe = None;
             }
         }
-        lock(&self.local).insert(key, record.clone());
-        self.deliver(&record)
+        self.commit(key, compilation, None)
     }
 }
 
-fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+pub(super) fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(|error| error.into_inner())
 }
 
@@ -261,3 +274,15 @@ mod stylesheet_context_reuse_tests;
 #[cfg(test)]
 #[path = "_tests_/stylesheet_retention_tests.rs"]
 mod stylesheet_retention_tests;
+
+#[cfg(test)]
+#[path = "_tests_/class_maps/mod.rs"]
+mod class_maps_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_preparation_tests.rs"]
+mod stylesheet_preparation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_retirement_tests.rs"]
+mod stylesheet_retirement_tests;

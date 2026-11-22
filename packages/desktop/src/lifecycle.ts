@@ -44,8 +44,8 @@ export interface DesktopLifecycleDependencies {
   prepare(exchange: HandoffExchange): void;
   createWindow(): BrowserWindow;
   wireWindow(window: BrowserWindow): void;
-  updates(): { check(): void; stop(): void };
-  menu(check: () => void): void;
+  updates(): { available: boolean; check(): unknown; stop(): void };
+  menu(updates: { available: boolean; check(): unknown }): void;
   warn(error: unknown): void;
 }
 
@@ -106,7 +106,7 @@ export function startDesktop(dependencies: DesktopLifecycleDependencies): void {
       const active = ensureWindow();
       installLifecycle(app, dependencies.platform, reopen);
       const updates = dependencies.updates();
-      dependencies.menu(updates.check);
+      dependencies.menu(updates);
       app.on("before-quit", updates.stop);
       const handled = [...queued.splice(0), ...dependencies.arguments].some(
         receive,

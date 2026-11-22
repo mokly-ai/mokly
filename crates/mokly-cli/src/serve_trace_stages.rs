@@ -17,6 +17,7 @@ pub(super) fn stage(name: &str) -> bool {
             | "graph.prepare.stylesheet-roots"
             | "graph.prepare.routing-records"
             | "render.inputs"
+            | "render.inputs.seed"
             | "render.document"
             | "render.store.read"
             | "render.store.write"

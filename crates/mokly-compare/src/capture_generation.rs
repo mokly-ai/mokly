@@ -8,8 +8,10 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
+use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::collection_input::EncodedComparisonDocument;
 use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode, content_identity};
 use mokly_graph::comparison_stream::ComparisonConsumer;
@@ -19,7 +21,7 @@ use mokly_graph::types::{
     ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
     TemporaryDocument,
 };
-use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
+use mokly_graph::workers::ComparisonTask;
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
@@ -61,6 +63,10 @@ impl GeneratedResources for CapturedGeneration {
 }
 
 impl RenderGeneration for CapturedGeneration {
+    fn prepare_render_reuse(&self) {
+        self.source.prepare_render_reuse();
+    }
+
     fn retained_document_evidence(&self, route: &str) -> Option<RetainedDocumentEvidence> {
         if !self.restorer.proves_restore() {
             return None;
@@ -99,6 +105,16 @@ impl RenderGeneration for CapturedGeneration {
         }
         self.source.comparison_usage(route)
     }
+    fn capture_parallelism(&self) -> usize {
+        self.source.capture_parallelism()
+    }
+    fn schedule_capture_window(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        self.source.schedule_capture_window(task, consumer);
+    }
     fn comparison_parallelism(&self) -> usize {
         self.source.comparison_parallelism()
     }
@@ -111,13 +127,6 @@ impl RenderGeneration for CapturedGeneration {
     }
     fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.source.schedule_comparison_tasks(count, task);
-    }
-    fn schedule_comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        self.source.schedule_comparison(routes, worker)
     }
     fn retained_comparison_input(&self, route: &str) -> Option<RetainedComparisonInput> {
         let view = self.views.get(route)?;
@@ -180,10 +189,14 @@ impl RenderGeneration for CapturedGeneration {
     fn collect_comparison(&self, collector: &mut dyn ComparisonCollector) -> Result<RenderSummary> {
         let summary = self.summary.clone();
         collector.summary(&summary);
+        let encoder = collector.encoder();
         for route in self.source.plans().keys() {
             let input = self.comparison_input(route)?;
             self.check_cancelled()?;
-            collector.collect(route, input)?;
+            collector.collect(
+                route,
+                EncodedComparisonDocument::encode(route, input, encoder.as_ref())?,
+            )?;
         }
         Ok(summary)
     }

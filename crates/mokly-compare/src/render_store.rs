@@ -1,9 +1,10 @@
 //! Optional lossless document segments over the common cache publication rules.
 
 use std::collections::{BTreeMap, VecDeque};
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
+use arc_swap::ArcSwapOption;
 use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 use mokly_sidecar::bundle_store::RecordToken;
 
@@ -70,6 +71,10 @@ pub trait DocumentBackend: Send + Sync {
     fn initialize(&self) -> ReadOutcome {
         ReadOutcome::Miss
     }
+    /// Probe the prepared index without IO, decoding, or access-order changes.
+    fn contains(&self, _key: &StoreKey) -> bool {
+        false
+    }
     /// Read one complete document from its retained segment.
     fn load(&self, key: &StoreKey) -> ReadOutcome;
     /// Envelope version used by the appending writer.
@@ -82,7 +87,10 @@ pub trait DocumentBackend: Send + Sync {
 pub struct CachedDocuments {
     pub(crate) cache: Arc<dyn SegmentCache>,
     pub(crate) version: String,
-    pub(crate) index: Mutex<Option<BTreeMap<StoreKey, SegmentPosition>>>,
+    /// Complete bounded metadata, absent until startup inventory has finished.
+    pub(crate) index: ArcSwapOption<BTreeMap<StoreKey, SegmentPosition>>,
+    /// Startup, writer inspection, and adoption publish only while this owner is held.
+    pub(crate) maintenance: Mutex<()>,
     pub(crate) faults: Mutex<VecDeque<EntryFault>>,
     pub(crate) enabled: AtomicBool,
 }
@@ -109,7 +117,8 @@ impl CachedDocuments {
         Self {
             cache,
             version,
-            index: Mutex::new(None),
+            index: ArcSwapOption::empty(),
+            maintenance: Mutex::new(()),
             faults: Mutex::new(VecDeque::new()),
             enabled: AtomicBool::new(true),
         }
@@ -119,6 +128,14 @@ impl CachedDocuments {
 impl DocumentBackend for CachedDocuments {
     fn initialize(&self) -> ReadOutcome {
         self.prepare_documents()
+    }
+    fn contains(&self, key: &StoreKey) -> bool {
+        self.enabled.load(Ordering::Acquire)
+            && self
+                .index
+                .load()
+                .as_ref()
+                .is_some_and(|entries| entries.contains_key(key))
     }
     fn load(&self, key: &StoreKey) -> ReadOutcome {
         self.read_document(key)
@@ -134,3 +151,15 @@ impl DocumentBackend for CachedDocuments {
 #[cfg(test)]
 #[path = "_tests_/render_store_boundary_tests.rs"]
 mod render_store_boundary_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_store_fault_tests.rs"]
+mod render_store_fault_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_store_concurrency_tests.rs"]
+mod render_store_concurrency_tests;
+
+#[cfg(test)]
+#[path = "_tests_/render_store_adoption_tests.rs"]
+mod render_store_adoption_tests;

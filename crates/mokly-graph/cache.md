@@ -66,8 +66,11 @@ restore, restore failure, miss, and eviction counts of the
 [`render.cache` record](../../docs/protocol/mokly-timings.md#core-spans).
 Oversized artifacts return to the caller without retention. Plans keep
 recipes rather than a complete set of parsed documents.
-Eviction changes work only. Cross-view anchor checks retain successful
-destination renders in this same bounded cache. A repeated check of one
+Eviction changes work only. `RenderCache::contains` reports whether any tier
+holds a key. It restores nothing and changes no access order. A generation uses
+it to list the routes of its
+[early renders](../../docs/protocol/mokly-base-preparation.md#shared-render-runtime).
+Cross-view anchor checks retain successful destination renders in this same bounded cache. A repeated check of one
 destination view and fragment uses the stored result of the generation when it
 has one, and reads no document. Concurrent checks of one destination share its
 active render.
@@ -80,8 +83,14 @@ JavaScript identity of the generation. Serve sets it for its head and base
 graphs, and direct and one-shot callers leave it absent. `StoreKey::new`
 combines a document key with the build identity: the native identity of the
 store and, for a document that uses JavaScript, the JavaScript identity. When
-a part is absent, the generation neither reads nor offers that document. After
-a render cache miss, a generation reads the store before it renders. A stored
+a part is absent, the generation neither reads nor offers that document.
+`DocumentStore::contains` probes the prepared index without IO, restoration, or
+access-order changes. Early-render miss discovery uses that probe after the
+render cache probe. An unprepared, contended, or disabled index gives no hit.
+A later read still checks the indexed entry and renders from sources on a miss.
+After a render cache miss, a generation reads the store before it renders. A Serve
+background view makes this same read on a render worker, as the
+[background lookup](./workers.md#background-lookup) guidance says. A stored
 read repeats the public closure walk, the link checks, and the usage records of
 its side, so it gives the result of a fresh render. On a usable store hit, the
 generation also passes the same `ComposeRequest` that a composition uses to
@@ -128,7 +137,9 @@ route.
 ## Document codec
 
 `document_codec::EncodedView` is the lossless compact form of one document. The
-compact tier and the base and head captures of `mokly-compare` share it.
+compact tier and the base and head captures of `mokly-compare` share it. It
+encodes trees with `postcard` and compresses trees and bytes with zlib through
+`flate2`.
 `EncodedView::restore` rebuilds the exact bytes, parsed tree, and trusted
 annotations without parsing authored HTML, or returns a
 `document_error::CodecError`. An encoded view also lends its retained usage

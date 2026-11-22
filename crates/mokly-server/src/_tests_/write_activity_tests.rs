@@ -11,6 +11,8 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::assets::File;
 use crate::backend::DocumentsMock;
+use crate::background_read::BackgroundRead;
+use crate::background_support::dispatch;
 use crate::work::{Work, Workers};
 
 struct Lease {
@@ -43,7 +45,8 @@ fn cancelled_native_html_work_keeps_writer_suppression_until_the_blocking_job_re
 
 /// One blocking thread makes the queued sentinel fence complete closure teardown.
 async fn cancelled_native_work() {
-    for foreground in [false, true] {
+    for phase in ["lookup", "resume", "foreground"] {
+        let foreground = phase == "foreground";
         let active = Arc::new(AtomicUsize::new(0));
         let finished = Arc::new(Notify::new());
         let entered = active.clone();
@@ -74,6 +77,16 @@ async fn cancelled_native_work() {
                         }))
                     })),
             )
+        } else if phase == "lookup" {
+            Unimock::new(
+                DocumentsMock::background_read
+                    .some_call(matching!("html"))
+                    .answers_arc(Arc::new(move |_, _| {
+                        observed.notify_one();
+                        released.lock().unwrap().recv().unwrap();
+                        Ok(Some(BackgroundRead::Complete(Vec::new())))
+                    })),
+            )
         } else {
             Unimock::new(
                 DocumentsMock::background
@@ -98,7 +111,7 @@ async fn cancelled_native_work() {
                     .map(|_| ())
             } else {
                 workers
-                    .background(Arc::new(rendering), "html".into())
+                    .background(Arc::new(rendering), "html".into(), dispatch(1))
                     .await
                     .map(|_| ())
             }

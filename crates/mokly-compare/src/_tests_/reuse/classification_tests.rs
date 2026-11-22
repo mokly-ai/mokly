@@ -135,6 +135,7 @@ fn failed_kept_base_retry_clears_its_candidate_before_the_fresh_comparison_fails
                 .some_call(matching!(_))
                 .answers_arc(Arc::new(move |_, _| {
                     Ok(PreparedBase {
+                        prefetch: None,
                         generation: fresh.clone(),
                         scripts_off: false,
                         freshness: None,

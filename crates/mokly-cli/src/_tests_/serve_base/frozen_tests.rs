@@ -44,6 +44,7 @@ fn reused_frozen_resource_change_releases_and_prepares_once_without_old_local_ha
                     );
                     let bytes = bytes.clone();
                     Ok(PreparedBase {
+                        prefetch: None,
                         generation: Arc::new(FrozenResources::new(Arc::new(Unimock::new((
                             RenderGenerationMock::catalogue
                                 .some_call(matching!())

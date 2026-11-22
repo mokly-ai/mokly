@@ -2,7 +2,6 @@
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
 use mokly_css::error::{CssError, InternalError};
@@ -196,7 +195,7 @@ impl PostCss {
 
     #[tracing::instrument(name = "css.postcss", skip_all, err)]
     fn process_css(&self, path: &str, source: &str) -> Result<Css> {
-        self.lease.used.store(true, Ordering::Relaxed);
+        self.lease.begin_use();
         let call = Call::ProcessCss(ProcessCss {
             repository_roots: self
                 .side

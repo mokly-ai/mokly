@@ -4,6 +4,8 @@ import type {
   Rectangle,
 } from "electron";
 
+import { windowButtonPosition } from "./window-buttons.js";
+
 export interface WindowDependencies {
   create(options: BrowserWindowConstructorOptions): BrowserWindow;
   readState(): string;
@@ -34,12 +36,22 @@ export function windowBounds(
 }
 
 /** One isolated renderer; no preload or privileged renderer bridge exists. */
-export function createWindow(dependencies: WindowDependencies): BrowserWindow {
+export function createWindow(
+  dependencies: WindowDependencies,
+  platform: NodeJS.Platform,
+): BrowserWindow {
   const window = dependencies.create({
     ...windowBounds(dependencies),
     minWidth: 640,
     minHeight: 480,
     title: "Mokly",
+    ...(platform === "darwin"
+      ? {
+          titleBarStyle: "hidden",
+          trafficLightPosition: windowButtonPosition(1),
+          titleBarOverlay: true,
+        }
+      : {}),
     webPreferences: {
       contextIsolation: true,
       sandbox: true,

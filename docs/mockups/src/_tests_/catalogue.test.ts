@@ -120,7 +120,7 @@ test("the authored catalogue contains the product, site and registered component
   const components = entries.filter(
     (entry) => entry.kind === "component" && variantParent(entry) === undefined,
   );
-  assert.equal(components.length, 23);
+  assert.equal(components.length, 24);
   assert.deepEqual(
     records.filter(
       (record) => record.kind === "screen" && record.tags.includes("variant"),

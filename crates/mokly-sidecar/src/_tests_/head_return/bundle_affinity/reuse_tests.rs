@@ -57,7 +57,7 @@ fn a_disk_recipe_hit_does_not_create_a_compilation_rank() {
         ReusableRecipe::new(
             "disk".into(),
             request.params,
-            vec![],
+            Default::default(),
             Arc::new(compiled("disk")),
         )
         .unwrap(),
