@@ -59,7 +59,10 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 and never depend on each other. The CLI composes the crates for each command
 and turns a finished static output into one upload. To decrease allocator CPU
 cost and peak memory, the CLI selects mimalloc as the global allocator for the
-binary's Rust allocations. Each crate's README names its entry points.
+binary's Rust allocations. On every platform, the CLI also shortens the delay
+before mimalloc returns freed memory to the operating system, to decrease the
+binary's resident memory. A valid `MIMALLOC_PURGE_DELAY` value in the
+environment takes priority. Each crate's README names its entry points.
 
 ## npm Packages
 

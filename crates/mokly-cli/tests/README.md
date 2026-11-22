@@ -65,6 +65,7 @@ cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
 cargo test -p mokly-cli --test design_behaviour_tests
 cargo test -p mokly-cli --test serve_terminal_tests
+cargo test -p mokly-cli --test allocator_tests
 cargo clippy -p mokly-cli --all-targets -- -D warnings
 ```
 
@@ -92,6 +93,10 @@ npm test -- tests/static_recovery_signals.test.ts
 
 These tests use the [debug fault adapters](../src/test_faults/mod.rs).
 `MOKLY_TEST_STATIC_FAULTS` selects injected filesystem failures or signal gates.
+Its `allocator` value makes the `allocator_probe` module print
+`allocator-purge-delay` and the purge delay that mimalloc reports, and the
+binary then exits. The Rust test `allocator_tests.rs` checks that line with and
+without `MIMALLOC_PURGE_DELAY`.
 The optional `MOKLY_TEST_STATIC_READY`, `MOKLY_TEST_STATIC_EVENTS`,
 `MOKLY_TEST_STATIC_PREVIOUS`, and `MOKLY_TEST_STATIC_COLUMNS` values provide
 isolated test paths and terminal width. Release builds compile none of these
