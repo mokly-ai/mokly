@@ -288,17 +288,21 @@ search field in the middle. The prototype starts with the mark, then the
 workspace and project, centres the publication pill, and ends with a compact
 Search, History and Share with icons, and the account.
 
-- [ ] Lay out the `@mokly/ui` top bar as the prototype bar: the mark, the
+- [x] Lay out the `@mokly/ui` top bar as the prototype bar: the mark, the
       start slot, the centred publication, then a compact search before the
       end slot. Keep the `mokly serve` bar (mark, search, Appearance).
-- [ ] Draw the cloud slot content as the prototype: `workspace / project`
+      Branch: `calummoore/canvas-redesign-m22-viewer-bar-to-the-19n5`.
+- [x] Draw the cloud slot content as the prototype: `workspace / project`
       with the workspace muted, the publication pill, History with its icon,
       Share and the account. Leave out the presence avatars (decision 9).
-- [ ] Show the mark in the compact embedded bar, as the prototype does at
+      Branch: `calummoore/canvas-redesign-m22-viewer-bar-to-the-19n5`.
+- [x] Show the mark in the compact embedded bar, as the prototype does at
       390px. The catalogue button stays until Milestone 11 builds the dock.
-- [ ] Bring the cloud viewer mockups, `viewer-chrome.md` and
+      Branch: `calummoore/canvas-redesign-m22-viewer-bar-to-the-19n5`.
+- [x] Bring the cloud viewer mockups, `viewer-chrome.md` and
       `mokly-shell-design.md` in line, and check the bar at 390, 1024, 1180
       and 1440px against the prototype.
+      Branch: `calummoore/canvas-redesign-m22-viewer-bar-to-the-19n5`.
 
 ## Milestone 23: Frame content size
 
