@@ -95,7 +95,7 @@ test("Publish this branch follows its build to the published catalogue", async (
   for (const step of ["checkout", "install", "publish"]) {
     await expect(steps(page, step)).toContainText("Done");
   }
-  await expect(page.locator(".fo-top-state")).toContainText("Published");
+  await expect(page.locator(".fo-top-state")).toContainText("Ready · ");
   // A terminal transition never navigates, and the card stops reading.
   await expect(page).toHaveURL((url) => url.pathname === scenario.buildAt(id));
   await page.waitForTimeout(3_500);

@@ -163,18 +163,18 @@ clears the error. The source keeps the catalogue index it read, so a
 reconstruction does not read it again. A reload creates a new
 document scope and starts fresh.
 
-The adapter composes the five cloud actions of
-[Viewer chrome](./viewer-chrome.md#slot-inventory) into package `topBarStart`
-and `topBarEnd`; the package keeps its own catalogue and stage. Each panel
-trigger opens exactly one overlay, and the account trigger and **More** open a
-[menu](./viewer-chrome-account.md#menus) instead. The settings dialog and the
-four panels are the same overlay position: the address decides which, and the
-viewer gives up its landmark and heading the moment the address says so rather
-than a frame later. Focus returns to the current trigger of the logical action
-that the press came from. Opening an overlay keeps that chrome mounted; a
-fallback/package handoff, a route reconstruction or a change between the full
-and compact bar can replace its controls. Opening a panel pushes one history
-entry; closing undoes it.
+The adapter composes the five cloud actions of [Viewer
+chrome](./viewer-chrome.md#slot-inventory) into package `topBarStart`,
+`topBarCenter` and `topBarEnd`; the package keeps its own catalogue and stage.
+Each panel trigger opens exactly one overlay, and the account trigger and
+**More** open a [menu](./viewer-chrome-account.md#menus) instead. The settings
+dialog and the four panels are the same overlay position: the address decides
+which, and the viewer gives up its landmark and heading the moment the address
+says so rather than a frame later. Focus returns to the current trigger of the
+logical action that the press came from. Opening an overlay keeps that chrome
+mounted; a fallback/package handoff, a route reconstruction or a change between
+the full and compact bar can replace its controls. Opening a panel pushes one
+history entry; closing undoes it.
 
 The viewer also draws its own `main` and skip link. Its public React
 API provides no host control for those elements. The ready state therefore has

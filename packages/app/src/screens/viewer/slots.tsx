@@ -73,7 +73,7 @@ function meta(subject: ChromeSubject): {
   if (state === "ready") {
     return {
       state,
-      detail: "Published " + publishedDay(publication.publishedAt),
+      detail: "Ready · " + publishedDay(publication.publishedAt),
       sha,
     };
   }

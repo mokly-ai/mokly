@@ -85,8 +85,20 @@ const menuPath = "product/viewer/standalone/account-menu";
 
 test("the full pill keeps the reference as its trigger's label and the state beside it", () => {
   const drawn = page("product/viewer/standalone");
-  const [full, compact] = byClass(drawn, "fo-canvas-pill");
-  assert.ok(full && compact);
+  // The full bar draws its pill in the centre slot, and the compact bar in its
+  // start slot, after the package's mark.
+  const full = one(one(drawn, "fo-package-slot-center"), "fo-canvas-pill");
+  const [compactStart, ...otherStarts] = byClass(
+    drawn,
+    "fo-package-slot-start",
+  ).filter((slot) =>
+    (attribute(slot, "class") ?? "")
+      .split(/\s+/)
+      .includes("fo-package-slot-compact"),
+  );
+  assert.ok(compactStart, "no compact start slot");
+  assert.equal(otherStarts.length, 0, "more than one compact start slot");
+  const compact = one(compactStart, "fo-canvas-pill");
   assert.deepEqual(buttonsIn(full).map(label), [publication.branch]);
   const state = one(full, "fo-top-state");
   assert.equal(

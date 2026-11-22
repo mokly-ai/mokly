@@ -148,13 +148,14 @@ test("the project read draws the cloud frame with its bar's controls waiting", (
     "fo-top-trail",
   );
   // History, Share and the account's avatar, whose control keeps the
-  // reader's name; Settings lives in the account menu, not in the bar.
+  // reader's name; Settings lives in the account menu, not in the bar. A
+  // desktop drawing draws the full bar and the compact bar for the switch in
+  // `viewer-bar.css` to show one, so the bar's last group also holds the
+  // compact bar's More.
   const trail = controlStates(loaded).map(([shown]) => shown);
-  assert.deepEqual(trail, ["History", "Share", sample.viewer.name]);
-  // A desktop drawing draws the full bar and the compact bar for the switch
-  // in `viewer.css` to show one, so its bar also holds the compact bar's More.
+  assert.deepEqual(trail, ["History", "Share", sample.viewer.name, "More"]);
   for (const [viewport, known] of [
-    ["desktop", [...trail, "More"]],
+    ["desktop", trail],
     ["mobile", ["More"]],
   ] as const) {
     const where = id + " " + viewport;

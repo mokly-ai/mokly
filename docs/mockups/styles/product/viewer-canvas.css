@@ -1,75 +1,18 @@
-/* The Canvas look of the viewer drawings: the bar's two compositions and the
-   search field's hint. The bar's controls that the application draws too,
-   the publication pill and the avatar, are in the shared `viewer-controls.css`.
-   Only the drawings load this sheet. `chrome.tsx` imports it, so Mokly bundles
-   it into each viewer entry's own stylesheet, after the product sheets that
-   the configuration links, and the application, which links the product
-   sheets, never loads it. The configuration's base.css declares the Geist
-   faces, which the drawn @mokly/ui parts also name.
-   Every rule is scoped to the renderer's wrapper, the element that carries
-   `data-color-scheme`, whose attribute weighs as much as a class, so a rule
-   here outweighs a product sheet's rule for the same element. Every rule
-   styles cloud elements only, never a package part or a registered control.
-
-   The switch in `viewer.css` shows each composition's parts by their
-   `fo-full-bar-only` and `fo-compact-bar-only` classes. A rule here that
-   sets the display of an element that can carry one of them goes through
-   `:where()`, so the switch still outweighs it. */
+/* The Canvas look of the viewer drawings that only the drawings need: the
+   inline end of the bar's two compositions, which the open menus share, and
+   the search field's hint. The bar's composition and its controls, which the
+   application draws too, are in the shared `viewer-bar.css` and
+   `viewer-controls.css`. `chrome.tsx` imports this sheet, so Mokly bundles it
+   into each viewer entry's own stylesheet, after the product sheets that the
+   configuration links, and the application never loads it. Every rule is
+   scoped to the renderer's wrapper, the element that carries
+   `data-color-scheme`, and styles cloud elements only. */
 
 [data-color-scheme] .fo-viewer-screen {
   /* The inline end of the full bar and of the compact bar, which the open
      menus under each bar's last control share. */
   --fo-canvas-bar-end: var(--mk-space-3);
   --fo-canvas-compact-end: var(--mk-space-2);
-}
-
-/* The cloud slots in the package's bar take the bar's own surface, so the
-   bar reads as one surface in both schemes, and keep their hairline. */
-[data-color-scheme] .fo-package-slot {
-  gap: var(--mk-space-1);
-  background: transparent;
-}
-[data-color-scheme] .fo-package-slot-start {
-  padding-left: var(--mk-space-2);
-}
-/* The full end slot holds three fixed controls in about 14rem, so the full
-   start slot takes the bar less that slot and the package's own 22rem for its
-   mark and search, rather than half the bar. */
-[data-color-scheme] .fo-package-slot-start:not(.fo-package-slot-compact) {
-  max-width: calc(var(--fo-viewer-bar-width, 100vw) - 36rem);
-}
-[data-color-scheme] .fo-package-slot-end {
-  padding-right: var(--fo-canvas-bar-end);
-}
-[data-color-scheme] .fo-package-slot-compact.fo-package-slot-end {
-  padding-right: var(--fo-canvas-compact-end);
-}
-[data-color-scheme] .fo-package-slot .fo-top-project,
-[data-color-scheme] .fo-package-publication {
-  flex: 0 1 auto;
-}
-/* The project switcher gives up its width before the pill gives up any. */
-[data-color-scheme] .fo-package-slot .fo-top-project {
-  flex-shrink: 100;
-  min-width: 4rem;
-}
-
-/* The cloud's own bar, before the package mounts: the same composition on
-   the bar's surface, around the cloud's mark. */
-[data-color-scheme] .fo-top-bar {
-  gap: var(--mk-space-2);
-  padding: 0 var(--fo-canvas-bar-end) 0 var(--mk-space-4);
-  background: var(--mk-color-surface);
-}
-[data-color-scheme] .fo-top-leading,
-[data-color-scheme] .fo-top-trail {
-  gap: var(--mk-space-1);
-}
-[data-color-scheme] .fo-top-bar .fo-top-project {
-  flex: 0 1 auto;
-}
-[data-color-scheme] .fo-top-grow {
-  gap: var(--mk-space-2);
 }
 
 /* The `⌘K` hint at the end of the package's search field. */

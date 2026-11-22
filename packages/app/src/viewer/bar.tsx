@@ -85,6 +85,10 @@ function EndTriggers({
   );
 }
 
+/**
+ * The start slot, after the package's mark: the project trigger on the full
+ * bar, and the publication on the compact bar, whose centre stays empty.
+ */
 function PackageSlotStart({ slots }: { slots: ViewerSlots }) {
   const placement = useBarPlacement();
   return (
@@ -96,6 +100,24 @@ function PackageSlotStart({ slots }: { slots: ViewerSlots }) {
         }
       >
         {!carriedByMore(placement, "projects") && slots.project}
+        {placement.compact && (
+          <span className="fo-package-publication">{slots.publication}</span>
+        )}
+      </div>
+    </ViewerSlotSourceBoundary>
+  );
+}
+
+/**
+ * The centre slot of the full bar: the publication, in the middle of the bar.
+ * The compact bar draws nothing here, so the package gives the slot no room.
+ */
+function PackageSlotCenter({ slots }: { slots: ViewerSlots }) {
+  const placement = useBarPlacement();
+  if (placement.compact) return null;
+  return (
+    <ViewerSlotSourceBoundary source="package">
+      <div className="fo-package-slot fo-package-slot-center">
         <span className="fo-package-publication">{slots.publication}</span>
       </div>
     </ViewerSlotSourceBoundary>
@@ -118,52 +140,48 @@ function PackageSlotEnd({ slots }: { slots: ViewerSlots }) {
   );
 }
 
-/** Compose the cloud actions into the package's two documented top-bar slots. */
+/**
+ * Compose the cloud actions into the package's three documented top-bar
+ * slots. The publication moves between the start slot and the centre slot
+ * when the composition changes, so its trigger mounts again there; a
+ * dismissed overlay still finds it through its slot.
+ */
 export function packageSlots(slots?: ViewerSlots): PackageSlots | undefined {
   if (!slots) return undefined;
   return {
     topBarStart: <PackageSlotStart slots={slots} />,
+    topBarCenter: <PackageSlotCenter slots={slots} />,
     topBarEnd: <PackageSlotEnd slots={slots} />,
   };
 }
 
 /**
  * The application header, and the only navigation the product has: the six
- * slots the cloud fills, placed by the host. A bar wide enough for all six
- * fills one row — the mark and the project trigger, then the publication
- * trigger with its state, then History, Share, Settings and the account. A
- * narrower bar, as on every phone, keeps the publication visible and carries
- * the other actions in More.
+ * slots the cloud fills, placed by the host. It takes the package bar's order
+ * without a search, in three groups. A bar wide enough for all six holds the
+ * mark and the project trigger, then the publication trigger with its state
+ * in the middle of the bar, then History, Share, Settings and the account. A
+ * narrower bar, as on every phone, holds the mark, the publication and More,
+ * which carries the other actions.
  *
- * Both compositions give the publication's slot the same key, so a change of
- * composition keeps its trigger mounted, with any focus it holds, although
- * the slot's position among the bar's children differs between them.
+ * Both compositions draw the same three groups in the same order, so a change
+ * of composition keeps the publication's trigger mounted, with any focus it
+ * holds.
  */
 export function SlotBar({ slots }: { slots: ViewerSlots }) {
   const placement = useBarPlacement();
-  const project = !carriedByMore(placement, "projects") && slots.project;
-  if (placement.compact) {
-    return (
-      <div className="fo-top-bar">
-        <Brand compact />
-        {project}
-        <span
-          key="publication"
-          className="fo-top-slot fo-top-grow fo-compact-publication"
-        >
-          {slots.publication}
-        </span>
-        <EndTriggers slots={slots} placement={placement} />
-      </div>
-    );
-  }
   return (
     <div className="fo-top-bar">
-      <span className="fo-top-slot fo-top-leading">
+      <span className="fo-top-slot">
         <Brand compact />
-        {project}
+        {!carriedByMore(placement, "projects") && slots.project}
       </span>
-      <span key="publication" className="fo-top-slot fo-top-grow">
+      <span
+        className={
+          "fo-top-slot fo-top-grow" +
+          (placement.compact ? " fo-compact-publication" : "")
+        }
+      >
         {slots.publication}
       </span>
       <span className="fo-top-slot fo-top-trail">

@@ -27,7 +27,7 @@ export interface SlotPullRequest {
 
 /**
  * The width of the reference trigger's placeholder, in px: the 9rem frame
- * that `viewer.css` gives the trigger, which a branch name such as the one
+ * that `viewer-bar.css` gives the trigger, which a branch name such as the one
  * Cal reads fills.
  */
 const referenceFrameWidth = 144;
@@ -57,7 +57,7 @@ function ReferencePlaceholder() {
 /**
  * The reference trigger of each composition that the drawing's bar can show,
  * each opening the switcher. A phone draws the compact bar only, and a desktop
- * drawing draws both for the switch in `viewer.css` to show one.
+ * drawing draws both for the switch in `viewer-bar.css` to show one.
  */
 function ReferenceTriggers({
   viewport,

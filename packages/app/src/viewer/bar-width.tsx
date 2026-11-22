@@ -8,23 +8,22 @@ import {
 import type { ReactNode, RefObject } from "react";
 
 /**
- * What each full-bar slot gives up for the package's 22rem: little from the
- * start slot, for a pull request's author, Changes and GitHub beside its
- * trigger, and most from the end slot, whose account label truncates first.
- * A static catalogue frame sets neither, so its caps keep their own reserve.
+ * The room that the full bar's centre leaves the end column, which the
+ * centre's caps in the shared `viewer-bar.css` read. The App's end slot holds
+ * Settings until Milestone 13, and its package search holds the catalogue's
+ * tag filter, so it needs more than a drawing, whose caps keep their own: the
+ * package bar's search with its whole placeholder and the end slot, and the
+ * last group of the cloud's own bar.
  */
-const slotReserves = {
-  "--fo-viewer-start-reserve": "3rem",
-  "--fo-viewer-end-reserve": "19rem",
+const endRooms = {
+  "--fo-viewer-end-room": "24rem",
+  "--fo-viewer-trail-room": "17.25rem",
 } as const;
-
-/** The measured bar width, which the slot caps in `viewer.css` read. */
-const barWidthProperty = "--fo-viewer-bar-width";
 
 /**
  * Choose the viewer top bar's composition from the width of `root`, the
  * app-owned `.fo-viewer-screen` element that the bar spans and that the shared
- * `viewer.css` makes the bar's container. Its one switch rule decides: the
+ * `viewer-bar.css` makes the bar's container. Its one switch rule decides: the
  * full row when the six cloud controls fit beside the package's own, or else
  * the publication and More. The returned probe is a part that only the full
  * bar draws, a hidden 1px box beside `root`, so it has a box exactly when the
@@ -33,8 +32,9 @@ const barWidthProperty = "--fo-viewer-bar-width";
  *
  * The bar is compact until the first measurement, which runs before the first
  * paint, and it stays compact when the shared styles are missing, because an
- * unstyled probe has no width. `root` also carries the bar width and the slot
- * reserves that the slot caps read. Render the returned probe inside `root`.
+ * unstyled probe has no width. `root` also carries the end rooms that the
+ * centre's caps read, which take the bar's width from its container. Render
+ * the returned probe inside `root`.
  */
 export function useViewerBarWidth(root: RefObject<HTMLElement | null>): {
   compact: boolean;
@@ -46,12 +46,10 @@ export function useViewerBarWidth(root: RefObject<HTMLElement | null>): {
     const bar = root.current;
     const full = probe.current;
     if (bar === null || full === null) return;
-    for (const [property, reserve] of Object.entries(slotReserves)) {
-      bar.style.setProperty(property, reserve);
+    for (const [property, room] of Object.entries(endRooms)) {
+      bar.style.setProperty(property, room);
     }
     const measure = () => {
-      const width = bar.getBoundingClientRect().width;
-      bar.style.setProperty(barWidthProperty, width + "px");
       setCompact(full.getBoundingClientRect().width <= 0);
     };
     measure();

@@ -211,3 +211,48 @@ test("the top bar keeps controls readable and follows its own width", async ({
     tagged.dispose();
   }
 });
+
+test("a dismissed switcher returns focus to the pill wherever the composition puts it", async ({
+  page,
+}) => {
+  const made = await publishedProject(page, "viewer-bar-switcher-focus");
+  await makePublic(page, made.projectId);
+  await open(page, made.publicationPath);
+  await publishedViewerReady(page);
+  const viewer = page.locator("[data-mokly-shell]");
+  const publication = viewer.getByTestId("viewer-publication");
+  const panel = page.getByTestId("viewer-panel-switcher");
+  const container = page.locator('[data-mkc-screen="viewer"]');
+  // The modal hides its backdrop from accessibility. Include the rendered
+  // control only to wait for the new composition before dismissal.
+  const rendered = (name: string) =>
+    viewer.getByRole("button", { name, exact: true, includeHidden: true });
+
+  // The full bar holds the pill in its centre slot, and the compact bar in its
+  // start slot, so a change of composition draws the trigger again elsewhere.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(viewer.getByTestId("viewer-history")).toBeVisible();
+  await publication.click();
+  await expect(panel).toBeVisible();
+  await container.evaluate((element) => {
+    element.style.width = "768px";
+  });
+  await expect(rendered("More")).toBeVisible();
+  await page.getByTestId("close-switcher").click();
+  await expect(panel).toHaveCount(0);
+  await expect(
+    publication,
+    "the switcher opened from the full bar returns to the compact bar's pill",
+  ).toBeFocused();
+
+  await publication.click();
+  await expect(panel).toBeVisible();
+  await container.evaluate((element) => element.style.removeProperty("width"));
+  await expect(rendered("History")).toBeVisible();
+  await page.getByTestId("close-switcher").click();
+  await expect(panel).toHaveCount(0);
+  await expect(
+    publication,
+    "the switcher opened from the compact bar returns to the full bar's pill",
+  ).toBeFocused();
+});

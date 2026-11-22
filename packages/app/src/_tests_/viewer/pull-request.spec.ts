@@ -73,8 +73,8 @@ test("a pull request without an observed author names no author", async ({
     "#8 Retain the author login",
   );
   const detail = page.locator(".fo-top-state-detail");
-  await expect(detail).toHaveText(/^Published /);
-  // The separator is what an author would be attached by, so its absence is
-  // what says nothing was put where the author is not known.
-  await expect(detail).not.toContainText("·");
+  // An author would lead the phrase, attached by a separator of its own. The
+  // phrase leading with only its own separator says nothing was put where the
+  // author is not known.
+  await expect(detail).toHaveText(/^Ready · [^·]+$/);
 });

@@ -7,8 +7,8 @@
    here outweighs a product rule for the same element. Every rule styles cloud
    elements only, never a package part or a registered control. A rule that
    sets the display of an element that can carry `fo-full-bar-only` or
-   `fo-compact-bar-only` goes through `:where()`, so the switch in `viewer.css`
-   still outweighs it. */
+   `fo-compact-bar-only` goes through `:where()`, so the switch in
+   `viewer-bar.css` still outweighs it. */
 
 [data-color-scheme] .fo-viewer-screen {
   /* A divider a step stronger than a hairline. */

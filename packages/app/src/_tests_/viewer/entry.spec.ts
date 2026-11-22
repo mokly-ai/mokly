@@ -30,7 +30,7 @@ test("standalone entry opens a ready publication and names its branch", async ({
   await open(page, await projectPathFor(page, projectId));
   await expect(page).toHaveURL(new RegExp(`publications/${main.id}$`));
   await expect(page.getByTestId("viewer-publication")).toHaveText("main");
-  await expect(page.locator(".fo-top-state")).toContainText("Published");
+  await expect(page.locator(".fo-top-state")).toContainText("Ready · ");
   const viewer = page.locator("[data-mokly-shell]");
   await expect(viewer).toBeVisible();
   await expect(

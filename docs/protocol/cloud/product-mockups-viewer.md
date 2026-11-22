@@ -37,21 +37,19 @@ which `product/viewer/standalone/reader` draws as a screen beside
 because the same branch is read by both and only the card inside the stage
 differs.
 
-The ready drawing is a static depiction composed of workspace `@mokly/ui`
-parts. Its embedded layout holds the cloud chrome in the
-`topBarStart` and `topBarEnd` host slots around the package top bar, which
-takes no end control, because the cloud's bar has no theme toggle, and whose
-search field ends with the `⌘K` hint. The cloud controls take the looks of
-[Viewer compositions](./folio-viewer.md#compositions), in the ready drawing
-and in the cloud's own bar alike: the project switcher led by its workspace in
-muted ink, the publication pill, History with its history glyph, Share, the
-avatar, and More with its chevron.
-The layout also holds the catalogue navigation and the
-workspace layout, with its screen header and view controls.
-The stage holds the phone and browser frames, and a sample screen is the
-children of each frame. The navigation rows and the sample
-screen come from cloud fixtures, never from a fixture file of an installed
-package.
+The ready drawing is a static depiction composed of workspace `@mokly/ui` parts.
+Its embedded layout holds the cloud chrome in the `topBarStart`, `topBarCenter`
+and `topBarEnd` host slots of the package top bar, which takes no end control,
+because the cloud's bar has no theme toggle, and whose search field ends with
+the `⌘K` hint. The cloud controls take the looks of [Viewer
+compositions](./folio-viewer.md#compositions), in the ready drawing and in the
+cloud's own bar alike: the project switcher led by its workspace in muted ink,
+the publication pill, History with its history glyph, Share, the avatar, and
+More with its chevron. The layout also holds the catalogue navigation and the
+workspace layout, with its screen header and view controls. The stage holds the
+phone and browser frames, and a sample screen is the children of each frame. The
+navigation rows and the sample screen come from cloud fixtures, never from a
+fixture file of an installed package.
 
 The parts draw their controls through the package's static props, so the
 drawing runs no script, and the layout states the drawing's color scheme as

@@ -61,11 +61,34 @@ function SlotButton({
 }
 
 /**
- * One composition's start: the quiet workspace and project switcher, then the
- * publication pill, with the publication's Changes badge, GitHub and View
- * latest beside it. The compact bar keeps only the pill, with the status dot
- * and the reference's compact name. The published viewer always shows a
- * ready publication.
+ * The publication pill of one composition. The full pill holds the glyph, the
+ * whole reference and the publication's state, and the compact pill the
+ * status dot, the glyph and the reference's compact name. The published
+ * viewer always shows a ready publication.
+ */
+function PublishedPill({
+  bar,
+  subject,
+}: {
+  bar: SlotBar;
+  subject: PublishedSubject;
+}) {
+  return (
+    <Pill>
+      {bar.compact && <PillDot state="ready" />}
+      <PillGlyph kind={subject.kind} />
+      <ReferenceTrigger bar={bar} reference={subject.label} />
+      {!bar.compact && (
+        <PillState state="ready" detail={subject.detail} sha={subject.sha} />
+      )}
+    </Pill>
+  );
+}
+
+/**
+ * One composition's start, after the package's mark: the quiet workspace and
+ * project switcher on the full bar, and the publication pill on the compact
+ * bar, whose centre stays empty.
  */
 function StartSlot({
   bar,
@@ -80,49 +103,22 @@ function StartSlot({
 }) {
   return (
     <div className={slotClass("fo-package-slot-start", bar)}>
-      {!bar.compact && (
+      {bar.compact ? (
+        <span className="fo-package-publication">
+          <PublishedPill bar={bar} subject={subject} />
+        </span>
+      ) : (
         <span className="fo-top-slot fo-top-project">
           <ProjectTrigger workspace={workspace} project={project} />
         </span>
       )}
-      <span className="fo-package-publication">
-        <Pill>
-          {bar.compact && <PillDot state="ready" />}
-          <PillGlyph kind={subject.kind} />
-          <ReferenceTrigger bar={bar} reference={subject.label} />
-          {!bar.compact && (
-            <PillState
-              state="ready"
-              detail={subject.detail}
-              sha={subject.sha}
-            />
-          )}
-        </Pill>
-        {!bar.compact && subject.changes && (
-          <span className="fo-top-badge">
-            <Badge tone="neutral" size="sm">
-              Changes
-            </Badge>
-          </span>
-        )}
-        {!bar.compact && subject.github && (
-          <SlotButton instance="viewer-github" label="GitHub" />
-        )}
-        {!bar.compact && subject.latest && (
-          <SlotButton
-            instance="viewer-view-latest"
-            label="View latest"
-            tone="secondary"
-          />
-        )}
-      </span>
     </div>
   );
 }
 
 /**
- * The `topBarStart` slot: the workspace and project switcher and the
- * publication pill on the full bar, and the pill alone on the compact bar.
+ * The `topBarStart` slot: the workspace and project switcher on the full bar,
+ * and the publication pill on the compact bar.
  */
 export function PublishedSlotStart({
   viewport,
@@ -144,6 +140,49 @@ export function PublishedSlotStart({
       project={project}
     />
   ));
+}
+
+/**
+ * The `topBarCenter` slot of the full bar: the publication pill in the middle
+ * of the bar, with the publication's Changes badge, GitHub and View latest
+ * beside it. A phone draws the compact bar only, so its centre stays empty.
+ */
+export function PublishedSlotCenter({
+  viewport,
+  subject,
+}: {
+  viewport: "mobile" | "desktop";
+  subject: PublishedSubject;
+}) {
+  return slotBars(viewport)
+    .filter((bar) => !bar.compact)
+    .map((bar) => (
+      <div
+        key={bar.part ?? "full"}
+        className={slotClass("fo-package-slot-center", bar)}
+      >
+        <span className="fo-package-publication">
+          <PublishedPill bar={bar} subject={subject} />
+          {subject.changes && (
+            <span className="fo-top-badge">
+              <Badge tone="neutral" size="sm">
+                Changes
+              </Badge>
+            </span>
+          )}
+          {subject.github && (
+            <SlotButton instance="viewer-github" label="GitHub" />
+          )}
+          {subject.latest && (
+            <SlotButton
+              instance="viewer-view-latest"
+              label="View latest"
+              tone="secondary"
+            />
+          )}
+        </span>
+      </div>
+    ));
 }
 
 /**

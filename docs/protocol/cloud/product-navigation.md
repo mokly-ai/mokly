@@ -206,10 +206,10 @@ full pages outside the viewer are account entry and onboarding, which end by
 opening the new project's viewer with its build or publishing card until the
 first publication arrives.
 
-The package host contract, the mapping of five cloud controls into the
-package's two top-bar slots, and the mockup representation are in
-[Viewer chrome](./viewer-chrome.md); the top bar's geometry is in
-[Viewer compositions](./folio-viewer.md).
+The package host contract, the mapping of five cloud controls into the package's
+three top-bar slots, and the mockup representation are in [Viewer
+chrome](./viewer-chrome.md); the top bar's geometry is in [Viewer
+compositions](./folio-viewer.md).
 
 Mobile keeps the same model: the publication stays in the compact top bar, and
 its **More** menu holds the project, History and Share, then the account rows:

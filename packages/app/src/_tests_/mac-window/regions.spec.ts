@@ -13,6 +13,7 @@ import {
   expectBarsClearOfButtons,
   expectMovesWindow,
   expectTakesClicks,
+  partsUnderButtons,
   windowInsets,
 } from "./regions";
 
@@ -110,10 +111,6 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
 
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
-  const slots = {
-    "start slot": page.locator(".fo-package-slot-start"),
-    "end slot": page.locator(".fo-package-slot-end"),
-  };
   for (const [width, composition] of [
     [1440, "full"],
     [1024, "compact"],
@@ -124,6 +121,14 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
         composition === "full" ? "viewer-history" : "viewer-more",
       ),
     ).toBeVisible();
+    // The compact bar leaves the centre slot empty.
+    const slots = {
+      "start slot": page.locator(".fo-package-slot-start"),
+      ...(composition === "full" && {
+        "centre slot": page.locator(".fo-package-slot-center"),
+      }),
+      "end slot": page.locator(".fo-package-slot-end"),
+    };
     for (const [label, slot] of Object.entries(slots)) {
       await expectBarRegions(slot, `the ${composition} bar's ${label}`);
     }
@@ -143,4 +148,37 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByTestId("viewer-settings").click();
   await expectTakesClicks(page.getByRole("dialog"), "the settings dialog");
+});
+
+test("the viewer package's mark comes after the Mac window's buttons in both compositions", async ({
+  page,
+}) => {
+  const made = await publishedProject(page, "mac-window-viewer-mark");
+  await open(page, made.publicationPath);
+  await publishedViewerReady(page);
+  // The package's start column: its menu button where it shows, its mark and
+  // the cloud's start slot.
+  const start = page
+    .locator("[data-mokly-shell]")
+    .getByRole("link", { name: "Mokly", exact: true })
+    .locator("..");
+  for (const [width, composition] of [
+    [1440, "full"],
+    [1024, "compact"],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(
+      page.getByTestId(
+        composition === "full" ? "viewer-history" : "viewer-more",
+      ),
+    ).toBeVisible();
+    await emulateMacWindow(page, "start");
+    await expect
+      .poll(
+        () => partsUnderButtons(start, "start"),
+        `the ${composition} bar's mark keeps clear of the buttons`,
+      )
+      .toEqual([]);
+    await clearMacWindow(page);
+  }
 });
