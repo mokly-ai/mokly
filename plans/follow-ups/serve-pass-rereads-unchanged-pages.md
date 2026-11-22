@@ -16,8 +16,10 @@
   - `crates/mokly-graph/src/session_render.rs:55`: a background read of a
     route without a viewport keeps no walk record.
 - **Reason:** The code lies outside the diff of the branch that found it, and
-  on 2026-11-22 the performance orchestrator asked to rank it when the next
-  speed pull request is chosen.
+  on 2026-11-22 the performance orchestrator asked to rank it with the other
+  cuts of the pass. Its ranking of that date chose H, W1, and C1 and did not
+  name this cost. So the cost waits for the next ranking of the
+  orchestrator.
 
 - **Source:** Review.
 - **Category:** Performance.
@@ -81,14 +83,15 @@
 - **Previous examples:** None found.
 - **Related:**
   - [serve-edit-background-pass-split.md](./serve-edit-background-pass-split.md)
-    holds the safe CPU cuts of the pass, which the next speed pull request
-    ranks with this cost.
+    holds the safe CPU cuts of the pass and the ranking of 2026-11-22, which
+    chose H, W1, and C1 and did not name this cost. H, W1, and C1 were then
+    measured and reverted. Until 2026-11-22 this line said that the next
+    speed pull request ranks the cuts with this cost.
   - [background-walk-records-from-kept-facts.md](./background-walk-records-from-kept-facts.md)
     holds the choice of the reads that keep a walk record.
-- **Recommendation:** B, if the ranking of the next speed pull request
-  chooses this cost. It removes the reads and keeps the printed warnings. On
-  the data of 2026-11-22 the cost ranks last, because it is zero on
-  mokly-cloud.
-- **Action:** fix after merge, apply B, because the code lies outside the
-  branch that found it, and the orchestrator asked on 2026-11-22 to rank it
-  for the next speed pull request first.
+- **Recommendation:** B, if a ranking of the performance orchestrator chooses
+  this cost. It removes the reads and keeps the printed warnings. On the data
+  of 2026-11-22 the cost ranks last, because it is zero on mokly-cloud.
+- **Action:** ask the user, because the work waits for a ranking of the
+  performance orchestrator, and its ranking of 2026-11-22 did not name this
+  cost.

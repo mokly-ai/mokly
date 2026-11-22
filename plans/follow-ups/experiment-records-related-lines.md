@@ -46,6 +46,9 @@
 - **Wider fix:** None. Option A of the kind item, a listed kind in the shared
   `plans` skill, removes the need for the links, and it waits for the user.
 - **Previous examples:** None found.
+- **Related:** [item-fields-after-added-facts.md](./item-fields-after-added-facts.md)
+  proposes a `plans` skill rule that would also ask for these links when a
+  change adds facts to an item.
 - **Recommendation:** A. It applies the rule of the `plans` skill with four
   bullets.
 - **Action:** fix after merge, apply A, because the records are outside the
