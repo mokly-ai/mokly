@@ -1,0 +1,4 @@
+/* The Canvas viewer's loading and recovery: the shell before its catalogue
+   arrives, an entry that loads or failed, and the Changes availability
+   states. Each Canvas part keeps its own sheet; this sheet holds only the
+   layout and the states of these artboards. */

@@ -18,7 +18,7 @@ import { InspectSection } from "./inspect.js";
  * version is the branch. An entry that the branch added has no version
  * before, so its rail holds the current version alone, and a line says why.
  */
-function ChangesCompared({ added = false }: { added?: boolean }) {
+export function ChangesCompared({ added = false }: { added?: boolean }) {
   return (
     <InspectSection title="Compared">
       <ol className="cv-refs" data-cv-added={added ? "" : undefined}>
@@ -51,7 +51,7 @@ function ChangesCompared({ added = false }: { added?: boolean }) {
  * sentence for each reason. The rail above names the base, so the evidence
  * leaves out its branch-point sentence.
  */
-function ChangesEvidence({
+export function ChangesEvidence({
   reasons,
 }: {
   reasons: readonly ChangeReasonKind[];

@@ -24,6 +24,16 @@ import { RightPanel, type PanelTab } from "./panel.js";
 /** The sheet that a compact artboard shows open. */
 export type CanvasSheet = "catalogue" | "panel";
 
+/** The search field's query and the tag picker of the top bar. */
+export interface CanvasSearch {
+  /** The query in the search field, such as `tag:forms`. */
+  value?: string | undefined;
+  /** The tag that the query enters, whose chip the picker marks. */
+  activeTag?: string | undefined;
+  /** The tag picker open under the search field. */
+  pickerOpen?: boolean | undefined;
+}
+
 interface CanvasShellProps {
   design: CanvasDestination;
   viewport: ArtboardViewport;
@@ -45,6 +55,8 @@ interface CanvasShellProps {
   zoom?: number | undefined;
   /** The compact form's zoom in percent, which the dock's Fit restores. */
   compactZoom?: number | undefined;
+  /** The top bar's search query and tag picker; an empty, closed field by default. */
+  search?: CanvasSearch | undefined;
   /** The stage on the canvas. */
   children: ReactNode;
 }
@@ -103,7 +115,7 @@ export function CanvasShell(props: CanvasShellProps) {
  * The package top bar. Its brand opens the Canvas home, and its menu opens
  * the catalogue sheet, as the dock's Catalogue does, or closes the open one.
  */
-function CanvasTopBar({ design, sheet, viewport }: CanvasShellProps) {
+function CanvasTopBar({ design, search, sheet, viewport }: CanvasShellProps) {
   const transitions = useDesignNavigation().canvas ?? {};
   const open = viewport === "mobile" && sheet === "catalogue";
   const menu = open
@@ -113,8 +125,11 @@ function CanvasTopBar({ design, sheet, viewport }: CanvasShellProps) {
       : CANVAS_PAGES.catalogue;
   return (
     <TopBar
+      activeTag={search?.activeTag}
       drawerOpen={open}
       links={{ brand: CANVAS_PAGES.home, menu }}
+      searchValue={search?.value}
+      tagPickerOpen={search?.pickerOpen}
       viewport={viewport}
     />
   );

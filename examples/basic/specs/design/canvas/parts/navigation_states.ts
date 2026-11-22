@@ -1,4 +1,9 @@
 import type { NavigationState } from "../../parts/navigation_states.js";
+import { EXPLORER_NAVIGATION_STATES } from "../components/parts/navigation.js";
+import { LOADING_NAVIGATION_STATES } from "../loading/parts/navigation.js";
+import { OUTCOME_NAVIGATION_STATES } from "../outcomes/parts/navigation.js";
+import { PROPS_NAVIGATION_STATES } from "../props/parts/navigation.js";
+import { SEARCH_NAVIGATION_STATES } from "../search/parts/navigation.js";
 
 import { CANVAS_PAGES as C, type CanvasDestination } from "./destinations.js";
 
@@ -62,6 +67,11 @@ const detailsSelection = { canvas: { changesTab: C.addedChanges } } as const;
  * artboard, so its Changes tab is a picture.
  */
 export const CANVAS_NAVIGATION_STATES = {
+  ...OUTCOME_NAVIGATION_STATES,
+  ...LOADING_NAVIGATION_STATES,
+  ...SEARCH_NAVIGATION_STATES,
+  ...EXPLORER_NAVIGATION_STATES,
+  ...PROPS_NAVIGATION_STATES,
   [C.overview]: { changes: C.catalogue, canvas: { ...welcome, ...changes } },
   [C.zoomed]: {
     changes: C.catalogue,

@@ -1,0 +1,4 @@
+/* The Canvas viewer's component explorer: a changed component compared on
+   its variant set, its Usage with the affected screens, and its empty,
+   loading and removed states. Each Canvas part keeps its own sheet; this
+   sheet holds only the layout and the states of these artboards. */
