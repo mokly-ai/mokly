@@ -104,7 +104,7 @@
       start gets the stored plan only after a sidecar accepts that stored
       compilation.
     - The Rust plan check is `plan_inputs::current`, at
-      `crates/mokly-render/src/plan_inputs.rs:11`. Plan reuse also
+      `crates/mokly-render/src/plan_inputs.rs:16` (`plan_inputs::current`). Plan reuse also
       needs the `durable` flag, which that check does not read.
     - The plan record gives the import targets of a captured compile. Option
       D below also needs such a record. Plan reuse stores no edit compile, so

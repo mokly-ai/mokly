@@ -7,7 +7,10 @@
   part of that record. `plans/follow-ups/follow-up-line-pointer-drift.md`
   held it until main deleted that item in #410. Widened on 2026-11-21 by the
   restored bundle reuse change (#465), whose review listed 7 more moved
-  pointers into `crates/mokly-sidecar/src/pool_bundle_cache.rs`.
+  pointers into `crates/mokly-sidecar/src/pool_bundle_cache.rs`. Widened on
+  2026-11-22 by the warm edit bundle change on branch
+  `calummoore/mokly-edit-bundle-path-kv2o`, whose review listed 4 more stale
+  pointers into `crates/mokly-sidecar/src/pool.rs`.
 - **Location:** `plans/follow-ups/sequential-evidence-capture-cost.md:10`,
   lines 11, 12, 13, 14, 54, 59, 69, 78, 81, 83, 87, and 218,
   `plans/follow-ups/ancestor-churn-disables-durable-capture.md:8`, lines 9,
@@ -22,7 +25,9 @@
   `plans/follow-ups/marked-reuse-link-retarget.md:11`, lines 12, 50, and 55,
   `plans/follow-ups/stylesheet-roots-span-parent.md:9`,
   `plans/follow-ups/flaky-warm-bundle-cache-no-record.md:13`, line 70, and
-  line 72, and `plans/follow-ups/serve-pause-warm-head.md:10` and line 45.
+  line 72, `plans/follow-ups/serve-pause-warm-head.md:10` and line 45,
+  `plans/follow-ups/serve-sidecar-prestart.md:7` and line 26, and
+  `plans/follow-ups/sidecar-loaded-state-selection.md:10` and line 41.
 - **Reason:** The workspace orchestrator chose on 2026-11-20 to record these
   pointers and not to fix them in the folder evidence branch, because the
   fix adds a scope round of about thirty minutes before the final gate.
@@ -108,6 +113,18 @@
       `seed_bundle`. It is now at line 107.
     - `sequential-evidence-capture-cost.md:14` and line 87 cite lines 111 to
       123 for the save of `complete_bundle`. It is now at lines 173 to 185.
+  - The warm edit bundle change of 2026-11-22 added the source digest
+    boundary to `crates/mokly-sidecar/src/pool.rs`. Its review found 4
+    pointers into that file, in 2 items, that were already wrong at its merge
+    base `249fa1aa5` and moved further with it. Their targets at the head of
+    that change:
+    - `serve-sidecar-prestart.md:7` and line 26 cite lines 75 and 119 for
+      `acquire` and `spawn`. `Pool::acquire` is now at
+      `crates/mokly-sidecar/src/pool_leases.rs:16`, and `Pool::spawn` at
+      `crates/mokly-sidecar/src/pool.rs:120`.
+    - `sidecar-loaded-state-selection.md:10` and line 41 cite line 171 for
+      the slot that goes back to the idle queue when its request ends. That
+      push is now in `Pool::release`, at line 215.
   - The workspace orchestrator's call of 2026-11-20: record these pointers,
     so that one later change updates the line references together. A fix in
     the folder evidence branch was rejected, because it adds a scope round
@@ -117,17 +134,18 @@
     class: a doc that contradicts the changed code gets fixed, and a change
     that removes or renames a name searches `docs/`, `plans/`, and every
     `README.md` for it.
-- **Problem:** 48 line pointers in 11 follow-up items cite source lines that
-  moved: 41 that the folder evidence branch moved, and 7 into
+- **Problem:** 52 line pointers in 13 follow-up items cite source lines that
+  moved: 41 that the folder evidence branch moved, 7 into
   `pool_bundle_cache.rs` that were already wrong and that #465 moved
-  further.
+  further, and 4 into `pool.rs` that were already wrong and that the warm
+  edit bundle change moved further.
 - **Impact if no action:** A reader who follows such a pointer opens the
   wrong code and must search for the target. A wrong pointer can also
   mislead a fix.
-- **Root question:** How do these 11 items get true source pointers again
+- **Root question:** How do these 13 items get true source pointers again
   after the code moved?
 - **Options:**
-  - **A.** In a later branch, re-anchor the 48 pointers at that branch's
+  - **A.** In a later branch, re-anchor the 52 pointers at that branch's
     commit. Cost: the next move can break them again. Effort: Small.
   - **B.** Apply A, and name the symbol beside each pointer, as #410 did. A
     reader then finds a moved target by its name, and a search for the name
@@ -153,7 +171,7 @@
     the seven pointers that it moved, with a symbol beside each.
   - On 2026-11-20, #410 re-anchored two stale pointers with a symbol beside
     each.
-- **Recommendation:** B. It fixes the 48 recorded pointers and keeps them
+- **Recommendation:** B. It fixes the 52 recorded pointers and keeps them
   easy to find after the next move.
 - **Action:** fix after merge, apply B, because the workspace orchestrator
   chose on 2026-11-20 to record these pointers instead of a fix in the

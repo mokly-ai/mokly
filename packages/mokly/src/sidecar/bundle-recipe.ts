@@ -68,6 +68,9 @@ export async function bundleRecipe(
   );
   // The compilation identity: module paths, imports and non-CSS source and
   // loader bytes, then the metadata inputs and the settings hashed below.
+  // Without a full capture owner the evidence is never complete, so the
+  // random runtime key keeps the identity fresh and the sources stay out.
+  const sourced = evidence !== undefined;
   const hash = createHash("sha256");
   const physicalInputs: Record<string, string | null> = {};
   const metadataInputs: Record<string, string | null> = {};
@@ -83,9 +86,9 @@ export async function bundleRecipe(
           `Bundled source bytes were not recorded: ${module.path}`,
         );
       module.digest = createHash("sha256").update(text).digest("hex");
-      hash.update(JSON.stringify([module.path, module.imports]));
+      if (sourced) hash.update(JSON.stringify([module.path, module.imports]));
       if (!module.path.endsWith(".css")) {
-        hash.update(text);
+        if (sourced) hash.update(text);
         physicalInputs[absolute] = module.digest;
       }
     }

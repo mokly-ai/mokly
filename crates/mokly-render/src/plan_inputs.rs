@@ -2,11 +2,16 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread;
 
 use mokly_sidecar::compiled::ReuseEvidence;
 use mokly_sidecar::resolution_plan::{DirectoryCandidates, ResolutionPlan};
 
 use crate::physical_inputs::PhysicalInputs;
+
+/// The most threads that check one record, which are bound by filesystem latency.
+const THREADS: usize = 4;
 
 pub(crate) fn current(
     plan: &ResolutionPlan,
@@ -28,13 +33,28 @@ pub(crate) fn current(
             return false;
         }
     }
-    evidence.inputs.iter().all(|(path, expected)| {
-        if let Some(names) = directories.get(path.as_str()) {
-            reader
-                .matches_candidates(Path::new(path), expected, names)
-                .unwrap_or(false)
-        } else {
-            reader.matches(Path::new(path), expected).unwrap_or(false)
+    let inputs: Vec<_> = evidence.inputs.iter().collect();
+    let length = inputs.len().div_ceil(THREADS).max(1);
+    let failed = AtomicBool::new(false);
+    thread::scope(|scope| {
+        for part in inputs.chunks(length) {
+            let (directories, failed) = (&directories, &failed);
+            scope.spawn(move || {
+                for (path, expected) in part {
+                    if failed.load(Ordering::Relaxed) {
+                        return;
+                    }
+                    let matched = match directories.get(path.as_str()) {
+                        Some(names) => reader.matches_candidates(Path::new(path), expected, names),
+                        None => reader.matches(Path::new(path), expected),
+                    };
+                    if !matched.unwrap_or(false) {
+                        failed.store(true, Ordering::Relaxed);
+                        return;
+                    }
+                }
+            });
         }
-    })
+    });
+    !failed.load(Ordering::Relaxed)
 }

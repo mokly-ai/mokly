@@ -4,9 +4,9 @@
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
 consumer PostCSS. It returns HTML, CSS, module and definition inventories,
-and diagnostics. It never reads the catalogue or writes files. It retains
-only loaded bundle generations and explicit PostCSS contexts. The binary owns
-catalogue decisions, caching, invalidation, comparison, and output.
+and diagnostics. It never reads the catalogue or writes files. It keeps loaded
+generations, explicit PostCSS contexts, and bounded export-name data. The binary
+owns catalogue decisions, caching, invalidation, comparison, and output.
 
 ## Lifecycle
 
