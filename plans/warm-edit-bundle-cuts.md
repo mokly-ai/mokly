@@ -63,10 +63,13 @@ Design calls, mine, 2026-11-21:
   names the newest live compilation. Reason: the comparison only chooses which
   paths to read. The rule out itself needs a current file that differs from
   the released recipe.
-- F rules a recipe out only when the recipe records a digest for the path and
-  the current file gives another digest. A missing or unreadable file rules
-  nothing out, and the scan goes on, so the result does not depend on the
-  order. Reason: Cal's condition that such a file keeps today's behavior.
+- F, call of 2026-11-22: F rules a recipe out when the current file differs
+  from what the recipe records: another digest, or a file where the recipe
+  records an absence. A missing or unreadable current file rules nothing out,
+  and the scan goes on, so the result does not depend on the order. Reason:
+  the release rules as approved, and Cal's condition that a missing or
+  unreadable file keeps today's behavior. The call of 2026-11-21 also left a
+  recorded absence out, so the pool read such a file and then ignored it.
 - F reads outside the pool lock, through a new digest boundary of the pool with
   a mock for tests. `mokly-sidecar` gets the `sha2` dependency for it. The
   digest equals the sidecar's: SHA-256 of all bytes of a regular file.

@@ -55,7 +55,8 @@ impl SourceDigests for SystemSourceDigests {
 /// Whether a current source differs from the released recipe at a path whose digests differ.
 ///
 /// Only the sources that the two compilations record with different digests are read, each
-/// once, until the first difference. A missing or unreadable source rules nothing out.
+/// once, until the first difference. A file that now exists where the recipe records an
+/// absence differs from it. A missing or unreadable source rules nothing out.
 pub(crate) fn rules_out(
     released: &CompiledGeneration,
     live: &CompiledGeneration,
@@ -68,7 +69,8 @@ pub(crate) fn rules_out(
         .any(
             |(path, recorded)| match (recorded, digests.digest(Path::new(path))) {
                 (Some(recorded), Ok(Some(current))) => current != *recorded,
-                _ => false,
+                (None, Ok(Some(_))) => true,
+                (None, Ok(None)) | (Some(_), Ok(None)) | (_, Err(_)) => false,
             },
         )
 }

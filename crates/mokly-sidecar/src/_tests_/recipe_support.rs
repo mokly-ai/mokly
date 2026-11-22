@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::bundle_outcomes::CacheOutcome;
 use crate::codec;
 use crate::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence, UncapturedEvidence};
 use crate::fixture_leases::FixtureLeases;
@@ -251,14 +252,15 @@ impl Fixture {
         self.probe_outcome(entry, id, slot, capture).0
     }
 
-    /// The restored identities before one bundle on `slot`, and its result.
+    /// The restored identities before one bundle on `slot`, and the `cache` value that the
+    /// pool gives it.
     pub(super) fn probe_outcome(
         &self,
         entry: &str,
         id: &str,
         slot: usize,
         capture: BundleCapture,
-    ) -> (Vec<String>, results::Bundle) {
+    ) -> (Vec<String>, Option<CacheOutcome>) {
         let _leases = FixtureLeases::only(&self.pool, slot);
         self.calls.lock().unwrap().clear();
         let probe = self.bundle_with_capture(entry, id, capture);
@@ -277,7 +279,7 @@ impl Fixture {
                 generation: probe.generation.clone(),
             }))
             .unwrap();
-        (restored, probe)
+        (restored, probe.cache)
     }
 }
 

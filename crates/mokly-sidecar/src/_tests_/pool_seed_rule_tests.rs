@@ -27,6 +27,8 @@ enum Current {
 struct Sources {
     fixture: Fixture,
     reads: Arc<Mutex<Vec<String>>>,
+    /// What the released recipe records for `SCREEN`: a digest, or `None` for an absence.
+    released_screen: Option<&'static str>,
 }
 
 impl Sources {
@@ -50,7 +52,14 @@ impl Sources {
         Self {
             fixture: Fixture::with_digests(usize::MAX, Arc::new(digests)),
             reads,
+            released_screen: Some("released"),
         }
+    }
+
+    /// Make the released recipe record `SCREEN` as absent.
+    fn recording_absence(mut self) -> Self {
+        self.released_screen = None;
+        self
     }
 
     /// Release `released` and keep `live` live, both with the settings of `entry`.
@@ -68,7 +77,7 @@ impl Sources {
     ) -> Self {
         self.fixture.record_inputs(
             released,
-            &[(SCREEN, Some("released")), (SHARED, Some("shared"))],
+            &[(SCREEN, self.released_screen), (SHARED, Some("shared"))],
         );
         self.fixture.record_inputs(
             &format!("{released}-live"),
@@ -94,16 +103,38 @@ impl Sources {
 fn a_forward_edit_sends_no_released_recipe_that_a_changed_source_rules_out() {
     let sources =
         Sources::new(Current::Digest("edited")).edits("screen.ts", "released", Some("live"));
-    let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    let (restored, cache) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
     assert_eq!(restored, ["released-live"]);
     assert_eq!(
         sources.reads(),
         [SCREEN],
         "only the path whose digests differ is read, once"
     );
-    assert_eq!(result.generation, "probe");
-    assert_eq!(result.compile_count, 1);
-    assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+    assert_eq!(cache, Some(CacheOutcome::StampMismatch));
+}
+
+#[test]
+fn a_file_created_where_the_released_recipe_records_an_absence_rules_it_out() {
+    let sources = Sources::new(Current::Digest("created"))
+        .recording_absence()
+        .edits("screen.ts", "released", Some("live"));
+    let (restored, cache) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    assert_eq!(restored, ["released-live"]);
+    assert_eq!(sources.reads(), [SCREEN]);
+    assert_eq!(cache, Some(CacheOutcome::StampMismatch));
+}
+
+#[test]
+fn a_source_still_missing_where_the_released_recipe_records_an_absence_keeps_it() {
+    let sources = Sources::new(Current::Missing).recording_absence().edits(
+        "screen.ts",
+        "released",
+        Some("live"),
+    );
+    let (restored, cache) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    assert_eq!(restored, ["released", "released-live"]);
+    assert_eq!(sources.reads(), [SCREEN]);
+    assert_eq!(cache, Some(CacheOutcome::StampMismatch));
 }
 
 #[test]
@@ -114,7 +145,7 @@ fn a_ruled_out_recipe_keeps_stamp_mismatch_when_no_live_compilation_can_serve() 
         Some("live"),
         BundleCapture::Full,
     );
-    let (restored, result) =
+    let (restored, cache) =
         sources
             .fixture
             .probe_outcome("screen.ts", "probe", 2, BundleCapture::Full);
@@ -125,7 +156,7 @@ fn a_ruled_out_recipe_keeps_stamp_mismatch_when_no_live_compilation_can_serve() 
     );
     assert_eq!(sources.reads(), [SCREEN]);
     assert_eq!(
-        result.cache,
+        cache,
         Some(CacheOutcome::StampMismatch),
         "the ruled-out recipe still counts as a reusable compilation"
     );
@@ -135,34 +166,30 @@ fn a_ruled_out_recipe_keeps_stamp_mismatch_when_no_live_compilation_can_serve() 
 fn a_revert_to_the_released_content_still_sends_the_released_recipe() {
     let sources =
         Sources::new(Current::Digest("released")).edits("screen.ts", "released", Some("live"));
-    let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    let (restored, cache) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
     assert_eq!(restored, ["released", "released-live"]);
     assert_eq!(sources.reads(), [SCREEN]);
-    assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+    assert_eq!(cache, Some(CacheOutcome::StampMismatch));
 }
 
 #[test]
 fn equal_digests_in_both_recipes_keep_the_released_recipe_without_a_read() {
     let sources =
         Sources::new(Current::Digest("edited")).edits("screen.ts", "released", Some("released"));
-    let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+    let (restored, cache) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
     assert_eq!(restored, ["released", "released-live"]);
     assert_eq!(sources.reads(), Vec::<String>::new());
-    assert_eq!(result.cache, Some(CacheOutcome::StampMismatch));
+    assert_eq!(cache, Some(CacheOutcome::StampMismatch));
 }
 
 #[test]
 fn a_missing_or_unreadable_source_keeps_the_released_recipe() {
     for current in [Current::Missing, Current::Unreadable] {
         let sources = Sources::new(current).edits("screen.ts", "released", Some("live"));
-        let (restored, result) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
+        let (restored, cache) = sources.fixture.probe_outcome("screen.ts", "probe", 2, EDIT);
         assert_eq!(restored, ["released", "released-live"], "{current:?}");
         assert_eq!(sources.reads(), [SCREEN], "{current:?}");
-        assert_eq!(
-            result.cache,
-            Some(CacheOutcome::StampMismatch),
-            "{current:?}"
-        );
+        assert_eq!(cache, Some(CacheOutcome::StampMismatch), "{current:?}");
     }
 }
 

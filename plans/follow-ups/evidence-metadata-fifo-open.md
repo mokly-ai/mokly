@@ -129,8 +129,10 @@
   - **E.** Move the pool's read into the sidecar, which already opens without
     waiting. The pool sends one small call with the paths whose digests
     differ. It adds a method to `docs/protocol/mokly-sidecar.md`, wire types,
-    and one round trip for each warm edit, so it needs the user.
-    Effort: Large.
+    and one round trip for each warm edit, so it needs the user. It also
+    removes the pool's copy of the sidecar's input rule, so that rule cannot
+    drift between the two readers, for a recorded absence or for a later
+    recorded kind. Effort: Large.
 - **Left out:**
   - A kind check before the open alone: a path that changes to a FIFO
     between the check and the open still waits.
