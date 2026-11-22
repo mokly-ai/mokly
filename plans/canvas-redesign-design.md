@@ -206,33 +206,11 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   - The social card embeds the committed light lockup, and its title uses a
     system font.
 
-- Calls on Milestone 17, 2026-11-22:
-  - `npm run palette:generate` writes the `@mokly/ui` theme and the Markdown
-    palette part from the palette module, and `npm run palette:check` in the
-    repository suite guards them. The build does not generate them.
-  - The theme stays one file at its path with the same selectors. The
-    Markdown style is a generated palette part plus hand-kept typography.
-  - The generator mixes colours in sRGB and writes plain values, so tests can
-    measure contrast. The theme uses the Canvas role names.
-  - The mark reads the Canvas signal roles directly. `--chrome-brand` and
-    `--serif` had no reader, so they are gone.
-  - The embedded stylesheet names its faces "Mokly Geist" and "Mokly Geist
-    Mono", so the cloud app's own Geist keeps its file.
-  - Codex stopped on its usage limit, so a Claude subagent did the non-UI
-    work.
-- Calls on Milestone 19, 2026-11-22:
-  - The renderer writes each document's two `@font-face` rules, with an
-    address relative to the document's route, so a build under a sub-path
-    works. The generated palette keeps only the font stacks.
-  - The closure check skips only those two font files, only in a Markdown
-    document's own stylesheet, with no query string.
-  - Each comparison generation holds copies of both fonts, 140,700 bytes,
-    which the cloud stores once per project. Serve answers the copies from
-    its own viewer files. The comparison treats both font addresses as the
-    same file.
-- Call of 2026-11-22: the viewer bar follows the prototype's order and
-  shows the mark at 390px. This replaces the earlier call that the embedded
-  compact bar hides the brand. Milestone 22 does it.
+- 2026-11-22, Cal: to speed up, Milestone 11 starts before 18 and 22 merge,
+  new browser tests run 3 times instead of 10, and the orchestrator decides
+  design and scope questions and reports them.
+- The calls on Milestones 11, 17, 19, 22 and 23 are in the
+  [viewer design calls](./canvas-redesign-design-viewer.md).
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
 
@@ -259,7 +237,7 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   [Viewer appearance](../docs/protocol/mokly-viewer-appearance.md),
   [Component inspector design](../docs/protocol/mokly-component-inspector-design.md)
   [Comparison panes](../docs/protocol/mokly-comparison-panes.md),
-  [Shell device chrome](../docs/protocol/mokly-shell-device-chrome.md),
+  [Shell canvas frames](../docs/protocol/mokly-shell-device-chrome.md),
   [Viewer selection](../docs/protocol/mokly-viewer-selection.md),
   [Frame probe](../docs/protocol/mokly-frame-probe.md),
   [Frame probe wire](../docs/protocol/mokly-frame-probe-wire.md) and

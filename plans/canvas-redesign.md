@@ -4,12 +4,13 @@ Status: Active. On branch `calummoore/mokly-website-redesign-plan-af84`, no
 pull request yet. The pull request that completes the work deletes this plan
 and its parts: the [design record](./canvas-redesign-design.md), the
 [site design calls](./canvas-redesign-design-site.md), the
+[viewer design calls](./canvas-redesign-design-viewer.md), the
 [viewer milestones](./canvas-redesign-milestones-viewer.md),
 [decisions 1 to 5](./canvas-redesign-decisions.md),
 [decisions 6 to 12](./canvas-redesign-decisions-viewer.md) and
 [decisions 20 to 26](./canvas-redesign-decisions-docs.md) and
 [decisions 27 to 32 and 38](./canvas-redesign-decisions-site.md) and
-[decisions 33 to 36](./canvas-redesign-decisions-browse.md). Decisions 29 and 38 wait for Cal. Every other decision is answered.
+[decisions 33 to 36 and 39](./canvas-redesign-decisions-browse.md). Every decision is answered. From 2026-11-22 the orchestrator decides new design and scope questions and reports them, as Cal agreed.
 
 The public site in `apps/site` uses Folio: a warm off-white page, one moss
 accent and Inter. Cal found it boring and asked for a site that looks like a
@@ -266,9 +267,9 @@ Depends on: 4
       cards, the browser walk and the Lighthouse pages. Branch:
       `calummoore/canvas-redesign-m9-site-pricing-5q33`.
 
-## Milestones 10 to 13 and 15 to 22
+## Milestones 10 to 13 and 15 to 23
 
-The viewer milestones and the added Milestones 15 to 22 are in
+The viewer milestones and the added Milestones 15 to 23 are in
 [the viewer milestones file](./canvas-redesign-milestones-viewer.md).
 
 ## Milestone 14: Verification, commit, review and pull request
