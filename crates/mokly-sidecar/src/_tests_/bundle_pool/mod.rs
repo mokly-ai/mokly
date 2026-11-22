@@ -4,6 +4,7 @@ mod order_tests;
 mod origin_lifetime_tests;
 mod origin_support;
 mod plan_tests;
+mod prepare_context_failure_tests;
 mod prepare_context_tests;
 mod provenance_tests;
 mod recovery_tests;

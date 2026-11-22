@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::{BundleStoreMock, WriteOutcome};
-use crate::error::{Error, RemoteCode, RequestCode, Result};
+use crate::error::Error;
 use crate::methods::{BundleRequest, Call, ModuleResolution};
 use crate::pool::{Pool, SidecarPool};
 use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
@@ -25,7 +25,7 @@ fn resolution() -> ModuleResolution {
     }
 }
 
-fn bundle_request(preparation: bool) -> BundleRequest {
+pub(super) fn bundle_request(preparation: bool) -> BundleRequest {
     let mut params = params();
     params.repository_roots = vec!["/workspace".into()];
     params.module_resolution = resolution();
@@ -48,7 +48,7 @@ fn request(pool: &Pool, request: BundleRequest) -> results::Bundle {
 }
 
 /// One stored hit; the read is an event, so its order beside the worker calls shows.
-fn store(events: Events) -> Unimock {
+pub(super) fn store(events: Events) -> Unimock {
     Unimock::new((
         BundleStoreMock::load
             .some_call(matching!(_))
@@ -63,11 +63,7 @@ fn store(events: Events) -> Unimock {
 }
 
 /// Record each call, keep each `prepareContext` request, and reuse the stored seed.
-fn recorder(
-    events: Events,
-    prepared: Arc<Mutex<Vec<PrepareContext>>>,
-    reply: fn() -> Result<MethodResult>,
-) -> Unimock {
+fn recorder(events: Events, prepared: Arc<Mutex<Vec<PrepareContext>>>) -> Unimock {
     Unimock::new((
         WorkerMock::request
             .each_call(matching!(_, _))
@@ -83,11 +79,11 @@ fn recorder(
                     _ => panic!("unexpected call"),
                 };
                 events.lock().unwrap().push(event);
-                match &request.call {
-                    Call::PrepareContext(_) => reply(),
-                    Call::Bundle(_) => Ok(answer("seed", 0)),
-                    _ => Ok(MethodResult::Empty),
-                }
+                Ok(if matches!(request.call, Call::Bundle(_)) {
+                    answer("seed", 0)
+                } else {
+                    MethodResult::Empty
+                })
             })),
         WorkerMock::resident_bytes
             .each_call(matching!())
@@ -101,9 +97,7 @@ fn a_prepared_bundle_starts_its_context_before_the_cache_read_and_the_seed() {
     let prepared = Arc::default();
     let pool = pool(
         store(events.clone()),
-        recorder(events.clone(), Arc::clone(&prepared), || {
-            Ok(MethodResult::Empty)
-        }),
+        recorder(events.clone(), Arc::clone(&prepared)),
     );
     let result = request(&pool, bundle_request(true));
     assert_eq!(result.generation, "seed");
@@ -136,9 +130,7 @@ fn a_bundle_without_a_preparation_sends_no_prepare_context() {
     let prepared = Arc::default();
     let pool = pool(
         store(events.clone()),
-        recorder(events.clone(), Arc::clone(&prepared), || {
-            Ok(MethodResult::Empty)
-        }),
+        recorder(events.clone(), Arc::clone(&prepared)),
     );
     assert_eq!(
         request(&pool, bundle_request(false)).cache,
@@ -149,38 +141,6 @@ fn a_bundle_without_a_preparation_sends_no_prepare_context() {
         ["load", "restore:disk:seed", "bundle", "dispose:disk:seed"]
     );
     assert_eq!(*prepared.lock().unwrap(), []);
-}
-
-#[test]
-fn a_usable_error_reply_to_prepare_context_leaves_the_bundle_result_unchanged() {
-    let events: Events = Arc::default();
-    let pool = pool(
-        store(events.clone()),
-        recorder(events.clone(), Arc::default(), || {
-            Err(Error::Remote {
-                code: RemoteCode::Request(RequestCode::BundleFailed),
-                message: "fixture preparation failed".into(),
-            })
-        }),
-    );
-    let result = request(&pool, bundle_request(true));
-    assert_eq!(result.generation, "seed");
-    assert_eq!(result.cache, Some(CacheOutcome::Hit));
-    assert_eq!(
-        *events.lock().unwrap(),
-        [
-            "prepare",
-            "load",
-            "restore:disk:seed",
-            "bundle",
-            "dispose:disk:seed"
-        ]
-    );
-    let state = pool.lock();
-    let attempt = BTreeSet::from(["attempt".to_owned()]);
-    assert_eq!(state.contexts, attempt);
-    assert_eq!(state.slots[0].as_ref().unwrap().contexts, attempt);
-    assert_eq!(state.slots.iter().flatten().count(), 2);
 }
 
 #[test]

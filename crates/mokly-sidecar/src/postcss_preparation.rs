@@ -55,7 +55,18 @@ impl Call {
                 .map(|value| value.context.as_str()),
             Self::ProcessCss(params) => Some(&params.context),
             Self::PrepareContext(params) => Some(&params.context),
-            _ => None,
+            Self::Hello(_)
+            | Self::RestoreGeneration(_)
+            | Self::Describe(_)
+            | Self::Bindings(_)
+            | Self::RenderScreen(_)
+            | Self::RenderComponent(_)
+            | Self::RenderStory(_)
+            | Self::RenderPage(_)
+            | Self::CssModules(_)
+            | Self::Dispose(_)
+            | Self::DisposeContext(_)
+            | Self::Shutdown(_) => None,
         }
     }
 }

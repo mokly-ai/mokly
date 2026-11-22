@@ -42,15 +42,18 @@
 - **Impact if no action:** The module comment stays false. A wire change of a
   method without a row is caught only by slower checks, or not at all for a
   field that no process test reads.
-- **Root question:** How does each sidecar method, also one that a later change
-  adds, get a wire round trip in the method inventory test without a reviewer?
+- **Root question:** How does every sidecar method, also a later one, get a
+  checked wire shape without a reviewer and without a false claim of
+  completeness?
 - **Options:**
   - **A.** Add a `restoreGeneration` row to the test, and keep rows by review.
     It fixes today's gap only. Effort: Small.
-  - **B.** Do A, and add a test helper with an exhaustive `match` over `Call`
-    that returns one sample request for each method. The inventory test loops
-    over the helper, so the test does not compile until a new method has a
-    sample. It adds a test for a class of defects. Effort: Medium.
+  - **B.** Do A, and build the test from one test macro that declares each
+    method with its sample request and its sample result, and generates an
+    exhaustive `match` over `Call` from that list. A match next to a separate
+    sample list would force an arm but not a sample. The test then does not
+    compile until a new method has a sample. It adds a test for a class of
+    defects. Effort: Medium.
   - **C.** Change the module comment so that it claims no complete inventory.
     It gives up the coverage that the comment promises. Effort: Small.
 - **Left out:** A structural fix that removes the case: none exists, because
@@ -58,8 +61,10 @@
 - **Wider fix:** B. It is a detection fix, and no structural fix exists.
 - **Previous examples:** `restoreGeneration` since #199. The `prepareContext`
   row, added on 2026-11-22 after a review finding.
-- **Recommendation:** B. It keeps the inventory claim true for every later
-  method, and its exhaustive match follows the pattern of the decode, display,
-  and failure-kind matches.
+- **Recommendation:** B. It keeps a fast check of the encode and the decode of
+  each later method. The generated TypeScript types do not replace it: a field
+  that the encode skips without a default is optional in TypeScript only when it
+  has both serde attributes, and the result half of the seven methods with an
+  empty result accepts any success payload in `decode_result`.
 - **Action:** ask the user, because the recommended option adds a test for a
   class of defects, which the outcome rules leave to the user.

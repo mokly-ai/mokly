@@ -185,6 +185,13 @@ pub(super) fn generation(call: &Call) -> Option<&str> {
         Call::RenderStory(value) => Some(&value.generation),
         Call::RenderPage(value) => Some(&value.generation),
         Call::CssModules(value) => Some(&value.generation),
-        _ => None,
+        Call::Hello(_)
+        | Call::Bundle(_)
+        | Call::RestoreGeneration(_)
+        | Call::ProcessCss(_)
+        | Call::Dispose(_)
+        | Call::PrepareContext(_)
+        | Call::DisposeContext(_)
+        | Call::Shutdown(_) => None,
     }
 }
