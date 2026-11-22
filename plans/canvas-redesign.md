@@ -8,8 +8,8 @@ and its parts: the [design record](./canvas-redesign-design.md), the
 [decisions 1 to 5](./canvas-redesign-decisions.md),
 [decisions 6 to 12](./canvas-redesign-decisions-viewer.md) and
 [decisions 20 to 26](./canvas-redesign-decisions-docs.md) and
-[decisions 27 to 32](./canvas-redesign-decisions-site.md). Decisions 11, 12
-and 20 to 32 wait for Cal.
+[decisions 27 to 32](./canvas-redesign-decisions-site.md). Decisions 12 and 20
+to 32 wait for Cal.
 
 The public site in `apps/site` uses Folio: a warm off-white page, one moss
 accent and Inter. Cal found it boring and asked for a site that looks like a
@@ -266,9 +266,9 @@ Depends on: 4
       cards, the browser walk and the Lighthouse pages. Branch:
       `calummoore/canvas-redesign-m9-site-pricing-5q33`.
 
-## Milestones 10 to 13 and 15 to 17
+## Milestones 10 to 13 and 15 to 18
 
-The viewer milestones and the added Milestones 15 to 17 are in
+The viewer milestones and the added Milestones 15 to 18 are in
 [the viewer milestones file](./canvas-redesign-milestones-viewer.md).
 
 ## Milestone 14: Verification, commit, review and pull request

@@ -221,6 +221,8 @@ terms, the summary table and the notes about the options check.
   changes.
 - **Action:** ask the user, because D deletes drawings of shipped behaviour
   and each option has a real cost.
+- **Answer:** Cal chose **D** on 2026-11-22. Milestone 18 does the work, and
+  Milestone 17 no longer re-themes the older screens.
 
 ## 12. New automatic checks from the mockup reviews
 

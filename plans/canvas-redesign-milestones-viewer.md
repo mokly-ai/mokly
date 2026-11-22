@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 to 17 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 18 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -23,7 +23,7 @@ Depends on: 2
 
 Tags: ui
 
-Depends on: 15, 17
+Depends on: 15, 17, 18
 
 - [ ] Restyle the catalogue, the top bar, the compare toolbar and the search
       in Canvas.
@@ -110,8 +110,9 @@ their code.
 
 Depends on: 3
 
-Starts after Cal answers decision 11, which decides whether the older Browse
-design screens are re-themed here or removed first.
+Under decision 11, option D, Milestone 18 removes the older Browse design
+screens, so this milestone does not re-theme them. It runs at the same time as
+Milestone 18 and leaves `examples/basic/specs/design/` to it.
 
 - [ ] Generate the `@mokly/ui` theme stylesheet and the `mokly-html` Markdown
       style from the palette module, with Canvas as the default.
@@ -122,3 +123,24 @@ design screens are re-themed here or removed first.
 - [ ] Switch the shell mark's rules to `onSignal` and its front layer to
       `signal`, and remove `docs/mockups/styles/fonts/inter.css` and its Inter
       files.
+
+## Milestone 18: One Canvas family of Browse designs
+
+Tags: mockup
+
+Depends on: 1, 3
+
+Decision 11, option D. The design catalogue keeps one Canvas family of Browse
+screens, which Milestones 11 and 12 build.
+
+- [ ] Map each older design screen under `examples/basic/specs/design/` to its
+      Canvas successor, or name it obsolete.
+- [ ] Draw one Canvas screen for each state kind that has none: the removed
+      and moved outcomes, use-case flows, loading and recovery, tag search,
+      and the component explorer pages.
+- [ ] Remove the older screens, their scaffolds and sheets, the seven
+      library parts that only they use, and their fixtures. Move the specs and
+      tests that name them to Canvas or example entries.
+- [ ] Link the Canvas sheets through a `design/canvas/**` route.
+- [ ] Update the design inventory pages and the mockups README.
+- [ ] Run the mockup check of the example catalogue.
