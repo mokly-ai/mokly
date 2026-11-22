@@ -52,7 +52,8 @@ impl Session {
         composed: Arc<Artifact>,
         finish: Finish,
     ) -> Result<Arc<Artifact>> {
-        let recorder = (finish == Finish::Background).then(|| PassRecorder::new(self));
+        let recorder = (finish == Finish::Background && self.state.plans[route].viewport.is_some())
+            .then(|| PassRecorder::new(self));
         let walk: &dyn ValidationRecorder = match &recorder {
             Some(recorder) => recorder,
             None => &Unrecorded,
@@ -113,7 +114,9 @@ impl Session {
 pub(crate) enum Finish {
     /// A foreground read keeps no walk record.
     Foreground,
-    /// A background read keeps one for the head validation of its generation.
+    /// A background read of a view with a viewport keeps one for the head validation of its
+    /// generation. A page or a Markdown document keeps none, because the pass reads it again
+    /// after each edit, also when its document did not change.
     Background,
 }
 

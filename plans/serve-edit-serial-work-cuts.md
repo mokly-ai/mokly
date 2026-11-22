@@ -259,15 +259,21 @@ Depends on: 1
 
 Depends on: 2, 3, 4
 
-- [ ] Run the repository suite `cargo xtask check --suite repository`.
-- [ ] Merge `origin/main` once after workspaces 229 and 233 land, with the
-      `git-merge` skill.
-- [ ] Run the complete gate `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch. Send the SHA to
-      the performance orchestrator.
-- [ ] Run a strict byte proof with ready Changes on `mokly-cloud`,
+- [x] Run the repository suite `cargo xtask check --suite repository`.
+      Evidence: `.context/edit-background-render/jobs/repo-suite.log`.
+- [x] Merge `origin/main` once after workspaces 229 and 233 land, with the
+      `git-merge` skill. Evidence:
+      `.context/edit-background-render/merged-oracle-tests.txt`.
+- [x] Run the complete gate `cargo xtask check`. This machine has no
+      Postgres, `libpq`, Terraform, Helm, or Electron, and no Testbox key, so
+      the gate runs in CI: a manual dispatch of the branch, then the CI of the
+      pull request. Evidence: CI run 45002056303 at `66c9c2baf`.
+- [x] Commit with Conventional Commits and push the branch. Send the SHA to
+      the performance orchestrator. Sent on 2026-11-22: `66c9c2baf`.
+- [x] Run a strict byte proof with ready Changes on `mokly-cloud`,
       `examples/basic`, and the large HTML and large React fixtures of
-      `scripts/large/`. Save the evidence under `.context/`.
+      `scripts/large/`. Save the evidence under `.context/`. Evidence:
+      `.context/edit-background-render/proofs/`.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

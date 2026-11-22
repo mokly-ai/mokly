@@ -141,7 +141,9 @@ impl Fixture {
 }
 
 impl State {
-    /// Read each route whose document key the previous state did not have, as the pass does.
+    /// Read each route whose document key the previous state did not have, and each page and
+    /// Markdown document, as the pass does: only views complete, so the pass reads a route
+    /// without a viewport again after each edit.
     pub(super) fn pass(&self, previous: Option<&State>) -> Vec<String> {
         let known: BTreeMap<_, _> = previous
             .map(|state| {
@@ -157,7 +159,7 @@ impl State {
             .inner
             .plans()
             .iter()
-            .filter(|(route, plan)| known.get(*route) != Some(&plan.key))
+            .filter(|(route, plan)| plan.viewport.is_none() || known.get(*route) != Some(&plan.key))
             .map(|(route, _)| route.clone())
             .collect();
         self.background(&routes)

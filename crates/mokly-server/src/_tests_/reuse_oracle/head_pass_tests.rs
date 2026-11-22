@@ -11,6 +11,7 @@ use super::publication::publish;
 
 const OTHER_VIEWS: [&str; 2] = ["other/index.desktop.html", "other/index.mobile.html"];
 const TARGET_VIEWS: [&str; 2] = ["target/index.desktop.html", "target/index.mobile.html"];
+const NOTES: &str = "---\ntitle: Notes\n---\n# Notes\n\nThe notes of the team.\n";
 
 /// Accept a classification of the initial files and return its state and the stores.
 fn accepted(
@@ -111,5 +112,36 @@ fn foreground_renders_keep_no_walk_records() {
         next.work().validation_walks,
         2,
         "only the views that the pass read keep their walks"
+    );
+}
+
+#[test]
+fn background_reads_of_markdown_documents_keep_no_walk_records() {
+    let base = Fixture::new();
+    let head = Fixture::new();
+    base.tree.write("specs/notes.md", NOTES);
+    head.tree.write("specs/notes.md", NOTES);
+    let (initial, store, previous) = accepted(&head, &base);
+    head.tree.write(
+        "specs/notes.md",
+        &NOTES.replace("notes of the team", "edited notes"),
+    );
+    let state = head.state();
+    let documents: Vec<String> = state
+        .inner
+        .plans()
+        .iter()
+        .filter(|(_, plan)| plan.viewport.is_none())
+        .map(|(route, _)| route.clone())
+        .collect();
+    assert_eq!(documents.len(), 1, "the document has one route");
+    assert_eq!(state.pass(Some(&initial)), documents);
+    let next = attempt(&store);
+    next.compare_prepared(&request(), previous, state.head.clone())
+        .unwrap();
+    assert_eq!(
+        next.work().validation_walks,
+        1,
+        "the pass kept no walk record of the edited document, so its classification walks it"
     );
 }

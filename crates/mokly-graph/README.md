@@ -256,7 +256,8 @@ retention disabled.
   store key, the root eligibility, and the view's span, and no tree.
   `BackgroundMiss::complete` can prepare the own root, hands it off, and
   finishes the view on the render workers without a second lookup. A
-  background finish keeps the walk record of its view.
+  background finish of a view with a viewport keeps the walk record of the
+  view. A page or a Markdown document keeps none.
 - [`src/fragment_weight.rs`](./src/fragment_weight.rs) computes the capacity
   charge of a prepared root fragment without JSON encoding.
 - [`src/document_codec.rs`](./src/document_codec.rs) defines `EncodedView`,
@@ -371,8 +372,10 @@ retention disabled.
 - [`src/head_walks.rs`](./src/head_walks.rs) defines `WalkRecord` and
   `WalkStep`. A Serve background read records the read set of its closure walk
   through the same recorder calls as a validation walk. The generation keeps
-  one record for each view that its background reads walked, within two MiB,
-  and its head validation takes each record once. A record ends with that
+  one record for each view with a viewport that its background reads walked,
+  within two MiB, and its head validation takes each record once. A page or a
+  Markdown document keeps no record, because the pass reads it again after
+  each edit, also when its document did not change. A record ends with that
   validation or with its generation.
 - [`src/reference_index.rs`](./src/reference_index.rs) defines
   `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each

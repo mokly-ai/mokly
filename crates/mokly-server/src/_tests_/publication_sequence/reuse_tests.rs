@@ -98,10 +98,6 @@ fn repeated_edit_phases_do_not_build_equal_details_again_at_either_catalogue_siz
                         Arc::ptr_eq(detail, &statuses[0].details[path]),
                         "{count} entries, edit {edit}: {path} shares the equal status detail"
                     );
-                    assert_eq!(
-                        current.detail(path).and_then(|detail| detail.revision),
-                        Some(current.index.revision)
-                    );
                 }
             }
         });

@@ -57,17 +57,6 @@ encoded payload. A new detail takes that id and payload only when it equals the
 record apart from `detailId` and `revision`, and both details have or both
 lack `revision`. A supplied id alone never proves equality.
 
-Usage completion and Changes first compare the inputs of each detail with
-the record of their own kind, by value. The inputs are the fields that the
-publication keeps from the current detail and the values that it writes: the
-usage of the completed views, the settled workspace, and for Changes the
-comparison evidence and the projected workspace of the entry. When the record
-equals the detail that these inputs build, the publication shares the typed
-detail of the record and its payload. It does not copy or build the detail,
-and it does not search the other records. Otherwise it builds the detail and
-publishes it as above. A usage completion copies a detail only when a value
-that it writes changes.
-
 A detail that a publication builds or changes takes the revision of that
 publication. A detail that a publication shares keeps the typed `revision` of
 the publication that built it, so this value can be older than the revision of

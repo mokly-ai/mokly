@@ -1,7 +1,7 @@
 # Shorten the work after each warm Serve edit
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Closed experiment record.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-22, from the split of the background pass of warm Serve
   edits on branch `calummoore/mokly-edit-background-render-olos`, which the
   performance orchestrator requested.
@@ -41,9 +41,10 @@
   - `docs/protocol/mokly-on-demand.md:76`: the rule that no base capture or
     comparison starts before the pass of its state ends.
 - **Reason:** On 2026-11-22 the performance orchestrator chose B1, B2, and B4
-  for the plan `plans/serve-edit-serial-work-cuts.md`, and the safe parts of C
-  for the next pull request. B3, D, E, and the V8 code cache stay open options
-  with their reasons below.
+  for the pull request of branch
+  `calummoore/mokly-edit-background-render-olos`, and the safe parts of C for
+  the next pull request of that workspace, after the first one merges. B3, D,
+  E, and the V8 code cache stay open options with their reasons below.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -218,6 +219,10 @@
     owns repeated compositions, which this pass does not have.
   - [default-sidecar-count.md](./default-sidecar-count.md) owns the default
     pool size, which this split did not change.
+  - [closed-experiment-record-kind.md](./closed-experiment-record-kind.md)
+    holds the open decision on records that ask for no action. When the next
+    pull request closes this item and keeps its measurements, it applies that
+    answer.
   - The plan `plans/cheaper-sidecar-describe.md` of branch
     `calummoore/mokly-cheaper-sidecar-describe-dlz0` records the Part B call.
     One reason of that call says that render sidecars run `describe` after
@@ -228,20 +233,46 @@
     this item: split the serial work after the last view with the same probe,
     with no protocol change and no product code before the next answer.
   - 2026-11-22, the performance orchestrator chose F without B3: B1, B2, and
-    B4 as one pull request, with the conditions that the plan
-    `plans/serve-edit-serial-work-cuts.md` records, and the safe parts of C as
-    the next pull request after it merges. The parts of C in the seed path and
-    the released-recipe release wait until the branch that owns them merges.
+    B4 as one pull request, from branch
+    `calummoore/mokly-edit-background-render-olos`, and the safe parts of C as
+    the next pull request after it merges. The safe parts are the per-rule
+    style registry index with its fixed cap and its release at `dispose`, one
+    encode of each restore request for all cold sidecars, and the native frame
+    scan. The parts of C in the seed path and the released-recipe release are
+    not in that choice; they waited for the branch that owned them, which
+    merged as PR #469 on 2026-11-22.
+  - 2026-11-22, the performance orchestrator, after its gate accepted B1, B2,
+    and B4: before any code of the next pull request, split two more costs
+    with one clock, and rank their fixes with the safe parts of C, under the
+    same bytes and the same 2% memory rule:
+    - The first edit after a warm start builds all 366 entry details. In the
+      12 gate sessions of the orchestrator, on both arms, the first edit had
+      366 `detail.build` spans between the end of `graph.prepare` and the
+      start of `index.build`, with a mean of 125 ms, in a range of 92 to
+      205 ms. Edits 2 and 3 had no `detail.build` there and took 15 to 16 ms.
+      The startup restores its state from the store, so the core probably
+      holds no encoded details of the startup generation to share. Candidate
+      fixes: encode or keep the details of the startup generation at idle
+      after the first ready Changes, or reuse the stored bytes of the
+      unchanged details. The item
+      [changes-detail-revision-copies.md](./changes-detail-revision-copies.md)
+      holds this cost.
+    - The background pass reads every unchanged page and Markdown document
+      again after each edit. The item
+      [serve-pass-rereads-unchanged-pages.md](./serve-pass-rereads-unchanged-pages.md)
+      gives its count and its time: none on mokly-cloud, which has no pages
+      or Markdown documents.
   - 2026-11-22, the performance orchestrator: B3 stays out. A check by file
     metadata alone adds an unseen change class to the freshness rules, so it
     needs a protocol decision that is not taken for 15 to 18 ms.
   - 2026-11-22, the performance orchestrator: D, E, and the V8 code cache stay
     recorded as ranked here.
 - **Recommendation:** F without B3, as chosen on 2026-11-22.
-- **Action:** No action in this item. The plan
-  `plans/serve-edit-serial-work-cuts.md` carries B1, B2, B4, and the safe parts
-  of C. A later proposal of B3 needs a protocol decision first. D, E, and the
-  V8 code cache need their own scope approval.
+- **Action:** fix after merge, apply the safe parts of C of option F in the
+  next pull request of the workspace, after the split and the ranking of
+  2026-11-22 above, because the orchestrator chose that order. A later
+  proposal of B3 needs a protocol decision first. D, E, and the V8 code cache
+  need their own scope approval.
 
 ## Measurements of 2026-11-22
 
