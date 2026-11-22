@@ -1,4 +1,5 @@
-//! Weak Serve head contexts constrain speculative preparation without extending ownership.
+//! Serve side marks and weak Serve head contexts constrain speculative preparation without
+//! extending ownership.
 
 use std::sync::{Arc, Weak};
 
@@ -9,6 +10,12 @@ impl Runtime {
     /// Stylesheet watching identifies Serve head startup and edits, independently of capture mode.
     pub(crate) fn serve_head(&self) -> bool {
         self.watch_stylesheets && self.base.is_none() && self.head_styles.is_none()
+    }
+
+    /// A base runtime with base leases that a Serve head made. A head never passes, because it
+    /// has no reference to the original head's stylesheet store.
+    pub(crate) fn serve_base(&self) -> bool {
+        self.from_serve_head && self.base.is_some() && self.head_styles.is_some()
     }
 
     /// Register a head context without retaining its graph or child.
