@@ -8,6 +8,8 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { snapshotViewPath } from "../../packages/viewer/src/navigation/routes.js";
+
 import {
   comparisonSection,
   documentExtent,
@@ -18,6 +20,7 @@ import {
   viewportOffset,
 } from "./comparison_scroll.js";
 import { comparisonPaths, test } from "./comparison_test.js";
+import { comparisonIndex } from "./comparison_ui.js";
 import { blockedFormSubmission } from "./shell_error_allowances.js";
 
 /** Mark the pane's window, so that a replaced document is seen. */
@@ -51,8 +54,12 @@ for (const viewport of ["desktop", "mobile"] as const)
   test(`${viewport}: copied comparison panes stay read-only`, async ({
     page,
     allowBrowserError,
+    baseURL,
+    request,
   }) => {
     allowBrowserError(blockedFormSubmission);
+    const index = await comparisonIndex(request, baseURL);
+    const generation = new URL(index.comparisonUrl, baseURL);
     await openComparison(
       page,
       comparisonPaths.changed,
@@ -70,7 +77,10 @@ for (const viewport of ["desktop", "mobile"] as const)
     });
     await expect(away).toHaveAttribute(
       "href",
-      `../stable/index.${viewport}.html`,
+      new URL(
+        snapshotViewPath("after", comparisonPaths.unchanged, viewport, "light"),
+        generation,
+      ).href,
     );
     await markPane(frame);
     await away.click();

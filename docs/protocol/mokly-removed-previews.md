@@ -170,19 +170,35 @@ Retry. Cancellation after unmount or replacement is silent, and late work
 cannot change the replacement stage.
 
 Parse the body as an inert HTML document. Preserve document-level comments
-before and after the document element in their parsed order. Resolve the
-first `<base href>` in document order against the document address, falling
-back to that address when there is no such element or its value is
-unresolvable. Remove every consumer `<base>` and every `<meta>` whose
-`http-equiv`, after trimming ASCII whitespace, equals `refresh` under ASCII
-case-insensitive comparison. Prepend exactly one `<base href>` for the
-effective base as `head`'s first child, including for an implicit head.
-Serialize the source doctype's name, public identifier, and system identifier
-before the document element, or preserve its absence, so the markup stays
-faithful. A `srcdoc` document always renders in no-quirks mode, so a version
-that relied on quirks or limited-quirks rendering may differ from its original
-presentation; this is accepted. Otherwise serialize parsed nodes without
-mutation; do not rewrite resource attributes, links, text, or styles.
+before and after the document element in their parsed order. The effective base
+is the first `<base href>` in document order, resolved against the document
+address, or that address when there is none or it does not resolve. Remove
+every `<base>` and every `<meta>` whose `http-equiv`, after trimming ASCII
+whitespace, equals `refresh`, ignoring ASCII case. Add no `<base>`. Serialize
+the source doctype's name, public identifier, and system identifier before the
+document element, or preserve its absence. A `srcdoc` document always renders
+in no-quirks mode, so a version that relied on quirks or limited-quirks
+rendering may differ from its original presentation; this is accepted.
+
+Replace each relative address with its absolute form, resolved against the
+effective base: every `src`, `href`, `xlink:href`, and `poster` attribute, the
+`data` of an `<object>`, each `srcset` URL, and, in a `style` attribute or an
+HTML or SVG `<style>` element, each `url()`, each `@import` string, and each
+direct string argument of `image-set()` or `-webkit-image-set()`. An address
+stays unchanged when it has a scheme, is empty after trimming ASCII whitespace,
+or does not resolve. A fragment-only address (`#name`) stays too, except as the
+address of an HTML `<a>` or `<area>` or an SVG `<a>`. This keeps CSS `url(#id)`
+and SVG `<use href="#icon">` same-document references, and lets the guard below
+recognize a same-document link by its resolved URL. The address edits also
+apply in `<template>` contents and, recursively, in each `<iframe srcdoc>`
+document, whose effective base uses the outer effective base in place of the
+document address. Such a document keeps its `<base>` elements without `href`,
+so `<base target>` still applies, and a `srcdoc` value with nothing to edit
+stays byte-identical. Nothing else is rewritten. Decision: the viewer resolves
+the addresses itself, because a host's `base-uri 'none'`, as on the Mokly Cloud
+catalogue origin, blocks every `<base>` in a `srcdoc` document. Requiring hosts
+to allow `base-uri 'self'` was rejected because it relaxes a security header,
+and documenting the limit because relative images and links stay broken.
 
 The viewer assigns that serialization to `srcdoc`, never `src`, on a frame
 with exactly `sandbox="allow-same-origin"`. The presented document therefore

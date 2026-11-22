@@ -5,7 +5,11 @@ import path from "node:path";
 /** Exact files and directory indexes; a root callback selects one copy per request. */
 export async function serveStaticFiles(
   root: string | (() => string),
-  options: { allowedOrigin?: string; csp?: string } = {},
+  options: {
+    allowedOrigin?: string;
+    csp?: string;
+    headers?: Readonly<Record<string, string>>;
+  } = {},
 ) {
   const allowedOrigins = new Set<string>();
   if (options.allowedOrigin)
@@ -26,6 +30,8 @@ export async function serveStaticFiles(
           request.headers.origin,
         );
     }
+    for (const [name, value] of Object.entries(options.headers ?? {}))
+      response.setHeader(name, value);
     if (request.method !== "GET" && request.method !== "HEAD") {
       response.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
       response.end("Method not allowed");

@@ -47,9 +47,10 @@ Acceptance, parsing, and transformation follow the
 exactly: the final URL must be the requested address or its
 provider-normalized extensionless form on the same origin, the status OK, the
 MIME essence `text/html`, and the counted body at most 64 MiB. The body is
-parsed without scripting; consumer `<base>` elements and `<meta http-equiv="refresh">`
-directives are removed, one `<base href>` naming the effective base is
-prepended, and the doctype and every other node are serialized unchanged. The
+parsed without scripting; `<base>` elements and `<meta http-equiv="refresh">`
+directives are removed, no `<base>` is added, relative addresses are replaced
+with absolute ones resolved against the effective base, and the doctype and
+every other node are otherwise serialized unchanged. The
 result is assigned to `srcdoc`, never `src`, on a frame with exactly
 `sandbox="allow-same-origin"`, no script permission and `scrolling="no"`, so
 the document has the viewer's origin in every host while scripts, forms,
