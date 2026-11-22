@@ -4,6 +4,8 @@
 
 pub mod bindings;
 pub mod bundle_outcomes;
+pub mod bundle_reply;
+mod bundle_reply_decode;
 pub mod bundle_store;
 pub mod capture_hint;
 #[cfg(target_os = "linux")]
@@ -13,6 +15,7 @@ mod cgroup_level;
 #[cfg(target_os = "linux")]
 pub mod cgroup_memory;
 pub mod client;
+mod client_origins;
 pub mod codec;
 pub mod compiled;
 pub mod controls;

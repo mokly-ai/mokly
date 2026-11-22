@@ -7,6 +7,7 @@ use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::error::{Error, Result};
 use crate::methods::{Bundle, BundleRequest, Call, CssModules, Generation};
 use crate::pool::Pool;
+use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_recipes::same_settings;
 use crate::pool_state::{Slot, State};
 use crate::results::Module;
@@ -58,6 +59,7 @@ impl Pool {
         &self,
         slot: &mut Slot,
         request: &BundleRequest,
+        attempt: &mut BundleAttempt,
     ) -> Result<bool> {
         let params = &request.params;
         let capture = request.capture.unwrap_or_default();
@@ -117,18 +119,16 @@ impl Pool {
             && candidate.as_ref().is_some_and(|(_, _, captured)| *captured)
             && let Some((generation, preparation, _)) = candidate.take()
         {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         if let Some(recipe) = stored {
-            let generation = recipe.generation.clone();
-            self.prerequisite(slot, Call::RestoreGeneration(recipe), false)?;
-            slot.generations.insert(generation, 0);
+            self.install_released(slot, attempt, recipe)?;
         }
         if let Some((generation, preparation, _)) = candidate {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         if let Some((generation, preparation)) = fallback {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         Ok(complete)
     }
@@ -227,10 +227,17 @@ pub(super) struct Preparation {
 struct Recipe {
     params: Bundle,
     compiled: Arc<CompiledGeneration>,
-    modules: Vec<Module>,
+    modules: Arc<Vec<Module>>,
 }
 
 impl Preparation {
+    /// Keep the recipe that this preparation restores until the attempt ends.
+    pub(super) fn pin(&self, attempt: &mut BundleAttempt) {
+        if let Some(recipe) = &self.recipe {
+            attempt.pin(&recipe.compiled, &recipe.modules);
+        }
+    }
+
     /// Take the inputs that the slot lacks; the pool must retain each input that is needed.
     pub(super) fn snapshot(
         state: &State,

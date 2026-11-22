@@ -57,7 +57,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
                         compile_count: 1,
                         compiled: Arc::new(compiled("g")),
                         generation: "g".into(),
-                        modules: Vec::new(),
+                        modules: Default::default(),
                     })),
                     Call::Describe(_) => MethodResult::Definitions(Definitions {
                         screens: Vec::new(),
@@ -157,7 +157,7 @@ fn pair(first: Unimock, second: Unimock) -> Pool {
         state.available.push_back(1);
         state.bundles.insert("g".into(), bundle());
         state.epochs.insert("g".into(), 0);
-        state.modules.insert("g".into(), Vec::new());
+        state.modules.insert("g".into(), Default::default());
         state.compiled.insert("g".into(), Arc::new(compiled("g")));
         state.leases.insert("g".into(), BTreeSet::from([0]));
         state.maps.insert("g".into(), maps("old-control"));

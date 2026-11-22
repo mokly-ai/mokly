@@ -107,17 +107,16 @@
       file.
     - Each run made 13 to 50 `existsSync` and `statSync` calls on 9 to 21
       paths inside the temporary folder.
-  - Proposed, not current behaviour: the unmerged branch
-    `calummoore/mokly-stylesheet-store-across-restarts-jffu` plans a stored
-    format for stylesheet records. On 2026-11-21 its plan recorded two
-    approvals. A stored PostCSS record carries a digest of the effective
-    child environment. Only a record with complete and stable evidence
-    enters the disk. Nothing of this is on `main`.
+  - Proposed, not current behaviour: the parked design in
+    [stylesheet-cache-across-restarts.md](./stylesheet-cache-across-restarts.md)
+    describes a stored format for stylesheet records. Its approved admission
+    rule requires complete and stable evidence and a digest of the effective
+    child environment. On 2026-11-21 the performance orchestrator parked
+    that store and selected startup PostCSS preparation instead. No
+    stylesheet result persists across processes.
   - Harder later is No. Under that proposed admission rule, every current
     PostCSS record stays in memory, because its coverage is incomplete.
-    The open evidence choice of that plan recommends that the store keeps
-    no PostCSS results. A later choice to store them must cover these
-    mechanisms first.
+    A later choice to store PostCSS results must cover these mechanisms first.
 - **Problem:** The mapped-read rule keeps only the bytes that observed
   reads deliver inside the mapped roots. Three separate mechanisms change the PostCSS
   output without a change to that evidence:

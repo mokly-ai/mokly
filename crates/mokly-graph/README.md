@@ -333,6 +333,25 @@ retention disabled.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
   closure walk.
+- `ClosureBuilder::collect_recorded` reports each input of the walk to a
+  `ValidationRecorder`. Its default marks the walk unknown, so a builder that
+  cannot record its inputs keeps no facts. The private
+  [`src/closure_walk.rs`](./src/closure_walk.rs) holds the one walk that
+  `Walker::collect` and `Walker::collect_recorded` run.
+- [`src/head_validation.rs`](./src/head_validation.rs) defines
+  `HeadValidation`, `ClosureFacts`, `ValidationRecorder`, and `ValidationRead`.
+  `RenderGeneration::validate_head` runs complete head validation over every
+  view with a caller's `HeadValidation`. That caller supplies each checked
+  document, and either proven closure facts or a recorded walk. The default
+  calls `render_all`. `RenderGeneration::validation_document` and
+  `RenderGeneration::validation_identity` give the checked head read and the
+  proof of one walk input. Their defaults read `comparison_document` and prove
+  nothing. The caller's `HeadValidation` reads documents and inputs through the
+  outermost generation. So a checking wrapper can forward `validate_head`, and
+  it keeps its checks in these two methods. The private
+  [`src/session_head.rs`](./src/session_head.rs) runs the pass for a prepared
+  generation. It replays the observer calls of reused facts, and it takes
+  anchors, links, and document warnings from the current document.
 - [`src/reference_index.rs`](./src/reference_index.rs) defines
   `ReferenceIndex` and `MemoryReferenceIndex`, the reference edges of each
   referenced file of one generation and its reads of the style memo.

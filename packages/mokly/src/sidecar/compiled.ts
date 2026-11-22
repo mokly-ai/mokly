@@ -98,6 +98,7 @@ export function bundleResult(
   generation: Generation,
   plan?: ResolutionPlan,
   encoding?: Map<object, string>,
+  checkSize = checkRecipeSize,
 ): BundleResult {
   const result: BundleResult = {
     ...(plan ? { plan } : {}),
@@ -107,7 +108,7 @@ export function bundleResult(
     modules: generation.modules,
     compiled: generation.compiled,
   };
-  checkRecipeSize(generation.params, result, undefined, encoding);
+  checkSize(generation.params, result, undefined, encoding);
   return result;
 }
 
@@ -116,6 +117,7 @@ export async function reuse(
   generations: Iterable<Generation>,
   params: BundleParams,
   capture: BundleCapture = "full",
+  selected?: (source: Generation) => void,
 ): Promise<Generation | undefined> {
   const paths = await ModulePaths.create(params);
   params = { ...params, sourceRoot: paths.sourceRoot };
@@ -162,7 +164,9 @@ export async function reuse(
           new PhysicalInputReader().markedCurrent(
             generation.compiled.reuseEvidence,
           ));
-    if (current)
+    if (current) {
+      selected?.(generation);
       return restore(params, generation.compiled, generation.modules);
+    }
   }
 }

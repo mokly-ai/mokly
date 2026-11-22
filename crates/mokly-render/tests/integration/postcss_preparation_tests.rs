@@ -1,9 +1,11 @@
-//! Real Serve edit attempts end unused preparation and retain used contexts.
+//! Real Serve startup and edit attempts own prepared PostCSS contexts.
 
 use std::fs;
 use std::sync::Arc;
 
+use mokly_render::runtime::Runtime;
 use mokly_sidecar::methods::{BundleCapture, Call};
+use mokly_sidecar::operations::Operation;
 
 use super::support::Consumer;
 
@@ -54,6 +56,108 @@ pub(super) fn releases(consumer: &Consumer, context: &str) -> usize {
         .iter()
         .filter(|call| matches!(call, Call::DisposeContext(params) if params.context == context))
         .count()
+}
+
+fn startup(consumer: &mut Consumer) {
+    let runtime = consumer.runtime.as_ref();
+    consumer.runtime = Arc::new(
+        Runtime::new(
+            runtime.tree.clone(),
+            runtime.dependency_tree.clone(),
+            runtime.physical_inputs.clone(),
+            runtime.pool.clone(),
+            runtime.cache.clone(),
+            runtime.workers.clone(),
+            runtime.version.clone(),
+            None,
+        )
+        .with_serve_edit_plans()
+        .with_stylesheet_watching(),
+    );
+}
+
+#[test]
+fn startup_uses_full_capture_and_one_context_for_configured_stylesheets() {
+    let mut consumer = fixture(true);
+    let build = consumer.generation(consumer.prepare().unwrap());
+    let expected = build.resource("styles/theme.css").unwrap().unwrap();
+    startup(&mut consumer);
+    let before = consumer.pool.calls.lock().unwrap().len();
+    let prepared = consumer.prepare().unwrap();
+    let contexts = preparations(&consumer, before);
+    assert_eq!(contexts.len(), 1);
+    let captures: Vec<_> = consumer.pool.calls.lock().unwrap()[before..]
+        .iter()
+        .filter_map(|call| match call {
+            Call::Bundle(request) => Some(request.capture),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(captures, [Some(BundleCapture::Full)]);
+    assert_eq!(releases(&consumer, &contexts[0]), 0);
+    let generation = consumer.generation(prepared);
+    let requests: Vec<_> = consumer.pool.calls.lock().unwrap()[before..]
+        .iter()
+        .filter_map(|call| match call {
+            Call::ProcessCss(params) => Some(params.context.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(requests, contexts);
+    let actual = generation.resource("styles/theme.css").unwrap().unwrap();
+    assert_eq!(actual, b"p {\n  color: red;\n}\n");
+    assert_eq!(actual, expected);
+    assert_eq!(releases(&consumer, &contexts[0]), 1);
+    consumer.processes.wait_for(Operation::PostcssStop, 1);
+    assert_eq!(consumer.processes.count(Operation::PostcssStart), 2);
+    drop(generation);
+    assert_eq!(releases(&consumer, &contexts[0]), 1);
+}
+
+#[test]
+fn startup_without_a_postcss_root_releases_its_unused_preparation() {
+    let mut consumer = fixture(false);
+    consumer.write("specs/page.mockup.ts", &page("Without CSS", false));
+    startup(&mut consumer);
+    let prepared = consumer.prepare().unwrap();
+    let contexts = preparations(&consumer, 0);
+    assert_eq!(contexts.len(), 1);
+    assert_eq!(releases(&consumer, &contexts[0]), 0);
+    let generation = consumer.generation(prepared);
+    assert_eq!(releases(&consumer, &contexts[0]), 1);
+    let requests: Vec<_> = consumer
+        .pool
+        .calls
+        .lock()
+        .unwrap()
+        .iter()
+        .filter_map(|call| match call {
+            Call::ProcessCss(params) => Some(params.context.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(requests, Vec::<String>::new());
+    assert!(
+        String::from_utf8_lossy(&generation.render("page/index.html").unwrap().bytes)
+            .contains("Without CSS")
+    );
+    drop(generation);
+    assert_eq!(releases(&consumer, &contexts[0]), 1);
+}
+
+#[test]
+fn startup_bundle_failure_releases_its_new_preparation() {
+    let mut consumer = fixture(false);
+    startup(&mut consumer);
+    consumer.write("specs/page.mockup.ts", "export default {");
+    let failure = consumer.prepare().unwrap_err();
+    assert!(matches!(
+        failure,
+        mokly_catalogue::error::CatalogueError::Runtime { .. }
+    ));
+    let contexts = preparations(&consumer, 0);
+    assert_eq!(contexts.len(), 1);
+    assert_eq!(releases(&consumer, &contexts[0]), 1);
 }
 
 #[test]

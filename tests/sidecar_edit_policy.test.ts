@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { build } from "esbuild";
 
+import type { BundleReply } from "../packages/mokly/src/generated/sidecar/BundleReply.js";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { CaptureDurability } from "../packages/mokly/src/sidecar/capture-durability.js";
@@ -124,11 +125,20 @@ test("CSS and YAML edits reuse an uncaptured JavaScript edit and its seeded reci
     compiled: edited.compiled,
     modules: edited.modules,
   });
+  const compact = await fresh.call<BundleReply>("bundle", {
+    ...params,
+    evaluation: "seeded",
+    capture: "serveEdit",
+  });
+  assert.ok("restoredGeneration" in compact);
+  assert.equal(compact.restoredGeneration, edited.generation);
+  await fresh.call("dispose", { generation: edited.generation });
   const seeded = await fresh.call<BundleResult>("bundle", {
     ...params,
     evaluation: "seeded",
     capture: "serveEdit",
   });
+  assert.equal(seeded.generation, compact.generation);
   assert.equal(seeded.compiled.runtimeKey, edited.compiled.runtimeKey);
   assert.equal(fresh.operations.length, 0);
   await sidecar.call("shutdown");

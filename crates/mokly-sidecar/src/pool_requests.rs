@@ -20,6 +20,9 @@ impl Pool {
         deadline: u64,
         attempt: &mut BundleAttempt,
     ) -> Result<MethodResult> {
+        if matches!(call, Call::Bundle(_)) {
+            attempt.pin_loaded(&self.lock(), slot);
+        }
         self.cleanup(slot)?;
         if let Call::Bundle(params) = call {
             self.seed_bundle(slot, params, attempt)?;

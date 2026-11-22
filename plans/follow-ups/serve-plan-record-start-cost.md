@@ -16,7 +16,7 @@
   `crates/mokly-sidecar/src/pool_bundle_cache.rs:86`, line 128, and line
   139, `crates/mokly-compare/src/bundle_codec.rs:51` to line 57,
   `crates/mokly-compare/src/bundle_codec_write.rs:18` to line 24,
-  `crates/mokly-compare/src/bundle_codec_read.rs:100`,
+  `crates/mokly-compare/src/bundle_codec_read.rs:98`,
   `crates/mokly-compare/src/bundle_store.rs:147` to line 149,
   `crates/mokly-render/src/edit_plans.rs:60`,
   `crates/mokly-render/src/bundle_attempt.rs:51`, and
@@ -61,7 +61,7 @@
       the evidence again to count them. It runs for each offer with a plan,
       at `crates/mokly-sidecar/src/pool_bundle_cache.rs:139`, and for each
       read of an entry with a plan, at
-      `crates/mokly-compare/src/bundle_codec_read.rs:100`.
+      `crates/mokly-compare/src/bundle_codec_read.rs:98`.
     - The offer count runs before the receipt check that ends an unchanged
       write, at `crates/mokly-compare/src/bundle_store.rs:147` to line 149.
       So a warm hit pays it too.

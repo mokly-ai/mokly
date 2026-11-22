@@ -68,7 +68,7 @@ pub(super) struct State {
     pub(super) next_epoch: u64,
     pub(super) epochs: BTreeMap<String, u64>,
     pub(super) bundles: BTreeMap<String, Bundle>,
-    pub(super) modules: BTreeMap<String, Vec<Module>>,
+    pub(super) modules: BTreeMap<String, Arc<Vec<Module>>>,
     pub(super) compiled: BTreeMap<String, Arc<CompiledGeneration>>,
     pub(super) recipes: Recipes,
     pub(super) leases: BTreeMap<String, BTreeSet<u64>>,

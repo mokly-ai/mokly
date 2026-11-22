@@ -37,6 +37,7 @@ pub mod error;
 mod fragment_weight;
 pub mod fragments;
 pub mod graph;
+pub mod head_validation;
 pub mod key;
 mod link_index;
 mod link_results;
@@ -79,6 +80,7 @@ mod routing_inputs;
 mod routing_records;
 mod session;
 mod session_build;
+mod session_head;
 mod session_lookup;
 mod session_proof;
 mod session_render;
@@ -101,6 +103,8 @@ mod resource_access;
 
 mod closure_prefetch;
 mod closure_seeds;
+mod closure_target;
+mod closure_walk;
 #[cfg(test)]
 #[path = "_tests_/rendering_tests.rs"]
 mod rendering_tests;
@@ -139,3 +143,7 @@ pub mod write_activity;
 #[cfg(test)]
 #[path = "_tests_/style_memo_tests.rs"]
 mod style_memo_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_usage_tests.rs"]
+mod comparison_usage_tests;

@@ -121,7 +121,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     path: "specs/card.mockup.ts".into(),
                     imports: Vec::new(),
                     digest: Some("source".into()),
-                }],
+                }].into(),
             })))),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::CssModules(params) if params.generation == "base-bundle")))

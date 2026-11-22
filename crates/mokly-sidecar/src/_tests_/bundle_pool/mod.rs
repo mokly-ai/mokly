@@ -1,10 +1,14 @@
 //! Pool cache tests use real pool entry points with mocked workers and stores.
 
 mod order_tests;
+mod origin_lifetime_tests;
+mod origin_support;
 mod plan_tests;
 mod provenance_tests;
 mod recovery_tests;
 mod restore_tests;
+mod restored_reply_tests;
+mod seed_pin_tests;
 mod sharing_tests;
 mod write_tests;
 
@@ -56,14 +60,20 @@ fn answer(id: &str, compile_count: u64) -> MethodResult {
         cache: None,
         compile_count,
         epoch: 0,
-        modules: vec![],
+        modules: Default::default(),
         unmapped_dependency_directories: None,
     }))
 }
 
 fn recipe(id: &str) -> DurableRecipe {
     DurableRecipe::new(
-        ReusableRecipe::new(id.into(), params(), vec![], Arc::new(compilation(id, true))).unwrap(),
+        ReusableRecipe::new(
+            id.into(),
+            params(),
+            Default::default(),
+            Arc::new(compilation(id, true)),
+        )
+        .unwrap(),
     )
     .unwrap()
 }
@@ -149,7 +159,7 @@ fn live(pool: &Pool, id: &str, epoch: u64, complete: bool, installed: bool) {
     state
         .compiled
         .insert(id.into(), Arc::new(compilation(id, complete)));
-    state.modules.insert(id.into(), vec![]);
+    state.modules.insert(id.into(), Default::default());
     state.epochs.insert(id.into(), epoch);
     state.next_epoch = state.next_epoch.max(epoch);
     state.leases.insert(id.into(), [epoch].into());

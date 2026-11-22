@@ -83,9 +83,16 @@ to the claim that held it, if that claim is still live.
 `SysinfoMemory` reads physical total minus used memory. On Linux,
 `CgroupMemory` reads finite v1 or v2 controller limits through `dyn MemoryFiles`.
 
-Every bundle result includes its compiled recipe. The pool retains these
+A full bundle result includes its compiled recipe. The pool retains these
 recipes, CSS Modules maps, and resolved handle tables. A new process restores
-old code without compiling changed sources.
+old code without compiling changed sources. When the sidecar reuses a restored
+compilation, it can send the short result of the
+[restored reuse rules](../../docs/protocol/mokly-sidecar-recipes.md#restored-reuse).
+`Client` rebuilds it into a full `results::Bundle` that shares the `Arc`
+compilation and module graph of that restore. `Client` reaches them only
+through `Weak` references, and each pool `bundle` request pins the recipes
+that its sidecar can reuse until the request ends. So a short result adds no
+recipe copy, and `Client` keeps no recipe alive.
 Epoch-specific releases retain newer lifetimes with the same id. Releases
 record state without waiting for a worker. An idle cleanup worker sends
 disposal to each affected slot. Busy slots apply it before their next request.
@@ -183,10 +190,10 @@ on another worker. Captured candidates still take priority in the sidecar's
 reuse check.
 Directory membership can change without a change of the content id. The
 private seed id keeps a stored and a live recipe with the same content id
-apart, so both reach the sidecar's `reuse` check. Bundle results carry the
-public content id, never a seed id. Cleanup disposes of the seed when the
-slot returns from the bundle request. A reused recipe leaves the store when
-it becomes live. Its next final release can keep it again. Only a `bundle`
+apart, so both reach the sidecar's `reuse` check. The `generation` of a bundle
+result is the public content id, never a seed id. Cleanup disposes of the seed
+when the slot returns from the bundle request. A reused recipe leaves the store
+when it becomes live. Its next final release can keep it again. Only a `bundle`
 call loads stored entries. A replay never loads one. A replay still restores
 the live generation that a request names, also an incomplete one.
 `shutdown`, `abort`, and `cancel_requests` clear the store. A late release
@@ -410,7 +417,11 @@ with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
 Real-process recipe tests count esbuild operations. A revert after a
 release skips esbuild, a changed input compiles, and a stored and a live
-recipe with one content id both stay usable. The shutdown unit tests
+recipe with one content id both stay usable. Restored reply tests cover the
+shared rebuild of short replies, origin lifetimes, protocol failures, full
+reply decoding, and the request pins of the pool. The origin lifetime and seed pin tests release
+or evict a live, loaded, released-recipe, Serve edit fallback, or disk seed
+while the request that names it is busy, and the reply still resolves. The shutdown unit tests
 control exit and drain independently through `WaitMock`. Command stderr tests
 acknowledge all forwarded bytes before shutdown and check bounded pieces and
 process reaping. Direct sidecar tests check graceful exit code 0 and the final
@@ -495,10 +506,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
   call from the bundle store, keeps the request-local provenance of its disk
   seed, sets the `cache` outcome of its result, and offers the served recipe
-  of each `Full` call to the store. The provenance keeps the runtime key and
-  the plan of a restored stored compilation. A result with that runtime key
-  carries that plan. It reports `hit` when its count of `esbuild` events is
-  zero.
+  of each `Full` call to the store. The provenance keeps the loaded recipe of
+  a restored stored compilation, with its runtime key and plan. A result with
+  that runtime key carries that plan. It reports `hit` when its count of
+  `esbuild` events is zero. `BundleAttempt` also holds the request pins of the
+  live slot generations and the restored seeds. `install_live` and `install_released`
+  pin each live or released seed before they restore it in the slot.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
@@ -552,7 +565,15 @@ spawn the built sidecar and render a component, screen, story, and page. The
   [`src/process_memory.rs`](./src/process_memory.rs) define the host
   `SystemClock` and `SystemMemory` that the composition root injects.
 - [`src/client.rs`](./src/client.rs) defines `Client`, which performs hello,
-  forwards diagnostic events, and decodes each result.
+  forwards diagnostic events, and decodes each result. The private `Origins`
+  of [`src/client_origins.rs`](./src/client_origins.rs) records whether a
+  `bundle` result or a `restoreGeneration` request loaded each generation of
+  its process. It rebuilds a short reply before `Client` records the returned
+  id.
+- [`src/bundle_reply.rs`](./src/bundle_reply.rs) defines `BundleReply`, a full
+  `results::Bundle` or a short `RestoredBundle`. The private
+  [`src/bundle_reply_decode.rs`](./src/bundle_reply_decode.rs) decodes either
+  form in one typed pass.
 - [`src/codec.rs`](./src/codec.rs) frames NDJSON messages within
   `MAX_FRAME_BYTES`. After each complete frame, its `Decoder` keeps at most
   16 KiB of buffer capacity.
@@ -569,12 +590,16 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `results::Bundle` carries the optional `plan` beside `compiled`. Pool state, store calls, and restore requests take
   only the `Bundle` settings. A successful `Response`
   keeps its result as owned raw JSON until `decode_result` decodes the type of
-  the pending request. The private [`src/wire_decode.rs`](./src/wire_decode.rs)
+  the pending request. A `bundle` result decodes as a `BundleReply`, and the
+  restore origins of the `Client` resolve a short reply. A failed
+  typed decode falls back once to a generic JSON tree.
+  The private [`src/wire_decode.rs`](./src/wire_decode.rs)
   decodes each envelope field by field, with no generic JSON tree.
   `results::Bundle` and the `RestoreGeneration` of
-  [`src/compiled.rs`](./src/compiled.rs) hold the compilation in an `Arc`, and
-  a compilation holds its `ReuseEvidence` in an `Arc`. Pool records, store
-  offers, and restore requests share the compilation instead of copying it.
+  [`src/compiled.rs`](./src/compiled.rs) hold the compilation and the module
+  graph in an `Arc` each, and a compilation holds its `ReuseEvidence` in an
+  `Arc`. Pool records, store offers, restore requests, and rebuilt short
+  replies share them instead of copying them.
   `ReuseEvidence` can carry the `UncapturedEvidence` marker of a deliberate
   Serve edit omission. Its `captured`, `serve_edit`, and `reusable` methods
   decide which candidates a call admits.
