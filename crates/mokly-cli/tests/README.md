@@ -60,6 +60,10 @@ writes no stdout, and the listening line is the first line that they parse.
 [`process_support/html.rs`](./process_support/html.rs) holds the shared HTML
 fixture writes and the complete native-process shutdown.
 
+Some `mokly-cli` Rust tests use debug-only hooks, such as the allocator probe
+and `MOKLY_TEST_STATIC_COLUMNS`, so they need the dev profile and fail under
+`cargo test --release`.
+
 ```bash
 cargo test -p mokly-cli
 cargo test -p mokly-cli --features design-matrix --test design_attribution_tests
@@ -93,10 +97,18 @@ npm test -- tests/static_recovery_signals.test.ts
 
 These tests use the [debug fault adapters](../src/test_faults/mod.rs).
 `MOKLY_TEST_STATIC_FAULTS` selects injected filesystem failures or signal gates.
-Its `allocator` value makes the `allocator_probe` module print
-`allocator-purge-delay` and the purge delay that mimalloc reports, and the
-binary then exits. The Rust test `allocator_tests.rs` checks that line with and
-without `MIMALLOC_PURGE_DELAY`.
+
+The `allocator` value of `MOKLY_TEST_STATIC_FAULTS` runs the allocator probe of
+[`allocator_probe.rs`](../src/test_faults/allocator_probe.rs) instead of the
+command. The probe prints `allocator-purge-delay` and the purge delay that
+mimalloc reports at startup. It then calls `MimallocPurgeDelay`, the
+implementation that Serve calls after its first ready Changes. It prints
+`allocator-purge-delay-after-changes` and the delay after that call, and the
+binary exits. The Rust test `allocator_tests.rs` checks both lines with and
+without `MIMALLOC_PURGE_DELAY`. A unit test in
+[`serve_changes_tests.rs`](../src/_tests_/serve_changes_tests.rs) checks that
+only a ready Changes result calls `PurgeDelay`.
+
 The optional `MOKLY_TEST_STATIC_READY`, `MOKLY_TEST_STATIC_EVENTS`,
 `MOKLY_TEST_STATIC_PREVIOUS`, and `MOKLY_TEST_STATIC_COLUMNS` values provide
 isolated test paths and terminal width. Release builds compile none of these

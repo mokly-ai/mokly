@@ -32,9 +32,13 @@ the commands, the options, the exit statuses, and the error categories. The
 version bytes. `--help` and `--version` write plain stdout in every output
 mode.
 
-The binary's mimalloc allocator returns freed memory to the operating system
-after 30 ms, not after mimalloc's default of 1,000 ms. A valid
-`MIMALLOC_PURGE_DELAY` value in the environment keeps priority.
+The binary uses mimalloc as its global allocator. After Serve publishes its
+first ready Changes, the binary sets mimalloc's default purge delay to 30 ms.
+The purge delay is the time after which a freed memory range becomes due for its
+return to the operating system. Before that point, and in `build` and
+`publish`, the delay stays at mimalloc's own default of 1,000 ms. A valid
+`MIMALLOC_PURGE_DELAY` value in the environment, or the legacy
+`MIMALLOC_RESET_DELAY`, keeps priority over both values.
 
 Build and Serve share the same runtime composition. Each command owns one
 lazy sidecar pool. `--sidecars` and `MOKLY_SIDECARS` set an exact size.
@@ -325,9 +329,10 @@ changed.
 - [`src/main.rs`](./src/main.rs) and [`src/entry.rs`](./src/entry.rs) start
   the binary, select the command and the output mode, and map the result to
   the exit status.
-- [`src/allocator.rs`](./src/allocator.rs) defines
-  `return_freed_memory_sooner`, which `main` calls first to make the shorter
-  purge delay the mimalloc default.
+- [`src/allocator.rs`](./src/allocator.rs) defines the `PurgeDelay` boundary
+  and its mimalloc implementation, `MimallocPurgeDelay`. `Source::finished`
+  calls `return_freed_memory_sooner` after each ready Changes result. Only the
+  first call in a process sets the 30 ms default purge delay.
 - [`src/grammar.rs`](./src/grammar.rs) defines `Cli`, `Verb`, and `Common`,
   the clap grammar, and [`src/options.rs`](./src/options.rs) normalizes
   options and environment fallbacks. `Publish.token` and `Environment.token`
