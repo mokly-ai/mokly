@@ -310,22 +310,29 @@ milestone has no TODOs left.
 
 Depends on: 4, and 6 when Part B stays in this branch
 
-- [ ] Run `cargo xtask check`. Run `cargo xtask mokly-fixtures`, and commit its
+- [x] Run `cargo xtask check`. Run `cargo xtask mokly-fixtures`, and commit its
       output when it changes. Then commit, push, and give the SHA to the
       orchestrator.
-- [ ] Compare local warm Cloud edits and the memory rule with `main`. Prove
+      Evidence: `.context/cheaper-describe/complete-gate-5.log`,
+      `.context/cheaper-describe/cloud-suites.log`, and
+      `.context/cheaper-describe/mokly-fixtures.log`.
+- [x] Compare local warm Cloud edits and the memory rule with `main`. Prove
       equal bytes, warnings, and diagnostics of strict builds and ready Changes
       on the four acceptance fixtures. Save each result under
       `.context/cheaper-describe/`.
+      Evidence: `.context/cheaper-describe/local-timings.md`,
+      `.context/cheaper-describe/stats-heap-report.md`, and
+      `.context/cheaper-describe/bytes-run-2.log`.
 
 ## Milestone 8: Review and pull request
 
 Depends on: 7
 
-- [ ] Review the complete diff against `origin/main` with the
+- [x] Review the complete diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings. Then
       fix the `fix now` findings, record follow-up items under
       `plans/follow-ups/` for the rest, re-review once, and report.
+      Evidence: `.context/reviews/calummoore/mokly-cheaper-sidecar-describe-dlz0/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request with the `finish-work` skill. Its description gives
       the user decisions and design calls with their dates, a permalink to
