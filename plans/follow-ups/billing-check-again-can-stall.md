@@ -1,0 +1,39 @@
+# Check again can stay busy without a limit
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-22, from the finding check of finding 1 of the round 3 review of `calummoore/fu-billing-refresh-after-payment-dj5d`, which listed it outside the review scope.
+- **Location:** `packages/app/src/settings/panes/billing-pane.tsx:139`, `packages/app/src/settings/write.ts:188`, and `docs/protocol/cloud/settings-dialog.md:193`.
+- **Reason:** The code is unchanged from `origin/main`, and the recommended option adds a time limit and a failure that no requirement covers.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Billing pane:** The settings pane that shows the workspace plan, in `packages/app/src/settings/panes/billing-pane.tsx`.
+  - **Confirmation wait:** The reads of the Billing pane after a successful Stripe Checkout return. `readUntilTeam` in `packages/app/src/settings/panes/billing-watch.ts` runs them.
+  - **Delayed state:** The notice **Still confirming your subscription** with one **Check again** control. The pane shows it when the confirmation wait ends before a read reports Team.
+- **Background:**
+  - After a successful Checkout return, the Billing pane reads billing until a read reports Team or the confirmation wait ends.
+  - `docs/protocol/cloud/settings-dialog.md`, section "History And Entry Points", gives the confirmation wait one deadline, thirty seconds after it starts.
+  - The deadline ends the wait also while a read is pending. A read that answers or fails after the deadline changes nothing.
+  - On 2026-11-20, the user chose that `readUntilTeam` holds one deadline for its whole run, ends a pending read and a pause at it, and drops late answers. That choice does not cover **Check again**.
+  - The same section says that **Check again** "makes one fresh read and returns to the delayed state while the plan remains Free".
+  - The same section says that a failed Check again read stays beside that control with the same failure fragment.
+  - No requirement gives the Check again read a time limit.
+- **Problem:**
+  - **Check again** sends one `readBilling` call inside its `useWrite` write.
+  - The write in `packages/app/src/settings/write.ts`, `readBilling` in `packages/app/src/data/billing.ts`, and the API client in `packages/app/src/api/client.ts` set no time limit and no abort signal.
+  - While the read is pending, the control shows **Checking…** and refuses each press.
+  - A read that never answers keeps the control busy without a limit. The deadline of the confirmation wait does not apply to this read.
+  - Nobody has reproduced this. A read of the code shows it.
+- **Impact if no action:** A stalled request leaves the reader on **Checking…**, with no failure and no other way to read the plan again in the pane.
+- **Root question:** How does a press of **Check again** end when its read does not answer?
+- **Options:**
+  - **A.** Keep one ordinary read with no time limit, as now. Nothing changes, and a stalled read keeps the control busy. Effort: Small.
+  - **B.** Bound the one read. At a time limit, end the press with a load failure that the reader can retry, and ignore a later answer. This adds new behaviour at a boundary, so the user chooses the limit and the failure that shows. Effort: Small.
+  - **C.** Make **Check again** start the full confirmation wait again, with the confirming state, its one deadline, and the delayed state at the end. This changes the one-fresh-read rule and the `product/settings/billing/delayed/checking` mockup. Each press can then wait thirty seconds. Effort: Medium.
+  - **D.** Give every request of the API client in `packages/app/src/api/client.ts` one time limit. A stalled request then fails like any other transport failure. This changes every read and write of the app and needs a new requirement for the client. A write that reaches its limit can still complete on the server, so its failure can be wrong. Effort: Large.
+- **Left out:** A deadline check after the read answers cannot end a read that does not answer.
+- **Wider fix:** D. No read or write of the app can then stay busy without a limit.
+- **Previous examples:** Until 2026-11-20, `readUntilTeam` checked its deadline only after a read answered, so a read that never answered kept the confirmation wait running. The user then chose one deadline that also ends a pending read.
+- **Recommendation:** B. It ends a stalled press with a failure that the reader can retry, and it keeps the one-read rule. D best protects the codebase, but it changes every request of the app.
+- **Action:** ask the user, because B adds a time limit and a failure at a boundary that no requirement covers.

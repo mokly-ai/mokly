@@ -88,7 +88,7 @@ export function BillingPane({
 
   // The return from Checkout never writes the plan — only the webhook does —
   // so the pane says what it is doing and asks again until the subscription is
-  // confirmed or the bounded wait ends with one more attempt.
+  // confirmed or the bounded wait reaches its deadline.
   useEffect(() => {
     if (landing === undefined && confirmationRetry === 0) return;
     if (landing === "cancelled") {
