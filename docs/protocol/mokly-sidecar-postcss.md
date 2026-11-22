@@ -75,8 +75,8 @@ neither starts with a stylesheet bundle that it can reuse. A check for a PostCSS
 stylesheet root before the bundle was rejected, because the module graph that
 names the roots comes with the `bundle` result. So a startup or base attempt
 whose stylesheets need no `processCss` request starts a child that ends unused.
-Decision: a base attempt prepares its context. A start at its first `processCss`
-request was rejected, because that request then waits for the child.
+Decision: a base attempt with a `bundle` request prepares its context. A start at
+its first `processCss` request was rejected, because that request waits for the child.
 Decision: a head attempt prepares no context while an older used head context of
 its configuration stays live. A preparation beside that context was rejected,
 because the attempt would then hold two children during its bundle.

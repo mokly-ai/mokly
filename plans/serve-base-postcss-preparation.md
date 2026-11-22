@@ -2,17 +2,21 @@
 
 Status: Active. On branch `calummoore/mokly-earlier-postcss-start-bdhv`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
-Since #470, Serve prepares the PostCSS context of each head attempt, so the
-pool sends `prepareContext` directly after the head `hello`. The base side of
-a Changes classification prepares no context. Its child forks only at the
-first base `processCss` request, and that request waits for the child: about
-340 to 540 ms of each first Changes in warm sessions of `examples/basic`.
-This change makes each base graph preparation of a Serve classification a
-base attempt that prepares its context. The pool then sends its
-`prepareContext` request directly after the base `hello`, before the seed and
-the `bundle` request, with no pool or sidecar change. `build`, `publish`, and
-every head attempt keep their rules, and a head attempt can never take the
-base rule. No output changes.
+Since #470, a Serve head attempt can prepare its PostCSS context through its
+`bundle` request: a startup attempt, and a later attempt that keeps a stale
+PostCSS stylesheet bundle. The pool then sends `prepareContext` directly after
+the head `hello`. The base side of a Changes classification prepares no
+context. Its child forks only at the first base `processCss` request, and that
+request waits for the child: about 340 to 540 ms of each first Changes in
+warm sessions of `examples/basic`. This change makes each base graph
+preparation of a Serve classification a base attempt. A base attempt with a
+`bundle` request prepares its context, so the pool sends its `prepareContext`
+request directly after the base `hello`, before the seed and the `bundle`
+request. A CSS-only base sends no `bundle` request, so its child still starts
+at its first `processCss` request. The eager pool path now binds a prepared
+`bundle` request to its process too, so the first base stylesheet reaches the
+prepared child. `build`, `publish`, and every head attempt keep their rules,
+and a head attempt can never take the base rule. No output changes.
 
 Decisions, all by the performance orchestrator under the delegation of the
 user:
@@ -74,11 +78,30 @@ Design calls, my own:
   `publish` prepare no context, so the change cannot reach their bytes.
 - 2026-11-22: no options check ran over the decisions, because the user
   answered each of them before this plan existed.
+- 2026-11-22, review finding 14: both admission paths of the pool bind the
+  PostCSS context of a call to its slot when they select the slot, through
+  one helper, and the eager claim reads the context through
+  `Call::postcss_context`. Before, the eager path bound only a `processCss`
+  context. So a prepared `bundle` request on the eager path left its context
+  without a process, and the first base stylesheet could reach another idle
+  process of the base root and start a second child. Rejected: one record at
+  execution, because a second request of a context must wait for the slot of
+  the first one from the selection on. The scheduling test "a render uses an
+  idle slot while an earlier affine call waits" checks that, and it failed
+  with the record at execution.
+- 2026-11-22, review finding 15: the base decision line of the protocol names
+  a base attempt with a `bundle` request, and the plan texts say the same.
+  The words restate the unchanged rule that only a `bundle` request carries
+  the preparation, so no requirement and no decision changes. A CSS-only base
+  keeps its start at its first `processCss` request.
 
 Contract owners:
 
 - [Prepared contexts](../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts).
-- The [render crate README](../crates/mokly-render/README.md).
+- [Source root workers](../docs/protocol/mokly-sidecar-modules.md#source-root-workers),
+  which places a prepared context in the process of its `bundle` request.
+- The [render crate README](../crates/mokly-render/README.md) and the
+  [sidecar crate README](../crates/mokly-sidecar/README.md).
 
 ## Milestone 1: Documentation and protocol
 

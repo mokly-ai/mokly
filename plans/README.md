@@ -12,8 +12,8 @@ under [follow-ups](./follow-ups/).
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
 - [Serve base attempts prepare their PostCSS context](./serve-base-postcss-preparation.md) —
-  start the PostCSS child of a Serve base graph preparation directly after
-  the base `hello`, as each head attempt does.
+  start the PostCSS child of a Serve base graph preparation with a `bundle`
+  request directly after the base `hello`, as a Serve head startup does.
 
 ## Completed Plans
 
