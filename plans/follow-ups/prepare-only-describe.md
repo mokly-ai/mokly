@@ -15,8 +15,9 @@
   `docs/protocol/mokly-sidecar.md`, and
   `docs/protocol/mokly-sidecar-definitions.md`.
 - **Reason:** The user approved this work on 2026-11-21, but on the same day the
-  performance orchestrator chose not to build it, because it saves little on
-  the warm edit path and no option keeps every failure check.
+  performance orchestrator chose not to build it, because no option keeps the
+  Rust definitions check, and the reply that it removes costs only about 3 ms
+  of a warm edit.
 
 - **Source:** Design.
 - **Category:** Performance.
@@ -52,11 +53,22 @@
     serialize, send, and the Rust decode depend on the returned records.
   - The export-name cache of `packages/mokly/src/sidecar/export-name-cache.ts`
     later removed most of the export-order time.
-  - The orchestrator split each `mokly-cloud` edit into stages over four
-    blocks. In warm edits, render sidecars ran their describes 2.7 to 4.9 s
-    after the edit started, after Changes published. In cold 10-edit sessions,
-    about one render-sidecar describe per edit fell inside `serve.background`,
-    at about 25 ms with the export-name cache.
+  - A split of warm `mokly-cloud` edits on one monotonic clock for the core
+    and every sidecar, by workspace 234 on 2026-11-22, measured this:
+    - In each warm edit, the three cold sidecars run `restoreGeneration` and a
+      preparation describe inside the background pass, before their first
+      render and before Changes publishes. This preparation takes a median of
+      200 ms on each of them.
+    - A preparation describe takes a median of 134 ms. `orderedExports` is
+      about 23% of it, which the export-name cache removes for unchanged
+      entries.
+    - The definitions reply is about 0.2 MB, so removing it saves about 3 ms.
+    - The record is `plans/follow-ups/serve-edit-background-pass-split.md` on
+      branch `calummoore/mokly-edit-background-render-olos`, commit 77fe22c13.
+  - Correction of 2026-11-22: an earlier record said that render sidecars run
+    their describes after Changes publishes in warm edits. That claim came
+    from spans of different processes aligned by `elapsedMs`, and each process
+    starts that clock at its own start. It is wrong.
   - Other open work changes the same code. On 2026-11-21, pull request #465
     rewrote `Response::decode_result` in `wire.rs`, the preparation path of
     `pool_preparation.rs`, the `bundle` and `restoreGeneration` cases of
@@ -65,9 +77,9 @@
     `crates/mokly-sidecar`. Read those places on `main` again before you start.
 - **Problem:** Each preparation describe serializes, encodes, sends, and
   decodes definitions that the binary drops.
-- **Impact if no action:** Render sidecars keep a few milliseconds to about
-  20 ms of work per generation, mostly after Changes publishes. The edit time
-  that a user sees changes little.
+- **Impact if no action:** Each cold render sidecar keeps about 3 ms of reply
+  work inside the background pass of each warm edit. The edit time that a
+  user sees changes little.
 - **Root question:** How does a render sidecar prepare a generation without
   sending definitions that nobody reads, and keep every failure that the full
   reply reports today?
@@ -116,10 +128,9 @@
 - **Wider fix:** None. This is one call path.
 - **Previous examples:** None found.
 - **Related:** None.
-- **Recommendation:** A. The work falls mostly after Changes publishes, and
-  each other option drops a failure check or changes the contract.
-  Measure again when a later change moves render-sidecar describes onto the
-  edit path.
+- **Recommendation:** A. Each other option drops a failure check or changes
+  the contract, and the measured gain is about 3 ms per warm edit. Measure
+  again when the reply grows.
 - **Action:** ask the user, because the user approved this work on 2026-11-21,
   option A withdraws it, and every option that builds it drops a failure
   check or changes the error contract of `describe`.

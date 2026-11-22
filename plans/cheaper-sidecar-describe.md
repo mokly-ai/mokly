@@ -74,6 +74,10 @@ Contract owners:
 - 2026-11-21, orchestrator: Part B is not built. In warm edits, render
   sidecars describe after Changes publishes, and Part B cannot keep the Rust
   definitions check.
+- 2026-11-22, orchestrator correction: render sidecars do describe inside the
+  background pass of a warm edit, before Changes publishes. The earlier
+  reason came from spans aligned by per-process clocks. Part B stays unbuilt,
+  because it cannot keep the Rust definitions check and saves about 3 ms.
 - 2026-11-21, orchestrator: the large-catalogue cap item is added only when one
   generation charges more than the cap. Large React charged 165,162 bytes, and
   large HTML starts no sidecar, so no item was added.
