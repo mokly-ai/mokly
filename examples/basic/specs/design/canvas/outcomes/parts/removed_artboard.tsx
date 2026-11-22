@@ -12,7 +12,7 @@ import type { RemovedRecord } from "./removed_entries.js";
 import {
   PreviousVersionState,
   usePreviousLabel,
-  type PreviousRequest,
+  type PreviousStatus,
 } from "./removed_stage.js";
 
 /** What every artboard of a removed entry names. */
@@ -95,14 +95,14 @@ export function PendingArtboard({
   frames,
   panel,
   record,
-  request,
   sheet,
+  status,
   tab,
   viewport,
 }: RemovedArtboardProps & {
   /** The historical frames that a screen's compact frame picker lists. */
   frames: readonly CanvasFrameSpec[];
-  request: PreviousRequest;
+  status: PreviousStatus;
 }) {
   return (
     <CanvasShell
@@ -117,7 +117,7 @@ export function PendingArtboard({
       <PreviousVersionState
         entry={record.entry}
         frames={frames}
-        request={request}
+        status={status}
       />
     </CanvasShell>
   );

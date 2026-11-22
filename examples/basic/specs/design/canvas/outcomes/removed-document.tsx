@@ -28,7 +28,6 @@ import {
   handbookFrames,
   lightOnlyFrames,
 } from "./parts/removed_sketches.js";
-import type { PreviousRequest } from "./parts/removed_stage.js";
 
 /**
  * A page that the handbook branch removed, selected from the Changes filter
@@ -64,8 +63,8 @@ function Page({
 
 /**
  * Printing tips while its previous version loads, and Style notes after its
- * request failed, whose Retry opens the loading state. A reading frame has
- * no frame picker.
+ * request failed. No artboard shows Style notes loading again, so its Retry
+ * is a picture. A reading frame has no frame picker.
  */
 function PendingPage({
   failed,
@@ -75,9 +74,6 @@ function PendingPage({
   viewport: ArtboardViewport;
 }) {
   const record = failed ? P.styleNotes : P.printingTips;
-  const request: PreviousRequest = failed
-    ? { status: "failed", retry: O.removedDocumentLoading }
-    : { status: "loading" };
   return (
     <PendingArtboard
       catalogue={handbookRemoved(record)}
@@ -85,7 +81,7 @@ function PendingPage({
       frames={handbookFrames()}
       panel={<RemovedChanges step={handbookStep(record)} />}
       record={record}
-      request={request}
+      status={failed ? "failed" : "loading"}
       tab="changes"
       viewport={viewport}
     />

@@ -1,7 +1,8 @@
+import { useDesignInstance } from "../../../library/composition.js";
+import { emptyState } from "../../../library/preview/empty-state.js";
 import { useRenderedAppearance } from "../../../parts/appearance.js";
-import { EmptyState, LoadingState } from "../../../parts/stage_content.js";
+import { LoadingState } from "../../../parts/stage_content.js";
 import { StageState } from "../../loading/parts/stage_state.js";
-import type { CanvasDestination } from "../../parts/destinations.js";
 import type { CanvasEntry } from "../../parts/entries.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { EntryStatus } from "../../parts/stage.js";
@@ -18,9 +19,24 @@ export function usePreviousLabel(lightOnly = false): string {
     : "Showing previous version";
 }
 
-/** A previous version that loads, or whose request failed, with its retry. */
-export type PreviousRequest =
-  { status: "loading" } | { status: "failed"; retry: CanvasDestination };
+/** Whether a removed entry's previous version loads, or its request failed. */
+export type PreviousStatus = "failed" | "loading";
+
+/**
+ * The shell's state after a previous version could not be loaded: its title,
+ * its sentence, and Retry, which repeats the request. No artboard shows the
+ * same entry loading again, so Retry is a picture of itself.
+ */
+function PreviousUnavailable() {
+  return (
+    <emptyState.Component
+      moklyInstance={useDesignInstance("empty")}
+      actionLabel="Retry"
+      body="The previous version could not be loaded."
+      title="Previous version unavailable"
+    />
+  );
+}
 
 /**
  * The compact entry bar of a removed page or document whose stage holds no
@@ -42,39 +58,33 @@ function DocumentEntryBar({ entry }: { entry: CanvasEntry }) {
  * The canvas of a removed entry while its previous version loads, or after
  * its request failed: the shell's state in place of the section, in the
  * card of the home guidance. While it loads, one busy status line; after a
- * failure, the shell's title and sentence with Retry, which repeats the
- * request and opens the loading state. The compact entry bar keeps the
- * Removed status, and a screen's frame picker lists its historical views,
- * which the catalogue index names.
+ * failure, the shell's title and sentence with Retry. The compact entry bar
+ * keeps the Removed status, and a screen's frame picker lists its historical
+ * views, which the catalogue index names.
  */
 export function PreviousVersionState({
   entry,
   frames,
-  request,
+  status,
 }: {
   entry: CanvasEntry;
   /** The historical frames that a screen's picker lists. */
   frames: readonly CanvasFrameSpec[];
-  request: PreviousRequest;
+  status: PreviousStatus;
 }) {
   const state =
-    request.status === "failed" ? (
-      <EmptyState
-        body="The previous version could not be loaded."
-        linkLabel="Retry"
-        title="Previous version unavailable"
-        to={request.retry}
-      />
+    status === "failed" ? (
+      <PreviousUnavailable />
     ) : (
       <LoadingState status="Loading previous version…" />
     );
   return entry.kind === "document" ? (
     <>
       <DocumentEntryBar entry={entry} />
-      <StageState state={request.status}>{state}</StageState>
+      <StageState state={status}>{state}</StageState>
     </>
   ) : (
-    <StageState selected={{ entry, frames }} state={request.status}>
+    <StageState selected={{ entry, frames }} state={status}>
       {state}
     </StageState>
   );

@@ -24,9 +24,11 @@ const canonical = (state: NavigationState): NavigationState => ({
  * them into the family's states. The moved Invoice's tabs move between its
  * Changes tab and Inspect, and so do Farewell's and Save failed's. Each Fit
  * opens its own fitted artboard, and a state that loads or failed holds no
- * section, so it has no Fit. No artboard zooms these entries, so the zoom
- * controls are pictures, and no artboard shows the other removed entries on
- * their other tab, so those tabs are pictures. A tab switch keeps the
+ * section, so it has no Fit. No artboard shows Archive or Style notes loading
+ * again, so the Retry of their failed state is a picture. No artboard zooms
+ * these entries, so the zoom controls are pictures, and no artboard shows
+ * the other removed entries on their other tab, so those tabs are pictures.
+ * A tab switch keeps the
  * catalogue's filter. On a phone, an open panel sheet's close is a picture,
  * because no artboard shows that tab with the sheet closed. The removed
  * document and variant branches are branches of their own, so their All

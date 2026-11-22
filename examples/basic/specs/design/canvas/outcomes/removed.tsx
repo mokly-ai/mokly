@@ -84,8 +84,9 @@ function Survey({ viewport }: { viewport: ArtboardViewport }) {
 
 /**
  * Invite while its previous version loads, and Archive after its request
- * failed, whose Retry opens the loading state. The compact frame picker
- * lists the views that the catalogue index names.
+ * failed. No artboard shows Archive loading again, so its Retry is a
+ * picture. The compact frame picker lists the views that the catalogue
+ * index names.
  */
 function Pending({
   failed,
@@ -106,11 +107,7 @@ function Pending({
         />
       }
       record={record}
-      request={
-        failed
-          ? { status: "failed", retry: O.removedLoading }
-          : { status: "loading" }
-      }
+      status={failed ? "failed" : "loading"}
       tab="changes"
       viewport={viewport}
     />
