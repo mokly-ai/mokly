@@ -6,17 +6,17 @@
   experiments, which ran diagnostics on `main` at `e331ad64b`, PR #449.
 - **Location:**
   - `packages/mokly/src/sidecar/planned-relative.ts:75`:
-    `PlannedRelative.verify`, the proof. Lines 80 to 121 scan the metafile
-    edges and run conditional, memoized target checks. Line 104 starts
+    `PlannedRelative.verify`, the proof. Lines 79 to 119 scan the metafile
+    edges and run conditional, memoized target checks. Line 102 starts
     `classifyNativeTarget` when a target needs the check.
-    Lines 122 to 124 read and check the metadata. Lines 125 to 128 record the
+    Lines 120 to 122 read and check the metadata. Lines 123 and 124 record the
     observations.
   - `packages/mokly/src/sidecar/bundle.ts:258`: the call of the proof after a
     planned compile, and the fallback to the complete planned compile.
   - `packages/mokly/src/sidecar/native-plan.ts:146`: `classifyNativeTarget`.
   - `packages/mokly/src/sidecar/metadata-proof.ts:32` and `:49`:
     `MetadataProof.use` and `MetadataProof.current`.
-  - `packages/mokly/src/sidecar/module-paths.ts:219`: `ModulePaths.observe`.
+  - `packages/mokly/src/sidecar/module-paths.ts:220`: `ModulePaths.observe`.
   - `packages/mokly/src/sidecar/dependency-usage.ts:35`:
     `DependencyUsage.resolved`.
   - `packages/mokly/src/sidecar/native-resolution.ts:49`: `importCallbackKey`.
@@ -58,6 +58,12 @@
   - A change could not touch the create step, the compile callbacks, the
     reuse of PR #449, the digests, or resolution.
   - The existing per-target Promise memo of the proof stays.
+  - On 2026-11-22, a change on branch `calummoore/mokly-edit-bundle-path-kv2o`
+    applied the first two cuts of option B: the proof makes no
+    dependency-usage call for its relative names, and `ModulePaths.observe`
+    observes each path once. In local ABBA runs on mokly-cloud, the gap after
+    the compile, which holds the proof, fell from 39 ms to 26 ms in a
+    prototype, and by 14 ms in the final change. The third cut stays open.
   - The diagnostic spans split the proof into these phases:
     - Total: the whole proof.
     - Classify: the complete metafile edge scan, including conditional,
@@ -85,8 +91,10 @@
   - **A.** Change nothing. This is the settled outcome of the stop of
     2026-11-21. Effort: Small.
   - **B.** Apply the three cuts that the stop check estimated from the source.
-    They give 5 to 12 ms together, below the bar. Nobody implemented or
-    measured them, and the stop does not start them. Effort: Medium.
+    They give 5 to 12 ms together, below the bar. The change of 2026-11-22
+    applied the first two. The third, the edge keys of each importer from one
+    same-byte prefix, stays: 1 to 3 ms by the source estimate. Effort:
+    Medium.
 - **Left out:**
   - Removal of the whole proof. The largest local proof took 25.583 ms, so
     even removal cannot save 30 ms locally. Removal also breaks the required
@@ -166,8 +174,8 @@ Findings:
   `ModulePaths`, so the observations repeat.
 - A change must keep the per-target memo and every false and fallback path.
 
-The stop check estimated three cuts from the source. Nobody implemented or
-measured them. Together they give 5 to 12 ms:
+The stop check estimated three cuts from the source. Together they give 5 to
+12 ms. The change of 2026-11-22 applied the first two:
 
 | Cut                                                                  | Source estimate |
 | -------------------------------------------------------------------- | --------------- |

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-18, from the options check of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`.
-- **Location:** `packages/mokly/src/sidecar/module-paths.ts:230`, `packages/mokly/src/sidecar/plugins.ts:162`, `packages/mokly/src/sidecar/plugins.ts:205`, and `packages/mokly/src/sidecar/native-plan.ts:144`.
+- **Location:** `packages/mokly/src/sidecar/module-paths.ts:233` (`ModulePaths.resolve`), `packages/mokly/src/sidecar/plugins.ts:162`, `packages/mokly/src/sidecar/plugins.ts:205`, and `packages/mokly/src/sidecar/native-plan.ts:144`.
 - **Reason:** The bundle change moved only the measured consumer file loads to synchronous reads, and nobody has measured this second class of callbacks.
 
 - **Source:** Review.

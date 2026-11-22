@@ -82,11 +82,24 @@ export async function metadataDigest(
   );
 }
 
-/** Reuse owns four reusable buffers while the first reads wait for the filesystem. */
+/**
+ * Reuse owns four reusable buffers while the first reads wait for the filesystem.
+ * The `first` inputs are read before the others, and `failed` names an input that
+ * differs. The checks stop at the first difference, so the order changes no result.
+ */
 export async function currentFileInputs(
   inputs: Readonly<Record<string, string | null>>,
+  first: Iterable<string> = [],
+  failed?: (file: string) => void,
 ): Promise<boolean> {
-  const values = Object.entries(inputs);
+  const leading = new Set([...first].filter((file) => file in inputs));
+  const values = [
+    ...[...leading].map((file): [string, string | null] => [
+      file,
+      inputs[file]!,
+    ]),
+    ...Object.entries(inputs).filter(([file]) => !leading.has(file)),
+  ];
   const buffers = Array.from(
     { length: Math.min(INPUT_WORKERS, values.length) },
     () => Buffer.allocUnsafe(digestBuffer.length),
@@ -94,7 +107,9 @@ export async function currentFileInputs(
   return everyInput(values, async ([file, expected]) => {
     const buffer = buffers.pop()!;
     try {
-      return (await digestFile(file, buffer, true)) === expected;
+      const same = (await digestFile(file, buffer, true)) === expected;
+      if (!same) failed?.(file);
+      return same;
     } finally {
       buffers.push(buffer);
     }
