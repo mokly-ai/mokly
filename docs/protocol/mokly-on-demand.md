@@ -7,8 +7,10 @@ hierarchy, the prop schemas, and the [source inventory](./mokly-source-protectio
 Validation creates one immutable route set from the model's identities; a
 request for a route outside that set is 404, and a new catalogue state
 creates a new set. Serve does not render every document, classify Git
-changes, or write anything before Browse is available. This applies with and
-without watch.
+changes, or publish catalogue output or Changes evidence before Browse is
+available. Cache work before then publishes nothing, the source work of
+[eager base preparation](./mokly-eager-base-preparation.md#start) included.
+This applies with and without watch.
 
 The catalogue index describes the available views, not completed rendering.
 A view's usage in its entry detail is `pending` until that view has rendered,
@@ -71,14 +73,30 @@ then classifies Changes, which renders the base side under the
 [background pass](./mokly-on-demand-background.md) defines how this pass
 starts, looks up, renders, reports, and stops its views.
 
+No base document render of a classification, its
+[early renders](./mokly-base-preparation.md#shared-render-runtime) included,
+and no base capture or comparison starts before the background pass of its
+state ends. [Eager base preparation](./mokly-eager-base-preparation.md) can
+prepare the base side earlier, during startup and the pass. It publishes
+nothing until the classification of its state adopts it.
+Decision: base document renders, capture, and comparison wait for the
+background pass, and independent base preparation does not. Rejected: base
+preparation after the pass, because its cost then stays on the path of the
+first Changes. Rejected: early renders or capture during the pass, because the
+memory of head and base renders would then add up.
+
 Sidecar admission preserves foreground priority for each whole HTTP render.
-Queued base calls wait until those requests finish their sidecar work. The
-queued calls of started background views go after the other queued head calls,
-such as the calls of HTTP renders. The later calls of a view in the
+Queued base calls wait until those requests finish their sidecar work. While
+those of a base capture or its early renders wait, they hold no render worker
+that foreground renders use. The queued calls of started background views go
+after the other queued head calls, such as the calls of HTTP renders. The
+later calls of a view in the
 [completion stage](./mokly-on-demand-background.md#batch-and-completion) are
 such calls. So a batch view can wait behind them while it holds its worker. A
 call of a started view does not wait for the end of an HTTP request. Active
-calls finish under their deadlines.
+calls finish under their deadlines. The calls of eager base preparation also
+wait for every queued head call, under the
+[eager admission rules](./mokly-eager-base-preparation.md#admission).
 
 Head and base calls share the
 [sidecar capacity](./mokly-sidecar-memory.md#capacity), including a capacity
@@ -96,6 +114,11 @@ before memory fell, or while base calls held the sidecars, would then delay a
 foreground render. A wait for the end of each HTTP request was rejected,
 because that request can share the render of the view, and neither would then
 finish.
+
+Decision: a base capture and its early renders wait for admission without a
+shared render worker. Rejected: a claim before each base job, because a claim
+covers one call, not a whole job. Rejected: a separate pool for foreground
+renders, because it changes how a foreground request waits for a busy worker.
 
 Decision: a batch view can wait behind the later calls of the completion
 stage. A batch place for each later call was rejected, because waiting batch
@@ -115,7 +138,9 @@ candidate keeps the last-good state. Replacement invalidates the cached
 documents whose keys moved, every detail, and the published comparison
 evidence; a resource edit invalidates the documents that reference it. Replacement and
 shutdown cancel active Git commands and wait for their process and pipe
-closure before cleanup completes. A Git read of the kept base finishes after
+closure before cleanup completes. They also cancel the
+[eager base preparation](./mokly-eager-base-preparation.md#ownership) of the
+state that they end, and wait for its work to end. A Git read of the kept base finishes after
 a replacement, under the
 [kept base cancellation rule](./mokly-base-preparation.md#cancellation).
 Shutdown still cancels it.

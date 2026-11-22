@@ -11,8 +11,11 @@ use mokly_cli::cancellation::Cancellation;
 use mokly_cli::output::Style;
 use mokly_cli::redaction::Redactor;
 use mokly_compare::base_render::{
-    BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
+    BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, HistoricalSources,
+    PreparedBase,
 };
+use mokly_compare::base_retention::BaseRetentionRequest;
+use mokly_compare::base_sources::BaseSourcesRequest;
 use mokly_compare::cache_types::{Lease, Reporter};
 use mokly_compare::comparison_steps::{Step, Steps};
 use mokly_compare::error::{Error, Result};
@@ -21,7 +24,7 @@ use mokly_server::changes::{ChangeCancellation, ChangeProgress};
 use mokly_server::changes_signal::ChangeSignal;
 use mokly_server::comparison_graph::FrozenResources;
 
-use crate::base_dependencies::BaseDependencies;
+use crate::base_dependencies::{BaseDependencies, DependencySources};
 use crate::changes_freshness::{PreparedDependencies, SelectionRequest};
 use crate::changes_runtime::cache_line;
 use crate::serve_progress::{Progress, TerminalEvent};
@@ -76,8 +79,19 @@ pub(super) struct PreparingDependencies {
     pub(super) progress: Arc<dyn ChangeProgress>,
 }
 impl BaseDependencies for PreparingDependencies {
-    fn existing_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
+    fn existing_sources(&self, request: &BaseSourcesRequest<'_>) -> Result<Option<Arc<Lease>>> {
         self.inner.existing_sources(request)
+    }
+
+    fn sources(
+        &self,
+        request: &BaseSourcesRequest<'_>,
+        existing: Option<Arc<Lease>>,
+    ) -> Result<DependencySources> {
+        if !matches!(self.progress.status(ChangesStatus::Preparing), Ok(true)) {
+            return Err(Error::Cancelled);
+        }
+        self.inner.sources(request, existing)
     }
 
     fn prepare(
@@ -85,11 +99,8 @@ impl BaseDependencies for PreparingDependencies {
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         selection: &SelectionRequest<'_>,
-        sources: Option<Arc<Lease>>,
+        sources: DependencySources,
     ) -> Result<PreparedDependencies> {
-        if !matches!(self.progress.status(ChangesStatus::Preparing), Ok(true)) {
-            return Err(Error::Cancelled);
-        }
         self.inner.prepare(request, config, selection, sources)
     }
 }
@@ -99,7 +110,30 @@ pub(super) struct AttemptBase {
     pub(super) inner: Arc<dyn BaseProvider>,
     pub(super) progress: Arc<dyn ChangeProgress>,
 }
+
+pub(super) fn preparation_warnings(prepared: &BasePreparationResult) -> Vec<Warning> {
+    let warnings = match prepared {
+        Ok(base) => base.generation.catalogue().warnings.clone(),
+        Err(error) => match &*error.source {
+            Error::Catalogue {
+                source: CatalogueError::Invalid { warnings, .. },
+            } => warnings.clone(),
+            Error::Graph { source } => source.warnings(),
+            _ => Vec::new(),
+        },
+    };
+    warnings
+        .into_iter()
+        .filter(|warning| matches!(warning.code, "base-dependencies" | "base-conversion"))
+        .collect()
+}
 impl BaseProvider for AttemptBase {
+    fn historical_sources(
+        &self,
+        request: &BaseRetentionRequest<'_>,
+    ) -> Result<Option<HistoricalSources>> {
+        self.inner.historical_sources(request)
+    }
     fn prepare(&self, request: &BaseRequest<'_>) -> BasePreparationResult {
         let prepared = self.inner.prepare(request);
         let records = match &prepared {
@@ -131,6 +165,7 @@ impl BaseProvider for AttemptBase {
             ));
         }
         Ok(PreparedBase {
+            prefetch: prepared.prefetch,
             generation: Arc::new(FrozenResources::new(prepared.generation)),
             scripts_off: prepared.scripts_off,
             freshness: prepared.freshness,

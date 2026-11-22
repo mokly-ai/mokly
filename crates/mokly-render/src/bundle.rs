@@ -2,24 +2,29 @@
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Weak};
+use std::thread;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::render_sources::JavaScriptGeneration;
-use mokly_css::types::{StylesheetBundler, StylesheetRoot};
+use mokly_css::types::StylesheetRoot;
 use mokly_model::material::digest;
 use mokly_sidecar::compiled::ReuseEvidence;
 use mokly_sidecar::definitions::Definitions;
 use mokly_sidecar::methods::{Bundle, BundleCapture, Call, CssModules, Generation};
+use mokly_sidecar::postcss_preparation::PostcssPreparation;
 use mokly_sidecar::results;
 
 use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
-use crate::leases::BundleLease;
+use crate::leases::{BundleLease, ContextLease};
 use crate::render_environment::{ClassMaps, RenderEnvironment};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
+use crate::stylesheet_class_maps::ClassMapCompiler;
+use crate::stylesheet_compiler::StylesheetPreparation;
 use crate::{
     bundle_attempt, bundle_finish, bundle_inputs, persistent_identity, render_environment,
 };
@@ -75,7 +80,9 @@ pub(crate) fn describe(
         })
         .collect();
     candidates.sort_by_key(|state| !state.reuse_evidence.captured());
-    let compiler = stylesheets::compiler(runtime, config, &side);
+    let attempt = stylesheets::attempt(runtime, config, &side);
+    let compiler = attempt.compiler;
+    let context = attempt.context;
     let mut prepared_maps = None;
     if let Some(previous) = candidates.first() {
         let maps = class_maps(compiler.as_ref(), &previous.modules, &params)?;
@@ -85,7 +92,7 @@ pub(crate) fn describe(
             .find(|state| state.class_maps_digest == digest)
         {
             bundle_attempt::served(runtime, &existing.lease);
-            return bundle_finish::finish(runtime, side, compiler, existing.clone());
+            return bundle_finish::finish(runtime, side, compiler, context, existing.clone());
         }
         prepared_maps = Some(maps);
     }
@@ -94,7 +101,8 @@ pub(crate) fn describe(
         evaluation.push_str(&maps_digest(maps));
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
-    let (mut result, mut lease) = bundle_attempt::request(runtime, &params)?;
+    let preparation = attempt_preparation(runtime, config, compiler.as_ref(), context.as_ref());
+    let (mut result, mut lease) = bundle_attempt::request(runtime, &params, preparation)?;
     record_usage(runtime, &side, &result);
     let mut modules = bundle_attempt::modules(&result);
     let maps = match prepared_maps {
@@ -106,7 +114,7 @@ pub(crate) fn describe(
         .is_some_and(|previous| previous.class_maps_digest != class_maps_digest)
     {
         params.evaluation = Some(digest(format!("{cache_key}{class_maps_digest}").as_bytes()));
-        (result, lease) = bundle_attempt::request(runtime, &params)?;
+        (result, lease) = bundle_attempt::request(runtime, &params, None)?;
         record_usage(runtime, &side, &result);
         modules = bundle_attempt::modules(&result);
     }
@@ -145,7 +153,7 @@ pub(crate) fn describe(
             reuse_evidence: result.compiled.reuse_evidence.clone(),
         });
         bundle_attempt::remember(runtime, &existing);
-        return bundle_finish::finish(runtime, side, compiler, existing);
+        return bundle_finish::finish(runtime, side, compiler, context, existing);
     }
     match runtime.pool.request(Call::CssModules(CssModules {
         generation: lease.id.clone(),
@@ -175,7 +183,7 @@ pub(crate) fn describe(
         reuse_evidence: result.compiled.reuse_evidence.clone(),
     });
     bundle_attempt::remember(runtime, &state);
-    bundle_finish::finish(runtime, side, compiler, state)
+    bundle_finish::finish(runtime, side, compiler, context, state)
 }
 
 fn maps_digest(maps: &ClassMaps) -> String {
@@ -184,8 +192,35 @@ fn maps_digest(maps: &ClassMaps) -> String {
     digest(&bytes)
 }
 
+/// The PostCSS preparation of an attempt under the prepared context rules. A Serve base attempt
+/// prepares its unused context. A head attempt checks its guards in this order, because the
+/// stale check records the probe key that a later lookup reads.
+fn attempt_preparation(
+    runtime: &Runtime,
+    config: &ResolvedConfig,
+    compiler: &dyn StylesheetPreparation,
+    context: Option<&Arc<ContextLease>>,
+) -> Option<PostcssPreparation> {
+    let startup = runtime.bundle_capture == BundleCapture::Full && runtime.edit_plans.is_some();
+    let lease = if runtime.serve_base() {
+        context.filter(|lease| !lease.used.load(Ordering::Relaxed))
+    } else if (startup || runtime.bundle_capture == BundleCapture::ServeEdit)
+        && runtime.base.is_none()
+        && runtime.head_styles.is_none()
+    {
+        context.filter(|lease| {
+            !lease.used.load(Ordering::Relaxed)
+                && !runtime.older_used_head_context(lease)
+                && (startup || compiler.stale_postcss())
+        })
+    } else {
+        None
+    };
+    lease.and_then(|lease| config.postcss().and_then(|postcss| lease.prepare(postcss)))
+}
+
 fn class_maps(
-    compiler: &dyn StylesheetBundler,
+    compiler: &dyn ClassMapCompiler,
     modules: &BTreeMap<String, Vec<String>>,
     params: &Bundle,
 ) -> Result<ClassMaps> {
@@ -201,13 +236,11 @@ fn class_maps(
         &entries,
         &params.module_resolution.loaders,
     );
-    let mut maps = BTreeMap::new();
-    for root in roots {
-        match compiler.bundle(&root) {
-            Ok(bundle) => maps.extend(bundle.css_modules),
-            Err(source) => return Err(RenderError::Css { source }),
-        }
-    }
+    let parallelism = thread::available_parallelism().map_or(1, usize::from);
+    let mut maps = match compiler.class_maps(&roots, parallelism) {
+        Ok(maps) => maps,
+        Err(source) => return Err(RenderError::Css { source }),
+    };
     for path in modules.keys().filter(|path| path.ends_with(".module.css")) {
         if !maps.contains_key(path)
             && !stylesheets::ignored(path, &params.module_resolution.loaders)
@@ -231,9 +264,13 @@ fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) 
     for directory in result.unmapped_dependency_directories.iter().flatten() {
         runtime.dependency_usage.unmapped(directory);
     }
-    for module in &result.modules {
+    for module in result.modules.iter() {
         runtime
             .dependency_usage
             .record(&side.dependency_aliases, &module.path);
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/class_maps/uncovered_tests.rs"]
+mod uncovered_tests;

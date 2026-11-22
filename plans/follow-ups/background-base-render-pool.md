@@ -1,15 +1,21 @@
-# Give background base work its own render pool
+# Give kept-base reads their own render workers
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-10-29, from PR #228, decision 9 of the stylesheet bundle
-  performance plan, and review finding 1 of step A.
-- **Location:** `crates/mokly-cli/src/serve_changes_native.rs:194`,
-  `crates/mokly-cli/src/serve_pool.rs:93`, and
-  `crates/mokly-graph/src/session_collection.rs:28`.
-- **Reason:** The orchestrator chose to change the shared render pool in a
-  separate branch, because the base comparison capture on `origin/main` has
-  the same problem and needs its own review.
+  performance plan, and review finding 1 of step A. Narrowed on 2026-11-19 by
+  the miss-first base capture branch, which covered the fresh base capture and
+  its early renders.
+- **Location:** `Source::classification_runtime` in
+  `crates/mokly-cli/src/serve_changes_native.rs`, `CaptureWorkers` in
+  `crates/mokly-cli/src/capture_workers.rs`, `ScheduledPool::request` in
+  `crates/mokly-cli/src/serve_pool.rs`, `Gate::acquire` in
+  `crates/mokly-cli/src/serve_gate.rs`, `BaseReader` in
+  `crates/mokly-compare/src/base_reader.rs`, and `capture_side` in
+  `crates/mokly-server/src/comparison_capture.rs`.
+- **Reason:** The miss-first base capture branch kept its change to the fresh
+  base capture and its early renders, so the reads through the kept base need
+  their own branch and review.
 
 - **Terms:**
   - **Base side:** the historical version of the catalogue that Serve's
@@ -17,7 +23,7 @@
   - **Render pool:** the machine-sized thread pool, `ThreadWorkers`, that
     runs render and bundle jobs.
   - **Admission gate:** the Serve sidecar gate in
-    `crates/mokly-cli/src/serve_pool.rs`. It lets queued base work call a
+    `crates/mokly-cli/src/serve_gate.rs`. It lets queued base work call a
     sidecar only while no foreground request is active.
   - **Orchestrator:** the agent that coordinated the performance pull
     requests of 2026-10-27 to 2026-10-29 and answered their decisions for
@@ -27,24 +33,47 @@
     [Serve base lifetime rule](../../docs/protocol/mokly-base-preparation.md#serve-base-lifetime).
 - **Background:**
   - The base runtime of Serve wraps the shared render pool, in
-    `Source::classification_runtime` at
-    `crates/mokly-cli/src/serve_changes_native.rs:194`. So base jobs and
-    foreground document renders use the same workers.
-  - `acquire` in `crates/mokly-cli/src/serve_pool.rs:93` makes a base call
-    wait while a foreground request is active. A base job that waits there
-    still holds its render worker.
+    `Source::classification_runtime` in
+    `crates/mokly-cli/src/serve_changes_native.rs`. Before 2026-11-19, base
+    render jobs and foreground document renders used the same workers.
+  - `ScheduledPool::request` in `crates/mokly-cli/src/serve_pool.rs` calls
+    `Gate::acquire` in `crates/mokly-cli/src/serve_gate.rs`. That call makes a
+    base call wait while a foreground request is active. A base job that waits
+    there still holds its render worker.
   - The first review of PR #228, which bundles stylesheet roots in
     parallel, found on 2026-10-28 that base stylesheet jobs could deadlock
     foreground renders this way. Severity High. PR #228 fixed that case:
     base stylesheet roots bundle on the classification thread.
-  - The base comparison capture in
-    `crates/mokly-graph/src/session_collection.rs:28` can still fill every
-    render worker with jobs that wait at the admission gate.
-  - Serve keeps one captured base between classifications. The base
-    capture then runs only on a fresh preparation. A reuse of the kept base
-    captures nothing, but it still renders the base views that the kept
-    capture does not hold, on the same workers. A selected capture does the
-    same.
+  - Until 2026-11-19, the base comparison capture in
+    `crates/mokly-graph/src/session_collection.rs` could fill every render
+    worker with jobs that wait at the admission gate.
+  - On 2026-11-19, the miss-first base capture branch gave two cases render
+    workers that foreground renders do not use. The cases are the capture
+    window of a fresh base, and its early renders. An early render is a render
+    of a base view that no render cache tier holds, and it starts before the
+    capture reaches that view. The rule is in the
+    [on-demand contract](../../docs/protocol/mokly-on-demand.md#background-work-and-replacement).
+  - `Source::classification_runtime` now wraps the base workers in
+    `CaptureWorkers` from `crates/mokly-cli/src/capture_workers.rs`. Its
+    capture pool comes from `crates/mokly-cli/src/serve_capture_workers.rs`.
+    Its thread count is the smaller of the worker count and the gate's
+    admission limit. `CaptureWorkers` runs the capture window and the early renders on
+    that pool, and it forwards every other job, ordinary reads included, to
+    the shared workers.
+  - That branch kept the process pool, memory admission, the per-call claims,
+    and root scheduling. It rejected a claim before each job on a shared
+    worker, because a claim covers one call, not a whole job. It rejected a
+    separate pool for foreground renders, because it changes how a foreground
+    request waits for a busy worker. It also found that a read that finds its
+    view in the render cache can still render after an eviction. So a read
+    cannot stay on the shared workers only because its view was cached.
+  - Serve keeps one captured base between classifications. The base capture
+    then runs only on a fresh preparation. A reuse of the kept base captures
+    nothing, but it still renders the base views that the kept capture does
+    not hold, on the shared workers. A selected capture of the on-demand
+    comparison routes, in `crates/mokly-server/src/comparison_capture.rs`,
+    does the same. A reuse reads the kept base through `BaseReader` in
+    `crates/mokly-compare/src/base_reader.rs`.
   - A kept base follows only the stop of Serve. A replaced or cancelled
     reader cannot cancel a kept-base call that waits at the admission gate.
     That call ends its wait when the foreground request ends or Serve stops.
@@ -53,22 +82,24 @@
     rejected the same change in PR #228, because the base comparison
     capture on `origin/main` has the same problem and needs its own review.
 - **Task:**
-  1. Give Serve's background base work its own render pool, so that no base
-     job holds a worker that a foreground render needs.
-  2. Cover the base comparison capture in `session_collection.rs`.
-  3. Add a test in which base jobs wait at the admission gate while a
-     foreground render still gets a worker.
-- **Impact if no action:** While a base comparison capture or a kept-base
-  render waits at the admission gate, a foreground document render can wait
-  for a free worker. Queued base calls wait until no foreground request is
-  active. During a fresh preparation, the preview request can stall until
-  the base attempt is cancelled. A kept-base call ends its wait only when
-  the foreground request ends, for example at its deadline, or when Serve
-  stops. Cancelling its reader no longer ends that wait.
+  1. Give the reads through the kept base their own render workers, as the
+     fresh base capture and its early renders already have. Cover the base
+     views that a reuse renders because the kept capture does not hold them,
+     and the selected captures that read the kept base.
+  2. Keep the process pool, memory admission, the per-call claims, and root
+     scheduling unchanged.
+  3. Add a test in which kept-base read jobs wait at the admission gate while
+     a foreground render still gets a worker.
+- **Impact if no action:** While a kept-base render or a selected capture
+  waits at the admission gate, a foreground document render can wait for a
+  free worker. Queued base calls wait until no foreground request is active.
+  A kept-base call ends its wait only when the foreground request ends, for
+  example at its deadline, or when Serve stops. Cancelling its reader no
+  longer ends that wait.
 - **Needs:** Nothing. The task needs no deployed change and no credentials.
-- **Done when:** Base comparison capture jobs and the other base jobs,
-  kept-base renders included, run on their own pool, and a test shows that a
-  foreground render finishes while base jobs wait at the admission gate.
+- **Done when:** Reads through the kept base, the selected captures included,
+  run on render workers that foreground renders do not use. A test shows that
+  a foreground render finishes while those jobs wait at the admission gate.
 - **Related:** `plans/follow-ups/css-bundling-global-pool.md` measures the
   global Rayon pool that base stylesheet bundles start on the classification
   thread. Both items come from the same admission gate. The base pool of this

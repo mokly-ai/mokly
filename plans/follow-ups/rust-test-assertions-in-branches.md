@@ -52,6 +52,9 @@
 - **Wider fix:** C, a detection fix. No structural fix prevents the pattern.
 - **Previous examples:** Review finding 4 of round 1 of branch
   `calummoore/mokly-publish-path`.
+- **Related:**
+  [typescript-test-assertions-in-branches.md](./typescript-test-assertions-in-branches.md)
+  holds the same class in TypeScript tests. One lint decision can cover both.
 - **Recommendation:** A now, then B. C waits for the user, because it adds a
   gate.
 - **Action:** fix after merge, apply A, because the tests are outside the

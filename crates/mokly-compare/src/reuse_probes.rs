@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
+use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use mokly_graph::types::RenderGeneration;
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::usage::CatalogueUsage;
@@ -21,6 +21,7 @@ struct Probe {
 }
 
 pub(crate) struct Probes {
+    pub(crate) documents: Mutex<BTreeMap<String, DocumentProof>>,
     pub(crate) resident: Arc<Resident>,
     values: Mutex<[BTreeMap<Arc<str>, Arc<Probe>>; 6]>,
     _charge: Option<Charge>,
@@ -37,6 +38,7 @@ impl Probes {
     pub(crate) fn new(resident: &Arc<Resident>) -> Arc<Self> {
         let charge = resident.reserve(mem::size_of::<Self>() + 32 + 6 * 320);
         Arc::new(Self {
+            documents: Mutex::new(BTreeMap::new()),
             resident: resident.clone(),
             values: Default::default(),
             overflowed: AtomicBool::new(charge.is_none()),
@@ -186,7 +188,12 @@ impl Probes {
             .unwrap_or_else(|error| error.into_inner());
         self.reads.fetch_add(1, Ordering::Relaxed);
         let start = Instant::now();
-        let proof = after.comparison_document_proof(&read.route);
+        let forwarded = self
+            .documents
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .remove(read.route.as_ref());
+        let proof = forwarded.or_else(|| after.comparison_document_proof(&read.route));
         self.usage_nanos
             .fetch_add(start.elapsed().as_nanos() as u64, Ordering::Relaxed);
         let proof = proof?;

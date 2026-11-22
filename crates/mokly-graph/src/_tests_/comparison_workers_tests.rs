@@ -5,10 +5,43 @@ use std::sync::{Arc, Barrier, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::cache::Artifact;
+use crate::capture_window::CaptureConsumerMock;
 use crate::closure::Closure;
-use crate::error::{GraphError, invalid};
+use crate::error::{GraphError, Result, invalid};
 use crate::types::ComparisonDocument;
-use crate::workers::{ComparisonWorkerMock, RenderWorkers, ThreadWorkers};
+use crate::workers::{
+    ComparisonTaskMock, ComparisonWorker, ComparisonWorkerMock, RenderWorkers, ThreadWorkers,
+};
+
+fn collect_inputs(
+    workers: &dyn RenderWorkers,
+    routes: &[String],
+    worker: Unimock,
+) -> Vec<Result<ComparisonDocument>> {
+    let outputs = Arc::new(Mutex::new(std::collections::BTreeMap::new()));
+    let prepared = outputs.clone();
+    let routes = routes.to_vec();
+    let count = routes.len();
+    let task = Unimock::new(
+        ComparisonTaskMock::run
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, index| {
+                let input = worker.input(&routes[index]);
+                prepared.lock().unwrap().insert(index, input);
+            })),
+    );
+    let mut consumer = Unimock::new((
+        CaptureConsumerMock::admit
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, index| index < count)),
+        CaptureConsumerMock::complete
+            .each_call(matching!(_))
+            .returns(true),
+    ));
+    workers.capture_window(workers.capture_parallelism(), &task, &mut consumer);
+    let results = std::mem::take(&mut *outputs.lock().unwrap());
+    results.into_values().collect()
+}
 
 #[test]
 fn comparison_inputs_overlap_on_the_existing_pool_and_keep_route_order() {
@@ -35,7 +68,7 @@ fn comparison_inputs_overlap_on_the_existing_pool_and_keep_route_order() {
                 })
             })),
     );
-    let results = workers.comparison(&["first".into(), "second".into()], &worker);
+    let results = collect_inputs(&workers, &["first".into(), "second".into()], worker);
     let bytes: Vec<_> = results
         .into_iter()
         .map(|input| input.unwrap().artifact.bytes.clone())
@@ -56,7 +89,7 @@ fn parallel_failures_keep_the_requested_route_order() {
             .answers(&|_, route| Err(invalid(route, "fixture failure"))),
     );
     let routes = vec!["first".into(), "second".into()];
-    let results = workers.comparison(&routes, &worker);
+    let results = collect_inputs(&workers, &routes, worker);
     for (result, expected) in results.into_iter().zip(routes) {
         let GraphError::Invalid { route, .. } = result.unwrap_err() else {
             panic!("expected the original failure")

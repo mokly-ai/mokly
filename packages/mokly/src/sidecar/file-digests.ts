@@ -1,5 +1,10 @@
 import { createHash } from "node:crypto";
-import fs from "node:fs/promises";
+import fs from "node:fs";
+
+import { cooperativeYield } from "./cooperative-yield.js";
+
+const digestBuffer = Buffer.allocUnsafe(64 * 1024);
+const INPUT_WORKERS = 4;
 
 /** Only a missing candidate is absence. Permission and other read failures are errors. */
 export function missingFile(error: unknown): boolean {
@@ -13,20 +18,47 @@ export function missingFile(error: unknown): boolean {
 
 /** Hash an opened file with a fixed 64 KiB buffer, independent of its length. */
 export async function fileDigest(file: string): Promise<string | null> {
+  return digestFile(file, digestBuffer, false);
+}
+
+function firstRead(handle: number, buffer: Buffer): Promise<number> {
+  return new Promise((resolve, reject) => {
+    fs.read(handle, buffer, 0, buffer.length, null, (error, length) => {
+      if (error) reject(error);
+      else resolve(length);
+    });
+  });
+}
+
+async function digestFile(
+  file: string,
+  buffer: Buffer,
+  overlapFirstRead: boolean,
+): Promise<string | null> {
+  const pause = cooperativeYield();
+  if (pause) await pause;
   try {
-    const handle = await fs.open(file, "r");
+    const handle = fs.openSync(
+      file,
+      fs.constants.O_RDONLY | fs.constants.O_NONBLOCK,
+    );
     try {
-      if (!(await handle.stat()).isFile())
-        throw new Error("not a regular file");
+      if (!fs.fstatSync(handle).isFile()) throw new Error("not a regular file");
       const hash = createHash("sha256");
-      for await (const bytes of handle.createReadStream({
-        highWaterMark: 64 * 1024,
-        autoClose: false,
-      }))
-        hash.update(bytes);
+      let first = overlapFirstRead;
+      for (;;) {
+        const length = first
+          ? await firstRead(handle, buffer)
+          : fs.readSync(handle, buffer, 0, buffer.length, null);
+        first = false;
+        if (!length) break;
+        hash.update(buffer.subarray(0, length));
+        const pause = cooperativeYield();
+        if (pause) await pause;
+      }
       return hash.digest("hex");
     } finally {
-      await handle.close();
+      fs.closeSync(handle);
     }
   } catch (error) {
     if (missingFile(error)) return null;
@@ -40,6 +72,8 @@ export async function metadataDigest(
   inputs: Readonly<Record<string, string | null>>,
   bytes?: Uint8Array,
 ): Promise<string | null> {
+  const pause = cooperativeYield();
+  if (pause) await pause;
   return (
     inputs[file] ??
     (bytes === undefined
@@ -48,7 +82,41 @@ export async function metadataDigest(
   );
 }
 
-/** Four workers bound both open handles and the memory used by streaming checks. */
+/**
+ * Reuse owns four reusable buffers while the first reads wait for the filesystem.
+ * The `first` inputs are read before the others, and `failed` names an input that
+ * differs. The checks stop at the first difference, so the order changes no result.
+ */
+export async function currentFileInputs(
+  inputs: Readonly<Record<string, string | null>>,
+  first: Iterable<string> = [],
+  failed?: (file: string) => void,
+): Promise<boolean> {
+  const leading = new Set([...first].filter((file) => file in inputs));
+  const values = [
+    ...[...leading].map((file): [string, string | null] => [
+      file,
+      inputs[file]!,
+    ]),
+    ...Object.entries(inputs).filter(([file]) => !leading.has(file)),
+  ];
+  const buffers = Array.from(
+    { length: Math.min(INPUT_WORKERS, values.length) },
+    () => Buffer.allocUnsafe(digestBuffer.length),
+  );
+  return everyInput(values, async ([file, expected]) => {
+    const buffer = buffers.pop()!;
+    try {
+      const same = (await digestFile(file, buffer, true)) === expected;
+      if (!same) failed?.(file);
+      return same;
+    } finally {
+      buffers.push(buffer);
+    }
+  });
+}
+
+/** Four workers bound in-flight checks and share the cooperative yield budget. */
 export async function everyInput<T>(
   values: readonly T[],
   check: (value: T) => Promise<boolean>,
@@ -56,8 +124,11 @@ export async function everyInput<T>(
   let index = 0;
   let matches = true;
   await Promise.all(
-    Array.from({ length: Math.min(4, values.length) }, async () => {
+    Array.from({ length: Math.min(INPUT_WORKERS, values.length) }, async () => {
       while (matches && index < values.length) {
+        const pause = cooperativeYield();
+        if (pause) await pause;
+        if (!matches || index >= values.length) break;
         const value = values[index++]!;
         try {
           if (!(await check(value))) matches = false;

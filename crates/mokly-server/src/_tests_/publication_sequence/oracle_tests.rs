@@ -1,4 +1,5 @@
-//! The byte oracle was recorded from the publication algorithm at main 794b30a91.
+//! Successive edits keep every served byte and detail id of each publication, and a shared
+//! detail keeps the typed revision of the publication that built it.
 
 use std::fmt::Write;
 use std::sync::Arc;
@@ -74,7 +75,7 @@ fn status(current: Arc<Snapshot>, status: ChangesStatus, edit: usize) -> Arc<Sna
 }
 
 #[tokio::test]
-async fn several_edits_preserve_every_publication_byte_id_and_typed_revision() {
+async fn several_edits_keep_every_byte_and_id_and_shared_details_keep_their_built_revision() {
     let projector = projector();
     let mut current = projector.create(generation(2, 0), input(1)).unwrap();
     let mut output = String::new();
@@ -140,5 +141,12 @@ async fn several_edits_preserve_every_publication_byte_id_and_typed_revision() {
             record(&mut output, &format!("edit {edit}: {phase:?}"), &current).await;
         }
     }
-    insta::assert_snapshot!(output);
+    insta::with_settings!({
+        description => "The served bytes and the detail ids equal those of the publication \
+            algorithm at main 794b30a91. Each typed revision follows the sharing rule of the \
+            mokly-server README: a shared detail keeps the typed revision of the publication that \
+            built it.",
+    }, {
+        insta::assert_snapshot!(output);
+    });
 }

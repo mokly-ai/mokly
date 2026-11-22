@@ -4,14 +4,17 @@ use std::collections::BTreeMap;
 use std::mem;
 use std::sync::Arc;
 
+#[cfg(test)]
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
+use mokly_graph::collection_charge;
 use mokly_graph::comparison_proof::ContentIdentity;
 use mokly_graph::document_codec::EncodedView;
 use mokly_graph::error::Result;
 use mokly_graph::types::RenderGeneration;
 
 use crate::capture_collection::Collector;
+#[cfg(test)]
 use crate::capture_error::{self, CaptureResult};
 use crate::capture_generation::CapturedGeneration;
 use crate::capture_restore::LosslessRestorer;
@@ -50,6 +53,7 @@ pub(crate) struct CapturedView {
 }
 
 impl CapturedView {
+    #[cfg(test)]
     #[tracing::instrument(name = "review.capture-encode", skip_all, fields(status = "error"))]
     pub(crate) fn encode(artifact: &Artifact, closure: Closure) -> Result<Self> {
         let (document, identity) =
@@ -66,7 +70,7 @@ impl CapturedView {
         256 + route.len()
             + self.document.retained_bytes()
             + mem::size_of::<ContentIdentity>()
-            + capture_weight::closure(&self.closure)
+            + collection_charge::closure(&self.closure)
     }
 }
 

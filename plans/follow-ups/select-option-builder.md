@@ -25,7 +25,7 @@
 - **Root question:** Which select controls does the core write so Props offers valid choices?
 - **Options:** The letters follow the options of decision 3.
   - **D.** Keep the change of 2026-11-01 only. Effort: Small.
-  - **E.** One option builder in `crates/mokly-model` makes every select, also from Storybook. It keeps each value once and only values that the property schema accepts. A schema with no value left gets no control, and the Storybook path keeps its derived control. It edits `docs/protocol/mokly-sidecar.md:195-196`. Effort: Medium.
+  - **E.** One option builder in `crates/mokly-model` makes every select, also from Storybook. It keeps each value once and only values that the property schema accepts. A schema with no value left gets no control, and the Storybook path keeps its derived control. It edits `docs/protocol/mokly-sidecar.md:193-194`. Effort: Medium.
   - **F.** A receiver checks each select in the Rust read-model reader. This adds stricter upload validation. Effort: Medium.
 - **Left out:** The viewer drops a bad control: it fails the goal, because the core still writes it.
 - **Wider fix:** E, because one builder then makes every select.

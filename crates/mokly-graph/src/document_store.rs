@@ -92,6 +92,10 @@ pub trait DocumentStore: Send + Sync {
     fn identity(&self) -> Option<String> {
         None
     }
+    /// Probe prepared storage metadata without IO, restoration, or access-order changes.
+    fn contains(&self, _key: &StoreKey) -> bool {
+        false
+    }
     /// Release optional writes after the first completed Changes publication.
     fn resume(&self) {}
     /// Read without bypassing the caller's current-side validation.

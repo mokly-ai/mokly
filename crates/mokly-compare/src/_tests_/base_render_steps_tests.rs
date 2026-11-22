@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_git::identity::ObjectId;
+use mokly_graph::prefetch::{PrefetchGuard, PrefetchMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_render::{
@@ -38,6 +39,7 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
             .next_call(matching!(_))
             .answers(&|boundaries, _| {
                 Ok(PreparedBase {
+                    prefetch: Some(PrefetchGuard::new(Arc::new(boundaries.clone()))),
                     generation: Arc::new(boundaries.clone()),
                     scripts_off: false,
                     freshness: None,
@@ -49,6 +51,9 @@ fn reading_starts_before_base_preparation_and_comparing_after_the_base_capture()
         ComparisonMock::capture_base
             .next_call(matching!(_))
             .answers(&|_, before| Ok(before)),
+        PrefetchMock::cancel_and_join
+            .next_call(matching!())
+            .returns(()),
         SourceFailuresMock::failure
             .next_call(matching!())
             .returns(None),

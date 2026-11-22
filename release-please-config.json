@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/v17.6.0/schemas/config.json",
   "bootstrap-sha": "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
+  "separate-pull-requests": true,
   "packages": {
     ".": {
       "release-type": "node",
@@ -347,6 +348,37 @@
         "docs/api",
         "fixtures",
         "rules"
+      ]
+    },
+    "packages": {
+      "release-type": "node",
+      "component": "desktop",
+      "package-name": "@mokly-cloud/desktop",
+      "changelog-path": "desktop/CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "bump-minor-pre-major": true,
+      "initial-version": "0.1.0",
+      "prerelease": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/desktop/package.json",
+          "jsonpath": "$['version']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/desktop']['version']"
+        }
+      ],
+      "exclude-paths": [
+        "packages/mokly",
+        "packages/native-darwin-arm64",
+        "packages/native-darwin-x64",
+        "packages/native-linux-arm64-gnu",
+        "packages/native-linux-x64-gnu",
+        "packages/native-win32-x64-msvc"
       ]
     }
   }

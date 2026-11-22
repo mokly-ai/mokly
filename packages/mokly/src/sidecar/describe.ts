@@ -8,8 +8,12 @@ import { validateFields } from "./definition-fields.js";
 import { serialize } from "./describe-records.js";
 import { SidecarError, detail } from "./errors.js";
 import { evaluate } from "./evaluate.js";
+import { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
 import { describeStories } from "./stories.js";
+
+/** One bounded cache of parsed export names lasts for the sidecar process. */
+const exportNameCache = new ExportNameCache();
 
 const groups = {
   screen: "screens",
@@ -19,9 +23,12 @@ const groups = {
   folder: "folders",
 } as const;
 
-export async function describe(generation: Generation): Promise<Definitions> {
+export async function describe(
+  generation: Generation,
+  cache: ExportNameCache = exportNameCache,
+): Promise<Definitions> {
   try {
-    return await collect(generation);
+    return await collect(generation, cache);
   } catch (error) {
     if (error instanceof SidecarError) throw error;
     throw new SidecarError(
@@ -31,7 +38,10 @@ export async function describe(generation: Generation): Promise<Definitions> {
   }
 }
 
-async function collect(generation: Generation): Promise<Definitions> {
+async function collect(
+  generation: Generation,
+  cache: ExportNameCache,
+): Promise<Definitions> {
   if (generation.definitions) return generation.definitions;
   const exports = evaluate(generation);
   const result: Definitions = {
@@ -58,6 +68,7 @@ async function collect(generation: Generation): Promise<Definitions> {
       generation.sources.get(module) ?? "",
       values,
       module,
+      cache,
     )) {
       const location = `${module} export ${exportName}`;
       if (containsDefinition(value)) {
@@ -160,7 +171,7 @@ async function collect(generation: Generation): Promise<Definitions> {
       message: `${deferred.source ?? "unknown module"}: referenced definition ${target?.input.title ?? "unknown"} from ${target?.source ?? "unknown module"} is not exported by an entry module`,
     });
   }
-  await describeStories(generation, exports, result);
+  await describeStories(generation, exports, result, cache);
   generation.sources.clear();
   return (generation.definitions = result);
 }
