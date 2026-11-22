@@ -4,13 +4,14 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-22, from the branch `calummoore/mokly-viewer-refresh-identity-q13s`, the open options of its second user decision.
 - **Location:** `packages/viewer/src/shell/data_controller.ts`, `packages/viewer/src/shell/data_refresh.ts`, `packages/viewer/src/shell/data_requests.ts` (`loadRefresh`), `packages/viewer/src/shell/data_commit.ts` (`withIndex`), `packages/viewer/src/shell/store.tsx`, `packages/viewer/src/shell/frame_mount_hook.ts`.
-- **Reason:** A decision of 2026-11-22 makes the hold of refreshes wait for a traced session of the identity reuse, and the other options wait for the same result.
+- **Reason:** A decision of 2026-11-22 defers the hold of refreshes until the identity reuse and the Serve delivery change merge and a fresh measurement on `main` justifies it.
 
 - **Terms:**
   - **Publication:** one revision that `mokly serve` publishes after a source edit. The viewer gets one server-sent event for it and fetches the index and the route details again.
   - **Index:** the catalogue index JSON that lists every entry record. It is 1.2 MB on the mokly-cloud catalogue.
   - **Identity reuse:** the change of 2026-11-22 that keeps each unchanged index record, detail, lookup, navigation section, and frame usage object across a publication.
   - **Frame probe:** the script in each mounted frame that reports the frame's state and draws highlights. A usage update restarts it.
+  - **Serve delivery change:** the Serve change of the same work. It compresses the JSON answers of `mokly serve`, validates resources, and serves immutable generation files.
 - **Background:**
   - In Serve, one source edit gives about five publications. On each publication, the viewer fetches the whole index and the route details. It adopts them in one store commit.
   - The measurements of `main` on 2026-11-22 used the mokly-cloud catalogue, with 167 entries and 1,508 views, on 4 vCPU with warm edits. Each warm edit cost about 320 ms of renderer main-thread work.
@@ -22,7 +23,27 @@
   - In that bench, renderer script time fell by 34.7 ms, or 24%, on a view, and by 46.9 ms, or 22%, on Changes. Task time fell by 11% and 7%, within the noise. The heap during an edit fell by 8.3 MiB on a view.
   - The first and last frame paints and the Changes pane paint did not move beyond the noise. The first paint waits for the frame document and a cold sidecar process, not for viewer script. Bytes and requests stayed equal.
   - On 2026-11-22, the performance orchestrator of this work decided how to judge the hold of refreshes. One traced session on the identity reuse sums the main-thread time of the refreshes between the first event and the last frame paint. The hold gets built only when that sum is at least 20 ms.
-- **Problem:** The identity reuse removes the copy and most React and builder work for unchanged parts. Each publication still fetches and parses the whole index, compares each record, and commits, also while frames load. No measurement says yet how much of this work falls before the last frame paint.
+  - The traced session of 2026-11-22 used one light trace without CPU sampling (`TRACE_LIGHT`). It ran on the mokly-cloud catalogue at commit `194fdb78`, on 4 vCPU.
+  - Its setup was the Serve delivery change at commit `529039532` with the identity reuse at commit `a97ffa96e`. It made 4 edits on the page `/view/product/settings/project/slug/` and traced edit 3.
+  - The measure was fixed before the data:
+    - A refresh window starts at an `index.json` request. The first window of an edit is the rebuild refresh that reloads the frames.
+    - Each later window that starts before the last frame paint counts up to the next window or the last paint, whichever comes first.
+    - The measure is the main-thread time of the top-level tasks whose work belongs mostly to the viewer's own frame.
+  - The result, on the trace clock from the first index request of the edit:
+    - Index requests came at 0, 216, 353, 719, and 883 ms. The frame paints came at 318.5 and 392.5 ms. So two refreshes fell inside the frame-load window.
+    - The viewer tasks in those windows took 44.3 ms. The viewer frame's own events took 35.5 ms, of which 24.1 ms was shell script.
+    - Subframe work took 36.2 ms. Events with no frame, for example garbage collection, took 81.7 ms.
+    - So this edit met the rule of at least 20 ms.
+  - The same measure on two earlier light traces of `main`, before the identity reuse, gave 31.6 ms and 8.0 ms of viewer tasks. Their viewer-frame events took 17.6 ms and 4.8 ms.
+  - The caveats of the trace:
+    - The result comes from one edit, and the measure varies a lot between edits.
+    - Tracing slows the page. The traced edit painted later than the untraced edits.
+    - The system swap-out counter rose by 1,066 pages during the traced session. The measured processes run with `MemorySwapMax=0`.
+  - On 2026-11-22, the performance orchestrator decided not to build the hold now. A new measurement on `main` follows after the identity reuse and the Serve delivery change merge. The hold gets built only when a fresh measurement still justifies it. The reasons:
+    - The trace met the 20 ms rule on one edit only. The same measure gave 8.0 ms and 31.6 ms on two other edits.
+    - The hold can save only part of that time on the last paint. The larger wait there is the cold second sidecar process.
+    - The paint noise is about ±65 ms over 12 edits. So a gain of 10 to 30 ms needs a long series to verify.
+- **Problem:** The identity reuse removes the copy and most React and builder work for unchanged parts. Each publication still fetches and parses the whole index, compares each record, and commits, also while frames load. One traced edit found 44.3 ms of viewer tasks inside the frame-load window. The measure varies a lot between edits, so the saving of a hold is not known.
 - **Impact if no action:** When the remaining cost is too high, each warm edit in Serve keeps a visible delay in the viewer on large catalogues.
 - **Root question:** After the identity reuse, how does a warm edit in Serve reach its final view with the least renderer work?
 - **Options:**
@@ -36,5 +57,5 @@
 - **Wider fix:** C. A selector store stops each container from rendering again for a change outside its slice, without hand-kept memo inputs.
 - **Previous examples:** None found.
 - **Related:** `plans/follow-ups/nav-section-reuse-field-contract.md`, the same code. Its structural fix changes the inputs of the rail's section reuse, and options C and D also change them.
-- **Recommendation:** B, when the traced session finds at least 20 ms of refresh work between the first event and the last frame paint. It cuts the adoptions of one edit at Medium effort and changes no contract. F cuts the most work, but it changes the Serve contract.
-- **Action:** ask the user, because the decision of 2026-11-22 makes the hold wait for the traced session, and no other option is clearly best before that result.
+- **Recommendation:** B, only when a fresh measurement on `main` still justifies it after both changes merge. That measurement needs a series long enough to show a gain beyond the paint noise. B cuts the adoptions of one edit at Medium effort and changes no contract. F cuts the most work, but it changes the Serve contract.
+- **Action:** ask the user, because the decision of 2026-11-22 defers the hold until a fresh measurement on `main`, and no other option is clearly best before that measurement.
