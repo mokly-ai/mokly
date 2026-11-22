@@ -1,5 +1,5 @@
 /* The foundations of the public site mockups, shared by every site screen:
-   the dot-grid canvas behind every page, the type defaults, the focus rule,
+   the dot-grid canvas behind every page, the type defaults, the focus glow,
    the shared text, links and badges.
 
    The site stylesheets are split by owner. The shared files come first in
@@ -53,10 +53,13 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* The reset of a paragraph weighs no more than the element, as the site's
+   own reset does, so a part's declared margins draw. */
+
 .site-root h1,
 .site-root h2,
 .site-root h3,
-.site-root p,
+:where(.site-root) p,
 .site-root ul,
 .site-root ol,
 .site-root pre,
@@ -72,9 +75,24 @@
   text-wrap: balance;
 }
 
+/* Keyboard focus draws the focus glow of @firna/ui in place of an outline:
+   a 4px halo with no blur outside the control, in the signal ink at 75%,
+   which keeps 3:1 against every page surface. A control that draws its own
+   shadow, or sits where an outer halo would be clipped, repeats the glow in
+   its own focus rule. Forced colours drop every shadow, so there focus
+   takes a system outline. */
+
 .site-root :focus-visible {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  .site-root :focus-visible {
+    box-shadow: none;
+    outline: 2px solid Highlight;
+  }
 }
 
 /* Shared text */

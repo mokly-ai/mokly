@@ -64,7 +64,9 @@
 }
 
 /* The viewport and saved-state controls: native radios drawn as the
-   segments of a track; the chosen segment sits on the canvas tone */
+   segments of a track; the chosen segment sits on the canvas tone. A
+   radio is hidden, so its segment draws the focus glow, before the chosen
+   segment's ring. */
 
 .site-docs-sample-controls {
   display: flex;
@@ -126,8 +128,14 @@
 }
 
 .site-docs-sample-option:has(.site-docs-sample-input:focus-visible) {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 2px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:checked:focus-visible) {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
 }
 
 .site-docs-sample-option svg {

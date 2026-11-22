@@ -105,14 +105,16 @@
   color: var(--mk-color-on-signal-fill);
 }
 
+/* The radio is hidden, so its option draws the focus glow outside the
+   signal fill, on the bar's surface */
+
 .site-changelog-filter-option:has(.site-changelog-filter-input:focus-visible) {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
 }
 
 /* The status, set off from the options by a divider in the floating bar.
-   It keeps no margin, as the mockup draws it: its reset of a paragraph's
-   margins outweighs the status's own margins. */
+   On mobile it keeps no margin. */
 
 .site-changelog-filter-status {
   border-left: 0;
@@ -174,6 +176,7 @@
 
   .site-changelog-filter-status {
     border-left: 1px solid var(--mk-color-border);
+    margin: 0 12px 0 8px;
     padding: 4px 0 4px 14px;
   }
 
@@ -215,6 +218,17 @@
     flex-basis: 100%;
     margin: 0;
     padding: 0 0 0 2px;
+  }
+}
+
+/* Forced colours drop the focus glow, so the focused option takes a system
+   outline */
+
+@media (forced-colors: active) {
+  .site-changelog-filter-option:has(
+    .site-changelog-filter-input:focus-visible
+  ) {
+    outline: 2px solid Highlight;
   }
 }
 

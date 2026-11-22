@@ -36,8 +36,11 @@ beneath its own selector, so light, dark and explicit-scheme output coexist
 in one static document without leaking into another scope. Site and mockup
 styles consume only the resulting `--mk-*` properties. They declare no token,
 copied palette, `--site-*` compatibility alias or literal colour. A tint
-mixes a role with another role or with `transparent`. A stylesheet that
-contains a literal colour fails the checks.
+mixes two parts in any colour space, and each part is a role, `currentColor`,
+`transparent` or another tint. This is decision 26, option C: nested tints
+keep the approved colours of the drawn demo app, and single mixes of two
+roles were rejected, because four of its colours moved visibly. A stylesheet
+that contains a literal colour fails the checks.
 
 The site ships light and dark. Colours follow `prefers-color-scheme`, and the
 document root's `data-color-scheme="light" | "dark"` attribute overrides that
@@ -68,7 +71,8 @@ attribute.
 
 Status text and fills use the shared `success`, `warning`, `danger` and
 `info` roles with their soft fills: the changed and removed chips, the
-breaking callout and the depicted diff. Keyboard focus uses the `focus` role.
+breaking callout and the depicted diff. The focus ring takes `signalDeep`,
+and `signal` inside the code panel.
 
 Reading text in green uses `signalDeep`. `signal` marks selections, handles,
 tags, rules, wires and the brand. Each depicted person or agent keeps one
@@ -165,11 +169,24 @@ loses the chosen green.
 
 A frame on the canvas takes a `border` ring and `shadow.small`. A floating
 panel takes a `border` ring and `shadow.medium`. The menu, the tree sheet and
-the depicted windows take `shadow.large`. Focus is a 2px solid `focus`
-outline with 3px offset, never removed; forced-colors mode keeps a system
-outline. Transitions use `motion.fast` or `motion.standard` with the shared
-easing. Every transition and animation honours reduced motion: nothing
-moves, and each part shows its finished state.
+the depicted windows take `shadow.large`. Transitions use `motion.fast` or
+`motion.standard` with the shared easing. Every transition and animation
+honours reduced motion: nothing moves, and each part shows its finished
+state.
+
+Keyboard focus shows the focus ring of the `@firna/ui` controls: a glow, a
+4px halo with no blur, in place of an outline. The glow is `signalDeep` at
+75% on every page surface and `signal` at 75% inside the code panel, so that
+each keeps 3:1 against the surface it draws on in both schemes; `signal` on
+a light surface stays below 3:1 at any share. A control draws the glow
+outside its box and keeps its own shadow under the glow. A row of a list and
+a part of the code panel draw it inside their box, so that a panel that
+scrolls or clips keeps it whole. The segment of a segmented control draws
+the glow of its hidden radio. Every focusable control shows the glow, and
+nothing removes it. Forced-colors mode drops shadows, so there focus takes a
+2px system outline. This is decision 32: the site takes the focus design of
+the `@firna/ui` controls, so that focus looks the same on the site and in the
+cloud app, and the 2px `focus` outline with a 3px offset was rejected.
 
 ## Brand
 

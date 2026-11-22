@@ -96,6 +96,13 @@
   color: var(--mk-color-text);
 }
 
+/* The compact control has no edge, so its focus is the glow alone */
+
+.site-docs-subbar .site-search:focus-visible {
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
 /* The tree sheet under the sub-bar: 60px of tool bar and 52px of sub-bar on
    mobile */
 

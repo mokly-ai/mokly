@@ -75,6 +75,14 @@
   color: var(--mk-color-text);
 }
 
+/* Focus: the glow before the control's strong edge, after the hover rule */
+
+.site-search:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
+}
+
 .site-search svg {
   flex: none;
 }
@@ -120,6 +128,14 @@
 .site-version-link:hover {
   background: var(--mk-color-background);
   color: var(--mk-color-text);
+}
+
+/* The version row draws the focus glow inside its box, as a panel row does */
+
+.site-version-link:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline-offset: -2px;
 }
 
 .site-version {

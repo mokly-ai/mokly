@@ -149,9 +149,18 @@
   color: var(--mk-color-text);
 }
 
+/* The radio is hidden, so its segment draws the focus glow, before the
+   chosen segment's ring */
+
 .site-docs-sample-option:has(.site-docs-sample-input:focus-visible) {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 2px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:checked:focus-visible) {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
 }
 
 .site-docs-sample-option svg {
@@ -267,7 +276,8 @@
 
 /* Forced colors drop the canvas tone and the ring, and the radio stays
    hidden, so the chosen segment takes the system highlight, as the scheme
-   control's does. Its focus ring takes the system text colour. */
+   control's does. Forced colours also drop the focus glow, so the focused
+   segment takes an outline in the system text colour. */
 
 @media (forced-colors: active) {
   .site-docs-sample-option:has(.site-docs-sample-input:checked) {
@@ -277,7 +287,9 @@
     forced-color-adjust: none;
   }
 
-  .site-docs-sample-option:has(.site-docs-sample-input:focus-visible) {
-    outline-color: CanvasText;
+  .site-docs-sample-option:has(.site-docs-sample-input:focus-visible),
+  .site-docs-sample-option:has(.site-docs-sample-input:checked:focus-visible) {
+    box-shadow: none;
+    outline: 2px solid CanvasText;
   }
 }

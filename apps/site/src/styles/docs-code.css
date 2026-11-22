@@ -20,10 +20,12 @@
   overflow: visible !important;
 }
 
-/* Shiki keeps each block in the tab order. The panel clips an outer ring, so
-   the block's focus ring draws inside the block, as Copy's does. */
+/* Shiki keeps each block in the tab order. The panel clips an outer halo, so
+   the block's focus glow draws inside the block, as Copy's does. */
 
 .site-code .site-code-body:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal) 75%, transparent);
   outline-offset: -2px;
 }
 

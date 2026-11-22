@@ -16,7 +16,7 @@ const LANDING =
   "the site's root scroll padding clears the tool bar, 56px on desktop and 60px on mobile, so the site's scroll margin is the mockup's less the bar's height, and a jump lands the part where the mockup lands it";
 
 const RESET =
-  "the mockup's reset of the headings and paragraphs under its root outweighs this rule, so the mockup draws the reset's value; the site's reset weighs less, so the site leaves out the declaration and draws the same";
+  "the mockup's reset of the headings under its root outweighs this rule, so the mockup draws the reset's value; the site's reset weighs less, so the site leaves out the declaration and draws the same";
 
 export const CHANGELOG_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-release-index":
@@ -27,7 +27,6 @@ export const CHANGELOG_DIFFERENCES: Readonly<Record<string, string>> = {
   ".site-release": LANDING,
   ".site-release-group": LANDING,
   ".site-release-group-title": RESET,
-  ".site-release-group-hint": RESET,
   ".site-release-meta": BELOW,
   ".site-release-counts": BELOW,
   ".site-release-notes": BELOW,
