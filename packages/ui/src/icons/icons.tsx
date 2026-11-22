@@ -4,14 +4,16 @@
 // device chrome's copy and expand / collapse controls, and the workspace
 // controls' icons. Icons are stroke-based on a 24-unit viewBox and inherit
 // `currentColor`. The brand mark, the Mokly logo on its own 32-unit grid,
-// lives with the top bar that draws and colours it, and this module, the
-// package's icons entry, exports it too. Authored folder groups swap closed
-// and open folder icons; top-level catalogue sections and the details
+// lives with the top bar that draws and colours it, and the canvas glyphs, on
+// the 16-unit grid of the Canvas design, live in `canvas-icons.tsx`; this
+// module, the package's icons entry, exports both. Authored folder groups swap
+// closed and open folder icons; top-level catalogue sections and the details
 // inspector use the disclosure chevron.
 
 import type { ReactNode } from "react";
 
 export { BrandIcon } from "../top-bar/brand-icon.js";
+export { CanvasIcon, type CanvasIconName } from "./canvas-icons.js";
 
 export function IconSvg(props: { children: ReactNode; size: number }) {
   return (

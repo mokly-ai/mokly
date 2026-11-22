@@ -16,6 +16,22 @@
       "types": "./dist/browser-bar/browser-bar.d.ts",
       "import": "./dist/browser-bar/browser-bar.js"
     },
+    "./canvas-frame": {
+      "types": "./dist/canvas-frame/canvas-frame.d.ts",
+      "import": "./dist/canvas-frame/canvas-frame.js"
+    },
+    "./canvas-section": {
+      "types": "./dist/canvas-section/canvas-section.d.ts",
+      "import": "./dist/canvas-section/canvas-section.js"
+    },
+    "./canvas-stage": {
+      "types": "./dist/canvas-stage/canvas-stage.d.ts",
+      "import": "./dist/canvas-stage/canvas-stage.js"
+    },
+    "./canvas-zoom-pill": {
+      "types": "./dist/canvas-zoom-pill/canvas-zoom-pill.d.ts",
+      "import": "./dist/canvas-zoom-pill/canvas-zoom-pill.js"
+    },
     "./catalogue-navigation": {
       "types": "./dist/catalogue-navigation/catalogue-navigation.d.ts",
       "import": "./dist/catalogue-navigation/catalogue-navigation.js"

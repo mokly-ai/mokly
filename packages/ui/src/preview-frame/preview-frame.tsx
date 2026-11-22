@@ -50,6 +50,37 @@ function FrameLabel({
  */
 export type FrameRetry = { href: string } | { onClick(): void };
 
+/** The line of a preview that has no document to show. */
+export function FrameUnavailable() {
+  return <EmptyLine>This preview is unavailable.</EmptyLine>;
+}
+
+/** The line of a frame whose document failed to load, with Try again. */
+export function FrameFailure({
+  retry,
+}: {
+  /** Try again: the host's callback, or the address of the outcome. */
+  retry?: FrameRetry | undefined;
+}) {
+  return (
+    <p className="mbk-frame-error mbk-reset" role="status">
+      This preview could not be loaded.
+      {retry ? (
+        <>
+          {" "}
+          <EmptyAction
+            action={
+              "href" in retry
+                ? { href: retry.href, label: "Try again" }
+                : { label: "Try again", onClick: retry.onClick }
+            }
+          />
+        </>
+      ) : null}
+    </p>
+  );
+}
+
 /**
  * The content of a frame, or the line of a preview that has none, then the
  * line of a frame whose document failed to load, with Try again.
@@ -65,24 +96,8 @@ function FrameContent({
 }) {
   return (
     <>
-      {children ?? <EmptyLine>This preview is unavailable.</EmptyLine>}
-      {error ? (
-        <p className="mbk-frame-error mbk-reset" role="status">
-          This preview could not be loaded.
-          {retry ? (
-            <>
-              {" "}
-              <EmptyAction
-                action={
-                  "href" in retry
-                    ? { href: retry.href, label: "Try again" }
-                    : { label: "Try again", onClick: retry.onClick }
-                }
-              />
-            </>
-          ) : null}
-        </p>
-      ) : null}
+      {children ?? <FrameUnavailable />}
+      {error ? <FrameFailure retry={retry} /> : null}
     </>
   );
 }

@@ -1,0 +1,152 @@
+/* One frame on the canvas: its box takes its nominal size times the canvas's
+   zoom, --mbk-canvas-zoom, and its document keeps the nominal size, scaled.
+   The ring and the shadow mix the Canvas roles of the interface appearance:
+   the shadow's shade is the ink in a light appearance and the canvas in a
+   dark one. The label and the size tag keep their size at every zoom. */
+.mbk-canvas-frame {
+  --mbk-canvas-frame-scale: var(--mbk-canvas-zoom, 1);
+  --mbk-canvas-frame-ring: color-mix(in srgb, var(--cv-text) 8%, transparent);
+  --mbk-canvas-frame-lift:
+    0 1px 2px color-mix(in srgb, var(--cv-text) 5%, transparent),
+    0 14px 30px -14px color-mix(in srgb, var(--cv-text) 24%, transparent);
+  position: relative;
+  width: calc(
+    var(--mbk-canvas-frame-width) * var(--mbk-canvas-frame-scale) * 1px
+  );
+  height: calc(
+    var(--mbk-canvas-frame-height) * var(--mbk-canvas-frame-scale) * 1px
+  );
+  margin: 0;
+}
+
+.mbk[data-mokly-theme="dark"] .mbk-canvas-frame {
+  --mbk-canvas-frame-lift:
+    0 1px 2px color-mix(in srgb, var(--cv-background) 50%, transparent),
+    0 18px 36px -14px color-mix(in srgb, var(--cv-background) 70%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mbk[data-mokly-theme="auto"] .mbk-canvas-frame {
+    --mbk-canvas-frame-lift:
+      0 1px 2px color-mix(in srgb, var(--cv-background) 50%, transparent),
+      0 18px 36px -14px
+        color-mix(in srgb, var(--cv-background) 70%, transparent);
+  }
+}
+
+/* The label: the glyph and the name, then the size tag at the right edge.
+   The label holds one line, so a size tag that does not fit beside the name
+   wraps out of sight, and a name too long for the frame ends in an
+   ellipsis. */
+.mbk-canvas-frame-label {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 7px);
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+  height: 14px;
+  overflow: hidden;
+  color: var(--cv-text-muted);
+  font: 500 11.5px/14px var(--cv-mono);
+  white-space: nowrap;
+}
+
+.mbk-canvas-frame-title {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 14px;
+}
+
+.mbk-canvas-frame-title > svg {
+  flex: none;
+}
+
+.mbk-canvas-frame-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mbk-canvas-frame-size {
+  flex: none;
+  height: 14px;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The frame that holds the selection lights its glyph and name; its size
+   stays quiet. */
+.mbk-canvas-frame[data-selected] > .mbk-canvas-frame-label {
+  color: var(--cv-signal-deep);
+}
+
+.mbk-canvas-frame[data-selected] .mbk-canvas-frame-size {
+  color: var(--cv-text-muted);
+}
+
+/* The frame's box clips its document and paints the opaque preview surface
+   of the frame's own scheme behind it. A document with keyboard focus draws
+   the focus glow on the box. */
+.mbk-canvas-frame-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--mbk-screen-bg);
+  box-shadow:
+    0 0 0 1px var(--mbk-canvas-frame-ring),
+    var(--mbk-canvas-frame-lift);
+}
+
+.mbk-canvas-frame[data-preview-color-scheme="dark"] > .mbk-canvas-frame-clip {
+  background: var(--mbk-dark-screen-bg);
+}
+
+.mbk-canvas-frame-clip:has(.mbk-frag:focus-visible) {
+  box-shadow:
+    var(--mbk-focus-glow),
+    0 0 0 1px var(--mbk-canvas-frame-ring),
+    var(--mbk-canvas-frame-lift);
+}
+
+.mbk-canvas-frame-document {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--mbk-canvas-frame-width) * 1px);
+  height: calc(var(--mbk-canvas-frame-height) * 1px);
+  transform: scale(var(--mbk-canvas-frame-scale));
+  transform-origin: 0 0;
+}
+
+/* The line of a frame without a document, or whose document failed to
+   load, on a small surface in the frame's middle, at its own size. */
+.mbk-canvas-frame-note {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: 4px;
+  max-width: calc(100% - 16px);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--cv-surface);
+  box-shadow: 0 0 0 1px var(--cv-border);
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.mbk-canvas-frame-note > .mbk-empty {
+  padding: 0;
+}
+
+.mbk-canvas-frame-note > .mbk-frame-error {
+  margin: 0;
+}

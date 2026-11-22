@@ -1,0 +1,98 @@
+/* The canvas zoom: a raised 36px pill on the surface, with a hairline ring
+   and the Canvas design's second shadow, holding Zoom out, the zoom level in
+   the mono face, Zoom in, a rule, and Fit. Its shadow takes the ink as its
+   shade in a light appearance and the canvas in a dark one. */
+.mbk-zoom-pill {
+  --mbk-zoom-pill-lift:
+    0 1px 1px color-mix(in srgb, var(--cv-text) 4%, transparent),
+    0 4px 10px -2px color-mix(in srgb, var(--cv-text) 6%, transparent),
+    0 18px 36px -14px color-mix(in srgb, var(--cv-text) 14%, transparent);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--cv-surface);
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--mbk-zoom-pill-lift);
+  color: var(--cv-text-secondary);
+  font-family: var(--cv-sans);
+}
+
+.mbk[data-mokly-theme="dark"] .mbk-zoom-pill {
+  --mbk-zoom-pill-lift:
+    0 0 0 1px color-mix(in srgb, var(--cv-text) 4%, transparent),
+    0 6px 14px -4px color-mix(in srgb, var(--cv-background) 50%, transparent),
+    0 22px 44px -16px color-mix(in srgb, var(--cv-background) 60%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mbk[data-mokly-theme="auto"] .mbk-zoom-pill {
+    --mbk-zoom-pill-lift:
+      0 0 0 1px color-mix(in srgb, var(--cv-text) 4%, transparent),
+      0 6px 14px -4px color-mix(in srgb, var(--cv-background) 50%, transparent),
+      0 22px 44px -16px
+        color-mix(in srgb, var(--cv-background) 60%, transparent);
+  }
+}
+
+.mbk-zoom-step,
+.mbk-zoom-fit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mbk-zoom-step {
+  width: 30px;
+}
+
+.mbk-zoom-fit {
+  gap: 6px;
+  padding: 0 10px 0 8px;
+  font-size: 12.5px;
+  font-weight: 540;
+}
+
+.mbk-zoom-step svg,
+.mbk-zoom-fit svg {
+  display: block;
+  flex: none;
+}
+
+.mbk-zoom-step:hover,
+.mbk-zoom-fit:hover {
+  background: var(--chrome-hover);
+  color: var(--cv-text);
+}
+
+.mbk-zoom-step:focus-visible,
+.mbk-zoom-fit:focus-visible {
+  outline: none;
+  box-shadow: var(--mbk-focus-glow);
+}
+
+.mbk-zoom-value {
+  min-width: 44px;
+  color: var(--cv-text);
+  font: 500 12px/1 var(--cv-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.mbk-zoom-rule {
+  width: 1px;
+  height: 18px;
+  margin: 0 3px;
+  background: var(--cv-border);
+}
