@@ -78,7 +78,6 @@ export class Session {
           preparation,
           ...params
         } = request.params;
-        if (preparation) this.workers.prepare({ ...params, ...preparation });
         try {
           let source: Generation | undefined;
           const previous = await reuse(

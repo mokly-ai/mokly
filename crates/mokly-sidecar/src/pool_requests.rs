@@ -163,8 +163,8 @@ impl Pool {
 
     /// Start a bundle request's preparation in its own process before the bundle cache read.
     ///
-    /// The `bundle` request still carries the preparation, so after an error reply that leaves
-    /// the process usable the sidecar starts it there. A crash or a timeout keeps the retry.
+    /// After an error reply that leaves the process usable, the first `processCss` request of the
+    /// context starts the child. A crash or a timeout keeps the retry.
     fn prepare_context(&self, slot: &mut Slot, preparation: PrepareContext) -> Result<()> {
         match self.prerequisite(slot, Call::PrepareContext(preparation), false) {
             Err(error) if reusable(&error) => {

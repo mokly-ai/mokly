@@ -9,47 +9,23 @@ import { PostcssWorkers } from "../packages/mokly/src/sidecar/postcss.js";
 import { Session } from "../packages/mokly/src/sidecar/session.js";
 
 import { preparedSession } from "./helpers/prepared_session.js";
-import { cssParams } from "./helpers/sidecar.js";
+import { contextParams, cssParams } from "./helpers/sidecar.js";
 import { editSource } from "./helpers/sidecar_edit.js";
 
-test("Bundle starts preparation before compilation and does not await it", async (context) => {
+test("A bundle preparation changes neither the generation nor its reuse", async (context) => {
   const { params } = await editSource(context);
-  const events: string[] = [];
-  const contexts: string[] = [];
-  let completePreparation: () => void = () => {};
-  const preparation = new Promise<void>((resolve) => {
-    completePreparation = resolve;
-  });
-  context.mock.method(
-    PostcssWorkers.prototype,
-    "prepare",
-    (params: Parameters<PostcssWorkers["prepare"]>[0]) => {
-      events.push("prepare");
-      contexts.push(params.context);
-      return preparation;
-    },
-  );
-  let compileEntered: () => void = () => {};
-  const compiling = new Promise<void>((resolve) => {
-    compileEntered = resolve;
-  });
-  let completeCompile: () => void = () => {};
-  const compile = new Promise<void>((resolve) => {
-    completeCompile = resolve;
-  });
+  let compilations = 0;
   const session = new Session(
     "test",
     () => {},
-    async (options) => {
-      events.push("compile");
-      compileEntered();
-      await compile;
+    (options) => {
+      compilations++;
       return build(options);
     },
   );
   context.after(() => session.dispose());
   await session.call({ id: 0, method: "hello", params: {} });
-  const bundling = session.call({
+  const prepared = await session.call({
     id: 1,
     method: "bundle",
     params: {
@@ -58,14 +34,6 @@ test("Bundle starts preparation before compilation and does not await it", async
       preparation: { context: "attempt", postcss: "postcss.mjs" },
     },
   });
-  await compiling;
-  try {
-    assert.deepEqual(events, ["prepare", "compile"]);
-  } finally {
-    completeCompile();
-    await bundling;
-  }
-  const prepared = await bundling;
   assert.ok(
     prepared && typeof prepared === "object" && "generation" in prepared,
   );
@@ -76,7 +44,7 @@ test("Bundle starts preparation before compilation and does not await it", async
   });
   assert.ok(plain && typeof plain === "object" && "generation" in plain);
   assert.equal(plain.generation, prepared.generation);
-  const compilations = events.filter((event) => event === "compile").length;
+  const before = compilations;
   const reused = await session.call({
     id: 3,
     method: "bundle",
@@ -88,12 +56,7 @@ test("Bundle starts preparation before compilation and does not await it", async
   });
   assert.ok(reused && typeof reused === "object" && "generation" in reused);
   assert.equal(reused.generation, prepared.generation);
-  assert.deepEqual(contexts, ["attempt", "next"]);
-  assert.equal(
-    events.filter((event) => event === "compile").length,
-    compilations,
-  );
-  completePreparation();
+  assert.equal(compilations, before);
 });
 
 test("prepareContext starts preparation and answers while it is pending", async (context) => {
@@ -151,14 +114,17 @@ test("Bundle failure releases its prepared child before returning the error", as
   );
   context.after(() => session.dispose());
   await session.call({ id: 0, method: "hello", params: {} });
+  const preparation = { context: "failed", postcss: "postcss.mjs" };
+  await session.call({
+    id: 1,
+    method: "prepareContext",
+    params: contextParams(params, preparation),
+  });
   await assert.rejects(
     session.call({
-      id: 1,
+      id: 2,
       method: "bundle",
-      params: {
-        ...params,
-        preparation: { context: "failed", postcss: "postcss.mjs" },
-      },
+      params: { ...params, preparation },
     }),
     { code: "bundle-failed", message: /fixture compilation failed/ },
   );
@@ -200,13 +166,16 @@ test("Session disposal during compilation stops preparation before compilation r
   );
   context.after(() => session.dispose());
   await session.call({ id: 0, method: "hello", params: {} });
-  const bundling = session.call({
+  const preparation = { context: "stopped", postcss: "postcss.mjs" };
+  await session.call({
     id: 1,
+    method: "prepareContext",
+    params: contextParams(params, preparation),
+  });
+  const bundling = session.call({
+    id: 2,
     method: "bundle",
-    params: {
-      ...params,
-      preparation: { context: "stopped", postcss: "postcss.mjs" },
-    },
+    params: { ...params, preparation },
   });
   await Promise.all([started, compiling]);
   try {
@@ -220,7 +189,7 @@ test("Session disposal during compilation stops preparation before compilation r
   assert.equal(starts, 1);
 });
 
-test("A restored reuse with a startup preparation starts the prepared child and replies short", async (context) => {
+test("A restored reuse with a prepared startup context replies short and keeps one child", async (context) => {
   const { params, write } = await editSource(context);
   await write("postcss.mjs", "export default {plugins:[]};");
   await write("theme.css", ".theme{color:red}");
@@ -268,14 +237,16 @@ test("A restored reuse with a startup preparation starts the prepared child and 
       }),
     ),
   });
-  const reply = await restored.call({
+  const preparation = { context: "startup", postcss: "postcss.mjs" };
+  await restored.call({
     id: 2,
+    method: "prepareContext",
+    params: contextParams(params, preparation),
+  });
+  const reply = await restored.call({
+    id: 3,
     method: "bundle",
-    params: {
-      ...params,
-      capture: "full",
-      preparation: { context: "startup", postcss: "postcss.mjs" },
-    },
+    params: { ...params, capture: "full", preparation },
   });
   assert.deepEqual(reply, {
     generation: full.generation,
@@ -284,7 +255,7 @@ test("A restored reuse with a startup preparation starts the prepared child and 
   assert.deepEqual(prepared, ["startup"]);
   await started;
   const css = await restored.call({
-    id: 3,
+    id: 4,
     method: "processCss",
     params: cssParams({
       context: "startup",

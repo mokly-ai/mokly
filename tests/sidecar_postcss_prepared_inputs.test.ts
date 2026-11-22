@@ -6,10 +6,15 @@ import type { BundleResult } from "../packages/mokly/src/generated/sidecar/Bundl
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 
 import { preparedSession } from "./helpers/prepared_session.js";
-import { bundleParams, cssParams, startSidecar } from "./helpers/sidecar.js";
+import {
+  bundleParams,
+  contextParams,
+  cssParams,
+  startSidecar,
+} from "./helpers/sidecar.js";
 import { editSource } from "./helpers/sidecar_edit.js";
 
-test("a prepared configuration failure belongs to CSS and leaves Bundle usable", async (context) => {
+test("a configuration failure belongs to CSS and leaves Bundle usable, with or without prepareContext", async (context) => {
   const { params, write } = await editSource(context);
   await write(
     "postcss.mjs",
@@ -197,11 +202,9 @@ test("fresh prepared contexts remove utilities and reload Tailwind configuration
       );
     }
     const name = `attempt-${index}`;
-    await sidecar.call("bundle", {
-      ...params,
-      evaluation: name,
-      preparation: { context: name, postcss: "postcss.mjs" },
-    });
+    const preparation = { context: name, postcss: "postcss.mjs" };
+    await sidecar.call("prepareContext", contextParams(params, preparation));
+    await sidecar.call("bundle", { ...params, evaluation: name, preparation });
     const result = await sidecar.call<CssResult>(
       "processCss",
       cssParams({
@@ -249,11 +252,9 @@ test("fresh prepared contexts reload configuration plugins dependencies and impo
       `import plugin from './plugin.mjs';export default {plugins:[plugin(${configured})]};`,
     );
     const name = `attempt-${index}`;
-    await sidecar.call("bundle", {
-      ...params,
-      evaluation: name,
-      preparation: { context: name, postcss: "postcss.mjs" },
-    });
+    const preparation = { context: name, postcss: "postcss.mjs" };
+    await sidecar.call("prepareContext", contextParams(params, preparation));
+    await sidecar.call("bundle", { ...params, evaluation: name, preparation });
     const result = await sidecar.call<CssResult>(
       "processCss",
       cssParams({
