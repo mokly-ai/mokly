@@ -31,11 +31,17 @@
   - `crates/mokly-server/src/changes_execution.rs:22`: `changes.classify`, and
     `crates/mokly-cli/src/serve_base.rs:124`, where the kept-base check reads
     the dependency directories that the renders record.
+  - `crates/mokly-server/src/publication.rs:155` and `:205`: the usage
+    publication through `crates/mokly-server/src/evidence.rs:39`, and the
+    Changes publication through `crates/mokly-server/src/changes.rs:157` and
+    `crates/mokly-server/src/changes_detail.rs:13`.
+  - `crates/mokly-compare/src/base_classification.rs:29` and
+    `crates/mokly-compare/src/base_freshness.rs:132`: the base pin, the
+    kept-base check, and the comparisons.
   - `docs/protocol/mokly-on-demand.md:76`: the rule that no base capture or
     comparison starts before the pass of its state ends.
-- **Reason:** No set of changes without a protocol change projects 60 ms for
-  each warm edit, and the options with more saving wait for the decision of
-  the performance orchestrator.
+- **Reason:** No single cut projects 60 ms for each warm edit, and the choice
+  of the cuts and their order waits for the performance orchestrator.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -88,59 +94,83 @@
     of each render. Mokly's own work after the React render is most of the
     rest, about 28%. The parse of the whole style registry on each render is
     9.3% of the render time.
-  - After the last view, the serial work takes about 173 ms: 21 ms to publish
-    the usage, 4 ms to the classification, and 152 ms of `changes.classify`.
-    The sidecars are idle then.
+  - After the last view, the serial work takes a median of 159 ms in a calm
+    session: 20 ms to publish the usage, 3 ms of Git references, and
+    `changes.classify`. Inside it: 3 ms of base pin, 23 ms of kept-base
+    check, 69 ms of comparisons, 7 ms of identity, metadata, and a Git check,
+    and 29 ms of Changes publication. The sidecars are idle then.
   - The plan `plans/cheaper-sidecar-describe.md` of branch
     `calummoore/mokly-cheaper-sidecar-describe-dlz0` caches the export names
     of `orderedExports`. The orchestrator accepted it on 2026-11-21 at -42 ms
     for each mokly-cloud edit. It is not on `main`, so it is not in this
     baseline. It also lowers the preparation of each cold sidecar.
 - **Problem:** Each warm edit spends about 400 ms in the CPU-bound background
-  pass and about 173 ms in serial work after it. The changes that need no
-  protocol change cut too little to save 60 ms for each edit.
+  pass and about 160 ms in serial work after its last view. No single cut
+  saves 60 ms. The cuts without a protocol change reach about 75 ms only
+  together.
 - **Impact if no action:** Each warm edit on mokly-cloud keeps a background
-  pass of about 320 to 540 ms, median 400 ms, and a classification of about
-  120 to 190 ms, in these local runs.
+  pass of about 320 to 540 ms, median 400 ms, and about 150 to 180 ms of
+  serial work after the last view, in these local runs.
 - **Root question:** How can a warm edit publish Changes at least 100 ms
   sooner, by removing CPU work and serial waits from the background pass and
   the work after it, with the same output and a whole-tree peak within 2% of
   `main`?
 - **Options:**
   - **A.** Change nothing, and close this record. Effort: Small.
-  - **B.** Split the serial work after the last view first, then propose cuts
-    there. That work is the usage publication, `changes.classify`, and the
-    Changes publication. A first split gives the classification step about
-    73% and the Changes publication about 23%. The sidecars are idle then, so
-    each cut saves its full time, and no protocol change is needed. The
-    projection is unknown until the split. Effort: Medium for the split.
-  - **C.** Cut the CPU of the pass with no protocol change. Encode each
-    restore request once for all cold sidecars. Measure a released recipe
-    without an encode under the pool lock, and let the first calls of a pass
-    take their slots before the one-at-a-time disposes end. Scan frames with
-    the native `indexOf`. Index the style registry by rule, for each
-    generation, with a fixed cap and a release at `dispose`. Add a V8 code
-    cache for the bundle evaluation. With the owner of the seed path, also
-    send a render-only restore without the module graph, the input digests,
-    and the directory listings. The projection is about 45 to 50 ms, in a
-    range of 35 to 65. The style index needs a memory bound. Effort: Large.
-  - **D.** Start the comparisons against the kept base during the pass. The
-    base work and the comparisons of the changed views overlap the pass, and
-    the classification publishes nothing before the pass ends. This changes
-    the rule at `docs/protocol/mokly-on-demand.md:76` for comparisons only.
-    The recorded rejection there is about the memory of base renders and
-    capture, and those still wait. The options check projects 35 to 75 ms
-    net. It is lower when the kept-base check must stay after the renders,
-    because that check reads the dependency directories that the renders
-    record. It adds about 9 MB, about 0.3%. Effort: Large, with high risk.
+  - **B.** Cut the serial work after the last view, with no protocol change.
+    The section "Serial work after the last view" below gives the split. The
+    sidecars are idle then, so each cut saves its full time. Effort: Large.
+    - **B1.** In both publications, build only the entry details that the
+      pass or the Changes result changes. Share the other details without a
+      clone or a deep compare. Encode the canonical index without a JSON value
+      tree. About 18 to 26 ms. Most of it is in the Changes publication,
+      because the usage publication already touches only the 11 changed
+      entry details. Memory: lower, because fewer details are cloned. Risk:
+      low to medium. Every published byte must stay equal.
+    - **B2.** In the comparisons, decide the reuse of an unchanged view from
+      its document key and the base identity, without a fetch and a digest of
+      its document. Reuse the closure and anchor walks that the pass already
+      made for the changed views. About 20 to 35 ms. The link checks of an
+      unchanged view can change when a view that it links to changes, so the
+      reuse must follow the link targets. Memory: the walk facts of the views
+      of one pass, at most 44 here, released with the pass. Risk: medium.
+      Changes must stay equal over every edit sequence.
+    - **B3.** In the kept-base check, skip the re-read of unchanged working
+      manifests, lockfiles, and install listings. About 15 to 18 ms. A check
+      by file metadata alone adds a change that the checks do not see, so it
+      changes the Freshness Checks section of
+      `docs/protocol/mokly-base-preparation.md`. So B3 needs a protocol
+      decision. Risk: medium to high.
+    - **B4.** One Git read of the references for both the reference
+      resolution and the base pin. About 3 ms. Risk: low.
+  - **C.** Cut the CPU of the pass with no protocol change. These parts touch
+    neither the seed path nor the released-recipe release. Encode each restore
+    request once for all cold sidecars, about 4 to 8 ms. It holds one encoded
+    5.9 MB request for each generation while its restores wait. Index the style
+    registry by rule, for each generation, with a fixed cap and a release at
+    `dispose`, about 8 to 13 ms. Scan frames with the native `indexOf`, about
+    3 to 8 ms. Together about 15 to 29 ms. Effort: Medium.
+    - These parts wait until the branch that owns the seed path and the
+      released-recipe release merges: a release without the lock-held encode
+      and without the one-at-a-time disposes, about 3 to 8 ms, and a
+      render-only restore, about 15 to 25 ms.
+    - A V8 code cache would live in the memory of the core. The holder makes it
+      after its visible `describe`, and each restore request carries it, about
+      1.6 MB more. So its net gain is about 3 to 8 ms. A file would need a new
+      kind of cache entry, because the sidecar writes no files today.
+  - **D.** Start the comparisons against the kept base during the pass. This
+    changes the rule at `docs/protocol/mokly-on-demand.md:76` for
+    comparisons only. The kept-base check stays after the last render,
+    because it reads the dependency directories that the renders record.
+    After B, the comparisons that could overlap take about 30 to 45 ms, and
+    their CPU slows the CPU-bound pass. So D gains about 5 to 25 ms net after
+    B. Effort: Large, with high risk.
   - **E.** Evaluate only the modules that the rendered views need on a cold
-    sidecar. The evaluation is about 36% of the preparation, so the projection
-    is about 25 to 45 ms. It changes the bundle entry, the evaluation, and
-    `describe`, and it needs proof that module order cannot change any
-    output. Effort: Large.
-  - **F.** C and D together, in stages. The options check projects about 90
-    ms, in a range of 65 to 120. Without D, the set projects about 45 ms.
-    Effort: Large.
+    sidecar. About 25 to 45 ms. It changes `describe.ts`, which another branch
+    owns until it merges, and it needs proof that module order cannot change
+    any output. Effort: Large.
+  - **F.** B without B3, and C. About 55 to 95 ms, central about 75. With B3,
+    about 70 to 110 ms. Effort: Large.
 - **Left out:**
   - A second process that holds the new generation before the pass. This is
     the preload family of
@@ -165,9 +195,14 @@
     make the output depend on the edit history.
   - One render for the four views of a path. Each render call carries its
     viewport and its color scheme, and the renderer can read both.
+  - A classification that starts before the usage publication ends. Serve
+    classifies Changes after the usage of the pass, so this changes a
+    requirement, and the orchestrator ruled out protocol changes for B on
+    2026-11-22.
 - **Wider fix:** None. This is a speed opportunity, not a class of defect.
 - **Previous examples:** PR #225 made the pass parallel. PR #313 and PR #315
-  keep head processes ready and rank them by their loaded generation.
+  keep head processes ready and rank them by their loaded generation. PR #466
+  reuses proven head validation facts in the comparisons.
 - **Related:**
   - [serve-head-generation-preload.md](./serve-head-generation-preload.md)
     records the three rejected attempts to prepare the new generation before
@@ -183,14 +218,17 @@
     One reason of that call says that render sidecars run `describe` after
     Changes publishes. This split shows three prerequisite `describe` calls
     inside each warm pass, before Changes.
-- **Recommendation:** B. The sidecars are idle during the serial work after
-  the last view, so each cut there saves its full time with no protocol
-  change, and the split also bounds what D can still gain. F best reaches the
-  goal if the orchestrator accepts a protocol change and Large work with high
-  risk.
-- **Action:** ask the user, because two or more options have real trade-offs:
-  F projects about 90 ms but needs a protocol change and Large work with high
-  risk, and B may find a cheaper path first.
+- **Decisions:**
+  - 2026-11-22, the performance orchestrator chose B of the first decision of
+    this item: split the serial work after the last view with the same probe,
+    with no protocol change and no product code before the next answer.
+- **Recommendation:** F without B3, in two pull requests. First B1, B2, and B4,
+  which change one subsystem and project about 40 to 65 ms. Then C, about 15
+  to 29 ms. B3 needs a protocol decision of its own. D is not recommended,
+  because after B it gains only about 5 to 25 ms for a protocol change and
+  high risk.
+- **Action:** ask the user, because the orchestrator decides between the cuts
+  of B, C, and F, and the order of their pull requests.
 
 ## Measurements of 2026-11-22
 
@@ -305,28 +343,51 @@ each edit by about 0.6 s, so only its shares count. For a prerequisite
   largest part is `registryStyles`, which parses the whole style registry
   with PostCSS on each render, 9.3% of the render time.
 
-### After the last view
+### Serial work after the last view
 
-A later probe session split the serial work after the last view. Other work
-on the machine slowed that session, so only its shares count.
+One calm probe session, 6 warm edits, medians. The thread CPU is the CPU of
+the thread that runs the step.
 
-| Step after the last view                        | Median, that session |
-| ----------------------------------------------- | -------------------- |
-| Publication of the usage of the pass            | 31                   |
-| Wait before `changes.classify`                  | 4                    |
-| The classification step: base work, comparisons | 193, 73% of it       |
-| Identity encode of the result, 648 KB           | 4                    |
-| Changes metadata files                          | 4                    |
-| Git reference check                             | 5                    |
-| Changes publication, with the index build       | 59, 23% of it        |
+| Step after the last view                                 | Wall | Thread CPU |
+| -------------------------------------------------------- | ---- | ---------- |
+| Usage publication, `evidence::complete`                  | 20   | 20         |
+| Git reference read before the classification             | 3    | none       |
+| Base pin, `review.base-commit`, Git                      | 3    | 0.4        |
+| Kept-base check, `review.base-tree`                      | 23   | 6          |
+| Comparisons, `review.compare-views`                      | 69   | 35         |
+| Identity encode, metadata files, and Git reference check | 7    |            |
+| Changes publication, `changes::project`                  | 29   | 29         |
+| Last view to published Changes, in total                 | 159  |            |
 
-- In the calm sessions, the publication of the usage took about 21, and
-  `changes.classify` took a median of 152.
-- The sidecars are idle during this work. Each cut here saves its full time.
-- `crates/mokly-cli/src/serve_base.rs:124`: the reuse of the kept base reads
-  the dependency directories that the renders of the pass record. So that
-  check cannot start before the renders end, unless the change proves the
-  same result.
+- Inside the Changes publication: `changes_detail::apply` 10, the detail loop
+  and the index encode 9, the Changes apply 4, and the index build 2.
+- `changes_detail::apply` deep-clones all 167 entry details on each
+  publication. The detail loop then deep-compares each detail with the
+  previous one before it reuses the old file.
+- The usage publication also encodes the whole index again.
+
+A second session ran under `perf` at 1,999 Hz with frame pointers. It slowed
+each edit by about 1 s, so only its shares count. Shares of the CPU samples in
+each step:
+
+- Usage publication: the index encode 35%, clones 27%, and deep compares of
+  details 24%.
+- Kept-base check: the work runs on about 10 threads, mostly in the kernel,
+  with directory reads and zlib `inflate`. It lists `node_modules`, hashes the
+  install lockfiles, and reads the working manifests with Git clean
+  normalization.
+- Comparisons, on about 2.6 busy threads: head validation of the 1,508 views
+  50%, with document cache lookups 11%, SHA-256 digests 10%, and anchor and
+  closure walks of the 44 changed views 15%. The comparison engine 13%, the
+  retained preparation 11%, and the reuse checks 17%.
+- Changes publication: `changes_detail::apply` 34%, clones 33%, the index
+  encode 23%, and `projection::index` 14%.
+- The pass already walks the closure of each changed view before it caches
+  the document, so part of the comparison walks repeats work.
+- `crates/mokly-cli/src/serve_base.rs:124`: the kept-base check reads the
+  dependency directories that the renders of the pass record. So that check
+  cannot start before the renders end, unless the change proves the same
+  result.
 
 ### Twice the views in flight
 
@@ -354,9 +415,9 @@ each, warm edits only:
 ## Checks of the split
 
 - The probe and the analysis scripts ran only on the local machine. They
-  changed no file of the repository. The final probe patch has 695 lines, and
+  changed no file of the repository. The final probe patch has 906 lines, and
   its SHA-256 is
-  `5a67c898a1a9d47a9db8434b71f6bbb57fddbb305dc122e7d04db339a3f0659c`. This
+  `fffe177c389b873263d136a6b6b6aba5af72d145df35afaf2f8019012811c0c7`. This
   record holds every fact that it needs from the patch and the evidence.
 - A fresh read-only agent ran the options check over this record on
   2026-11-22. It added the release, style index, and render-only restore
