@@ -241,6 +241,10 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   so its mark clears the Mac window buttons that the cloud reports.
   The registered Button gains a muted lead text, so the project trigger
   mutes the workspace and stays one control. History gets a `history` icon.
+  The Button also gets an icon-only form, so History and Settings drop their
+  labels and the full bar fits at 1024px. The pill sits in `topBarCenter` on
+  both bars. The start slot fills its column, so that space still moves the
+  Mac window. Milestone 11 removes the preview scheme switch from the bar.
 - 2026-11-22, Cal: to speed up, Milestone 11 starts before 18 and 22 merge,
   new browser tests run 3 times instead of 10, and the orchestrator decides
   design and scope questions and reports them.

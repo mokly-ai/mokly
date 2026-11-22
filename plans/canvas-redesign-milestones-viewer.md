@@ -40,6 +40,8 @@ Depends on: 15, 17. It starts before 18 and 22 merge, and takes them in as they 
 - [ ] Restyle the standalone Appearance control. Add `⌘K` and `/` for
       search.
 - [ ] Give every viewer focus ring the `@firna/ui` focus glow (decision 38).
+- [ ] Remove the preview scheme switch from the top bar; the Frames filter
+      chooses the scheme.
 
 ## Milestone 12: Right panel and compare
 
