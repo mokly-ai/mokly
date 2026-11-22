@@ -1,7 +1,7 @@
 # Shorten the work after each warm Serve edit
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Closed experiment record.
 - **Added:** 2026-11-22, from the split of the background pass of warm Serve
   edits on branch `calummoore/mokly-edit-background-render-olos`, which the
   performance orchestrator requested.
@@ -40,8 +40,10 @@
     kept-base check, and the comparisons.
   - `docs/protocol/mokly-on-demand.md:76`: the rule that no base capture or
     comparison starts before the pass of its state ends.
-- **Reason:** No single cut projects 60 ms for each warm edit, and the choice
-  of the cuts and their order waits for the performance orchestrator.
+- **Reason:** On 2026-11-22 the performance orchestrator chose B1, B2, and B4
+  for the plan `plans/serve-edit-serial-work-cuts.md`, and the safe parts of C
+  for the next pull request. B3, D, E, and the V8 code cache stay open options
+  with their reasons below.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -222,13 +224,21 @@
   - 2026-11-22, the performance orchestrator chose B of the first decision of
     this item: split the serial work after the last view with the same probe,
     with no protocol change and no product code before the next answer.
-- **Recommendation:** F without B3, in two pull requests. First B1, B2, and B4,
-  which change one subsystem and project about 40 to 65 ms. Then C, about 15
-  to 29 ms. B3 needs a protocol decision of its own. D is not recommended,
-  because after B it gains only about 5 to 25 ms for a protocol change and
-  high risk.
-- **Action:** ask the user, because the orchestrator decides between the cuts
-  of B, C, and F, and the order of their pull requests.
+  - 2026-11-22, the performance orchestrator chose F without B3: B1, B2, and
+    B4 as one pull request, with the conditions that the plan
+    `plans/serve-edit-serial-work-cuts.md` records, and the safe parts of C as
+    the next pull request after it merges. The parts of C in the seed path and
+    the released-recipe release wait until the branch that owns them merges.
+  - 2026-11-22, the performance orchestrator: B3 stays out. A check by file
+    metadata alone adds an unseen change class to the freshness rules, so it
+    needs a protocol decision that is not taken for 15 to 18 ms.
+  - 2026-11-22, the performance orchestrator: D, E, and the V8 code cache stay
+    recorded as ranked here.
+- **Recommendation:** F without B3, as chosen on 2026-11-22.
+- **Action:** No action in this item. The plan
+  `plans/serve-edit-serial-work-cuts.md` carries B1, B2, B4, and the safe parts
+  of C. A later proposal of B3 needs a protocol decision first. D, E, and the
+  V8 code cache need their own scope approval.
 
 ## Measurements of 2026-11-22
 
