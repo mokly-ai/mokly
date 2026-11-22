@@ -215,6 +215,9 @@ export class Session {
       case "dispose":
         this.generations.delete(request.params.generation);
         return null;
+      case "prepareContext":
+        this.workers.prepare(request.params);
+        return null;
       case "disposeContext":
         await this.workers.dispose(request.params.context);
         return null;

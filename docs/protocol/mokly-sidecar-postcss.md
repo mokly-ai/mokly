@@ -80,17 +80,20 @@ Decision: an attempt prepares no context while an older used head context of
 its configuration stays live. A preparation beside that context was rejected,
 because the attempt would then hold two children during its bundle.
 
-The sidecar that runs the `bundle` request starts the preparation when the
-request reaches it, before it checks a compilation for reuse. It starts the
-preparation also when it reuses a compilation. The prepared child loads
-the PostCSS module and constructs its plugins. It processes no stylesheet
-before the first `processCss` request of its context. The `bundle` request
-never waits for that load. A preparation failure never changes the result or
+For a `bundle` request with a preparation, the pool first sends a
+`prepareContext` request to the sidecar of the `bundle` request. It carries the
+preparation, source root, repository roots, and resolution settings. It comes
+before the bundle cache read and any seed, so a new sidecar receives it directly
+after `hello`. The sidecar starts the preparation then and answers at once. A
+`bundle` request starts the preparation only when no earlier request did. The
+prepared child loads the PostCSS module and constructs its plugins. It processes
+no stylesheet before the first `processCss` request of its context. Neither
+request waits for that load. A preparation failure never changes the result or
 the error of the `bundle` request.
-Decision: the child starts with the `bundle` request and runs no stylesheet
+Decision: the child starts before the bundle cache read and runs no stylesheet
 early. Processing the stylesheet roots during the bundle was rejected, because
-it needs speculative roots and later evidence checks. A later start was
-rejected, because it hides less of the module load behind the bundle.
+it needs speculative roots and later evidence checks. A start at the `bundle`
+request was rejected, because the child then starts after the bundle cache read.
 
 A prepared context gives each `processCss` request the text, dependencies,
 read evidence, and failure that a context without preparation gives. Its read
@@ -129,7 +132,7 @@ evidence, so a later process cannot check every input of a result. Reuse under
 an age limit and reuse that compiles again after readiness were rejected,
 because stale styles or wrong Changes could then reach the user.
 
-A prepared context is live from the start of its `bundle` request. The
+A prepared context is live from its `prepareContext` request. The
 [source root workers](./mokly-sidecar-modules.md#source-root-workers) place it.
 It is unused until its first `processCss` request. The core releases an unused
 prepared context at once when its `bundle` request fails, when its attempt is

@@ -10,7 +10,7 @@ use ts_rs::TS;
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
 use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
-use crate::postcss_preparation::PostcssPreparation;
+use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
 use crate::resolution_plan::ResolutionPlan;
 
 /// A request with no method parameters.
@@ -268,6 +268,8 @@ pub enum Call {
     CssModules(CssModules),
     /// Release one bundle generation.
     Dispose(Generation),
+    /// Start a `bundle` request's PostCSS preparation without waiting for its child.
+    PrepareContext(PrepareContext),
     /// Release one stylesheet context.
     DisposeContext(DisposeContext),
     /// Drain in-flight work and exit.

@@ -176,8 +176,19 @@ owns the retention rule and the bound. Each entry costs the bytes of its
 serialized `restoreGeneration` envelope, with its private seed id and
 without the LF delimiter. `MAX_FRAME_BYTES` bounds the total. A use counter,
 not a clock, orders eviction. Keeping or seeding an entry counts as a use.
+For a `bundle` call with a PostCSS preparation, the pool records the context
+on the slot after the slot cleanup. It then sends `prepareContext` to the same
+slot, before the bundle cache read and any seed. An error reply that leaves the
+process usable does not fail the call.
 Before a `bundle` call, the pool restores the stored entry with equal
-settings under a private seed id. It then prepares the first live generation
+settings under a private seed id. It first compares the entry with the newest
+live generation of equal settings. For each source that the two record with
+different digests, it reads the current digest once, until the first
+difference. A current source that differs from the entry rules the entry out,
+so the pool sends no seed. A missing or unreadable source rules nothing out.
+The use counter and the `cache` outcome stay as for a sent seed, and the
+[release rules](../../docs/protocol/mokly-sidecar-release.md) own this rule.
+It then prepares the first live generation
 with equal settings: a captured generation before a marked one, then the
 highest epoch. The generation id breaks a tie. The `BundleCapture` of the
 call admits each seed. A `Full` call takes only captured seeds, and a
@@ -500,7 +511,11 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_releases.rs`](./src/pool_releases.rs) keeps the recipe of each
   final release in that store, and
   [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the memory
-  seeds that each `bundle` call's capture admits, captured seeds first. Its
+  seeds that each `bundle` call's capture admits, captured seeds first. It
+  sends no stored seed that `rules_out` in
+  [`src/source_digests.rs`](./src/source_digests.rs) rules out. That module also
+  holds `SourceDigests`, the current source digest boundary, and its native
+  `SystemSourceDigests`, which `Pool::with_source_digests` can replace. Its
   `Prerequisites` gives the inputs that each generation call needs, for
   replay and for the rank alike.
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
@@ -584,8 +599,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `BundleCapture`, `Full` by default or `ServeEdit`, the optional
   request-only `plan` of a Serve edit, and the optional request-only
   `preparation`. [`src/postcss_preparation.rs`](./src/postcss_preparation.rs)
-  defines that `PostcssPreparation` and `Call::postcss_context`, which gives
-  the PostCSS context of a `processCss` call or of a prepared `bundle` call.
+  defines that `PostcssPreparation`. It also defines `PrepareContext`, the
+  params of `Call::PrepareContext`, which the pool builds from a prepared
+  `bundle` request. `Call::postcss_context` gives the PostCSS context of a
+  `processCss` call, a `prepareContext` call, or a prepared `bundle` call.
   The pool uses that context for its slot affinity and its release.
   `results::Bundle` carries the optional `plan` beside `compiled`. Pool state, store calls, and restore requests take
   only the `Bundle` settings. A successful `Response`

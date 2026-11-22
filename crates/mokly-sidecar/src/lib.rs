@@ -76,6 +76,7 @@ mod request_display;
 pub mod resolution_plan;
 pub mod results;
 pub mod reusable_recipe;
+pub mod source_digests;
 pub mod typescript;
 pub mod usage;
 pub mod wire;

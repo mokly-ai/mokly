@@ -16,16 +16,19 @@ its requests and results. The paths below are relative to the package root.
   which wraps standard error: timing records start on their own line and use
   the original writer, and its `quiet` control drops every other write.
 - [`src/sidecar/session.ts`](./session.ts) holds `Session`, which
-  dispatches each sidecar request to its method. It removes the request-only
+  dispatches each sidecar request to its method. It passes the params of a
+  `prepareContext` request to `PostcssWorkers.prepare` and answers without
+  waiting for the child. It removes the request-only
   `capture`, `plan`, and `preparation` values of a `bundle` request before the
   reuse check, the compile, the identity, and the restore see the settings. It
   passes the `preparation` to `PostcssWorkers.prepare` before the reuse check
-  and does not wait for it. When the bundle fails, it disposes that context
-  before it returns the error. It gives a `CaptureDurability` only to a `full`
-  request. It ignores a `restoreGeneration` request for an id that it already
-  holds. It adds each generation that a `restoreGeneration` request installs
-  to a `WeakSet`. Both reply forms of `bundle` follow the same checks of
-  `reuse` and the same size check of `bundleResult`. The reply is a short
+  and does not wait for it. A `bundle` request starts its preparation only
+  when no earlier request started it. When the bundle fails, it disposes that
+  context before it returns the error. It gives a `CaptureDurability` only to
+  a `full` request. It ignores a `restoreGeneration` request for an id that it
+  already holds. It adds each generation that a `restoreGeneration` request
+  installs to a `WeakSet`. Both reply forms of `bundle` follow the same checks
+  of `reuse` and the same size check of `bundleResult`. The reply is a short
   `RestoredBundle` under the
   [restored reuse rules](../../../../docs/protocol/mokly-sidecar-recipes.md#restored-reuse)
   only when `reuse` selected a generation of that set, the size check kept the
@@ -39,6 +42,12 @@ its requests and results. The paths below are relative to the package root.
   `encodeResponse` encodes each response with `jsonText` from
   [`src/sidecar/json.ts`](./json.ts), which sorts object keys in UTF-16
   order and keeps negative zero.
+- [`src/sidecar/export-order.ts`](./export-order.ts) holds `orderedExports`,
+  which restores source order with parsed names from the `ExportNameCache` of
+  [`src/sidecar/export-name-cache.ts`](./export-name-cache.ts) that its caller
+  passes. `describe` keeps one bounded cache for the process and passes it to
+  `orderedExports` and `describeStories`. Each call reads the current
+  namespace values.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
@@ -139,8 +148,9 @@ its requests and results. The paths below are relative to the package root.
   target. Examples are a relative `require.resolve` and a failed relative
   `require` inside `try`. An external relative `require.resolve` or
   `require` edge that the callback did not answer discards it too. `verify`
-  records the observations and the dependency usage of the unanswered internal
-  edges only after every edge passes.
+  records the observations of the unanswered internal edges only after every
+  edge passes. Their names are relative, and dependency usage records only bare
+  names, so they add none.
   After a discarded result or a failed guarded compile, `bundle` runs the
   complete planned compile, in which the callback takes every import. That
   compile gives the result or the error. A guarded result that stands has the
@@ -149,8 +159,10 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and
-  the compilation identity. An incomplete recipe gets a fresh identity, also
-  when `checkRecipeSize` in
+  the compilation identity. A compile without a full capture owner, such as a
+  `serveEdit` compile, hashes no module source into its identity, because its
+  incomplete evidence adds the random runtime key. An incomplete recipe gets a
+  fresh identity, also when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
   result before it drops the evidence. For a new compile, `bundleRecipe`
@@ -260,7 +272,10 @@ its requests and results. The paths below are relative to the package root.
   captured compilations first, and also checks their reuse evidence. Then a
   `serveEdit` request tries the marked compilations with these live checks
   and their private folder files. A `full` request never takes a marked
-  compilation. `reuse` gives the generation whose compilation passed these
+  compilation. `reuse` reads first the input that failed the last check of the
+  process, then the inputs whose digests differ from another held generation of
+  equal settings. The checks stop at the first difference, so this order changes
+  no result. `reuse` gives the generation whose compilation passed these
   checks to its optional `selected` callback. `restore` installs a recipe
   without a compile. `bundleResult` builds the full result of a generation and
   runs the size check on it.
@@ -436,10 +451,11 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/postcss.ts`](./postcss.ts) holds `PostcssWorkers`,
   which owns the PostCSS child processes. Its `prepare` starts the child of a
   [prepared context](../../../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts)
-  with the roots and resolution settings of the `bundle` request. That child
-  processes no stylesheet before the first `process` call of its context, and
-  that call takes the child, also after the child failed. `dispose` also stops
-  a start whose path lookup still runs, so that start forks no child.
+  with the roots and resolution settings of the `prepareContext` or `bundle`
+  request. That child processes no stylesheet before the first `process` call
+  of its context, and that call takes the child, also after the child failed.
+  `dispose` also stops a start whose path lookup still runs, so that start
+  forks no child.
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
   `BundleReply`, the reply of `bundle`, is the full `BundleResult` or the short

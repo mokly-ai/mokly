@@ -4,9 +4,9 @@
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and
 consumer PostCSS. It returns HTML, CSS, module and definition inventories,
-and diagnostics. It never reads the catalogue or writes files. It retains
-only loaded bundle generations and explicit PostCSS contexts. The binary owns
-catalogue decisions, caching, invalidation, comparison, and output.
+and diagnostics. It never reads the catalogue or writes files. It keeps loaded
+generations, explicit PostCSS contexts, and bounded export-name data. The binary
+owns catalogue decisions, caching, invalidation, comparison, and output.
 
 ## Lifecycle
 
@@ -69,6 +69,7 @@ both sides were rejected, because the copies drift and increase the code size.
 | `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                                                                                                              | `{ text, dependencies, readEvidence }`                                                             |
 | `bindings`          | generation, handle-to-path-and-title table                                                                                                                                                                  | nothing                                                                                            |
 | `disposeContext`    | PostCSS context                                                                                                                                                                                             | nothing                                                                                            |
+| `prepareContext`    | PostCSS context and module, source root, repository roots, and resolution settings                                                                                                                          | nothing                                                                                            |
 | `cssModules`        | generation, class maps by stylesheet path                                                                                                                                                                   | nothing                                                                                            |
 | `dispose`           | generation                                                                                                                                                                                                  | nothing                                                                                            |
 | `shutdown`          | none                                                                                                                                                                                                        | nothing                                                                                            |
