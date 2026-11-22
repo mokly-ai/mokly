@@ -208,3 +208,53 @@ test("a process keeps one kept context, and a replaced context is disposed", asy
     { created: 3, disposed: 2, live: [1, 1, 1, 1] },
   );
 });
+
+test("a changed hook list replaces the kept context", async (context) => {
+  const root = await nativeRoot(context);
+  const entry = path.join(root, "entry.mjs");
+  await write(entry, 'export { value } from "virtual:value";');
+  const { kept, counts } = countedKept();
+  context.after(() => kept.dispose());
+  // `extra` adds one resolve hook ahead of the others, as a plan with more safe names adds filters.
+  const plugin = (label: string, extra: boolean): Plugin => ({
+    name: "values",
+    setup(builder) {
+      if (extra) builder.onResolve({ filter: /^unused:/ }, () => undefined);
+      builder.onResolve({ filter: /^virtual:value$/ }, (args) => ({
+        path: args.path,
+        namespace: "values",
+      }));
+      builder.onLoad({ filter: /.*/, namespace: "values" }, () => ({
+        contents: `export const value = ${JSON.stringify(label)};`,
+        loader: "js",
+      }));
+    },
+  });
+  // Each compile gives whether its output carries its own label, or "failed".
+  const carries = (label: string, extra: boolean) =>
+    kept
+      .compile({
+        entryPoints: [entry],
+        bundle: true,
+        write: false,
+        format: "esm",
+        logLevel: "silent",
+        plugins: [plugin(label, extra)],
+      })
+      .then(
+        (result) =>
+          result.outputFiles.some((file) =>
+            file.text.includes(JSON.stringify(label)),
+          ),
+        () => "failed",
+      );
+  const outputs = [
+    await carries("first", false),
+    await carries("second", false),
+    await carries("third", true),
+  ];
+  assert.deepEqual(
+    { outputs, ...counts },
+    { outputs: [true, true, true], created: 2, disposed: 1 },
+  );
+});
