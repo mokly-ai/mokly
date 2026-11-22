@@ -96,6 +96,36 @@ test("Bundle starts preparation before compilation and does not await it", async
   completePreparation();
 });
 
+test("prepareContext starts preparation and answers while it is pending", async (context) => {
+  const { params } = await editSource(context);
+  const prepared: Array<Parameters<PostcssWorkers["prepare"]>[0]> = [];
+  context.mock.method(
+    PostcssWorkers.prototype,
+    "prepare",
+    (params: Parameters<PostcssWorkers["prepare"]>[0]) => {
+      prepared.push(params);
+      return new Promise<void>(() => {});
+    },
+  );
+  const session = new Session("test", () => {});
+  context.after(() => session.dispose());
+  await session.call({ id: 0, method: "hello", params: {} });
+  const request = {
+    context: "attempt",
+    postcss: "postcss.mjs",
+    sourceRoot: params.sourceRoot,
+    repositoryRoots: ["/workspace"],
+    moduleResolution: params.moduleResolution,
+  };
+  const reply = await session.call({
+    id: 1,
+    method: "prepareContext",
+    params: request,
+  });
+  assert.equal(reply, null);
+  assert.deepEqual(prepared, [request]);
+});
+
 test("Bundle failure releases its prepared child before returning the error", async (context) => {
   const { params, write } = await editSource(context);
   await write("postcss.mjs", "export default {plugins:[]};");

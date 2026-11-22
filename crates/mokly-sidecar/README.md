@@ -176,6 +176,10 @@ owns the retention rule and the bound. Each entry costs the bytes of its
 serialized `restoreGeneration` envelope, with its private seed id and
 without the LF delimiter. `MAX_FRAME_BYTES` bounds the total. A use counter,
 not a clock, orders eviction. Keeping or seeding an entry counts as a use.
+For a `bundle` call with a PostCSS preparation, the pool records the context
+on the slot after the slot cleanup. It then sends `prepareContext` to the same
+slot, before the bundle cache read and any seed. An error reply that leaves the
+process usable does not fail the call.
 Before a `bundle` call, the pool restores the stored entry with equal
 settings under a private seed id. It first compares the entry with the newest
 live generation of equal settings. For each source that the two record with
@@ -595,8 +599,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `BundleCapture`, `Full` by default or `ServeEdit`, the optional
   request-only `plan` of a Serve edit, and the optional request-only
   `preparation`. [`src/postcss_preparation.rs`](./src/postcss_preparation.rs)
-  defines that `PostcssPreparation` and `Call::postcss_context`, which gives
-  the PostCSS context of a `processCss` call or of a prepared `bundle` call.
+  defines that `PostcssPreparation`. It also defines `PrepareContext`, the
+  params of `Call::PrepareContext`, which the pool builds from a prepared
+  `bundle` request. `Call::postcss_context` gives the PostCSS context of a
+  `processCss` call, a `prepareContext` call, or a prepared `bundle` call.
   The pool uses that context for its slot affinity and its release.
   `results::Bundle` carries the optional `plan` beside `compiled`. Pool state, store calls, and restore requests take
   only the `Bundle` settings. A successful `Response`
