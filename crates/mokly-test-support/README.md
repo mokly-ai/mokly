@@ -95,16 +95,18 @@ fixture changes during its captures.
 creates `target/durable-capture-fixtures/rust` and
 `target/durable-capture-fixtures/node` in the checkout. Then it creates the
 folder of every Rust owner under `rust`. Last, it creates the scoped `TempDir`
-in the folder of the given owner. `Owner` is a closed list of six tests:
+in the folder of the given owner. `Owner` is a closed list of eight variants:
 
-| Owner                      | Folder                       | Test                                               |
-| -------------------------- | ---------------------------- | -------------------------------------------------- |
-| `CompareWarmPlan`          | `compare-warm-plan`          | The warm edit plan test of `bundle_pool_tests`     |
-| `CompareRecipeReplacement` | `compare-recipe-replacement` | The recipe replacement test of `bundle_pool_tests` |
-| `CompareAbsolutePaths`     | `compare-absolute-paths`     | The absolute paths test of `bundle_pool_tests`     |
-| `CompareConfigDir`         | `compare-config-dir`         | The test of `config_dir_pool_tests`                |
-| `RenderPlanChanges`        | `render-plan-changes`        | The nine-case Serve plan test of `mokly-render`    |
-| `RenderAbsolutePaths`      | `render-absolute-paths`      | The absolute paths Serve plan test                 |
+| Owner                      | Folder                       | Test                                                    |
+| -------------------------- | ---------------------------- | ------------------------------------------------------- |
+| `CompareWarmPlan`          | `compare-warm-plan`          | The warm edit plan test of `bundle_pool_tests`          |
+| `CompareRecipeReplacement` | `compare-recipe-replacement` | The recipe replacement test of `bundle_pool_tests`      |
+| `CompareAbsolutePaths`     | `compare-absolute-paths`     | The absolute paths test of `bundle_pool_tests`          |
+| `CompareConfigDir`         | `compare-config-dir`         | The test of `config_dir_pool_tests`                     |
+| `RenderPlanChanges`        | `render-plan-changes`        | The nine-case Serve plan test of `mokly-render`         |
+| `RenderAbsolutePaths`      | `render-absolute-paths`      | The absolute paths Serve plan test                      |
+| `RenderPlanCandidates`     | `render-plan-candidates`     | The serialized editor-file plan tests of `mokly-render` |
+| `ServePostcssRestart`      | `serve-postcss-restart`      | The warm PostCSS restart test of `serve_js_tests`       |
 
 `durableRoot(context, owner)` in `tests/helpers/durable_fixture.ts` applies
 the same rule to two Node CLI tests, with the owners `static-config-dir` and
@@ -120,7 +122,7 @@ The fixtures follow these rules:
   runtime before it returns a fixture. So a later fixture does not change a
   folder above the capture of another test.
 - A Rust child goes when its `TempDir` drops. A Node child goes when its test
-  ends. The fixture root, the two runtime folders, and the eight owner folders
+  ends. The fixture root, the two runtime folders, and the ten owner folders
   stay, empty.
 - The anchor is the `target` folder of the checkout, also when
   `CARGO_TARGET_DIR` names another folder. The helpers make no folder for each
@@ -199,6 +201,8 @@ cargo test -p mokly-sidecar --lib trace_capture
 cargo test -p mokly-compare --test bundle_pool_tests
 cargo test -p mokly-compare --test config_dir_pool_tests
 cargo test -p mokly-render --test integration_tests plan_invalidation_tests
+cargo test -p mokly-render --test integration_tests plan_candidate_tests
+cargo test -p mokly-cli --test serve_js_tests postcss_restart_tests
 ```
 
 ## Development
@@ -234,6 +238,11 @@ Follow these rules when you add a durable fixture:
   helpers.
 - Keep every assertion of the test. The fixture changes only where the test
   puts its files.
+- A fixture root is inside the checkout, so a compile there reads the package
+  type of the checkout `package.json` and the checkout `tsconfig.json`. Give a
+  consumer project root its own `package.json` without a type and an empty
+  `tsconfig.json`, as the Serve fixture of `serve_js_tests` does. Then it
+  compiles as it does in a temporary folder.
 
 ### Key Code
 
@@ -256,9 +265,11 @@ Follow these rules when you add a durable fixture:
   defines `durableRoot`, the Node helper with the same ownership rule.
 - [`../mokly-compare/tests/bundle_pool_tests.rs`](../mokly-compare/tests/bundle_pool_tests.rs),
   [`../mokly-compare/tests/config_dir_pool_tests.rs`](../mokly-compare/tests/config_dir_pool_tests.rs),
+  [`../mokly-render/tests/integration/plan_invalidation_tests.rs`](../mokly-render/tests/integration/plan_invalidation_tests.rs),
+  [`../mokly-render/tests/integration/plan_support.rs`](../mokly-render/tests/integration/plan_support.rs),
   and
-  [`../mokly-render/tests/integration/plan_invalidation_tests.rs`](../mokly-render/tests/integration/plan_invalidation_tests.rs)
-  hold the six Rust fixture owners.
+  [`../mokly-cli/tests/serve_js/postcss_restart_tests.rs`](../mokly-cli/tests/serve_js/postcss_restart_tests.rs)
+  hold the eight Rust fixture owners.
 - [`../mokly-sidecar/src/_tests_/trace_capture_tests.rs`](../mokly-sidecar/src/_tests_/trace_capture_tests.rs)
   holds the first-registration regression test of the guard.
 - [`../mokly-server/src/_tests_/changes_trace_support.rs`](../mokly-server/src/_tests_/changes_trace_support.rs)

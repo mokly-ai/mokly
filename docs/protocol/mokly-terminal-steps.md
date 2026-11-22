@@ -32,6 +32,13 @@ forced-rich pipe show no step, because neither animates the spinner. In
 Serve, a step of a replaced comparison never changes the label of the
 comparison that replaced it.
 
+In Serve, [eager base preparation](./mokly-eager-base-preparation.md#reporting)
+shows no step and changes no label before its classification adopts it. At
+adoption, the label starts as for any comparison. Serve then shows each step
+that the eager work reached, in the order in which the steps started, and then
+each later step when it starts. So the steps and their order are the same with
+and without eager preparation. Only their timing differs.
+
 Decision: show the step on the one spinner line. Rejected: one durable line
 for each step, because watched Serve compares again after each change, and the
 repeated lines would fill the terminal.

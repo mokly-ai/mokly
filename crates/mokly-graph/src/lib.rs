@@ -10,8 +10,11 @@ mod cache_encoding;
 mod cache_state;
 mod cache_tier;
 mod cache_transit;
+pub mod capture_window;
 pub mod closure;
 pub mod collection;
+pub mod collection_charge;
+pub mod collection_input;
 pub mod comparison_input;
 pub mod comparison_proof;
 pub mod comparison_stream;
@@ -34,19 +37,24 @@ pub mod error;
 mod fragment_weight;
 pub mod fragments;
 pub mod graph;
+pub mod head_validation;
 pub mod key;
 mod link_index;
 mod link_results;
 pub mod policy;
+pub mod prefetch;
 pub mod public_denial;
 pub mod public_inputs;
 mod public_locations;
 pub mod reference_index;
 pub mod references;
+mod render_calculation;
 pub mod render_class;
 mod render_closure;
 mod render_exporters;
 pub mod render_inputs;
+mod render_preparation;
+mod render_reuse;
 pub mod route_inventory;
 pub mod source_snapshot;
 pub mod types;
@@ -71,9 +79,12 @@ mod resource_keys;
 mod routing_inputs;
 mod routing_records;
 mod session;
+mod session_build;
+mod session_head;
 mod session_lookup;
 mod session_proof;
 mod session_render;
+mod session_render_reuse;
 mod styles;
 mod stylesheet_jobs;
 mod stylesheet_keys;
@@ -92,6 +103,8 @@ mod resource_access;
 
 mod closure_prefetch;
 mod closure_seeds;
+mod closure_target;
+mod closure_walk;
 #[cfg(test)]
 #[path = "_tests_/rendering_tests.rs"]
 mod rendering_tests;
@@ -114,12 +127,15 @@ mod reference_tests;
 
 pub mod asset_delivery;
 
+mod collection_jobs;
 mod document_capacity;
 mod document_export;
 mod document_node_capacity;
 pub mod export_memory;
+mod prefetch_state;
 mod session_collection;
 mod session_persistence;
+mod session_prefetch;
 pub mod store_memory;
 mod validation_summary;
 pub mod write_activity;
@@ -127,3 +143,7 @@ pub mod write_activity;
 #[cfg(test)]
 #[path = "_tests_/style_memo_tests.rs"]
 mod style_memo_tests;
+
+#[cfg(test)]
+#[path = "_tests_/comparison_usage_tests.rs"]
+mod comparison_usage_tests;

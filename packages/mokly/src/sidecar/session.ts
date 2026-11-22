@@ -1,6 +1,7 @@
 import { build } from "esbuild";
 
 import { definitionData } from "../authoring/runtime.js";
+import type { BundleReply } from "../generated/sidecar/BundleReply.js";
 import type { CaptureHint } from "../generated/sidecar/CaptureHint.js";
 import type { Operation } from "../generated/sidecar/Operation.js";
 import type { Request } from "../generated/sidecar/Request.js";
@@ -16,6 +17,7 @@ import { finishMarkup } from "./markup.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
 import { PostcssWorkers } from "./postcss.js";
+import { checkRecipeSize } from "./recipe-size.js";
 import { renderSession } from "./render-session.js";
 import { render } from "./render.js";
 
@@ -23,6 +25,7 @@ export class Session {
   private hello = false;
   private capture: CaptureHint | undefined;
   private generations = new Map<string, Generation>();
+  private restored = new WeakSet<Generation>();
   private workers: PostcssWorkers;
 
   constructor(
@@ -32,8 +35,11 @@ export class Session {
     private readonly operation: (operation: Operation) => void = () => {},
     private readonly measurements: Measurements = unmeasured,
     phase: (line: string) => void = () => {},
+    workers?: PostcssWorkers,
+    private readonly checkSize = checkRecipeSize,
   ) {
-    this.workers = new PostcssWorkers(diagnostic, operation, undefined, phase);
+    this.workers =
+      workers ?? new PostcssWorkers(diagnostic, operation, undefined, phase);
   }
 
   async call(request: Request): Promise<unknown> {
@@ -66,37 +72,69 @@ export class Session {
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
       case "bundle": {
-        const { capture = "full", plan, ...params } = request.params;
-        const previous = await reuse(
-          this.generations.values(),
-          params,
-          capture,
-        );
-        const { generation, result } = previous
-          ? { generation: previous, result: bundleResult(previous) }
-          : await bundle(
-              params,
-              (options) => {
-                this.operation("esbuild");
-                return this.compile(options);
-              },
-              this.measurements,
-              capture === "full" && this.capture
-                ? new CaptureDurability(this.capture)
-                : undefined,
-              capture,
-              plan,
-            );
-        this.generations.set(generation.id, generation);
-        return result;
+        const {
+          capture = "full",
+          plan,
+          preparation,
+          ...params
+        } = request.params;
+        if (preparation) this.workers.prepare({ ...params, ...preparation });
+        try {
+          let source: Generation | undefined;
+          const previous = await reuse(
+            this.generations.values(),
+            params,
+            capture,
+            (candidate) => {
+              source = candidate;
+            },
+          );
+          const evidence = previous?.compiled.reuseEvidence;
+          const { generation, result } = previous
+            ? {
+                generation: previous,
+                result: bundleResult(
+                  previous,
+                  undefined,
+                  undefined,
+                  this.checkSize,
+                ),
+              }
+            : await bundle(
+                params,
+                (options) => {
+                  this.operation("esbuild");
+                  return this.compile(options);
+                },
+                this.measurements,
+                capture === "full" && this.capture
+                  ? new CaptureDurability(this.capture)
+                  : undefined,
+                capture,
+                plan,
+              );
+          this.generations.set(generation.id, generation);
+          const reply: BundleReply =
+            source &&
+            this.restored.has(source) &&
+            result.compiled.reuseEvidence === evidence &&
+            result.plan === undefined
+              ? { generation: generation.id, restoredGeneration: source.id }
+              : result;
+          return reply;
+        } catch (error) {
+          if (preparation)
+            await this.workers.dispose(preparation.context).catch(() => {});
+          throw error;
+        }
       }
       case "restoreGeneration": {
         const { generation, params, compiled, modules } = request.params;
-        if (!this.generations.has(generation))
-          this.generations.set(
-            generation,
-            restore(params, compiled, modules, generation),
-          );
+        if (!this.generations.has(generation)) {
+          const installed = restore(params, compiled, modules, generation);
+          this.generations.set(generation, installed);
+          this.restored.add(installed);
+        }
         return null;
       }
       case "describe":
@@ -176,6 +214,9 @@ export class Session {
         return this.workers.process(request.params);
       case "dispose":
         this.generations.delete(request.params.generation);
+        return null;
+      case "prepareContext":
+        this.workers.prepare(request.params);
         return null;
       case "disposeContext":
         await this.workers.dispose(request.params.context);

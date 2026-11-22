@@ -21,11 +21,15 @@ use mokly_render::runtime::Runtime;
 use mokly_server::changes::{
     CaptureLease, ChangeCancellation, ChangeProgress, ChangeRun, ChangeSource,
 };
+use mokly_server::changes_background::PendingChanges;
 use mokly_server::comparison_graph::FrozenResources;
 use mokly_server::error::{Result, ServerError};
+use mokly_sidecar::workers::Diagnostics;
 
 use crate::serve_base::BaseSlot;
 use crate::serve_capture_cancel::{CaptureCancellation, CaptureScopes};
+use crate::serve_eager::{EagerStarts, PendingBase};
+use crate::serve_eager_diagnostics::DiagnosticRouting;
 use crate::serve_git::GitWork;
 use crate::serve_pool::PoolScheduling;
 use crate::serve_progress::{Progress, TerminalEvent};
@@ -43,6 +47,9 @@ pub(super) trait ChangeSources: Send + Sync {
 
 #[derive(Clone)]
 pub(super) struct ServeChanges {
+    pub(super) eager: Option<Arc<dyn EagerStarts>>,
+    pub(super) diagnostics: Arc<dyn Diagnostics>,
+    pub(super) routing: Option<Arc<dyn DiagnosticRouting>>,
     pub(super) reuse: Arc<dyn ComparisonReuse>,
     /// All source generations share one optional captured base.
     pub(super) kept_base: Arc<BaseSlot>,
@@ -68,6 +75,10 @@ impl ChangeSources for ServeChanges {
         warnings: Arc<dyn AttemptWarnings>,
     ) -> Arc<dyn ChangeSource> {
         Arc::new(Source {
+            preparation: self
+                .eager
+                .as_ref()
+                .and_then(|eager| eager.bind(&prepared.config)),
             services: self.clone(),
             config: prepared.config.clone(),
             head: Arc::new(FrozenResources::new(prepared.generation.clone())),
@@ -80,6 +91,7 @@ impl ChangeSources for ServeChanges {
     }
 }
 pub(super) struct Source {
+    pub(super) preparation: Option<Arc<dyn PendingBase>>,
     pub(super) staging: Mutex<Option<Arc<dyn ReuseAttempt>>>,
     pub(super) references: Mutex<Option<(Vec<String>, String)>>,
     pub(super) operation: Arc<dyn CaptureScopes>,
@@ -90,6 +102,23 @@ pub(super) struct Source {
     pub(super) warnings: Arc<dyn AttemptWarnings>,
 }
 impl ChangeSource for Source {
+    fn settled(&self) {
+        self.head.prepare_render_reuse();
+    }
+
+    fn pending(&self) -> Option<Arc<dyn PendingChanges>> {
+        self.preparation.as_ref().and_then(|pending| {
+            self.services
+                .eager
+                .as_ref()
+                .and_then(|eager| eager.take(pending))
+        })
+    }
+    fn settle_pending(&self, accepted: bool) {
+        if let Some(pending) = &self.preparation {
+            pending.settled(accepted);
+        }
+    }
     fn started(&self, cancel: Arc<dyn ChangeCancellation>) -> Option<Box<dyn ChangeRun>> {
         let phase = RefCell::new(None);
         cancel.commit(&TerminalEvent(&|| {
@@ -116,6 +145,7 @@ impl ChangeSource for Source {
                 .refreshing(selected_base(&self.config, self.services.base.as_deref()))
         });
         Some(Arc::new(Self {
+            preparation: None,
             services: self.services.clone(),
             config: self.config.clone(),
             head: self.head.clone(),

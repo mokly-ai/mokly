@@ -66,6 +66,13 @@ export const publishingSituations = [
     pending: true,
   },
   {
+    path: "product/viewer/standalone/mac-app",
+    family: "viewer",
+    screen: "standalone",
+    name: "mac-app",
+    states: ["default"],
+  },
+  {
     path: "product/viewer/pull-request/publishing",
     family: "viewer",
     screen: "pull-request",

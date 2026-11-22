@@ -31,6 +31,10 @@ jobs:
     outputs:
       cli_release_created: ${{ steps.release.outputs.release_created }}
       cli_tag_name: ${{ steps.release.outputs.tag_name }}
+      # The desktop component lives at packages/, so its outputs carry that path.
+      desktop_release_created: ${{ steps.release.outputs['packages--release_created'] }}
+      desktop_tag_name: ${{ steps.release.outputs['packages--tag_name'] }}
+      desktop_sha: ${{ steps.release.outputs['packages--sha'] }}
     steps:
       - name: Create or update release pull request
         id: release
@@ -39,6 +43,44 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+  desktop-tag:
+    name: Check the desktop release tag
+    if: vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && needs.release-please.outputs.desktop_release_created == 'true'
+    needs: [release-please]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      # Read the tag by its full name, so a branch with the same name never
+      # counts. The workflow never moves a tag.
+      - name: Check that the tag names the release commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.desktop_tag_name }}
+          RELEASE_COMMIT: ${{ needs.release-please.outputs.desktop_sha }}
+        run: |
+          tagged="$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$RELEASE_TAG" --jq .sha)"
+          if [ "$tagged" != "$RELEASE_COMMIT" ]; then
+            echo "::error::$RELEASE_TAG names $tagged, not the release commit $RELEASE_COMMIT. Move the tag to the release commit, then rerun the failed jobs."
+            exit 1
+          fi
+  desktop:
+    name: Release desktop
+    needs: [release-please, desktop-tag]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/desktop-release.yml
+    with:
+      tag: ${{ needs.release-please.outputs.desktop_tag_name }}
+      ref: ${{ needs.release-please.outputs.desktop_sha }}
+    secrets:
+      CSC_LINK: ${{ secrets.CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      DESKTOP_RELEASES_TOKEN: ${{ secrets.DESKTOP_RELEASES_TOKEN }}
   select-release:
     permissions:
       actions: read

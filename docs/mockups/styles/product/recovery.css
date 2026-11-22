@@ -1,4 +1,9 @@
+/* Recovery: one raised panel on the dotted canvas. The page is a column, so
+   the band that moves the Mac app's window takes its height from the canvas
+   and the page does not grow. */
 .fo-recovery {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background-image: radial-gradient(
     var(--mk-color-border) 1px,
@@ -8,7 +13,7 @@
 }
 .fo-recovery-main {
   display: grid;
-  min-height: 100vh;
+  flex: 1 0 auto;
   place-items: center;
   padding: var(--mk-space-8) var(--mk-space-5);
 }

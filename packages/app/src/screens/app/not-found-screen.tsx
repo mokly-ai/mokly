@@ -1,6 +1,7 @@
 import { Action } from "../../components/action";
 import { Brand } from "../../components/brand";
 import { StateMessage } from "../../components/page-parts";
+import { WindowBand } from "../../components/window-band";
 import { useDocumentTitle } from "../../layout/document-title";
 import { dashboardPath } from "../../navigation/paths";
 
@@ -15,6 +16,7 @@ export function NotFoundScreen() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
+      <WindowBand />
       <main id="main" className="fo-recovery-main">
         <div className="fo-recovery-body">
           <div className="fo-recovery-mark">

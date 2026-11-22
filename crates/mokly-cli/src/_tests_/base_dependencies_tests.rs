@@ -12,7 +12,7 @@ fn dependency_timing_tiers_match_the_three_documented_numbers() {
         (Tier::Installed, 2),
         (Tier::Fallback, 3),
     ] {
-        assert_eq!(super::tier_number(tier), number);
+        assert_eq!(crate::base_dependency_selection::tier_number(tier), number);
     }
 }
 
@@ -37,7 +37,7 @@ fn package_roots_are_normalized_before_selecting_dependency_tiers() {
         authored_inputs: Vec::new(),
         roots: Vec::new(),
     };
-    let selected = super::resolution(&config);
+    let selected = crate::base_dependency_selection::resolution(&config);
     assert_eq!(selected.package_roots, ["packages/one", "config/other"]);
     assert_eq!(selected.aliases["react-native"], "react-native-web");
     assert_eq!(selected.conditions, ["react-native"]);

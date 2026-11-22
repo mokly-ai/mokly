@@ -68,7 +68,10 @@ hold no snapshot, generation, render backend, or history. A candidate copies
 them, so a rejected candidate leaves the live records unchanged.
 
 `UsagePass` and `ChangesPass` run the background work of Serve: current usage
-first, then Changes classification against one pinned merge base. The
+first, then Changes classification against one pinned merge base. A Changes
+continuation can also give the pass the base preparation that its command
+started early, as a `PendingChanges`. The pass owns that work until its
+Changes work ends, so a replaced pass cancels it and waits for it. The
 [background work](./background.md) page holds the guidance for their window,
 the lookup and the miss of each view, the `Stages` bounds and budget, the ready
 state, and the write leases of the Changes reference probes.
@@ -86,9 +89,14 @@ retains document and resource hashes. It rejects changed public bytes or an
 inconsistent document after cache eviction before a capture can install a
 mixed generation. Its `comparison_capture` method returns `None`, so capture
 creation and smaller budgets cannot bypass these checks through the wrapped
-generation. It forwards `comparison_parallelism`, `schedule_comparison`,
-`schedule_comparison_tasks`, and `schedule_comparison_stream` to the wrapped
-generation. Scheduled tasks still call its checked reads. It keeps the default `None` of
+generation. It forwards `comparison_parallelism`, `capture_parallelism`,
+`schedule_capture_window`, `schedule_comparison_tasks`, and
+`schedule_comparison_stream` to the wrapped generation. Scheduled tasks still
+call its checked reads. Its capture collector wraps the
+`ComparisonEncoder` of the inner collector. So each capture worker checks the
+original document bytes and the digests of the closure's resources before it
+encodes a view. The collector forwards `remaining`, so the waiting views keep
+the same byte bound. It keeps the default `None` of
 `retained_comparison_input`, because a forward could bypass these checks or
 need source IO. The contract owns the admission, retention, and capacity
 limits.
@@ -232,6 +240,17 @@ generations.
   `UsagePass::fill_window` starts each view in catalogue order with its own
   `Dispatch`. `ChangesPass::activity` holds the render store's activity, and
   the private `Reference` keeps a probe result together with its lease.
+  After a committed
+  Ready or Unavailable completion, and after `execute` and its write lease end,
+  `ChangesPass` runs the optional `ChangeSource::settled` work and waits for it.
+  [`src/changes_seed.rs`](./src/changes_seed.rs) skips that work when Serve
+  stops, the classification is cancelled, or the head is no longer current.
+  `AfterUsage::prepare` moves the pending base preparation of the origin's
+  head attempt into the pass as a `PendingChanges`, through
+  `ChangeSource::pending`. The pass calls `PendingChanges::dispatched` after it
+  starts the last view, and `PendingChanges::cancel_and_join` when its
+  Changes work ends or the pass is replaced. `ChangesPass` calls
+  `ChangeSource::settle_pending` after each classification.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   bounded window of the current usage pass, which keeps catalogue order for
   starts, warnings, and failure reports. `Window::start_dispatched` adds a view
@@ -281,11 +300,21 @@ generations.
   `PackageAssets`, the built viewer inventory. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
 
+- [`src/comparison_collector.rs`](./src/comparison_collector.rs) defines `CheckedCollector`, whose worker-side encoder checks frozen document and resource digests before capture.
+- [`src/comparison_graph.rs`](./src/comparison_graph.rs) defines
+  `FrozenResources`, which checks frozen document and resource hashes for the
+  generation that it wraps.
+  [`src/comparison_head.rs`](./src/comparison_head.rs) gives it the head
+  validation methods. It forwards `validate_head` to the wrapped generation,
+  checks each `validation_document` read against the frozen document digest,
+  and answers `validation_identity` for head proofs.
+
 ### Related Docs
 
 - [Shell delivery](../../docs/protocol/mokly-shell-delivery.md).
-- [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and its
-  [background pass](../../docs/protocol/mokly-on-demand-background.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md), its
+  [background pass](../../docs/protocol/mokly-on-demand-background.md), and
+  [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md).
 - [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).

@@ -16,6 +16,7 @@ use crate::pool_releases::Notice;
 use crate::pool_start::StartLease;
 use crate::pool_state::{Slot, State};
 use crate::pool_timing::Reason;
+use crate::source_digests::{SourceDigests, SystemSourceDigests};
 use crate::wire::MethodResult;
 use crate::workers::{Clock, SpawnFailure, WorkerControl, WorkerFactory};
 
@@ -71,6 +72,7 @@ pub struct Pool {
     pub(super) releases: Option<Sender<Notice>>,
     pub(super) ready: Arc<Condvar>,
     pub(super) bundle_store: Option<Arc<dyn BundleStore>>,
+    pub(super) source_digests: Arc<dyn SourceDigests>,
 }
 
 impl Pool {
@@ -93,6 +95,7 @@ impl Pool {
             ready: Arc::new(Condvar::new()),
             releases: Some(sender),
             bundle_store: None,
+            source_digests: Arc::new(SystemSourceDigests),
         };
         pool.start_releases(receiver);
         pool
@@ -101,6 +104,12 @@ impl Pool {
     /// Add optional persistent recipes without starting a process or accessing disk.
     pub fn with_bundle_store(mut self, store: Arc<dyn BundleStore>) -> Self {
         self.bundle_store = Some(store);
+        self
+    }
+
+    /// Read current source digests through another boundary, such as a test double.
+    pub fn with_source_digests(mut self, digests: Arc<dyn SourceDigests>) -> Self {
+        self.source_digests = digests;
         self
     }
 

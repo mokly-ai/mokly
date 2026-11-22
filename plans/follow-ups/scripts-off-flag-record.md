@@ -5,12 +5,13 @@
 - **Added:** 2026-11-01, from the branch
   `conductor/rust-rebuild-150-base-install-scripts-and-managers`, the wider
   fix of finding 2 of its first review.
-- **Location:** `crates/mokly-compare/src/base_render.rs:48` to line 79,
-  `crates/mokly-compare/src/base_render.rs:114`,
-  `crates/mokly-compare/src/base_classification.rs:103` to line 233,
-  `scripts_off` at `crates/mokly-cli/src/changes_base.rs:42` and `:131`,
-  `crates/mokly-cli/src/changes_static.rs:24` and `:30`, and
-  `crates/mokly-cli/src/serve_changes_base.rs:129` and `:135`.
+- **Location:** `crates/mokly-compare/src/base_render.rs:48` to line 81,
+  `crates/mokly-compare/src/base_render.rs:145`,
+  `crates/mokly-compare/src/base_classification.rs:103` to line 236,
+  `scripts_off` at `crates/mokly-cli/src/changes_base.rs:44`, `:60`, `:133`,
+  and `:178` to line 180,
+  `crates/mokly-cli/src/base_render_admission.rs:15` to line 38, and
+  `crates/mokly-cli/src/serve_changes_base.rs:129` and `:136`.
 - **Reason:** On 2026-10-29 the user kept this wider fix out of the pull
   request that added the flag, and applied the direct fix there.
 
@@ -27,8 +28,7 @@
     and `--base-install-scripts` after a base failure.
   - **Base provider:** an implementation of the `BaseProvider` trait in
     `crates/mokly-compare/src/base_render.rs`. `NativeBase` prepares the
-    base. `StaticBase` and `AttemptBase` in `mokly-cli` wrap another
-    provider.
+    base. `AttemptBase` in `mokly-cli` wraps another provider.
   - **`BaseRequest`:** the input of `BaseProvider::prepare`.
     `Changes::classify` builds it for each fresh base preparation.
 - **Background:**
@@ -43,9 +43,19 @@
     `base_render.rs`. A kept base holds the flag in `KeptBase`, in
     `crates/mokly-compare/src/base_retention.rs`, so a failure of a reuse gets
     the same hint.
-  - `StaticBase` in `changes_static.rs` and `AttemptBase` in
-    `serve_changes_base.rs` copy the flag from the result of their inner
-    provider into their own result.
+  - Until 2026-11-19, `StaticBase` in `changes_static.rs` and `AttemptBase`
+    in `serve_changes_base.rs` copied the flag from the result of their inner
+    provider into their own result. `AttemptBase` still does, at lines 129
+    and 136.
+  - On 2026-11-19 the miss-first base capture branch made `StaticBase` an
+    admission policy. It implements `BaseRenderAdmission` in
+    `crates/mokly-cli/src/base_render_admission.rs`, and it only verifies the
+    source evidence of `build` and `publish`. `NativeBase` calls the policy
+    after base graph preparation.
+  - The provided method `BaseRenderAdmission::admit` puts the flag into the
+    `PreparedBase` or the `BasePreparationError` that it returns. `NativeBase`
+    drops the flag of that error at `changes_base.rs:180`, and it adds the
+    same flag again at line 60.
   - `Changes::classify` copies the flag onto each `Error::Base` that it
     builds, through `base_error` in
     `crates/mokly-compare/src/base_classification.rs`: a preparation failure,
@@ -63,8 +73,8 @@
     and `base_selection_tests.rs`.
   - The same day the user kept the wider fix, D, out of that pull request,
     for work after the merge.
-- **Problem:** Each provider wrapper and each `Error::Base` construction
-  copies the flag by hand. A new wrapper or a new failure path can drop the
+- **Problem:** Each provider wrapper, the admission step, and each
+  `Error::Base` construction copy the flag by hand. A new wrapper or a new failure path can drop the
   flag, and only a new test would catch it.
 - **Impact if no action:** A later base provider or failure path can lose
   the scripts hint for its failures. The tests cover only the copies that
@@ -79,7 +89,8 @@
     Effort: Medium.
   - **C.** Do B. Also give `PreparedBase` two public methods that keep the
     flag: one replaces the generation, and one makes a
-    `BasePreparationError`. Make `StaticBase` and `AttemptBase` use them.
+    `BasePreparationError`. Make `BaseRenderAdmission::admit` and
+    `AttemptBase` use them.
     The public `mokly-compare` API changes, and code changes in both
     packages. A wrapper can still build a wrong flag by hand, because the
     fields and the constructor stay public. Effort: Large.
@@ -89,19 +100,20 @@
     every `Error::Base`. The provider result becomes `Result<PreparedBase>`.
     `PreparedBase` keeps the generation and the freshness evidence, and its
     copied `scripts_off` field goes away. `BasePreparationError` and the
-    copies in `StaticBase` and `AttemptBase` also go away. `KeptBase` keeps
+    copies in `BaseRenderAdmission::admit`, `NativeBase`, and `AttemptBase`
+    also go away. `KeptBase` keeps
     the same shared write-once record in place of its own flag, so a later
     failure of a reuse reads that record. So D still removes each copy of the
     flag. The request type gets a field that `NativeBase` writes through a
     shared reference. The public `mokly-compare` API changes, and the change
     spans two packages. Effort: Large.
-  - **E.** Do B. Also send a true flag through the third `StaticBase` arm
-    and the source failure paths of `Changes::classify`, and assert it each
-    time. The change is test code only. The pull request that added the
+  - **E.** Do B. Also send a true flag through the third arm of
+    `StaticBase`, which then wrapped the provider, and the source failure
+    paths of `Changes::classify`, and assert it each time. The change is test code only. The pull request that added the
     flag applied E. Effort: Medium.
   - **F.** Do E. Also add the two flag-keeping methods of C as private
-    functions in `mokly-cli`, and make `StaticBase` and `AttemptBase` use
-    them. The public API stays the same. A wrapper can still build a wrong
+    functions in `mokly-cli`, and make `BaseRenderAdmission::admit` and
+    `AttemptBase` use them. The public API stays the same. A wrapper can still build a wrong
     flag by hand. Effort: Medium.
 - **Left out:**
   - One chain test over the real provider stack. It needs the same
@@ -113,6 +125,10 @@
   construction can drop the flag, also in a later wrapper.
 - **Previous examples:** A review of the scripts opt-in on 2026-10-21 found
   that no test checked when the hint appears.
+- **Related:** `plans/follow-ups/static-evidence-callback-boundary.md`
+  studies where the static evidence check of the admission policy runs. A
+  fix of either item touches `BaseRenderAdmission::admit` and the error path
+  of `NativeBase`.
 - **Recommendation:** D. One record of the flag removes the copies that the
   tests of E now guard one by one.
 - **Action:** fix after merge, apply D, because no condition of the

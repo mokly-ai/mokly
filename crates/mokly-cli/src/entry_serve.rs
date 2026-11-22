@@ -101,7 +101,6 @@ pub(super) fn run(
             return ExitCode::FAILURE;
         }
     };
-    let tree = services.tree.clone();
     let preparation = services.preparation.clone();
     let (workers, runtime) = match serve_lifecycle::runtime() {
         Ok(runtime) => runtime,
@@ -120,6 +119,7 @@ pub(super) fn run(
         let phase = Arc::new(serve_shutdown::Phase::default());
         let git = Arc::new(ServeGit::new(Arc::new(SystemRunners)));
         let lifecycle = Arc::new(ServeLifecycle {
+            eager: Some(services.eager.clone()),
             git: git.clone(),
             watch: Mutex::new(None),
             cancellation: cancellation.clone(),
@@ -141,13 +141,26 @@ pub(super) fn run(
                     None
                 } else {
                     Some(Arc::new(WatchedInputs::new(
-                        tree.clone(),
+                        services.tree.clone(),
                         &services.config,
                     )?))
                 };
                 *slot = watching.clone();
                 watching
             };
+            let states = serve_delivery::states(StateInputs {
+                services: &services,
+                common,
+                style,
+                entropy: entropy.clone(),
+                git,
+                warnings: warnings.clone(),
+                progress: progress.clone(),
+                reporter: reporter.clone(),
+                cancellation: cancellation.clone(),
+                terminal: terminal.clone(),
+                redactor: redactor.clone(),
+            })?;
             let Some(preparing) = candidates.enter() else {
                 return Ok(ExitCode::SUCCESS);
             };
@@ -175,19 +188,6 @@ pub(super) fn run(
             if *receiver.borrow() {
                 return Ok(ExitCode::SUCCESS);
             }
-            let states = serve_delivery::states(StateInputs {
-                services: &services,
-                common,
-                style,
-                entropy: entropy.clone(),
-                git,
-                warnings: warnings.clone(),
-                progress: progress.clone(),
-                reporter: reporter.clone(),
-                cancellation: cancellation.clone(),
-                terminal: terminal.clone(),
-                redactor: redactor.clone(),
-            })?;
             let snapshot = states.create(&prepared, 1, attempt.clone())?;
             let (configuration, summary) = serve_preparation::summary(prepared);
             let base = snapshot.index.base.clone().unwrap_or_default();
@@ -233,8 +233,8 @@ pub(super) fn run(
                 reserved = Some(server);
                 return Ok(ExitCode::SUCCESS);
             }
-            services.head_published();
             timing.ready();
+            services.head_published();
             if options.open {
                 serve_controls::open(&url, style, &redactor, terminal.as_ref());
             }

@@ -5,6 +5,7 @@ use mokly_model::error::ModelError;
 use mokly_model::validation::PropValidator;
 use serde_json::json;
 
+use crate::client_origins::Origins;
 use crate::definitions::{Definition, Definitions};
 use crate::diagnostics::DefinitionCode;
 use crate::error::{Error, RemoteCode};
@@ -25,7 +26,9 @@ fn schema_mistakes_reach_the_single_rust_profile_validator() {
                 generation: "g".into(),
             }),
         };
-        let MethodResult::Definitions(definitions) = response.decode_result(&request).unwrap()
+        let MethodResult::Definitions(definitions) = response
+            .decode_result(&request, &Origins::default())
+            .unwrap()
         else {
             panic!()
         };
@@ -65,13 +68,16 @@ fn describe_diagnostics_and_error_replies_keep_the_authoring_code() {
         )
         .unwrap();
         assert!(matches!(
-            response.decode_result(&Request {
-                id: 1,
-                quiet: false,
-                call: Call::Describe(Generation {
-                    generation: "g".into()
-                })
-            }),
+            response.decode_result(
+                &Request {
+                    id: 1,
+                    quiet: false,
+                    call: Call::Describe(Generation {
+                        generation: "g".into()
+                    })
+                },
+                &Origins::default()
+            ),
             Err(Error::Remote {
                 code: RemoteCode::Definition(_),
                 ..

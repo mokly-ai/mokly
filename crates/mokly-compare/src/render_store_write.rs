@@ -24,8 +24,8 @@ impl CachedDocuments {
         match self.cache.replace(&segment, bytes) {
             Ok(Mutation::Written) => {
                 let mut fault = false;
-                if let Ok(mut index) = self.index.try_lock() {
-                    fault = match self.initialize(&mut index) {
+                if let Ok(_maintenance) = self.maintenance.try_lock() {
+                    fault = match self.initialize() {
                         Ok(Some(fault)) => fault,
                         Ok(None) => false,
                         Err(_) => true,
@@ -40,7 +40,8 @@ impl CachedDocuments {
                         }
                         _ => None,
                     };
-                    if let (Some(index), Some(token)) = (index.as_mut(), publication) {
+                    if let (Some(index), Some(token)) = (self.index.load_full(), publication) {
+                        let mut index = index.as_ref().clone();
                         let segment = Arc::new(SegmentIdentity {
                             key: segment,
                             header_digest,
@@ -62,6 +63,7 @@ impl CachedDocuments {
                                 );
                             }
                         }
+                        self.index.store(Some(Arc::new(index)));
                     }
                 }
                 if fault {

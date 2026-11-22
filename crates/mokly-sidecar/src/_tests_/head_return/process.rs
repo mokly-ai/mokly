@@ -151,7 +151,7 @@ fn worker(
                         cache: None,
                         compile_count,
                         compiled: Arc::new(compiled(&params.params.entry_files[0])),
-                        modules: vec![],
+                        modules: Default::default(),
                         unmapped_dependency_directories: None,
                     })),
                     _ => MethodResult::Empty,
