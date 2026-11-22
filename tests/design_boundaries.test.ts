@@ -95,18 +95,14 @@ const AUDITED_BOUNDARIES = [
   "design-library/panels/compare-modes.css .cv-mode-switch > input:checked + .cv-mode-switch-track",
   "design-library/panels/compare-modes.css .cv-mode-switch > input:focus-visible + .cv-mode-switch-track",
   "design-library/panels/compare-modes.css .cv-mode[aria-current]",
-  "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
+  // The package controls draw keyboard focus as a glow, a shadow rather than a
+  // boundary; packages/ui/tests/palette.test.ts holds the glow at 3:1.
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
   "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
-  "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
   "packages/ui/src/controls-panel/controls-panel.css .mbk-control-alert",
-  "packages/ui/src/icon-control/icon-control.css .mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-icon-button:has(> input:focus-visible)",
   'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
-  "packages/ui/src/inspector/inspector.css .mbk-sheet-grab:has(> input:focus-visible)",
   'packages/ui/src/instance-tree/instance-tree.css .mbk-instance-select[aria-pressed="true"], .mbk-instance-tree a.mbk-instance-select[aria-current="true"]',
-  "packages/ui/src/prop-field/prop-field.css .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible",
   "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
-  "packages/ui/src/text-button/text-button.css .mbk-text-button:focus-visible",
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
