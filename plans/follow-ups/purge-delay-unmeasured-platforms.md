@@ -43,9 +43,8 @@
     Changes keep the mimalloc default of 1,000 ms.
   - mimalloc reads its environment before the `main` function runs.
     `mi_option_set_default` changes only an option that no valid environment
-    value set. So a valid `MIMALLOC_PURGE_DELAY` value, or the legacy
-    `MIMALLOC_RESET_DELAY`, keeps priority at startup and after the first
-    ready Changes.
+    value set. So a valid `MIMALLOC_PURGE_DELAY` value keeps priority at
+    startup and after the first ready Changes.
   - The way back for a user: `MIMALLOC_PURGE_DELAY=1000` in the environment of
     the core keeps the mimalloc default for the whole session.
   - A purge works differently on each platform:
@@ -148,8 +147,16 @@
   - On 2026-11-22, the performance orchestrator chose to ship the current
     version. Its official check of that version uses a cold bar of 60 MiB: 6
     cold pairs, at least 5 of 6 lower, and a whole-tree peak at most 1% above
-    `main`. Its speed bars stay as they were for the first version. That check
-    was still open when this item was written.
+    `main`. Its speed bars stay as they were for the first version. The check
+    passed every bar on its own quiet machine:
+    - Cold, 10 pairs: the core RSS maximum fell by 93 MiB, lower in 10 of 10
+      pairs. The whole-tree peak fell by 3.65%. The core CPU ratio rose by
+      1.84%, and the first ready Changes came 40 ms sooner on the median.
+    - Warm edits: +5 ms in its 8 rounds, and −49 ms with the 8 rounds of the
+      change pooled.
+    - Warm restarts, 16 pairs: the listening line came 3 ms sooner, and the
+      first ready Changes 14 ms sooner on the median.
+    - `examples/basic` with 4 sidecars, cold: the whole-tree peak fell by 0.6%.
 - **Task:**
   1. On a macOS and a Windows machine, run Serve on the `mokly-cloud`
      catalogue with one release core for both arms. One arm runs the core as
@@ -188,9 +195,15 @@
 - **Done when:** The measurements are recorded, and a user decision keeps the
   delay, changes it, or gives a platform an exception.
 - **Related:**
-  [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md) holds
-  the core RSS that the purge delay does not return. That is the startup
-  memory that stays committed into the edits, and the blocks that one thread
-  frees on pages that another, idle thread owns. Its option of a forced purge
-  at the first ready Changes would change the setting that this task
-  measures.
+  - [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md) holds
+    the core RSS that the purge delay does not return. That is the startup
+    memory that stays committed into the edits, and the blocks that one thread
+    frees on pages that another, idle thread owns. Its option of a forced purge
+    at the first ready Changes would change the setting that this task
+    measures.
+  - [mimalloc-v3-7-upgrade.md](./mimalloc-v3-7-upgrade.md) upgrades mimalloc.
+    The upgrade changes the allocator under the measurements of this task.
+  - [purge-delay-switch-after-replaced-changes.md](./purge-delay-switch-after-replaced-changes.md)
+    defines which ready Changes starts the 30 ms when Serve replaces a
+    comparison right after its publication. Its fix edits the definition of
+    the first ready Changes in this item.

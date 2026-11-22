@@ -34,9 +34,28 @@ pub(super) trait PurgeDelay {
 /// Process-wide purge delay backed by mimalloc.
 ///
 /// Only the first call in a process writes the default. mimalloc reads
-/// `MIMALLOC_PURGE_DELAY` and the legacy `MIMALLOC_RESET_DELAY` before `main`.
+/// `MIMALLOC_PURGE_DELAY` before `main`. It reads the legacy name
+/// `MIMALLOC_RESET_DELAY` only when the environment has no `MIMALLOC_PURGE_DELAY`.
 /// `mi_option_set_default` writes only an option that no valid environment value
 /// set.
+///
+/// The write is a known formal data race. Serve's other threads can read the
+/// purge delay while the write runs, and the bindings say that the setter is not
+/// thread safe. The mimalloc v3.3.2 sources that `libmimalloc-sys` 0.1.49 vendors
+/// show why a reader still gets a valid delay:
+///
+/// - Each option is a plain `long` (`include/mimalloc/internal.h:407-413`).
+/// - `mi_option_get` reads it from any thread without atomics
+///   (`src/options.c:271-280`).
+/// - The options comment says that options "can be accessed by multiple threads"
+///   (`src/options.c:27-30`).
+/// - mimalloc exports `mi_option_set` for use at run time
+///   (`include/mimalloc.h:506`).
+///
+/// So a concurrent reader sees the old or the new delay. Each reader only checks
+/// the sign of the delay or computes a purge time from it. Both delays are
+/// positive, so a purge only becomes due earlier or later. mimalloc v3.7.0 makes
+/// the option state atomic (upstream issue #1494).
 pub(super) struct MimallocPurgeDelay;
 
 impl PurgeDelay for MimallocPurgeDelay {
@@ -44,8 +63,8 @@ impl PurgeDelay for MimallocPurgeDelay {
         static SET_DEFAULT: Once = Once::new();
         SET_DEFAULT.call_once(|| {
             // SAFETY: The option index is valid and mimalloc reads its options at startup.
-            // Once limits the update to one write. This relies on mimalloc v3 storing the
-            // delay in a naturally aligned C long, so concurrent readers see either delay.
+            // Once limits the update to one write. The doc comment of `MimallocPurgeDelay`
+            // explains why readers on other threads still get a valid delay.
             unsafe { mi_option_set_default(PURGE_DELAY_OPTION, PURGE_DELAY_MS) };
         });
     }

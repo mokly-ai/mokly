@@ -260,6 +260,10 @@
   - [purge-delay-unmeasured-platforms.md](./purge-delay-unmeasured-platforms.md)
     measures the 30 ms purge delay of option A on macOS and Windows. A change
     of that setting here, such as F, changes what that task measures.
+  - [mimalloc-v3-7-upgrade.md](./mimalloc-v3-7-upgrade.md) upgrades mimalloc
+    to a release that no longer loses scheduled purges. Lost purges can be
+    part of the gap that this item measures, so B gives a different split
+    after that upgrade.
 - **Recommendation:** B. Its split names the largest source of the gap that
   stays, so that F, C, or D runs only when its source is large. Until
   2026-11-22 the recommendation was A, with B in the same sessions.

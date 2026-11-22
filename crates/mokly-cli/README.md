@@ -37,8 +37,7 @@ first ready Changes, the binary sets mimalloc's default purge delay to 30 ms.
 The purge delay is the time after which a freed memory range becomes due for its
 return to the operating system. Before that point, and in `build` and
 `publish`, the delay stays at mimalloc's own default of 1,000 ms. A valid
-`MIMALLOC_PURGE_DELAY` value in the environment, or the legacy
-`MIMALLOC_RESET_DELAY`, keeps priority over both values.
+`MIMALLOC_PURGE_DELAY` value in the environment keeps priority over both values.
 
 Build and Serve share the same runtime composition. Each command owns one
 lazy sidecar pool. `--sidecars` and `MOKLY_SIDECARS` set an exact size.
