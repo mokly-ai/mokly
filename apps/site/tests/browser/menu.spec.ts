@@ -106,6 +106,39 @@ test(
 );
 
 test(
+  "without closedby a press on the dimmed page closes the menu, and a drag from the sheet does not",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    // Chromium implements `closedby`. The page loses it, as in a browser
+    // that lacks it, so only the site's fallback can close the menu on a
+    // press. The fallback is shared by the menu, the tree sheet and search.
+    await page.addInitScript(() => {
+      Reflect.deleteProperty(HTMLDialogElement.prototype, "closedBy");
+      document.addEventListener("DOMContentLoaded", () => {
+        for (const dialog of document.querySelectorAll("dialog"))
+          dialog.removeAttribute("closedby");
+      });
+    });
+    await page.goto(SITE_PATHS.home);
+    const menu = await openMenu(page);
+    const sheet = await menu.boundingBox();
+    const height = page.viewportSize()?.height ?? 0;
+    if (!sheet) throw new Error("the open menu has no box");
+    const x = sheet.x + sheet.width / 2;
+    const dimmed = (sheet.y + sheet.height + height) / 2;
+    // A drag from the sheet's empty foot to the dimmed page keeps it open.
+    await page.mouse.move(x, sheet.y + sheet.height - 8);
+    await page.mouse.down();
+    await page.mouse.move(x, dimmed);
+    await page.mouse.up();
+    expect(await isOpen(menu)).toBe(true);
+    // A press that starts and ends on the dimmed page closes it.
+    await page.mouse.click(x, dimmed);
+    await expect(menu).toBeHidden();
+  },
+);
+
+test(
   "a destination in the menu opens its page",
   { tag: "@mobile" },
   async ({ page }) => {

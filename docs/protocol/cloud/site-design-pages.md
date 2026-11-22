@@ -49,8 +49,8 @@ owns the islands that make the parts below move.
   copy. Below them, a frame labelled `Open foundation` sets a code panel with
   a terminal beside an artboard. On desktop a `signal` wire joins a source
   line to the element that it renders, and below 960px the wire leaves. That
-  frame carries only its label, with no selection. The facts follow as 38px
-  pills with `signalDeep` icons. The three steps follow as an ordered list of
+  frame carries only its label, with no selection. The facts follow as pills
+  at least 38px tall with `signalDeep` icons. The three steps follow as an ordered list of
   small frames joined by `signal` arrows: one row on desktop, and one column
   below 900px.
 - Every demo is a depiction. It is hidden from assistive technology, and its
@@ -79,8 +79,11 @@ owns the islands that make the parts below move.
 - Filter: a sticky bar of radio options, All, Breaking, Features, Fixes and
   Performance, each with its icon and its note count, and a polite live line
   that counts the shown notes and releases. The checked option is
-  `signalFill` with `onSignalFill`. Below 1200px the bar stops sticking. On
-  mobile its options form a two-row grid of 44px targets without icons.
+  `signalFill` with `onSignalFill`, and in forced colours it takes the system
+  highlight. Below 1200px the bar stops sticking. On mobile its options form
+  rows of two and three 44px targets without icons. An option is at least as
+  wide as its label and count, so an option that its row cannot hold moves to
+  a row of its own at any text size.
 - Release frames: the six newest releases are frames 120px apart, 96px on
   mobile, each labelled with its version and date in `mono`. The head shows
   the `Mokly CLI` label, the version at 64px (40px on mobile), the date, a

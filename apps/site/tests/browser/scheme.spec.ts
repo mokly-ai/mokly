@@ -8,6 +8,8 @@ import {
 
 import { SITE_PATHS } from "../../src/navigation.js";
 
+import { focusGlows } from "./accessibility.js";
+
 /**
  * The footer's scheme control and the scheme island, in a real browser: a
  * choice applies at once and holds across pages, `?scheme=` holds for one
@@ -141,8 +143,14 @@ test(
   },
 );
 
+/** The focus glow, as the first shadow layer of a segment in the scheme. */
+async function glowing(page: Page): Promise<RegExp> {
+  const [glow = ""] = await focusGlows(page);
+  return new RegExp(`^${glow.replace(/[()./]/g, "\\$&")}, `);
+}
+
 test(
-  "the arrow keys choose between the options, and the focused segment draws the ring",
+  "the arrow keys choose between the options, and the focused segment draws the glow",
   DESKTOP,
   async ({ page }, info) => {
     const { other, system } = schemes(info);
@@ -153,13 +161,19 @@ test(
       .focus();
     await page.keyboard.press("Tab");
     await expect(radio(page, system)).toBeFocused();
-    await expect(segment(page, system)).toHaveCSS("outline-style", "solid");
+    await expect(segment(page, system)).toHaveCSS(
+      "box-shadow",
+      await glowing(page),
+    );
     await page.keyboard.press(system === "light" ? "ArrowRight" : "ArrowLeft");
     await expect(radio(page, other)).toBeFocused();
     await expect(radio(page, other)).toBeChecked();
     await expectScheme(page, other);
-    await expect(segment(page, other)).toHaveCSS("outline-style", "solid");
-    await expect(segment(page, system)).toHaveCSS("outline-style", "none");
+    await expect(segment(page, other)).toHaveCSS(
+      "box-shadow",
+      await glowing(page),
+    );
+    await expect(segment(page, system)).toHaveCSS("box-shadow", "none");
   },
 );
 

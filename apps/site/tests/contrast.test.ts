@@ -32,28 +32,27 @@ const PAIRS: ReadonlyArray<readonly [ColorName, ColorName, number]> = [
   ["warning", "warningSoft", 4.5],
   ["danger", "dangerSoft", 4.5],
   ["info", "infoSoft", 4.5],
-  ["focus", "background", 3],
-  ["focus", "surface", 3],
   ["borderStrong", "background", 3],
   ["borderStrong", "surface", 3],
   ["borderStrong", "surfaceMuted", 3],
 ];
 
-function luminance(color: string): number {
-  const channels = [1, 3, 5].map((start) => {
-    const value = Number.parseInt(color.slice(start, start + 2), 16) / 255;
-    return value <= 0.03928
-      ? value / 12.92
-      : Math.pow((value + 0.055) / 1.055, 2.4);
-  });
-  return (
-    0.2126 * (channels[0] ?? 0) +
-    0.7152 * (channels[1] ?? 0) +
-    0.0722 * (channels[2] ?? 0)
-  );
+/** The channels of a `#rrggbb` token value. */
+function channels(value: string): number[] {
+  return [1, 3, 5].map((at) => Number.parseInt(value.slice(at, at + 2), 16));
 }
 
-function contrast(one: string, other: string): number {
+/** The relative luminance of sRGB channels. */
+function luminance(colour: readonly number[]): number {
+  const [red = 0, green = 0, blue = 0] = colour.map((channel) => {
+    const value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+/** The contrast ratio of two colours, each as sRGB channels. */
+function contrast(one: readonly number[], other: readonly number[]): number {
   const first = luminance(one);
   const second = luminance(other);
   const lighter = Math.max(first, second);
@@ -69,11 +68,39 @@ test("every documented site token pair meets its contrast ratio", () => {
       const background = values[behind];
       assert.ok(foreground, `${scheme} is missing ${ink}`);
       assert.ok(background, `${scheme} is missing ${behind}`);
-      const ratio = contrast(foreground, background);
+      const ratio = contrast(channels(foreground), channels(background));
       assert.ok(
         ratio >= minimum,
         `${scheme}: ${ink} on ${behind} is ${ratio.toFixed(2)}:1, below ${minimum}:1`,
       );
+    }
+  }
+});
+
+test("the glow keeps 3:1 against every surface it draws on, in both schemes", () => {
+  // Each glow with the surface it sits on in light and in dark: the page
+  // glow on the canvas and the page's surfaces, and the code glow on the
+  // code panel, which text fills in light and the muted surface in dark.
+  const backdrops: ReadonlyArray<readonly [ColorName, ColorName, ColorName]> = [
+    ["signalDeep", "background", "background"],
+    ["signalDeep", "surface", "surface"],
+    ["signalDeep", "surfaceMuted", "surfaceMuted"],
+    ["signalDeep", "surfaceRaised", "surfaceRaised"],
+    ["signalDeep", "signalSoft", "signalSoft"],
+    ["signal", "text", "surfaceMuted"],
+  ];
+  for (const [glow, light, dark] of backdrops) {
+    for (const [scheme, behind] of [
+      ["light", light],
+      ["dark", dark],
+    ] as const) {
+      // The glow at 75% over an opaque fill, as the browser composites it.
+      const fill = channels(tokens.color[scheme][behind]);
+      const halo = channels(tokens.color[scheme][glow]).map(
+        (channel, at) => channel * 0.75 + (fill[at] ?? 0) * 0.25,
+      );
+      const ratio = contrast(halo, fill);
+      assert.ok(ratio >= 3, `${scheme}: ${glow} on ${behind}, ${ratio}:1`);
     }
   }
 });

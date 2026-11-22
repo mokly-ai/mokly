@@ -200,9 +200,16 @@ directory, never in the repository, and deleting that cache is safe.
 - Fixture data is allowed here. Keep it in mockup fixtures or explicit component
   variants; never carry fictional counts, customers, testimonials, or activity
   into the product app. Avoid invented claims about Mokly anywhere in the
-  catalogue. The site screens' demo app is fictional, and they may depict a
-  feature that ships before go-live, as
-  [Public site](../protocol/cloud/site.md) allows.
+  catalogue. The site screens' demo app, `acme/storefront`, and the people of
+  the design file, Maya and Sam, are fiction and stay after go-live, as
+  [Public site](../protocol/cloud/site.md#boundary) allows. Until go-live, the
+  site screens may also depict features that the product does not have yet:
+  comments, approvals, agent sessions and presence. Presence inside a depicted
+  Mokly screen counts as such a feature, and so does each named agent, Claude
+  and Codex. Each mockup drawing of such a feature carries the
+  `status: "ahead"` mark of its site drawing. The go-live removal of a drawing
+  whose feature did not ship changes these mockups first, because they are the
+  visual source of truth, and then the site.
 - A fresh screen needs meaningful empty, loading, or error variants when its
   owning spec calls for them. Add new owning screen entries before adding them
   to a flow.
@@ -214,7 +221,7 @@ directory, never in the repository, and deleting that cache is safe.
 
 - `src/screens/design/site/` — the eight site screens: `home_screen.tsx`, `docs_screen.tsx`, `changelog_screen.tsx`, `pricing_screen.tsx` and `policy_screens.tsx` (the four legal documents), each drawn as a part of a design file on the dot-grid canvas.
 - [src/screens/design/site/parts/](./src/screens/design/site/parts/) — the shared site mockup parts: `links.ts` (catalogue paths, application links and current-page marking), `metadata.ts` (the related documents that every site entry records), `brand.tsx` (mark and wordmark), `chrome.tsx` (`SiteLayout`: the skip link, the tool bar with the file title and the people in the file, the open menu and the footer), `menu.tsx` (the mobile menu control and the open menu), `footer.tsx` (the footer frame with the scheme control of `scheme-control.tsx` and the status bar), `actions.tsx` (the action pair), `icons.tsx` (`SiteIcon`, the Canvas icon set, drawn from `icon-drawings.tsx` and `icon-drawings-pages.tsx`), `labels.tsx` (kickers, chips and section boxes), `frame-label.tsx` (a frame's label and size), `selection.tsx` (the selection box, the size tag and the spacing redline), `panel.tsx` (the floating panel), `page-frame.tsx` (a document page as a selected frame), `people.tsx` (the depicted people, their presence and their cursors), `trail.tsx` (the location trail), `legal-documents.tsx` (the approved legal text) and `version.ts` (the depicted package version).
-- The documentation parts in the same folder: `docs_data.ts` (the documentation architecture), `docs-pages.ts` (the model of a drawn guide), `docs-install.tsx` and `docs-first-screen.tsx` with `docs-first-screen-code.ts` (the two guides drawn word for word), `docs_navigation.tsx` (the Layers panel with search and the version), `docs-inspect.tsx` (the Inspect panel), `docs-page.tsx` (the guide as a page frame), `docs-sheet.tsx` (the mobile sub-bar and the tree sheet), `docs-sample.tsx` (the HTML sample fence) with `docs-sample-frames.tsx` (its Mobile and Desktop frames) and `code_panel.tsx` (the code panel, dark in both schemes).
+- The documentation parts in the same folder: `docs_data.ts` (the documentation architecture), `docs-pages.ts` (the model of a drawn guide), `docs-install.tsx` and `docs-first-screen.tsx` with `docs-first-screen-code.ts` (the two guides drawn word for word), `docs_navigation.tsx` (the Layers panel with search and the version), `docs-inspect.tsx` (the Inspect panel), `docs-page.tsx` (the guide as a page frame), `docs-sheet.tsx` (the mobile sub-bar and the tree sheet), `docs-sample.tsx` (the HTML sample fence) with `docs-sample-frames.tsx` (its Mobile and Desktop frames) and `code_panel.tsx` (the code panel, dark in both schemes: a file tab's name ends in an ellipsis where the tab bar cannot hold it, and the tab's text keeps the whole name).
 - The changelog and pricing parts in the same folder: `releases.ts` with `release.ts`, `native-releases.ts`, `catalogue-releases.ts` and `early-releases.ts` (the depicted releases), `changelog-facts.ts` (the anchors, dates and counts derived from them), the `changelog-*.tsx` parts (Version history, the timeline, the filter, the release frames with their notes and upgrade notes, and Earlier releases), `pricing-data.ts` and `pricing-questions-data.ts` (the plan facts and the resolved questions), and the `pricing-*.tsx` parts (the plan frames, the comparison and the questions).
 - `src/screens/design/site/home/` — the home's parts: the hero, the spread of the fictional `acme/storefront` app with the artboards and components of `home/acme/`, the workspace with the Specs panel, the Browse, Review and Edit frames with their depicted viewer, comment thread and agent, and the open foundation with its steps.
 - `src/render.tsx` — the Mokly renderer. Mokly calls it around each screen render and each component page render, never around a registered component inside a screen, and it returns one `MockupDocument` wrapper.

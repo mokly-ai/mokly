@@ -63,13 +63,19 @@
   text-transform: uppercase;
 }
 
+/* A link breaks a word that is wider than its column, such as Complaints
+   at 200% text on a 320px window. Its 6px radius draws nothing at rest, so
+   its focus glow is rounded. */
+
 .site-footer-link {
   align-items: center;
+  border-radius: 6px;
   color: var(--mk-color-text);
   display: inline-flex;
   font-size: 0.9375rem;
   min-height: var(--mk-layout-control-min);
   min-width: var(--mk-layout-control-min);
+  overflow-wrap: anywhere;
   text-decoration: none;
   text-underline-offset: 4px;
   transition: color var(--mk-motion-fast) var(--mk-motion-easing);
@@ -87,7 +93,7 @@
 /* The scheme control: two native radios drawn as segments of the canvas
    track; the chosen segment sits on the raised surface with the strong
    ring of a control boundary. The radio itself is hidden, and its segment
-   draws the focus ring. */
+   draws the focus glow, before the chosen segment's ring and shadow. */
 
 .site-scheme {
   background: var(--mk-color-background);
@@ -138,8 +144,15 @@
 }
 
 .site-scheme-option:has(.site-scheme-input:focus-visible) {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
+.site-scheme-option:has(.site-scheme-input:checked:focus-visible) {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    0 0 0 1px var(--mk-color-border-strong),
+    var(--mk-shadow-small);
 }
 
 .site-scheme-input {

@@ -44,8 +44,10 @@ function Tokens({ line }: { line: CodeLine }) {
 /**
  * A code panel. Without `files`, its one tab names the `language`, as a
  * shell block does; with `files`, the tabs name the files, the first one
- * open, and the language sits at the bar's end. `meta` adds a path or a
- * note before Copy. The code is `code` as plain text or `lines` as tokens.
+ * open, and the language sits at the bar's end. A file's name may shrink
+ * and end in an ellipsis, and its text keeps the whole name. `meta` adds a
+ * path or a note before Copy. The code is `code` as plain text or `lines`
+ * as tokens.
  * `numbered` draws line numbers, `prompt` a `$` before each line, and
  * `dimmed` and `lit` mark lines by their 1-based numbers. `foot` holds
  * content under the code inside the panel, such as a terminal.
@@ -108,7 +110,7 @@ export function CodePanel({
               key={file}
             >
               {index === 0 ? <SiteIcon name={tabIcon} size={13} /> : null}
-              {file}
+              <span className="site-code-tab-name">{file}</span>
             </span>
           ))
         )}

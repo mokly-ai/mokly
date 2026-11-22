@@ -40,11 +40,21 @@ the public site. [Site](./site.md) owns their routes and shared navigation;
 - Cloudflare handles the public site, DNS, TLS and limited request metadata at
   its edge. GitHub processes authentication and repository-integration data;
   Postmark processes service email.
-- The public site sets no cookies and runs no analytics. The application uses
-  only the essential session, catalogue-access and browser-storage mechanisms
-  defined by [Authentication](./auth-sessions.md),
-  [Callbacks](./auth-callbacks.md) and
-  [Catalogue hosting](./catalogue-hosting.md).
+- The public site sets no cookies and runs no analytics. It keeps two items in
+  browser storage and sends neither to Mokly: the scheme choice of
+  [Site chrome](./site-chrome.md#scheme-control) and the tree position of
+  [Site docs layout](./site-docs-layout.md#tree-scroll).
+- The application uses the session, catalogue-access and browser-storage
+  mechanisms defined by [Authentication](./auth-sessions.md),
+  [Callbacks](./auth-callbacks.md),
+  [Desktop sign-in](./desktop-sign-in.md) and
+  [Catalogue hosting](./catalogue-hosting.md). It also keeps one preference on
+  the device, the [Theme](./viewer-chrome-account.md#theme) choice. The Privacy
+  Policy names each of these items, and the `SameSite` value of the session
+  cookie in a browser and in the desktop app.
+- For each item that the site keeps and for the Theme, the Privacy Policy
+  gives the purpose, says that the item stays in the browser, and says how to
+  remove it.
 - Provider and international-transfer statements distinguish the UK operator
   from US hosting and other provider processing. They do not claim UK hosting.
 - The controller/processor distinction names Calum Moore Consulting Limited as
@@ -88,5 +98,5 @@ They do not claim a certification, independent audit, support SLA, restore
 test, analytics system, paid plan, bug bounty, anonymization, scheduled
 cleanup or security control that this repository does not establish. Legal
 prose does not reuse the MIT license as service terms. Any provider, region,
-retention, identity or control change must update this contract and the
-affected Markdown in the same change.
+retention, identity, control or browser storage change must update this
+contract and the affected Markdown in the same change.

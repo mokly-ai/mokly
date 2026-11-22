@@ -89,12 +89,16 @@
   padding: 0 12px;
 }
 
+/* Where the thread is too narrow for the sync note and Approve, as in a
+   320px window, Approve moves under the note */
+
 .site-home-thread-foot {
   align-items: center;
   background: var(--mk-color-surface-muted);
   border-radius: 0 0 14px 14px;
   border-top: 1px solid var(--mk-color-border);
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   justify-content: space-between;
   padding: 12px 12px 12px 14px;
@@ -197,7 +201,7 @@
 
 @media (max-width: 1439px) {
   [data-site-viewport="desktop"] .site-home-edit-canvas h3 {
-    font-size: clamp(28px, 2.5vw, 36px);
+    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
   }
 }
 

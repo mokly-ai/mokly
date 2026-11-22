@@ -93,7 +93,8 @@
 }
 
 /* The scope of a note as a mono chip, its code spans and its links. A link
-   in a note reads as a body link of the document pages. */
+   in a note reads as a body link of the document pages. The chip's line
+   height follows its text, 21px at the 12px base. */
 
 .site-release-scope {
   background: var(--mk-color-surface-muted);
@@ -104,7 +105,7 @@
   font-family: var(--mk-font-mono);
   font-size: 0.75rem;
   font-weight: var(--mk-font-medium);
-  line-height: 21px;
+  line-height: 1.75;
   margin-right: 3px;
   padding: 0 7px;
   vertical-align: 1px;
@@ -120,6 +121,7 @@
 }
 
 .site-release-note-text a {
+  border-radius: 6px;
   color: var(--mk-color-signal-deep);
   font-weight: var(--mk-font-medium);
   text-decoration: underline;
@@ -148,6 +150,7 @@
 
 .site-release-ref {
   align-items: center;
+  border-radius: 6px;
   color: var(--mk-color-text-muted);
   display: inline-flex;
   font-family: var(--mk-font-mono);

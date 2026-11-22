@@ -27,7 +27,7 @@
   - **B.** Fix them in the mockup milestone that decision 11 of the Canvas plan
     adds. Effort: Small.
 - **Left out:** Treating the edges as decorative, because both mark a control.
-- **Wider fix:** Decision 12 of the Canvas plan holds the class-wide checks.
+- **Wider fix:** `plans/follow-ups/site-defect-classes-lack-site-wide-checks.md` holds the class-wide checks of the site and its mockups.
 - **Previous examples:** The grabber fix in Milestone 15 of the Canvas plan.
 - **Recommendation:** B, because that milestone already redraws these parts.
 - **Action:** fix after merge, apply B, because the fix milestone did not own

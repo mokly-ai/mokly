@@ -100,6 +100,13 @@
   color: var(--mk-color-text);
 }
 
+/* The compact control has no edge, so its focus is the glow alone */
+
+.site-docs-subbar .site-search:focus-visible {
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
 /* The tree sheet under the sub-bar, over a scrim that dims the page */
 
 .site-docs-sheet-scrim {
@@ -153,6 +160,15 @@
 
 .site-docs-sheet .site-panel-row {
   font-size: 0.9375rem;
+}
+
+/* In the sheet a page name that its row cannot hold wraps, and the row
+   grows taller, rather than ending in an ellipsis */
+
+.site-docs-sheet .site-panel-row-label {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .site-docs-sheet .site-doc-tree-foot {

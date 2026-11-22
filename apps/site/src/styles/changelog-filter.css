@@ -6,9 +6,13 @@
    compositions. */
 
 /* The filter: the options of all notes and of each main group, then the
-   status. On mobile the options form a grid of two and three 44px targets
-   without icons, over the status. From 1100px they share one floating bar
-   with the status, which sticks under the tool bar from 1200px. */
+   status. On mobile the options form rows of two and three 44px targets
+   without icons, over the status. Each row shares its width, and an option
+   is at least as wide as its label and count, which it centres, and 2px on
+   each side, so an option that its row cannot hold moves to a row of its
+   own, at any text size, and an option grows taller with its text. From
+   1100px they share one floating bar with the status, which sticks under
+   the tool bar from 1200px. */
 
 .site-changelog-filterbar {
   align-items: center;
@@ -33,9 +37,9 @@
   box-shadow:
     0 0 0 1px var(--mk-color-border),
     var(--mk-shadow-small);
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 2px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin: 0;
   min-inline-size: 0;
   padding: 3px;
@@ -50,9 +54,9 @@
   font-size: 0.875rem;
   font-weight: var(--mk-font-medium);
   gap: 7px;
-  height: var(--mk-layout-control-min);
   justify-content: center;
-  padding: 0 8px;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 2px;
   position: relative;
   transition:
     background var(--mk-motion-fast) var(--mk-motion-easing),
@@ -61,11 +65,11 @@
 }
 
 .site-changelog-filter-option:nth-child(-n + 2) {
-  grid-column: span 3;
+  flex: 1 1 calc(50% - 2px);
 }
 
 .site-changelog-filter-option:nth-child(n + 3) {
-  grid-column: span 2;
+  flex: 1 1 calc(33.33% - 3px);
 }
 
 /* From 768px an option reaches a 44px target through a transparent band */
@@ -105,14 +109,16 @@
   color: var(--mk-color-on-signal-fill);
 }
 
+/* The radio is hidden, so its option draws the focus glow outside the
+   signal fill, on the bar's surface */
+
 .site-changelog-filter-option:has(.site-changelog-filter-input:focus-visible) {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
 }
 
 /* The status, set off from the options by a divider in the floating bar.
-   It keeps no margin, as the mockup draws it: its reset of a paragraph's
-   margins outweighs the status's own margins. */
+   On mobile it keeps no margin. */
 
 .site-changelog-filter-status {
   border-left: 0;
@@ -155,13 +161,20 @@
     border-radius: 0;
     box-shadow: none;
     display: flex;
+    flex-wrap: nowrap;
     padding: 0;
   }
 
   .site-changelog-filter-option {
     font-size: 0.84375rem;
     height: 34px;
+    min-height: auto;
     padding: 0 11px;
+  }
+
+  .site-changelog-filter-option:nth-child(-n + 2),
+  .site-changelog-filter-option:nth-child(n + 3) {
+    flex: 0 1 auto;
   }
 
   .site-changelog-filter-option::before {
@@ -174,6 +187,7 @@
 
   .site-changelog-filter-status {
     border-left: 1px solid var(--mk-color-border);
+    margin: 0 12px 0 8px;
     padding: 4px 0 4px 14px;
   }
 
@@ -215,6 +229,35 @@
     flex-basis: 100%;
     margin: 0;
     padding: 0 0 0 2px;
+  }
+}
+
+/* Forced colours drop the signal fill, and the radio stays hidden, so the
+   checked option takes the system highlight, as the scheme control's chosen
+   segment does, with its count and icon. It keeps these system colours
+   itself, or the browser draws a backplate in the page's colour behind its
+   label. Forced colours also drop the focus glow, so the focused option
+   takes an outline in the system text colour, which stays apart from the
+   highlight. */
+
+@media (forced-colors: active) {
+  .site-changelog-filter-option:has(.site-changelog-filter-input:checked) {
+    background: Highlight;
+    box-shadow: none;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .site-changelog-filter-option:has(.site-changelog-filter-input:checked)
+    :is(svg, .site-changelog-filter-count) {
+    color: HighlightText;
+  }
+
+  .site-changelog-filter-option:has(
+    .site-changelog-filter-input:focus-visible
+  ) {
+    box-shadow: none;
+    outline: 2px solid CanvasText;
   }
 }
 

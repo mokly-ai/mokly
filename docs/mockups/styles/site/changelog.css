@@ -31,10 +31,13 @@
   width: 100%;
 }
 
-/* The intro: the page title as a selected text layer, then the lead */
+/* The intro: the page title as a selected text layer, then the lead. Its
+   one column keeps the column's width, so a title word that is wider at a
+   large text size does not widen the intro and its selection. */
 
 .site-changelog-intro {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   padding-top: 104px;
 }

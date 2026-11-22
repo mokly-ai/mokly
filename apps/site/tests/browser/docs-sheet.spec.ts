@@ -1,5 +1,6 @@
 import { type Locator, type Page, expect, test } from "@playwright/test";
 
+import { NARROW_WIDTH, openLargeText } from "./large-text.js";
 import { settle } from "./menu.js";
 
 /**
@@ -115,5 +116,33 @@ test(
       .getByRole("link", { name: "Configure" })
       .click();
     await expect(page).toHaveURL(/\/docs\/start\/configure\/$/);
+  },
+);
+
+test(
+  "at 200% text in a 320px window the tree sheet's rows fit the window and show whole page names",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    await openLargeText(page, "/docs/cli/options-and-exit-status/");
+    const sheet = await openSheet(page);
+    const rows = sheet.getByRole("link");
+    expect(await rows.count()).toBeGreaterThan(40);
+    // Reading every row's box at once: a row scrolled out of the tree still
+    // has its width.
+    const misses = await rows.evaluateAll(
+      (links, width) =>
+        links.flatMap((link) => {
+          const box = link.getBoundingClientRect();
+          const label = link.querySelector(".site-panel-row-label") ?? link;
+          const name = link.textContent?.trim() ?? "";
+          if (box.left < 0 || box.right > width)
+            return [`${name}: ${box.right}`];
+          if (label.scrollWidth > label.clientWidth + 1)
+            return [`${name}: cut`];
+          return [];
+        }),
+      NARROW_WIDTH,
+    );
+    expect(misses).toEqual([]);
   },
 );

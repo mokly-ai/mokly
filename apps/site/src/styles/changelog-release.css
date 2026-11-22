@@ -143,13 +143,13 @@
   color: var(--mk-color-warning);
 }
 
-/* The hint sits right under the title, as the mockup draws it: its reset
-   of a paragraph's margins outweighs the hint's own top margin */
+/* The hint sits 6px under the title */
 
 .site-release-group-hint {
   color: var(--mk-color-warning);
   font-size: 0.8125rem;
   font-weight: var(--mk-font-medium);
+  margin-top: 6px;
 }
 
 .site-release-group--breaking > ul > li {

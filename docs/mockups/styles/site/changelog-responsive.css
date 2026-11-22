@@ -42,7 +42,11 @@
   gap: 5px;
 }
 
-/* The filter: the options as a grid, the status under it */
+/* The filter: the options in rows of two and three, the status under it.
+   Each row shares its width, and an option is at least as wide as its
+   label and count, which it centres, and 2px on each side, so an option
+   that its row cannot hold moves to a row of its own, at any text size. An
+   option grows taller with its text. */
 
 [data-site-viewport="mobile"] .site-changelog-filterbar {
   background: none;
@@ -61,24 +65,25 @@
   box-shadow:
     0 0 0 1px var(--mk-color-border),
     var(--mk-shadow-small);
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   padding: 3px;
 }
 
 [data-site-viewport="mobile"] .site-changelog-filter-option {
   font-size: 0.875rem;
-  height: var(--mk-layout-control-min);
+  height: auto;
   justify-content: center;
-  padding: 0 8px;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 2px;
 }
 
 [data-site-viewport="mobile"] .site-changelog-filter-option:nth-child(-n + 2) {
-  grid-column: span 3;
+  flex: 1 1 calc(50% - 2px);
 }
 
 [data-site-viewport="mobile"] .site-changelog-filter-option:nth-child(n + 3) {
-  grid-column: span 2;
+  flex: 1 1 calc(33.33% - 3px);
 }
 
 [data-site-viewport="mobile"] .site-changelog-filter-option::before {
@@ -93,6 +98,15 @@
   border-left: 0;
   margin: 0;
   padding: 0 0 0 2px;
+}
+
+/* The status of a choice may outgrow the narrowest window, so the mobile
+   line wraps rather than widening the page */
+
+[data-site-viewport="mobile"]
+  .site-changelog-filterbar
+  > .site-changelog-filter-status {
+  white-space: normal;
 }
 
 /* The release frames: full width, the head stacked, the groups stacked */
@@ -185,15 +199,24 @@
   white-space: normal;
 }
 
+/* A compact frame flows as a wrapping row: the date sits beside the version
+   while the row holds both, and moves under it at a large text size. The
+   chips, the link and Show notes each take a row of their own. */
+
 [data-site-viewport="mobile"] .site-release--compact {
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px 14px;
-  grid-template-columns: auto minmax(0, 1fr);
   padding: 14px 16px;
+}
+
+[data-site-viewport="mobile"] .site-release--compact .site-release-date {
+  flex: 1 1 auto;
 }
 
 [data-site-viewport="mobile"] .site-release--compact .site-release-counts,
 [data-site-viewport="mobile"] .site-release--compact .site-release-links {
-  grid-column: 1 / -1;
+  flex-basis: 100%;
   margin-right: 0;
 }
 

@@ -17,13 +17,28 @@ const NAMED_COLORS =
 /** A role, as a site sheet names one. */
 const ROLE = String.raw`var\(--mk-[\w-]+\)`;
 
-/**
- * The one tint that docs/protocol/cloud/site-design.md allows: a role or the
- * current colour, mixed in sRGB with another role or with transparent.
- */
+/** A part of a tint: a role, the current colour or transparent. */
+const PART = String.raw`(?:${ROLE}|currentColor|transparent)(?: \d+(?:\.\d+)?%)?`;
+
+/** A mix of two such parts, in any colour space. */
 const TINT = new RegExp(
-  String.raw`^color-mix\(in srgb, (?:${ROLE}|currentColor) \d+(?:\.\d+)?%, (?:${ROLE}|transparent)\)$`,
+  String.raw`color-mix\(in [a-z-]+, ${PART}, ${PART}\)`,
+  "g",
 );
+
+/**
+ * Whether a mix is a tint that docs/protocol/cloud/site-design.md allows:
+ * each of its two parts is a role, the current colour, transparent or another
+ * tint, in any colour space. Each pass folds the innermost tints into a role.
+ */
+function isTint(mix: string): boolean {
+  let folded = mix;
+  for (let last = ""; folded !== last;) {
+    last = folded;
+    folded = folded.replace(TINT, "var(--mk-tint)");
+  }
+  return folded === "var(--mk-tint)";
+}
 
 /** Every `color-mix()` call in a sheet, on one line, as Prettier spaces it. */
 function mixes(source: string): string[] {
@@ -47,12 +62,12 @@ function mixes(source: string): string[] {
 }
 
 /**
- * The widths that a site sheet's width query may start with: the 768px
- * breakpoint every page shares, fixed by docs/protocol/cloud/site-design.md,
- * and 1100px, which no sheet uses now. A desktop step narrows a 768px query
- * with a `max-width` condition, as the header and the docs steps do.
+ * The width that a site sheet's width query may start with: the 768px
+ * breakpoint every page shares, fixed by docs/protocol/cloud/site-design.md.
+ * A desktop step narrows a 768px query with a `max-width` condition, as the
+ * header and the docs steps do.
  */
-const WIDTH_QUERIES = ["min-width: 768px", "min-width: 1100px"];
+const WIDTH_QUERIES = ["min-width: 768px"];
 
 /**
  * Controls whose whole boundary must be meaningful rather than decorative.
@@ -140,7 +155,7 @@ test("site styles consume workspace tokens without declaring another palette", a
     const source = await readFile(path.join(styles, name), "utf8");
     assert.doesNotMatch(source, /--site-/, name);
     assert.doesNotMatch(source, /--mk-[\w-]+\s*:/, name);
-    for (const mix of mixes(source)) assert.match(mix, TINT, `${name}: ${mix}`);
+    for (const mix of mixes(source)) assert.ok(isTint(mix), `${name}: ${mix}`);
     assert.doesNotMatch(source, /#[0-9a-fA-F]{3,8}\b/, name);
     assert.doesNotMatch(source, /\b(?:rgba?|hsla?|oklch)\(/, name);
     for (const [, value] of source.matchAll(/^\s*[\w-]+:\s*([^;]+);/gm)) {
@@ -220,13 +235,6 @@ test("the build inlines the generated workspace theme", async () => {
     );
   }
   assert.match(html, /@media\s*\(prefers-color-scheme:\s*dark\)/);
-});
-
-test("no stylesheet removes a focus outline", async () => {
-  for (const name of await stylesheets()) {
-    const sheet = await readFile(path.join(styles, name), "utf8");
-    assert.doesNotMatch(sheet, /outline\s*:\s*(?:none|0)\b/, name);
-  }
 });
 
 test("a control's whole boundary is meaningful, never the hairline", async () => {

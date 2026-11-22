@@ -1,0 +1,53 @@
+# Site README passes the 300-line split limit
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-22, from `calummoore/canvas-redesign-m20-site-decisions-of-fqcp`, which grew the README from 353 to 396 lines.
+- **Location:** `apps/site/README.md:203-289`, the Content Boundaries section, and `apps/site/README.md:310-367`, the Key Code section. `plans/follow-ups/flaky-site-lighthouse-performance.md:14` and `:20` cite lines of the README.
+- **Reason:** The README passed the split limit at 353 lines before that branch, and on 2026-11-22 the branch kept to its site work and recorded the split here.
+- **Source:** Implementation.
+- **Category:** Repository rule.
+
+- **Terms:**
+  - **Split limit:** the 300 lines past which the shared always-on rules ask to split a file, with a target of about 200 lines.
+  - **Key Code:** the README section that names the entry points of the code, with one entry for each group of files, as the `documentation` skill asks.
+  - **Sibling page:** a Markdown page in the folder of a README that holds one topic of it and links back to it, such as `packages/app/testing.md`.
+  - **Link check:** `tests/markdown_links.test.ts`, which checks the local links and anchors of every README and of each Markdown file under `apps/`.
+- **Background:**
+  - The shared always-on rules from `Firna-AI/skills`, which `AGENTS.md` names, say: "Keep files short. Target about 200 lines and split a file that passes 300."
+  - No gate caps a README. The changed-file length audit caps changed TypeScript and JavaScript at 300 lines and changed Markdown under `docs/protocol/` at 250 lines.
+  - `apps/site/README.md` had 353 lines and 4,582 words at commit `188bb4705` of 2026-11-22, before the branch of the Added line changed it. At commit `d2366d29a` it has 396 lines and 5,203 words.
+  - The branch grew Content Boundaries from 50 to 87 lines, with the rule and the steps for the marks of features that the product does not have yet. "What This Package Does" grew from 91 to 96 lines, and Key Code from 2,429 to 2,651 words.
+  - At `d2366d29a`, Key Code has 59 lines and 2,651 words, half the words of the README. Each of its 56 entries stays on one source line, because Prettier keeps its default `proseWrap: "preserve"`. 20 entries pass 300 characters, and the longest, at line 356, has 1,079.
+  - The last 11 entries of Key Code, at lines 357-367, name the tests. They have 472 words.
+  - By lines, the longest sections are "What This Package Does", with 96 lines and 898 words, and Content Boundaries, with 87 lines and 757 words.
+  - So a move of the test entries alone leaves about 387 lines, and a move of Key Code alone about 342. A move of Key Code and Content Boundaries leaves about 260.
+  - Other packages split a long README in two ways:
+    - A topic moves into a sibling page. `packages/app/account-entry.md`, `cloud-builds.md` and `testing.md` sit beside `packages/app/README.md`, which has 298 lines at `d2366d29a`. Other sibling pages are `docs/mockups/add-or-change-a-screen.md` and `composition.md`, `crates/mokly-graph/cache.md` and `workers.md`, and `crates/mokly-server/background.md`.
+    - Each sibling page opens with a sentence that links back to its README, such as "This page is part of the `mokly-graph` README." in `crates/mokly-graph/cache.md`. The README keeps the moved heading with one sentence that links the page, as `docs/mockups/README.md` keeps "Add Or Change A Screen".
+    - Key Code moves into another README. The root `README.md` links `docs/development/README.md#key-code`, `packages/mokly/README.md` links `src/sidecar/README.md#key-code`, and `xtask/README.md` links `remote/README.md#key-code`.
+  - `apps/README.md:98` and `docs/development/cloud.md:286` link the README with no anchor. No doc, README or test links one of its headings, and no test reads its text.
+  - The link check also checks a new page under `apps/site/`. A page in that folder keeps every relative link of the moved text valid.
+  - `plans/follow-ups/flaky-site-lighthouse-performance.md:14` and `:20` cite README lines 128, 248, 251 and 258 for the Lighthouse command and Key Code entries. Those lines no longer hold them.
+- **Problem:** The README has 396 lines, past the split limit, and it grew by 43 lines on one branch. Key Code holds half its words, and two prose sections hold 183 of its lines.
+- **Impact if no action:** Each site change makes the README longer. A reader scans about 5,200 words to find an entry point or a rule for site work.
+- **Root question:** How does the site README get back under the split limit, with every fact kept?
+- **Options:**
+  - **A.** Change nothing. The README stays at 396 lines, past the split limit. Effort: Small.
+  - **B.** Move the 11 test entries word for word into a sibling testing page, `apps/site/testing.md`, as `packages/app/testing.md` does for the app. The Development section links it. The README keeps about 387 lines, still past the limit. Effort: Small.
+  - **C.** Move Key Code word for word into a sibling page, `apps/site/key-code.md`. The README keeps the heading `### Key Code` and one sentence that links the page. The README keeps about 342 lines, still past the limit, and half its words. Effort: Small.
+  - **D.** Do C, and move Content Boundaries word for word into a second sibling page, `apps/site/content-boundaries.md`. The README keeps that heading and one sentence that links the page too. The README then has about 260 lines. Effort: Small.
+  - **E.** Split Key Code by area into READMEs beside the code, as `packages/mokly/src/sidecar/README.md` holds the Key Code of the sidecar. Examples are `apps/site/tests/README.md` for the test entries and a README for each large area under `apps/site/src/`. The site README keeps one entry for each area, and Content Boundaries moves as in D. The README then has about 270 lines, with more READMEs to keep current. Effort: Medium.
+- **Left out:**
+  - Cut each Key Code entry to one sentence, and move its mechanics into doc comments. It answers another question, whether Key Code holds mechanics, which `plans/follow-ups/mockups-readme-passes-300-lines.md` asks for the mockups README. Each entry also stays one line, so the README keeps its length in lines.
+  - Cut "What This Package Does" to a summary that links the protocol docs. It deletes text that only the user can approve to delete, and D reaches the split limit with moves alone.
+  - Wrap the Key Code entries at 80 columns. It adds lines and moves no fact.
+  - Shared by every option: each fact stays, and each moved heading stays in the README with a link. A doc on `main` is functionality, and only the user can approve its deletion.
+- **Wider fix:** None. The split limit and the Key Code rule of the `documentation` skill are the wider fix in force. `plans/follow-ups/changed-files-have-no-length-check.md` holds a length check for changed Markdown outside `docs/protocol/`. That check is a new gate, so it waits for the user.
+- **Previous examples:** The split of `packages/app/README.md` into the sibling pages above. The move of the screen steps of `docs/mockups/README.md` into `docs/mockups/add-or-change-a-screen.md` on 2026-11-03. The open items `plans/follow-ups/mockups-readme-passes-300-lines.md`, `plans/follow-ups/shell-readme-length.md` and `plans/follow-ups/operator-docs-pass-300-lines.md`.
+- **Related:**
+  - `plans/follow-ups/changed-files-have-no-length-check.md` shares the wider fix. Its check would report this README in the change that grows it.
+  - `plans/follow-ups/mockups-readme-passes-300-lines.md` is the same class for the mockups README. Its open options cut Key Code mechanics into doc comments, which this item leaves out.
+  - `plans/follow-ups/flaky-site-lighthouse-performance.md` cites README lines that the split moves. The split updates those citations.
+- **Recommendation:** D. Of the options, it is the smallest that brings the README under the split limit, it keeps every fact, and it follows the sibling pages of `packages/app` and `docs/mockups`. E keeps each entry point closest to its code, at Medium effort.
+- **Action:** fix after merge, apply D, because the README passed the split limit before the branch of the Added line, and the move touches none of the site work of that branch.

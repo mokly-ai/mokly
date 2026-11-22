@@ -1,6 +1,6 @@
 /* Foundations for the public site: the reset, the dot-grid canvas behind
    every page, the type roles, the shared measures, the visually hidden
-   text, the focus ring, the minimum target size, and the forced-colors and
+   text, the focus glow, the minimum target size, and the forced-colors and
    reduced-motion rules.
 
    Every value here resolves from a semantic --mk-* property emitted by the
@@ -94,9 +94,16 @@ svg {
   max-width: 100%;
 }
 
+/* Keyboard focus draws the focus glow of @firna/ui in place of an outline:
+   a 4px halo with no blur outside the control, in the signal ink at 75%,
+   which keeps 3:1 against every page surface. A control that draws its own
+   shadow, or sits where an outer halo would be clipped, repeats the glow in
+   its own focus rule. The rule matches docs/mockups/styles/site/base.css. */
+
 :focus-visible {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline: none;
 }
 
 /* The minimum target height. Inline links in prose keep their line box
@@ -141,10 +148,12 @@ button {
   width: 1px;
 }
 
+/* Forced colours drop every shadow, so there focus takes a system outline */
+
 @media (forced-colors: active) {
   :focus-visible {
-    outline: 2px solid CanvasText;
-    outline-offset: 3px;
+    box-shadow: none;
+    outline: 2px solid Highlight;
   }
 }
 

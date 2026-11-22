@@ -10,10 +10,14 @@
    the desktop values and the desktop step follow under the 768px query, in
    the mockup's order. */
 
+/* A cell breaks a word that is wider than its column, such as Unlimited at
+   200% text on a 320px window, rather than spilling under the next cell */
+
 .site-pricing-props th,
 .site-pricing-props td {
   border-bottom: 1px solid var(--mk-color-border);
   font-weight: var(--mk-font-regular);
+  overflow-wrap: anywhere;
   padding: 15px 22px;
   text-align: left;
   vertical-align: top;
@@ -105,13 +109,19 @@
   padding: 6px 8px 15px 14px;
 }
 
-/* Every cell is 14px on mobile, the heads and the groups too: the mockup's
-   mobile rule outweighs their own sizes through its viewport attribute, and
-   the canvas root, .site-root on body, gives this rule the same weight. */
+/* Every cell is 14px on mobile, the column heads too: the mockup's mobile
+   rule outweighs their own sizes through its viewport attribute, and the
+   canvas root, .site-root on body, gives this rule the same weight. The
+   group heads keep their 11px mono label size, which the mockup's mobile
+   group rule sets again after the cells. */
 
 .site-root .site-pricing-props th,
 .site-root .site-pricing-props td {
   font-size: 0.875rem;
+}
+
+.site-root .site-pricing-props-group th {
+  font-size: 0.6875rem;
 }
 
 .site-pricing-props .site-pricing-props-team {
@@ -149,6 +159,12 @@
 
 .site-pricing-dash {
   color: var(--mk-color-text-muted);
+}
+
+/* A token chip wraps inside its cell */
+
+.site-pricing-props .site-chip {
+  white-space: normal;
 }
 
 .site-pricing-line {

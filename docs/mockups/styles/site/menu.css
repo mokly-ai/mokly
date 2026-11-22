@@ -123,6 +123,15 @@
   width: 7px;
 }
 
+/* A destination row draws the focus glow inside its box, as a panel row
+   does, because the sheet scrolls when its rows do not fit */
+
+.site-menu-link:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline-offset: -2px;
+}
+
 .site-menu-actions {
   border-top: 1px solid var(--mk-color-border);
   display: grid;

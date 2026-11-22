@@ -77,10 +77,10 @@ for (const [
     ).toHaveText(firstSection);
     await expect(page.locator(".site-policy-date time")).toHaveAttribute(
       "datetime",
-      "2026-09-22",
+      "2026-11-22",
     );
     await expect(page.locator(".site-policy-date time")).toHaveText(
-      "22 September 2026",
+      "22 November 2026",
     );
     const navigation = page.getByRole("navigation", {
       name: "Legal documents",

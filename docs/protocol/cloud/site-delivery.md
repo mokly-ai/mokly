@@ -111,8 +111,10 @@ menu, footer, Layers and On this page link, and `aria-current` on the current
 route. Every published route, including the 404 page, has exactly one `h1`,
 one `main` and a nonempty `html[lang]`; every image has an `alt` attribute or
 `aria-hidden="true"`; every exposed button and link has a nonempty accessible
-name; a focused element keeps a visible, nonzero outline; and no page
-overflows horizontally at any inspection width, including 320px. The mobile
+name; a focused control shows the focus glow of
+[Site design](./site-design.md#radius-elevation-focus-and-motion), and a 2px
+system outline in forced colours; and no page overflows horizontally at any
+inspection width, including 320px. The mobile
 menu is a modal dialog: opening it moves focus to its close control, the page
 behind it is inert and holds its scroll position, and closing it returns focus
 to the menu control. The tree sheet is a modal dialog in the same way, and

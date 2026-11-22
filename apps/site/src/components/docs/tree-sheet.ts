@@ -3,12 +3,15 @@
  * opens the sheet as a modal dialog that drops in under the sub-bar, and
  * reveals the current page's row with the smallest scroll. Escape, a press
  * on the dimmed page and a tree link close it, and the control's
- * `aria-expanded` follows. While the sheet is open the page behind it is
+ * `aria-expanded` follows. A drag that starts on the sheet and ends on the
+ * dimmed page keeps it open. While the sheet is open the page behind it is
  * inert, so a press on the control's place lands on the dimmed page and
  * closes the sheet too. The sheet also closes when the Layers panel takes
  * over at 1024px, and when the reader leaves the page, so a page restored
  * from the back and forward cache shows it closed.
  */
+
+import { closeOnBackdrop } from "../dialog-backdrop.js";
 
 import { revealCurrent } from "./tree-reveal.js";
 
@@ -37,15 +40,9 @@ if (sheet && opener) {
     if (event.target instanceof Element && event.target.closest("a")) close();
   });
 
-  // `closedby="any"` closes the sheet on a press outside it. Where the
-  // browser does not implement it, a press on the backdrop targets the
-  // dialog itself, while a press on the sheet, which its tree fills, targets
-  // one of its children.
-  if (!("closedBy" in HTMLDialogElement.prototype)) {
-    sheet.addEventListener("click", (event) => {
-      if (event.target === sheet) close();
-    });
-  }
+  // `closedby="any"` closes the sheet on a press on the dimmed page, and
+  // `closeOnBackdrop` does where the browser does not implement it.
+  closeOnBackdrop(sheet);
 
   PANEL.addEventListener("change", (event) => {
     if (event.matches) close();

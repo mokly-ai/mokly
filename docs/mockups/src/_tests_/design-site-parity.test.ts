@@ -143,10 +143,8 @@ function composition(
       pinned?.[1] === "desktop" || query.includes("min-width: 768px");
     const forNarrow =
       pinned?.[1] === "mobile" || query.includes("max-width: 767px");
-    if (view === "wide" && (forNarrow || query.includes("max-width: 1100px")))
-      continue;
-    if (view === "narrow" && (forWide || query.includes("min-width: 1100px")))
-      continue;
+    if (view === "wide" && forNarrow) continue;
+    if (view === "narrow" && forWide) continue;
     for (const part of rule.selector.split(",")) {
       const selector = normalize(part);
       if (!selector.includes(".site-")) continue;

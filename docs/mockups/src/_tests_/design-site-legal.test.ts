@@ -54,8 +54,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
       const time = elements(document, (node) => node.tagName === "time")[0];
       assert.ok(time);
-      assert.equal(attribute(time, "datetime"), "2026-09-22");
-      assert.equal(label(time), "22 September 2026");
+      assert.equal(attribute(time, "datetime"), "2026-11-22");
+      assert.equal(label(time), "22 November 2026");
       assert.deepEqual(
         elements(
           byClass(document, "site-policy-links")[0]!,

@@ -55,6 +55,7 @@ export function Artboard({
         <SiteIcon name={device} size={12} />
         {name}
         {dark ? <SiteIcon name="moon" size={12} /> : null}
+        {/* status: "ahead" (agent sessions) */}
         {live ? (
           <span className="site-home-board-live">
             <span className="site-home-live-dot" />
