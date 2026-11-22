@@ -132,6 +132,7 @@ impl BaseProvider for ServeBase {
                 head: request.head,
                 directories: &directories,
                 unmapped: &unmapped,
+                readings: None,
             },
         );
         if self.reader.cancelled() {

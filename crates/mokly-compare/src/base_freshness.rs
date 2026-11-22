@@ -42,6 +42,16 @@ pub struct PreparationInputs {
     pub installed_modules: BTreeMap<String, Option<String>>,
 }
 
+/// Reads already made for the pinned checkout and working inputs during adoption.
+pub struct FreshnessReadings<'a> {
+    /// Current identity of the selected checkout.
+    pub checkout: CheckoutIdentity,
+    /// Exact dependency inputs supplied to the full working reader.
+    pub requested_inputs: &'a Inputs,
+    /// Current working dependency inputs returned by the reader.
+    pub working_inputs: Inputs,
+}
+
 /// Current classification inputs supplied without preparing the base again.
 pub struct FreshnessRequest<'a> {
     /// Repository and immutable base commit.
@@ -52,6 +62,8 @@ pub struct FreshnessRequest<'a> {
     pub directories: &'a [String],
     /// Current unsupported importer directories supplied to selection.
     pub unmapped: &'a [String],
+    /// Readings from the same adoption check, when available.
+    pub readings: Option<&'a FreshnessReadings<'a>>,
 }
 
 /// Bounded install evidence boundary. None means that no proof is available.
@@ -137,23 +149,42 @@ impl Freshness for FreshnessChecks {
             return Ok(false);
         }
         let repository = request.selected.repository.as_ref();
-        let checkout = repository
-            .checkout_identity(&request.selected.commit)
-            .base()?;
-        if checkout.filtered || checkout != inputs.checkout {
+        let sampled_checkout;
+        let checkout = match request.readings {
+            Some(readings) => &readings.checkout,
+            None => {
+                sampled_checkout = repository
+                    .checkout_identity(&request.selected.commit)
+                    .base()?;
+                &sampled_checkout
+            }
+        };
+        if checkout.filtered || checkout != &inputs.checkout {
             return Ok(false);
         }
         let selection = &inputs.selection;
-        let current = match &selection.paths {
-            Some(paths) => {
-                self.working
-                    .read_paths(repository, &selection.inputs, paths, Limits::default())?
+        let sampled_inputs;
+        let current = match (&selection.paths, request.readings) {
+            (None, Some(readings)) if readings.requested_inputs == &selection.inputs => {
+                &readings.working_inputs
             }
-            None => self
-                .working
-                .read(repository, &selection.inputs, Limits::default())?,
+            (Some(paths), _) => {
+                sampled_inputs = self.working.read_paths(
+                    repository,
+                    &selection.inputs,
+                    paths,
+                    Limits::default(),
+                )?;
+                &sampled_inputs
+            }
+            (None, _) => {
+                sampled_inputs =
+                    self.working
+                        .read(repository, &selection.inputs, Limits::default())?;
+                &sampled_inputs
+            }
         };
-        if current != selection.inputs {
+        if current != &selection.inputs {
             return Ok(false);
         }
         for (root, previous) in &inputs.installations {

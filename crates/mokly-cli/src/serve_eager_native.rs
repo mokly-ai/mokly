@@ -226,7 +226,7 @@ impl PendingBase for NativePending {
             return Ok(None);
         }
         self.task.sources_ready(cancel.clone());
-        if !self.work.current(request)? {
+        if !self.task.ended() && !self.work.current(request)? {
             self.task.cancel();
             let joined = self.task.join();
             self.work.release_pending();
@@ -248,3 +248,7 @@ impl PendingBase for NativePending {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/eager_evidence_tests.rs"]
+mod eager_evidence_tests;

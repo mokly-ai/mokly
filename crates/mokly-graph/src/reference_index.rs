@@ -1,7 +1,8 @@
-//! One generation parses each referenced HTML or CSS file once. Inline style texts reuse
-//! the scans of a style memo that the index receives.
+//! One generation keeps the first parsed edges of each referenced HTML or CSS file.
+//! Inline style texts reuse the scans of a style memo that the index receives.
 
 use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 use std::sync::{Arc, Mutex};
 
 use mokly_css::reference_cache::{MemoryReferenceCache, ReferenceCache};
@@ -45,7 +46,7 @@ pub trait ReferenceIndex: Send + Sync {
 
 /// Generation-scoped edge cache, discarded with its source and policy view.
 pub struct MemoryReferenceIndex {
-    edges: Mutex<BTreeMap<String, ReferenceEdges>>,
+    edges: Mutex<BTreeMap<String, Arc<ReferenceEdges>>>,
     styles: Arc<dyn ReferenceCache>,
 }
 
@@ -66,6 +67,14 @@ impl MemoryReferenceIndex {
             styles,
         }
     }
+
+    fn cached(&self, path: &str) -> Option<Arc<ReferenceEdges>> {
+        self.edges
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(path)
+            .cloned()
+    }
 }
 
 impl Default for MemoryReferenceIndex {
@@ -76,11 +85,7 @@ impl Default for MemoryReferenceIndex {
 
 impl ReferenceIndex for MemoryReferenceIndex {
     fn get_identified(&self, path: &str) -> Option<ReferenceEdges> {
-        self.edges
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .get(path)
-            .cloned()
+        self.cached(path).map(|first| first.as_ref().clone())
     }
     fn get(&self, path: &str) -> Option<Vec<String>> {
         self.get_identified(path).map(|edges| edges.urls)
@@ -94,16 +99,20 @@ impl ReferenceIndex for MemoryReferenceIndex {
         bytes: &[u8],
         identity: Option<ContentIdentity>,
     ) -> Result<ReferenceEdges> {
-        let mut edges = self.edges.lock().unwrap_or_else(|error| error.into_inner());
-        if let Some(first) = edges.get(path) {
-            return Ok(first.clone());
+        if let Some(first) = self.cached(path) {
+            return Ok(first.as_ref().clone());
         }
-        let first = ReferenceEdges {
-            urls: resource_edges::urls(path, bytes)?,
-            identity,
+        let parsed = resource_edges::urls(path, bytes)
+            .map(|urls| Arc::new(ReferenceEdges { urls, identity }));
+        let path = path.to_owned();
+        let first = {
+            let mut edges = self.edges.lock().unwrap_or_else(|error| error.into_inner());
+            match edges.entry(path) {
+                Entry::Occupied(entry) => entry.get().clone(),
+                Entry::Vacant(entry) => entry.insert(parsed?).clone(),
+            }
         };
-        edges.insert(path.into(), first.clone());
-        Ok(first)
+        Ok(first.as_ref().clone())
     }
     fn style_references(&self, source: &str) -> Arc<[Reference]> {
         self.styles.references(source)

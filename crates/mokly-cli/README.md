@@ -516,7 +516,8 @@ changed.
   work with its own lifetime, eager pool handle, and ordered record.
   [`src/serve_eager_task.rs`](./src/serve_eager_task.rs) runs it on one owned
   thread, which `PendingChanges::cancel_and_join` cancels and joins before it
-  releases the pending inputs.
+  releases the pending inputs. If the thread has ended, adoption checks its
+  evidence after joining it.
   [`src/serve_eager_sources.rs`](./src/serve_eager_sources.rs) and
   [`src/serve_eager_work.rs`](./src/serve_eager_work.rs) hold the source phase
   and the validation phase.
@@ -531,9 +532,9 @@ changed.
   `AdoptingBase`, which adopts one pending graph or prepares the base
   serially. [`src/serve_eager_evidence.rs`](./src/serve_eager_evidence.rs)
   checks the exact key, the head dependency evidence, and the working inputs
-  before adoption, and
-  [`src/serve_eager_adoption.rs`](./src/serve_eager_adoption.rs) releases each
-  rejected pending graph.
+  before adoption. [`src/serve_eager_adoption.rs`](./src/serve_eager_adoption.rs)
+  passes the checkout and working input reads to the freshness check. It
+  releases each rejected pending graph.
 
 - [`src/base_render_admission.rs`](./src/base_render_admission.rs) defines the prerequisite before early rendering. Static commands verify source evidence, and Serve admits immediately.
 

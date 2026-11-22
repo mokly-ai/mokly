@@ -1,9 +1,12 @@
 //! Classification selects one kept base or makes one fresh captured generation.
 
+use std::panic::resume_unwind;
 use std::sync::Arc;
+use std::thread;
 
 use mokly_catalogue::config::relative;
 use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_graph::render_class::RenderClass;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::material::catalogue_key;
 
@@ -77,7 +80,25 @@ impl Changes {
                 }
                 None => {
                     span.record("action", "prepare");
-                    self.prepare_attempt(&request)?
+                    let parent = tracing::Span::current();
+                    let dispatch = tracing::dispatcher::get_default(Clone::clone);
+                    let class = RenderClass::current();
+                    thread::scope(|scope| {
+                        let validation = scope.spawn(|| {
+                            class.in_scope(|| {
+                                tracing::dispatcher::with_default(&dispatch, || {
+                                    parent.in_scope(|| {
+                                        self.comparison.prepare_head(&comparison, &head);
+                                    });
+                                });
+                            });
+                        });
+                        let attempt = self.prepare_attempt(&request);
+                        if let Err(payload) = validation.join() {
+                            resume_unwind(payload);
+                        }
+                        attempt
+                    })?
                 }
             };
             span.record("status", "ok");

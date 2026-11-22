@@ -35,6 +35,7 @@ pub(super) struct Fixture {
     pub(super) failed_document: Option<String>,
     pub(super) failed_resources: bool,
     pub(super) documents: Arc<AtomicUsize>,
+    pub(super) head_validations: Arc<AtomicUsize>,
     pub(super) workers: bool,
     pub(super) proof_threads: Arc<Mutex<Vec<ThreadId>>>,
 }
@@ -52,6 +53,7 @@ impl Default for Fixture {
             failed_document: None,
             failed_resources: false,
             documents: Arc::new(AtomicUsize::new(0)),
+            head_validations: Arc::new(AtomicUsize::new(0)),
             workers: false,
             proof_threads: Arc::new(Mutex::new(Vec::new())),
         }
@@ -170,10 +172,20 @@ impl Fixture {
                 })
             }))
             .at_least_times(0);
-        let validation = RenderGenerationMock::render_all
-            .each_call(matching!())
-            .answers(&|_| Ok(RenderSummary::default()))
-            .at_least_times(0);
+        let head_validations = self.head_validations.clone();
+        let validation = (
+            RenderGenerationMock::render_all
+                .each_call(matching!())
+                .answers(&|_| Ok(RenderSummary::default()))
+                .at_least_times(0),
+            RenderGenerationMock::validate_head
+                .each_call(matching!(_))
+                .answers_arc(Arc::new(move |generation, _| {
+                    head_validations.fetch_add(1, Ordering::SeqCst);
+                    generation.render_all()
+                }))
+                .at_least_times(0),
+        );
         let workers = self.workers;
         let scheduling = RenderGenerationMock::schedule_comparison_stream
             .each_call(matching!(_, _))

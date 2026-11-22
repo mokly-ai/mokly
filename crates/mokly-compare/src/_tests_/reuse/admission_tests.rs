@@ -1,9 +1,54 @@
 //! Reuse requires accepted complete content and invalidates changed or uncertain inputs.
 
+use std::sync::atomic::Ordering;
+
 use crate::comparison_reuse::{ComparisonReuse, MemoryComparisons, ReuseFence};
 
 use super::base_support::reader;
 use super::support::{Fixture, engine, request, review};
+
+#[test]
+fn prepared_head_validation_is_consumed_only_by_the_same_generation() {
+    let store = MemoryComparisons::new(1024 * 1024);
+    let fixture = Fixture::default();
+    let request = request();
+    let before = fixture.generation(false, true);
+    let after = fixture.generation(true, true);
+    let baseline = store.begin(engine(), ReuseFence::new(&"settings"));
+    let expected = baseline
+        .compare_prepared(&request, before.clone(), after.clone())
+        .unwrap();
+    baseline.discard();
+    assert_eq!(fixture.head_validations.load(Ordering::SeqCst), 1);
+
+    let attempt = store.begin(engine(), ReuseFence::new(&"settings"));
+    attempt.prepare_head(&request, &after);
+    assert_eq!(
+        fixture.head_validations.load(Ordering::SeqCst),
+        2,
+        "head validation finishes before comparison"
+    );
+    let result = attempt
+        .compare_prepared(&request, before.clone(), after.clone())
+        .unwrap();
+    assert_eq!(fixture.head_validations.load(Ordering::SeqCst), 2);
+    assert_eq!(review(&result), review(&expected));
+    assert_eq!(
+        serde_json::to_vec(&result.snapshot).unwrap(),
+        serde_json::to_vec(&expected.snapshot).unwrap()
+    );
+    assert_eq!(result.warnings, expected.warnings);
+    attempt.discard();
+
+    let replacement = store.begin(engine(), ReuseFence::new(&"settings"));
+    replacement.prepare_head(&request, &after);
+    let different_head = fixture.generation(true, true);
+    let result = replacement
+        .compare_prepared(&request, before, different_head)
+        .unwrap();
+    assert_eq!(fixture.head_validations.load(Ordering::SeqCst), 4);
+    assert_eq!(review(&result), review(&expected));
+}
 
 #[test]
 fn accepted_views_skip_preparation_but_changed_and_unknown_views_compare() {

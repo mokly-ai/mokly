@@ -96,6 +96,7 @@ fn working_install_freshness_checks_selection_records_modules_and_checkout() {
                         head: &head,
                         directories: &["node_modules".into()],
                         unmapped: &[],
+                        readings: None,
                     }
                 )
                 .unwrap(),
@@ -135,6 +136,7 @@ fn installed_base_ignores_working_install_and_modules_but_checks_dependency_sele
                         head: &Unimock::new(()),
                         directories: &["node_modules".into()],
                         unmapped: &[],
+                        readings: None,
                     }
                 )
                 .unwrap(),
@@ -185,7 +187,8 @@ fn html_checks_exact_governing_paths_and_head_directory_selection() {
                         selected: &selected,
                         head: &Unimock::new(()),
                         directories: &directories,
-                        unmapped: &[]
+                        unmapped: &[],
+                        readings: None,
                     }
                 )
                 .unwrap(),

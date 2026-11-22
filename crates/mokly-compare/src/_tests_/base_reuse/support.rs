@@ -12,9 +12,42 @@ use mokly_model::snapshot::CatalogueChangeSnapshotV4;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_retention::KeptBase;
-use crate::comparison_types::{ComparisonRequest, ComparisonResult};
-use crate::error::Error;
+use crate::comparison_types::{Comparison, ComparisonRequest, ComparisonResult};
+use crate::error::{Error, Result};
 use crate::source_failures::{SourceFailures, SourceFailuresMock};
+
+use super::harness::State;
+
+/// Record optional preparation calls while the comparison mock checks required calls.
+pub(super) struct RecordedComparison {
+    /// Mock for base capture and comparison.
+    pub(super) inner: Unimock,
+    /// Call record shared with the classification test.
+    pub(super) state: Arc<Mutex<State>>,
+}
+
+impl Comparison for RecordedComparison {
+    fn prepare_head(&self, request: &ComparisonRequest, head: &Arc<dyn RenderGeneration>) {
+        self.state
+            .lock()
+            .unwrap()
+            .head_preparations
+            .push((request.clone(), Arc::downgrade(head)));
+    }
+
+    fn capture_base(&self, before: Arc<dyn RenderGeneration>) -> Result<Arc<dyn RenderGeneration>> {
+        self.inner.capture_base(before)
+    }
+
+    fn compare_prepared(
+        &self,
+        request: &ComparisonRequest,
+        before: Arc<dyn RenderGeneration>,
+        after: Arc<dyn RenderGeneration>,
+    ) -> Result<ComparisonResult> {
+        self.inner.compare_prepared(request, before, after)
+    }
+}
 
 pub(super) fn config() -> ResolvedConfig {
     ResolvedConfig {

@@ -18,11 +18,13 @@ impl NativePreparation {
             .unwrap_or_else(|error| error.into_inner())
             .clone();
         match evidence {
-            Some(evidence) => evidence.current(
-                request,
-                &self.runtime.dependency_usage.directories(),
-                &self.runtime.dependency_usage.unmapped_directories(),
-            ),
+            Some(evidence) => evidence
+                .current(
+                    request,
+                    &self.runtime.dependency_usage.directories(),
+                    &self.runtime.dependency_usage.unmapped_directories(),
+                )
+                .map(|readings| readings.is_some()),
             None => Ok(false),
         }
     }
@@ -68,8 +70,8 @@ impl NativePreparation {
         };
         let directories = self.runtime.dependency_usage.directories();
         let unmapped = self.runtime.dependency_usage.unmapped_directories();
-        let current = evidence.current(request, &directories, &unmapped)?;
-        let current = if current {
+        let readings = evidence.current(request, &directories, &unmapped)?;
+        let current = if let Some(readings) = readings {
             match prepared
                 .as_ref()
                 .and_then(|result| result.as_ref().ok())
@@ -97,6 +99,7 @@ impl NativePreparation {
                             head: request.head,
                             directories: &directories,
                             unmapped: &unmapped,
+                            readings: Some(&readings),
                         },
                     ) {
                         Ok(current) => current,

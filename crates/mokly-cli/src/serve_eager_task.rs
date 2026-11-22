@@ -28,9 +28,12 @@ pub(super) trait PreparationWork: Send + Sync {
     fn discard(&self);
 }
 
+#[cfg_attr(test, unimock::unimock(api = PreparationTaskMock))]
 pub(super) trait PreparationTask: PendingChanges {
     /// Bind the classification before waiting for independent source work.
     fn sources_ready(&self, cancel: Arc<dyn ChangeCancellation>);
+    /// Return whether the task thread finished or never started.
+    fn ended(&self) -> bool;
     fn cancel(&self);
     fn head(&self, head: Arc<dyn RenderGeneration>);
     fn continue_for_classification(&self, cancel: Arc<dyn ChangeCancellation>);
@@ -170,6 +173,13 @@ impl PreparationTask for Task {
                 .wait(state)
                 .unwrap_or_else(|error| error.into_inner());
         }
+    }
+    fn ended(&self) -> bool {
+        self.thread
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_ref()
+            .is_none_or(JoinHandle::is_finished)
     }
     fn cancel(&self) {
         self.control.cancel.cancel();

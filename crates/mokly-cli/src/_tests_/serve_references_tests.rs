@@ -14,6 +14,8 @@ use mokly_compare::error::Error;
 use mokly_compare::extraction_snapshots::ProcessSnapshots;
 use mokly_git::command::{Output, ProcessMode, Runner, RunnerMock};
 use mokly_git::error;
+use mokly_graph::error::GraphError;
+use mokly_graph::types::RenderGenerationMock;
 use mokly_render::runtime::Runtime;
 use mokly_server::changes::{ChangeSource, ChangeToken};
 use mokly_server::error::ServerError;
@@ -130,13 +132,22 @@ fn an_attempt_resolves_the_base_once_and_classifies_against_the_merge_base_of_it
     config.file = root.join("mokly.config.json");
     config.repo_root = root;
     let terminal = Unimock::new(());
-    let source = source(
+    let mut source = source(
         config,
         Arc::new(git),
         Arc::new(progress),
         Arc::new(sidecars),
         &terminal,
     );
+    source.head = Arc::new(Unimock::new(
+        RenderGenerationMock::validate_head
+            .some_call(matching!(_))
+            .answers(&|_, _| {
+                Err(GraphError::InputsChanged {
+                    path: "head.html".into(),
+                })
+            }),
+    ));
     let merge_base = source.references(Arc::new(ChangeToken::default())).unwrap();
     let failure = match source.classify(
         Arc::new(ChangeToken::default()),
