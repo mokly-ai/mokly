@@ -233,6 +233,12 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
 - Call of 2026-11-22: the viewer bar follows the prototype's order and
   shows the mark at 390px. This replaces the earlier call that the embedded
   compact bar hides the brand. Milestone 22 does it.
+- Calls on Milestone 22, 2026-11-22: `@mokly/viewer` gets an optional
+  `topBarCenter` slot, and the cloud puts the publication pill in it. The
+  live cloud controls take the prototype look now, with no behaviour change;
+  Milestone 13 builds the account menu. The package bar takes two optional
+  consumer properties, `--mokly-top-bar-inset-start` and `-end` (default 0),
+  so its mark clears the Mac window buttons that the cloud reports.
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
 
