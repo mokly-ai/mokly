@@ -13,8 +13,8 @@
   `crates/mokly-sidecar/src/resolution_plan.rs:62` to line 128,
   `crates/mokly-sidecar/src/compiled.rs:72` to line 83,
   `crates/mokly-sidecar/src/durable_recipe.rs:18`,
-  `crates/mokly-sidecar/src/pool_bundle_cache.rs:86`, line 128, and line
-  139, `crates/mokly-compare/src/bundle_codec.rs:51` to line 57,
+  `crates/mokly-sidecar/src/pool_bundle_cache.rs:129` (the disk seed in
+  `seed_bundle`), line 170, and line 181 (both in `complete_bundle`), `crates/mokly-compare/src/bundle_codec.rs:51` to line 57,
   `crates/mokly-compare/src/bundle_codec_write.rs:18` to line 24,
   `crates/mokly-compare/src/bundle_codec_read.rs:98`,
   `crates/mokly-compare/src/bundle_store.rs:147` to line 149,
@@ -59,7 +59,8 @@
     - `DurableRecipe::with_plan` at
       `crates/mokly-sidecar/src/durable_recipe.rs:18` serializes the plan and
       the evidence again to count them. It runs for each offer with a plan,
-      at `crates/mokly-sidecar/src/pool_bundle_cache.rs:139`, and for each
+      at `crates/mokly-sidecar/src/pool_bundle_cache.rs:181` in
+      `complete_bundle`, and for each
       read of an entry with a plan, at
       `crates/mokly-compare/src/bundle_codec_read.rs:98`.
     - The offer count runs before the receipt check that ends an unchanged
@@ -77,8 +78,9 @@
       also for an entry without a plan. Before the change, the payload
       decoded `RestoreGeneration` directly.
     - A disk hit decodes the stored plan with the payload. The pool keeps
-      the plan beside the restored seed, at `pool_bundle_cache.rs:86`, and
-      adds it to an accepted result at line 128.
+      the plan beside the restored seed, at `pool_bundle_cache.rs:129` in
+      `seed_bundle`, and adds it to an accepted result at line 170 in
+      `complete_bundle`.
     - `Records::insert` at `crates/mokly-render/src/edit_plans.rs:60`
       serializes the resolution settings, the plan, and the evidence again to
       count them, under the records mutex. Only the Serve head core calls it,
