@@ -16,13 +16,14 @@ use mokly_model::catalogue::EntryContent;
 /// The shared sheets that the design routes link, in link order. The stage
 /// sheet's imports, the preview and mini-screen sheets, are not listed,
 /// because their rules reach the older routes through the stage sheet.
-pub const SHEETS: [&str; 20] = [
+pub const SHEETS: [&str; 21] = [
     "design-stage.css",
     "design-canvas.css",
     "design-canvas-inspect.css",
     "design-canvas-sections.css",
     "design-canvas-changes.css",
     "design-canvas-outcomes.css",
+    "design-canvas-flows.css",
     "design-canvas-loading.css",
     "design-canvas-search.css",
     "design-canvas-components.css",

@@ -1,6 +1,7 @@
 import type { NavigationState } from "../../parts/navigation_states.js";
 import { EXPLORER_NAVIGATION_STATES } from "../components/parts/navigation.js";
 import { EVIDENCE_NAVIGATION_STATES } from "../evidence/parts/navigation.js";
+import { FLOW_NAVIGATION_STATES } from "../flows/parts/navigation.js";
 import { LOADING_NAVIGATION_STATES } from "../loading/parts/navigation.js";
 import { OUTCOME_NAVIGATION_STATES } from "../outcomes/parts/navigation.js";
 import { PROPS_NAVIGATION_STATES } from "../props/parts/navigation.js";
@@ -77,6 +78,7 @@ export const CANVAS_NAVIGATION_STATES = {
   ...EXPLORER_NAVIGATION_STATES,
   ...PROPS_NAVIGATION_STATES,
   ...EVIDENCE_NAVIGATION_STATES,
+  ...FLOW_NAVIGATION_STATES,
   [C.overview]: {
     changes: C.catalogue,
     tags: { active: null, picker: false, artboards: TAG_FILTERS },

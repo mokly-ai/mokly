@@ -1,0 +1,4 @@
+/* The Canvas viewer's use case: one section of step frames in a row, each
+   with its step number, its title and a link to its screen. Each Canvas part
+   keeps its own sheet; this sheet holds only the layout and the states of
+   these artboards. */

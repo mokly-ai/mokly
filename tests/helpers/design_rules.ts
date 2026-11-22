@@ -186,6 +186,7 @@ const BASE_SHEETS = new Set([
   "design-canvas-sections.css",
   "design-canvas-changes.css",
   "design-canvas-outcomes.css",
+  "design-canvas-flows.css",
   "design-canvas-loading.css",
   "design-canvas-search.css",
   "design-canvas-components.css",

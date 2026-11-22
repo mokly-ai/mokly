@@ -177,6 +177,7 @@ const CANVAS_ROUTE_SHEETS = [
   "design-canvas-sections.css",
   "design-canvas-changes.css",
   "design-canvas-outcomes.css",
+  "design-canvas-flows.css",
   "design-canvas-loading.css",
   "design-canvas-search.css",
   "design-canvas-components.css",
