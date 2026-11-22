@@ -201,7 +201,7 @@
 
 @media (max-width: 1439px) {
   [data-site-viewport="desktop"] .site-home-edit-canvas h3 {
-    font-size: clamp(28px, 2.5vw, 36px);
+    font-size: clamp(1.75rem, 2.5vw, 2.25rem);
   }
 }
 

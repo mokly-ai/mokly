@@ -124,7 +124,8 @@ loses the chosen green.
 
 - Headings are semibold. A heading of two lines sets its second line in
   `textMuted` where the copy splits it. The hero heading is one line on
-  desktop and two lines on mobile.
+  desktop and two lines on mobile. It grows with the reader's text size
+  until the window cannot hold its longest line, and stops there.
 - On desktop widths below 1440px, the home, changelog, pricing and docs
   headings and leads scale down with the window, in the steps that their
   mockups draw. No text passes its desktop size.

@@ -49,8 +49,8 @@ owns the islands that make the parts below move.
   copy. Below them, a frame labelled `Open foundation` sets a code panel with
   a terminal beside an artboard. On desktop a `signal` wire joins a source
   line to the element that it renders, and below 960px the wire leaves. That
-  frame carries only its label, with no selection. The facts follow as 38px
-  pills with `signalDeep` icons. The three steps follow as an ordered list of
+  frame carries only its label, with no selection. The facts follow as pills
+  at least 38px tall with `signalDeep` icons. The three steps follow as an ordered list of
   small frames joined by `signal` arrows: one row on desktop, and one column
   below 900px.
 - Every demo is a depiction. It is hidden from assistive technology, and its

@@ -153,3 +153,40 @@ test(
       .toBeLessThanOrEqual(NARROW_WIDTH);
   },
 );
+
+test(
+  "at 200% text in a 320px window the home's text doubles and its heading stays inside",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    await openLargeText(page, SITE_PATHS.home);
+    // The heading's lines take their final width once the fonts load, a
+    // state the page reports only to script.
+    await page.evaluate(() => document.fonts.ready.then(() => true));
+    // A phone sets the lead at 19px and a module's body at 16px.
+    await expect(page.getByText(LEAD)).toHaveCSS("font-size", "38px");
+    await expect(
+      page.getByText("Each branch and pull request publishes a catalogue"),
+    ).toHaveCSS("font-size", "32px");
+    // A phone sets the heading at 82px; it grows until the window cannot
+    // hold its longer line. Playwright reads no line boxes, so the spec
+    // reads the line boxes of the heading's text.
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect
+      .poll(() =>
+        heading.evaluate((element) =>
+          Number.parseFloat(getComputedStyle(element).fontSize),
+        ),
+      )
+      .toBeGreaterThan(82);
+    await expect
+      .poll(() =>
+        heading.evaluate((element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          const rights = [...range.getClientRects()].map((box) => box.right);
+          return Math.max(...rights);
+        }),
+      )
+      .toBeLessThanOrEqual(NARROW_WIDTH);
+  },
+);

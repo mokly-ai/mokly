@@ -1,8 +1,14 @@
 /* The home hero: the selected heading layer with its handles, its name tag,
    its type badge and its size tag, the green redline that measures the gap
    to the lead, Maya's cursor on the resize handle, then the lead and the
-   actions as one left-aligned group. The heading runs at 162px on one line
-   on the desktop composition. */
+   actions as one left-aligned group. The heading runs at 10.125rem, 162px
+   at the 16px base, on one line on the desktop composition.
+
+   The heading and the lead are set in rem, so they grow with the reader's
+   text size. The heading stops where the window cannot hold its line: at
+   13.5vw on the desktop steps, where a 768px window holds its line and
+   Maya's cursor after it, and at 194.4px from 1440px, where the layout
+   stops growing. */
 
 .site-hero {
   padding-top: 86px;
@@ -24,7 +30,7 @@
 }
 
 .site-hero h1 {
-  font-size: 162px;
+  font-size: min(10.125rem, 194.4px);
   letter-spacing: -0.058em;
   line-height: 0.96;
   white-space: nowrap;
@@ -61,7 +67,7 @@
 
 .site-hero-lead {
   color: var(--mk-color-text-secondary);
-  font-size: 23.75px;
+  font-size: 1.484375rem;
   letter-spacing: -0.012em;
   line-height: 1.45;
   max-width: 29em;
@@ -75,8 +81,9 @@
 }
 
 /* The intermediate desktop steps, from the prototype: below 1440px the
-   heading scales with the window on one line, its selection keeps the
-   descender inside, and the gutter, the top space and the lead follow. */
+   heading scales with the window on one line, from 5.4rem at 768px, its
+   selection keeps the descender inside, and the gutter, the top space and
+   the lead follow. */
 
 @media (max-width: 1439px) {
   [data-site-viewport="desktop"] .site-hero {
@@ -88,14 +95,15 @@
   }
 
   [data-site-viewport="desktop"] .site-hero h1 {
-    font-size: clamp(46px, 11.25vw, 162px);
+    font-size: min(clamp(5.4rem, 11.25vw, 10.125rem), 13.5vw);
   }
 
   [data-site-viewport="desktop"] .site-home-title-layer .site-home-title-sel {
-    inset: -2px -14px calc(clamp(46px, 11.25vw, 162px) * -0.1);
+    inset: -2px -14px
+      calc(min(clamp(5.4rem, 11.25vw, 10.125rem), 13.5vw) * -0.1);
   }
 
   [data-site-viewport="desktop"] .site-hero-lead {
-    font-size: clamp(19px, 1.65vw, 24px);
+    font-size: clamp(1.1875rem, 1.65vw, 1.5rem);
   }
 }

@@ -1,7 +1,9 @@
 /* The home's mobile composition: no panel, the heading on two lines with
    its selection, the actions stacked, three phones in the spread, the
    frames stacked with their copy first, the viewer's catalogue folded over
-   its screen, and the thread and the chat under their artboards. */
+   its screen, and the thread and the chat under their artboards. The
+   heading stops growing with the reader's text at 27vw, where a 320px
+   window holds its longer line. */
 
 [data-site-viewport="mobile"] .site-hero {
   padding-top: 64px;
@@ -17,7 +19,7 @@
 }
 
 [data-site-viewport="mobile"] .site-hero h1 {
-  font-size: 82px;
+  font-size: min(5.125rem, 27vw);
   white-space: normal;
 }
 
@@ -41,7 +43,7 @@
 }
 
 [data-site-viewport="mobile"] .site-hero-lead {
-  font-size: 19px;
+  font-size: 1.1875rem;
 }
 
 [data-site-viewport="mobile"] .site-hero .site-actions {
@@ -96,11 +98,11 @@
 
 [data-site-viewport="mobile"] .site-section-head h2,
 [data-site-viewport="mobile"] .site-closing-copy h2 {
-  font-size: 38px;
+  font-size: 2.375rem;
 }
 
 [data-site-viewport="mobile"] .site-section-head p {
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 
 [data-site-viewport="mobile"] .site-module-grid {
@@ -113,11 +115,11 @@
 }
 
 [data-site-viewport="mobile"] .site-module h3 {
-  font-size: 28px;
+  font-size: 1.75rem;
 }
 
 [data-site-viewport="mobile"] .site-module-body {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 /* Browse: the full-width card, and the viewer's catalogue over its screen */
@@ -235,7 +237,7 @@
 }
 
 [data-site-viewport="mobile"] .site-home-edit-canvas h3 {
-  font-size: 28px;
+  font-size: 1.75rem;
 }
 
 [data-site-viewport="mobile"] .site-agent {

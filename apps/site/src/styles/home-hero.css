@@ -1,10 +1,17 @@
 /* The home hero: the selected heading layer with its handles, its name tag,
    its type badge and its size tag, the green redline that measures the gap
    to the lead, Maya's cursor on the resize handle, then the lead and the
-   actions as one left-aligned group. A phone sets the heading at 82px on
-   two lines, stacks the actions and draws no type badge. The desktop
-   composition sets the heading at 162px on one line, and below 1440px the
-   heading scales with the window.
+   actions as one left-aligned group. A phone sets the heading at 5.125rem,
+   82px at the 16px base, on two lines, stacks the actions and draws no type
+   badge. The desktop composition sets the heading at 10.125rem, 162px, on
+   one line, and below 1440px the heading scales with the window.
+
+   The heading and the lead are set in rem, so they grow with the reader's
+   text size. The heading stops where the window cannot hold its longest
+   line: at 27vw on a phone, where a 320px window holds its longer line, and
+   at 13.5vw on the desktop steps, where a 768px window holds its line and
+   Maya's cursor after it. From 1440px, where the layout stops growing, the
+   heading stops at 194.4px, which is 13.5vw at 1440px.
 
    The class names and the rules match docs/mockups/styles/site/home-hero.css
    and the hero rules of home-responsive.css. The mockups pin a composition
@@ -32,7 +39,7 @@
 }
 
 .site-hero h1 {
-  font-size: 82px;
+  font-size: min(5.125rem, 27vw);
   letter-spacing: -0.058em;
   line-height: 0.96;
   white-space: normal;
@@ -80,7 +87,7 @@
 
 .site-hero-lead {
   color: var(--mk-color-text-secondary);
-  font-size: 19px;
+  font-size: 1.1875rem;
   letter-spacing: -0.012em;
   line-height: 1.45;
   max-width: 29em;
@@ -103,7 +110,7 @@
   }
 
   .site-hero h1 {
-    font-size: 162px;
+    font-size: min(10.125rem, 194.4px);
     white-space: nowrap;
   }
 
@@ -131,7 +138,7 @@
   }
 
   .site-hero-lead {
-    font-size: 23.75px;
+    font-size: 1.484375rem;
   }
 
   .site-hero .site-actions {
@@ -140,8 +147,9 @@
 }
 
 /* The intermediate desktop steps, from the prototype: below 1440px the
-   heading scales with the window on one line, its selection keeps the
-   descender inside, and the gutter, the top space and the lead follow. */
+   heading scales with the window on one line, from 5.4rem at 768px, its
+   selection keeps the descender inside, and the gutter, the top space and
+   the lead follow. */
 
 @media (min-width: 768px) and (max-width: 1439px) {
   .site-hero {
@@ -153,15 +161,16 @@
   }
 
   .site-hero h1 {
-    font-size: clamp(46px, 11.25vw, 162px);
+    font-size: min(clamp(5.4rem, 11.25vw, 10.125rem), 13.5vw);
   }
 
   .site-home-title-layer .site-home-title-sel {
-    inset: -2px -14px calc(clamp(46px, 11.25vw, 162px) * -0.1);
+    inset: -2px -14px
+      calc(min(clamp(5.4rem, 11.25vw, 10.125rem), 13.5vw) * -0.1);
   }
 
   .site-hero-lead {
-    font-size: clamp(19px, 1.65vw, 24px);
+    font-size: clamp(1.1875rem, 1.65vw, 1.5rem);
   }
 }
 

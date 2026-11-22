@@ -10,7 +10,8 @@
    same switch at 768px. So each base rule is the phone composition, where
    the actions go under the copy and the steps stack in one column with the
    arrows running down between the frames, and the desktop values and the
-   desktop steps follow under the 768px query, in the mockup's order. */
+   desktop steps follow under the 768px query, in the mockup's order. The
+   text is set in rem, so it grows with the reader's text size. */
 
 .site-closing {
   margin-top: 112px;
@@ -35,7 +36,7 @@
 
 .site-closing-panel p {
   color: var(--mk-color-text-secondary);
-  font-size: 16.5px;
+  font-size: 1.03125rem;
   letter-spacing: -0.004em;
   line-height: 1.6;
 }
@@ -44,7 +45,9 @@
   flex: none;
 }
 
-/* The facts of the open-source CLI, which a phone sets closer to the frame */
+/* The facts of the open-source CLI, which a phone sets closer to the frame.
+   A fact that its row cannot hold at a large text size wraps, and its pill
+   grows taller. */
 
 .site-closing .site-home-facts {
   display: flex;
@@ -64,10 +67,10 @@
     var(--mk-shadow-small);
   color: var(--mk-color-text-secondary);
   display: inline-flex;
-  font-size: 14px;
+  font-size: 0.875rem;
   gap: 8px;
-  height: 38px;
-  padding: 0 15px 0 13px;
+  min-height: 38px;
+  padding: 6px 15px 6px 13px;
 }
 
 .site-home-facts svg {
@@ -77,7 +80,7 @@
 .site-home-facts li:first-child {
   color: var(--mk-color-text);
   font-family: var(--mk-font-mono);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* The steps, which a phone sets closer to the facts */
@@ -133,7 +136,7 @@
 .site-step-number {
   color: var(--mk-color-signal-deep);
   font-family: var(--mk-font-mono);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .site-home-step-icon {
@@ -144,7 +147,7 @@
 }
 
 .site-step h3 {
-  font-size: 21px;
+  font-size: 1.3125rem;
   letter-spacing: -0.025em;
   line-height: 1.2;
   margin-top: 30px;
@@ -153,7 +156,7 @@
 
 .site-step p {
   color: var(--mk-color-text-secondary);
-  font-size: 15.5px;
+  font-size: 0.96875rem;
   line-height: 1.5;
   margin-top: 8px;
 }
