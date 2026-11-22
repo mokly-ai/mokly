@@ -37,7 +37,7 @@ import {
  * A variant set's Frames filter: its frames are its saved variants in each
  * scheme, so it has no viewport toggles.
  */
-const SET_FILTER = {
+export const SET_FILTER = {
   viewports: false,
   mobile: true,
   desktop: true,
@@ -50,7 +50,7 @@ const SET_FILTER = {
  * The head of a component's Inspect, as its definition declares it: its
  * description, its source, its schemes, and its tags where it has any.
  */
-function ComponentHead({
+export function ComponentHead({
   component,
   entry,
 }: {
