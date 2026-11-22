@@ -101,6 +101,14 @@
   margin-top: 6px;
 }
 
+/* A moved entry's previous path reads in the Canvas mono, as the Compared
+   rail names the base. */
+.cv-evidence .mbk-code {
+  color: var(--cv-text);
+  font-family: var(--cv-mono);
+  font-size: 12px;
+}
+
 /* ---- Side by side on the stage -------------------------------------- */
 
 /* The stage holds every frame's pair and shows the compared frame's, the

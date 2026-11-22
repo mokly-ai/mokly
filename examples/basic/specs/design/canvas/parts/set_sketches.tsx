@@ -10,7 +10,7 @@ import { TOOLBAR_INSTANCES } from "./instance_records.js";
 import { instanceLabel } from "./instances.js";
 
 /** The nominal size of the Action's component document. */
-const ACTION_DOCUMENT = { width: 320, height: 132 } as const;
+export const ACTION_DOCUMENT = { width: 320, height: 132 } as const;
 
 /**
  * The nominal size of the Toolbar's component document: the Toolbar 24px

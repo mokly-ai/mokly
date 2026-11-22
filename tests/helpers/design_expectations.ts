@@ -96,7 +96,7 @@ export const DUAL_SCHEME =
 
 /** The startup pages draw no catalogue chrome before the index arrives. */
 const STARTUP =
-  /^design\/browse\/loading\/(catalogue-loading|catalogue-failed|viewer-version)$/u;
+  /^design\/(browse\/loading\/(catalogue-loading|catalogue-failed|viewer-version)|canvas\/loading\/catalogue(\/failed|\/version)?)$/u;
 
 /** Screens that depict no selected entry, so they have no screen header. */
 const UNSELECTED = new Set([

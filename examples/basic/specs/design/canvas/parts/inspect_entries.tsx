@@ -7,6 +7,7 @@ import { PREVIOUS_PATHS } from "../../parts/entry_paths.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 import { SUBJECTS, type ScreenSubject } from "../../parts/subjects.js";
 import { TagChips } from "../../parts/tag_filter.js";
+import type { CatalogueTag } from "../../parts/tags.js";
 
 import { CANVAS_ENTRIES } from "./entries.js";
 import {
@@ -23,9 +24,16 @@ import { InspectVariants } from "./inspect_variants.js";
 /**
  * The Details rows of today's inspector that a depicted screen has, after
  * its path and source. A related entry would open a Browse artboard, and
- * Canvas links stay inside the Canvas family, so it is named as text.
+ * Canvas links stay inside the Canvas family, so it is named as text. The
+ * chip of the tag that the search enters reads active.
  */
-export function SubjectRows({ subject }: { subject: ScreenSubject }) {
+export function SubjectRows({
+  activeTag,
+  subject,
+}: {
+  activeTag?: CatalogueTag | undefined;
+  subject: ScreenSubject;
+}) {
   const metadata = SUBJECTS[subject];
   return (
     <>
@@ -41,7 +49,7 @@ export function SubjectRows({ subject }: { subject: ScreenSubject }) {
       </MetaRow>
       {metadata.tags.length > 0 ? (
         <MetaRow name="tags" label="Tags">
-          <TagChips tags={metadata.tags} />
+          <TagChips activeTag={activeTag} tags={metadata.tags} />
         </MetaRow>
       ) : null}
       {metadata.relatedDocs ? (

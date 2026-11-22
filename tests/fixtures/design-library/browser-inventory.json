@@ -297,6 +297,73 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/components/affected",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/affected/details",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/affected"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/compare",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/compare/current",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/compare"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/compare/difference",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/compare"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/compare/props",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/compare"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/inspection",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/inspection/unavailable",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/inspection"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/removed",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/removed/changes",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/removed"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/usage",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/usage/loading",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/usage"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/inspect/frames",
     "colorSchemes": ["light", "dark"]
   },
@@ -340,6 +407,68 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/loading/catalogue",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/catalogue/failed",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/loading/catalogue"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/catalogue/version",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/loading/catalogue"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/changes",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/changes/empty",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/loading/changes"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/changes/preparing",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/loading/changes"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/changes/unavailable",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/loading/changes"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/changes/without-changes",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/loading/changes"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/entry",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/entry/failed",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/loading/entry"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/loading/missing",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/outcomes/added",
     "colorSchemes": ["light", "dark"]
   },
@@ -375,8 +504,133 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/outcomes/moved",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/moved/inspect",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/moved"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/overview",
     "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/editing",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/editing/edited",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/editing"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/editing/reset",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/editing"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/editing/unset",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/editing"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/loading",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/preparing",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/preparing/failed",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/preparing"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/read-only",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/read-only/disabled",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/read-only"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/read-only/no-props",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/read-only"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/states",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/states/error",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/states"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/states/expired",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/states"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/states/invalid",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/states"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/props/states/invalid-together",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/states"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/search/tags",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/search/tags/forms",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/search/tags"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/search/tags/forms-picker",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/search/tags"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/search/tags/onboarding",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/search/tags"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/search/tags/onboarding-picker",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/search/tags"
   },
   {
     "kind": "screen",

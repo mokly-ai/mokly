@@ -1,4 +1,112 @@
 /* The Canvas viewer's component explorer: a changed component compared on
-   its variant set, its Usage with the affected screens, and its empty,
-   loading and removed states. Each Canvas part keeps its own sheet; this
-   sheet holds only the layout and the states of these artboards. */
+   its variant set, its Usage with the affected screens, screen inspection
+   that waits or is unavailable, and a removed saved variant. Each Canvas
+   part keeps its own sheet; this sheet holds only the states of these
+   artboards. Saved props that a comparison shows end with the shipped text
+   button, from its @mokly/ui stylesheet. */
+@import "../../packages/ui/src/text-button/text-button.css";
+
+/* ---- The version before --------------------------------------------- */
+
+/* The Action branch changed the Action's button: before it, the button had
+   smaller corners and narrower padding, wherever it rendered. */
+.cv-cx-before {
+  display: contents;
+}
+
+.cv-cx-before .mbk-shot-action {
+  border-radius: 3px;
+  padding-inline: 6px;
+}
+
+/* ---- A removed variant's frame --------------------------------------- */
+
+/* A removed component entry has no preview: the shipped pane of a version
+   without a document fills its frame, in the frame's own scheme, so the
+   removed row keeps the set's Light and Dark columns. */
+.cv-cx-missing {
+  background: var(--mbk-screen-bg);
+  color: var(--mbk-screen-ink-2);
+  inset: 0;
+  padding: 12px 14px 14px;
+  position: absolute;
+}
+
+.cv-cx-missing > .mb-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.cv-cx-missing .mb-pane-label {
+  color: var(--mbk-screen-ink-2);
+  font: 500 11px/1 var(--cv-mono);
+  margin-bottom: 8px;
+}
+
+.cv-cx-missing .mb-pane-missing {
+  background: transparent;
+  border-color: color-mix(
+    in srgb,
+    var(--mbk-screen-ink) 34%,
+    var(--mbk-screen-bg)
+  );
+  border-radius: 8px;
+  color: var(--mbk-screen-ink-2);
+  flex: 1;
+  font-size: 12.5px;
+  min-height: 0;
+  padding: 8px;
+}
+
+/* ---- Comparison details ---------------------------------------------- */
+
+/* The shipped evidence names the saved variant in property rows and links
+   each changed component, in Inspect's type. */
+.cv-cx-evidence .mbk-comparison-evidence .mbk-props {
+  margin: 8px 0 0;
+}
+
+.cv-cx-evidence .mbk-comparison-evidence a {
+  color: var(--cv-signal-deep);
+  font-weight: 560;
+  text-decoration: none;
+}
+
+/* ---- Props ----------------------------------------------------------- */
+
+/* Saved props that cannot be edited here: the notice, then Switch to
+   Current in signal text, above the values. */
+.cv-fold-body .mbk-component-controls .mbk-controls-notice {
+  margin: 0 0 8px;
+}
+
+.cv-fold-body .mbk-component-controls .mbk-text-button {
+  color: var(--cv-signal-deep);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 560;
+  margin: 0 0 8px;
+}
+
+/* ---- Compact layout -------------------------------------------------- */
+
+/* The removed Compact's frames join the frames that the compact picker
+   swaps in place. A component's entry bar that holds a change status beside
+   the frame picker keeps its kind tag's glyph alone, so the status stays
+   clear of the picker; the tag keeps its words for assistive technology. */
+@container cv (width < 56.25rem) {
+  .cv-work:has(option[value="compact-light"]:checked)
+    .cv-frame[data-cv-frame="compact-light"],
+  .cv-work:has(option[value="compact-dark"]:checked)
+    .cv-frame[data-cv-frame="compact-dark"] {
+    display: block;
+  }
+
+  .cv-entry-bar:has(.cv-frame-pick)
+    .cv-entry-title:has(.mbk-entry-status)
+    > .cv-kind-tag {
+    font-size: 0;
+    gap: 0;
+  }
+}

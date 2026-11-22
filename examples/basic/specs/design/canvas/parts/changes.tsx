@@ -48,12 +48,16 @@ export function ChangesCompared({ added = false }: { added?: boolean }) {
 
 /**
  * The comparison details of today's inspector: the shipped evidence with one
- * sentence for each reason. The rail above names the base, so the evidence
- * leaves out its branch-point sentence.
+ * sentence for each reason, after the previous path of a moved entry, which
+ * the evidence names as the earlier side. The rail above names the base, so
+ * the evidence leaves out its branch-point sentence.
  */
 export function ChangesEvidence({
+  previousPath,
   reasons,
 }: {
+  /** The path that a moved entry had at the branch point. */
+  previousPath?: string | undefined;
   reasons: readonly ChangeReasonKind[];
 }) {
   return (
@@ -61,6 +65,7 @@ export function ChangesEvidence({
       <ComparisonEvidence
         base=""
         mark="data-workspace-evidence"
+        previousPath={previousPath}
         reasons={reasonEvidence(reasons)}
       />
     </div>
@@ -111,8 +116,10 @@ export function WelcomeChanges({
 
 /**
  * The Changes tab of Details, which the branch added, the second of its
- * changes: the stepper, whose Previous change opens Welcome in Changes, the
- * current version alone, and the compare modes reduced to Current.
+ * changes: the stepper, whose Previous change opens Welcome in Changes and
+ * whose Next change opens the moved Invoice in Changes, the current version
+ * alone, the compare modes reduced to Current, and the comparison details
+ * with the sentence of its reason.
  */
 export function DetailsChanges() {
   return (
@@ -122,6 +129,7 @@ export function DetailsChanges() {
         position={2}
         total={CHANGED_COUNT}
         previousDestination={C.changesCurrent}
+        nextDestination={C.moved}
       />
       <ChangesCompared added />
       <InspectSection title="Compare">
@@ -133,6 +141,7 @@ export function DetailsChanges() {
           destinations={{ current: C.addedChanges }}
         />
       </InspectSection>
+      <ChangesEvidence reasons={["added"]} />
     </>
   );
 }

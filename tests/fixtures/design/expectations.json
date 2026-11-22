@@ -265,6 +265,59 @@
       "target": "design/browse/loading/preview-loading"
     },
     {
+      "source": "design/canvas/loading/catalogue/failed",
+      "name": "Try again",
+      "target": "design/canvas/loading/catalogue"
+    },
+    {
+      "source": "design/canvas/loading/catalogue/version",
+      "name": "Reload",
+      "target": "design/canvas/loading/catalogue"
+    },
+    {
+      "source": "design/canvas/loading/entry/failed",
+      "name": "Try again",
+      "target": "design/canvas/loading/entry"
+    },
+    {
+      "source": "design/canvas/loading/entry",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": null
+    },
+    {
+      "source": "design/canvas/loading/entry",
+      "name": "Fit",
+      "target": "design/canvas/loading/entry"
+    },
+    {
+      "source": "design/canvas/loading/entry/failed",
+      "name": "Fit",
+      "target": "design/canvas/loading/entry/failed"
+    },
+    {
+      "source": "design/canvas/loading/entry",
+      "viewports": ["desktop"],
+      "name": "Zoom in",
+      "target": null
+    },
+    {
+      "source": "design/canvas/loading/missing",
+      "name": "Go to the catalogue home",
+      "target": "design/canvas/stage/home"
+    },
+    {
+      "source": "design/canvas/loading/changes",
+      "name": "All",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/loading/changes/without-changes",
+      "name": "All",
+      "target": null
+    },
+    {
       "source": "design/components/states/removed-consumer",
       "viewports": ["desktop"],
       "name": "ActionChanged",
@@ -721,7 +774,7 @@
     {
       "source": "design/canvas/outcomes/added/changes",
       "name": "Next change",
-      "target": null
+      "target": "design/canvas/outcomes/moved"
     },
     {
       "source": "design/canvas/stage/catalogue",
@@ -1060,6 +1113,175 @@
       "within": "mbk-nav",
       "name": "Welcome",
       "target": "design/canvas/inspect/frames"
+    },
+    {
+      "source": "design/canvas/props/editing/edited",
+      "name": "Reset to Default",
+      "target": "design/canvas/props/editing/reset"
+    },
+    {
+      "source": "design/canvas/props/editing/reset",
+      "name": "Reset to Default",
+      "target": null
+    },
+    {
+      "source": "design/canvas/props/editing",
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": "design/canvas/stage/component-set/disabled"
+    },
+    {
+      "source": "design/canvas/props/states",
+      "viewports": ["desktop"],
+      "within": "cv-zoom",
+      "name": "Fit",
+      "target": "design/canvas/props/states"
+    },
+    {
+      "source": "design/canvas/props/states",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": null
+    },
+    {
+      "source": "design/canvas/props/states/invalid-together",
+      "name": "Reset to Default",
+      "target": "design/canvas/props/editing/reset"
+    },
+    {
+      "source": "design/canvas/props/states/error",
+      "name": "Try again",
+      "target": "design/canvas/props/states"
+    },
+    {
+      "source": "design/canvas/props/states/expired",
+      "name": "Update preview",
+      "target": "design/canvas/props/states"
+    },
+    {
+      "source": "design/canvas/props/preparing/failed",
+      "name": "Try again",
+      "target": "design/canvas/props/preparing"
+    },
+    {
+      "source": "design/canvas/props/preparing",
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": null
+    },
+    {
+      "source": "design/canvas/props/read-only",
+      "within": "cv-variants",
+      "name": "Disabled",
+      "target": "design/canvas/props/read-only/disabled"
+    },
+    {
+      "source": "design/canvas/props/read-only/disabled",
+      "within": "cv-variants",
+      "name": "Default",
+      "target": "design/canvas/props/read-only"
+    },
+    {
+      "source": "design/canvas/props/read-only/no-props",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/props/read-only/no-props",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/components/usage",
+      "within": "[data-usage-section=affected]",
+      "name": "Welcome",
+      "target": "design/canvas/components/affected"
+    },
+    {
+      "source": "design/canvas/components/usage",
+      "within": "[data-usage-section=affected]",
+      "name": "Details",
+      "target": "design/canvas/components/affected/details"
+    },
+    {
+      "source": "design/canvas/components/usage",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/components/compare/current"
+    },
+    {
+      "source": "design/canvas/components/compare/current",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/components/usage"
+    },
+    {
+      "source": "design/canvas/components/compare",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/components/compare/props"
+    },
+    {
+      "source": "design/canvas/components/compare",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Difference",
+      "target": "design/canvas/components/compare/difference"
+    },
+    {
+      "source": "design/canvas/components/compare",
+      "viewports": ["desktop"],
+      "within": "cv-modes",
+      "name": "Side by side",
+      "target": null
+    },
+    {
+      "source": "design/canvas/components/compare/props",
+      "name": "Switch to Current",
+      "target": "design/canvas/components/usage"
+    },
+    {
+      "source": "design/canvas/components/compare/props",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/components/compare"
+    },
+    {
+      "source": "design/canvas/components/affected",
+      "viewports": ["desktop"],
+      "within": "cv-cx-evidence",
+      "name": "Action",
+      "target": "design/canvas/components/compare/current"
+    },
+    {
+      "source": "design/canvas/components/affected",
+      "viewports": ["desktop"],
+      "within": "cv-mode-frames",
+      "name": "Desktop · Light",
+      "target": "design/canvas/components/affected"
+    },
+    {
+      "source": "design/canvas/components/removed",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/components/removed/changes"
+    },
+    {
+      "source": "design/canvas/components/removed/changes",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/components/removed"
+    },
+    {
+      "source": "design/canvas/components/inspection",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/outcomes/added/changes"
     }
   ],
   "tagStates": [

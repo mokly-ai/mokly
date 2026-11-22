@@ -11,9 +11,29 @@ import {
 } from "./destinations.js";
 import type { CatalogueTag } from "./tags.js";
 
+/**
+ * The artboards of one family's tag states of Welcome: by the tag that the
+ * search enters, or none, the artboard with the tag picker closed and open.
+ */
+export type TagArtboards = Readonly<
+  Record<
+    "none" | CatalogueTag,
+    Readonly<Record<"closed" | "open", DesignDestination>>
+  >
+>;
+
+/** The Browse family's tag states, around Welcome's Browse screen. */
+const BROWSE_TAGS = {
+  none: { closed: D.welcome, open: D.tagPicker },
+  forms: { closed: D.forms, open: D.formsPicker },
+  onboarding: { closed: D.onboarding, open: D.onboardingPicker },
+} as const satisfies TagArtboards;
+
 interface TagState {
   active: CatalogueTag | null;
   picker: boolean;
+  /** The artboards of the family's tag states; the Browse family's by default. */
+  artboards?: TagArtboards;
 }
 
 /** Only authored transitions are present; absence always means a depiction. */
@@ -183,17 +203,19 @@ export function tagPickerTarget(
   tags: TagState | undefined,
 ): DesignDestination | undefined {
   if (!tags) return undefined;
-  if (tags.active === "forms") return tags.picker ? D.forms : D.formsPicker;
-  if (tags.active === "onboarding")
-    return tags.picker ? D.onboarding : D.onboardingPicker;
-  return tags.picker ? D.welcome : D.tagPicker;
+  const state = (tags.artboards ?? BROWSE_TAGS)[tags.active ?? "none"];
+  return tags.picker ? state.closed : state.open;
 }
 
+/**
+ * A chip enters its tag and closes the picker; the chip of the entered tag
+ * clears the query.
+ */
 export function tagTarget(
   tags: TagState | undefined,
   tag: CatalogueTag,
 ): DesignDestination | undefined {
   if (!tags) return undefined;
-  if (tags.active === tag) return D.welcome;
-  return tag === "forms" ? D.forms : D.onboarding;
+  const artboards = tags.artboards ?? BROWSE_TAGS;
+  return (tags.active === tag ? artboards.none : artboards[tag]).closed;
 }

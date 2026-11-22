@@ -37,12 +37,24 @@ export const CANVAS_ALL_ROWS: NavigationRows = NAV_TREE.map((row) =>
 );
 
 /**
+ * The moved rows that open a Canvas artboard: Invoice opens its moved
+ * outcome on the Changes tab, and Payment terms, which has no Changes
+ * artboard, opens its reading frame. No artboard shows the Overdue
+ * variant, so its row is a picture.
+ */
+const MOVED_TARGETS: Readonly<Record<string, DesignDestination>> = {
+  invoice: CANVAS_PAGES.moved,
+  "payment-terms": CANVAS_PAGES.document,
+};
+
+/**
  * The canonical branch in the Changes filter, as the shipped tree draws it:
  * Welcome changed, Details added, the billing entries moved under Account,
  * and five screens removed, ten entries in all. The changed and the added
  * rows carry the changed mark; a moved or removed row names its state
- * instead. Welcome opens the Changes filter with Welcome selected, and
- * Details opens the added entry; the other rows are pictures.
+ * instead. Welcome opens the Changes filter with Welcome selected, Details
+ * opens the added entry, and the moved rows open their artboards; the
+ * removed rows are pictures.
  */
 export const CANVAS_CHANGES_ROWS: NavigationRows = [
   {
@@ -75,7 +87,7 @@ export const CANVAS_CHANGES_ROWS: NavigationRows = [
     label: "Details",
     to: CANVAS_PAGES.added,
   },
-  ...MOVED_ROWS.map((row) => retarget(row, undefined)),
+  ...MOVED_ROWS.map((row) => retarget(row, MOVED_TARGETS[row.key])),
   ...REMOVED_SCREEN_ROWS.map((entry) => ({
     key: entry.key,
     depth: 0,

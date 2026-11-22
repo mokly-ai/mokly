@@ -68,9 +68,11 @@ const MAIN_ID = "cv-main";
  * The root of a Canvas artboard: the theme's root class with the Canvas
  * palette in the rendered appearance, and the design artboard class, whose
  * Highlight components rule reveals the frames' highlight. A mobile render
- * draws the compact form at every width.
+ * draws the compact form at every width. A startup page, which the shell
+ * draws before the catalogue arrives, holds its one state in this root
+ * alone.
  */
-function CanvasRoot({
+export function CanvasRoot({
   children,
   viewport,
 }: {
