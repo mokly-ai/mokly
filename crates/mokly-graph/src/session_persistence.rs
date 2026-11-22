@@ -7,6 +7,18 @@ use crate::planning;
 use crate::session::Session;
 
 impl Session {
+    /// Probe the complete persistent identity without restoring the indexed document.
+    pub(crate) fn has_stored_document(&self, route: &str) -> bool {
+        self.state
+            .inputs
+            .persistence
+            .as_ref()
+            .is_some_and(|persistence| {
+                self.stored_key(route)
+                    .is_some_and(|key| persistence.store.contains(&key))
+            })
+    }
+
     pub(crate) fn stored_key(&self, route: &str) -> Option<StoreKey> {
         let persistence = self.state.inputs.persistence.as_ref()?;
         let native = persistence.store.identity()?;

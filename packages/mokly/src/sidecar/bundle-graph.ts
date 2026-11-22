@@ -8,15 +8,20 @@ import type { ModulePaths } from "./module-paths.js";
 /** Logical identities never expose another checkout or dependency cache path. */
 export function moduleGraph(
   metafile: Metafile,
-  paths: ModulePaths,
+  paths: Pick<ModulePaths, "sourceRoot" | "name">,
 ): { modules: Module[]; physical: Map<string, string> } {
   const physical = new Map<string, string>();
+  const names = new Map<string, { absolute: string; logical: string }>();
   const edges = new MetafileEdges(metafile, paths.sourceRoot);
   const name = (file: string) => {
-    const absolute = edges.physical(file);
-    const logical = paths.name(absolute);
-    physical.set(logical, absolute);
-    return logical;
+    let named = names.get(file);
+    if (named === undefined) {
+      const absolute = edges.physical(file);
+      named = { absolute, logical: paths.name(absolute) };
+      names.set(file, named);
+    }
+    physical.set(named.logical, named.absolute);
+    return named.logical;
   };
   const modules = Object.entries(metafile.inputs)
     .filter(([file]) => !edges.own(file))

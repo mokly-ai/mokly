@@ -183,28 +183,46 @@ mock-provider tests cannot prove provider authentication.
 
 ### Desktop release secrets
 
-The desktop release workflow of
-[Desktop distribution](../protocol/cloud/desktop-distribution.md#distribution-and-updates)
-reads six GitHub Actions repository secrets. It reads none of them from Secret
-Manager, none enters a workload or a Terraform job, and fork builds receive
-none of them.
+The desktop release job of
+[Desktop distribution](../protocol/cloud/desktop-distribution.md#release-secrets)
+reads six secrets of the `desktop-release` GitHub environment. The environment
+admits only the `main` branch and has no required reviewer, because the merge
+of the desktop release pull request approves the release. The job reads none
+of the secrets from Secret Manager, none enters a workload or a Terraform job,
+and pull requests, branch dispatches and fork builds receive none of them.
 The workflow writes the certificate and the API key to mode-0600 temporary
 files for electron-builder and never places a value on a command line.
-Only the tag job's publishing steps receive these values. The packaging
+Only the release job's publishing steps receive these values. The packaging
 script replaces `CSC_LINK` and `APPLE_API_KEY` with their temporary file paths
 in the builder environment and removes both files after success or failure.
 It passes `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`. The release helper reads it
 for the pinned publisher, append-only uploads and the final asset inventory
-check. Pull requests and branch dispatches use no release secrets.
+check.
 
-| Secret                   | Value                                                                          | Owner                          | Rotation                                                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `CSC_LINK`               | Base64 `.p12` export of the Developer ID Application certificate               | Apple Developer account holder | Export the renewed certificate before expiry, replace the secret, run a tag build, then revoke the old certificate      |
-| `CSC_KEY_PASSWORD`       | The `.p12` password                                                            | Apple Developer account holder | Rotated with `CSC_LINK`                                                                                                 |
-| `APPLE_API_KEY`          | The App Store Connect API key `.p8` contents                                   | Apple Developer account holder | Create a replacement key in App Store Connect, replace the three Apple API secrets, run a tag build, revoke the old key |
-| `APPLE_API_KEY_ID`       | That key's identifier                                                          | Apple Developer account holder | Rotated with `APPLE_API_KEY`                                                                                            |
-| `APPLE_API_ISSUER`       | The App Store Connect issuer identifier                                        | Apple Developer account holder | Rotated with `APPLE_API_KEY`                                                                                            |
-| `DESKTOP_RELEASES_TOKEN` | Fine-grained GitHub token with contents write on `mokly-ai/mokly-desktop` only | Repository administrator       | Create a replacement token, replace the secret, run a tag build, then delete the old token                              |
+A repository administrator creates the environment once and limits it to
+`main`:
+
+```sh
+gh api -X PUT repos/mokly-ai/mokly/environments/desktop-release \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST repos/mokly-ai/mokly/environments/desktop-release/deployment-branch-policies \
+  -f name=main -f type=branch
+```
+
+Enter each secret with
+`gh secret set NAME --env desktop-release --repo mokly-ai/mokly`, which reads
+the value without printing it. After the first desktop release passes, delete
+the repository secrets of the same names.
+
+| Secret                   | Value                                                                          | Owner                          | Rotation                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------ | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `CSC_LINK`               | Base64 `.p12` export of the Developer ID Application certificate               | Apple Developer account holder | Export the renewed certificate before expiry, replace the secret, check the next desktop release, then revoke the old certificate      |
+| `CSC_KEY_PASSWORD`       | The `.p12` password                                                            | Apple Developer account holder | Rotated with `CSC_LINK`                                                                                                                |
+| `APPLE_API_KEY`          | The App Store Connect API key `.p8` contents                                   | Apple Developer account holder | Create a replacement key in App Store Connect, replace the three Apple API secrets, check the next desktop release, revoke the old key |
+| `APPLE_API_KEY_ID`       | That key's identifier                                                          | Apple Developer account holder | Rotated with `APPLE_API_KEY`                                                                                                           |
+| `APPLE_API_ISSUER`       | The App Store Connect issuer identifier                                        | Apple Developer account holder | Rotated with `APPLE_API_KEY`                                                                                                           |
+| `DESKTOP_RELEASES_TOKEN` | Fine-grained GitHub token with contents write on `mokly-ai/mokly-desktop` only | Repository administrator       | Create a replacement token, replace the secret, check the next desktop release, then delete the old token                              |
 
 The operator keeps a backup of the three credential values in the
 operator-only Secret Manager IDs of the [Inventory](#inventory):
@@ -214,7 +232,7 @@ operator-only Secret Manager IDs of the [Inventory](#inventory):
 and grants no identity access to them. The values never enter Terraform.
 App Store Connect always shows the key ID and the issuer ID, so they need no
 backup. After a rotation, add each new value as a new version of the same ID.
-To restore the three GitHub secrets from the backups:
+To restore the three environment secrets from the backups:
 
 ```sh
 umask 077
@@ -222,9 +240,9 @@ dir="$(mktemp -d)"
 for id in mkc-desktop-developer-id-p12 mkc-desktop-developer-id-p12-password mkc-desktop-notary-api-key; do
   gcloud secrets versions access latest --secret="$id" --project=mokly-508518 --out-file="$dir/$id"
 done
-base64 < "$dir/mkc-desktop-developer-id-p12" | gh secret set CSC_LINK --repo mokly-ai/mokly
-gh secret set CSC_KEY_PASSWORD --repo mokly-ai/mokly < "$dir/mkc-desktop-developer-id-p12-password"
-gh secret set APPLE_API_KEY --repo mokly-ai/mokly < "$dir/mkc-desktop-notary-api-key"
+base64 < "$dir/mkc-desktop-developer-id-p12" | gh secret set CSC_LINK --env desktop-release --repo mokly-ai/mokly
+gh secret set CSC_KEY_PASSWORD --env desktop-release --repo mokly-ai/mokly < "$dir/mkc-desktop-developer-id-p12-password"
+gh secret set APPLE_API_KEY --env desktop-release --repo mokly-ai/mokly < "$dir/mkc-desktop-notary-api-key"
 rm -rf "$dir"
 ```
 

@@ -9,6 +9,7 @@ import { SettingsLayer } from "../../../entries/design/settings-layer.mockup";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { stateScreenPath } from "../../../fixtures/product-states";
 import { Icon } from "../icons";
+import { MacWindowControls, macWindowClass } from "../mac-window";
 import { Brand } from "../navigation";
 import { Action } from "../page-parts";
 import { ViewerStage } from "../shell";
@@ -113,6 +114,7 @@ export function SettingsSurface({
   screen,
   unaddressed = [],
   modal,
+  macApp = false,
   children,
 }: {
   pane: SurfaceId;
@@ -134,6 +136,8 @@ export function SettingsSurface({
    * reader left it. The frame stays drawn beneath it as an inert layer.
    */
   modal?: ReactNode;
+  /** Whether the page draws the Mac app window around settings. */
+  macApp?: boolean;
   children: ReactNode;
 }) {
   const heading = <h1 className="fo-dialog-title">{title}</h1>;
@@ -168,7 +172,9 @@ export function SettingsSurface({
     );
   return (
     <div
-      className="folio-root fo-settings-screen"
+      className={
+        "folio-root fo-settings-screen" + (macApp ? " " + macWindowClass : "")
+      }
       data-mkc-screen={screen ?? stateScreenPath(paneScreenPath(pane), state)}
     >
       <a className="skip-link" href="#main">
@@ -189,6 +195,7 @@ export function SettingsSurface({
         {modal ? <LayerBeneath>{frame}</LayerBeneath> : frame}
         {modal && <div className="fo-settings-modal-layer">{modal}</div>}
       </main>
+      {macApp && <MacWindowControls />}
     </div>
   );
 }

@@ -96,6 +96,9 @@ roles; the accent roles above are shared:
 | `artSage`         | `#e8eddf` | `#303b29` | Screen art tile                |
 | `artMint`         | `#e4eee7` | `#233b2d` | Journey art tile               |
 | `artOlive`        | `#ebecdf` | `#353925` | Change art tile                |
+| `windowClose`     | `#ff5f57` | `#ff5f57` | Mac window close button        |
+| `windowMinimize`  | `#febc2e` | `#febc2e` | Mac window minimize button     |
+| `windowZoom`      | `#28c840` | `#28c840` | Mac window zoom button         |
 
 ## Folio: Product And Marketing Surfaces
 

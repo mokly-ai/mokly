@@ -1,26 +1,27 @@
 //! Warm plans cross into the core only after the sidecar accepts their compilation.
 
-use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
 use crate::bundle_outcomes::CacheOutcome;
 use crate::bundle_store::{BundleStoreMock, ReadOutcome, RecordToken, WriteOutcome};
-use crate::resolution_plan::{PlannedImport, ResolutionPlan};
+use crate::resolution_plan::{PlannedImport, PlannedImportKind, ResolutionPlan};
 
 use super::{bundle, pool, recipe, worker};
 
 #[test]
 fn a_warm_plan_is_returned_only_for_the_runtime_key_the_sidecar_accepted() {
     let plan = Arc::new(ResolutionPlan {
-        imports: BTreeMap::from([(
-            "edge".into(),
-            PlannedImport {
-                path: "/repo/target.ts".into(),
-                side_effects: true,
-            },
-        )]),
+        candidates: None,
+        paths: vec!["/repo/entry.ts".into(), "/repo/target.ts".into()],
+        imports: vec![PlannedImport(
+            0,
+            "./target.ts".into(),
+            PlannedImportKind::ImportStatement,
+            1,
+            true,
+        )],
     });
     for (accepted, expected) in [("seed", Some(plan.clone())), ("fresh", None)] {
         let stored = recipe("seed").with_plan(Some(plan.clone()));

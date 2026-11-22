@@ -40,6 +40,7 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
     ));
     let terminal = Unimock::new(());
     let source = Source {
+        preparation: None,
         references: Mutex::new(None),
         staging: Mutex::new(None),
         operation: Arc::new(CaptureCancellation::default()),
@@ -48,6 +49,9 @@ fn moved_and_restored_tips_keep_the_resolved_merge_base_identity() {
         head: Arc::new(Unimock::new(())),
         warnings: scopes(&terminal).begin(),
         services: ServeChanges {
+            routing: None,
+            eager: None,
+            diagnostics: Arc::new(Unimock::new(())),
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
                 32 * 1024 * 1024,
             )),

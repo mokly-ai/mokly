@@ -6,7 +6,7 @@
   problem outside the scope that the options check of the proof-cost item
   found.
 - **Location:** `crates/mokly-graph/src/session_render.rs:59-66` and
-  `:68-107`, `crates/mokly-graph/src/session.rs:202-204`,
+  `:68-107`, `crates/mokly-graph/src/session.rs:189-191`,
   `crates/mokly-compare/src/comparison_resources.rs:43` and `:48`,
   `crates/mokly-compare/src/move_fingerprint.rs:18`,
   `crates/mokly-server/src/comparison_capture.rs:177`, and

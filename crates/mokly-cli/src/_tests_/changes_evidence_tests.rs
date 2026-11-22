@@ -23,6 +23,7 @@ use mokly_render::runtime::Runtime;
 use mokly_source_interface::tree::SourceTreeMock;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 
 #[derive(Clone, Copy, Debug)]
@@ -164,6 +165,8 @@ fn prepare(evidence: Evidence) -> (BasePreparationResult, Arc<Calls>) {
         Unimock::new(())
     };
     let provider: &dyn BaseProvider = &NativeBase {
+        validation: None,
+        admission: Arc::new(ImmediateBaseRenders),
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(dependency_tree),

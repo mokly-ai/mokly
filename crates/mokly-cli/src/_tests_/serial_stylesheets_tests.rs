@@ -5,17 +5,22 @@ use std::sync::{Arc, Mutex};
 use std::thread::{self, ThreadId};
 
 use mokly_css::types::{Bundle, StylesheetRoot};
+use mokly_graph::background::{BackgroundRead, BackgroundWorkerMock};
 use mokly_graph::cache::Artifact;
+use mokly_graph::capture_window::CaptureConsumerMock;
 use mokly_graph::closure::Closure;
 use mokly_graph::error::{GraphError, Result};
-use mokly_graph::types::ComparisonDocument;
+use mokly_graph::render_class::RenderClass;
 use mokly_graph::workers::{
-    ArtifactWorker, ComparisonWorker, DocumentWorker, RenderWorkers, RenderWorkersMock,
+    ArtifactWorker, ComparisonTask, DocumentWorker, RenderWorkers, RenderWorkersMock,
     StylesheetWorker, ThreadWorkers, ValidatedView,
 };
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
+use mokly_test_support::capture::Trace;
 use unimock::{MockFn, Unimock, matching};
 
+use crate::cancellation::CancellationMock;
+use crate::cancelled_work::CancellableWorkers;
 use crate::serial_stylesheets::SerialStylesheets;
 
 pub(crate) fn root(path: &str) -> StylesheetRoot {
@@ -95,8 +100,8 @@ impl ArtifactWorker for Unused {
     }
 }
 
-impl ComparisonWorker for Unused {
-    fn input(&self, _route: &str) -> Result<ComparisonDocument> {
+impl ComparisonTask for Unused {
+    fn run(&self, _index: usize) {
         unreachable!("the inner workers answer without the job")
     }
 }
@@ -120,9 +125,11 @@ fn every_other_job_reaches_the_inner_workers() {
             RenderWorkersMock::comparison_parallelism
                 .next_call(matching!())
                 .returns(3_usize),
-            RenderWorkersMock::comparison
-                .next_call(matching!(_, _))
-                .answers(&|_, _, _| Vec::new()),
+            RenderWorkersMock::capture_window
+                .next_call(matching!(_, _, _))
+                .answers(&|_, _, _, consumer| {
+                    consumer.complete(0);
+                }),
             RenderWorkersMock::cancelled
                 .next_call(matching!())
                 .returns(true),
@@ -139,9 +146,90 @@ fn every_other_job_reaches_the_inner_workers() {
     };
     let unused = Unused;
     assert_eq!(workers.comparison_parallelism(), 3);
-    assert!(workers.comparison(&[], &unused).is_empty());
+    let completed = Arc::new(Mutex::new(Vec::new()));
+    let recorded = completed.clone();
+    let mut consumer = Unimock::new(
+        CaptureConsumerMock::complete
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, index| {
+                recorded.lock().unwrap().push(index);
+                true
+            }))
+            .at_least_times(0),
+    );
+    workers.capture_window(3, &unused, &mut consumer);
+    assert_eq!(*completed.lock().unwrap(), [0]);
     assert!(workers.cancelled());
     assert!(workers.closure("page", &unused).is_ok());
     assert!(workers.document("page", &unused).is_ok());
     assert!(workers.run(&[], &unused).is_empty());
+}
+
+#[test]
+fn background_lookup_uses_the_existing_worker_through_both_wrappers() {
+    let threads = Arc::new(ThreadWorkers::new(1).unwrap());
+    let workers = SerialStylesheets {
+        inner: Arc::new(CancellableWorkers {
+            inner: threads.clone(),
+            cancellation: Arc::new(Unimock::new(
+                CancellationMock::requested
+                    .each_call(matching!())
+                    .returns(false),
+            )),
+        }),
+    };
+    let observed = Arc::new(Mutex::new(Vec::new()));
+    let caller = thread::current().id();
+    let job = Unimock::new(
+        BackgroundWorkerMock::read
+            .each_call(matching!(_))
+            .answers_arc(Arc::new({
+                let observed = observed.clone();
+                move |_, route| {
+                    observed.lock().unwrap().push((
+                        thread::current().id(),
+                        RenderClass::current(),
+                        tracing::Span::current().metadata().unwrap().name(),
+                        route.to_owned(),
+                    ));
+                    Ok(BackgroundRead::Complete(Arc::new(Artifact {
+                        bytes: route.as_bytes().to_vec(),
+                        document: None,
+                        fragment: None,
+                        content_type: "text/html".into(),
+                    })))
+                }
+            })),
+    );
+    let trace = Trace::default();
+    trace.in_scope(|| {
+        RenderClass::Background.in_scope(|| {
+            let span = tracing::info_span!("worker.lookup");
+            span.in_scope(|| {
+                assert!(matches!(
+                    threads.background("direct", &job).unwrap(),
+                    BackgroundRead::Complete(_)
+                ));
+                let BackgroundRead::Complete(artifact) =
+                    workers.background("wrapped", &job).unwrap()
+                else {
+                    panic!("a completed lookup must keep its result");
+                };
+                assert_eq!(artifact.bytes, b"wrapped");
+            });
+        })
+    });
+    let observed = observed.lock().unwrap();
+    assert_eq!(observed.len(), 2);
+    assert_ne!(observed[0].0, caller);
+    assert_eq!(
+        observed[1].0, observed[0].0,
+        "the wrappers must reuse the existing worker"
+    );
+    assert_eq!(observed[0].1, RenderClass::Background);
+    assert_eq!(observed[1].1, RenderClass::Background);
+    assert_eq!(observed[0].2, "worker.lookup");
+    assert_eq!(observed[1].2, "worker.lookup");
+    assert_eq!(observed[0].3, "direct");
+    assert_eq!(observed[1].3, "wrapped");
 }

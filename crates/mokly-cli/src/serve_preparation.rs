@@ -44,6 +44,7 @@ pub(super) async fn initial(
                 let mut candidate = match watch.candidate(&prepared) {
                     Ok(candidate) => candidate,
                     Err(error) => {
+                        preparation.discard();
                         attempt.report(&prepared.summary.warnings, false);
                         return Err(error);
                     }
@@ -59,6 +60,7 @@ pub(super) async fn initial(
                         }
                     };
                     if let Err(error) = watch.recheck(&mut candidate, &prepared) {
+                        preparation.discard();
                         attempt.report(&first_warnings, false);
                         attempt.report(&prepared.summary.warnings, false);
                         return Err(error);
@@ -66,6 +68,7 @@ pub(super) async fn initial(
                 }
                 watch.clone().adopt(candidate, &prepared);
             }
+            preparation.adopted(&prepared);
             attempt.report(&prepared.summary.warnings, false);
             Ok(Ok(prepared))
         })

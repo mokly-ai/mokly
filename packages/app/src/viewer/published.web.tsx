@@ -3,6 +3,8 @@ import { useCallback, useContext, useMemo, useRef, useState } from "react";
 import { MoklyViewer, postMessageAdapter } from "@mokly/viewer";
 import type { ViewerError, ViewerSlots as PackageSlots } from "@mokly/viewer";
 
+import { viewerHostProps } from "../layout/drag-covers";
+
 import { packageSlots } from "./bar";
 import { catalogueArtifactOrigin } from "./catalogue-source.web";
 import type { ViewerHostProps } from "./host";
@@ -131,8 +133,10 @@ export function ViewerHost(props: ViewerHostProps) {
         stageOverlay: comparisonOverlay(catalogue.source.origin),
       }
     : { ...composed };
+  // The wrapper's mark lets the Mac window's drag check find what the package
+  // draws, with no package selector.
   return (
-    <div className="fo-published-viewer">
+    <div className="fo-published-viewer" {...viewerHostProps}>
       <MoklyViewer
         index={catalogue.index}
         baseUrl={root}

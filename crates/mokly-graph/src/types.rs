@@ -13,16 +13,20 @@ use mokly_model::axes::{ColorScheme, Viewport};
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
+use crate::background::BackgroundRead;
 use crate::cache::Artifact;
+use crate::capture_window::{self, CaptureConsumer};
 use crate::closure::{Closure, GeneratedResources};
 use crate::collection::ComparisonCollector;
 use crate::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
+use crate::head_validation::{HeadValidation, ValidationRead};
 use crate::key::NodeKey;
+use crate::prefetch::PrefetchGuard;
 use crate::resource_inputs::ResourceObserver;
-use crate::workers::{ComparisonTask, ComparisonWorker};
+use crate::workers::ComparisonTask;
 
 /// A document's input key and render recipe, available before rendering.
 #[derive(Clone, Debug)]
@@ -76,7 +80,7 @@ pub struct ComparisonCapture {
     pub encoded_bytes: usize,
 }
 
-/// One transient comparison input, released after the caller encodes its batch.
+/// One transient comparison input, released after its worker encodes it.
 #[derive(Debug)]
 pub struct ComparisonDocument {
     /// Exact document bytes and composed tree.
@@ -88,6 +92,25 @@ pub struct ComparisonDocument {
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Complete head validation before pairing, with optional caller-owned facts.
+    fn validate_head(&self, _validation: &dyn HeadValidation) -> Result<RenderSummary> {
+        self.render_all()
+    }
+    /// Read one current document without replacing the later complete link pass.
+    fn validation_document(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.comparison_document(route)
+    }
+    /// Prove one closure-walk input. Unknown or failed reads are ordinary misses.
+    fn validation_identity(&self, _kind: ValidationRead, _route: &str) -> Option<ContentIdentity> {
+        None
+    }
+    /// Prepare optional generation-owned reuse evidence without changing keys or rendering.
+    fn prepare_render_reuse(&self) {}
+
+    /// Perform the ordinary worker lookup, completing a hit or deferring its real miss.
+    fn read_background(&self, _route: &str) -> Result<Option<BackgroundRead>> {
+        Ok(None)
+    }
     /// Return the generation's cancellation error before more view work starts.
     fn check_cancelled(&self) -> Result<()>;
 
@@ -101,6 +124,14 @@ pub trait RenderGeneration: GeneratedResources {
     fn generation_key(&self) -> &str;
     /// All document keys, available without any document render.
     fn plans(&self) -> &BTreeMap<String, DocumentPlan>;
+    /// List routes absent from cache tiers and the prepared store, without restoration.
+    fn uncached_documents(&self) -> Vec<String> {
+        Vec::new()
+    }
+    /// Start classification-owned early renders without publishing their results.
+    fn prefetch_comparison(&self) -> Result<Option<PrefetchGuard>> {
+        Ok(None)
+    }
     /// Validated private catalogue, including its complete source inventory.
     fn catalogue(&self) -> &PreparedCatalogue;
     /// Obtain one document, using the cache or rendering an evicted node again.
@@ -152,9 +183,21 @@ pub trait RenderGeneration: GeneratedResources {
             .as_ref()
             .map(|document| document.usage.clone()))
     }
-    /// Maximum number of transient comparison inputs in one scheduled batch.
+    /// Worker capacity for bounded comparison preparation.
     fn comparison_parallelism(&self) -> usize {
         1
+    }
+    /// Maximum simultaneous capture inputs under worker and sidecar capacity.
+    fn capture_parallelism(&self) -> usize {
+        self.comparison_parallelism()
+    }
+    /// Refill completed capture slots and join all admitted work before returning.
+    fn schedule_capture_window(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        capture_window::sequential(task, consumer);
     }
     /// Run every indexed task once and finish before returning. Tasks own their
     /// bounded result slots, errors, and generation cancellation checks.
@@ -171,14 +214,6 @@ pub trait RenderGeneration: GeneratedResources {
         consumer: &mut dyn ComparisonConsumer,
     ) {
         comparison_stream::sequential(task, consumer);
-    }
-    /// Schedule a wrapper's own input checks on this generation's workers.
-    fn schedule_comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        routes.iter().map(|route| worker.input(route)).collect()
     }
     /// Compose and validate one input after checking command cancellation.
     fn comparison_input(&self, route: &str) -> Result<ComparisonDocument> {
@@ -261,7 +296,3 @@ pub struct TemporaryDocument {
     /// Resources checked through the generation's public-file policy.
     pub closure: Closure,
 }
-
-#[cfg(test)]
-#[path = "_tests_/comparison_usage_tests.rs"]
-mod comparison_usage_tests;

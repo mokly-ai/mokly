@@ -3,6 +3,7 @@ import type { Viewport } from "@mokly/mokly";
 import { ContentList } from "../../../entries/design/content-list.mockup";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
+import { MacWindowLinks } from "../mac-window";
 import { Action, Pending, Section, StateMessage } from "../page-parts";
 
 import { paneScreenPath, panes, sections } from "./panes";
@@ -45,9 +46,14 @@ function SectionIndex({ waiting = false }: { waiting?: boolean }) {
 function SectionsPane({
   state,
   viewport,
+  screen,
+  macApp,
 }: {
   state: ScreenState;
   viewport: Viewport;
+  screen?: string;
+  /** Whether the page draws the Mac app window around settings. */
+  macApp?: boolean;
 }) {
   return (
     <SettingsSurface
@@ -55,6 +61,8 @@ function SectionsPane({
       state={state}
       viewport={viewport}
       title="Settings"
+      screen={screen}
+      macApp={macApp}
     >
       {state === "loading" ? (
         <Pending label="Loading settings" labelMode="screen-reader-only">
@@ -123,4 +131,30 @@ export function SettingsSectionsErrorScreen({
   viewport: Viewport;
 }) {
   return <SectionsPane viewport={viewport} state="error" />;
+}
+
+const macAppPath = "product/settings/sections/mac-app";
+
+/**
+ * Settings in the Mac app. A wide window opens the dialog over the stage, and
+ * the window buttons stay above its backdrop, because macOS draws them above
+ * the page. A narrow window opens the full-screen layer, whose bar starts after
+ * the buttons.
+ */
+export function SettingsSectionsMacAppScreen({
+  viewport,
+}: {
+  viewport: Viewport;
+}) {
+  return (
+    <>
+      <SectionsPane
+        viewport={viewport}
+        state="default"
+        screen={macAppPath}
+        macApp
+      />
+      <MacWindowLinks current={macAppPath} />
+    </>
+  );
 }

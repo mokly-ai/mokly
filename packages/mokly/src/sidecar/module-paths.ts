@@ -28,6 +28,7 @@ export class ModulePaths {
   readonly resolvedDependencies = new Set<string>();
   readonly lookupFiles = new Set<string>();
   readonly lookupDirectories = new Set<string>();
+  private readonly observed = new Set<string>();
 
   private constructor(
     readonly sourceRoot: string,
@@ -215,8 +216,10 @@ export class ModulePaths {
     return this.observe(real);
   }
 
-  /** Record a resolved module as a dependency lookup observation. */
+  /** Record a resolved module as a dependency lookup observation, once for each path. */
   observe(file: string): string {
+    if (this.observed.has(file)) return file;
+    this.observed.add(file);
     if (file.split(path.sep).includes("node_modules"))
       this.resolvedDependencies.add(file);
     this.dependencyUsage.file(file);

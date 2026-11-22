@@ -2,11 +2,10 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::resolution::Resolution;
-use mokly_css::types::{StylesheetBundler, StylesheetRoot};
+use mokly_css::types::StylesheetRoot;
 
 use crate::leases::ContextLease;
 use crate::postcss::PostCss;
@@ -15,13 +14,33 @@ use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
 use crate::stylesheet_cache::CachedStylesheets;
-use crate::stylesheet_compiler::CapturingCompiler;
+use crate::stylesheet_compiler::{CapturingCompiler, StylesheetPreparation};
 
-pub(crate) fn compiler(
+/// Stylesheet services and context ownership for one attempt.
+pub(crate) struct StylesheetAttempt {
+    /// Compilation and its retained preparation probe.
+    pub(crate) compiler: Arc<dyn StylesheetPreparation>,
+    /// Optional PostCSS context shared with the compiler.
+    pub(crate) context: Option<Arc<ContextLease>>,
+}
+
+impl StylesheetAttempt {
+    /// Retire a used context after successful Serve head preparation when every root remains.
+    pub(crate) fn retire_used(&self) {
+        if let Some(context) = &self.context
+            && context.used_live()
+            && self.compiler.kept_every_record()
+        {
+            context.retire();
+        }
+    }
+}
+
+pub(crate) fn attempt(
     runtime: &Runtime,
     config: &ResolvedConfig,
     side: &SideInputs,
-) -> Arc<dyn StylesheetBundler> {
+) -> StylesheetAttempt {
     let tree = sources::reader(runtime, config, side);
     let module_resolution = &side.module_resolution;
     let resolution = Resolution {
@@ -35,22 +54,34 @@ pub(crate) fn compiler(
             .collect(),
         extensions: module_resolution.resolve_extensions.clone(),
     };
+    let settings = format!(
+        "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
+        config.input,
+        config.modules,
+        config.postcss().map(|_| &side.source_root),
+        side.module_resolution,
+        dependency_roots(side),
+        side.repository_roots
+    );
     let postcss = config.postcss().map(|module| {
+        let released = {
+            let mut cache = runtime
+                .css
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            cache.purge();
+            cache.releases.clone()
+        };
+        let lease = Arc::new(ContextLease::new(
+            side.context.clone(),
+            settings.clone(),
+            runtime.pool.clone(),
+            released,
+        ));
+        runtime.track_head_context(&lease);
         Arc::new(PostCss {
             usage: runtime.dependency_usage.clone(),
-            lease: Arc::new(ContextLease {
-                id: side.context.clone(),
-                pool: runtime.pool.clone(),
-                released: {
-                    let mut cache = runtime
-                        .css
-                        .lock()
-                        .unwrap_or_else(|error| error.into_inner());
-                    cache.purge();
-                    cache.releases.clone()
-                },
-                used: AtomicBool::new(false),
-            }),
+            lease,
             pool: runtime.pool.clone(),
             tree: tree.clone(),
             inventory_tree: runtime.inventory_tree.clone(),
@@ -62,16 +93,8 @@ pub(crate) fn compiler(
             module_digests: Default::default(),
         })
     });
-    let settings = format!(
-        "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
-        config.input,
-        config.modules,
-        config.postcss().map(|_| &side.source_root),
-        side.module_resolution,
-        dependency_roots(side),
-        side.repository_roots
-    );
-    Arc::new(
+    let context = postcss.as_ref().map(|postcss| postcss.lease.clone());
+    let compiler = Arc::new(
         CachedStylesheets::new(
             Arc::new(CapturingCompiler {
                 tree: tree.clone(),
@@ -82,6 +105,7 @@ pub(crate) fn compiler(
                     .watch_stylesheets
                     .then(|| runtime.inventory_tree.clone()),
                 side: side.clone(),
+                deferred_sources: Some(tree.clone()),
             }),
             tree,
             config.repo_root.clone(),
@@ -89,7 +113,8 @@ pub(crate) fn compiler(
             runtime.styles.clone(),
         )
         .with_head(runtime.head_styles.clone().unwrap_or_default()),
-    )
+    );
+    StylesheetAttempt { compiler, context }
 }
 
 #[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]

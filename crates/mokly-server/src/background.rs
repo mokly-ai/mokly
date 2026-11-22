@@ -7,9 +7,11 @@ use mokly_catalogue::diagnostic::Warning;
 use tokio::sync::{broadcast, watch};
 
 use crate::backend::Documents;
-use crate::background_batch::Window;
+use crate::background_batch::{Event, Window};
 use crate::background_capacity::BackgroundCapacity;
-use crate::changes_background::AfterUsage;
+use crate::background_dispatch::Dispatch;
+use crate::background_stage::Stages;
+use crate::changes_background::{AfterUsage, PendingChanges};
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::publication::{PublicationEvent, Publications};
@@ -44,17 +46,33 @@ impl Background for UsagePass {
             return;
         }
         let mut updates = self.publications.subscribe().updates;
+        let stages = Stages::new(self.capacity.clone());
         loop {
             if stopped(&stop) {
                 return;
             }
             let origin = self.publications.current();
-            if !self.fill(&origin, &mut stop, &mut updates).await {
+            let pending = self
+                .changes
+                .as_ref()
+                .and_then(|changes| changes.prepare(&origin));
+            let filled = self
+                .fill_window(
+                    &origin,
+                    &mut stop,
+                    &mut updates,
+                    &stages,
+                    pending.as_deref(),
+                )
+                .await;
+            if !filled {
+                self.drain(pending).await;
                 continue;
             }
             if let Some(changes) = &self.changes {
                 changes.run(origin.clone(), stop.clone()).await;
             }
+            self.drain(pending).await;
             while Arc::ptr_eq(&self.publications.current().documents, &origin.documents) {
                 if stopped(&stop) {
                     return;
@@ -70,18 +88,20 @@ impl Background for UsagePass {
 
 impl UsagePass {
     #[tracing::instrument(name = "serve.background", skip_all, fields(status = "ok"))]
-    async fn fill(
+    async fn fill_window(
         &self,
         origin: &Arc<Snapshot>,
         stop: &mut watch::Receiver<bool>,
         updates: &mut broadcast::Receiver<PublicationEvent>,
+        stages: &Arc<Stages>,
+        pending: Option<&dyn PendingChanges>,
     ) -> bool {
-        let mut window = Window::new(1);
-        let mut routes = origin.routes.iter().enumerate();
+        let mut window = Window::new(self.work.parallelism());
+        let mut routes = origin.routes.iter().enumerate().peekable();
+        let mut dispatched = false;
         loop {
             loop {
                 tokio::task::yield_now().await;
-                window.set_limit(self.capacity.capacity());
                 if !window.has_room() {
                     break;
                 }
@@ -95,11 +115,22 @@ impl UsagePass {
                 if current.completed.contains_key(&route.route) {
                     continue;
                 }
-                window.start(
+                let dispatch = Dispatch::new(stages.clone());
+                window.start_dispatched(
                     position,
-                    self.work
-                        .background(origin.documents.clone(), route.route.clone()),
+                    self.work.background(
+                        origin.documents.clone(),
+                        route.route.clone(),
+                        dispatch.clone(),
+                    ),
+                    dispatch,
                 );
+            }
+            if !dispatched && routes.peek().is_none() {
+                if let Some(pending) = pending {
+                    pending.dispatched();
+                }
+                dispatched = true;
             }
             if window.is_empty() {
                 break;
@@ -109,9 +140,11 @@ impl UsagePass {
                 _ = updates.recv() => {
                     if !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
                 },
-                (position, result) = window.next() => {
+                event = window.next_event() => {
                     if stopped(stop) || !Arc::ptr_eq(&self.publications.current().documents, &origin.documents) { return cancelled(); }
-                    for outcome in window.settle(position, result) { self.report(origin.documents.as_ref(), outcome); }
+                    if let Event::Completed(position, result) = event {
+                        for outcome in window.settle(position, result) { self.report(origin.documents.as_ref(), outcome); }
+                    }
                 }
             }
         }
@@ -140,6 +173,32 @@ impl UsagePass {
         }
         true
     }
+    async fn drain(&self, pending: Option<Arc<dyn PendingChanges>>) {
+        if let Some(pending) = pending
+            && let Err(source) =
+                tokio::task::spawn_blocking(move || pending.cancel_and_join()).await
+        {
+            self.diagnostics
+                .failed(&ServerError::Internal(InternalError::Task { source }));
+        }
+    }
+    #[cfg(test)]
+    async fn fill(
+        &self,
+        origin: &Arc<Snapshot>,
+        stop: &mut watch::Receiver<bool>,
+        updates: &mut broadcast::Receiver<PublicationEvent>,
+    ) -> bool {
+        self.fill_window(
+            origin,
+            stop,
+            updates,
+            &Stages::new(self.capacity.clone()),
+            None,
+        )
+        .await
+    }
+
     /// Report one view as a serial pass did: its warnings, then its failure diagnostic.
     fn report(&self, documents: &dyn Documents, outcome: Result<Vec<Warning>>) {
         match outcome {
@@ -174,3 +233,11 @@ mod quiet_background_tests;
 #[cfg(test)]
 #[path = "_tests_/background_batch/mod.rs"]
 mod background_batch_tests;
+
+#[cfg(test)]
+#[path = "_tests_/overlap/mod.rs"]
+mod overlap_tests;
+
+#[cfg(test)]
+#[path = "_tests_/eager_usage_tests.rs"]
+mod eager_usage_tests;

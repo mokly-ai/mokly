@@ -5,14 +5,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_css::types::{Bundle, StylesheetRoot};
+use mokly_graph::background::{BackgroundRead, BackgroundWorker};
 use mokly_graph::cache::Artifact;
+use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::Closure;
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
-use mokly_graph::types::ComparisonDocument;
 use mokly_graph::workers::{
-    ArtifactWorker, ComparisonTask, ComparisonWorker, DocumentWorker, RenderWorkers,
-    StylesheetWorker, ValidatedView,
+    ArtifactWorker, ComparisonTask, DocumentWorker, RenderWorkers, StylesheetWorker, ValidatedView,
 };
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_source_interface::error::SourceError;
@@ -143,6 +143,24 @@ fn check(cancellation: &dyn Cancellation) -> Result<()> {
 }
 
 impl RenderWorkers for CancellableWorkers {
+    fn capture_window(
+        &self,
+        limit: usize,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        self.inner.capture_window(limit, task, consumer);
+    }
+    fn capture_parallelism(&self) -> usize {
+        self.inner.capture_parallelism()
+    }
+    fn prefetch_tasks(&self, count: usize, task: &dyn ComparisonTask) {
+        self.inner.prefetch_tasks(count, task);
+    }
+    fn background(&self, route: &str, worker: &dyn BackgroundWorker) -> Result<BackgroundRead> {
+        check(self.cancellation.as_ref())?;
+        self.inner.background(route, worker)
+    }
     /// The supplied task checks both generations and stores their own errors.
     fn comparison_stream(&self, task: &dyn ComparisonTask, consumer: &mut dyn ComparisonConsumer) {
         self.inner.comparison_stream(task, consumer);
@@ -152,19 +170,6 @@ impl RenderWorkers for CancellableWorkers {
     }
     fn comparison_parallelism(&self) -> usize {
         self.inner.comparison_parallelism()
-    }
-    fn comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        self.inner.comparison(
-            routes,
-            &ComparisonJobs {
-                cancellation: self.cancellation.as_ref(),
-                inner: worker,
-            },
-        )
     }
     fn cancelled(&self) -> bool {
         self.cancellation.requested()
@@ -206,11 +211,6 @@ struct Jobs<'a> {
     inner: &'a dyn DocumentWorker,
 }
 
-struct ComparisonJobs<'a> {
-    cancellation: &'a dyn Cancellation,
-    inner: &'a dyn ComparisonWorker,
-}
-
 struct StylesheetJobs<'a> {
     cancellation: &'a dyn Cancellation,
     inner: &'a dyn StylesheetWorker,
@@ -223,12 +223,6 @@ impl StylesheetWorker for StylesheetJobs<'_> {
     }
 }
 
-impl ComparisonWorker for ComparisonJobs<'_> {
-    fn input(&self, route: &str) -> Result<ComparisonDocument> {
-        check(self.cancellation)?;
-        self.inner.input(route)
-    }
-}
 impl DocumentWorker for Jobs<'_> {
     fn validate(&self, route: &str) -> Result<ValidatedView> {
         check(self.cancellation)?;

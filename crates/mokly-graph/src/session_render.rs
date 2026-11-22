@@ -5,14 +5,32 @@ use std::sync::{Arc, Weak};
 use mokly_model::axes::Viewport;
 
 use crate::cache::Artifact;
-use crate::closure::{Closure, ClosureBuilder, ClosureObserver};
-use crate::document_store::ReadOutcome;
-use crate::error::{GraphError, Result, invalid};
+use crate::closure::{Closure, ClosureBuilder, ClosureObserver, Walker};
+use crate::error::{GraphError, Result};
 use crate::session::Session;
+use crate::session_lookup::DocumentRead;
+use crate::types::DocumentPlan;
 use crate::workers::ArtifactWorker;
-use crate::{document_composition, resource_digests, validation};
+use crate::{resource_digests, validation};
 
 impl Session {
+    pub(crate) fn preview_walker(&self) -> Walker {
+        Walker {
+            observer: None,
+            ..self.walker()
+        }
+    }
+
+    pub(crate) fn walker(&self) -> Walker {
+        Walker {
+            observer: Some(Arc::new(self.clone())),
+            tree: self.state.tree.clone(),
+            policy: self.state.policy.clone(),
+            generated: Arc::new(self.clone()),
+            index: self.state.reference_index.clone(),
+        }
+    }
+
     #[tracing::instrument(
         name = "render.document",
         skip_all,
@@ -20,77 +38,17 @@ impl Session {
         err
     )]
     pub(crate) fn raw(&self, route: &str) -> Result<Arc<Artifact>> {
-        let plan = self
-            .state
-            .plans
-            .get(route)
-            .ok_or_else(|| invalid(route, "document route is absent from this generation"))?;
-        tracing::Span::current().record(
-            "viewport",
-            match plan.viewport {
-                Some(Viewport::Mobile) => "mobile",
-                Some(Viewport::Desktop) => "desktop",
-                None => "none",
-            },
-        );
-        tracing::Span::current().record(
-            "scheme",
-            match plan.color_scheme {
-                mokly_model::axes::ColorScheme::Light => "light",
-                mokly_model::axes::ColorScheme::Dark => "dark",
-            },
-        );
-        if let Some(artifact) = self.state.cache.get(&plan.key) {
-            tracing::Span::current().record("cache_hit", true);
-            return Ok(artifact);
-        }
-        let stored_key = self.stored_key(route);
-        if let (Some(key), Some(persistence)) = (&stored_key, &self.state.inputs.persistence)
-            && let ReadOutcome::Hit(artifact) | ReadOutcome::HitWithStoreFault(artifact) =
-                persistence.store.load(key)
-        {
-            self.state
-                .composer
-                .record_served(&document_composition::request(
-                    self,
-                    plan,
-                    &self.state.catalogue.model.entries[plan.entry],
-                ));
-            return Ok(artifact);
-        }
-        let entry = &self.state.catalogue.model.entries[plan.entry];
-        let result = document_composition::document(self, plan, entry);
-        match result {
-            Ok(artifact) => {
-                if let Some(key) = stored_key {
-                    self.state
-                        .fresh
-                        .lock()
-                        .unwrap_or_else(|error| error.into_inner())
-                        .insert(plan.key.0.clone(), key);
-                }
-                Ok(artifact)
-            }
-            Err(source) => Err(GraphError::Document {
-                entry: entry.metadata.path.clone(),
-                source: Box::new(source),
-            }),
+        match self.raw_lookup(route)? {
+            DocumentRead::Hit(artifact) => Ok(artifact),
+            DocumentRead::Miss(key) => self.compose_miss(route, key, None),
         }
     }
-}
 
-impl ArtifactWorker for Session {
-    fn closure_job(&self, route: &str) -> Result<Closure> {
-        let artifact = self.artifact(route)?;
-        let document = artifact
-            .document
-            .as_ref()
-            .expect("rendered document artifacts carry their composed tree");
-        self.walker()
-            .collect(route, &document.tree, &document.resources)
-    }
-    fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
-        let composed = self.raw(route)?;
+    pub(crate) fn finish_artifact(
+        &self,
+        route: &str,
+        composed: Arc<Artifact>,
+    ) -> Result<Arc<Artifact>> {
         let document = composed
             .document
             .as_ref()
@@ -129,6 +87,22 @@ impl ArtifactWorker for Session {
         }
         self.offer_document(route);
         Ok(artifact)
+    }
+}
+
+impl ArtifactWorker for Session {
+    fn closure_job(&self, route: &str) -> Result<Closure> {
+        let artifact = self.artifact(route)?;
+        let document = artifact
+            .document
+            .as_ref()
+            .expect("rendered document artifacts carry their composed tree");
+        self.walker()
+            .collect(route, &document.tree, &document.resources)
+    }
+    fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
+        let composed = self.raw(route)?;
+        self.finish_artifact(route, composed)
     }
 }
 
@@ -198,4 +172,22 @@ impl ClosureObserver for Session {
         }
         Ok(())
     }
+}
+
+pub(crate) fn record_axes(plan: &DocumentPlan) {
+    tracing::Span::current().record(
+        "viewport",
+        match plan.viewport {
+            Some(Viewport::Mobile) => "mobile",
+            Some(Viewport::Desktop) => "desktop",
+            None => "none",
+        },
+    );
+    tracing::Span::current().record(
+        "scheme",
+        match plan.color_scheme {
+            mokly_model::axes::ColorScheme::Light => "light",
+            mokly_model::axes::ColorScheme::Dark => "dark",
+        },
+    );
 }

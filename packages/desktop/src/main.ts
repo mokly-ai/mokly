@@ -4,6 +4,7 @@ import { extname, resolve, sep } from "node:path";
 
 import {
   app,
+  autoUpdater as nativeUpdater,
   BrowserWindow,
   dialog,
   Menu,
@@ -19,11 +20,13 @@ import { contentSecurityPolicy, readConfiguration } from "./config.js";
 import { safeDiagnostic } from "./diagnostics.js";
 import { exportHandler, registerScheme } from "./export-handler.js";
 import { exchangeObserver } from "./handoff.js";
+import { offerApplicationsMove, readOnlyFolder } from "./install-location.js";
 import { startDesktop } from "./lifecycle.js";
 import { installMenu } from "./menu.js";
 import { installNavigation } from "./navigation.js";
 import { installPermissions } from "./permissions.js";
 import { startUpdates, updateMode } from "./updates.js";
+import { installWindowButtons } from "./window-buttons.js";
 import { createWindow } from "./window.js";
 
 const warn = (error: unknown) =>
@@ -80,36 +83,61 @@ startDesktop({
   },
   createWindow: () => {
     const statePath = resolve(app.getPath("userData"), "window.json");
-    return createWindow({
-      create: (options) => new BrowserWindow(options),
-      readState: () => readFileSync(statePath, "utf8"),
-      saveState: (value) => writeFileSync(statePath, value),
-      visible: (bounds) =>
-        screen
-          .getAllDisplays()
-          .some(
-            ({ workArea }) =>
-              bounds.x < workArea.x + workArea.width &&
-              bounds.x + bounds.width > workArea.x &&
-              bounds.y < workArea.y + workArea.height &&
-              bounds.y + bounds.height > workArea.y,
-          ),
-      warn,
-    });
+    return createWindow(
+      {
+        create: (options) => new BrowserWindow(options),
+        readState: () => readFileSync(statePath, "utf8"),
+        saveState: (value) => writeFileSync(statePath, value),
+        visible: (bounds) =>
+          screen
+            .getAllDisplays()
+            .some(
+              ({ workArea }) =>
+                bounds.x < workArea.x + workArea.width &&
+                bounds.x + bounds.width > workArea.x &&
+                bounds.y < workArea.y + workArea.height &&
+                bounds.y + bounds.height > workArea.y,
+            ),
+        warn,
+      },
+      process.platform,
+    );
   },
-  wireWindow: (active) =>
+  wireWindow: (active) => {
+    if (process.platform === "darwin") installWindowButtons(active);
     installNavigation(active.webContents, configuration.config.appOrigin, {
       openExternal: (url) => shell.openExternal(url),
       load: (url) => active.loadURL(url),
       warn,
-    }),
-  updates: () =>
-    startUpdates(
+    });
+  },
+  updates: () => {
+    const mode = updateMode(
+      app.isPackaged,
+      configuration.config.updates === true,
+      process.platform,
+      process.env.APPIMAGE,
+    );
+    void offerApplicationsMove({
+      updates: mode === "install",
+      platform: process.platform,
+      version: app.getVersion(),
+      executable: app.getPath("exe"),
+      userData: app.getPath("userData"),
+      inApplications: () => app.isInApplicationsFolder(),
+      readOnly: (folder) => readOnlyFolder(folder),
+      showDialog: (options) => dialog.showMessageBox(options),
+      move: () => app.moveToApplicationsFolder(),
+      warn,
+    });
+    return startUpdates(
       {
         updater:
           process.platform === "linux" && !process.env.APPIMAGE
             ? new electronUpdater.DebUpdater()
             : electronUpdater.autoUpdater,
+        nativeUpdater:
+          process.platform === "darwin" ? nativeUpdater : undefined,
         showDialog: (options) => dialog.showMessageBox(options),
         openExternal: (url) => shell.openExternal(url),
         every: (callback, milliseconds) => {
@@ -118,14 +146,19 @@ startDesktop({
         },
         warn,
       },
-      updateMode(app.isPackaged, process.platform, process.env.APPIMAGE),
-    ),
-  menu: (check) =>
+      mode,
+    );
+  },
+  menu: (updates) =>
     installMenu(
       {
         current: () => Menu.getApplicationMenu(),
         item: (options) => new MenuItem(options),
+        build: (items) => Menu.buildFromTemplate(items),
+        set: (menu) => Menu.setApplicationMenu(menu),
+        focusedWindow: () => BrowserWindow.getFocusedWindow(),
       },
-      check,
+      updates,
+      process.platform,
     ),
 });

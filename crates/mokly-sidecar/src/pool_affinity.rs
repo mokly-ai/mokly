@@ -62,10 +62,7 @@ pub(super) fn acquire(
     limit: usize,
     protected: Option<usize>,
 ) -> Option<usize> {
-    let context = match call {
-        Call::ProcessCss(params) => Some(params.context.as_str()),
-        _ => None,
-    };
+    let context = call.postcss_context();
     let index = if let Some(index) = context
         .and_then(|id| state.affinity.get(id))
         .map(|affinity| affinity.index)
@@ -128,3 +125,7 @@ mod pool_root_selection_tests;
 #[cfg(test)]
 #[path = "_tests_/generation_affinity/mod.rs"]
 mod generation_affinity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_postcss_preparation_tests.rs"]
+mod pool_postcss_preparation_tests;
