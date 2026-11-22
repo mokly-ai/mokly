@@ -11,9 +11,6 @@ under [follow-ups](./follow-ups/).
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
-- [Serve base attempts prepare their PostCSS context](./serve-base-postcss-preparation.md) —
-  start the PostCSS child of a Serve base graph preparation with a `bundle`
-  request directly after the base `hello`, as a Serve head startup does.
 
 ## Completed Plans
 
