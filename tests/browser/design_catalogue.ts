@@ -5,17 +5,19 @@ import type { CatalogueReadModel } from "@mokly/viewer";
 import inventory from "../fixtures/design-library/browser-inventory.json" with { type: "json" };
 
 import { test } from "./browser_test.js";
+import { libraryCases } from "./design_library_inventory.js";
 
 export type DesignEntry =
   | CatalogueReadModel["screens"][number]
   | CatalogueReadModel["components"][number];
 /** Fixed discovery inputs; runtime validation prevents an untested new design. */
-export const designCases = inventory as Array<{
+const fixedCases = inventory as Array<{
   kind: "screen" | "component";
   path: string;
   colorSchemes: ("light" | "dark")[];
   variantOf?: string;
 }>;
+export const designCases = [...fixedCases, ...libraryCases];
 
 /** Each spec registers its own catalogue read and owns its mutable entry list. */
 export function designCatalogue(fixtureTest = test): DesignEntry[] {

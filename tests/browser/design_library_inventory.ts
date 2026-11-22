@@ -1,58 +1,37 @@
-export const designLibrary = [
-  [
-    "chrome",
-    "top-bar",
-    ["default", "search", "tag-picker", "drawer-open", "auto-appearance"],
-  ],
-  [
-    "chrome",
-    "catalogue-navigation",
-    [
-      "all",
-      "changes",
-      "empty",
-      "drawer",
-      "loading",
-      "preparing",
-      "unavailable",
-      "variants",
-      "changed-variants",
-      "folder-screen",
-      "changed-member",
-    ],
-  ],
-  ["chrome", "screen-header", ["screen", "component", "changed", "removed"]],
-  ["chrome", "appearance-selector", ["auto", "light", "dark", "compact"]],
-  [
-    "controls",
-    "comparison-toolbar",
-    ["current", "side-by-side", "overlay", "difference", "side-by-side-apart"],
-  ],
-  [
-    "controls",
-    "view-controls",
-    ["default", "both", "highlighted", "unavailable", "changed-views"],
-  ],
-  ["controls", "tag-picker", ["all", "selected", "empty"]],
-  ["controls", "tag-chip", ["default", "selected", "inactive"]],
-  ["controls", "change-status", ["unmodified", "added", "changed", "removed"]],
-  ["inspector", "inspector", ["details", "props", "closed"]],
-  ["inspector", "metadata-row", ["text", "code", "linked", "tags"]],
-  [
-    "inspector",
-    "prop-field",
-    ["text", "boolean", "invalid-number", "select", "optional-unset"],
-  ],
-  [
-    "preview",
-    "device-frame",
-    ["phone", "browser", "dark", "light-only", "failed"],
-  ],
-  [
-    "preview",
-    "comparison-pane",
-    ["before", "current", "missing-before", "missing-current"],
-  ],
-  ["preview", "empty-state", ["home", "missing-route", "no-changes"]],
-  ["preview", "flow-step", ["first", "second"]],
-] as const;
+import type { CatalogueReadModel } from "@mokly/viewer";
+
+import {
+  DUAL_SCHEME,
+  SHARED_COMPONENTS,
+} from "../helpers/design_expectations.js";
+
+export const designLibrary = Object.entries(SHARED_COMPONENTS).map(
+  ([id, variants]): readonly [string, string, readonly string[]] => {
+    const separator = id.indexOf("/");
+    return [id.slice(0, separator), id.slice(separator + 1), variants];
+  },
+);
+
+type LibraryCase = Pick<
+  CatalogueReadModel["components"][number],
+  "kind" | "path" | "colorSchemes" | "variantOf"
+>;
+
+export const libraryCases = Object.entries(SHARED_COMPONENTS)
+  .flatMap(([id, variants]) => {
+    const path = `design/library/${id}`;
+    const parent: LibraryCase = {
+      kind: "component",
+      path,
+      colorSchemes: DUAL_SCHEME.test(path) ? ["light", "dark"] : ["light"],
+    };
+    return [
+      parent,
+      ...variants.map((variant) => ({
+        ...parent,
+        path: `${path}/${variant}`,
+        variantOf: path,
+      })),
+    ];
+  })
+  .sort((a, b) => a.path.localeCompare(b.path));

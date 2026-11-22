@@ -26,6 +26,13 @@ pub fn route(sheet: &str) -> String {
 }
 
 pub fn check(result: &ComparisonResult) -> Scopes {
+    let expectations: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../tests/fixtures/design/expectations.json"
+    ))
+    .unwrap();
+    let shared_components: BTreeMap<String, Vec<String>> =
+        serde_json::from_value(expectations["sharedComponents"].clone()).unwrap();
+    let saved_variants: usize = shared_components.values().map(Vec::len).sum();
     let entries = &result.after.catalogue().model.entries;
     let components: Vec<_> = entries
         .iter()
@@ -36,7 +43,7 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             .iter()
             .filter(|entry| entry.metadata.variant_of.is_some())
             .count(),
-        69
+        saved_variants
     );
     let screens: BTreeSet<_> = entries
         .iter()
