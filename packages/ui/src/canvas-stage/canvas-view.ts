@@ -149,7 +149,19 @@ function anchoredStart(
   return point - (fixed + nominal * next);
 }
 
-/** The view at another zoom about a canvas point; the reader then leaves Fit. */
+/**
+ * Where the canvas draws the section: on whole pixels, so its head and its
+ * labels stay sharp. The view keeps the exact position, so slow drags and
+ * scrolls add up.
+ */
+export function drawnPosition(view: CanvasView): CanvasPoint {
+  return { x: Math.round(view.x), y: Math.round(view.y) };
+}
+
+/**
+ * The view at another zoom about a canvas point; the reader then leaves Fit.
+ * The point is a point of the drawn section, so it stays under the pointer.
+ */
 export function zoomAbout(
   view: CanvasView,
   extent: CanvasExtent,
@@ -157,10 +169,11 @@ export function zoomAbout(
   point: CanvasPoint,
 ): CanvasView {
   const next = clampZoom(zoom);
+  const drawn = drawnPosition(view);
   return {
     fitted: false,
-    x: anchoredStart(extent.columns, view.x, view.zoom, next, point.x),
-    y: anchoredStart(extent.rows, view.y, view.zoom, next, point.y),
+    x: anchoredStart(extent.columns, drawn.x, view.zoom, next, point.x),
+    y: anchoredStart(extent.rows, drawn.y, view.zoom, next, point.y),
     zoom: next,
   };
 }

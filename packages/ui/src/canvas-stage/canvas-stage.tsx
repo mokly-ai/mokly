@@ -24,6 +24,7 @@ import { useMergedRef } from "../merged-ref/merged-ref.js";
 
 import { bindCanvasGestures } from "./canvas-gestures.js";
 import {
+  drawnPosition,
   panView,
   wheelZoom,
   zoomAbout,
@@ -131,6 +132,7 @@ export function CanvasStage({
     [reading, section],
   );
   const canvasElement = useMergedRef(canvas, canvasRef);
+  const drawn = drawnPosition(view);
   return (
     <div
       className="mbk-canvas mbk-reset"
@@ -138,7 +140,7 @@ export function CanvasStage({
       data-mokly-stage={routed ? "" : undefined}
       ref={canvasElement}
       style={{
-        backgroundPosition: `${view.x % GRID_PITCH}px ${view.y % GRID_PITCH}px`,
+        backgroundPosition: `${drawn.x % GRID_PITCH}px ${drawn.y % GRID_PITCH}px`,
       }}
     >
       <div
@@ -153,7 +155,7 @@ export function CanvasStage({
             style={
               {
                 "--mbk-canvas-zoom": view.zoom,
-                transform: `translate(${Math.round(view.x)}px, ${Math.round(view.y)}px)`,
+                transform: `translate(${drawn.x}px, ${drawn.y}px)`,
               } as CSSProperties
             }
           >
