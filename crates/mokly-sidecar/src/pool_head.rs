@@ -26,6 +26,7 @@ pub(super) struct Head {
     pub(super) active: Option<usize>,
     pub(super) return_disabled: bool,
     pub(super) wake: Option<Weak<dyn ReturnWake>>,
+    pub(super) admission: Option<Weak<dyn ReturnWake>>,
     /// Recent render calls of the newest head generation and the pending warm-ups.
     pub(super) warmups: Warmups,
 }
@@ -33,6 +34,9 @@ pub(super) struct Head {
 impl Head {
     /// The wake records work only; it never runs maintenance under the state lock.
     pub(super) fn notify(&self) {
+        if let Some(wake) = self.admission.as_ref().and_then(Weak::upgrade) {
+            wake.notify();
+        }
         if (!self.candidates.is_empty() || self.warmups.waiting())
             && let Some(wake) = self.wake.as_ref().and_then(Weak::upgrade)
         {

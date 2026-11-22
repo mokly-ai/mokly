@@ -11,6 +11,8 @@ use mokly_sidecar::pool::{ReturnWake, SidecarPool};
 /// Admission waiting outside the process pool can defer a new transition.
 #[cfg_attr(test, unimock::unimock(api = ReturnAdmissionMock))]
 pub(super) trait ReturnAdmission: Send + Sync {
+    /// Wake queued call admission outside the pool's state lock.
+    fn changed(&self) {}
     /// Keep existing maintenance visible to optional writer admission.
     fn activity(&self) -> Option<Box<dyn WriteLease>> {
         None
@@ -72,6 +74,9 @@ pub(super) fn start(
                     }
                 }
                 loop {
+                    if let Some(admission) = admission.upgrade() {
+                        admission.changed();
+                    }
                     if !admission
                         .upgrade()
                         .is_some_and(|admission| admission.ready())

@@ -31,7 +31,7 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
         calls.clone(),
     )
     .with_serve_edit_plans();
-    let (first, lease) = request(&runtime, &params()).unwrap();
+    let (first, lease) = request(&runtime, &params(), None).unwrap();
     drop((first, lease));
     assert_eq!(
         Arc::strong_count(&evidence),
@@ -41,7 +41,7 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
     runtime.bundle_capture = BundleCapture::ServeEdit;
     for expected in [true, false, true] {
         current.store(expected, Ordering::Release);
-        let (_, lease) = request(&runtime, &params()).unwrap();
+        let (_, lease) = request(&runtime, &params(), None).unwrap();
         assert_eq!(
             calls.lock().unwrap().last().unwrap().plan,
             expected.then(|| plan.clone())
@@ -55,42 +55,48 @@ fn a_captured_record_shares_evidence_and_survives_lease_release_stale_checks_and
     );
     let mut evaluation = params();
     evaluation.evaluation = Some("new evaluation".into());
-    let _ = request(&runtime, &evaluation).unwrap();
+    let _ = request(&runtime, &evaluation, None).unwrap();
     assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan));
 }
 
 #[test]
-fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
+fn plan_records_match_resolution_settings_and_require_current_evidence() {
+    let current = Arc::new(AtomicBool::new(true));
+    let reads = current.clone();
     let calls = Arc::new(Mutex::new(vec![]));
     let mut runtime = runtime(
         Unimock::new(
             PhysicalInputsMock::matches
                 .each_call(matching!(_, _, _))
-                .answers(&|_, _, _, _| Ok(true)),
+                .answers_arc(Arc::new(
+                    move |_, _, _, _| Ok(reads.load(Ordering::Acquire)),
+                )),
         ),
         vec![result(Some(plan()), evidence())],
         calls.clone(),
     )
     .with_serve_edit_plans();
-    let _ = request(&runtime, &params()).unwrap();
+    let _ = request(&runtime, &params(), None).unwrap();
     runtime.bundle_capture = BundleCapture::ServeEdit;
     let original = params();
     let mut resolution = original.module_resolution.clone();
     resolution.aliases.insert("old".into(), "new".into());
-    for (name, params) in [
+    for (name, params, reusable) in [
         (
             "source root",
             Bundle {
                 source_root: "/other".into(),
                 ..original.clone()
             },
+            false,
         ),
         (
             "entries",
             Bundle {
-                entry_files: vec!["other.ts".into()],
+                entry_files: vec!["entry.ts".into(), "other.ts".into()],
                 ..original.clone()
             },
+            true,
         ),
         (
             "stories",
@@ -98,6 +104,7 @@ fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
                 stories_files: vec!["story.ts".into()],
                 ..original.clone()
             },
+            true,
         ),
         (
             "renderer",
@@ -105,6 +112,7 @@ fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
                 renderer: Some("renderer.tsx".into()),
                 ..original.clone()
             },
+            true,
         ),
         (
             "configuration",
@@ -112,6 +120,7 @@ fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
                 configuration_directory: "nested".into(),
                 ..original.clone()
             },
+            false,
         ),
         (
             "repositories",
@@ -119,6 +128,7 @@ fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
                 repository_roots: vec!["/other".into()],
                 ..original.clone()
             },
+            false,
         ),
         (
             "resolution",
@@ -126,12 +136,20 @@ fn plan_settings_ignore_only_evaluation_and_every_other_setting_must_match() {
                 module_resolution: resolution,
                 ..original.clone()
             },
+            false,
         ),
     ] {
-        let _ = request(&runtime, &params).unwrap();
-        assert_eq!(calls.lock().unwrap().last().unwrap().plan, None, "{name}");
+        for valid in [true, false, true] {
+            current.store(valid, Ordering::Release);
+            let _ = request(&runtime, &params, None).unwrap();
+            assert_eq!(
+                calls.lock().unwrap().last().unwrap().plan,
+                (reusable && valid).then(plan),
+                "{name}, current={valid}"
+            );
+        }
     }
-    let _ = request(&runtime, &original).unwrap();
+    let _ = request(&runtime, &original, None).unwrap();
     assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan()));
 }
 
@@ -148,12 +166,7 @@ fn only_a_serve_head_retains_complete_durable_captured_records() {
         Arc::make_mut(&mut evidence).durable = durable;
         let mut plan = plan();
         if oversized {
-            Arc::make_mut(&mut plan)
-                .imports
-                .values_mut()
-                .next()
-                .unwrap()
-                .path = "x".repeat(8 * 1024 * 1024);
+            Arc::make_mut(&mut plan).paths[1] = "x".repeat(8 * 1024 * 1024);
         }
         let calls = Arc::new(Mutex::new(vec![]));
         let mut runtime = runtime(
@@ -164,10 +177,10 @@ fn only_a_serve_head_retains_complete_durable_captured_records() {
         if enabled {
             runtime = runtime.with_serve_edit_plans();
         }
-        let _ = request(&runtime, &params()).unwrap();
+        let _ = request(&runtime, &params(), None).unwrap();
         assert_eq!(Arc::strong_count(&evidence), 1, "{name}");
         runtime.bundle_capture = BundleCapture::ServeEdit;
-        let _ = request(&runtime, &params()).unwrap();
+        let _ = request(&runtime, &params(), None).unwrap();
         assert_eq!(calls.lock().unwrap().last().unwrap().plan, None, "{name}");
     }
 }

@@ -1,8 +1,29 @@
 name: Desktop release
 
 on:
-  push:
-    tags: [desktop-v*]
+  # The release workflow calls this workflow after a desktop release pull
+  # request merges. It passes the tag and the commit that Release Please made.
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+    secrets:
+      CSC_LINK:
+        required: false
+      CSC_KEY_PASSWORD:
+        required: false
+      APPLE_API_KEY:
+        required: false
+      APPLE_API_KEY_ID:
+        required: false
+      APPLE_API_ISSUER:
+        required: false
+      DESKTOP_RELEASES_TOKEN:
+        required: false
   pull_request:
     paths:
       - apps/**
@@ -24,7 +45,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: desktop-${{ github.event.pull_request.number || github.ref }}
+  group: desktop-${{ inputs.tag || github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -109,9 +130,12 @@ jobs:
 
   release:
     name: Release desktop (${{ matrix.platform }})
-    if: vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (startsWith(github.ref, 'refs/tags/desktop-v') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+    # A called workflow sees the caller's push event. Only that call has a tag.
+    if: vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && github.event_name == 'push' && inputs.tag != ''
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    # The environment admits only main and holds the signing secrets.
+    environment: desktop-release
     permissions:
       contents: read
     strategy:
@@ -127,14 +151,17 @@ jobs:
     env:
       MKC_DOMAIN: ${{ vars.MKC_DOMAIN }}
       MKC_CATALOGUE_BASE_DOMAIN: ${{ vars.MKC_CATALOGUE_BASE_DOMAIN }}
-      MKC_BUILD_SHA: ${{ github.sha }}
+      MKC_BUILD_SHA: ${{ inputs.ref }}
     steps:
-      - name: Check out the tagged source
+      - name: Check out the release commit
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Check the tag and resolve production build inputs
-        run: python3 packages/desktop/scripts/release-environment.py production --tag "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python3 packages/desktop/scripts/release-environment.py production --tag "$RELEASE_TAG" >> "$GITHUB_ENV"
       - name: Install Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -148,7 +175,9 @@ jobs:
         run: rustup toolchain install
       - name: Build workspace packages
         run: npm run build
-      - name: Build the bundled export
+      - name: Build the bundled export with the updater on
+        env:
+          MKC_DESKTOP_UPDATES: enabled
         run: npm run build --workspace @mokly-cloud/desktop
       - name: Sign, notarize and publish macOS packages
         if: runner.os == 'macOS'

@@ -1,6 +1,7 @@
-import fs from "node:fs/promises";
+import fs from "node:fs";
 import path from "node:path";
 
+import { cooperativeYield } from "./cooperative-yield.js";
 import { SidecarError } from "./errors.js";
 import { metadataDigest } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -12,10 +13,14 @@ export async function directoryFiles(
   directory: string,
   limit = FRAME_LIMIT / 2,
 ): Promise<string[]> {
+  const pause = cooperativeYield();
+  if (pause) await pause;
   try {
     const names: string[] = [];
     let bytes = 2;
-    for await (const entry of await fs.opendir(directory)) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const pause = cooperativeYield();
+      if (pause) await pause;
       if (entry.isDirectory()) continue;
       bytes += Buffer.byteLength(JSON.stringify(entry.name)) + 1;
       if (bytes > limit)
@@ -47,8 +52,11 @@ export async function resolutionInputs(
 ) {
   const ancestors = new Set<string>();
   const directories = new Set<string>();
-  for (const directory of paths.lookupDirectories)
+  for (const directory of paths.lookupDirectories) {
     directories.add(await paths.metadata(directory));
+    const pause = cooperativeYield();
+    if (pause) await pause;
+  }
   for (const file of consumed) {
     let directory = path.dirname(file);
     directories.add(directory);
@@ -60,6 +68,8 @@ export async function resolutionInputs(
       if (directory === root) break;
       directory = path.dirname(directory);
     }
+    const pause = cooperativeYield();
+    if (pause) await pause;
   }
   for (const lookup of [...paths.lookupFiles].sort()) {
     const file = await paths.metadata(lookup);

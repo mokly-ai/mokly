@@ -14,7 +14,7 @@
   `crates/mokly-sidecar/src/durable_recipe.rs:31` to line 35,
   `crates/mokly-compare/src/bundle_store.rs:73` and line 138,
   `crates/mokly-sidecar/src/bundle_outcomes.rs:5` to line 19, and
-  `packages/mokly/src/sidecar/captured-plan.ts:8` to line 18.
+  `packages/mokly/src/sidecar/captured-plan.ts:7` to line 12.
 - **Reason:** The source stays unknown after 100 complete local runs with
   failure diagnostics on 2026-11-20, so the user chooses the eventual fix.
 
@@ -65,7 +65,7 @@
   - How the plan and the disk record come about:
     - The sidecar returns a plan only for complete and durable evidence with
       no `uncaptured` marker, in `capturedPlan` at
-      `packages/mokly/src/sidecar/captured-plan.ts:8` to line 18.
+      `packages/mokly/src/sidecar/captured-plan.ts:7` to line 12.
     - After a full capture, `complete_bundle` saves a durable recipe to the
       store, at `pool_bundle_cache.rs:131` to line 143. `DurableRecipe::new`
       admits only captured and durable evidence, at `durable_recipe.rs:32`.

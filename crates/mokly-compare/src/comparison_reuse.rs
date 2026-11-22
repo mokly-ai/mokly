@@ -27,6 +27,18 @@ impl ReuseFence {
 /// Private runtime diagnostics, never a publication wire type.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct ReuseWork {
+    /// Candidate comparison payload charge, excluding optional validation facts.
+    pub comparison_kept_bytes: usize,
+    /// Current optional closure fact charge, inside the comparison bound.
+    pub validation_fact_bytes: usize,
+    /// Lifetime peak optional closure fact charge, inside the comparison bound.
+    pub validation_fact_peak_bytes: usize,
+    /// Head closures proved without another walk in this attempt.
+    pub validation_reused: usize,
+    /// Head closures walked in this attempt.
+    pub validation_walks: usize,
+    /// Head documents checked during complete head validation.
+    pub validation_documents: usize,
     /// Peak charged memory over the Serve lifetime.
     pub peak_bytes: usize,
     /// Candidate views collected before any overflow.
@@ -105,7 +117,7 @@ impl ComparisonReuse for MemoryComparisons {
     }
 }
 impl Comparison for Attempt {
-    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, admitted_views = 0u64, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty, reused = tracing::field::Empty, compared = tracing::field::Empty, recorded_reads = tracing::field::Empty, retained_bytes = tracing::field::Empty, revalidation_ms = tracing::field::Empty, recording_ms = tracing::field::Empty, recording_identity_reads = tracing::field::Empty, current_usage_ms = tracing::field::Empty, identities_checked = tracing::field::Empty, identity_reads = tracing::field::Empty, peak_bytes = tracing::field::Empty, candidate_views = tracing::field::Empty, candidate_bytes = tracing::field::Empty, accepted_bytes = tracing::field::Empty, overflowed = tracing::field::Empty))]
+    #[tracing::instrument(name = "review.compare-views", skip_all, fields(status = "error", views = tracing::field::Empty, admitted_views = 0u64, unchanged = tracing::field::Empty, changed = tracing::field::Empty, ignored_only = tracing::field::Empty, reused = tracing::field::Empty, compared = tracing::field::Empty, recorded_reads = tracing::field::Empty, retained_bytes = tracing::field::Empty, revalidation_ms = tracing::field::Empty, recording_ms = tracing::field::Empty, recording_identity_reads = tracing::field::Empty, current_usage_ms = tracing::field::Empty, identities_checked = tracing::field::Empty, identity_reads = tracing::field::Empty, peak_bytes = tracing::field::Empty, candidate_views = tracing::field::Empty, candidate_bytes = tracing::field::Empty, accepted_bytes = tracing::field::Empty, overflowed = tracing::field::Empty, validation_fact_bytes = tracing::field::Empty, validation_fact_peak_bytes = tracing::field::Empty, comparison_kept_bytes = tracing::field::Empty, validation_reused = tracing::field::Empty, validation_walks = tracing::field::Empty, validation_documents = tracing::field::Empty))]
     fn compare_prepared(
         &self,
         request: &ComparisonRequest,
@@ -142,7 +154,34 @@ impl Comparison for Attempt {
             .compare_reusing(request, before, after, Some(&mut collection));
         collection.work.retained_bytes = self.shared.resident.bytes();
         collection.work.peak_bytes = self.shared.resident.peak();
+        collection.work.validation_fact_bytes = self.shared.resident.fact_bytes();
+        collection.work.validation_fact_peak_bytes = self.shared.resident.fact_peak();
+        collection.work.comparison_kept_bytes = collection
+            .candidate
+            .as_ref()
+            .map_or(0, |candidate| candidate.bytes);
         let span = tracing::Span::current();
+        span.record(
+            "validation_fact_bytes",
+            collection.work.validation_fact_bytes as u64,
+        );
+        span.record(
+            "validation_fact_peak_bytes",
+            collection.work.validation_fact_peak_bytes as u64,
+        );
+        span.record(
+            "comparison_kept_bytes",
+            collection.work.comparison_kept_bytes as u64,
+        );
+        span.record(
+            "validation_reused",
+            collection.work.validation_reused as u64,
+        );
+        span.record("validation_walks", collection.work.validation_walks as u64);
+        span.record(
+            "validation_documents",
+            collection.work.validation_documents as u64,
+        );
         span.record("peak_bytes", collection.work.peak_bytes as u64);
         span.record("candidate_views", collection.work.candidate_views as u64);
         span.record("candidate_bytes", collection.work.candidate_bytes as u64);
@@ -210,6 +249,8 @@ impl ReuseAttempt for Attempt {
     fn work(&self) -> ReuseWork {
         let mut work = *self.work.lock().unwrap_or_else(|error| error.into_inner());
         work.retained_bytes = self.shared.resident.bytes();
+        work.validation_fact_bytes = self.shared.resident.fact_bytes();
+        work.validation_fact_peak_bytes = self.shared.resident.fact_peak();
         work
     }
 }

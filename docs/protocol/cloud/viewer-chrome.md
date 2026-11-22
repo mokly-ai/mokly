@@ -36,6 +36,13 @@ opens another overlay or leaves the route. The package keeps its own top bar
 and rail. Cloud does not fill the remaining slots in this scope. Each trigger
 opens one cloud overlay, and only one overlay is open at a time.
 
+In the Mac desktop app, the `topBarStart` content of both layouts starts
+after the window buttons that
+[Desktop bundle and origin](./desktop-bundle.md#mac-window) places at the
+start of the bar. The cloud fallback bar starts the same way. The cloud's slot
+content is the part of the bar that moves the window. The package's own part
+does not.
+
 A press that begins on a cloud fallback control also finishes on that logical
 slot. If access becomes ready while the primary pointer or Space/Enter
 activation is held, the original control still delivers its activation, and an

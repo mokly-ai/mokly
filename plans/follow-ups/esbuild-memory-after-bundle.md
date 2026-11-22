@@ -50,6 +50,7 @@
 - **Wider fix:** B. Every bundle then ends with no idle service.
 - **Previous examples:** None found.
 - **Related:**
+  - [eager-base-postcss-edit-peak-variance.md](./eager-base-postcss-edit-peak-variance.md): higher edit peaks at the same sampled process set. Both arms retain two esbuild services there, but the cause of the RSS difference is unknown.
   - [default-sidecar-count.md](./default-sidecar-count.md): the other large
     part of sidecar memory.
   - The

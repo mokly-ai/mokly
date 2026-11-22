@@ -87,6 +87,7 @@ fn records_that_share_a_context_entry_charge_it_once() {
     );
     store.insert("a".into(), first);
     store.insert("b".into(), second);
+    assert!(store.kept_every_record());
     assert!(store.record("a").is_some());
     assert!(store.record("b").is_some());
     assert!(Arc::ptr_eq(
@@ -127,6 +128,10 @@ fn a_record_that_does_not_fit_removes_the_others_and_their_keys_miss_with_evicte
     assert_eq!(store.miss("a"), Miss::Evicted);
     assert!(store.record("b").is_some());
     assert!(store.context(&context(&second).digest).is_some());
+    assert!(!store.kept_every_record());
+    store.insert("a".into(), record("a.css", MODULE, None));
+    assert!(!store.kept_every_record(), "record loss stays sticky");
+    assert!(store.empty_peer().kept_every_record());
 }
 
 #[test]
@@ -136,6 +141,7 @@ fn a_record_larger_than_the_bound_misses_with_evicted() {
     store.insert("a".into(), first);
     assert!(store.record("a").is_none());
     assert_eq!(store.miss("a"), Miss::Evicted);
+    assert!(!store.kept_every_record());
 }
 
 #[test]
@@ -230,6 +236,10 @@ fn the_store_drops_a_context_entry_that_no_record_uses() {
     let mut store = StylesheetCache::default();
     store.insert("a".into(), first);
     store.insert("a".into(), record("a.css", "node_modules/b/index.js", None));
+    assert!(
+        store.kept_every_record(),
+        "same-key replacement loses no root"
+    );
     assert!(store.context(&digest).is_none());
 }
 

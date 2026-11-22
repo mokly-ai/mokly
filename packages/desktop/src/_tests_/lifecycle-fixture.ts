@@ -75,7 +75,7 @@ export function lifecycleFixture(platform = "darwin") {
       return window as unknown as BrowserWindow;
     },
     wireWindow: () => {},
-    updates: () => ({ check: () => {}, stop: () => {} }),
+    updates: () => ({ available: false, check: () => {}, stop: () => {} }),
     menu: () => {},
     warn: (error) => {
       errors.push(error);

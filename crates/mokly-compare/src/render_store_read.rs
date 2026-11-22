@@ -7,7 +7,7 @@ use mokly_graph::document_codec::EncodedView;
 use mokly_graph::document_store::{EntryFault, ReadOutcome, StoreKey};
 
 use crate::render_segment;
-use crate::render_store::{CachedDocuments, SegmentIdentity, SegmentPosition};
+use crate::render_store::{CachedDocuments, SegmentIdentity};
 
 impl CachedDocuments {
     pub(crate) fn read_document(&self, key: &StoreKey) -> ReadOutcome {
@@ -15,9 +15,7 @@ impl CachedDocuments {
             return ReadOutcome::Miss;
         }
         let segment = {
-            let Ok(index) = self.index.try_lock() else {
-                return ReadOutcome::Miss;
-            };
+            let index = self.index.load();
             index.as_ref().and_then(|entries| entries.get(key)).cloned()
         };
         if let Some(fault) = self
@@ -62,10 +60,10 @@ impl CachedDocuments {
                     return Err(EntryFault::Damaged);
                 }
                 if replaced
-                    && let Some(document) = header
+                    && header
                         .documents
                         .iter()
-                        .find(|document| document.key == key.0)
+                        .any(|document| document.key == key.0)
                 {
                     let segment = Arc::new(SegmentIdentity {
                         key: segment.clone(),
@@ -74,17 +72,7 @@ impl CachedDocuments {
                         bytes,
                         start,
                     });
-                    let adopted = SegmentPosition {
-                        segment,
-                        offset: document.offset,
-                        length: document.bytes,
-                        digest: document.digest.clone(),
-                    };
-                    if let Ok(mut index) = self.index.try_lock()
-                        && let Some(index) = index.as_mut()
-                    {
-                        index.insert(key.clone(), adopted);
-                    }
+                    self.adopt_segment(segment, &header);
                 }
                 render_segment::document(entry.input.as_mut(), &header, start, key)
             })

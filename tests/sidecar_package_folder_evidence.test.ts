@@ -6,8 +6,8 @@ import { build } from "esbuild";
 
 import { bundle } from "../packages/mokly/src/sidecar/bundle.js";
 import { reuse } from "../packages/mokly/src/sidecar/compiled.js";
-import { planKey } from "../packages/mokly/src/sidecar/native-resolution.js";
 import { currentEvidence } from "../packages/mokly/src/sidecar/physical-input-reader.js";
+import { PlanLookup } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import { folderPackage } from "./helpers/package_folder.js";
 import type { FolderCase } from "./helpers/package_folder.js";
@@ -115,10 +115,16 @@ for (const row of cases)
       first.result.plan,
       "the full capture must return its native plan",
     );
+    const planned = new PlanLookup(first.result.plan).get(
+      fixture.dependency,
+      "chosen/sub/value",
+      "import-statement",
+    );
     assert.deepEqual(
-      first.result.plan.imports[
-        planKey(fixture.dependency, "chosen/sub/value", "import-statement")
-      ],
+      planned && {
+        path: first.result.plan.paths[planned[3]],
+        sideEffects: planned[4],
+      },
       row.route === "dependency"
         ? { path: fixture.original, sideEffects: true }
         : undefined,

@@ -45,6 +45,7 @@ fn classification_reports_reading_with_its_own_token_before_the_first_git_comman
     let mut config = config();
     config.repo_root = env!("CARGO_MANIFEST_DIR").into();
     let source = Source {
+        preparation: None,
         references: Mutex::new(None),
         staging: Mutex::new(None),
         operation: Arc::new(CaptureCancellation::default()),
@@ -53,13 +54,19 @@ fn classification_reports_reading_with_its_own_token_before_the_first_git_comman
         head: Arc::new(Unimock::new(())),
         warnings: scopes(&terminal).begin(),
         services: ServeChanges {
+            routing: None,
+            eager: None,
+            diagnostics: Arc::new(Unimock::new(())),
             reuse: Arc::new(MemoryComparisons::new(32 * 1024 * 1024)),
             kept_base: Arc::default(),
-            sidecars: Arc::new(Unimock::new(
+            sidecars: Arc::new(Unimock::new((
                 PoolSchedulingMock::pool
                     .some_call(matching!(Some(_)))
                     .returns(pool),
-            )),
+                PoolSchedulingMock::limit
+                    .some_call(matching!())
+                    .returns(1_usize),
+            ))),
             progress: Arc::new(boundaries.clone()),
             refreshes: Arc::new(Unimock::new(())),
             cache_announced: Arc::new(false.into()),

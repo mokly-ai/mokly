@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small (estimate). **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-18, from the options check of the sidecar bundle JavaScript cuts on `calummoore/mokly-bundle-hot-path-2-1bc5`.
-- **Location:** `packages/mokly/src/sidecar/module-paths.ts:230`, `packages/mokly/src/sidecar/plugins.ts:162`, `packages/mokly/src/sidecar/plugins.ts:205`, and `packages/mokly/src/sidecar/native-plan.ts:128`.
+- **Location:** `packages/mokly/src/sidecar/module-paths.ts:233` (`ModulePaths.resolve`), `packages/mokly/src/sidecar/plugins.ts:162`, `packages/mokly/src/sidecar/plugins.ts:205`, and `packages/mokly/src/sidecar/native-plan.ts:144`.
 - **Reason:** The bundle change moved only the measured consumer file loads to synchronous reads, and nobody has measured this second class of callbacks.
 
 - **Source:** Review.
@@ -14,7 +14,7 @@
 - **Background:**
   - Each bundle call compiles the catalogue with esbuild. Mokly's plugins in `plugins.ts` resolve imports and load files on the main JavaScript thread.
   - `ModulePaths.resolve` awaits `fs.promises.realpath` for each absolute target. A mapped candidate awaits a second `realpath` and a `stat`. Each call is a thread-pool round trip with a callback on the main thread.
-  - The CSS resolver at `plugins.ts:162` and the full resolver at `plugins.ts:205` call it for each resolved import. The native plan classification at `native-plan.ts:128` calls it once for each distinct native target.
+  - The CSS resolver at `plugins.ts:162` and the full resolver at `plugins.ts:205` call it for each resolved import. The native plan classification at `native-plan.ts:144` calls it once for each distinct native target.
   - `ModulePaths.resolveSync`, below `resolve` in the same file, already does the same work with synchronous calls.
   - On 2026-11-18, the `mokly-cloud` head bundle of 167 entries had 4,638 inputs, 15,251 import edges, and 13,227 consumer `onResolve` calls. The main thread was busy for about 63% of each bundle.
   - On the same date, one synchronous read in place of the callback read of each consumer file load saved 252 ms of 2,048 ms per bundle in a standalone probe.

@@ -50,7 +50,7 @@ test("ownership retains a consumer Emotion cache key and its inline CSS", () => 
     );
   const before = render(false),
     after = render(true);
-  assert.equal(after.html, before.html);
+  assert.equal(after.input.html, before.input.html);
   assert.deepEqual(
     after.styles.map((item) => item.css),
     before.styles.map((item) => item.css),
@@ -75,7 +75,7 @@ test("consumer Emotion Global styles keep their component owner", () => {
       }),
     ),
   );
-  const match = result.html.match(
+  const match = result.input.html.match(
     /<style data-emotion="([^"]+)"[^>]*>(.*?)<\/style>/,
   );
   assert.ok(match);
@@ -109,7 +109,7 @@ test("ownership retains the consumer styled-components forwarding policy", () =>
     );
   const before = render(false),
     after = render(true);
-  assert.equal(after.html, before.html);
+  assert.equal(after.input.html, before.input.html);
   assert.deepEqual(
     after.styles.map((item) => item.css),
     before.styles.map((item) => item.css),
@@ -173,7 +173,7 @@ test("ownership does not replace a consumer styled-components sheet", () => {
   };
   const before = render(false),
     after = render(true);
-  assert.equal(after.html, before.html);
+  assert.equal(after.input.html, before.input.html);
   assert.deepEqual(
     after.styles.map((item) => item.css),
     before.styles.map((item) => item.css),

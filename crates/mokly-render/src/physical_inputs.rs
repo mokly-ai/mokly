@@ -10,6 +10,8 @@ use mokly_sidecar::compiled::{PhysicalEntry, PhysicalEntryKind, PhysicalInput, R
 use mokly_source_interface::error::{Result, SourceError};
 use mokly_source_interface::stream::{OpenedSource, SourceStream};
 
+use crate::plan_directory;
+
 /// Physical reads used only to decide whether an earlier compilation remains current.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PhysicalInputsMock))]
 pub trait PhysicalInputs: Send + Sync {
@@ -21,6 +23,17 @@ pub trait PhysicalInputs: Send + Sync {
         expected: &PhysicalInput,
         inputs: &BTreeMap<String, PhysicalInput>,
     ) -> Result<bool>;
+    /// Compare a plan directory using proved names. Other readers retain full checks.
+    fn matches_candidates(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        names: &[String],
+        inputs: &BTreeMap<String, PhysicalInput>,
+    ) -> Result<bool> {
+        let _ = names;
+        self.matches(path, expected, inputs)
+    }
 }
 
 /// Native filesystem reader. File content checks retain one 64 KiB streaming buffer.
@@ -33,14 +46,20 @@ impl PhysicalInputs for SystemPhysicalInputs {
         expected: &PhysicalInput,
         inputs: &BTreeMap<String, PhysicalInput>,
     ) -> Result<bool> {
-        match self.read(path, expected, inputs) {
-            Ok(matches) => Ok(matches),
-            Err(source) => Err(SourceError::Io {
-                operation: "check physical compilation input",
-                path: path.into(),
-                source,
-            }),
+        checked_result(path, self.read(path, expected, inputs))
+    }
+
+    fn matches_candidates(
+        &self,
+        path: &Path,
+        expected: &PhysicalInput,
+        names: &[String],
+        inputs: &BTreeMap<String, PhysicalInput>,
+    ) -> Result<bool> {
+        if !matches!(expected, PhysicalInput::Directory { .. }) {
+            return self.matches(path, expected, inputs);
         }
+        checked_result(path, plan_directory::matches(path, expected, names))
     }
 }
 
@@ -162,7 +181,19 @@ fn lexical_link_target(path: &Path) -> io::Result<String> {
     }
 }
 
-fn real_path(path: &Path) -> io::Result<String> {
+/// Keep the physical input path and operation on each native read error.
+pub(crate) fn checked_result<T>(path: &Path, result: io::Result<T>) -> Result<T> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(source) => Err(SourceError::Io {
+            operation: "check physical compilation input",
+            path: path.into(),
+            source,
+        }),
+    }
+}
+
+pub(crate) fn real_path(path: &Path) -> io::Result<String> {
     let real = dunce::canonicalize(path)?;
     match real.into_os_string().into_string() {
         Ok(real) => Ok(real),

@@ -3,7 +3,9 @@
 use std::sync::{Arc, Mutex, Weak};
 
 use mokly_compare::base_freshness::{Freshness, FreshnessRequest};
-use mokly_compare::base_render::{BasePreparationResult, BaseProvider, BaseRequest};
+use mokly_compare::base_render::{
+    BasePreparationResult, BaseProvider, BaseRequest, HistoricalSources,
+};
 use mokly_compare::base_retention::{BaseRelease, BaseRetentionRequest, BaseReuse, KeptBase};
 use mokly_compare::error::{Error, Result};
 use mokly_git::control::Cancellation;
@@ -21,6 +23,40 @@ pub(super) struct KeptEntry {
 
 /// The one optional base owned by Serve state.
 pub(super) type BaseSlot = Mutex<Option<KeptEntry>>;
+
+/// Eager preparation observes the slot without changing its freshness or lifetime.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KeptState {
+    /// No retained graph restricts eager preparation.
+    Vacant,
+    /// The normal classification must decide this kept key's freshness.
+    Matching,
+    /// Source work can run, while dependency and graph work wait for classification.
+    Different,
+}
+
+#[cfg_attr(test, unimock::unimock(api = KeptAvailabilityMock))]
+pub(super) trait KeptAvailability: Send + Sync {
+    fn state(&self, key: &BaseKey) -> KeptState;
+}
+
+pub(super) struct SlotAvailability {
+    pub(super) slot: Weak<BaseSlot>,
+}
+
+impl KeptAvailability for SlotAvailability {
+    fn state(&self, key: &BaseKey) -> KeptState {
+        let Some(owner) = self.slot.upgrade() else {
+            return KeptState::Vacant;
+        };
+        let slot = owner.lock().unwrap_or_else(|error| error.into_inner());
+        match slot.as_ref() {
+            None => KeptState::Vacant,
+            Some(entry) if &entry.key == key => KeptState::Matching,
+            Some(_) => KeptState::Different,
+        }
+    }
+}
 
 /// Classification-local retention policy with a weak link to Serve state.
 pub(super) struct ServeBase {
@@ -41,6 +77,12 @@ pub(super) struct ServeBase {
 }
 
 impl BaseProvider for ServeBase {
+    fn historical_sources(
+        &self,
+        request: &BaseRetentionRequest<'_>,
+    ) -> Result<Option<HistoricalSources>> {
+        self.inner.historical_sources(request)
+    }
     fn find_kept(&self, request: &BaseRetentionRequest<'_>) -> Result<Option<BaseReuse>> {
         if self.reader.cancelled() {
             return Err(Error::Cancelled);
@@ -197,14 +239,23 @@ struct Keep<'a> {
 
 impl ChangeCommit for Keep<'_> {
     fn apply(&self) -> bool {
-        if self.reader.cancelled() {
+        self.lifetime.commit_keep(&StoreKeep(self))
+    }
+}
+
+struct StoreKeep<'a>(&'a Keep<'a>);
+
+impl ChangeCommit for StoreKeep<'_> {
+    fn apply(&self) -> bool {
+        let keep = self.0;
+        if keep.reader.cancelled() || keep.lifetime.requested() {
             return false;
         }
-        let mut slot = self.slot.lock().unwrap_or_else(|error| error.into_inner());
-        self.lifetime.detach();
+        let mut slot = keep.slot.lock().unwrap_or_else(|error| error.into_inner());
+        keep.lifetime.detach();
         *slot = Some(KeptEntry {
-            key: self.key.clone(),
-            base: self.base.clone(),
+            key: keep.key.clone(),
+            base: keep.base.clone(),
         });
         true
     }

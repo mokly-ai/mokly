@@ -74,6 +74,7 @@ fn calls_without_generations_keep_fifo_and_live_context_affinity() {
     for (call, affine, expected) in [
         (
             Call::Bundle(BundleRequest {
+                preparation: None,
                 plan: None,
                 params: bundle("/head"),
                 capture: None,

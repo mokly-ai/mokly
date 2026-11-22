@@ -7,6 +7,7 @@ use serde_json::value::to_raw_value;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::client::{Client, EventsMock, SidecarClient, TransportMock};
+use crate::client_origins::Origins;
 use crate::error::{Error, ProtocolError};
 use crate::methods::{Call, Empty, Hello};
 use crate::wire::{Event, Frame, MethodResult, Request, Response};
@@ -154,7 +155,7 @@ fn invalid_result_payload_fails_json_decoding() {
         result: to_raw_value(&json!({"invalid":"payload"})).unwrap(),
     };
     assert!(matches!(
-        response.decode_result(&request),
+        response.decode_result(&request, &Origins::default()),
         Err(Error::Protocol(ProtocolError::Json { .. }))
     ));
 }
