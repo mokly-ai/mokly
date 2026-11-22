@@ -274,11 +274,13 @@ Depends on: 2, 3, 4
       `examples/basic`, and the large HTML and large React fixtures of
       `scripts/large/`. Save the evidence under `.context/`. Evidence:
       `.context/edit-background-render/proofs/`.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Two rounds found seven Low findings, all fixed in
+      this branch. Evidence:
+      `.context/reviews/calummoore/mokly-edit-background-render-olos/findings.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
@@ -294,4 +296,5 @@ Depends on: 2, 3, 4
       `dispose`, one encode of each restore request for all cold sidecars,
       and the native frame scan. The follow-up item
       `plans/follow-ups/serve-edit-background-pass-split.md` holds their
-      projections.
+      projections. Moved on 2026-11-22 into that item, which owns this task
+      after the plan is deleted.

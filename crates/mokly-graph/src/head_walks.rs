@@ -167,3 +167,7 @@ fn record_bytes(record: &WalkRecord) -> usize {
             })
             .sum::<usize>()
 }
+
+#[cfg(test)]
+#[path = "_tests_/head_walks_tests.rs"]
+mod head_walks_tests;

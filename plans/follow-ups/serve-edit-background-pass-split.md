@@ -12,12 +12,12 @@
     the lookup, the batch admission, and the resumed render of one view.
   - `crates/mokly-sidecar/src/pool_affinity.rs:36` and `:58`: the generation
     rank that sends a render to an idle process that lacks its generation.
-  - `crates/mokly-sidecar/src/pool_preparation.rs:136`, `:159`, and `:208`:
-    `Pool::prepare`, `Pool::restore`, and `Pool::prerequisite`, which send
+  - `crates/mokly-sidecar/src/pool_preparation.rs:150` (`Pool::prepare`),
+    `:173` (`Pool::restore`), and `:222` (`Pool::prerequisite`), which send
     `restoreGeneration`, `cssModules`, `describe`, and `bindings` before the
     first render of a generation on a process.
-  - `crates/mokly-sidecar/src/pool_releases.rs:70` and `:110`:
-    `record_release`, which holds the pool lock while
+  - `crates/mokly-sidecar/src/pool_releases.rs:70` (`record_release`) and
+    `:109` (`clean_idle`): `record_release`, which holds the pool lock while
     `crates/mokly-sidecar/src/pool_recipes.rs:73` encodes a whole restore
     request to measure a released recipe, and `clean_idle`, which disposes the
     idle slots one at a time.
@@ -31,10 +31,11 @@
   - `crates/mokly-server/src/changes_execution.rs:22`: `changes.classify`, and
     `crates/mokly-cli/src/serve_base.rs:124`, where the kept-base check reads
     the dependency directories that the renders record.
-  - `crates/mokly-server/src/publication.rs:155` and `:205`: the usage
-    publication through `crates/mokly-server/src/evidence.rs:39`, and the
-    Changes publication through `crates/mokly-server/src/changes.rs:157` and
-    `crates/mokly-server/src/changes_detail.rs:13`.
+  - `crates/mokly-server/src/publication.rs:155` (`completed_many`) and `:205`
+    (`changes`): the usage publication through
+    `crates/mokly-server/src/evidence.rs:42` (`complete`), and the Changes
+    publication through `crates/mokly-server/src/changes.rs:158` (`project`)
+    and `crates/mokly-server/src/changes_detail.rs:29` (`apply`).
   - `crates/mokly-compare/src/base_classification.rs:29` and
     `crates/mokly-compare/src/base_freshness.rs:132`: the base pin, the
     kept-base check, and the comparisons.
@@ -43,8 +44,8 @@
 - **Reason:** On 2026-11-22 the performance orchestrator chose B1, B2, and B4
   for the pull request of branch
   `calummoore/mokly-edit-background-render-olos`, and the safe parts of C for
-  the next pull request of that workspace, after the first one merges. B3, D,
-  E, and the V8 code cache stay open options with their reasons below.
+  the next speed pull request, after that one merges. B3, D, E, and the V8
+  code cache stay open options with their reasons below.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -68,7 +69,9 @@
     orchestrator first.
   - The section "Measurements of 2026-11-22" below gives the method and the
     numbers. The baseline is `main` at
-    `9bdb0569d3ac0214bf303c599854a70b20dc2b2c`, PR #467.
+    `9bdb0569d3ac0214bf303c599854a70b20dc2b2c`, PR #467. Each number and each
+    code fact of this Background and of that section is of that commit:
+    before PR #468, PR #469, and the cuts B1, B2, and B4.
   - Each warm edit re-renders 44 views: 11 view paths in light and dark at
     two viewports. Each view makes one sidecar render.
   - The pass is CPU-bound. The core and the sidecars together use a median of
@@ -102,18 +105,31 @@
     `changes.classify`. Inside it: 3 ms of base pin, 23 ms of kept-base
     check, 69 ms of comparisons, 7 ms of identity, metadata, and a Git check,
     and 29 ms of Changes publication. The sidecars are idle then.
-  - The plan `plans/cheaper-sidecar-describe.md` of branch
-    `calummoore/mokly-cheaper-sidecar-describe-dlz0` caches the export names
-    of `orderedExports`. The orchestrator accepted it on 2026-11-21 at -42 ms
-    for each mokly-cloud edit. It is not on `main`, so it is not in this
-    baseline. It also lowers the preparation of each cold sidecar.
-- **Problem:** Each warm edit spends about 400 ms in the CPU-bound background
-  pass and about 160 ms in serial work after its last view. No single cut
-  saves 60 ms. The cuts without a protocol change reach about 75 ms only
-  together.
-- **Impact if no action:** Each warm edit on mokly-cloud keeps a background
-  pass of about 320 to 540 ms, median 400 ms, and about 150 to 180 ms of
-  serial work after the last view, in these local runs.
+  - PR #468, merged on 2026-11-22, caches the export names of
+    `orderedExports` across generations. The orchestrator accepted it on
+    2026-11-21 at -42 ms for each mokly-cloud edit. It is not in this
+    baseline. It also lowers the preparation of each cold sidecar. Its Part B,
+    a preparation `describe` without definitions, is the item
+    [prepare-only-describe.md](./prepare-only-describe.md).
+  - The gate of the performance orchestrator measured B1, B2, and B4 on
+    2026-11-22 against `main` at `1a2534d03`, with release cores on 4 vCPU,
+    over 6 rounds of 3 warm one-line mokly-cloud edits: edit to published
+    Changes 1,898 to 1,811 ms, `changes.classify` 181 to 140 ms, and
+    `serve.background` 437 to 413 ms. The whole-tree memory peak of cold
+    10-edit sessions stayed equal, 3,110 to 3,109 MiB. A confirm check of the
+    final code on 4 rounds measured `changes.classify` 190 to 152 ms.
+- **Problem:** After B1, B2, and B4, each warm mokly-cloud edit still spends
+  about 410 ms in the CPU-bound background pass, and the safe CPU cuts of the
+  pass are not built. The goal of 100 ms is not reached: the gate measured
+  -87 ms. Until 2026-11-22 the problem was: each warm edit spends about
+  400 ms in the CPU-bound background pass and about 160 ms in serial work
+  after its last view; no single cut saves 60 ms, and the cuts without a
+  protocol change reach about 75 ms only together.
+- **Impact if no action:** Each warm edit on mokly-cloud keeps the CPU of the
+  pass that the safe parts of C would remove, about 15 to 29 ms. Until
+  2026-11-22 the impact was: a background pass of about 320 to 540 ms,
+  median 400 ms, and about 150 to 180 ms of serial work after the last view,
+  in the local runs of that date.
 - **Root question:** How can a warm edit publish Changes at least 100 ms
   sooner, by removing CPU work and serial waits from the background pass and
   the work after it, with the same output and a whole-tree peak within 2% of
@@ -129,7 +145,9 @@
       tree. About 18 to 26 ms. Most of it is in the Changes publication,
       because the usage publication already touches only the 11 changed
       entry details. Memory: lower, because fewer details are cloned. Risk:
-      low to medium. Every published byte must stay equal.
+      low to medium. Every published byte must stay equal. Applied on
+      2026-11-22: a publication shares the record of a detail whose inputs
+      are equal, and the canonical encoder sorts keys while it writes.
     - **B2.** In the comparisons, decide the reuse of an unchanged view from
       its document key and the base identity, without a fetch and a digest of
       its document. Reuse the closure and anchor walks that the pass already
@@ -137,7 +155,14 @@
       unchanged view can change when a view that it links to changes, so the
       reuse must follow the link targets. Memory: the walk facts of the views
       of one pass, at most 44 here, released with the pass. Risk: medium.
-      Changes must stay equal over every edit sequence.
+      Changes must stay equal over every edit sequence. Applied on
+      2026-11-22, as built: a proven head view skips its document fetch, its
+      digest, and its anchor walk; only a background read of a view with a
+      viewport keeps a walk record; the records of one generation stay within
+      two MiB, and each record ends when the classification of its
+      generation takes it or when the generation ends. The record rule for
+      pages and Markdown documents is the item
+      [background-walk-records-from-kept-facts.md](./background-walk-records-from-kept-facts.md).
     - **B3.** In the kept-base check, skip the re-read of unchanged working
       manifests, lockfiles, and install listings. About 15 to 18 ms. A check
       by file metadata alone adds a change that the checks do not see, so it
@@ -148,7 +173,8 @@
       already records the cost of this check as work outside an earlier
       scope.
     - **B4.** One Git read of the references for both the reference
-      resolution and the base pin. About 3 ms. Risk: low.
+      resolution and the base pin. About 3 ms. Risk: low. Applied on
+      2026-11-22.
   - **C.** Cut the CPU of the pass with no protocol change. These parts touch
     neither the seed path nor the released-recipe release. Encode each restore
     request once for all cold sidecars, about 4 to 8 ms. It holds one encoded
@@ -156,10 +182,12 @@
     registry by rule, for each generation, with a fixed cap and a release at
     `dispose`, about 8 to 13 ms. Scan frames with the native `indexOf`, about
     3 to 8 ms. Together about 15 to 29 ms. Effort: Medium.
-    - These parts wait until the branch that owns the seed path and the
-      released-recipe release merges: a release without the lock-held encode
-      and without the one-at-a-time disposes, about 3 to 8 ms, and a
-      render-only restore, about 15 to 25 ms.
+    - Two more parts touch the seed path and the released-recipe release: a
+      release without the lock-held encode and without the one-at-a-time
+      disposes, about 3 to 8 ms, and a render-only restore, about 15 to
+      25 ms. They waited for the branch that owned that code, which merged as
+      PR #469 on 2026-11-22. They are not in the choice of the next pull
+      request.
     - A V8 code cache would live in the memory of the core. The holder makes it
       after its visible `describe`, and each restore request carries it, about
       1.6 MB more. So its net gain is about 3 to 8 ms. A file would need a new
@@ -190,10 +218,11 @@
   - Coalesced document compositions. The 44 views of a pass have 44 distinct
     document keys, so no composition repeats.
   - The production build of React. It changes published bytes and warnings.
-  - A prerequisite `describe` without a reply. It repeats Part B of
-    `plans/cheaper-sidecar-describe.md`, which the orchestrator did not build
-    on 2026-11-21, because the core would lose its Rust check of the
-    definitions. The reply is 0.2 MB, so it saves about 3 ms.
+  - A prerequisite `describe` without a reply. It repeats Part B of the
+    export-name cache work, which the orchestrator did not build on
+    2026-11-21, because the core would lose its Rust check of the
+    definitions. The item [prepare-only-describe.md](./prepare-only-describe.md)
+    holds it. The reply is 0.2 MB, so it saves about 3 ms.
   - Fewer cold sidecars in a pass. The preparation and the renders that it
     enables cost about the same lane time, so the pass ends at about the
     same time.
@@ -223,11 +252,11 @@
     holds the open decision on records that ask for no action. When the next
     pull request closes this item and keeps its measurements, it applies that
     answer.
-  - The plan `plans/cheaper-sidecar-describe.md` of branch
-    `calummoore/mokly-cheaper-sidecar-describe-dlz0` records the Part B call.
-    One reason of that call says that render sidecars run `describe` after
-    Changes publishes. This split shows three prerequisite `describe` calls
-    inside each warm pass, before Changes.
+  - [prepare-only-describe.md](./prepare-only-describe.md) holds the Part B
+    call of the export-name cache work. One reason of that call says that
+    render sidecars run `describe` after Changes publishes. This split shows
+    three prerequisite `describe` calls inside each warm pass, before
+    Changes.
 - **Decisions:**
   - 2026-11-22, the performance orchestrator chose B of the first decision of
     this item: split the serial work after the last view with the same probe,
@@ -269,7 +298,7 @@
     recorded as ranked here.
 - **Recommendation:** F without B3, as chosen on 2026-11-22.
 - **Action:** fix after merge, apply the safe parts of C of option F in the
-  next pull request of the workspace, after the split and the ranking of
+  next speed pull request, after the split and the ranking of
   2026-11-22 above, because the orchestrator chose that order. A later
   proposal of B3 needs a protocol decision first. D, E, and the V8 code cache
   need their own scope approval.
@@ -278,7 +307,8 @@
 
 All times are in milliseconds. They are local measurements with a probe, not
 official Changes timings, and the performance orchestrator owns the official
-measurements.
+measurements. Each number and each code fact of this section is of `main` at
+`9bdb0569d`: before PR #468, PR #469, and the cuts B1, B2, and B4.
 
 ### Method
 
@@ -405,10 +435,11 @@ the thread that runs the step.
 
 - Inside the Changes publication: `changes_detail::apply` 10, the detail loop
   and the index encode 9, the Changes apply 4, and the index build 2.
-- `changes_detail::apply` deep-clones all 167 entry details on each
-  publication. The detail loop then deep-compares each detail with the
-  previous one before it reuses the old file.
-- The usage publication also encodes the whole index again.
+- Until 2026-11-22, `changes_detail::apply` deep-cloned all 167 entry
+  details on each publication, and the detail loop then deep-compared each
+  detail with the previous one before it reused the old file. B1 removed
+  both.
+- The usage publication also encoded the whole index again.
 
 A second session ran under `perf` at 1,999 Hz with frame pointers. It slowed
 each edit by about 1 s, so only its shares count. Shares of the CPU samples in
