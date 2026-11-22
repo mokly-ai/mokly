@@ -159,13 +159,14 @@ Depends on: every other milestone
       `main`. Evidence:
       `.context/serve-base-postcss-preparation/serveproof-summary.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
-- [ ] Send the final product SHA to the performance orchestrator for its
-      official gate.
+      once, and report. Two rounds ran. Findings 14, 15, and 16 are fixed
+      in `bd098d8d3` and `0d0cc3650`, and none is open.
+- [x] Send the final product SHA to the performance orchestrator for its
+      official gate. Sent: `408eb5571`, which merges `main` `c699b35d3`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
