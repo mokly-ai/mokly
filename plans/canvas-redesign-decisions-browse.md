@@ -1,4 +1,4 @@
-# Canvas redesign: decisions 33 and 34
+# Canvas redesign: decisions 33 to 35
 
 These decisions came from Milestone 18, one Canvas family of Browse designs,
 of the [Canvas redesign plan](./canvas-redesign.md). This file is a part of
@@ -84,3 +84,29 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
 - **Previous examples:** None found.
 - **Recommendation:** B. It matches how every other screen opens.
 - **Action:** ask the user, because B and C change three requirements.
+
+## 35. The zoom pill while an entry loads or failed
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-shell-canvas-stage.md:28-32`
+- **Background:** The canvas stage contract shows the zoom pill while an entry
+  is selected. It hides the pill with nothing selected, because the canvas
+  then holds no section to zoom or fit.
+- **Problem:** While the selected entry's preview loads or failed, the canvas
+  also holds no section, but the requirement still shows the pill and the
+  dock's Fit.
+- **Impact if no action:** The pill and Fit show while they act on nothing.
+- **Root question:** When does the canvas show its zoom controls?
+- **Options:**
+  - **A.** Keep the requirement: the pill and Fit show while an entry is
+    selected. The mockup draws this now. Effort: Small.
+  - **B.** Show the pill and Fit only while the canvas holds a section. Change
+    the contract line and two loading mockups. Effort: Small.
+- **Left out:** A disabled pill, because a control that does nothing adds
+  noise.
+- **Wider fix:** None, because one rule settles it.
+- **Previous examples:** The home state has no pill for the same reason.
+- **Recommendation:** B. The rule then follows its own reason.
+- **Action:** ask the user, because B changes a requirement.
