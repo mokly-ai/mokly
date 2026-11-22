@@ -94,6 +94,12 @@ Design calls, my own:
   The words restate the unchanged rule that only a `bundle` request carries
   the preparation, so no requirement and no decision changes. A CSS-only base
   keeps its start at its first `processCss` request.
+- 2026-11-22, review finding 16: the decision sentence about an unused child
+  now says that a prepared child ends unused when no stylesheet of its
+  startup or base attempt needs a `processCss` request. An attempt without a
+  `bundle` request starts no child, so the old words were wrong for it. The
+  new words restate the unchanged rule, so no requirement and no decision
+  changes.
 
 Contract owners:
 
