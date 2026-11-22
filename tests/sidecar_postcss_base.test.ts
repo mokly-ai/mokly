@@ -5,7 +5,12 @@ import test from "node:test";
 
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 
-import { bundleParams, cssParams, startSidecar } from "./helpers/sidecar.js";
+import {
+  bundleParams,
+  contextParams,
+  cssParams,
+  startSidecar,
+} from "./helpers/sidecar.js";
 import { sidecarSources } from "./helpers/sidecar_sources.js";
 
 test("base Tailwind automatic scans use the base source root and never head sources", async (context) => {
@@ -29,15 +34,15 @@ test("base Tailwind automatic scans use the base source root and never head sour
   }
   const sidecar = startSidecar(context, head);
   await sidecar.call("hello");
-  await sidecar.call("bundle", {
-    ...bundleParams({
-      sourceRoot: head,
-      entryFiles: [],
-      renderer: null,
-      storiesFiles: [],
-    }),
-    preparation: { context: "head", postcss: "postcss.mjs" },
+  const headParams = bundleParams({
+    sourceRoot: head,
+    entryFiles: [],
+    renderer: null,
+    storiesFiles: [],
   });
+  const preparation = { context: "head", postcss: "postcss.mjs" };
+  await sidecar.call("prepareContext", contextParams(headParams, preparation));
+  await sidecar.call("bundle", { ...headParams, preparation });
   const render = (root: string, context: string) =>
     sidecar.call<CssResult>(
       "processCss",

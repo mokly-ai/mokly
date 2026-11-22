@@ -6,10 +6,15 @@ import type { BundleResult } from "../packages/mokly/src/generated/sidecar/Bundl
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 
 import { preparedSession } from "./helpers/prepared_session.js";
-import { bundleParams, cssParams, startSidecar } from "./helpers/sidecar.js";
+import {
+  bundleParams,
+  contextParams,
+  cssParams,
+  startSidecar,
+} from "./helpers/sidecar.js";
 import { editSource } from "./helpers/sidecar_edit.js";
 
-test("a prepared configuration failure belongs to CSS and leaves Bundle usable", async (context) => {
+test("a configuration failure belongs to CSS and leaves Bundle usable, with or without prepareContext", async (context) => {
   const { params, write } = await editSource(context);
   await write(
     "postcss.mjs",
@@ -57,12 +62,7 @@ test("a prepared configuration failure belongs to CSS and leaves Bundle usable",
   const answered = await early.call({
     id: 1,
     method: "prepareContext",
-    params: {
-      ...preparation,
-      sourceRoot: params.sourceRoot,
-      repositoryRoots: params.repositoryRoots,
-      moduleResolution: params.moduleResolution,
-    },
+    params: contextParams(params, preparation),
   });
   assert.equal(answered, null);
   const prepared = await early.call({
@@ -111,12 +111,7 @@ test("prepareContext starts the only child before a restored Bundle", async (con
   const reply = await session.call({
     id: 1,
     method: "prepareContext",
-    params: {
-      ...preparation,
-      sourceRoot: params.sourceRoot,
-      repositoryRoots: params.repositoryRoots,
-      moduleResolution: params.moduleResolution,
-    },
+    params: contextParams(params, preparation),
   });
   assert.equal(reply, null);
   assert.equal(preparations.length, 1);
@@ -143,6 +138,7 @@ test("prepareContext starts the only child before a restored Bundle", async (con
     generation: full.generation,
     restoredGeneration: "restore:startup",
   });
+  assert.equal(preparations.length, 1);
   const css = (name: string) =>
     cssParams({
       context: name,
@@ -157,6 +153,7 @@ test("prepareContext starts the only child before a restored Bundle", async (con
     params: css("startup"),
   });
   assert.equal(starts, 1);
+  assert.equal((prepared as CssResult).text, ".theme{color:red}");
   const plain = await session.call({
     id: 5,
     method: "processCss",
@@ -197,11 +194,9 @@ test("fresh prepared contexts remove utilities and reload Tailwind configuration
       );
     }
     const name = `attempt-${index}`;
-    await sidecar.call("bundle", {
-      ...params,
-      evaluation: name,
-      preparation: { context: name, postcss: "postcss.mjs" },
-    });
+    const preparation = { context: name, postcss: "postcss.mjs" };
+    await sidecar.call("prepareContext", contextParams(params, preparation));
+    await sidecar.call("bundle", { ...params, evaluation: name, preparation });
     const result = await sidecar.call<CssResult>(
       "processCss",
       cssParams({
@@ -249,11 +244,9 @@ test("fresh prepared contexts reload configuration plugins dependencies and impo
       `import plugin from './plugin.mjs';export default {plugins:[plugin(${configured})]};`,
     );
     const name = `attempt-${index}`;
-    await sidecar.call("bundle", {
-      ...params,
-      evaluation: name,
-      preparation: { context: name, postcss: "postcss.mjs" },
-    });
+    const preparation = { context: name, postcss: "postcss.mjs" };
+    await sidecar.call("prepareContext", contextParams(params, preparation));
+    await sidecar.call("bundle", { ...params, evaluation: name, preparation });
     const result = await sidecar.call<CssResult>(
       "processCss",
       cssParams({
