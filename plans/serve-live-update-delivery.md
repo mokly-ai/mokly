@@ -70,7 +70,7 @@ Depends on: 4
 
 - [x] Restore `docs/protocol/mokly-on-demand-background.md` and the follow-up items `serve-pass-rereads-unchanged-pages.md`, `background-walk-records-from-kept-facts.md`, and `native-html-head-usage-overhead.md` to `origin/main`.
 - [x] Remove the request record, the pass priority, the catalogue-order warning reports that only P4 needed, their tests, and their README text.
-- [ ] Record P4 in a follow-up item with the measurements, and fold `plans/follow-ups/pass-priority-skips-unchanged-generations.md` into it.
+- [x] Record P4 in a follow-up item with the measurements, and fold `plans/follow-ups/pass-priority-skips-unchanged-generations.md` into it.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

@@ -189,6 +189,10 @@
     and [serve-watch-candidate-plan-cost.md](./serve-watch-candidate-plan-cost.md)
     record experiments H and C of the same day. Both stopped without a
     candidate. Experiment C is not option C of this record.
+  - [serve-pass-requested-views-first.md](./serve-pass-requested-views-first.md)
+    keeps the requested-views-first order of the background pass, which needs
+    the second visible frame document on a warm process. A preload of this
+    record is one way to give it one.
 - **Recommendation:** A. The first recommendation was B, measured once.
   Experiment D measured a bounded form of B on 2026-11-21. It missed its speed
   and memory bars, and the user rejected it. Its result rejects the assumption
@@ -390,9 +394,10 @@ These partial checks do not establish full product correctness or CI acceptance.
 On 2026-11-22, the viewer live-update work measured how soon the frames of an
 open view page show an edit. It tested no preload. Its two arms were `main` at
 `3362e250d` and the branch `calummoore/mokly-viewer-live-update-lpaj`, with
-the core of commit `529039532`. That branch compresses the JSON answers of
+the core of commit `529039532`. That commit compresses the JSON answers of
 Serve, adds validators to resources, and starts requested views first in the
-background pass.
+background pass. A later commit of the branch removed the requested-views-first
+order again.
 
 ### Fixture and probe
 
