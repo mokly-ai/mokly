@@ -91,7 +91,7 @@ test("a build names its branch, or its pull request with number and title", () =
   assert.equal(buildReferenceLabel(pull), "#14 Host the catalogue");
 });
 
-test("the slot reads what the build's switcher row would", () => {
+test("the slot says the build's state as the pill says a publication's", () => {
   assert.deepEqual(buildSlot(build({ state: "queued" })), {
     state: "publishing",
     detail: "Publishing now",
@@ -113,7 +113,7 @@ test("the slot reads what the build's switcher row would", () => {
     build({ state: "published", finishedAt: "2026-09-15T14:20:00Z" }),
   );
   assert.equal(published.state, "ready");
-  assert.match(published.detail, /^Published /);
+  assert.match(published.detail, /^Ready · /);
 });
 
 test("a failed build is newer than the newest attempt only when it began later", () => {

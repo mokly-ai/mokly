@@ -4,19 +4,24 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { createRef, type ComponentProps } from "react";
+import { createRef, type ComponentProps, type RefObject } from "react";
 import { renderToString } from "react-dom/server";
 
 import {
   EmbeddedLayout,
   MarkerLayer,
+  type HostSlotName,
 } from "../src/embedded-layout/embedded-layout.js";
 
 import { assertSameElement } from "./dom-assertions.js";
 
 type LayoutProps = ComponentProps<typeof EmbeddedLayout>;
 
-/** An embedded root with marked content in place of the shell's parts. */
+/**
+ * An embedded root with marked content in place of the shell's parts. The
+ * stand-in top bar places the containers of the host's top-bar slots in their
+ * order.
+ */
 function layout(props: Partial<LayoutProps> = {}) {
   return (
     <EmbeddedLayout
@@ -30,7 +35,13 @@ function layout(props: Partial<LayoutProps> = {}) {
       navigation={<nav aria-label="Catalogue" />}
       statusId="x-mb-status"
       theme="auto"
-      topBar={<header>Top bar</header>}
+      topBar={(host) => (
+        <header>
+          {host.start}
+          {host.center}
+          {host.end}
+        </header>
+      )}
       {...props}
     />
   );
@@ -39,7 +50,7 @@ function layout(props: Partial<LayoutProps> = {}) {
 test("an embedded root lays out the shell's parts between its host slots", () => {
   assert.equal(
     renderToString(layout()),
-    '<div class="mbk mokly-viewer mbk-reset" data-drawer="closed" data-mokly-color-scheme="light" data-mokly-shell="" tabindex="-1" data-mokly-theme="auto"><a class="mbk-skip-link mbk-reset" href="#x-mb-main">Skip to content</a><div class="mokly-top-host mbk-reset"><div data-mokly-slot="topBarStart"></div><header>Top bar</header><div data-mokly-slot="topBarEnd"></div></div><div class="mbk-body mbk-reset"><div class="mokly-rail-host mbk-reset"><div data-mokly-slot="railStart"></div><nav aria-label="Catalogue"></nav><div data-mokly-slot="railEnd"></div></div><div class="mokly-stage-host mbk-reset"><main id="x-mb-main">Routed</main><div data-mokly-slot="emptyState" hidden=""></div><div data-mokly-slot="stageOverlay" hidden="" style="pointer-events:none"></div></div><div data-mokly-slot="sidePanel"></div></div><div data-mokly-marker-layer="" data-mokly-slot="markers"></div><div class="mbk-reset" data-mokly-label-layer=""></div><p aria-atomic="true" aria-live="polite" class="mbk-route-status mbk-reset" id="x-mb-status" role="status">Opened Home</p></div>',
+    '<div class="mbk mokly-viewer mbk-reset" data-drawer="closed" data-mokly-color-scheme="light" data-mokly-shell="" tabindex="-1" data-mokly-theme="auto"><a class="mbk-skip-link mbk-reset" href="#x-mb-main">Skip to content</a><div class="mokly-top-host mbk-reset"><header><div data-mokly-slot="topBarStart"></div><div data-mokly-slot="topBarCenter"></div><div data-mokly-slot="topBarEnd"></div></header></div><div class="mbk-body mbk-reset"><div class="mokly-rail-host mbk-reset"><div data-mokly-slot="railStart"></div><nav aria-label="Catalogue"></nav><div data-mokly-slot="railEnd"></div></div><div class="mokly-stage-host mbk-reset"><main id="x-mb-main">Routed</main><div data-mokly-slot="emptyState" hidden=""></div><div data-mokly-slot="stageOverlay" hidden="" style="pointer-events:none"></div></div><div data-mokly-slot="sidePanel"></div></div><div data-mokly-marker-layer="" data-mokly-slot="markers"></div><div class="mbk-reset" data-mokly-label-layer=""></div><p aria-atomic="true" aria-live="polite" class="mbk-route-status mbk-reset" id="x-mb-status" role="status">Opened Home</p></div>',
   );
   assert.match(
     renderToString(
@@ -66,6 +77,7 @@ test("each host slot holds the host's own content in its place", () => {
             Start
           </button>
         ),
+        topBarCenter: <i>Centre</i>,
         topBarEnd: <b>End</b>,
         railStart: <p>Above</p>,
         railEnd: <p>Below</p>,
@@ -79,6 +91,7 @@ test("each host slot holds the host's own content in its place", () => {
     container.querySelector(`[data-mokly-slot="${name}"]`);
   assertSameElement(start.current?.parentElement, slot("topBarStart"));
   for (const [name, text] of [
+    ["topBarCenter", "Centre"],
     ["topBarEnd", "End"],
     ["railStart", "Above"],
     ["railEnd", "Below"],
@@ -92,14 +105,33 @@ test("each host slot holds the host's own content in its place", () => {
     (slot("stageOverlay") as HTMLElement).style.pointerEvents,
     "auto",
   );
-  assertSameElement(
-    slot("topBarStart")?.parentElement,
-    container.querySelector(".mokly-top-host"),
-  );
+  // The top bar places the top-bar slots inside the top host.
+  for (const name of ["topBarStart", "topBarCenter", "topBarEnd"])
+    assertSameElement(
+      slot(name)?.parentElement?.parentElement,
+      container.querySelector(".mokly-top-host"),
+      name,
+    );
   assertSameElement(
     slot("railEnd")?.parentElement,
     container.querySelector(".mokly-rail-host"),
   );
+});
+
+test("each top-bar slot's container reaches the host through its name", () => {
+  const refs = new Map<HostSlotName, RefObject<HTMLDivElement | null>>();
+  const slotRef = (name: HostSlotName) => {
+    const ref = refs.get(name) ?? createRef<HTMLDivElement>();
+    refs.set(name, ref);
+    return ref;
+  };
+  const { container } = render(layout({ slotRef }));
+  for (const name of ["topBarStart", "topBarCenter", "topBarEnd"] as const)
+    assertSameElement(
+      refs.get(name)?.current,
+      container.querySelector(`[data-mokly-slot="${name}"]`),
+      name,
+    );
 });
 
 test("the empty state slot shows only when the host asks for it", () => {

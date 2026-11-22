@@ -127,8 +127,9 @@ export function referenceRowState(
 }
 
 /**
- * What the publication slot says beside a build's reference: the state its
- * switcher row would read, with no SHA, because a build is not a publication.
+ * What the publication slot says beside a build's reference: the state that
+ * the pill says of a publication, `Ready · {day}` once the build has
+ * published, with no SHA, because a build is not a publication.
  */
 export function buildSlot(build: Build): {
   state: PublicationState;
@@ -140,7 +141,7 @@ export function buildSlot(build: Build): {
   if (build.state === "published") {
     return {
       state: "ready",
-      detail: "Published " + publishedDay(build.finishedAt ?? build.createdAt),
+      detail: "Ready · " + publishedDay(build.finishedAt ?? build.createdAt),
     };
   }
   if (buildFailed(build.state)) {

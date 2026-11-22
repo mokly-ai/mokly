@@ -1,11 +1,13 @@
 import type { ReactNode, RefObject } from "react";
 
 import { Action } from "../components/action";
+import type { ActionIcon } from "../components/action";
 import { StateDot } from "../components/controls";
 import { SiteLink } from "../components/page-parts";
 
-import { useCompactBar } from "./bar-width";
+import { useBarLabels, useCompactBar } from "./bar-width";
 import type { ViewerSlotName } from "./host";
+import { PillChevron } from "./pill";
 import type { PublicationState } from "./resolution";
 import { publicationTones } from "./resolution";
 import { useViewerSlotSource } from "./slot-source";
@@ -44,7 +46,12 @@ export function Slot({
   );
 }
 
-/** The workspace and project the reader is inside, and the way to another. */
+/**
+ * The workspace and project the reader is inside, and the way to another: one
+ * quiet Button labelled with the project, with the workspace as its muted
+ * lead, so a press anywhere on the two opens the projects. The whole
+ * `workspace / project` is its accessible name and tooltip.
+ */
 export function ProjectTrigger({
   workspace,
   project,
@@ -59,19 +66,21 @@ export function ProjectTrigger({
   slotRef?: RefObject<HTMLSpanElement | null>;
 }) {
   const compact = useCompactBar();
-  const label = compact || !workspace ? project : workspace + " / " + project;
+  const lead = compact || !workspace ? undefined : workspace;
+  const whole = lead === undefined ? project : lead + " / " + project;
   return (
     <Slot
       name="projects"
       slotRef={slotRef}
       className="fo-top-project"
-      title={label}
+      title={whole}
     >
       <span className="fo-top-variable-control">
         <Action
-          label={label}
-          accessibilityLabel={label}
-          tone="secondary"
+          label={project}
+          lead={lead}
+          accessibilityLabel={whole}
+          tone="quiet"
           size="sm"
           chevron
           block
@@ -86,7 +95,12 @@ export function ProjectTrigger({
   );
 }
 
-/** The branch or pull request the stage is showing, and the way to another. */
+/**
+ * The branch or pull request the stage is showing, and the way to another:
+ * the quiet Button inside the publication pill, which is the frame the reader
+ * sees. The compact pill's trigger carries the chevron, and the full pill
+ * draws its chevron after the state.
+ */
 export function PublicationTrigger({
   label,
   open,
@@ -110,9 +124,9 @@ export function PublicationTrigger({
       <Action
         label={shown}
         accessibilityLabel={label}
-        tone="secondary"
+        tone="quiet"
         size="sm"
-        chevron
+        chevron={compact}
         block
         singleLine
         expanded={open}
@@ -125,27 +139,29 @@ export function PublicationTrigger({
 }
 
 /**
- * What the chrome says about the publication the stage is showing. The state
- * sits outside the trigger, so the trigger's label stays the reference the
- * reader recognizes and the publication's own identity stays secondary.
+ * What the full pill says about the publication the stage is showing, after
+ * its trigger: a hairline, the decorative status dot, the state's phrase, the
+ * short SHA in mono and the chevron at the pill's end. The state sits outside
+ * the trigger, so the trigger's label stays the reference the reader
+ * recognizes and the publication's own identity stays secondary. The compact
+ * bar hides it.
  */
 export function PublicationMeta({
   state,
   detail,
   sha,
-  children,
 }: {
   state: PublicationState;
   detail: string;
   sha?: string;
-  children?: ReactNode;
 }) {
   return (
     <span className="fo-top-state" data-mkc-publication-state={state}>
+      <span className="fo-canvas-pill-rule" />
       <StateDot tone={publicationTones[state]} />
       <span className="fo-top-state-detail">{detail}</span>
       {sha && <code className="mono-value">{sha}</code>}
-      {children}
+      <PillChevron />
     </span>
   );
 }
@@ -161,7 +177,7 @@ export function PullRequestLink({ url }: { url: string }) {
  * label and draws itself disabled, with no test handle, because the control
  * a test means is the one that opens something.
  */
-type BarPress =
+export type BarPress =
   | {
       testID: string;
       onPress: () => void;
@@ -179,50 +195,53 @@ type BarPress =
       slotRef?: undefined;
     };
 
-/** A repeat action in the bar's trail; none of them spends the accent. */
+/**
+ * A repeat action in the bar's trail, compact and on one line. Only Share can
+ * spend the accent: while no overlay is open, its caller marks it `filled`,
+ * and it is the screen's one filled action where the package's slots hold it,
+ * because the package draws only a ready publication. The cloud's own bar
+ * stands over a stage card, which owns that action, so there it keeps `tone`.
+ * An action with a glyph draws its glyph alone where the bar has no room for
+ * its label, and keeps its name and tooltip; it stays one control, so it
+ * keeps its focus when the drawing changes.
+ */
 export function BarAction({
   label,
-  whole,
   testID,
   onPress,
   open,
   chevron,
+  icon,
   disabled,
   slotRef,
   tone = "quiet",
+  filled = false,
   popup = "dialog",
   slot,
   waiting,
 }: BarPress & {
   label: string;
-  /**
-   * The whole value, when the label is a shortened form of it. It becomes the
-   * control's accessible name and its tooltip, so a reader who cannot hover —
-   * which is every reader on the surface where the label is shortened — can
-   * still reach it.
-   */
-  whole?: string;
   chevron?: boolean;
+  /** The glyph before the label, or instead of it, such as History's clock. */
+  icon?: ActionIcon;
   tone?: "secondary" | "quiet";
+  filled?: boolean;
   popup?: "dialog" | "menu";
   slot: ViewerSlotName;
 }) {
-  const variable = slot === "account";
+  const ready = useViewerSlotSource() === "package";
+  const labels = useBarLabels();
   return (
-    <Slot
-      name={slot}
-      slotRef={slotRef}
-      title={whole ?? label}
-      className={variable ? "fo-top-account" : "fo-top-fixed"}
-    >
-      <span className={variable ? "fo-top-variable-control" : undefined}>
+    <Slot name={slot} slotRef={slotRef} title={label} className="fo-top-fixed">
+      <span>
         <Action
           label={label}
-          accessibilityLabel={whole ?? label}
-          tone={tone}
+          accessibilityLabel={label}
+          tone={filled && ready ? "primary" : tone}
           size="sm"
           chevron={chevron}
-          block={variable}
+          icon={icon}
+          iconOnly={icon === undefined ? undefined : !labels}
           singleLine
           expanded={open}
           hasPopup={popup}

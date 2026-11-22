@@ -21,6 +21,7 @@ import {
 import type { CatalogueView } from "./published-navigation";
 import {
   ComparisonOverlay,
+  PublishedSlotCenter,
   PublishedSlotEnd,
   PublishedSlotStart,
 } from "./published-slots";
@@ -45,9 +46,10 @@ const ids = {
 
 /**
  * The ready publication as a static depiction composed of `@mokly/ui` parts:
- * the embedded layout with the cloud controls in its `topBarStart` and
- * `topBarEnd` slots around the package top bar, the catalogue navigation,
- * and the workspace with the sample screen in the phone and browser frames.
+ * the embedded layout with the cloud controls in the package top bar's three
+ * host slots, `topBarStart` after its mark, `topBarCenter` in its middle and
+ * `topBarEnd` after its search, the catalogue navigation, and the workspace
+ * with the sample screen in the phone and browser frames.
  * Every part draws its controls as pictures or native controls, so the
  * drawing runs no script, and the layout states the document's scheme as its
  * appearance. The top bar takes no end control, because the cloud's bar has
@@ -124,10 +126,12 @@ export function PublishedViewer({
           topBarStart: (
             <PublishedSlotStart
               viewport={viewport}
-              subject={subject}
               workspace={workspace}
               project={project}
             />
+          ),
+          topBarCenter: (
+            <PublishedSlotCenter viewport={viewport} subject={subject} />
           ),
           topBarEnd: (
             <PublishedSlotEnd
@@ -159,15 +163,16 @@ export function PublishedViewer({
         }}
         statusId={ids.status}
         theme={colorScheme}
-        topBar={
+        topBar={(host) => (
           <TopBar
             drawerOpen={false}
+            host={host}
             interactive={false}
             navigationId={ids.navigation}
             searchId={ids.search}
             tagPicker={<SearchHint />}
           />
-        }
+        )}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 # Viewer Compositions
 
-Status: The bar, the publication pill, the account menu, the check card, the cloud's dot-grid stage and the Canvas panels, dialog and layer of these compositions are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
+Status: The five-action bar, the account menu, the check card, the cloud's dot-grid stage and the Canvas panels, dialog and layer of these compositions are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
 
 The compositions of the viewer and of the surfaces layered over it, from
 [Folio chrome](./folio-chrome.md): the stage, the viewer top bar, the
@@ -25,84 +25,100 @@ beneath it. The Floating and Overlay roles of
 [Design tokens](./design-tokens.md#radius-elevation-and-focus) give the
 values.
 
-**Stage**. The published viewer fills the available height and owns its top
-bar, catalogue and stage. Cloud composes the lead and middle groups into
-`topBarStart` and the trailing actions into `topBarEnd`, and the cloud slots
-take the bar's own surface, so the bar reads as one surface in both schemes.
-The package's interface takes the app's scheme, the `theme` the
-[package host contract](./viewer-host.md#package-host) passes it, so its own
-neutrals and the cloud slots it holds read as one surface; the preview
-documents keep their own schemes. Non-ready publication and access states
-replace the package with one centered cloud card on the cloud's own canvas:
-the `background` with a `dot` grid on a 24px pitch. A State card, its waiting
-form and a build card float on it with the float shadow. An overlay or
-settings dialog makes the viewer beneath inert and keeps the document's single
-`main` and `h1` above it.
+**Stage**. The published viewer fills the available height and owns its top bar,
+catalogue and stage. Cloud composes the project into `topBarStart`, the
+publication into `topBarCenter` and the trailing actions into `topBarEnd`. The
+package bar draws the surface, the hairline and the padding around the cloud
+slots, so the bar reads as one surface in both schemes. The package's interface
+takes the app's scheme, the `theme` the [package host
+contract](./viewer-host.md#package-host) passes it, so its own neutrals and the
+cloud slots it holds read as one surface; the preview documents keep their own
+schemes. Non-ready publication and access states replace the package with one
+centered cloud card on the cloud's own canvas: the `background` with a `dot`
+grid on a 24px pitch. A State card, its waiting form and a build card float on
+it with the float shadow. An overlay or settings dialog makes the viewer beneath
+inert and keeps the document's single `main` and `h1` above it.
 
 **Viewer top bar**. The application header, and the only cloud navigation the
 product has. When the bar's own width fits the five cloud targets beside the
-package controls, they fill the package's 48px row: `topBarStart` takes the
-workspace/project switcher and the publication pill; the package keeps its own
-mark and search, whose field ends with the `⌘K` hint; `topBarEnd` takes
-History, Share and the account's avatar, right aligned. The project switcher
-gives up its width before the pill gives up any. Beside the pill, the full bar
-draws the publication's Changes badge, its pull request's GitHub link and View
-latest, when each applies. A narrower bar, as on mobile, cannot fit those five
-cloud targets, so `topBarStart` keeps only the pill and `topBarEnd` carries one
-quiet **More** trigger with a chevron. Its rows are the current project,
-History and Share, then the account rows; they open the same overlays as the
-desktop controls, and dismissal returns focus to the action's current trigger,
-as [Viewer chrome](./viewer-chrome.md#slot-inventory) defines. At a viewer
-width of 560px or less the package's search field is its own 30px search
-button, which opens a full-width search over the same row with both slots
-still mounted; Close or Escape returns to the button. That width is the
-viewer's container rather than the window, so between it and the product's
-compact breakpoint the compact row still carries the whole search field.
-Non-ready cloud-owned stages use the same one-row grouping around the cloud's
-Mokly mark, without a search, because no catalogue is mounted, rather than
-inventing package navigation. The project switcher, the publication trigger,
-History and **More** are `quiet` registered Buttons, so the bar reads as one
-control strip. Share is the screen's one filled action on the ready viewer: the
-`primary` tone, which Canvas paints `signalFill` with `onSignalFill` text.
-Under a panel, a sheet or the dialog, and over a non-ready stage, Share keeps
-the `secondary` tone, because the layer or the stage card owns the screen's
-filled action. The bar stays in one row. A narrower bar uses the compact
-composition described above. The compact row keeps the current publication,
-the package's own controls and **More** visible, while the menu gives every
-grouped action a 44px target. The document's `h1` is the project and its
-selected publication, carried by the chrome and visually hidden, because the
-triggers already name both and a second visible title would repeat them.
+package controls, they fill the package's 48px row in three columns: the
+package's mark, then `topBarStart` with the workspace/project switcher;
+`topBarCenter` with the publication pill in the middle of the bar, and the
+publication's Changes badge, its pull request's GitHub link and View latest
+beside it when each applies; then the package's compact search, whose field ends
+with the `⌘K` hint, its end control, and `topBarEnd` with History, Share and the
+account's avatar. The two outer columns are equal, so the pill stays in the
+middle. The project switcher gives up its width first; inside the centre's room
+the state's phrase gives way, then the reference, down to the room of a short
+name, and the controls keep their width. As the full bar narrows, the pill drops
+its short SHA, then History becomes a square quiet Button that draws its clock
+alone and keeps its accessible name and tooltip, then the pill drops its phrase
+and divider and keeps its dot. A narrower bar, as on mobile, cannot fit those
+five cloud targets, so `topBarStart` stays empty, `topBarCenter` keeps only the
+pill, which starts right after the mark and takes the free room, and `topBarEnd`
+carries one quiet **More** trigger with a chevron. Its rows are the current
+project, History and Share, then the account rows; they open the same overlays
+as the desktop controls, and dismissal returns focus to the action's current
+trigger, as [Viewer chrome](./viewer-chrome.md#slot-inventory) defines. At a
+viewer width of 560px or less the package's search field is its own 30px search
+button, which opens a full-width search over the same row with both slots still
+mounted; Close or Escape returns to the button. That width is the viewer's
+container rather than the window, so between it and the product's compact
+breakpoint the compact row still carries the whole search field. Non-ready
+cloud-owned stages use the same order around the cloud's Mokly mark in three
+groups, without a search, because no catalogue is mounted, rather than inventing
+package navigation: the mark and the project, the centred pill, then the
+actions, or the mark, the pill and **More** in the compact form. The project
+switcher, the publication trigger, History and **More** are `quiet` registered
+Buttons, so the bar reads as one control strip. The project switcher is one
+Button labelled with the project, with the workspace as its muted `lead` before
+a slash, and the switcher's up-down chevron, on one line, so a press anywhere on
+`workspace / project` opens the projects. The workspace gives up its width
+before the project does, and the whole `workspace / project` is the Button's
+accessible name and tooltip. History carries the history glyph, a clock with a
+back arrow, as its Button's icon, and **More** carries the switcher's chevron.
+Share is the screen's one filled action on the ready viewer: the `primary` tone,
+which Canvas paints `signalFill` with `onSignalFill` text. Under a panel, a
+sheet or the dialog, and over a non-ready stage, Share keeps the `secondary`
+tone, because the layer or the stage card owns the screen's filled action. The
+bar stays in one row. A narrower bar uses the compact composition described
+above. The compact row keeps the current publication, the package's own controls
+and **More** visible, while the menu gives every grouped action a 44px target.
+The document's `h1` is the project and its selected publication, carried by the
+chrome and visually hidden, because the triggers already name both and a second
+visible title would repeat them.
 
 **Publication pill**. The branch or pull request trigger and what the stage
 shows of it, in one rounded control on `surfaceMuted` with a hairline and the
 8px chrome radius, 32px tall and 40px on a phone, where the trigger keeps its
 44px target. The full pill holds the reference's glyph, branch or pull
 request, the reference trigger, a short divider, the decorative status dot,
-the state's phrase in secondary ink, such as `Ready · 15 Sep`, the short SHA in
-muted mono and a trailing chevron; a pull request's phrase starts with its
-author. The compact pill holds the status dot, the glyph and the reference's
-compact name, a pull request's number or the last segment of a branch, with
-the chevron on the trigger. The trigger is a quiet registered Button with no
-frame of its own, so the pill is the frame the reader sees. Its label is the
-reference alone, and its accessible name and tooltip are the whole reference,
-so the glyph, the state and the chevron stay decorative. While a read decides
-the reference, the trigger is a placeholder in its own frame and the pill
-takes the bar's surface. A name that stands in for a reference that no read
-has reached, such as This build, draws no glyph.
+the state's phrase in secondary ink at the 13px `ui` size, such as
+`Ready · 15 Sep`, the short SHA in muted mono and a trailing chevron in muted
+ink; a pull request's phrase starts with its author. The compact pill holds
+the status dot, the glyph and the reference's compact name, a pull request's
+number or the last segment of a branch, with the chevron on the trigger. The
+trigger is a quiet registered Button with no frame of its own, so the pill is
+the frame the reader sees. Its label is the reference alone, and its
+accessible name and tooltip are the whole reference, so the glyph, the state
+and the chevron stay decorative. While a read decides the reference, the
+trigger is a placeholder in its own frame and the pill takes the bar's
+surface. A name that stands in for a reference that no read has reached, such
+as This build, draws no glyph.
 
 **Account menu**. The account trigger is a quiet registered Button named by
-the reader, with the avatar laid over it as a decorative picture: a 28px circle
-in the `pink` people colour, its `fill` behind its `ink` initials in 11px
-semibold. A disabled trigger fades its avatar. The account menu and **More**
-open as a 260px popover in the shared menu chrome, end-aligned 6px below the
-trigger. The account rows lead with who is signed in, a 32px avatar beside the
-name in 13px semibold ink over the address in 12px muted ink, cut with an
-ellipsis, then, under a hairline, Theme's 13px label with the registered
-Light and Dark segmented control at its own width. Settings, Sign out and
-More's own rows each lead with a muted 16px glyph in a column of one width, so
-every label starts at one edge. A hairline separates More's own rows from the
-account rows. On a phone, **More** is the registered panel's bottom sheet, and
-each of its rows is a 44px touch target.
+the reader, 34px wide, with the avatar laid over its middle as a decorative
+picture: a 28px circle in the `pink` people colour, its `fill` behind its `ink`
+initials in 11px semibold. A disabled trigger fades its avatar. The account
+menu and **More** open as a 260px popover in the shared menu chrome,
+end-aligned 6px below the trigger. The account rows lead with who is signed
+in, a 32px avatar beside the name in 13px semibold ink over the address in
+12px muted ink, cut with an ellipsis, then, under a hairline, Theme's 13px
+label with the registered Light and Dark segmented control at its own width.
+Settings, Sign out and More's own rows each lead with a muted 16px glyph in a
+column of one width, so every label starts at one edge. A hairline separates
+More's own rows from the account rows. On a phone, **More** is the registered
+panel's bottom sheet, and each of its rows is a 44px touch target.
 
 **Panel**. The registered `panel` frame, which the switchers, history and share
 open over the stage. Desktop is a centered modal at most 480px wide and 76vh

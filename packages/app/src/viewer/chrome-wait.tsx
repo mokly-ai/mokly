@@ -1,7 +1,9 @@
 import { WaitingDot } from "../components/placeholder-rows";
 import { ControlPlaceholder, TextBar } from "../components/placeholders";
 
+import { useCompactBar } from "./bar-width";
 import { Slot } from "./chrome";
+import { PillChevron, PillDot, PublicationPill } from "./pill";
 
 /**
  * The bar's controls whose labels the answer decides, while the route reads
@@ -22,10 +24,10 @@ const projectTriggerWidth = 200;
 const referenceTriggerWidth = 144;
 
 /**
- * The width of the account trigger at the bar's size, in px: a reader named
- * by a short display name, as the catalogue draws the bar's reader.
+ * The width of the account trigger at the bar's size, in px: the box of the
+ * reader's avatar, as the catalogue draws it.
  */
-const accountTriggerWidth = 67;
+const accountTriggerWidth = 34;
 
 /** The workspace and project trigger, whose label the project gives. */
 export function ProjectTriggerWait() {
@@ -53,18 +55,26 @@ export function ReferenceTriggerWait() {
 /**
  * The publication slot. The reference and its state are the project's to
  * tell, so the trigger is a placeholder in the reference's own frame and the
- * state is a dot and a bar in its own line.
+ * state is a dot and a bar in its own line, both hidden from assistive
+ * technology like every placeholder. The pill keeps its frame, its hairline
+ * and its chevron around them, and the compact pill its dot.
  */
 export function PublicationSlotWait() {
+  const compact = useCompactBar();
   return (
     <Slot name="switcher">
-      <ReferenceTriggerWait />
-      <span className="fo-top-state" aria-hidden="true">
-        <WaitingDot />
-        <span className="fo-top-state-detail">
-          <TextBar width="6em" />
+      <PublicationPill waiting>
+        {compact && <PillDot />}
+        <ReferenceTriggerWait />
+        <span className="fo-top-state" aria-hidden="true">
+          <span className="fo-canvas-pill-rule" />
+          <WaitingDot />
+          <span className="fo-top-state-detail">
+            <TextBar width="6em" />
+          </span>
+          <PillChevron />
         </span>
-      </span>
+      </PublicationPill>
     </Slot>
   );
 }
@@ -72,8 +82,8 @@ export function PublicationSlotWait() {
 /** The account trigger, while the session read says who the reader is. */
 export function AccountTriggerWait() {
   return (
-    <Slot name="account" className="fo-top-account">
-      <span className="fo-top-variable-control">
+    <Slot name="account" className="fo-top-fixed">
+      <span className="fo-canvas-account">
         <ControlPlaceholder size="sm" width={accountTriggerWidth} />
       </span>
     </Slot>

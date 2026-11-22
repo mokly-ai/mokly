@@ -8,7 +8,7 @@
    the side panel's own container is the package's.
 
    The host carries the class that shows a part only in the full bar, whose
-   switch in `viewer.css` sets its display, so no rule here sets it. */
+   switch in `viewer-bar.css` sets its display, so no rule here sets it. */
 @import "viewer-canvas-depth.css";
 
 /* The canvas the panel floats on, the stage's dot grid, as tall as the

@@ -15,6 +15,11 @@ const ACCENT_OVERRIDES = new Map([
   ["--mokly-accent-contrast", "--_mokly-private-accent-contrast-default"],
   ["--mokly-accent-soft", "--_mokly-private-accent-soft-default"],
 ]);
+/** The insets with which a host clears its window controls from the top bar. */
+const TOP_BAR_INSETS = [
+  "--mokly-top-bar-inset-start",
+  "--mokly-top-bar-inset-end",
+];
 
 function render(theme?: "auto" | "light" | "dark"): string {
   return embeddedMarkup(theme ? { theme } : {});
@@ -91,11 +96,13 @@ test("both appearances define exactly the same shell roles", () => {
     );
 });
 
-test("only the three public accent overrides survive from a host", () => {
-  // No stylesheet declares a public accent override, so a host value on the
-  // root or on an ancestor wins in each appearance. The fallback behind each
+test("only the public overrides survive from a host: three accents and two top-bar insets", () => {
+  // No stylesheet declares a public override, so a host value on the root or
+  // on an ancestor wins in each appearance. The fallback behind each accent
   // use must therefore follow the appearance, or a dark root would paint the
-  // Light accent. A wrapped declaration reads as one line here.
+  // Light accent. Each top-bar inset falls back to zero, so a host that sets
+  // none keeps the bar's own padding. A wrapped declaration reads as one line
+  // here.
   for (const [delivery, styles] of [
     ["standalone", STANDALONE_CSS],
     ["embedded", EMBEDDED_CSS],
@@ -113,8 +120,8 @@ test("only the three public accent overrides survive from a host", () => {
           ),
         ),
       ].sort(),
-      [...ACCENT_OVERRIDES.keys()].sort(),
-      `the ${delivery} shell reads a public property other than the three overrides`,
+      [...ACCENT_OVERRIDES.keys(), ...TOP_BAR_INSETS].sort(),
+      `the ${delivery} shell reads a public property other than the overrides`,
     );
     assert.deepEqual(
       [...css.matchAll(/(--mokly-[a-z0-9-]+)\s*:/gu)].map((match) => match[1]),
@@ -126,6 +133,12 @@ test("only the three public accent overrides survive from a host", () => {
         css,
         new RegExp(`var\\(${name}(?![\\w-]|, var\\(${fallback}\\)\\))`, "u"),
         `a use of ${name} in the ${delivery} shell has no scheme-aware fallback`,
+      );
+    for (const name of TOP_BAR_INSETS)
+      assert.doesNotMatch(
+        css,
+        new RegExp(`var\\(${name}(?![\\w-]|, 0px\\))`, "u"),
+        `a use of ${name} in the ${delivery} shell does not fall back to zero`,
       );
   }
   for (const [block, accent] of [

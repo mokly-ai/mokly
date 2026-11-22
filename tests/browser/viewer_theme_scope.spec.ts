@@ -77,11 +77,9 @@ test("host accent overrides and interactive overlay stay within the viewer", asy
     "stroke",
     "rgb(4, 19, 11)",
   );
-  await expect(page.locator("#one .mbk-name-dot")).toHaveCSS(
-    "color",
-    "rgb(18, 183, 106)",
-  );
-  await expect(page.locator("#one .mbk-name")).toHaveCSS(
+  // The embedded bar draws the mark alone, in the shell's embedded type.
+  await expect(page.locator("#one .mbk-name")).toHaveCount(0);
+  await expect(page.locator("#one .mokly-viewer")).toHaveCSS(
     "font-family",
     '"Mokly Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
   );

@@ -43,14 +43,17 @@ roles and the contrast of the outline.
 
 ## Wordmark And Layout
 
-The mark is non-shrinking. The lowercase `mokly.` wordmark follows it after an
-8px gap. It sets `mokly` in `text` and the period in `signal`, in the
-palette's `sans` stack, Geist, at 20px, weight 640, and `-0.055em` tracking,
-and it never wraps.
+The mark is non-shrinking and starts the top bar, after the menu button where
+the bar shows one. In the standalone top bar, the lowercase `mokly.` wordmark
+follows the mark after an 8px gap. It sets `mokly` in `text` and the period in
+`signal`, in the palette's `sans` stack, Geist, at 20px, weight 640, and
+`-0.055em` tracking, and it never wraps.
 
-The narrow top bar hides the wordmark so search retains space, while the mark
-and accessible link name remain. The mark keeps the same size and colors in
-standalone and embedded shells at every width.
+The narrow standalone top bar hides the wordmark so search retains space,
+while the mark and accessible link name remain. An embedded top bar draws the
+mark alone at every width, its compact bar included, because the host's start
+slot follows the mark. The mark keeps the same size and colors in standalone
+and embedded shells at every width.
 
 ## Related Docs
 

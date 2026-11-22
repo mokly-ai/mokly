@@ -256,7 +256,7 @@ export function ViewerScreen({
       {...handoff.rootProps}
     >
       {bar.probe}
-      <CompactBarProvider compact={bar.compact}>
+      <CompactBarProvider compact={bar.compact} labels={bar.labels}>
         <ViewerBody beneath={beneath} heading={heading} stage={stage} />
       </CompactBarProvider>
       {beneath && panel && (

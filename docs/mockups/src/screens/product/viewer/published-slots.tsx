@@ -4,9 +4,11 @@ import { Action } from "../page-parts";
 
 import { AccountTrigger } from "./account-trigger";
 import type { AccountLabel } from "./account-trigger";
+import { HistoryTrigger, MoreTrigger, ShareTrigger } from "./bar-actions";
 import type { CheckedPullRequest } from "./check-panel";
 import { Pill, PillDot, PillGlyph, PillState } from "./pill";
 import type { ReferenceKind } from "./pill";
+import { ProjectTrigger } from "./project-trigger";
 import { slotBars, slotClass } from "./published-bar";
 import type { SlotBar } from "./published-bar";
 import { ReferenceTrigger } from "./reference-trigger";
@@ -27,90 +29,111 @@ export interface PublishedSubject {
 }
 
 /**
- * One cloud action in a package slot: the registered Button through `Action`,
- * compact, on one line and with no catalogue link, so it stays the button
- * that the application draws. The renderer's static control theme reaches
- * it, because the embedded layout renders the slots in the screen's own React
- * tree. The registered Button takes its touch target from the drawing's
- * viewport, not from the composition, because a compact bar also fits a
- * narrow desktop window.
+ * One cloud action in a package slot that has no part of its own: the
+ * registered Button through `Action`, compact, on one line and with no
+ * catalogue link, so it stays the button that the application draws. The
+ * renderer's static control theme reaches it, because the embedded layout
+ * renders the slots in the screen's own React tree. The registered Button
+ * takes its touch target from the drawing's viewport, not from the
+ * composition, because a compact bar also fits a narrow desktop window. The
+ * bar's own controls are the parts of `project-trigger.tsx`,
+ * `reference-trigger.tsx`, `bar-actions.tsx` and `account-trigger.tsx`, which
+ * the cloud's fallback bar draws too.
  */
 function SlotButton({
   instance,
   label,
   tone = "quiet",
-  chevron,
-  whole,
-  block,
 }: {
   instance: string;
   label: string;
-  tone?: "primary" | "quiet" | "secondary";
-  chevron?: boolean;
-  whole?: string;
-  block?: boolean;
+  tone?: "quiet" | "secondary";
 }) {
   return (
     <Action
       instance={instance}
       label={label}
-      whole={whole}
       tone={tone}
       size="sm"
-      chevron={chevron}
-      block={block}
       singleLine
     />
   );
 }
 
 /**
- * One composition's start: the quiet workspace and project switcher, then the
- * publication pill, with the publication's Changes badge, GitHub and View
- * latest beside it. The compact bar keeps only the pill, with the status dot
- * and the reference's compact name. The published viewer always shows a
- * ready publication.
+ * The publication pill of one composition. The full pill holds the glyph, the
+ * whole reference and the publication's state, and the compact pill the
+ * status dot, the glyph and the reference's compact name. The published
+ * viewer always shows a ready publication.
  */
-function StartSlot({
+function PublishedPill({
   bar,
   subject,
-  workspace,
-  project,
 }: {
   bar: SlotBar;
   subject: PublishedSubject;
+}) {
+  return (
+    <Pill>
+      {bar.compact && <PillDot state="ready" />}
+      <PillGlyph kind={subject.kind} />
+      <ReferenceTrigger bar={bar} reference={subject.label} />
+      {!bar.compact && (
+        <PillState state="ready" detail={subject.detail} sha={subject.sha} />
+      )}
+    </Pill>
+  );
+}
+
+/**
+ * The `topBarStart` slot: the quiet workspace and project switcher on the full
+ * bar. The compact bar carries the project in More and draws nothing here, so
+ * a phone leaves the slot empty and the package gives the centre column the
+ * room after the mark. A desktop drawing still holds the full bar's switcher
+ * there, hidden on its compact bar.
+ */
+export function PublishedSlotStart({
+  viewport,
+  workspace,
+  project,
+}: {
+  viewport: "mobile" | "desktop";
   workspace: string;
   project: string;
 }) {
-  const named = workspace + " / " + project;
-  return (
-    <div className={slotClass("fo-package-slot-start", bar)}>
-      {!bar.compact && (
-        <span className="fo-top-slot fo-top-project" title={named}>
-          <span className="fo-top-variable-control">
-            <SlotButton
-              instance="viewer-project"
-              label={named}
-              whole={named}
-              chevron
-              block
-            />
-          </span>
+  return slotBars(viewport)
+    .filter((bar) => !bar.compact)
+    .map((bar) => (
+      <div
+        key={bar.part ?? "full"}
+        className={slotClass("fo-package-slot-start", bar)}
+      >
+        <span className="fo-top-slot fo-top-project">
+          <ProjectTrigger workspace={workspace} project={project} />
         </span>
-      )}
+      </div>
+    ));
+}
+
+/**
+ * The `topBarCenter` slot: the publication pill, in the middle of the full bar
+ * and right after the mark on the compact bar. The full bar draws the
+ * publication's Changes badge, GitHub and View latest beside it.
+ */
+export function PublishedSlotCenter({
+  viewport,
+  subject,
+}: {
+  viewport: "mobile" | "desktop";
+  subject: PublishedSubject;
+}) {
+  return slotBars(viewport).map((bar) => (
+    <div
+      key={bar.part ?? "compact"}
+      className={slotClass("fo-package-slot-center", bar)}
+    >
       <span className="fo-package-publication">
-        <Pill>
-          {bar.compact && <PillDot state="ready" />}
-          <PillGlyph kind={subject.kind} />
-          <ReferenceTrigger bar={bar} reference={subject.label} />
-          {!bar.compact && (
-            <PillState
-              state="ready"
-              detail={subject.detail}
-              sha={subject.sha}
-            />
-          )}
-        </Pill>
+        <PublishedPill bar={bar} subject={subject} />
         {!bar.compact && subject.changes && (
           <span className="fo-top-badge">
             <Badge tone="neutral" size="sm">
@@ -130,32 +153,6 @@ function StartSlot({
         )}
       </span>
     </div>
-  );
-}
-
-/**
- * The `topBarStart` slot: the workspace and project switcher and the
- * publication pill on the full bar, and the pill alone on the compact bar.
- */
-export function PublishedSlotStart({
-  viewport,
-  subject,
-  workspace,
-  project,
-}: {
-  viewport: "mobile" | "desktop";
-  subject: PublishedSubject;
-  workspace: string;
-  project: string;
-}) {
-  return slotBars(viewport).map((bar) => (
-    <StartSlot
-      key={bar.part ?? "compact"}
-      bar={bar}
-      subject={subject}
-      workspace={workspace}
-      project={project}
-    />
   ));
 }
 
@@ -176,18 +173,17 @@ function EndSlot({
   return (
     <div className={slotClass("fo-package-slot-end", bar)}>
       {bar.compact ? (
-        <SlotButton instance="viewer-more" label="More" chevron />
+        <MoreTrigger />
       ) : (
         <>
-          <span className="fo-top-slot fo-top-fixed">
-            <SlotButton instance="viewer-history" label="History" />
+          <span className="fo-top-slot fo-top-fixed fo-bar-label-only">
+            <HistoryTrigger />
+          </span>
+          <span className="fo-top-slot fo-top-fixed fo-bar-glyph-only">
+            <HistoryTrigger iconOnly />
           </span>
           <span className="fo-top-slot fo-top-fixed">
-            <SlotButton
-              instance="viewer-share"
-              label="Share"
-              tone={layered ? "secondary" : "primary"}
-            />
+            <ShareTrigger tone={layered ? "secondary" : "primary"} />
           </span>
           <span className="fo-top-slot fo-top-fixed">
             <AccountTrigger account={account} />
@@ -200,7 +196,8 @@ function EndSlot({
 
 /**
  * The `topBarEnd` slot: History, Share and the account's avatar on the full
- * bar, and one More menu on the compact bar.
+ * bar, with History's label or its clock alone as the bar's width holds, and
+ * one More menu on the compact bar.
  */
 export function PublishedSlotEnd({
   viewport,

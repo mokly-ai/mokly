@@ -208,6 +208,7 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 - [Shell Canvas Stage](./mokly-shell-canvas-stage.md)
 - [Shell Design Inventory](./mokly-shell-design-inventory.md)
 - [Shell Navigation Design](./mokly-shell-design-navigation.md)
+- [Shell Tag Picker Design](./mokly-shell-design-tag-picker.md)
 - [Viewer Appearance Mockups](./mokly-viewer-appearance-mockups.md)
 
 ## CI, Verification, And Release
