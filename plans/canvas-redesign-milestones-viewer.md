@@ -63,6 +63,10 @@ Depends on: 10, 11
       `mokly-changes.md` requires: Changes counts 11, and the tour gets a
       Changed status and a Changes tab with the stepper and the comparison
       details but no compare modes. Draw the artboards first.
+- [ ] Add the own-example row to the other Canvas artboards that draw a
+      variant set: the Toolbar's `component-set/toolbar*` variants and the
+      Action's sets on `canvas/props/**`, `canvas/components/**` and
+      `canvas/evidence/unchanged`.
 - [ ] Size a component's frame during a compare at the larger width and
       height of its two versions, measured once when both load (decision 23,
       option A). Change the measurement rule for component frames in
