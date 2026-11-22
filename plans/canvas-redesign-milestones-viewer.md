@@ -57,6 +57,10 @@ Depends on: 10, 11
 - [ ] Build Changes: counts, base and head, the compare modes, next and
       previous change, and a slot for the cloud's check.
 - [ ] Add the Swipe mode with one divider on every frame. Keep Overlay.
+- [ ] List the Example tour as a change in the depicted branch, as
+      `mokly-changes.md` requires: Changes counts 11, and the tour gets a
+      Changed status and a Changes tab with the stepper and the comparison
+      details but no compare modes. Draw the artboards first.
 - [ ] Size a component's frame during a compare at the larger width and
       height of its two versions, measured once when both load (decision 23,
       option A). Change the measurement rule for component frames in
