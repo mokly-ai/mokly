@@ -168,7 +168,10 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
   branch name, `feat/checkout-v2`, in regular mono. A new prop lets the
   project trigger mute the workspace name, but it cannot change the face.
 - **Problem:** The pill shows the branch in bold sans, not in the
-  prototype's regular mono.
+  prototype's regular mono. Also, only the pill's reference trigger is a
+  Button. Its glyph, state phrase and chevron are decorative, so a press on
+  them does nothing, and in the Mac app it moves the window. The app already
+  behaved this way before Milestone 22.
 - **Impact if no action:** One small typographic difference from the
   prototype in the bar.
 - **Root question:** Does the bar's pill draw its branch in mono, as the
@@ -176,7 +179,8 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
 - **Options:**
   - **A.** Keep the branch in bold sans. Effort: Small.
   - **B.** Give the registered Button an optional content node, so a control
-    can draw any parts inside it, the mono branch too. The mockup catalogue
+    can draw any parts inside it, the mono branch too, and the whole pill
+    becomes one control. The mockup catalogue
     cannot record a node as an input, and two control contracts change.
     Milestone 13 does it with the bar rebuild. Effort: Large.
 - **Left out:** A second control for the branch, because one action would
@@ -184,7 +188,9 @@ the device frame and the flow step leave `@mokly/ui` and the design library.
 - **Wider fix:** B, because any control could then mix faces.
 - **Previous examples:** The muted workspace prop of Milestone 22, which
   covers inks only.
-- **Recommendation:** A. The difference is small, and B changes two shared
-  contracts for one label.
+- **Recommendation:** B, changed from A after Milestone 22's note. It fixes
+  the font and makes the whole pill one control, which a reader expects. A
+  is the smaller change if the pill's dead areas are acceptable.
 - **Action:** ask the user, because A leaves a part of the prototype out and
   B changes shared contracts.
+- **Answer:** Cal agreed on 2026-11-22 that the orchestrator decides the open design and scope questions, so **B** applies. Milestone 13 does the work.

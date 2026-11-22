@@ -95,6 +95,7 @@ of the plan, and the pull request that deletes the plan deletes it too.
   `site-design.md` and the mockup's intent.
 - **Action:** ask the user, because B moves the site away from the merged
   mockup's drawing.
+- **Answer:** Cal agreed on 2026-11-22 that the orchestrator decides the open design and scope questions, so **B** applies. Milestone 20 does the work.
 
 ## 30. The sample tab text overlaps below 348px
 
@@ -218,3 +219,4 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Recommendation:** B. Decision 1 chose one Canvas look on every surface.
 - **Action:** ask the user, because decision 32 named the site's outlines
   only.
+- **Answer:** Cal agreed on 2026-11-22 that the orchestrator decides the open design and scope questions, so **B** applies. Milestone 11 does the work.

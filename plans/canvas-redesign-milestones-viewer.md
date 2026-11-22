@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 to 22 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 23 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -23,7 +23,7 @@ Depends on: 2
 
 Tags: ui
 
-Depends on: 15, 17, 18, 22
+Depends on: 15, 17. It starts before 18 and 22 merge, and takes them in as they land (Cal, 2026-11-22).
 
 - [ ] Restyle the catalogue, the compare toolbar and the search in Canvas.
       Milestone 22 does the top bar.
@@ -31,11 +31,17 @@ Depends on: 15, 17, 18, 22
       light and dark, with frame labels and size tags. A component opens as
       its variant set.
 - [ ] Add pan, zoom, pinch, the zoom pill, Fit and their keys.
+- [ ] Build the use case's section with its step frames, and the removed
+      entry's section of historical views with its missing-view note
+      (decisions 33 and 34).
 - [ ] Float the catalogue and the right panel over the canvas.
 - [ ] Build the compact layout: one frame with a frame picker, the dock with
       Catalogue, the current tab and Fit, and the panels as sheets.
 - [ ] Restyle the standalone Appearance control. Add `⌘K` and `/` for
       search.
+- [ ] Give every viewer focus ring the `@firna/ui` focus glow (decision 38).
+- [ ] Remove the preview scheme switch from the top bar; the Frames filter
+      chooses the scheme.
 
 ## Milestone 12: Right panel and compare
 
@@ -53,6 +59,14 @@ Depends on: 10, 11
 - [ ] Build Changes: counts, base and head, the compare modes, next and
       previous change, and a slot for the cloud's check.
 - [ ] Add the Swipe mode with one divider on every frame. Keep Overlay.
+- [ ] List the Example tour as a change in the depicted branch, as
+      `mokly-changes.md` requires: Changes counts 11, and the tour gets a
+      Changed status and a Changes tab with the stepper and the comparison
+      details but no compare modes. Draw the artboards first.
+- [ ] Add the own-example row to the other Canvas artboards that draw a
+      variant set: the Toolbar's `component-set/toolbar*` variants and the
+      Action's sets on `canvas/props/**`, `canvas/components/**` and
+      `canvas/evidence/unchanged`.
 - [ ] Size a component's frame during a compare at the larger width and
       height of its two versions, measured once when both load (decision 23,
       option A). Change the measurement rule for component frames in
@@ -71,6 +85,10 @@ Depends on: 10, 11
       sentences and tokens from `mokly-viewer-appearance.md`,
       `mokly-viewer-palette.md` and `mokly-viewer-palette-preview.md`, and
       rewrite the use-case stage paragraph of `packages/viewer/src/shell/README.md`.
+      Redraw the cloud viewer drawings that show their sample screen in a
+      device frame: `cloud/viewer-chrome.md:208-209`,
+      `cloud/product-mockups-viewer.md:47-48` and `:164-165`, and
+      `cloud/mockups.md:152-154`.
 - [ ] List an ignored-only entry's ignored ids in Current too, as
       `mokly-css-evidence-presentation.md` requires. Today
       `workspace_evidence.tsx` lists them only while a comparison is loaded.
@@ -90,6 +108,8 @@ Depends on: 12
 - [ ] Restyle the panels, the switcher, Share, History and the settings
       dialog.
 - [ ] End the More menu with the same account rows on compact widths.
+- [ ] Give the registered Button an optional content node, so the pill draws
+      its branch in mono and is one control (decision 39).
 - [ ] Add Docs and Changelog rows to the account menu and to More on phones
       (decision 22, option B). Change the account menu mockup first, then
       `marketing-site.md` and the other docs that describe the menu.
@@ -267,3 +287,18 @@ Search, History and Share with icons, and the account.
 - [ ] Bring the cloud viewer mockups, `viewer-chrome.md` and
       `mokly-shell-design.md` in line, and check the bar at 390, 1024, 1180
       and 1440px against the prototype.
+
+## Milestone 23: Frame content size
+
+Depends on: 10
+
+A leaf component registers no instance, so the viewer cannot size its frame
+to its content, as the canvas frames contract requires. Decision 23 = A also
+needs the measured size of both versions in a compare.
+
+- [ ] Add an optional content-box measurement to the frame probe and the
+      mounted frame, in frame wire version 4, which `main` has not released.
+- [ ] Give same-origin and cross-origin adapters the method, with unit tests,
+      and keep the probe inside its size budget.
+- [ ] Bring the frame probe, wire and adapter pages in line, and run
+      `cargo xtask mokly-fixtures`.

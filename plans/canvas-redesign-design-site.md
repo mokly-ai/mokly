@@ -74,3 +74,13 @@ the plan deletes it too.
   - Note links stay live, and a relative link to a published guide goes to
     the guide's site page.
   - The trail rules live in `layout.css`.
+- Calls on Milestone 20, 2026-11-22 (orchestrator, under Cal's delegation):
+  - The desktop 200% text pass is a follow-up item; `site-design.md` asks
+    for 320px only.
+  - The home moves its px text to rem, as `site-design.md` already requires,
+    with the hero heading capped by the window width.
+  - Privacy section 9 also names the desktop sign-in verifier and the
+    desktop session cookie's SameSite value. Terms section 1 drops
+    "React-authored", as `terms-describe-react-only-mockups.md` option A
+    says. Both legal edits are separate commits for Cal's review.
+  - The site README split is a follow-up item.
