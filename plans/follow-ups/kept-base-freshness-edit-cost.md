@@ -207,11 +207,9 @@
   - [plain-git-fsmonitor-override.md](./plain-git-fsmonitor-override.md): the
     same code. Its option D changes the plain `config` and `check-attr`
     requests of this check, and so the checkout identity, once.
-  - [changes-detail-revision-copies.md](https://github.com/mokly-ai/mokly/blob/a2ae5636010353d9ed2cdf1c037805b6bb5b5dd6/plans/follow-ups/changes-detail-revision-copies.md):
-    the same measurement. It recorded the ready publication, the other
-    deferred phase outside the comparison. The cuts of 2026-11-22 shortened
-    that phase and removed the detail builds of the first edit after a warm
-    start, and closed that item.
+  - [changes-detail-revision-copies.md](./changes-detail-revision-copies.md):
+    the same measurement. It records the ready publication, the other
+    deferred phase outside the comparison.
 - **Recommendation:** A. No option is clearly best until a split names the
   costly Git process, and A names it without a product change.
 - **Action:** fix after merge, apply A, because the user asked on 2026-11-21

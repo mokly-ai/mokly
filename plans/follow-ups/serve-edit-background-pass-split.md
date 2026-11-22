@@ -25,9 +25,9 @@
   - `packages/mokly/src/sidecar/transport.ts:8`: the frame decoder.
   - `packages/mokly/src/sidecar/evaluate.ts:47`: the `new Function`
     evaluation of the bundle.
-  - `packages/mokly/src/sidecar/registry-index.ts`: the style registry index
-    of C1, which since 2026-11-22 replaces the parse of the whole style
-    registry on each render.
+  - `packages/mokly/src/sidecar/styles.ts:150` and
+    `packages/mokly/src/sidecar/registry-styles.ts:32`: the per-render parse of
+    the whole style registry.
   - `crates/mokly-server/src/changes_execution.rs:22`: `changes.classify`, and
     `crates/mokly-cli/src/serve_base.rs:124`, where the kept-base check reads
     the dependency directories that the renders record.
@@ -46,8 +46,9 @@
   `calummoore/mokly-edit-background-render-olos`, and the safe parts of C for
   the next speed pull request, after that one merges. B3, D, E, and the V8
   code cache stay open options with their reasons below. The second pull
-  request of that branch applied H, W1, and C1 on 2026-11-22. C2, C3, W2, and
-  W4 wait for a choice of the orchestrator.
+  request of that branch, H, W1, and C1, was measured and closed as a product
+  change on 2026-11-22. The section "H, W1, and C1, measured on 2026-11-22"
+  below gives its numbers. C1, C2, C3, W1, W2, and W4 stay open options.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -73,7 +74,7 @@
     numbers. The baseline is `main` at
     `9bdb0569d3ac0214bf303c599854a70b20dc2b2c`, PR #467. Each number and each
     code fact of this Background and of that section is of that commit:
-    before PR #468, PR #469, and the cuts B1, B2, B4, H, W1, and C1.
+    before PR #468, PR #469, and the cuts B1, B2, and B4.
   - Each warm edit re-renders 44 views: 11 view paths in light and dark at
     two viewports. Each view makes one sidecar render.
   - The pass is CPU-bound. The core and the sidecars together use a median of
@@ -121,14 +122,14 @@
     10-edit sessions stayed equal, 3,110 to 3,109 MiB. A confirm check of the
     final code on 4 rounds measured `changes.classify` 190 to 152 ms.
 - **Problem:** After B1, B2, and B4, each warm mokly-cloud edit still spends
-  about 410 ms in the CPU-bound background pass. The goal of 100 ms is not
-  reached: the gate measured -87 ms. H, W1, and C1, applied on 2026-11-22,
-  cut the first edit after a warm start and the style filter of each render.
-  The safe CPU cuts C2 and C3 of the pass are not built. Until 2026-11-22
-  the problem was: each warm edit spends about 400 ms in the CPU-bound
-  background pass and about 160 ms in serial work after its last view; no
-  single cut saves 60 ms, and the cuts without a protocol change reach about
-  75 ms only together.
+  about 410 ms in the CPU-bound background pass, and the safe CPU cuts of the
+  pass are not built. The goal of 100 ms is not reached: the gate measured
+  -87 ms. H, W1, and C1 were measured on 2026-11-22 and did not merge,
+  because their pooled untimed check missed its bar. Until 2026-11-22 the
+  problem was: each warm edit spends about 400 ms in the CPU-bound background
+  pass and about 160 ms in serial work after its last view; no single cut
+  saves 60 ms, and the cuts without a protocol change reach about 75 ms only
+  together.
 - **Impact if no action:** Each warm edit on mokly-cloud keeps the CPU of the
   pass that the safe parts of C would remove, about 15 to 29 ms. Until
   2026-11-22 the impact was: a background pass of about 320 to 540 ms,
@@ -186,10 +187,11 @@
     registry by rule, for each generation, with a fixed cap and a release at
     `dispose`, about 8 to 13 ms. Scan frames with the native `indexOf`, about
     3 to 8 ms. Together about 15 to 29 ms. Effort: Medium. The style registry
-    index was applied on 2026-11-22 as C1: each generation owns an index with
-    fixed caps of one text and 64 outputs, and the index ends with its
-    generation. The one encode of each restore request is C2, and the native
-    frame scan is C3.
+    index was built and measured as C1 on 2026-11-22 and did not merge: it
+    removed about 100 to 120 ms of sidecar CPU for each warm edit, but
+    `serve.background` did not get shorter in either timed run. The section
+    "H, W1, and C1, measured on 2026-11-22" gives the numbers. The one encode
+    of each restore request is C2, and the native frame scan is C3.
     - Two more parts touch the seed path and the released-recipe release: a
       release without the lock-held encode and without the one-at-a-time
       disposes, about 3 to 8 ms, and a render-only restore, about 15 to
@@ -292,7 +294,7 @@
       fixes: encode or keep the details of the startup generation at idle
       after the first ready Changes, or reuse the stored bytes of the
       unchanged details. The item
-      [changes-detail-revision-copies.md](https://github.com/mokly-ai/mokly/blob/a2ae5636010353d9ed2cdf1c037805b6bb5b5dd6/plans/follow-ups/changes-detail-revision-copies.md)
+      [changes-detail-revision-copies.md](./changes-detail-revision-copies.md)
       holds this cost.
     - The background pass reads every unchanged page and Markdown document
       again after each edit. The item
@@ -301,10 +303,24 @@
       or Markdown documents.
   - 2026-11-22, the performance orchestrator, after the splits above and the
     watch split below: the next speed pull request is H of
-    [changes-detail-revision-copies.md](https://github.com/mokly-ai/mokly/blob/a2ae5636010353d9ed2cdf1c037805b6bb5b5dd6/plans/follow-ups/changes-detail-revision-copies.md),
+    [changes-detail-revision-copies.md](./changes-detail-revision-copies.md),
     W1 below, and C1, the style registry index of option C, in that order.
     C2, one encode of each restore request, and C3, the native frame scan,
     wait: about 7 to 16 ms together. W2 and W4 below stay open. W3 stays out.
+  - 2026-11-22, the performance orchestrator, after the checks of the second
+    pull request: H, W1, and C1 do not merge, and the branch keeps only the
+    records. Reason: only H shows a gain on the critical path, on the first
+    edit of a session (the window from the end of `graph.prepare` to the
+    start of `index.build`, 100 to 67 ms, timed), and it costs 18.5 MiB of
+    live data until the first edit and about 40 MiB of retained core RSS. C1
+    removes sidecar CPU, but `serve.background` did not get shorter in either
+    timed run. W1 does not help the measured edit. So the change gives less
+    than its projection, and its memory sits near the 2% limit. H can come
+    back as its own small pull request, with option I of
+    [changes-detail-revision-copies.md](./changes-detail-revision-copies.md),
+    only if an allocator change removes the retained RSS. The item
+    [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md)
+    holds the allocator question.
   - 2026-11-22, the performance orchestrator: B3 stays out. A check by file
     metadata alone adds an unseen change class to the freshness rules, so it
     needs a protocol decision that is not taken for 15 to 18 ms.
@@ -325,9 +341,10 @@
       the two email logos, and the drain adds them to the live plan, so a
       write to them after a warm start is caught: in a real session a rebuild
       started 79 ms after the write. The drain does not add them to the
-      record. W1 fixes this cause. Applied on 2026-11-22: the drain keeps a
-      copy of the record with the observed resources beside the adopted
-      record.
+      record. W1 fixes this cause. It was built and measured on 2026-11-22
+      and did not merge. Its copy of the record holds 3.0 MiB, and the
+      measured slug-editor edit does not use it, because its resolution
+      inputs differ.
     - Resolution. On the edit of
       `docs/mockups/src/screens/product/settings/slug-editor.tsx`, the bundle
       reads one more resolver probe than the startup bundle of the same
@@ -360,17 +377,16 @@
 - **Recommendation:** F without B3, as chosen on 2026-11-22.
 - **Action:** fix after merge, apply C2 and C3 of option C, W2, or W4 when the
   orchestrator chooses them, because the orchestrator chose on 2026-11-22 to
-  wait with them. The second pull request of the branch applied H, W1, and
-  C1 on 2026-11-22. A later proposal of B3 needs a protocol decision first.
-  D, E, and the V8 code cache need their own scope approval.
+  wait with them. H, W1, and C1 were measured and closed on 2026-11-22. A
+  later proposal of B3 needs a protocol decision first. D, E, and the V8 code
+  cache need their own scope approval.
 
 ## Measurements of 2026-11-22
 
 All times are in milliseconds. They are local measurements with a probe, not
 official Changes timings, and the performance orchestrator owns the official
 measurements. Each number and each code fact of this section is of `main` at
-`9bdb0569d`: before PR #468, PR #469, and the cuts B1, B2, B4, H, W1, and
-C1.
+`9bdb0569d`: before PR #468, PR #469, and the cuts B1, B2, and B4.
 
 ### Method
 
@@ -566,3 +582,103 @@ each, warm edits only:
 - These did not happen: a product change, tests, the repository suite, the
   complete gate, a byte proof, a review, CI, and an official latency or memory
   run. This record makes no acceptance claim.
+
+## H, W1, and C1, measured on 2026-11-22
+
+The second pull request of branch
+`calummoore/mokly-edit-background-render-olos` built three cuts. It did not
+merge, and its product commits are reverted. The plan of that work is kept at
+https://github.com/mokly-ai/mokly/blob/0910565bf3a7abac064b2bc7b04845e913ee1260/plans/serve-first-edit-and-style-cuts.md?plain=1.
+
+### What was built
+
+- **H:** after the first ready Changes of a session, an idle step built and
+  encoded the ready rebuild record of each unchanged entry, in chunks of 32
+  on idle workers. Each path kept two rebuild records, one for each usage
+  shape. The first edit then shared its unchanged details instead of
+  encoding them. The item
+  [changes-detail-revision-copies.md](./changes-detail-revision-copies.md)
+  holds H with its memory and its option I, which keeps no typed copy.
+- **W1:** the watch drain kept a copy of the adopted watch record with the
+  resources that the background pass observed, beside the adopted record, so
+  that a later candidate with equal inputs reused it.
+- **C1:** each sidecar generation kept an index of the React Native Web
+  style registry text, at most 1 text and 64 outputs, so that a render found
+  its needed rules with no parse. The filter of `main` stayed as the
+  fallback.
+
+### Measurements of the performance orchestrator
+
+Release cores, 4 vCPU, 7.9 GB, no memory cap; mokly-cloud unless named.
+
+- The gate, `a9a09edf2` against `main` `a2ae56360`, with no kept esbuild
+  context in either arm:
+  - Untimed, 6 warm rounds of 3 edits: all 18 edits 1,749 to 1,696 ms (-54,
+    4 of 6 rounds faster); edit 1 2,087 to 1,963 ms (-123); edits 2 and 3
+    1,608 to 1,588 and 1,553 to 1,535 ms.
+  - Timed, 4 rounds: on edit 1, the end of `graph.prepare` to the start of
+    `index.build` 100 to 67 ms, with 366 and 0 `detail.build` spans;
+    `serve.background` for each edit 374 to 382 ms (+8).
+  - Untimed, 8 warm unchanged restarts: the listening line 1,063 to 1,028 ms,
+    first Changes 2,928 to 2,915 ms, edits after a restart 1,756 to 1,731 ms.
+  - Cold 10-edit sessions, 4 pairs: whole-tree peak 3,097 to 3,158 MiB
+    (+61.5 MiB, +1.99%; pairs +135, +4, +25, +82).
+  - `examples/basic`, 2 sidecars, 4 warm pairs: edits 1,792 to 1,572 ms
+    (-219); restores 993 to 1,033 ms (+40; pairs -13, +19, +73, +80); cold
+    5+5 peak 2,147 to 2,192 MiB (+2.13%; median +12.5 MiB).
+- The confirm after the merge of #478, `0910565bf` against `main`
+  `c699b35d3`, with the kept esbuild context in both arms, untimed, 4 warm
+  rounds: edit 1 2,012 to 2,130 ms (+118; rounds +40, +180, +120, +130);
+  edits 2 and 3 1,480 to 1,502 and 1,472 to 1,478 ms; all 12 edits 1,655 to
+  1,703 ms (+48).
+- A timed split of the same arms, 4 warm rounds: published for each edit
+  1,675 against 1,690 ms (+15); edit 1 +90 ms, carried by one round whose
+  edit-1 compile took 889 ms against 617 to 674 ms in every other session;
+  edits 2 and 3 -40 and -5 ms; `serve.background` +4 ms and
+  `changes.classify` +1 ms. Edit 1 ran on one sidecar that kept the context
+  in every session. A sidecar spawned during edit 1 in 2 of 4 `main` and 3 of
+  4 candidate sessions.
+- The `examples/basic` repeat with the merged arms, pooled with the gate, 8
+  pairs each: warm edits -123 ms (median -96), restores -8 ms (median +3),
+  cold peak +41.8 MiB (+1.97%). The +40 ms restores of the gate were noise.
+- Pooled memory, 8 cold pairs each: mokly-cloud +1.27%, `examples/basic`
+  +1.97%. Both pass the 2% limit.
+- The decisive check, untimed, the merged arms, announced before its data: a
+  new run of 8 rounds gave all edits -42 ms (7 of 8 rounds faster), edit 1
+  -65 ms (median -50), and edits 2 and 3 -45 and -15 ms. Pooled with the
+  confirm, 12 rounds: all edits -12 ms (8 of 12 rounds faster), which misses
+  the bar of -15 ms; edit 1 -4 ms (median +10), which passes.
+
+### Measurements of the branch
+
+- Byte proofs of `a9a09edf2` against `main` `a2ae56360`, with the same
+  TypeScript packages apart from C1: strict builds of mokly-cloud (5,304
+  files), `examples/basic` (2,389), and the large HTML and React fixtures
+  (20,828 each) gave equal bytes and equal output streams. Serve sessions of
+  `examples/basic` (8 stages, 2,313 file checks) and of mokly-cloud (a warm
+  start with a logo write before the first edit, 6 stages, 2,346 file checks)
+  gave 0 differences and equal revisions.
+- H in that mokly-cloud Serve session: `main` encoded 375, 0, 13, 305, and 0
+  details inside its five rebuilds, and the candidate 0 in each. The idle
+  step made 377 encodes, 94 to 109 ms of wall time and 45 to 54 ms of encode
+  time, and it started 8 to 9 ms after the first ready Changes.
+- A 2x2 factorial with the kept context in every arm, timed, 3 warm
+  restarts of 3 edits for each arm, on a noisy machine: edit 1 means of
+  2,459 ms (main core, `main` dist), 2,019 ms (main core, C1 dist), 2,186 ms
+  (candidate core, `main` dist), and 2,227 ms (candidate core, C1 dist). The
+  idle step ended 5.1 to 5.7 s before edit 1 in every candidate session, the
+  edit-1 bundle took 955 to 1,133 ms in every arm, and all 4 sidecars
+  rendered in every edit. The factorial found no mechanism for the +118 ms
+  of the confirm.
+- C1 in the sidecar: the filter of `main` took a median of 1.88 ms for each
+  call inside the sidecars, and the same registry text repeated in 2,033 of
+  2,049 calls. Outside the sidecar, on that text, the filter of `main` took
+  411 to 603 us, an index hit 23 to 103 us, and a memo miss 98 to 245 us.
+  One index held about 297 KiB.
+- W1: the copy held 3.0 MiB net (the inputs, the plan with its private
+  indexes, and 5,104 targets), and its build took 54 ms once for each
+  session.
+- The memory breakdown of H is in the item
+  [changes-detail-revision-copies.md](./changes-detail-revision-copies.md),
+  and the retained core RSS is in the item
+  [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md).
