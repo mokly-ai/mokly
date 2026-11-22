@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 to 21 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 22 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -23,10 +23,10 @@ Depends on: 2
 
 Tags: ui
 
-Depends on: 15, 17, 18
+Depends on: 15, 17, 18, 22
 
-- [ ] Restyle the catalogue, the top bar, the compare toolbar and the search
-      in Canvas.
+- [ ] Restyle the catalogue, the compare toolbar and the search in Canvas.
+      Milestone 22 does the top bar.
 - [ ] Build the canvas stage: each screen as desktop and mobile frames in
       light and dark, with frame labels and size tags. A component opens as
       its variant set.
@@ -237,3 +237,27 @@ Follow-up item 37, option B, which Cal chose on 2026-11-22.
       `calummoore/canvas-redesign-m21-previous-version-9sa7`.
 - [x] Delete `plans/follow-ups/catalogue-base-uri-blocks-previous-version.md`.
       Branch: `calummoore/canvas-redesign-m21-previous-version-9sa7`.
+
+## Milestone 22: Viewer bar to the prototype
+
+Tags: ui, mockup
+
+Depends on: 17
+
+Cal, 2026-11-22: the cloud header bar does not match the prototype. The
+package top bar puts the cloud's start slot before the Mokly mark and a wide
+search field in the middle. The prototype starts with the mark, then the
+workspace and project, centres the publication pill, and ends with a compact
+Search, History and Share with icons, and the account.
+
+- [ ] Lay out the `@mokly/ui` top bar as the prototype bar: the mark, the
+      start slot, the centred publication, then a compact search before the
+      end slot. Keep the `mokly serve` bar (mark, search, Appearance).
+- [ ] Draw the cloud slot content as the prototype: `workspace / project`
+      with the workspace muted, the publication pill, History with its icon,
+      Share and the account. Leave out the presence avatars (decision 9).
+- [ ] Show the mark in the compact embedded bar, as the prototype does at
+      390px. The catalogue button stays until Milestone 11 builds the dock.
+- [ ] Bring the cloud viewer mockups, `viewer-chrome.md` and
+      `mokly-shell-design.md` in line, and check the bar at 390, 1024, 1180
+      and 1440px against the prototype.

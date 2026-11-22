@@ -230,6 +230,9 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
     which the cloud stores once per project. Serve answers the copies from
     its own viewer files. The comparison treats both font addresses as the
     same file.
+- Call of 2026-11-22: the viewer bar follows the prototype's order and
+  shows the mark at 390px. This replaces the earlier call that the embedded
+  compact bar hides the brand. Milestone 22 does it.
 - The calls on the site milestones 4, 5, 6, 8 and 9 are in the
   [site design calls](./canvas-redesign-design-site.md).
 

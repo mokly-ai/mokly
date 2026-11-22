@@ -266,9 +266,9 @@ Depends on: 4
       cards, the browser walk and the Lighthouse pages. Branch:
       `calummoore/canvas-redesign-m9-site-pricing-5q33`.
 
-## Milestones 10 to 13 and 15 to 21
+## Milestones 10 to 13 and 15 to 22
 
-The viewer milestones and the added Milestones 15 to 21 are in
+The viewer milestones and the added Milestones 15 to 22 are in
 [the viewer milestones file](./canvas-redesign-milestones-viewer.md).
 
 ## Milestone 14: Verification, commit, review and pull request
