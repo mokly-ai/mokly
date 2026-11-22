@@ -112,6 +112,12 @@
     a different cost: the start cost of the compiled import plan record of
     the sidecar and its encoding. That plan is not the watch plan. This record
     does not cover it.
+  - [serve-edit-background-pass-split.md](./serve-edit-background-pass-split.md)
+    measured the same step again on 2026-11-22, on the first edit after a warm
+    start (36 to 52 ms), with the same two causes of the record miss. W1 there
+    was measured and reverted. W2 and W4 there are forms of option C of this
+    record, and they wait in that item for the choice of the performance
+    orchestrator.
 - **Recommendation:** A. Safe work in this step cannot save 30 ms for each
   edit, and a 30 ms saving needs broader algorithms that nobody authorized.
 - **Action:** No action. The stop of 2026-11-21 is settled, and no current

@@ -5,7 +5,9 @@
 - **Added:** 2026-11-22, from a local run of the `cloud-site` suite on the
   branch `calummoore/mokly-earlier-postcss-start-bdhv`, which does not change
   `apps/site`.
-- **Location:** `apps/site/tests/browser/pages.spec.ts:77`.
+- **Location:** `apps/site/tests/browser/pages.spec.ts:77`,
+  `apps/site/src/layouts/Docs.astro:88`, and
+  `apps/site/src/components/Header.astro:34`.
 - **Reason:** The branch that saw it does not touch the site, so one fix in its
   own branch reaches every open branch.
 
@@ -22,30 +24,52 @@
     structure.
   - It runs for five viewports: 320 px light, 390 px light and dark, and
     1440 px light and dark.
-- **Problem:** The check failed once in a complete local `cloud-site` run on a
-  4-CPU machine (1 failed, 508 passed). The failure text: "Error:
+- **Problem:** The check fails now and then, on more than one docs page:
+  first in a complete local `cloud-site` run on a 4-CPU machine (1 failed, 508
+  passed), and then in the CI of PR #472. The failure text: "Error:
   expect(locator).toHaveCount(expected) failed. Locator:
   `locator('astro-island[ssr]')`. Expected: 0. Received: 2. Timeout: 5000ms."
-  The failing project was `1440-light`. A rerun of the same test in all five
-  viewports passed 5 of 5 at once.
+  In the local run, the failing project was `1440-light`, and a rerun of the
+  same test in all five viewports passed 5 of 5 at once.
+- **Occurrences:**
+  - 2026-11-22, the local `cloud-site` run above: `/docs/authoring/screens/`,
+    `1440-light`.
+  - 2026-11-22, the `Site checks` job of the CI of PR #472 at `bb59546ba`
+    (run 45015168777, job 137186011114, step "Verify the partition"):
+    "`/docs/ci/the-check-on-a-pull-request/` meets the deterministic
+    accessibility contract" at `390-light`, with the same failure text
+    (received 2 within 5000 ms) and 508 other tests passed. The one rerun of
+    the job passed (attempt 2, job 137190782856). That branch did not change
+    `apps/site` or `packages/`.
 - **Impact if no action:** The cloud-site suite of the gate fails now and then
   without a site defect.
 - **Root question:** How does the check wait for the islands of a docs page to
-  hydrate, without a time bound that machine load can pass?
+  hydrate, without a time bound that machine load or a late idle callback can
+  pass?
 - **Options:**
   - **A.** Wait for an explicit readiness signal of the page, for example an
     attribute that the page sets after its islands hydrate, before the count.
-    Effort: Small.
+    It still waits for the idle callback of both islands. Effort: Small.
   - **B.** Wait for the load state and for each island to lose its `ssr`
     attribute one by one through an event that Astro dispatches on hydration.
+    Effort: Small.
+  - **C.** Hydrate the two islands without the idle wait, with `client:load`,
+    or with `client:idle={{ timeout: 500 }}`, which bounds the wait. Cost: the
+    code of the search and the copy button loads earlier on each docs page.
     Effort: Small.
 - **Left out:** A longer timeout or a retry: the testing rules forbid them, and
   they hide the race.
 - **Wider fix:** A, if the site helpers give every browser test the same
   readiness wait.
 - **Previous examples:** None found.
-- **Recommendation:** A. It removes the race at its source.
-- **Action:** fix after merge, apply A, in a branch that owns `apps/site`.
-- **Suspected source:** The suite ran directly after the `cloud-mockups` and
-  `cloud-app` suites on a 4-CPU machine. Under that load, the hydration of two
-  islands on that page took more than 5 seconds.
+- **Recommendation:** C. It removes the idle wait that the suspected source
+  names, and a readiness signal after hydration waits for the same idle time.
+  Until 2026-11-22 the recommendation was A.
+- **Action:** fix after merge, apply C, in a branch that owns `apps/site`.
+- **Suspected source:** Each docs page has two `client:idle` islands, the
+  search in `apps/site/src/components/Header.astro:34` and the copy button in
+  `apps/site/src/layouts/Docs.astro:88`, and both failures report two islands
+  that did not hydrate. Astro starts a `client:idle` island through
+  `requestIdleCallback`, with no timeout, so a busy browser can delay both past
+  5 seconds. Until 2026-11-22 this line named only the load of earlier suites
+  on a 4-CPU machine, which does not fit the CI occurrence.

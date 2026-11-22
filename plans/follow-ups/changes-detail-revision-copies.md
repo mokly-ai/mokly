@@ -8,7 +8,8 @@
   `calummoore/mokly-edit-comparison-cost-bo07`, which timed the warm edits of
   the `mokly-cloud` catalogue. Updated on 2026-11-22 from the branch
   `calummoore/mokly-edit-background-render-olos`, which shares unchanged
-  details.
+  details, and again on the same day after that branch built and measured
+  option H, which did not merge.
 - **Location:** `crates/mokly-server/src/changes.rs:158` (`project`),
   `crates/mokly-server/src/changes_detail.rs:29` (`apply`),
   `crates/mokly-server/src/detail_publication.rs:38`
@@ -19,7 +20,11 @@
   `crates/mokly-model/src/projection.rs:76` (`index`), and
   `crates/mokly-compare/src/projection_index.rs:23` (`apply`).
 - **Reason:** The code lies outside the diffs of both branches that found it,
-  and on 2026-11-21 the user asked for a separate later task.
+  and on 2026-11-21 the user asked for a separate later task. On 2026-11-22
+  the performance orchestrator closed the second speed change of branch
+  `calummoore/mokly-edit-background-render-olos`, which built option H,
+  because its memory cost was near the 2% limit and its pooled speed check
+  missed its bar.
 
 - **Source:** Implementation.
 - **Category:** Performance.
@@ -53,6 +58,14 @@
       and changed the typed revision rule, as the parts below say. This item
       then took in the cost of the first edit after a warm start, and its
       problem, recommendation, and action changed.
+    - On 2026-11-22 the second speed change of that branch split the first
+      edit (option A) and built option H. That change, H, W1, and C1, was
+      built with H in commit `ea6724a03` and reverted in `11f8e4ac4`, and it
+      never opened a pull request. Its code stays at
+      https://github.com/mokly-ai/mokly/tree/0910565bf3a7abac064b2bc7b04845e913ee1260.
+      H did not merge. Option H below
+      gives its measurements, and option I, new on that date, gives the cut of
+      its memory.
   - Mokly Serve serves a mockup catalogue for development and watches its
     sources. After each source edit, it prepares a new head generation from
     the working tree.
@@ -206,10 +219,11 @@
 - **Problem:** The first edit after a warm start builds all 366 entry details
   of mokly-cloud, with a mean of 125 ms, because Serve holds no encoded detail
   of the startup generation to share. Later warm edits share their unchanged
-  details since 2026-11-22. No split names the parts of the 125 ms yet. Until
-  2026-11-22 the problem was: each warm edit spends a mean of 55.6 ms in the
-  ready publication, almost all of it in `changes::project`, which built the
-  whole index and every detail again.
+  details since 2026-11-22. The split of 2026-11-22 gives the encodes as 37 to
+  46 ms of that work, and option H, which removes them, costs memory near the
+  2% limit. Until 2026-11-22 the problem was: each warm edit spends a mean of
+  55.6 ms in the ready publication, almost all of it in `changes::project`,
+  which built the whole index and every detail again.
 - **Impact if no action:** The first edit after each warm start keeps about
   125 ms more on the path to published Changes than the later edits.
 - **Root question:** How can Serve publish the ready Changes state sooner
@@ -270,6 +284,75 @@
     Changes, or reuse the stored bytes of the unchanged details. Each needs
     the same published bytes and a whole-tree memory peak within 2% of
     `main`. Cost: idle work or memory after each start. Effort: Medium.
+    Built and measured on 2026-11-22, and reverted:
+    - The code: commit `ea6724a03`, which `11f8e4ac4` reverts. A return of H
+      starts from it and from two review results of 2026-11-22 on it. The
+      idle step called `install_records` on a Serve async thread
+      (`crates/mokly-server/src/idle_records.rs:107-117` at `0910565bf`),
+      where every other caller of the build lock uses
+      `tokio::task::spawn_blocking`. The step stopped on
+      `PublicationWriter::candidate`, which the rebuild loop calls after the
+      debounce, and not on the activity lease that the kept plan names.
+    - The build: after the first ready Changes, an idle step built the detail
+      that the next rebuild builds for each unchanged entry, with the code of
+      the rebuild, encoded it in chunks of 32 on idle workers, and kept it as
+      a ready rebuild record. Each path kept two rebuild records, one for each
+      usage shape, so five records in all. The plan of that work is kept at
+      https://github.com/mokly-ai/mokly/blob/0910565bf3a7abac064b2bc7b04845e913ee1260/plans/serve-first-edit-and-style-cuts.md?plain=1.
+    - The split of option A on mokly-cloud: the 366 encodes of the first edit
+      took 37 to 46 ms. A rebuilt detail of an unchanged entry differs from
+      its usage record only in `workspace`, which the rebuild leaves unset
+      while an edited entry has pending usage. So no kept record had the
+      shape of that rebuild.
+    - Speed: the timed gate of the performance orchestrator, 4 rounds, gave
+      the window from the end of `graph.prepare` to the start of
+      `index.build` on the first edit as 100 ms with 366 `detail.build` spans
+      on `main` and 67 ms with none. In a Serve session of the branch, every
+      rebuild encoded no detail, against 375, 0, 13, 305, and 0 on `main`.
+      The idle step made 377 encodes, 94 to 109 ms of wall time and 45 to
+      54 ms of encode time, starting 8 to 9 ms after the first ready Changes.
+    - Bytes: the strict build and Serve byte proofs of the branch were equal
+      to `main`.
+    - Memory on mokly-cloud, one cold session of 10 edits for each arm with a
+      counting allocator in the core: the ready records held 8.9 MiB of
+      typed details and 9.6 MiB of encoded bytes, 18.5 MiB, from the first
+      ready Changes until the first edit. At the first edit the rebuild
+      shared the encoded bytes, its own typed details replaced the typed
+      copies, and the extra records then held about 1.4 MiB: the pending
+      slot, 377 small records of 0.8 MiB, and small differences. The peak
+      live heap was 542 MiB against 538 MiB. But the core RSS settled about
+      37 MiB higher after the idle step and stayed higher for all 10 edits: a
+      median of 995 MiB against 949 MiB. The item
+      [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md)
+      holds that retention.
+    - Memory on `examples/basic`: 241 records, 8.6 MiB typed and 11.8 MiB
+      encoded, until the first rebuild; the live heap peak rose at the first
+      edit, 512 MiB against 486 MiB.
+    - The pooled whole-tree memory checks passed: mokly-cloud +1.27% and
+      `examples/basic` +1.97% over 8 cold pairs each, with W1 and C1 of the
+      same change.
+  - **I.** H, with no typed copy in a ready record. The step builds its record
+    with the code of the rebuild, as H did, and checks that it is equivalent
+    to the usage record of the same path with the workspace unset, through
+    `equivalent_with` in `crates/mokly-server/src/detail_publication.rs`. If
+    so, the slot keeps only the encoded bytes, a reference to that usage
+    record, a marker for the unset workspace, and the `detailId` of the
+    encoded bytes. The encoder sets that id to the digest of the canonical
+    preimage, and a share gives the new detail the id of the record that it
+    shares, so the slot must keep the id of its bytes. The rebuild compares
+    its detail with the reference and the marker, so it needs no copy. If the
+    check fails, the slot keeps the typed record, as H did. The bytes stay
+    equal, because the kept bytes encode exactly the value that the rebuild
+    compares. Saving: 8.9 MiB of live data on mokly-cloud and 8.6 MiB on
+    `examples/basic` until the first edit. If the item
+    [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md)
+    shows that the typed copies that the first rebuild frees cause the
+    retained RSS, I also removes that part. Cost: on `main`,
+    `RecentDetails` has four slots and `retain_paths`, `publish`, `record`,
+    and `keep`. I brings back the ready rebuild slot and the `find` and
+    `holds` of H, which `11f8e4ac4` removed, with a new record form and its
+    use in `publish`, and tests for a share, a failed check, and the id.
+    Effort: Medium.
 - **Left out:**
   - Change nothing. It fails the goal of a shorter warm edit.
   - Publish `ready` before the projection ends, or publish the index and the
@@ -299,13 +382,23 @@
     the same measurement. It records the kept-base freshness check, the other
     deferred phase outside the comparison.
   - [serve-edit-background-pass-split.md](./serve-edit-background-pass-split.md):
-    the next speed pull request ranks the fix of the first edit after a warm
-    start with the safe CPU cuts of the pass.
-- **Recommendation:** A, on the first edit after a warm start, and then H if
-  the split shows that the detail builds are its largest part. No option is
-  clearly best until a split names the costly part. Until 2026-11-22 the
-  recommendation was A on every warm edit, and until 2026-11-21 it was A,
-  then B if the measurement showed a cost.
-- **Action:** fix after merge, apply A, because the performance orchestrator
-  asked on 2026-11-22 for the split after the pull request of the cuts of
-  that date opens, before any code.
+    the second speed change that built H also built W1 and C1. That item
+    holds the measurements of all three of 2026-11-22 and the decision to
+    close them. Until 2026-11-22 this line said that the next speed pull
+    request ranks the fix of the first edit after a warm start with the safe
+    CPU cuts of the pass.
+  - [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md): the
+    retained core RSS that decides whether H with I can come back.
+- **Recommendation:** H with I, only if an allocator change removes the
+  retained core RSS that the item
+  [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md)
+  describes. H is the only measured cut of the first edit on the critical
+  path, and I removes its typed copies. Without the allocator change, the
+  memory of H stays near the 2% limit. Until 2026-11-22 the recommendation
+  was A, on the first edit after a warm start, and then H if the split shows
+  that the detail builds are its largest part; before that it was A on every
+  warm edit, and until 2026-11-21 it was A, then B if the measurement showed
+  a cost.
+- **Action:** fix after merge, apply H with I, because the performance
+  orchestrator chose on 2026-11-22 that H comes back as its own small pull
+  request only after an allocator change removes its retained RSS.
