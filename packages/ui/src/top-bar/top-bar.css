@@ -2,10 +2,12 @@
    the brand and a host's start slot, the centre column a host's centre slot,
    and the end column the catalogue search, the end control and a host's end
    slot. The two outer columns share the room that the centre column leaves,
-   so the centre column sits in the middle. A host clears its own window
-   controls with the two inset properties: each side's padding is the larger
-   of the bar's padding and that side's inset. The narrow query is the shell's
-   one layout breakpoint, narrower than 900px. */
+   so the centre column sits in the middle. An embedded root gives that room
+   to the centre column instead while its host's start slot is empty, as its
+   layout stylesheet says. A host clears its own window controls with the two
+   inset properties: each side's padding is the larger of the bar's padding
+   and that side's inset. The narrow query is the shell's one layout
+   breakpoint, narrower than 900px. */
 .mbk-topbar {
   position: relative;
   z-index: 11;

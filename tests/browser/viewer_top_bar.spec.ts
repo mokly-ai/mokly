@@ -29,6 +29,7 @@ const PARTS = {
   mark: "#one .mbk-mark",
   start: '#one [data-mokly-slot="topBarStart"]',
   centre: '#one [data-mokly-slot="topBarCenter"]',
+  centreContent: '#one [data-mokly-slot="topBarCenter"] > *',
   toggle: "#one .mbk-search-toggle",
   search: "#one .mbk-search",
   close: "#one .mbk-search-close",
@@ -99,6 +100,23 @@ async function startBar(page: Page, width: number) {
   );
 }
 
+/**
+ * Leave the start slot empty, keep the end slot, and fill the centre slot
+ * with the harness's content or with a text that the test gives.
+ */
+async function leaveStartEmpty(page: Page, centre?: string) {
+  await page.evaluate((label) => {
+    const host = window.viewerHarness.get("one");
+    const slots = host.props.slots!;
+    host.props.slots = {
+      topBarCenter: label ?? slots.topBarCenter,
+      topBarEnd: slots.topBarEnd,
+    };
+    host.render();
+  }, centre);
+  await expect(page.locator(PARTS.start)).toBeEmpty();
+}
+
 async function setInsets(page: Page, start: string, end: string) {
   await page.evaluate(
     ([start, end]) => {
@@ -139,6 +157,43 @@ for (const width of [1440, 800]) {
     ]);
     expect((menu ?? mark).left - bar.left).toBe(12);
     expect(bar.right - end.right).toBe(12);
+    // The start slot fills its column, up to the gap before the centre.
+    expect(centre.left - start.right).toBeCloseTo(12, 0);
+  });
+}
+
+for (const [width, gap, next] of [
+  [1024, 12, "search"],
+  [390, 8, "toggle"],
+] as const) {
+  test(`an empty start slot gives the centre slot the free room after the mark at ${width}px`, async ({
+    page,
+  }) => {
+    await startBar(page, width);
+    await leaveStartEmpty(page);
+    // An empty start slot takes no room.
+    expect((await measure(page)).start).toBeUndefined();
+    const parts = await shown(page, ["mark", "centre", "centreContent", next]);
+    const { mark, centre } = parts;
+    // The centre content starts right after the mark, and its slot takes the
+    // free room up to the end column.
+    expect(centre.left - mark.right).toBeCloseTo(gap, 0);
+    expect(parts.centreContent.left).toBeCloseTo(centre.left, 0);
+    expect(parts[next].left - centre.right).toBeCloseTo(gap, 0);
+    // Content wider than the room overflows its slot, so that host text can
+    // truncate, and the end column stays where it is.
+    const label = "Publication".repeat(12);
+    await leaveStartEmpty(page, label);
+    await expect(page.locator(PARTS.centre)).toHaveText(label);
+    const wide = await shown(page, ["centre", next]);
+    const across = (box: Box) => [box.left, box.right];
+    expect(across(wide.centre)).toEqual(across(centre));
+    expect(across(wide[next])).toEqual(across(parts[next]));
+    expect(
+      await page
+        .locator(PARTS.centre)
+        .evaluate((slot) => slot.scrollWidth > slot.clientWidth),
+    ).toBe(true);
   });
 }
 

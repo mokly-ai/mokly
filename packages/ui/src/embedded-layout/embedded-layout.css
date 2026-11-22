@@ -35,8 +35,9 @@
 }
 
 /* The embedded bar keeps its two equal outer columns at every window width,
-   so a host's centre slot stays in the middle of the bar. Only the top host's
-   own width switches it to the compact bar below. */
+   so a host's centre slot stays in the middle of the bar beside a filled
+   start slot. Only the top host's own width switches it to the compact bar
+   below. */
 .mokly-top-host > .mbk-topbar {
   flex: 1;
   min-width: 0;
@@ -113,8 +114,10 @@
 }
 
 /* The host's top-bar slots, which the top bar places in its columns. The
-   start and centre slots give way when their column runs short, so their
-   content can truncate. The end slot keeps the width of its content. */
+   start and centre slots fill the free room of their column, so that host
+   content can fill it too, with that content at their start. They give way
+   when their column runs short, so their content can truncate. The end slot
+   keeps the width of its content. */
 .mokly-viewer [data-mokly-slot="topBarStart"],
 .mokly-viewer [data-mokly-slot="topBarCenter"],
 .mokly-viewer [data-mokly-slot="topBarEnd"] {
@@ -125,8 +128,19 @@
 
 .mokly-viewer [data-mokly-slot="topBarStart"],
 .mokly-viewer [data-mokly-slot="topBarCenter"] {
-  flex-shrink: 1;
+  flex: 1 1 auto;
   min-width: 0;
+}
+
+/* A host that leaves the start slot empty and fills the centre slot gets the
+   bar's free room in the centre column, which starts after the mark, in the
+   three columns and in the compact row alike. The end column then keeps the
+   width of its content. A filled start slot keeps the centre in the middle. */
+.mokly-top-host
+  > .mbk-topbar:has(
+    > .mbk-topbar-start > [data-mokly-slot="topBarStart"]:empty
+  ):has(> .mbk-topbar-center > [data-mokly-slot="topBarCenter"]:not(:empty)) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
 @media (width < 56.25rem) {
@@ -137,18 +151,15 @@
 
 /* The compact top bar switches at the viewer contract's container width of
    560px. The query uses pixels, so the host page's root font size cannot
-   move it. It holds one row: the start column with its growing start slot,
-   then the centre slot and the end column at the width of their content. */
+   move it. It holds one row: the start column with its start slot takes the
+   free room, then the centre slot and the end column keep the width of their
+   content, unless the rule above gives the room to the centre column. */
 @container mokly-top-host (max-width: 560px) {
   .mokly-top-host > .mbk-topbar {
     grid-template-columns: minmax(0, 1fr) auto auto;
     column-gap: 8px;
     padding-inline: max(8px, var(--mokly-top-bar-inset-start, 0px))
       max(8px, var(--mokly-top-bar-inset-end, 0px));
-  }
-
-  .mokly-top-host [data-mokly-slot="topBarStart"] {
-    flex-grow: 1;
   }
 
   .mokly-top-host > .mbk-topbar .mbk-search,
