@@ -1,4 +1,4 @@
-//! The startup purge delay and environment override of the Mokly binary.
+//! The Mokly binary's purge delay at startup and after ready Changes.
 
 use std::env;
 use std::ffi::OsStr;
@@ -20,12 +20,12 @@ fn allocator_probe() -> Command {
 }
 
 #[test]
-fn uses_a_30_ms_purge_delay_by_default() {
+fn reduces_the_default_purge_delay_after_changes() {
     let output = allocator_probe().output().unwrap();
     assert_eq!(output.status.code(), Some(0));
     assert_eq!(
         String::from_utf8(output.stdout).unwrap(),
-        "allocator-purge-delay 30\n"
+        "allocator-purge-delay 1000\nallocator-purge-delay-after-changes 30\n"
     );
 }
 
@@ -38,6 +38,6 @@ fn preserves_the_purge_delay_from_the_environment() {
     assert_eq!(output.status.code(), Some(0));
     assert_eq!(
         String::from_utf8(output.stdout).unwrap(),
-        "allocator-purge-delay 250\n"
+        "allocator-purge-delay 250\nallocator-purge-delay-after-changes 250\n"
     );
 }

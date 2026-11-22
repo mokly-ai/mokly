@@ -100,8 +100,6 @@ mod viewer_assets;
 static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() -> std::process::ExitCode {
-    allocator::return_freed_memory_sooner();
-
     #[cfg(debug_assertions)]
     if let Some(result) = test_faults::allocator_probe::purge_delay() {
         return result;
