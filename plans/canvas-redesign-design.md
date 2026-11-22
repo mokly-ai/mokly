@@ -237,7 +237,7 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
   [Viewer appearance](../docs/protocol/mokly-viewer-appearance.md),
   [Component inspector design](../docs/protocol/mokly-component-inspector-design.md)
   [Comparison panes](../docs/protocol/mokly-comparison-panes.md),
-  [Shell device chrome](../docs/protocol/mokly-shell-device-chrome.md),
+  [Shell canvas frames](../docs/protocol/mokly-shell-device-chrome.md),
   [Viewer selection](../docs/protocol/mokly-viewer-selection.md),
   [Frame probe](../docs/protocol/mokly-frame-probe.md),
   [Frame probe wire](../docs/protocol/mokly-frame-probe-wire.md) and

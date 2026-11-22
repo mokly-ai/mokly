@@ -81,6 +81,10 @@ Depends on: 10, 11
       sentences and tokens from `mokly-viewer-appearance.md`,
       `mokly-viewer-palette.md` and `mokly-viewer-palette-preview.md`, and
       rewrite the use-case stage paragraph of `packages/viewer/src/shell/README.md`.
+      Redraw the cloud viewer drawings that show their sample screen in a
+      device frame: `cloud/viewer-chrome.md:208-209`,
+      `cloud/product-mockups-viewer.md:47-48` and `:164-165`, and
+      `cloud/mockups.md:152-154`.
 - [ ] List an ignored-only entry's ignored ids in Current too, as
       `mokly-css-evidence-presentation.md` requires. Today
       `workspace_evidence.tsx` lists them only while a comparison is loaded.
