@@ -20,11 +20,11 @@ const FAILED: PendingDetails = { status: "failed", retry: P.propsLoading };
  * The Action's variant set with Default chosen while the route's details
  * load, or after their load failed: the stage, Props, and Usage wait for
  * all route details. The stage holds the shipped state in place of the
- * frames, and Props and Usage wait without counts, because the details
- * carry the declared order of the fields and the usage. After a failure,
- * the stage says that the component could not be shown, and it, Props, and
- * Usage each offer Try again. While the details load or failed, no artboard
- * shows Disabled, so it is a picture.
+ * frames, with no zoom controls, and Props and Usage wait without counts,
+ * because the details carry the declared order of the fields and the usage.
+ * After a failure, the stage says that the component could not be shown,
+ * and it, Props, and Usage each offer Try again. While the details load or
+ * failed, no artboard shows Disabled, so it is a picture.
  */
 function Loading({
   details,

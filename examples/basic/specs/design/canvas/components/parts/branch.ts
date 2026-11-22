@@ -1,9 +1,14 @@
 import { COMPONENT_NAVIGATION } from "../../../parts/component_nav_data.js";
 import type { NavNode } from "../../../parts/nav.js";
+import { REMOVED_SCREEN_RECORDS } from "../../outcomes/parts/removed_entries.js";
 import type { CatalogueView } from "../../parts/catalogue.js";
 import { COMPONENT_IDENTITIES } from "../../parts/component_identity.js";
+import type { CanvasDestination } from "../../parts/destinations.js";
 import { CANVAS_ENTRIES, type CanvasEntry } from "../../parts/entries.js";
 import { CANVAS_ALL_ROWS, retarget } from "../../parts/nav_rows.js";
+import type { PanelTab } from "../../parts/panel.js";
+
+import { EXPLORER_PAGES as E } from "./destinations.js";
 
 /*
  * The three branches that the Component explorer artboards depict beside the
@@ -14,9 +19,10 @@ import { CANVAS_ALL_ROWS, retarget } from "../../parts/nav_rows.js";
  * the direct-change branch, the Action changed in the same way, and Welcome
  * also changed the label that it gives its own Action, so Welcome keeps a
  * Changes row of its own: five Changes rows. On the removal branch, the
- * Action's saved variant Compact was removed: one Changes row. Each branch is
- * a story of its own, so a catalogue row opens only an artboard of its story,
- * and every other row is a picture.
+ * Action's saved variant Compact was removed, and so was Farewell, a screen
+ * that rendered the Action: two Changes rows. Each branch is a story of its
+ * own, so a catalogue row opens only an artboard of its story, and every
+ * other row is a picture.
  */
 
 const { action: ACTION } = COMPONENT_IDENTITIES;
@@ -59,6 +65,7 @@ const variantKey = (slug: string) =>
 export const EXPLORER_KEYS = {
   default: variantKey("default"),
   compact: variantKey("compact"),
+  farewell: REMOVED_SCREEN_RECORDS.farewell.key,
 } as const;
 
 /** Example's folder, which holds its screens and its Components library. */
@@ -131,12 +138,20 @@ const DIRECT_BRANCH_ROWS: readonly NavNode[] = [
 ];
 
 /**
- * The removal branch in the Changes filter: the removed Compact under the
- * Action, which carries the aggregate mark. A removed row names its state
- * and takes no changed mark.
+ * The removal branch in the Changes filter: the removed Farewell under
+ * Example's Screens, and the removed Compact under the Action, which carries
+ * the aggregate mark. A removed row names its state and takes no changed
+ * mark.
  */
 const REMOVAL_BRANCH_ROWS: readonly NavNode[] = [
   EXAMPLE_ROW,
+  { key: "screens", depth: 1, kind: "folder", label: "Screens", open: true },
+  {
+    key: EXPLORER_KEYS.farewell,
+    depth: 2,
+    kind: "screen",
+    label: "Farewell · Removed",
+  },
   ...ACTION_ROWS,
   variantRow("compact", "Compact · Removed", false),
 ];
@@ -145,12 +160,13 @@ const REMOVAL_BRANCH_ROWS: readonly NavNode[] = [
  * Each branch's changes in the Changes filter's order, as the stepper counts
  * them: the Action, then Default, Disabled, and Secondary on the Action
  * branch; Welcome, which Specs lists first, then the same four on the
- * direct-change branch; and the removed Compact alone on the removal branch.
+ * direct-change branch; and on the removal branch Farewell, which Specs
+ * lists first, then the removed Compact.
  */
 export const BRANCH_CHANGES = {
   action: { total: 4, defaultPosition: 2 },
   direct: { total: 5, welcomePosition: 1 },
-  removal: { total: 1, compactPosition: 1 },
+  removal: { total: 2, farewellPosition: 1, compactPosition: 2 },
 } as const;
 
 /** The catalogue of the Action branch in the Changes filter. */
@@ -185,13 +201,40 @@ export const DIRECT_CHANGES: CatalogueView = {
   changedCount: BRANCH_CHANGES.direct.total,
 };
 
-/** The catalogue of the removal branch in the Changes filter. */
-export const REMOVAL_CHANGES: CatalogueView = {
-  filter: "changes",
-  activeKey: EXPLORER_KEYS.compact,
-  rows: REMOVAL_BRANCH_ROWS,
-  changedCount: BRANCH_CHANGES.removal.total,
+/**
+ * The artboards of the removal branch's two changes, by the right panel's
+ * tab: on Inspect, the removed Compact on its parent's variant set and
+ * Farewell's previous version; on the Changes tab, their Changes artboards.
+ */
+const REMOVAL_TARGETS: Readonly<
+  Record<PanelTab, Readonly<Record<string, CanvasDestination>>>
+> = {
+  inspect: {
+    [EXPLORER_KEYS.farewell]: E.explorerConsumer,
+    [EXPLORER_KEYS.compact]: E.explorerRemoved,
+  },
+  changes: {
+    [EXPLORER_KEYS.farewell]: E.explorerConsumerChanges,
+    [EXPLORER_KEYS.compact]: E.explorerRemovedChanges,
+  },
 };
+
+/**
+ * The catalogue of the removal branch in the Changes filter, with one of its
+ * two changes selected. A row keeps the right panel's tab.
+ */
+export function removalChanges(
+  activeKey: string,
+  tab: PanelTab,
+): CatalogueView {
+  return {
+    filter: "changes",
+    activeKey,
+    rows: REMOVAL_BRANCH_ROWS,
+    targets: REMOVAL_TARGETS[tab],
+    changedCount: BRANCH_CHANGES.removal.total,
+  };
+}
 
 /**
  * The zoom that fits the removal branch's variant set, whose fourth row is

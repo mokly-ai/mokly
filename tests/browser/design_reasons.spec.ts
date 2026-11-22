@@ -6,9 +6,9 @@
  * and neither does an unchanged entry or a page. Every built Canvas design
  * whose Changes tab is open, or that draws comparison details, must be in
  * the list, so a new design of a change cannot leave out its reasons. An
- * unchanged entry without evidence draws no comparison details. The older
- * designs of a removed entry keep their reasons until the Canvas family
- * draws a removed entry's previous version.
+ * unchanged entry without evidence draws no comparison details. A removed
+ * entry's Changes tab keeps its reason beside its previous version, also
+ * while that version loads or failed.
  */
 
 import { readFile } from "node:fs/promises";
@@ -57,6 +57,7 @@ const REASONS: readonly ReasonRow[] = [
   ["design/canvas/components/compare/difference", ["material"], DESKTOP],
   ["design/canvas/components/compare/side-by-side", ["material"], DESKTOP],
   ["design/canvas/components/removed/changes", ["removed"], DESKTOP],
+  ["design/canvas/components/removed/consumer-changes", ["removed"], BOTH],
   ["design/canvas/evidence/ignored", [], BOTH],
   ["design/canvas/evidence/page", [], BOTH],
   ["design/canvas/evidence/styles", [], BOTH],
@@ -67,6 +68,15 @@ const REASONS: readonly ReasonRow[] = [
   ["design/canvas/evidence/unchanged/action", [], BOTH],
   ["design/canvas/outcomes/added/changes", ["added"], BOTH],
   ["design/canvas/outcomes/moved", ["material"], DESKTOP],
+  ["design/canvas/outcomes/removed", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed/long", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed/loading", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed/unavailable", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document/long", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document/loading", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-document/unavailable", ["removed"], DESKTOP],
+  ["design/canvas/outcomes/removed-variant", ["removed"], BOTH],
 ];
 
 /** Unchanged Canvas entries without evidence, which draw no details. */
@@ -74,16 +84,6 @@ const NO_EVIDENCE = [
   "design/canvas/inspect/unchanged",
   "design/canvas/props/editing/edited",
   "design/canvas/stage/component-set",
-];
-
-/** The older designs of a removed entry and its previous version. */
-const REMOVED = [
-  "design/browse/variants/variant-removed",
-  "design/changes/outcomes/previous-version/loading",
-  "design/changes/outcomes/previous-version/long",
-  "design/changes/outcomes/previous-version/no-view",
-  "design/changes/outcomes/previous-version/unavailable",
-  "design/changes/outcomes/removed",
 ];
 
 /** The Canvas designs of the shell design inventory. */
@@ -187,12 +187,6 @@ for (const viewport of ["desktop", "mobile"] as const)
       await expect(page.locator(".mbk-comparison-evidence"), route).toHaveCount(
         0,
       );
-    }
-    for (const route of REMOVED) {
-      await openDesign(page, route, viewport);
-      const details = page.locator(".mbk-comparison-details");
-      await expect(details, route).toHaveCount(1);
-      await expectReasonSentences(details, ["removed"], `${viewport} ${route}`);
     }
   });
 

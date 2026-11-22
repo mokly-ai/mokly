@@ -53,6 +53,11 @@
   );
   --mbk-screen-link: #7fae95;
   --mbk-screen-link-strong: #a4c9b3;
+  /* A dark screen's error, such as a removed variant's failed save, at the
+     dark design palette's danger values. */
+  --mbk-screen-danger-bg: #331f1d;
+  --mbk-screen-danger-edge: #5e3b37;
+  --mbk-screen-danger-ink: #f1a99c;
 }
 
 /* ---- Highlight of a depicted view -------------------------------------- */

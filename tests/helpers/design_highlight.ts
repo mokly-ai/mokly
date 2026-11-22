@@ -23,6 +23,7 @@ function unavailable(title: string): HighlightSwitch {
 const COMPARISON = unavailable(
   "A comparison is selected. Highlighting is available in Current.",
 );
+const REMOVED = unavailable("This preview is unavailable.");
 const LOADING = unavailable("Waiting for the component preview.");
 const EMPTY = unavailable("No registered components are used in this view.");
 
@@ -52,10 +53,14 @@ function expectedSwitches(
 const SHELL_STATES: Readonly<
   Record<string, HighlightSwitch | ViewportSwitches>
 > = {
-  // A removed screen, on its older design until decision 34.
-  "design/changes/outcomes/removed": unavailable(
-    "This preview is unavailable.",
-  ),
+  // A removed screen has no current preview to inspect: Farewell's Inspect,
+  // on a desktop and in a phone's panel sheet, and Timeline's, whose phone
+  // draws no switch while its panel sheet is closed.
+  "design/canvas/outcomes/removed/inspect": REMOVED,
+  "design/canvas/outcomes/removed/no-view": {
+    desktop: REMOVED,
+    mobile: undefined,
+  },
   // The Canvas viewer's Frames filter holds the switch. Profile renders no
   // registered component, on a desktop and in a phone's panel sheet.
   "design/canvas/inspect/unchanged": EMPTY,

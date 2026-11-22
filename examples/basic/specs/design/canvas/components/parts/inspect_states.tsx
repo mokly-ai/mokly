@@ -1,8 +1,11 @@
+import { mockLink } from "@mokly/mokly";
+
 import { InstanceTree } from "../../../../../../../packages/ui/src/instance-tree/instance-tree.js";
 import { PropsMessage } from "../../../../../../../packages/ui/src/props-panel/props-panel.js";
 import {
   UsageList,
   UsageStatus,
+  type UsageRow,
 } from "../../../../../../../packages/ui/src/usage-list/usage-list.js";
 import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
 import { SUBJECTS } from "../../../parts/subjects.js";
@@ -28,13 +31,33 @@ import { CompactSavedProps } from "./props.js";
 import { removedSetFrames } from "./sketches.js";
 
 /**
+ * Farewell, a former consumer of the Action that the removal branch removed,
+ * in the affected list: it rendered one Action in each of its two Light
+ * views, and its row opens its Removed state, which shows its previous
+ * version.
+ */
+function removedConsumer(): UsageRow {
+  return {
+    direct: true,
+    href: mockLink(E.explorerConsumer),
+    id: "Farewell",
+    instances: 1,
+    key: "Farewell",
+    removed: true,
+    title: "Farewell",
+    views: 2,
+  };
+}
+
+/**
  * Inspect for the removed Compact on its parent's variant set, with its
  * Light frame selected: the Action's head with Compact's path and its
  * Removed status, Compact checked after the current variants, the eight
  * frames, and the selected frame. Props shows Compact's saved props
  * read-only. A removed variant keeps its own lists: the consumers of the
- * Action. Removing a saved variant changes no consumer's render, so it
- * affects none.
+ * Action, and the screens that the change affects, which keep Farewell, a
+ * removed former consumer. Removing a saved variant changes no current
+ * consumer's render, so Welcome and Details stay out of that list.
  */
 export function RemovedInspect() {
   return (
@@ -68,7 +91,7 @@ export function RemovedInspect() {
         <CompactSavedProps />
       </InspectFold>
       <InspectFold count={actionUsedBy().length} name="usage" title="Usage">
-        <UsageList affected={[]} usedBy={actionUsedBy()} />
+        <UsageList affected={[removedConsumer()]} usedBy={actionUsedBy()} />
       </InspectFold>
     </>
   );

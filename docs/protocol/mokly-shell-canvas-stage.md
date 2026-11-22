@@ -1,10 +1,11 @@
 # Shell Canvas Stage
 
-Status: The canvas, its section and frames, pan, zoom, Fit, the floating panels and the Frames filter are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, its section and frames, pan, zoom, Fit and the panels, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Frames filter in Inspect.
+Status: The canvas, its sections and frames, a use case's and a removed entry's included, pan, zoom, Fit, the floating panels and the Frames filter are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, its sections and frames, pan, zoom, Fit and the panels, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Frames filter in Inspect.
 
 This continues the [shell design contract](./mokly-shell-design.md#layout). It
 fixes the canvas below the top bar: the panels that float over it, the selected
-entry's section with its frames, the Frames filter, and pan, zoom and Fit.
+entry's section with its frames, a use case's section, the Frames filter, and
+pan, zoom and Fit.
 [Device chrome](./mokly-shell-device-chrome.md) fixes each frame, the preview
 scheme, and the compact layout below the layout breakpoint.
 
@@ -25,11 +26,14 @@ scheme, and the compact layout below the layout breakpoint.
 - The stage is the part of the canvas between the floating panels and above
   the zoom pill. Fit and centring use the stage. Panning can move a frame under
   a panel.
-- While an entry is selected, the zoom pill floats at the bottom centre of the
-  stage, 12px above the canvas's bottom edge. It is a group named `Zoom` that
-  holds Zoom out, the zoom as a whole percentage, Zoom in, and Fit. With
-  nothing selected, the canvas has no zoom pill, because it holds no section
-  to zoom or fit.
+- While the canvas holds a section, the zoom pill floats at the bottom centre
+  of the stage, 12px above the canvas's bottom edge. It is a group named
+  `Zoom` that holds Zoom out, the zoom as a whole percentage, Zoom in, and
+  Fit. While the canvas holds no section, such as with nothing selected or
+  while the selected entry's preview loads or failed, it has no zoom pill.
+  Decision: the zoom controls show only while the canvas holds a section, not
+  whenever an entry is selected and not as a disabled pill, because they act
+  only on a section, and a control that does nothing adds noise.
 - The panels, the zoom pill, the section head, and the frames' labels and size
   tags keep their size at every zoom.
 
@@ -41,8 +45,8 @@ of a screen at once, as frames in a design file.
 
 The selected entry stands on the canvas as one section.
 
-- A screen's or a document's section is a box with a 16px radius, a faint fill
-  and a hairline ring. A component's section is a dashed outline with no fill.
+- A component's section is a dashed outline with no fill. Every other section
+  is a box with a 16px radius, a faint fill and a hairline ring.
 - The section's head, at its top left, names the entry: its title in a dark
   tag, a `Component` kind tag for a component, a monospace path chip with the
   entry's path as written and no `#` prefix, and its change status. The path
@@ -56,8 +60,12 @@ The selected entry stands on the canvas as one section.
   variants' order, with its Light frame beside its Dark frame. A component
   without saved variants has one row for its own example.
 - A page or a Markdown document opens as one reading frame.
-- A use case, a removed entry's previous version, and a preview that loads or
-  failed keep the presentation that their own contracts give.
+- A use case opens as one row of step frames, as [Use Case](#use-case) gives.
+- A removed screen, page or document opens as the section of its previous
+  version, under the
+  [removed previews](./mokly-removed-previews.md#behavior) contract.
+- While the selected entry's preview loads, or after it failed, the canvas
+  holds that state in place of the section.
 
 ## Frames Filter
 
@@ -69,9 +77,12 @@ hides only the frames that they do not compare.
 
 - A frame that the filter turns off leaves the canvas, and the stage refits
   around the frames that stay.
-- The section keeps one row for each shown scheme, Light above Dark. With one
-  viewport turned off, the frames of the other viewport form one column.
+- A screen's section keeps one row for each shown scheme, Light above Dark.
+  With one viewport turned off, the frames of the other viewport form one
+  column.
 - A variant set has no viewport toggles, because its frames have no viewport.
+- A use case's filter chooses one viewport and one scheme, as
+  [Use Case](#use-case) gives.
 - A screen without a dark view disables the Dark toggle, which reads
   `Light only`.
 - The filter holds the Highlight components switch. With the switch on, every
@@ -103,6 +114,34 @@ hides only the frames that they do not compare.
 - The zoom scales each frame with its document. A frame's document lays out at
   the frame's nominal size at every zoom.
 
+## Use Case
+
+A use case opens as one section of its steps. The section pans, zooms and fits
+as a screen's section does.
+
+- The section holds one canvas frame for each step, in step order, in one row
+  from left to right, at one zoom. Each
+  [step frame](./mokly-shell-device-chrome.md#canvas-frames) shows its step
+  screen's view of the viewport and the scheme that the Frames filter chooses.
+- The Frames filter of a use case chooses one viewport and one scheme.
+  Choosing a viewport or a scheme turns the other one off, so each step shows
+  one frame. At or above the layout breakpoint, a use case opens on Desktop
+  and Light. The compact layout opens it on Mobile and Light.
+- When no step's screen has a dark view, the Dark toggle is disabled and reads
+  `Light only`. A step whose screen has no dark view follows the
+  [light-only rule](./mokly-shell-device-chrome.md#color-scheme).
+- Below the layout breakpoint, the
+  [compact layout](./mokly-shell-device-chrome.md#compact-layout) shows one
+  step at a time.
+- A use case offers no compare mode. The comparison of each step stays on the
+  step's screen.
+
+Decision: a use case opens as one row of step frames that pans, zooms and fits
+like a screen, not as a column of steps in device frames or in canvas frames
+at a fixed zoom, because one frame model then serves every entry kind. Each
+step shows one frame, not one for each viewport and scheme, because five steps
+would then show twenty frames.
+
 ## Related Docs
 
 - [Shell design contract](./mokly-shell-design.md)
@@ -110,4 +149,5 @@ hides only the frames that they do not compare.
 - [Shell navigation design](./mokly-shell-design-navigation.md)
 - [Component inspector design](./mokly-component-inspector-design.md)
 - [Comparison panes](./mokly-comparison-panes.md)
+- [Removed content previews](./mokly-removed-previews.md)
 - [Canvas design inventory](./mokly-shell-canvas-inventory.md)

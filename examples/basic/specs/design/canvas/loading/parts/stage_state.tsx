@@ -73,6 +73,7 @@ const NOUNS = {
   component: "component",
   document: "document",
   screen: "screen",
+  "use-case": "flow",
 } as const satisfies Record<CanvasEntryKind, string>;
 
 /**

@@ -2,7 +2,8 @@
  * The Component explorer artboards of the Canvas viewer family: a changed
  * component compared on its variant set, its usage, the screens that its
  * change affects, a screen that also changed its own props, screen
- * inspection while it waits or is unavailable, and a removed saved variant.
+ * inspection while it waits or is unavailable, and a removed saved variant
+ * with the removed screen that used it, on Inspect and on its Changes tab.
  * `../../parts/destinations.ts` spreads them into `CANVAS_PAGES`, so Canvas
  * links reach them.
  */
@@ -23,6 +24,8 @@ export const EXPLORER_PAGES = {
     "design/canvas/components/inspection/unavailable",
   explorerRemoved: "design/canvas/components/removed",
   explorerRemovedChanges: "design/canvas/components/removed/changes",
+  explorerConsumer: "design/canvas/components/removed/consumer",
+  explorerConsumerChanges: "design/canvas/components/removed/consumer-changes",
 } as const;
 
 export type ExplorerDestination =

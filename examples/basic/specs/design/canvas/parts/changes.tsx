@@ -21,11 +21,23 @@ import { InspectSection } from "./inspect.js";
  * The version before is the branch point on the base, and the current
  * version is the branch. An entry that the branch added has no version
  * before, so its rail holds the current version alone, and a line says why.
+ * An entry that the branch removed has no current version, so its rail holds
+ * the version before alone, which the canvas shows, and a line says why.
  */
-export function ChangesCompared({ added = false }: { added?: boolean }) {
+export function ChangesCompared({
+  added = false,
+  removed = false,
+}: {
+  added?: boolean;
+  removed?: boolean;
+}) {
   return (
     <InspectSection title="Compared">
-      <ol className="cv-refs" data-cv-added={added ? "" : undefined}>
+      <ol
+        className="cv-refs"
+        data-cv-added={added ? "" : undefined}
+        data-cv-removed={removed ? "" : undefined}
+      >
         {added ? null : (
           <li className="cv-ref" data-side="before">
             <span aria-hidden="true" className="cv-ref-dot" />
@@ -35,15 +47,22 @@ export function ChangesCompared({ added = false }: { added?: boolean }) {
             </span>
           </li>
         )}
-        <li className="cv-ref" data-side="after">
-          <span aria-hidden="true" className="cv-ref-dot" />
-          <span className="cv-ref-side">Current</span>{" "}
-          <span className="cv-ref-name">This branch</span>
-        </li>
+        {removed ? null : (
+          <li className="cv-ref" data-side="after">
+            <span aria-hidden="true" className="cv-ref-dot" />
+            <span className="cv-ref-side">Current</span>{" "}
+            <span className="cv-ref-name">This branch</span>
+          </li>
+        )}
       </ol>
       {added ? (
         <p className="cv-hint">
           Added on this branch, so there is no base to compare.
+        </p>
+      ) : null}
+      {removed ? (
+        <p className="cv-hint">
+          Removed on this branch, so there is no current version to compare.
         </p>
       ) : null}
     </InspectSection>

@@ -37,11 +37,11 @@ const USAGE_PAGES = {
  * the Action's consumers and the screens that its change affects. A current
  * variant waits for its own detail and its parent's, which holds the usage:
  * while the parent's detail loads, or after that load failed, the stage
- * holds the shipped state in place of the frames, and Props and Usage wait
- * or say that they could not be loaded. On a phone, the selected frame with
- * the Inspect sheet open at its expanded height; while the details are
- * pending, the sheet opens at its first height, so the stage's state shows
- * above it.
+ * holds the shipped state in place of the frames, with no zoom controls,
+ * because the canvas holds no section, and Props and Usage wait or say that
+ * they could not be loaded. On a phone, the selected frame with the Inspect
+ * sheet open at its expanded height; while the details are pending, the
+ * sheet opens at its first height, so the stage's state shows above it.
  */
 function DefaultUsage({
   state,
@@ -71,13 +71,11 @@ function DefaultUsage({
   ) : (
     <CanvasShell
       catalogue={catalogue}
-      compactZoom={FITS.phonePicked}
       design={design}
       entry={CHANGED_DEFAULT}
       panel={panel}
       sheet="panel"
       viewport={viewport}
-      zoom={FITS.action}
     >
       <DetailsStage
         details={PENDING_DETAILS[state]}

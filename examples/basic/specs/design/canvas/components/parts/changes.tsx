@@ -174,14 +174,14 @@ export function AffectedChanges({
 }
 
 /**
- * The Changes tab of the removed Compact, the one change of the removal
- * branch: a removed component variant stays eligible for comparison with a
- * missing current side, so the rail names both versions and every mode is
- * offered, and its comparison falls back to Side by side. Only Compact's
- * frames compare, so Side by side offers their chips and compares
- * Compact · Light. No artboard shows this tab in Current, Compact · Dark's
- * pair, or another mode, which falls back to Side by side, so those tiles
- * and that chip are pictures.
+ * The Changes tab of the removed Compact, the last change of the removal
+ * branch, whose Previous change opens Farewell's Changes tab: a removed
+ * component variant stays eligible for comparison with a missing current
+ * side, so the rail names both versions and every mode is offered, and its
+ * comparison falls back to Side by side. Only Compact's frames compare, so
+ * Side by side offers their chips and compares Compact · Light. No artboard
+ * shows this tab in Current, Compact · Dark's pair, or another mode, which
+ * falls back to Side by side, so those tiles and that chip are pictures.
  */
 export function RemovedChanges() {
   return (
@@ -190,6 +190,7 @@ export function RemovedChanges() {
         moklyInstance={useDesignInstance("stepper")}
         position={BRANCH_CHANGES.removal.compactPosition}
         total={BRANCH_CHANGES.removal.total}
+        previousDestination={E.explorerConsumerChanges}
       />
       <ChangesCompared />
       <InspectSection title="Compare">

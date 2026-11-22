@@ -139,6 +139,18 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/components/removed/consumer",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/removed"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/components/removed/consumer-changes",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/components/removed"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/components/usage",
     "colorSchemes": ["light", "dark"]
   },
@@ -203,6 +215,29 @@
     "path": "design/canvas/evidence/unchanged/action",
     "colorSchemes": ["light", "dark"],
     "variantOf": "design/canvas/evidence/unchanged"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/flows/tour",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/flows/tour/dark",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/flows/tour"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/flows/tour/mobile",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/flows/tour"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/flows/tour/second-step",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/flows/tour"
   },
   {
     "kind": "screen",
@@ -354,6 +389,81 @@
     "path": "design/canvas/outcomes/moved/inspect",
     "colorSchemes": ["light", "dark"],
     "variantOf": "design/canvas/outcomes/moved"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed-document",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed-document/light-only",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed-document"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed-document/loading",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed-document"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed-document/long",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed-document"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed-document/unavailable",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed-document"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed-variant",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed-variant/inspect",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed-variant"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed/inspect",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed/loading",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed/long",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed/no-view",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/outcomes/removed/unavailable",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/outcomes/removed"
   },
   {
     "kind": "screen",

@@ -24,7 +24,9 @@ const fitted = (
  * shows the Changes sheet open, so the dock's Changes opens the same
  * artboard. Details' inspection states open Details' Changes tab of the
  * canonical branch. The removed Compact's tabs move between Inspect and its
- * comparison.
+ * comparison, and the removed Farewell's between Inspect and its Changes
+ * tab, which a phone shows in the open panel sheet; no artboard shows that
+ * sheet closed, so its close is a picture.
  */
 export const EXPLORER_NAVIGATION_STATES = {
   [E.explorerCompare]: fitted(E.explorerCompare, {
@@ -41,12 +43,14 @@ export const EXPLORER_NAVIGATION_STATES = {
   [E.explorerUsage]: fitted(E.explorerUsage, {
     changesTab: E.explorerCompareCurrent,
   }),
-  [E.explorerUsageLoading]: fitted(E.explorerUsageLoading, {
-    changesTab: E.explorerCompareCurrent,
-  }),
-  [E.explorerUsageFailed]: fitted(E.explorerUsageFailed, {
-    changesTab: E.explorerCompareCurrent,
-  }),
+  // While the usage loads or failed, the canvas holds no section, so it has
+  // no Fit.
+  [E.explorerUsageLoading]: {
+    canvas: { changesTab: E.explorerCompareCurrent },
+  },
+  [E.explorerUsageFailed]: {
+    canvas: { changesTab: E.explorerCompareCurrent },
+  },
   [E.explorerAffected]: fitted(E.explorerAffected),
   [E.explorerAffectedDetails]: fitted(E.explorerAffectedDetails),
   [E.explorerAffectedDirect]: fitted(E.explorerAffectedDirect, {
@@ -63,5 +67,12 @@ export const EXPLORER_NAVIGATION_STATES = {
   }),
   [E.explorerRemovedChanges]: fitted(E.explorerRemovedChanges, {
     inspectTab: E.explorerRemoved,
+  }),
+  [E.explorerConsumer]: fitted(E.explorerConsumer, {
+    changesTab: E.explorerConsumerChanges,
+  }),
+  [E.explorerConsumerChanges]: fitted(E.explorerConsumerChanges, {
+    inspectTab: E.explorerConsumer,
+    panelSheet: E.explorerConsumerChanges,
   }),
 } satisfies Record<ExplorerDestination, NavigationState>;

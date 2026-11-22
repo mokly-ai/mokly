@@ -23,9 +23,10 @@ canvas stage and the right panel replace that layout.
 The [Canvas design inventory](./mokly-shell-canvas-inventory.md), with the
 pages that it links, lists the `design/canvas` screens, and it owns their
 family rules. They depict the canvas stage, the floating panels, Inspect,
-Changes and the compact layout. They also depict loading and recovery, the tag
-search, the added and moved outcomes, the comparison evidence, the component
-explorer pages and the Props states. The
+Changes and the compact layout. They also depict a use case, loading and
+recovery, the tag search, the added and moved outcomes, a removed entry's
+previous version, the comparison evidence, the component explorer pages and
+the Props states. The
 [component design inventory](./mokly-component-design-inventory.md) lists the
 component explorer and Props screens. The
 [shell design inventory](./mokly-shell-design-inventory.md) lists the Browse
@@ -33,10 +34,6 @@ and Changes screens outside the Canvas family and owns the dual-scheme and
 owning-group rules. The
 [depicted design catalogue](./mokly-shell-design-catalogue.md) describes the
 fixture catalogue that the design screens browse.
-
-The Canvas screens do not draw a use-case flow or a removed entry's previous
-version. Each of these states keeps the requirements of its own contract and
-the content that its Browse, Changes or component explorer screen depicts.
 
 ## Consumer-Tunable Custom Properties
 
@@ -180,9 +177,8 @@ catalogue.
 ## Device Chrome And Color Scheme
 
 [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
-defines the canvas frames, the device frames of the states that the Canvas
-screens do not draw, the use-case flow layout, and the preview scheme with its
-containment and light-only rules.
+defines the canvas frames, a use case's step frames included, and the preview
+scheme with its light-only rules.
 
 ## Responsive Behavior
 
@@ -217,8 +213,8 @@ offers Current alone. `design/canvas/outcomes/moved` depicts a moved entry,
 which compares with the version at its previous path. The
 `design/canvas/components` screens depict a component's comparison on its
 variant set, and the `design/canvas/evidence` screens the comparison evidence.
-The `design/changes/outcomes` screens depict a removed screen's previous
-version, which offers no compare mode. See [Changes](./mokly-changes.md),
+`design/canvas/outcomes/removed` depicts a removed screen's previous version,
+which offers no compare mode. See [Changes](./mokly-changes.md),
 [component designs](./mokly-component-design.md), and
 [CSS evidence](./mokly-css-evidence-shell.md).
 

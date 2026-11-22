@@ -187,80 +187,79 @@ export function registerComponentDesignInspection(
         ).toBeVisible();
       });
 
-      // No Canvas screen draws a removed screen's previous version until
-      // decision 34, so the removed consumer keeps its older subjects.
       test("a removed consumer opens its previous version behind its Removed badge", async ({
         page,
       }) => {
         await page.goto(
-          designDocumentUrl("design/components/states/removed", viewport),
-        );
-        await expect(
-          page
-            .locator(".ce-preview-view:visible")
-            .getByText("This variant has been removed.", { exact: true }),
-        ).toBeVisible();
-        await page
-          .locator('[data-usage-section="affected"]')
-          .getByRole("link", { name: "Farewell" })
-          .click();
-        await expect(page).toHaveURL(
           designDocumentUrl(
-            "design/components/states/removed-consumer",
+            "design/canvas/components/removed/consumer",
             viewport,
           ),
         );
-        await expect(page.locator(".mbk-previous")).toHaveText(
+        // Farewell's previous version, where it rendered the Action with
+        // Compact's props, behind its Removed status, with no comparison.
+        await expect(
+          page.locator(".cv-canvas .mbk-entry-status:visible"),
+        ).toHaveText("Removed");
+        await expect(page.locator(".cv-previous-label:visible")).toHaveText(
           "Showing previous version",
         );
+        const frame = page.locator('.cv-frame[data-cv-frame="mobile-light"]');
         await expect(
-          page
-            .locator(".ce-preview-view:visible")
-            .getByText("Come back whenever you are ready.", { exact: true }),
+          frame.getByText("Thanks for looking around", { exact: true }),
         ).toBeVisible();
+        await expect(frame.locator(".cv-cx-compact")).toHaveText("Continue");
+        // A desktop shows both historical frames, a phone the picked one.
         await expect(
-          page.locator(".ce-preview-view:visible .ce-action--before"),
-        ).toBeVisible();
-        await expect(page.locator(".ce-preview-set")).toHaveAttribute(
-          "data-viewport",
-          viewport,
-        );
+          page.locator('.cv-frame[data-cv-frame="desktop-light"]'),
+        ).toBeVisible({ visible: viewport === "desktop" });
         await expect(
-          page.locator(
-            viewport === "desktop"
-              ? ".ce-preview-view:visible .browser-frame"
-              : ".ce-preview-view:visible .phone-frame",
-          ),
-        ).toBeVisible();
-        await expect(
-          page.getByRole("group", { name: "Comparison mode" }),
+          page.getByRole("list", { name: "Comparison mode" }),
         ).toHaveCount(0);
         await expect(page.locator(".mb-pane-missing")).toHaveCount(0);
         await expect(
-          page.getByRole("switch", { name: "Dark mode" }),
-        ).toHaveCount(0);
-        await expect(
           page.getByLabel("Appearance", { exact: true }),
         ).toHaveValue("light");
-        await expect(
-          page.getByRole("switch", { name: "Highlight components" }),
-        ).toBeDisabled();
-        await expect(
-          page
-            .locator(
-              viewport === "desktop" ? ".mbk-nav" : ".ce-mobile-location",
-            )
-            .getByRole("link", {
-              name: viewport === "desktop" ? "Action" : /Changes/,
-            }),
-        ).toHaveAttribute(
-          "data-mokly-link",
-          "design/components/states/removed",
-        );
-        await expect(
-          page.getByRole("button", { name: "Details", exact: true }),
-        ).toBeVisible();
       });
     });
   }
+
+  // A phone draws Usage only in a panel sheet, which the removed variant's
+  // artboard shows closed, so the desktop artboard follows the link.
+  test.describe("desktop removed consumer", () => {
+    test.use({ viewport: { width: 1440, height: 1000 } });
+    test("a removed variant's affected list opens its removed consumer's Removed state", async ({
+      page,
+    }) => {
+      await page.goto(
+        designDocumentUrl("design/canvas/components/removed", "desktop"),
+      );
+      const usage = page.locator('[data-cv-section="usage"]');
+      await usage.locator(":scope > summary").click();
+      await usage
+        .locator('[data-usage-section="affected"]')
+        .getByRole("link", { name: "Farewell · Removed", exact: true })
+        .click();
+      await expect(page).toHaveURL(
+        designDocumentUrl(
+          "design/canvas/components/removed/consumer",
+          "desktop",
+        ),
+      );
+      // Inspect stays available on the removed screen: its views are light
+      // only, and no current preview exists to highlight. Compact's row
+      // returns to the removed variant.
+      await expect(
+        page
+          .getByRole("group", { name: "Frames", exact: true })
+          .getByRole("checkbox", { name: /^Dark/u }),
+      ).toBeDisabled();
+      await expect(
+        page.getByRole("switch", { name: "Highlight components" }),
+      ).toBeDisabled();
+      await expect(
+        page.locator(".mbk-nav").getByRole("link", { name: /^Compact/u }),
+      ).toHaveAttribute("data-mokly-link", "design/canvas/components/removed");
+    });
+  });
 }

@@ -19,9 +19,13 @@ export const HIGHLIGHT_REASONS = {
   string
 >;
 
-/** One frame toggle: the frames it shows, its glyph, its name, its size. */
+/**
+ * One frame toggle: the frames it shows, the axis it belongs to, its glyph,
+ * its name, its size.
+ */
 interface FrameToggle {
   id: "dark" | "desktop" | "light" | "mobile";
+  axis: "scheme" | "viewport";
   glyph: CanvasGlyphName;
   label: string;
   size?: string;
@@ -33,12 +37,14 @@ const size = ({ height, width }: { height: number; width: number }) =>
 const VIEWPORT_TOGGLES: readonly FrameToggle[] = [
   {
     id: "mobile",
+    axis: "viewport",
     glyph: "mobile",
     label: "Mobile",
     size: size(FRAME_SIZES.mobile),
   },
   {
     id: "desktop",
+    axis: "viewport",
     glyph: "desktop",
     label: "Desktop",
     size: size(FRAME_SIZES.desktop),
@@ -46,8 +52,8 @@ const VIEWPORT_TOGGLES: readonly FrameToggle[] = [
 ];
 
 const SCHEME_TOGGLES: readonly FrameToggle[] = [
-  { id: "light", glyph: "light", label: "Light" },
-  { id: "dark", glyph: "dark", label: "Dark" },
+  { id: "light", axis: "scheme", glyph: "light", label: "Light" },
+  { id: "dark", axis: "scheme", glyph: "dark", label: "Dark" },
 ];
 
 /**
@@ -59,6 +65,8 @@ const SCHEME_TOGGLES: readonly FrameToggle[] = [
  * shows for the depicted view, and a reason disables it with the shell's own
  * sentence. A component set's frames are its variants in each scheme, so it
  * has no viewport toggles, and a light-only screen's Dark toggle is disabled.
+ * A use case's filter chooses one viewport and one scheme, so each axis is a
+ * pair of native radio buttons, and choosing one turns the other off.
  */
 export function FramesFilterView(props: FramesFilterProps) {
   const toggles = props.viewports
@@ -80,7 +88,8 @@ export function FramesFilterView(props: FramesFilterProps) {
                 data-cv-frames={toggle.id}
                 defaultChecked={props[toggle.id] && !absent}
                 disabled={absent}
-                type="checkbox"
+                name={props.single ? `cv-frames-${toggle.axis}` : undefined}
+                type={props.single ? "radio" : "checkbox"}
               />
               <CanvasGlyph name={toggle.glyph} size={14} />
               <span className="cv-ff-name">{toggle.label}</span>

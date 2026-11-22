@@ -19,14 +19,11 @@ const changesFilter = (fit: CanvasDestination): NavigationState => ({
 
 /**
  * Welcome's stage while its detail loads or after it failed: the Changes
- * filter keeps Welcome selected, and Fit refits the artboard's own stage. No
- * artboard shows the Changes tab, a zoom, or the panel sheet before the
- * entry's detail arrives, so those controls are pictures.
+ * filter keeps Welcome selected. The canvas holds no section, so it draws no
+ * zoom controls. No artboard shows the Changes tab or the panel sheet before
+ * the entry's detail arrives, so those controls are pictures.
  */
-const entryStage = (fit: CanvasDestination): NavigationState => ({
-  changes: C.catalogue,
-  canvas: { fit },
-});
+const entryStage: NavigationState = { changes: C.catalogue };
 
 /**
  * The authored transitions of the Loading and recovery artboards.
@@ -38,8 +35,8 @@ export const LOADING_NAVIGATION_STATES = {
   [C.loadingCatalogue]: {},
   [C.loadingCatalogueFailed]: {},
   [C.loadingCatalogueVersion]: {},
-  [C.loadingEntry]: entryStage(C.loadingEntry),
-  [C.loadingEntryFailed]: entryStage(C.loadingEntryFailed),
+  [C.loadingEntry]: entryStage,
+  [C.loadingEntryFailed]: entryStage,
   [C.loadingChanges]: changesFilter(C.loadingChanges),
   [C.loadingChangesPreparing]: changesFilter(C.loadingChangesPreparing),
   [C.loadingChangesUnavailable]: changesFilter(C.loadingChangesUnavailable),

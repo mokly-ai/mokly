@@ -26,7 +26,8 @@ export function registerComponentDesignSelection(
     await page.goto(
       designDocumentUrl("design/canvas/components/removed", "desktop"),
     );
-    await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
+    // The removal branch removed Compact and Farewell, its former consumer.
+    await expect(page.locator(".mbk-nav-filter-count")).toHaveText("2");
     const changed = page.locator(
       '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
     );
@@ -37,40 +38,36 @@ export function registerComponentDesignSelection(
     ).toContainText("Compact · Removed");
   });
 
-  for (const viewport of ["desktop", "mobile"] as const) {
-    // No Canvas screen draws a removed screen's previous version until
-    // decision 34, so the removed consumer keeps its older subject.
-    test(`a removed consumer keeps independent ${viewport} Changes membership`, async ({
-      page,
-    }) => {
-      await page.setViewportSize(
-        viewport === "desktop"
-          ? { width: 1440, height: 1000 }
-          : { width: 390, height: 844 },
-      );
-      await page.goto(
-        designDocumentUrl(
-          "design/components/states/removed-consumer",
-          viewport,
-        ),
-      );
-      await expect(
-        page.locator(
-          viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count",
-        ),
-      ).toHaveText("2");
-      if (viewport === "desktop") {
-        await expect(page.locator(".mbk-nav-scroll a")).toContainText([
-          "Farewell",
-          "Action",
-          "Compact · Removed",
-        ]);
-        await expect(
-          page.locator(
-            '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
-          ),
-        ).toHaveCount(1);
-      }
-    });
-  }
+  test("a removed consumer keeps independent Changes membership", async ({
+    page,
+  }) => {
+    // A desktop's catalogue lists Farewell's own Removed row beside the
+    // removed variant's, counts both, and marks only the Action changed.
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(
+      designDocumentUrl("design/canvas/components/removed/consumer", "desktop"),
+    );
+    await expect(page.locator(".mbk-nav-filter-count")).toHaveText("2");
+    await expect(page.locator(".mbk-nav-scroll a")).toContainText([
+      "Farewell · Removed",
+      "Compact · Removed",
+    ]);
+    await expect(
+      page.locator(
+        '.mbk-nav-scroll [data-nav-row][data-changed="true"]:not([data-nav-removed]):visible',
+      ),
+    ).toHaveCount(1);
+    // A phone draws no catalogue; its Changes tab counts Farewell first
+    // among the branch's two changes.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(
+      designDocumentUrl(
+        "design/canvas/components/removed/consumer-changes",
+        "mobile",
+      ),
+    );
+    await expect(
+      page.getByText("Change 1 of 2", { exact: true }),
+    ).toBeVisible();
+  });
 }

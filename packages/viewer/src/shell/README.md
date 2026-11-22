@@ -337,15 +337,17 @@ supplied by prop controls keep their index `documentKey`. Only a temporary
 render URL bypasses that key.
 
 A use case's
-stage, in `public_stage.tsx`, shows each step with `@mokly/ui/flow-step` and
-its desktop view in a browser frame, or, while `narrow_layout.ts` reports a
-window at most 760px wide, its mobile view in a phone frame, under the
-[device chrome contract](../../../../docs/protocol/mokly-shell-device-chrome.md#device-chrome).
+stage, in `public_stage.tsx`, keeps device frames today: it shows each step
+with `@mokly/ui/flow-step` and its desktop view in a browser frame, or, while
+`narrow_layout.ts` reports a window at most 760px wide, its mobile view in a
+phone frame. The
+[use-case rule](../../../../docs/protocol/mokly-shell-canvas-stage.md#use-case)
+of the canvas stage contract requires one canvas frame for each step instead.
 `layout_breakpoint.ts` holds that contract's layout breakpoint as one media
 query, narrower than 900px, which every shell and viewer rule and script
 reads, so the catalogue drawer, the inspector sheet and the embedded rail
-switch at the same width. It also holds the contract's device breakpoint, at
-most 760px wide, which `narrow_layout.ts` watches. The `@mokly/ui`
+switch at the same width. It also holds the use-case stage's device
+breakpoint, which `narrow_layout.ts` watches. The `@mokly/ui`
 stylesheets cannot import either query, so they repeat them, and the viewer's
 [styles test](../../tests/styles.test.ts) holds them to both.
 

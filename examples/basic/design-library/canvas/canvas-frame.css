@@ -61,6 +61,66 @@
   color: var(--cv-text-muted);
 }
 
+/* A use case's step frame: the step's number in a dark tag leads the label,
+   the step's title is the link that opens its screen, with a chevron, and
+   the step's description reads muted on its own line below the label. */
+.cv-frame-label:has(> .cv-frame-note) {
+  flex-wrap: wrap;
+  row-gap: 7px;
+}
+
+.cv-frame-step {
+  align-items: center;
+  background: var(--cv-text);
+  border-radius: 4px;
+  color: var(--cv-surface);
+  display: inline-flex;
+  flex: none;
+  font: 600 10.5px/1 var(--cv-mono);
+  height: 18px;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 5px;
+}
+
+/* The word stays in the caption's text, so the number reads as a step. */
+.cv-frame-step-word {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.cv-frame-link {
+  align-items: center;
+  color: var(--cv-text);
+  display: inline-flex;
+  gap: 2px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.cv-frame-link:hover > .cv-frame-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cv-frame-link > .cv-glyph {
+  color: var(--cv-text-muted);
+  flex: none;
+  transform: rotate(-90deg);
+}
+
+.cv-frame-note {
+  color: var(--cv-text-muted);
+  flex-basis: 100%;
+  font: 400 12px/1.3 var(--cv-sans);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* A frame too narrow for its label and its size keeps the label. */
 @container cv-frame (width < 190px) {
   .cv-frame-size {

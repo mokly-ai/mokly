@@ -1,6 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { artboardStates } from "../../parts/artboards.js";
+import { REMOVED_SCREENS } from "../../parts/nav_data.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { COMPARISON_VIEW } from "../parts/changes_sketches.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
@@ -27,7 +28,8 @@ type MovedState = "changes" | "inspect";
  * its Light frames, with the catalogue in the Changes filter and
  * `Invoice · Moved` selected. On the Changes tab, Overlay compares every
  * frame with the version at its previous path, and the rows of Welcome and
- * Details keep the tab. Inspect keeps the filter. On a phone, the Changes
+ * Details keep the tab. Inspect keeps the filter, and Farewell's row keeps
+ * the Inspect tab. On a phone, the Changes
  * tab shows the one frame with the overlay, and Inspect opens the panel
  * sheet.
  */
@@ -49,7 +51,7 @@ function Moved({
               welcome: CANVAS_PAGES.changesCurrent,
               details: CANVAS_PAGES.addedChanges,
             }
-          : undefined,
+          : { [REMOVED_SCREENS.farewell.key]: OUTCOME_PAGES.removedInspect },
       }}
       compactZoom={FITS.phone}
       design={changes ? OUTCOME_PAGES.moved : OUTCOME_PAGES.movedInspect}

@@ -15,7 +15,9 @@ const fitted = (fit: PropsDestination) => ({ canvas: { fit } });
  * The authored transitions of the Props and controls artboards.
  * `../../parts/navigation_states.ts` spreads them into the family's states.
  * Details, the screen without props, opens its Changes tab, and its panel
- * sheet closes onto Details on Inspect with the sheet closed.
+ * sheet closes onto Details on Inspect with the sheet closed. While the
+ * route's details load or failed, the canvas holds no section, so it has no
+ * Fit.
  */
 export const PROPS_NAVIGATION_STATES = {
   [P.propsEditing]: fitted(P.propsEditing),
@@ -34,6 +36,6 @@ export const PROPS_NAVIGATION_STATES = {
   [P.propsNoProps]: {
     canvas: { changesTab: C.addedChanges, fit: P.propsNoProps, close: C.added },
   },
-  [P.propsLoading]: fitted(P.propsLoading),
-  [P.propsLoadingFailed]: fitted(P.propsLoadingFailed),
+  [P.propsLoading]: {},
+  [P.propsLoadingFailed]: {},
 } satisfies Record<PropsDestination, NavigationState>;

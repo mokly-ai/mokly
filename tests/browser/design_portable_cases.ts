@@ -93,11 +93,13 @@ export function registerDesignPortable(
       await expect(page).toHaveURL(
         design("design/canvas/search/tags/onboarding", viewport),
       );
-      // The flow-step link keeps the older use-case design until the Canvas
-      // family draws a use case. Its Details step opens the Canvas artboard
-      // of Details.
-      await page.goto(design("design/browse/views/use-case", viewport));
-      await page.locator(".flow-step-link").nth(1).click();
+      // The use case's second step, which a phone shows once the frame
+      // picker picks it, opens the Canvas artboard of Details.
+      await page.goto(design("design/canvas/flows/tour/second-step", viewport));
+      await page
+        .locator(".cv-frames")
+        .getByRole("link", { name: "Details", exact: true })
+        .click();
       await expect(page).toHaveURL(
         design("design/canvas/outcomes/added", viewport),
       );

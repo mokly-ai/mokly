@@ -142,18 +142,25 @@ export function removedSetFrames(): CanvasFrameSpec[] {
 }
 
 /**
- * The removed Compact as the branch point rendered it, from its saved
- * props: the Action's button with its 4px corners and no hint.
+ * The Action's button as the removed Compact's saved props draw it, with its
+ * 4px corners and no hint: a picture, which opens nothing.
  */
+export function CompactAction() {
+  return (
+    <span
+      className={`mbk-shot-action mbk-shot-action--${COMPACT_SAVED.tone} cv-cx-compact`}
+    >
+      {COMPACT_SAVED.label}
+    </span>
+  );
+}
+
+/** The removed Compact as the branch point rendered it, from its saved props. */
 function CompactBefore() {
   return (
     <div className="mbk-shot mbk-shot--action">
       <div className="mbk-shot-pad">
-        <span
-          className={`mbk-shot-action mbk-shot-action--${COMPACT_SAVED.tone} cv-cx-compact`}
-        >
-          {COMPACT_SAVED.label}
-        </span>
+        <CompactAction />
       </div>
     </div>
   );

@@ -3,7 +3,13 @@ import { defineComponent } from "@mokly/mokly";
 import { MiniAction } from "../../parts/mini_action.js";
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
-import { enumOptions, flag, text, type LibraryProps } from "../schemas.js";
+import {
+  destination,
+  enumOptions,
+  flag,
+  text,
+  type LibraryProps,
+} from "../schemas.js";
 
 import { CanvasFrameView } from "./canvas-frame.view.js";
 
@@ -24,6 +30,9 @@ const propSchema = {
     side: { enum: ["before", "after"] },
     variant: text,
     selected: flag,
+    step: { type: "integer", minimum: 1, maximum: 99 },
+    screenDestination: destination,
+    description: text,
   },
 } as const;
 const slots = ["children", "before", "overlay"] as const;
@@ -43,7 +52,7 @@ export const canvasFrame = defineComponent({
     "canvas",
     "canvas-frame",
     "Canvas frame",
-    "One view of an entry on the canvas: a bare frame with its label and size, scaled by the zoom, which shows both versions in a comparison.",
+    "One view of an entry on the canvas: a bare frame with its label and size, scaled by the zoom, which shows both versions in a comparison. A use case's step frame adds the step's number, a link to its screen and its description.",
   ),
   propSchema,
   props: desktop,

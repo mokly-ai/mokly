@@ -64,37 +64,48 @@ export function registerComponentEvidence(
             : { width: 390, height: 844 },
       });
 
-      // No Canvas screen draws a removed screen's previous version until
-      // decision 34, so the removed consumer keeps its older subject.
-      test("a removed consumer's comparison facts appear only in Details", async ({
+      // A removed consumer keeps its comparison evidence on its Changes tab,
+      // which a phone opens in the panel sheet; the canvas holds none.
+      test("a removed consumer's comparison facts appear only in its Changes tab", async ({
         page,
       }) => {
-        const route = "design/components/states/removed-consumer";
+        const route = "design/canvas/components/removed/consumer-changes";
         await page.goto(designDocumentUrl(route, viewport));
         await expect(
-          page.locator(".ce-preview-pane [data-workspace-evidence]"),
+          page.locator(".cv-canvas [data-workspace-evidence]"),
         ).toHaveCount(0);
-        await expect(page.locator(".ce-change-context")).toHaveCount(0);
-        const details = page.getByRole("region", {
-          name: "Details",
-          exact: true,
-        });
-        if (!(await details.isVisible()))
-          await page
-            .getByRole("button", { name: "Details", exact: true })
-            .click();
-        await expect(details).toContainText("Comparison details");
-        await expect(page.locator("[data-workspace-evidence]")).toHaveCount(1);
+        const panel = page.getByRole("region", { name: "Panel", exact: true });
         await expect(
-          page.locator("[data-workspace-evidence]"),
-        ).not.toContainText("corners and spacing");
+          panel.getByRole("link", { name: "Changes", exact: true }),
+        ).toHaveAttribute("aria-current", "page");
+        const evidence = page.locator("[data-workspace-evidence]");
+        await expect(evidence).toHaveCount(1);
+        await expect(panel.locator(".cv-evidence")).toContainText(
+          "Comparison details",
+        );
+        await expect(evidence).not.toContainText("corners and spacing");
         await expectReasonSentences(
-          page.locator("[data-workspace-evidence]"),
+          evidence,
           ["removed"],
           `${viewport} ${route}`,
         );
-        await expect(details).toContainText(
-          "A former screen that is no longer in the catalogue.",
+        // The rail holds the version before alone, and no mode compares.
+        await expect(
+          panel.getByText(
+            "Removed on this branch, so there is no current version to compare.",
+            { exact: true },
+          ),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("list", { name: "Comparison mode" }),
+        ).toHaveCount(0);
+        // Inspect, the panel's other tab, opens Farewell's Removed state.
+        await panel.getByRole("link", { name: "Inspect", exact: true }).click();
+        await expect(page).toHaveURL(
+          designDocumentUrl(
+            "design/canvas/components/removed/consumer",
+            viewport,
+          ),
         );
       });
 

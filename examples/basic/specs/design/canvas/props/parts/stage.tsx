@@ -18,9 +18,10 @@ import { CanvasStage } from "../../parts/stage.js";
  * with its corners and its size, at the set's fitted zoom, and what lies
  * over the edited variant's frames, such as the status of a render in
  * flight, joins the selection. Until the route's details arrive, the stage
- * holds their shipped state in place of the frames, and the compact frame
- * picker still picks the chosen frame. On a phone, the frame picker shows
- * the selected frame alone at full size, under the open Inspect sheet.
+ * holds their shipped state in place of the frames, with no zoom pill and no
+ * Fit in the dock, because the canvas holds no section, and the compact
+ * frame picker still picks the chosen frame. On a phone, the frame picker
+ * shows the selected frame alone at full size, under the open Inspect sheet.
  */
 export function ChosenVariantArtboard({
   design,
@@ -45,18 +46,19 @@ export function ChosenVariantArtboard({
 }) {
   const selection = frameSelectionOverlays(frame);
   const entry = CANVAS_ENTRIES.action;
+  const section = details === undefined;
   return (
     <CanvasShell
       catalogue={{ filter: "all", activeKey: COMPONENT_NAVIGATION.action.id }}
-      compactZoom={FITS.phonePicked}
+      compactZoom={section ? FITS.phonePicked : undefined}
       design={design}
       entry={entry}
       panel={panel}
       sheet="panel"
       viewport={viewport}
-      zoom={FITS.action}
+      zoom={section ? FITS.action : undefined}
     >
-      {details === undefined ? (
+      {section ? (
         <CanvasStage
           entry={entry}
           frames={frames}
