@@ -144,6 +144,7 @@ export function CanvasSection({
         {frames.map((frame) => (
           <div
             className="mbk-canvas-cell mbk-reset"
+            hidden={frame.hidden === true}
             key={frame.key}
             style={cellStyle(frame, kind === "document" ? reading : undefined)}
           >

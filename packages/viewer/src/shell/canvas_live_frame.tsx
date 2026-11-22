@@ -70,9 +70,11 @@ export function CanvasLiveFrame({
     viewport,
   });
   const component = plan.kind === "component";
-  // A component frame asks for its size once its document loads. No frame
-  // adapter measures a document's content yet, so the frame keeps the size
-  // of a frame without a content box.
+  // A component frame asks for its size once after each load of its
+  // document: the status leaves `ready` while a document loads, and a usage
+  // update keeps it, so a frame never measures a document that it has
+  // already sized. No frame adapter measures a document's content yet, so
+  // the frame keeps the size of a frame without a content box.
   useEffect(() => {
     if (component && frame.status === "ready")
       onSize?.(plan.key, componentFrameSize(undefined));

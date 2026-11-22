@@ -72,10 +72,13 @@ export function CanvasWorkspaceStage({
         return {
           column: plan.column,
           height: size.height,
+          hidden: plan.hidden,
           key: plan.key,
           node: (
             <CanvasLiveFrame
-              fragment={fragment}
+              // The route's fragment names a place in the routed entry, so
+              // only that entry's frames open there, not the set's other rows.
+              fragment={plan.entry.path === entry.path ? fragment : undefined}
               hasDarkFragments={catalogue.hasDarkFragments}
               onSize={onSize}
               plan={plan}

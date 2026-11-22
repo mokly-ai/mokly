@@ -5,12 +5,15 @@ import test from "node:test";
 import type { ColorScheme } from "@mokly/model";
 
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
+import { CanvasReadingStage } from "../src/shell/canvas_reading.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
+import { DisplaySelection } from "../src/shell/display_context.js";
 import { DocumentStageFrame } from "../src/shell/document_stage_frame.js";
 import {
   removedPreviewData,
   RemovedPreviewStage,
 } from "../src/shell/previews.js";
+import { defaultSelection } from "../src/shell/selection.js";
 
 import { indexFixture } from "./catalogue_v9_fixture.js";
 import { storeMarkup } from "./shell_markup.js";
@@ -37,6 +40,43 @@ test("a current document with no dark render names its fallback above its pane",
   assert.match(lightOnly, /data-preview-color-scheme="light"/u);
   assert.doesNotMatch(stage(["light", "dark"], true), /mbk-scheme-fallback/u);
   assert.doesNotMatch(stage(["light"], false), /mbk-scheme-fallback/u);
+});
+
+test("on the canvas, a document with no dark render names its fallback in its label under Dark", () => {
+  const label = (
+    colorSchemes: ColorScheme[],
+    screenSchemes: ColorScheme[],
+    colorScheme: ColorScheme,
+  ) => {
+    const index = indexFixture((raw) => {
+      for (const screen of raw.screens) screen.colorSchemes = screenSchemes;
+      for (const document of raw.documents)
+        document.colorSchemes = colorSchemes;
+    });
+    const catalogue = createCatalogue(shellCatalogueModel(index, new Map()));
+    const entry = catalogue.byPath.get("product");
+    assert.ok(entry?.kind === "document");
+    const html = storeMarkup(
+      <DisplaySelection value={{ ...defaultSelection, colorScheme }}>
+        <CanvasReadingStage catalogue={catalogue} entry={entry} />
+      </DisplaySelection>,
+      { index },
+    );
+    assert.doesNotMatch(html, /mbk-scheme-fallback/u);
+    return /<span class="mbk-canvas-frame-name mbk-reset">([^<]*)<\/span>/u.exec(
+      html,
+    )?.[1];
+  };
+  assert.equal(
+    label(["light"], ["light", "dark"], "dark"),
+    "README.md · Light only",
+  );
+  assert.equal(label(["light"], ["light", "dark"], "light"), "README.md");
+  assert.equal(
+    label(["light", "dark"], ["light", "dark"], "dark"),
+    "README.md",
+  );
+  assert.equal(label(["light"], ["light"], "dark"), "README.md");
 });
 
 /** A removed document under the fixture's product folder. */

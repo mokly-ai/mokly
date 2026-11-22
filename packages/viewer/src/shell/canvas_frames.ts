@@ -28,6 +28,11 @@ export interface CanvasFramePlan {
   column: number;
   /** The entry whose view the frame shows: the screen, or the set's row. */
   entry: ShellCatalogueComponent | ShellCatalogueScreen;
+  /**
+   * Whether the viewport choice hides the frame: it stays mounted, with its
+   * document, but takes no room on the canvas.
+   */
+  hidden?: boolean;
   /** Names the frame among its section's frames. */
   key: string;
   kind: "component" | "desktop" | "mobile";
@@ -72,19 +77,22 @@ function viewOf(
 /**
  * A screen's frames: Desktop beside Mobile, the Light row above the Dark
  * row, and only the Light row without a dark view. A viewport choice of
- * `desktop` or `mobile` keeps that column alone.
+ * `desktop` or `mobile` keeps that column alone on the canvas; the other
+ * column's frames stay mounted, so a later choice shows them at once.
  */
 export function screenFrames(
   screen: ShellCatalogueScreen,
   viewport: ViewerSelection["viewport"],
 ): CanvasFramePlan[] {
-  const columns = (["desktop", "mobile"] as const).filter(
+  const sizes = ["desktop", "mobile"] as const;
+  const shown = sizes.filter(
     (size) => viewport === "both" || viewport === size,
   );
   return schemes(screen.views).flatMap((scheme, row) =>
-    columns.map((size, column) => ({
-      column,
+    sizes.map((size) => ({
+      column: Math.max(0, shown.indexOf(size)),
       entry: screen,
+      ...(shown.includes(size) ? {} : { hidden: true }),
       key: `${size}-${scheme}`,
       kind: size,
       label: `${VIEWPORTS[size]} · ${SCHEMES[scheme]}`,
@@ -152,14 +160,32 @@ export function workspaceFrames(
 }
 
 /**
- * The workspace views that the frames show, so inspection draws on every
- * shown frame.
+ * The saved views that a live edit of a component's row renders on the
+ * canvas: the row's desktop views in both schemes, so the edit shows in both
+ * of its frames. Without a desktop view the edit keeps `views`, the views
+ * that the one-frame stage renders.
+ */
+export function canvasEditContexts(
+  saved: readonly GeneratedComponentView[],
+  rowPath: string,
+  views: readonly GeneratedComponentView[],
+): readonly GeneratedComponentView[] {
+  const row = saved.filter(
+    (view) => view.variantPath === rowPath && view.viewport === "desktop",
+  );
+  return row.length ? row : views;
+}
+
+/**
+ * The workspace views that the shown frames show, so inspection draws on
+ * every shown frame.
  */
 export function framesViews(
   views: readonly GeneratedComponentView[],
   frames: readonly CanvasFramePlan[],
 ): readonly GeneratedComponentView[] {
   return frames.flatMap((frame) => {
+    if (frame.hidden) return [];
     const view = views.find(
       (candidate) =>
         candidate.viewport === frame.viewport &&

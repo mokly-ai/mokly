@@ -6,6 +6,7 @@ import { VIEWER_DIRECTORY, type CatalogueReadModel } from "@mokly/model";
 import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
 import { generatedViews } from "../src/components/views.js";
 import {
+  canvasEditContexts,
   framesViews,
   readingFrameLabel,
   workspaceFrames,
@@ -101,14 +102,31 @@ test("a screen without a dark view has the Light row alone, and the viewport cho
     ],
   );
   const dark = workspace("product/browse/home", true);
+  const mobile = workspaceFrames(dark, "mobile", dark.views);
+  // The Desktop frames stay mounted, hidden, and Mobile takes the first
+  // column.
   assert.deepEqual(
-    shown(workspaceFrames(dark, "mobile", dark.views)).map(({ cell, key }) => [
-      key,
-      cell,
+    mobile.map((frame) => [
+      frame.key,
+      frame.hidden === true,
+      [frame.column, frame.row],
     ]),
     [
-      ["mobile-light", [0, 0]],
-      ["mobile-dark", [0, 1]],
+      ["desktop-light", true, [0, 0]],
+      ["mobile-light", false, [0, 0]],
+      ["desktop-dark", true, [0, 1]],
+      ["mobile-dark", false, [0, 1]],
+    ],
+  );
+  // Inspection draws on the shown frames only.
+  assert.deepEqual(
+    framesViews(dark.views, mobile).map((view) => [
+      view.viewport,
+      view.colorScheme,
+    ]),
+    [
+      ["mobile", "light"],
+      ["mobile", "dark"],
     ],
   );
 });
@@ -202,6 +220,29 @@ test("a saved variant's page opens the set with its Light frame selected, and a 
         `/${VIEWER_DIRECTORY}/components/renders/desktop-dark.html`,
       ],
     ],
+  );
+});
+
+test("a live edit of a row renders the row's desktop views in both schemes", () => {
+  const data = workspace("components/action/default", true);
+  const stage = data.views.slice(0, 1);
+  assert.deepEqual(
+    canvasEditContexts(data.views, "components/action/default", stage).map(
+      (view) => [view.variantPath, view.viewport, view.colorScheme],
+    ),
+    [
+      ["components/action/default", "desktop", "light"],
+      ["components/action/default", "desktop", "dark"],
+    ],
+  );
+  // A row without a desktop view keeps the views of the one-frame stage.
+  assert.equal(
+    canvasEditContexts(
+      data.views.filter((view) => view.viewport !== "desktop"),
+      "components/action/default",
+      stage,
+    ),
+    stage,
   );
 });
 

@@ -25,6 +25,11 @@ export interface CanvasCell {
   column: number;
   /** A reading frame has no size of its own: it takes the reading size. */
   height?: number | undefined;
+  /**
+   * Whether the frame is out of the section: its cell stays, so its document
+   * stays loaded, but it takes no room and Fit leaves it out.
+   */
+  hidden?: boolean | undefined;
   row: number;
   width?: number | undefined;
 }
@@ -104,21 +109,23 @@ function axis(
 }
 
 /**
- * A section's tracks: each column as wide as its widest frame and each row
- * as tall as its tallest frame, as the section's grid lays them out, with
- * the padding and the gaps that keep their size at every zoom.
+ * A section's tracks: each column as wide as its widest shown frame and each
+ * row as tall as its tallest, as the section's grid lays them out, with the
+ * padding and the gaps that keep their size at every zoom.
  */
 export function sectionExtent(
   kind: CanvasSectionKind,
   cells: readonly CanvasCell[],
   reading: CanvasSize,
 ): CanvasExtent {
-  const sized = cells.map((cell) => ({
-    column: cell.column,
-    height: kind === "document" ? reading.height : (cell.height ?? 0),
-    row: cell.row,
-    width: kind === "document" ? reading.width : (cell.width ?? 0),
-  }));
+  const sized = cells
+    .filter((cell) => !cell.hidden)
+    .map((cell) => ({
+      column: cell.column,
+      height: kind === "document" ? reading.height : (cell.height ?? 0),
+      row: cell.row,
+      width: kind === "document" ? reading.width : (cell.width ?? 0),
+    }));
   const gaps = SECTION_GAPS[kind];
   return {
     columns: axis(

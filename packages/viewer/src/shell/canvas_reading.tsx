@@ -2,14 +2,14 @@
  * A page's or a Markdown document's canvas in the wide layout: one reading
  * frame, named by its source file, whose document reflows to the reading
  * size that the canvas gives. It shows the document of the preview scheme,
- * as the one-frame stage does, with the Light-only band above the canvas.
+ * as the one-frame stage does. A document without a dark render keeps its
+ * light document under Dark, and its label then names that fallback.
  */
 
 import { useContext } from "react";
 
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
-import { LightOnlyBand } from "@mokly/ui/scheme-fallback";
 
 import { readingFrameLabel } from "./canvas_frames.js";
 import { CanvasEntryStage } from "./canvas_stage.js";
@@ -30,10 +30,12 @@ import { documentLightOnly } from "./scheme_fallback.js";
 function ReadingFrame({
   entry,
   fragment,
+  label,
   scheme,
 }: {
   entry: DocumentEntry;
   fragment: string | undefined;
+  label: string;
   scheme: "dark" | "light";
 }) {
   const stage = useContext(FrameStageContext);
@@ -42,7 +44,7 @@ function ReadingFrame({
     <CanvasFrame
       error={frame.status === "error"}
       kind="document"
-      label={readingFrameLabel(entry)}
+      label={label}
       retry={{ onClick: focusThen(frame.frameRef, frame.retry) }}
       scheme={scheme}
     >
@@ -79,28 +81,34 @@ export function CanvasReadingStage({
     entry.kind === "page"
       ? pageComparisonEvidence(catalogue, entry.path)?.status
       : undefined;
+  // Under Dark, a document of a catalogue with a dark axis that has no dark
+  // render shows its light document, and its label says so.
+  const lightOnly =
+    selection.colorScheme === "dark" &&
+    documentLightOnly(entry, catalogue.hasDarkFragments);
+  const file = readingFrameLabel(entry);
   return (
-    <>
-      {documentLightOnly(entry, catalogue.hasDarkFragments) ? (
-        <LightOnlyBand />
-      ) : null}
-      <CanvasEntryStage
-        fitKey={entry.path}
-        frames={[
-          {
-            column: 0,
-            key: "reading",
-            node: (
-              <ReadingFrame entry={entry} fragment={fragment} scheme={scheme} />
-            ),
-            row: 0,
-          },
-        ]}
-        kind="document"
-        path={head.path}
-        status={status}
-        title={head.title}
-      />
-    </>
+    <CanvasEntryStage
+      fitKey={entry.path}
+      frames={[
+        {
+          column: 0,
+          key: "reading",
+          node: (
+            <ReadingFrame
+              entry={entry}
+              fragment={fragment}
+              label={lightOnly ? `${file} · Light only` : file}
+              scheme={scheme}
+            />
+          ),
+          row: 0,
+        },
+      ]}
+      kind="document"
+      path={head.path}
+      status={status}
+      title={head.title}
+    />
   );
 }

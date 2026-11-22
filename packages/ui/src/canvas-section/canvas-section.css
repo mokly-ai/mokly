@@ -116,3 +116,8 @@ span.mbk-canvas-path-chip {
 .mbk-canvas-cell {
   min-width: 0;
 }
+
+/* A frame out of the section keeps its document loaded and takes no room. */
+.mbk-canvas-cell[hidden] {
+  display: none;
+}

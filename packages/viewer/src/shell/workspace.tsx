@@ -6,7 +6,11 @@ import { ChangeStatus } from "@mokly/ui/change-status";
 import type { InspectorHandle } from "@mokly/ui/inspector";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
-import { framesViews, workspaceFrames } from "./canvas_frames.js";
+import {
+  canvasEditContexts,
+  framesViews,
+  workspaceFrames,
+} from "./canvas_frames.js";
 import { useCanvasLayout } from "./canvas_layout.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
@@ -87,10 +91,22 @@ export function ComponentWorkspace({
     data.removed,
     data.controlOrder,
   );
+  // In the wide layout the canvas shows every chosen frame, and the
+  // highlights draw on each of them. A component's edit renders both frames
+  // of its row.
+  const wide = useCanvasLayout();
+  const editRow = editTarget?.kind === "component" ? editTarget.path : "";
+  const contexts = useMemo(
+    () =>
+      wide && editRow
+        ? canvasEditContexts(data.views, editRow, savedViews)
+        : savedViews,
+    [data.views, editRow, savedViews, wide],
+  );
   const propsRecovery = useRetryFocus();
   const controls = useComponentControls({
     comparing,
-    contexts: savedViews,
+    contexts,
     data,
     onCurrent: () => comparison.selectMode("current"),
     recovery: propsRecovery,
@@ -107,9 +123,6 @@ export function ComponentWorkspace({
       ),
     [colorScheme, controls.previewViews, data, variantPath, viewport],
   );
-  // In the wide layout the canvas shows every chosen frame, and the
-  // highlights draw on each of them.
-  const wide = useCanvasLayout();
   const canvasFrames = useMemo(
     () =>
       wide ? workspaceFrames(data, viewport, controls.previewViews) : undefined,

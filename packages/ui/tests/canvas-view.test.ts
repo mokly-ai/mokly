@@ -70,6 +70,23 @@ test("Fit keeps 8% on a stage too small for the section and shows its top left",
   assert.deepEqual(view, { fitted: true, x: 26, y: 36, zoom: 0.08 });
 });
 
+test("a hidden frame takes no room in the section, so Fit leaves it out", () => {
+  assert.deepEqual(
+    sectionExtent(
+      "screen",
+      [
+        { column: 0, row: 0, width: 1280, height: 800, hidden: true },
+        { column: 0, row: 0, width: 390, height: 844 },
+      ],
+      { width: 0, height: 0 },
+    ),
+    {
+      columns: [{ fixed: 22 }, { scaled: 390 }, { fixed: 22 }],
+      rows: [{ fixed: 64 }, { scaled: 844 }, { fixed: 22 }],
+    },
+  );
+});
+
 test("Zoom in and Zoom out step by 1.25 and 0.8 between 8% and 400%", () => {
   const view: CanvasView = { fitted: true, x: 0, y: 0, zoom: 0.5 };
   const larger = stepZoom(view, SCREEN, STAGE, "in");

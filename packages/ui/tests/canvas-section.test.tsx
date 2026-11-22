@@ -31,6 +31,15 @@ test("a screen's section names the entry in its head, and its path chip copies t
           height: 844,
           node: <i>mobile</i>,
         },
+        {
+          key: "desktop-dark",
+          column: 0,
+          hidden: true,
+          row: 1,
+          width: 1280,
+          height: 800,
+          node: <i>hidden</i>,
+        },
       ]}
       kind="screen"
       onCopyPath={(path) => copied.push(path)}
@@ -50,7 +59,8 @@ test("a screen's section names the entry in its head, and its path chip copies t
   assert.equal(chip.textContent, "example/screens/welcome");
   fireEvent.click(chip);
   assert.deepEqual(copied, ["example/screens/welcome"]);
-  // Each frame takes its cell; the padding and the gaps are the section's.
+  // Each frame takes its cell, and a hidden frame keeps its cell out of
+  // sight; the padding and the gaps are the section's.
   const cells = [
     ...container.querySelectorAll<HTMLElement>(".mbk-canvas-cell"),
   ];
@@ -59,10 +69,12 @@ test("a screen's section names the entry in its head, and its path chip copies t
       cell.textContent,
       cell.style.gridColumn,
       cell.style.gridRow,
+      cell.hidden,
     ]),
     [
-      ["desktop", "1", "1"],
-      ["mobile", "2", "2"],
+      ["desktop", "1", "1", false],
+      ["mobile", "2", "2", false],
+      ["hidden", "1", "2", true],
     ],
   );
   assert.equal(section?.style.padding, "64px 22px 22px");
