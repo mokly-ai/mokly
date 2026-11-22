@@ -11,11 +11,11 @@ import { test } from "./browser_test.js";
 import { renderWithShellStyles } from "./shell_styles_page.js";
 
 /** The Light palette's accent, the ink on it, and its soft hover fill. */
-const ACCENT = "rgb(79, 120, 100)";
+const ACCENT = "rgb(6, 122, 69)";
 const ON_ACCENT = "rgb(255, 255, 255)";
-const ACCENT_SOFT = "rgba(79, 120, 100, 0.1)";
+const ACCENT_SOFT = "rgb(227, 246, 236)";
 /** The resting chip's fill. */
-const CHIP_FILL = "rgb(244, 244, 241)";
+const CHIP_FILL = "rgb(241, 242, 238)";
 
 test.use({ colorScheme: "light" });
 

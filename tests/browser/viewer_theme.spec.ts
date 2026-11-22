@@ -96,11 +96,11 @@ test("embedded Auto follows the host system without moving its preview", async (
   const root = page.locator("#auto .mokly-viewer");
   const frame = page.locator('#auto iframe[data-workspace-frame="mobile"]');
   await expect(root).toHaveAttribute("data-mokly-theme", "auto");
-  await expect(root).toHaveCSS("background-color", "rgb(24, 24, 27)");
+  await expect(root).toHaveCSS("background-color", "rgb(17, 17, 19)");
   await expect(frame).toHaveCSS("color-scheme", "light");
 
   await page.emulateMedia({ colorScheme: "light" });
-  await expect(root).toHaveCSS("background-color", "rgb(244, 244, 241)");
+  await expect(root).toHaveCSS("background-color", "rgb(241, 242, 238)");
   await expect(frame).toHaveCSS("color-scheme", "light");
 });
 
@@ -115,7 +115,7 @@ test("an explicit theme paints the root and leaves the host page alone", async (
   await expect(page.locator(ROOT)).toHaveAttribute("data-mokly-theme", "dark");
   await expect(page.locator(ROOT)).toHaveCSS(
     "background-color",
-    "rgb(24, 24, 27)",
+    "rgb(17, 17, 19)",
   );
   expect(
     await page.evaluate(() => getComputedStyle(document.body).backgroundColor),
@@ -139,11 +139,11 @@ test("two roots hold independent appearances", async ({ page }) => {
   });
   await expect(page.locator(ROOT)).toHaveCSS(
     "background-color",
-    "rgb(24, 24, 27)",
+    "rgb(17, 17, 19)",
   );
   await expect(page.locator("#two .mokly-viewer")).toHaveCSS(
     "background-color",
-    "rgb(244, 244, 241)",
+    "rgb(241, 242, 238)",
   );
 });
 
@@ -157,7 +157,7 @@ test("a host slot keeps its own styling under a dark root", async ({
   await expect(slot).toBeVisible();
   expect(
     await slot.evaluate((element) => getComputedStyle(element).fontFamily),
-  ).not.toContain("Mokly Inter");
+  ).not.toContain("Mokly Geist");
 });
 
 test("an appearance change preserves everything the reader is doing", async ({

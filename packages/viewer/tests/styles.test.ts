@@ -18,7 +18,7 @@ const [STANDALONE_CSS, EMBEDDED_CSS, FONT_CSS] = await Promise.all([
   fs.readFile(new URL("../dist/shell.css", import.meta.url), "utf8"),
   fs.readFile(new URL("../dist/styles.css", import.meta.url), "utf8"),
   fs.readFile(
-    new URL("../src/shell/assets/fonts/inter.css", import.meta.url),
+    new URL("../src/shell/assets/fonts/geist.css", import.meta.url),
     "utf8",
   ),
 ]);
@@ -29,33 +29,44 @@ const PACKAGE_CSS = await fs.readFile(
   "utf8",
 );
 
-/** The built `@font-face` rule at the start of a stylesheet. */
-function fontRule(styles: string): string {
-  return /^@font-face \{[^}]*\}/u.exec(styles)?.[0] ?? "";
+/** The built `@font-face` rules at the start of a stylesheet, each with its newline. */
+function fontRules(styles: string): string {
+  return /^(?:@font-face \{[^}]*\}\n)+/u.exec(styles)?.[0] ?? "";
 }
 
 const bareDocumentSelector =
   /(?<![-_a-zA-Z0-9])(?:html|body)(?![-_a-zA-Z0-9])|:root(?![-_a-zA-Z0-9])/;
 
-test("the standalone stylesheet is the shell font at its path, then the package rules", () => {
+test("the standalone stylesheet is the shell fonts at their paths, then the package rules", () => {
   assert.equal(STANDALONE_CSS, standaloneStyles(FONT_CSS, PACKAGE_CSS));
+  const fonts = fontRules(STANDALONE_CSS);
   assert.match(
-    fontRule(STANDALONE_CSS),
-    /font-family: "Inter";[^}]*src: url\("\/mokly-viewer\/fonts\/InterVariable\.woff2"\)/u,
+    fonts,
+    /font-family: "Geist";[^}]*src: url\("\/mokly-viewer\/fonts\/Geist-Variable\.woff2"\)/u,
+  );
+  assert.match(
+    fonts,
+    /font-family: "Geist Mono";[^}]*src: url\("\/mokly-viewer\/fonts\/GeistMono-Variable\.woff2"\)/u,
   );
   const sample = ".mbk-x { color: red }\n";
-  assert.equal(
-    standaloneStyles(FONT_CSS, sample),
-    `${fontRule(STANDALONE_CSS)}\n${sample}`,
-  );
+  assert.equal(standaloneStyles(FONT_CSS, sample), `${fonts}${sample}`);
 });
 
-test("the embedded stylesheet names its own font and has no scope", () => {
+test("the embedded stylesheet names its own fonts and has no scope", () => {
+  const fonts = fontRules(EMBEDDED_CSS);
   assert.match(
-    fontRule(EMBEDDED_CSS),
-    /font-family: "Mokly Inter";[^}]*src: url\("\.\/assets\/fonts\/InterVariable\.woff2"\)/u,
+    fonts,
+    /font-family: "Mokly Geist";[^}]*src: url\("\.\/assets\/fonts\/Geist-Variable\.woff2"\)/u,
   );
-  assert.doesNotMatch(EMBEDDED_CSS, /"Inter"/u);
+  assert.match(
+    fonts,
+    /font-family: "Mokly Geist Mono";[^}]*src: url\("\.\/assets\/fonts\/GeistMono-Variable\.woff2"\)/u,
+  );
+  // The package rules name the faces by the embedded families, so a host's
+  // own Geist keeps its file.
+  assert.match(EMBEDDED_CSS, /--sans: "Mokly Geist", /u);
+  assert.match(EMBEDDED_CSS, /--mono: "Mokly Geist Mono", /u);
+  assert.doesNotMatch(EMBEDDED_CSS, /"Geist(?: Mono)?"/u);
   for (const styles of [STANDALONE_CSS, EMBEDDED_CSS]) {
     assert.doesNotMatch(styles, /@scope\b|:scope\b/u);
     assert.doesNotMatch(styles, /-:scope/);
@@ -67,7 +78,7 @@ test("the embedded stylesheet names its own font and has no scope", () => {
 });
 
 const stubAuto =
-  /@media \(prefers-color-scheme: dark\)\s*\{[^{]*\.mbk-document:not\(\[data-mokly-theme\]\)[^{]*\{[^}]*--chrome-bg: #18181b;/;
+  /@media \(prefers-color-scheme: dark\)\s*\{[^{]*\.mbk-document:not\(\[data-mokly-theme\]\)[^{]*\{[^}]*--chrome-bg: #111113;/;
 
 test("the stub's document takes the system appearance until the bundle marks it", () => {
   assert.match(STANDALONE_CSS, stubAuto);
@@ -121,7 +132,11 @@ test("the built embedded stylesheet holds every package rule in its order", () =
     embedded.selectors.map(printSelector),
     source.selectors.map(printSelector),
   );
-  assert.deepEqual(embedded.atRules, ["font-face", ...source.atRules]);
+  assert.deepEqual(embedded.atRules, [
+    "font-face",
+    "font-face",
+    ...source.atRules,
+  ]);
 });
 
 test("embedded styles keep each package rule whole and in its order", () => {
@@ -137,7 +152,7 @@ test("embedded styles keep each package rule whole and in its order", () => {
     "@container other (max-width: 560px) { .mbk-v { gap: 8px } }",
   ];
   const styles = embeddedStyles(FONT_CSS, sample.join("\n"));
-  assert.ok(styles.startsWith(`${fontRule(EMBEDDED_CSS)}\n`));
+  assert.ok(styles.startsWith(`${fontRules(EMBEDDED_CSS)}.mbk-x {`));
   const rule = styles.indexOf(".mbk-x {");
   const whole = /^\.mbk-x \{[^}]*\}/u.exec(styles.slice(rule))?.[0] ?? "";
   assert.equal(whole.replace(/\s+/g, " "), ".mbk-x { color: red; }");

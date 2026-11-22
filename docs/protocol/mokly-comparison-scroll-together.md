@@ -38,10 +38,10 @@ still tracks the last-scrolled version, but it writes no counterpart offsets.
 
 The design catalogue draws a 30×18px pill track with a 1px border and a 12px
 knob inset 2px, followed by an 8px gap and a 12px/600 label in
-`--chrome-ink-2`. On uses `--mbk-sage-deep` for the track and border and
-`--mbk-accent-contrast` for the knob at the far end; off uses `--chrome-bg`
+`--chrome-ink-2`. On uses `--mbk-accent-deep` for the track and border and
+`--_mokly-private-on-accent-deep` for the knob at the far end; off uses `--chrome-bg`
 for the track and `--chrome-control-edge` for its border and knob at the start.
-A keyboard-focused control draws a 2px `--mbk-sage-deep` ring 2px outside the
+A keyboard-focused control draws a 2px `--mbk-accent-deep` ring 2px outside the
 track, and the transparent checkbox covers the whole control. The runtime
 switch draws these [palette](./mokly-viewer-palette.md) values in each
 appearance. It never uses the consumer-tunable `--mokly-accent-contrast`. The

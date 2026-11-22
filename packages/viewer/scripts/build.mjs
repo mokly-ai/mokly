@@ -12,14 +12,14 @@ const target = path.join(root, "dist");
 const browser = path.join(target, "browser");
 const assets = path.join(root, "src/shell/assets");
 // Every rule of the installed `@mokly/ui`, which both stylesheets carry, so
-// that a delivery or a host loads one stylesheet, and the rule of the shell
-// font, which the viewer delivers beside the font.
+// that a delivery or a host loads one stylesheet, and the rules of the shell
+// fonts, which the viewer delivers beside the faces.
 const packageCss = await fs.readFile(
   fileURLToPath(import.meta.resolve("@mokly/ui/styles.css")),
   "utf8",
 );
-const font = await fs.readFile(path.join(assets, "fonts/inter.css"), "utf8");
-// The font rule goes into the stylesheets, not beside the delivered font.
+const font = await fs.readFile(path.join(assets, "fonts/geist.css"), "utf8");
+// The font rules go into the stylesheets, not beside the delivered faces.
 await fs.cp(assets, path.join(target, "assets"), {
   filter: (source) => !source.endsWith(".css"),
   recursive: true,

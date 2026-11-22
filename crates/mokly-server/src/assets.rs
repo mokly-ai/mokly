@@ -23,7 +23,7 @@ pub struct File {
 /// Package asset loader boundary, separate from authored resources.
 #[cfg_attr(test, unimock::unimock(api = ViewerAssetsMock))]
 pub trait ViewerAssets: Send + Sync {
-    /// Load exactly the browser inventory, shell stylesheet, and packaged font.
+    /// Load exactly the browser inventory, shell stylesheet, and packaged fonts.
     fn load(&self, dist: &Path) -> Result<BTreeMap<String, File>>;
 }
 
@@ -93,8 +93,13 @@ impl ViewerAssets for PackageAssets {
             ("shell.css", "shell.css", "text/css; charset=utf-8"),
             ("assets/brand.svg", "client/brand.svg", "image/svg+xml"),
             (
-                "assets/fonts/InterVariable.woff2",
-                "fonts/InterVariable.woff2",
+                "assets/fonts/Geist-Variable.woff2",
+                "fonts/Geist-Variable.woff2",
+                "font/woff2",
+            ),
+            (
+                "assets/fonts/GeistMono-Variable.woff2",
+                "fonts/GeistMono-Variable.woff2",
                 "font/woff2",
             ),
         ] {

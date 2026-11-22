@@ -5,7 +5,7 @@ import { expect, type Page, type TestInfo } from "@playwright/test";
 import type { CatalogueReadModel } from "@mokly/viewer";
 
 import { viewRoute } from "../../packages/viewer/dist/data.js";
-import { paletteColor } from "../helpers/design_palette.js";
+import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
@@ -75,7 +75,7 @@ async function assertFragmentEligibility(
   } else {
     await expect(toolbar, fragment).toHaveCSS(
       "background-color",
-      await paletteColor(appearance, "--chrome-surface"),
+      canvasColor(appearance, "surface"),
     );
     await expect(toolbar, fragment).toHaveCSS("display", "flex");
     const bounds = await toolbar.boundingBox();

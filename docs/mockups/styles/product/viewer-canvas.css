@@ -3,8 +3,8 @@
    the drawings load this sheet. `chrome.tsx` imports it, so Mokly bundles it
    into each viewer entry's own stylesheet, after the product sheets that the
    configuration links, and the application, which links the product sheets,
-   never loads it. The configuration's base.css declares the Geist faces, and
-   this sheet imports Inter, the face that the drawn @mokly/ui parts name.
+   never loads it. The configuration's base.css declares the Geist faces,
+   which the drawn @mokly/ui parts also name.
    Every rule is scoped to the renderer's wrapper, the element that carries
    `data-color-scheme`, whose attribute weighs as much as a class, so a rule
    here outweighs a product sheet's rule for the same element. Every rule
@@ -14,7 +14,6 @@
    `fo-full-bar-only` and `fo-compact-bar-only` classes. A rule here that
    sets the display of an element that can carry one of them goes through
    `:where()`, so the switch still outweighs it. */
-@import "../fonts/inter.css";
 
 [data-color-scheme] .fo-viewer-screen {
   /* The inline end of the full bar and of the compact bar, which the open

@@ -232,8 +232,14 @@ package, the frame package, the viewer, and then the shim and the sidecar, in
 that order. The viewer build bundles the standalone shell into
 `dist/browser/shell.js` and copies the frame probe that `@mokly/frame` builds
 into `dist/browser/frame-probe.js`. It writes `shell.css` and `styles.css`
-from the `@font-face` rule of the shell font and the UI package's `styles.css`,
-whose rules keep the cascade order that `packages/ui/src/styles.css` lists.
+from the `@font-face` rules of the shell fonts and the UI package's
+`styles.css`, whose rules keep the cascade order that
+`packages/ui/src/styles.css` lists. The shell fonts are Geist and Geist Mono,
+variable faces under the SIL Open Font License, which the build copies with
+their licence into `dist/assets/fonts/`. Serve and `mokly build` deliver them
+under `/mokly-viewer/fonts/`. The embedded `styles.css` reads them from its
+packaged assets as `Mokly Geist` and `Mokly Geist Mono`, so a host's own Geist
+keeps its file.
 The embedded `styles.css` needs no `@scope` rule, because no package rule
 reaches the host page or host slot content. The build records every browser
 output in the browser module inventory, `dist/browser.manifest.json`;
@@ -324,10 +330,10 @@ and Review regressions against `mokly serve` of the example catalogue.
   section's scroll controller and attach the viewport, its spacer, and each
   surface to it through refs
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — writes the standalone
-  `shell.css` and the embedded `styles.css` from the `@font-face` rule of
-  [`src/shell/assets/fonts/inter.css`](./src/shell/assets/fonts/inter.css) and
-  the UI package's `styles.css`: the font's address in each delivery and the
-  embedded font family
+  `shell.css` and the embedded `styles.css` from the `@font-face` rules of
+  [`src/shell/assets/fonts/geist.css`](./src/shell/assets/fonts/geist.css) and
+  the UI package's `styles.css`: each face's address in each delivery and the
+  embedded font families
 - [`src/catalogue`](./src/catalogue) — the readers of the catalogue index, the
   entry detail, and the live descriptor, which gate the format version and
   return a typed copy; the reader of the optional deployment file; the detail

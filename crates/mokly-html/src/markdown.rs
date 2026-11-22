@@ -186,4 +186,10 @@ fn table_alignment(nodes: &mut [Node]) {
     }
 }
 
-pub(crate) const STYLES: &str = include_str!("document.css");
+/// The one stylesheet that every Markdown document inlines: the colours and
+/// fonts that `npm run palette:generate` writes from the `@mokly/ui` palette,
+/// then the hand-kept typography that reads them.
+pub(crate) const STYLES: &str = concat!(
+    include_str!("document_palette.css"),
+    include_str!("document.css")
+);

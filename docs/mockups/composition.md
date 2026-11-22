@@ -49,11 +49,10 @@ surface, `viewer-canvas-panels.css` the panels that the slots open,
 `viewer-canvas-menu.css` the open account and More menus,
 `viewer-canvas-check.css` the Mokly check beside the stage, and
 `viewer-canvas-settings.css` the settings dialog over the viewer.
-`styles/fonts/` holds the self-hosted Inter variable face, copied from the
-pinned `@mokly/mokly` package, and the Geist and Geist Mono variable faces of
-the Canvas palette, copied from the `geist` npm package, with the SIL Open
-Font License of each family. `styles/site/fonts/` holds the Instrument Serif
-face of the site's drawn demo app with its license. `styles/email/` holds the
+`styles/fonts/` holds the self-hosted Geist and Geist Mono variable faces of
+the Canvas palette, copied from the `geist` npm package, with their SIL Open
+Font License. `styles/site/fonts/` holds the Instrument Serif face of the
+site's drawn demo app with its license. `styles/email/` holds the
 inbox frame and byte-identical copies of the published logo lockups in
 `apps/site/public/brand/`. The message table uses separate borders with zero
 spacing so the card border follows its corners.

@@ -18,14 +18,14 @@ const HOST = {
 };
 /** The accent defaults of the Light and the Dark palette. */
 const LIGHT = {
-  accent: "rgb(79, 120, 100)",
+  accent: "rgb(6, 122, 69)",
   contrast: "rgb(255, 255, 255)",
-  soft: "rgba(79, 120, 100, 0.1)",
+  soft: "rgb(227, 246, 236)",
 };
 const DARK = {
-  accent: "rgb(134, 183, 155)",
-  contrast: "rgb(14, 26, 20)",
-  soft: "rgba(134, 183, 155, 0.16)",
+  accent: "rgb(91, 227, 160)",
+  contrast: "rgb(27, 27, 30)",
+  soft: "rgb(15, 42, 29)",
 };
 
 // A dark system resolves an Auto root to Dark.

@@ -150,6 +150,13 @@ consumer renderer wrappers. Only instance and slot markers reach served bytes.
 `links::rewrite` returns logical references for cross-view anchor validation
 by the graph. The crate performs no direct filesystem access or writes.
 
+Each rendered Markdown document inlines one package-owned stylesheet in two
+parts. The first, `src/document_palette.css`, holds the colours and fonts of
+the Light and Dark documents as custom properties; it is generated from the
+Canvas palette of `@mokly/ui`, which the shell draws in. The second,
+`src/document.css`, holds the hand-kept typography, which reads them. A
+document names the Geist and Geist Mono stacks and loads no font file.
+
 ## Quick Start
 
 ```rust
@@ -178,6 +185,12 @@ cargo test -p mokly-html
 cargo test -p mokly-graph --test render_tests
 cargo clippy -p mokly-html --all-targets -- -D warnings
 ```
+
+Do not edit `src/document_palette.css`. Change the palette in `packages/ui`,
+run `npm run palette:generate` from the repository root, and commit the
+result; `npm run palette:check` fails while the file differs from the
+palette. The Markdown document snapshots of both test commands above show
+each change of either stylesheet part.
 
 Enable `mock` for the unimock fragment and composer boundaries. Unit tests
 mock impure boundaries. Graph integration fixtures exercise complete rendered
@@ -262,6 +275,10 @@ aligned byte must equal its source byte or be an LF from a CR.
   adapts link-control roots.
 - [`src/markdown.rs`](./src/markdown.rs) defines `LinkResolver` and `render`,
   the Markdown renderer with injected link resolution.
+- [`src/document_palette.css`](./src/document_palette.css) and
+  [`src/document.css`](./src/document.css) are the generated colours and fonts
+  and the hand-kept typography of the stylesheet that `render` inlines in
+  every document.
 - [`src/safety.rs`](./src/safety.rs) and [`src/url_safety.rs`](./src/url_safety.rs)
   hold the final Markdown allowlist and the URL policy of composed documents.
 - [`src/error.rs`](./src/error.rs) defines `HtmlError`, the typed composition
