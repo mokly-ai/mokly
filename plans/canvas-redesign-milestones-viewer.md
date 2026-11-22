@@ -54,6 +54,16 @@ Depends on: 10, 11
       previous change, and a slot for the cloud's check.
 - [ ] Add the Swipe mode with one divider on every frame. Keep Overlay.
 - [ ] Delete the old inspector layout and the one-frame stage.
+- [ ] Fix the race that opens Props when a third nested disclosure of the
+      Components tab opens (4 in 72 rounds under load on a Canvas screen),
+      likely in `workspace_instance_selection.ts`. Then move the runtime test
+      of `tests/browser/design_library_runtime_cases.ts` to a Canvas screen
+      and delete `design/browse/views/screen/tag-picker`, the one older
+      design screen that Milestone 18 kept for it.
+- [ ] List an ignored-only entry's ignored ids in Current too, as
+      `mokly-css-evidence-presentation.md` requires. Today
+      `workspace_evidence.tsx` lists them only while a comparison is loaded.
+      Add a unit test.
 
 ## Milestone 13: Cloud viewer chrome
 
