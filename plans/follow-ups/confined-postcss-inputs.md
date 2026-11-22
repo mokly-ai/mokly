@@ -66,6 +66,8 @@
 - **Previous examples:** The staged observers added descriptor ranges, file
   identity, and resolution manifests one read class at a time before the
   merge.
+- **Related:** [postcss-probes-external-reads-environment.md](./postcss-probes-external-reads-environment.md)
+  records missing-file probes, reads outside mapped roots, and inherited environment values.
 - **Recommendation:** B. It is the work that the user deferred, and it puts
   the protocol change before the user.
 - **Action:** fix after merge, apply B, because the user's decision of

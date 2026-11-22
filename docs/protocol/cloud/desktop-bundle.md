@@ -3,7 +3,7 @@
 This is the bundle and window sub-contract of
 [Desktop application](./desktop-app.md): the privileged scheme and the
 desktop origin from which the shell serves the web export, the renderer
-settings and the window lifecycle.
+settings, the window lifecycle and the Mac window.
 
 ## Origin And Export
 
@@ -68,3 +68,37 @@ running; configuration and initialization failures still stop startup.
 Main-process warnings emit only a fixed operation label and a safe error code.
 They omit raw messages, URLs, stacks, causes and arbitrary error fields so a
 callback credential cannot enter the log.
+
+## Mac Window
+
+On macOS the window has no native title bar. The native close, minimize and
+zoom buttons stay, at the start of the app's own 48px top bar and centred in
+its height. Every top bar of the app starts its content after the buttons:
+the viewer's top bar, as [Viewer chrome](./viewer-chrome.md#slot-inventory)
+places its slots, the account header and the compact settings bar. In full
+screen macOS hides the buttons, and the bars start at their usual padding.
+In a right-to-left locale the buttons sit at the end of the bar, and every
+top bar ends its content before them. The browser app keeps its usual layout.
+Linux keeps the native frame and its title bar.
+
+Every screen has a top area that moves the window when the reader drags it:
+the cloud-owned parts of its top bar, or a 48px band at the top of a screen
+without one. Every control in that area stays clickable, and so does every
+dialog, sheet or menu over it. The area stays active while a dialog or a menu
+is open, so the window still moves. While a surface that the viewer package
+draws, such as its open search or an expanded preview frame, or a focused skip
+link covers part of the area, that part does not move the window, so the
+surface takes presses. The part moves the window again when the surface goes.
+The page title still names the window in the Window menu and in Mission
+Control.
+
+Decision: the buttons sit in the app's own top bar rather than in a native
+title bar or in a separate strip that the app draws, because a second bar
+above the app's top bar makes the window look unfinished. Only the cloud's
+parts of the viewer's top bar move the window. The part that the viewer
+package draws, with search, does not. A cloud drag band over the package's
+bar was rejected, because the package's own controls would then need to opt
+out of it, and the cloud does not style package parts. A covered part stops
+moving the window rather than the package documenting its own drag regions or
+the cover's controls staying unreachable, because the cloud can detect any
+cover without knowing the package's markup.

@@ -2,12 +2,19 @@
 
 use std::sync::{Arc, Mutex};
 
+use mokly_server::background_capacity::FixedCapacity;
+use mokly_server::background_dispatch::Dispatch;
+use mokly_server::background_stage::Stages;
 use mokly_sidecar::methods::{Call, ProcessCss};
 use mokly_sidecar::pool::{PoolMock, SidecarPool};
 use mokly_sidecar::pool_admission::{CapacityMock, PoolCapacity};
 use mokly_sidecar::pool_claim::CallClaim;
 use mokly_sidecar::wire::MethodResult;
 use unimock::{MockFn, Unimock, matching};
+
+pub(super) fn dispatch(count: usize) -> Arc<Dispatch> {
+    Dispatch::new(Stages::new(Arc::new(FixedCapacity(count))))
+}
 
 /// Inject the exact capacity of an existing scheduling scenario.
 pub(crate) fn capacity(count: usize) -> Arc<dyn PoolCapacity> {
@@ -17,6 +24,9 @@ pub(crate) fn capacity(count: usize) -> Arc<dyn PoolCapacity> {
             CapacityMock::try_claim
                 .each_call(matching!())
                 .answers(&|_| Ok(Some(CallClaim::fixed()))),
+            CapacityMock::try_eager_claim
+                .each_call(matching!(_))
+                .answers(&|_, _| Ok(Some(CallClaim::fixed()))),
         ))
         .no_verify_in_drop(),
     )
@@ -51,7 +61,7 @@ pub(super) fn pool() -> (Unimock, Arc<dyn SidecarPool>, Arc<Mutex<Observed>>) {
     (pool, shared, events)
 }
 
-pub(super) fn css(root: &str, sequence: usize) -> Call {
+pub(crate) fn css(root: &str, sequence: usize) -> Call {
     Call::ProcessCss(ProcessCss {
         source_root: root.into(),
         context: format!("{root}:{sequence}"),

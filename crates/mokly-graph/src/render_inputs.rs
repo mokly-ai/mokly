@@ -1,17 +1,17 @@
 //! Per-entry-module render input keys: every input that can change a module's renders.
 
-use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
-use std::iter;
+use std::collections::BTreeMap;
+use std::mem::size_of;
+use std::panic::{AssertUnwindSafe, catch_unwind, resume_unwind};
+use std::sync::OnceLock;
 
-use mokly_catalogue::render_sources::{
-    JavaScriptGeneration, RenderMethod, RenderSource, ResolvedDefinition,
-};
-use mokly_model::material::digest;
-use serde_json::to_vec;
+use mokly_catalogue::config_types::ResolvedConfig;
+use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_catalogue::render_sources::{JavaScriptGeneration, RenderSource, ResolvedDefinition};
 
 use crate::key::NodeKey;
-use crate::render_closure::{Records, chain, closure, handle_module};
-use crate::render_exporters;
+use crate::render_calculation::{self, Built, Mode};
+use crate::render_reuse::Facts;
 use crate::workers::RenderWorkers;
 
 /// Storybook preview candidates in the sidecar's selection order.
@@ -46,6 +46,7 @@ pub struct RenderInputs<'a> {
 pub struct RenderKeys {
     modules: BTreeMap<String, NodeKey>,
     fallback: NodeKey,
+    reuse: Option<Box<OnceLock<Option<Facts>>>>,
 }
 
 impl RenderKeys {
@@ -54,6 +55,7 @@ impl RenderKeys {
         Self {
             modules: BTreeMap::new(),
             fallback,
+            reuse: None,
         }
     }
 
@@ -65,7 +67,7 @@ impl RenderKeys {
     /// does not name. The stories then use `fallback`, which covers the preview, and the
     /// shared part leaves the digest out.
     pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Self {
-        Self::build_keys(inputs, fallback, None)
+        Self::build_keys(inputs, fallback, None, Mode::Full)
     }
 
     /// Build the same keys on the supplied render workers with caller tracing context.
@@ -75,23 +77,64 @@ impl RenderKeys {
         fallback: NodeKey,
         workers: &dyn RenderWorkers,
     ) -> Self {
-        Self::build_keys(inputs, fallback, Some(workers))
+        Self::build_keys(inputs, fallback, Some(workers), Mode::Full)
     }
 
-    #[tracing::instrument(name = "render.inputs", skip_all)]
+    /// Calculate every key and defer Serve-head facts until the generation requests them.
+    pub fn build_unseeded_with_workers(
+        inputs: &RenderInputs<'_>,
+        fallback: NodeKey,
+        workers: &dyn RenderWorkers,
+    ) -> Self {
+        Self::build_keys(inputs, fallback, Some(workers), Mode::Deferred)
+    }
+
+    /// Seed Serve-head facts with a full build, or reuse equal preceding entry keys.
+    /// The result owns only its current facts; it retains no preceding generation.
+    pub fn build_reusing_with_workers(
+        inputs: &RenderInputs<'_>,
+        fallback: NodeKey,
+        workers: &dyn RenderWorkers,
+        previous: Option<&Self>,
+    ) -> Self {
+        Self::build_keys(inputs, fallback, Some(workers), Mode::Reuse(previous))
+    }
+
+    #[tracing::instrument(name = "render.inputs", skip_all, fields(
+        reused = tracing::field::Empty, recomputed = tracing::field::Empty,
+        retained_bytes = tracing::field::Empty
+    ))]
     fn build_keys(
         inputs: &RenderInputs<'_>,
         fallback: NodeKey,
         workers: Option<&dyn RenderWorkers>,
+        mode: Mode<'_>,
     ) -> Self {
-        let modules = match build_modules(inputs, workers) {
-            Ok(modules) => modules,
+        let keys = match render_calculation::build(inputs, workers, mode) {
+            Ok(Built { modules, reuse }) => Self {
+                modules,
+                fallback,
+                reuse,
+            },
             Err(error) => {
                 tracing::error!(%error, "render inputs could not serialize; using whole-bundle keys");
-                BTreeMap::new()
+                Self::whole(fallback)
             }
         };
-        Self { modules, fallback }
+        tracing::Span::current().record("retained_bytes", keys.reuse_facts_bytes());
+        keys
+    }
+
+    /// Bytes of the lazy cell and its facts, excluding allocator headers and existing keys.
+    /// Ordinary full builders retain no cell and return zero.
+    pub fn reuse_facts_bytes(&self) -> usize {
+        self.reuse.as_deref().map_or(0, |cell| {
+            size_of::<OnceLock<Option<Facts>>>()
+                + cell
+                    .get()
+                    .and_then(Option::as_ref)
+                    .map_or(0, Facts::heap_bytes)
+        })
     }
 
     /// The whole-bundle key, which every module without its own key uses.
@@ -122,153 +165,71 @@ impl RenderKeys {
     }
 }
 
-/// Prepare shared closures once and merge only each exporter's additional records.
-fn build_modules(
-    inputs: &RenderInputs<'_>,
-    workers: Option<&dyn RenderWorkers>,
-) -> serde_json::Result<BTreeMap<String, NodeKey>> {
-    let generation = inputs.generation;
-    let graph = &generation.modules;
-    let stories: BTreeSet<_> = inputs
+/// Borrow the same catalogue inputs for full calculation, edit reuse, and deferred seeding.
+pub fn with_catalogue_inputs<T>(
+    config: &ResolvedConfig,
+    catalogue: &PreparedCatalogue,
+    generation: &JavaScriptGeneration,
+    build: impl FnOnce(&RenderInputs<'_>) -> T,
+) -> T {
+    let renderer = config.renderer();
+    let declarations = catalogue
+        .model
         .entries
-        .values()
-        .filter(|source| source.method == RenderMethod::Story)
-        .filter_map(|source| handle_module(graph, &source.handle))
-        .collect();
-    let mut records = records(generation)?;
-    let chained: BTreeSet<&String> = records.chains.values().flatten().collect();
-    let shared: Vec<_> = generation
-        .resolution_digests
         .iter()
-        .filter(|(name, _)| {
-            !chained.contains(name)
-                && !runtime_manifest(generation, name)
-                && !PREVIEWS.contains(&name.as_str())
+        .filter_map(|entry| {
+            let source = catalogue.javascript.entries.get(&entry.metadata.path)?;
+            Some((source.handle.clone(), entry.metadata.source.path.clone()))
         })
         .collect();
-    let unattributed: Vec<_> = inputs
-        .bindings
-        .iter()
-        .filter(|(handle, _)| generation.unattributed.contains(*handle))
-        .map(|(handle, binding)| (handle, &binding.path, &binding.title))
-        .collect();
-    let shared = digest(&to_vec(&(&generation.environment, shared, unattributed))?);
-    let unnamed_renderer = inputs
-        .renderer
-        .is_some_and(|renderer| !graph.contains_key(renderer));
-    let unnamed_preview = PREVIEWS
-        .iter()
-        .any(|candidate| generation.resolution_digests.contains_key(*candidate));
-    let mut exporters = BTreeSet::new();
-    for (handle, binding) in inputs.bindings {
-        let Some(exporter) = handle_module(graph, handle) else {
-            continue;
-        };
-        exporters.insert(exporter);
-        let declarer = inputs
-            .declarations
-            .get(handle)
-            .map(String::as_str)
-            .filter(|module| *module != exporter && graph.contains_key(*module));
-        let encoded = to_vec(&(handle, &binding.path, &binding.title))?;
-        for module in iter::once(exporter).chain(declarer) {
-            records
-                .bindings
-                .entry(module)
-                .or_default()
-                .push(encoded.clone());
-        }
+    build(&RenderInputs {
+        generation,
+        bindings: &catalogue.javascript.bindings,
+        renderer: renderer.as_deref(),
+        entries: &catalogue.javascript.entries,
+        declarations: &declarations,
+    })
+}
+
+impl RenderKeys {
+    /// Reading an in-progress initializer returns no evidence and never waits.
+    pub(crate) fn completed_facts(&self) -> Option<&Facts> {
+        self.reuse.as_deref()?.get()?.as_ref()
     }
-    let preview = records.parts(
-        PREVIEWS
-            .iter()
-            .find(|candidate| graph.contains_key(**candidate))
-            .map_or_else(BTreeSet::new, |candidate| {
-                closure(graph, [(*candidate).to_owned()])
-            }),
-    );
-    let renderer = records.parts(inputs.renderer.map_or_else(BTreeSet::new, |renderer| {
-        closure(graph, [renderer.to_owned()])
-    }));
-    let exporters = exporters
-        .into_iter()
-        .filter_map(|module| {
-            let story = stories.contains(module);
-            if (story && unnamed_preview) || (!story && unnamed_renderer) {
-                return None;
+
+    /// A fallback is never reusable as an exporter's own key.
+    pub(crate) fn keyed(&self, module: &str) -> Option<&NodeKey> {
+        self.modules.get(module)
+    }
+
+    /// Initialize only this generation's facts; derive temporary inputs inside the closure.
+    pub(crate) fn seed_with(&self, seed: impl FnOnce() -> serde_json::Result<Facts>) {
+        if let Some(cell) = self.reuse.as_deref() {
+            let mut panic = None;
+            cell.get_or_init(|| {
+                let span = tracing::info_span!("render.inputs.seed", status = "ok", recomputed = 0, retained_bytes = tracing::field::Empty);
+                let _scope = span.enter();
+                let facts = match catch_unwind(AssertUnwindSafe(seed)) {
+                    Ok(Ok(facts)) => Some(facts),
+                    Ok(Err(error)) => {
+                        span.record("status", "error");
+                        tracing::error!(%error, "render reuse facts could not serialize; keeping full calculations");
+                        None
+                    }
+                    Err(payload) => {
+                        span.record("status", "error");
+                        panic = Some(payload);
+                        None
+                    }
+                };
+                span.record("retained_bytes", size_of::<OnceLock<Option<Facts>>>() + facts.as_ref().map_or(0, Facts::heap_bytes));
+                facts
+            });
+            if let Some(payload) = panic {
+                resume_unwind(payload);
             }
-            Some((module, if story { &preview } else { &renderer }))
-        })
-        .collect();
-    Ok(render_exporters::build(
-        graph, &records, &shared, exporters, workers,
-    ))
-}
-
-/// Whether a name is the manifest of a runtime package other than React.
-///
-/// The environment identifies runtime packages by their resolved paths. Only React's
-/// manifest also enters every key, because both sides record it. A side can record the
-/// other manifests while it resolves them, so they count only on a module chain.
-fn runtime_manifest(generation: &JavaScriptGeneration, name: &str) -> bool {
-    name.strip_suffix("/package.json").is_some_and(|directory| {
-        generation
-            .runtime_packages
-            .iter()
-            .filter(|package| package.as_str() != "react")
-            .any(|package| {
-                directory
-                    .strip_suffix(package.as_str())
-                    .is_some_and(dependency_root)
-            })
-    })
-}
-
-/// Whether a logical prefix ends with a dependency root: a `node_modules` directory or
-/// a further selected root, `node_modules/.mokly-roots/{index}`.
-fn dependency_root(prefix: &str) -> bool {
-    prefix.ends_with("node_modules/")
-        || prefix
-            .strip_suffix('/')
-            .and_then(|prefix| prefix.rsplit_once("node_modules/.mokly-roots/"))
-            .is_some_and(|(_, index)| !index.is_empty() && !index.contains('/'))
-}
-
-/// Encode every module and resolution record once, including explicit missing imports.
-fn records(generation: &JavaScriptGeneration) -> serde_json::Result<Records<'_>> {
-    let mut modules = BTreeMap::new();
-    for (path, imports) in &generation.modules {
-        let content = if path.ends_with(".module.css") {
-            generation.class_map_digests.get(path)
-        } else if path.ends_with(".css") {
-            None
-        } else {
-            generation.module_digests.get(path).and_then(Option::as_ref)
-        };
-        let record = digest(&to_vec(&(path, imports, content))?);
-        modules.insert(path.as_str(), to_vec(&(path, Some(record)))?);
-    }
-    for path in generation.modules.values().flatten() {
-        if let Entry::Vacant(entry) = modules.entry(path.as_str()) {
-            entry.insert(to_vec(&(path, Option::<&str>::None))?);
         }
     }
-    let resolution = generation
-        .resolution_digests
-        .iter()
-        .map(|(name, value)| Ok((name.as_str(), to_vec(&(name, value))?)))
-        .collect::<serde_json::Result<_>>()?;
-    let chains = generation
-        .modules
-        .keys()
-        .map(|path| (path.as_str(), chain(path)))
-        .collect();
-    Ok(Records {
-        modules,
-        resolution,
-        chains,
-        bindings: BTreeMap::new(),
-    })
 }
 
 #[cfg(test)]
@@ -289,3 +250,6 @@ mod render_parallel_tests;
 #[cfg(test)]
 #[path = "_tests_/render_reference.rs"]
 mod render_reference;
+#[cfg(test)]
+#[path = "_tests_/render_reuse_tests.rs"]
+mod render_reuse_tests;

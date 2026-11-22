@@ -12,6 +12,7 @@ use unimock::Unimock;
 use crate::assets::File;
 use crate::backend::Documents;
 use crate::background::Background;
+use crate::background_support::dispatch;
 use crate::error::Result;
 use crate::publication_support;
 use crate::work::{Work, Workers};
@@ -116,15 +117,16 @@ async fn a_stop_drops_renders_that_wait_for_admission() {
     running.await;
     renders.release("foreground");
     assert!(foreground.await.unwrap().unwrap().is_none());
-    work.background(documents, route(9)).await.unwrap();
+    work.background(documents, route(9), dispatch(1))
+        .await
+        .unwrap();
     work.stop().await;
     assert_eq!(renders.started(), ["foreground".to_owned(), route(9)]);
     assert!(script.published.lock().unwrap().is_empty());
 }
 
-/// A pass whose route 1 failure waits while routes 0 and 2 run behind their gates. No
-/// render can end until the test releases a gate, so the test picks the path that ends
-/// the pass. A third worker stays free for a replacement's render.
+/// A two-view window starts route 2 only after route 1's failure has settled behind
+/// gated route 0. Routes 0 and 2 then keep their workers until the test releases them.
 struct HeldFailure {
     renders: Renders,
     script: Script,
@@ -136,7 +138,7 @@ struct HeldFailure {
 async fn held_failure(publishes: bool) -> HeldFailure {
     let (mut renders, documents) = Renders::new(&[&route(0), &route(2)], &[&route(1)]);
     let origin = publication_support::snapshot(3, documents);
-    let work = Arc::new(Workers::new(3, Arc::new(Unimock::new(()))));
+    let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
     let (diagnostics, reported) = reports();
     let (script, pass, stopping) = pass(origin, 2, work.clone(), diagnostics, publishes);
     let task = tokio::spawn(async move { pass.run(stopping).await });
@@ -157,8 +159,8 @@ async fn an_announced_replacement_discards_a_held_failure() {
     let (mut replacement_renders, replaced) = Renders::new(&[], &[]);
     held.script
         .replace(publication_support::snapshot(1, replaced));
-    assert_eq!(replacement_renders.next_start().await, route(0));
     held.renders.release(&route(0));
+    assert_eq!(replacement_renders.next_start().await, route(0));
     held.renders.release(&route(2));
     held.task.await.unwrap();
     held.work.stop().await;

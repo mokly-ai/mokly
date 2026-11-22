@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import type { MetadataFact } from "./metadata-proof.js";
+
 /** The fields of the nearest package.json that esbuild applies to a file. */
 interface Manifest {
   directory: string;
@@ -20,6 +22,7 @@ interface Manifest {
 export class PackageScope {
   private readonly manifests = new Map<string, Promise<Manifest | undefined>>();
   private readonly configurations = new Map<string, Promise<boolean>>();
+  private readonly configurationFiles = new Map<string, string | undefined>();
   private readonly matchers = new Map<
     Manifest,
     Array<(file: string) => boolean>
@@ -68,6 +71,33 @@ export class PackageScope {
     );
   }
 
+  /** The cached candidates actually read for this scope's parsing and side effects. */
+  async metadata(start: string): Promise<MetadataFact[]> {
+    const manifest = await this.manifest(start);
+    const facts: MetadataFact[] = [];
+    for (let directory = start; ;) {
+      const regular = manifest?.directory === directory;
+      facts.push({ file: path.join(directory, "package.json"), regular });
+      const parent = path.dirname(directory);
+      if (regular || parent === directory) break;
+      directory = parent;
+    }
+    if (start.split(path.sep).includes("node_modules")) return facts;
+    await this.configuration(start);
+    const selected = this.configurationFiles.get(start);
+    for (let directory = start; ;) {
+      for (const name of ["tsconfig.json", "jsconfig.json"]) {
+        const candidate = path.join(directory, name);
+        const regular = candidate === selected;
+        facts.push({ file: candidate, regular });
+        if (regular) return facts;
+      }
+      const parent = path.dirname(directory);
+      if (parent === directory) return facts;
+      directory = parent;
+    }
+  }
+
   private manifest(directory: string): Promise<Manifest | undefined> {
     let manifest = this.manifests.get(directory);
     if (!manifest) {
@@ -106,11 +136,19 @@ export class PackageScope {
       found = (async () => {
         for (const name of ["tsconfig.json", "jsconfig.json"]) {
           const file = path.join(directory, name);
-          if (await regularFile(file))
+          if (await regularFile(file)) {
+            this.configurationFiles.set(directory, file);
             return parseOptions(await fs.readFile(file, "utf8"));
+          }
         }
         const parent = path.dirname(directory);
-        return parent !== directory && this.configuration(parent);
+        const result =
+          parent !== directory && (await this.configuration(parent));
+        this.configurationFiles.set(
+          directory,
+          this.configurationFiles.get(parent),
+        );
+        return result;
       })();
       this.configurations.set(directory, found);
     }

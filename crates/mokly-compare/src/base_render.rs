@@ -7,6 +7,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::Repository;
 use mokly_git::tree::Limits;
+use mokly_graph::prefetch::PrefetchGuard;
 use mokly_graph::types::RenderGeneration;
 use mokly_source_interface::tree::SourceTree;
 
@@ -22,6 +23,7 @@ use crate::source_failures::SourceFailures;
 use crate::sources::{GitSources, Sources};
 
 /// Both source interfaces pin one immutable index and cancellation generation.
+#[derive(Clone)]
 pub struct HistoricalSources {
     /// Typed Git failures remain fatal even when source validation reports a diagnostic.
     pub failures: Arc<dyn SourceFailures>,
@@ -45,6 +47,8 @@ pub trait BaseSourceFactory: Send + Sync {
 
 /// A base preparation result with the state needed for its later diagnostics.
 pub struct PreparedBase {
+    /// Early work remains owned by this preparation until capture ends.
+    pub prefetch: Option<PrefetchGuard>,
     /// Prepared historical render generation.
     pub generation: Arc<dyn RenderGeneration>,
     /// True only when a tier-two install supplied dependencies with scripts off.
@@ -130,6 +134,13 @@ pub struct BaseRequest<'a> {
 /// Rendering service seam. HTML and future JavaScript base entries use the same graph.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BaseProviderMock))]
 pub trait BaseProvider: Send + Sync {
+    /// Adopt source readers from a current pending preparation after kept-base classification.
+    fn historical_sources(
+        &self,
+        _request: &BaseRetentionRequest<'_>,
+    ) -> Result<Option<HistoricalSources>> {
+        Ok(None)
+    }
     /// Find an equal, current base and create this classification's reader.
     /// A miss releases a different or stale base before any fresh preparation.
     /// Fresh preparation samples checkout identity before its first base read,

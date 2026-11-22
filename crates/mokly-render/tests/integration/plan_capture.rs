@@ -27,7 +27,7 @@ pub(super) struct InitialCapture {
 
 /// Local plan-test capture preserves the real pool and its recorded requests.
 pub(super) struct PlanPool {
-    inner: CapturedPool,
+    pub(super) inner: CapturedPool,
     initial: Mutex<Option<InitialCapture>>,
 }
 

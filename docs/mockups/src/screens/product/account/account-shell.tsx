@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { MockLink } from "@mokly/mokly";
 
 import { site } from "../../../fixtures/site";
+import { MacWindowControls, macWindowClass } from "../mac-window";
 import { Account, AccountPlaceholder, Brand, SiteBrand } from "../navigation";
 import { Pending } from "../page-parts";
 import { TextBar } from "../placeholders";
@@ -45,6 +46,8 @@ type ShellFrame = {
   /** The steps the reader has done, where that is not every earlier one. */
   complete?: readonly SetupStep[];
   below?: ReactNode;
+  /** Whether the page draws the Mac app window around the account canvas. */
+  macApp?: boolean;
 };
 
 /**
@@ -70,7 +73,7 @@ type ShellContent =
  * never shifts under them.
  */
 export function AccountShell(props: ShellFrame & ShellContent) {
-  const { id, title, identity, step, complete, below } = props;
+  const { id, title, identity, step, complete, below, macApp = false } = props;
   const signedIn = identity.kind === "signed-in" || identity.kind === "waiting";
   // A heading that the answer decides is the one place that names the read,
   // for screen readers only, so no other part of the panel holds the name.
@@ -100,7 +103,10 @@ export function AccountShell(props: ShellFrame & ShellContent) {
     );
   };
   return (
-    <div className="folio-root fo-account" data-mkc-screen={id}>
+    <div
+      className={"folio-root fo-account" + (macApp ? " " + macWindowClass : "")}
+      data-mkc-screen={id}
+    >
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -138,6 +144,7 @@ export function AccountShell(props: ShellFrame & ShellContent) {
         <a href={site.terms}>Terms</a>
         <a href={site.privacy}>Privacy</a>
       </footer>
+      {macApp && <MacWindowControls />}
     </div>
   );
 }

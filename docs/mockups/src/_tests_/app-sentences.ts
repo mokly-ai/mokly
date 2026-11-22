@@ -41,6 +41,9 @@ export const sentences: Partial<
     },
   ],
   "product/settings/billing/unavailable": ["Billing opens soon."],
+  "product/settings/sections/mac-app": [
+    "Your name, email and GitHub connection",
+  ],
   "product/settings/project/no-builds": [
     {
       sentence: "This project publishes from CI.",

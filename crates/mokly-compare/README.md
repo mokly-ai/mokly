@@ -141,7 +141,7 @@ through `SystemImage`. On Linux, it digests the embedded build nonce and the
 running image through `/proc/self/exe`, and it gives no identity when the image
 changes during the read. On other targets, it digests the nonce alone.
 The [render store contract](../../docs/protocol/mokly-render-store.md) owns the
-identity, the entry format, the fault classes, and the bound.
+identity, the read rules, the entry format, the fault classes, and the bound.
 
 `entry_lock_path` in `cache_lock.rs` maps each kind and key to its lock file in
 one place. The bundle and render kinds use 256 fixed stripes, selected by the
@@ -193,13 +193,17 @@ head. Each view supplies its validated document and closure without a second
 render. `Comparison::compare_prepared` classifies the prepared base and head.
 An uncaptured fallback uses the source generation, so a summary that exceeds
 the capture bound does not start another pass. The capture keeps exact document
-bytes, generated CSS, and trusted annotations in compressed form. It encodes
-documents with `mokly_graph::document_codec::EncodedView`, the codec that the
-compact tier of the render cache also uses. Each kept view also keeps the
-32-byte identity of its codec input from `EncodedView::encode_identified`,
-and the capture budget charges it. The render cache keeps no identity. Inputs
-that do not fit the capture budget, and kept views that fail to restore, read
-from their side's source.
+bytes, generated CSS, and trusted annotations in compressed form. Its collector
+gives the graph workers a `ComparisonEncoder` through
+`ComparisonCollector::encoder`. So each worker encodes its view with
+`mokly_graph::document_codec::EncodedView`, the codec that the compact tier of
+the render cache also uses. The encoder calls `EncodedView::encode_identified`,
+so each view also gets the 32-byte identity of its codec input.
+`ComparisonCollector::remaining` gives the bytes that the capture bound has
+left for the views that wait for their turn. Each waiting view and each kept
+view holds its identity, and the capture budget charges it. The render cache
+keeps no identity. Inputs that do not fit the capture budget, and kept views
+that fail to restore, read from their side's source.
 A usage read of a kept view returns its retained usage without a restore, so
 it needs no source fallback. Serve head reads use the bounded render cache and
 render again on the head root only when neither cache tier holds the document.
@@ -258,8 +262,10 @@ parsed CSS cache counts do not depend on the worker count.
 `dyn ReuseAttempt`. `Changes` calls the attempt as its `dyn Comparison`.
 Without a fence, the attempt reuses and keeps nothing. Admission finds the
 kept view of each route. The worker of that view then checks its read set
-before preparation, through `comparison_identity` and the head's
-`comparison_document_proof`, with no base source read. A proven view skips
+before preparation, through `comparison_identity` and the checked head
+document proof, with no base source read. Complete head validation supplies
+that proof when it read the document, and `comparison_document_proof`
+supplies it otherwise. A proven view skips
 preparation and takes its current head usage from that proof. The ordered
 pass adds its shared evidence, its warnings, and the current usage of both
 sides. Call
@@ -301,7 +307,13 @@ The CLI implements `BaseProvider`, which supplies the base render generation
 through the common graph. A JavaScript provider uses the same request's source
 and repository handles for extraction and dependency leases. The CLI supplies
 `mokly_render::runtime::Runtime` for both sides, sharing its render cache,
-sidecar pool, and cancellation.
+sidecar pool, and cancellation. `BaseRequest::source_request` gives the
+source-only `BaseSourcesRequest`, which carries no head. So a provider can
+start source work as soon as the working configuration validates.
+A fresh preparation first asks `BaseProvider::historical_sources`, after the
+kept-base lookup misses. A
+provider that adopts a pending preparation returns its source readers there.
+The default returns `None`, and `Changes` creates the sources itself.
 
 `BaseProvider` can also keep one captured base between classifications. After
 the pin and before any base read, `Changes` calls `BaseProvider::find_kept`
@@ -452,12 +464,30 @@ development dependencies, and no test uses the internet.
   `ReuseWork`, the bounded view comparison reuse of Serve. The private
   `reuse_*.rs` modules record proof reads, charge the bound, and collect the
   candidate.
+- [`src/validation_head.rs`](./src/validation_head.rs) defines the private
+  `Head`, the `HeadValidation` of one Serve reuse attempt. `Engine` passes it
+  to `RenderGeneration::validate_head` before pairing, and it calls
+  `render_all` when it has no reuse collection. `Head` reads each checked head
+  document once and keeps that proof, with current usage, for the view stream.
+  It reuses the closure facts of a head route only when the document key, the
+  policy identity, and every recorded walk read are equal. Otherwise it
+  records a new walk. Facts never depend on pairing. The private
+  `validation_*.rs` modules keep the facts and their reads.
+- [`src/reuse_optional.rs`](./src/reuse_optional.rs) defines the private
+  `Arena`, the optional fact store of one classification inside the
+  comparison bound. The bound clears every optional arena before it refuses a
+  comparison charge, so facts never displace kept comparisons.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
   with lifecycle scripts off, carry its freshness evidence, and compare it with
   the head. The default `BaseProvider::find_kept`, `keep`, and `release`
-  methods keep nothing.
+  methods keep nothing. `PreparedBase::prefetch` holds the `PrefetchGuard` of
+  the early renders of a fresh base. `BaseProvider::historical_sources` lets a
+  provider adopt pending source readers.
+- [`src/base_sources.rs`](./src/base_sources.rs) defines
+  `BaseSourcesRequest`, the inputs of base source work that need no head
+  generation, and `BaseRequest::source_request`.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
   `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
   inputs of the kept base's key and freshness checks, the kept capture with
@@ -475,7 +505,9 @@ development dependencies, and no test uses the internet.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
   `review.base-tree` action, and the single fresh preparation after a failed
-  reuse.
+  reuse. Each fresh preparation takes the provider's historical sources when
+  it has them. It holds the `PrefetchGuard` of a fresh base until the capture
+  of that base returns, so each exit stops its early renders and waits for them.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,
@@ -524,8 +556,15 @@ development dependencies, and no test uses the internet.
 - [`src/render_store.rs`](./src/render_store.rs) defines `RenderDisk`,
   `SegmentCache`, `CachedDocuments`, `DocumentBackend`, `WriteOutcome`, and
   `CAPACITY`, the render kind and its document backend. The private
-  [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory, and the
-  `render_store_*.rs` modules hold the index, the reads, and the writes.
+  [`src/render_disk.rs`](./src/render_disk.rs) runs the one inventory.
+  [`src/render_store_state.rs`](./src/render_store_state.rs) prepares the
+  index from that inventory and handles entry and store faults.
+  [`src/render_store_read.rs`](./src/render_store_read.rs) reads one position
+  from the published snapshot before segment IO.
+  [`src/render_store_index.rs`](./src/render_store_index.rs) adopts validated
+  replacement positions in one snapshot while preserving keys that moved.
+  [`src/render_store_write.rs`](./src/render_store_write.rs) publishes a built
+  segment and adds its batch to the index with one snapshot copy.
 - [`src/render_segment.rs`](./src/render_segment.rs) checks format 1 of a
   segment: the prefix, the bounded header, and the digests.
   [`src/render_segment_buffer.rs`](./src/render_segment_buffer.rs) defines
@@ -583,6 +622,7 @@ development dependencies, and no test uses the internet.
 - [Comparison serving](../../docs/protocol/mokly-comparison-serving.md) and
   [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
+  [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
   [render store](../../docs/protocol/mokly-render-store.md),
   [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md),

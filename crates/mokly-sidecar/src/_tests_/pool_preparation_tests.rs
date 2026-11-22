@@ -35,7 +35,8 @@ fn fixture() -> (State, Slot) {
             digest: Some("digest".into()),
             path: "entry.ts".into(),
             imports: vec!["shared.ts".into()],
-        }],
+        }]
+        .into(),
     );
     state.compiled.insert(
         "g".into(),
@@ -115,6 +116,14 @@ fn fresh_worker_retains_complete_replay_inputs() {
         ["shared.ts"]
     );
     assert_eq!(replay.recipe.as_ref().unwrap().compiled.code, "code");
+    assert!(Arc::ptr_eq(
+        &replay.recipe.as_ref().unwrap().compiled,
+        &state.compiled["g"]
+    ));
+    assert_eq!(
+        replay.recipe.as_ref().unwrap().modules.as_ptr(),
+        state.modules["g"].as_ptr()
+    );
     assert_eq!(
         replay.maps.unwrap().class_maps["entry.module.css"]["class"],
         "scoped"

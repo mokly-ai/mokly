@@ -5,21 +5,21 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use mokly_catalogue::config::relative;
-use mokly_catalogue::config_types::{ModuleLoader, ResolvedConfig};
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::base_freshness::DependencySelection;
 use mokly_compare::base_render::BaseRequest;
+use mokly_compare::base_sources::BaseSourcesRequest;
 use mokly_compare::cache::DiskCache;
 use mokly_compare::cache_types::{Cache, Lease, Reporter, Storage};
 use mokly_compare::commands::TimedCommands;
 use mokly_compare::dependencies::{Dependencies, DependencyTiers};
-use mokly_compare::dependency_types::{Request, Tier};
+use mokly_compare::dependency_types::Request;
 use mokly_compare::error::{Error, Result};
 use mokly_compare::extraction::{CachedExtraction, Extraction};
-use mokly_compare::inputs::{InputReader, SourceInputs};
+use mokly_compare::inputs::Inputs;
 use mokly_compare::locations::{Locations, SystemLocations};
 use mokly_compare::process::SystemSpawner;
 use mokly_compare::storage::SystemStorage;
-use mokly_compare::working_inputs::{SystemWorkingInputs, WorkingInputs};
 use mokly_git::control::{Cancellation, SystemClock};
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::Limits;
@@ -27,39 +27,57 @@ use mokly_platform::flush::SystemFlush;
 use mokly_platform::locks::SystemLocks;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::side::BaseSide;
-use mokly_sidecar::methods::ModuleResolution;
 
+use crate::base_dependency_selection::{resolution, tier_number};
 use crate::changes_freshness::{PreparedDependencies, SelectionRequest};
+use crate::serve_eager_diagnostics::DiagnosticRouting;
 
 #[cfg_attr(test, unimock::unimock(api = BaseDependenciesMock))]
 pub(super) trait BaseDependencies: Send + Sync {
     /// Lease the complete extraction of the base commit when one exists, without a build.
-    fn existing_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>>;
-    /// Lease the extraction, reusing `sources` when given, and select the dependency tier.
+    fn existing_sources(&self, request: &BaseSourcesRequest<'_>) -> Result<Option<Arc<Lease>>>;
+    /// Extract the discovered sidecar sources and read both clean dependency identities.
+    fn sources(
+        &self,
+        request: &BaseSourcesRequest<'_>,
+        existing: Option<Arc<Lease>>,
+    ) -> Result<DependencySources>;
+    /// Select the dependency tier with exact adopted head evidence.
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         selection: &SelectionRequest<'_>,
-        sources: Option<Arc<Lease>>,
+        sources: DependencySources,
     ) -> Result<PreparedDependencies>;
 }
 
 /// The source and dependency caches of one repository, with their storage and clock.
-struct Caches {
-    root: PathBuf,
-    cache: Arc<dyn Cache>,
-    storage: Arc<dyn Storage>,
-    clock: Arc<SystemClock>,
+pub(super) struct Caches {
+    pub(super) root: PathBuf,
+    pub(super) cache: Arc<dyn Cache>,
+    pub(super) storage: Arc<dyn Storage>,
+    pub(super) clock: Arc<SystemClock>,
+}
+
+/// Extracted sources and clean identities sampled before dependency selection.
+pub struct DependencySources {
+    /// Extraction remains leased through preparation and capture.
+    pub(super) sources: Arc<Lease>,
+    /// Historical clean dependency inputs.
+    pub(super) base: Inputs,
+    /// Working clean dependency inputs.
+    pub(super) head: Inputs,
 }
 
 pub(super) struct NativeDependencies {
     pub(super) cancellation: Arc<dyn Cancellation>,
     pub(super) reporter: Arc<dyn Reporter>,
+    pub(super) routing: Option<Arc<dyn DiagnosticRouting>>,
 }
 
 impl BaseDependencies for NativeDependencies {
-    fn existing_sources(&self, request: &BaseRequest<'_>) -> Result<Option<Arc<Lease>>> {
+    fn existing_sources(&self, request: &BaseSourcesRequest<'_>) -> Result<Option<Arc<Lease>>> {
         let caches = self.caches(&request.working_config.repo_root)?;
         let extraction: &dyn Extraction = &CachedExtraction {
             repository: request.repository.clone(),
@@ -70,12 +88,32 @@ impl BaseDependencies for NativeDependencies {
         Ok(extraction.existing(&request.commit)?.map(Arc::new))
     }
 
+    fn sources(
+        &self,
+        request: &BaseSourcesRequest<'_>,
+        existing: Option<Arc<Lease>>,
+    ) -> Result<DependencySources> {
+        match self.prepare_sources(request, existing) {
+            Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
+                path: ".".into(),
+                source,
+            }),
+            Err(Error::CacheLimit { limit }) => Err(Error::Limit {
+                path: ".".into(),
+                source: mokly_git::error::Error::ByteLimit {
+                    limit: limit as usize,
+                },
+            }),
+            result => result,
+        }
+    }
+
     fn prepare(
         &self,
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         selection: &SelectionRequest<'_>,
-        sources: Option<Arc<Lease>>,
+        sources: DependencySources,
     ) -> Result<PreparedDependencies> {
         match self.prepare_side(request, config, selection, sources) {
             Err(Error::Git { source }) if source.is_limit() => Err(Error::Limit {
@@ -95,7 +133,7 @@ impl BaseDependencies for NativeDependencies {
 
 impl NativeDependencies {
     /// The repository's source and dependency caches, composed for one preparation.
-    fn caches(&self, repo_root: &Path) -> Result<Caches> {
+    pub(super) fn caches(&self, repo_root: &Path) -> Result<Caches> {
         let locations: &dyn Locations = &SystemLocations;
         let root = locations.repository(repo_root)?;
         let clock = Arc::new(SystemClock::default());
@@ -127,7 +165,7 @@ impl NativeDependencies {
         request: &BaseRequest<'_>,
         config: &ResolvedConfig,
         selection_request: &SelectionRequest<'_>,
-        sources: Option<Arc<Lease>>,
+        sources: DependencySources,
     ) -> Result<PreparedDependencies> {
         let Caches {
             root: cache_namespace,
@@ -135,28 +173,17 @@ impl NativeDependencies {
             storage,
             clock,
         } = self.caches(&config.repo_root)?;
-        let sources = match sources {
-            Some(sources) => sources,
-            None => {
-                let extraction: &dyn Extraction = &CachedExtraction {
-                    repository: request.repository.clone(),
-                    cache: cache.clone(),
-                    steps: request.steps.clone(),
-                    files: Limits::default().files,
-                };
-                Arc::new(extraction.acquire(&request.commit)?)
-            }
-        };
+        let DependencySources {
+            sources,
+            base,
+            head,
+        } = sources;
         let span = tracing::info_span!(
             "review.base-dependencies",
             status = "error",
             tier = tracing::field::Empty
         );
         let _scope = span.enter();
-        let reader: &dyn InputReader = &SourceInputs;
-        let base = reader.read(request.sources.sources.as_ref(), Limits::default())?;
-        let working: &dyn WorkingInputs = &SystemWorkingInputs;
-        let head = working.read(request.repository.as_ref(), &base, Limits::default())?;
         let selection = selection_request.record.then(|| DependencySelection {
             inputs: head.clone(),
             paths: None,
@@ -208,48 +235,6 @@ impl NativeDependencies {
                 identity: request.commit.to_string(),
             }),
         })
-    }
-}
-
-fn tier_number(tier: Tier) -> u64 {
-    match tier {
-        Tier::Working => 1,
-        Tier::Installed => 2,
-        Tier::Fallback => 3,
-    }
-}
-
-fn resolution(config: &ResolvedConfig) -> ModuleResolution {
-    let authored = config.input.module_resolution.clone().unwrap_or_default();
-    let loaders = authored
-        .loaders
-        .unwrap_or_default()
-        .into_iter()
-        .map(|(extension, loader)| {
-            let name = match loader {
-                ModuleLoader::Base64 => "base64",
-                ModuleLoader::Binary => "binary",
-                ModuleLoader::Dataurl => "dataurl",
-                ModuleLoader::Empty => "empty",
-                ModuleLoader::File => "file",
-                ModuleLoader::Js => "js",
-                ModuleLoader::Json => "json",
-                ModuleLoader::Jsx => "jsx",
-                ModuleLoader::Text => "text",
-                ModuleLoader::Ts => "ts",
-                ModuleLoader::Tsx => "tsx",
-            };
-            (extension, name.into())
-        })
-        .collect();
-    ModuleResolution {
-        dependency_root: None,
-        aliases: authored.aliases.unwrap_or_default(),
-        conditions: authored.conditions.unwrap_or_default(),
-        loaders,
-        main_fields: authored.main_fields.unwrap_or_default(),
-        resolve_extensions: authored.resolve_extensions.unwrap_or_default(),
-        package_roots: config.package_roots(),
     }
 }
 

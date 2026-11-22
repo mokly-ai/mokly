@@ -10,6 +10,7 @@ publish = false
 dunce = "1.0.5"
 serde = { version = "1.0.229", features = ["derive", "rc"] }
 serde_json = { version = "1.0.154", features = ["raw_value"] }
+sha2 = "0.11.1"
 sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
 thiserror = "2.0.21"
 tracing = "0.1.44"

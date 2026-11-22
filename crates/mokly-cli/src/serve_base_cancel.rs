@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use mokly_cli::cancellation::Cancellation;
 use mokly_git::control;
-use mokly_server::changes::ChangeCancellation;
+use mokly_server::changes::{ChangeCancellation, ChangeCommit};
 use mokly_server::changes_signal::ChangeSignal;
 
 use crate::serve_changes_base::CombinedCancel;
@@ -15,12 +15,15 @@ pub(super) trait BaseLifetime:
 {
     /// Called under the original classification's publication guard at keep.
     fn detach(&self);
+    /// Serialize an eligible keep with the independent pending owner, when one exists.
+    fn commit_keep(&self, publication: &dyn ChangeCommit) -> bool;
 }
 
 /// The base's initial reader lifetime, until its successful keep.
 pub(super) struct PreparingBase {
     command: Arc<dyn Cancellation>,
     preparing: Mutex<Option<Arc<CombinedCancel>>>,
+    owner: Mutex<Option<Arc<dyn ChangeCancellation>>>,
 }
 
 impl PreparingBase {
@@ -29,6 +32,18 @@ impl PreparingBase {
         Self {
             command: preparing.command.clone(),
             preparing: Mutex::new(Some(preparing)),
+            owner: Mutex::new(None),
+        }
+    }
+
+    pub(super) fn owned(
+        preparing: Arc<CombinedCancel>,
+        owner: Arc<dyn ChangeCancellation>,
+    ) -> Self {
+        Self {
+            command: preparing.command.clone(),
+            preparing: Mutex::new(Some(preparing)),
+            owner: Mutex::new(Some(owner)),
         }
     }
 
@@ -41,8 +56,23 @@ impl PreparingBase {
 }
 
 impl BaseLifetime for PreparingBase {
+    fn commit_keep(&self, publication: &dyn ChangeCommit) -> bool {
+        let owner = self
+            .owner
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone();
+        match owner {
+            Some(owner) => owner.commit(publication),
+            None => publication.apply(),
+        }
+    }
     fn detach(&self) {
         self.preparing
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take();
+        self.owner
             .lock()
             .unwrap_or_else(|error| error.into_inner())
             .take();

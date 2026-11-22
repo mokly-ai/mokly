@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
-import fs from "node:fs/promises";
+import fs from "node:fs";
 import path from "node:path";
 
 import { version } from "esbuild";
 
+import { cooperativeYield } from "./cooperative-yield.js";
 import { fileDigest } from "./file-digests.js";
 
 let identity: Promise<string | undefined> | undefined;
@@ -14,7 +15,7 @@ export function toolchainIdentity(): Promise<string | undefined> {
 }
 
 async function packageManifest(file: string): Promise<unknown> {
-  const handle = await fs.open(file, "r");
+  const handle = await fs.promises.open(file, "r");
   try {
     const metadata = await handle.stat();
     if (!metadata.isFile() || metadata.size > 1024 * 1024)
@@ -35,7 +36,9 @@ async function packageManifest(file: string): Promise<unknown> {
 }
 
 async function computeIdentity(): Promise<string> {
-  const root = await fs.realpath(path.resolve(import.meta.dirname, "../.."));
+  const root = fs.realpathSync.native(
+    path.resolve(import.meta.dirname, "../.."),
+  );
   const manifest = await packageManifest(path.join(root, "package.json"));
   if (
     !manifest ||
@@ -50,9 +53,11 @@ async function computeIdentity(): Promise<string> {
   const files: string[] = [];
   let namesBytes = 0;
   const visit = async (directory: string): Promise<void> => {
-    for await (const entry of await fs.opendir(
-      path.join(root, "dist", directory),
-    )) {
+    for (const entry of fs.readdirSync(path.join(root, "dist", directory), {
+      withFileTypes: true,
+    })) {
+      const pause = cooperativeYield();
+      if (pause) await pause;
       const file = path.join(directory, entry.name);
       namesBytes += Buffer.byteLength(file);
       if (namesBytes > 8 * 1024 * 1024 || files.length >= 100_000)

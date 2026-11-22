@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::bundle_outcomes::CacheOutcome;
 use crate::codec;
 use crate::compiled::{CompiledGeneration, RestoreGeneration, ReuseEvidence, UncapturedEvidence};
 use crate::fixture_leases::FixtureLeases;
@@ -13,12 +14,14 @@ use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
 use crate::pool_state::Slot;
 use crate::results;
+use crate::source_digests::{SourceDigests, SystemSourceDigests};
 use crate::wire::{MethodResult, Request};
 use crate::workers::{ClockMock, WorkerMock};
 
 use super::{Recipes, seed_id};
 
 type RestoreAction = Box<dyn FnOnce() + Send>;
+type Inputs = BTreeMap<String, Option<String>>;
 
 pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     Bundle {
@@ -33,7 +36,7 @@ pub(super) fn settings(entry: &str, evaluation: &str) -> Bundle {
     }
 }
 
-fn compiled(id: &str, capture: BundleCapture) -> CompiledGeneration {
+fn compiled(id: &str, capture: BundleCapture, inputs: Inputs) -> CompiledGeneration {
     let captured = capture == BundleCapture::Full;
     CompiledGeneration {
         toolchain: "fixture".into(),
@@ -51,7 +54,7 @@ fn compiled(id: &str, capture: BundleCapture) -> CompiledGeneration {
         css_modules: Vec::new(),
         sources: BTreeMap::new(),
         peers: BTreeMap::new(),
-        inputs: BTreeMap::new(),
+        inputs,
         metadata_inputs: BTreeMap::new(),
         input_directories: BTreeMap::new(),
         metadata_directories: BTreeMap::new(),
@@ -70,8 +73,8 @@ pub(super) fn envelope_size_with_capture(entry: &str, id: &str, capture: BundleC
         call: Call::RestoreGeneration(Box::new(RestoreGeneration {
             generation: seed_id(id),
             params: settings(entry, id),
-            modules: Vec::new(),
-            compiled: Arc::new(compiled(id, capture)),
+            modules: Default::default(),
+            compiled: Arc::new(compiled(id, capture, Inputs::new())),
         })),
     })
     .unwrap()
@@ -83,12 +86,20 @@ pub(super) struct Fixture {
     pub(super) pool: Pool,
     pub(super) calls: Arc<Mutex<Vec<Call>>>,
     pub(super) before_restore: Arc<Mutex<Option<RestoreAction>>>,
+    inputs: Arc<Mutex<BTreeMap<String, Inputs>>>,
     _worker: Unimock,
 }
 
 impl Fixture {
     pub(super) fn new(bound: usize) -> Self {
+        Self::with_digests(bound, Arc::new(SystemSourceDigests))
+    }
+
+    /// A fixture whose pool reads current source digests through `digests`.
+    pub(super) fn with_digests(bound: usize, digests: Arc<dyn SourceDigests>) -> Self {
         let calls = Arc::new(Mutex::new(Vec::new()));
+        let inputs = Arc::new(Mutex::new(BTreeMap::<String, Inputs>::new()));
+        let recorded_inputs = inputs.clone();
         let recorded = calls.clone();
         let before_restore = Arc::new(Mutex::new(None::<RestoreAction>));
         let restoring = before_restore.clone();
@@ -112,11 +123,17 @@ impl Fixture {
                                 compiled: Arc::new(compiled(
                                     id,
                                     params.capture.unwrap_or_default(),
+                                    recorded_inputs
+                                        .lock()
+                                        .unwrap()
+                                        .get(id)
+                                        .cloned()
+                                        .unwrap_or_default(),
                                 )),
                                 epoch: 0,
                                 cache: None,
                                 compile_count: 1,
-                                modules: Vec::new(),
+                                modules: Default::default(),
                                 unmapped_dependency_directories: None,
                             }))
                         }
@@ -143,7 +160,8 @@ impl Fixture {
                 size: 4.try_into().unwrap(),
                 timeout_ms: None,
             },
-        );
+        )
+        .with_source_digests(digests);
         {
             let mut state = pool.lock();
             state.recipes = Recipes::new(bound);
@@ -168,8 +186,20 @@ impl Fixture {
             pool,
             calls,
             before_restore,
+            inputs,
             _worker: worker,
         }
+    }
+
+    /// Record the source digests of the compilation that `id` names.
+    pub(super) fn record_inputs(&self, id: &str, inputs: &[(&str, Option<&str>)]) {
+        self.inputs.lock().unwrap().insert(
+            id.into(),
+            inputs
+                .iter()
+                .map(|(path, digest)| ((*path).into(), digest.map(Into::into)))
+                .collect(),
+        );
     }
 
     pub(super) fn retained(&self) -> usize {
@@ -189,6 +219,7 @@ impl Fixture {
         let MethodResult::Bundle(result) = self
             .pool
             .request(Call::Bundle(BundleRequest {
+                preparation: None,
                 plan: None,
                 params: settings(entry, id),
                 capture: Some(capture),
@@ -218,6 +249,18 @@ impl Fixture {
         slot: usize,
         capture: BundleCapture,
     ) -> Vec<String> {
+        self.probe_outcome(entry, id, slot, capture).0
+    }
+
+    /// The restored identities before one bundle on `slot`, and the `cache` value that the
+    /// pool gives it.
+    pub(super) fn probe_outcome(
+        &self,
+        entry: &str,
+        id: &str,
+        slot: usize,
+        capture: BundleCapture,
+    ) -> (Vec<String>, Option<CacheOutcome>) {
         let _leases = FixtureLeases::only(&self.pool, slot);
         self.calls.lock().unwrap().clear();
         let probe = self.bundle_with_capture(entry, id, capture);
@@ -233,10 +276,10 @@ impl Fixture {
             .collect();
         self.pool
             .request(Call::Dispose(Generation {
-                generation: probe.generation,
+                generation: probe.generation.clone(),
             }))
             .unwrap();
-        restored
+        (restored, probe.cache)
     }
 }
 
