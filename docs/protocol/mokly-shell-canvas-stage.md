@@ -5,9 +5,9 @@ Status: The canvas, its sections and frames, a use case's and a removed entry's 
 This continues the [shell design contract](./mokly-shell-design.md#layout). It
 fixes the canvas below the top bar: the panels that float over it, the selected
 entry's section with its frames, a use case's section, the Frames filter, and
-pan, zoom and Fit.
-[Device chrome](./mokly-shell-device-chrome.md) fixes each frame, the preview
-scheme, and the compact layout below the layout breakpoint.
+pan, zoom and Fit. The
+[canvas frames contract](./mokly-shell-device-chrome.md) fixes each frame,
+the preview scheme, and the compact layout below the layout breakpoint.
 
 ## Canvas
 
@@ -123,10 +123,17 @@ as a screen's section does.
   from left to right, at one zoom. Each
   [step frame](./mokly-shell-device-chrome.md#canvas-frames) shows its step
   screen's view of the viewport and the scheme that the Frames filter chooses.
-- The Frames filter of a use case chooses one viewport and one scheme.
-  Choosing a viewport or a scheme turns the other one off, so each step shows
-  one frame. At or above the layout breakpoint, a use case opens on Desktop
-  and Light. The compact layout opens it on Mobile and Light.
+- The Frames filter of a use case holds two choices: Mobile or Desktop, and
+  Light or Dark. Choosing one turns the other off, so each step shows one
+  frame.
+- A use case always opens on Desktop and Light at or above the layout
+  breakpoint, and on Mobile and Light in the compact layout. A choice in its
+  Frames filter applies to that use case alone. A screen keeps its own Frames
+  filter, which a use case neither reads nor changes. Decision: a use case
+  opens on these fixed choices and keeps its own choice, not on the
+  selection's saved viewport and scheme and not with a filter that it shares
+  with the screens, because it then always opens the same way and leaves the
+  reader's screen filter as they set it.
 - When no step's screen has a dark view, the Dark toggle is disabled and reads
   `Light only`. A step whose screen has no dark view follows the
   [light-only rule](./mokly-shell-device-chrome.md#color-scheme).
@@ -145,7 +152,7 @@ would then show twenty frames.
 ## Related Docs
 
 - [Shell design contract](./mokly-shell-design.md)
-- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
 - [Shell navigation design](./mokly-shell-design-navigation.md)
 - [Component inspector design](./mokly-component-inspector-design.md)
 - [Comparison panes](./mokly-comparison-panes.md)

@@ -343,8 +343,9 @@ with `@mokly/ui/flow-step` and its desktop view in a browser frame, or, while
 phone frame. The
 [use-case rule](../../../../docs/protocol/mokly-shell-canvas-stage.md#use-case)
 of the canvas stage contract requires one canvas frame for each step instead.
-`layout_breakpoint.ts` holds that contract's layout breakpoint as one media
-query, narrower than 900px, which every shell and viewer rule and script
+`layout_breakpoint.ts` holds the layout breakpoint of the
+[canvas frames contract](../../../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
+as one media query, narrower than 900px, which every shell and viewer rule and script
 reads, so the catalogue drawer, the inspector sheet and the embedded rail
 switch at the same width. It also holds the use-case stage's device
 breakpoint, which `narrow_layout.ts` watches. The `@mokly/ui`

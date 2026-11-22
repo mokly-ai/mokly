@@ -226,9 +226,9 @@ sources and could install its dependencies during the suite.
 
 The paths, bytes and times of the build output are the same before startup,
 after the suite and after shutdown. Serve, including
-`serve --no-watch`, writes nothing into the repository. Serve
-frames each journey step's desktop view, or its mobile view while the shell is
-at most 760px wide. Mobile journeys also open the same owning
-mobile screens in Browse.
+`serve --no-watch`, writes nothing into the repository. Serve shows each
+journey under the package's
+[use-case rule](../mokly-shell-canvas-stage.md#use-case). Mobile journeys also
+open the same owning mobile screens in Browse.
 Test account-entry layouts at 320px and 200% text too. Keep wrapping and grid
 minimums readable without clipping or hidden overflow.

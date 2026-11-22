@@ -171,10 +171,9 @@ land on a named state entry when that state is where the scenario ends, and the
 entry is still the owning screen for it. Browse follows Cal from the branch he is reading, through the switcher
 into a pull request, then its history and its link.
 
-UseCaseStep has no viewport selector. Serve frames each journey step's desktop
-view, or its mobile view while the shell is at most 760px wide, and the
-package's flow behavior is kept. Browser tests walk the
-same owning mobile screens through Browse.
+UseCaseStep has no viewport selector. Serve shows each journey under the
+package's [use-case rule](../mokly-shell-canvas-stage.md#use-case), unchanged.
+Browser tests walk the same owning mobile screens through Browse.
 
 Every flow step reuses an existing owning screen and reciprocally lists the
 flow path through `useCasePaths`; steps use `screenPath`.

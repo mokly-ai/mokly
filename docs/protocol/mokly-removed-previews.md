@@ -10,25 +10,27 @@ entry's views rendered from the base commit's sources under
 Changes row. The previous version stands on the
 [canvas](./mokly-shell-canvas-stage.md#section) as the entry's section. The
 section head holds the entry's title tag, its path chip, its Removed status
-and the quiet label `Showing previous version`. Breadcrumbs keep the textual
-base ancestry, and Details keeps its historical metadata. The entry offers no
-compare mode, not even Current, and no Refresh. No Props editing, current
-inspector bindings, or current usage or comment markers appear.
+and the quiet label `Showing previous version`. In the compact layout, the
+entry bar shows that label on a second line. The entry offers no compare mode,
+not even Current, and no Refresh. No Props editing, current inspector
+bindings, or current usage or comment markers appear. The right panel stays,
+and Inspect keeps the base commit's record. A removed screen's Highlight
+components switch is unavailable, and its reason reads
+`This preview is unavailable.` The
+[Changes tab](./mokly-changes-controls.md#changes-tab) gives its Compared rail.
 
 A removed screen's section holds one canvas frame for each historical view,
-as a current screen's section does: Desktop beside Mobile, and the Light row
-above the Dark row, at one zoom. A removed screen without a historical dark
-view has the Light row alone, and the Frames filter's Dark toggle is disabled
-and reads `Light only`. A removed page or document opens as one reading frame
-that holds its historical document. A page is light only. A document's reading
-frame shows its historical version of the preview colour scheme. A removed
-document without a historical dark version keeps its light version under
-Dark, and the head's label then reads `Showing previous version — Light only`
-when the catalogue has a dark axis. Decision: the previous version opens as
-canvas frames in the entry's section, not in device frames or a document pane,
-because one frame model then serves every entry kind. It does not stand as the
-Before side of an empty comparison, because a removed screen offers no compare
-mode.
+as a current screen's section does, light-only views included: Desktop beside
+Mobile, and the Light row above the Dark row, at one zoom. A removed page or
+document opens as one reading frame that holds its historical document. A page
+is light only. A document's reading frame shows its historical version of the
+preview colour scheme. A removed document without a historical dark version
+keeps its light version under Dark, and the head's label then reads
+`Showing previous version — Light only` when the catalogue has a dark axis.
+Decision: the previous version opens as canvas frames in the entry's section,
+not in device frames or a document pane, because one frame model then serves
+every entry kind. It does not stand as the Before side of an empty comparison,
+because a removed screen offers no compare mode.
 
 Removed screens stay outside the compare modes; an incoming comparison URL
 opens the preview instead. A removed component entry has no preview: it
@@ -39,16 +41,16 @@ and has no preview; where its kind has a comparison, that comparison uses the
 paired base entry as its before side.
 
 A viewport with no historical view draws its note where its frame would
-stand: in a place of that frame's size, under that frame's label, never a blank
-space. The note reads “No previous mobile version was captured. Switch to
+stand, never a blank space. That place keeps the frame's size and label, with
+no surface, ring, shadow or size tag, and the note keeps its size at every
+zoom. The note reads “No previous mobile version was captured. Switch to
 Desktop to see it.”, exchanging the two viewport names for the desktop case. A
 preview with no views at all is unavailable instead, so the viewport the note
 names always holds a view. The second sentence shows only while no frame of
 the other viewport shows, as in the compact layout or while the Frames filter
 hides that viewport. Otherwise the second sentence is hidden, not rewritten.
 The note carries the `mbk-preview-note` class and its closing sentence the
-`mbk-preview-switch` class, the classes the design catalogue's stage
-stylesheet owns.
+`mbk-preview-switch` class.
 
 Historical content is read-only in every host, including a viewer embedded
 across origins. Scrolling, text selection, and same-document anchors work,
@@ -65,11 +67,11 @@ and in a static build alike. Ordinary browsing, All/Changes filtering,
 search, navigation, and revision updates never request historical bytes.
 While the request runs, the canvas holds “Loading previous version…” in place
 of the section. A failure shows “Previous version unavailable” there, with
-Retry, which requests the preview again. The catalogue, the right panel, and
-the compact layout's entry bar with the Removed status stay usable. Current
-bytes, current fragments, or invented content never stand in for missing
-history. A build without Changes has no removed entries and therefore no
-previews.
+“The previous version could not be loaded.” and Retry, which requests the
+preview again. The catalogue, the right panel, and the compact layout's entry
+bar with the Removed status stay usable. Current bytes, current fragments, or
+invented content never stand in for missing history. A build without Changes
+has no removed entries and therefore no previews.
 
 ## Delivery
 

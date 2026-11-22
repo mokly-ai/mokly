@@ -1,4 +1,4 @@
-# Shell Device Chrome And Preview Scheme
+# Shell Canvas Frames, Preview Scheme And Compact Layout
 
 Status: The canvas frames, a use case's step frames included, their schemes, the compact layout with its dock and sheets, and the Side by side tags are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the frames, the schemes and the compact layout, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Side by side tags.
 
@@ -21,9 +21,10 @@ side by side, at one zoom.
   and its scheme, such as `Desktop · Light`. A component's frame is named by
   its saved variant and its scheme, such as `Default · Light`. A reading frame
   is named by its source file, such as `payment-terms.md`. A step frame is
-  named by its step's number and title. Where one frame stands for the entry,
-  as in the compact layout, the entry's slug leads the name:
-  `welcome · Mobile · Light`. The label of the frame that holds the selection,
+  named by its step, not by its viewport and scheme: the step's number in a
+  dark tag, which reads as `Step 1`, and the step's title. Where one frame
+  stands for the entry, as in the compact layout, the entry's slug leads the
+  name: `welcome · Mobile · Light`. The label of the frame that holds the selection,
   a selected instance or the frame itself, reads in the signal colour.
 - **Size tag** — above the frame's right edge: the nominal width and height in
   CSS pixels, such as `1280 × 800`. The size tag stays muted when the label
@@ -35,9 +36,11 @@ side by side, at one zoom.
   has no size tag. Decision: one reading frame, not device frames, because a
   page and a document have no viewport.
 - **Step frame** — the frame of one use-case step: a desktop or a mobile frame,
-  for the viewport that the Frames filter chooses. The step's description
-  reads muted below the label. A link opens the step's screen. The link's
-  accessible name names that screen.
+  for the viewport that the Frames filter chooses. The step's title in the
+  label is a link, with a chevron, that opens the step's screen. The link's
+  accessible name names that screen. The step's description reads muted below
+  the label, and a description too long for the frame ends in an ellipsis. No
+  slug leads a step frame's name, also in the compact layout.
 - **Comparison** — in a comparison, a frame holds both versions as its compare
   mode draws them. In Side by side, each of the compared frame's two versions
   stands in its own frame, whose label starts with a `Before` or a `Current`
@@ -71,7 +74,7 @@ preview scheme apart from its interface appearance, as
 - **Light-only screens** — on the canvas, a screen with no dark view has its
   Light frames alone, and the Frames filter's Dark toggle reads `Light only`.
   A use-case step whose screen has no dark view keeps its Light view while
-  Dark is chosen, and its label states that the view is light only.
+  Dark is chosen, and its label adds `Light only`.
 - **Comparisons** — a comparison on a canvas frame compares the views of that
   frame's viewport and scheme.
 
@@ -100,7 +103,9 @@ frame at a time:
 - An entry bar over the top of the canvas names the entry: its title tag, its
   `Component` kind tag, and its change status. A frame picker, a native select
   named `Frame`, stands at the bar's end and lists the entry's shown frames.
-  A use case's picker lists its steps by number and title.
+  A use case's picker lists its steps by number and title, such as
+  `1 · Welcome`. The bar and its picker stay while the selected entry's
+  preview loads or failed.
 - The canvas shows the picked frame alone, large enough to read. A screen
   opens on its Mobile · Light frame, or on its first shown frame while the
   Frames filter hides that one. A use case opens on its first step. A variant
@@ -114,9 +119,10 @@ frame at a time:
   catalogue sheet; the right panel's current tab, Inspect or Changes, which
   names what a tap on the frame does and opens the panel sheet; and Fit. Fit
   shows only while the canvas holds a section, as the
-  [zoom pill](./mokly-shell-canvas-stage.md#canvas) does. With nothing
-  selected, the dock holds Catalogue alone. The dock hides while a sheet is
-  open.
+  [zoom pill](./mokly-shell-canvas-stage.md#canvas) does. So while the
+  selected entry's preview loads or failed, the dock holds Catalogue and the
+  current tab. With nothing selected, the dock holds Catalogue alone. The dock
+  hides while a sheet is open.
 - While an instance is selected, a pill above the dock names the selection and
   opens the panel sheet. The pill hides while a sheet is open.
 - The top bar's menu button opens the catalogue sheet, and closes an open

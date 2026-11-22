@@ -210,7 +210,7 @@ the set.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
 [canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md),
-[device chrome](../../docs/protocol/mokly-shell-device-chrome.md),
+[canvas frames](../../docs/protocol/mokly-shell-device-chrome.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),
 [Canvas inventory](../../docs/protocol/mokly-shell-canvas-inventory.md),
 [depicted catalogue](../../docs/protocol/mokly-shell-design-catalogue.md),

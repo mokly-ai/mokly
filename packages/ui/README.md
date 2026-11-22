@@ -347,7 +347,7 @@ embeds the viewer sets that size, so a `rem` width can change from host to
 host. An `em` width follows the element's own font size instead. The
 navigation drawer's `max-width: 20rem` is the one `rem` width. The
 [compact layout](../../docs/protocol/mokly-shell-device-chrome.md#compact-layout)
-of the device chrome contract replaces that drawer with sheets.
+of the canvas frames contract replaces that drawer with sheets.
 
 `src/styles.css` sets the order of `styles.css`. It lists the component
 stylesheets with one `@import` each, in cascade order: the theme and the reset
@@ -553,7 +553,7 @@ override the desktop layout rules.
   palette and the theme that the package draws in
 - [Shell design](../../docs/protocol/mokly-shell-design.md),
   [Shell canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md) and
-  [Shell device chrome](../../docs/protocol/mokly-shell-device-chrome.md), the
+  [Shell canvas frames](../../docs/protocol/mokly-shell-device-chrome.md), the
   Canvas stage, its frames, pan, zoom and Fit, and the compact layout
 - [Component inspector design](../../docs/protocol/mokly-component-inspector-design.md),
   the right panel with Inspect and Changes,

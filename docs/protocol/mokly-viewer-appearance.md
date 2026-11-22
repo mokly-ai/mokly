@@ -57,8 +57,7 @@ a changed view carries the shared change dot and names `Other theme changed`
 or `Other viewport changed`. A Markdown document shows one preview scheme.
 There, a change confined to another preview scheme marks the standalone
 Appearance selector with the shared change dot and an `Other theme changed`
-description, and the viewport dropdown keeps the separate other-viewport
-indicator. Embedded viewers mark their Dark preview control instead. The
+description. Embedded viewers mark their Dark preview control instead. The
 active workspace supplies these marks from one entry-owned evidence and view
 resolution, including Light fallback and later detail updates. Leaving a
 workspace clears its mark; no control depends on a second evidence fetch.
@@ -217,5 +216,5 @@ the design screens of the appearance and their owning folders.
 - [Viewer semantic palette](./mokly-viewer-palette.md)
 - [Standalone appearance control](./mokly-viewer-appearance-standalone.md)
 - [Viewer preview palette](./mokly-viewer-palette-preview.md)
-- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
 - [Embeddable viewer](./mokly-viewer.md)
