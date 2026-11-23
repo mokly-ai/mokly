@@ -4,8 +4,8 @@
  * frame, and the selection that a route names.
  */
 
-import type { CanvasFrameState, CanvasSelected } from "./canvas_selection.js";
 import type { CanvasFramePlan } from "./canvas_frames.js";
+import type { CanvasFrameState, CanvasSelected } from "./canvas_selection.js";
 import { validFrameUsage } from "./frame_instances.js";
 import type { ShellFrameSession } from "./frame_registry.js";
 import type { ShellRoute } from "./routes.js";
@@ -131,9 +131,7 @@ export function routeSelection(
   plans: readonly CanvasFramePlan[],
   routed: { path: string; savedVariant: boolean; scheme: "dark" | "light" },
 ):
-  | { instance: { frame: string; key: string } }
-  | { frame: string }
-  | undefined {
+  { instance: { frame: string; key: string } } | { frame: string } | undefined {
   const viewport = route.viewport === "desktop" ? "desktop" : "mobile";
   if (route.instance) {
     const frame = routedFrame(

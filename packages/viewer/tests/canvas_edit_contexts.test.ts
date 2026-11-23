@@ -149,10 +149,9 @@ test("a screen's frame shows its view's temporary render, and else its saved doc
     view === darkDesktop ? rendered(view) : view,
   );
   assert.deepEqual(
-    withEditPreviews(workspaceFrames(data, EVERY_FRAME), edited).map((frame) => [
-      frame.key,
-      frame.preview?.path,
-    ]),
+    withEditPreviews(workspaceFrames(data, EVERY_FRAME), edited).map(
+      (frame) => [frame.key, frame.preview?.path],
+    ),
     [
       ["desktop-light", undefined],
       ["mobile-light", undefined],

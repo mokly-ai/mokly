@@ -8,6 +8,7 @@
  * preview control of a document's one preview scheme in the head.
  */
 
+import type { CatalogueUseCase } from "@mokly/model";
 import { ChangeStatus, type ChangeStatusValue } from "@mokly/ui/change-status";
 import type { FramesToggleName } from "@mokly/ui/frames-filter";
 import { IconButton } from "@mokly/ui/icon-control";
@@ -16,13 +17,11 @@ import { InspectPanel } from "@mokly/ui/inspect-panel";
 import { InspectSelection } from "@mokly/ui/inspect-selection";
 import { MetadataRow } from "@mokly/ui/metadata-row";
 
-import type { CatalogueUseCase } from "@mokly/model";
-
 import type { UseCaseFramesChoice } from "./canvas_use_case_frames.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { EntryInspectHead } from "./inspect_head.js";
 import { UseCaseFrames } from "./inspect_frames.js";
+import { EntryInspectHead } from "./inspect_head.js";
 import { PageEvidence } from "./page_evidence.js";
 import type { PageComparisonEvidence } from "./page_evidence_data.js";
 import { EntryRightPanel } from "./right_panel.js";

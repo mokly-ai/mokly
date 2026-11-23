@@ -67,10 +67,9 @@ test("a screen opens as Desktop beside Mobile, its Light row above its Dark row"
 test("a screen without a dark view has the Light row alone, and the Frames filter keeps the shown columns and rows", () => {
   const data = workspace("product/browse/home", false);
   assert.deepEqual(
-    shown(workspaceFrames(data, EVERY_FRAME, data.views)).map(({ cell, key }) => [
-      key,
-      cell,
-    ]),
+    shown(workspaceFrames(data, EVERY_FRAME, data.views)).map(
+      ({ cell, key }) => [key, cell],
+    ),
     [
       ["desktop-light", [0, 0]],
       ["mobile-light", [1, 0]],
@@ -235,9 +234,7 @@ test("a component without saved variants has one row for its own example, withou
   const data = workspace("components/action", false);
   const own = { ...data, variants: data.variants.slice(0, 1) };
   assert.deepEqual(
-    shown(workspaceFrames(own, EVERY_FRAME, data.views)).map(
-      ({ key }) => key,
-    ),
+    shown(workspaceFrames(own, EVERY_FRAME, data.views)).map(({ key }) => key),
     ["components/action:light"],
   );
   const removed = {

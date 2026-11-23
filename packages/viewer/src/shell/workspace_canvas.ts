@@ -108,8 +108,7 @@ export function useWorkspaceCanvas(
   const picked = wide
     ? undefined
     : set
-      ? all.find((frame) => frame.key === selected?.frame && !frame.hidden)
-          ?.key
+      ? all.find((frame) => frame.key === selected?.frame && !frame.hidden)?.key
       : pickedScreenFrame(all, { colorScheme, viewport });
   const frames = useMemo(
     () => (wide ? all : compactFrames(all, picked)),

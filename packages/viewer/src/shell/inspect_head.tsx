@@ -121,10 +121,7 @@ function DetailRows({
         </MetadataRow>
       ) : null}
       {entry.kind === "screen" ? (
-        <UsedByChips
-          catalogue={catalogue}
-          useCasePaths={entry.useCasePaths}
-        />
+        <UsedByChips catalogue={catalogue} useCasePaths={entry.useCasePaths} />
       ) : null}
     </>
   );
@@ -161,7 +158,9 @@ export function EntryInspectHead({
         title={head.title}
       >
         <MetadataRow label="Path" mark="data-inspect-path">
-          <MetadataPath segments={pathSegments(entry.path, head.crumbs, store)} />
+          <MetadataPath
+            segments={pathSegments(entry.path, head.crumbs, store)}
+          />
         </MetadataRow>
         <DetailRows
           catalogue={catalogue}

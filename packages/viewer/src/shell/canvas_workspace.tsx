@@ -41,8 +41,7 @@ export interface WorkspaceCanvas {
   onFrameSize?: ((key: string, size: CanvasFrameSize) => void) | undefined;
   /** What lies over a frame of a size, such as the canvas selection. */
   overlay?:
-    | ((plan: CanvasFramePlan, size: CanvasFrameSize) => ReactNode)
-    | undefined;
+    ((plan: CanvasFramePlan, size: CanvasFrameSize) => ReactNode) | undefined;
 }
 
 function frameSize(

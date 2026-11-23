@@ -69,7 +69,9 @@ function ownProps(target: ControlTarget): boolean {
 
 /** Whether Props shows the edit form or the saved props of `target`. */
 export function editsProps(target: ControlTarget | undefined): boolean {
-  return target !== undefined && (target.kind === "component" || ownProps(target));
+  return (
+    target !== undefined && (target.kind === "component" || ownProps(target))
+  );
 }
 
 /** The number of fields of the form that Props shows, where it has fields. */
