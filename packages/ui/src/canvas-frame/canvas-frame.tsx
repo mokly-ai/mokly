@@ -33,18 +33,29 @@ const GLYPHS: Readonly<Record<CanvasFrameKind, CanvasIconName>> = {
   mobile: "mobile",
 };
 
-/** A frame's size tag: its nominal width and height, such as `1280 × 800`. */
+/**
+ * A frame's size tag: its nominal width and height in whole CSS pixels,
+ * rounded, such as `1280 × 800`, or `148 × 86` for a component's document of
+ * 147.73 × 86.
+ */
 export function frameSizeTag(width: number, height: number): string {
-  return `${width} × ${height}`;
+  return `${Math.round(width)} × ${Math.round(height)}`;
 }
 
-/** The frame's nominal size, which its box and its document read. */
+/**
+ * The frame's nominal size, which its box reads, and the box of its
+ * document: the nominal size rounded up to whole pixels, so a document
+ * whose measured size holds a fraction of a pixel fits without a scrollbar.
+ * The frame's box clips that fraction.
+ */
 function sizeStyle(
   width: number | undefined,
   height: number | undefined,
 ): CSSProperties | undefined {
   if (width === undefined || height === undefined) return undefined;
   return {
+    "--mbk-canvas-frame-document-height": Math.ceil(height),
+    "--mbk-canvas-frame-document-width": Math.ceil(width),
     "--mbk-canvas-frame-height": height,
     "--mbk-canvas-frame-width": width,
   } as CSSProperties;
@@ -66,8 +77,9 @@ export function CanvasFrame({
   /** Whether the frame's document failed to load. */
   error?: boolean;
   /**
-   * The nominal height in CSS pixels. A reading frame leaves it out and
-   * takes the reading size that its section gives.
+   * The nominal height in CSS pixels, which can hold a fraction of a pixel,
+   * as a component's measured document does. A reading frame leaves it out
+   * and takes the reading size that its section gives.
    */
   height?: number | undefined;
   kind: CanvasFrameKind;
@@ -79,7 +91,10 @@ export function CanvasFrame({
   scheme: FrameScheme;
   /** Whether the frame holds the selection, which lights its label. */
   selected?: boolean;
-  /** The nominal width in CSS pixels; a reading frame leaves it out. */
+  /**
+   * The nominal width in CSS pixels, which can hold a fraction of a pixel;
+   * a reading frame leaves it out.
+   */
   width?: number | undefined;
 }) {
   const unavailable = children === undefined || children === null;

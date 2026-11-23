@@ -377,7 +377,8 @@ frame, `data-workspace-variant`. A route's fragment opens the routed entry's
 frames at it, and not the other rows of a variant set. Once each document of
 a component frame is ready, the mount hook's `onReady` hears of it, and the
 frame asks the mounted frame's `contentBox` once; `componentFrameSize` of
-`canvas_frame_size.ts` turns the box into the frame's size. An adapter
+`canvas_frame_size.ts` turns the box into the frame's size, the document's
+own size with its fractions, which the size tag rounds. An adapter
 without the measurement, a failed measurement, and a document without
 content keep the desktop size, and a measurement that ends after the frame
 loads another document is dropped. A fitted canvas refits to the measured

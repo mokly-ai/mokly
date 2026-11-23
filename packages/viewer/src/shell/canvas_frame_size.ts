@@ -28,16 +28,17 @@ export const MOBILE_FRAME_SIZE: CanvasFrameSize = Object.freeze({
 
 /**
  * A component frame's size from the box of its document's content, in
- * document coordinates. The frame holds the box with the same margin on its
- * far edges as on its near edges, rounded up to whole pixels. Without a box,
- * as from an adapter that cannot measure the content, the frame takes the
+ * document coordinates: the document's own size, which holds the box with
+ * the same margin on its far edges as on its near edges and can hold a
+ * fraction of a pixel. The frame's size tag rounds it. Without a box, as
+ * from an adapter that cannot measure the content, the frame takes the
  * desktop size.
  */
 export function componentFrameSize(box?: Box | null): CanvasFrameSize {
   if (!box) return DESKTOP_FRAME_SIZE;
   return {
-    height: Math.max(1, Math.ceil(box.y * 2 + box.height)),
-    width: Math.max(1, Math.ceil(box.x * 2 + box.width)),
+    height: Math.max(1, box.y * 2 + box.height),
+    width: Math.max(1, box.x * 2 + box.width),
   };
 }
 

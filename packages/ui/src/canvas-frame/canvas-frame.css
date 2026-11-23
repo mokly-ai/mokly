@@ -113,12 +113,19 @@
     var(--mbk-canvas-frame-lift);
 }
 
+/* The document's box takes the nominal size rounded up to whole pixels where
+   the frame gives it, and a reading frame's size otherwise. */
 .mbk-canvas-frame-document {
   position: absolute;
   top: 0;
   left: 0;
-  width: calc(var(--mbk-canvas-frame-width) * 1px);
-  height: calc(var(--mbk-canvas-frame-height) * 1px);
+  width: calc(
+    var(--mbk-canvas-frame-document-width, var(--mbk-canvas-frame-width)) * 1px
+  );
+  height: calc(
+    var(--mbk-canvas-frame-document-height, var(--mbk-canvas-frame-height)) *
+      1px
+  );
   transform: scale(var(--mbk-canvas-frame-scale));
   transform-origin: 0 0;
 }

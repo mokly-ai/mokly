@@ -217,8 +217,11 @@ and the reading size, which the section draws and Fit reads, so the two
 agree. `CanvasFrame`
 draws one bare frame at its nominal `width` and `height` times the canvas's
 zoom, `--mbk-canvas-zoom`, with its label and size tag, and holds its
-document at the nominal size, scaled. A frame too narrow for its label and its
-size tag drops the tag. A reading frame has no tag and takes the reading size
+document at the nominal size, scaled. A nominal size can hold a fraction of a
+pixel, as a component's measured document does: the size tag reads whole
+pixels, rounded, and the document's box rounds the size up, so the document
+fits without a scrollbar and the frame clips the fraction. A frame too narrow
+for its label and its size tag drops the tag. A reading frame has no tag and takes the reading size
 that its section gives. `CanvasZoomPill` draws the pill, a group named Zoom,
 from the zoom and three callbacks, and `CanvasIcon` the canvas glyphs on the
 Canvas design's 16-unit grid. The canvas parts mix their rings, fills, and

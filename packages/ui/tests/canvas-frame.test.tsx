@@ -59,6 +59,37 @@ test("a frame's label names it above its left edge, and its size tag gives its n
   );
 });
 
+test("a frame at a measured size tags it in whole pixels and rounds its document's box up", () => {
+  const { container } = render(
+    <CanvasFrame
+      height={113.5}
+      kind="component"
+      label="Default · Light"
+      scheme="light"
+      width={234.3}
+    >
+      <span title="Default — desktop — light" />
+    </CanvasFrame>,
+  );
+  const figure = screen.getByRole("figure");
+  assert.equal(
+    container.querySelector(".mbk-canvas-frame-size")?.textContent,
+    "234 × 114",
+  );
+  // The frame's box keeps the measured size; its document's box rounds it
+  // up, so the document fits without a scrollbar.
+  const style = (name: string) => figure.style.getPropertyValue(name);
+  assert.deepEqual(
+    [
+      style("--mbk-canvas-frame-width"),
+      style("--mbk-canvas-frame-height"),
+      style("--mbk-canvas-frame-document-width"),
+      style("--mbk-canvas-frame-document-height"),
+    ],
+    ["234.3", "113.5", "235", "114"],
+  );
+});
+
 test("a reading frame has no size tag, and the frame that holds the selection is marked", () => {
   const { container } = render(
     <>

@@ -14,10 +14,14 @@ test("a component frame holds its content box with the same margin on its far ed
     componentFrameSize({ x: 24, y: 24, width: 272, height: 84 }),
     { width: 320, height: 132 },
   );
-  // Fractions round up to whole pixels.
+  // The document's own size keeps its fractions; the size tag rounds them.
   assert.deepEqual(
-    componentFrameSize({ x: 10.2, y: 0.5, width: 100.1, height: 40.25 }),
-    { width: 121, height: 42 },
+    componentFrameSize({ x: 0, y: 0, width: 147.73, height: 86 }),
+    { width: 147.73, height: 86 },
+  );
+  assert.deepEqual(
+    componentFrameSize({ x: 10.25, y: 0.5, width: 100.5, height: 40.25 }),
+    { width: 121, height: 41.25 },
   );
   // An empty box still leaves a frame of one pixel.
   assert.deepEqual(componentFrameSize({ x: 0, y: 0, width: 0, height: 0 }), {
