@@ -171,6 +171,7 @@ export function ComponentWorkspace({
     data.component?.path === entry.path ? data.status : presentation.status;
   const compare = useWorkspaceComparison({
     choice,
+    compared,
     comparison,
     data,
     frames,

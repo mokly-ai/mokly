@@ -771,13 +771,15 @@ then the modes and the details that the caller gives. An entry that the
 Changes filter does not list has no stepper. `compare_modes.tsx` gives a
 screen's or a component's modes to the tab: the offer rule of the
 [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls),
-every mode for an eligible view, Current alone for a shown status of Added,
-and none otherwise or for a removed screen; the tiles of
-`@mokly/ui/compare-modes` with a chip for each frame that the canvas shows;
-Scroll together of `use_scroll_together.ts`; and Refresh once a comparison
-loaded. While Changes is the selected tab, `compare_mode_keys.ts` binds the
-keys 1 to 5 to the offered modes. The tab's comparison details list the
-outcome line of each compared frame, such as
+every mode while the workspace offers its compare, as a variant set does
+while a shown row compares, Current alone for a shown status of Added, and
+none otherwise or for a removed screen; the tiles of
+`@mokly/ui/compare-modes` with a chip for each shown frame whose row
+compares, or for each view of a removed component or variant; Scroll
+together of `use_scroll_together.ts`; and Refresh while the comparison holds
+a row's generation. While Changes is the selected tab,
+`compare_mode_keys.ts` binds the keys 1 to 5 to the offered modes. The tab's
+comparison details list the outcome line of each compared frame, such as
 `Desktop · Light · Screen changed` (`comparison_outcome.ts`). The canvas
 shows the chosen mode only while Changes is the selected tab: the workspace
 gates the compare with `shown`, and the inspection, the edit previews and
