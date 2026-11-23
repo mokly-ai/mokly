@@ -26,11 +26,7 @@ import {
 
 import { CHANGED_DEFAULT } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
-import {
-  DEFAULT_FIELD_COUNT,
-  DefaultControls,
-  DefaultSavedProps,
-} from "./props.js";
+import { DEFAULT_FIELD_COUNT, DefaultControls } from "./props.js";
 
 /**
  * The screens that the Action branch's change affects, each opening its own
@@ -54,11 +50,11 @@ function affectedScreens(): UsageRow[] {
 }
 
 /**
- * What a state of Default's Inspect shows: its usage in Current, the route's
- * details while its parent's detail loads or after that load failed, or its
- * saved props while a compare mode stays on the frames.
+ * What a state of Default's Inspect shows: its usage, the route's details
+ * while its parent's detail loads or after that load failed, or the panel
+ * scrolled to Props, which edits Default, with Usage folded.
  */
-export type DefaultInspectState = "comparison" | "failed" | "loading" | "usage";
+export type DefaultInspectState = "failed" | "loading" | "props" | "usage";
 
 /**
  * The route's details in each state that waits for the parent's detail:
@@ -75,9 +71,10 @@ export const PENDING_DETAILS = {
  * its Light frame selected, and on a phone its frame of the appearance's
  * scheme: the Action's head with Default's path and its Changed status, the
  * Action itself and its saved variants with Default checked, the eight
- * frames, and the selected frame. Props edits Default in Current; while a
- * compare mode is on, Props shows its saved props read-only, and Highlight
- * components waits for Current. Usage holds the Action's own lists, Used by
+ * frames, and the selected frame. Inspect shows the current frames whatever
+ * mode the Changes tab holds, so Props edits Default and Highlight components
+ * says that the Action renders no registered component, also while Overlay
+ * stays chosen there. Usage holds the Action's own lists, Used by
  * and the affected screens, from the parent's detail. A current variant
  * waits for its own detail and its parent's, so until both arrive Props and
  * Usage wait without counts, and no frame mounts, so Highlight components
@@ -96,7 +93,7 @@ export function DefaultInspect({
   frame: CanvasFrameSpec;
   state: DefaultInspectState;
 }) {
-  const comparing = state === "comparison";
+  const atProps = state === "props";
   const details =
     state === "failed" || state === "loading"
       ? PENDING_DETAILS[state]
@@ -119,30 +116,24 @@ export function DefaultInspect({
         count={8}
         filter={{
           ...SET_FILTER,
-          unavailable: comparing
-            ? "comparison"
-            : details === undefined
-              ? "empty"
-              : "loading",
+          unavailable: details === undefined ? "empty" : "loading",
         }}
       />
       <InspectFrameSelected frame={frame} variant="Default" />
       <InspectFold
-        count={
-          comparing || details !== undefined ? undefined : DEFAULT_FIELD_COUNT
-        }
-        initial={comparing}
+        count={details === undefined ? DEFAULT_FIELD_COUNT : undefined}
+        initial={atProps}
         name="props"
         open
         title="Props"
       >
-        <DefaultProps comparing={comparing} details={details} />
+        <DefaultProps details={details} />
       </InspectFold>
       <InspectFold
         count={details === undefined ? actionUsedBy().length : undefined}
-        initial={!comparing}
+        initial={!atProps}
         name="usage"
-        open={!comparing}
+        open={!atProps}
         title="Usage"
       >
         {details === undefined ? (
@@ -156,17 +147,13 @@ export function DefaultInspect({
 }
 
 /**
- * Default's Props: its edit form in Current, its saved props read-only
- * while a compare mode is on, or the shipped status while the route's
+ * Default's Props: its edit form, or the shipped status while the route's
  * details are pending.
  */
-function DefaultProps({
-  comparing,
-  details,
-}: {
-  comparing: boolean;
-  details: PendingDetails | undefined;
-}) {
-  if (details !== undefined) return <PendingProps details={details} />;
-  return comparing ? <DefaultSavedProps /> : <DefaultControls />;
+function DefaultProps({ details }: { details: PendingDetails | undefined }) {
+  return details === undefined ? (
+    <DefaultControls />
+  ) : (
+    <PendingProps details={details} />
+  );
 }

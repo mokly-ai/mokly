@@ -58,16 +58,61 @@ function parts(container: HTMLElement): (string | null)[] {
   );
 }
 
-test("the rail holds an added entry's current version alone and a removed entry's version before alone", () => {
-  const cases: readonly [EntryStatus | undefined, string | undefined][] = [
-    ["Added", "added"],
-    ["Removed", "removed"],
-    ["Changed", undefined],
-    ["Unmodified", undefined],
-    [undefined, undefined],
+test("the rail holds an added entry's current version alone while nothing compares, and a removed entry's version before alone", () => {
+  // Each case: the shown status, whether a shown row compares, the outcome.
+  const cases: readonly [
+    EntryStatus | undefined,
+    boolean,
+    string | undefined,
+  ][] = [
+    ["Added", false, "added"],
+    ["Added", true, undefined],
+    ["Removed", false, "removed"],
+    ["Removed", true, "removed"],
+    ["Changed", true, undefined],
+    ["Unmodified", false, undefined],
+    [undefined, false, undefined],
   ];
-  for (const [status, outcome] of cases)
-    assert.equal(comparedOutcome(status), outcome, String(status));
+  for (const [status, compares, outcome] of cases)
+    assert.equal(
+      comparedOutcome(status, compares),
+      outcome,
+      `${String(status)}, compares: ${String(compares)}`,
+    );
+});
+
+test("a set's added row names both versions while another shown row compares, and its added line while none does", (t) => {
+  registerDom(t);
+  const { adapter } = fakeAdapter();
+  // A variant set opened on its added row, as the Card set opened on Fresh.
+  const path = "components/action/default";
+  const rail = (compares: boolean) => {
+    const view = renderInShell(
+      adapter,
+      path,
+      <ChangesTab
+        compares={compares}
+        details={<p>Rendered content changed.</p>}
+        path={path}
+        status="Added"
+      />,
+    );
+    const lines = [
+      ...view.container.querySelectorAll(
+        ".mbk-compared-version, .mbk-compared-note",
+      ),
+    ].map((line) => line.textContent);
+    view.unmount();
+    return lines;
+  };
+  assert.deepEqual(rail(true), [
+    "Before Branch point on main",
+    "Current This branch",
+  ]);
+  assert.deepEqual(rail(false), [
+    "Current This branch",
+    "Added on this branch, so there is no base to compare.",
+  ]);
 });
 
 test("the Changes tab holds the stepper of the entry's change, the host's content, Compared, the modes, then the details", (t) => {

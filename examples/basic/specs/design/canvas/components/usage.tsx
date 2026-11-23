@@ -25,7 +25,7 @@ import {
 import { explorerMetadata, explorerState } from "./parts/metadata.js";
 
 /** A state of Default's usage: listed, loading, or failed to load. */
-type UsageState = Exclude<DefaultInspectState, "comparison">;
+type UsageState = Exclude<DefaultInspectState, "props">;
 
 /** The artboard that shows each state of Default's usage. */
 const USAGE_PAGES = {

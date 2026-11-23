@@ -77,11 +77,17 @@ context. Temporary state is never written to a source, never encoded in a URL,
 local storage, a comparison, or a Changes count, and never enters the
 catalogue model.
 
-Temporary edits operate in Current. Selecting a comparison restores the saved
-props and compares the base render with the current render of the saved props;
-the controls are unavailable while comparing, and the product explains that the
-comparison shows the saved props. A render response cannot overwrite a
-comparison, another entry, another viewport or scheme, or a different page.
+Temporary edits operate on the current frames. A comparison shows only while
+the Changes tab shows a compare mode; while a mode stays chosen there, Inspect
+shows the current frames, so Props edits them and Highlight components works.
+Showing a compare mode in Changes discards the edit in progress and restores
+the saved props, and the comparison compares the base render with the current
+render of the saved props. A return to Inspect starts Props again from the
+saved props. Decision: the edit goes when a compare mode shows, not when the
+tab changes alone, because a comparison never shows temporary props, and
+Inspect keeps its current frames whatever mode Changes holds. A render
+response cannot overwrite a comparison, another entry, another viewport or
+scheme, or a different page.
 The [controls mockups](./mokly-component-controls-design.md) show the states.
 
 ## Rendering Boundary

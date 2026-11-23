@@ -16,7 +16,8 @@ const fitted = (
  * The authored transitions of the Component explorer artboards.
  * `../../parts/navigation_states.ts` spreads them into the family's states.
  * The changed Default variant moves between Inspect in Current and its
- * Changes tab, whose Inspect tab keeps Overlay on the frames. No artboard
+ * Changes tab, and its Overlay's Inspect tab keeps Overlay chosen in Changes
+ * while Inspect shows the current frames. No artboard
  * shows Inspect with Side by side or Difference on, or a sheet of these
  * states closed again, so those controls are pictures. The affected screens
  * and Welcome on the direct-change branch have no Inspect artboard on their

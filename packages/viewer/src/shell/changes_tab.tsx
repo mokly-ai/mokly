@@ -23,13 +23,16 @@ import type { EntryStatus } from "./view_status.js";
 
 /**
  * The one version that the Compared rail holds: an added entry's current
- * version, or a removed entry's version before. Any other status holds both.
+ * version while no shown row compares, or a removed entry's version before.
+ * Any other status, and an added row of a variant set whose other shown row
+ * compares, holds both.
  */
 export function comparedOutcome(
   status: EntryStatus | undefined,
+  compares: boolean,
 ): ComparedOutcome | undefined {
-  if (status === "Added") return "added";
-  return status === "Removed" ? "removed" : undefined;
+  if (status === "Removed") return "removed";
+  return status === "Added" && !compares ? "added" : undefined;
 }
 
 /**
@@ -41,18 +44,25 @@ export function comparedOutcome(
  * shell leaves the host's content alone.
  */
 export function ChangesTab({
+  compares = false,
   details,
   modes,
   path,
   status,
 }: {
+  /**
+   * Whether the entry offers its comparison: a shown row compares, which
+   * for a variant set can be a row other than the routed one. Absent for an
+   * entry without compare modes.
+   */
+  compares?: boolean;
   /** The comparison details, without the branch-point sentence that the rail replaces. */
   details: ReactNode;
   /** The compare modes; absent for an entry that offers none. */
   modes?: ReactNode;
   /** The routed entry's path; the route's snapshot names a removed record. */
   path: string;
-  /** The status that the entry shows, which decides the rail's versions. */
+  /** The status that the entry shows, which with `compares` decides the rail's versions. */
   status: EntryStatus | undefined;
 }) {
   const { context, sections } = useShellStore();
@@ -71,7 +81,10 @@ export function ChangesTab({
   return (
     <ChangesPanel
       compared={
-        <ComparedRail base={context.base} outcome={comparedOutcome(status)} />
+        <ComparedRail
+          base={context.base}
+          outcome={comparedOutcome(status, compares)}
+        />
       }
       details={details}
       modes={modes}
