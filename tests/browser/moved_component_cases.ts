@@ -6,20 +6,33 @@ import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js"
 
 import type { test as baseTest } from "./browser_test.js";
 import { expectHostPath } from "./entry_hosts.js";
-import { ACTION, row, showDetails, type MovedHost } from "./moved_rows.js";
+import { ACTION, row, type MovedHost } from "./moved_rows.js";
+import { openInspectFold, revealInPanel } from "./workspace_actions.js";
 
-/** The saved-variant bar of the moved Action: its parent, then its variants. */
-const BAR = ["Action", "Primary", "Ghost", "Iconic", "Secondary · Removed"];
+/** Inspect's Variants of the moved Action: its own example, then its variants. */
+const ROWS = ["Action", "Primary", "Ghost", "Iconic", "Secondary"];
 
-function savedVariants(page: Page) {
-  return page.getByRole("navigation", { name: "Saved variants" });
+function variants(page: Page) {
+  return page.locator(
+    '[data-inspect-section="variants"] [data-inspect-variant]',
+  );
 }
 
-async function expectBar(page: Page, status: string): Promise<void> {
-  await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-    status,
-  );
-  await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
+/**
+ * Expect the shown entry's status in Inspect's head, Inspect's Variants, and
+ * the checked row of the routed variant, whose frame is selected.
+ */
+async function expectVariants(
+  page: Page,
+  status: string,
+  checked?: string,
+): Promise<void> {
+  await expect(page.locator("[data-workspace-status]")).toHaveText(status);
+  await expect(variants(page)).toHaveText(ROWS);
+  if (checked !== undefined)
+    await expect(
+      page.locator('[data-inspect-section="variants"] [data-checked]'),
+    ).toHaveText(checked);
 }
 
 /** Register the moved component cases on `host`, which `test` serves. */
@@ -31,13 +44,13 @@ export function registerMovedComponentCases(
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    for (const [entry, status] of [
-      [moves.unchangedMovedVariant, "Primary · Unmodified"],
-      [moves.metadataMovedVariant, "Ghost · Changed"],
-      [moves.nestedMovedVariant, "Iconic · Changed"],
+    for (const [entry, status, checked] of [
+      [moves.unchangedMovedVariant, "Unmodified", "Primary"],
+      [moves.metadataMovedVariant, "Changed", "Ghost"],
+      [moves.nestedMovedVariant, "Changed", "Iconic"],
     ] as const) {
       await host.open(page, entry);
-      await expectBar(page, status);
+      await expectVariants(page, status, checked);
     }
   });
 
@@ -46,21 +59,18 @@ export function registerMovedComponentCases(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, moves.removedActionVariant);
-    await expectBar(page, "Secondary · Removed");
-    await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-    await page.getByRole("tab", { name: "Props", exact: true }).click();
-    await expect(
-      page.getByRole("region", { name: "Inspector", exact: true }),
-    ).toContainText("Go back");
+    await expectVariants(page, "Removed", "Secondary");
+    // Props shows the removed variant's saved props.
+    await expect(await openInspectFold(page, "props")).toContainText("Go back");
   });
 
-  test("a moved variant keeps the nested inputs it changed in Details", async ({
+  test("a moved variant keeps the nested inputs it changed in its comparison details", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, moves.nestedMovedVariant);
-    await showDetails(page);
     const evidence = page.locator("[data-workspace-evidence]");
+    await revealInPanel(page, evidence);
     // The fixture renders both schemes, so each view names its own input.
     for (const viewport of ["mobile", "desktop"])
       for (const scheme of ["light", "dark"])
@@ -103,11 +113,8 @@ export function registerMovedComponentCases(
     const routed = new URL(page.url());
     expect([routed.search, routed.hash]).toEqual([opened.search, opened.hash]);
     await fetched;
-    await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
+    await expect(variants(page)).toHaveText(ROWS);
     release();
-    await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-      "Action · Unmodified",
-    );
-    await expect(savedVariants(page).getByRole("link")).toHaveText(BAR);
+    await expectVariants(page, "Unmodified");
   });
 }
