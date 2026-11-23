@@ -65,16 +65,19 @@ async function expectRemovedRow(
 }
 
 /**
- * The parent's own entry, then its variants; removed ones come last. The
- * list checks the variant of the selected frame, which a routed saved
- * variant selects; a removed variant has no frame, so its route checks none.
+ * The parent's own entry, then its variants; removed ones come last. A
+ * saved variant's page opens the set with that variant's frame selected,
+ * and the list checks the variant of the selected frame, so the routed
+ * variant's row is checked, the removed sibling's on its own page too.
  */
 function bar(family: Family, routed: "primary" | "removed"): string[] {
   const { title, parent, primary, removed } = family;
+  const checked = (row: "primary" | "removed") =>
+    routed === row ? " (current)" : "";
   return [
     `${title} -> ${parent}`,
-    `primary -> ${primary}${routed === "primary" ? " (current)" : ""}`,
-    `secondary · Removed -> ${removed}`,
+    `primary -> ${primary}${checked("primary")}`,
+    `secondary · Removed -> ${removed}${checked("removed")}`,
   ];
 }
 
