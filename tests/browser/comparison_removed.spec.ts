@@ -7,6 +7,7 @@ import {
   navRow,
   snapshotOf,
 } from "./comparison_ui.js";
+import { historicalFrame, previousVersionLabel } from "./previous_version.js";
 
 const PREVIEW = "iframe[data-mokly-preview-frame]";
 const DOCUMENT_ICON = '.mbk-nav-ico path[d="M9 13h6M9 17h4"]';
@@ -53,15 +54,15 @@ for (const [kind, removedPath, title, content] of [
     const current = new RegExp(`/view/${comparisonPaths.changed}/$`);
     const frame =
       kind === "screen"
-        ? "[data-mokly-preview] .mbk-frame-desktop iframe"
-        : PREVIEW;
+        ? historicalFrame(page, "desktop").locator("iframe")
+        : page.locator(PREVIEW);
     const expectHistorical = async () => {
       await expect(page.locator("#mb-main h2").first()).toHaveText(title);
-      await expect(page.locator(".mbk-previous")).toHaveText(
+      await expect(previousVersionLabel(page)).toHaveText(
         "Showing previous version",
       );
       await expect(
-        page.frameLocator(frame).getByRole("heading", { name: content }),
+        frame.contentFrame().getByRole("heading", { name: content }),
       ).toBeVisible();
     };
     const expectCurrent = async () => {

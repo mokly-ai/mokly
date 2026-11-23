@@ -9,6 +9,7 @@ import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
 import { focusDesignLink } from "./design_test_helpers.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
 import {
   canvasFrame,
   chooseScheme,
@@ -128,7 +129,7 @@ export function registerExampleLinks(
       for (const step of [0, 1]) {
         await page.goto("/view/example/tour/");
         await chooseScheme(page, scheme);
-        const frame = page.frameLocator(".mbk-flow-screen iframe").nth(step);
+        const frame = useCaseStepFrame(page, step + 1).contentFrame();
         const button = frame
           .locator('a[data-mokly-link-control="button"]')
           .filter({
