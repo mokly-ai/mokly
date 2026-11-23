@@ -113,7 +113,7 @@ export function CanvasLiveFrame({
       kind={plan.kind}
       label={plan.label}
       onSelect={onSelect}
-      overlay={overlay}
+      marks={overlay}
       retry={{ onClick: focusThen(frame.frameRef, frame.retry) }}
       scheme={scheme}
       selected={plan.selected}

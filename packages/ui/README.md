@@ -228,7 +228,7 @@ square handles and a size tag below its middle. A selected instance has eight
 handles, a tag above its top-left corner that names its component, and the
 redline of its left padding, which hides while the padding is too narrow on
 screen to read. A selected frame has a handle at each corner. `CanvasFrame`
-holds the selection as its `overlay`, over its document and outside its
+holds the selection as its `marks`, over its document and outside its
 clip. With `selected`, the frame's label reads in the signal colour, and with
 `onSelect`, its name is a button. `SelectionPill` draws the compact layout's
 pill above the dock, which names the selected instance and opens the panel's
@@ -714,7 +714,7 @@ override the desktop layout rules.
   `sectionExtent`, the lengths that Fit reads
 - [`src/canvas-frame/canvas-frame.tsx`](./src/canvas-frame/canvas-frame.tsx) —
   `CanvasFrame`: a bare frame, its label and size tag, a step's description,
-  its scaled document or the place that holds a note, and its overlay
+  its scaled document or the place that holds a note, and its marks
 - [`src/canvas-frame/frame-label.tsx`](./src/canvas-frame/frame-label.tsx) —
   the frame's label: its glyph, a step's number, its name or the link that it
   is, `Light only`, and its size tag

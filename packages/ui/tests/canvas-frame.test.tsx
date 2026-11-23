@@ -141,7 +141,7 @@ test("a frame that a press selects names itself in a button, and an overlay lies
       kind="component"
       label="Disabled · Light"
       onSelect={() => (pressed += 1)}
-      overlay={<span title="Selection" />}
+      marks={<span title="Selection" />}
       scheme="light"
       selected
       width={148}
