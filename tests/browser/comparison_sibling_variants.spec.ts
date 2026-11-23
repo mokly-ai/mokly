@@ -1,10 +1,11 @@
 /**
  * A component's compare across its sibling variants on the copied comparison
  * output, under the variant navigation and comparison panes contracts. A
- * variant set compares the frames of the routed entry. Navigation to a
- * sibling variant keeps the mode, which then compares the sibling's own
- * frames; an added sibling offers Current alone. While a mode shows, Props
- * stay read-only and highlighting waits for Current.
+ * variant set compares the frames of each shown row that compares.
+ * Navigation to a sibling variant keeps the mode, which then compares the
+ * sibling's own frames; an added sibling's own frame stays current while the
+ * set offers its modes for the other rows. While a mode shows, Props stay
+ * read-only and highlighting waits for Current.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -16,7 +17,6 @@ import {
   chooseFilter,
   chooseMode,
   comparisonFrames,
-  expectNoCompareModes,
   modeButton,
   navRow,
   showMode,
@@ -55,9 +55,9 @@ test("component comparisons follow changed variants while added variants stay cu
   page,
 }) => {
   await page.goto(`/view/${comparisonPaths.component}/`);
-  // A variant set's frames show desktop views. The parent's comparison holds
-  // its own example's frames, Light and Dark, each with both versions.
-  await showMode(page, "Overlay", 4);
+  // A variant set's frames show desktop views. Card and Featured compare, so
+  // the Light and Dark frames of both rows each hold both versions.
+  await showMode(page, "Overlay", 8);
   // The comparison details stand in the Changes tab, never on the canvas.
   await expect(
     page.locator("[data-mokly-stage] [data-workspace-evidence]"),
@@ -70,9 +70,17 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(page.locator("[data-workspace-evidence]")).toHaveCount(1);
   await revealInPanel(page, highlightSwitch(page));
   await expect(highlightSwitch(page)).toBeDisabled();
-  // A changed sibling keeps the mode and compares its own frames.
+  // A changed sibling keeps the mode and compares its own frames, beside
+  // Card's. The canvas shows the compare only while Changes is the selected
+  // tab, and the Highlight switch stands in Inspect.
   await openSibling(page, comparisonPaths.changedVariant);
-  const featured = paneFrame(comparisonSection(page, "component"), "after");
+  await openPanelTab(page, "Changes");
+  const featured = paneFrame(
+    comparisonSection(page, "component").and(
+      page.getByRole("figure", { name: /^Featured · Light\b/u }),
+    ),
+    "after",
+  );
   await expect(featured).toHaveAttribute(
     "data-mokly-preview-source",
     /card\/featured\/index\.desktop\.html$/,
@@ -91,7 +99,10 @@ test("component comparisons follow changed variants while added variants stay cu
   ).toBeVisible();
   await openSibling(page, comparisonPaths.addedVariant);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
-  await expectNoCompareModes(page);
+  // Card and Featured still compare, so the set offers its modes on Fresh's
+  // route too, while Fresh's own frame stays current.
+  await openPanelTab(page, "Changes");
+  await expect(modeButton(page, "Overlay")).toBeVisible();
   await expect(
     rowHeading(page, comparisonPaths.addedVariant, "Fresh card"),
   ).toBeVisible();
