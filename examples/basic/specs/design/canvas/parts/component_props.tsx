@@ -10,7 +10,9 @@ import { PropsMessage } from "../../../../../../packages/ui/src/props-panel/prop
 import { CONTROLS_COPY } from "../../components/controls/parts/copy.js";
 import { optional, useDesignInstance } from "../../library/composition.js";
 import { propField } from "../../library/inspector/prop-field.js";
-import { TOOLBAR_DEFAULT } from "../../parts/mini_toolbar.js";
+import { TOOLBAR_EXAMPLES } from "../../parts/mini_toolbar.js";
+
+import { COMPONENT_IDENTITIES } from "./component_identity.js";
 
 /**
  * The Props section of a variant set while no frame is selected: the set
@@ -153,14 +155,14 @@ export function actionFields(
 /** The Action's controls with its saved variant Disabled's values. */
 const ACTION_DISABLED = actionFields(ACTION_SAVED.disabled);
 
-/** The Toolbar's one control, Title, with its saved variant Default's value. */
-const TOOLBAR_DEFAULT_FIELDS: readonly VariantField[] = [
+/** The Toolbar's one control, Title, with its own example's value. */
+const TOOLBAR_FIELDS: readonly VariantField[] = [
   {
     name: "title",
     label: "Title",
     input: (id) => (
       <input
-        defaultValue={TOOLBAR_DEFAULT.title}
+        defaultValue={TOOLBAR_EXAMPLES.own.title}
         id={id}
         maxLength={80}
         type="text"
@@ -169,10 +171,10 @@ const TOOLBAR_DEFAULT_FIELDS: readonly VariantField[] = [
   },
 ];
 
-/** The fields that Props counts while it edits each depicted variant. */
+/** The fields that Props counts while it edits each depicted example. */
 export const VARIANT_FIELDS = {
   "action-disabled": ACTION_DISABLED.length,
-  "toolbar-default": TOOLBAR_DEFAULT_FIELDS.length,
+  toolbar: TOOLBAR_FIELDS.length,
 } as const;
 
 /**
@@ -261,13 +263,16 @@ export function ActionDisabledControls() {
   );
 }
 
-/** The Toolbar's edit form for its saved variant Default. */
-export function ToolbarDefaultControls() {
+/**
+ * The Toolbar's edit form for its own example, whose own props Props edits
+ * while a selection stands on the own example's frame.
+ */
+export function ToolbarControls() {
   return (
     <VariantControls
-      fields={TOOLBAR_DEFAULT_FIELDS}
-      id="toolbar-default"
-      title="Default"
+      fields={TOOLBAR_FIELDS}
+      id="toolbar"
+      title={COMPONENT_IDENTITIES.toolbar.title}
     />
   );
 }

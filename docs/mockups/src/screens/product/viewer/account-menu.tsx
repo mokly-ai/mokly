@@ -93,9 +93,11 @@ function ThemeChoice({
 
 /**
  * The account rows that end both menus: who is signed in and the Theme
- * choice, above the menu's own items, Settings and Sign out. A popover marks
- * the keyboard's row, the first as it opens, with the library's ring; the
- * sheet has no keyboard and marks none.
+ * choice, above the menu's own items, Settings, Docs, Changelog and Sign out.
+ * Docs and Changelog open the site, so each carries the external glyph in
+ * place of a glyph of its own, and Settings stays the first item. A popover
+ * marks the keyboard's row, the first as it opens, with the library's ring;
+ * the sheet has no keyboard and marks none.
  */
 function AccountRows({
   scheme,
@@ -123,6 +125,8 @@ function AccountRows({
       }
       entries={[
         row("settings", "Settings", <Icon name="settings" />),
+        row("docs", "Docs", <Icon name="external" />),
+        row("changelog", "Changelog", <Icon name="external" />),
         row("sign-out", "Sign out", <Icon name="signOut" />),
       ]}
     />

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import {
   MainRegion,
@@ -53,7 +53,10 @@ interface CanvasShellProps {
   pill?: ReactNode;
   /** The stage's zoom in percent, which the zoom pill shows. */
   zoom?: number | undefined;
-  /** The compact form's zoom in percent, which the dock's Fit restores. */
+  /**
+   * The compact form's zoom in percent, which the dock's Fit restores and at
+   * which the compact form draws a component's frames.
+   */
   compactZoom?: number | undefined;
   /** The top bar's search query and tag picker; an empty, closed field by default. */
   search?: CanvasSearch | undefined;
@@ -155,8 +158,18 @@ function CanvasWork({
   const compact = viewport === "mobile";
   const zoomInstance = useDesignInstance("zoom");
   const dockInstance = useDesignInstance("dock");
+  // The compact form draws a component's frames at the zoom that the dock's
+  // Fit restores.
+  const fit: (CSSProperties & Record<"--cv-compact-zoom", number>) | undefined =
+    compactZoom === undefined
+      ? undefined
+      : { "--cv-compact-zoom": compactZoom / 100 };
   return (
-    <div className="cv-work" data-cv-sheet={expanded ? "expanded" : undefined}>
+    <div
+      className="cv-work"
+      data-cv-sheet={expanded ? "expanded" : undefined}
+      style={fit}
+    >
       <div className="cv-canvas">{children}</div>
       {!compact && zoom !== undefined ? (
         <div className="cv-zoom-place">

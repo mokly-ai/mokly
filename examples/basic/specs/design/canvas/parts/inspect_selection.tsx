@@ -5,7 +5,7 @@ import { useDesignInstance } from "../../library/composition.js";
 import { boxModel } from "../../library/inspector/box-model.js";
 import { MetaRow } from "../../parts/metadata_row.js";
 
-import { SCHEMES, type CanvasFrameSpec } from "./frames.js";
+import { SCHEMES, frameSize, type CanvasFrameSpec } from "./frames.js";
 import { WrappingPath } from "./inspect.js";
 import { contentSize, instanceSize, type CanvasInstance } from "./instances.js";
 
@@ -92,8 +92,8 @@ export function InspectSelected({
 
 /**
  * The Selection section with a frame of a variant set selected: a Frame chip
- * with the frame's size, and the variant and the scheme that the frame
- * shows.
+ * with the frame's size in whole pixels, and the variant and the scheme that
+ * the frame shows.
  */
 export function InspectFrameSelected({
   frame,
@@ -106,6 +106,7 @@ export function InspectFrameSelected({
   /** The title of the saved variant that the frame shows. */
   variant: string;
 }) {
+  const size = frameSize(frame);
   return (
     <section aria-label="Selection" className={sectionClass(initial)}>
       <h3 className="cv-sec-head">
@@ -114,7 +115,7 @@ export function InspectFrameSelected({
           Frame
         </span>{" "}
         <span className="cv-sec-count">
-          {frame.width} × {frame.height}
+          {size.width} × {size.height}
         </span>
       </h3>
       <dl className="cv-props">

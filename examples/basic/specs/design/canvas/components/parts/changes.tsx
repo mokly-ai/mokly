@@ -19,7 +19,7 @@ import type {
 import type { CanvasDestination } from "../../parts/destinations.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { InspectSection } from "../../parts/inspect.js";
-import { actionFrames } from "../../parts/set_sketches.js";
+import { actionSetFrames } from "../../parts/set_sketches.js";
 
 import { BRANCH_CHANGES } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
@@ -46,8 +46,9 @@ export const DEFAULT_FRAME = "default-light";
 export const COMPACT_FRAME = "compact-light";
 
 /**
- * A variant set's frames as Side by side's chips: each frame by its saved
- * variant and scheme, with the component glyph.
+ * A variant set's frames as Side by side's chips: each frame by its label,
+ * its saved variant or the component's title for its own example, and its
+ * scheme, with the component glyph.
  */
 function setChips(frames: readonly CanvasFrameSpec[]) {
   return frames.map(({ id, label }) => ({
@@ -97,7 +98,7 @@ export function changedAction(): EvidenceLink[] {
  * Action branch's four changes: the stepper, Compared, the compare modes in
  * the shown mode, and the comparison details, which name the saved variant
  * and its unchanged saved props. Side by side offers a chip for each frame
- * of the set and compares Default · Light. No artboard shows the Action's
+ * of the set, the own example's first, and compares Default · Light. No artboard shows the Action's
  * own changes or Disabled's, so Previous change and Next change are
  * pictures, and no artboard shows the set in Swipe or another frame's pair,
  * so that tile and those chips are pictures too.
@@ -121,7 +122,7 @@ export function DefaultChanges({ mode }: { mode: DefaultMode }) {
           {...(mode === "side-by-side"
             ? {
                 frame: DEFAULT_FRAME,
-                frames: setChips(actionFrames()),
+                frames: setChips(actionSetFrames()),
                 frameDestination: E.explorerCompareSide,
               }
             : {})}

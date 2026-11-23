@@ -6,7 +6,7 @@ import { DETAILS_VIEW, detailsFrames } from "../parts/changes_sketches.js";
 import { ACTION_SAVED } from "../parts/component_props.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { DetailsInspect } from "../parts/inspect_details.js";
-import { actionFrames, frameOf } from "../parts/set_sketches.js";
+import { actionSetFrames, frameOf } from "../parts/set_sketches.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
@@ -39,7 +39,7 @@ function Published({
   chosen: ChosenVariant;
   viewport: ArtboardViewport;
 }) {
-  const frames = actionFrames();
+  const frames = actionSetFrames();
   const frame = frameOf(frames, `${chosen}-light`);
   return (
     <ChosenVariantArtboard

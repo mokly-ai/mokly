@@ -13,9 +13,9 @@ import { CanvasStage } from "../parts/stage.js";
 
 /**
  * The catalogue in the Changes filter with Welcome selected on Inspect. A
- * row keeps the right panel's tab, so the moved Invoice's row and the
- * removed Farewell's row open theirs on Inspect. On a phone, the catalogue
- * sheet is open over the Welcome frame.
+ * row keeps the right panel's tab, so the rows of the Example tour, the
+ * moved Invoice and the removed Farewell open theirs on Inspect. On a phone,
+ * the catalogue sheet is open over the Welcome frame.
  */
 function Catalogue({ viewport }: { viewport: ArtboardViewport }) {
   const entry = CANVAS_ENTRIES.welcome;
@@ -25,6 +25,7 @@ function Catalogue({ viewport }: { viewport: ArtboardViewport }) {
         filter: "changes",
         activeKey: "welcome",
         targets: {
+          "example/tour": CANVAS_PAGES.useCase,
           invoice: CANVAS_PAGES.movedInspect,
           [REMOVED_SCREENS.farewell.key]: CANVAS_PAGES.removedInspect,
         },
@@ -50,7 +51,7 @@ function Catalogue({ viewport }: { viewport: ArtboardViewport }) {
 export const canvasCatalogueScreen = defineScreen({
   ...canvasDesignMetadata,
   description:
-    "The catalogue in the Changes filter, which lists the ten entries that the branch changed and names the base it compares with. On a phone, the catalogue opens as a sheet from the dock.",
+    "The catalogue in the Changes filter, which lists the eleven entries that the branch changed and names the base it compares with. On a phone, the catalogue opens as a sheet from the dock.",
   ...artboards({
     desktop: <Catalogue viewport="desktop" />,
     mobile: <Catalogue viewport="mobile" />,

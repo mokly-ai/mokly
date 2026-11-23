@@ -52,8 +52,8 @@ function removedConsumer(): UsageRow {
 /**
  * Inspect for the removed Compact on its parent's variant set, with its
  * Light frame selected: the Action's head with Compact's path and its
- * Removed status, Compact checked after the current variants, the eight
- * frames, and the selected frame. Props shows Compact's saved props
+ * Removed status, the Action itself and its current variants with Compact
+ * checked after them, the ten frames, and the selected frame. Props shows Compact's saved props
  * read-only. A removed variant keeps its own lists: the consumers of the
  * Action, and the screens that the change affects, which keep Farewell, a
  * removed former consumer. Removing a saved variant changes no current
@@ -68,6 +68,7 @@ export function RemovedInspect() {
       />
       <InspectVariants
         variants={[
+          { label: COMPONENT_IDENTITIES.action.title },
           { label: "Default" },
           { label: "Disabled" },
           { label: "Secondary" },
@@ -79,7 +80,7 @@ export function RemovedInspect() {
         ]}
       />
       <InspectFrames
-        count={8}
+        count={10}
         filter={{ ...SET_FILTER, unavailable: "empty" }}
       />
       <InspectFrameSelected

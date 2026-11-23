@@ -59,11 +59,13 @@ screens, and their saved variants stay under them in authored order.
   and `design/canvas/components/removed` and its variants depict the removal
   branch. Screen inspection depicts Details on the canonical branch.
 - A saved variant opens its parent's variant set with its Light frame
-  selected. A changed component compares on its variant set. Each frame holds
-  both versions of its view at one size, the larger width and the larger
-  height of the two. On the depicted branches, both versions have the same
-  size. In Side by side, a chip names each frame of the set by its saved
-  variant and scheme.
+  selected. A changed component compares on its variant set, its own
+  example's frames included. Each frame holds both versions of its view at
+  one size, the larger width and the larger height of the two. On the Action
+  branch, no version before is larger than its current version, so each frame
+  keeps the size of its current version. In Side by side, a chip names each
+  frame of the set as the frame's label does, the own example's frames
+  first.
 - The changed Default's compare modes link Current to
   `design/canvas/components/compare/current`, Side by side to
   `design/canvas/components/compare/side-by-side`, Overlay to

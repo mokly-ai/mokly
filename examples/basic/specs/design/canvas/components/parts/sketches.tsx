@@ -3,10 +3,7 @@ import type { ReactNode } from "react";
 import { ComparisonPane } from "../../../../../../../packages/ui/src/comparison-pane/comparison-pane.js";
 import type { FrameCompare } from "../../../library/canvas/frame_compare.js";
 import { DesignInstances } from "../../../library/composition.js";
-import {
-  MiniAction,
-  type MiniActionVariant,
-} from "../../../parts/mini_action.js";
+import { MiniAction, MiniActionDocument } from "../../../parts/mini_action.js";
 import { MiniDetails, MiniWelcome } from "../../../parts/mini_screens.js";
 import {
   componentFrames,
@@ -14,15 +11,25 @@ import {
   sideBySideFrames,
   type CanvasFrameSpec,
 } from "../../parts/frames.js";
-import { ACTION_DOCUMENT, actionFrames } from "../../parts/set_sketches.js";
+import {
+  COMPONENT_DOCUMENTS,
+  actionSetFrames,
+  actionVariantOf,
+} from "../../parts/set_sketches.js";
 
 import { COMPACT_SAVED } from "./props.js";
 
 /**
- * The zoom in percent of a variant set's compared pair on a phone, where
- * both versions of the picked frame stand next to each other.
+ * The zooms in percent that fit a compared frame's pair in Side by side, in
+ * the way that `SET_FITS` fits a set: on the stage of a desktop, and on a
+ * phone, where both versions of the picked frame stand 24px apart. Default ·
+ * Light's pair takes Default's width, and Compact · Light's the narrower
+ * width of its only version.
  */
-export const PAIR_PHONE_FIT = 54;
+export const PAIR_FITS = {
+  default: { zoom: 100, phone: 72 },
+  compact: { zoom: 100, phone: 100 },
+} as const;
 
 /**
  * The version before the Action branch: the Action's button with its
@@ -32,26 +39,14 @@ export function Before({ children }: { children: ReactNode }) {
   return <div className="cv-cx-before">{children}</div>;
 }
 
-/** The Action's saved variants, as their frames name them by slug. */
-const ACTION_VARIANTS = [
-  "default",
-  "disabled",
-  "secondary",
-] as const satisfies readonly MiniActionVariant[];
-
-/** The saved variant that a frame of the Action's set shows. */
-function actionVariant(slug: string | undefined): MiniActionVariant {
-  const variant = ACTION_VARIANTS.find((candidate) => candidate === slug);
-  if (variant === undefined)
-    throw new Error(`The Action has no saved variant ${slug}.`);
-  return variant;
-}
-
-/** A frame's version before the Action branch: its saved variant, earlier. */
+/**
+ * A frame's version before the Action branch: its own example or its saved
+ * variant, earlier.
+ */
 function actionBefore(frame: CanvasFrameSpec): ReactNode {
   return (
     <Before>
-      <MiniAction variant={actionVariant(frame.variant)} />
+      <MiniAction variant={actionVariantOf(frame)} />
     </Before>
   );
 }
@@ -70,11 +65,14 @@ function beforeOf(
 
 /**
  * The Action's variant set on the Action branch in a comparison that applies
- * to every frame: each frame holds the version before under the current
- * version. Both versions share the frame's size.
+ * to every frame: the Action's render changed, so its own example compares
+ * like its saved variants, and each frame holds the version before under
+ * the current version. Both versions share the frame's size, the larger of
+ * the two: the version before is narrower, so each frame keeps the size of
+ * its current version.
  */
 export function actionCompareFrames(compare: FrameCompare): CanvasFrameSpec[] {
-  return actionFrames().map((frame) => ({
+  return actionSetFrames().map((frame) => ({
     ...frame,
     compare,
     before: beforeOf(frame, actionBefore),
@@ -102,11 +100,11 @@ function sidePairs(
 }
 
 /**
- * The Action's variant set on the Action branch in Side by side: every
- * saved variant changed, so each frame has its pair.
+ * The Action's variant set on the Action branch in Side by side: its own
+ * example and every saved variant changed, so each frame has its pair.
  */
 export function actionSideFrames(): CanvasFrameSpec[] {
-  return sidePairs(actionFrames(), actionBefore);
+  return sidePairs(actionSetFrames(), actionBefore);
 }
 
 /**
@@ -123,27 +121,33 @@ function RemovedVersion() {
 }
 
 /**
- * The removed Compact's frames, at the size of its siblings' documents,
- * which hold its missing current version.
+ * The removed Compact's frames, which hold its missing current version. Its
+ * only version, the version before, renders the Action's button labelled
+ * Continue without a hint, so the frames take the size of that document,
+ * the own example's.
  */
 export function compactFrames(): CanvasFrameSpec[] {
-  return componentFrames(
-    [{ slug: "compact", title: "Compact", render: () => <RemovedVersion /> }],
-    ACTION_DOCUMENT,
-  );
+  return componentFrames([
+    {
+      slug: "compact",
+      title: "Compact",
+      size: COMPONENT_DOCUMENTS.action,
+      render: () => <RemovedVersion />,
+    },
+  ]);
 }
 
 /**
- * The Action's variant set on the removal branch: its current saved
- * variants, then the removed Compact after them.
+ * The Action's variant set on the removal branch: its own example and its
+ * current saved variants, then the removed Compact after them.
  */
 export function removedSetFrames(): CanvasFrameSpec[] {
-  return [...actionFrames(), ...compactFrames()];
+  return [...actionSetFrames(), ...compactFrames()];
 }
 
 /**
- * The Action's button as the removed Compact's saved props draw it, with its
- * 4px corners and no hint: a picture, which opens nothing.
+ * The Action's button as the removed Compact's saved props draw it in a
+ * screen, with its 4px corners and no hint: a picture, which opens nothing.
  */
 export function CompactAction() {
   return (
@@ -155,14 +159,18 @@ export function CompactAction() {
   );
 }
 
-/** The removed Compact as the branch point rendered it, from its saved props. */
+/**
+ * The removed Compact's component document as the branch point rendered it,
+ * from its saved props: the Action's button with its 4px corners and no
+ * hint.
+ */
 function CompactBefore() {
   return (
-    <div className="mbk-shot mbk-shot--action">
-      <div className="mbk-shot-pad">
-        <CompactAction />
-      </div>
-    </div>
+    <MiniActionDocument
+      label={COMPACT_SAVED.label}
+      look={COMPACT_SAVED.tone}
+      radius={COMPACT_SAVED.radius}
+    />
   );
 }
 

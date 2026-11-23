@@ -31,14 +31,15 @@ interface PropsSection {
 }
 
 /**
- * Inspect for the Action with a saved variant chosen: its head, its saved
- * variants with the chosen one checked, its frames, the selected frame, the
- * Props section unfolded with the body of the depicted state, which the
- * panel opens scrolled to, and Usage. The Action renders no registered
- * component, so Highlight components is unavailable. Until the route's
- * details arrive, no frame mounts, so Highlight components waits for the
- * component preview, also after a failed load, and Usage has no count.
- * After a failed load, Usage says so, with Try again.
+ * Inspect for the Action with a saved variant chosen: its head, the Action
+ * itself and its saved variants with the chosen one checked, its eight
+ * frames, the selected frame, the Props section unfolded with the body of
+ * the depicted state, which the panel opens scrolled to, and Usage. No
+ * artboard shows the own example chosen, so it is a picture. The Action
+ * renders no registered component, so Highlight components is unavailable.
+ * Until the route's details arrive, no frame mounts, so Highlight components
+ * waits for the component preview, also after a failed load, and Usage has
+ * no count. After a failed load, Usage says so, with Try again.
  */
 export function ChosenVariantInspect({
   chosen,
@@ -69,13 +70,14 @@ export function ChosenVariantInspect({
       />
       <InspectVariants
         variants={[
+          { label: COMPONENT_IDENTITIES.action.title },
           variant("default"),
           variant("disabled"),
           { label: "Secondary" },
         ]}
       />
       <InspectFrames
-        count={6}
+        count={8}
         filter={{
           ...SET_FILTER,
           unavailable: details === undefined ? "empty" : "loading",

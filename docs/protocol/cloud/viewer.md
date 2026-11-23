@@ -1,15 +1,15 @@
 # Publication Viewer
 
-Status: The account menu with Theme and Settings, and the Mokly check in the Changes tab, are not built yet. [Milestone 12](../../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab's check slot, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the account menu and the check in that slot.
+Status: The account menu with Theme, Settings, Docs and Changelog, and the Mokly check in the Changes tab, are not built yet. [Milestone 12](../../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab's check slot, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the account menu and the check in that slot.
 
 The viewer is the application: once signed in with a project, the user is
 always inside it, and one viewer serves standalone browsing and pull request
 links. The app hosts the workspace `@mokly/viewer` and fills its slots with
 workspace and project switching, branch and pull request selection,
-publication history, share, the account menu with Theme, Settings and Sign
-out, and the Mokly check in the Changes tab; the package owns Browse, Changes,
-search, screen rendering, comparisons and viewports, and draws its interface
-in the scheme that Theme sets.
+publication history, share, the account menu with Theme, Settings, Docs,
+Changelog and Sign out, and the Mokly check in the Changes tab; the package
+owns Browse, Changes, search, screen rendering, comparisons and viewports, and
+draws its interface in the scheme that Theme sets.
 There is no separate project or workspace page: the viewer's slots carry
 workspace, project and publication switching, so a list page outside the
 viewer would duplicate them and take the reader out of the publication. See

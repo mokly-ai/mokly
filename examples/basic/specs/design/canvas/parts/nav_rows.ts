@@ -66,13 +66,15 @@ const REMOVED_TARGETS: Readonly<Record<string, DesignDestination>> = {
 };
 
 /**
- * The canonical branch in the Changes filter, as the shipped tree draws it:
- * Welcome changed, Details added, the billing entries moved under Account,
- * and five screens removed, ten entries in all. The changed and the added
- * rows carry the changed mark; a moved or removed row names its state
- * instead. Welcome opens the Changes filter with Welcome selected, Details
- * opens the added entry, and the moved and the removed rows open their
- * artboards.
+ * The canonical branch in the Changes filter, as the shipped tree draws it,
+ * in folder order: Welcome changed and Details added under Screens, the
+ * Example tour, whose steps name both screens, after the Screens folder, the
+ * billing entries moved under Account, and five screens removed, eleven
+ * entries in all. The changed, the added and the use case's rows carry the
+ * changed mark; a moved or removed row names its state instead. Welcome
+ * opens the Changes filter with Welcome selected, Details opens the added
+ * entry, the tour opens its Changes tab, and the moved and the removed rows
+ * open their artboards.
  */
 export const CANVAS_CHANGES_ROWS: NavigationRows = [
   {
@@ -105,6 +107,14 @@ export const CANVAS_CHANGES_ROWS: NavigationRows = [
     label: "Details",
     to: CANVAS_PAGES.added,
   },
+  {
+    key: "example/tour",
+    changed: true,
+    depth: 1,
+    kind: "flow",
+    label: "Example tour",
+    to: CANVAS_PAGES.useCaseChanges,
+  },
   ...MOVED_ROWS.map((row) => retarget(row, MOVED_TARGETS[row.key])),
   ...REMOVED_SCREEN_ROWS.map((entry) =>
     retarget(
@@ -118,3 +128,12 @@ export const CANVAS_CHANGES_ROWS: NavigationRows = [
     ),
   ),
 ];
+
+/**
+ * The place of a row's change among the canonical branch's changes, as the
+ * change stepper counts it: in the Changes filter's order, folders left out.
+ */
+export function changePosition(key: string): number {
+  const changes = CANVAS_CHANGES_ROWS.filter((row) => row.kind !== "folder");
+  return changes.findIndex((row) => row.key === key) + 1;
+}

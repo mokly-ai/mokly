@@ -78,14 +78,16 @@ whole address as its accessible name and tooltip.
 
 The account menu has its own screen beside `product/viewer/standalone`:
 `product/viewer/standalone/account-menu` draws it open under the avatar, with
-who is signed in, Theme with Light and Dark, Settings and Sign out. A desktop
-drawing whose bar is too narrow for the full composition opens **More** under
-its trigger instead, with the project, History and Share above the same
-account rows. Both are non-modal popovers, so the viewer beneath keeps its
-heading and landmark. The phone opens More as the panel's bottom sheet, titled
-More, whose rows are 44px targets, and the sheet takes the document's `main`
-and `h1`, as a panel does. Catalogue-only links below the artboard lead to the
-settings index, the sign-in screen and the settings drawing.
+who is signed in, Theme with Light and Dark, Settings, Docs, Changelog and Sign
+out. Docs and Changelog carry the external glyph, because each leaves the app
+for the site. A desktop drawing whose bar is too narrow for the full
+composition opens **More** under its trigger instead, with the project, History
+and Share above the same account rows. Both are non-modal popovers, so the
+viewer beneath keeps its heading and landmark. The phone opens More as the
+panel's bottom sheet, titled More, whose rows are 44px targets, and the sheet
+takes the document's `main` and `h1`, as a panel does. Catalogue-only links
+below the artboard lead to the settings index, the site's documentation and
+changelog, the sign-in screen and the settings drawing.
 `product/viewer/standalone/settings`, another screen beside
 `product/viewer/standalone`, draws the settings dialog over the viewer in
 Canvas, on the Members pane that its rail opens, because the menu's Settings
