@@ -39,11 +39,14 @@ const IMPORT_ONLY_TYPES: &[(&str, &str)] = &[
     (".webmanifest", "application/manifest+json"),
 ];
 
+const FILE_LOADER_ONLY_TYPES: &[(&str, &str)] = &[(".txt", "text/plain; charset=utf-8")];
+
 /// Content type for an imported opaque asset without decoding its contents.
 pub fn content_type(path: &str) -> Option<&'static str> {
     let (_, extension) = path.rsplit_once('.')?;
     find_content_type(STYLESHEET_TYPES, extension)
         .or_else(|| find_content_type(IMPORT_ONLY_TYPES, extension))
+        .or_else(|| find_content_type(FILE_LOADER_ONLY_TYPES, extension))
 }
 
 /// Content type of a CSS `url()` target, with the existing bare-name fallback.

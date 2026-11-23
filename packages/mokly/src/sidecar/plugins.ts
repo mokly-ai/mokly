@@ -43,25 +43,29 @@ export function consumerPlugins(
       name: "mokly-consumer",
       setup(build) {
         build.onLoad({ filter: /.*/, namespace: "file" }, async (args) => {
-          const consumer = consumerLoader(
-            args.path,
-            params.moduleResolution.loaders,
-          );
-          if (consumer === "file")
-            throw new Error(
-              `consumer graph emitted an undelivered file: ${logical(root, args.path)}; use a dataurl or binary loader for JavaScript assets instead of file`,
-            );
+          const type = args.with.type ?? "";
+          const attribute = Object.hasOwn(attributeLoaders, type)
+            ? attributeLoaders[type]
+            : undefined;
           const extension = path.extname(args.path);
           const loader =
-            consumer ??
+            attribute ??
+            consumerLoader(args.path, params.moduleResolution.loaders) ??
             sourceLoaders[extension] ??
-            attributeLoaders[args.with.type ?? ""] ??
             (assetType(args.path)
               ? "asset"
               : extension === ".txt"
                 ? "text"
                 : undefined);
           if (!loader) return undefined;
+          if (loader === "file" && !assetType(args.path, loader))
+            return {
+              errors: [
+                {
+                  text: `file loader cannot deliver ${paths.name(args.path)}; use a binary or text loader for this type`,
+                },
+              ],
+            };
           let contents = reads.get(args.path);
           if (contents === undefined) {
             try {
@@ -83,7 +87,7 @@ export function consumerPlugins(
             reads.set(args.path, contents);
           }
           inputs.files.set(args.path, contents);
-          if (loader === "asset")
+          if (loader === "asset" || loader === "file")
             return {
               contents: assetModule(paths.name(args.path), inputs.files),
               loader: "text",

@@ -108,6 +108,46 @@ test(
 );
 
 test(
+  "Serve delivers a file-loaded .txt asset as UTF-8 text",
+  { timeout: 60_000 },
+  async (context) => {
+    const notes = "Café notes\n";
+    const root = await consumer(context, {
+      "mokly.config.json": JSON.stringify({
+        moduleResolution: { loaders: { ".txt": "file" } },
+      }),
+      "media/notes.txt": notes,
+      "specs/home.mockup.ts": `
+import React from "react";
+import {defineComponent} from "@mokly/mokly";
+import notes from "../media/notes.txt";
+export default defineComponent({
+  path: "gallery", element: "ui-gallery", title: "Gallery", description: "", relatedDocs: [],
+  propSchema: {type: "object", additionalProperties: false, properties: {}}, props: {},
+  render: () => React.createElement("a", {href: notes}, "Notes"),
+});`,
+    });
+    const running = await serve(context, root);
+    const ready = running.ready();
+    await assert.doesNotReject(ready);
+    const url = await ready;
+    const response = await fetch(`${url}/${generated}/assets/media/notes.txt`, {
+      signal: running.signal,
+    });
+    assert.equal(response.status, 200, running.output.stderr);
+    assert.equal(
+      response.headers.get("content-type"),
+      "text/plain; charset=utf-8",
+    );
+    assert.deepEqual(
+      Buffer.from(await response.arrayBuffer()),
+      Buffer.from(notes),
+    );
+    await running.close();
+  },
+);
+
+test(
   "a PNG-only edit lists the component view in Changes and preserves the base bytes",
   { timeout: 60_000 },
   async (context) => {

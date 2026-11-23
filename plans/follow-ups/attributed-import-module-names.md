@@ -70,11 +70,10 @@
   - [bundle-recipe-query-suffix.md](bundle-recipe-query-suffix.md) has the
     same cause: a metafile input name that holds more than its path. One
     branch can fix both items with option C of each.
-  - No option of the open decisions C1 and C2 of the Storybook support plan
-    covers this problem. C2 asks which wins when an import names its type:
-    the attribute, or a rule for its file extension. Its answer changes the
-    value of such an import, not its module name. C1 decides what a
-    configured `file` loader does.
+  - Decisions C1 and C2 of the Storybook support plan, answered on
+    2026-11-23, set the `file` loader rule and the loader order. They
+    change the value of an import, not its module name, so they do not
+    cover this problem.
 - **Recommendation:** C. A valid esbuild import then bundles, and the digest
   rule of the bundling contract holds.
 - **Action:** fix after merge, apply C, because the failure exists before

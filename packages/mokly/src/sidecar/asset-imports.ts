@@ -36,7 +36,12 @@ export const assetExtensions = [
   ".webmanifest",
 ] as const;
 
+export const fileLoaderOnlyExtensions = [".txt"] as const;
+
 const extensions: ReadonlySet<string> = new Set(assetExtensions);
+const fileLoaderExtensions: ReadonlySet<string> = new Set(
+  fileLoaderOnlyExtensions,
+);
 const assets = new WeakMap<ReadonlyMap<string, Uint8Array>, Set<string>>();
 
 /** Consumer loaders match the longest configured filename suffix. */
@@ -50,8 +55,12 @@ export function consumerLoader(
   return suffix === undefined ? undefined : loaders[suffix];
 }
 
-export function assetType(file: string): boolean {
-  return extensions.has(path.extname(file));
+export function assetType(file: string, loader?: "file"): boolean {
+  const extension = path.extname(file);
+  return (
+    extensions.has(extension) ||
+    (loader === "file" && fileLoaderExtensions.has(extension))
+  );
 }
 
 /** Closed tokens retain their logical identity across byte edits and checkouts. */
@@ -59,7 +68,7 @@ export function assetToken(file: string): string {
   return `mokly-asset:[${file}]`;
 }
 
-/** Keep the actual asset-default loads with this compile's consumed-byte map. */
+/** Keep the actual asset loads with this compile's consumed-byte map. */
 export function assetModule(
   file: string,
   files: ReadonlyMap<string, Uint8Array>,

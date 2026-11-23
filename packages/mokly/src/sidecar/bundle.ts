@@ -209,7 +209,8 @@ async function bundleAttempt(
     const settings = params.moduleResolution;
     const loaders = Object.fromEntries(
       Object.entries(settings.loaders).filter(
-        ([extension]) => extension !== ".css" && extension !== ".module.css",
+        ([extension, loader]) =>
+          loader !== "file" && ![".css", ".module.css"].includes(extension),
       ),
     );
     const options = {

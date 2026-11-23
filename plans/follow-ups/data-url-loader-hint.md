@@ -52,9 +52,9 @@
 - **Wider fix:** None. The one message covers each `data:` URL in `src` and
   `href`.
 - **Previous examples:** None found.
-- **Related:** No option of the open decisions C1 and C2 of the Storybook
-  support plan covers this problem. C1 decides what a configured `file`
-  loader does, and it does not change a `dataurl` loader.
+- **Related:** Decision C1 of the Storybook support plan, answered on
+  2026-11-23, makes a configured `file` loader deliver the file. It does not
+  change a `dataurl` loader, so it does not cover this problem.
 - **Recommendation:** B. The failure then names its fix where the author
   sees it.
 - **Action:** ask the user, because B changes an exact message that the

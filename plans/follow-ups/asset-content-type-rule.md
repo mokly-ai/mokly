@@ -91,4 +91,5 @@
   branch that found it.
 - **Done when:** the status lines of `docs/protocol/mokly-imported-assets.md`
   and `docs/protocol/mokly-imported-styles-assets.md` are gone, because Mokly
-  Cloud sends the content types of the asset tables.
+  Cloud sends the content types of the asset tables and of a delivered
+  `.txt` asset.

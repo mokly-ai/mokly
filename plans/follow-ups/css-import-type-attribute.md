@@ -53,12 +53,10 @@
 - **Wider fix:** None. Each option settles the one attribute type that
   esbuild rejects.
 - **Previous examples:** None found.
-- **Related:** Decision C2 of the Storybook support plan, open on
-  2026-11-20, asks which wins when an import names its type: the attribute,
-  or a rule for its file extension. Its option D gives a `.css` import with
-  a `json`, `text`, or `bytes` attribute that value and no stylesheet.
-  Option D does not cover `type: "css"`, so no option of C1 or C2 covers
-  this problem.
+- **Related:** Decision C2 of the Storybook support plan, answered on
+  2026-11-23 with option B, lets an import attribute win over every loader,
+  but a `.css` import stays a stylesheet. So that answer does not cover
+  `type: "css"`.
 - **Recommendation:** A. The styles still show, the build does not fail,
   and the protocol tells authors what the value is.
 - **Action:** ask the user, because A adds a requirement that no protocol

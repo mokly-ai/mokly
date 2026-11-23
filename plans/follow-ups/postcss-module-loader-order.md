@@ -1,14 +1,14 @@
 # Align the PostCSS module loader choice with the bundle
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan. The options checks of its decisions C1 and C2 found the
   problem on 2026-11-18.
 - **Location:** `packages/mokly/src/sidecar/postcss-source.ts:15-37`.
 - **Reason:** The PostCSS files are outside the files that track C may
-  change, and the loader order to share depends on two open decisions.
+  change.
 
 - **Source:** Design.
 - **Category:** Product bug.
@@ -24,9 +24,14 @@
     attribute before the loader of the extension.
 - **Background:**
   - The bundle of entries and components chooses a loader in the `onLoad`
-    hook of `packages/mokly/src/sidecar/plugins.ts`. There a consumer
-    loader wins over Mokly's own loaders for JavaScript, TypeScript, and
-    JSON.
+    hook of `packages/mokly/src/sidecar/plugins.ts`. There an import
+    attribute wins first, except for a CSS import, which stays a stylesheet.
+    A consumer loader by its longest key comes next, then Mokly's own
+    loaders for JavaScript, TypeScript, and JSON, then the asset default.
+    A consumer `file` loader gives the asset delivery for the delivered
+    types and `.txt`, and fails for every other type with the message that
+    `docs/protocol/mokly-imported-styles-errors.md` gives.
+    `docs/protocol/mokly-imported-assets.md` states this order.
   - `postcssSource`, at lines 30-32, tries Mokly's own loaders by the last
     extension first. It tries the consumer loader with the longest key
     second.
@@ -45,10 +50,10 @@
   compile loads a file?
 - **Options:**
   - **A.** Change nothing. Effort: Small.
-  - **B.** Give the PostCSS module compile the loader order of the bundle: a
-    consumer loader by its longest key, then Mokly's own loaders, then the
-    import attribute. A `file` loader there fails with the message of the
-    bundle. Effort: Small.
+  - **B.** Give the PostCSS module compile the loader order of the bundle:
+    the import attribute, then a consumer loader by its longest key, then
+    Mokly's own loaders. A `file` loader there fails with the message of the
+    bundle, because that compile delivers no file. Effort: Small.
   - **C.** Move the loader choice into one module that both compiles call. A
     later change of the order then reaches both compiles. Effort: Medium.
 - **Left out:** Deliver a file from the PostCSS module compile: that compile
@@ -56,16 +61,12 @@
 - **Wider fix:** C. One loader choice for both compiles prevents the next
   difference between them.
 - **Previous examples:** None found.
-- **Related:** Two decisions of the Storybook support plan, both open on
-  2026-11-20, decide the order that B and C copy:
-  - Decision C1 asks what a configured `file` loader does, now that Mokly
-    delivers imported files itself. Its options change only the bundle, so
-    none of them covers this compile.
-  - Decision C2 asks which wins when an import names its type: the
-    attribute, or a rule for its file extension. Its option E gives each
-    esbuild compile of Mokly one shared attribute rule, also the PostCSS
-    module compile. Option E covers the attribute part of this problem.
-- **Recommendation:** C, after the answers to C1 and C2. Both compiles then
-  give one configuration the same value.
-- **Action:** ask the user, because the order that C shares depends on the
-  answers to the open decisions C1 and C2.
+- **Related:** On 2026-11-23 the orchestrator of the Storybook support plan
+  answered its decisions C1 and C2 as design calls. An import attribute wins
+  over every loader except for a CSS import. A `file` loader gives the asset
+  delivery for the delivered types and `.txt`, and fails for other types.
+  These answers set the order that B and C copy.
+- **Recommendation:** C. Both compiles then give one configuration the same
+  value.
+- **Action:** fix after merge, apply C, because the PostCSS files are outside
+  the files of track C, and C1 and C2 now set the order.

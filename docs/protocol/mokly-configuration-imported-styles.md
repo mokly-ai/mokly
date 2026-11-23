@@ -51,8 +51,10 @@ dependency contract is
 Mokly owns `.css` and `.module.css` handling. At those keys,
 `moduleResolution.loaders` accepts only `"empty"`: `.css` skips both plain
 and module CSS, while `.module.css` skips only module CSS and its class map.
-Opted-out CSS stays inventoried as a watched source. A `file` loader on
-another JavaScript-imported asset fails `build`. A consumer `css` loader on any
+Opted-out CSS stays inventoried as a watched source. The
+[JavaScript asset import rules](./mokly-imported-assets.md#imported-types) say
+when a `file` loader at another key delivers the file and when it fails the
+bundle. A consumer `css` loader on any
 extension is rejected at config validation because it would emit an
 undelivered sibling stylesheet; rename the input to `.css` or use a
 JavaScript-safe loader. Configured and component-declared local stylesheets and PostCSS inputs

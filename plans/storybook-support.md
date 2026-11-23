@@ -819,6 +819,12 @@ move them to "Design calls" at the merge.
 - **Action:** ask the user, because D changes the requirement that a consumer
   `file` loader fails the build, and it changes three docs outside the scope
   of track C.
+- **Answer:** E, an orchestrator design call of 2026-11-23. A `file` key
+  gives Mokly's delivery for the default types and for `.txt`, one
+  longest-suffix key rule covers every load, esbuild never gets a `file` key,
+  and an import attribute wins over a `file` key, as C2 says. Reason: the
+  user's decision 6 chose this delivery, and the change only removes a
+  failure.
 
 ### C2. An import attribute against a configured loader
 
@@ -878,6 +884,11 @@ move them to "Design calls" at the merge.
   Large and outside track C.
 - **Action:** ask the user, because B changes the value that existing imports
   get today.
+- **Answer:** B, an orchestrator design call of 2026-11-23. The attribute
+  wins over every loader, as in esbuild and the language standard. A `.css`
+  import stays a stylesheet, and the asset page names that exception.
+  Reason: today's order differs from esbuild by accident, and no page states
+  it.
 
 The options check reports of C1 and C2 are in
 `.context/storybook-support/track-c/reports/`.
@@ -893,10 +904,10 @@ track D edits the same configuration pages.
       `docs/protocol/mokly-imported-styles-assets.md`, or to a new linked
       page when that page would pass 250 lines. Add the status line.
       Branch: conductor/storybook-support-c-imported-assets
-- [ ] Update the `file` loader row of
+- [x] Update the `file` loader row of
       `docs/protocol/mokly-imported-styles-errors.md` with the answer to
       decision C1. Branch: conductor/storybook-support-c-imported-assets
-- [ ] State the answer to decision C2 in
+- [x] State the answer to decision C2 in
       `docs/protocol/mokly-imported-assets.md`. Branch:
       conductor/storybook-support-c-imported-assets
 - [x] Run `npm run format:check` and
@@ -920,7 +931,7 @@ delegate reports, the watch smoke test, and the gate logs are in
       conductor/storybook-support-c-imported-assets
 - [x] Add asset bytes to the watch inputs and the render keys. Branch:
       conductor/storybook-support-c-imported-assets
-- [ ] Replace the `file` loader error and the `dataurl` advice, as "Replaced
+- [x] Replace the `file` loader error and the `dataurl` advice, as "Replaced
       ways" says, with the answer to decision C1. Also update the `file`
       loader sentences of `docs/protocol/mokly-imported-styles-modules.md`,
       `docs/protocol/mokly-configuration-imported-styles.md`,
@@ -932,7 +943,7 @@ delegate reports, the watch smoke test, and the gate logs are in
       `static/mokly-generated/` in `docs/protocol/mokly-artifact-paths.md`.
       Branch:
       conductor/storybook-support-c-imported-assets
-- [ ] Apply the answer to decision C2 to the loader choice of the bundle.
+- [x] Apply the answer to decision C2 to the loader choice of the bundle.
       Branch: conductor/storybook-support-c-imported-assets
 - [x] Test that a component that imports a PNG and an SVG renders them in
       Serve and `build`, and that Changes shows an edited image. Branch:

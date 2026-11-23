@@ -6,7 +6,9 @@ This page defines the files that JavaScript imports as assets, such as
 `import logo from "./logo.png"`. Such an import gives an asset token. Each
 composed document gets the URL of the delivered file in place of the token.
 The delivered file uses the routes and the delivery of
-[stylesheet assets](./mokly-imported-styles-assets.md).
+[stylesheet assets](./mokly-imported-styles-assets.md). The page also gives
+the order in which an import attribute and the loaders choose the value of
+each JavaScript import.
 
 Decision: Mokly delivers each imported asset as a file, and it gives each
 document its own URL to that file. This reuses the delivery of stylesheet
@@ -17,26 +19,44 @@ scope.
 
 ## Imported Types
 
-These rules apply to a file whose extension is in the
+A file has an asset type when its name ends with an extension of the
 [stylesheet asset table](./mokly-imported-styles-assets.md#assets-links-and-delivery)
-or in the table below. The match of the extension is case-sensitive, as for
-stylesheet assets. An explicit choice wins over the asset token:
+or of the table below. The match of an extension is case-sensitive, as for
+stylesheet assets. The file of an asset import is an imported asset. These
+rules choose the value of a JavaScript import. The first rule that applies
+wins:
 
-- A consumer `moduleResolution.loaders` entry applies, under the
-  [module resolution rules](./mokly-configuration.md#module-resolution). Its
-  key is the longest configured key that ends the file name, as in esbuild.
-- An import attribute `type` of `json`, `text`, or `bytes`, such as
-  `with { type: "bytes" }`, gives the parsed JSON, the text, or the bytes of
-  the file.
+1. An import attribute `type` of `json`, `text`, or `bytes`, such as
+   `with { type: "bytes" }`, gives the parsed JSON, the text, or the bytes of
+   the file.
+2. A consumer `moduleResolution.loaders` entry applies, under the
+   [module resolution rules](./mokly-configuration.md#module-resolution). Its
+   key is the longest configured key that ends the file name, as in esbuild.
+   A `file` loader follows the `file` rules below.
+3. Mokly's own loaders read JavaScript, TypeScript, JSON, and CSS. A `.txt`
+   import gives the text of the file.
+4. An import of a file with an asset type is an asset import.
+5. An import of any other file fails the bundle with `bundle-failed`, under
+   the [bundling rules](./mokly-sidecar.md#bundling).
 
-Otherwise the import is an asset import, and its value is an asset token.
+A `.css` or `.module.css` import is the exception to these rules. It stays a
+stylesheet import under the
+[imported stylesheet contract](./mokly-imported-styles.md), also with an import
+attribute. That contract also gives its loader rules.
 
-The file of an asset import is an imported asset. A `.txt` import gives the
-text of the file, unless a consumer loader or an import attribute applies.
-Mokly's own loaders read JavaScript, TypeScript, JSON, and CSS. An import of
-any other type fails the bundle with `bundle-failed` when no consumer loader
-and no import attribute applies, under the
-[bundling rules](./mokly-sidecar.md#bundling).
+Decision: the import attribute wins over every loader, as in esbuild.
+Rejected: a configured loader first, because an import then gets another value
+than in the product's own esbuild build.
+
+A consumer `file` loader gives an asset import for a file with an asset type
+or the extension `.txt`. For every other file, the `file` loader fails the
+bundle with the
+[diagnostic](./mokly-imported-styles-errors.md#build-build-invalid) that names
+the file. Mokly delivers a `.txt` file only through a `file` loader.
+
+Decision: a `file` loader gives an asset import for each type that Mokly can
+deliver. Rejected: a failure for every `file` loader, because Mokly can deliver
+the file, and a failure only makes the project delete the entry.
 
 | Extension                 | Content type                |
 | ------------------------- | --------------------------- |
@@ -58,7 +78,8 @@ and no import attribute applies, under the
 | `.webmanifest`            | `application/manifest+json` |
 
 Serve sends the content types of this table and of the stylesheet asset table.
-A host of the static output sends the same types, under the
+It sends `text/plain; charset=utf-8` for a `.txt` asset. A host of the static
+output sends the same types, under the
 [static delivery contract](./mokly-export-delivery.md#hosting-contract). A stylesheet `url()` keeps the extension list of the
 stylesheet asset table. The types of this table are assets only when
 JavaScript imports them.

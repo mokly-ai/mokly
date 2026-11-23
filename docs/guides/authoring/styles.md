@@ -152,11 +152,17 @@ with its React tree.
 
 An asset import's default value is not a URL that code can fetch during a render.
 Use `binary` or `text` in `moduleResolution.loaders` to read the file's bytes or text.
-An import attribute such as `with { type: "text" }` also gives the file's text.
 A configured loader overrides asset delivery for its extension.
 A `.txt` import gives its text by default.
 
-A `file` loader emits an undelivered file and fails.
+A `file` loader in `moduleResolution.loaders` gives your code a URL. Mokly
+delivers the file as it does for an image import. Use `file` for `.txt` or
+the [asset types listed in this guide](/docs/authoring/styles/#import-images-fonts-and-media).
+The build fails if Mokly applies `file` to any other type.
+
+An import attribute overrides a configured loader, including `file`.
+For example, `with { type: "text" }` gives your code the file's text.
+A CSS import stays a stylesheet even with an import attribute.
 Only `empty` can override `.css` or `.module.css` handling.
 The `.css` override opts out of plain CSS and CSS Modules. The `.module.css`
 override opts out of CSS Modules alone.

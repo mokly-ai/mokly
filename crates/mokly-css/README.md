@@ -171,8 +171,9 @@ also fails when that exception no longer differs.
   `StylesheetBundler` that reads, transforms, scopes, and bundles one root.
 - [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
-- [`src/imported_assets.rs`](./src/imported_assets.rs) defines the stylesheet
-  and import-only asset types and their case-sensitive lookups.
+- [`src/imported_assets.rs`](./src/imported_assets.rs) defines case-sensitive
+  content type tables for stylesheet assets, additional default imports, and
+  imports that require a `file` loader.
 - [`src/paths.rs`](./src/paths.rs) supplies the shared portable path rule
   for stylesheet routes, asset delivery, and document asset tokens.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and

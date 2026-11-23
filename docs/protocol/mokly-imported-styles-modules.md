@@ -110,6 +110,6 @@ module supplies an empty default map, no named bindings, and no delivered
 CSS; its file stays in the source inventory as a graph input. Any other CSS
 loader fails configuration validation. No extension may use the consumer
 `css` loader, because it would produce an undelivered sibling file; rename
-the stylesheet to `.css` or choose a JavaScript-safe loader. A consumer
-`file` loader on any JavaScript import fails the build: Mokly never exposes
-extra graph outputs as public URLs.
+the stylesheet to `.css` or choose a JavaScript-safe loader. The
+[JavaScript asset import rules](./mokly-imported-assets.md#imported-types) say
+when a consumer `file` loader delivers the file and when it fails the bundle.

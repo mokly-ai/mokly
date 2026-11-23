@@ -24,6 +24,7 @@ fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets()
         ("pdf", "application/pdf"),
         ("vtt", "text/vtt"),
         ("webmanifest", "application/manifest+json"),
+        ("txt", "text/plain; charset=utf-8"),
     ] {
         let file = format!("assets/file.{extension}");
         assert_eq!(
@@ -48,7 +49,7 @@ fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets()
     for file in [
         "image.PNG",
         "image.png.extra",
-        "image.txt",
+        "file.TXT",
         "image",
         "image.unknown",
     ] {
