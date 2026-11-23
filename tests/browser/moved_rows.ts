@@ -5,6 +5,7 @@ import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 
 import { embeddedHost, routedHost, type EntryHost } from "./entry_hosts.js";
+import { revealInPanel } from "./workspace_actions.js";
 
 /** How one host runs the moved cases. */
 export interface MovedHost extends EntryHost {
@@ -67,12 +68,14 @@ export function dot(page: Page, entry: string): Promise<string> {
   );
 }
 
-/** Select the Details panel, which some entries open with already. */
+/**
+ * Show the Details of Inspect's head, which the panel always holds: in the
+ * compact layout the panel is a sheet that the dock opens.
+ */
 export async function showDetails(page: Page): Promise<void> {
-  const details = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await details.getAttribute("aria-selected")) !== "true")
-    await details.click();
-  await expect(details).toHaveAttribute("aria-selected", "true");
+  const details = page.locator('[data-inspect-section="details"]');
+  await revealInPanel(page, details);
+  await expect(details).toBeVisible();
 }
 
 /** Open the narrow layout's drawer when the catalogue is behind it. */
