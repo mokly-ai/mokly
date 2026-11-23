@@ -1,7 +1,8 @@
 /**
  * The compare modes of a screen's or a component's Changes tab, under the
  * [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
- * eligible views offer every mode, a shown status of Added offers Current
+ * a workspace that offers its compare, as a variant set does while a shown
+ * row compares, offers every mode, a shown status of Added offers Current
  * alone, and the other views offer none, a removed screen's included. While
  * Changes is the selected tab, the mode keys select an offered mode. This
  * container reads the workspace's compare and the Scroll together choice;
@@ -33,7 +34,10 @@ const NO_MODE: readonly CompareMode[] = [];
 
 /** What decides the compare modes that an entry offers. */
 interface ModeOffer {
-  /** Whether the shown views' comparison is eligible. */
+  /**
+   * Whether the workspace offers its compare modes, as a variant set does
+   * while a shown row compares.
+   */
   eligible: boolean;
   /** Whether the entry is a removed screen, which shows its previous version. */
   removedScreen: boolean;
@@ -42,9 +46,9 @@ interface ModeOffer {
 }
 
 /**
- * The modes that an entry offers, in the order of their keys: every mode for
- * an eligible view, Current alone for a shown status of Added, and none for
- * any other view or for a removed screen.
+ * The modes that an entry offers, in the order of their keys: every mode
+ * while its workspace offers the compare, Current alone for a shown status of
+ * Added, and none for any other view or for a removed screen.
  */
 export function offeredModes({
   eligible,
@@ -57,21 +61,21 @@ export function offeredModes({
 }
 
 /**
- * The chip of each frame that the canvas shows, in the canvas's order, or of
- * each view of a removed component: the frame's own name, such as
- * `Desktop · Light`, and its kind.
+ * The chip of each shown frame whose row compares, in the canvas's order, or
+ * of each view of a removed component or variant, which passes no compared
+ * frames: the frame's own name, such as `Desktop · Light`, and its kind.
  */
 export function compareFrames(
   plans: ReadonlyMap<
     string,
     Pick<ComparisonFramePlan, "key" | "kind" | "name">
   >,
+  compared: readonly { key: string }[] | undefined,
 ): CompareFrame[] {
-  return [...plans.values()].map((plan) => ({
-    key: plan.key,
-    kind: plan.kind,
-    label: plan.name,
-  }));
+  const keys = compared && new Set(compared.map(({ key }) => key));
+  return [...plans.values()]
+    .filter((plan) => !keys || keys.has(plan.key))
+    .map((plan) => ({ key: plan.key, kind: plan.kind, label: plan.name }));
 }
 
 /**
@@ -101,8 +105,10 @@ export function useCompareModes({
     <CompareModes
       comparable={offered.length === EVERY_MODE.length}
       frame={controller.comparedFrame}
-      frames={compareFrames(compare.canvas.plans)}
-      loaded={controller.loaded !== undefined}
+      frames={compareFrames(compare.canvas.plans, compare.compared)}
+      // Any compared row's generation can be renewed, also when the routed
+      // row does not compare.
+      loaded={(controller.generations?.size ?? 0) > 0}
       mode={controller.mode}
       onFrame={controller.setComparedFrame}
       onMode={controller.selectMode}

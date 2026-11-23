@@ -178,7 +178,11 @@ export function ComparisonCanvas({
       }),
       mode: ready.mode,
       onSplit: setSplit,
-      retry: comparison.retry,
+      // The row's load replaces its Try again, so the stage takes focus first.
+      retry: (entry) => {
+        stage.current?.focus();
+        comparison.retry(entry);
+      },
       sideKey,
       split,
       sync,

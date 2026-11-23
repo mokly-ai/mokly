@@ -187,7 +187,13 @@ row compares alone. `comparisonFrames` in `comparison_eligible_frames.ts`
 gives the shown frames whose rows compare under the
 [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
 the row's shown views are eligible, or a shown view that reads Unmodified uses
-a changed component that the row's own detail names. `comparison_presentation.ts`
+a changed component that the row's own detail names. `comparisonOffered` in the
+same file gates the compare modes, the route's comparison intent, and the
+Changes tab of an entry that Changes does not list: a variant set with live
+frames offers them while one of its shown rows compares, whichever row the
+route names, and a screen, or a removed component or variant, while its
+routed views are eligible. A row that does not compare keeps its live frames
+while a mode shows. `comparison_presentation.ts`
 turns the frames into the demand, with one key for each row: each row with the
 axes of its frames, or in Side by side the row of the compared frame alone.
 Without frames, the routed row is keyed on the selection's axes.
@@ -231,9 +237,9 @@ environment and unmount cancel every row, and a late response changes nothing.
 `comparison_intent.ts` applies a route's comparison intent once. The store
 counts route installations and keeps the installed route's intent; the
 routed workspace settles it when `comparisonEligibilityKnown` first reports
-final eligibility, and only for an eligible view it opens Side by side and
-selects the Changes tab, where the canvas shows that mode. An intent for an
-ineligible view leaves the selected tab as it is. A
+final eligibility, and only while the workspace offers its compare modes it
+opens Side by side and selects the Changes tab, where the canvas shows that
+mode. Otherwise the intent leaves the selected tab as it is. A
 publication keeps the count, so it cannot reopen the comparison, and the mode
 owner never reads the address.
 
@@ -351,6 +357,9 @@ the top bar shows: ⌘K and Ctrl+K from anywhere, and `/` outside a text field.
 It listens on the document of a standalone shell and on an embedded root
 only, so the host page keeps its own keys. A key that acts loses its default
 action and moves focus through the `TopBarHandle` that `top_bar.tsx` holds.
+A search key that a canvas frame's document forwards arrives as the
+`mokly-shell-key` event of `canvas_input.ts` on the same target, and it moves
+focus the same way. The frame has already cancelled its default action.
 `useSearchShortcut` makes the field's key hint name `⌘K` on Apple's platforms
 and `Ctrl K` on the others.
 `routes.ts`,
@@ -449,9 +458,11 @@ it. The catalogue's width is the reader's choice or the starting width of
 `canvas_layout.ts`, 252px or 224px below the panel step, and a double click
 on the separator forgets the choice. `nav.tsx` passes the index's `base` to
 the catalogue's foot. A target view puts its tabs in the right panel of
-`right_panel.tsx`: Inspect, and Changes where the entry has it.
-`workspace_panel.tsx` and `target_panel.tsx` give an entry's Changes tab to
-`changes_tab.tsx`, and `comparison_canvas.tsx` draws the compare on the
+`right_panel.tsx`: Inspect, and Changes where the entry has it. A screen's or
+a component's workspace has Changes while Changes lists its entry or while
+the workspace offers its compare modes. `workspace_panel.tsx` and
+`target_panel.tsx` give an entry's Changes tab to `changes_tab.tsx`, and
+`comparison_canvas.tsx` draws the compare on the
 canvas. The dock's Fit refits the canvas that `canvas_stage.tsx` registers in
 `root_context.tsx` while it shows, also during a compare, and it hides while
 the state of a comparison covers the canvas.
@@ -505,8 +516,13 @@ frame, mounts with the adapter's canvas input: the mount hook's
 `CanvasControlContext`.
 `canvas_input.ts` maps a point of the frame's viewport to the page through
 the frame's box and scale: ⌘ or Ctrl with the wheel and a pinch zoom the
-canvas about that point with the handle's `zoomAt`, and a canvas key runs
-its command. While the document reports keyboard focus, the frame's
+canvas about that point with the handle's `zoomAt`, and a zoom key runs
+its command. Escape and the search keys belong to the shell, not to the
+canvas: `useCanvasFrameInput` sends each from the frame element as a bubbling
+`mokly-shell-key` DOM event, which `canvas_input.ts` owns, so
+`use_canvas_selection.ts` and `search_keys.ts` hear it on the same target as
+their own keydown listeners.
+While the document reports keyboard focus, the frame's
 `focusVisible` draws its focus glow; `canvas-blur`, a focus without
 `visible`, and the end of the document's mount put the glow out, since the
 mount hook sends `canvas-blur` when it disposes of or replaces the mount.
@@ -664,7 +680,10 @@ in Inspect, a click on a frame selects the innermost instance under the
 pointer, a click that follows a link selects nothing, a host pick takes the
 click in either tab, and the empty canvas and Escape clear the selection.
 Escape acts on the whole document of a standalone shell and only on an
-embedded root, and Highlight components and a host pick take it first. A
+embedded root, and Highlight components and a host pick take it first. An
+Escape that a canvas frame's document forwards arrives as the
+`mokly-shell-key` event of `canvas_input.ts` on the same target, and it clears
+the selection under the same rule. A
 frame's session tells the selection when its document is replaced or the
 instance leaves its ready usage. A request to show the selection is an
 event: each explicit choice and each route's instance counts once, and
@@ -763,13 +782,15 @@ then the modes and the details that the caller gives. An entry that the
 Changes filter does not list has no stepper. `compare_modes.tsx` gives a
 screen's or a component's modes to the tab: the offer rule of the
 [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls),
-every mode for an eligible view, Current alone for a shown status of Added,
-and none otherwise or for a removed screen; the tiles of
-`@mokly/ui/compare-modes` with a chip for each frame that the canvas shows;
-Scroll together of `use_scroll_together.ts`; and Refresh once a comparison
-loaded. While Changes is the selected tab, `compare_mode_keys.ts` binds the
-keys 1 to 5 to the offered modes. The tab's comparison details list the
-outcome line of each compared frame, such as
+every mode while the workspace offers its compare, as a variant set does
+while a shown row compares, Current alone for a shown status of Added, and
+none otherwise or for a removed screen; the tiles of
+`@mokly/ui/compare-modes` with a chip for each shown frame whose row
+compares, or for each view of a removed component or variant; Scroll
+together of `use_scroll_together.ts`; and Refresh while the comparison holds
+a row's generation. While Changes is the selected tab,
+`compare_mode_keys.ts` binds the keys 1 to 5 to the offered modes. The tab's
+comparison details list the outcome line of each compared frame, such as
 `Desktop · Light · Screen changed` (`comparison_outcome.ts`). The canvas
 shows the chosen mode only while Changes is the selected tab: the workspace
 gates the compare with `shown`, and the inspection, the edit previews and
@@ -833,9 +854,9 @@ and `comparison_frame.tsx` reuses `preview_frame.tsx`'s `SnapshotFrame` and the
 read-only guard for each version, marked `data-mokly-comparison-frame` with
 `scrolling="no"`. Each version forwards its canvas input with
 `listenForCanvasInput` to the `useCanvasFrameInput` hook of
-`canvas_frame_input.tsx`, so ⌘ or Ctrl with the wheel, a pinch and the canvas
-keys reach the canvas from a pane, and its keyboard focus draws its frame's
-focus glow.
+`canvas_frame_input.tsx`, so ⌘ or Ctrl with the wheel, a pinch and the zoom
+keys reach the canvas from a pane, Escape and the search keys reach the shell,
+and its keyboard focus draws its frame's focus glow.
 
 `comparison_scroll_sync.ts` is the per-section scroll controller behind the
 interfaces in `comparison_scroll_types.ts`: it follows each layer document from
@@ -899,10 +920,11 @@ version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
 input of each document that it presents with `listenForCanvasInput`, with
 the frame element, and the `useCanvasFrameInput` hook of
 `canvas_frame_input.tsx`, which the live frames share, routes it through the
-`CanvasControlContext` of `canvas_stage.tsx`: a canvas key runs its command,
+`CanvasControlContext` of `canvas_stage.tsx`: a zoom key runs its command,
 a zoom wheel or a pinch, a two-finger pinch included, zooms the canvas about
 its point in the frame, and the document's keyboard focus draws the frame's
-focus glow. The React
+focus glow. Escape and the search keys go to the shell, as from a live frame.
+The React
 request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays

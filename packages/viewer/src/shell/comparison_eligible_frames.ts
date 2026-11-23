@@ -3,7 +3,8 @@
  * [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
  * a row compares when its shown views are eligible, or when a shown view that
  * reads Unmodified uses a changed component that the row's own detail names.
- * A row without a comparison keeps its current frames.
+ * A row without a comparison keeps its current frames. A variant set offers
+ * its compare while one of its shown rows compares.
  */
 
 import type { EntryDetailV4 } from "@mokly/model";
@@ -172,4 +173,30 @@ export function comparisonFrames(
         ]
       : [];
   });
+}
+
+/**
+ * Whether a workspace offers its compare modes, and with them its Changes
+ * tab. A variant set with live frames offers them while one of its shown
+ * rows compares, whichever row the route names. A screen, and a removed
+ * component or variant, which has no live frames, follow the eligibility of
+ * the routed entry's shown views.
+ */
+export function comparisonOffered({
+  comparisons,
+  frames,
+  routedEligible,
+  set,
+}: {
+  /** Whether the catalogue has comparisons. */
+  comparisons: boolean;
+  /** The shown frames whose rows compare; none for a removed entry. */
+  frames: readonly ComparisonFrameDemand[] | undefined;
+  /** Whether the routed entry's shown views are comparison-eligible. */
+  routedEligible: boolean;
+  /** Whether the canvas holds a variant set. */
+  set: boolean;
+}): boolean {
+  if (!comparisons) return false;
+  return set && frames ? frames.length > 0 : routedEligible;
 }

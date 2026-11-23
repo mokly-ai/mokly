@@ -7,7 +7,7 @@ import {
   type CompareFrame,
 } from "../parts/changes_sketches.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
-import { useOpeningFrame } from "../parts/opening_frame.js";
+import { useOpeningFrame } from "../parts/picked_frames.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";

@@ -17,7 +17,10 @@ import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { ComparisonCanvas } from "./comparison_canvas.js";
 import { useComparedFrameChoice } from "./comparison_compared_frame.js";
-import { comparisonFrames } from "./comparison_eligible_frames.js";
+import {
+  comparisonFrames,
+  comparisonOffered,
+} from "./comparison_eligible_frames.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
@@ -69,36 +72,40 @@ export function ComponentWorkspace({
   );
   const savedViews = resolvedView.views;
   const set = entry.kind === "component";
-  const changes =
-    store.context.changedEntries?.includes(entry.path) === true ||
-    Boolean(data.comparisons && presentation.comparisonEligible);
-  const tab = shownPanelTab(store.state.panelTab, changes);
+  // The tab needs the canvas's frames, which decide a set's compare, so a
+  // click and the Escape key read the shown tab when they arrive.
+  const inspecting = useRef(false);
   const { canvas, chosenRow, onPick, picks, wide } = useWorkspacePicks({
     data,
     entry,
-    selecting: tab === "inspect" && !data.removed,
+    selecting: () => inspecting.current,
   });
   const choice = useComparedFrameChoice();
   const historical = data.removed || variant?.removed === true;
+  // Each shown row that compares gets its own generation. A removed entry
+  // has no live frames, so its own row compares alone.
+  const compared = historical
+    ? undefined
+    : comparisonFrames(data, catalogue.publicModel.details, canvas.frames);
+  const offered = comparisonOffered({
+    comparisons: data.comparisons,
+    frames: compared,
+    routedEligible: presentation.comparisonEligible,
+    set,
+  });
+  const changes =
+    store.context.changedEntries?.includes(entry.path) === true || offered;
+  const tab = shownPanelTab(store.state.panelTab, changes);
+  inspecting.current = tab === "inspect" && !data.removed;
   const comparison = useComparison({
     ...(choice.chosen === undefined ? {} : { comparedFrame: choice.chosen }),
     effectiveColorScheme: resolvedView.colorScheme,
-    eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    eligible: offered,
     eligibilityKnown: comparisonEligibilityKnown(
       catalogue.publicModel.changesStatus,
       workspace.detailDelivery,
     ),
-    // Each shown row that compares gets its own generation. A removed entry
-    // has no live frames, so its own row compares alone.
-    ...(historical
-      ? {}
-      : {
-          frames: comparisonFrames(
-            data,
-            catalogue.publicModel.details,
-            canvas.frames,
-          ),
-        }),
+    ...(compared ? { frames: compared } : {}),
     historical,
     entryId: variantPath ?? entry.path,
     ...(data.component ? { owner: data.component.path } : {}),
@@ -164,6 +171,7 @@ export function ComponentWorkspace({
     data.component?.path === entry.path ? data.status : presentation.status;
   const compare = useWorkspaceComparison({
     choice,
+    compared,
     comparison,
     data,
     frames,
@@ -224,9 +232,7 @@ export function ComponentWorkspace({
             controls: controls.panel,
             data,
             delivery: workspace.detailDelivery,
-            eligible: Boolean(
-              data.comparisons && presentation.comparisonEligible,
-            ),
+            eligible: offered,
             frames: {
               changed: changedViews,
               choice: store.state.frames,

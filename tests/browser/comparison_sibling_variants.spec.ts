@@ -3,10 +3,11 @@
  * output, under the variant navigation, selected comparison and comparison
  * panes contracts. A variant set compares each row whose shown views are
  * eligible, and an added variant's row keeps its current frames. Navigation
- * to a sibling variant keeps the mode and the rows' comparisons; an added
- * sibling offers Current alone. While a mode stays chosen, Inspect shows the
- * current frames, so Props shows their controls without a comparison line,
- * and the comparison leaves highlighting alone.
+ * to a sibling variant keeps the mode and the rows' comparisons; on an added
+ * sibling's route the set still offers its modes while another row compares.
+ * While a mode stays chosen, Inspect shows the current frames, so Props shows
+ * their controls without a comparison line, and the comparison leaves
+ * highlighting alone.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -18,7 +19,6 @@ import {
   chooseFilter,
   chooseMode,
   comparisonFrames,
-  expectCurrentAlone,
   modeButton,
   navRow,
   showMode,
@@ -78,8 +78,8 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(highlightSwitch(page)).toHaveAccessibleDescription(
     "No registered components are used in this view.",
   );
-  // A changed sibling keeps the mode and compares its own frames, which the
-  // canvas shows while Changes is the selected tab.
+  // A changed sibling keeps the mode and compares its own frames, beside
+  // Card's, which the canvas shows while Changes is the selected tab.
   await openSibling(page, comparisonPaths.changedVariant);
   await openPanelTab(page, "Changes");
   const featured = paneFrame(
@@ -104,7 +104,10 @@ test("component comparisons follow changed variants while added variants stay cu
   ).toBeVisible();
   await openSibling(page, comparisonPaths.addedVariant);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
-  await expectCurrentAlone(page);
+  // Card and Featured still compare, so the set offers its modes on Fresh's
+  // route too, while Fresh's own frame stays current (decision 16 = B).
+  await openPanelTab(page, "Changes");
+  await expect(modeButton(page, "Overlay")).toBeVisible();
   await expect(
     rowHeading(page, comparisonPaths.addedVariant, "Fresh card"),
   ).toBeVisible();
