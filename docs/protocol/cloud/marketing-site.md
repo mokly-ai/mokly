@@ -1,5 +1,7 @@
 # Marketing Site
 
+Status: The Docs and Changelog rows of the account menu and of More are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
+
 The public website and documentation live in this repository as the static
 Astro npm workspace `apps/site`. Marketing lives here, not in `packages/app`,
 because the site documents the cloud from the cloud protocol docs and consumes
@@ -63,12 +65,19 @@ task and it lives on the site;
 [Viewer build navigation](./viewer-build-navigation.md#project-setting-and-onboarding) says when it
 leads and when Open project does. No other account screen or state adds a
 contextual site link. Its catalogue path is `product/account/project-created`.
-The signed-in
-account menu links **Home**,
-**Docs** and **Changelog** to the shared site origin, the Billing pane links
-**Pricing** at `/pricing` when it cannot show a verified price, and contextual
-help inside the product links documentation pages by their site path. Those
-paths are recorded in [Product navigation](./product-navigation.md) when added.
+
+The signed-in account menu, and **More** on compact widths, link **Docs** at
+`/docs/` and **Changelog** at `/changelog/`, as
+[Viewer chrome: account menu](./viewer-chrome-account.md#docs-and-changelog)
+defines. Decision: these rows are a signed-in reader's fixed path to the site,
+in a browser and in the desktop app alike, because inside the product the Mokly
+mark is not a link and the desktop app has no address bar. A mark that links
+the site was rejected, because a stray press would leave the viewer. Home is
+not a row, because the site's own header leads to Home from Docs and
+Changelog. The Billing pane links **Pricing** at `/pricing` when it cannot
+show a verified price, and contextual help inside the product links
+documentation pages by their site path. Those paths are recorded in
+[Product navigation](./product-navigation.md) when added.
 [Outbound links](./web-product-shell.md#outbound-links) defines the origin
 for these links on web, native surfaces and the desktop shell.
 

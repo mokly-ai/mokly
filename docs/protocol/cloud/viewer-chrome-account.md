@@ -31,15 +31,32 @@ The `account` trigger opens the account menu. Its rows, from the top:
 - **Theme**, with **Light** and **Dark**, as [Theme](#theme) defines.
 - **Settings**, which opens the [settings dialog](./settings-dialog.md) on its
   index, because it names no pane.
+- **Docs** and **Changelog**, which open the public site's `/docs/` and
+  `/changelog/`, as [Docs and Changelog](#docs-and-changelog) defines.
 - **Sign out**, which ends the session.
 
-Who is signed in and Theme head the menu. Settings and Sign out are its items,
-and choosing one closes the menu before the dialog opens or the session ends.
-When Sign out fails, the
+Who is signed in and Theme head the menu. Settings, Docs, Changelog and Sign
+out are its items, and choosing one closes the menu before the dialog opens,
+the site page opens or the session ends. When Sign out fails, the
 [settings dialog](./settings-dialog.md#sections-and-panes) opens on the
 Account pane, which shows the failure. Theme is a choice, not an item:
 choosing Light or Dark applies the scheme and keeps the menu open, so the
-reader sees the result and can change it back.
+reader sees the result and can change it back. Decision: Settings stays the
+first item and Sign out the last, with Docs and Changelog between them, rather
+than Docs and Changelog first, so a menu opened from the keyboard starts on the
+account's own action and not on a row that leaves the app.
+
+## Docs And Changelog
+
+**Docs** and **Changelog** leave the app for the public site, so each carries
+the external glyph in place of a glyph of its own. In a browser tab, each
+opens its page in the same tab, as
+[Outbound links](./web-product-shell.md#outbound-links) defines. In the
+desktop app, each opens its page in the system browser, as
+[Desktop application](./desktop-app.md#navigation) defines, and the window
+keeps the viewer.
+[Marketing site](./marketing-site.md#links-from-the-app-to-the-site) says why
+the menu carries these two links and not Home.
 
 ## Theme
 
@@ -61,9 +78,10 @@ standalone shell has no account menu, as
 
 On compact widths, **More** holds the project, History and Share, each with
 its glyph, then a divider, then the same account rows as the account menu: who
-is signed in, Theme, Settings and Sign out. More holds no Search, because the
-package keeps its own search control in the compact bar. The project, History
-and Share open the same panels as their full-bar triggers.
+is signed in, Theme, Settings, Docs, Changelog and Sign out. More holds no
+Search, because the package keeps its own search control in the compact bar.
+The project, History and Share open the same panels as their full-bar
+triggers.
 
 ## Menus
 
@@ -75,7 +93,8 @@ the page, with its own landmark and heading. On a touch viewport, **More**
 opens as the registered panel's bottom sheet, titled More, with Close, over the
 inert viewer, exactly as a panel opens: the sheet takes the document's `main`
 landmark and `h1`. Escape and a press outside dismiss a menu, and so does the
-sheet's Close; each returns focus to the menu's trigger. When a settings
-dialog that a menu's Settings opened closes, focus returns to that menu's
-trigger: the avatar on the full bar, or **More** while the compact bar groups
-the account rows.
+sheet's Close; each returns focus to the menu's trigger. In the desktop app,
+choosing Docs or Changelog also returns focus to the menu's trigger, because
+the window keeps the viewer. When a settings dialog that a menu's Settings
+opened closes, focus returns to that menu's trigger: the avatar on the full
+bar, or **More** while the compact bar groups the account rows.

@@ -179,7 +179,8 @@ Change a doc only when a requirement or a decision changes.
 - [Viewer chrome](./viewer-chrome.md) — slots, the bar's actions, overlays,
   publication context and mockups;
   [account menu](./viewer-chrome-account.md) owns the avatar trigger, the
-  account menu with Theme, Settings and Sign out, and More's account rows, and
+  account menu with Theme, Settings, Docs, Changelog and Sign out, and More's
+  account rows, and
   [check slot](./viewer-chrome-check.md) owns the check in the Changes tab.
 - [Viewer address state](./viewer-address-state.md) — controlled selection,
   query grammar, alias round trips, panels and browser history.
