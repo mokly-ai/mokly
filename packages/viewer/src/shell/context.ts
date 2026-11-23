@@ -33,12 +33,18 @@ export interface ShellContext {
   snapshotId?: string;
 }
 
+/** Context fields that decide navigation visibility and change marks. */
+export type NavigationContext = Pick<
+  ShellContext,
+  "changedEntries" | "changesStatus" | "materialEntries"
+>;
+
 /**
  * The entries that changed since the branch point beyond a move: Changes
  * membership without its pure moves.
  */
 export function materialChangedEntries(
-  context: ShellContext,
+  context: NavigationContext,
 ): readonly string[] | undefined {
   return context.materialEntries ?? context.changedEntries;
 }

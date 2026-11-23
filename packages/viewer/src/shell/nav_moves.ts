@@ -7,7 +7,7 @@
  */
 
 import type { BranchPointLookup } from "./catalogue_branch_point.js";
-import { materialChangedEntries, type ShellContext } from "./context.js";
+import { materialChangedEntries, type NavigationContext } from "./context.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 
 /** Copy the sections with each paired entry's branch-point path on its row. */
@@ -40,7 +40,7 @@ export function withMovedRows(
 export function navRowPresentation(
   node: NavLeafNode,
   changesFilter: boolean,
-  context: ShellContext,
+  context: NavigationContext,
 ): { changed: boolean; changedVariants: boolean; label: string } {
   const moved = changesFilter && node.movedFrom !== undefined;
   const material = changesFilter ? undefined : materialChangedEntries(context);

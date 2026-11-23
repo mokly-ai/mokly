@@ -13,7 +13,7 @@ use crate::wire::Request;
 pub struct ReusableRecipe {
     generation: String,
     params: Bundle,
-    modules: Vec<Module>,
+    modules: Arc<Vec<Module>>,
     compiled: Arc<CompiledGeneration>,
 }
 
@@ -22,7 +22,7 @@ impl ReusableRecipe {
     pub fn new(
         generation: String,
         params: Bundle,
-        modules: Vec<Module>,
+        modules: Arc<Vec<Module>>,
         compiled: Arc<CompiledGeneration>,
     ) -> Option<Self> {
         if !compiled.reuse_evidence.reusable(BundleCapture::ServeEdit)
@@ -49,7 +49,7 @@ impl ReusableRecipe {
     }
 
     /// Captured module graph.
-    pub fn modules(&self) -> &[Module] {
+    pub fn modules(&self) -> &Arc<Vec<Module>> {
         &self.modules
     }
 

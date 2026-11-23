@@ -2,6 +2,7 @@
 
 mod capture_tests;
 mod checkout_tests;
+mod eager_revert_tests;
 mod flow_support;
 mod flow_tests;
 mod frozen_tests;

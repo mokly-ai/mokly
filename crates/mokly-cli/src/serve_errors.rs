@@ -77,6 +77,7 @@ fn internal(error: &InternalError) -> String {
         InternalError::Io { source } => source.to_string(),
         InternalError::Json { source } => source.to_string(),
         InternalError::Task { .. } => "A server worker did not finish. Restart Serve.".into(),
+        InternalError::EntityTag { .. } => "Serve could not tag a resource. Restart Serve.".into(),
     }
 }
 

@@ -42,6 +42,7 @@ fn both_optional_watch_mapping_stages_preserve_cancellation() {
             postcss: None,
             watch_sources: Some(sources),
             side: side(),
+            deferred_sources: None,
         };
         let error = compiler
             .watch_files(&BTreeSet::from([input.into()]))
@@ -100,6 +101,7 @@ fn escaped_local_candidates_keep_only_the_written_repair_path() {
         postcss: None,
         watch_sources: Some(sources),
         side: side(),
+        deferred_sources: None,
     };
     let inputs = compiler
         .watch_files(&BTreeSet::from(["tokens.preferred.css".into()]))

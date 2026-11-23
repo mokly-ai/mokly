@@ -29,8 +29,8 @@ async fn source_replacement_cancels_and_drains_the_old_classifier_without_a_resu
             .next_call(matching!(_))
             .returns(Ok("refs".into())),
         ChangeSourceMock::classify
-            .next_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, cancel, _| {
+            .next_call(matching!(_, _, _))
+            .answers_arc(Arc::new(move |_, cancel, _, _| {
                 entered
                     .lock()
                     .unwrap()

@@ -6,6 +6,7 @@ use std::sync::{Arc, Weak};
 
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
 use mokly_sidecar::methods::{Bundle, BundleCapture, BundleRequest, Call};
+use mokly_sidecar::postcss_preparation::PostcssPreparation;
 use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::results;
 
@@ -13,13 +14,14 @@ use crate::bundle::BundleState;
 use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::BundleLease;
-use crate::physical_inputs;
+use crate::plan_inputs;
 use crate::runtime::Runtime;
 
 /// Request a bundle and immediately own its returned lifetime epoch.
 pub(crate) fn request(
     runtime: &Runtime,
     params: &Bundle,
+    preparation: Option<PostcssPreparation>,
 ) -> Result<(results::Bundle, Arc<BundleLease>)> {
     let span = tracing::info_span!(
         "catalogue.bundle",
@@ -28,6 +30,7 @@ pub(crate) fn request(
     );
     let _scope = span.enter();
     let result = match runtime.pool.request(Call::Bundle(BundleRequest {
+        preparation,
         plan: edit_plan(runtime, params),
         params: params.clone(),
         capture: Some(runtime.bundle_capture),
@@ -67,8 +70,12 @@ fn edit_plan(runtime: &Runtime, params: &Bundle) -> Option<Arc<ResolutionPlan>> 
         .lock()
         .unwrap_or_else(|error| error.into_inner())
         .get(params)?;
-    physical_inputs::current(&record.evidence, runtime.physical_inputs.as_ref())
-        .then(|| record.plan.clone())
+    plan_inputs::current(
+        &record.plan,
+        &record.evidence,
+        runtime.physical_inputs.as_ref(),
+    )
+    .then(|| record.plan.clone())
 }
 
 /// Apply disk publication when the core serves a retained state directly.
@@ -149,3 +156,23 @@ mod bundle_plan_tests;
 #[cfg(test)]
 #[path = "_tests_/bundle_plan_bound_tests.rs"]
 mod bundle_plan_bound_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_plan_candidate_tests.rs"]
+mod bundle_plan_candidate_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_plan_threads_tests.rs"]
+mod bundle_plan_threads_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_preparation_support.rs"]
+mod bundle_preparation_support;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_preparation_tests.rs"]
+mod bundle_preparation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/base_preparation_tests.rs"]
+mod base_preparation_tests;

@@ -21,6 +21,10 @@ pub enum Owner {
     RenderPlanChanges,
     /// Serve plans reject an earlier absolute mapped target.
     RenderAbsolutePaths,
+    /// Serialized editor-file scenarios preserve checked plans and native output.
+    RenderPlanCandidates,
+    /// A warm Serve restart takes the PostCSS module and environment of its process.
+    ServePostcssRestart,
 }
 
 const OWNERS: &[Owner] = &[
@@ -30,6 +34,8 @@ const OWNERS: &[Owner] = &[
     Owner::CompareConfigDir,
     Owner::RenderPlanChanges,
     Owner::RenderAbsolutePaths,
+    Owner::RenderPlanCandidates,
+    Owner::ServePostcssRestart,
 ];
 
 impl Owner {
@@ -41,6 +47,8 @@ impl Owner {
             Self::CompareConfigDir => "compare-config-dir",
             Self::RenderPlanChanges => "render-plan-changes",
             Self::RenderAbsolutePaths => "render-absolute-paths",
+            Self::RenderPlanCandidates => "render-plan-candidates",
+            Self::ServePostcssRestart => "serve-postcss-restart",
         }
     }
 }

@@ -11,9 +11,13 @@ descendants. Native helpers are excluded when the root executable is known.
 Unknown root identity includes all descendants conservatively.
 
 A sample measures only processes that the sidecar owns. It discovers new
-descendants at spawn, at the first sample after `processCss`, and every 64
-samples. A Node binary started through a symlink matches its forked
-children.
+descendants at spawn, at the first sample after `processCss`, at the first
+sample after the start of a
+[prepared PostCSS child](./mokly-sidecar-postcss.md#prepared-contexts), and
+every 64 samples. So recycling and default admission count a child that a
+`prepareContext` request starts. They count a child that a `processCss` request
+starts in the same way, also after a failed `prepareContext`. A Node binary
+started through a symlink matches its forked children.
 
 A fresh worker finishes one request before memory recycling can start.
 After a memory recycle, the slot doubles the completed requests before the

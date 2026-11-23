@@ -32,7 +32,7 @@ async fn a_large_authored_asset_streams_and_the_existing_preview_budget_still_ap
     assert!(head.bytes().await.unwrap().is_empty());
     let mut response = harness.client.get(url).send().await.unwrap();
     assert_eq!(response.status(), 200);
-    support::headers(&response);
+    support::headers_with_cache(&response, "no-cache");
     let mut received = 0_u64;
     while let Some(chunk) = response.chunk().await.unwrap() {
         assert!(chunk.iter().all(|byte| *byte == 0));

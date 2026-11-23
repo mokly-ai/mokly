@@ -86,8 +86,9 @@ generation; readers accept only the version of the
 Serve answers the generation's before-side routes for a removed entry from
 the bounded base capture or pinned-source fallback from the background
 classification. Uncaptured views render again from the same base inputs.
-The generation's routes answer with `no-store`, `nosniff`, and GET/HEAD
-parity. `build` writes every
+The generation's routes answer with `nosniff` and GET/HEAD parity, and its
+files carry the cache policy of the
+[comparison serving contract](./mokly-comparison-serving.md#generation-and-serving). `build` writes every
 removed entry's detail, documents, and preview metadata into the generation,
 with the documents' transitive resource closure under the
 [resources](./mokly-comparison.md#resources) rule, before installation. Those

@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { BundleReply } from "../packages/mokly/src/generated/sidecar/BundleReply.js";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 
@@ -90,6 +91,10 @@ for (const layout of [
       params,
       compiled: result.compiled,
       modules: result.modules,
+    });
+    assert.deepEqual(await restored.call<BundleReply>("bundle", params), {
+      generation: result.generation,
+      restoredGeneration: result.generation,
     });
     const replay = await restored.call<BundleResult>("bundle", params);
     assert.deepEqual(

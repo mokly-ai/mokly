@@ -3,7 +3,8 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-19, from branch `calummoore/mokly-publish-path`, at the
-  decision of the performance orchestrator, which owns this item.
+  decision of the performance orchestrator, which owns this item. Updated
+  2026-11-21 with the result of experiment D, which does not test this task.
 - **Location:** `crates/mokly-sidecar/src/pool_requests.rs` (`Pool::execute`),
   `crates/mokly-sidecar/src/pool_cleanup.rs` (`cleanup`),
   `crates/mokly-sidecar/src/pool_head.rs` (`Head::warm`),
@@ -83,6 +84,53 @@
     delegation of 2026-11-16, to merge the plan reuse alone, without the
     earlier start, and to make the pool rule below the root fix, in its own
     branch and measurement.
+  - Experiment D of 2026-11-21 does not test this task. It is a different,
+    rejected attempt:
+    - D ran before the publication. After the first Changes result of the
+      session and a successful head bundle of an edit, it prepared one idle
+      head process that did not bundle.
+    - That process first disposed its older loaded head generations. Then it
+      restored the new generation, installed its maps, and ran a quiet
+      `describe`. The pool kept the recipes of every live generation.
+    - D tested its disposal only as part of that early preparation. It did
+      not test the pool rule of this task with the earlier start of the
+      background pass, or the drop of the previous pass snapshot on a blocking
+      thread.
+    - The performance orchestrator owns the official measurement of D. Its
+      setup:
+      - The control is `main` at `77021d88cf483f56943b7ebaea462ca787c29951`,
+        PR #452. The candidate is the prototype at
+        `fd3b3b12679a791679640053bb341b58956c0912`, on the branch
+        `calummoore/mokly-edit-critical-path-o9ma`.
+      - Each arm uses its own core and its matching sidecar dist, copied
+        under `ts/node_modules/@mokly/`.
+      - The fixture is the `mokly-ai/mokly-cloud` repository at commit
+        `194fdb78`, of 2026-11-06, with its retention change #85. Two local
+        scratch commits sit on top: `5b981d5d`, for Mokly 0.19.0, and
+        `bbed663a`, with a `mokly.subset.json` that the runs did not use.
+      - The runs use the fixture's own `mokly.config.json`. Its roots are
+        `docs/mockups/src/entries/**/*.mockup.{ts,tsx}`. Its renderer is
+        `docs/mockups/src/render.tsx`. It renders light and dark. Serve runs
+        with `--base HEAD`.
+      - The setup has 1,508 views, 4 vCPU, and two sidecars. A snapshot-quiet
+        gate guards the runs against the workspace snapshot agent.
+      - The official edit changes the `TITLE` text on line 35 of
+        `docs/mockups/src/screens/product/settings/slug-editor.tsx`. Each
+        session restores the exact source afterwards.
+    - In six warm rounds of one-line edits, the mean time from an edit to
+      Changes ready was 2.02 s on `main` and 2.09 s with D.
+    - In four alternating cold ten-edit pairs, the mean whole-tree peak was
+      3,072 MiB on `main` and 3,190 MiB with D, 3.8% more. The whole tree is
+      the core, the sidecars, and esbuild.
+    - D needed a warm gain of at least 80 ms and at most 2% more peak memory.
+      It missed both, and the user rejected it on 2026-11-21.
+    - Memory rose although D disposed older head generations before each
+      early restore. The measurements do not show the cause.
+    - So D neither tests nor rules out this task. The task below stays open
+      and untested. No measurement shows that every disposal rule fails.
+    - For more detail only,
+      [serve-head-generation-preload.md](./serve-head-generation-preload.md)
+      holds the full record of D. This item does not depend on it.
 - **Task:**
   1. Add a pool rule: before a head process that did not bundle the newest
      head generation (`Head::warm`) runs a render of that generation,
@@ -110,6 +158,7 @@
   starts without the drop, and a mokly-cloud measurement shows the window
   gain with a peak memory demand within 2% of `main`.
 - **Related:** [serve-head-generation-preload.md](./serve-head-generation-preload.md)
-  proposes the same eviction rule as its option B. The rule of this item also
-  lets that preload evaluate a new generation without a second evaluated head
-  generation on the process.
+  proposed the same eviction rule as its option B. It is now a closed record.
+  Its experiment D tested a bounded form of B before the publication, and the
+  user rejected D on 2026-11-21. The task of this item stays separate and
+  untested.

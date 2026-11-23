@@ -14,6 +14,7 @@ use tokio::runtime::{Builder, Runtime};
 use tokio::sync::watch;
 use tokio::task::JoinHandle;
 
+use crate::serve_eager::EagerStarts;
 use crate::serve_git::GitWork;
 use crate::serve_progress::Progress;
 use crate::serve_shutdown;
@@ -35,6 +36,7 @@ pub(super) fn animate(progress: Arc<dyn Progress>, stop: watch::Receiver<bool>) 
 }
 
 pub(super) struct ServeLifecycle {
+    pub(super) eager: Option<Arc<dyn EagerStarts>>,
     pub(super) git: Arc<dyn GitWork>,
     pub(super) watch: Mutex<Option<Arc<dyn WatchInputs>>>,
     pub(super) cancellation: Arc<dyn Cancellation>,
@@ -73,7 +75,13 @@ impl Lifecycle for ServeLifecycle {
         serve_shutdown::pool_result(tokio::task::spawn_blocking(move || pool.shutdown()).await)
     }
     async fn release(&self) -> Result<()> {
-        Ok(())
+        let Some(eager) = self.eager.clone() else {
+            return Ok(());
+        };
+        match tokio::task::spawn_blocking(move || eager.discard()).await {
+            Ok(()) => Ok(()),
+            Err(source) => Err(mokly_server::error::InternalError::Task { source }.into()),
+        }
     }
 }
 

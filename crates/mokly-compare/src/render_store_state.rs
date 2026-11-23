@@ -18,10 +18,10 @@ impl CachedDocuments {
             return ReadOutcome::Miss;
         }
         let store_fault = {
-            let Ok(mut index) = self.index.try_lock() else {
+            let Ok(_maintenance) = self.maintenance.try_lock() else {
                 return ReadOutcome::Miss;
             };
-            match self.initialize(&mut index) {
+            match self.initialize() {
                 Ok(Some(fault)) => fault,
                 Ok(None) => return ReadOutcome::Miss,
                 Err(error) => return self.failed(error),
@@ -95,11 +95,9 @@ impl CachedDocuments {
         Ok(None)
     }
 
-    pub(crate) fn initialize(
-        &self,
-        index: &mut Option<BTreeMap<StoreKey, SegmentPosition>>,
-    ) -> Result<Option<bool>> {
-        if index.is_some() {
+    /// Build and publish the complete startup map while maintenance is owned.
+    pub(crate) fn initialize(&self) -> Result<Option<bool>> {
+        if self.index.load().is_some() {
             return Ok(Some(false));
         }
         let Some(segments) = self.cache.entries()? else {
@@ -157,7 +155,7 @@ impl CachedDocuments {
                 }
             }
         }
-        *index = Some(entries);
+        self.index.store(Some(Arc::new(entries)));
         Ok(Some(store_fault))
     }
 }

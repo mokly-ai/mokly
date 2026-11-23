@@ -3,19 +3,48 @@
 use std::io::{Read, Write};
 use std::process::{ChildStderr, ChildStdin, ChildStdout};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, SyncSender};
 
 use crate::codec::Decoder;
 use crate::error::{Error, InternalError, Result};
+use crate::operations::Operation;
 use crate::postcss_phase::PhaseState;
-use crate::wire::Frame;
+use crate::wire::{Event, Frame};
 use crate::workers::Diagnostics;
 
-pub(super) fn read_frames(mut stdout: ChildStdout, sender: SyncSender<Result<Frame>>) {
+/// Byte input read by the stdout decoder.
+#[cfg_attr(test, unimock::unimock(api = FrameInputMock))]
+pub(super) trait FrameInput {
+    /// Read bytes from the sidecar stdout pipe.
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize>;
+}
+
+struct StdoutInput(ChildStdout);
+
+impl FrameInput for StdoutInput {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        self.0.read(buffer)
+    }
+}
+
+pub(super) fn read_frames(
+    stdout: ChildStdout,
+    sender: SyncSender<Result<Frame>>,
+    discover_memory: Arc<AtomicBool>,
+) {
+    forward_frames(&mut StdoutInput(stdout), sender, discover_memory.as_ref());
+}
+
+fn forward_frames(
+    reader: &mut dyn FrameInput,
+    sender: SyncSender<Result<Frame>>,
+    discover_memory: &AtomicBool,
+) {
     let mut decoder = Decoder::default();
     let mut buffer = [0; 16_384];
     loop {
-        match stdout.read(&mut buffer) {
+        match reader.read(&mut buffer) {
             Ok(0) => {
                 let result = match decoder.finish() {
                     Ok(()) => Err(Error::Crashed),
@@ -27,6 +56,15 @@ pub(super) fn read_frames(mut stdout: ChildStdout, sender: SyncSender<Result<Fra
             Ok(size) => match decoder.push(&buffer[..size]) {
                 Ok(frames) => {
                     for frame in frames {
+                        if matches!(
+                            frame,
+                            Frame::Event(Event::Operation {
+                                operation: Operation::PostcssStart,
+                                ..
+                            })
+                        ) {
+                            discover_memory.store(true, Ordering::Relaxed);
+                        }
                         if sender.send(Ok(frame)).is_err() {
                             return;
                         }
@@ -166,3 +204,7 @@ fn forward_piece(text: &str, diagnostics: &dyn Diagnostics, timings: bool, phase
 #[cfg(test)]
 #[path = "_tests_/process_io_tests.rs"]
 mod process_io_tests;
+
+#[cfg(test)]
+#[path = "_tests_/process_frame_discovery_tests.rs"]
+mod process_frame_discovery_tests;

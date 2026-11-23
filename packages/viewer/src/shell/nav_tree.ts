@@ -72,7 +72,7 @@ export interface NavLeafNode {
 /** A collapsible navigation group with no destination of its own. */
 export interface NavGroupNode {
   hidden?: true;
-  children: NavNode[];
+  children: readonly NavNode[];
   key: string;
   kind: "group";
   label: string;
@@ -83,7 +83,7 @@ export type NavNode = NavGroupNode | NavLeafNode;
 
 /** One top-level catalogue section: components, or every other kind. */
 export interface NavSectionNode {
-  children: NavNode[];
+  children: readonly NavNode[];
   id: "components" | "specs";
   key: "section:components" | "section:specs";
   label: "Components" | "Specs";
