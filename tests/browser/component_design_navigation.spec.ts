@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { expectFrameLoaded } from "./workspace_actions.js";
+import { canvasFrame, expectFrameLoaded } from "./workspace_actions.js";
 
 for (const delayedStyles of [false, true]) {
   test(`the served catalogue reaches component designs and follows their variant links${delayedStyles ? " with delayed styles" : ""}`, async ({
@@ -13,7 +13,8 @@ for (const delayedStyles of [false, true]) {
         'a[data-nav-row][data-route="design/components/overview/index.html"]',
       ),
     ).toHaveAttribute("aria-current", "page");
-    const iframe = page.locator(".mbk-frame-desktop iframe");
+    // The design screen's Desktop · Light frame on the canvas.
+    const iframe = page.locator(canvasFrame("desktop"));
     const desktop = iframe.contentFrame();
     await expectFrameLoaded(
       iframe,

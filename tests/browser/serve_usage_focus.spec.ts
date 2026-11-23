@@ -7,7 +7,7 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./serve_comparison_test.js";
-import { expectFrameLoaded } from "./workspace_actions.js";
+import { canvasFrame, expectFrameLoaded } from "./workspace_actions.js";
 
 test("a Changes completion keeps keyboard focus on an unchanged Usage link", async ({
   page,
@@ -53,7 +53,7 @@ test("a Changes completion keeps keyboard focus on an unchanged Usage link", asy
     ),
   );
   await expectFrameLoaded(
-    page.locator('[data-workspace-frame="mobile"]'),
+    page.locator(canvasFrame("mobile")),
     /\/screens\/consumer\/index\.mobile\.html/u,
   );
 });

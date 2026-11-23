@@ -25,6 +25,7 @@ import {
   awaitSelectedComparison,
   selectedRequests,
 } from "./serve_comparison_ui.js";
+import { viewportFrame } from "./workspace_actions.js";
 
 /** Badge keeps each current destination, including the consumer's own variant. */
 export function expectBadgeAffected(affected: UsageLink[]) {
@@ -226,7 +227,7 @@ export async function affectedDestinations(
       await expect(
         page
           .frameLocator(
-            `iframe[data-workspace-frame="${facts[index]!.viewport}"]`,
+            viewportFrame(facts[index]!.viewport as "desktop" | "mobile"),
           )
           .locator("h1"),
       ).toHaveText("New consumer");

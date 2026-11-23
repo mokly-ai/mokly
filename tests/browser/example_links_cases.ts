@@ -10,6 +10,7 @@ import { focusDesignLink } from "./design_test_helpers.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
   expectFrameLoaded,
@@ -53,7 +54,8 @@ export function registerExampleLinks(
           release();
         }
         const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
-        const frameElement = page.locator(`.mbk-frame-${viewport} iframe`);
+        // The canvas frame of the viewport in its own scheme.
+        const frameElement = page.locator(canvasFrame(viewport, scheme));
         await expectFrameLoaded(
           frameElement,
           new RegExp(
@@ -75,7 +77,7 @@ export function registerExampleLinks(
           /\/view\/example\/screens\/details\/\?fragment=details$/,
         );
         await expectFrameSource(
-          page.locator(`.mbk-frame-${viewport} iframe`),
+          page.locator(canvasFrame(viewport, scheme)),
           new RegExp(
             `example/screens/details/index\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
           ),

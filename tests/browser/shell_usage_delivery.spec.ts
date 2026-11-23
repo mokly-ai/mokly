@@ -9,6 +9,7 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { DOCUMENT_FRAME } from "./workspace_actions.js";
 
 /** Hold the first read of one entry detail; later reads continue. */
 async function holdDetail(page: Page, entryPath: string) {
@@ -193,10 +194,10 @@ test("use-case and page frames load and navigate while usage and resource eviden
   await expect(page.locator("#mb-main h2").first()).toHaveText(
     "Getting started",
   );
-  const document = page.locator(".mbk-stage-embed iframe");
+  const document = page.locator(DOCUMENT_FRAME);
   await expect(document).toHaveAttribute("data-mokly-frame-state", "ready");
   await page
-    .frameLocator(".mbk-stage-embed iframe")
+    .frameLocator(DOCUMENT_FRAME)
     .getByRole("link", { name: "Open Welcome" })
     .click();
   await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/u);

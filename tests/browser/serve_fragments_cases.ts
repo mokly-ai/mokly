@@ -1,22 +1,42 @@
 import { expect, type Page } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
-import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  expectFrameSource,
+} from "./workspace_actions.js";
+
+/** The routed screen's canvas frames: Desktop and Mobile, Light and Dark. */
+const FRAMES = "iframe[data-workspace-frame][data-workspace-color-scheme]";
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerServeFragments(test = baseTest) {
+  /** Expect each frame's document, by the frame's own scheme. */
+  async function expectSources(
+    page: Page,
+    source: (dark: string) => RegExp,
+  ): Promise<void> {
+    const frames = page.locator(FRAMES);
+    await expect(frames).toHaveCount(4);
+    for (const frame of await frames.all()) {
+      const scheme = await frame.getAttribute("data-workspace-color-scheme");
+      await expectFrameSource(
+        frame,
+        source(scheme === "dark" ? "\\.dark" : ""),
+      );
+    }
+  }
+  /** Each frame keeps its own scheme's document, opened at the fragment. */
   async function expectFragments(page: Page, fragment: string) {
-    const frames = page.locator(
-      ".mbk-frame-mobile iframe, .mbk-frame-desktop iframe",
+    await expectSources(
+      page,
+      (dark) =>
+        new RegExp(`/index\\.(mobile|desktop)${dark}\\.html#${fragment}$`),
     );
-    await expect(frames).toHaveCount(2);
-    for (const frame of await frames.all())
-      await expectFrameSource(frame, new RegExp(`#${fragment}$`));
   }
   async function expectTop(page: Page) {
-    for (const frame of await page
-      .locator(".mbk-frame-mobile iframe, .mbk-frame-desktop iframe")
-      .all())
+    for (const frame of await page.locator(FRAMES).all())
       await expect
         .poll(() =>
           frame.evaluate(
@@ -25,7 +45,7 @@ export function registerServeFragments(test = baseTest) {
         )
         .toBe(0);
   }
-  test("direct screen fragments update current and swap sources", async ({
+  test("direct screen fragments update current and keep each frame's scheme", async ({
     page,
   }) => {
     await page.goto("/view/example/screens/details/?fragment=details");
@@ -47,21 +67,11 @@ export function registerServeFragments(test = baseTest) {
       "fragment=details&fragment=other",
     ]) {
       await page.goto(`/view/example/screens/details/?${query}`);
-      const frames = page.locator(
-        ".mbk-frame-mobile iframe, .mbk-frame-desktop iframe",
-      );
-      await expect(frames).toHaveCount(2);
-      for (const frame of await frames.all())
-        await expectFrameSource(
-          frame,
-          /\/details\/index\.(mobile|desktop)(?:\.dark)?\.html$/,
-        );
+      const plain = (dark: string) =>
+        new RegExp(`/details/index\\.(mobile|desktop)${dark}\\.html$`);
+      await expectSources(page, plain);
       await chooseScheme(page, "dark");
-      for (const frame of await frames.all())
-        await expectFrameSource(
-          frame,
-          /\/details\/index\.(mobile|desktop)\.dark\.html$/,
-        );
+      await expectSources(page, plain);
     }
   });
   test("use-case fragments apply to the first step only", async ({ page }) => {
@@ -79,7 +89,7 @@ export function registerServeFragments(test = baseTest) {
   }) => {
     await page.goto("/view/example/screens/welcome/");
     await page
-      .frameLocator(".mbk-frame-mobile iframe")
+      .frameLocator(canvasFrame("mobile"))
       .getByRole("link", { name: "Open the details screen", exact: true })
       .click();
     await expect(page).toHaveURL(

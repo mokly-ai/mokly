@@ -13,6 +13,7 @@ import { expect } from "@playwright/test";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { chooseFilter, comparisonIndex, snapshotOf } from "./comparison_ui.js";
 import { documentFaces, loadedViewerFaces } from "./document_faces.js";
+import { DOCUMENT_FRAME } from "./workspace_actions.js";
 
 const CONTROLS = "[data-diff-stage], [data-diff-mode], [data-viewport-option]";
 
@@ -86,12 +87,12 @@ for (const width of [390, 1280])
       await page.goto(
         `/view/${comparisonPaths.currentDocument}/?fragment=overview`,
       );
-      const document = page.frameLocator(".mbk-stage-embed iframe");
+      const document = page.frameLocator(DOCUMENT_FRAME);
       await expect(document.locator("#overview")).toBeInViewport();
       await expect(page.locator(CONTROLS)).toHaveCount(0);
       await page.reload();
       await expect(document.locator("#overview")).toBeInViewport();
-      await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+      await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
         "data-mokly-frame-state",
         "ready",
       );

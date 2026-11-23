@@ -10,7 +10,7 @@ import type {
 import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
-import { chooseVariant } from "./workspace_actions.js";
+import { canvasFrame, chooseVariant } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -57,11 +57,16 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
   );
 }
 
+/**
+ * Highlight `instance` and expect its one label and layer over `frame`, the
+ * frame that shows it: a canvas frame of its viewport and scheme, or a step
+ * of a use case.
+ */
 async function highlight(
   page: Page,
   instance: InstanceRef,
   cross: boolean,
-  index: number,
+  frame: string,
 ) {
   const frames = page.locator("iframe[data-mokly-frame-state]");
   for (let i = 0; i < (await frames.count()); i++)
@@ -74,8 +79,8 @@ async function highlight(
       window.viewerHarness.get("one").ref.current.highlightInstance(instance),
     instance,
   );
-  await expect(frames.nth(index)).toHaveAccessibleName(
-    new RegExp(`— ${instance.viewport}$`),
+  await expect(page.locator(frame)).toHaveAccessibleName(
+    new RegExp(`— ${instance.viewport}(?: — ${instance.colorScheme})?$`),
   );
   const labels = page.locator("[data-mokly-label-layer] button");
   await expect(labels).toHaveCount(1);
@@ -157,14 +162,14 @@ for (const cross of [false, true]) {
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
         0,
       );
-      for (const [index, viewport] of (
-        ["mobile", "desktop"] as const
-      ).entries())
+      // The canvas shows each viewport in each scheme; the highlight keeps to
+      // the frame of the instance's viewport and scheme.
+      for (const viewport of ["mobile", "desktop"] as const)
         await highlight(
           page,
           { screenPath: "home", key, viewport, colorScheme },
           cross,
-          index,
+          canvasFrame(viewport, colorScheme),
         );
     }
     await page.evaluate(() =>
@@ -202,7 +207,7 @@ for (const cross of [false, true]) {
           colorScheme: "light",
         },
         cross,
-        1,
+        `${canvasFrame("desktop")}[data-workspace-variant="${variant.path}"]`,
       );
     }
   });
@@ -222,7 +227,12 @@ for (const cross of [false, true]) {
         colorScheme: "light" as const,
         stepIndex,
       };
-      const clicked = await highlight(page, instance, cross, stepIndex);
+      const clicked = await highlight(
+        page,
+        instance,
+        cross,
+        `.flow-step iframe >> nth=${stepIndex}`,
+      );
       expect(clicked).toMatchObject({
         frame: { entryPath: "tour", stepIndex },
       });

@@ -140,7 +140,9 @@ export function registerMovedRowCases(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, moves.pureMovedScreen);
-    await expect(page.locator(".mbk-entry-status")).toHaveText("Unmodified");
+    await expect(page.locator(".mbk-screen-head .mbk-entry-status")).toHaveText(
+      "Unmodified",
+    );
     await awaitRoutedDetail(page, moves.pureMovedScreen);
     await expect(
       page.getByRole("group", { name: "Comparison mode" }),

@@ -6,6 +6,7 @@ import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { firstScreen } from "./changes.js";
+import { viewFrame } from "./frames.js";
 import type { PreparedFixture } from "./setup.js";
 
 export async function fixtureEdits(
@@ -24,7 +25,7 @@ export async function fixtureEdits(
       target: firstScreen,
       async verify(page: Page, edited: boolean) {
         await expect(
-          page.frameLocator('[data-workspace-frame="desktop"]').locator("h1"),
+          page.frameLocator(viewFrame("desktop")).first().locator("h1"),
         ).toHaveText(edited ? "Benchmark screen" : "Activity 1", {
           timeout: timeoutMs,
         });
@@ -43,7 +44,8 @@ export async function fixtureEdits(
       async verify(page: Page, edited: boolean) {
         await expect(
           page
-            .frameLocator('[data-workspace-frame="desktop"]')
+            .frameLocator(viewFrame("desktop"))
+            .first()
             .getByRole("button", {
               name: edited ? "New record benchmark" : "New record",
               exact: true,
@@ -60,7 +62,8 @@ export async function fixtureEdits(
       async verify(page: Page, edited: boolean) {
         await expect(
           page
-            .frameLocator('[data-workspace-frame="desktop"]')
+            .frameLocator(viewFrame("desktop"))
+            .first()
             .locator(".scale-screen"),
         ).toHaveCSS("border-top-width", edited ? "7px" : "0px", {
           timeout: timeoutMs,

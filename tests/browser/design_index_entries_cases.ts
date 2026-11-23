@@ -8,7 +8,11 @@ import { test as baseTest } from "./browser_test.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
-import { chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseViewport,
+  expectCanvasViewport,
+} from "./workspace_actions.js";
 
 export function registerDesignIndexEntries(
   test = baseTest,
@@ -27,7 +31,7 @@ export function registerDesignIndexEntries(
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto("/view/design/browse/views/screen/");
     await chooseViewport(page, "desktop");
-    const frame = page.frameLocator(".mbk-frame-desktop iframe");
+    const frame = page.frameLocator(canvasFrame("desktop"));
     const nav = frame.locator("nav.mbk-nav");
     const filter = frame.getByRole("group", { name: "Catalogue filter" });
     await nav.getByRole("link", { name: "Profile", exact: true }).click();
@@ -55,10 +59,7 @@ export function registerDesignIndexEntries(
         'a[data-nav-row][data-route="design/browse/index-entries/member-changes/index.html"]',
       ),
     ).toHaveAttribute("aria-current", "page");
-    await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-      "data-viewport",
-      "desktop",
-    );
+    await expectCanvasViewport(page, "desktop");
   });
 
   test("narrow index entry designs reach the folder screen from the drawer and a member's crumb", async ({
@@ -67,7 +68,7 @@ export function registerDesignIndexEntries(
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto(`${family}/member/`);
     await chooseViewport(page, "mobile");
-    const frame = page.frameLocator(".mbk-frame-mobile iframe");
+    const frame = page.frameLocator(canvasFrame("mobile"));
     await frame
       .getByLabel("Catalogue location")
       .getByRole("link", { name: "Profile", exact: true })

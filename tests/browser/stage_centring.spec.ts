@@ -2,13 +2,15 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { copiedStaticUrl } from "./static_test.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseViewport, NARROW_WINDOW } from "./workspace_actions.js";
 
+// The component stage below the layout breakpoint scrolls its rows; from
+// 900px wide the canvas fits and centres the variant set instead.
 for (const delivery of ["serve", "static"] as const) {
-  test(`${delivery}: overflowing component rows start at the stage edge and fitting rows stay centred`, async ({
+  test(`${delivery}: below the layout breakpoint, overflowing component rows start at the stage edge and fitting rows stay centred`, async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1000, height: 800 });
+    await page.setViewportSize(NARROW_WINDOW);
     await page.goto(
       `${delivery === "static" ? copiedStaticUrl() : ""}/view/example/components/action/`,
     );

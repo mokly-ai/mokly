@@ -69,9 +69,10 @@ test("the picker enters, keeps, and clears a tag term", async ({ page }) => {
 test("the open picker takes Escape ahead of the expanded frame", async ({
   page,
 }) => {
-  await page.goto("/view/example/screens/welcome/");
+  // A use case's steps keep their screens in browser windows.
+  await page.goto("/view/example/tour/");
   await page.fill(search, "welcome");
-  await page.click(".browser-expand");
+  await page.locator(".browser-expand").first().click();
   await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
 
   // Synthesised state: the expand scrim covers the bar, so no real click opens the panel here.

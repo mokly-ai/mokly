@@ -5,10 +5,14 @@
  * and the inspector icons.
  */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type FrameLocator, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { chooseScheme } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  NARROW_WINDOW,
+} from "./workspace_actions.js";
 
 const ACTION = "/view/example/components/action/";
 
@@ -33,22 +37,29 @@ for (const viewport of ["desktop", "mobile"] as const)
     const props = await openPanel(page, "Props");
     if (viewport === "mobile")
       await page.getByRole("button", { name: "Expand inspector" }).click();
-    const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
+    // On the canvas a row of the variant set shows the edit in its Light and
+    // Dark frames; the narrow layout's one frame swaps to the chosen scheme.
+    const rowFrame = (row: string, scheme: "dark" | "light" = "light") =>
+      page.frameLocator(
+        viewport === "desktop"
+          ? `${canvasFrame("desktop", scheme)}[data-workspace-variant="${row}"]`
+          : `[data-workspace-frame="${viewport}"]`,
+      );
+    const frame = rowFrame("example/components/action");
     const label = props.getByLabel("Label", { exact: true });
     await expect(label).toBeEditable();
     await label.fill("Ready to continue");
-    const button = frame.getByRole("button", {
-      name: "Ready to continue",
-      exact: true,
-    });
-    await expect(button).toBeVisible();
+    const ready = (shown: FrameLocator) =>
+      shown.getByRole("button", { name: "Ready to continue", exact: true });
+    await expect(ready(frame)).toBeVisible();
     // The optional radius is set in the saved props, so its field shows.
     await props.locator('[data-prop-control="radius"]').fill("24");
-    await expect(button).toHaveCSS("border-radius", "24px");
-    // A scheme change keeps the edit and renders it in the dark view.
+    await expect(ready(frame)).toHaveCSS("border-radius", "24px");
+    // A scheme change keeps the edit, and the dark view renders it.
     await chooseScheme(page, "dark");
-    await expect(frame.locator("html")).toHaveCSS("color-scheme", "dark");
-    await expect(button).toHaveCSS("border-radius", "24px");
+    const dark = rowFrame("example/components/action", "dark");
+    await expect(dark.locator("html")).toHaveCSS("color-scheme", "dark");
+    await expect(ready(dark)).toHaveCSS("border-radius", "24px");
     await expect(label).toHaveValue("Ready to continue");
 
     const usage = await openPanel(page, "Usage");
@@ -62,10 +73,11 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(page).toHaveURL(
       /\/view\/example\/components\/toolbar\/default\/\?/u,
     );
-    await expect(frame.locator(".example-toolbar")).toHaveCSS(
-      "border-radius",
-      "12px",
-    );
+    await expect(
+      rowFrame("example/components/toolbar/default", "dark").locator(
+        ".example-toolbar",
+      ),
+    ).toHaveCSS("border-radius", "12px");
     const nested = await openPanel(page, "Nested components");
     await expect(nested.locator("[data-instance-key]")).toHaveCount(2);
     const highlight = page.getByRole("button", {
@@ -76,9 +88,28 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(highlight).toHaveAttribute("aria-pressed", "true");
   });
 
-test("each view of a component renders in its actual viewport and scheme", async ({
+test("on the canvas, each frame of a component renders its desktop view in the frame's scheme", async ({
   page,
 }) => {
+  await page.goto("/view/design/library/chrome/top-bar/?viewport=both");
+  const own = '[data-workspace-variant="design/library/chrome/top-bar"]';
+  const light = page.frameLocator(`${canvasFrame("desktop")}${own}`);
+  const dark = page.frameLocator(`${canvasFrame("desktop", "dark")}${own}`);
+  // The top bar reads the viewport and scheme from its render context.
+  for (const frame of [light, dark]) {
+    await expect(frame.locator(".mbk-name")).toHaveText("mokly.");
+    await expect(frame.locator(".mbk-menu")).toBeHidden();
+  }
+  await expect(dark.locator("html")).toHaveCSS("color-scheme", "dark");
+  await expect(light.locator("html")).not.toHaveCSS("color-scheme", "dark");
+  await chooseScheme(page, "dark");
+  await expect(light.locator("html")).not.toHaveCSS("color-scheme", "dark");
+});
+
+test("below the layout breakpoint, each view of a component renders in its actual viewport and scheme", async ({
+  page,
+}) => {
+  await page.setViewportSize(NARROW_WINDOW);
   await page.goto("/view/design/library/chrome/top-bar/?viewport=both");
   const mobile = page.frameLocator('[data-workspace-frame="mobile"]');
   const desktop = page.frameLocator('[data-workspace-frame="desktop"]');

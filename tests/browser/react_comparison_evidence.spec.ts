@@ -106,17 +106,23 @@ test("screen inspection records real nested, repeated and hidden instances witho
   });
   await expect(highlight).toBeEnabled();
   await highlight.click();
+  // The switch draws on every shown frame: on the canvas, each scheme's.
   await expect(
-    page.locator('.mbk-highlight-layer[data-highlight-viewport="desktop"]'),
+    page
+      .locator('.mbk-highlight-layer[data-highlight-viewport="desktop"]')
+      .first(),
   ).toBeVisible();
   await expect(
     page.locator(".mbk-highlight-label").filter({ hasText: "hidden" }),
   ).toHaveCount(0);
-  await page
+  // At the fitted zoom the labels keep their size over scaled frames, so a
+  // neighbour's label can cover this one; the keys press it.
+  const footer = page
     .locator(".mbk-highlight-label")
     .filter({ hasText: "footer" })
-    .first()
-    .click();
+    .first();
+  await footer.focus();
+  await page.keyboard.press("Enter");
   await expect(
     page.getByRole("tabpanel", { name: "Props", exact: true }),
   ).toContainText("Finish");

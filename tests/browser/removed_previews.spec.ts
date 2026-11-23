@@ -10,7 +10,7 @@ import {
 } from "./comparison_ui.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 import { responseFailure } from "./shell_error_allowances.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { canvasFrame, chooseViewport } from "./workspace_actions.js";
 
 const PREVIEW = "iframe[data-mokly-preview-frame]";
 const SCREEN_PREVIEW = "[data-mokly-preview] .mbk-frame-desktop iframe";
@@ -133,7 +133,7 @@ test("browsing current entries requests no historical bytes", async ({
   await chooseViewport(page, "mobile");
   await expect(
     page
-      .frameLocator('iframe[data-workspace-frame="mobile"]')
+      .frameLocator(canvasFrame("mobile"))
       .getByRole("heading", { name: "After screen" }),
   ).toBeVisible();
   await navRow(page, comparisonPaths.component).click();

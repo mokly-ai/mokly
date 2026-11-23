@@ -59,6 +59,57 @@ export async function expectFrameSource(
   else await expect.poll(value).toMatch(source);
 }
 
+/**
+ * The selector of one canvas frame of the routed screen or component, by its
+ * viewport and its own scheme: from 900px wide, a screen shows Desktop beside
+ * Mobile in Light and Dark, and a component its rows of desktop frames.
+ */
+export function canvasFrame(
+  viewport: "desktop" | "mobile",
+  scheme: "dark" | "light" = "light",
+): string {
+  return `iframe[data-workspace-frame="${viewport}"][data-workspace-color-scheme="${scheme}"]`;
+}
+
+/**
+ * The selector of a viewport's frame in either layout: the canvas's Light
+ * frame from 900px wide, or below it the one frame of the viewport, which
+ * shows the preview scheme.
+ */
+export function viewportFrame(viewport: "desktop" | "mobile"): string {
+  return `iframe[data-workspace-frame="${viewport}"]:not([data-workspace-color-scheme="dark"])`;
+}
+
+/**
+ * Expect the canvas to keep a chosen viewport: the Viewport control holds it,
+ * its column of frames shows, and the other column stays hidden.
+ */
+export async function expectCanvasViewport(
+  page: Page,
+  viewport: "desktop" | "mobile",
+): Promise<void> {
+  await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
+    viewport,
+  );
+  await expect(page.locator(canvasFrame(viewport))).toBeVisible();
+  await expect(
+    page.locator(canvasFrame(viewport === "desktop" ? "mobile" : "desktop")),
+  ).toBeHidden();
+}
+
+/**
+ * The selector of the routed page's or Markdown document's frame: the
+ * canvas's reading frame from 900px wide, and the document pane's frame below.
+ */
+export const DOCUMENT_FRAME =
+  "[data-mokly-stage] iframe, .mbk-stage-embed iframe";
+
+/**
+ * A window narrower than the 900px layout breakpoint, where the one-frame
+ * stage shows each screen view in the preview scheme, in device chrome.
+ */
+export const NARROW_WINDOW = { width: 860, height: 800 } as const;
+
 /** Wait for the matching same-origin document and its blocking resources together. */
 export async function expectFrameLoaded(
   frame: Locator,

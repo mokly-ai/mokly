@@ -11,7 +11,7 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 import { test } from "./browser_test.js";
 import type {} from "./viewer_harness.js";
 import { startViewerPick } from "./viewer_pick.js";
-import { chooseVariant } from "./workspace_actions.js";
+import { canvasFrame, chooseVariant } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
@@ -29,7 +29,7 @@ test("frame links and saved variants emit only committed navigation", async ({
   page,
 }) => {
   await page.evaluate(() => window.viewerHarness.start("one", { cross: true }));
-  const frame = page.frameLocator('#one iframe[data-workspace-frame="mobile"]');
+  const frame = page.frameLocator(`#one ${canvasFrame("mobile")}`);
   await frame.getByRole("link", { name: "Open Action" }).click();
   await expect(
     page.locator("#one").getByRole("heading", { name: "Action", exact: true }),
@@ -56,7 +56,7 @@ test("frame links and saved variants emit only committed navigation", async ({
 
 async function activateUnknownFrameLink(page: Page) {
   const link = page
-    .frameLocator('iframe[data-workspace-frame="mobile"]')
+    .frameLocator(canvasFrame("mobile"))
     .getByRole("link", { name: "Open Action" });
   await link.evaluate((element) =>
     element.setAttribute("data-mokly-link", "missing-entry"),

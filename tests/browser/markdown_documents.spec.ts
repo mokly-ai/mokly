@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import { DOCUMENT_FRAME, expectFrameSource } from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
   test(`Markdown overview and guide open, link and change appearance at ${width}px`, async ({
@@ -10,11 +10,11 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/");
     await expect(page.locator("#mb-main h2")).toHaveText("Example");
-    const frame = page.frameLocator(".mbk-stage-embed iframe");
+    const frame = page.frameLocator(DOCUMENT_FRAME);
     await expect(
       frame.getByRole("heading", { name: "Example", exact: true }),
     ).toBeVisible();
-    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+    await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
       "data-mokly-frame-state",
       "ready",
     );
@@ -32,7 +32,7 @@ for (const width of [390, 1280]) {
     ).toBeGreaterThan(0);
     await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
     await expectFrameSource(
-      page.locator(".mbk-stage-embed iframe"),
+      page.locator(DOCUMENT_FRAME),
       /index\.dark\.html#your-first-visit$/,
     );
     await expect(frame.locator("html")).toHaveAttribute(
@@ -45,23 +45,23 @@ for (const width of [390, 1280]) {
     await page.goBack();
     await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
     await page.reload();
-    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+    await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
       "data-mokly-frame-state",
       "ready",
     );
     await expectFrameSource(
-      page.locator(".mbk-stage-embed iframe"),
+      page.locator(DOCUMENT_FRAME),
       /index\.dark\.html#your-first-visit$/,
     );
     // Switch both sources through the rendered control instead of reading metadata.
     await page.getByLabel("Appearance", { exact: true }).selectOption("light");
     await expectFrameSource(
-      page.locator(".mbk-stage-embed iframe"),
+      page.locator(DOCUMENT_FRAME),
       /index\.html#your-first-visit$/,
     );
     await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
     await expectFrameSource(
-      page.locator(".mbk-stage-embed iframe"),
+      page.locator(DOCUMENT_FRAME),
       /index\.dark\.html#your-first-visit$/,
     );
   });

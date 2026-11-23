@@ -10,7 +10,11 @@ import {
   showMode,
   snapshotOf,
 } from "./comparison_ui.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 const stage = "[data-diff-stage]";
 
@@ -122,7 +126,7 @@ test("added and removed screens stay current without comparison controls", async
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(
     page
-      .frameLocator('[data-workspace-frame="desktop"]')
+      .frameLocator(canvasFrame("desktop"))
       .getByRole("heading", { name: "Added screen" }),
   ).toBeVisible();
 

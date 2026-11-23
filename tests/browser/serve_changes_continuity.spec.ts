@@ -15,6 +15,7 @@ import {
   navigationState,
 } from "./serve_changes_emulation.js";
 import { test } from "./serve_comparison_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 for (const mobile of [false, true]) {
   test(`background evidence preserves All without replacing documents (${mobile ? "mobile" : "desktop"})`, async ({
@@ -34,7 +35,9 @@ for (const mobile of [false, true]) {
       mobile ? { width: 390, height: 500 } : { width: 1280, height: 500 },
     );
     await page.goto(`/view/${changes.paths.changed}/`);
-    const frame = page.frameLocator(".mbk-frame-mobile iframe");
+    const frame = page.frameLocator(
+      mobile ? ".mbk-frame-mobile iframe" : canvasFrame("mobile"),
+    );
     await expect(frame.locator("h1")).toHaveText("After screen");
     await frame
       .locator("body")

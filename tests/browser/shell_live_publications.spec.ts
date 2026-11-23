@@ -150,7 +150,10 @@ test("keyboard focus stays on its element while a publication is adopted", async
       page.locator('a[data-entry-id="other"][data-nav-row]'),
     ).toContainText("Other renamed");
     await expect(homeLink).toBeFocused();
-    const copy = page.getByRole("button", { name: "Copy path home" });
+    // The head band's path chip; the canvas section's head repeats it.
+    const copy = page
+      .locator(".mbk-screen-head")
+      .getByRole("button", { name: "Copy path home" });
     await copy.focus();
     await replaceFile(
       server.root,

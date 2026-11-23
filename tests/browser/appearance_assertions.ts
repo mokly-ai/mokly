@@ -1,4 +1,6 @@
-import { type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+
+import { canvasFrame, expectFrameSource } from "./workspace_actions.js";
 
 export const control = ".mbk-topbar [data-mokly-appearance-control]";
 
@@ -30,6 +32,31 @@ export async function appearance(page: Page): Promise<{
         "[data-mokly-appearance-select]",
       )?.value ?? "",
   }));
+}
+
+/**
+ * Expect a screen's canvas frames, which keep their own scheme whatever the
+ * appearance: each viewport's Light frame shows the light document, and its
+ * Dark frame the dark one, or a light-only screen has no Dark frame.
+ */
+export async function expectCanvasFrames(
+  page: Page,
+  entry: string,
+  dark: boolean,
+): Promise<void> {
+  for (const viewport of ["mobile", "desktop"] as const) {
+    await expectFrameSource(
+      page.locator(canvasFrame(viewport)),
+      new RegExp(`${entry}/index\\.${viewport}\\.html$`, "u"),
+    );
+    if (dark)
+      await expectFrameSource(
+        page.locator(canvasFrame(viewport, "dark")),
+        new RegExp(`${entry}/index\\.${viewport}\\.dark\\.html$`, "u"),
+      );
+    else
+      await expect(page.locator(canvasFrame(viewport, "dark"))).toHaveCount(0);
+  }
 }
 
 export async function store(page: Page, value: string): Promise<void> {

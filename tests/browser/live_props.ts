@@ -13,10 +13,18 @@ export function frameTexts(page: Page): Promise<string[]> {
   );
 }
 
-/** The URL and text of one viewport's stage frame, read through the page. */
-export function frameDocument(page: Page, viewport: "desktop" | "mobile") {
+/**
+ * The URL and text of one viewport's stage frame, read through the page. On
+ * the canvas, `scheme` picks the frame of that scheme.
+ */
+export function frameDocument(
+  page: Page,
+  viewport: "desktop" | "mobile",
+  scheme?: "dark" | "light",
+) {
+  const own = scheme ? `[data-workspace-color-scheme="${scheme}"]` : "";
   return page
-    .locator(`#mb-main iframe[data-workspace-frame="${viewport}"]`)
+    .locator(`#mb-main iframe[data-workspace-frame="${viewport}"]${own}`)
     .evaluate((frame: HTMLIFrameElement) => ({
       url: frame.contentDocument?.URL ?? "",
       text: frame.contentDocument?.body?.innerText ?? "",

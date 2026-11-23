@@ -17,12 +17,14 @@ async function failLoads(page: Page, pattern: string): Promise<() => void> {
   };
 }
 
+// At 1280px a screen stands on the canvas as Desktop and Mobile in Light and
+// Dark, and a document as one reading frame.
 for (const [kind, route, documents, count] of [
   [
     "screen",
     "/view/example/screens/welcome/",
     "**/static/mokly-generated/example/screens/welcome/index.*",
-    2,
+    4,
   ],
   [
     "document",

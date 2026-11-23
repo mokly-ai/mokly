@@ -10,6 +10,7 @@ import { expect, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import {
+  CANVAS_FRAMES,
   DETAILS,
   heading,
   holdReads,
@@ -38,7 +39,7 @@ test("the skip link adds fragment history without reading the route again", asyn
 }) => {
   const names = await titles(request);
   await page.goto(route(WELCOME));
-  await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+  await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
   const reads = readsOf(page);
   const loads = loadsOf(page);
   const main = page.locator("#mb-main");
@@ -49,7 +50,7 @@ test("the skip link adds fragment history without reading the route again", asyn
   await expect(page).toHaveURL(new RegExp(`${route(WELCOME)}$`));
   await expect(main).toBeFocused();
   await expect(heading(page)).toHaveText(names.get(WELCOME)!);
-  await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+  await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
   await page.goForward();
   await expect(page).toHaveURL(new RegExp(`${route(WELCOME)}#mb-main$`));
   await expect(main).toBeFocused();
@@ -119,7 +120,7 @@ test("Back during a pending navigation keeps the previous route, and Forward loa
   await aborted;
   await expect(page).toHaveURL(new RegExp(`${route(WELCOME)}$`));
   await expect(heading(page)).toHaveText(names.get(WELCOME)!);
-  await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+  await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
   release();
   await page.unrouteAll({ behavior: "wait" });
   await expect(page).toHaveURL(new RegExp(`${route(WELCOME)}$`));
@@ -128,7 +129,7 @@ test("Back during a pending navigation keeps the previous route, and Forward loa
   await page.goForward();
   await expect(page).toHaveURL(new RegExp(`${route(DETAILS)}$`));
   await expect(heading(page)).toHaveText(names.get(DETAILS)!);
-  await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+  await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
   expect(reads).toEqual([detail, detail]);
   expect(loads.count).toBe(0);
 });
@@ -177,13 +178,13 @@ for (const direction of ["Back", "Forward"] as const)
     }
     await aborted;
     release();
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+    await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
     const loads = loadsOf(page);
     await (direction === "Back" ? page.goBack() : page.goForward());
     await expect.poll(() => loads.count).toBe(1);
     await expect(page).toHaveURL(new RegExp(`${route(DETAILS)}$`));
     await expect(heading(page)).toHaveText(names.get(DETAILS)!);
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+    await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
     expect(reads).toBe(3);
     await page.unrouteAll({ behavior: "wait" });
   });

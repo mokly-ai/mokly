@@ -3,7 +3,6 @@ import { expect } from "@playwright/test";
 import {
   computedStyle,
   darkSurface,
-  designHomeRow,
   desktopFrame,
   expectSchemeSelected,
   mobileFrame,
@@ -13,33 +12,68 @@ import {
 } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
   expectFrameSource,
+  NARROW_WINDOW,
 } from "./workspace_actions.js";
 
-test("viewport controls switch device frames", async ({ page }) => {
-  await page.goto("/view/example/screens/welcome/");
+const WELCOME = "/view/example/screens/welcome/";
+
+test("the viewport choice keeps one column of canvas frames", async ({
+  page,
+}) => {
+  await page.goto(WELCOME);
   await expect(
     page.locator(".mbk-screen-head [data-workspace-viewport]"),
   ).toBeVisible();
   await expect(page.locator(".mbk-viewbar")).toHaveCount(0);
-  await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
-  await expect(page.locator(".mbk-frame-desktop")).toBeVisible();
+  const frames = (viewport: "desktop" | "mobile") => [
+    page.locator(canvasFrame(viewport, "light")),
+    page.locator(canvasFrame(viewport, "dark")),
+  ];
+  for (const frame of [...frames("mobile"), ...frames("desktop")])
+    await expect(frame).toBeVisible();
   await chooseViewport(page, "mobile");
-  await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
-  await expect(page.locator(".mbk-frame-desktop")).toBeHidden();
+  for (const frame of frames("mobile")) await expect(frame).toBeVisible();
+  for (const frame of frames("desktop")) await expect(frame).toBeHidden();
   await chooseViewport(page, "desktop");
-  await expect(page.locator(".mbk-frame-mobile")).toBeHidden();
-  await expect(page.locator(".mbk-frame-desktop")).toBeVisible();
+  for (const frame of frames("mobile")) await expect(frame).toBeHidden();
+  for (const frame of frames("desktop")) await expect(frame).toBeVisible();
 });
 
-test("color scheme switch swaps device frames", async ({ page }) => {
-  await page.goto("/view/example/screens/welcome/");
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /example\/screens\/welcome\/index\.mobile\.html$/,
-  );
+test("each canvas frame keeps its own scheme and surface through the Appearance", async ({
+  page,
+}) => {
+  await page.goto(WELCOME);
+  const expectOwnSchemes = async () => {
+    await expectFrameSource(
+      page.locator(canvasFrame("mobile", "light")),
+      /example\/screens\/welcome\/index\.mobile\.html$/,
+    );
+    await expectFrameSource(
+      page.locator(canvasFrame("mobile", "dark")),
+      /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
+    );
+    await expectFrameSource(
+      page.locator(canvasFrame("desktop", "light")),
+      /example\/screens\/welcome\/index\.desktop\.html$/,
+    );
+    await expectFrameSource(
+      page.locator(canvasFrame("desktop", "dark")),
+      /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
+    );
+    // A dark frame paints the dark preview surface behind its document.
+    expect(
+      await computedStyle(
+        page,
+        canvasFrame("desktop", "dark"),
+        "backgroundColor",
+      ),
+    ).toBe(darkSurface);
+  };
+  await expectOwnSchemes();
   await expectSchemeSelected(page, "light");
 
   await chooseScheme(page, "dark");
@@ -47,35 +81,20 @@ test("color scheme switch swaps device frames", async ({ page }) => {
     "data-mokly-color-scheme",
     "dark",
   );
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
-  );
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
-  );
-  await expectSchemeSelected(page, "dark");
+  await expectOwnSchemes();
 
   await chooseScheme(page, "light");
   await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "light",
   );
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /example\/screens\/welcome\/index\.mobile\.html$/,
-  );
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /example\/screens\/welcome\/index\.desktop\.html$/,
-  );
-  await expectSchemeSelected(page, "light");
+  await expectOwnSchemes();
 });
 
 test("dark device screens keep their surface and edge", async ({ page }) => {
-  await page.setViewportSize({ height: 800, width: 1_280 });
-  await page.goto("/view/example/screens/welcome/");
+  // Device chrome stays on the one-frame stage below the layout breakpoint.
+  await page.setViewportSize(NARROW_WINDOW);
+  await page.goto(WELCOME);
   const phoneScreen = ".mbk-frame-mobile .phone-screen";
   expect(await overlayStyle(page, phoneScreen, "boxShadow")).toBe("none");
 
@@ -94,13 +113,16 @@ test("dark device screens keep their surface and edge", async ({ page }) => {
   ).toBe(darkSurface);
 });
 
-test("view controls retain mounted screen frames and their selected sources", async ({
+test("the viewport choice keeps the canvas frames mounted with their sources", async ({
   page,
 }) => {
-  await page.goto("/view/example/screens/welcome/");
-  await chooseScheme(page, "dark");
-  const mobile = await page.locator(mobileFrame).elementHandle();
-  const desktop = await page.locator(desktopFrame).elementHandle();
+  await page.goto(WELCOME);
+  const mobile = await page
+    .locator(canvasFrame("mobile", "dark"))
+    .elementHandle();
+  const desktop = await page
+    .locator(canvasFrame("desktop", "dark"))
+    .elementHandle();
   expect(mobile).not.toBeNull();
   expect(desktop).not.toBeNull();
 
@@ -108,11 +130,11 @@ test("view controls retain mounted screen frames and their selected sources", as
   expect(await mobile?.evaluate((node) => node.isConnected)).toBe(true);
   expect(await desktop?.evaluate((node) => node.isConnected)).toBe(true);
   await expectFrameSource(
-    page.locator(mobileFrame),
+    page.locator(canvasFrame("mobile", "dark")),
     /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
   );
   await expectFrameSource(
-    page.locator(desktopFrame),
+    page.locator(canvasFrame("desktop", "dark")),
     /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
   );
 
@@ -120,28 +142,36 @@ test("view controls retain mounted screen frames and their selected sources", as
   await desktop?.dispose();
 });
 
-test("view controls retain mounted component frames", async ({ page }) => {
+test("the viewport choice keeps a variant set's frames mounted", async ({
+  page,
+}) => {
   await page.goto("/view/example/components/action/");
-  const mobileFrame = page.locator('[data-workspace-frame="mobile"]');
-  const desktopFrame = page.locator('[data-workspace-frame="desktop"]');
-  const mobile = await mobileFrame.elementHandle();
-  const desktop = await desktopFrame.elementHandle();
-  expect(mobile).not.toBeNull();
-  expect(desktop).not.toBeNull();
+  // A component's frames show its desktop views, row by row.
+  const own = '[data-workspace-variant="example/components/action"]';
+  const light = await page
+    .locator(`${canvasFrame("desktop", "light")}${own}`)
+    .elementHandle();
+  const dark = await page
+    .locator(`${canvasFrame("desktop", "dark")}${own}`)
+    .elementHandle();
+  expect(light).not.toBeNull();
+  expect(dark).not.toBeNull();
 
   await chooseViewport(page, "mobile");
-  expect(await mobile?.evaluate((node) => node.isConnected)).toBe(true);
-  expect(await desktop?.evaluate((node) => node.isConnected)).toBe(true);
+  expect(await light?.evaluate((node) => node.isConnected)).toBe(true);
+  expect(await dark?.evaluate((node) => node.isConnected)).toBe(true);
 
-  await mobile?.dispose();
-  await desktop?.dispose();
+  await light?.dispose();
+  await dark?.dispose();
 });
 
 test("a light-only screen keeps light frames and says so", async ({ page }) => {
-  await page.goto("/view/example/screens/welcome/");
+  // The device frames' fallback label stays on the one-frame stage below the
+  // layout breakpoint; a light-only screen's canvas shows its Light row alone.
+  await page.setViewportSize(NARROW_WINDOW);
+  await page.goto(WELCOME);
   await chooseScheme(page, "dark");
-  await page.fill("[data-mokly-search]", "home");
-  await page.click(designHomeRow);
+  await page.goto("/view/design/browse/views/home/");
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
 
   await expectFrameSource(
@@ -180,7 +210,7 @@ test("a light-only screen keeps light frames and says so", async ({ page }) => {
 test("use-case steps follow the selected scheme without a caption", async ({
   page,
 }) => {
-  await page.goto("/view/example/screens/welcome/");
+  await page.goto(WELCOME);
   await chooseScheme(page, "dark");
   await page.fill("[data-mokly-search]", "tour");
   await page.click(tourRow);

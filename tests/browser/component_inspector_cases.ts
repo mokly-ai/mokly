@@ -5,6 +5,7 @@ import { componentDesignFixture } from "./component_design_fixture.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerComponentInspector(
@@ -86,7 +87,7 @@ export function registerComponentInspector(
   }) => {
     await page.goto("/view/design/components/overview/");
     for (const viewport of ["desktop", "mobile"] as const) {
-      const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+      const frame = page.frameLocator(canvasFrame(viewport));
       const inspector = frame.getByRole("region", {
         name: "Inspector",
         exact: true,

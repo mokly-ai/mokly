@@ -9,8 +9,8 @@ import type {
 
 import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
-
 import type {} from "./viewer_harness.js";
+import { NARROW_WINDOW } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -167,9 +167,56 @@ for (const cross of [false, true]) {
     await expectPresentation(page, cross, [0, 1]);
   });
 
-  test(`${adapter} rejects a mixed-scheme ref without changing the prior highlight`, async ({
+  test(`${adapter} on the canvas highlights refs of both schemes and rejects a missing ref without changing the prior highlight`, async ({
     page,
   }) => {
+    await openViewer(page, cross);
+    await page.waitForFunction(
+      () => window.viewerHarness.get("one").ref.current !== null,
+    );
+    // The canvas shows each view in each scheme, so a ref may name a Dark
+    // view beside the Light ones.
+    const refs = [
+      homeInstance("mobile", "light"),
+      homeInstance("desktop", "light"),
+      homeInstance("desktop", "dark"),
+    ];
+    await page.evaluate(
+      (refs) =>
+        window.viewerHarness.get("one").ref.current.highlightInstances(refs),
+      refs,
+    );
+    await expectPresentation(page, cross, [0, 1, 2]);
+    const missing = { ...refs[1]!, key: "f".repeat(64) };
+    const outcome = await page.evaluate(
+      async ({ refs, missing }) => {
+        try {
+          await window.viewerHarness
+            .get("one")
+            .ref.current.highlightInstances([...refs, missing]);
+          return "resolved";
+        } catch {
+          return "rejected";
+        }
+      },
+      { refs, missing },
+    );
+    expect(outcome).toBe("rejected");
+    await expectPresentation(page, cross, [0, 1, 2]);
+    expect(
+      await page.evaluate(() =>
+        window.viewerHarness
+          .get("one")
+          .events.filter((event) => event.name === "error"),
+      ),
+    ).toHaveLength(1);
+  });
+
+  test(`${adapter} below the layout breakpoint, rejects a mixed-scheme ref without changing the prior highlight`, async ({
+    page,
+  }) => {
+    // The one-frame stage shows the Light views alone under Light.
+    await page.setViewportSize(NARROW_WINDOW);
     await openViewer(page, cross);
     const refs = [
       homeInstance("mobile", "light"),

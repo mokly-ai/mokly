@@ -2,7 +2,15 @@ import { expect } from "@playwright/test";
 
 import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
-import { chooseScheme, expectFrameLoaded } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  expectFrameLoaded,
+  NARROW_WINDOW,
+} from "./workspace_actions.js";
+
+// The one-frame stage below the layout breakpoint swaps a frame's document
+// with the appearance; on the canvas each frame keeps its own scheme.
+test.use({ viewport: NARROW_WINDOW });
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: a superseded Dark response cannot replace the newer Light selection`, async ({

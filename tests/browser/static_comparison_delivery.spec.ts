@@ -12,7 +12,11 @@ import {
   copiedComparisonDirectory,
   test,
 } from "./comparison_test.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
   test(`${width}px: copied comparisons read lazily and Refresh re-reads the same immutable generation`, async ({
@@ -72,7 +76,13 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/view/${comparisonPaths.changed}/?viewport=desktop`);
     await expect(
-      page.frameLocator('iframe[data-workspace-frame="desktop"]').locator("h1"),
+      page
+        .frameLocator(
+          width < 900
+            ? 'iframe[data-workspace-frame="desktop"]'
+            : canvasFrame("desktop"),
+        )
+        .locator("h1"),
     ).toHaveText("After screen");
     expect(traffic.urls.filter((url) => url.includes("/diffs/"))).toEqual([]);
 

@@ -3,14 +3,18 @@ import { expect } from "@playwright/test";
 import {
   appearance,
   control,
-  mobileFrame,
+  expectCanvasFrames,
   screen,
   select,
 } from "./appearance_assertions.js";
 import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { missingResourceNotice } from "./document_error_allowance.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  expectFrameSource,
+  NARROW_WINDOW,
+} from "./workspace_actions.js";
 
 test("the appearance keeps working when storage refuses", async ({ page }) => {
   await page.addInitScript(() => {
@@ -32,10 +36,7 @@ test("the appearance keeps working when storage refuses", async ({ page }) => {
       theme: "dark",
       value: "dark",
     });
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
-  );
+  await expectCanvasFrames(page, "example/screens/welcome", true);
 });
 
 test("Appearance can be set from the keyboard alone", async ({ page }) => {
@@ -74,9 +75,37 @@ test("an unavailable route still offers Appearance", async ({
   );
 });
 
-test("a component sample follows the one Appearance control", async ({
+test("on the canvas, a component's Light and Dark samples keep their schemes under the one Appearance control", async ({
   page,
 }) => {
+  await page.goto("/view/example/components/action/");
+  const own = '[data-workspace-variant="example/components/action"]';
+  const samples = [
+    [page.locator(`${canvasFrame("desktop")}${own}`), ""],
+    [page.locator(`${canvasFrame("desktop", "dark")}${own}`), "\\.dark"],
+  ] as const;
+  // No separate preview control: the Appearance dresses the interface.
+  await expect(page.getByRole("button", { name: "Dark preview" })).toHaveCount(
+    0,
+  );
+  for (const choice of ["dark", "light"] as const) {
+    await page.locator(select).selectOption(choice);
+    await expect(page.locator(shellRoot)).toHaveAttribute(
+      "data-mokly-color-scheme",
+      choice,
+    );
+    for (const [sample, dark] of samples)
+      await expectFrameSource(
+        sample,
+        new RegExp(`example/components/action/index\\.desktop${dark}\\.html$`),
+      );
+  }
+});
+
+test("below the layout breakpoint, a component sample follows the one Appearance control", async ({
+  page,
+}) => {
+  await page.setViewportSize(NARROW_WINDOW);
   await page.goto("/view/example/components/action/");
   const sample = page.locator('[data-workspace-frame="desktop"]');
   await expectFrameSource(

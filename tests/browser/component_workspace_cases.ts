@@ -5,6 +5,7 @@ import { componentDesignFixture } from "./component_design_fixture.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerComponentWorkspace(
@@ -267,7 +268,7 @@ export function registerComponentWorkspace(
     page,
   }) => {
     await page.goto("/view/design/components/inspection/inspection-details/");
-    const frame = page.frameLocator(".mbk-frame-desktop iframe");
+    const frame = page.frameLocator(canvasFrame("desktop"));
     const toolbar = frame.getByRole("group", { name: "View options" });
     await toolbar
       .getByRole("combobox", { name: "Viewport" })

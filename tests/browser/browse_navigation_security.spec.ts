@@ -12,6 +12,7 @@ import {
   navigationDenials,
 } from "./navigation_error_allowances.js";
 import { routeNavigationNestedFrame } from "./navigation_fixture.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 test.beforeAll(startSuite);
 
@@ -51,7 +52,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
       await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
       const opened = page.context().waitForEvent("page");
       await page
-        .frameLocator(".mbk-frame-mobile iframe")
+        .frameLocator(canvasFrame("mobile"))
         .locator(activation.selector)
         .click({
           ...(activation.button ? { button: activation.button } : {}),
@@ -82,7 +83,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
       };
     });
     await page
-      .frameLocator(".mbk-frame-mobile iframe")
+      .frameLocator(canvasFrame("mobile"))
       .locator("#mock-link")
       .dispatchEvent("click", { button: 0, ctrlKey: true });
     await expect
@@ -116,7 +117,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
       };
     });
     await page
-      .frameLocator(".mbk-frame-mobile iframe")
+      .frameLocator(canvasFrame("mobile"))
       .locator("#named-link")
       .click();
     await expect
@@ -138,10 +139,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
 
   for (const selector of ["#top-link", "#parent-link"]) {
     await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
-    await page
-      .frameLocator(".mbk-frame-mobile iframe")
-      .locator(selector)
-      .click();
+    await page.frameLocator(canvasFrame("mobile")).locator(selector).click();
     await expectDestination(page);
   }
 });
@@ -152,8 +150,8 @@ test("sandboxed direct and nested content cannot escape or invoke parent enhance
 }) => {
   navigationDenials(allowBrowserError, suiteState.navigation.url);
   await page.goto(`${suiteState.navigation.url}/view/fixture/nested/home/`);
-  const frame = page.frameLocator(".mbk-frame-mobile iframe");
-  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
+  const frame = page.frameLocator(canvasFrame("mobile"));
+  await expect(page.locator(canvasFrame("mobile"))).toHaveAttribute(
     "sandbox",
     "allow-same-origin",
   );

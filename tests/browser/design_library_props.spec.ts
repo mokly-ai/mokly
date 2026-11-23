@@ -13,11 +13,15 @@ import { expect } from "@playwright/test";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 const SOURCE = path.join(
   repositoryRoot,
   "examples/basic/specs/design/library/chrome/top-bar.tsx",
 );
+
+/** The edited saved variant, whose row of the variant set shows the edit. */
+const VARIANT = "design/library/chrome/top-bar/search";
 
 for (const viewport of ["desktop", "mobile"] as const)
   test(`${viewport}: design props are temporary, unset and set an optional prop, and load the styles of a newly shown nested component`, async ({
@@ -29,14 +33,20 @@ for (const viewport of ["desktop", "mobile"] as const)
         : { width: 1280, height: 900 },
     );
     const source = await fs.readFile(SOURCE, "utf8");
-    await page.goto(
-      `/view/design/library/chrome/top-bar/search/?viewport=${viewport}`,
-    );
+    await page.goto(`/view/${VARIANT}/?viewport=${viewport}`);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page.getByRole("button", { name: "Expand inspector" }).click();
     const props = page.getByRole("tabpanel", { name: "Props", exact: true });
-    const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
+    // On the canvas the edited variant's row shows the edit in its Light and
+    // Dark frames; the narrow layout keeps one frame.
+    const frameOf = (scheme: "dark" | "light") =>
+      page.frameLocator(
+        viewport === "desktop"
+          ? `${canvasFrame("desktop", scheme)}[data-workspace-variant="${VARIANT}"]`
+          : `[data-workspace-frame="${viewport}"]`,
+      );
+    const frame = frameOf("light");
     const search = frame.getByRole("searchbox", { name: "Search catalogue" });
     const query = props.locator('[data-prop-control="query"]');
     await expect(query).toBeEditable();
@@ -44,6 +54,10 @@ for (const viewport of ["desktop", "mobile"] as const)
 
     await query.fill("New search");
     await expect(search).toHaveValue("New search");
+    if (viewport === "desktop")
+      await expect(
+        frameOf("dark").getByRole("searchbox", { name: "Search catalogue" }),
+      ).toHaveValue("New search");
     // The tag picker renders tag chips that the saved variant does not show;
     // the preview brings their styles with them.
     await props.locator('[data-prop-control="pickerOpen"]').check();

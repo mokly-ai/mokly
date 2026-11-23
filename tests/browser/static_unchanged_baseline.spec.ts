@@ -14,7 +14,7 @@ import {
   changesPaths,
   comparisonIndex,
 } from "./comparison_ui.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseViewport, viewportFrame } from "./workspace_actions.js";
 
 const test = additionsCopyTest("browser-head-baseline", undefined, "HEAD");
 
@@ -50,7 +50,7 @@ test("the owning catalogue stays usable when HEAD is the unchanged baseline", as
     ).toHaveText("0");
     const frames = page.locator("[data-current-screen] iframe");
     await expect(
-      frames.and(page.locator(`[data-workspace-frame="${viewport}"]`)),
+      frames.and(page.locator(viewportFrame(viewport))),
     ).toBeVisible();
     for (const frame of await frames.all()) {
       await expect(frame.contentFrame().locator("h1")).toHaveText(

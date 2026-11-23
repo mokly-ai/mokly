@@ -8,6 +8,7 @@ import {
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
+import { NARROW_WINDOW } from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
 
@@ -30,6 +31,9 @@ test.beforeEach(async ({ page, allowBrowserError }) => {
 test("an unowned frame document stays frame-owned during shell replacement", async ({
   page,
 }) => {
+  // The appearance replaces a frame's document on the one-frame stage, below
+  // the layout breakpoint; a canvas frame keeps its own scheme.
+  await page.setViewportSize(NARROW_WINDOW);
   await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   await frame.locator("#unowned-details-link").click();

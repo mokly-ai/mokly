@@ -1,8 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 
+import { expectCanvasFrames } from "./appearance_assertions.js";
 import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
-import { expectFrameSource } from "./workspace_actions.js";
 
 const welcome = "/view/example/screens/welcome/";
 const details = "/view/example/screens/details/";
@@ -29,15 +29,9 @@ async function expectAppearance(
     scheme,
   );
   await expect(page.locator(select)).toHaveValue(theme);
+  // The canvas keeps each frame's own scheme through every appearance.
   const entry = page.url().includes("welcome") ? "welcome" : "details";
-  const suffix = scheme === "dark" ? ".dark" : "";
-  for (const viewport of ["mobile", "desktop"]) {
-    const frame = page.locator(`[data-workspace-frame="${viewport}"]`);
-    await expectFrameSource(
-      frame,
-      new RegExp(`${entry}/index\\.${viewport}${suffix}\\.html$`),
-    );
-  }
+  await expectCanvasFrames(page, `example/screens/${entry}`, true);
 }
 
 for (const choice of ["light", "auto"] as const) {

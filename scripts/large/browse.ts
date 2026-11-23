@@ -3,6 +3,7 @@ import type { BrowserContext, Page } from "@playwright/test";
 
 import { changesSummary, firstScreen } from "./changes.js";
 import { changesVisible, delivered, observeDelivery } from "./delivery.js";
+import { DOCUMENT_FRAME, schemeFrame, viewFrame } from "./frames.js";
 import { previewBytes } from "./http.js";
 import type { PreparedFixture } from "./setup.js";
 
@@ -21,7 +22,7 @@ export async function browse(
   const response = await page.goto(`${url}/view/${firstScreen}/`);
   if (!response?.ok())
     throw new Error(`Browse returned HTTP ${response?.status()}`);
-  const desktop = page.frameLocator('[data-workspace-frame="desktop"]');
+  const desktop = page.frameLocator(viewFrame("desktop"));
   await expect(desktop.locator("h1")).toHaveText("Activity 1", {
     timeout: 60_000,
   });
@@ -40,11 +41,12 @@ export async function browse(
   await page.getByRole("searchbox").fill("");
   const comparison =
     scope === "serve" ? await changesReadiness(page, fixture, beginning) : {};
-  for (const viewport of ["desktop", "mobile"]) {
+  for (const viewport of ["desktop", "mobile"] as const) {
     await page.getByLabel("Viewport", { exact: true }).selectOption(viewport);
-    for (const scheme of ["dark", "light"]) {
+    for (const scheme of ["dark", "light"] as const) {
       await page.getByLabel("Appearance", { exact: true }).selectOption(scheme);
-      const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
+      // The canvas shows each scheme in its own frame.
+      const frame = page.frameLocator(schemeFrame(viewport, scheme));
       await expect(frame.locator("html")).toHaveAttribute(
         "style",
         new RegExp(`color-scheme: ${scheme}`),
@@ -57,9 +59,7 @@ export async function browse(
       );
     }
   }
-  const src = await page
-    .locator('[data-workspace-frame="mobile"]')
-    .getAttribute("src");
+  const src = await page.locator(viewFrame("mobile")).getAttribute("src");
   if (!src) throw new Error("Preview has no URL");
   const cached = performance.now();
   const bytes = await previewBytes(new URL(src, url));
@@ -69,16 +69,18 @@ export async function browse(
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   const edited = performance.now();
   await page.getByLabel("label", { exact: true }).fill("Benchmark action");
+  // The component's own example comes first in its variant set.
   await expect(
     page
-      .frameLocator('[data-workspace-frame="desktop"]')
+      .frameLocator(viewFrame("desktop"))
+      .first()
       .getByRole("button", { name: "Benchmark action" }),
   ).toBeVisible({ timeout: 60_000 });
   const propsMs = performance.now() - edited;
   await page.goto(`${url}/view/area-1/guide/`);
   await expect(
     page
-      .frameLocator(".mbk-stage-embed iframe")
+      .frameLocator(DOCUMENT_FRAME)
       .getByRole("heading", { name: "Getting started" }),
   ).toBeVisible({ timeout: 60_000 });
   if (errors.length) throw new Error(`Browser errors: ${errors.join("; ")}`);

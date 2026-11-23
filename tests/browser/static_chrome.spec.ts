@@ -2,7 +2,11 @@ import { expect } from "@playwright/test";
 
 import { staticRequests } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
-import { chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseViewport,
+  expectCanvasViewport,
+} from "./workspace_actions.js";
 
 test("copied catalogue navigation retains pointer and keyboard resizing", async ({
   page,
@@ -42,7 +46,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   }) => {
     await page.goto("/view/design/browse/pages/view/");
     await chooseViewport(page, viewport);
-    const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+    const frame = page.frameLocator(canvasFrame(viewport));
     await frame.locator(".mbk-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details\/$/);
     await frame.locator(".mbk-inspector-link").click();
@@ -51,9 +55,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
       .getByRole("link", { name: "Open Welcome", exact: true })
       .click();
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-      "data-viewport",
-      viewport,
-    );
+    await expectCanvasViewport(page, viewport);
   });
 }

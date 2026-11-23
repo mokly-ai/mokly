@@ -1,14 +1,38 @@
 /**
- * The quiet band that names a current light-only document's light page under
- * Dark, as `design/browse/appearance/states/light-only-current` depicts. Any
- * host whose shell still offers Dark can check it.
+ * The note that names a current light-only document's light page under
+ * Dark: the reading frame's label on the canvas, and in the narrow layout the
+ * quiet band above the document pane, as
+ * `design/browse/appearance/states/light-only-current` depicts. Any host
+ * whose shell still offers Dark can check it.
  */
 
 import { expect, type Page } from "@playwright/test";
 
 /**
- * Expect no band under Light, then choose Dark and expect one band above the
- * document pane, with the approved border, colour, size, weight, and padding.
+ * On the canvas, expect the reading frame's label to name the source file
+ * alone under Light, and the fallback after it under Dark, while the frame
+ * keeps the light document and no band shows.
+ */
+export async function expectLightOnlyDocumentLabel(
+  page: Page,
+  documentPath: string,
+  file: string,
+): Promise<void> {
+  const label = page.locator("[data-mokly-stage] figcaption");
+  await expect(label).toHaveText(file);
+  await page.locator("[data-mokly-appearance-select]").selectOption("dark");
+  await expect(label).toHaveText(`${file} · Light only`);
+  await expect(page.locator(".mbk-scheme-fallback")).toHaveCount(0);
+  await expect(page.locator("[data-mokly-fragment-frame]")).toHaveAttribute(
+    "src",
+    new RegExp(`/static/mokly-generated/${documentPath}/index\\.html$`, "u"),
+  );
+}
+
+/**
+ * In the narrow layout, expect no band under Light, then choose Dark and
+ * expect one band above the document pane, with the approved border, colour,
+ * size, weight, and padding.
  */
 export async function expectLightOnlyDocumentBand(
   page: Page,

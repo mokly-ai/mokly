@@ -4,6 +4,7 @@ import { shellRoot } from "./browse_assertions.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { awaitRoutedDetail, modeButton, showMode } from "./comparison_ui.js";
 import {
+  canvasFrame,
   chooseVariant,
   chooseViewport,
   expectFrameSource,
@@ -135,14 +136,12 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
     "data-mokly-color-scheme",
     "dark",
   );
+  // The light-only screen stands on the canvas as its Light frames alone.
   await expectFrameSource(
-    page.locator('[data-workspace-frame="mobile"]'),
+    page.locator(canvasFrame("mobile")),
     /screens\/stable\/index\.mobile\.html$/,
   );
-  await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
-    "data-color-scheme-fallback",
-    "",
-  );
+  await expect(page.locator(canvasFrame("mobile", "dark"))).toHaveCount(0);
   await expectShownStatus(page, comparisonPaths.unchanged, "Unmodified", false);
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
     "aria-pressed",
@@ -182,10 +181,13 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
     "Rendered content changed.",
   );
+  // Current shows the variant set, whose rows show their desktop views.
   await modeButton(page, "Current").click();
   await expect(
     page
-      .frameLocator('[data-workspace-frame="mobile"]')
+      .frameLocator(
+        `${canvasFrame("desktop")}[data-workspace-variant="${comparisonPaths.changedVariant}"]`,
+      )
       .getByRole("heading", { name: "Featured After" }),
   ).toBeVisible();
   await chooseVariant(page, "Fresh");
@@ -196,7 +198,9 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(page.locator(TOOLBAR)).toBeHidden();
   await expect(
     page
-      .frameLocator('[data-workspace-frame="mobile"]')
+      .frameLocator(
+        `${canvasFrame("desktop")}[data-workspace-variant="${comparisonPaths.addedVariant}"]`,
+      )
       .getByRole("heading", { name: "Fresh card" }),
   ).toBeVisible();
 });

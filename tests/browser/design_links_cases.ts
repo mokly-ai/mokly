@@ -7,7 +7,11 @@ import {
 
 import { test as baseTest } from "./browser_test.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
-import { chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseViewport,
+  expectCanvasViewport,
+} from "./workspace_actions.js";
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerDesignLinks(
@@ -39,7 +43,7 @@ export function registerDesignLinks(
     viewport: "mobile" | "desktop",
     entryPath: string,
   ): Promise<void> {
-    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+    await expect(page.locator(canvasFrame(viewport))).toHaveAttribute(
       "src",
       `/static/mokly-generated/${entryPath}/index.${viewport}.html`,
     );
@@ -52,7 +56,7 @@ export function registerDesignLinks(
       await page.setViewportSize({ width: 1600, height: 1000 });
       await page.goto("/view/design/browse/views/home/");
       await chooseViewport(page, viewport);
-      const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+      const frame = page.frameLocator(canvasFrame(viewport));
       await frame.locator(".mbk-empty-link").click();
       await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
       await expectFrameRoute(page, viewport, "design/browse/views/screen");
@@ -74,10 +78,7 @@ export function registerDesignLinks(
       );
       await expect(row).toHaveAttribute("aria-current", "page");
       await expect(row).toBeVisible();
-      await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-        "data-viewport",
-        viewport,
-      );
+      await expectCanvasViewport(page, viewport);
       await page.goBack();
       await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
       await expectFrameRoute(page, viewport, "design/browse/views/screen");
@@ -92,14 +93,11 @@ export function registerDesignLinks(
       await visibleShotLink(frame, "Return to welcome").click();
       await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
       await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
-      const iframe = page.locator(`.mbk-frame-${viewport} iframe`);
+      const iframe = page.locator(canvasFrame(viewport));
       expect(
         (await iframe.getAttribute("sandbox"))?.split(/\s+/),
       ).not.toContain("allow-scripts");
-      await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-        "data-viewport",
-        viewport,
-      );
+      await expectCanvasViewport(page, viewport);
     });
 
     test(`${viewport} comparison, tags, and flow links use canonical designs`, async ({
@@ -108,7 +106,7 @@ export function registerDesignLinks(
       await page.setViewportSize({ width: 1600, height: 1000 });
       await page.goto("/view/design/browse/views/screen/");
       await chooseViewport(page, viewport);
-      const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+      const frame = page.frameLocator(canvasFrame(viewport));
       await visibleShotLink(frame, "Open the details screen").click();
       await expect(page).toHaveURL(
         /\/view\/design\/browse\/views\/details-screen\/$/,
@@ -172,7 +170,7 @@ export function registerDesignLinks(
     page,
   }) => {
     await page.goto("/view/design/browse/views/home/");
-    const frame = page.frameLocator(".mbk-frame-mobile iframe");
+    const frame = page.frameLocator(canvasFrame("mobile"));
     await frame
       .getByRole("link", { name: "Open catalogue navigation" })
       .click();
