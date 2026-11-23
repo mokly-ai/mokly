@@ -218,14 +218,14 @@ render with `@mokly/ui/edit-status`. The controls' wording of
 render `@mokly/ui/canvas-stage`, `@mokly/ui/canvas-frame`,
 `@mokly/ui/canvas-missing-view`, `@mokly/ui/canvas-state`,
 `@mokly/ui/canvas-previous-version`, `@mokly/ui/preview-frame`,
-`@mokly/ui/device-frame`, `@mokly/ui/preview-state`,
+`@mokly/ui/preview-state`,
+`@mokly/ui/canvas-comparison`, `@mokly/ui/swipe-divider`,
 `@mokly/ui/comparison-stage`, `@mokly/ui/comparison-pane`,
 `@mokly/ui/empty-state`, and `@mokly/ui/variant-bar`. Each `<iframe>` element
 is `PreviewIframe` of `@mokly/ui/preview-frame`: a container passes its `ref`,
 its `src` or `srcDoc`, its `key`, and its data attributes, and it keeps the
 mount hooks, the sources, the read-only guard, and the scroll controllers.
-`frames.tsx` draws the browser window of a comparison's desktop pane and
-copies its address, while the package shows "URL copied". `views.tsx` renders the main
+`views.tsx` renders the main
 region of `@mokly/ui/shell-layout`, `workspace.tsx` lays out the workspace
 with `@mokly/ui/workspace-layout`, and `embedded_viewer.tsx` lays out an
 embedded root and its host slots with `@mokly/ui/embedded-layout`, which
@@ -398,10 +398,11 @@ it. The catalogue's width is the reader's choice or the starting width of
 on the separator forgets the choice. `nav.tsx` passes the index's `base` to
 the catalogue's foot. A target view puts its head band, a workspace's
 comparison band and variant bar, and the inspector or a page's Details in
-the right panel of `sheets.tsx`; `diffs.tsx` gives the band and the stage
-apart. The dock's Fit refits the canvas that `canvas_stage.tsx` registers in
-`root_context.tsx` while it shows, and it hides while a compare mode shows
-its stage.
+the right panel of `sheets.tsx`; `diffs.tsx` gives the band to the panel, and
+`comparison_canvas.tsx` draws the compare on the canvas. The dock's Fit
+refits the canvas that `canvas_stage.tsx` registers in `root_context.tsx`
+while it shows, also during a compare, and it hides while the state of a
+comparison covers the canvas.
 
 `stages.tsx` shows the routed screen, component, page or document on the
 canvas of `@mokly/ui/canvas-stage`, under the
@@ -469,8 +470,8 @@ resize event. The canvas clips the frames and their highlights. The frames'
 stage is the canvas stage's invisible box, the canvas between the floating
 panels and above the zoom pill, from `stageRef`, so a marker under a panel is
 cut at the panel's edge, and one fully under it is hidden. A compare mode
-other than Current hides the canvas behind the
-comparison stage, which stops its keys.
+draws on the canvas's frames, so the canvas keeps its pan, zoom, Fit and
+keys; while the state of a comparison covers the canvas, its keys stop.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each selection through
@@ -501,8 +502,6 @@ its lists from its own detail. A current component variant reads Used by and
 Affected from its parent's detail, while its own detail supplies its other
 workspace facts. Every value is projected only from the installed index and
 detail records: every catalogue of a delivery carries its published records.
-`comparison_views.tsx` renders
-React-owned frame chrome around the snapshots from the comparison metadata.
 
 `workspace_evidence_data.ts` merges an entry's own reasons, which
 `publicWorkspace` reads from the routed entry detail's `reasons`, the selected
@@ -676,36 +675,69 @@ must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
 
-`diffs.tsx` owns the comparison band and stage, which
-`@mokly/ui/comparison-stage` draws; `@mokly/ui/comparison-toolbar`
-renders the band's mode group, the Scroll together switch (a native checkbox
-with `role="switch"`, shown in every diff mode including loading and failure)
-and Refresh, from props and callbacks alone. `use_comparison.ts` requests, renews and fences the selected
+`diffs.tsx` owns the comparison band, which `@mokly/ui/comparison-toolbar`
+draws: the mode group with Swipe as the fifth mode, the Scroll together switch
+(a native checkbox with `role="switch"`, shown in every diff mode including
+loading and failure), Refresh, and the outcome line of each compared frame,
+such as `Desktop · Light · Screen changed` (`comparison_outcome.ts`), from
+props and callbacks alone. `comparison_canvas.tsx` draws the compare on the
+canvas, under the
+[pane layout](../../../../docs/protocol/mokly-comparison-panes.md#layout):
+`workspace_comparison.ts` gives it the frames that compare, from the canvas's
+shown frames (`comparison_rows.ts`; a removed component or variant, which has
+no live frames, gets the frames of its own views and its own section), and
+the frame that Side by side compares, which starts on the first compared
+frame, the picked frame in the compact layout, and which `setComparedFrame`
+of `comparison_compared_frame.ts` chooses. `comparison_canvas_state.ts`
+decides what the canvas holds: `Loading comparison…`, the failure with Try
+again, or the line of an entry without a comparison, which
+`@mokly/ui/canvas-comparison` draws on a canvas in place of the section while
+the section's live frames stay mounted out of sight, or the compared frames.
+Through the context of `comparison_canvas_context.ts`, `canvas_stage.tsx`
+then takes the section of `comparison_cells.tsx`: in Overlay, Difference and
+Swipe each compared frame takes its live frame's cell, and in Side by side
+the section holds the compared frame's Before and Current frames. A frame
+whose version is missing makes the compare fall back to Side by side. The
+container's `shown` input, true by default, gates the compare: while it is
+false the canvas shows its live frames, while the mode, the loaded comparison
+and its presentations stay. `comparison_canvas_parts.ts` keeps one scroll
+controller for each compared frame, Swipe's divider position, which every
+frame shares and which opens in the middle, and the measured sizes of
+component frames (`comparison_frame_size.ts`): the larger width and height of
+both versions, measured once with `measureContentBox` when both documents
+load. `use_comparison.ts` requests, renews and fences the selected
 comparison. Current entries use Serve's selected endpoint. Removed component
 parents and variants use the current index's advertised generation in every
 host, which separates historical entries from current entries at the same path.
 `comparison_presentation.ts` owns its request identity and
-axes; `comparison_selection.ts` picks the views and snapshot addresses
-the selection shows; and `use_comparison_documents.ts` presents every selected
-pane document through the shared snapshot loader of the comparison's immutable
-generation before the stage reports ready. Its framework-free core,
-`comparison_documents.ts`, keeps one loaded comparison's presentations across
-mode, viewport and scheme switches and discards them when Refresh, Try again, a
-new generation, Current or navigation replaces the comparison; a failure shows
-the existing failure copy with Try again. `comparison_views.tsx` renders one
-section per viewport, sharing one last-scrolled version
-(`comparison_scroll_owner.ts`) between them, and chooses `comparison_stack.tsx`
-for Overlay and Difference (one chrome whose viewport holds the Before layer
-and the blended Current layer) or `comparison_side.tsx` for Side by side and
-for views missing a side, whose message is the design copy that the
+axes. The comparison holds one generation for each compared row, by the row's
+entry id (`generations`), and `comparison_selection.ts` gives each compared
+frame its row's view of the frame's viewport and scheme, with the snapshot
+addresses of its row's generation. `use_comparison_documents.ts` presents
+every selected pane document through the shared snapshot loader of its row's
+immutable generation, and reports each row ready only when all of its
+documents are accepted. Its framework-free core, `comparison_documents.ts`,
+keeps one generation's presentations across mode, frame, viewport and scheme
+switches and discards them when Refresh, Try again, a new generation,
+Current or navigation replaces the comparison; a failure shows the existing
+failure copy with Try again. The compared frames share one last-scrolled
+version (`comparison_scroll_owner.ts`). `comparison_stack.tsx` draws one
+frame of Overlay, Difference or Swipe, whose page viewport holds the Before
+layer and the Current layer, at half opacity, blended, or to the right of
+Swipe's divider of `@mokly/ui/swipe-divider`; `comparison_side.tsx` draws one
+version of Side by side in its own canvas frame, with its Before or Current
+tag, or the design copy of a missing version that the
 [pane layout](../../../../docs/protocol/mokly-comparison-panes.md#layout)
-names. `comparison_chrome.tsx` picks the browser, phone or
-bordered component frame, `comparison_viewport.tsx` attaches the shared
-viewport, its sticky device-sized box and range spacer, which
-`@mokly/ui/comparison-pane` draws, to the scroll controller through refs, and
-`comparison_frame.tsx` reuses `preview_frame.tsx`'s `SnapshotFrame` and the
+names. `comparison_viewport.tsx` attaches the page viewport and its range
+spacer, which `@mokly/ui/comparison-pane` draws inside the canvas frame's
+document at the frame's nominal size, to the scroll controller through refs,
+and `comparison_frame.tsx` reuses `preview_frame.tsx`'s `SnapshotFrame` and the
 read-only guard for each version, marked `data-mokly-comparison-frame` with
-`scrolling="no"`.
+`scrolling="no"`. Each version forwards its canvas input with
+`listenForCanvasInput` to the `useCanvasFrameInput` hook of
+`canvas_frame_input.tsx`, so ⌘ or Ctrl with the wheel, a pinch and the canvas
+keys reach the canvas from a pane, and its keyboard focus draws its frame's
+focus glow.
 
 `comparison_scroll_sync.ts` is the per-section scroll controller behind the
 interfaces in `comparison_scroll_types.ts`: it follows each layer document from

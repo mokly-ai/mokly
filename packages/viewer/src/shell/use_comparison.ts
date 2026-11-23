@@ -39,10 +39,19 @@ interface PendingOperation {
   scopeKey: string;
 }
 
+/**
+ * The generation that holds each compared row's documents, by the row's
+ * entry id. A screen has one row; a variant set has a row for its own example
+ * and one for each saved variant.
+ */
+export type ComparisonGenerations = ReadonlyMap<string, LoadedComparison>;
+
 /** State and actions consumed by the comparison toolbar and pane renderer. */
 export interface ComparisonController {
   busy: boolean;
   failure?: string;
+  /** The generation of each compared row; the routed entry's row today. */
+  generations?: ComparisonGenerations;
   loaded?: LoadedComparison;
   mode: ComparisonMode;
   presentation?: ComparisonPresentation;
@@ -263,11 +272,19 @@ export function useComparison({
     presentation?.scopeKey === scopeKey ? presentation : undefined;
   const currentFailure =
     failure && failure.key === demand?.key ? failure : undefined;
+  // The map keeps its identity while the loaded generation stays, so the
+  // documents of each row are not presented again.
+  const generations = useMemo<ComparisonGenerations | undefined>(
+    () => (currentLoaded ? new Map([[entryId, currentLoaded]]) : undefined),
+    [currentLoaded, entryId],
+  );
   return {
     busy,
     mode,
     ...(currentFailure ? { failure: currentFailure.message } : {}),
-    ...(demand && currentLoaded ? { loaded: currentLoaded } : {}),
+    ...(demand && currentLoaded && generations
+      ? { generations, loaded: currentLoaded }
+      : {}),
     ...(demand && currentPresentation
       ? { presentation: currentPresentation }
       : {}),

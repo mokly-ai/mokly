@@ -49,7 +49,16 @@ side by side, at one zoom.
 - **Comparison** — in a comparison, a frame holds both versions as its compare
   mode draws them. In Side by side, each of the compared frame's two versions
   stands in its own frame, whose label starts with a `Before` or a `Current`
-  tag. The [comparison panes](./mokly-comparison-panes.md) fix each mode.
+  tag. The [comparison panes](./mokly-comparison-panes.md) fix each mode. A
+  screen's frame keeps its nominal size. A component's frame takes the larger
+  width and the larger height of its two versions' documents, each measured
+  once when both documents load, and both versions share that size. Until
+  then, the frame holds the desktop size, at which each document lays out for
+  its measurement. Decision: the larger width and height of the two versions,
+  not the desktop width with the larger height, which gives a narrow
+  component a wide frame, and not each version at its own size, which makes
+  Swipe's divider cross a size edge, because one frame then fits both
+  versions with one measurement.
 
 ## Color Scheme
 

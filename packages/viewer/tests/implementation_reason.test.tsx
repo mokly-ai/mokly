@@ -9,26 +9,14 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { ComparedEntry } from "../src/review/types.js";
-import {
-  selectedComparisonDocuments,
-  selectedComparisonViews,
-} from "../src/shell/comparison_selection.js";
-import { ComparisonViews } from "../src/shell/comparison_views.js";
-import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
+import { comparedFrames } from "../src/shell/comparison_selection.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../src/shell/workspace_evidence.js";
 
-import { storeMarkup } from "./shell_markup.js";
+import { frameOutcome } from "./compared_outcome.js";
 
 const SENTENCE = "Rendered content changed where this component is used.";
 const URL_ = `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/`;
-const MOBILE: ComparisonPresentation = {
-  colorScheme: "light",
-  mode: "side",
-  requestedColorScheme: "light",
-  viewport: "mobile",
-};
-
 /**
  * The detail of `card`, where only actual-instance proof changes it: its own
  * mobile view is unchanged.
@@ -82,31 +70,22 @@ test("Details explain a component's impact where it is used", () => {
 });
 
 test("the reason leaves the component's own views unchanged", () => {
-  const loaded = { url: URL_ };
-  const views = selectedComparisonViews(loaded, MOBILE, implementationOnly);
-  assert.equal(views?.length, 1);
-  assert.equal(views[0]!.view.state, "unchanged");
-  assert.equal(views[0]!.styleOnly, false);
-  const markup = storeMarkup(
-    <ComparisonViews
-      entryId="card"
-      entryKind="component"
-      presentation={MOBILE}
-      presentations={
-        new Map(
-          selectedComparisonDocuments(views).map((address) => [
-            address,
-            { snapshotAddress: address, srcdoc: "<p>Snapshot</p>" },
-          ]),
-        )
-      }
-      together
-      views={views}
-    />,
+  const frames = comparedFrames(
+    [
+      {
+        entry: { path: "card" },
+        key: "frame",
+        scheme: "light",
+        viewport: "mobile",
+      },
+    ],
+    new Map([["card", { url: URL_ }]]),
+    () => ({ compared: implementationOnly, usingChanged: new Set() }),
   );
-  assert.match(
-    markup,
-    /<h3 class="mbk-reset">Mobile · No changes to this variant<\/h3>/,
-  );
-  assert.doesNotMatch(markup, new RegExp(SENTENCE));
+  assert.equal(frames.length, 1);
+  assert.equal(frames[0]!.view.state, "unchanged");
+  assert.equal(frames[0]!.styleOnly, false);
+  const outcome = frameOutcome(implementationOnly, "component");
+  assert.equal(outcome, "Mobile · Light · No changes to this variant");
+  assert.doesNotMatch(outcome, new RegExp(SENTENCE));
 });

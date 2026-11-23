@@ -16,6 +16,10 @@
       "types": "./dist/browser-bar/browser-bar.d.ts",
       "import": "./dist/browser-bar/browser-bar.js"
     },
+    "./canvas-comparison": {
+      "types": "./dist/canvas-comparison/canvas-comparison.d.ts",
+      "import": "./dist/canvas-comparison/canvas-comparison.js"
+    },
     "./canvas-dock": {
       "types": "./dist/canvas-dock/canvas-dock.d.ts",
       "import": "./dist/canvas-dock/canvas-dock.js"
@@ -189,6 +193,10 @@
       "import": "./dist/stage/stage.js"
     },
     "./styles.css": "./dist/styles.css",
+    "./swipe-divider": {
+      "types": "./dist/swipe-divider/swipe-divider.d.ts",
+      "import": "./dist/swipe-divider/swipe-divider.js"
+    },
     "./tag-chip": {
       "types": "./dist/tag-chip/tag-chip.d.ts",
       "import": "./dist/tag-chip/tag-chip.js"

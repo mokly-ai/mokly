@@ -323,11 +323,11 @@ and Review regressions against `mokly serve` of the example catalogue.
   cannot render, an entry detail included, becomes the root's failure state
   with Try again, and a value that host code throws passes on to the host;
   `hostErrors` records those values for one viewer
-- [`src/shell/comparison_views.tsx`](./src/shell/comparison_views.tsx) and
+- [`src/shell/comparison_canvas.tsx`](./src/shell/comparison_canvas.tsx) and
   [`src/shell/comparison_viewport.tsx`](./src/shell/comparison_viewport.tsx) —
-  the containers of the comparison sections and panes, which own each
-  section's scroll controller and attach the viewport, its spacer, and each
-  surface to it through refs
+  the containers of the compare on the canvas's frames, which own each
+  compared frame's scroll controller and attach the viewport, its spacer, and
+  each surface to it through refs
 - [`scripts/styles.mjs`](./scripts/styles.mjs) — writes the standalone
   `shell.css` and the embedded `styles.css` from the `@font-face` rules of
   [`src/shell/assets/fonts/geist.css`](./src/shell/assets/fonts/geist.css) and

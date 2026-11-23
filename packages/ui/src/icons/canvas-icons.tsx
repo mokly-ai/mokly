@@ -1,7 +1,8 @@
 // The glyphs of the canvas, on the 16-unit grid of the Canvas design: the
 // kinds of frame that a frame's label starts with, the zoom pill's controls,
 // and the controls of the compact layout: the dock, a sheet's close control,
-// the frame picker's chevron, and the catalogue foot's branch. They stroke at
+// the frame picker's chevron, the catalogue foot's branch, and the grip of
+// Swipe's divider. They stroke at
 // 1.5 units in `currentColor`, as the Canvas design library draws them, and
 // the icons entry exports them.
 
@@ -16,6 +17,7 @@ export type CanvasIconName =
   | "desktop"
   | "document"
   | "fit"
+  | "grip"
   | "inspect"
   | "layers"
   | "mobile"
@@ -55,6 +57,7 @@ const STROKES: Record<CanvasIconName, () => ReactNode> = {
       <rect height={5.2} rx={1} width={5.2} x={5.4} y={5.4} />
     </>
   ),
+  grip: () => <path d="M6.2 4.6 2.8 8l3.4 3.4M9.8 4.6 13.2 8l-3.4 3.4" />,
   inspect: () => <path d="M3.2 2.4 13 7.3l-4.3 1.3-1.9 4.3z" />,
   layers: () => (
     <>

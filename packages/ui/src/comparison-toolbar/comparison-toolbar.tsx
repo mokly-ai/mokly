@@ -6,14 +6,17 @@ import {
   type Segment,
 } from "../segmented-control/segmented-control.js";
 
-/** A comparison presentation: Current, or one of the three diff modes. */
-export type ComparisonMode = "current" | "side" | "overlay" | "difference";
+/** A comparison presentation: Current, or one of the four diff modes. */
+export type ComparisonMode =
+  "current" | "side" | "overlay" | "difference" | "swipe";
 
+/** The modes in the order of their keys, from 1 for Current to 5 for Swipe. */
 const modes: readonly Segment<ComparisonMode>[] = [
   ["current", "Current"],
   ["side", "Side by side"],
   ["overlay", "Overlay"],
   ["difference", "Difference"],
+  ["swipe", "Swipe"],
 ];
 
 /** The refresh glyph: an open circle with its arrow at the top. */
@@ -67,9 +70,10 @@ function Refresh({
 /**
  * The mode group, then the Scroll together switch in every diff mode,
  * including while a comparison loads or has failed, then Refresh once a
- * comparison loaded. The switch is a native checkbox with switch semantics
- * laid over a drawn track, so its label is its hit area and accessible name.
- * It stays native in every band, because it acts in place.
+ * comparison loaded, and the outcome line of each compared frame. The switch
+ * is a native checkbox with switch semantics laid over a drawn track, so its
+ * label is its hit area and accessible name. It stays native in every band,
+ * because it acts in place.
  */
 export function ComparisonToolbar({
   current,
@@ -81,6 +85,7 @@ export function ComparisonToolbar({
   onMode,
   onRefresh,
   onTogether,
+  outcomes = [],
   together,
 }: {
   /** Whether Current is shown, which hides Scroll together and Refresh. */
@@ -104,6 +109,11 @@ export function ComparisonToolbar({
   onMode: (mode: ComparisonMode) => void;
   onRefresh: () => void;
   onTogether: (on: boolean) => void;
+  /**
+   * The outcome line of each compared frame, such as `Desktop · Light ·
+   * Screen changed`, which a diff mode lists below the band's controls.
+   */
+  outcomes?: readonly string[];
   together: boolean;
 }) {
   return (
@@ -134,6 +144,18 @@ export function ComparisonToolbar({
         interactive={interactive}
         onRefresh={onRefresh}
       />
+      {current || !outcomes.length ? null : (
+        <ul
+          aria-label="Compared frames"
+          className="mbk-diff-outcomes mbk-reset"
+        >
+          {outcomes.map((outcome) => (
+            <li className="mbk-reset" key={outcome}>
+              {outcome}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -20,11 +20,12 @@ import {
 import { usePreviousVersionLabel } from "./canvas_removed_section.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
+import { ComparisonCanvas } from "./comparison_canvas.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { controlTarget } from "./control_values.js";
-import { ComparisonBand, ControlledDiffScreen } from "./diffs.js";
+import { ComparisonBand } from "./diffs.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
@@ -33,6 +34,7 @@ import { RightPanel } from "./sheets.js";
 import { useShellStore } from "./store_context.js";
 import { useComparison } from "./use_comparison.js";
 import { useWorkspaceCanvas } from "./workspace_canvas.js";
+import { useWorkspaceComparison } from "./workspace_comparison.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
@@ -146,6 +148,15 @@ export function ComponentWorkspace({
   const head = targetHead(catalogue, target);
   const headStatus =
     data.component?.path === entry.path ? data.status : presentation.status;
+  const compare = useWorkspaceComparison({
+    comparison,
+    data,
+    frames,
+    head,
+    status: headStatus,
+    usingChanged: presentation.usingChanged,
+    variant,
+  });
   const preview = data.removed
     ? removedPreviewData(catalogue, context, entry)
     : undefined;
@@ -205,8 +216,9 @@ export function ComponentWorkspace({
           />
           {data.comparisons && !preview ? (
             <ComparisonBand
-              comparison={comparison}
+              comparison={compare.controller}
               eligible={presentation.comparisonEligible}
+              outcomes={compare.outcomes}
             />
           ) : null}
           <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
@@ -247,15 +259,7 @@ export function ComponentWorkspace({
           {preview ? (
             <RemovedPreviewStage data={preview} onShown={previous.onShown} />
           ) : data.comparisons ? (
-            <ControlledDiffScreen
-              compared={data.compared}
-              comparison={comparison}
-              entryId={variantPath ?? entry.path}
-              entryKind={entry.kind}
-              usingChanged={presentation.usingChanged}
-            >
-              {stage}
-            </ControlledDiffScreen>
+            <ComparisonCanvas {...compare.canvas}>{stage}</ComparisonCanvas>
           ) : (
             stage
           )}

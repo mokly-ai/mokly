@@ -43,6 +43,8 @@
 @import "./flow-step/flow-step.css";
 @import "./comparison-pane/comparison-pane.css";
 @import "./comparison-stage/comparison-stage.css";
+@import "./canvas-comparison/canvas-comparison.css";
+@import "./swipe-divider/swipe-divider.css";
 @import "./variant-bar/variant-bar.css";
 @import "./preview-state/preview-state.css";
 @import "./previous-version/previous-version.css";
