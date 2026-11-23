@@ -20,19 +20,19 @@ const propSchema = {
 } as const;
 export type ChangeStepperProps = LibraryProps<typeof propSchema>;
 
-/** Welcome, the first of the canonical branch's ten changes. */
+/** Welcome, the first of the canonical branch's eleven changes. */
 const first = {
   position: 1,
-  total: 10,
+  total: 11,
   nextDestination: CANVAS_PAGES.addedChanges,
 } as const;
 
-/** Details, the second change, between Welcome and the moved Invoice. */
+/** Details, the second change, between Welcome and the Example tour. */
 const second = {
   position: 2,
-  total: 10,
+  total: 11,
   previousDestination: CANVAS_PAGES.changesCurrent,
-  nextDestination: CANVAS_PAGES.moved,
+  nextDestination: CANVAS_PAGES.useCaseChanges,
 } as const;
 
 const countControl = (label: string) =>

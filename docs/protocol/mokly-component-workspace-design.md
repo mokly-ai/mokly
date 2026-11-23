@@ -165,9 +165,11 @@ branch-point sentence, where the comparison details show one, and a moved
 entry's previous path, and come before the changed files, the paired prop
 values, and the changed components used here. A
 `dependency` reason reads only through the changed-files list of the
-[CSS evidence contract](./mokly-css-evidence-presentation.md), a `screen`
-reason, which only a use case carries, has no sentence, and a pure move has no
-reason sentence. Only a record that Changes lists shows reasons.
+[CSS evidence contract](./mokly-css-evidence-presentation.md), and a pure move
+has no reason sentence. A `screen` reason, which only a use case carries,
+gives one `Changed step:` line for each step whose screen changed, with the
+step's title as a link to that step's screen. Only a record that Changes lists
+shows reasons.
 
 | Reason           | Sentence                                                 |
 | ---------------- | -------------------------------------------------------- |
@@ -178,6 +180,7 @@ reason sentence. Only a record that Changes lists shows reasons.
 | `inputs`         | “Supplied props or slots changed.”                       |
 | `structure`      | “Component instances changed.”                           |
 | `metadata`       | “Page details or saved examples changed.”                |
+| `screen`         | “Changed step: {step title}” for each changed step       |
 
 The `implementation` sentence describes actual-instance impact. The
 component's own view states and comparison headings stay unchanged.

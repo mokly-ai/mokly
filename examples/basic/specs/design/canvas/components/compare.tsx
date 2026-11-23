@@ -2,10 +2,10 @@ import { defineScreen } from "@mokly/mokly";
 
 import { artboardStates } from "../../parts/artboards.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
-import { actionFrames, frameOf } from "../parts/set_sketches.js";
+import { actionSetFrames, frameOf } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
-import { FITS } from "../parts/sketches.js";
+import { SET_FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
 
 import {
@@ -23,18 +23,18 @@ import { EXPLORER_PAGES as E } from "./parts/destinations.js";
 import { DefaultInspect } from "./parts/inspect_default.js";
 import { explorerChangesMetadata, explorerState } from "./parts/metadata.js";
 import {
-  PAIR_PHONE_FIT,
+  PAIR_FITS,
   actionCompareFrames,
   actionSideFrames,
 } from "./parts/sketches.js";
 
 /**
  * The Action's saved variant Default on the Changes tab of the Action
- * branch: the Action's variant set in the shown mode, which Overlay and
- * Difference apply to every frame, and the catalogue in the Changes filter
- * with Default selected. In Changes the canvas draws no selection. On a
- * phone, Current shows the Changes sheet open, and a comparison the whole
- * set.
+ * branch: the Action's variant set, its own example and its saved variants,
+ * in the shown mode, which Overlay and Difference apply to every frame, and
+ * the catalogue in the Changes filter with Default selected. In Changes the
+ * canvas draws no selection. On a phone, Current shows the Changes sheet
+ * open, and a comparison the whole set.
  */
 function DefaultCompare({
   mode,
@@ -49,12 +49,14 @@ function DefaultCompare({
       compare={mode}
       design={DEFAULT_MODES[mode]}
       entry={CHANGED_DEFAULT}
-      frames={mode === "current" ? actionFrames() : actionCompareFrames(mode)}
+      fit={SET_FITS.action}
+      frames={
+        mode === "current" ? actionSetFrames() : actionCompareFrames(mode)
+      }
       panel={<DefaultChanges mode={mode} />}
       sheet={mode === "current" ? "panel" : undefined}
       tab="changes"
       viewport={viewport}
-      zoom={FITS.action}
     />
   );
 }
@@ -70,21 +72,21 @@ function DefaultSideBySide({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <CanvasShell
       catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
-      compactZoom={PAIR_PHONE_FIT}
+      compactZoom={PAIR_FITS.default.phone}
       design={E.explorerCompareSide}
       entry={CHANGED_DEFAULT}
       panel={<DefaultChanges mode="side-by-side" />}
       tab="changes"
       viewport={viewport}
-      zoom={FITS.action}
+      zoom={PAIR_FITS.default.zoom}
     >
       <CanvasStage
         compare="side-by-side"
         entry={CHANGED_DEFAULT}
         frames={actionSideFrames()}
-        pickable={actionFrames()}
+        pickable={actionSetFrames()}
         picked={DEFAULT_FRAME}
-        zoom={FITS.action}
+        zoom={PAIR_FITS.default.zoom}
       />
     </CanvasShell>
   );
@@ -104,6 +106,7 @@ function ComparingProps({ viewport }: { viewport: ArtboardViewport }) {
       compare="overlay"
       design={E.explorerCompareProps}
       entry={CHANGED_DEFAULT}
+      fit={SET_FITS.action}
       frames={frames}
       panel={
         <DefaultInspect design={E.explorerCompareProps} state="comparison" />
@@ -111,7 +114,6 @@ function ComparingProps({ viewport }: { viewport: ArtboardViewport }) {
       selection={{ frame: frameOf(frames, "default-light") }}
       sheet="panel"
       viewport={viewport}
-      zoom={FITS.action}
     />
   );
 }
@@ -156,6 +158,6 @@ export const canvasExplorerCompareScreen = defineScreen({
   ),
   slug: "compare",
   rationale:
-    "On the Action branch the Action's render changed, so the Action and its three saved variants each changed. Every frame of the set compares its own view, and both versions share the frame's size. The compare mode stays while Inspect is shown, so Props stays read-only until Current.",
+    "On the Action branch the Action's render changed, so the Action and its three saved variants each changed. Every frame of the set, the own example's included, compares its own view, and both versions share the frame's size. The compare mode stays while Inspect is shown, so Props stays read-only until Current.",
   title: "Compare a component",
 });

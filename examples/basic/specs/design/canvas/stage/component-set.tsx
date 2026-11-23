@@ -4,12 +4,9 @@ import { defineScreen } from "@mokly/mokly";
 
 import { artboardStates, type ArtboardVariant } from "../../parts/artboards.js";
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
-import { MiniAction } from "../../parts/mini_action.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
-import { COMPONENT_IDENTITIES } from "../parts/component_identity.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
-import { componentFrames } from "../parts/frames.js";
 import { ActionInspect, ToolbarInspect } from "../parts/inspect_sets.js";
 import {
   TOOLBAR_INSTANCES,
@@ -17,43 +14,13 @@ import {
 } from "../parts/instance_records.js";
 import { canvasDesignMetadata } from "../parts/metadata.js";
 import {
-  ACTION_DOCUMENT,
   TOOLBAR_VIEW,
-  actionFrames,
+  actionSetFrames,
   frameOf,
-  toolbarFrames,
+  toolbarSetFrames,
 } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
-import { FITS } from "../parts/sketches.js";
-
-/**
- * The zoom in percent that fits the Action's set: its own example's row and
- * the rows of its three saved variants, the largest zoom that keeps the set
- * at least 10px inside the stage.
- */
-const ACTION_SET_FIT = 94;
-
-/**
- * The Action's variant set: a row for its own example first, with the
- * component's own props and named by its title, as the shipped variant bar
- * names the parent's own entry, then one row for each saved variant, in
- * their order.
- */
-function actionSetFrames() {
-  return [
-    ...componentFrames(
-      [
-        {
-          slug: CANVAS_ENTRIES.action.slug,
-          title: COMPONENT_IDENTITIES.action.title,
-          render: () => <MiniAction variant="own" />,
-        },
-      ],
-      ACTION_DOCUMENT,
-    ),
-    ...actionFrames(),
-  ];
-}
+import { SET_FITS } from "../parts/sketches.js";
 
 /**
  * The Action component opened as its variant set: its own example, then
@@ -79,21 +46,22 @@ function ActionSet({
       catalogue={{ filter: "all", activeKey: COMPONENT_NAVIGATION.action.id }}
       design={design}
       entry={CANVAS_ENTRIES.action}
+      fit={SET_FITS.action}
       frames={frames}
       panel={<ActionInspect disabled={disabled} />}
       selection={disabled === undefined ? undefined : { frame: disabled }}
       sheet={chosen ? "panel" : undefined}
       viewport={viewport}
-      zoom={ACTION_SET_FIT}
     />
   );
 }
 
 /**
- * The Toolbar, a composed component, opened as its variant set: Default in
- * Light and Dark. With one of its Actions selected on the Default · Light
- * frame, Inspect opens at the Selection section; on a phone, the frame shows
- * the selection, and the pill above the dock names it.
+ * The Toolbar, a composed component, opened as its variant set: its own
+ * example, then Default, each in Light and Dark. With one of its Actions
+ * selected on the Toolbar · Light frame, the set's first frame, Inspect opens
+ * at the Selection section; on a phone, the frame shows the selection, and
+ * the pill above the dock names it.
  */
 function ToolbarSet({
   selected,
@@ -110,12 +78,12 @@ function ToolbarSet({
       catalogue={{ filter: "all", activeKey: COMPONENT_NAVIGATION.toolbar.id }}
       design={design}
       entry={CANVAS_ENTRIES.toolbar}
-      frames={toolbarFrames()}
+      fit={SET_FITS.toolbar}
+      frames={toolbarSetFrames()}
       panel={<ToolbarInspect design={design} selected={selected} />}
       selection={instance === undefined ? undefined : { instance }}
       view={TOOLBAR_VIEW}
       viewport={viewport}
-      zoom={FITS.toolbar}
     />
   );
 }
@@ -158,19 +126,19 @@ export const canvasComponentSetScreen = defineScreen({
       setState(
         "toolbar",
         "Toolbar",
-        "The Toolbar, a composed component, as its variant set: Default in Light and Dark. Inspect lists its consumers and its nested components, the two Actions that it renders.",
+        "The Toolbar, a composed component, as its variant set: its own example, which renders without slot content, then Default, which fills the slot, each in Light and Dark. Inspect lists its consumers and its nested components, the two Actions that it renders.",
         (viewport) => <ToolbarSet viewport={viewport} />,
       ),
       setState(
         "toolbar-primary",
         "Toolbar's primary Action",
-        "The Toolbar's first Action selected on the Default · Light frame, as its nested components select it.",
+        "The Toolbar's first Action selected on the Toolbar · Light frame, the set's first frame, as its nested components select it. Variants checks the Toolbar itself, and Props edits its own props.",
         (viewport) => <ToolbarSet selected="primary" viewport={viewport} />,
       ),
       setState(
         "toolbar-secondary",
         "Toolbar's secondary Action",
-        "The Toolbar's second Action selected on the Default · Light frame, as its nested components select it.",
+        "The Toolbar's second Action selected on the Toolbar · Light frame, the set's first frame, as its nested components select it. Variants checks the Toolbar itself, and Props edits its own props.",
         (viewport) => <ToolbarSet selected="secondary" viewport={viewport} />,
       ),
     ],

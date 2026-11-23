@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { libraryStyleFiles } from "../examples/basic/specs/design/library/style_files.js";
 
+import { COMPONENT_PARAMETERS } from "./helpers/design_component_parameters.js";
 import {
   canvasRoleColor,
   canvasScopeTokens,
@@ -241,17 +242,6 @@ test("preview tokens stay independent of the interface appearance", async () => 
  * reads with a fallback, each with the reason, so a palette token cannot join
  * the list unnoticed.
  */
-const COMPONENT_PARAMETERS = new Map([
-  ["--mbk-indent", "each catalogue row sets its own indent"],
-  ["--mbk-nav-width", "a resizable catalogue column sets its own width"],
-  ["--inspector-height", "a resizable inspector sets its own height"],
-  ["--inspector-tabs", "a static inspector sets the number of its tabs"],
-  ["--inspector-tab", "each tab of a static inspector sets its own column"],
-  [
-    "--mbk-comparison-canvas",
-    "a comparison's host paints the canvas colour of each version",
-  ],
-]);
 
 test("the design stylesheets import the shipped theme and the reset class that every @mokly/ui component reads", async () => {
   const imported = new Set((await designStyleRules()).map((rule) => rule.file));

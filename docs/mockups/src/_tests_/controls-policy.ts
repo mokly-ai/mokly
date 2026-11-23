@@ -80,7 +80,9 @@ export function controlSourceViolations(file: SourceFile): string[] {
 /** Old primitive selectors and RNW atomic selectors would create a second theme. */
 export function controlCssViolations(css: string): string[] {
   const violations: string[] = [];
-  for (const rule of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+  // A comment is not part of the selector that follows it.
+  const source = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  for (const rule of source.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const selector = rule[1].trim();
     if (
       /\.(?:button(?:-[\w-]+)?|field|field-error|badge(?:-[\w-]+)?|avatar|status-dot)(?=[\s,.:#>+~[]|$)/.test(

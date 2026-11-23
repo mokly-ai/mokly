@@ -44,8 +44,11 @@ removed variant and the removed consumer follow the same rules. Retry of an
 unavailable previous version is a depiction, because no artboard shows that
 entry while its previous version loads again. The Example tour offers no
 compare mode, and its step frames' inner links do nothing, because each
-step's title opens its screen. The ignored-only Welcome, in All, and the empty
-Changes filter show the current version without compare modes. The
+step's title opens its screen. In the comparison details of its Changes tab,
+each changed step's title opens that screen on its Changes tab: Welcome
+`design/canvas/changes/current` and Details
+`design/canvas/outcomes/added/changes`. The ignored-only Welcome, in All, and
+the empty Changes filter show the current version without compare modes. The
 ignored-only Welcome keeps its evidence in Inspect, and the All filter of the
 empty Changes filter opens `design/canvas/overview`.
 

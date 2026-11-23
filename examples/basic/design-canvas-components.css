@@ -24,12 +24,14 @@
 
 /* A removed component entry has no preview: the shipped pane of a version
    without a document fills its frame, in the frame's own scheme, so the
-   removed row keeps the set's Light and Dark columns. */
+   removed row keeps the set's Light and Dark columns. The frame takes the
+   size of the version before, a small document, so the pane keeps its
+   label and its message in two lines inside it. */
 .cv-cx-missing {
   background: var(--mbk-screen-bg);
   color: var(--mbk-screen-ink-2);
   inset: 0;
-  padding: 12px 14px 14px;
+  padding: 10px 12px;
   position: absolute;
 }
 
@@ -42,7 +44,7 @@
 .cv-cx-missing .mb-pane-label {
   color: var(--mbk-screen-ink-2);
   font: 500 11px/1 var(--cv-mono);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .cv-cx-missing .mb-pane-missing {
@@ -55,9 +57,10 @@
   border-radius: 8px;
   color: var(--mbk-screen-ink-2);
   flex: 1;
-  font-size: 12.5px;
+  font-size: 12px;
+  line-height: 1.35;
   min-height: 0;
-  padding: 8px;
+  padding: 4px 6px;
 }
 
 /* A frame of Side by side names its version in its tag, so the pane of the
@@ -96,16 +99,11 @@
 
 /* ---- Comparison details ---------------------------------------------- */
 
-/* The shipped evidence names the saved variant in property rows and links
-   each changed component, in Inspect's type. */
+/* The shipped evidence names the saved variant in property rows, in
+   Inspect's type. Its changed component links take the link rule of the
+   comparison details in design-canvas-changes.css. */
 .cv-cx-evidence .mbk-comparison-evidence .mbk-props {
   margin: 8px 0 0;
-}
-
-.cv-cx-evidence .mbk-comparison-evidence a {
-  color: var(--cv-signal-deep);
-  font-weight: 560;
-  text-decoration: none;
 }
 
 /* A screen's paired props: each view's heading names the instance, then
@@ -161,20 +159,15 @@
    swaps in place. A component's entry bar that holds a change status beside
    the frame picker keeps its kind tag's glyph alone, so the status stays
    clear of the picker; the tag keeps its words for assistive technology.
-   Side by side shows the picked frame's two versions next to each other,
-   each small enough that both fit. */
+   Side by side shows the picked frame's two versions next to each other, at
+   the compact zoom that fits both, with room between them for a narrow
+   frame's label. */
 @container cv (width < 56.25rem) {
   .cv-work:has([data-cv-frame-pick])
     .cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"] {
     display: flex;
-    gap: 14px;
+    gap: 24px;
     justify-content: center;
-  }
-
-  .cv-work:has([data-cv-frame-pick])
-    .cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"]
-    .cv-frame {
-    --cv-zoom: 0.54;
   }
 
   .cv-work:has(option[value="compact-light"]:checked)

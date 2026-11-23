@@ -81,9 +81,20 @@ export const ACTION_PADDING = { top: 0, right: 10, bottom: 0, left: 10 };
 export const TOOLBAR_PADDING = { top: 10, right: 12, bottom: 10, left: 12 };
 
 /**
+ * The real Action's button in a component document keeps 16px beside its
+ * label, as the built document measures it.
+ */
+export const DOCUMENT_ACTION_PADDING = {
+  top: 0,
+  right: 16,
+  bottom: 0,
+  left: 16,
+};
+
+/**
  * The two Actions that the example's Toolbar renders, with the props that
- * it gives each and its outer width: its label in Geist, its padding, and
- * its border.
+ * it gives each and its outer width in a screen sketch: its label in Geist,
+ * its padding, and its border.
  */
 const TOOLBAR_ACTIONS = {
   primary: { label: "Browse details", destination: "details", width: 107.03 },
@@ -100,8 +111,9 @@ export function actionProps(label: string, tone: string, destination: string) {
 }
 
 /**
- * One of the Toolbar's two Actions, from the top-left corner of its box on
- * the frame where the reader selects it. Its chip opens the Action's set.
+ * One of the Toolbar's two Actions in a screen sketch, from the top-left
+ * corner of its box on the frame where the reader selects it. Its chip opens
+ * the Action's set.
  */
 export function toolbarAction(
   id: keyof typeof TOOLBAR_ACTIONS,
@@ -120,6 +132,19 @@ export function toolbarAction(
     source: COMPONENT_IDENTITIES.action.source,
     componentPage: CANVAS_PAGES.componentSet,
   };
+}
+
+/**
+ * One of the Toolbar's two Actions in a component document of the Toolbar,
+ * where the reader selects it: at its measured box, with the real button's
+ * border and padding, which differ from a screen sketch's.
+ */
+export function documentToolbarAction(
+  id: keyof typeof TOOLBAR_ACTIONS,
+  measure: SketchMeasure,
+  record: Pick<CanvasInstance, "frame" | "page">,
+): CanvasInstance {
+  return { ...toolbarAction(id, measure.box, record), ...measure };
 }
 
 /** The shell's label of an instance: its component's title and its id. */

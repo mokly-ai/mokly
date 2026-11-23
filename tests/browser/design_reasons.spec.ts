@@ -3,7 +3,8 @@
  * direct reason, as the viewer's Details do, under the component workspace
  * design contract. A stylesheet reason reads only through the changed files,
  * so a design whose only reason is a stylesheet shows no reason sentence,
- * and neither does an unchanged entry or a page. Every built Canvas design
+ * and neither does an unchanged entry or a page. A use case's `screen`
+ * reason reads only through its changed steps. Every built Canvas design
  * whose Changes tab is open, or that draws comparison details, must be in
  * the list, so a new design of a change cannot leave out its reasons. An
  * unchanged entry without evidence draws no comparison details. A removed
@@ -66,6 +67,7 @@ const REASONS: readonly ReasonRow[] = [
   ["design/canvas/evidence/styles/unresolved", [], BOTH],
   ["design/canvas/evidence/unchanged", [], BOTH],
   ["design/canvas/evidence/unchanged/action", [], BOTH],
+  ["design/canvas/flows/tour/changes", [], BOTH],
   ["design/canvas/outcomes/added/changes", ["added"], BOTH],
   ["design/canvas/outcomes/moved", ["material"], DESKTOP],
   ["design/canvas/outcomes/removed", ["removed"], DESKTOP],

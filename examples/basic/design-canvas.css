@@ -230,8 +230,11 @@
   grid-row: 1;
 }
 
-/* A component opens as its variant set: one row per saved variant, Light
-   beside Dark, inside a dashed outline. */
+/* A component opens as its variant set: a row for its own example, then one
+   row per saved variant, Light beside Dark, inside a dashed outline. Its
+   frames take their documents' sizes, so the head stands in the section's
+   flow, at the same place, and the section is at least as wide as its
+   head. */
 .cv-section[data-cv-kind="component"] {
   background: transparent;
   box-shadow: none;
@@ -240,9 +243,16 @@
   outline-offset: -1px;
 }
 
+.cv-section[data-cv-kind="component"] > .cv-section-head {
+  inset: auto;
+  margin: -52px -10px 28px;
+  position: relative;
+}
+
 /* A row leaves room for a selected frame's size tag above the next row's
-   label. Light takes the first column and Dark the second, so each saved
-   variant keeps its row; with Light hidden, Dark takes the first column. */
+   label. Light takes the first column and Dark the second, so each row
+   keeps its example; with Light hidden, Dark takes the first column. Each
+   column takes the width of its widest frame. */
 .cv-frames[data-cv-kind="component"] {
   column-gap: 40px;
   row-gap: 64px;
@@ -277,15 +287,4 @@
   top: calc(var(--cv-sel-y) * var(--cv-frame-scale) * 1px);
   width: calc(var(--cv-sel-w) * var(--cv-frame-scale) * 1px);
   z-index: 2;
-}
-
-/* A component's document draws the component 24px from its top left: the
-   Action's button, and the Toolbar with its two Actions. */
-.mbk-shot--action > .mbk-shot-pad,
-.mbk-shot--toolbar > .mbk-shot-pad {
-  padding: 24px;
-}
-
-.mbk-shot--action p {
-  margin: 10px 0 0;
 }

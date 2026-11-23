@@ -44,8 +44,9 @@ after the component sheets, as the package's `styles.css` orders them.
 
 The `design/canvas/**` route links the Canvas viewer's shared sheets in this
 order: `design.css`, `design-preview.css`, `design-shots.css` with the mini
-screen sketches that a frame holds, and `design-canvas.css`, which holds the
-roles that the Canvas palette lacks and the stage. Then come
+screen sketches and the component documents that a frame holds, and
+`design-canvas.css`, which holds the roles that the Canvas palette lacks and
+the stage. Then come
 `design-canvas-inspect.css`, Inspect's sections; `design-canvas-sections.css`,
 the sections that a selection and an unfolded section fill, which imports the
 package stylesheets of the instance tree, the supplied props, the usage list,

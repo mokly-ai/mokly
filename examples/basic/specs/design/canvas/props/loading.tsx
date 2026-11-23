@@ -3,7 +3,7 @@ import { defineScreen } from "@mokly/mokly";
 import { artboardStates } from "../../parts/artboards.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { PendingProps, type PendingDetails } from "../loading/parts/details.js";
-import { actionFrames, frameOf } from "../parts/set_sketches.js";
+import { actionSetFrames, frameOf } from "../parts/set_sketches.js";
 
 import { PROPS_PAGES as P } from "./parts/destinations.js";
 import { ChosenVariantInspect } from "./parts/inspect.js";
@@ -33,7 +33,7 @@ function Loading({
   details: PendingDetails;
   viewport: ArtboardViewport;
 }) {
-  const frames = actionFrames();
+  const frames = actionSetFrames();
   const frame = frameOf(frames, "default-light");
   const design =
     details.status === "failed" ? P.propsLoadingFailed : P.propsLoading;

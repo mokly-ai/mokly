@@ -5,6 +5,7 @@ import type {
   HighlightRegion,
   PreviewRegions,
 } from "./depicted_view.js";
+import { labelBox } from "./mini_action.js";
 import type { ArtboardViewport } from "./shell.js";
 
 /**
@@ -178,23 +179,42 @@ export function MiniInstances({
   );
 }
 
+/** The two Actions that the example's Toolbar renders, by their labels. */
+const TOOLBAR_ACTIONS = [
+  { label: "Browse details", tone: "primary" },
+  { label: "Browse welcome", tone: "secondary" },
+] as const;
+
 /**
- * A depicted Toolbar: its title, its slot's text, and the two Actions that
- * the example's Toolbar renders, in a row on a desktop and in a component
- * document, and stacked in a phone.
+ * A depicted Toolbar: its title, its slot's text where the caller fills the
+ * slot, and the two Actions that the example's Toolbar renders, in a row on
+ * a desktop and in a component document, and stacked in a phone. In a
+ * component document, each Action's label keeps its measured width.
  */
-export function MiniToolbarCard({ text, title }: MiniToolbarContent) {
+export function MiniToolbarCard({
+  measured = false,
+  text,
+  title,
+}: {
+  /** The card stands in its component document, at the measured layout. */
+  measured?: boolean | undefined;
+  text?: string | undefined;
+  title: string;
+}) {
   return (
     <div className="mbk-shot-toolbar">
       <strong>{title}</strong>
-      <span>{text}</span>
+      {text === undefined ? null : <span>{text}</span>}
       <div className="mbk-shot-toolbar-actions">
-        <span className="mbk-shot-action mbk-shot-action--primary">
-          Browse details
-        </span>
-        <span className="mbk-shot-action mbk-shot-action--secondary">
-          Browse welcome
-        </span>
+        {TOOLBAR_ACTIONS.map(({ label, tone }) => (
+          <span
+            className={`mbk-shot-action mbk-shot-action--${tone}`}
+            key={label}
+            style={measured ? labelBox(label) : undefined}
+          >
+            {label}
+          </span>
+        ))}
       </div>
     </div>
   );

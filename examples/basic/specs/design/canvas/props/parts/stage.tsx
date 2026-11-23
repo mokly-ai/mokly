@@ -9,19 +9,20 @@ import { CANVAS_ENTRIES } from "../../parts/entries.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { frameSelectionOverlays } from "../../parts/selection.js";
 import { CanvasShell } from "../../parts/shell.js";
-import { FITS } from "../../parts/sketches.js";
+import { SET_FITS } from "../../parts/sketches.js";
 import { CanvasStage } from "../../parts/stage.js";
 
 /**
- * The Action opened as its variant set with one saved variant chosen, as
- * Inspect's Props edits it: the chosen variant's Light frame is selected,
- * with its corners and its size, at the set's fitted zoom, and what lies
- * over the edited variant's frames, such as the status of a render in
- * flight, joins the selection. Until the route's details arrive, the stage
- * holds their shipped state in place of the frames, with no zoom pill and no
- * Fit in the dock, because the canvas holds no section, and the compact
- * frame picker still picks the chosen frame. On a phone, the frame picker
- * shows the selected frame alone at full size, under the open Inspect sheet.
+ * The Action opened as its variant set, its own example's row and its saved
+ * variants', with one saved variant chosen, as Inspect's Props edits it: the
+ * chosen variant's Light frame is selected, with its corners and its size,
+ * at the set's fitted zoom, and what lies over the edited variant's frames,
+ * such as the status of a render in flight, joins the selection. Until the
+ * route's details arrive, the stage holds their shipped state in place of
+ * the frames, with no zoom pill and no Fit in the dock, because the canvas
+ * holds no section, and the compact frame picker still picks the chosen
+ * frame. On a phone, the frame picker shows the selected frame alone, under
+ * the open Inspect sheet.
  */
 export function ChosenVariantArtboard({
   design,
@@ -50,13 +51,13 @@ export function ChosenVariantArtboard({
   return (
     <CanvasShell
       catalogue={{ filter: "all", activeKey: COMPONENT_NAVIGATION.action.id }}
-      compactZoom={section ? FITS.phonePicked : undefined}
+      compactZoom={section ? SET_FITS.action.phonePicked : undefined}
       design={design}
       entry={entry}
       panel={panel}
       sheet="panel"
       viewport={viewport}
-      zoom={section ? FITS.action : undefined}
+      zoom={section ? SET_FITS.action.zoom : undefined}
     >
       {section ? (
         <CanvasStage
@@ -73,7 +74,7 @@ export function ChosenVariantArtboard({
           }}
           picked={frame.id}
           selected={frame.id}
-          zoom={FITS.action}
+          zoom={SET_FITS.action.zoom}
         />
       ) : (
         <DetailsStage

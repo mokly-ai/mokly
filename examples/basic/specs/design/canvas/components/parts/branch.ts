@@ -7,6 +7,7 @@ import type { CanvasDestination } from "../../parts/destinations.js";
 import { CANVAS_ENTRIES, type CanvasEntry } from "../../parts/entries.js";
 import { CANVAS_ALL_ROWS, retarget } from "../../parts/nav_rows.js";
 import type { PanelTab } from "../../parts/panel.js";
+import { SET_FITS, type SetFit } from "../../parts/sketches.js";
 
 import { EXPLORER_PAGES as E } from "./destinations.js";
 
@@ -237,7 +238,8 @@ export function removalChanges(
 }
 
 /**
- * The zoom that fits the removal branch's variant set, whose fourth row is
- * the removed Compact, so it fits below 100%.
+ * The zooms that fit the removal branch's variant set, whose fifth row is
+ * the removed Compact, so it fits below 100% on a desktop. Its widest frame
+ * is Default's, as in the Action's set.
  */
-export const REMOVED_FIT = 88;
+export const REMOVED_FIT: SetFit = { ...SET_FITS.action, zoom: 94 };

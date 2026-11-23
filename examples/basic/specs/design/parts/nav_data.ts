@@ -53,10 +53,11 @@ export const REMOVED_SCREENS = {
 export const REMOVED_SCREEN_ROWS = Object.values(REMOVED_SCREENS);
 
 /**
- * Welcome changed, Details was added, three billing entries moved under
- * Account, and five screens were removed.
+ * Welcome changed, Details was added, the Example tour changed because its
+ * steps name both screens, three billing entries moved under Account, and
+ * five screens were removed: eleven changes.
  */
-export const CHANGED_COUNT = 2 + MOVED_COUNT + REMOVED_SCREEN_ROWS.length;
+export const CHANGED_COUNT = 3 + MOVED_COUNT + REMOVED_SCREEN_ROWS.length;
 
 type NavigationRows = CatalogueNavigationProps["rows"];
 
