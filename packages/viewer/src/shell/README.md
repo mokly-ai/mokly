@@ -177,11 +177,43 @@ shows. `workspace.tsx` consumes that shared resolution on every change of the
 Frames choice, the selection's viewport and scheme, a component variant, or
 the evidence, and passes the effective scheme to the comparison
 presentation.
-`comparison_request.ts` establishes a comparison's generation root: a
-pinned catalogue's advertised root without a request, or the root that
-Serve's selection endpoint redirects to, which a HEAD request renews. A failed
-request shows the comparison failure with Try again; Current remains
-available.
+The comparison holds one generation for each row that it demands, under the
+[selected comparisons contract](../../../../docs/protocol/mokly-selected-comparisons.md):
+each row of the shown frames that `useComparison` receives, a screen or one
+row of a component's variant set, or without frames the routed entry's row
+alone. `workspace.tsx` passes the canvas's frames that compare. A removed
+component or variant has no live frames, so it passes none, and the removed
+row compares alone. `comparisonFrames` in `comparison_eligible_frames.ts`
+gives the shown frames whose rows compare under the
+[screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
+the row's shown views are eligible, or a shown view that reads Unmodified uses
+a changed component that the row's own detail names. `comparison_presentation.ts`
+turns the frames into the demand, with one key for each row: each row with the
+axes of its frames, or in Side by side the row of the compared frame alone.
+Without frames, the routed row is keyed on the selection's axes.
+`comparison_request.ts` establishes one row's generation root: a pinned
+catalogue's advertised root without a request, or the root that Serve's
+selection endpoint redirects to, which a HEAD request renews.
+`comparison_row_lifecycle.ts` runs each demanded row on its own. A row without
+a generation gets one request, a loaded row whose key changes renews first,
+and a key change while the row's work runs keeps that work, whose completion
+applies the row's latest key. In a static build, the rows that start together
+share one deployment check (`comparison_deployment_check.ts`). A row that
+leaves the demand aborts its work and keeps its generation, which renews when
+the row returns. A failed row keeps its failure for its key while the other
+rows continue; `retry` requests one row again, the routed row by default, and
+`refresh` every demanded row. `comparison_row_snapshot.ts` shows the demanded
+rows to the controller, for the demand of each render: `generations`, by
+entry id, with the rows that still load and the rows that failed, keeps its
+identity while nothing in it changes, and the presentation follows the latest
+mode and axes once every demanded row has settled. A row whose key a render
+changes reads as loading in that render, so no document of its new frames
+loads before its renewal. `use_comparison_documents.ts` presents and aborts
+each row's documents on its own, starts nothing new for a row that renews,
+reads a failed row's failure, and keeps the accepted presentations while
+`generations` is absent, as Inspect makes it, so a return shows the mode with
+no new load. A failed row shows the comparison failure with Try again on
+its own frames while the other rows compare; Current remains available.
 Every failed comparison uses the details sentence "The comparison is
 unavailable.". The shell never shows server or browser error text there.
 `use_comparison.ts` owns comparison mode through `comparison_mode.tsx`,
@@ -190,8 +222,10 @@ navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
 resolves, so a removed variant of a moved or case-renamed parent opens in its
-siblings' workspace and keeps their mode. The mode owner also includes the
-index revision, so a publication returns an active comparison to Current.
+siblings' workspace and keeps their mode, and every row's generation. The
+mode owner also includes the index revision, so a publication returns an
+active comparison to Current. Current, a new owner, a new comparison
+environment and unmount cancel every row, and a late response changes nothing.
 `comparison_intent.ts` applies a route's comparison intent once. The store
 counts route installations and keeps the installed route's intent; the
 routed workspace settles it when `comparisonEligibilityKnown` first reports
@@ -715,15 +749,18 @@ no live frames, gets the frames of its own views and its own section), and
 the frame that Side by side compares, which starts on the first compared
 frame, the picked frame in the compact layout, and which `setComparedFrame`
 of `comparison_compared_frame.ts` chooses. `comparison_canvas_state.ts`
-decides what the canvas holds: `Loading comparison…`, the failure with Try
-again, or the line of an entry without a comparison, which
+decides what the canvas holds: `Loading comparison…` until every demanded row
+has a generation, the failure when every drawn row failed, whose Try again
+requests every row again, or the line of an entry without a comparison, which
 `@mokly/ui/canvas-comparison` draws on a canvas in place of the section while
 the section's live frames stay mounted out of sight, or the compared frames.
 Through the context of `comparison_canvas_context.ts`, `canvas_stage.tsx`
 then takes the section of `comparison_cells.tsx`: in Overlay, Difference and
 Swipe each compared frame takes its live frame's cell, and in Side by side
 the section holds the compared frame's Before and Current frames. A frame
-whose version is missing makes the compare fall back to Side by side. The
+that misses one of its two versions makes the compare fall back to Side by
+side. A failed row's frames have no versions: each draws the row's failure in
+its cell, whose Try again requests that row again. The
 container's `shown` input, true by default, gates the compare: while it is
 false the canvas shows its live frames, while the mode, the loaded comparison
 and its presentations stay. `comparison_canvas_parts.ts` keeps one scroll

@@ -1,6 +1,6 @@
-/** React owner of the pane documents that a loaded comparison presents. */
+/** React owner of the pane documents that each compared row presents. */
 
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 
 import { createSnapshotPresentationLoader } from "../previews/presentation.js";
 
@@ -14,7 +14,8 @@ import {
   type ComparisonDocuments,
   type ComparisonDocumentsState,
 } from "./comparison_documents.js";
-import type { ComparisonGenerations } from "./use_comparison.js";
+import type { LoadedComparison } from "./comparison_request.js";
+import type { ComparisonGenerations } from "./comparison_row_snapshot.js";
 
 /** The pane documents of one compared row, under the row's generation. */
 export interface ComparisonRowDocuments {
@@ -61,12 +62,95 @@ function documentsOf(
   return documents;
 }
 
+/** One row's selection under the row's documents and generation. */
+interface RowSelection {
+  /** The selection's addresses, as one key. */
+  key: string;
+  addresses: readonly string[];
+  documents: ComparisonDocuments;
+  loaded: LoadedComparison;
+}
+
+/** One row's running or finished presentation of one selection. */
+interface RowWork extends RowSelection {
+  controller: AbortController;
+}
+
+/**
+ * Present each row's selection under its confirmed generation. A change to
+ * one row's generation or addresses aborts only that row's work, a row that
+ * renews starts nothing new until its renewal ends, and without generations
+ * every row's work stops while its accepted presentations stay.
+ */
+function presentRows(
+  work: Map<string, RowWork>,
+  owners: RowOwners,
+  generations: ComparisonGenerations | undefined,
+  rows: readonly ComparisonRowDocuments[],
+  settled: () => void,
+): void {
+  const wanted = new Map<string, RowSelection>();
+  if (generations)
+    for (const { addresses, entry } of rows) {
+      const loaded = generations.get(entry);
+      const documents = loaded && documentsOf(owners, entry);
+      if (loaded && documents)
+        wanted.set(entry, {
+          addresses,
+          documents,
+          key: JSON.stringify(addresses),
+          loaded,
+        });
+    }
+  for (const [entry, running] of work) {
+    const next = wanted.get(entry);
+    if (
+      next?.key === running.key &&
+      next.documents === running.documents &&
+      next.loaded === running.loaded
+    )
+      continue;
+    running.controller.abort();
+    work.delete(entry);
+  }
+  for (const [entry, next] of wanted) {
+    if (work.has(entry) || generations?.pending?.has(entry)) continue;
+    const controller = new AbortController();
+    work.set(entry, { ...next, controller });
+    void next.documents
+      .present(next.loaded, next.addresses, controller.signal)
+      .then(() => {
+        if (!controller.signal.aborted) settled();
+      });
+  }
+}
+
+/** A row's state: its request's failure, or its documents once confirmed. */
+function rowState(
+  owners: RowOwners,
+  generations: ComparisonGenerations | undefined,
+  row: ComparisonRowDocuments,
+): ComparisonDocumentsState {
+  if (!generations) return { status: "idle" };
+  const failure = generations.failures?.get(row.entry);
+  if (failure !== undefined) return { status: "failed", message: failure };
+  const loaded = generations.get(row.entry);
+  const documents = loaded && documentsOf(owners, row.entry);
+  if (!loaded || !documents) return { status: "loading" };
+  const state = documents.state(loaded, row.addresses);
+  // A renewing row shows what it accepted and loads nothing new.
+  return generations.pending?.has(row.entry) && state.status !== "ready"
+    ? { status: "loading" }
+    : state;
+}
+
 /**
  * Present every selected pane document of each row through the shared
  * snapshot loader of the row's immutable generation, and report each row
  * ready only when all of its documents are accepted. Each row keeps its own
- * presentations across mode, frame, viewport and scheme changes; a replaced
- * generation, Current, navigation and unmount discard them.
+ * presentations across mode, frame, viewport and scheme changes, and while
+ * `generations` is absent, as Inspect makes it; a replaced generation and
+ * another environment discard them.
  */
 export function useComparisonDocuments(
   generations: ComparisonGenerations | undefined,
@@ -77,35 +161,26 @@ export function useComparisonDocuments(
   // Another comparison environment starts every row anew.
   if (owners.current.environment !== environment)
     owners.current = { environment, rows: new Map() };
+  const [work] = useState(() => new Map<string, RowWork>());
   const [, settled] = useReducer((version: number) => version + 1, 0);
+  const latestRows = useRef(rows);
+  latestRows.current = rows;
   const key = JSON.stringify(rows);
   useEffect(() => {
-    if (!generations) return;
-    const controller = new AbortController();
-    for (const row of JSON.parse(key) as ComparisonRowDocuments[]) {
-      const loaded = generations.get(row.entry);
-      const documents = loaded && documentsOf(owners.current, row.entry);
-      if (!loaded || !documents) continue;
-      void documents
-        .present(loaded, row.addresses, controller.signal)
-        .then(() => {
-          if (!controller.signal.aborted) settled();
-        });
-    }
-    return () => controller.abort();
-  }, [environment, generations, key]);
+    presentRows(work, owners.current, generations, latestRows.current, settled);
+  }, [environment, generations, key, work]);
+  useEffect(
+    () => () => {
+      for (const running of work.values()) running.controller.abort();
+      work.clear();
+    },
+    [work],
+  );
   const states = new Map<string, ComparisonDocumentsState>();
-  for (const row of rows) {
-    const loaded = generations?.get(row.entry);
-    const documents = loaded && documentsOf(owners.current, row.entry);
-    states.set(
-      row.entry,
-      !generations
-        ? { status: "idle" }
-        : !loaded || !documents
-          ? { status: "loading" }
-          : documents.state(loaded, row.addresses),
-    );
-  }
+  for (const row of rows)
+    states.set(row.entry, rowState(owners.current, generations, row));
+  // A row whose request failed has no documents to list.
+  for (const [entry, message] of generations?.failures ?? [])
+    if (!states.has(entry)) states.set(entry, { status: "failed", message });
   return states;
 }

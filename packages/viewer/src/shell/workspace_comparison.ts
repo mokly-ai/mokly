@@ -13,8 +13,8 @@ import type { CanvasFramePlan } from "./canvas_frames.js";
 import type { StandaloneComparisonHead } from "./comparison_canvas.js";
 import {
   comparedFrameKey,
-  useComparedFrameChoice,
   type CanvasComparisonController,
+  type ComparedFrameChoice,
 } from "./comparison_compared_frame.js";
 import { comparedFrameOutcome } from "./comparison_outcome.js";
 import {
@@ -45,6 +45,7 @@ export interface WorkspaceComparison {
 }
 
 export function useWorkspaceComparison({
+  choice,
   comparison,
   data,
   frames,
@@ -53,6 +54,8 @@ export function useWorkspaceComparison({
   usingChanged,
   variant,
 }: {
+  /** The reader's choice of the frame that Side by side compares. */
+  choice: ComparedFrameChoice;
   comparison: ComparisonController;
   data: WorkspaceData;
   /** The workspace's frames on the canvas, from which the shown ones compare. */
@@ -63,7 +66,6 @@ export function useWorkspaceComparison({
   usingChanged: ReadonlySet<string> | undefined;
   variant: WorkspaceVariant | undefined;
 }): WorkspaceComparison {
-  const choice = useComparedFrameChoice();
   const entry = variant?.value ?? data.entry;
   const routed = entry.path;
   // A removed component or variant has no live frames: its compare draws

@@ -5,6 +5,7 @@ import { keepsComponentRecord, viewAxesKey } from "../review/shared_impact.js";
 import type { ComparedEntry, ReviewView } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
+import type { ComparisonGenerations } from "./comparison_row_snapshot.js";
 import { isStyleOnlyView } from "./workspace_style_evidence.js";
 
 /** Resolve a derived snapshot path beneath its comparison's generation. */
@@ -71,49 +72,53 @@ function frameView(
   return light ? { lightOnly: true, view: light } : undefined;
 }
 
+/** The snapshot address of each side that a view has, beneath its row's generation. */
+function viewDocuments(
+  loaded: LoadedComparison,
+  compared: ComparedEntry,
+  view: ReviewView,
+): ComparedFrame["documents"] {
+  const before = view.state !== "added";
+  const after = view.state !== "removed";
+  return {
+    ...(before
+      ? { before: snapshotUrl(loaded.url, "before", compared.basePath, view) }
+      : {}),
+    ...(after
+      ? { after: snapshotUrl(loaded.url, "after", compared.path, view) }
+      : {}),
+  };
+}
+
 /**
  * The frames that compare, in the frames' order: each frame whose row has a
  * generation and a ready view of the frame's viewport and scheme compares
  * that view, with the documents of the row's generation. Each row finds its
  * generation by its entry id, so a variant set compares every row whose
- * generation the comparison holds.
+ * generation the comparison holds. A row whose request failed compares with
+ * no documents, so the canvas draws the row's failure on its frames.
  */
 export function comparedFrames(
   frames: readonly ComparedFramePlan[],
-  generations: ReadonlyMap<string, LoadedComparison>,
+  generations: ComparisonGenerations,
   rows: (entry: string) => ComparedRow | undefined,
 ): ComparedFrame[] {
   return frames.flatMap((frame): ComparedFrame[] => {
     const id = frame.entry.path;
-    const loaded = generations.get(id);
-    const row = loaded ? rows(id) : undefined;
+    const failed = generations.failures?.has(id) === true;
+    const loaded = failed ? undefined : generations.get(id);
+    const row = loaded || failed ? rows(id) : undefined;
     const shown = row ? frameView(row.compared, frame) : undefined;
-    if (!loaded || !row || !shown) return [];
+    if (!row || !shown) return [];
     const { compared } = row;
     const { view } = shown;
-    const before = view.state !== "added";
-    const after = view.state !== "removed";
     return [
       {
         componentsOnly:
           view.state === "unchanged" &&
           (keepsComponentRecord(view) ||
             row.usingChanged.has(viewAxesKey(view))),
-        documents: {
-          ...(before
-            ? {
-                before: snapshotUrl(
-                  loaded.url,
-                  "before",
-                  compared.basePath,
-                  view,
-                ),
-              }
-            : {}),
-          ...(after
-            ? { after: snapshotUrl(loaded.url, "after", compared.path, view) }
-            : {}),
-        },
+        documents: loaded ? viewDocuments(loaded, compared, view) : {},
         entry: id,
         key: frame.key,
         lightOnly: shown.lightOnly,

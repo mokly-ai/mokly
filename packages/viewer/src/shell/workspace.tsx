@@ -16,6 +16,8 @@ import { usePreviousVersionLabel } from "./canvas_removed_section.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { ComparisonCanvas } from "./comparison_canvas.js";
+import { useComparedFrameChoice } from "./comparison_compared_frame.js";
+import { comparisonFrames } from "./comparison_eligible_frames.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
@@ -67,18 +69,6 @@ export function ComponentWorkspace({
     variantPath,
   );
   const savedViews = resolvedView.views;
-  const comparison = useComparison({
-    effectiveColorScheme: resolvedView.colorScheme,
-    eligible: Boolean(data.comparisons && presentation.comparisonEligible),
-    eligibilityKnown: comparisonEligibilityKnown(
-      catalogue.publicModel.changesStatus,
-      workspace.detailDelivery,
-    ),
-    historical: data.removed || variant?.removed === true,
-    entryId: variantPath ?? entry.path,
-    ...(data.component ? { owner: data.component.path } : {}),
-  });
-  const comparing = comparison.mode !== "current";
   const set = entry.kind === "component";
   const changes =
     store.context.changedEntries?.includes(entry.path) === true ||
@@ -89,6 +79,32 @@ export function ComponentWorkspace({
     entry,
     selecting: tab === "inspect" && !data.removed,
   });
+  const choice = useComparedFrameChoice();
+  const historical = data.removed || variant?.removed === true;
+  const comparison = useComparison({
+    ...(choice.chosen === undefined ? {} : { comparedFrame: choice.chosen }),
+    effectiveColorScheme: resolvedView.colorScheme,
+    eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    eligibilityKnown: comparisonEligibilityKnown(
+      catalogue.publicModel.changesStatus,
+      workspace.detailDelivery,
+    ),
+    // Each shown row that compares gets its own generation. A removed entry
+    // has no live frames, so its own row compares alone.
+    ...(historical
+      ? {}
+      : {
+          frames: comparisonFrames(
+            data,
+            catalogue.publicModel.details,
+            canvas.frames,
+          ),
+        }),
+    historical,
+    entryId: variantPath ?? entry.path,
+    ...(data.component ? { owner: data.component.path } : {}),
+  });
+  const comparing = comparison.mode !== "current";
   const picked = picks.state;
   // Props on a variant set edit the variant of the selected frame.
   const editTarget = controlTarget(
@@ -145,6 +161,7 @@ export function ComponentWorkspace({
   const headStatus =
     data.component?.path === entry.path ? data.status : presentation.status;
   const compare = useWorkspaceComparison({
+    choice,
     comparison,
     data,
     frames,
