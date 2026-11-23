@@ -27,11 +27,11 @@ test("uncontrolled selection, slots and handle lifecycle", async ({ page }) => {
   await page.waitForFunction(
     () => window.viewerHarness.get("one").ref.current !== null,
   );
-  // The first shown frame: the Frames filter shows every frame, the Desktop
-  // column before the Mobile one, whatever viewport the selection names.
+  // The first shown frame: the canvas shows the column of the selection's
+  // viewport, Mobile.
   await expect(page.locator("#one .mbk-frag:visible").first()).toHaveAttribute(
     "src",
-    /\/static\/mokly-generated\/home\/index.desktop.html/,
+    /\/static\/mokly-generated\/home\/index.mobile.html/,
   );
   await page.getByText("Host start").click();
   await expect(page.getByText("Annotation")).toBeVisible();

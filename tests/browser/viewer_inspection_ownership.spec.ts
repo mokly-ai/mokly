@@ -10,10 +10,10 @@ import { startViewerPick } from "./viewer_pick.js";
 import { canvasFrame } from "./workspace_actions.js";
 
 /**
- * The frames on the canvas: the Frames filter shows both viewports in both
- * schemes, whatever viewport the selection names.
+ * The frames on the canvas: the selection's one viewport, Mobile and after a
+ * frame replacement Desktop, in both schemes.
  */
-const SHOWN_FRAMES = 4;
+const SHOWN_FRAMES = 2;
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {

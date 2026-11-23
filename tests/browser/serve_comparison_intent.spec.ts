@@ -42,14 +42,15 @@ test("a watched update keeps Current after an Affected link opened Side by side"
   await awaitSelectedComparison(page, () => link.click());
   await expect(page).toHaveURL(/[?&]comparison=side(?:&|$)/u);
   // Honouring the intent selects the Changes tab, and the canvas shows Side
-  // by side: the pair of the first shown frame, Desktop · Light.
+  // by side: the pair of the first shown frame, Mobile · Light, as the link
+  // names its usage's Mobile view, whose column the canvas shows.
   await expect(changesTab).toHaveAttribute("aria-selected", "true");
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   await expect(
-    comparisonSection(page, "desktop").locator('[data-compare-mode="side"]'),
+    comparisonSection(page, "mobile").locator('[data-compare-mode="side"]'),
   ).toHaveCount(2);
   await expect(comparisonFrames(page)).toHaveCount(2);
   expect(requests).toHaveLength(1);
