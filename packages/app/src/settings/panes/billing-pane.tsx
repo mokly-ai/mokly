@@ -23,7 +23,6 @@ import { FreePlan, TeamPlan, TeamPlanWait } from "./billing-plans";
 import { useReconcilePlan } from "./billing-reconcile";
 import {
   landingOf,
-  openStripe,
   opensStripeOutside,
   withoutCheckout,
 } from "./billing-stripe";
@@ -89,7 +88,7 @@ export function BillingPane({
 
   // The return from Checkout never writes the plan — only the webhook does —
   // so the pane says what it is doing and asks again until the subscription is
-  // confirmed or the bounded wait ends with one more attempt.
+  // confirmed or the bounded wait reaches its deadline.
   useEffect(() => {
     if (landing === undefined && confirmationRetry === 0) return;
     if (landing === "cancelled") {
@@ -171,7 +170,7 @@ export function BillingPane({
   const upgrade = useCallback(
     () =>
       void checkout.run(async () => {
-        openStripe(checkout, await startCheckout(workspace.id));
+        checkout.leave(await startCheckout(workspace.id));
         if (external) watchCheckout();
       }),
     [checkout, external, watchCheckout, workspace.id],
@@ -179,7 +178,7 @@ export function BillingPane({
   const manage = useCallback(
     () =>
       void portal.run(async () =>
-        openStripe(portal, await openBillingPortal(workspace.id)),
+        portal.leave(await openBillingPortal(workspace.id)),
       ),
     [portal, workspace.id],
   );

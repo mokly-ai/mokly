@@ -3,24 +3,27 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { unexpectedError } from "../api/errors";
 import type { Connection } from "../api/types";
 
+import { isDesktopShell } from "./desktop-shell";
 import { storeGitHubFlow } from "./github-flow";
 import type { GitHubFlowPurpose } from "./github-flow";
+import { openBeside } from "./web-setup";
 
 /** A hosted page's URL, or the purpose and API answer for one GitHub trip. */
 export type PageTrip =
   [url: string] | [purpose: GitHubFlowPurpose, connection: Connection];
 
 /**
- * How a screen hands this tab to another site at the end of a write, as
+ * How a screen opens another site at the end of a write, as
  * GitHub's authorization and Stripe's hosted pages need: Write in progress in
  * `docs/protocol/cloud/folio-chrome.md`.
  *
  * The function it returns leaves only while the screen that asks is still
  * shown, so a reader who followed Back or another link while the write ran
- * stays where they went, and it says whether it left. The application renders
- * one route at a time, so a screen is shown exactly while it is mounted. The
- * write runs until the page has left, so a screen that goes while its page is
- * still leaving calls the trip off, and the reader stays where they went.
+ * stays where they went. It returns true only when this tab leaves.
+ * The application renders one route at a time. A screen is shown exactly while
+ * it is mounted. A tab write runs until the page has left. A screen that goes
+ * while its page is leaving calls the trip off, so the reader stays where
+ * they went.
  *
  * A page that left is gone once the next one loads, so nothing marks the end
  * of the trip. A page the browser brings back from its back-forward cache never
@@ -29,6 +32,8 @@ export type PageTrip =
  *
  * A GitHub trip stores its record after the shown check, in the same step as
  * leaving. An abandoned screen's late answer cannot replace a newer record.
+ * An address alone opens beside the desktop window after the same check.
+ * The window stays, so this returns false and the write returns to rest.
  */
 export function useLeavePage(
   restored: () => void,
@@ -74,6 +79,10 @@ export function useLeavePage(
   return useCallback(
     (...trip: PageTrip) => {
       if (!shown.current) return false;
+      if (trip.length === 1 && isDesktopShell()) {
+        openBeside(trip[0]);
+        return false;
+      }
       if (trip.length === 2 && !storeGitHubFlow(trip[0], trip[1])) {
         throw unexpectedError();
       }

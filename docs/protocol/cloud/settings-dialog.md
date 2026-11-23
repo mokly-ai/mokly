@@ -183,18 +183,20 @@ accepted workspace's viewer or project setup.
 External returns (GitHub installation, Stripe Checkout
 and the Customer Portal) arrive on the route form and redirect into the dialog
 on desktop. The Checkout return carries `checkout=success` or
-`checkout=cancelled`. A successful return shows the confirming state for up to
-thirty seconds, including one read at the end of that window, and the pane's
-ordinary load never races it. A Team read shows the Team facts, and every pane
-and the page beneath then show Team without a reload. A Free read after the
-bounded wait shows **Still confirming your subscription** and only
-**Check again**; that control makes one fresh read and returns to the delayed
-state while the plan remains Free. The success path never offers Upgrade to
-Team again. A failed confirmation read shows **Billing couldn’t load** with its
-reference and one **Try again**; a failed Check again read stays beside that
-control with the same failure fragment. Only a successful Free read enters the
-delayed state. Either return value is removed from the address without adding
-a history entry.
+`checkout=cancelled`. A successful return shows the confirming state while the
+pane waits for a Team read. The pane's ordinary load never races that wait.
+The wait has one deadline, thirty seconds after it starts. The deadline ends
+the wait, also while a read is pending, and no read starts at it. A read that
+answers or fails after the deadline changes nothing. A Team read shows the
+Team facts, and every pane and the page beneath then show Team without a
+reload. When the wait ends at the deadline, the pane shows the delayed state:
+**Still confirming your subscription** and only **Check again**. That control
+makes one fresh read and returns to the delayed state while the plan remains
+Free. The success path never offers Upgrade to Team again. A confirmation read
+that fails before the deadline shows **Billing couldn’t load** with its
+reference and one **Try again**. A failed Check again read stays beside that
+control with the same failure fragment. Either return value is removed from
+the address without adding a history entry.
 
 ## States
 

@@ -5,9 +5,7 @@ import { createElement } from "react";
 
 import type { Billing, Workspace } from "../../api/types";
 import { icons } from "../../components/icons";
-import type { PageTrip } from "../../navigation/leave-page";
-import type { Write } from "../../settings/write";
-import { shellPage, tabAt, withWindow } from "../page-window";
+import { shellPage, tabAt } from "../page-window";
 import { answers } from "../resource-doubles";
 import { draw, recordingPage } from "../server-render";
 
@@ -76,29 +74,4 @@ test("each Stripe action carries the external glyph in the window only", async (
     assert.equal(await glyph(billing, label, shellPage()), icons.external);
     assert.notEqual(await glyph(billing, label, tabAt()), icons.external);
   }
-});
-
-/** A write that records each trip it is asked to leave by. */
-function recordingWrite(): { write: Write; trips: PageTrip[] } {
-  const trips: PageTrip[] = [];
-  const write = { leave: (...trip: PageTrip) => trips.push(trip) };
-  return { write: write as unknown as Write, trips };
-}
-
-test("the window opens a Stripe page in the browser and a tab leaves for it", async () => {
-  const { openStripe } = await import("../../settings/panes/billing-stripe");
-  const address = "https://checkout.stripe.com/c/pay/cs_test";
-
-  const shell = recordingPage(shellPage());
-  const inShell = recordingWrite();
-  withWindow(shell.page, () => openStripe(inShell.write, address));
-  assert.deepEqual(shell.opened, [[address, "_blank", "noopener,noreferrer"]]);
-  assert.deepEqual(inShell.trips, []);
-  assert.deepEqual(shell.assigned, []);
-
-  const tab = recordingPage(tabAt());
-  const inTab = recordingWrite();
-  withWindow(tab.page, () => openStripe(inTab.write, address));
-  assert.deepEqual(tab.opened, []);
-  assert.deepEqual(inTab.trips, [[address]]);
 });

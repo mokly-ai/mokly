@@ -72,10 +72,12 @@ supplies one:
 | Portal return | `<app origin>/{workspaceSlug}/-/settings/billing`                    |
 
 A return URL never changes the plan. The success landing shows the confirming
-state and re-reads billing until the webhook has landed or a bounded wait of
-thirty seconds ends with one retry. After a read that reports Team, switching
-panes or closing settings uses the reconciled plan without a page reload. The
-cancelled landing is the pane as it was.
+state and re-reads billing until a read reports Team or a bounded wait of
+thirty seconds ends. The
+[Settings dialog](./settings-dialog.md#history-and-entry-points) defines the
+deadline of that wait and the states that follow it. After a read that reports
+Team, switching panes or closing settings uses the reconciled plan without a
+page reload. The cancelled landing is the pane as it was.
 
 The desktop app's window opens Checkout in the system browser, so the return
 lands there, not in the window. The window's first focus after it opened

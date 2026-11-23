@@ -9,16 +9,13 @@ const confirmWindowMs = 30_000;
 /** How often it asks again while it waits. */
 const confirmIntervalMs = 2_000;
 
-function pause(ms: number): Promise<void> {
-  return new Promise((done) => setTimeout(done, ms));
-}
-
 /**
  * Read billing until a read reports Team or the bounded wait for Stripe's
  * webhook ends. Only the webhook writes the plan, so a reader who comes back
- * from Checkout can be ahead of it. `accept` takes every read. Answers `true`
- * once a read reports Team, `false` when the wait ends first, and `undefined`
- * as soon as `live` answers `false`. A failed read rejects.
+ * from Checkout can be ahead of it. `accept` takes every read before the
+ * deadline. Answers `true` once a read reports Team, `false` when the wait
+ * ends first, and `undefined` when `live` answers `false`. The deadline ends
+ * a pending read or pause, and drops late answers. A timely failed read rejects.
  */
 export async function readUntilTeam(
   read: () => Promise<Billing>,
@@ -26,14 +23,33 @@ export async function readUntilTeam(
   live: () => boolean,
 ): Promise<boolean | undefined> {
   const deadline = Date.now() + confirmWindowMs;
-  for (;;) {
-    const value = await read();
-    if (!live()) return undefined;
-    accept(value);
-    if (value.plan === "team") return true;
-    if (Date.now() >= deadline) return false;
-    await pause(confirmIntervalMs);
-    if (!live()) return undefined;
+  let deadlineTimer: ReturnType<typeof setTimeout> | undefined;
+  let pauseTimer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<undefined>((done) => {
+    deadlineTimer = setTimeout(() => done(undefined), confirmWindowMs);
+  });
+  try {
+    for (;;) {
+      const value = await Promise.race([read(), expired]);
+      if (!live()) return undefined;
+      if (value === undefined || Date.now() >= deadline) return false;
+      accept(value);
+      if (value.plan === "team") return true;
+      const paused = await Promise.race([
+        new Promise<true>((done) => {
+          pauseTimer = setTimeout(() => done(true), confirmIntervalMs);
+        }),
+        expired,
+      ]);
+      if (!live()) return undefined;
+      if (paused === undefined || Date.now() >= deadline) return false;
+    }
+  } catch (caught) {
+    if (Date.now() >= deadline) return live() ? false : undefined;
+    throw caught;
+  } finally {
+    clearTimeout(deadlineTimer);
+    clearTimeout(pauseTimer);
   }
 }
 
