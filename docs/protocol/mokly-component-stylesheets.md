@@ -1,5 +1,7 @@
 # Component Stylesheets
 
+Status: Declared stylesheets in Vite's other stylesheet languages are not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds them.
+
 ## Two Kinds Of Component CSS
 
 A component's CSS reaches a document in two ways. Styles that a
@@ -41,7 +43,10 @@ export const action = defineComponent({
 Each value is a nonempty, normalized POSIX path, relative to the
 configuration file like a configured local stylesheet, to an existing,
 regular stylesheet input inside `repoRoot` with a case-insensitive
-`.css` suffix. Reject absolute paths, backslashes, empty, dot, or parent segments,
+`.css` suffix. Under the
+[Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), a
+declared stylesheet may use any of Vite's stylesheet languages.
+Reject absolute paths, backslashes, empty, dot, or parent segments,
 query or fragment suffixes, other URL schemes, HTTP(S) URLs, non-CSS files,
 missing files, directories, protected source, and paths whose real targets
 escape the repository. A CSS parse or bundle failure is fatal and uses the diagnostics of
@@ -119,7 +124,11 @@ links. Each declared CSS file is a delivery root under the
 [imported stylesheet contract](./mokly-imported-styles.md). Its href is a
 relative URL from the document route to `styles/<repository-relative CSS
 path>` inside `static/mokly-generated/`, with the same per-segment URL
-encoding as configured local stylesheet links. The renderer module wraps React
+encoding as configured local stylesheet links. Under the Vite adapter, a
+declared stylesheet whose path does not end in `.css` delivers at that route
+plus `.css`, under the
+[route rules](./mokly-imported-styles.md#routes-and-ownership).
+The renderer module wraps React
 renders and emits no
 links, so no authored link is reused or anchored on; the configured
 stylesheet order of the [rendering contract](./mokly-rendering.md) is

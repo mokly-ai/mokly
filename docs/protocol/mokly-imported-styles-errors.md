@@ -1,14 +1,17 @@
 # Imported Stylesheet Diagnostics
 
-Status: The Vite stylesheet transform is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
+Status: The Vite stylesheet transform and the fix text of the route collision row are not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds them.
 
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`
-are repository-relative POSIX paths; `{line}` and `{column}` refer to the CSS
+are repository-relative POSIX paths. `{line}` and `{column}` refer to the CSS
 that the scoper or the bundler received, after PostCSS, never to a source-map
-origin. `{config-path}` is the `postcss` value as the configuration spells
-it. Only `{detail}` may carry raw tool text.
+origin. Under the
+[Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
+setup's transform takes the place of PostCSS in this rule. `{config-path}` is
+the `postcss` value as the configuration spells it. Only `{detail}` may carry
+raw tool text.
 
 ## Configuration (`config-invalid`)
 
@@ -36,15 +39,18 @@ and column, and `{detail}` is its reason. The diagnostic uses the logical
 stylesheet path, without PostCSS's physical-path or plugin framing.
 
 Under the [Vite adapter](./mokly-vite-adapter-styles.md#css-modules), Mokly's
-scoper does not run, so the CSS Modules rows do not apply. A CSS Module that
-the setup cannot transform fails with the Vite setup row. Under the
+scoper does not run, so the CSS Modules rows do not apply. The setup's
+transform also takes the place of the `processCss` step. So the row for a
+PostCSS plugin that throws does not apply. A stylesheet that the setup cannot
+transform fails with the Vite setup row. This also holds for a CSS Module and
+for a syntax error. Under the
 [import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets),
 the row for a nested renderer-owned import does not apply either.
 
 | Failure                                                 | Exact message                                                                                                                                                                                                             |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Root stylesheet route not portable                      | `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`                                                    |
-| Two roots at one route                                  | `stylesheet route collision: {route}; give each root module a distinct repository path`                                                                                                                                   |
+| Two roots at one route                                  | `stylesheet route collision: {route}; rename one of the files whose stylesheets share this route`                                                                                                                         |
 | Shared asset route has different bytes                  | `CSS asset bytes disagree at {route}; keep shared asset inputs stable during the build`                                                                                                                                   |
 | Plain CSS transform failure                             | `could not transform CSS {stylesheet}: {detail}; fix the stylesheet and rebuild`                                                                                                                                          |
 | CSS Modules parse or scoping failure                    | `could not transform CSS {stylesheet}:{line}:{column}: {reason}; fix the stylesheet and rebuild`                                                                                                                          |
@@ -93,5 +99,7 @@ diagnostic of the [referenced closure](./mokly-public-closure.md):
 
 A sidecar failure while `processCss` runs, that is a crash, a timeout, or a
 protocol error, uses the [fail-closed codes](./mokly-sidecar.md#fail-closed-rules)
-of the sidecar contract. The [build warning record](./mokly-build-warnings.md)
+of the sidecar contract. Under the Vite adapter, the same rule holds for a
+sidecar failure while the setup transforms a stylesheet. The
+[build warning record](./mokly-build-warnings.md)
 carries no stylesheet warning; every stylesheet problem is an error.

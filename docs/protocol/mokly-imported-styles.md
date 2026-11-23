@@ -6,7 +6,11 @@ Status: The Vite stylesheet transform is not available yet. The [stylesheet mile
 
 A configured or component-declared local stylesheet, and CSS that an entry module, a stories file,
 or the renderer module imports with `import "./theme.css"` or
-`import styles from "./card.module.css"`, reach documents one way. Mokly
+`import styles from "./card.module.css"`, reach documents one way. Under the
+[Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
+rules of this page for `.css` and `.module.css` imports cover each of Vite's
+stylesheet languages. So `import "./theme.scss"` and
+`import styles from "./card.module.scss"` reach documents the same way. Mokly
 bundles each delivery root into one stylesheet on `lightningcss`, resolves its
 `@import` chain and `url()` assets, and delivers the stylesheet and its
 verified assets under the `static/mokly-generated/` namespace. A configured HTTP(S) URL is linked
@@ -34,8 +38,11 @@ forms never collide because a module path never ends in `.css`. Under the
 stylesheet whose path does not end in `.css` delivers at its route plus
 `.css`, as a module root does: `design/base.scss` delivers
 `styles/design/base.scss.css`. Decision: such a route ends in `.css`, because
-a static host chooses the MIME type from the file extension. `styles` and
-`assets` are reserved as the
+a static host chooses the MIME type from the file extension. Under the
+adapter, the configured stylesheets `design/base.scss` and
+`design/base.scss.css` thus share one route. Such a pair fails with the
+[route collision diagnostic](./mokly-imported-styles-errors.md#build-build-invalid).
+`styles` and `assets` are reserved as the
 first segment of document routes. Nothing is written into the repository:
 Serve answers the routes through
 [generation delivery](./mokly-imported-styles-assets.md#validation-and-the-render-cache),
@@ -112,7 +119,9 @@ package lookup from that directory.
 ## Bundling
 
 A root's stylesheet is built again when its stylesheet sources, its assets,
-the PostCSS module, or the resolution settings change. For each stylesheet of the closure the core reads the text from the working tree,
+the PostCSS module, or the resolution settings change. Under the Vite adapter,
+the [inputs of a Vite compile](./mokly-vite-adapter-inputs.md#inputs-and-serve)
+take the place of the PostCSS module in this rule. For each stylesheet of the closure the core reads the text from the working tree,
 or from a Git blob on the base side, with package inputs read from the
 selected dependency root; runs the consumer's PostCSS plugins
 through the sidecar's `processCss` when the configuration names a `postcss`
@@ -127,7 +136,11 @@ step. `lightningcss` reprints the stylesheet, so an authored comment may be
 dropped. Repeated
 builds with the same inputs and deterministic plugins give byte-identical
 output; plugin determinism is the consumer's responsibility. The plain and the
-module form of a stylesheet differ only in their scoped names.
+module form of a stylesheet differ only in their scoped names. Under the
+[Vite adapter](./mokly-vite-adapter-styles.md#css-modules), the module form
+can also use the features of Vite's CSS Modules, such as `@value`, `:export`,
+and a `composes` from another file. A module form that uses them differs from
+the plain form in more than its scoped names.
 Mokly supports at least 32 levels of nested rules, at-rules, selector
 functions, and value functions. A deeper stylesheet can exceed the CSS
 parser's recursion limit and stop the process. Decision: Mokly accepts this
