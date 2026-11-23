@@ -147,7 +147,10 @@ test("watched publications keep collapsed active ancestry until a route change r
   await page.locator("[data-mokly-search]").fill("");
   await expect(screens).not.toHaveAttribute("open", "");
   await frame.getByRole("link", { name: "Details", exact: true }).click();
-  await expect(page).toHaveURL(/\/view\/fixture\/screens\/details\/$/u);
+  // The destination's address names the kept Mobile viewport.
+  await expect(page).toHaveURL(
+    /\/view\/fixture\/screens\/details\/\?viewport=mobile$/u,
+  );
   await expect(screens).toHaveAttribute("open", "");
   expect(await hasMarker(page)).toBe(true);
 });

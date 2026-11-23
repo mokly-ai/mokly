@@ -151,9 +151,13 @@ for (const destination of ["Current", "another screen"] as const)
         "aria-pressed",
         "true",
       );
+      // The destination's address names the kept Mobile viewport.
       if (destination === "another screen")
         await expect(page).toHaveURL(
-          new RegExp(`/view/${changes.paths.component}/$`, "u"),
+          new RegExp(
+            `/view/${changes.paths.component}/\\?viewport=mobile$`,
+            "u",
+          ),
         );
     } finally {
       pending.unblock();

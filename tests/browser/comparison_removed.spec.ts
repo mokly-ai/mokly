@@ -111,8 +111,11 @@ for (const changed of [false, true])
       new RegExp(`/view/${variant}/\\?snapshot=[a-f0-9]{64}$`),
     );
     await removed.click();
+    // From an unchanged parent, the Changes landing opens the first changed
+    // view, whose Mobile viewport the address names.
+    const landing = changed ? "" : "viewport=mobile&";
     await expect(page).toHaveURL(
-      new RegExp(`/view/${variant}/\\?snapshot=[a-f0-9]{64}$`),
+      new RegExp(`/view/${variant}/\\?${landing}snapshot=[a-f0-9]{64}$`),
     );
     // The shell names the removed variant and its parent, and its status.
     await awaitRoutedDetail(page, variant);

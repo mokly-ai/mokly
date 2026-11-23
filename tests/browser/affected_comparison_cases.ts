@@ -34,6 +34,12 @@ const SCREEN_LINES = [
   "Mobile · Dark · Components this screen uses changed",
 ];
 
+/** The outcome lines of Consumer screen's Mobile frames, which a link to its Mobile view shows. */
+const MOBILE_SCREEN_LINES = [
+  "Mobile · Light · Components this screen uses changed",
+  "Mobile · Dark · Components this screen uses changed",
+];
+
 /** The outcome line of each frame of Toolbar's one row. */
 const VARIANT_LINES = [
   "Toolbar · Light · Components this variant uses changed",
@@ -186,9 +192,9 @@ export function registerAffectedComparisons(
     );
     await expect(comparisonFrames(page)).toHaveCount(2);
     await expectModesOffered(page, comparisonPaths.consumer);
-    // The canvas keeps every frame through the in-shell navigation, so each
-    // of the consumer's frames has its outcome line.
-    await expectSideBySide(page, SCREEN_LINES);
+    // The link names its usage's Mobile view, so the canvas shows the Mobile
+    // column, and each of its frames has its outcome line.
+    await expectSideBySide(page, MOBILE_SCREEN_LINES);
     await chooseFilter(page, "changed");
     await expect(navRow(page, comparisonPaths.consumer)).toBeHidden();
   });
