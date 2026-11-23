@@ -4,15 +4,13 @@ import {
   expectMirrored,
   registerComparisonAlignmentInput,
 } from "./comparison_alignment_input_cases.js";
+import { expectStackAt, sampleFrames, wheelOver } from "./comparison_scroll.js";
 import {
   comparisonSection,
-  expectStackAt,
   openComparison,
   paneFrame,
-  sampleFrames,
   sharedViewports,
-  wheelOver,
-} from "./comparison_scroll.js";
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { modeButton } from "./comparison_ui.js";
 

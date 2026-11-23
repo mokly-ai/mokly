@@ -30,16 +30,49 @@ write the sources of each entry on both commits.
 pins the expected Changes state of each entry, the moved pairs, and the
 removed paths.
 
-The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
-switch filters and modes, and measure pane, viewport, and region offsets.
+`comparison_ui.ts` reads the index and switches the catalogue filter. Its
+`chooseMode` opens the right panel's Changes tab, which holds the comparison
+band, and presses a mode. `showMode` also waits for an exact count of pane
+frames: two for each frame that Overlay, Difference, or Swipe compares, and
+two for the pair of Side by side. `outcomeLines` reads the band's line for
+each compared frame, and `expectNoCompareModes` checks, in a page or in one
+viewer's root, that an entry offers no mode: it opens the Changes tab of an
+entry that has one first, also from the compact layout's closed panel sheet.
+`compareStage` is the compare, busy while it loads, and `compareState` is its
+loading or failure state, which exists only then and never holds a pane.
+`comparison_outcomes.ts` builds the expected outcome lines of a screen's
+shown frames, the Light row first, or of one row of a variant set.
+`comparison_static_frames.ts` names which frames a mode compares on the copy:
+every shown frame in Overlay, Difference, and Swipe, the first shown frame in
+Side by side, and the compact layout's one frame. Its `expectSectionMode`
+checks that a compared frame shows a mode as one stack or a Before and
+Current pair. `comparison_absence.ts` checks that an entry, such as a removed
+entry's previous version, renders no band, no comparison state, and no pane.
+`comparison_sections.ts` opens a comparison and finds one compared frame by
+its kind and its scheme: in Overlay, Difference, and Swipe the frame's
+figure, whose one viewport stacks both versions, and in Side by side the
+canvas section that holds the frame's Before and Current pair. Its readers
+take that section: each version's pane frame, the page viewports, the shown
+mode, and the frame labels. `comparison_scroll.ts` measures the page offsets
+and ranges in the documents' CSS pixels, which the canvas zoom does not
+change, and `comparison_region_offsets.ts` measures inner scroll regions.
+`comparison_band.ts` reads the band through its hooks, the `Comparison mode`
+group, the `Scroll together` switch and Refresh: its geometry, the order of
+its controls, and the drawn state of the switch.
 `comparison_evidence_page.ts` holds the Details copy and readers that the
 stylesheet Details specs share. Its readers require one Comparison details
-heading and exactly one changed-files list. `openEvidence` also requires the
+heading and exactly one changed-files list. `openEvidence` and
+`openPageEvidence` show the comparison details in the right panel's tab that
+holds them: Changes for an entry that has that tab, and Inspect otherwise.
+An entry that the Changes filter does not list gains its Changes tab once its
+detail makes it comparison-eligible, so a spec waits for `awaitRoutedDetail`
+before it opens such an entry's details. `openEvidence` also requires the
 branch-point sentence, or its absence when a spec passes `null` for an index
 without a base. `expectExcludedOnly` checks Details that hold one examined
 list and no changed-files list. `configuredStylesheets` and
 `pageStylesheets` in `comparison_evidence_groups.ts` name the copy's
-stylesheets as the shell shows them.
+stylesheets as the shell shows them. `inspect_head.ts` reads the routed
+entry's title and status in Inspect's head, which the old screen head held.
 `comparison_frames.ts` checks every pane frame attribute that the comparison
 panes contract requires, on the copied output and in an embedded viewer
 through both frame adapters.
@@ -64,7 +97,8 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
 `comparisonViewerHost(source)` mounts another copy instead, such as the
-branch copy's `branchCopy.directory`.
+branch copy's `branchCopy.directory`. `openEmbeddedComparison` opens an entry
+in that viewer and shows a diff mode until its pane documents load.
 
 ## Comparison scrolling suites
 
@@ -118,7 +152,13 @@ through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
 a `MovedHost`. The checks read its `BranchPointHost` part, which keeps the
 `EntryHost` path check and says when comparisons are captured.
-`branch_viewer_test.ts` serves the embedded viewer to both embedded specs.
+`branch_point_ui.ts` reads Inspect's head: its title, the breadcrumbs of its
+Path row, the Location row of a removed entry, and the Variants list.
+`branch_point_siblings.ts` holds the journey of a family's removed sibling,
+and `branch_point_destinations.ts` the shown status and the outcome lines of
+each of Tally's Affected destinations on the wide canvas and in the compact
+layout. `branch_viewer_test.ts` serves the embedded viewer to both embedded
+specs.
 
 ## Small comparison copies
 

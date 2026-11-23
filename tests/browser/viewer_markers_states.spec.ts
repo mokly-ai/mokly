@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
+import { chooseMode } from "./comparison_ui.js";
 import { generationDocumentsNotice } from "./document_error_allowance.js";
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
@@ -100,9 +101,10 @@ for (const cross of [false, true]) {
       host.props.index = index;
       host.render();
     });
-    await page.locator('[data-diff-mode="side"]').click();
+    // The modes stand in the band of the right panel's Changes tab.
+    await chooseMode(page, "Side by side");
     await expectMarkerState(page, "visible", "unavailable");
-    await page.locator('[data-diff-mode="current"]').click();
+    await chooseMode(page, "Current");
     await expectMarkerState(page, "visible", "visible");
 
     await page.evaluate((visible) => {
