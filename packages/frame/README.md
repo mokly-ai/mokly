@@ -79,9 +79,11 @@ unavailable inspection. The
 
 A mount with `canvasInput: true` forwards modified wheel input, WebKit
 pinches, canvas keys and document focus while it has a listener. Both
-adapters do this while instance usage is pending or unavailable. The
+adapters do this while instance usage is pending or unavailable. The canvas
+keys are the zoom keys of the canvas, and Escape and the search keys of the
+shell. The
 [canvas input contract](../../docs/protocol/mokly-frame-canvas-input.md)
-defines the reports.
+defines the reports and the keys that qualify.
 
 ### Frames without an adapter
 
@@ -149,8 +151,9 @@ of spelling them in source.
   `temporaryPreviewAdapter`, `clipNode`, the rectangle helpers, and the
   `LinkActivation` type. `measureContentBox` measures a document without a
   frame adapter.
-- `canvasKey` in [`src/internal.ts`](./src/internal.ts) maps keyboard events
-  from the shell or a frame to the canvas key actions.
+- `canvasKey` in [`src/internal.ts`](./src/internal.ts) maps a keydown in a
+  frame's document to its `canvas-key` value: a zoom key, or, with its
+  `shell` argument, Escape or a search key. Only `probeRuntime` calls it.
 - `listenForCanvasInput` in [`src/internal.ts`](./src/internal.ts) runs the
   shared runtime on a same-origin document without an adapter. It takes a
   document, a canvas event listener and an optional callback environment.
