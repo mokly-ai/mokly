@@ -116,9 +116,9 @@
   font-size: 12px;
 }
 
-/* A link in the comparison details, such as a use case's changed step,
-   reads as a changed component's link does: in the signal ink, at its
-   weight, without an underline. */
+/* A link in the comparison details, such as a changed component or a use
+   case's changed step, reads in the signal ink at its weight, without an
+   underline. */
 .cv-evidence .mbk-comparison-evidence a {
   color: var(--cv-signal-deep);
   font-weight: 560;

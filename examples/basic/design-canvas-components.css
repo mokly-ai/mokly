@@ -99,16 +99,11 @@
 
 /* ---- Comparison details ---------------------------------------------- */
 
-/* The shipped evidence names the saved variant in property rows and links
-   each changed component, in Inspect's type. */
+/* The shipped evidence names the saved variant in property rows, in
+   Inspect's type. Its changed component links take the link rule of the
+   comparison details in design-canvas-changes.css. */
 .cv-cx-evidence .mbk-comparison-evidence .mbk-props {
   margin: 8px 0 0;
-}
-
-.cv-cx-evidence .mbk-comparison-evidence a {
-  color: var(--cv-signal-deep);
-  font-weight: 560;
-  text-decoration: none;
 }
 
 /* A screen's paired props: each view's heading names the instance, then
