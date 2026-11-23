@@ -265,7 +265,9 @@ const validFrameMessage = (
         (value.key === "zoom-in" ||
           value.key === "zoom-out" ||
           value.key === "zoom-100" ||
-          value.key === "fit")
+          value.key === "fit" ||
+          value.key === "escape" ||
+          value.key === "search")
       );
     case "canvas-focus":
       return messageFields(value, 1) && typeof value.visible === "boolean";
