@@ -183,15 +183,14 @@ short, and the end column keeps the width of its content. Decision: the free
 room, not the middle of the bar, because beside an empty start slot the equal
 outer columns give the empty start column as much room as the end column and
 squeeze the search at mid widths. At a container width of 560px or less, the
-compact bar holds, in one row: the menu button below the layout breakpoint,
-the mark, `topBarStart`, which takes the free room and lets its content
-truncate, `topBarCenter` where a host fills it, the search control, the end
-control and `topBarEnd`. There the package-owned search field becomes a 30px
-square search control. Activating it opens a full-width search surface over
-the same row, focuses an input at least 160px wide down to a 320px viewer, and
-leaves every host slot subtree mounted. Close or Escape restores the search
-control and its focus. This behaviour follows the viewer container, not the
-browser viewport.
+compact bar holds, in one row: the mark, `topBarStart`, which takes the free
+room and lets its content truncate, `topBarCenter` where a host fills it, the
+search control, the end control and `topBarEnd`. There the package-owned
+search field becomes a 30px square search control. Activating it opens a
+full-width search surface over the same row, focuses an input at least 160px
+wide down to a 320px viewer, and leaves every host slot subtree mounted.
+Close or Escape restores the search control and its focus. This behaviour
+follows the viewer container, not the browser viewport.
 
 ## Theming And Ownership
 

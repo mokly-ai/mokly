@@ -99,7 +99,8 @@ owns both rules.
 links to it, a visible folder without one becomes a button that
 `nav_reveal.ts` resolves to the disclosures exposing that folder, and the
 store's `revealFolder` opens them, clears only a hiding filter, opens the
-drawer at narrow widths, and asks `nav_scroll.ts` to focus the folder row.
+catalogue's sheet in the compact layout, and asks `nav_scroll.ts` to focus
+the folder row.
 An embedded reveal proposes the cleared query as a whole; `nav_scroll.ts`
 keeps the reveal pending until the host commits a selection that shows the
 row, and gives up when a commit leaves it hidden.
@@ -228,7 +229,11 @@ address, while the package shows "URL copied". `views.tsx` renders the main
 region of `@mokly/ui/shell-layout`, `workspace.tsx` lays out the workspace
 with `@mokly/ui/workspace-layout`, and `embedded_viewer.tsx` lays out an
 embedded root and its host slots with `@mokly/ui/embedded-layout`, which
-places each slot's content and never reads it. The standalone shell's root
+places each slot's content and never reads it. `sheets.tsx` renders the
+right panel with `@mokly/ui/floating-panel`, the compact layout's dock with
+`@mokly/ui/canvas-dock`, and the catalogue's sheet state that both roots
+pass to their layout, and the views render the compact layout's entry bar
+with `@mokly/ui/entry-bar`. The standalone shell's root
 and the loading, failure, and version states of both roots render
 `@mokly/ui/shell-layout`, and the highlight labels of the workspace and of a
 host's inspection render `@mokly/ui/highlight-label`.
@@ -280,7 +285,7 @@ An inspector tag then returns focus to the toggle in its own shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.
 
 `store.tsx` and the focused `store_*` modules own the shared route,
-selection, disclosure, drawer, details and scroll state. Every container
+selection, disclosure, sheet, details and scroll state. Every container
 renders under `ShellStoreProvider` and reads that state through
 `useShellStore`, also in tests. `store_browser.ts`
 owns standalone history, and `store_host.ts` owns host selection commits.
@@ -350,23 +355,49 @@ of the canvas stage contract requires one canvas frame for each step instead.
 `layout_breakpoint.ts` holds the layout breakpoint of the
 [canvas frames contract](../../../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
 as one media query, narrower than 900px, which every shell and viewer rule and script
-reads, so the catalogue drawer, the inspector sheet and the embedded rail
-switch at the same width. It also holds the use-case stage's device
-breakpoint, which `narrow_layout.ts` watches. The `@mokly/ui`
-stylesheets cannot import either query, so they repeat them, and the viewer's
-[styles test](../../tests/styles.test.ts) holds them to both.
+reads, so the floating panels, their sheets, the dock and the entry bar
+switch at the same width. It also holds the 1180px panel step, below which
+the floating panels narrow, and the use-case stage's device breakpoint, which
+`narrow_layout.ts` watches. The `@mokly/ui` stylesheets cannot import these
+queries, so they repeat them, and the viewer's
+[styles test](../../tests/styles.test.ts) holds them to these.
 
-At and above the layout breakpoint, `stages.tsx` shows the routed entry on the
+Both roots draw the Canvas layout: the standalone shell and an embedded root
+pass `useCanvasLayoutParts` of `sheets.tsx` to their layout, the catalogue's
+sheet, the dock and the catalogue's width. The store holds the open sheet,
+one at a time, and whether it is expanded; a navigation closes the
+catalogue's sheet and keeps the right panel's sheet while an entry shows,
+and a sheet's close control returns focus to the dock's control that opens
+it. The catalogue's width is the reader's choice or the starting width of
+`canvas_layout.ts`, 252px or 224px below the panel step, and a double click
+on the separator forgets the choice. `nav.tsx` passes the index's `base` to
+the catalogue's foot. A target view puts its head band, a workspace's
+comparison band and variant bar, and the inspector or a page's Details in
+the right panel of `sheets.tsx`; `diffs.tsx` gives the band and the stage
+apart. The dock's Fit refits the canvas that `canvas_stage.tsx` registers in
+`root_context.tsx` while it shows, and it hides while a compare mode shows
+its stage.
+
+`stages.tsx` shows the routed screen, component, page or document on the
 canvas of `@mokly/ui/canvas-stage`, under the
-[canvas stage contract](../../../../docs/protocol/mokly-shell-canvas-stage.md);
-below it, the one-frame stage of `public_stage.tsx` stays. `canvas_layout.ts`
+[canvas stage contract](../../../../docs/protocol/mokly-shell-canvas-stage.md),
+in both layouts; `public_stage.tsx` keeps a use case's stage. `canvas_layout.ts`
 watches the breakpoint, and a render without a window is wide. `workspace.tsx`
-asks `canvas_frames.ts` for its entry's frames: a screen's frames, Desktop
+asks `workspace_canvas.ts` for its entry's frames, which reads
+`canvas_frames.ts`: a screen's frames, Desktop
 beside Mobile and Light above Dark, or a component's variant set, a row for
 its own example and then one for each current saved variant, Light beside
 Dark, each with the row's desktop view. A viewport choice keeps one column of
 a screen's frames on the canvas; the other column's frames stay mounted with
-their documents but take no room. A live edit of a component's row renders
+their documents but take no room. In the compact layout `canvas_compact.ts`
+keeps the picked frame alone: a screen's frame of the selection's viewport
+and scheme, with Both read as Mobile, or a routed saved variant's frame in
+the selection's scheme, while a component's own route shows its whole set.
+The entry bar's frame picker lists the shown frames of the model, a screen's
+Mobile frames first, and a pick sets the selection's viewport and scheme or
+opens the picked row's entry. The other frames stay mounted out of the
+section, and the picked screen frame's label leads with the entry's slug. A
+live edit of a component's row renders
 the row's desktop views in both schemes (`canvasEditContexts`), so both of
 its frames show the edit. It passes the frames with the stage, and its
 highlights draw on every shown frame. `canvas_workspace.tsx` mounts each frame
@@ -387,7 +418,7 @@ frames.
 named by its source file, through the mount hook of `document_stage_frame.tsx`.
 A Markdown document without a dark render keeps its light document under
 Dark, and while the catalogue has a dark axis its reading frame's label adds
-`Light only` after the file name, in place of the band. `canvas_stage.tsx`
+`Light only` after the file name. `canvas_stage.tsx`
 gives the section the head band's title, path chip copy and status, binds the
 canvas's keys on the whole document of a standalone shell and only on an
 embedded root while the canvas shows, and asks the registry's geometry for one
@@ -519,10 +550,11 @@ The focused `workspace_*` containers turn evidence, usage, instances and
 supplied props into the records of the package's panels. `@mokly/ui/inspector`
 owns the tab keys and returns focus from Close to the tab pressed last.
 `inspector.tsx` closes the inspector the same way on Escape anywhere in its
-shell root. `inspector_resize.ts` owns the divider and the mobile sheet,
-through Inspector sizing props and the refs of its handles and workspace
-panes. `root_context.tsx` shares the root ref, drag state, focus targets,
-host slots, and named scroll regions. Containers use package refs for focus
+shell root, and `workspace_inspector.tsx` gives it a workspace's panels. In
+the right panel the inspector takes the height of its content, so it has no
+divider or sheet of its own. `root_context.tsx` shares the root ref, drag
+state, focus targets, host slots, the dock's controls, named scroll regions,
+and the shown canvas. Containers use package refs for focus
 and measurement. `focus_after.ts` moves focus after a recovery action of the
 component controls. `retry_focus.ts` moves focus after each other Try again,
 first to the status that replaces the button and then to the content, under
@@ -578,10 +610,9 @@ Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
-in a catalogue with a dark axis. Below the layout breakpoint a current
-document then gets a band above its pane, and on the canvas its reading
-frame's label names the fallback; a removed one gets a suffix on
-`Showing previous version`. The band and the suffix carry the `Light only`
+in a catalogue with a dark axis. A current document's reading frame then
+names the fallback in its label, in both layouts; a removed one gets a
+suffix on `Showing previous version`. The suffix carries the `Light only`
 note of `@mokly/ui/scheme-fallback`, which the stylesheet shows only under
 Dark. The stylesheets of `@mokly/ui/preview-frame`,
 `@mokly/ui/device-frame`, and `@mokly/ui/comparison-pane` set every preview
@@ -698,9 +729,9 @@ See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).
 
-Markdown documents use `DocumentStageFrame` below the layout breakpoint and the
-reading frame of `canvas_reading.tsx` above it, both with scheme-specific
-routes.
+Markdown documents use the reading frame of `canvas_reading.tsx` in both
+layouts, with scheme-specific routes; in the compact layout the frame takes
+the canvas's width.
 `previews.tsx` and `use_removed_preview.ts` select the historical document's
 scheme through the same page preview lifecycle. Documents have no viewport or
 usage axis; logical links in a document reach the parent shell through the

@@ -133,8 +133,8 @@ frame at a time:
   hides while a sheet is open.
 - While an instance is selected, a pill above the dock names the selection and
   opens the panel sheet. The pill hides while a sheet is open.
-- The top bar's menu button opens the catalogue sheet, and closes an open
-  sheet.
+- The top bar has no menu button: the dock's Catalogue opens the catalogue
+  sheet, and a sheet's close control closes it.
 - With Highlight components on, the frame draws its highlight also while the
   sheet that holds the switch is closed.
 - The tag picker stops anchoring to the narrow field and drops as a sheet

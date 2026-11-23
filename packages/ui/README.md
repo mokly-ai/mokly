@@ -120,7 +120,10 @@ gives a link and inert text the line box and centring of a button.
 through a script. A static mockup gives `TopBar` a `brandHref` and a
 `menuHref`, which draw the brand and the menu as links, and sets
 `interactive={false}`, which draws a control without an address as a picture
-of itself and leaves out the compact search. It gives `CatalogueNavigation` a
+of itself and leaves out the compact search. A bar that runs its script draws
+no menu, because the dock opens the catalogue's sheet; its `drawerOpen`,
+`navigationId`, and `onDrawer` props stay for earlier hosts and change
+nothing there. It gives `CatalogueNavigation` a
 `filterHref`, which draws each filter that has an address as a link, and sets
 `operable={false}`, which draws Collapse all and the other filters as text and
 the separator as a picture of its grip. The link or the text of the shown
@@ -144,7 +147,10 @@ plain records that the host builds: sections, folders, entries, and the
 variants and members of an entry's list, each with its keys, label, depth,
 address, and open, hidden, and changed states. Each disclosure choice reaches
 `onDisclosure` with its key and its new open state, and the resize separator
-reports widths through `onWidth` and `onWidthCommit`. `TopBar` takes the tag
+reports widths through `onWidth` and `onWidthCommit`. A double click restores
+`startingWidth`, 252px by default, or asks a host that passes `onWidthReset`
+to forget the chosen width. While the Changes filter shows, the foot names
+the comparison `base`. `TopBar` takes the tag
 picker and the end control as slots. An embedded root also gives it `host`,
 the `TopBarHost` containers of its three top-bar slots: the bar places the
 start slot after the brand, the centre slot in its middle column, and the end
@@ -172,7 +178,9 @@ the inspector's size: `height`, `minimumHeight`, and `maximumHeight` give the
 height on a desktop and the separator's value, `expanded` the state of the
 narrow sheet, and `sheetHeight` the sheet's height during a drag. The host
 attaches its drag and its keys to the separator and the sheet grab through
-`resizeRef` and `grabRef`. `DetailsPanel` draws
+`resizeRef` and `grabRef`. In the right panel of the Canvas layout the
+inspector takes the height of its content, and the layout's stylesheet hides
+the separator and the grab. `DetailsPanel` draws
 the collapsible Details below a page's stage, and `DetailsBody` the body that
 it and the Details tab show. `MetadataRow` draws one labelled value, as a row
 of the metadata column or, in its `props` presentation, as a `dt` and `dd`
@@ -205,7 +213,24 @@ zoom, and Fit. The stage is the canvas less `--mbk-canvas-inset-top`,
 `--mbk-canvas-inset-start`, each 0 until a layout sets it, and less the zoom
 pill's room. The canvas measures an invisible box of that size, so a change
 of an inset refits like a resize. The canvas takes the drags, wheels, and
-pinches around the frames; a frame's document keeps its own.
+pinches around the frames; a frame's document keeps its own. Below the layout
+breakpoint the canvas has no zoom pill and no pill room, and a section with
+`compact` draws no box and no head, leaves only its frames' labels' room, and
+Fit stands it at the stage's top.
+
+`FloatingPanel` draws a panel that floats over the canvas at its `side`, the
+catalogue at the left or the right panel at the right, and below the layout
+breakpoint is a bottom sheet: it shows only while its `sheet` is open, at its
+compact or expanded height, with a grabber, the size toggle that a press or a
+drag switches, and a close control, which `noun` names, such as `Close
+catalogue`. A `label` makes the panel a region, and `scroll` makes its body
+scroll its content. `CanvasDock` draws the compact layout's dock, a group
+named `Canvas controls` with Catalogue, the right panel's current tab, and
+Fit, each from its callback, and gives Catalogue and the tab to the host's
+refs. `EntryBar` draws the compact layout's entry bar: the title tag, the
+`Component` kind tag, the status slot, and the frame picker, a native select
+named `Frame` of the `picker`'s frames. The dock and the entry bar show below
+the layout breakpoint only.
 
 `CanvasSection` draws the section: the box of a screen or a document, or the
 dashed outline of a component's variant set, its head with the title tag, the
@@ -228,7 +253,8 @@ Canvas design's 16-unit grid. The canvas parts mix their rings, fills, and
 shadows from the Canvas roles through `light-dark()`, so they follow the
 colour scheme that the shell root states for its appearance.
 
-`Stage` draws the dotted stage of a preview, which the narrow layout keeps.
+`Stage` draws the dotted stage of a preview, which a removed entry's previous
+version and the static depictions of the earlier stage keep.
 `PreviewFrame` draws one frame on
 it: the wrapper that records the scheme of the shown render, the viewport's
 label with the `LightOnlyNote` of `scheme-fallback`, and the lines of a
@@ -266,14 +292,25 @@ A state that a host focuses after Try again takes a ref: `focusRef` on
 and its preview scheme: the skip link, the top bar, and the body with the
 navigation and the `MainRegion`, and the `RouteStatus` that announces each
 navigation. `EmbeddedLayout` draws an embedded root with
-the same parts and its host's slots. Its `topBar` function receives the
+the same parts and its host's slots. With `catalogueSheet` both roots draw
+the Canvas layout: the main region is the canvas, the catalogue, or an
+embedded root's rail host with its slots, floats over it in a
+`FloatingPanel`, the `dock` floats at the canvas's bottom, and
+`navigationWidth` sets the catalogue's width that the canvas's start inset
+follows. The main region is the containing block of a view's right panel and
+entry bar, and a right panel in it sets the canvas's end inset. Without
+`catalogueSheet` the navigation stands in a column, as a static depiction of
+the earlier layout draws it. `HomeState` and `MissingRouteState` with
+`canvas` stand in a card on the canvas. Its `topBar` function receives the
 containers of the three top-bar slots, which the bar places in its columns.
 It places each slot's content
 without reading it, keeps the host's stage overlay over the shown preview,
 and takes the host's `MarkerLayer` and label layer. The shown preview is a
 workspace's preview, a use case's flow, a document's stage, or the routed
 canvas that holds a document's reading frame. `WorkspaceLayout` lays out
-a workspace's header, variant bar, preview, and inspector. `RootState` takes
+a workspace's preview with its `entryBar` and the right `panel` that holds
+the header, the variant bar, and the inspector, or, without a panel, the
+header and the variant bar above the preview beside the inspector. `RootState` takes
 a root's place while its catalogue loads, cannot be loaded, or needs a
 compatible viewer, or when the requested view is unavailable, as the
 `EmptyState` of the standalone root or of an embedded root, with the root class
@@ -411,9 +448,14 @@ Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
 `rem`. A `rem` length follows the root font size of the page. A host page that
 embeds the viewer sets that size, so a `rem` width can change from host to
 host. An `em` width follows the element's own font size instead. The
-navigation drawer's `max-width: 20rem` is the one `rem` width. The
+[responsive behaviour](../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
+requires the two `rem` queries, the layout breakpoint at `56.25rem` and the
+panel step at `73.75rem`, and the viewer's styles test holds the package to
+them. The drawer of a navigation column without a floating panel keeps
+`max-width: 20rem`, the one `rem` width, for a static depiction of the
+earlier layout; the
 [compact layout](../../docs/protocol/mokly-shell-device-chrome.md#compact-layout)
-of the canvas frames contract replaces that drawer with sheets.
+replaces that drawer with sheets.
 
 `src/styles.css` sets the order of `styles.css`. It lists the component
 stylesheets with one `@import` each, in cascade order: the theme and the reset
@@ -466,16 +508,18 @@ override the desktop layout rules.
   scheme switches and the comparison modes render, as buttons or as the links
   and inert text of a static depiction
 - [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar` and
-  `TopBarHost`: the three columns with the drawer menu, the brand, the
-  catalogue search with its compact form and its focus return, and an
-  embedded root's top-bar slots
+  `TopBarHost`: the three columns with the brand, the catalogue search with
+  its compact form and its focus return, and an embedded root's top-bar
+  slots
 - [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
-  menu and the brand, as controls, links, or pictures of a static depiction
+  brand, as a control, a link, or a picture, and the menu of a static
+  depiction, as a link or a picture
 - [`src/top-bar/brand-icon.tsx`](./src/top-bar/brand-icon.tsx) — `BrandIcon`,
   the Mokly mark, whose parts the top bar's stylesheet colours
 - [`src/catalogue-navigation/catalogue-navigation.tsx`](./src/catalogue-navigation/catalogue-navigation.tsx)
   — `CatalogueNavigation`: the column, the All and Changes filter, the status
-  line, and the resize separator with its drag and keys
+  line, the foot of the comparison base, and the resize separator with its
+  drag and keys
 - [`src/catalogue-tree/catalogue-tree.tsx`](./src/catalogue-tree/catalogue-tree.tsx)
   — `CatalogueTree`: the sections, folders, entry rows with their changed
   mark, and entry lists, drawn from the records of `tree-records.ts`
@@ -565,8 +609,17 @@ override the desktop layout rules.
   document
 - [`src/canvas-zoom-pill/canvas-zoom-pill.tsx`](./src/canvas-zoom-pill/canvas-zoom-pill.tsx)
   — `CanvasZoomPill`: Zoom out, the zoom, Zoom in, and Fit
+- [`src/canvas-dock/canvas-dock.tsx`](./src/canvas-dock/canvas-dock.tsx) —
+  `CanvasDock`: the compact layout's group of Catalogue, the current tab, and
+  Fit
+- [`src/entry-bar/entry-bar.tsx`](./src/entry-bar/entry-bar.tsx) —
+  `EntryBar`: the compact layout's entry name, status, and frame picker
+- [`src/floating-panel/floating-panel.tsx`](./src/floating-panel/floating-panel.tsx)
+  — `FloatingPanel` and `FloatingPanelSheet`: the panel over the canvas and
+  its bottom sheet, with the grabber of `sheet-grab.tsx` and the close control
 - [`src/icons/canvas-icons.tsx`](./src/icons/canvas-icons.tsx) — `CanvasIcon`,
-  the glyphs of the frames' kinds and the zoom pill
+  the glyphs of the frames' kinds, the zoom pill, the dock, the sheet, and
+  the frame picker
 - [`src/stage/stage.tsx`](./src/stage/stage.tsx) — `Stage`, the dotted
   surface of live frames, of a component's canvases, or of a state
 - [`src/preview-frame/preview-frame.tsx`](./src/preview-frame/preview-frame.tsx)
@@ -602,10 +655,11 @@ override the desktop layout rules.
   of a static depiction, and the status
 - [`src/shell-layout/shell-layout.tsx`](./src/shell-layout/shell-layout.tsx)
   — `ShellLayout`, the standalone root; `SkipLink`, `ShellBody`,
-  `MainRegion`, and `RouteStatus`, which both roots draw; and `RootState`, the
-  state of a root without a shell
+  `MainRegion`, `RouteStatus`, and `FloatingCatalogue`, which both roots
+  draw; and `RootState`, the state of a root without a shell
 - [`src/shell-layout/root-marks.ts`](./src/shell-layout/root-marks.ts) — the
-  classes of a root's drag and expanded window, which both roots share
+  classes of a root's drag and expanded window, and the Canvas layout's mark
+  and catalogue width, which both roots share
 - [`src/merged-ref/merged-ref.ts`](./src/merged-ref/merged-ref.ts) —
   `useMergedRef`, the internal ref of an element that a component and its
   host both need
@@ -614,7 +668,8 @@ override the desktop layout rules.
   containers it hands to the top bar, and the stage overlay of
   `host-slot.tsx`, and `MarkerLayer`, the host's markers
 - [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
-  — `WorkspaceLayout`: the header, the variant bar, and the preview beside the
+  — `WorkspaceLayout`: the preview on the canvas with the entry bar and the
+  right panel, or the header, the variant bar, and the preview beside the
   inspector
 - [`src/highlight-label/highlight-label.tsx`](./src/highlight-label/highlight-label.tsx)
   — `LabelLayer` and `HighlightLabel`: the layer and the labels of
