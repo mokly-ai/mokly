@@ -1,6 +1,6 @@
 # Component Pages And Screen Inspection
 
-Status: A component's variant set, the panel sheet, Inspect with its Frames filter and the canvas selection are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the variant set and the panel sheet, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds Inspect, its Frames filter and the selection.
+Status: Inspect with its Frames filter, the canvas selection and compare on every shown frame are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Catalogue And Component Pages
 
@@ -181,8 +181,8 @@ preview frame, also over a cross-origin frame, so consumer CSS cannot paint
 over it or restyle it.
 
 Bounds come from the active composed document, support multi-root and text
-ranges, and follow scroll, nested scroll containers, frame resize and
-expansion, fonts and images loading, and viewport and theme swaps. Clip to the
+ranges, and follow scroll, nested scroll containers, frame resize, pan and
+zoom, fonts and images loading, and viewport and theme swaps. Clip to the
 visible frame and its clipping ancestors; do not highlight unrelated content
 covered by occluding elements. Clipping follows the containing block of fixed
 elements, transformed ancestors, and inner scrollers. Zero-area and hidden

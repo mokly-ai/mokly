@@ -1,6 +1,6 @@
 # Standalone Appearance Control
 
-Status: The Appearance control is not restyled in Canvas yet, and the canvas stage, the right panel and the Frames filter that a choice leaves alone are not built. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the restyled control and the canvas stage, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and its Frames filter.
+Status: The Frames filter, which an Appearance choice leaves alone, is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
 
 This continues the [viewer appearance contract](./mokly-viewer-appearance.md):
 the one appearance control of Serve and the static build.
@@ -23,10 +23,7 @@ and preserves catalogue search.
 
 Choosing a value applies the interface appearance and the effective preview
 scheme together: the shell root's appearance mark and the reading frame of a
-Markdown document. The frames on the canvas keep their own schemes. A view
-outside the canvas stage swaps its screen and flow frames, component samples
-and comparison frames to the light or dark documents, under the unchanged swap
-rules, including the light-only fallback caption.
+Markdown document. The frames on the canvas keep their own schemes.
 
 In-shell navigation, Back and Forward keep the current reader choice, even
 when the destination URL contains an older or conflicting `scheme` pin. Before

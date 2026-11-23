@@ -1,6 +1,6 @@
 # Component Explorer Design
 
-Status: A component's variant set on the canvas, Inspect's sections and the Changes tab are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the variant set, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds Inspect's sections and the Changes tab.
+Status: Inspect's sections, the Changes tab and compare on every frame of a variant set are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Owning Catalogue
 

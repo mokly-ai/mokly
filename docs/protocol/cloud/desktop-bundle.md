@@ -86,9 +86,9 @@ the cloud-owned parts of its top bar, or a 48px band at the top of a screen
 without one. Every control in that area stays clickable, and so does every
 dialog, sheet or menu over it. The area stays active while a dialog or a menu
 is open, so the window still moves. While a surface that the viewer package
-draws, such as its open search or an expanded preview frame, or a focused skip
-link covers part of the area, that part does not move the window, so the
-surface takes presses. The part moves the window again when the surface goes.
+draws, such as its open search, or a focused skip link covers part of the
+area, that part does not move the window, so the surface takes presses. The
+part moves the window again when the surface goes.
 The page title still names the window in the Window menu and in Mission
 Control.
 

@@ -1,6 +1,6 @@
 # Mokly Shell Design Contract
 
-Status: The canvas stage with its floating panels and its compact layout, and the right panel with compare on every frame are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the stage, the panels and the compact layout, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and compare.
+Status: The right panel's Inspect and Changes tabs, with compare on every frame and Swipe, are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Scope
 

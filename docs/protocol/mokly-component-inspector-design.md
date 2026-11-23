@@ -1,6 +1,6 @@
 # Component Inspector Design
 
-Status: The right panel, its Inspect and Changes tabs and the box model in Inspect are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) floats the panel over the canvas, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the tabs.
+Status: The Inspect and Changes tabs of the right panel, with Inspect's sections and its box model, are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Right Panel
 

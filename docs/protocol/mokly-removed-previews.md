@@ -1,6 +1,6 @@
 # Removed Content Previews
 
-Status: The previous version's section on the canvas, with its canvas frames, its reading frame and its notes in the place of a missing view, is not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas stage and its sections.
+Status: Inspect, the Changes tab with its Compared rail, and the Frames filter that this page names are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Behavior
 

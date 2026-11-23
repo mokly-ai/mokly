@@ -1,6 +1,6 @@
 # Component Controls Design
 
-Status: Inspect's Props section, which edits the variant of the selected frame on a variant set, and the panel sheet of the compact layout are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the panel sheet, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds Inspect.
+Status: Inspect's Props section, which edits the variant of the selected frame on a variant set, is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
 
 ## Controls Panel
 

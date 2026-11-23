@@ -1,6 +1,6 @@
 # Component Workspace Design
 
-Status: The right panel with its tabs, its Nested components section and its Frames filter, and the panel sheet of the compact layout are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the floating panel and the panel sheet, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the tabs, the sections and the Frames filter.
+Status: The right panel's tabs, its Nested components section and its Frames filter are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## View Controls
 

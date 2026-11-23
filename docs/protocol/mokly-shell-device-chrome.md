@@ -1,6 +1,6 @@
 # Shell Canvas Frames, Preview Scheme And Compact Layout
 
-Status: The canvas frames, a use case's step frames included, their schemes, the compact layout with its dock and sheets, and the Side by side tags are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the frames, the schemes and the compact layout, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Side by side tags.
+Status: The Frames filter, the selection with its pill above the dock, the Changes tab that the dock names, and compare on every frame with the Side by side tags are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Canvas Frames
 

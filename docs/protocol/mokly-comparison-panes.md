@@ -1,6 +1,6 @@
 # Comparison Pane Presentation
 
-Status: Compare on every frame of the canvas, Swipe, and Side by side on one chosen frame are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the comparisons on it.
+Status: Compare on every frame of the canvas, Swipe, and Side by side on one chosen frame are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Behavior
 
@@ -16,9 +16,8 @@ in Current. Links and forms do nothing, anchors and scroll keys reach inner
 regions before the page, and text stays selectable. Readers compare a linked
 screen through the catalogue, where every screen has its own comparison.
 Loading, failed, refreshed, and renewed comparisons keep the product copy,
-and Try again repeats the request. Individual browser expansion stays
-available only in Current. No count or percentage of changed pixels is ever
-shown.
+and Try again repeats the request. No count or percentage of changed pixels
+is ever shown.
 
 ## Presentation
 
@@ -153,7 +152,7 @@ both source offsets in that region's handler. Pages and regions clamp at their
 own ends; only a shorter page's frame is translated, never snapshot elements.
 Side by side offsets may differ only while the reader has explicitly turned
 the control off. Overlay, Difference and Swipe keep one page offset in each
-frame even then. Browser expansion is unavailable outside Current.
+frame even then.
 
 ## Lifecycle
 

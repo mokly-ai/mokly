@@ -1,6 +1,6 @@
 # Canvas Selection
 
-Status: The canvas and the selection on it are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the selection.
+Status: The selection on the canvas is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
 
 This continues the [selection contract](./mokly-viewer-selection.md). The
 [canvas stage](./mokly-shell-canvas-stage.md) defines the canvas and its zoom,

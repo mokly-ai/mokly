@@ -1,6 +1,6 @@
 # Comparison Scrolling
 
-Status: Comparison frames at the nominal size of their canvas frame at every zoom, Swipe, and scrolling on every frame of the canvas are not built yet. The [Canvas stage milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the canvas frames and the zoom, and the [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the comparisons on them.
+Status: Comparison frames at the nominal size of their canvas frame at every zoom, Swipe, and scrolling on every frame of the canvas are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Page Scroller
 

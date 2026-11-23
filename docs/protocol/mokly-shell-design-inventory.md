@@ -25,12 +25,12 @@ screen stays in its feature contract.
 
 ## Kept Screen
 
-The kept screen draws the shipped shell, not the Canvas viewer. It draws the
-shipped tag picker over Welcome, and its Canvas form is
-`design/canvas/search/tags`. The design library's runtime test opens it until
-the viewer's race on a third nested disclosure is fixed. It is the one screen
-that renders the device frame, the screen header, the view controls and the
-inspector of the
+The kept screen draws the one-frame stage with the inspector below it, not the
+Canvas viewer. It draws the shipped tag picker over Welcome, and its Canvas
+form is `design/canvas/search/tags`. The design library's runtime test opens
+it until the viewer's race on a third nested disclosure is fixed. It is the
+one screen that renders the device frame, the screen header, the view controls
+and the inspector of the
 [design library](./mokly-design-component-library.md#components-and-saved-examples).
 Its folders hold no other screen and have no page of their own.
 

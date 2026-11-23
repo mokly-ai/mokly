@@ -1,6 +1,6 @@
 # Changes Screen Controls
 
-Status: The Changes tab of the right panel, with its stepper, its host slot and its five mode tiles, is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
+Status: The Changes tab of the right panel, with its stepper, its host slot and its five mode tiles, and the diffs in the frames of the canvas are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 Continuation of [Changes serving](./mokly-changes-serving.md).
 
@@ -91,7 +91,7 @@ follow the [pane](./mokly-comparison-panes.md) and
 frame-sized documents with inert links and aligned regions. Overlay,
 Difference and Swipe show both versions inside each frame; Side by side shows
 the two versions of one frame next to each other. Missing panes stay explicit,
-dimensions match, and only Current offers expansion or pixel measurements.
+dimensions match, and only Current offers pixel measurements.
 
 Loading, unavailable, and failed comparison states use plain product copy.
 Failure offers a retry. All and Changes share the same comparison eligibility.
