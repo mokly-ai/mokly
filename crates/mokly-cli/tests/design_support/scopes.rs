@@ -54,7 +54,7 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             .iter()
             .filter(|entry| entry.metadata.variant_of.is_some())
             .count(),
-        93
+        92
     );
     let screens: BTreeSet<_> = entries
         .iter()

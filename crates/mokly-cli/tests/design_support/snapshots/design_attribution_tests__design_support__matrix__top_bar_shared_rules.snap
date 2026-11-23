@@ -43,6 +43,7 @@ design/library/chrome/top-bar -> design/canvas/evidence/styles/unresolved
 design/library/chrome/top-bar -> design/canvas/evidence/unchanged
 design/library/chrome/top-bar -> design/canvas/evidence/unchanged/action
 design/library/chrome/top-bar -> design/canvas/flows/tour
+design/library/chrome/top-bar -> design/canvas/flows/tour/changes
 design/library/chrome/top-bar -> design/canvas/flows/tour/dark
 design/library/chrome/top-bar -> design/canvas/flows/tour/mobile
 design/library/chrome/top-bar -> design/canvas/flows/tour/second-step
