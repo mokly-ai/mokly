@@ -825,6 +825,14 @@ own lines of this plan.
   track D decision 1 call each file of the renderer's closure a renderer
   stylesheet, such as the shared Sass partial of option B, and answer A
   changes only where Mokly removes them.
+- D18. Made on 2026-11-23. `transformViteCss` has the 60-second deadline of
+  `processCss`. Reason: the setup's transform takes the place of the
+  `processCss` step, and it runs the same kind of work: preprocessors and
+  PostCSS.
+- D19. Made on 2026-11-23. A `transformViteCss` call on the head root prefers
+  the idle head worker that compiled last, as a head `bundle` does. Reason:
+  that worker already holds the Vite server of the side, which the transform
+  reuses.
 
 Decisions of track D. Decisions 1 and 5 have answers. Decisions 2, 3, and 4
 wait for the user.

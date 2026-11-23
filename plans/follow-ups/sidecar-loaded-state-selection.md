@@ -83,7 +83,9 @@
     table. Next comes another process that holds that lifetime. Queue order
     breaks ties. The pass preference comes before the rank. A call never
     waits for a busy process that holds its generation. Calls without a
-    generation keep queue order. The rank starts no process and keeps no state
+    generation keep queue order, except a head `bundle` and a head
+    `transformViteCss` call, which use the head bundle rank. The rank starts no
+    process and keeps no state
     of its own.
   - The orchestrator kept C and D open. B answers the root question below
     only inside one root. The choice of the process that changes root still
