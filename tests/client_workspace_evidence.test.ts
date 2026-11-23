@@ -29,7 +29,12 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
       components: [],
       comparisonEligible: true,
       comparisons: true,
-      entry: { path: "home", kind: "screen", route: "home/index.html" },
+      entry: {
+        path: "home",
+        kind: "screen",
+        route: "home/index.html",
+        views: [],
+      },
       inputChanges: [],
       // The routed detail's direct reasons reach Details with the record.
       reasons,
@@ -80,7 +85,12 @@ test("the terminal line names the screen or the variant it compared", () => {
 
   const screen = renderEvidence({
     ...unmodified,
-    entry: { path: "home", kind: "screen", route: "home/index.html" },
+    entry: {
+      path: "home",
+      kind: "screen",
+      route: "home/index.html",
+      views: [],
+    },
   } as unknown as WorkspaceData);
   assert.match(
     screen,
@@ -90,7 +100,12 @@ test("the terminal line names the screen or the variant it compared", () => {
   const component = renderEvidence(
     {
       ...unmodified,
-      entry: { path: "badge", kind: "component", route: "badge/index.html" },
+      entry: {
+        path: "badge",
+        kind: "component",
+        route: "badge/index.html",
+        views: [],
+      },
     } as unknown as WorkspaceData,
     "default",
   );

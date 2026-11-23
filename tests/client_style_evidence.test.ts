@@ -261,7 +261,7 @@ function renderEvidence({
     components: [],
     comparisonEligible: true,
     comparisons: true,
-    entry: { id: "home", kind: "screen", route: "home/index.html" },
+    entry: { id: "home", kind: "screen", route: "home/index.html", views: [] },
     inputChanges: [],
     relatedComponents: [],
     resourceEvidence:
