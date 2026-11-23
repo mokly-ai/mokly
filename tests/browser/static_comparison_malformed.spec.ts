@@ -13,6 +13,7 @@ import {
   copiedComparisonDirectory,
   test,
 } from "./comparison_test.js";
+import { chooseMode } from "./comparison_ui.js";
 import { missingResourceNotice } from "./document_error_allowance.js";
 
 test("a copied comparison without a pane document never falls back to a live comparison endpoint", async ({
@@ -49,7 +50,7 @@ test("a copied comparison without a pane document never falls back to a live com
     await page.goto(
       `${host.url}/view/${comparisonPaths.changed}/?viewport=mobile`,
     );
-    await page.getByRole("button", { name: "Overlay", exact: true }).click();
+    await chooseMode(page, "Overlay");
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(
       page.locator("iframe[data-mokly-comparison-frame]"),

@@ -2,22 +2,35 @@ import { expect } from "@playwright/test";
 
 import { files } from "../helpers/static_faults.js";
 
+import { refreshButton } from "./comparison_band.js";
 import {
   copiedBytes,
   deliveryIndex,
   deliveryRequests,
 } from "./comparison_delivery_assertions.js";
+import { comparisonSection, paneFrame } from "./comparison_sections.js";
+import {
+  COMPARE_MODES,
+  comparedViewports,
+  expectSectionMode,
+  type CompareMode,
+} from "./comparison_static_frames.js";
 import {
   comparisonPaths,
   copiedComparisonDirectory,
   test,
 } from "./comparison_test.js";
+import { chooseMode, comparisonFrames } from "./comparison_ui.js";
 import {
-  chooseScheme,
   chooseViewport,
-  revealInPanel,
+  openPanelTab,
+  setFrames,
   viewportFrame,
 } from "./workspace_actions.js";
+
+/** The frame names of each viewport and scheme, as the canvas labels them. */
+const NAMES = { desktop: "Desktop", mobile: "Mobile" } as const;
+const SCHEMES = { dark: "Dark", light: "Light" } as const;
 
 for (const width of [390, 1280]) {
   test(`${width}px: copied comparisons read lazily and Refresh re-reads the same immutable generation`, async ({
@@ -29,31 +42,36 @@ for (const width of [390, 1280]) {
     const before = await files(directory);
     const { generation } = await deliveryIndex(request, baseURL!);
     const traffic = deliveryRequests(page);
+    /**
+     * Expect the shown frames of `scheme` to compare in `mode`: each frame
+     * that the mode compares holds both versions, and each version's
+     * document was read `reads` times.
+     */
     const expectSelection = async (
       viewport: "mobile" | "desktop" | "both",
       scheme: "light" | "dark",
-      mode: string,
+      mode: CompareMode,
       reads = 1,
     ) => {
-      const views = viewport === "both" ? ["mobile", "desktop"] : [viewport];
-      await expect(
-        page.locator("iframe[data-mokly-comparison-frame]"),
-      ).toHaveCount(views.length * 2);
+      const views = comparedViewports(width, viewport, mode);
+      await expect(comparisonFrames(page)).toHaveCount(views.length * 2);
       await expect(page.locator(`[data-diff-mode="${mode}"]`)).toHaveAttribute(
         "aria-pressed",
         "true",
       );
       for (const view of views) {
-        const panes = page.locator(
-          `[data-diff-viewport="${view}"] [data-compare-mode]`,
+        const section = comparisonSection(page, view, scheme);
+        await expectSectionMode(
+          section,
+          mode,
+          `${NAMES[view]} · ${SCHEMES[scheme]}`,
         );
-        await expect(panes).toHaveAttribute("data-compare-mode", mode);
         const file = `index.${view}${scheme === "dark" ? ".dark" : ""}.html`;
         for (const [side, text] of [
           ["before", "Before screen"],
           ["after", "After screen"],
         ] as const) {
-          const frame = panes.locator(`.mb-pane--${side} iframe`);
+          const frame = paneFrame(section, side);
           const document = `${generation}snapshots/${side}/mokly-generated/${comparisonPaths.changed}/${file}`;
           await expect(frame).toHaveAttribute(
             "data-mokly-preview-source",
@@ -75,34 +93,36 @@ for (const width of [390, 1280]) {
       ).toEqual([]);
     };
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(`/view/${comparisonPaths.changed}/?viewport=desktop`);
+    await page.goto(`/view/${comparisonPaths.changed}/`);
     await expect(
-      page.frameLocator(viewportFrame("desktop")).locator("h1"),
+      page.frameLocator(viewportFrame("mobile")).locator("h1"),
     ).toHaveText("After screen");
     expect(traffic.urls.filter((url) => url.includes("/diffs/"))).toEqual([]);
 
-    // In the compact layout the comparison band stands in the panel's sheet.
-    for (const [mode, label] of [
-      ["side", "Side by side"],
-      ["overlay", "Overlay"],
-      ["difference", "Difference"],
-    ] as const) {
-      const button = page.getByRole("button", { name: label, exact: true });
-      await revealInPanel(page, button);
-      await button.click();
-      await expectSelection("desktop", "light", mode);
+    // The Frames filter shows the Desktop · Light frame alone. In the
+    // compact layout the comparison band stands in the panel's sheet.
+    await setFrames(page, {
+      desktop: true,
+      mobile: false,
+      light: true,
+      dark: false,
+    });
+    for (const label of ["Side by side", "Overlay", "Difference"] as const) {
+      await chooseMode(page, label);
+      await expectSelection("desktop", "light", COMPARE_MODES[label]);
     }
     for (const viewport of ["mobile", "both", "desktop"] as const) {
       await chooseViewport(page, viewport);
       await expectSelection(viewport, "light", "difference");
     }
-    await chooseScheme(page, "dark");
+    await setFrames(page, { dark: true, light: false });
     await expectSelection("desktop", "dark", "difference");
     await chooseViewport(page, "both");
     await expectSelection("both", "dark", "difference");
     // Refresh presents the same immutable generation again, so each shown
     // document is read a second time.
-    await page.getByRole("button", { name: "Refresh comparison" }).click();
+    await openPanelTab(page, "Changes");
+    await refreshButton(page).click();
     await expectSelection("both", "dark", "difference", 2);
     for (const address of new Set(
       traffic.urls.filter((url) => url.includes("/diffs/generations/")),
