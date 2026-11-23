@@ -77,7 +77,7 @@ the variant of that frame, under the
 
 The tags on a frame keep their size at every zoom: the selection's name tag,
 its size tag and its padding redline with the value, and the
-[highlight labels](./mokly-component-workspace-design.md#view-controls) of
+[highlight labels](./mokly-component-workspace-design.md#frames-filter-and-highlighting) of
 Highlight components. While the canvas draws its frames at less than 60% of
 their size, it hides these tags, and a zoom to 60% or more shows them again.
 The outlines, the handles and the highlight's cutouts stay, and Inspect's
