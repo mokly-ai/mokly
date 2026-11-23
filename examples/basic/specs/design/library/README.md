@@ -265,12 +265,15 @@ selection; `CanvasStage` draws the selected entry's section with its frames,
 panned onto a frame where the state asks, with what lies over each frame,
 such as the selection, and the compact entry bar with the frame picker,
 which a variant set shows only once a selection picks a frame, and then that
-frame alone. The compact form opens a screen on the frame that holds its
-selection, else on its Mobile frame in the scheme that the artboard renders
-in, or on the first frame that the picker lists where the picker does not
-list that one; `../canvas/parts/opening_frame.ts` decides it for every
-Canvas stage. While a stage draws its frames at less than 60% of their
-size, as the compact form draws a desktop frame, the frames draw no
+frame alone. The picker lists a screen's Mobile frames before its Desktop
+frames, Light before Dark, as the shell's picker does. The compact form
+opens a screen on the frame that holds its selection, else on its Mobile
+frame in the scheme that the artboard renders in, or on the first frame
+that the picker lists where the picker does not list that one;
+`../canvas/parts/picked_frames.ts` decides it for every Canvas stage. While
+a stage draws its
+frames at less than 60% of their size, as the compact form draws a desktop
+frame, the frames draw no
 highlight labels and no selection tags. Each frame stands in a slot that
 draws no box. The Frames
 filter hides the slot, so a frame that it turns off stays hidden whatever

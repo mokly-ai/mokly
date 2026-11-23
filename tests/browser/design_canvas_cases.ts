@@ -16,14 +16,30 @@ const framesToggle = (page: Page, frames: string) =>
 /**
  * The Canvas artboards' native controls and measurements: the Frames filter
  * hides the frames that it turns off, also the frame that the compact frame
- * picker shows, and keeps one row per scheme; a Dark phone opens a screen on
- * Mobile · Dark; a frame below 60% draws no highlight labels; a selection's
- * box model and padding redline follow the selected element's own box.
+ * picker shows, and keeps one row per scheme; the frame picker lists a
+ * screen's Mobile frames first; a Dark phone opens a screen on Mobile ·
+ * Dark; a frame below 60% draws no highlight labels; a selection's box
+ * model and padding redline follow the selected element's own box.
  */
 export function registerCanvasCases(
   test: typeof baseTest,
   design: DesignDocument,
 ) {
+  test("mobile: the frame picker lists a screen's Mobile frames first, Light before Dark", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(design("design/canvas/overview", "mobile"));
+    await expect(
+      page.getByRole("combobox", { name: "Frame" }).locator("option"),
+    ).toHaveText([
+      "Mobile · Light",
+      "Mobile · Dark",
+      "Desktop · Light",
+      "Desktop · Dark",
+    ]);
+  });
+
   test("mobile dark: a phone opens a screen on Mobile · Dark, or on its selection's frame or the first frame that the Frames filter shows", async ({
     page,
   }) => {

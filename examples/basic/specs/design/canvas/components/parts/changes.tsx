@@ -19,7 +19,7 @@ import type {
 import type { CanvasDestination } from "../../parts/destinations.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { InspectSection } from "../../parts/inspect.js";
-import { useOpeningFrame } from "../../parts/opening_frame.js";
+import { useOpeningFrame } from "../../parts/picked_frames.js";
 import { actionSetFrames } from "../../parts/set_sketches.js";
 
 import { BRANCH_CHANGES } from "./branch.js";
