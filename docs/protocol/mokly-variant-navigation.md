@@ -37,9 +37,10 @@ On the component page, Inspect's
 sibling variant entries. There is no variant query parameter. If a comparison
 mode is selected, navigation to a sibling keeps that mode and applies it to the
 sibling's eligible views. The workspace reads this single comparison-mode
-state: Props stay read-only and highlighting stays unavailable until the mode
-returns to Current. Late results for an earlier sibling cannot replace the
-selected entry.
+state: Props stay read-only and highlighting stays unavailable only while the
+Changes tab shows a compare mode; Inspect shows the current frames, where
+Props edits and highlighting works. Late results for an earlier sibling cannot
+replace the selected entry.
 
 ## Changes Rows
 

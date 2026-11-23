@@ -94,19 +94,18 @@ function DefaultSideBySide({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /**
- * Default on Inspect while Overlay stays on the frames: its Light frame is
- * selected, and on a phone its frame of the appearance's scheme, Props shows
- * its saved props read-only with Switch to Current, and Highlight components
- * waits for Current. On a phone, the selected frame with the Inspect sheet
- * open at Props.
+ * Default on Inspect while Overlay stays chosen in the Changes tab: the
+ * canvas shows the current frames, with no compare, its Light frame is
+ * selected, and on a phone its frame of the appearance's scheme, and Props
+ * edits Default from its saved props. On a phone, the selected frame with
+ * the Inspect sheet open at Props.
  */
-function ComparingProps({ viewport }: { viewport: ArtboardViewport }) {
-  const frames = actionCompareFrames("overlay");
+function OverlayInspect({ viewport }: { viewport: ArtboardViewport }) {
+  const frames = actionSetFrames();
   const frame = useChosenFrame(frames, "default", viewport);
   return (
     <VariantSetArtboard
       catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
-      compare="overlay"
       design={E.explorerCompareProps}
       entry={CHANGED_DEFAULT}
       fit={SET_FITS.action}
@@ -115,7 +114,7 @@ function ComparingProps({ viewport }: { viewport: ArtboardViewport }) {
         <DefaultInspect
           design={E.explorerCompareProps}
           frame={frame}
-          state="comparison"
+          state="props"
         />
       }
       selection={{ frame }}
@@ -157,14 +156,14 @@ export const canvasExplorerCompareScreen = defineScreen({
       ),
       explorerState(
         "props",
-        "Read-only props",
-        "Inspect while Overlay stays on: Default's Light frame is selected, and on a phone its frame of the appearance's scheme, Props shows its saved props with Switch to Current, and Highlight components says why it waits. On a phone, the Inspect sheet is open at Props.",
-        (viewport) => <ComparingProps viewport={viewport} />,
+        "Inspect during Overlay",
+        "Inspect while Overlay stays chosen in Changes: the canvas shows the current frames, Default's Light frame is selected, and on a phone its frame of the appearance's scheme, and Props edits Default from its saved props. Highlight components reads as in Current. On a phone, the Inspect sheet is open at Props.",
+        (viewport) => <OverlayInspect viewport={viewport} />,
       ),
     ],
   ),
   slug: "compare",
   rationale:
-    "On the Action branch the Action's render changed, so the Action and its three saved variants each changed. Every frame of the set, the own example's included, compares its own view, and both versions share the frame's size. The compare mode stays while Inspect is shown, so Props stays read-only until Current.",
+    "On the Action branch the Action's render changed, so the Action and its three saved variants each changed. Every frame of the set, the own example's included, compares its own view, and both versions share the frame's size. A compare mode shows only on the Changes tab, so Inspect keeps the current frames, where Props edits and Highlight components works while Overlay stays chosen. Showing Overlay again discards the edit, because a comparison compares the saved props.",
   title: "Compare a component",
 });

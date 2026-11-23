@@ -21,7 +21,7 @@ screens, and their saved variants stay under them in authored order.
 | `design/canvas/components/compare/current`          | Component explorer (variant) | Default's Changes tab in Current                                   | Changes           |
 | `design/canvas/components/compare/side-by-side`     | Component explorer (variant) | Default · Light's two versions side by side, a chip for each frame | None              |
 | `design/canvas/components/compare/difference`       | Component explorer (variant) | Difference on every frame of the set                               | None              |
-| `design/canvas/components/compare/props`            | Component explorer (variant) | Inspect while Overlay stays on: the saved props read-only          | Inspect           |
+| `design/canvas/components/compare/props`            | Component explorer (variant) | Inspect while Overlay stays chosen: current frames, editable Props | Inspect           |
 | `design/canvas/components/usage`                    | Component explorer           | Default in Current: Used by and the affected screens               | Inspect, expanded |
 | `design/canvas/components/usage/loading`            | Component explorer (variant) | The parent's detail loads: the stage, Props and Usage wait         | Inspect           |
 | `design/canvas/components/usage/failed`             | Component explorer (variant) | The parent's detail failed: the stage, Props and Usage say so      | Inspect           |
