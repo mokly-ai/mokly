@@ -16,7 +16,11 @@ import type {
 } from "@mokly/model";
 
 import { detailKey } from "../src/catalogue/detail_fences.js";
-import { workspaceFrames } from "../src/shell/canvas_frames.js";
+import {
+  EVERY_FRAME,
+  workspaceFrames,
+  type CanvasShown,
+} from "../src/shell/canvas_frames.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { comparisonFrames } from "../src/shell/comparison_eligible_frames.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
@@ -132,7 +136,12 @@ function shown(
   const entry = catalogue.byPath.get(path);
   assert.ok(entry?.kind === "screen" || entry?.kind === "component");
   const data = publicWorkspace(catalogue, model, entry, true, undefined, "");
-  return comparisonFrames(data, model.details, workspaceFrames(data, viewport));
+  // The Frames filter shows every frame, or the Desktop column alone.
+  const filter: CanvasShown =
+    viewport === "both"
+      ? EVERY_FRAME
+      : { schemes: EVERY_FRAME.schemes, viewports: ["desktop"] };
+  return comparisonFrames(data, model.details, workspaceFrames(data, filter));
 }
 
 test("a variant set compares its Changed rows and the rows that changed components affect, and keeps the others current", () => {
