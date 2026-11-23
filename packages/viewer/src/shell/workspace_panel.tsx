@@ -167,7 +167,9 @@ export function WorkspacePanel({ input }: { input: WorkspacePanelInput }) {
               ),
               count: propsFieldCount(input.target),
             },
-            removed: data.removed === true,
+            // A removed variant of a set keeps its saved props and its own
+            // lists; a removed screen's previous version has neither.
+            removed: data.removed === true && !component,
             reveal: input.reveal,
             selection: input.selection,
             usage: {

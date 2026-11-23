@@ -88,10 +88,16 @@ export function useCanvasSelection({
   /** Every frame of the canvas, the hidden ones included. */
   plans: readonly CanvasFramePlan[];
   /**
-   * The routed entry, whether it is a saved variant of a set, and the scheme
-   * of the frame that a routed variant selects.
+   * The routed entry, whether it is a saved variant of a set, the scheme of
+   * the frame that a routed variant selects, and whether the compact layout
+   * shows one frame.
    */
-  routed: { path: string; savedVariant: boolean; scheme: "dark" | "light" };
+  routed: {
+    compact: boolean;
+    path: string;
+    savedVariant: boolean;
+    scheme: "dark" | "light";
+  };
   /** Whether a click on a frame selects, as it does in Inspect. */
   selecting: boolean;
   /** Whether the canvas holds a variant set. */
@@ -171,15 +177,22 @@ export function useCanvasSelection({
   }, [registry]);
 
   // Escape clears the selection, unless a text field or another part of
-  // the shell took it.
+  // the shell took it: Highlight components and a host pick end first. It
+  // acts on the whole document of a standalone shell and only on an
+  // embedded root, so the host page keeps its own keys.
   const root = useShellRoot()?.elements.root;
+  const embedded = store.context.embedded ?? false;
   useEffect(() => {
     const element = root?.current;
     if (!element) return;
-    const escape = (event: KeyboardEvent) => {
+    const target: EventTarget = embedded ? element : element.ownerDocument;
+    const escape = (event: Event) => {
+      const active = registry?.inspection.getSnapshot().active?.kind;
       if (
-        event.key !== "Escape" ||
+        (event as KeyboardEvent).key !== "Escape" ||
         event.defaultPrevented ||
+        active === "workspace" ||
+        active === "pick" ||
         inTextField(event.target) ||
         !latest.current.selecting ||
         !latest.current.state.selected
@@ -187,9 +200,9 @@ export function useCanvasSelection({
         return;
       dispatch({ type: "clear" });
     };
-    element.addEventListener("keydown", escape);
-    return () => element.removeEventListener("keydown", escape);
-  }, [root]);
+    target.addEventListener("keydown", escape);
+    return () => target.removeEventListener("keydown", escape);
+  }, [embedded, registry, root]);
 
   return useMemo(
     () => ({

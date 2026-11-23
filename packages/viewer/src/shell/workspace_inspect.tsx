@@ -4,7 +4,8 @@
  * without a Changes tab, the rationale, Variants, Frames, Selection, and the
  * folded Props, Usage and Components; a composed component names the last
  * Nested components, and a leaf has none. A removed screen's previous
- * version has no current bindings, props or usage, so it ends after Frames.
+ * version has no current bindings, props or usage, so it ends after Frames;
+ * a removed variant of a set keeps its saved props and its own lists.
  * A request to show the selection scrolls Inspect to its Selection section.
  */
 

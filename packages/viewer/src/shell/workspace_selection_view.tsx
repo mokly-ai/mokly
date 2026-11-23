@@ -176,11 +176,15 @@ export function useWorkspaceSelection({
     },
     set: {
       chosen: plan?.variantPath,
+      // A row's Light frame on the wide canvas; in the compact layout, the
+      // frame of the selection's scheme, which names the picked frame.
       choose: (path: string) => {
-        const light = frames.find(
-          (frame) => frame.variantPath === path && frame.scheme === "light",
-        );
-        if (light) chooseFrame(light);
+        const scheme = wide ? "light" : store.state.selection.colorScheme;
+        const row = frames.filter((frame) => frame.variantPath === path);
+        const frame =
+          row.find((candidate) => candidate.scheme === scheme) ??
+          row.find((candidate) => candidate.scheme === "light");
+        if (frame) chooseFrame(frame);
       },
     },
     shown: useMemo(

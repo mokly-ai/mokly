@@ -235,7 +235,9 @@ export function ComponentWorkspace({
             reveal: picked.reveal,
             routed: entry,
             selection: views.details,
-            set: set ? views.set : undefined,
+            set: set
+              ? { ...views.set, chosen: chosenRow?.value.path }
+              : undefined,
             settled: comparisonEligibilityKnown(
               catalogue.publicModel.changesStatus,
               workspace.detailDelivery,
