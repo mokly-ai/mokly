@@ -4,8 +4,9 @@
  * wide layout a screen's viewport choice keeps one column. In the compact
  * layout the canvas shows the picked frame alone, and the picker sets the
  * selection's viewport and scheme, or opens the saved variant of the picked
- * row of a variant set. The frames carry no edit's views: the shown frames
- * name the edit's contexts, and the workspace adds their renders.
+ * row of a variant set in the picked scheme, as one selection change. The
+ * frames carry no edit's views: the shown frames name the edit's contexts,
+ * and the workspace adds their renders.
  */
 
 import { useMemo } from "react";
@@ -13,7 +14,6 @@ import { useMemo } from "react";
 import type { EntryBarPicker } from "@mokly/ui/entry-bar";
 
 import { isComponentVariant } from "../catalogue/variants.js";
-import { viewHref } from "../navigation/routes.js";
 
 import {
   compactFrames,
@@ -37,7 +37,8 @@ export interface WorkspaceCanvasFrames {
 
 /**
  * Pick a frame: a screen frame names the selection's viewport and scheme,
- * and a variant set's frame names the scheme and opens its row's entry.
+ * and a variant set's frame names the scheme and opens its row's entry. Each
+ * pick is one selection change, so a controlled host hears one proposal.
  */
 function pick(
   store: ShellStore,
@@ -51,9 +52,9 @@ function pick(
     store.select({ colorScheme: frame.scheme, viewport: frame.viewport });
     return;
   }
-  store.select({ colorScheme: frame.scheme });
   if (frame.variantPath && frame.variantPath !== routedPath)
-    store.navigateFrame(viewHref(frame.variantPath));
+    store.openEntry(frame.variantPath, { colorScheme: frame.scheme });
+  else store.select({ colorScheme: frame.scheme });
 }
 
 export function useWorkspaceCanvas(data: WorkspaceData): WorkspaceCanvasFrames {

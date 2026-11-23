@@ -3,6 +3,7 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import type { ViewerSelection } from "../host/types.js";
+import { viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
@@ -78,6 +79,15 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       copyText(text);
       if (announcement)
         input.setState((current) => ({ ...current, announcement }));
+    },
+    openEntry(path, axes) {
+      // A host's selection names the entry and the axes in one proposal.
+      if (input.embedded) {
+        input.propose({ ...axes, screenPath: path });
+        return;
+      }
+      updateSelection(axes);
+      input.navigation.navigateFrame(viewHref(path));
     },
     persistNavigationWidth(value = input.stateRef.current.navigationWidth) {
       if (value === undefined || input.embedded) return;

@@ -417,7 +417,9 @@ and scheme, with Both read as Mobile, or a routed saved variant's frame in
 the selection's scheme, while a component's own route shows its whole set.
 The entry bar's frame picker lists the shown frames of the model, a screen's
 Mobile frames first, and a pick sets the selection's viewport and scheme or
-opens the picked row's entry. The other frames stay mounted out of the
+opens the picked row's entry in its scheme through the store's `openEntry`,
+as one selection change, so a controlled host hears one proposal. The other
+frames stay mounted out of the
 section, and the picked screen frame's label leads with the entry's slug. A
 live edit renders the view of each shown frame of the edited screen or
 row (`canvasEditContexts`), one context for each viewport and scheme: every

@@ -22,6 +22,15 @@ export interface ShellStore {
   collapseAll(): void;
   copy(text: string, announcement?: string): void;
   navigateFrame(href: string, navigation?: FrameNavigation): void;
+  /**
+   * Open another entry with the viewport and scheme that it shows, such as
+   * the picked row of a variant set, as one selection change: an embedded
+   * root proposes the entry and the axes together.
+   */
+  openEntry(
+    path: string,
+    axes: Partial<Pick<ViewerSelection, "colorScheme" | "viewport">>,
+  ): void;
   openFrame(href: string, target: string): void;
   persistNavigationWidth(value?: number): void;
   /** Forget the chosen catalogue width, so the starting width applies. */
