@@ -93,7 +93,7 @@
   - By line 23 of that page, memory use stays bounded independently of
     repository size. By line 187 to line 189, each early render ends before its
     classification ends.
-  - By `docs/protocol/mokly-comparison-serving.md:39` to line 44, the base
+  - By `docs/protocol/mokly-comparison-serving.md:41` to line 46, the base
     capture has its own 256 MiB bound beside the render cache. By line 133 to
     line 137, the capture window takes the smaller of the worker count and the
     sidecar capacity. The decision at line 143 to line 145 rejected a larger
@@ -240,7 +240,7 @@
   - A pin only near the capture cursor, with no admission. Results that complete
     far ahead are the evicted ones, so it fails the goal.
   - A capture out of route order. It can change which views a full capture bound
-    keeps, and the window at `docs/protocol/mokly-comparison-serving.md:133`
+    keeps, and the window at `docs/protocol/mokly-comparison-serving.md:135`
     uses route order.
   - Early renders inside the capture window. The decision at
     `docs/protocol/mokly-base-preparation.md:79` and line 80 rejected it,
@@ -248,7 +248,7 @@
   - Change nothing. It keeps the re-reads that the user deferred to this item.
 - **Assumptions:** All options share these, unless a line says otherwise.
   - Output stays equal, and a compact restore stays a correct fallback. Source:
-    `docs/protocol/mokly-comparison-serving.md:151` and `cache.md:69`.
+    `docs/protocol/mokly-comparison-serving.md:153` and `cache.md:69`.
   - Early renders start at once, and between one and the sidecar capacity run.
     The capture takes each result at the view's turn. Source:
     `docs/protocol/mokly-base-preparation.md:72` to line 78.
@@ -264,7 +264,7 @@
     4 on `main`. Measure the busy time of each pool thread, and the waits for
     running early renders. Repeat cold pairs, because the pairs differ in sign.
   - A wider window for jobs that need no sidecar changes the decision at
-    `docs/protocol/mokly-comparison-serving.md:143`, so it needs a user decision.
+    `docs/protocol/mokly-comparison-serving.md:145`, so it needs a user decision.
 - **Wider fix:** D. It removes the class by structure, because the handoff no
   longer depends on an entry that the cache can evict. A also bounds the lead
   for every early-render window, but other cache pressure can still evict.

@@ -153,6 +153,10 @@
   priority. This item counts write activity leases, which claim no slot and
   change no admission. Each item keeps its own decision, and neither fix
   replaces the other.
+  `plans/follow-ups/serve-file-delivery-shutdown.md` changes the same file
+  jobs: its option B runs `Workers::file_delivery` and
+  `Workers::asset_delivery` through one delivery job that owns the shutdown
+  signal. Design the two owners together. Neither fix replaces the other.
 - **Recommendation:** A. It uses the existing controller at each complete
   owner, keeps every output and scheduling rule, and adds no counter, gate,
   or lint.

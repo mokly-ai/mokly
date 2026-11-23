@@ -90,4 +90,10 @@ pub enum InternalError {
         /// Original failure.
         source: tokio::task::JoinError,
     },
+    /// An entity tag could not be encoded as an HTTP header.
+    #[error("entity tag is not a valid HTTP header: {source}")]
+    EntityTag {
+        /// Original header conversion failure.
+        source: axum::http::header::InvalidHeaderValue,
+    },
 }

@@ -94,6 +94,11 @@
   - [stylesheet-cache-across-restarts.md](./stylesheet-cache-across-restarts.md):
     the broader parked store. This item gives it the admission guard, and it
     gives this item the stored layout. Both wait for the user.
+  - [rebuild-rehashes-unchanged-resources.md](./rebuild-rehashes-unchanged-resources.md):
+    its fix makes the versioned stylesheet artifact of the graph the common
+    source of the stylesheet bytes and digest for Serve, build, and comparison
+    reads, and it can reach `crates/mokly-render/src/stylesheet_store.rs`,
+    which this item also changes. Design the two changes together.
 - **Recommendation:** B, when the user wants the restart gain of catalogues
   without PostCSS. It is the only option that admits a record on proof, and
   its gain is bounded by the measured CSS union.
