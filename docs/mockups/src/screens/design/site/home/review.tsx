@@ -5,6 +5,7 @@
  * redline and Maya's pin; the comment thread spills out of the frame onto
  * the canvas. On a phone the copy leads and the thread follows the frame.
  */
+// status: "ahead" (comments, approvals)
 
 import { AcmePricingDesktop, AcmePricingPhone } from "./acme/acme-pricing.js";
 import { Artboard } from "./artboard.js";

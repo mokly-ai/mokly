@@ -2,7 +2,9 @@
    where the dark code panel is wired to the rendered pricing artboard, the
    terminal under the source, and the four facts. The code panel keeps its
    shared colours; the terminal's text mixes the signal into the panel's
-   own text, which keeps it above 4.5:1. */
+   own text, which keeps it above 4.5:1. The copy and the facts are set in
+   rem, so they grow with the reader's text size; the terminal is a
+   depiction and keeps its drawn size. */
 
 .site-closing {
   margin-top: 144px;
@@ -26,7 +28,7 @@
 
 .site-closing-panel p {
   color: var(--mk-color-text-secondary);
-  font-size: 16.5px;
+  font-size: 1.03125rem;
   letter-spacing: -0.004em;
   line-height: 1.6;
 }
@@ -121,7 +123,8 @@
   stroke-width: 1.75;
 }
 
-/* The facts of the open-source CLI */
+/* The facts of the open-source CLI. A fact that its row cannot hold at a
+   large text size wraps, and its pill grows taller. */
 
 .site-closing .site-home-facts {
   display: flex;
@@ -141,10 +144,10 @@
     var(--mk-shadow-small);
   color: var(--mk-color-text-secondary);
   display: inline-flex;
-  font-size: 14px;
+  font-size: 0.875rem;
   gap: 8px;
-  height: 38px;
-  padding: 0 15px 0 13px;
+  min-height: 38px;
+  padding: 6px 15px 6px 13px;
 }
 
 .site-home-facts svg {
@@ -154,7 +157,7 @@
 .site-home-facts li:first-child {
   color: var(--mk-color-text);
   font-family: var(--mk-font-mono);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* The wire that fits each width below 1440px: a 400px box at the source

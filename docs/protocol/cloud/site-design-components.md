@@ -44,9 +44,11 @@ they are hidden from assistive technology and take no focus.
 
 ## Buttons
 
-A button is 48px tall, with a 10px radius and 15.5px type at weight 560. The
-header's Get started is smaller, as the header says. On hover a button lifts
-by 1px and its shadow deepens.
+A button is 48px tall, with a 10px radius and 15.5px type at weight 560.
+Where its column cannot hold its label, the label wraps, centred, and the
+button grows taller. The header's Get started is smaller, as the header
+says, and keeps its label on one line. On hover a button lifts by 1px and its
+shadow deepens.
 
 - Filled: `signalFill` with an `onSignalFill` label in both schemes. The
   filled kind marks a page's primary actions: Get started, in the header and
@@ -76,7 +78,9 @@ tall on desktop and 60px on mobile.
   The navigation and Get started stay in the row down to the mobile
   composition.
 - Mobile: the brand, **Get started →** at 44px and the menu control, a 44px
-  square with the menu glyph.
+  square with the menu glyph, in one row. Get started and the menu control
+  keep their width. Where the row cannot hold the wordmark too, at the
+  reader's text size, the brand shows the mark alone in a 44px square.
 
 ## Menu
 
@@ -98,8 +102,9 @@ frame at most 1240px wide, 120px below the page content and inside the page
 gutter. It pairs the brand column with the two link groups. The brand column
 holds the brand, the open-source line in 15px `textSecondary` and the scheme
 control. Group headings are uppercase `mono` 12px in `textMuted`. Links are
-15px `text` with 44px targets. Hover turns a link `signalDeep` with an
-underline, and the current page's link is `signalDeep`. On mobile the frame
+15px `text` with 44px targets, and a link breaks a word that its column
+cannot hold. Hover turns a link `signalDeep` with an underline, and the
+current page's link is `signalDeep`. On mobile the frame
 stacks the brand column above the two groups, 96px below the content.
 
 The design file's status bar runs on the canvas under the frame: the file
@@ -142,10 +147,15 @@ page.
 - The 44px tab bar holds the open tab, which names the file or the language
   in `mono` 12px with a `signal` icon, an optional path, the language, and
   **Copy**: a 44px control with an icon and a visible label.
+- Where the bar cannot hold a file's name, as in a 320px window, the name
+  shrinks and ends in an ellipsis, and the language and Copy stay whole. The
+  tab's text keeps the whole name. This is decision 30, option B: hiding the
+  language on mobile was rejected, because the language stays readable.
 - The code is `mono` 13.5px, 12.5px on mobile, on a 1.78 line height. A long
   line wraps with a hanging indent, so the page never scrolls sideways.
 - The panel draws line numbers and the `$` prompt of a shell line itself, so
-  that the code's text stays exactly what Copy copies.
+  that the code's text stays exactly what Copy copies. A two-digit line
+  number keeps one line at any text size.
 - A lit line takes a `signal` tint. A dimmed line takes the panel's muted
   text at full opacity.
 - Every text colour of the panel keeps 4.5:1 against its fill in both

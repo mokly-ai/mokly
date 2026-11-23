@@ -53,6 +53,14 @@
   justify-content: flex-end;
 }
 
+/* The brand's column is a query container in the mobile composition, so
+   the brand can drop its wordmark when the bar cannot hold it */
+
+.site-header-start {
+  container-name: site-header-start;
+  container-type: normal;
+}
+
 /* The brand: the mark and the Geist wordmark with its green period */
 
 .site-brand {
@@ -196,6 +204,7 @@
   margin-left: 6px;
   min-height: 36px;
   padding: 0 14px;
+  white-space: nowrap;
 }
 
 /* The desktop steps: the tool bar sheds chrome as the window narrows, in
@@ -233,13 +242,19 @@
   }
 }
 
-/* The mobile composition: the brand, Get started and the menu control */
+/* The mobile composition: the brand, Get started and the menu control in
+   one row. Get started and the menu control keep their width, and the
+   brand's column takes the rest. */
 
 [data-site-viewport="mobile"] .site-header {
   gap: var(--mk-space-2);
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   min-height: 60px;
   padding: 0 8px 0 6px;
+}
+
+[data-site-viewport="mobile"] .site-header-start {
+  container-type: inline-size;
 }
 
 [data-site-viewport="mobile"] .site-header-title,
@@ -257,4 +272,21 @@
 
 [data-site-viewport="mobile"] .site-header-cta {
   min-height: var(--mk-layout-control-min);
+}
+
+/* Where the brand's column cannot hold the mark and the wordmark at the
+   reader's text size, the brand keeps the mark alone in a 44px square, and
+   its name stays "Mokly home". The full brand is 54px of mark, padding and
+   gap and the 3.8rem wordmark, so the rule follows the space at any text
+   size. The site declares the same rule, and design-site-containers.test.ts
+   compares the two. */
+
+@container site-header-start (width < calc(54px + 3.8rem)) {
+  .site-brand {
+    padding: 0 7px;
+  }
+
+  .site-brand-word {
+    display: none;
+  }
 }

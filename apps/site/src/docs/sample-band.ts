@@ -77,7 +77,11 @@ function numberedPre(pre: Element, sample: RenderedSample): Element {
   return { ...body, children: [{ ...code, children }] };
 }
 
-/** The numbered code panel, whose open tab names the file in its folder. */
+/**
+ * The numbered code panel, whose open tab names the file in its folder. The
+ * file's name sits in a part of its own, which shrinks and ends in an
+ * ellipsis where the bar cannot hold it, and keeps the whole name as text.
+ */
 function codePanel(
   pre: Element,
   file: string,
@@ -91,7 +95,14 @@ function codePanel(
       element(
         "span",
         ["site-code-tab", "site-code-tab--open"],
-        [tabIcon(name), text(path.posix.basename(file))],
+        [
+          tabIcon(name),
+          element(
+            "span",
+            ["site-code-tab-name"],
+            [text(path.posix.basename(file))],
+          ),
+        ],
       ),
       element("span", ["site-code-meta"], [text(path.posix.dirname(file))]),
       element(

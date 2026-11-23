@@ -97,7 +97,8 @@ package's generated copy of a guide, which Git ignores.
   The Layers control names the section and the page.
 - The Layers control opens the tree sheet: a modal dialog named Layers that
   drops in under the sub-bar over a scrim. It holds the version row, every
-  section with its 44px rows, and the Changelog row in its foot. The control,
+  section with its 44px rows, and the Changelog row in its foot. A page name
+  that its row cannot hold wraps, and the row grows taller. The control,
   Escape, the scrim and a link close it.
 
 ## Tree Scroll
@@ -135,6 +136,9 @@ Code blocks render in the
 
 The search control of the Layers panel, or of the sub-bar below 1024px, opens
 a modal search dialog. `⌘K` or `Ctrl K`, and `/`, open it on every docs page.
+Close, Escape and a press on the dimmed page close it, and a press inside the
+dialog keeps it open. Decision 27 rejected closing search only on Close and
+Escape, because the menu and the tree sheet also close on that press.
 Search sits in the Layers panel, as the design draws it, not in the site
 header. Search covers every docs page and no marketing or legal page. Only
 the document body is indexed, so the panels, the location trail and the pager
@@ -161,6 +165,8 @@ hairlines.
   full size: 390 × 844 for Mobile and 1280 × 800 for Desktop. The view keeps
   the browser's default style, light in both site schemes, because the
   sample has no stylesheet. The band opens on Mobile in the default state.
+  The view is a Tab stop, and while it has focus its screen shows the focus
+  glow.
 - Lines: a line that renders nothing in the chosen view is dimmed. Pointing
   at a line or an element, or tapping it, lights the line and the element.
   Where the band sets the frame beside the code, a `signal` wire joins the

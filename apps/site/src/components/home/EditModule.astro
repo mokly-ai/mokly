@@ -20,6 +20,7 @@
  * canvas and the artboard's part of the demo are in
  * `src/styles/home-edit.css`.
  */
+// status: "ahead" (agent sessions, Claude)
 import Cursor from "../Cursor.astro";
 import Icon from "../Icon.astro";
 import Presence from "../Presence.astro";
@@ -53,6 +54,7 @@ import "../../styles/home-edit.css";
           <span class="site-home-edit-tool">
             <Icon name="move" />
           </span>
+          {/* status: "ahead" (comments) */}
           <span class="site-home-edit-tool">
             <Icon name="comment" />
           </span>
@@ -60,6 +62,7 @@ import "../../styles/home-edit.css";
             <Icon name="agent" />
           </span>
         </span>
+        {/* status: "ahead" (presence, Claude) */}
         <Presence class="site-home-viewer-people" people={["sam", "claude"]} />
         <span class="site-home-edit-live">
           <span class="site-home-live-dot"></span>
@@ -100,6 +103,7 @@ import "../../styles/home-edit.css";
                 <CardSelection claude padding="24" tall />
               </span>
             </Artboard>
+            {/* status: "ahead" (presence, Claude) */}
             <Cursor class="site-home-edit-claude" person="claude" />
           </div>
         </div>

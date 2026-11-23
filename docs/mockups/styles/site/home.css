@@ -2,7 +2,9 @@
    Specs panel floats beside the frames column, which holds the features
    intro, the stack of feature modules and the open foundation. A module
    pairs its copy with a labelled frame on the canvas. Then the artboard
-   part that the spread and every frame place. */
+   part that the spread and every frame place. The copy is set in rem, so it
+   grows with the reader's text size; the artboard's label is a depiction
+   and keeps its drawn size. */
 
 .site-main {
   width: 100%;
@@ -43,7 +45,7 @@
 
 .site-section-head h2,
 .site-closing-copy h2 {
-  font-size: 66px;
+  font-size: 4.125rem;
   letter-spacing: -0.048em;
   line-height: 1;
 }
@@ -55,7 +57,7 @@
 
 .site-section-head p {
   color: var(--mk-color-text-secondary);
-  font-size: 21px;
+  font-size: 1.3125rem;
   letter-spacing: -0.012em;
   line-height: 1.5;
   margin-top: 26px;
@@ -81,7 +83,7 @@
 }
 
 .site-module h3 {
-  font-size: 42px;
+  font-size: 2.625rem;
   letter-spacing: -0.036em;
   line-height: 1.06;
   margin-top: 18px;
@@ -89,7 +91,7 @@
 
 .site-module-body {
   color: var(--mk-color-text-secondary);
-  font-size: 16.5px;
+  font-size: 1.03125rem;
   letter-spacing: -0.004em;
   line-height: 1.6;
   max-width: 44ch;
@@ -177,11 +179,11 @@
 
   [data-site-viewport="desktop"] .site-section-head h2,
   [data-site-viewport="desktop"] .site-closing-copy h2 {
-    font-size: clamp(38px, 4.6vw, 68px);
+    font-size: clamp(2.375rem, 4.6vw, 4.25rem);
   }
 
   [data-site-viewport="desktop"] .site-section-head p {
-    font-size: clamp(17px, 1.45vw, 21px);
+    font-size: clamp(1.0625rem, 1.45vw, 1.3125rem);
   }
 
   [data-site-viewport="desktop"] .site-module-grid {
@@ -190,7 +192,7 @@
   }
 
   [data-site-viewport="desktop"] .site-module h3 {
-    font-size: clamp(28px, 2.95vw, 42px);
+    font-size: clamp(1.75rem, 2.95vw, 2.625rem);
   }
 }
 

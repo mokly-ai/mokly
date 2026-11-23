@@ -1,7 +1,7 @@
 /* The scheme control in the footer's brand column: two native radios drawn
    as segments of a canvas track. The chosen segment sits on the raised
    surface with the strong ring of a control boundary. The radio itself is
-   visually hidden, and its segment draws the focus ring. Segments are drawn
+   visually hidden, and its segment draws the focus glow. Segments are drawn
    34px tall with a 44px target band from the breakpoint up, and 44px tall
    below it.
 
@@ -60,8 +60,15 @@
 }
 
 .site-scheme-option:has(.site-scheme-input:focus-visible) {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
+.site-scheme-option:has(.site-scheme-input:checked:focus-visible) {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    0 0 0 1px var(--mk-color-border-strong),
+    var(--mk-shadow-small);
 }
 
 .site-scheme-input {
@@ -106,8 +113,9 @@
 /* Forced colors drop the raised fill and the ring, and the radio stays
    hidden, so the chosen segment takes the system highlight. It keeps these
    system colours itself, or the browser draws a backplate in the page's
-   colour behind its label, which hides the label. Its focus ring takes the
-   system text colour. */
+   colour behind its label, which hides the label. Forced colours also drop
+   the focus glow, so the focused segment takes an outline in the system
+   text colour, which stays apart from the highlight. */
 
 @media (forced-colors: active) {
   .site-scheme-option:has(.site-scheme-input:checked) {
@@ -117,7 +125,9 @@
     forced-color-adjust: none;
   }
 
-  .site-scheme-option:has(.site-scheme-input:focus-visible) {
-    outline-color: CanvasText;
+  .site-scheme-option:has(.site-scheme-input:focus-visible),
+  .site-scheme-option:has(.site-scheme-input:checked:focus-visible) {
+    box-shadow: none;
+    outline: 2px solid CanvasText;
   }
 }

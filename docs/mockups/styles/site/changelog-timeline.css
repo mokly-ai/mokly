@@ -275,9 +275,12 @@
   color: var(--mk-color-on-signal-fill);
 }
 
+/* The radio is hidden, so its option draws the focus glow outside the
+   signal fill, on the bar's surface */
+
 .site-changelog-filter-option:has(.site-changelog-filter-input:focus-visible) {
-  outline: 2px solid var(--mk-color-focus);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
 }
 
 /* The status, set off from the options by a divider */

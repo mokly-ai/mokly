@@ -17,6 +17,14 @@
   padding-bottom: var(--mk-space-8);
 }
 
+/* A word that is wider than the column, such as a one-word title or a
+   published path at 200% text on a 320px window, breaks rather than
+   widening the document, as the site's document rules break it */
+
+.site-document-intro > * {
+  overflow-wrap: anywhere;
+}
+
 .site-document-intro h1 {
   font-size: 3.5rem;
   font-weight: var(--mk-font-semibold);
@@ -33,6 +41,7 @@
   display: grid;
   gap: var(--mk-space-4);
   justify-items: start;
+  overflow-wrap: anywhere;
   scroll-margin-top: var(--mk-space-6);
 }
 
@@ -89,7 +98,11 @@
   min-width: 0;
 }
 
+/* A body link takes a 6px radius, which draws nothing at rest, so its
+   focus glow is rounded */
+
 .site-document-body a {
+  border-radius: 6px;
   color: var(--mk-color-signal-deep);
   font-weight: var(--mk-font-medium);
   text-decoration: underline;

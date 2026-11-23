@@ -1,7 +1,14 @@
 import { tokens } from "@mokly-cloud/tokens/tokens";
-import { expect, test } from "@playwright/test";
+import { type Locator, type Page, expect, test } from "@playwright/test";
+
+import { openLargeText } from "./large-text.js";
 
 const PAGE = "/docs/start/your-first-screen/";
+
+/** The code panel of the guide's HTML sample. */
+function samplePanel(page: Page): Locator {
+  return page.locator(".site-code", { hasText: "welcome.screen.html" });
+}
 
 /** A `#rrggbb` token colour as the browser computes it. */
 function rgb(hex: string): string {
@@ -62,3 +69,62 @@ test("Copy sits beside the sample's language at the end of its tab bar", async (
     })
     .toBe(4);
 });
+
+/**
+ * Below about 348px the sample's tab bar cannot hold the file name, the
+ * `html` label and Copy. The name shrinks and ends in an ellipsis, clear of
+ * the label, and keeps the whole name as its text; at 390px it shows whole.
+ */
+for (const [width, cut] of [
+  [320, true],
+  [390, false],
+] as const) {
+  test(
+    `at ${width}px the sample tab's file name ${cut ? "ends in an ellipsis" : "shows whole"} before the html label`,
+    { tag: "@mobile" },
+    async ({ page }) => {
+      await page.setViewportSize({ height: 900, width });
+      await page.goto(PAGE);
+      const name = samplePanel(page).getByText("welcome.screen.html", {
+        exact: true,
+      });
+      const language = samplePanel(page).getByText("html", { exact: true });
+      await expect(name).toHaveText("welcome.screen.html");
+      const [named, label] = await Promise.all([
+        name.boundingBox(),
+        language.boundingBox(),
+      ]);
+      if (!named || !label) throw new Error("the tab or its label has no box");
+      expect(named.x + named.width).toBeLessThanOrEqual(label.x);
+      const drawn = await name.evaluate((node) => ({
+        clipped: getComputedStyle(node).overflowX === "hidden",
+        ellipsis: getComputedStyle(node).textOverflow === "ellipsis",
+        shortened: node.scrollWidth > node.clientWidth,
+      }));
+      expect(drawn).toEqual({ clipped: true, ellipsis: true, shortened: cut });
+    },
+  );
+}
+
+test(
+  "at 200% text in a 320px window each line number of the sample keeps one line",
+  { tag: "@mobile" },
+  async ({ page }) => {
+    await openLargeText(page, PAGE);
+    // A line number is drawn by the stylesheet, so the check reads its box.
+    const tall = await samplePanel(page)
+      .locator(".site-code-line")
+      .evaluateAll((lines) =>
+        lines.flatMap((line) => {
+          const number = Number.parseFloat(
+            getComputedStyle(line, "::before").height,
+          );
+          const row = Number.parseFloat(getComputedStyle(line).lineHeight);
+          return number > row + 0.5
+            ? [`${line.dataset["line"]}: ${number}`]
+            : [];
+        }),
+      );
+    expect(tall).toEqual([]);
+  },
+);

@@ -105,6 +105,11 @@
   }
 }
 
+/* A cursor is a depiction, so its name tag keeps the drawn size of its
+   arrow at any text size: 12.5px, and 10px for an agent's badge. A tag that
+   grew with the reader's text would pass the window from a cursor near the
+   right edge. */
+
 .site-cursor-tag {
   align-items: center;
   border-radius: 4px 11px 11px;
@@ -112,7 +117,7 @@
     0 0 0 1.5px var(--mk-color-surface),
     var(--mk-shadow-medium);
   display: inline-flex;
-  font-size: 0.78125rem;
+  font-size: 12.5px;
   font-weight: var(--mk-font-semibold);
   gap: 5px;
   height: 23px;
@@ -144,7 +149,7 @@
   background: color-mix(in srgb, currentColor 20%, transparent);
   border-radius: 6px;
   font-family: var(--mk-font-mono);
-  font-size: 0.625rem;
+  font-size: 10px;
   font-style: normal;
   font-weight: var(--mk-font-medium);
   letter-spacing: 0.02em;

@@ -3,14 +3,17 @@
  * docs page and binds the search controls that the page draws in the Layers
  * panel and in the sub-bar, each of which names the dialog in
  * `aria-controls`. ⌘K or Ctrl K, and `/` outside a text field, open it too,
- * and on Apple platforms the controls' key hint reads ⌘K. The dialog queries
- * the index the build wrote beside the pages, and every result links to the
- * page and, when the match is inside a section, to that heading. The index
- * is loaded on the first search, so a reader who never searches downloads
- * nothing.
+ * and on Apple platforms the controls' key hint reads ⌘K. Close, Escape and
+ * a press on the dimmed page close it. A press inside it, also on its
+ * padding, keeps it open. The dialog queries the index the build wrote
+ * beside the pages, and every result links to the page and, when the match
+ * is inside a section, to that heading. The index is loaded on the first
+ * search, so a reader who never searches downloads nothing.
  */
 
 import { useEffect, useRef, useState } from "react";
+
+import { closeOnBackdrop } from "../dialog-backdrop.js";
 
 import { CanvasIcon } from "./CanvasIcon.js";
 import { keyHint, opensSearch } from "./search-keys.js";
@@ -83,11 +86,15 @@ export default function Search() {
       if (key) key.textContent = hint;
     }
     document.addEventListener("keydown", onKey);
+    // `closedby="any"` closes the dialog on a press on the dimmed page, and
+    // `closeOnBackdrop` does where the browser does not implement it.
+    const stopBackdrop = closeOnBackdrop(element);
     return () => {
       for (const control of controls) {
         control.removeEventListener("click", open);
       }
       document.removeEventListener("keydown", onKey);
+      stopBackdrop();
     };
   }, []);
 
@@ -127,6 +134,7 @@ export default function Search() {
     <dialog
       aria-label="Search the documentation"
       className="site-search-dialog"
+      closedby="any"
       id={DIALOG}
       ref={dialog}
     >

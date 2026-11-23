@@ -82,7 +82,8 @@
   padding-top: 0;
 }
 
-/* The scope of a note as a mono chip, and its code spans */
+/* The scope of a note as a mono chip, and its code spans. The chip's line
+   height follows its text, 21px at the 12px base. */
 
 .site-release-scope {
   background: var(--mk-color-surface-muted);
@@ -93,7 +94,7 @@
   font-family: var(--mk-font-mono);
   font-size: 0.75rem;
   font-weight: var(--mk-font-medium);
-  line-height: 21px;
+  line-height: 1.75;
   margin-right: 3px;
   padding: 0 7px;
   vertical-align: 1px;
@@ -118,6 +119,7 @@
 
 .site-release-ref {
   align-items: center;
+  border-radius: 6px;
   color: var(--mk-color-text-muted);
   display: inline-flex;
   font-family: var(--mk-font-mono);
@@ -175,8 +177,12 @@
   min-width: 0;
 }
 
+/* The summary takes its box's 12px radius, so its focus glow follows the
+   box's corners */
+
 .site-release-upgrade-summary {
   align-items: center;
+  border-radius: 12px;
   display: flex;
   gap: 14px;
   min-height: 64px;

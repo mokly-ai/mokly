@@ -54,6 +54,7 @@ function StatusBar({ active }: { active: SiteScreen }) {
         <SiteIcon name="frame" size={14} />
         mokly.ai — {SITE_PAGE_NAMES[active]}
       </span>
+      {/* status: "ahead" (Claude, Codex) */}
       <span className="site-statusbar-item">
         <SitePresence small />
         {SITE_PEOPLE.length} in this file

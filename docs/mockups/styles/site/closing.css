@@ -1,6 +1,7 @@
 /* The steps that close the open foundation, drawn as a flow of frames: each
    white frame holds its number, its icon, its heading and its line, and a
-   green arrow runs from each frame to the next. */
+   green arrow runs from each frame to the next. The text is set in rem, so
+   it grows with the reader's text size. */
 
 .site-steps {
   display: grid;
@@ -53,7 +54,7 @@
 .site-step-number {
   color: var(--mk-color-signal-deep);
   font-family: var(--mk-font-mono);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .site-home-step-icon {
@@ -64,7 +65,7 @@
 }
 
 .site-step h3 {
-  font-size: 21px;
+  font-size: 1.3125rem;
   letter-spacing: -0.025em;
   line-height: 1.2;
   margin-top: 30px;
@@ -73,7 +74,7 @@
 
 .site-step p {
   color: var(--mk-color-text-secondary);
-  font-size: 15.5px;
+  font-size: 0.96875rem;
   line-height: 1.5;
   margin-top: 8px;
 }

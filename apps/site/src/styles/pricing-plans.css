@@ -41,6 +41,15 @@
   grid-column: 1;
 }
 
+/* No size tag or cursor sits under the Open source frame, so on mobile the
+   Mokly CLI box closes 24px under it. The rule names the plans, as the
+   section box rule does, so that it outweighs that rule's padding. The
+   desktop section box rule below sets the padding again. */
+
+.site-pricing-plans .site-pricing-box--cli {
+  padding-bottom: 24px;
+}
+
 .site-pricing-box--cloud {
   column-gap: 24px;
   grid-column: 3 / 6;
