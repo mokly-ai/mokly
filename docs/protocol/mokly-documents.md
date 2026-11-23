@@ -1,6 +1,6 @@
 # Markdown Documents
 
-Status: A current document's `Light only` label in its reading frame is not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds it. Follow-up work also remains in the [related documents viewer item](../../plans/follow-ups/related-docs-viewer-compatibility.md).
+Status: Follow-up work remains in the [related documents viewer item](../../plans/follow-ups/related-docs-viewer-compatibility.md).
 
 ## Discovery
 

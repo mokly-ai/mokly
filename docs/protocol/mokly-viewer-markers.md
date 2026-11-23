@@ -1,6 +1,6 @@
 # Viewer Markers And Multi-Instance Highlights
 
-Status: A cleanup error of marker content that the viewer removes or hides can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher. The refresh after a pan or a zoom of the canvas is not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds it.
+Status: A cleanup error of marker content that the viewer removes or hides can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher.
 
 ## Purpose And Boundary
 
