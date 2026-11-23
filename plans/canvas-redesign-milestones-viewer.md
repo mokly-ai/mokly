@@ -127,3 +127,10 @@ Depends on: 12
 - [ ] Add Docs and Changelog rows to the account menu and to More on phones
       (decision 22, option B). Milestone 24 changes the account menu mockup
       and the docs first.
+      `@firna/ui` menu rows take no `href`, and that package lives in another
+      repository, so the cloud draws its own link row (an anchor with the
+      `menuitem` role) inside the same list chrome. Record a follow-up item to
+      move the link row into `@firna/ui`.
+- [ ] Give `siteLinks` in `packages/app/src/config.ts` and the mockup fixture
+      `docs/mockups/src/fixtures/site.ts` the site's trailing slash: `/docs/`
+      and `/changelog/`.
