@@ -18,10 +18,10 @@ import { canvasFrameViolations } from "./viewer-measures";
 
 /**
  * The ready canvas of a branch's publication: the frames of the current
- * screen with the view that each shows, the right panel and the compact
- * layout's entry bar and dock, each control a native control or a picture of
- * itself. The chrome around every viewer screen is checked in
- * `viewer.spec.ts`.
+ * screen with the view that each shows, the right panel, the compact
+ * layout's entry bar and dock, and the package's search in the bar, each
+ * control a native control or a picture of itself. The chrome around every
+ * viewer screen is checked in `viewer.spec.ts`.
  */
 
 /**
@@ -152,6 +152,17 @@ for (const viewport of ["desktop", "mobile"] as const)
         await expect(
           page.getByRole("button", { name: publication.branch }),
         ).toBeVisible();
+        // At 390px the package's search field is its own search button, as
+        // in the app, and a wider bar shows the field in its place.
+        const search = viewer.getByRole("button", {
+          name: "Search catalogue",
+          exact: true,
+        });
+        const field = viewer.getByRole("searchbox", {
+          name: "Search catalogue",
+        });
+        await expect(search).toBeVisible({ visible: viewport === "mobile" });
+        await expect(field).toBeVisible({ visible: viewport === "desktop" });
       },
     );
 

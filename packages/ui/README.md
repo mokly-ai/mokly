@@ -131,7 +131,10 @@ stays a native switch.
 `TopBar` and `CatalogueNavigation` draw controls that act through a script.
 A static mockup gives `TopBar` a `brandHref`, which draws
 the brand as a link, and sets `interactive={false}`, which draws a brand
-without an address as a picture of itself and leaves out the compact search.
+without an address as a picture of itself. The compact search's toggle is
+then a native button without a handler, which a narrow embedded bar shows in
+place of the field, and Close search is left out, because a static search
+never opens.
 The bar draws no menu, also in a static mockup, because the dock opens the
 catalogue's sheet; its `drawerOpen`, `navigationId`, and `onDrawer` props
 stay for earlier hosts and change nothing. It gives `CatalogueNavigation` a
