@@ -40,11 +40,18 @@ function ReadingFrame({
   scheme: "dark" | "light";
 }) {
   const stage = useContext(FrameStageContext);
-  const onCanvasInput = useLiveFrameInput();
-  const frame = useDocumentFrame(entry, scheme, fragment, stage, onCanvasInput);
+  const input = useLiveFrameInput();
+  const frame = useDocumentFrame(
+    entry,
+    scheme,
+    fragment,
+    stage,
+    input.onCanvasInput,
+  );
   return (
     <CanvasFrame
       error={frame.status === "error"}
+      focusVisible={input.focusVisible}
       kind="document"
       label={label}
       retry={{ onClick: focusThen(frame.frameRef, frame.retry) }}

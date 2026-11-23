@@ -46,7 +46,9 @@ interface MountedFrameInput {
   /**
    * Receives the canvas input that the frame's document forwards, with the
    * frame element. With it, each mount asks its adapter for canvas input,
-   * and no other listener receives that input.
+   * and no other listener receives that input. When the hook disposes of or
+   * replaces the mount, the listener hears `canvas-blur`, so the frame's
+   * focus state ends with its document: disposal itself sends nothing.
    */
   onCanvasInput?: CanvasInputListener | undefined;
   onEvent?(event: FrameEvent): void;
@@ -198,7 +200,10 @@ export function useMountedShellFrame(input: MountedFrameInput): {
           registry.changed();
         }
       });
-    return () => disposeSession(registry, session, active, hostMark);
+    return () => {
+      disposeSession(registry, session, active, hostMark);
+      if (canvasInput) latestCanvas.current?.({ type: "canvas-blur" }, element);
+    };
   }, [
     hostMark,
     input.adapter,

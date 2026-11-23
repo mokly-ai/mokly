@@ -399,7 +399,10 @@ frame, mounts with the adapter's canvas input: the mount hook's
 `canvas_input.ts` maps a point of the frame's viewport to the page through
 the frame's box and scale: ⌘ or Ctrl with the wheel and a pinch zoom the
 canvas about that point with the handle's `zoomAt`, and a canvas key runs
-its command.
+its command. While the document reports keyboard focus, the frame's
+`focusVisible` draws its focus glow; `canvas-blur`, a focus without
+`visible`, and the end of the document's mount put the glow out, since the
+mount hook sends `canvas-blur` when it disposes of or replaces the mount.
 `canvas_reading.tsx` shows a page or a Markdown document as one reading frame,
 named by its source file, through the mount hook of `document_stage_frame.tsx`.
 A Markdown document without a dark render keeps its light document under

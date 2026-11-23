@@ -78,13 +78,13 @@ export function CanvasLiveFrame({
   size: CanvasFrameSize;
 }) {
   const stage = useContext(FrameStageContext);
-  const onCanvasInput = useLiveFrameInput();
+  const input = useLiveFrameInput();
   const { entry, scheme, viewport } = plan;
   const frame = useViewFrame({
     entry,
     expanded: false,
     fragment,
-    onCanvasInput,
+    onCanvasInput: input.onCanvasInput,
     // A screen's frames keep the size of their viewport.
     onReady:
       plan.kind === "component" && onSize
@@ -100,6 +100,7 @@ export function CanvasLiveFrame({
   return (
     <CanvasFrame
       error={frame.status === "error"}
+      focusVisible={input.focusVisible}
       height={size.height}
       kind={plan.kind}
       label={plan.label}

@@ -7,6 +7,7 @@ import type { FrameEvent } from "@mokly/frame";
 import { wheelZoom, type CanvasStageHandle } from "@mokly/ui/canvas-stage";
 
 import { DESKTOP_FRAME_SIZE } from "../src/shell/canvas_frame_size.js";
+import type { CanvasFramePlan } from "../src/shell/canvas_frames.js";
 import { CanvasLiveFrame } from "../src/shell/canvas_live_frame.js";
 import { CanvasReadingStage } from "../src/shell/canvas_reading.js";
 import {
@@ -118,5 +119,42 @@ test("a reading frame asks for canvas input, and a frame outside the canvas does
     } finally {
       frame.unmount();
     }
+  }
+});
+
+test("a live frame's glow follows its document's keyboard focus and ends with its mount", async (t) => {
+  registerDom(t);
+  const [light, dark] = canvasPlans("components/action");
+  assert.ok(light && dark?.preview);
+  const { adapter, mounts } = fakeAdapter();
+  const node = (plan: CanvasFramePlan) => (
+    <CanvasLiveFrame
+      hasDarkFragments={false}
+      plan={plan}
+      size={DESKTOP_FRAME_SIZE}
+    />
+  );
+  const frame = renderInShell(adapter, light.entry.path, node(light));
+  const glowing = () =>
+    frame.container.querySelector("figure")?.hasAttribute("data-focus-visible");
+  const emit = (event: FrameEvent) => act(() => mounts.at(-1)!.onEvent!(event));
+  try {
+    await act(flush);
+    emit({ type: "canvas-focus", visible: true });
+    assert.equal(glowing(), true);
+    // Focus from the pointer shows no glow.
+    emit({ type: "canvas-focus", visible: false });
+    assert.equal(glowing(), false);
+    emit({ type: "canvas-focus", visible: true });
+    emit({ type: "canvas-blur" });
+    assert.equal(glowing(), false);
+    // The mount of another document ends the glow of the one before.
+    emit({ type: "canvas-focus", visible: true });
+    frame.rerender(node({ ...light, preview: dark.preview }));
+    await act(flush);
+    assert.equal(mounts.length, 2);
+    assert.equal(glowing(), false);
+  } finally {
+    frame.unmount();
   }
 });

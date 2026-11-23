@@ -191,9 +191,9 @@
 }
 
 /* The frame's box clips its document and paints the opaque preview surface
-   of the frame's own scheme behind it. A document with keyboard focus draws
-   the focus glow on the box, also when the frame reports that focus from
-   inside its document. */
+   of the frame's own scheme behind it. A frame whose document reports
+   keyboard focus draws the focus glow on the box: the host page matches no
+   focus rule while the document holds the focus. */
 .mbk-canvas-frame-clip {
   position: absolute;
   inset: 0;
@@ -208,7 +208,6 @@
   background: var(--mbk-dark-screen-bg);
 }
 
-.mbk-canvas-frame-clip:has(.mbk-frag:focus-visible),
 .mbk-canvas-frame[data-focus-visible] > .mbk-canvas-frame-clip {
   box-shadow:
     var(--mbk-focus-glow),
