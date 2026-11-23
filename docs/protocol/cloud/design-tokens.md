@@ -1,6 +1,6 @@
 # Design Tokens
 
-Status: No token holds the Canvas depth of the viewer's cards, panels and settings dialog yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) restyles the viewer's cards, panels and dialog in that depth.
+Status: No token holds the Canvas depth of the viewer's cards, panels and settings dialog yet, and the application's panels and settings dialog lay the package modal's backdrop instead of the Overlay scrim. The [depth tokens item](../../../plans/follow-ups/canvas-depth-has-no-tokens.md) adds the tokens, and the [modal backdrop item](../../../plans/follow-ups/modal-backdrop-misses-canvas-scrim.md) brings the scrim.
 
 Canvas is the product and marketing system: the look of a design file, with a
 dot-grid canvas, white frames and panels with hairlines, near-black ink, one

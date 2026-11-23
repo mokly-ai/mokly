@@ -1,5 +1,4 @@
 import { InputFrame } from "@firna/ui/input";
-import { Search } from "lucide-react-native";
 
 import type { Viewport } from "@mokly/mokly";
 
@@ -11,6 +10,7 @@ import {
   publication,
   pullRequests,
 } from "../../../fixtures/publications";
+import { icons } from "../icons";
 import { Action, Pending, StateMessage } from "../page-parts";
 
 import { RefGroup } from "./rows";
@@ -43,7 +43,7 @@ function SwitcherSearch({
         nativeID="publication-search"
         accessibilityLabel={searchLabel}
         placeholder={searchLabel}
-        prefixIcon={Search}
+        prefixIcon={icons.search}
         variant="plain"
         size={viewport === "mobile" ? "lg" : "md"}
         value={value}

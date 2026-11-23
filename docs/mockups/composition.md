@@ -5,9 +5,11 @@ This is the detailed composition guide for the [Mockup catalogue](./README.md).
 ## Selected Folio And Canvas Styles
 
 Product components live under `src/screens/product/`; shared fixtures remain
-mockup-only. The account, recovery and settings families draw in Folio. The
-viewer family draws its cloud parts in Canvas, around the `@mokly/ui` parts,
-which keep the package's own look.
+mockup-only. The account and recovery families draw in Folio. The settings
+family draws its panes in the Canvas settings dialog and layer, which the
+viewer family's settings drawing and the application share. The viewer family
+draws its cloud parts in Canvas, around the `@mokly/ui` parts, which keep the
+package's own look.
 [`src/screens/product/viewer/published-viewer.tsx`](./src/screens/product/viewer/published-viewer.tsx)
 and its `published-*` modules own the published package stage with cloud slots
 filled. Their doc comments describe how the stage is drawn. Its rows and sample
@@ -39,14 +41,18 @@ card a cloud build draws in the stage, `settings.css` the overlay, `account.css`
 the account panel with its canvas, progress strip and mobile edge-to-edge rules,
 `entry.css` the shared sign-in/sign-up field stack, `recovery.css` the app-owned
 unmatched-path state, and `chrome.css` the wordmark, identity and heading
-primitives. The viewer drawings add the Canvas sheets, which their own modules
-import and the application never loads: `viewer-canvas.css` the inline end of
-the bar's two compositions, `viewer-canvas-stage.css` the
-dot-grid stage and its floating cards, `viewer-canvas-depth.css` the shade, the
-radius and the shadows of a floating surface, `viewer-canvas-panels.css` the
-panels that the slots open, `viewer-canvas-menu.css` the open account and More
-menus, `viewer-canvas-check.css` the Mokly check beside the stage, and
-`viewer-canvas-settings.css` the settings dialog over the viewer.
+primitives. The Canvas sheets draw the cloud's own parts of the viewer:
+`viewer-canvas.css` the inline end of the bar's two compositions,
+`viewer-canvas-stage.css` the dot-grid stage and its floating cards,
+`viewer-canvas-depth.css` the shade, the radius and the shadows of a floating
+surface, `viewer-canvas-panels.css` the panels that the slots open,
+`viewer-canvas-menu.css` the open account and More menus,
+`viewer-canvas-check.css` the Mokly check beside the stage, and
+`viewer-canvas-settings.css` the settings dialog and its layer. `viewer.css`
+imports the Canvas sheets of the surfaces that the application draws too: the
+stage, the panels and the settings dialog. So every product drawing and the
+application load them. A drawing module imports each other Canvas sheet that
+it needs, and the application never loads that sheet.
 `styles/fonts/` holds the self-hosted Geist and Geist Mono variable faces of the
 Canvas palette, copied from the `geist` npm package, with their SIL Open Font
 License. `styles/site/fonts/` holds the Instrument Serif face of the site's

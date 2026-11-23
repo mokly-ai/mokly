@@ -31,6 +31,21 @@ export interface RowTarget {
   details: boolean;
 }
 
+/**
+ * Whether a row is the reference the reader is on: a branch of the same name,
+ * or a pull request of the same number. A branch named like a pull request's
+ * number is still a branch, so the kind decides first.
+ */
+export function sameReference(
+  row: PublicationRef,
+  current: PublicationRef | undefined,
+): boolean {
+  if (current === undefined) return false;
+  return row.kind === "branch"
+    ? current.kind === "branch" && current.name === row.name
+    : current.kind === "pull-request" && current.number === row.number;
+}
+
 /** The reference's own address, which resolves to whatever it shows now. */
 function alias(
   row: RefRow,

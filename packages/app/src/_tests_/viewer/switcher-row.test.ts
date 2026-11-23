@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { Branch, PullRequest } from "../../api/types";
+import type { PublicationRef } from "../../data/publications";
 import {
   branchPath,
   buildPath,
@@ -9,7 +10,7 @@ import {
   pullRequestPath,
 } from "../../navigation/paths";
 import { referenceStage } from "../../viewer/reference-stage";
-import { rowTarget } from "../../viewer/switcher-row";
+import { rowTarget, sameReference } from "../../viewer/switcher-row";
 import type { RefRow } from "../../viewer/switcher-row";
 
 import { attempt, branchRow, pullRow, summary } from "./build-fixtures";
@@ -181,4 +182,46 @@ test("a row with a ready publication or nothing failed opens its reference", () 
   );
   assert.equal(pull.details, false);
   assert.equal(pull.href, pullRequestPath(workspace, project, 14));
+});
+
+/**
+ * The reader's row, which says Current in place of a destination, as the
+ * Publication row composition of `folio-viewer.md` gives it: the reference of
+ * the same kind, and the same branch name or pull request number.
+ */
+test("the reader's row is the reference of the same kind, name or number", () => {
+  const main: PublicationRef = { kind: "branch", name: "main" };
+  const fourteen: PublicationRef = { kind: "pull-request", number: 14 };
+  const cases: [string, PublicationRef, PublicationRef | undefined, boolean][] =
+    [
+      ["the same branch", main, { kind: "branch", name: "main" }, true],
+      ["another branch", main, { kind: "branch", name: "topic" }, false],
+      [
+        "the same pull request",
+        fourteen,
+        { kind: "pull-request", number: 14 },
+        true,
+      ],
+      [
+        "another pull request",
+        fourteen,
+        { kind: "pull-request", number: 15 },
+        false,
+      ],
+      [
+        "a branch named like the pull request's number",
+        { kind: "branch", name: "14" },
+        fourteen,
+        false,
+      ],
+      [
+        "a pull request beside a branch named like its number",
+        fourteen,
+        { kind: "branch", name: "14" },
+        false,
+      ],
+      ["an address that names no reference", main, undefined, false],
+    ];
+  for (const [name, row, current, expected] of cases)
+    assert.equal(sameReference(row, current), expected, name);
 });

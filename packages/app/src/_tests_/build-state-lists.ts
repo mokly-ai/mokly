@@ -75,7 +75,9 @@ export const history: BuildStateRow = {
  * Switcher rows read the newer of their publication and their build, with the
  * short SHA of whichever they read. Details on a row whose newest build failed
  * opens that build's address, even for a closed pull request, whose own
- * address shows the closed card.
+ * address shows the closed card. The reference the reader is on says Current
+ * in place of Details, so each Details below is pressed from another
+ * reference's address: the closed pull request's, then the branch's build.
  */
 export const switcher: BuildStateRow = {
   title: "switcher rows read their newest build, and Details opens it",
@@ -135,7 +137,7 @@ export const switcher: BuildStateRow = {
     const row = (name: string) =>
       panel.getByRole("listitem").filter({ hasText: name });
 
-    await open(page, scenario.buildAt(failed));
+    await open(page, scenario.pullAt(buildPullRequest.number));
     await page.getByTestId("viewer-publication").click();
     await expect(row("main")).toContainText("Publishing now");
     await expect(row("main")).toContainText("5d2e9a1");
