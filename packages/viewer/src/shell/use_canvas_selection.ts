@@ -171,15 +171,22 @@ export function useCanvasSelection({
   }, [registry]);
 
   // Escape clears the selection, unless a text field or another part of
-  // the shell took it.
+  // the shell took it: Highlight components and a host pick end first. It
+  // acts on the whole document of a standalone shell and only on an
+  // embedded root, so the host page keeps its own keys.
   const root = useShellRoot()?.elements.root;
+  const embedded = store.context.embedded ?? false;
   useEffect(() => {
     const element = root?.current;
     if (!element) return;
-    const escape = (event: KeyboardEvent) => {
+    const target: EventTarget = embedded ? element : element.ownerDocument;
+    const escape = (event: Event) => {
+      const active = registry?.inspection.getSnapshot().active?.kind;
       if (
-        event.key !== "Escape" ||
+        (event as KeyboardEvent).key !== "Escape" ||
         event.defaultPrevented ||
+        active === "workspace" ||
+        active === "pick" ||
         inTextField(event.target) ||
         !latest.current.selecting ||
         !latest.current.state.selected
@@ -187,9 +194,9 @@ export function useCanvasSelection({
         return;
       dispatch({ type: "clear" });
     };
-    element.addEventListener("keydown", escape);
-    return () => element.removeEventListener("keydown", escape);
-  }, [root]);
+    target.addEventListener("keydown", escape);
+    return () => target.removeEventListener("keydown", escape);
+  }, [embedded, registry, root]);
 
   return useMemo(
     () => ({

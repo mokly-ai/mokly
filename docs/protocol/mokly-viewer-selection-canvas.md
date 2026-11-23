@@ -24,7 +24,9 @@ selects nothing. On a variant set, a click on a frame's label selects that
 frame, and choosing a variant in Inspect selects the variant's Light frame.
 Selecting an instance in the component tree selects it as a click does, on the
 frame whose instances the tree lists. A click on the empty canvas, or Escape,
-clears the selection. At most one instance or one frame is selected at a time.
+clears the selection. While Highlight components is on or a host pick is
+active, Escape ends that first and keeps the selection. At most one instance
+or one frame is selected at a time.
 
 In Changes, a click on a frame selects nothing, and the canvas draws no
 selection. The frames keep the compare mode, and a drag on the Swipe divider
@@ -109,6 +111,11 @@ The pill above the dock of the
 [compact layout](./mokly-shell-device-chrome.md#compact-layout) names the
 selected instance: its component, its first prop, and its left padding when it
 has a box model. The one frame draws the selection as the wide layout does.
+The selection's scheme names that frame: choosing a variant in Inspect
+selects its row's frame of that scheme, and a variant set's selected frame
+moves to its row's frame of the scheme that the selection names, such as
+after an Appearance change. A row without a frame of that scheme keeps its
+Light frame.
 
 ## Related Docs
 
