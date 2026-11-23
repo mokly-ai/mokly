@@ -231,28 +231,31 @@ test("styles and duplicate ids do not escape independent roots", async ({
   expect(result).toEqual({ unique: true, ...before });
 });
 
-test("inspector resizing changes only its mounted viewer root", async ({
+test("catalogue resizing changes only its mounted viewer root", async ({
   page,
 }) => {
+  // The right panel holds the inspector without a divider of its own, so the
+  // floating catalogue's divider is the root's resize.
   await page.evaluate(() => {
     window.viewerHarness.start("one");
     window.viewerHarness.start("two");
   });
   const first = page.locator("#one [data-mokly-shell]");
   const second = page.locator("#two [data-mokly-shell]");
-  await first.getByRole("tab", { name: "Details", exact: true }).click();
-  await second.evaluate((root) => root.classList.add("mbk-inspector-resizing"));
-  const divider = first.getByRole("separator", { name: "Resize inspector" });
+  await second.evaluate((root) => root.classList.add("mbk-nav-resizing"));
+  const divider = first.getByRole("separator", {
+    name: "Resize navigation panel",
+  });
   const box = await divider.boundingBox();
-  if (!box) throw new Error("inspector divider bounds unavailable");
+  if (!box) throw new Error("navigation divider bounds unavailable");
 
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-  await expect(first).toHaveClass(/mbk-inspector-resizing/);
-  await expect(second).toHaveClass(/mbk-inspector-resizing/);
-  await expect(page.locator("body")).not.toHaveClass(/mbk-inspector-resizing/);
+  await expect(first).toHaveClass(/mbk-nav-resizing/);
+  await expect(second).toHaveClass(/mbk-nav-resizing/);
+  await expect(page.locator("body")).not.toHaveClass(/mbk-nav-resizing/);
   await page.mouse.up();
 
-  await expect(first).not.toHaveClass(/mbk-inspector-resizing/);
-  await expect(second).toHaveClass(/mbk-inspector-resizing/);
+  await expect(first).not.toHaveClass(/mbk-nav-resizing/);
+  await expect(second).toHaveClass(/mbk-nav-resizing/);
 });

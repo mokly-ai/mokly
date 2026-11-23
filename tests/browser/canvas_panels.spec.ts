@@ -9,7 +9,9 @@ function near(actual: number, expected: number): void {
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(1);
 }
 
+/** The box of a shown element, once it shows. */
 async function box(locator: Locator) {
+  await expect(locator).toBeVisible();
   const bounds = await locator.boundingBox();
   expect(bounds).not.toBeNull();
   return bounds!;

@@ -19,6 +19,7 @@ import {
   showDetails,
   type MovedHost,
 } from "./moved_rows.js";
+import { previousVersionLabel } from "./previous_version.js";
 
 /** Register the row and Details cases on `host`, which `test` serves. */
 export function registerMovedRowCases(
@@ -162,7 +163,7 @@ export function registerMovedRowCases(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, moves.removedInvoiceVariant);
-    await expect(page.locator(".mbk-previous")).toHaveText(
+    await expect(previousVersionLabel(page)).toHaveText(
       "Showing previous version",
     );
     const crumb = page

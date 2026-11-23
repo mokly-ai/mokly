@@ -235,9 +235,12 @@ test("an embedded missing-capture note keeps its width and wrapping at different
     await page.goto(
       `${host.url}/viewer.html?adapter=same-origin&responsive=1&view=changes&entry=${removed.entry.path}&viewport=mobile`,
     );
-    const note = page.getByRole("status").filter({
-      hasText: "No previous mobile version was captured.",
-    });
+    // The canvas holds the note in the place of each Mobile frame, Light
+    // and Dark; the Light frame's note is measured.
+    const note = page
+      .getByRole("figure", { name: /^Mobile · Light/u })
+      .getByRole("status")
+      .filter({ hasText: "No previous mobile version was captured." });
     await expect(note).toHaveText(
       "No previous mobile version was captured. Switch to Desktop to see it.",
     );

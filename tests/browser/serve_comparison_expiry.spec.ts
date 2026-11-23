@@ -13,6 +13,7 @@
 import { expect, type Page } from "@playwright/test";
 
 import { modeButton } from "./comparison_ui.js";
+import { historicalFrame } from "./previous_version.js";
 import { test } from "./serve_comparison_test.js";
 import {
   expectCardPane,
@@ -168,7 +169,7 @@ for (const change of ["scheme", "viewport"] as const)
     await page.goto(
       `/view/${record.entry.path}/?snapshot=${record.snapshotId}&viewport=desktop`,
     );
-    const desktop = page.locator(`${stage} .mbk-frame-desktop iframe`);
+    const desktop = historicalFrame(page, "desktop").locator("iframe");
     await expect(desktop.contentFrame().locator("h1")).toHaveText(
       "Historical screen",
     );
@@ -186,9 +187,12 @@ for (const change of ["scheme", "viewport"] as const)
     if (change === "scheme") await chooseScheme(page, "dark");
     else await chooseViewport(page, "mobile");
 
-    const renewed = page.locator(
-      `${stage} .mbk-frame-${change === "scheme" ? "desktop" : "mobile"} iframe`,
-    );
+    // The section's frame of the new scheme or the kept viewport.
+    const renewed = (
+      change === "scheme"
+        ? historicalFrame(page, "desktop", "dark")
+        : historicalFrame(page, "mobile")
+    ).locator("iframe");
     await expect(renewed).toHaveAttribute(
       PANE_SOURCE,
       change === "scheme" ? /\.desktop\.dark\.html$/u : /\.mobile\.html$/u,

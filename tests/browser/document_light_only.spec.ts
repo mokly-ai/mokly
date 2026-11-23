@@ -13,6 +13,7 @@ import {
 } from "../helpers/light_only_sources.js";
 
 import { additionsCopyTest } from "./additions_copy_test.js";
+import { previousVersionLabel } from "./previous_version.js";
 
 const test = additionsCopyTest(
   "browser-light-only-base",
@@ -27,8 +28,9 @@ for (const width of [390, 1280])
     await page.goto(`/view/${paths.removedDocument}/`);
     const appearance = page.getByLabel("Appearance", { exact: true });
     const preview = page.locator("[data-mokly-preview]");
-    // The quiet label of the section's head, after the Removed status.
-    const label = preview.getByText(/^Showing previous version/u);
+    // The quiet label after the Removed status: the section head's, or the
+    // entry bar's in the compact layout, whose section has no head.
+    const label = previousVersionLabel(page);
     const frame = preview.getByRole("figure");
     const heading = page
       .frameLocator("iframe[data-mokly-preview-frame]")

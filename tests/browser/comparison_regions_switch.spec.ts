@@ -127,8 +127,10 @@ test("Current shows no switch; every diff mode shows it on, after the modes", as
       "mbk-diff-refresh mbk-reset",
     ]);
     expect(facts.label, mode).toBe("Scroll together");
-    expect(facts.control.left - facts.modes.right, mode).toBeCloseTo(16, 1);
-    expect(facts.control.top, mode).toBeLessThan(facts.modes.bottom);
+    // In the right panel the modes take the band's width, so the switch
+    // starts the next line at the band's content edge, and Refresh ends it.
+    expect(facts.control.left - facts.content.left, mode).toBeCloseTo(0, 1);
+    expect(facts.control.top, mode).toBeGreaterThanOrEqual(facts.modes.bottom);
     expect(Math.abs(facts.refresh.right - facts.content.right)).toBeLessThan(
       0.5,
     );

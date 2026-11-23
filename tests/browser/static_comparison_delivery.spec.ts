@@ -13,9 +13,10 @@ import {
   test,
 } from "./comparison_test.js";
 import {
-  canvasFrame,
   chooseScheme,
   chooseViewport,
+  revealInPanel,
+  viewportFrame,
 } from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
@@ -76,22 +77,19 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/view/${comparisonPaths.changed}/?viewport=desktop`);
     await expect(
-      page
-        .frameLocator(
-          width < 900
-            ? 'iframe[data-workspace-frame="desktop"]'
-            : canvasFrame("desktop"),
-        )
-        .locator("h1"),
+      page.frameLocator(viewportFrame("desktop")).locator("h1"),
     ).toHaveText("After screen");
     expect(traffic.urls.filter((url) => url.includes("/diffs/"))).toEqual([]);
 
+    // In the compact layout the comparison band stands in the panel's sheet.
     for (const [mode, label] of [
       ["side", "Side by side"],
       ["overlay", "Overlay"],
       ["difference", "Difference"],
     ] as const) {
-      await page.getByRole("button", { name: label, exact: true }).click();
+      const button = page.getByRole("button", { name: label, exact: true });
+      await revealInPanel(page, button);
+      await button.click();
       await expectSelection("desktop", "light", mode);
     }
     for (const viewport of ["mobile", "both", "desktop"] as const) {

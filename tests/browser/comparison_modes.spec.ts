@@ -10,6 +10,7 @@ import {
   showMode,
   snapshotOf,
 } from "./comparison_ui.js";
+import { historicalFrame, previousVersionLabel } from "./previous_version.js";
 import {
   canvasFrame,
   chooseScheme,
@@ -141,12 +142,13 @@ test("added and removed screens stay current without comparison controls", async
   await awaitRoutedDetail(page, comparisonPaths.removedScreen);
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
   await expect(page.locator("[data-current-screen]")).toHaveCount(0);
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(
-    page
-      .frameLocator("[data-mokly-preview] .mbk-frame-desktop iframe")
+    historicalFrame(page, "desktop")
+      .locator("iframe")
+      .contentFrame()
       .getByRole("heading", { name: "Historical screen" }),
   ).toBeVisible();
 });

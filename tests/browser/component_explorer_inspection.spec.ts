@@ -4,6 +4,7 @@ import { browserSources } from "../../packages/viewer/tests/browser_sources.js";
 
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
+import { openPanelSheet } from "./workspace_actions.js";
 let server: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
   server = await serveCatalogue({
@@ -51,37 +52,27 @@ test("screen inspection records real nested, repeated and hidden instances with 
   await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
 });
 
-test("desktop divider stays centered while resizing and mobile sheet keeps the page bounded", async ({
+test("the right panel holds the inspector, and the compact layout's panel sheet expands and keeps the page bounded", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${server.url}/view/pane/`);
-  const divider = page.getByRole("separator", { name: "Resize inspector" });
-  await expect(divider).toBeVisible();
-  const before = await page.locator("[data-workspace-inspector]").boundingBox();
-  const handle = await divider.boundingBox();
-  expect(
-    Math.abs(handle!.y + handle!.height / 2 - before!.y),
-  ).toBeLessThanOrEqual(1);
-  await divider.focus();
-  await page.keyboard.press("ArrowUp");
-  const after = await page.locator("[data-workspace-inspector]").boundingBox();
-  expect(after!.height).toBeGreaterThan(before!.height);
+  // From the layout breakpoint up the right panel holds the inspector, which
+  // scrolls with the panel and has no divider of its own.
+  const panel = page.getByRole("region", { name: "Panel", exact: true });
+  await expect(panel.locator("[data-workspace-inspector]")).toBeVisible();
+  await expect(
+    page.getByRole("separator", { name: "Resize inspector" }),
+  ).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(divider).toBeHidden();
-  const sheet = page.getByRole("button", {
-    name: "Expand inspector",
-    exact: true,
-  });
-  await expect(sheet).toBeVisible();
-  const compact = await page
-    .locator("[data-workspace-inspector]")
-    .boundingBox();
-  await sheet.click();
-  const expanded = await page
-    .locator("[data-workspace-inspector]")
-    .boundingBox();
-  expect(expanded!.height).toBeGreaterThan(compact!.height);
+  await expect(panel).toBeHidden();
+  await openPanelSheet(page);
+  await expect(panel.locator("[data-workspace-inspector]")).toBeVisible();
+  const compact = (await panel.boundingBox())!.height;
+  await page.getByRole("button", { name: "Expand panel", exact: true }).click();
+  await expect
+    .poll(async () => (await panel.boundingBox())!.height)
+    .toBeGreaterThan(compact);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollHeight <= innerHeight,

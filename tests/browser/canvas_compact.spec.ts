@@ -1,11 +1,14 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { useCaseStep, useCaseSteps } from "./use_case_steps.js";
 import { canvasFrame } from "./workspace_actions.js";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
+/** The box of a shown element, once it shows. */
 async function box(locator: Locator) {
+  await expect(locator).toBeVisible();
   const bounds = await locator.boundingBox();
   expect(bounds).not.toBeNull();
   return bounds!;
@@ -153,6 +156,28 @@ test("a variant set shows its whole set until a saved variant picks its frame", 
   await expect(page.locator(".mbk-canvas-frame-name:visible")).toHaveText(
     "Secondary · Dark",
   );
+});
+
+test("a use case opens on its first step, and the picker shows each step alone", async ({
+  page,
+}) => {
+  await page.goto("/view/example/tour/");
+  await expect(picker(page)).toHaveValue("step-0");
+  await expect(picker(page).locator("option")).toHaveText([
+    "1 · Welcome",
+    "2 · Details",
+  ]);
+  // The hidden step stays mounted out of the section.
+  await expect(page.locator("[data-mokly-stage] iframe")).toHaveCount(2);
+  await expect(useCaseSteps(page)).toHaveCount(1);
+  await expect(useCaseStep(page, 1).getByRole("link")).toHaveText("Welcome");
+  await picker(page).selectOption({ label: "2 · Details" });
+  await expect(picker(page)).toHaveValue("step-1");
+  await expect(useCaseSteps(page)).toHaveCount(1);
+  await expect(useCaseStep(page, 2).getByRole("link")).toHaveText("Details");
+  // The step frame stands where the canvas fits it, from the stage's top.
+  await dock(page).getByRole("button", { name: "Fit" }).click();
+  await expect(useCaseStep(page, 2)).toBeInViewport();
 });
 
 test("a reading frame takes the canvas's width and has no picker", async ({

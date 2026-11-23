@@ -26,7 +26,10 @@ export async function openComparison(
   viewport: "both" | "desktop" | "mobile",
   mode: "Difference" | "Overlay" | "Side by side",
 ): Promise<void> {
-  await page.setViewportSize({ width: 1600, height: 1000 });
+  // The stage stands between the floating panels, and each Side by side pane
+  // keeps more than the 600px at which the regions shell drops its right
+  // column and its footer.
+  await page.setViewportSize({ width: 1920, height: 1000 });
   await page.goto(`/view/${entryPath}/`);
   await chooseViewport(page, viewport);
   await modeButton(page, mode).click();
