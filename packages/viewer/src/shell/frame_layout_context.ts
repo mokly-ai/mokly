@@ -4,7 +4,6 @@ import { createContext } from "react";
 import type { RefObject } from "react";
 
 export interface FrameLayout {
-  expanded: boolean;
   stage: RefObject<HTMLDivElement | null> | undefined;
 }
 

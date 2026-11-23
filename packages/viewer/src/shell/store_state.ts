@@ -27,7 +27,6 @@ export interface ShellState {
   changesStatus: Exclude<ChangesStatus, "disabled"> | undefined;
   detailsOpen: boolean;
   disclosures: Readonly<Record<string, boolean>>;
-  expandedFrame: string | undefined;
   filterBaseline: Readonly<Record<string, boolean>> | undefined;
   inspectorTab: string | undefined;
   navigationMaximum: number;

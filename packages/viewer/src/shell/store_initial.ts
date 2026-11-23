@@ -57,7 +57,6 @@ export function createInitialShellState(
     comparisonIntent: route.comparison === "side",
     detailsOpen,
     disclosures,
-    expandedFrame: undefined,
     filterBaseline: undefined,
     inspectorTab: detailsOpen ? "details" : undefined,
     navigationMaximum: initial?.navigationMaximum ?? 480,

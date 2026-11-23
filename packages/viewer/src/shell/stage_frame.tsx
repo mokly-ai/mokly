@@ -45,8 +45,6 @@ type ViewEntry = Extract<
 /** One frame of a view: what it shows and where it stands. */
 export interface ViewFrameInput {
   entry: ViewEntry;
-  /** Whether the frame's browser window covers the page. */
-  expanded: boolean;
   fragment?: string | undefined;
   /** Hears once for each document that the frame mounts, when it is ready. */
   onReady?: FrameReadyListener | undefined;
@@ -100,7 +98,7 @@ export function useViewFrame(input: ViewFrameInput) {
     enabled: store.interactive,
     generation,
     identity,
-    layout: { stage: input.stage, expanded: input.expanded },
+    layout: { stage: input.stage },
     onReady: input.onReady,
     sources: input.sources,
     source,

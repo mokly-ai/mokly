@@ -60,10 +60,10 @@ test("an embedded root lays out the shell's parts between its host slots", () =>
   );
 });
 
-test("the embedded root marks a separator drag and an expanded window for the stylesheets", () => {
+test("the embedded root marks a separator drag for the stylesheets", () => {
   assert.match(
-    renderToString(layout({ frameExpanded: true, resizing: "navigation" })),
-    /^<div class="mbk mokly-viewer mbk-nav-resizing frame-expanded mbk-reset" /u,
+    renderToString(layout({ resizing: "navigation" })),
+    /^<div class="mbk mokly-viewer mbk-nav-resizing mbk-reset" /u,
   );
 });
 

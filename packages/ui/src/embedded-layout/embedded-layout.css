@@ -99,11 +99,6 @@
   display: block;
 }
 
-.mokly-viewer.frame-expanded
-  :is([data-mokly-marker-layer], [data-mokly-label-layer]) {
-  z-index: 952;
-}
-
 .mokly-viewer [data-mokly-slot="sidePanel"] {
   flex: none;
   overflow: auto;

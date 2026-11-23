@@ -87,13 +87,6 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       );
       persist(widthStorageKey, String(width));
     },
-    releaseExpandedFrame(key) {
-      input.setState((current) =>
-        current.expandedFrame === key
-          ? { ...current, expandedFrame: undefined }
-          : current,
-      );
-    },
     resetNavigationWidth() {
       if (!input.embedded) forget(widthStorageKey);
       input.setState((current) => ({ ...current, navigationWidth: undefined }));
@@ -163,9 +156,6 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         persistDisclosures(current.selection, disclosures, !input.embedded);
         return { ...current, disclosures };
       });
-    },
-    setExpandedFrame(key) {
-      input.setState((current) => ({ ...current, expandedFrame: key }));
     },
     setNavigationMaximum(value) {
       input.setState((current) => ({

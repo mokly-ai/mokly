@@ -30,8 +30,8 @@ export interface PaneDocument {
 
 /**
  * The browser window for desktop, the phone for mobile, or the bordered
- * component frame for a saved variant. Browser expansion is never offered
- * outside Current, so a comparison cannot misalign one version alone.
+ * component frame for a saved variant. The window does not expand, so a
+ * comparison cannot misalign one version alone.
  */
 export function comparisonChrome(
   component: boolean,
@@ -41,11 +41,7 @@ export function comparisonChrome(
   if (component) return (content) => <ComponentFrame>{content}</ComponentFrame>;
   if (viewport === "mobile")
     return (content) => <PhoneFrame>{content}</PhoneFrame>;
-  return (content) => (
-    <BrowserFrame address={address} expandable={false}>
-      {content}
-    </BrowserFrame>
-  );
+  return (content) => <BrowserFrame address={address}>{content}</BrowserFrame>;
 }
 
 /** Carries the view's scheme to the chrome, its viewport and its frames. */

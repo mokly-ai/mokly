@@ -184,7 +184,7 @@ test("filter transitions restore their disclosure baseline and route activation 
   assert.ok(Object.values(state.disclosures).every(Boolean));
 
   state = withRoute(
-    { ...state, sheet: "catalogue", expandedFrame: "home:desktop" },
+    { ...state, sheet: "catalogue" },
     route,
     catalogue,
     catalogueNavSections(catalogue),
@@ -192,7 +192,6 @@ test("filter transitions restore their disclosure baseline and route activation 
   assert.equal(state.selection.search, "");
   assert.equal(state.selection.view, "all");
   assert.equal(state.sheet, undefined);
-  assert.equal(state.expandedFrame, undefined);
   assert.match(state.announcement, /^Loaded Guide/);
 
   state = withFilterSelection(state, {

@@ -72,7 +72,7 @@ export function useDocumentFrame(
     enabled: store.interactive,
     generation,
     identity,
-    layout: { stage, expanded: false },
+    layout: { stage },
     sources:
       entry.kind === "document"
         ? entry.colorSchemes.map((colorScheme) =>

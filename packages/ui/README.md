@@ -344,8 +344,7 @@ colours of the `--mbk-highlight-scrim` and `--mbk-highlight-edge` roles.
 
 Both roots mark the state that the stylesheets select on the root. `resizing`
 names the separator that the reader drags, so the whole shell keeps the
-drag's cursor, and `frameExpanded` shows the scrim below an expanded browser
-window.
+drag's cursor.
 
 The package gives a host each element that the host measures, focuses, or
 scrolls through a ref. `WorkspaceLayout` gives its preview pane and its panes
@@ -693,8 +692,8 @@ override the desktop layout rules.
   `MainRegion`, `RouteStatus`, and `FloatingCatalogue`, which both roots
   draw; and `RootState`, the state of a root without a shell
 - [`src/shell-layout/root-marks.ts`](./src/shell-layout/root-marks.ts) — the
-  classes of a root's drag and expanded window, and the Canvas layout's mark
-  and catalogue width, which both roots share
+  class of a root's drag, and the Canvas layout's mark and catalogue width,
+  which both roots share
 - [`src/merged-ref/merged-ref.ts`](./src/merged-ref/merged-ref.ts) —
   `useMergedRef`, the internal ref of an element that a component and its
   host both need

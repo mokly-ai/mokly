@@ -114,8 +114,7 @@ export function MainRegion({
 /**
  * The root of the standalone shell. It carries the shell's root class, which
  * holds the theme, and states its appearance and its preview scheme. It marks
- * a drag of a separator and an expanded browser window for the stylesheets.
- * With `catalogueSheet` it draws the Canvas layout: the catalogue floats over
+ * a drag of a separator for the stylesheets. With `catalogueSheet` it draws the Canvas layout: the catalogue floats over
  * the canvas, and the root marks `data-canvas-layout`. Without it, the
  * navigation stands in a column beside the main region, as a static
  * depiction of the earlier layout draws it.
@@ -126,7 +125,6 @@ export function ShellLayout({
   colorScheme,
   dock,
   drawerOpen,
-  frameExpanded,
   main,
   mainHref,
   navigation,
@@ -154,11 +152,6 @@ export function ShellLayout({
    * `data-drawer`. In the Canvas layout it is the catalogue's sheet.
    */
   drawerOpen: boolean;
-  /**
-   * Whether a browser window is expanded over the shell, which marks the root
-   * with `frame-expanded` and shows the scrim below the window.
-   */
-  frameExpanded?: boolean | undefined;
   /** The main region with the routed view. */
   main: ReactNode;
   /** The address of the main region, for the skip link. */
@@ -186,7 +179,7 @@ export function ShellLayout({
 }) {
   return (
     <div
-      className={rootClassName("mbk", { frameExpanded, resizing })}
+      className={rootClassName("mbk", { resizing })}
       {...canvasLayoutMarks(catalogueSheet !== undefined, navigationWidth)}
       data-drawer={drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={colorScheme}

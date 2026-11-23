@@ -12,10 +12,7 @@ import { MainRegion, ShellLayout } from "../src/shell-layout/shell-layout.js";
 import { assertSameElement } from "./dom-assertions.js";
 
 /** The marks of the shell root's state. */
-type RootMarks = Pick<
-  ComponentProps<typeof ShellLayout>,
-  "frameExpanded" | "resizing"
->;
+type RootMarks = Pick<ComponentProps<typeof ShellLayout>, "resizing">;
 
 /** A shell with marked slot content, as the standalone viewer fills it. */
 function shell(
@@ -74,14 +71,14 @@ test("the shell root states its appearance and its preview scheme", () => {
   assert.equal(root?.getAttribute("data-mokly-color-scheme"), "dark");
 });
 
-test("the root marks a separator drag and an expanded window for the stylesheets", () => {
+test("the root marks a separator drag for the stylesheets", () => {
   assert.equal(
     rootClass({ resizing: "navigation" }),
     "mbk mbk-nav-resizing mbk-reset",
   );
   assert.equal(
-    rootClass({ frameExpanded: true, resizing: "inspector" }),
-    "mbk mbk-inspector-resizing frame-expanded mbk-reset",
+    rootClass({ resizing: "inspector" }),
+    "mbk mbk-inspector-resizing mbk-reset",
   );
 });
 

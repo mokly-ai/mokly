@@ -207,7 +207,6 @@ export function StandaloneShellContents({
       announcement={store.state.announcement}
       {...canvas}
       colorScheme={appearance.scheme}
-      frameExpanded={Boolean(store.state.expandedFrame)}
       resizing={shellRoot?.resizing}
       main={
         <ShellMain

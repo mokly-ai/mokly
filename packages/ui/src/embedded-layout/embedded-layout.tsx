@@ -64,7 +64,6 @@ export function EmbeddedLayout({
   dock,
   drawerOpen,
   emptyStateShown,
-  frameExpanded,
   labelLayer,
   main,
   mainHref,
@@ -100,12 +99,6 @@ export function EmbeddedLayout({
   drawerOpen: boolean;
   /** Whether the empty state slot shows its content. */
   emptyStateShown: boolean;
-  /**
-   * Whether a browser window is expanded over the shell, which marks the root
-   * with `frame-expanded`: the scrim shows below the window, and the marker
-   * and label layers stay above it.
-   */
-  frameExpanded?: boolean | undefined;
   /** The label layer, such as a host inspection's. An empty one by default. */
   labelLayer?: ReactNode;
   /** The main region with the routed view. */
@@ -161,7 +154,7 @@ export function EmbeddedLayout({
   );
   return (
     <div
-      className={rootClassName("mbk mokly-viewer", { frameExpanded, resizing })}
+      className={rootClassName("mbk mokly-viewer", { resizing })}
       {...canvasLayoutMarks(catalogueSheet !== undefined, navigationWidth)}
       data-drawer={drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={colorScheme}

@@ -167,9 +167,7 @@ export class ShellFrameMarkers {
     if (!visible || !frame.offsetWidth || !frame.offsetHeight) return;
     const stage = session.layout?.stage?.current;
     const layerBounds = layer.getBoundingClientRect();
-    const stageBounds = (
-      session.layout?.expanded ? this.root : (stage ?? this.root)
-    ).getBoundingClientRect();
+    const stageBounds = (stage ?? this.root).getBoundingClientRect();
     const clip = intersectRectangles(visible, stageBounds);
     const bounded = clip && intersectRectangles(clip, layerBounds);
     if (!bounded) return;

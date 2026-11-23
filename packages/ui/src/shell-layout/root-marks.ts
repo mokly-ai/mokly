@@ -1,8 +1,7 @@
 /**
  * The marks of a viewer root's state, which the stylesheets select on the
- * root: a separator that the reader drags, a browser window that is
- * expanded over the shell, and the Canvas layout with the catalogue's width.
- * The standalone and the embedded root share them.
+ * root: a separator that the reader drags, and the Canvas layout with the
+ * catalogue's width. The standalone and the embedded root share them.
  */
 
 import type { CSSProperties } from "react";
@@ -34,8 +33,6 @@ export type ShellResizing = "inspector" | "navigation";
 
 /** The state of a viewer root that its class list marks. */
 export interface RootMarks {
-  /** Whether a browser window is expanded over the shell. */
-  frameExpanded?: boolean | undefined;
   /** The separator that the reader drags. */
   resizing?: ShellResizing | undefined;
 }
@@ -52,12 +49,11 @@ const RESIZING_CLASS = {
  */
 export function rootClassName(
   classes: string,
-  { frameExpanded, resizing }: RootMarks,
+  { resizing }: RootMarks,
 ): string {
   return [
     classes,
     resizing === undefined ? undefined : RESIZING_CLASS[resizing],
-    frameExpanded ? "frame-expanded" : undefined,
     "mbk-reset",
   ]
     .filter((name): name is string => name !== undefined)

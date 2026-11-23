@@ -304,15 +304,15 @@ and Review regressions against `mokly serve` of the example catalogue.
   and [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the mounts of the
   canvas frames and the container of a removed entry's previous version: they
   mount each frame, derive its sources, and pass its `ref` and attributes to
-  the package's `<iframe>`; `frames.tsx` holds the expanded browser frame in
-  the store
+  the package's `<iframe>`; `frames.tsx` draws the browser window of a
+  comparison's desktop pane, whose address the store copies
 - [`src/shell/views.tsx`](./src/shell/views.tsx),
   [`src/shell/workspace.tsx`](./src/shell/workspace.tsx),
   [`src/shell/embedded_viewer.tsx`](./src/shell/embedded_viewer.tsx), and
   [`src/standalone/shell.tsx`](./src/standalone/shell.tsx) — the containers of
   the shell layout: the main region, the workspace, an embedded root with its
-  host slots, and the standalone root, which carries the appearance, the
-  preview scheme, and the expanded window's mark; `src/viewer/component.tsx`
+  host slots, and the standalone root, which carries the appearance and the
+  preview scheme; `src/viewer/component.tsx`
   shows an
   embedded root's loading and failure states, and
   `src/shell/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place

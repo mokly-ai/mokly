@@ -86,7 +86,6 @@ export function useWorkspaceInstanceSelection(
       setActiveViewport(nextViewport);
       setSelectedKey(key);
       if (!openProps) return;
-      store.setExpandedFrame(undefined);
       store.setDetails(true, "props");
       queueMicrotask(() => inspectorRef.current?.focusTab("props"));
     },

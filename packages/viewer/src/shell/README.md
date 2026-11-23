@@ -224,8 +224,8 @@ render `@mokly/ui/canvas-stage`, `@mokly/ui/canvas-frame`,
 is `PreviewIframe` of `@mokly/ui/preview-frame`: a container passes its `ref`,
 its `src` or `srcDoc`, its `key`, and its data attributes, and it keeps the
 mount hooks, the sources, the read-only guard, and the scroll controllers.
-`frames.tsx` holds which browser frame is expanded in the store and copies its
-address, while the package shows "URL copied". `views.tsx` renders the main
+`frames.tsx` draws the browser window of a comparison's desktop pane and
+copies its address, while the package shows "URL copied". `views.tsx` renders the main
 region of `@mokly/ui/shell-layout`, `workspace.tsx` lays out the workspace
 with `@mokly/ui/workspace-layout`, and `embedded_viewer.tsx` lays out an
 embedded root and its host slots with `@mokly/ui/embedded-layout`, which
@@ -244,7 +244,7 @@ throws passes on to the host. Both
 inspection layers
 draw one `@mokly/ui/highlight-mask` over each highlighted frame from the same
 boundary snapshot as their labels, for same-origin and cross-origin frames.
-The mask clips to the visible frame and stays above an expanded frame.
+The mask clips to the visible frame.
 A local ESLint rule
 rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
@@ -291,8 +291,8 @@ renders under `ShellStoreProvider` and reads that state through
 owns standalone history, and `store_host.ts` owns host selection commits.
 `store_routes.ts` installs each route's display for both roots.
 `store_interactions.ts` binds both roots to clicks and Escape. It dismisses
-the picker and expanded frame on an outside click, including a click outside
-an embedded root. It returns picker focus only when the panel held focus.
+the tag picker on an outside click, including a click outside an embedded
+root. It returns picker focus only when the panel held focus.
 `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
 helpers. `selection.ts` owns selection changes and query equality.
@@ -573,8 +573,8 @@ and measurement. `focus_after.ts` moves focus after a recovery action of the
 component controls. `retry_focus.ts` moves focus after each other Try again,
 first to the status that replaces the button and then to the content, under
 the [recovery focus rule](../../../../docs/protocol/mokly-viewer.md#package-and-props).
-Frame sessions carry their source choices, stage refs,
-and expanded state, so geometry never reads package selectors. Each shell root
+Frame sessions carry their source choices and stage refs, so
+geometry never reads package selectors. Each shell root
 owns one `frame_registry.tsx` instance, so frame
 path-keyed identity, readiness, validated usage revisions and disposal cannot cross an
 independent embedded viewer. `frame_mount_hook.ts` mounts each frame, and

@@ -199,9 +199,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
     if (!session) return;
     if (input.sources) session.sources = input.sources;
     const layout = input.layout;
-    const layoutChanged =
-      layout?.expanded !== session.layout?.expanded ||
-      layout?.stage !== session.layout?.stage;
+    const layoutChanged = layout?.stage !== session.layout?.stage;
     if (layout) session.layout = layout;
     if (layoutChanged || !sameFrameIdentity(session.identity, input.identity)) {
       session.identity = input.identity;

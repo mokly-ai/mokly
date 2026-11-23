@@ -33,7 +33,6 @@ export function installShellRoute(
     announcement: `Loaded ${title}`,
     comparisonIntent: route.comparison === "side",
     disclosures: openDisclosures(state.disclosures, path),
-    expandedFrame: undefined,
     filterBaseline: state.filterBaseline
       ? openDisclosures(state.filterBaseline, path)
       : undefined,

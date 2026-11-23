@@ -54,7 +54,6 @@ export function CanvasUseCaseFrame({
     );
   const frame = useViewFrame({
     entry,
-    expanded: false,
     fragment,
     preview: undefined,
     sources: hasDarkFragments

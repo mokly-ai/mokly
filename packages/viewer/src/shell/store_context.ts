@@ -24,8 +24,6 @@ export interface ShellStore {
   navigateFrame(href: string, navigation?: FrameNavigation): void;
   openFrame(href: string, target: string): void;
   persistNavigationWidth(value?: number): void;
-  /** Collapse the expanded frame only while it is still the frame `key`. */
-  releaseExpandedFrame(key: string): void;
   /** Forget the chosen catalogue width, so the starting width applies. */
   resetNavigationWidth(): void;
   /**
@@ -38,7 +36,6 @@ export interface ShellStore {
   selectViewport(value: "both" | "desktop" | "mobile"): void;
   setDetails(open: boolean, tab?: string): void;
   setDisclosure(key: string, open: boolean): void;
-  setExpandedFrame(key: string | undefined): void;
   /** Open a sheet of the compact layout, which closes the other, or close it. */
   setSheet(sheet: ShellSheet | undefined): void;
   setSheetExpanded(expanded: boolean): void;

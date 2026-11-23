@@ -67,7 +67,6 @@ export function EmbeddedViewerShell({
       announcement={store.state.announcement}
       {...canvas}
       colorScheme={store.state.selection.colorScheme}
-      frameExpanded={Boolean(store.state.expandedFrame)}
       resizing={shellRoot?.resizing}
       slotRef={shellRoot?.elements.slots.ref}
       emptyStateShown={

@@ -28,7 +28,6 @@ export class ShellElements {
   readonly navigation = createRef<HTMLElement>();
   readonly tagToggle = createRef<HTMLButtonElement>();
   readonly tagPicker = createRef<HTMLDivElement>();
-  readonly expandedBrowser = createRef<HTMLDivElement>();
   readonly markers = createRef<HTMLDivElement>();
   readonly dock = new ElementRefs<DockControl, HTMLButtonElement>();
   readonly slots = new ElementRefs<HostSlotName, HTMLDivElement>();
