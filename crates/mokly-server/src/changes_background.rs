@@ -20,10 +20,24 @@ use crate::publication::Publications;
 use crate::snapshot::Snapshot;
 
 /// Continuation of the foreground-priority current usage pass.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = AfterUsageMock))]
 #[async_trait]
 pub trait AfterUsage: Send + Sync {
+    /// Transfer the preparation started by this origin's head attempt.
+    fn prepare(&self, _origin: &Arc<Snapshot>) -> Option<Arc<dyn PendingChanges>> {
+        None
+    }
     /// Classify and observe Git until this head is replaced or Serve stops.
     async fn run(&self, origin: Arc<Snapshot>, stop: watch::Receiver<bool>);
+}
+
+/// One origin owns pending preparation until its usage and classification end.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = PendingChangesMock))]
+pub trait PendingChanges: Send + Sync {
+    /// Permit small-capacity eager work after the last head view is dispatched.
+    fn dispatched(&self);
+    /// Cancel unfinished preparation and wait for its task and resource owners.
+    fn cancel_and_join(&self);
 }
 
 /// The HTTP loop never runs Git, prepares a base, or waits for classification.
@@ -43,6 +57,14 @@ pub struct ChangesPass {
 
 #[async_trait]
 impl AfterUsage for ChangesPass {
+    fn prepare(&self, origin: &Arc<Snapshot>) -> Option<Arc<dyn PendingChanges>> {
+        origin
+            .generation
+            .changes
+            .as_ref()
+            .and_then(|source| source.pending())
+    }
+
     async fn run(&self, origin: Arc<Snapshot>, mut stop: watch::Receiver<bool>) {
         if stopped(&stop) {
             return;
@@ -79,12 +101,13 @@ impl AfterUsage for ChangesPass {
                     let _activity = activity;
                     owner
                         .execute(head, task_source, task_cancel, references)
-                        .await;
+                        .await
                 }
                 .instrument(tracing::Span::current()),
             );
             let mut refresh = false;
             let mut settled = false;
+            let mut completed = false;
             loop {
                 if stopped(&stop) || !self.current(&origin) {
                     cancel.cancel();
@@ -92,7 +115,10 @@ impl AfterUsage for ChangesPass {
                 }
                 tokio::select! {
                     result = &mut work => {
-                        if let Err(source) = result { self.diagnostics.failed(&ServerError::Internal(InternalError::Task { source })); }
+                        match result {
+                            Ok(committed) => completed = committed,
+                            Err(source) => self.diagnostics.failed(&ServerError::Internal(InternalError::Task { source })),
+                        }
                         settled = true;
                         break;
                     },
@@ -118,6 +144,15 @@ impl AfterUsage for ChangesPass {
                     source = next;
                 }
                 continue;
+            }
+            if completed {
+                self.seed_after_completion(
+                    origin.clone(),
+                    source.clone(),
+                    cancel.clone(),
+                    stop.clone(),
+                )
+                .await;
             }
             loop {
                 if stopped(&stop) || !self.current(&origin) {

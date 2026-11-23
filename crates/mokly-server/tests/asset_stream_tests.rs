@@ -31,7 +31,7 @@ async fn get_and_head_stream_exact_checked_bytes_and_stale_sources_fail_closed()
     assert_eq!(head.status(), 200);
     assert_eq!(head.headers()["content-length"], (128 * 1024).to_string());
     assert_eq!(head.headers()["content-type"], "image/svg+xml");
-    support::headers(&head);
+    support::headers_with_cache(&head, "no-cache");
     assert!(head.bytes().await.unwrap().is_empty());
     let get = harness.client.get(&url).send().await.unwrap();
     assert_eq!(get.status(), 200);

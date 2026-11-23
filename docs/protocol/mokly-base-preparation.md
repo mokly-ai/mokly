@@ -1,9 +1,8 @@
 # Base Source And Dependency Preparation
 
 This page defines how Mokly prepares the sources and the dependencies of the
-base side. The [comparison contract](./mokly-comparison.md#sides) owns
-rendered sides. The [Git runtime](./mokly-git.md) owns history, blobs and
-extraction.
+base side. The [comparison contract](./mokly-comparison.md#sides) owns rendered
+sides. The [Git runtime](./mokly-git.md) owns history, blobs and extraction.
 
 ## Sources
 
@@ -61,10 +60,23 @@ missing objects names the recovery command.
 
 The head and the base render with the current Mokly version. One cancellation
 stops both sides of a classification, including Git reads, extraction,
-installation, comparison, and public resource planning. A base that Serve
-keeps follows the [kept base cancellation rule](#cancellation) instead. HTML
-without a renderer or PostCSS follows the
+installation, early renders, comparison, and public resource planning. A base
+that Serve keeps follows the [kept base cancellation rule](#cancellation)
+instead. HTML without a renderer or PostCSS follows the
 [HTML dependency policy](./mokly-comparison.md#html-package-styles).
+
+Static commands verify their source evidence before early renders start.
+As soon as the fresh base preparation of a classification knows its document keys, it lists each
+view whose key is absent from the [render cache](./mokly-runtime.md#render-graph-and-cache)
+and the prepared [render store](./mokly-render-store.md). The listing restores no view. Early renders of the listed views then
+start immediately. The limit of early renders that run at the same time is at
+least one. It cannot exceed the [sidecar capacity](./mokly-sidecar-memory.md#capacity).
+Early renders publish nothing. The
+[capture](./mokly-comparison-serving.md#base-and-head-capture) takes each result
+at the view's turn. It waits for an early render that still runs instead of a
+second render.
+Decision: early renders start when the keys are known. Rejected: listed views
+first in the capture window, because they would wait for the rest of preparation.
 
 Sidecar working directories follow the [fixed source-root rule](./mokly-sidecar.md#lifecycle).
 Each PostCSS context runs in a child process whose working directory is its
@@ -169,9 +181,11 @@ settings.
 
 ### Cancellation
 
-While Serve prepares a base, the classification's cancellation stops all of
-its base work. When Serve keeps the base, the base detaches from that
-classification, and only the stop of Serve stops it. Each reader of the kept
+While Serve prepares a base, the cancellation of its
+[owner](./mokly-eager-base-preparation.md#ownership) stops all of its base
+work. When Serve keeps the base, the base detaches from that owner, and only
+the stop of Serve stops it. Early renders never detach. Each one ends before
+its classification ends, so the kept base holds none. Each reader of the kept
 base, a classification or a selected capture, checks its own cancellation
 before each call to the base. A call that already runs finishes after its
 reader is cancelled: a Git read, a sidecar call, a render, or a wait for
@@ -181,6 +195,9 @@ Decision: detach the base when Serve keeps it. Rejected: release the base
 after any cancelled read, because each edit during a classification would
 lose the base. Rejected: a cancelled read that records no source failure,
 because one reader could then stop a read of another reader.
+Decision: early renders stay with their classification. Rejected: early
+renders that detach with the kept base, because they could then use sidecars
+and memory after their classification ends.
 
 ### Release
 

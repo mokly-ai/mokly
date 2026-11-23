@@ -11,15 +11,14 @@ use mokly_graph::write_activity::WriteActivity;
 use mokly_model::data::Props;
 use tokio::sync::Semaphore;
 
-use crate::asset_streams::AssetResult;
-use crate::assets::File;
+use crate::asset_streams::{AssetResult, SharedAsset};
+use crate::assets::{File, Stylesheet};
 use crate::backend::{Documents, PreviewDocument};
 use crate::background_dispatch::Dispatch;
 use crate::diagnostics::Diagnostics;
 use crate::error::{InternalError, Result, ServerError};
 use crate::foreground::Foreground;
 use crate::priority::Priority;
-use crate::public_read::OpenedFile;
 use crate::render_request::Rejection;
 use crate::revision::RenderLease;
 use crate::work_active::ActiveJobs;
@@ -48,10 +47,20 @@ pub trait Work: Send + Sync {
     /// Resolve a generated document off the HTTP event loop.
     async fn generated(&self, documents: Arc<dyn Documents>, route: String)
     -> Result<Option<File>>;
+    /// Render a stylesheet and prepare its validator on the native worker.
+    async fn stylesheet(
+        &self,
+        documents: Arc<dyn Documents>,
+        route: String,
+    ) -> Result<Option<Stylesheet>>;
     /// Verify and spool a generated opaque asset off the HTTP event loop.
     async fn asset(&self, documents: Arc<dyn Documents>, route: String) -> AssetResult;
     /// Recheck and read a reached public asset off the HTTP event loop.
-    async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile>;
+    async fn authored(
+        &self,
+        documents: Arc<dyn Documents>,
+        path: String,
+    ) -> Result<Option<SharedAsset>>;
     /// Coalesce a page's work and bound admission and duration.
     /// The render runs on a blocking thread, outside the HTTP event loop, behind eight
     /// server-wide queue tickets, and fails after ten seconds.
@@ -137,31 +146,26 @@ impl Work for Workers {
         documents: Arc<dyn Documents>,
         route: String,
     ) -> Result<Option<File>> {
-        self.generated_delivery(documents, route).await
+        self.file_delivery(move || documents.generated(&route))
+            .await
+    }
+    async fn stylesheet(
+        &self,
+        documents: Arc<dyn Documents>,
+        route: String,
+    ) -> Result<Option<Stylesheet>> {
+        self.file_delivery(move || documents.stylesheet(&route))
+            .await
     }
     async fn asset(&self, documents: Arc<dyn Documents>, route: String) -> AssetResult {
         self.asset_delivery(documents, route).await
     }
-    async fn authored(&self, documents: Arc<dyn Documents>, path: String) -> Option<OpenedFile> {
-        let activity = self.activity.as_ref().map(|activity| activity.enter());
-        let guard = self.priority.enter(true);
-        if self.closed.load(Ordering::SeqCst) {
-            return None;
-        }
-        let permit = self.workers.clone().acquire_owned().await.ok()?;
-        if self.closed.load(Ordering::SeqCst) {
-            return None;
-        }
-        tokio::task::spawn_blocking(move || {
-            let _activity = activity;
-            let _guard = guard;
-            let _permit = permit;
-            let documents = documents;
-            documents.authored(&path)
-        })
-        .await
-        .ok()
-        .flatten()
+    async fn authored(
+        &self,
+        documents: Arc<dyn Documents>,
+        path: String,
+    ) -> Result<Option<SharedAsset>> {
+        self.authored_delivery(documents, path).await
     }
     async fn preview(
         &self,

@@ -17,7 +17,11 @@ import { bundleParams } from "./sidecar.js";
 
 /** Count compilations and the resolver round trips that each plugin requests. */
 export function countedCompile() {
-  const counts = { compilations: 0, resolves: new Map<string, number>() };
+  const counts = {
+    compilations: 0,
+    resolves: new Map<string, number>(),
+    callbacks: new Map<string, string[]>(),
+  };
   const compile: typeof build = (options) => {
     counts.compilations += 1;
     for (const plugin of options.plugins ?? []) {
@@ -26,6 +30,16 @@ export function countedCompile() {
         setup(
           new Proxy(builder, {
             get(target, key, receiver) {
+              if (key === "onResolve")
+                return (
+                  ...[options, callback]: Parameters<PluginBuild["onResolve"]>
+                ) =>
+                  target.onResolve(options, (args) => {
+                    const calls = counts.callbacks.get(plugin.name) ?? [];
+                    calls.push(args.path);
+                    counts.callbacks.set(plugin.name, calls);
+                    return callback(args);
+                  });
               if (key !== "resolve") return Reflect.get(target, key, receiver);
               return (...args: Parameters<PluginBuild["resolve"]>) => {
                 counts.resolves.set(
@@ -45,6 +59,10 @@ export function countedCompile() {
     counts,
     /** Round trips that the consumer plugin's own resolve callbacks request. */
     consumerResolves: () => counts.resolves.get("mokly-consumer") ?? 0,
+    consumerCallbacks: (specifier: string) =>
+      (counts.callbacks.get("mokly-consumer") ?? []).filter(
+        (name) => name === specifier,
+      ).length,
   };
 }
 
@@ -123,6 +141,14 @@ export function fingerprint(result: BundleResult): Fingerprint {
       cssModules: [...compiled.cssModules].sort(),
     },
   };
+}
+
+/** Edit identities include a random runtime key, unlike captured identities. */
+export function editFingerprint(result: BundleResult): Fingerprint {
+  return fingerprint({
+    ...result,
+    compiled: { ...result.compiled, identity: "fresh edit identity" },
+  });
 }
 
 /** The bundle equals the full-path bundle of the same parameters. */

@@ -5,7 +5,12 @@ import test from "node:test";
 
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 
-import { cssParams, startSidecar } from "./helpers/sidecar.js";
+import {
+  bundleParams,
+  contextParams,
+  cssParams,
+  startSidecar,
+} from "./helpers/sidecar.js";
 import { sidecarSources } from "./helpers/sidecar_sources.js";
 
 test("base Tailwind automatic scans use the base source root and never head sources", async (context) => {
@@ -20,7 +25,7 @@ test("base Tailwind automatic scans use the base source root and never head sour
     );
     await fs.writeFile(
       path.join(root, "postcss.mjs"),
-      `export default { plugins: { "@tailwindcss/postcss": {} } };`,
+      `import tailwind from '@tailwindcss/postcss';export default {plugins:[tailwind(),{postcssPlugin:'side-config',Once(root){root.append({selector:'.side-config',nodes:[{prop:'order',value:'${value}'}]});}}]};`,
     );
     await fs.writeFile(
       path.join(root, "input.css"),
@@ -29,6 +34,15 @@ test("base Tailwind automatic scans use the base source root and never head sour
   }
   const sidecar = startSidecar(context, head);
   await sidecar.call("hello");
+  const headParams = bundleParams({
+    sourceRoot: head,
+    entryFiles: [],
+    renderer: null,
+    storiesFiles: [],
+  });
+  const preparation = { context: "head", postcss: "postcss.mjs" };
+  await sidecar.call("prepareContext", contextParams(headParams, preparation));
+  await sidecar.call("bundle", { ...headParams, preparation });
   const render = (root: string, context: string) =>
     sidecar.call<CssResult>(
       "processCss",
@@ -44,9 +58,11 @@ test("base Tailwind automatic scans use the base source root and never head sour
   const before = await render(base, "base");
   assert.match(before.text, /z-index: 137/);
   assert.doesNotMatch(before.text, /z-index: 911/);
+  assert.match(before.text, /order: 137/);
   const after = await render(head, "head");
   assert.match(after.text, /z-index: 911/);
   assert.doesNotMatch(after.text, /z-index: 137/);
+  assert.match(after.text, /order: 911/);
   assert.ok(
     before.dependencies.some((dependency) => dependency.path.startsWith(base)),
   );

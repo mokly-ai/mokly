@@ -1,13 +1,15 @@
 //! The kept base key includes every adopted configuration path and script setting.
 
+use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::base_retention::BaseRetentionRequest;
+use mokly_compare::base_selection::PinnedBase;
 use mokly_compare::error::{InternalError, Result};
 use mokly_git::identity::ObjectId;
 use mokly_model::material::digest;
 
 /// Adopted preparation inputs that must stay equal before reuse.
 #[derive(Clone, Eq, PartialEq)]
-pub(super) struct BaseKey {
+pub struct BaseKey {
     commit: ObjectId,
     configuration: String,
     install_scripts: bool,
@@ -16,7 +18,18 @@ pub(super) struct BaseKey {
 impl BaseKey {
     /// Hash the configuration and retain the selected commit and effective scripts flag.
     pub(super) fn new(request: &BaseRetentionRequest<'_>) -> Result<Self> {
-        let config = request.working_config;
+        Self::selected(
+            request.selected,
+            request.working_config,
+            request.install_scripts,
+        )
+    }
+
+    pub(super) fn selected(
+        selected: &PinnedBase,
+        config: &ResolvedConfig,
+        install_scripts: bool,
+    ) -> Result<Self> {
         let roots = config
             .roots
             .iter()
@@ -34,9 +47,9 @@ impl BaseKey {
             Err(source) => return Err(InternalError::Json { source }.into()),
         };
         Ok(Self {
-            commit: request.selected.commit.clone(),
+            commit: selected.commit.clone(),
             configuration: digest(&bytes),
-            install_scripts: request.install_scripts,
+            install_scripts,
         })
     }
 }

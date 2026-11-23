@@ -58,16 +58,16 @@ pub(super) fn service(
             batch_bytes: 48 * 1024 * 1024,
             snapshots: Arc::new(ProcessSnapshots::default()),
         }),
-        provider: Arc::new(StaticBase {
-            inputs,
-            inner: Arc::new(NativeBase {
-                runtime,
-                cancellation,
-                freshness: None,
-                dependencies: Arc::new(NativeDependencies {
-                    cancellation: token,
-                    reporter,
-                }),
+        provider: Arc::new(NativeBase {
+            validation: None,
+            admission: Arc::new(StaticBase { inputs }),
+            runtime,
+            cancellation,
+            freshness: None,
+            dependencies: Arc::new(NativeDependencies {
+                routing: None,
+                cancellation: token,
+                reporter,
             }),
         }),
         comparison: Arc::new(Engine {

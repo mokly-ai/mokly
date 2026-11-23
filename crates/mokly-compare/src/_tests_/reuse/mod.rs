@@ -7,5 +7,6 @@ mod classification_tests;
 mod support;
 
 mod lifetime_tests;
+mod optional_tests;
 mod proof_tests;
 mod weight_tests;

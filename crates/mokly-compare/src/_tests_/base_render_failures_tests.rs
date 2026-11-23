@@ -23,6 +23,7 @@ fn generation() -> Arc<dyn RenderGeneration> {
 
 fn prepared() -> BasePreparationResult {
     Ok(PreparedBase {
+        prefetch: None,
         generation: generation(),
         scripts_off: true,
         freshness: None,

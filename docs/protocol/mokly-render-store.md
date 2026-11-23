@@ -76,7 +76,21 @@ Serve reads the store after a render cache miss and before it renders the
 document. A stored read and a fresh render of the same side give equal results:
 the same bytes, public closure, link check results, build warnings, usage, and
 resource evidence. A read updates the access order of the entry that holds the
-document. No read waits for a lock, so a held lock is a miss.
+document.
+
+A read takes no index lock to look up its document. No read waits for the entry
+reads, the store writes, or the index updates of another operation. A held
+entry lock turns a read into a miss, also when the holder works on another
+entry that shares the lock. After preparation ends, another operation that
+reads or updates the index never turns a read of an indexed document into a
+miss.
+Decision: each index update publishes a complete snapshot of the index, and a
+lookup uses the last published snapshot. This keeps renders from waiting for
+the entry reads and store writes of an update, and adds no miss while other
+operations use the index. A miss while another operation holds the index was
+rejected, because it loses hits on stored documents. A wait for the index was
+rejected, because a render would then wait for those entry reads and store
+writes, or for one paused update.
 
 A head hit can also feed the
 [return warm-up record](./mokly-sidecar-return-warmup.md#recorded-renders),
@@ -169,11 +183,11 @@ command. The fault classes and their output are those of the
 [bundle cache](./mokly-base-cache.md#bundle-entries). Each store event other
 than a hit or a stored write falls into one class:
 
-| Class        | Cases                                                                                                                                            | Output                         | Store afterwards                |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------------- |
-| Entry fault  | A damaged, unreadable, or foreign entry                                                                                                          | The entry warning at each read | Stays on                        |
-| Store fault  | A filesystem or platform error outside one entry, or an invalid cache location                                                                   | The directory warning, once    | Off for the rest of the process |
-| Normal event | A held lock, a full set of pending writes, no room or no free lease for a write, a document that left the render cache, or a cancelled operation | None                           | Stays on                        |
+| Class        | Cases                                                                                                                                                                                                                          | Output                         | Store afterwards                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------------------------- |
+| Entry fault  | A damaged, unreadable, or foreign entry                                                                                                                                                                                        | The entry warning at each read | Stays on                        |
+| Store fault  | A filesystem or platform error outside one entry, or an invalid cache location                                                                                                                                                 | The directory warning, once    | Off for the rest of the process |
+| Normal event | A held entry lock at a read, a held lock at a write or at an index or access-order update, a full set of pending writes, no room or no free lease for a write, a document that left the render cache, or a cancelled operation | None                           | Stays on                        |
 
 A damaged entry has a damaged receipt or header, a wrong size or digest, or a
 document that does not decode or does not match its key. A foreign entry has another

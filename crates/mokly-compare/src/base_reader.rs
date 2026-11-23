@@ -10,18 +10,19 @@ use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::asset_delivery::AssetRead;
 use mokly_graph::cache::Artifact;
+use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::collection_input::EncodedComparisonDocument;
 use mokly_graph::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence};
 use mokly_graph::comparison_proof::{ComparisonRead, ContentIdentity, ProofMode};
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, Result};
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
-    ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
-    TemporaryDocument,
+    ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, TemporaryDocument,
 };
-use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
+use mokly_graph::workers::ComparisonTask;
 use mokly_model::data::Props;
 use mokly_model::runtime_diagnostic::{RuntimeCode, RuntimeDiagnostic};
 use mokly_model::usage::CatalogueUsage;
@@ -192,6 +193,20 @@ impl RenderGeneration for BaseReader {
             RetainedComparisonInput::Deferred(_) => None,
         }
     }
+    fn capture_parallelism(&self) -> usize {
+        self.state.reuse.base.generation.capture_parallelism()
+    }
+    fn schedule_capture_window(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        self.state
+            .reuse
+            .base
+            .generation
+            .schedule_capture_window(task, consumer);
+    }
     fn comparison_parallelism(&self) -> usize {
         self.state.reuse.base.generation.comparison_parallelism()
     }
@@ -212,17 +227,6 @@ impl RenderGeneration for BaseReader {
             .base
             .generation
             .schedule_comparison_stream(task, consumer);
-    }
-    fn schedule_comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        self.state
-            .reuse
-            .base
-            .generation
-            .schedule_comparison(routes, worker)
     }
     fn resource_bytes(&self, route: &str) -> Result<Option<Vec<u8>>> {
         self.state.read(|base| base.resource_bytes(route))
@@ -245,7 +249,9 @@ impl RenderGeneration for BaseReader {
         for route in self.plans().keys() {
             let input = self.comparison_input(route)?;
             self.check_cancelled()?;
-            collector.collect(route, input)?;
+            let encoded =
+                EncodedComparisonDocument::encode(route, input, collector.encoder().as_ref())?;
+            collector.collect(route, encoded)?;
         }
         Ok(summary)
     }

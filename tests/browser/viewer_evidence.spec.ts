@@ -125,7 +125,7 @@ for (const cross of [false, true]) {
         .elementHandle();
       await page.evaluate(
         (pending) =>
-          window.evidence.update("desktop", pending ? "pending" : "ready"),
+          window.evidence.update("desktop", pending ? "unavailable" : "ready"),
         pending,
       );
       await expect

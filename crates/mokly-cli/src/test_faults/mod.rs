@@ -23,6 +23,7 @@ use mokly_static::transaction::{Transaction, Transactions};
 #[cfg(unix)]
 use crate::interrupts::Interrupts;
 
+pub(super) mod allocator_probe;
 mod files;
 mod rename;
 

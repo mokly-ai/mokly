@@ -56,7 +56,7 @@ stub's origin, which can need its cookie, for example behind a private preview
 proxy; `omit` was rejected because such a proxy then rejects every read after
 the page loads.
 URL sources use HTTP(S) without userinfo or fragments. Fetches stay same-origin
-and reject cross-origin redirects. Serve JSON uses `Cache-Control: no-store`.
+and reject cross-origin redirects. In Serve the index, the details, and the live descriptor use `Cache-Control: no-store`. The files of a comparison generation follow the [comparison serving contract](./mokly-comparison-serving.md#generation-and-serving).
 Static hosts may cache the immutable index and details under the [static revalidation rules](./mokly-export-delivery.md#headers-caching-and-revalidation).
 The shell keeps the index and the details for the page's lifetime.
 
