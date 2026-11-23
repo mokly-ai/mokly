@@ -211,22 +211,21 @@ export function outcomeLines(scope: Page | Locator): Locator {
 
 /**
  * Wait until the shell shows `entryPath` and has applied its entry detail.
- * The head names the routed entry in the same render that starts the detail
- * load, and the stage and the Usage panel show that load until it settles.
- * The detail can still make an entry comparison-eligible, so every check that
- * the comparison band is absent waits for this first.
+ * The Path row of Inspect's head names the routed entry in the same render
+ * that starts the detail load, in either layout and while another tab is
+ * selected, and the stage and the Usage fold show that load until it
+ * settles. The detail can still make an entry comparison-eligible, so every
+ * check that the comparison band is absent waits for this first.
  */
 export async function awaitRoutedDetail(
   scope: Page | Locator,
   entryPath: string,
 ): Promise<void> {
-  await expect(
-    scope.locator(".mbk-screen-head [data-copy-path]"),
-  ).toHaveAttribute("data-copy-path", entryPath);
+  await expect(scope.locator("[data-inspect-path] code")).toHaveText(entryPath);
   await expect(
     scope.locator('[data-mokly-stage][aria-busy="true"]'),
   ).toHaveCount(0);
   await expect(
-    scope.locator('[data-inspector-panel="usage"] p[role="status"]'),
+    scope.locator('[data-inspect-section="usage"] p[role="status"]'),
   ).toHaveCount(0);
 }
