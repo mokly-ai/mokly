@@ -1,0 +1,99 @@
+/* Swipe's divider over a frame. It fills the frame's box and lets the
+   pointer through, except at its grip: the line stands at the divider's
+   position, the grip in the middle of the line, and the tags at the top, the
+   version before's to the left of the line and the current version's to its
+   right. Its marks keep their size at every zoom. The line and the grip take
+   the surface of the frame's scheme, so they read on both versions. */
+.mbk-swipe {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  --mbk-swipe-surface: var(--mbk-screen-bg);
+  --mbk-swipe-ink: var(--mbk-screen-ink);
+}
+
+[data-preview-color-scheme="dark"] .mbk-swipe {
+  --mbk-swipe-surface: var(--mbk-dark-screen-bg);
+  --mbk-swipe-ink: var(--mbk-dark-screen-ink);
+}
+
+.mbk-swipe-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--mbk-swipe-at);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--cv-signal);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--mbk-swipe-surface) 60%, transparent);
+}
+
+/* The tags: the version before in the dark tag, the current version in the
+   signal tag, each 8px from the line. */
+.mbk-swipe-tag {
+  position: absolute;
+  top: 8px;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font: 500 10.5px/1 var(--cv-mono);
+  white-space: nowrap;
+}
+
+.mbk-swipe-tag[data-side="before"] {
+  right: calc(100% - var(--mbk-swipe-at) + 8px);
+  background: var(--cv-text);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cv-surface) 24%, transparent);
+  color: var(--cv-surface);
+}
+
+.mbk-swipe-tag[data-side="after"] {
+  left: calc(var(--mbk-swipe-at) + 8px);
+  background: var(--cv-signal);
+  color: var(--cv-on-signal);
+}
+
+/* The grip: a round handle on the line with a signal ring, which the reader
+   drags, and which takes the focus glow. */
+.mbk-swipe-grip {
+  position: absolute;
+  top: 50%;
+  left: var(--mbk-swipe-at);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  background: var(--mbk-swipe-surface);
+  box-shadow:
+    0 0 0 2px var(--cv-signal),
+    0 6px 14px -4px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 35%, transparent),
+        color-mix(in srgb, var(--cv-background) 60%, transparent)
+      );
+  color: var(--mbk-swipe-ink);
+  cursor: ew-resize;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mbk-swipe-grip:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--mbk-focus-glow),
+    0 0 0 2px var(--cv-signal);
+}
+
+@media (forced-colors: active) {
+  .mbk-swipe-grip:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

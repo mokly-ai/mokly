@@ -541,9 +541,9 @@ override the desktop layout rules.
   — `AppearanceSelector`, the Auto, Light, and Dark control of the standalone
   shell
 - [`src/comparison-toolbar/comparison-toolbar.tsx`](./src/comparison-toolbar/comparison-toolbar.tsx)
-  — `ComparisonToolbar` and its `ComparisonMode`: the mode group, the Scroll
-  together switch, and Refresh, as buttons or as the links and inert text of
-  a static band
+  — `ComparisonToolbar` and its `ComparisonMode`: the mode group of the five
+  modes, the Scroll together switch, Refresh, and the outcome line of each
+  compared frame, as buttons or as the links and inert text of a static band
 - [`src/segmented-control/segmented-control.tsx`](./src/segmented-control/segmented-control.tsx)
   — `SegmentedControl`, the named group of segments that the viewport and
   scheme switches and the comparison modes render, as buttons or as the links
@@ -652,10 +652,12 @@ override the desktop layout rules.
   `sectionExtent`, the lengths that Fit reads
 - [`src/canvas-frame/canvas-frame.tsx`](./src/canvas-frame/canvas-frame.tsx) —
   `CanvasFrame`: a bare frame, its label and size tag, a step's description,
-  and its scaled document or the place that holds a note
+  its scaled document or the place that holds a note, and what lies over the
+  document at the frame's size, such as Swipe's divider
 - [`src/canvas-frame/frame-label.tsx`](./src/canvas-frame/frame-label.tsx) —
-  the frame's label: its glyph, a step's number, its name or the link that it
-  is, `Light only`, and its size tag
+  the frame's label: its glyph, the Before or Current tag of a frame of Side
+  by side, a step's number, its name or the link that it is, `Light only`,
+  and its size tag
 - [`src/canvas-missing-view/canvas-missing-view.tsx`](./src/canvas-missing-view/canvas-missing-view.tsx)
   — `CanvasMissingView`: the note of a view never captured, in its frame's
   place
@@ -708,6 +710,14 @@ override the desktop layout rules.
 - [`src/comparison-pane/comparison-pane.tsx`](./src/comparison-pane/comparison-pane.tsx)
   — `ComparisonPane`, `ComparisonLayer`, `ComparisonViewport`,
   `ComparisonSurface`, and `ComponentFrame`: one version and its viewport
+- [`src/canvas-comparison/canvas-comparison.tsx`](./src/canvas-comparison/canvas-comparison.tsx)
+  — `CanvasComparisonStage` and `FrameComparison`: the canvas of a compare,
+  with the comparison's state on a canvas in place of the section while the
+  section stays mounted, and a canvas frame's document in a compare mode,
+  whose page viewport draws no scrollbar
+- [`src/swipe-divider/swipe-divider.tsx`](./src/swipe-divider/swipe-divider.tsx)
+  — `SwipeDivider`: Swipe's line, grip and Before and Current tags over a
+  frame, which a drag, the arrow keys, Home and End move
 - [`src/variant-bar/variant-bar.tsx`](./src/variant-bar/variant-bar.tsx) —
   `VariantBar`: the links of a component's saved variants, or the pictures
   of a static depiction, and the status

@@ -11,12 +11,9 @@ import { test } from "node:test";
 import type { EntryChangeReason } from "@mokly/model";
 
 import type { ComparedEntry, ReviewView } from "../src/review/types.js";
-import { selectedComparisonViews } from "../src/shell/comparison_selection.js";
-import { ComparisonViews } from "../src/shell/comparison_views.js";
-import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 import { isStyleOnlyView } from "../src/shell/workspace_style_evidence.js";
 
-import { storeMarkup } from "./shell_markup.js";
+import { frameOutcome } from "./compared_outcome.js";
 
 const SHEET = "static/theme.css";
 const OTHER = "static/other.css";
@@ -124,39 +121,13 @@ test("an unchanged view and an entry without a reason keep the ordinary label", 
   assert.equal(isStyleOnlyView(view(undefined), [dependency(SHEET)]), false);
 });
 
-const MOBILE: ComparisonPresentation = {
-  colorScheme: "light",
-  mode: "side",
-  requestedColorScheme: "light",
-  viewport: "mobile",
-};
-const MOBILE_DARK: ComparisonPresentation = {
-  ...MOBILE,
-  colorScheme: "dark",
-  requestedColorScheme: "dark",
-};
-
-/** The selected mobile heading of one compared entry, as the panes render it. */
+/** The outcome line of the entry's Mobile frame, as the comparison band lists it. */
 function heading(
   entry: ComparedEntry,
   kind: "component" | "screen",
-  presentation = MOBILE,
+  scheme: "dark" | "light" = "light",
 ): string | undefined {
-  const loaded = {
-    url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/`,
-  };
-  const views = selectedComparisonViews(loaded, presentation, entry);
-  const markup = storeMarkup(
-    <ComparisonViews
-      entryId={entry.path}
-      entryKind={kind}
-      presentation={presentation}
-      presentations={new Map()}
-      together
-      views={views}
-    />,
-  );
-  return /<h3 class="mbk-reset">(.*?)<\/h3>/.exec(markup)?.[1];
+  return frameOutcome(entry, kind, { scheme });
 }
 
 function changedEntry(
@@ -176,18 +147,18 @@ function changedEntry(
 test("the pane heading takes its noun from the wording of the entry kind", () => {
   assert.equal(
     heading(changedEntry("screen", [dependency(SHEET)]), "screen"),
-    "Mobile · Styles this screen uses changed",
+    "Mobile · Light · Styles this screen uses changed",
   );
   assert.equal(
     heading(changedEntry("component", [dependency(SHEET)]), "component"),
-    "Mobile · Styles this variant uses changed",
+    "Mobile · Light · Styles this variant uses changed",
   );
   assert.equal(
     heading(
       changedEntry("component", [dependency(SHEET), { kind: "metadata" }]),
       "component",
     ),
-    "Mobile · Variant changed",
+    "Mobile · Light · Variant changed",
   );
 });
 
@@ -208,11 +179,11 @@ test("a variant's heading reads the variant's own reasons, not its parent's", ()
   };
   assert.equal(
     heading(variant, "component"),
-    "Mobile · Styles this variant uses changed",
+    "Mobile · Light · Styles this variant uses changed",
   );
   assert.equal(
     heading(parent, "component"),
-    "Mobile · No changes to this variant",
+    "Mobile · Light · No changes to this variant",
   );
 });
 
@@ -225,7 +196,12 @@ test("a stylesheet for dark views only keeps the style heading on light views", 
       { ...view([rule(dark), rule(SHEET)]), colorScheme: "dark" },
     ],
   };
-  const styles = "Mobile · Styles this screen uses changed";
-  assert.equal(heading(entry, "screen"), styles);
-  assert.equal(heading(entry, "screen", MOBILE_DARK), styles);
+  assert.equal(
+    heading(entry, "screen"),
+    "Mobile · Light · Styles this screen uses changed",
+  );
+  assert.equal(
+    heading(entry, "screen", "dark"),
+    "Mobile · Dark · Styles this screen uses changed",
+  );
 });

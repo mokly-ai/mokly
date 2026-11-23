@@ -1,6 +1,6 @@
 /**
- * The shared viewport one comparison chrome scrolls. This container attaches
- * the viewport and its spacer to the scroll controller;
+ * The page viewport that a comparison frame's versions share. This
+ * container attaches the viewport and its spacer to the scroll controller;
  * `@mokly/ui/comparison-pane` draws them.
  */
 
@@ -25,10 +25,11 @@ export function useComparisonViewport(): ViewportScope | undefined {
 }
 
 /**
- * The only user-scrollable container of its layers. A sticky box the size of
- * the viewport holds the device-sized frames, so viewport units, fixed and
- * sticky content render as in Current; the spacer after it extends the range
- * to the section's largest document.
+ * The only scrollable container of its layers. It fills its canvas frame's
+ * document, and a sticky box of its size holds the frames at the canvas
+ * frame's nominal size, so viewport units, fixed and sticky content render as
+ * in Current; the spacer after it extends the range to the largest document
+ * that the viewport's controller holds.
  */
 export function ComparisonViewport({
   children,

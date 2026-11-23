@@ -70,9 +70,10 @@ function Refresh({
 /**
  * The mode group, then the Scroll together switch in every diff mode,
  * including while a comparison loads or has failed, then Refresh once a
- * comparison loaded. The switch is a native checkbox with switch semantics
- * laid over a drawn track, so its label is its hit area and accessible name.
- * It stays native in every band, because it acts in place.
+ * comparison loaded, and the outcome line of each compared frame. The switch
+ * is a native checkbox with switch semantics laid over a drawn track, so its
+ * label is its hit area and accessible name. It stays native in every band,
+ * because it acts in place.
  */
 export function ComparisonToolbar({
   current,
@@ -84,6 +85,7 @@ export function ComparisonToolbar({
   onMode,
   onRefresh,
   onTogether,
+  outcomes = [],
   together,
 }: {
   /** Whether Current is shown, which hides Scroll together and Refresh. */
@@ -107,6 +109,11 @@ export function ComparisonToolbar({
   onMode: (mode: ComparisonMode) => void;
   onRefresh: () => void;
   onTogether: (on: boolean) => void;
+  /**
+   * The outcome line of each compared frame, such as `Desktop · Light ·
+   * Screen changed`, which a diff mode lists below the band's controls.
+   */
+  outcomes?: readonly string[];
   together: boolean;
 }) {
   return (
@@ -137,6 +144,18 @@ export function ComparisonToolbar({
         interactive={interactive}
         onRefresh={onRefresh}
       />
+      {current || !outcomes.length ? null : (
+        <ul
+          aria-label="Compared frames"
+          className="mbk-diff-outcomes mbk-reset"
+        >
+          {outcomes.map((outcome) => (
+            <li className="mbk-reset" key={outcome}>
+              {outcome}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
