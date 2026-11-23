@@ -59,6 +59,16 @@ export interface RowState {
   settled?: RowSettled;
 }
 
+/** What the controller reads of one row: whether its work runs, and what settled. */
+export interface RowStatus {
+  /** Whether the row's request or renewal runs. */
+  running: boolean;
+  settled?: RowSettled;
+}
+
+/** The status of each row that the engine holds, by entry id; it never changes in place. */
+export type RowStates = ReadonlyMap<string, RowStatus>;
+
 /** The snapshot without a demand: Current, or before the first demand. */
 export const IDLE_ROWS: ComparisonRowsSnapshot = { busy: false };
 
@@ -110,32 +120,36 @@ function sameGenerations(
 }
 
 /**
- * The snapshot of the demanded rows, in the demand's order. A row's failure
- * shows for its latest key and its generation for its scope; a row that left
- * the demand shows nothing. The presentation takes the demand's mode and axes
- * once every demanded row has settled for its latest key, and keeps the
- * earlier value meanwhile. `previous` stays while nothing in it changes,
- * because the documents of each row depend on the identity of `generations`.
+ * The snapshot of the rows that `demand` holds, in its order, for the render
+ * that makes the demand. A row whose key the demand changes reads as pending
+ * at once, before the work for that key starts, so nothing loads documents
+ * of its new frames from a generation that it has not renewed. A row's
+ * failure shows for its latest key and its generation for its scope; a row
+ * that left the demand shows nothing. The presentation takes the demand's
+ * mode and axes once every demanded row has settled for its latest key, and
+ * keeps the earlier value meanwhile. `previous` stays while nothing in it
+ * changes, because the documents of each row depend on the identity of
+ * `generations`.
  */
 export function rowsSnapshot(
   previous: ComparisonRowsSnapshot,
-  rows: ReadonlyMap<string, RowState>,
-  latest: ComparisonDemand | undefined,
+  rows: RowStates,
+  demand: ComparisonDemand | undefined,
 ): ComparisonRowsSnapshot {
-  if (!latest) return IDLE_ROWS;
+  if (!demand) return IDLE_ROWS;
   const loaded = new Map<string, LoadedComparison>();
   const failures = new Map<string, string>();
   const pending = new Set<string>();
   let settled = true;
-  for (const { id, key, scopeKey } of latest.rows) {
+  for (const { id, key, scopeKey } of demand.rows) {
     const row = rows.get(id);
     const state = row?.settled;
-    if (row?.operation) pending.add(id);
+    const current = state?.key === key;
+    if (row?.running === true || !current) pending.add(id);
     if (state?.kind === "loaded" && state.scopeKey === scopeKey)
       loaded.set(id, state.loaded);
-    if (state?.kind === "failed" && state.key === key)
-      failures.set(id, state.message);
-    if (state?.key !== key) settled = false;
+    if (state?.kind === "failed" && current) failures.set(id, state.message);
+    if (!current) settled = false;
   }
   const generations = sameGenerations(
     previous.generations,
@@ -144,7 +158,7 @@ export function rowsSnapshot(
     pending,
   );
   const presentation = settled
-    ? samePresentation(previous.presentation, latest.presentation)
+    ? samePresentation(previous.presentation, demand.presentation)
     : previous.presentation;
   const busy = pending.size > 0;
   if (

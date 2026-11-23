@@ -24,9 +24,11 @@ import {
   createComparisonRows,
   type ComparisonRows,
 } from "./comparison_row_lifecycle.js";
-import type {
-  ComparisonGenerations,
-  ComparisonRowsSnapshot,
+import {
+  IDLE_ROWS,
+  rowsSnapshot,
+  type ComparisonGenerations,
+  type ComparisonRowsSnapshot,
 } from "./comparison_row_snapshot.js";
 import { useShellStore } from "./store_context.js";
 
@@ -82,16 +84,18 @@ export interface ComparisonOptions {
   owner?: string;
 }
 
-/** The rows of one owner in one environment. */
+/** The rows of one owner in one environment, and what the last render showed. */
 interface RowsHolder {
   environment: ComparisonEnvironment | undefined;
   ownerKey: string;
   rows: ComparisonRows;
+  shown: ComparisonRowsSnapshot;
 }
 
 /**
  * One rows engine for each owner and environment, fed with the latest demand.
- * A new owner, a new environment and unmount cancel every row.
+ * Each render shows the rows for its own demand, before the effect applies
+ * it. A new owner, a new environment and unmount cancel every row.
  */
 function useComparisonRows(
   environment: ComparisonEnvironment | undefined,
@@ -108,20 +112,23 @@ function useComparisonRows(
       environment,
       ownerKey,
       rows: createComparisonRows(environment),
+      shown: IDLE_ROWS,
     };
-  const { rows } = holder.current;
-  const snapshot = useSyncExternalStore(
+  const current = holder.current;
+  const { rows } = current;
+  const states = useSyncExternalStore(
     rows.subscribe,
     rows.snapshot,
     rows.snapshot,
   );
+  current.shown = rowsSnapshot(current.shown, states, demand);
   const latest = useRef(demand);
   latest.current = demand;
   useEffect(() => {
     rows.demand(latest.current);
   }, [rows, demand?.key]);
   useEffect(() => () => rows.reset(), [rows]);
-  return { rows, snapshot };
+  return { rows, snapshot: current.shown };
 }
 
 /** Keep one request owner across rapid toolbar, viewport, and scheme changes. */
@@ -176,10 +183,7 @@ export function useComparison({
     if (!eligible) setModeState({ ownerKey, mode: "current" });
   }, [eligible, ownerKey]);
 
-  // Current and an ineligible view show no row, before the rows are reset.
-  const { busy, generations, presentation } = demand
-    ? snapshot
-    : { busy: false, generations: undefined, presentation: undefined };
+  const { busy, generations, presentation } = snapshot;
   const loaded = generations?.get(entryId);
   const failure = generations?.failures?.get(entryId);
   return {

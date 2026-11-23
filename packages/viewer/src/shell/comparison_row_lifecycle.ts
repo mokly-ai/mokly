@@ -18,13 +18,11 @@ import {
   renewComparison,
   requestComparison,
 } from "./comparison_request.js";
-import {
-  IDLE_ROWS,
-  rowsSnapshot,
-  type ComparisonRowsSnapshot,
-  type RowOperation,
-  type RowSettled,
-  type RowState,
+import type {
+  RowOperation,
+  RowSettled,
+  RowState,
+  RowStates,
 } from "./comparison_row_snapshot.js";
 
 /** The compared rows of one comparison owner in one environment. */
@@ -37,8 +35,34 @@ export interface ComparisonRows {
   reset(): void;
   /** Request one demanded row again with `refresh=1`. */
   retry(id: string): void;
-  snapshot(): ComparisonRowsSnapshot;
+  /** The status of every row that the rows hold, which a change replaces. */
+  snapshot(): RowStates;
   subscribe(listener: () => void): () => void;
+}
+
+/** The status of no row. */
+const NO_ROWS: RowStates = new Map();
+
+/** The rows' statuses; the previous ones stay while no row's status changes. */
+function rowStates(
+  previous: RowStates,
+  rows: ReadonlyMap<string, RowState>,
+): RowStates {
+  const next = new Map(
+    [...rows].map(([id, { operation, settled }]) => [
+      id,
+      { running: operation !== undefined, ...(settled ? { settled } : {}) },
+    ]),
+  );
+  const same =
+    next.size === previous.size &&
+    [...next].every(([id, status]) => {
+      const before = previous.get(id);
+      return (
+        before?.running === status.running && before.settled === status.settled
+      );
+    });
+  return same ? previous : next;
 }
 
 /** Create the rows of one comparison owner in one environment. */
@@ -48,10 +72,10 @@ export function createComparisonRows(
   const rows = new Map<string, RowState>();
   const listeners = new Set<() => void>();
   let latest: ComparisonDemand | undefined;
-  let snapshot = IDLE_ROWS;
+  let snapshot = NO_ROWS;
 
   function publish(): void {
-    const next = rowsSnapshot(snapshot, rows, latest);
+    const next = rowStates(snapshot, rows);
     if (next === snapshot) return;
     snapshot = next;
     for (const listener of [...listeners]) listener();

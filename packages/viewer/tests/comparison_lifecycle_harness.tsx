@@ -73,10 +73,14 @@ export interface HeldRequest {
    */
   label: string;
   signal: AbortSignal;
+  /** The requested address. */
+  url: URL;
   /** Answer with the generation root that the request reached. */
   answer(root: string): void;
   /** End the request with a network failure. */
   fail(error: unknown): void;
+  /** Answer with any response, such as a document or a failure status. */
+  respond(response: Response): void;
 }
 
 function label(url: URL, method: string): string {
@@ -89,8 +93,12 @@ function label(url: URL, method: string): string {
   return `${method} ${url.pathname}`;
 }
 
-function response(url: string): Response {
-  const value = new Response(null, { status: 204 });
+/** A response that reached `url`, with a status and an optional HTML body. */
+export function response(url: string, status = 204, html?: string): Response {
+  const value = new Response(html ?? null, {
+    status,
+    ...(html === undefined ? {} : { headers: { "content-type": "text/html" } }),
+  });
   Object.defineProperty(value, "url", { value: url });
   return value;
 }
@@ -115,8 +123,10 @@ export function heldHost(
         requests.push({
           label: label(url, init?.method ?? "GET"),
           signal: init?.signal ?? new AbortController().signal,
+          url,
           answer: (root) => resolve(response(root)),
           fail: reject,
+          respond: resolve,
         });
       }),
     reportError: (error) => reported.push(error),

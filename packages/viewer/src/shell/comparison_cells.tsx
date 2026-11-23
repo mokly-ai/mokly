@@ -55,8 +55,8 @@ export interface ComparisonSectionInput {
   mode: "difference" | "overlay" | "side" | "swipe";
   /** Receives each position that Swipe's grip moves to. */
   onSplit: (position: number) => void;
-  /** Try again on a row whose comparison could not be loaded. */
-  retry: () => void;
+  /** Try again on a row whose comparison could not be loaded, by its entry id. */
+  retry: (entry: string) => void;
   /** The frame that Side by side compares, by its key. */
   sideKey: string | undefined;
   split: number;
@@ -65,23 +65,31 @@ export interface ComparisonSectionInput {
   wording: Pick<EntryWording, "label">;
 }
 
-/** A compared frame whose row could not be loaded: the failure in its place. */
+/**
+ * A compared frame whose row could not be loaded: the failure in its place,
+ * whose Try again requests that row again.
+ */
 function failedCell(
-  key: string,
+  frame: ComparedFrame,
   cell: ComparisonFrameCell,
   message: string,
-  retry: () => void,
+  retry: (entry: string) => void,
 ): CanvasSectionFrame {
   return {
     column: cell.column,
     height: cell.size.height,
-    key: `compare:${key}`,
+    key: `compare:${frame.key}`,
     node: (
       <CanvasFrame
         height={cell.size.height}
         kind={cell.kind}
         label={cell.label}
-        place={<ComparisonFailure details={message} onRetry={retry} />}
+        place={
+          <ComparisonFailure
+            details={message}
+            onRetry={() => retry(frame.entry)}
+          />
+        }
         scheme={cell.scheme}
         width={cell.size.width}
       />
@@ -129,7 +137,7 @@ function stackedCell(
   const { frame, state } = compared;
   const cell = { ...compared.cell, column: place.column, row: place.row };
   if (state.status === "failed")
-    return failedCell(frame.key, cell, state.message, input.retry);
+    return failedCell(frame, cell, state.message, input.retry);
   const node =
     state.before && state.after ? (
       <StackedComparisonFrame

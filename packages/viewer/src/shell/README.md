@@ -180,8 +180,10 @@ The comparison holds one generation for each row that it demands, under the
 [selected comparisons contract](../../../../docs/protocol/mokly-selected-comparisons.md):
 each row of the shown frames that `useComparison` receives, a screen or one
 row of a component's variant set, or without frames the routed entry's row
-alone. `comparisonFrames` in `comparison_eligible_frames.ts` gives the shown
-frames whose rows compare under the
+alone. `workspace.tsx` passes the canvas's frames that compare. A removed
+component or variant has no live frames, so it passes none, and the removed
+row compares alone. `comparisonFrames` in `comparison_eligible_frames.ts`
+gives the shown frames whose rows compare under the
 [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
 the row's shown views are eligible, or a shown view that reads Unmodified uses
 a changed component that the row's own detail names. `comparison_presentation.ts`
@@ -200,15 +202,17 @@ leaves the demand aborts its work and keeps its generation, which renews when
 the row returns. A failed row keeps its failure for its key while the other
 rows continue; `retry` requests one row again, the routed row by default, and
 `refresh` every demanded row. `comparison_row_snapshot.ts` shows the demanded
-rows to the controller: `generations`, by entry id, with the rows that still
-load and the rows that failed, keeps its identity while nothing in it changes,
-and the presentation follows the latest mode and axes once every demanded row
-has settled. `use_comparison_documents.ts` presents and aborts each row's
-documents on its own, starts nothing new for a row that renews, reads a failed
-row's failure, and keeps the accepted presentations while `generations` is
-absent, as Inspect makes it, so a return shows the mode with no new load. A
-failed request shows the comparison failure with Try again; Current remains
-available.
+rows to the controller, for the demand of each render: `generations`, by
+entry id, with the rows that still load and the rows that failed, keeps its
+identity while nothing in it changes, and the presentation follows the latest
+mode and axes once every demanded row has settled. A row whose key a render
+changes reads as loading in that render, so no document of its new frames
+loads before its renewal. `use_comparison_documents.ts` presents and aborts
+each row's documents on its own, starts nothing new for a row that renews,
+reads a failed row's failure, and keeps the accepted presentations while
+`generations` is absent, as Inspect makes it, so a return shows the mode with
+no new load. A failed row shows the comparison failure with Try again on
+its own frames while the other rows compare; Current remains available.
 Every failed comparison uses the details sentence "The comparison is
 unavailable.". The shell never shows server or browser error text there.
 `use_comparison.ts` owns comparison mode through `comparison_mode.tsx`,
@@ -739,15 +743,18 @@ no live frames, gets the frames of its own views and its own section), and
 the frame that Side by side compares, which starts on the first compared
 frame, the picked frame in the compact layout, and which `setComparedFrame`
 of `comparison_compared_frame.ts` chooses. `comparison_canvas_state.ts`
-decides what the canvas holds: `Loading comparison…`, the failure with Try
-again, or the line of an entry without a comparison, which
+decides what the canvas holds: `Loading comparison…` until every demanded row
+has a generation, the failure when every drawn row failed, whose Try again
+requests every row again, or the line of an entry without a comparison, which
 `@mokly/ui/canvas-comparison` draws on a canvas in place of the section while
 the section's live frames stay mounted out of sight, or the compared frames.
 Through the context of `comparison_canvas_context.ts`, `canvas_stage.tsx`
 then takes the section of `comparison_cells.tsx`: in Overlay, Difference and
 Swipe each compared frame takes its live frame's cell, and in Side by side
 the section holds the compared frame's Before and Current frames. A frame
-whose version is missing makes the compare fall back to Side by side. The
+that misses one of its two versions makes the compare fall back to Side by
+side. A failed row's frames have no versions: each draws the row's failure in
+its cell, whose Try again requests that row again. The
 container's `shown` input, true by default, gates the compare: while it is
 false the canvas shows its live frames, while the mode, the loaded comparison
 and its presentations stay. `comparison_canvas_parts.ts` keeps one scroll
