@@ -67,7 +67,9 @@ export function registerDesignLinks(
       });
       await frame.getByRole("link", { name: "Mokly", exact: true }).focus();
       await tabTo(page, catalogue);
-      await expect(catalogue).toHaveCSS("outline-style", "solid");
+      // Keyboard focus shows the focus glow of decision 38, not an outline.
+      await expect(catalogue).toHaveCSS("outline-style", "none");
+      await expect(catalogue).not.toHaveCSS("box-shadow", "none");
       await page.keyboard.press("Enter");
       await expect(page).toHaveURL(
         /\/view\/design\/canvas\/stage\/catalogue\/$/,

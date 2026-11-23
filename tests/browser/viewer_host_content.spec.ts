@@ -97,7 +97,7 @@ test("no viewer rule matches the host page or host slot content", async ({
     };
   });
   expect(report.rules).toBeGreaterThan(400);
-  expect(report.slotted).toBe(8);
+  expect(report.slotted).toBe(9);
   expect(report.checked).toBeGreaterThan(80);
   expect(report.matches).toEqual([]);
 });
