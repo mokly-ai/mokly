@@ -80,7 +80,7 @@ function Selection({
       savedVariant: false,
       scheme: "light",
     },
-    selecting,
+    selecting: () => selecting,
     set: true,
     state,
   });

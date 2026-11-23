@@ -187,7 +187,13 @@ row compares alone. `comparisonFrames` in `comparison_eligible_frames.ts`
 gives the shown frames whose rows compare under the
 [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
 the row's shown views are eligible, or a shown view that reads Unmodified uses
-a changed component that the row's own detail names. `comparison_presentation.ts`
+a changed component that the row's own detail names. `comparisonOffered` in the
+same file gates the compare modes, the route's comparison intent, and the
+Changes tab of an entry that Changes does not list: a variant set with live
+frames offers them while one of its shown rows compares, whichever row the
+route names, and a screen, or a removed component or variant, while its
+routed views are eligible. A row that does not compare keeps its live frames
+while a mode shows. `comparison_presentation.ts`
 turns the frames into the demand, with one key for each row: each row with the
 axes of its frames, or in Side by side the row of the compared frame alone.
 Without frames, the routed row is keyed on the selection's axes.
@@ -231,9 +237,9 @@ environment and unmount cancel every row, and a late response changes nothing.
 `comparison_intent.ts` applies a route's comparison intent once. The store
 counts route installations and keeps the installed route's intent; the
 routed workspace settles it when `comparisonEligibilityKnown` first reports
-final eligibility, and only for an eligible view it opens Side by side and
-selects the Changes tab, where the canvas shows that mode. An intent for an
-ineligible view leaves the selected tab as it is. A
+final eligibility, and only while the workspace offers its compare modes it
+opens Side by side and selects the Changes tab, where the canvas shows that
+mode. Otherwise the intent leaves the selected tab as it is. A
 publication keeps the count, so it cannot reopen the comparison, and the mode
 owner never reads the address.
 
@@ -452,9 +458,11 @@ it. The catalogue's width is the reader's choice or the starting width of
 `canvas_layout.ts`, 252px or 224px below the panel step, and a double click
 on the separator forgets the choice. `nav.tsx` passes the index's `base` to
 the catalogue's foot. A target view puts its tabs in the right panel of
-`right_panel.tsx`: Inspect, and Changes where the entry has it.
-`workspace_panel.tsx` and `target_panel.tsx` give an entry's Changes tab to
-`changes_tab.tsx`, and `comparison_canvas.tsx` draws the compare on the
+`right_panel.tsx`: Inspect, and Changes where the entry has it. A screen's or
+a component's workspace has Changes while Changes lists its entry or while
+the workspace offers its compare modes. `workspace_panel.tsx` and
+`target_panel.tsx` give an entry's Changes tab to `changes_tab.tsx`, and
+`comparison_canvas.tsx` draws the compare on the
 canvas. The dock's Fit refits the canvas that `canvas_stage.tsx` registers in
 `root_context.tsx` while it shows, also during a compare, and it hides while
 the state of a comparison covers the canvas.
@@ -774,13 +782,15 @@ then the modes and the details that the caller gives. An entry that the
 Changes filter does not list has no stepper. `compare_modes.tsx` gives a
 screen's or a component's modes to the tab: the offer rule of the
 [screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls),
-every mode for an eligible view, Current alone for a shown status of Added,
-and none otherwise or for a removed screen; the tiles of
-`@mokly/ui/compare-modes` with a chip for each frame that the canvas shows;
-Scroll together of `use_scroll_together.ts`; and Refresh once a comparison
-loaded. While Changes is the selected tab, `compare_mode_keys.ts` binds the
-keys 1 to 5 to the offered modes. The tab's comparison details list the
-outcome line of each compared frame, such as
+every mode while the workspace offers its compare, as a variant set does
+while a shown row compares, Current alone for a shown status of Added, and
+none otherwise or for a removed screen; the tiles of
+`@mokly/ui/compare-modes` with a chip for each shown frame whose row
+compares, or for each view of a removed component or variant; Scroll
+together of `use_scroll_together.ts`; and Refresh while the comparison holds
+a row's generation. While Changes is the selected tab,
+`compare_mode_keys.ts` binds the keys 1 to 5 to the offered modes. The tab's
+comparison details list the outcome line of each compared frame, such as
 `Desktop · Light · Screen changed` (`comparison_outcome.ts`). The canvas
 shows the chosen mode only while Changes is the selected tab: the workspace
 gates the compare with `shown`, and the inspection, the edit previews and

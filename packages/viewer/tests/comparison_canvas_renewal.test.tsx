@@ -23,10 +23,10 @@ import {
 } from "../src/shell/use_comparison.js";
 
 import {
+  answerDocuments,
   generationRoot,
   heldHost,
   response,
-  type HeldRequest,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
 import { ShellStoreFixture } from "./shell_markup.js";
@@ -115,17 +115,6 @@ function Workspace({
       <Probe shown={shown} />
     </ComparisonCanvas>
   );
-}
-
-/** Answer each held snapshot document with an HTML version at its address. */
-async function answerDocuments(requests: readonly HeldRequest[]) {
-  await act(async () => {
-    for (const request of requests)
-      request.respond(
-        response(request.url.href, 200, "<!doctype html><p>Version</p>"),
-      );
-    await flush();
-  });
 }
 
 test("a change of the shown frames renews the row before its documents load, and a lost generation is selected again", async (t) => {

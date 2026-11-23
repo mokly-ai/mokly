@@ -4,9 +4,10 @@
 
 The `design/canvas/**` family depicts the pane contract with the
 [Changes tab](./mokly-changes-controls.md#changes-tab) of the right panel, in
-both viewports and both schemes. Each compare mode applies to every frame on
-the canvas, except Side by side, which compares the frame that the chips
-choose. Links inside every depicted frame are inert.
+both viewports and both schemes. Each compare mode applies to every frame of
+a [compared row](./mokly-selected-comparisons.md), except Side by side, which
+compares the frame that the chips choose; a row that does not compare keeps
+its current frames. Links inside every depicted frame are inert.
 
 | Entry                                           | State                                                                          |
 | ----------------------------------------------- | ------------------------------------------------------------------------------ |

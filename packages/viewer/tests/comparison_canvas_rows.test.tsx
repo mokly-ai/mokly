@@ -1,7 +1,8 @@
 /**
  * The failures of the compare on the canvas: a row's own failure stays on
  * that row's frames while the other rows compare, and only a failure of every
- * drawn row covers the canvas, whose Try again requests every row again.
+ * drawn row covers the canvas, whose Try again requests every row again. A
+ * row's Try again moves focus to the stage, which shows the row's load.
  */
 
 import assert from "node:assert/strict";
@@ -61,12 +62,20 @@ const LIVE: readonly CanvasSectionFrame[] = PLANS.map(({ key, row }) => ({
   width: 1280,
 }));
 
-/** The keys of the frames that the canvas shows, as the compare gives them. */
-function Probe() {
+/**
+ * The keys of the frames that the canvas shows, as the compare gives them,
+ * and the cell of the shown frame whose key is `drawn`.
+ */
+function Probe({ drawn }: { drawn: string | undefined }) {
   const comparison = useCanvasComparison();
   const frames = comparison ? comparison.frames(LIVE) : LIVE;
   const shown = frames.filter((frame) => !frame.hidden);
-  return <p data-testid="frames">{shown.map((frame) => frame.key).join()}</p>;
+  return (
+    <>
+      <p data-testid="frames">{shown.map((frame) => frame.key).join()}</p>
+      {shown.find((frame) => frame.key === drawn)?.node}
+    </>
+  );
 }
 
 /** The changed Light view of each row. */
@@ -131,9 +140,11 @@ function documentHost() {
   return { answers, environment };
 }
 
+/** The compare on the canvas, which draws the cell of `drawn` by its key. */
 function compare(
   comparison: ComparisonController,
   environment: ComparisonEnvironment,
+  drawn?: string,
 ): ReactNode {
   const generations = comparison.generations ?? new Map();
   return (
@@ -146,7 +157,7 @@ function compare(
         plans={new Map(PLANS.map((each) => [each.key, each]))}
         sideKey={undefined}
       >
-        <Probe />
+        <Probe drawn={drawn} />
       </ComparisonCanvas>
     </ShellStoreFixture>
   );
@@ -188,6 +199,48 @@ test("a row's failure stays on its own frames, and only every row's failure cove
     assert.ok(tryAgain);
     await act(async () => tryAgain.click());
     assert.deepEqual(calls, ["refresh"]);
+  } finally {
+    view.unmount();
+  }
+});
+
+test("a failed row's Try again moves focus to the comparison stage, which holds the row's load in place of the button", async (t) => {
+  GlobalRegistrator.register();
+  t.after(() => GlobalRegistrator.unregister());
+  const host = documentHost();
+  const calls: string[] = [];
+  const loaded = { url: generationRoot("a") };
+  const failed = Object.assign(new Map([[ACTION, loaded]]), {
+    failures: new Map([[OUTLINE, UNAVAILABLE]]),
+  });
+  const cell = `compare:${OUTLINE}:light`;
+  const view = render(
+    compare(controller(failed, calls), host.environment, cell),
+  );
+  try {
+    await act(async () => {
+      for (const answer of host.answers) answer();
+      await flush();
+    });
+    const tryAgain = view.getByRole("button", { name: "Try again" });
+    tryAgain.focus();
+    await act(async () => tryAgain.click());
+    assert.deepEqual(calls, [`retry ${OUTLINE}`]);
+    // The row waits for its next generation, so the canvas shows its load.
+    const retrying = Object.assign(new Map([[ACTION, loaded]]), {
+      pending: new Set([OUTLINE]),
+    });
+    view.rerender(compare(controller(retrying, calls), host.environment, cell));
+    assert.equal(
+      view.container.querySelector("[data-diff-stage]")?.textContent,
+      "Loading comparison…",
+    );
+    // The stage names its entry. The message of a failed comparison of two
+    // elements would print the whole document.
+    assert.equal(
+      document.activeElement?.getAttribute("data-diff-screen"),
+      OUTLINE,
+    );
   } finally {
     view.unmount();
   }

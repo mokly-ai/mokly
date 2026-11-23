@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
-import { render, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 import type { CanvasSectionFrame } from "@mokly/ui/canvas-section";
@@ -24,9 +24,14 @@ import {
 } from "../src/shell/comparison_selection.js";
 import type { ComparisonController } from "../src/shell/use_comparison.js";
 
+import {
+  answerDocuments,
+  heldHost,
+  ORIGIN,
+  type HeldRequest,
+} from "./comparison_lifecycle_harness.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
-const ORIGIN = "https://catalogue.test";
 const ROOT = `${ORIGIN}/mokly-viewer/diffs/generations/one/`;
 const HOME = "product/browse/home";
 
@@ -106,20 +111,9 @@ function homeFrames(): ComparedFrame[] {
   }));
 }
 
-/** An environment that answers every snapshot with a document. */
-function environment(fetched: string[]): ComparisonEnvironment {
-  return {
-    baseUrl: ORIGIN,
-    delivery: () => ({ kind: "live" }),
-    fetch: async (input) => {
-      fetched.push(String(input));
-      const response = new Response("<!doctype html><p>Version</p>", {
-        headers: { "content-type": "text/html" },
-      });
-      Object.defineProperty(response, "url", { value: String(input) });
-      return response;
-    },
-  };
+/** The address of each request that the host holds, in the order sent. */
+function requested(requests: readonly HeldRequest[]): string[] {
+  return requests.map(({ url }) => url.href);
 }
 
 function compare(
@@ -151,19 +145,17 @@ function compare(
 test("the shown gate keeps the loaded comparison and its presentations while the canvas shows its live frames", async (t) => {
   GlobalRegistrator.register();
   t.after(() => GlobalRegistrator.unregister());
-  const fetched: string[] = [];
-  const host = environment(fetched);
+  const { environment: host, requests } = heldHost();
   const frames = homeFrames();
   const comparison = controller(true);
   const view = render(compare({ comparison, frames }, host));
   try {
-    await waitFor(() =>
-      assert.equal(
-        view.getByTestId("frames").textContent,
-        "compare:desktop-light",
-      ),
+    await answerDocuments(requests);
+    assert.equal(
+      view.getByTestId("frames").textContent,
+      "compare:desktop-light",
     );
-    assert.deepEqual(fetched, [
+    assert.deepEqual(requested(requests), [
       `${ROOT}snapshots/before/mokly-generated/${HOME}/index.desktop.html`,
       `${ROOT}snapshots/after/mokly-generated/${HOME}/index.desktop.html`,
     ]);
@@ -174,7 +166,7 @@ test("the shown gate keeps the loaded comparison and its presentations while the
       view.getByTestId("frames").textContent,
       "compare:desktop-light",
     );
-    assert.equal(fetched.length, 2);
+    assert.equal(requests.length, 2);
   } finally {
     view.unmount();
   }
@@ -183,8 +175,7 @@ test("the shown gate keeps the loaded comparison and its presentations while the
 test("the canvas holds the loading line, then the line of an entry without a comparison", async (t) => {
   GlobalRegistrator.register();
   t.after(() => GlobalRegistrator.unregister());
-  const fetched: string[] = [];
-  const host = environment(fetched);
+  const { environment: host, requests } = heldHost();
   const view = render(
     compare({ comparison: controller(false), frames: [] }, host),
   );
@@ -202,7 +193,7 @@ test("the canvas holds the loading line, then the line of an entry without a com
       );
       assert.ok(view.getByText(line));
     }
-    assert.deepEqual(fetched, []);
+    assert.deepEqual(requested(requests), []);
   } finally {
     view.unmount();
   }

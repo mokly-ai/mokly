@@ -2,10 +2,11 @@
  * The right panel of a screen's or a component's workspace. Inspect holds
  * the entry's head, its variants, the Frames filter, the canvas selection,
  * Props, Usage and Components. The entry has Changes while the Changes
- * filter lists it or its comparison is eligible, and a catalogue with
- * comparison data; the tab holds the stepper, the host's slot, the Compared
- * rail, the compare modes and the comparison details, which list each
- * compared frame's outcome and leave the branch point to the rail. An entry
+ * filter lists it or its workspace offers its compare modes, as a variant set
+ * does while a shown row compares, in a catalogue with comparison data; the
+ * tab holds the stepper, the host's slot, the Compared rail, the compare
+ * modes and the comparison details, which list each compared frame's
+ * outcome and leave the branch point to the rail. An entry
  * without Changes keeps its comparison details in Inspect, after the head,
  * with the branch-point sentence.
  */
@@ -57,7 +58,10 @@ export interface WorkspacePanelInput {
   delivery: DetailDelivery;
   /** The evidence of a loaded comparison, which the details show. */
   compared: boolean;
-  /** Whether the shown views' comparison is eligible. */
+  /**
+   * Whether the workspace offers its compare modes, as a variant set does
+   * while a shown row compares.
+   */
   eligible: boolean;
   frames: FramesSectionModel;
   highlight: FramesHighlightControl;

@@ -1,7 +1,7 @@
 /**
  * The compare of a screen's or a component's workspace on its canvas: the
  * frames that compare, the frame that Side by side compares, the outcome
- * line of each compared frame for the comparison band, and the comparison
+ * line of each compared frame for the Changes tab, and the comparison
  * controller with the setter of the compared frame.
  */
 
@@ -17,6 +17,7 @@ import {
   type ComparedFrameChoice,
 } from "./comparison_compared_frame.js";
 import { comparedFrameOutcome } from "./comparison_outcome.js";
+import type { ComparisonFrameDemand } from "./comparison_presentation.js";
 import {
   comparedRows,
   comparisonFramePlans,
@@ -28,7 +29,7 @@ import { useShellStore } from "./store_context.js";
 import type { ComparisonController } from "./use_comparison.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
-/** What the canvas, the band and the panel read of a workspace's compare. */
+/** What the canvas and the Changes tab read of a workspace's compare. */
 export interface WorkspaceComparison {
   /** The props of `ComparisonCanvas`, less its children. */
   canvas: {
@@ -40,6 +41,11 @@ export interface WorkspaceComparison {
     sideKey: string | undefined;
     standalone?: StandaloneComparisonHead;
   };
+  /**
+   * The shown frames whose rows compare, which the chips of Side by side
+   * name; absent for a removed component or variant, whose views all compare.
+   */
+  compared: readonly ComparisonFrameDemand[] | undefined;
   controller: CanvasComparisonController;
   /** The outcome line of each compared frame, once the comparison is loaded. */
   outcomes: readonly string[];
@@ -47,6 +53,7 @@ export interface WorkspaceComparison {
 
 export function useWorkspaceComparison({
   choice,
+  compared: comparing,
   comparison,
   data,
   frames,
@@ -57,6 +64,11 @@ export function useWorkspaceComparison({
 }: {
   /** The reader's choice of the frame that Side by side compares. */
   choice: ComparedFrameChoice;
+  /**
+   * The shown frames whose rows compare, as `comparisonFrames` gives them;
+   * absent for a removed component or variant, which has no live frames.
+   */
+  compared: readonly ComparisonFrameDemand[] | undefined;
   comparison: ComparisonController;
   data: WorkspaceData;
   /** The workspace's frames on the canvas, from which the shown ones compare. */
@@ -115,6 +127,7 @@ export function useWorkspaceComparison({
           }
         : {}),
     },
+    compared: comparing,
     controller: {
       ...comparison,
       comparedFrame: sideKey,

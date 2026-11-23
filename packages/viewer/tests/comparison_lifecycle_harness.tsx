@@ -6,7 +6,7 @@
 
 import assert from "node:assert/strict";
 
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 
 import { VIEWER_DIRECTORY } from "@mokly/model";
 
@@ -21,6 +21,7 @@ import {
 } from "../src/shell/use_comparison.js";
 
 import { indexFixture } from "./catalogue_v9_fixture.js";
+import { flush } from "./data_fakes.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
 /** The origin of the host and of every generation. */
@@ -101,6 +102,23 @@ export function response(url: string, status = 204, html?: string): Response {
   });
   Object.defineProperty(value, "url", { value: url });
   return value;
+}
+
+/**
+ * Answer each held snapshot request with an HTML version at its address,
+ * inside `act`, so the presentations settle and the canvas commits while the
+ * scope is open, and React leaves no task on its scheduler after the test.
+ */
+export async function answerDocuments(
+  requests: readonly HeldRequest[],
+): Promise<void> {
+  await act(async () => {
+    for (const request of requests)
+      request.respond(
+        response(request.url.href, 200, "<!doctype html><p>Version</p>"),
+      );
+    await flush();
+  });
 }
 
 /**

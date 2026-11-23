@@ -2,7 +2,8 @@
  * The shown frames whose rows compare, under the screen controls of the
  * Changes controls contract: a row compares when its shown views are
  * eligible, or when a shown Unmodified view uses a changed component that
- * the row's own detail names.
+ * the row's own detail names. A variant set offers its compare while one of
+ * those rows shows.
  */
 
 import assert from "node:assert/strict";
@@ -22,7 +23,11 @@ import {
   type CanvasShown,
 } from "../src/shell/canvas_frames.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
-import { comparisonFrames } from "../src/shell/comparison_eligible_frames.js";
+import {
+  comparisonFrames,
+  comparisonOffered,
+} from "../src/shell/comparison_eligible_frames.js";
+import type { ComparisonFrameDemand } from "../src/shell/comparison_presentation.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
 
 import {
@@ -185,4 +190,54 @@ test("a screen compares its shown frames and leaves out the frames that the view
       viewport: "desktop",
     },
   ]);
+});
+
+test("a variant set offers its compare while any shown row compares, and a screen or a removed entry while its routed views are eligible", () => {
+  const compared = (path: string): ComparisonFrameDemand[] => [
+    {
+      entry: { path },
+      key: `${path}:light`,
+      scheme: "light",
+      viewport: "desktop",
+    },
+  ];
+  const cases = [
+    {
+      name: "a set whose only compared row is not the routed row",
+      input: { frames: compared(CHANGED), routedEligible: false, set: true },
+      offered: true,
+    },
+    {
+      name: "a set whose routed row reads eligible for a view that the set does not show",
+      input: { frames: [], routedEligible: true, set: true },
+      offered: false,
+    },
+    {
+      name: "a screen whose routed views are eligible",
+      input: { frames: [], routedEligible: true, set: false },
+      offered: true,
+    },
+    {
+      name: "a screen whose routed views are not eligible",
+      input: { frames: compared(HOME), routedEligible: false, set: false },
+      offered: false,
+    },
+    {
+      name: "a removed variant whose views are eligible, without live frames",
+      input: { frames: undefined, routedEligible: true, set: true },
+      offered: true,
+    },
+  ];
+  for (const { input, name, offered } of cases) {
+    assert.equal(
+      comparisonOffered({ comparisons: true, ...input }),
+      offered,
+      name,
+    );
+    assert.equal(
+      comparisonOffered({ comparisons: false, ...input }),
+      false,
+      `${name}, in a catalogue without comparisons`,
+    );
+  }
 });
