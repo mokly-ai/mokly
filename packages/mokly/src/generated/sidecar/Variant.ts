@@ -19,7 +19,7 @@ slug: string,
  */
 title: string,
 /**
- * Top-level data prop replacements.
+ * Data prop replacements, or the story variant's complete data args.
  */
 props: { [key in string]: JsonValue },
 /**

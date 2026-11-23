@@ -27,14 +27,16 @@ its requests and results. The paths below are relative to the package root.
   stories by their tags and keeps Storybook names, tags, descriptions, and the
   preview's composed `beforeAll` hook.
 - [`src/sidecar/stories.ts`](./stories.ts) holds `describeStories`,
-  which classifies args by composed argTypes and gives data props their hints.
-  It omits function and React element args without warnings.
+  which makes the first included story the parent and the other stories its
+  variants. It records each story's data args and control hints, and omits
+  function and React element args without warnings.
 - [`src/sidecar/story-setup.ts`](./story-setup.ts) holds
   `setupStories`, which keeps one active `beforeAll` setup, cleans it up before
   a generation switch, and remembers setup failures.
 - [`src/sidecar/render.ts`](./render.ts) holds `render`, which
   renders entries and the reader's portable stories to static markup. It
-  awaits story setup and `load()` before rendering each story or meta parent.
+  awaits story setup and `load()`. It passes `undefined` for each story data
+  arg that the request leaves out.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module

@@ -92,7 +92,7 @@ export const Saved={argTypes:{count:{control:{type:'number',max:9007199254740993
     assert.deepEqual(
       ordinary.stderr.split("\n").filter((line) => line.includes(suffix)),
       [
-        `[mokly/warning] component "number/Saved": control "/count/maximum" ${suffix}`,
+        `[mokly/warning] component "number": control "/count/maximum" ${suffix}`,
       ],
     );
     const strict = await command(
@@ -117,6 +117,7 @@ test(
 export default {title:'Number',component:({count})=>React.createElement('p',null,count),args:{count:0},
   argTypes:{count:{options:[0,9007199254740993],control:{max:9007199254740993}},
     missing:{control:{max:9007199254740993}}}};
+export const First={};
 export const Saved={};`,
     });
     const result = await command(

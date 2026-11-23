@@ -35,14 +35,40 @@ async function describeFixture(
   return { sidecar, generation, definitions };
 }
 
-test("CSF Factories describe stories and render stories and the meta parent with the preview decorator", async (context) => {
+test("renderStory does not restore a data arg that the request omits", async (context) => {
+  const { sidecar, generation } = await describeFixture(
+    context,
+    ["Button.stories.tsx"],
+    "storybook-template",
+  );
+  await installBindings(sidecar, generation);
+  const story = await sidecar.call<RenderResult>("renderStory", {
+    generation,
+    storyId: "Button.stories.tsx#Primary",
+    props: { label: "Requested" },
+    viewport: "mobile",
+    colorScheme: "light",
+  });
+  assert.equal(
+    story.html,
+    '<button type="button" class="storybook-button storybook-button--medium storybook-button--secondary">Requested</button>',
+  );
+});
+
+test("CSF Factories render the first story as the parent with its decorators", async (context) => {
   const { sidecar, generation, definitions } = await describeFixture(
     context,
     ["button.stories.tsx"],
     "factories",
   );
   assert.deepEqual(definitions.diagnostics, []);
-  assert.equal(definitions.components[0]?.title, "Factory Button");
+  const entry = definitions.components[0];
+  assert.equal(entry?.title, "Factory Button");
+  assert.deepEqual(entry.props, { label: "Primary" });
+  assert.deepEqual(
+    entry.variants.map(({ slug }) => slug),
+    ["Secondary"],
+  );
   assert.deepEqual(
     definitions.stories.map(({ id, props }) => ({ id, props })),
     [
@@ -53,7 +79,7 @@ test("CSF Factories describe stories and render stories and the meta parent with
   await installBindings(sidecar, generation);
   const axes = {
     generation,
-    props: {},
+    props: entry.props,
     viewport: "mobile",
     colorScheme: "light",
   };
@@ -61,10 +87,6 @@ test("CSF Factories describe stories and render stories and the meta parent with
     ...axes,
     storyId: "button.stories.tsx#Primary",
   });
-  assert.equal(
-    story.html,
-    '<section data-preview="factory"><button>Primary</button></section>',
-  );
   const parent = await sidecar.call<RenderResult>("renderComponent", {
     ...axes,
     handle: "button.stories.tsx#default",
@@ -74,8 +96,9 @@ test("CSF Factories describe stories and render stories and the meta parent with
   });
   assert.equal(
     parent.html,
-    '<section data-preview="factory"><button>Meta</button></section>',
+    '<section data-preview="factory"><strong><button>Primary</button></strong></section>',
   );
+  assert.equal(story.html, parent.html);
 });
 
 test("untitled stories keep the component display name, component name, or file name", async (context) => {
@@ -152,12 +175,10 @@ test("story names follow object names, legacy storyName, and Storybook start cas
       variants.map(({ title }) => title),
     ),
     [
-      "Explicit Sidebar",
       "Legacy Sidebar",
       "Object Sidebar",
       "Large Button",
       "Function Button",
-      "Large Button",
       "Named Factory",
     ],
   );
@@ -189,11 +210,6 @@ test("included stories keep custom tags and the first included component descrip
     })),
     [
       {
-        slug: "FirstIncluded",
-        tags: ["preview-tag", "first-tag"],
-        description: undefined,
-      },
-      {
         slug: "InheritedTags",
         tags: ["preview-tag", "meta-tag"],
         description: undefined,
@@ -214,34 +230,26 @@ test("stories files without an included story give no entry and no warning", asy
 });
 
 test("composed function and React element args stay out of data props without exclusions", async (context) => {
-  const sidecar = startSidecar(context);
-  await sidecar.call("hello");
-  const { generation } = await sidecar.call<BundleResult>(
-    "bundle",
-    bundleParams({
-      entryFiles: [],
-      renderer: null,
-      storiesFiles: ["story-args.stories.tsx", "story-non-data.stories.tsx"],
-    }),
-  );
-  await sidecar.call("cssModules", { generation, classMaps: {} });
-  const definitions = await sidecar.call<Definitions>("describe", {
-    generation,
+  const { sidecar, generation, definitions } = await describeFixture(context, [
+    "story-args.stories.tsx",
+    "story-non-data.stories.tsx",
+  ]);
+  assert.deepEqual(definitions.components[0]?.props, {
+    label: "Story",
+    empty: [],
   });
-  assert.deepEqual(definitions.components[0]?.props, { label: "Meta" });
   assert.deepEqual(definitions.components[0]?.excludedProps, []);
   assert.deepEqual(definitions.stories[0]?.props, {
     label: "Story",
     empty: [],
   });
-  assert.deepEqual(definitions.components[0]?.variants[0]?.excludedProps, []);
   assert.deepEqual(Object.keys(definitions.stories[0]!.argTypes).sort(), [
     "empty",
     "label",
   ]);
   assert.deepEqual(definitions.components[0]?.controlOrder, ["label", "empty"]);
   assert.deepEqual(definitions.stories[1]?.props, {});
-  assert.deepEqual(definitions.components[1]?.variants[0]?.excludedProps, [
+  assert.deepEqual(definitions.components[1]?.excludedProps, [
     "value",
     "mixed",
   ]);

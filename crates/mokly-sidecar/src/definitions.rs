@@ -23,7 +23,7 @@ pub struct Variant {
     pub slug: String,
     /// Display title.
     pub title: String,
-    /// Top-level data prop replacements.
+    /// Data prop replacements, or the story variant's complete data args.
     pub props: BTreeMap<String, Value>,
     /// Description override.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -107,7 +107,7 @@ pub struct Definition {
     /// Candidate control keys in authored order, before the core omits uneditable props.
     #[serde(default)]
     pub control_order: Vec<String>,
-    /// Storybook meta hints for the component parent's own controls.
+    /// The first included story's hints for the component parent's controls.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub arg_types: Option<BTreeMap<String, StoryHints>>,
@@ -146,7 +146,7 @@ pub struct Story {
     pub id: String,
     /// Display title.
     pub title: String,
-    /// Serializable merged args.
+    /// Data args of this composed story.
     pub props: BTreeMap<String, Value>,
     /// Schema-independent control hints by arg name.
     #[serde(default)]
@@ -167,7 +167,7 @@ pub struct Definitions {
     pub folders: Vec<Definition>,
     /// Registered components.
     pub components: Vec<Definition>,
-    /// Composed stories.
+    /// All included stories, including each component parent's story.
     pub stories: Vec<Story>,
     /// Source-attributed authoring diagnostics; these do not invalidate framing.
     #[serde(default)]

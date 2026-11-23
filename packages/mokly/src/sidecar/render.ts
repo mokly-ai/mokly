@@ -45,10 +45,11 @@ export async function render(
         story.globals.moklyColorScheme = params.colorScheme;
         await setupStories(generation, stored.beforeAll);
         await story.load();
-        node = React.createElement(
-          story as (props: object) => ReactNode,
-          props,
-        );
+        const args = {
+          ...Object.fromEntries(stored.dataKeys.map((key) => [key, undefined])),
+          ...props,
+        };
+        node = React.createElement(() => story(args));
       } else {
         const definition = generation.handles.get(name);
         const data = definitionData(definition)!;

@@ -27,7 +27,7 @@ folders: Array<Definition>,
  */
 components: Array<Definition>,
 /**
- * Composed stories.
+ * All included stories, including each component parent's story.
  */
 stories: Array<Story>,
 /**

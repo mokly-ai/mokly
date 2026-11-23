@@ -43,12 +43,11 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
   assert.equal(definitions.components[0]?.sourcePath, "component.mockup.tsx");
   assert.equal(definitions.stories[0]?.props.action, undefined);
   assert.equal(definitions.stories[0]?.argTypes.label?.name, "Button label");
-  assert.equal(
-    definitions.components.find(
-      (component) => component.handle === "button.stories.tsx#default",
-    )?.argTypes?.label?.name,
-    "Button label",
+  const parent = definitions.components.find(
+    (component) => component.handle === "button.stories.tsx#default",
   );
+  assert.deepEqual(parent?.props, { label: "Primary" });
+  assert.equal(parent?.argTypes?.label?.name, "Button label");
   await installBindings(sidecar, bundle.generation);
   const axes = {
     generation: bundle.generation,

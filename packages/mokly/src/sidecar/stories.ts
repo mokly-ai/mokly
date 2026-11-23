@@ -1,10 +1,10 @@
 import type { Definitions } from "../generated/sidecar/Definitions.js";
-import type { StoryHints } from "../generated/sidecar/StoryHints.js";
+import type { Story } from "../generated/sidecar/Story.js";
 
 import type { BundleExports, Generation } from "./bundle.js";
 import { dataProps } from "./definition-fields.js";
 import { storyHints } from "./story-hints.js";
-import { readStories } from "./story-reader.js";
+import { readStories, type StoredStory } from "./story-reader.js";
 
 export async function describeStories(
   generation: Generation,
@@ -14,30 +14,7 @@ export async function describeStories(
   if (!Object.keys(exports.stories).length) return;
   for (const [file, module] of Object.entries(exports.stories)) {
     const read = readStories(generation, exports, file, module);
-    const first = read.stories[0];
-    if (!first) continue;
-    generation.stories.set(`${file}#default`, {
-      compose: read.composeParent,
-      beforeAll: read.beforeAll,
-    });
-    const excludedProps: string[] = [];
-    const parent = {
-      excludedProps,
-      handle: `${file}#default`,
-      title: read.title,
-      description: read.description,
-      relatedDocs: [],
-      tags: first.tags,
-      props: storyProps(generation, read.args, read.argTypes, excludedProps),
-      argTypes: {} as Record<string, StoryHints>,
-      variants: [] as Definitions["components"][number]["variants"],
-      slots: [],
-      stylesheets: [],
-      useCasePaths: [],
-      steps: [],
-      controlOrder: [] as string[],
-    };
-    const variants = read.stories.map((entry) => {
+    const stories = read.stories.map((entry) => {
       const excludedProps: string[] = [];
       const props = storyProps(
         generation,
@@ -47,51 +24,50 @@ export async function describeStories(
       );
       return { ...entry, props, excludedProps };
     });
-    const dataKeys = new Set([
-      ...Object.keys(parent.props),
-      ...variants.flatMap((variant) => Object.keys(variant.props)),
-    ]);
-    for (const {
-      exportName,
-      title,
-      tags,
-      story,
-      compose,
-      props,
-      excludedProps,
-    } of variants) {
-      const id = `${file}#${exportName}`;
-      result.stories.push({
-        id,
-        title,
-        props: props as Definitions["stories"][number]["props"],
-        argTypes: Object.fromEntries(
+    const dataKeys = new Set(
+      stories.flatMap(({ props }) => Object.keys(props)),
+    );
+    const [first, ...variants] = stories.map(
+      ({ exportName, title, tags, story, compose, props, excludedProps }) => {
+        const id = `${file}#${exportName}`;
+        const argTypes = Object.fromEntries(
           Object.entries(story.argTypes)
             .filter(([key]) => dataKeys.has(key))
             .map(([key, value]) => [key, storyHints(value)]),
-        ),
-      });
-      parent.variants.push({
-        excludedProps,
-        slug: exportName,
-        title,
-        tags,
-        props: props as Definitions["stories"][number]["props"],
-        slots: {},
-      });
-      generation.stories.set(id, {
-        compose,
-        story,
-        beforeAll: read.beforeAll,
-      });
-    }
-    parent.controlOrder = [...dataKeys];
-    parent.argTypes = Object.fromEntries(
-      Object.entries(read.argTypes)
-        .filter(([key]) => dataKeys.has(key))
-        .map(([key, value]) => [key, storyHints(value)]),
+        );
+        const stored: StoredStory = {
+          compose,
+          beforeAll: read.beforeAll,
+          dataKeys: Object.keys(props),
+        };
+        generation.stories.set(id, stored);
+        result.stories.push({ id, title, props, argTypes });
+        return {
+          saved: { slug: exportName, title, tags, props, excludedProps },
+          argTypes,
+          stored,
+        };
+      },
     );
-    result.components.push(parent as Definitions["components"][number]);
+    if (!first) continue;
+    const handle = `${file}#default`;
+    generation.stories.set(handle, first.stored);
+    result.components.push({
+      excludedProps: first.saved.excludedProps,
+      handle,
+      title: read.title,
+      description: read.description,
+      relatedDocs: [],
+      tags: first.saved.tags,
+      props: first.saved.props,
+      argTypes: first.argTypes,
+      variants: variants.map(({ saved }) => ({ ...saved, slots: {} })),
+      slots: [],
+      stylesheets: [],
+      useCasePaths: [],
+      steps: [],
+      controlOrder: [...dataKeys],
+    });
   }
 }
 
@@ -100,7 +76,7 @@ function storyProps(
   args: Record<string, unknown>,
   hints: Record<string, Record<string, unknown>>,
   excluded: string[],
-) {
+): Story["props"] {
   const element = generation.runtime.react.isValidElement;
   const kept = Object.fromEntries(
     Object.entries(args).filter(([key, value]) => {
@@ -122,7 +98,7 @@ function storyProps(
       );
     }),
   );
-  return dataProps(kept, false, excluded);
+  return dataProps(kept, false, excluded) as Story["props"];
 }
 
 function disabled(value: unknown): boolean {

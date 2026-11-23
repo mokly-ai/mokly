@@ -51,7 +51,7 @@ controls?: { [key in string]: Control },
  */
 controlOrder: Array<string>,
 /**
- * Storybook meta hints for the component parent's own controls.
+ * The first included story's hints for the component parent's controls.
  */
 argTypes?: { [key in string]: StoryHints },
 /**

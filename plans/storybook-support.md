@@ -991,23 +991,27 @@ Depends on: 4
 
 The first included story becomes the parent page, as decision 3 says.
 
-- [ ] Render the first included story in source order as the parent page,
+- [x] Render the first included story in source order as the parent page,
       with its composed args as the parent's props.
-- [ ] Make the other included stories the parent's variants.
-- [ ] Apply the answer to decision B1: a story variant's props are only its
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Make the other included stories the parent's variants.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B1: a story variant's props are only its
       own data args, a key is required only when every included story sets
       it, and a story renders with exactly the requested data props, each
       left-out data arg `undefined`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Test that the variants of Storybook's Button template keep exactly
+- [x] Test that the variants of Storybook's Button template keep exactly
       their own args, and that unset of an optional prop renders the story
       without it.
       Branch: `conductor/storybook-support-b-story-reading`.
 - [x] Give a file without an included story no entry, as design call 3 says.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Delete the meta-only composition and move each consumer that "Replaced
+- [x] Delete the meta-only composition and move each consumer that "Replaced
       ways" lists.
-- [ ] Test that a meta without args builds, and that no base state repeats.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that a meta without args builds, and that no base state repeats.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 7: Globals from the `mokly` parameter

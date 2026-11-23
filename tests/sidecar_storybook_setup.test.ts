@@ -45,7 +45,7 @@ function renderStory(
   });
 }
 
-function renderParent(
+function renderFirstStoryPage(
   sidecar: ReturnType<typeof startSidecar>,
   generation: string,
 ) {
@@ -61,7 +61,7 @@ function renderParent(
   });
 }
 
-test("loaders prepare data for every story render and the meta parent", async (context) => {
+test("story loaders prepare data for every render of the first story", async (context) => {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
   const generation = await prepare(sidecar, "story-setup-loader");
@@ -75,7 +75,7 @@ test("loaders prepare data for every story render and the meta parent", async (c
     "<output>Loaded 2:desktop:dark</output>",
   );
   assert.equal(
-    (await renderParent(sidecar, generation)).html,
+    (await renderFirstStoryPage(sidecar, generation)).html,
     "<output>Loaded 3:mobile:light</output>",
   );
 });
@@ -93,7 +93,7 @@ test("beforeEach prepares renders and cleans up before the next story loads with
     "<output>ready|load:unset,setup,cleanup,load:clean,setup</output>",
   );
   assert.equal(
-    (await renderParent(sidecar, generation)).html,
+    (await renderFirstStoryPage(sidecar, generation)).html,
     "<output>ready|load:unset,setup,cleanup,load:clean,setup,cleanup,load:clean,setup</output>",
   );
 });
@@ -110,7 +110,10 @@ test("beforeAll stays active for repeated renders and cleans up before another g
   ] as const) {
     assert.equal((await renderStory(sidecar, generation)).html, expected);
     assert.equal((await renderStory(sidecar, generation)).html, expected);
-    assert.equal((await renderParent(sidecar, generation)).html, expected);
+    assert.equal(
+      (await renderFirstStoryPage(sidecar, generation)).html,
+      expected,
+    );
   }
 });
 
@@ -129,7 +132,7 @@ test("a throwing beforeAll fails every story render with its first error and run
     (await renderStory(sidecar, healthy)).html,
     "<button>Healthy</button>",
   );
-  await assert.rejects(renderParent(sidecar, generation), {
+  await assert.rejects(renderFirstStoryPage(sidecar, generation), {
     code: "render-failed",
     message: /beforeAll failed on attempt 1/,
   });

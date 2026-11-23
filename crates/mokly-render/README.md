@@ -386,6 +386,8 @@ view after the edit and counts real process starts and hello calls.
   without the checkout folder.
 - [`src/transport_values.rs`](./src/transport_values.rs) maps typed sidecar
   props, controls, owners, and source coordinates into catalogue records.
+- [`src/definition_input.rs`](./src/definition_input.rs) maps the sidecar's
+  parent handle and the variant export names to story render sources.
 - [`src/postcss.rs`](./src/postcss.rs) runs consumer PostCSS in an explicit
   side-specific context before scoping.
 - [`src/stylesheets.rs`](./src/stylesheets.rs) builds the stylesheet compiler

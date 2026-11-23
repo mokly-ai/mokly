@@ -11,24 +11,21 @@ export type PortableStory = ReturnType<typeof Storybook.composeStory>;
 export interface StoredStory {
   compose: () => PortableStory;
   beforeAll: ReturnType<typeof Storybook.setProjectAnnotations>["beforeAll"];
+  dataKeys: readonly string[];
 }
 
-type ArgTypes = Record<string, Record<string, unknown>>;
-
-interface ReadStory extends StoredStory {
+interface ReadStory {
   exportName: string;
   title: string;
   tags: string[];
   story: PortableStory;
+  compose: StoredStory["compose"];
 }
 
 interface ReadStories {
   title: string;
   description: string;
-  args: Record<string, unknown>;
-  argTypes: ArgTypes;
   beforeAll: StoredStory["beforeAll"];
-  composeParent: () => PortableStory;
   stories: ReadStory[];
 }
 
@@ -78,10 +75,6 @@ export function readStories(
     return composeStories(copied);
   };
   const composed = compose();
-  const composeParent = () => {
-    projectAnnotations();
-    return storybook.composeStory({}, { ...meta }, undefined, "MoklyDefault");
-  };
   const stories = orderedExports(
     generation.sources.get(file) ?? "",
     composed,
@@ -106,7 +99,6 @@ export function readStories(
         tags: customTags(composed[exportName]!.tags),
         story: composed[exportName]!,
         compose: () => compose()[exportName]!,
-        beforeAll: project.beforeAll,
       };
     });
   const docs = record(stories[0]?.story.parameters.docs);
@@ -114,10 +106,7 @@ export function readStories(
   return {
     title,
     description: typeof description === "string" ? description : "",
-    args: record(meta.args),
-    argTypes: stories.length ? argTypes(composeParent().argTypes) : {},
     beforeAll: project.beforeAll,
-    composeParent,
     stories,
   };
 }
@@ -147,12 +136,6 @@ function record(value: unknown): Record<string, unknown> {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return (
     value !== null && (typeof value === "object" || typeof value === "function")
-  );
-}
-
-function argTypes(value: unknown): ArgTypes {
-  return Object.fromEntries(
-    Object.entries(record(value)).map(([key, hint]) => [key, record(hint)]),
   );
 }
 
