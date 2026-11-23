@@ -7,7 +7,7 @@ import { selection } from "../../library/canvas/selection.js";
 import { useDesignInstance } from "../../library/composition.js";
 import { useDesignNavigation } from "../../parts/design_navigation.js";
 
-import type { CanvasFrameSpec } from "./frames.js";
+import { frameSize, type CanvasFrameSpec } from "./frames.js";
 import {
   instanceSize,
   type CanvasInstance,
@@ -62,7 +62,8 @@ export function selectionOverlays(instance: CanvasInstance) {
 
 /**
  * The selection of a whole frame: the registered selection's frame form over
- * the frame's document, with a handle at each corner and the frame's size.
+ * the frame's document, with a handle at each corner and the frame's size in
+ * whole pixels.
  */
 function FrameSelection({ frame }: { frame: CanvasFrameSpec }) {
   const { height, width } = frame;
@@ -71,8 +72,7 @@ function FrameSelection({ frame }: { frame: CanvasFrameSpec }) {
       <selection.Component
         moklyInstance={useDesignInstance("selection")}
         name={frame.label}
-        width={width}
-        height={height}
+        {...frameSize(frame)}
         kind="frame"
       />
     </SelectionPlace>

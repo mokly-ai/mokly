@@ -11,7 +11,11 @@ export type FrameScheme = "light" | "dark";
 /** A version of a changed entry: the version before, or the current one. */
 export type FrameVersion = "after" | "before";
 
-/** One frame of a stage: its identity, label, nominal size, and sketch. */
+/**
+ * One frame of a stage: its identity, label, nominal size, and sketch. A
+ * component's frame takes the measured size of its document, which can
+ * hold fractions of a pixel.
+ */
 export interface CanvasFrameSpec {
   /** The frame's id, unique on the stage, such as `desktop-light`. */
   id: string;
@@ -34,6 +38,14 @@ export interface CanvasFrameSpec {
    * view, and its label names that fallback.
    */
   lightOnly?: boolean;
+}
+
+/**
+ * A frame's size as its size tag, its selection, and Inspect show it: in
+ * whole CSS pixels.
+ */
+export function frameSize({ height, width }: CanvasFrameSpec) {
+  return { width: Math.round(width), height: Math.round(height) };
 }
 
 /** The name of each scheme, as a frame's label and Inspect show it. */
@@ -150,21 +162,22 @@ export function sideBySideFrames(render: VersionRender): CanvasFrameSpec[] {
 
 /**
  * One saved variant of a component, or the component's own example, which
- * its title names, as its frames depict it.
+ * its title names, as its frames depict it, with the size of its document.
  */
 export interface ComponentVariantSketch {
   slug: string;
   title: string;
+  /** The document's measured size in its desktop view, in CSS pixels. */
+  size: { width: number; height: number };
   render: () => ReactNode;
 }
 
 /**
  * Rows of a component's variant set: one row per sketch, Light beside Dark,
- * each frame at the component document's nominal size.
+ * each frame at the measured size of the document that it holds.
  */
 export function componentFrames(
   variants: readonly ComponentVariantSketch[],
-  size: { width: number; height: number },
 ): CanvasFrameSpec[] {
   return variants.flatMap((variant) =>
     (["light", "dark"] as const).map((scheme) => ({
@@ -173,7 +186,7 @@ export function componentFrames(
       scheme,
       label: `${variant.title} · ${SCHEMES[scheme]}`,
       variant: variant.slug,
-      ...size,
+      ...variant.size,
       content: (
         <DesignInstances name={`${variant.slug}-${scheme}`}>
           {variant.render()}

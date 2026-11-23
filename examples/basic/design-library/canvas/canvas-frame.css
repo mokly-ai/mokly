@@ -1,10 +1,10 @@
 /* A frame on the Canvas stage: a bare rectangle at its nominal size times the
-   zoom, with a ring and a soft shadow, and its mono label and size above it.
-   The stage may set --cv-zoom on a frame to show it at another zoom, as the
-   compact layout does. A frame too narrow for both keeps its label and drops
-   its size. In a comparison, the frame holds the shipped viewport, layers,
-   and surfaces of a stacked comparison, from their @mokly/ui stylesheets, in
-   the package's order. */
+   zoom, with a ring and a soft shadow, and its mono label and size, in whole
+   CSS pixels, above it. The stage may set --cv-zoom on a frame to show it at
+   another zoom, as the compact layout does. A frame too narrow for both
+   keeps its label and drops its size. In a comparison, the frame holds the
+   shipped viewport, layers, and surfaces of a stacked comparison, from their
+   @mokly/ui stylesheets, in the package's order. */
 @import "../../../../packages/ui/src/comparison-pane/comparison-pane.css";
 @import "../../../../packages/ui/src/comparison-stage/comparison-stage.css";
 
@@ -128,11 +128,28 @@
   text-overflow: ellipsis;
 }
 
-/* A frame too narrow for its label and its size keeps the label. */
+/* A frame too narrow for its label and its size keeps the label: the size
+   drops below 190px, and below 280px on a frame of Side by side, whose
+   label starts with its version's tag. */
 @container cv-frame (width < 190px) {
   .cv-frame-size {
     display: none;
   }
+}
+
+@container cv-frame (width < 280px) {
+  .cv-frame[data-cv-side] .cv-frame-size {
+    display: none;
+  }
+}
+
+/* A component's frame takes its document's size, so it can be narrower than
+   its label. The label then keeps its whole name and runs on past the
+   frame's right edge, into its column of the set or the gap beside it. */
+.cv-frame[data-cv-kind="component"] > .cv-frame-label {
+  min-width: 100%;
+  right: auto;
+  width: max-content;
 }
 
 /* The document: the depicted screen's own surface and ink, in the frame's

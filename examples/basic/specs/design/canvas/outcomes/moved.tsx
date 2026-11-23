@@ -28,8 +28,8 @@ type MovedState = "changes" | "inspect";
  * its Light frames, with the catalogue in the Changes filter and
  * `Invoice · Moved` selected. On the Changes tab, Overlay compares every
  * frame with the version at its previous path, and the rows of Welcome and
- * Details keep the tab. Inspect keeps the filter, and Farewell's row keeps
- * the Inspect tab. On a phone, the Changes
+ * Details keep the tab. Inspect keeps the filter, and the rows of the
+ * Example tour and Farewell keep the Inspect tab. On a phone, the Changes
  * tab shows the one frame with the overlay, and Inspect opens the panel
  * sheet.
  */
@@ -51,7 +51,10 @@ function Moved({
               welcome: CANVAS_PAGES.changesCurrent,
               details: CANVAS_PAGES.addedChanges,
             }
-          : { [REMOVED_SCREENS.farewell.key]: OUTCOME_PAGES.removedInspect },
+          : {
+              "example/tour": CANVAS_PAGES.useCase,
+              [REMOVED_SCREENS.farewell.key]: OUTCOME_PAGES.removedInspect,
+            },
       }}
       compactZoom={FITS.phone}
       design={changes ? OUTCOME_PAGES.moved : OUTCOME_PAGES.movedInspect}

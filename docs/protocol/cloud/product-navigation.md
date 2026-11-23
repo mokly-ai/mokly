@@ -1,6 +1,6 @@
 # Product Navigation
 
-Status: The account menu with Theme and Settings is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
+Status: The account menu with Theme, Settings, Docs and Changelog is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
 
 The product's routes, their resolution and fallbacks, and the navigation shell
 around the hosted viewer. Accounts, onboarding, roles and settings are in
@@ -198,13 +198,15 @@ catalogue for nothing the chrome cannot show. Once signed in with a project,
 the user is always inside the hosted `@mokly/viewer` stage, and every piece of
 cloud chrome lives in the package's slots: the workspace and project
 switcher, the branch and pull request switcher, publication history, share,
-and the account menu with Theme, Settings and Sign out. Project and workspace
-lists are panels opened from that chrome, not destinations. Settings opens the
-dialog over the viewer; workspace and project settings are its panes, not
-pages. The only
-full pages outside the viewer are account entry and onboarding, which end by
-opening the new project's viewer with its build or publishing card until the
-first publication arrives.
+and the account menu with Theme, Settings, Docs, Changelog and Sign out.
+Project and workspace lists are panels opened from that chrome, not
+destinations. Settings opens the dialog over the viewer; workspace and project
+settings are its panes, not pages. Docs and Changelog open the site's `/docs/`
+and `/changelog/`, as
+[Marketing site](./marketing-site.md#links-from-the-app-to-the-site) defines.
+The only full pages outside the viewer are account entry and onboarding, which
+end by opening the new project's viewer with its build or publishing card until
+the first publication arrives.
 
 The package host contract, the mapping of five cloud controls into the package's
 three top-bar slots, and the mockup representation are in [Viewer
@@ -213,8 +215,9 @@ compositions](./folio-viewer.md).
 
 Mobile keeps the same model: the publication stays in the compact top bar, and
 its **More** menu holds the project, History and Share, then the account rows:
-who is signed in, Theme, Settings and Sign out. The switcher, history and Share
-open as bottom sheets, and Settings opens the full-screen settings layers.
+who is signed in, Theme, Settings, Docs, Changelog and Sign out. The switcher,
+history and Share open as bottom sheets, and Settings opens the full-screen
+settings layers.
 History/share confirmations may use a centered shared modal on desktop or a
 bottom sheet on mobile; Escape/Close restores focus to the trigger. Product
 screens own one main landmark, one H1 and a skip link. Use Firna typography for

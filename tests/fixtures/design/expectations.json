@@ -191,6 +191,115 @@
       "target": "design/canvas/flows/tour"
     },
     {
+      "source": "design/canvas/flows/tour",
+      "viewports": ["desktop"],
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/mobile",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "within": "cv-ptabs",
+      "name": "Inspect",
+      "target": "design/canvas/flows/tour"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "within": "cv-ptabs",
+      "name": "Changes",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "name": "Previous change",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "name": "Next change",
+      "target": "design/canvas/outcomes/moved"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "within": "cv-evidence",
+      "name": "Welcome",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "within": "cv-evidence",
+      "name": "Details",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "within": "cv-frames",
+      "name": "Welcome",
+      "target": "design/canvas/overview"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "within": "cv-frames",
+      "name": "Details",
+      "target": "design/canvas/outcomes/added"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "name": "Current",
+      "target": null
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "name": "Fit",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "viewports": ["desktop"],
+      "name": "All",
+      "target": null
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Example tour",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Welcome",
+      "target": "design/canvas/changes/current"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Details",
+      "target": "design/canvas/outcomes/added/changes"
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "viewports": ["mobile"],
+      "within": "cv-dock",
+      "name": "Changes",
+      "target": null
+    },
+    {
+      "source": "design/canvas/flows/tour/changes",
+      "viewports": ["mobile"],
+      "name": "Close panel",
+      "target": null
+    },
+    {
       "source": "design/canvas/overview",
       "viewports": ["desktop"],
       "within": "cv-ins",
@@ -613,7 +722,47 @@
     {
       "source": "design/canvas/outcomes/added/changes",
       "name": "Next change",
-      "target": "design/canvas/outcomes/moved"
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/outcomes/moved",
+      "viewports": ["desktop"],
+      "name": "Previous change",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/outcomes/added/changes",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Example tour",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/outcomes/moved",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Example tour",
+      "target": "design/canvas/flows/tour/changes"
+    },
+    {
+      "source": "design/canvas/stage/catalogue",
+      "within": "mbk-nav",
+      "namePattern": "^Example tour",
+      "target": "design/canvas/flows/tour"
+    },
+    {
+      "source": "design/canvas/outcomes/moved/inspect",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Example tour",
+      "target": "design/canvas/flows/tour"
+    },
+    {
+      "source": "design/canvas/outcomes/removed/inspect",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Example tour",
+      "target": "design/canvas/flows/tour"
     },
     {
       "source": "design/canvas/stage/catalogue",

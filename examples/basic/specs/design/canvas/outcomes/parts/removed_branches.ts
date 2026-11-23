@@ -3,7 +3,7 @@ import { CHANGED_COUNT } from "../../../parts/nav_data.js";
 import { REMOVED_VARIANT_ROWS } from "../../../parts/variant_nav_data.js";
 import type { CatalogueView } from "../../parts/catalogue.js";
 import { CANVAS_PAGES as C } from "../../parts/destinations.js";
-import { CANVAS_CHANGES_ROWS } from "../../parts/nav_rows.js";
+import { changePosition } from "../../parts/nav_rows.js";
 import type { PanelTab } from "../../parts/panel.js";
 
 import { OUTCOME_PAGES as O, type OutcomeDestination } from "./destinations.js";
@@ -28,12 +28,6 @@ import type { RemovedStep } from "./removed_panel.js";
  * that branch, and every other row is a picture.
  */
 
-/** The canonical branch's change at a row, counted in the filter's order. */
-function canonicalPosition(key: string): number {
-  const changes = CANVAS_CHANGES_ROWS.filter((row) => row.kind !== "folder");
-  return changes.findIndex((row) => row.key === key) + 1;
-}
-
 /** A removed screen's step on the canonical branch, between its neighbours. */
 function canonicalStep(
   record: RemovedRecord,
@@ -41,7 +35,7 @@ function canonicalStep(
   next?: OutcomeDestination,
 ): RemovedStep {
   return {
-    position: canonicalPosition(record.key),
+    position: changePosition(record.key),
     total: CHANGED_COUNT,
     previous,
     next,
@@ -66,7 +60,7 @@ export const CANONICAL_STEPS = {
  * The canonical branch in the Changes filter with a removed screen selected.
  * A row keeps the right panel's tab where its entry has an artboard on that
  * tab: on the Changes tab, Welcome and Details open their Changes artboards;
- * on Inspect, Invoice and Farewell open theirs on Inspect.
+ * on Inspect, the Example tour, Invoice and Farewell open theirs on Inspect.
  */
 export function canonicalRemoved(
   record: RemovedRecord,
@@ -78,7 +72,11 @@ export function canonicalRemoved(
     targets:
       tab === "changes"
         ? { welcome: C.changesCurrent, details: C.addedChanges }
-        : { invoice: C.movedInspect, [farewell.key]: O.removedInspect },
+        : {
+            "example/tour": C.useCase,
+            invoice: C.movedInspect,
+            [farewell.key]: O.removedInspect,
+          },
   };
 }
 

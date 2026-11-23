@@ -31,6 +31,12 @@ export interface UseCaseStep {
   description: string;
   /** The Canvas artboard of the step's screen, which the step's link opens. */
   screen: CanvasDestination;
+  /**
+   * The Changes artboard of the step's screen, which the use case's
+   * comparison details link: none while the branch leaves the screen
+   * unmodified.
+   */
+  changes?: CanvasDestination | undefined;
   /** The step screen's frames, one for each viewport and scheme. */
   frames: () => CanvasFrameSpec[];
   /** The step screen's depicted view, whose instances the highlight marks. */
@@ -40,9 +46,9 @@ export interface UseCaseStep {
 /**
  * The steps of the Example tour on the canonical branch: Welcome, which the
  * branch changed, at its current version, then Details, which the branch
- * added. Both screens render in Light and in Dark, so no step falls back to
- * its Light view. Their links inside the frames stay inert, because a step's
- * own link opens its screen.
+ * added, so the branch changed the screen of each step. Both screens render
+ * in Light and in Dark, so no step falls back to its Light view. Their links
+ * inside the frames stay inert, because a step's own link opens its screen.
  */
 export const TOUR_STEPS: readonly UseCaseStep[] = [
   {
@@ -51,6 +57,7 @@ export const TOUR_STEPS: readonly UseCaseStep[] = [
     title: "Welcome",
     description: "The tour starts on the landing screen.",
     screen: CANVAS_PAGES.overview,
+    changes: CANVAS_PAGES.changesCurrent,
     frames: welcomeFrames,
     view: WELCOME_VIEW,
   },
@@ -60,6 +67,7 @@ export const TOUR_STEPS: readonly UseCaseStep[] = [
     title: "Details",
     description: "The tour ends on the details screen.",
     screen: CANVAS_PAGES.added,
+    changes: CANVAS_PAGES.addedChanges,
     frames: detailsFrames,
     view: DETAILS_VIEW,
   },

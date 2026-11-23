@@ -3,10 +3,10 @@ import { defineScreen } from "@mokly/mokly";
 import { artboardStates } from "../../parts/artboards.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { DetailsStage } from "../loading/parts/stage_state.js";
-import { actionFrames, frameOf } from "../parts/set_sketches.js";
+import { actionSetFrames, frameOf } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
-import { FITS } from "../parts/sketches.js";
+import { SET_FITS } from "../parts/sketches.js";
 
 import {
   CHANGED_DEFAULT,
@@ -50,7 +50,7 @@ function DefaultUsage({
   state: UsageState;
   viewport: ArtboardViewport;
 }) {
-  const frames = actionFrames();
+  const frames = actionSetFrames();
   const frame = frameOf(frames, "default-light");
   const design = USAGE_PAGES[state];
   const catalogue = actionBranchChanges(EXPLORER_KEYS.default);
@@ -61,12 +61,12 @@ function DefaultUsage({
       design={design}
       entry={CHANGED_DEFAULT}
       expanded
+      fit={SET_FITS.action}
       frames={frames}
       panel={panel}
       selection={{ frame }}
       sheet="panel"
       viewport={viewport}
-      zoom={FITS.action}
     />
   ) : (
     <CanvasShell

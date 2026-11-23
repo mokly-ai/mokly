@@ -23,9 +23,9 @@ import { InspectEvidence } from "./inspect.js";
 /**
  * Inspect for the unmodified Action on its stylesheet branch, as its variant
  * set: its head, the evidence of its examined stylesheet in the words of a
- * variant, its variants and frames, and Props, which asks for a variant. No
- * artboard of this branch shows a variant chosen, so the variants are
- * pictures. A leaf renders no registered component, so Highlight components
+ * variant, the Action itself and its saved variants, its eight frames, and
+ * Props, which asks for a variant. No artboard of this branch shows a
+ * variant chosen, so the variants are pictures. A leaf renders no registered component, so Highlight components
  * is unavailable and the set has no component tree.
  */
 export function ActionExcludedInspect() {
@@ -38,13 +38,14 @@ export function ActionExcludedInspect() {
       <InspectEvidence facts={ACTION_EXCLUDED_STYLES} />
       <InspectVariants
         variants={[
+          { label: COMPONENT_IDENTITIES.action.title },
           { label: "Default" },
           { label: "Disabled" },
           { label: "Secondary" },
         ]}
       />
       <InspectFrames
-        count={6}
+        count={8}
         filter={{ ...SET_FILTER, unavailable: "empty" }}
       />
       <InspectSelection />

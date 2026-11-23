@@ -46,15 +46,16 @@ the [account rows](./viewer-chrome-account.md#more). This keeps the package's
 48px top bar intact instead of adding a second row. The choice between the two
 layouts follows the bar's own width rather than the window width or a higher
 compact breakpoint, because that breakpoint also moves settings and touch
-targets across the product. Choosing a menu item closes the menu and opens the
-same cloud overlay as its desktop control. Dismissing an overlay returns focus
-to the current trigger of the cloud action that opened it: **More** while the
-compact bar groups that action, or the action's own trigger while the bar shows
-it, in whichever slot holds it. That focus obligation belongs to the logical
-action across the cloud fallback, the package loader, the ready package shell
-and a change between the two layouts. Restoration is bounded: it ends when the
-reader focuses another control, interacts again, opens another overlay or leaves
-the route. The package keeps its own top bar and catalogue. Cloud also fills the
+targets across the product. Choosing the project, history or share closes the
+menu and opens the same cloud overlay as its desktop control. Dismissing an
+overlay returns focus to the current trigger of the cloud action that opened
+it: **More** while the compact bar groups that action, or the action's own
+trigger while the bar shows it, in whichever slot holds it. That focus
+obligation belongs to the logical action across the cloud fallback, the
+package loader, the ready package shell and a change between the two layouts.
+Restoration is bounded: it ends when the reader focuses another control,
+interacts again, opens another overlay or leaves the route. The package keeps
+its own top bar and catalogue. Cloud also fills the
 Changes tab's [check slot](./viewer-chrome-check.md) and, for a private
 comparison, `stageOverlay`, as the [private artifact
 limit](./viewer.md#private-artifact-limit) defines. It leaves `railStart`,
@@ -87,7 +88,7 @@ fallback again.
 | `publication` | The publication pill: the branch or pull request and state | Branches with the default first, then pull requests, each row showing its publication state, time and short SHA |
 | `history`     | History                                                    | This branch's publications and, for members, its builds, newest first, each an immutable link                   |
 | `share`       | Share                                                      | The canonical publication link with the API-supported screen/view projection and Copy link                      |
-| `account`     | The reader's avatar                                        | The account menu: who is signed in, Theme, Settings and Sign out                                                |
+| `account`     | The reader's avatar                                        | The account menu: who is signed in, Theme, Settings, Docs, Changelog and Sign out                               |
 
 The project trigger uses the workspace display name when its authorized
 read succeeds and the readable slug while that optional read is pending or

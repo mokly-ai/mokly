@@ -57,14 +57,14 @@ and divider and keeps its dot. A narrower bar, as on mobile, cannot fit those
 five cloud targets, so `topBarStart` stays empty, `topBarCenter` keeps only the
 pill, which starts right after the mark and takes the free room, and `topBarEnd`
 carries one quiet **More** trigger with a chevron. Its rows are the current
-project, History and Share, then the account rows; they open the same overlays
-as the desktop controls, and dismissal returns focus to the action's current
-trigger, as [Viewer chrome](./viewer-chrome.md#slot-inventory) defines. At a
-viewer width of 560px or less the package's search field is its own 30px search
-button, which opens a full-width search over the same row with both slots still
-mounted; Close or Escape returns to the button. That width is the viewer's
-container rather than the window, so between it and the product's compact
-breakpoint the compact row still carries the whole search field. Non-ready
+project, History and Share, which open the same overlays as the desktop
+controls, then the account rows; dismissal returns focus to the action's
+current trigger, as [Viewer chrome](./viewer-chrome.md#slot-inventory)
+defines. At a viewer width of 560px or less the package's search field is its
+own 30px search button, which opens a full-width search over the same row with
+both slots still mounted; Close or Escape returns to the button. That width is
+the viewer's container rather than the window, so between it and the product's
+compact breakpoint the compact row still carries the whole search field. Non-ready
 cloud-owned stages use the same order around the cloud's Mokly mark in three
 groups, without a search, because no catalogue is mounted, rather than inventing
 package navigation: the mark and the project, the centred pill, then the
@@ -115,10 +115,13 @@ end-aligned 6px below the trigger. The account rows lead with who is signed
 in, a 32px avatar beside the name in 13px semibold ink over the address in
 12px muted ink, cut with an ellipsis, then, under a hairline, Theme's 13px
 label with the registered Light and Dark segmented control at its own width.
-Settings, Sign out and More's own rows each lead with a muted 16px glyph in a
-column of one width, so every label starts at one edge. A hairline separates
-More's own rows from the account rows. On a phone, **More** is the registered
-panel's bottom sheet, and each of its rows is a 44px touch target.
+Settings, Docs, Changelog, Sign out and More's own rows each lead with a muted
+16px glyph in a column of one width, so every label starts at one edge. Docs
+and Changelog draw the external glyph there and take no hairline of their own,
+because the glyph already sets them apart from Settings and Sign out. A
+hairline separates More's own rows from the account rows. On a phone, **More**
+is the registered panel's bottom sheet, and each of its rows is a 44px touch
+target.
 
 **Panel**. The registered `panel` frame, which the switchers, history and share
 open over the stage. Desktop is a centered modal at most 480px wide and 76vh

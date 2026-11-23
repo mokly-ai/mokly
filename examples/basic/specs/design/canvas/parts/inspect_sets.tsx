@@ -9,7 +9,7 @@ import {
 import {
   ActionDisabledControls,
   ChooseVariant,
-  ToolbarDefaultControls,
+  ToolbarControls,
   VARIANT_FIELDS,
 } from "./component_props.js";
 import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
@@ -141,10 +141,13 @@ export function ActionInspect({
 
 /**
  * Inspect for the Toolbar, a composed component, which opens as its variant
- * set: Default, the one saved variant. Its nested components are the two
- * Actions that it renders, each selecting its instance on the Default ·
- * Light frame. A selection on that frame checks Default, and Props edits
- * Default; with nothing selected, Props asks for a variant.
+ * set: its own example's row, then Default's, its one saved variant, four
+ * frames in all. The Variants list names the Toolbar itself first, as the
+ * set does; no artboard shows a variant chosen, so each is a picture. Its
+ * nested components are the two Actions that it renders, each selecting its
+ * instance on the Toolbar · Light frame, the set's first frame. A selection
+ * on that frame checks the Toolbar itself, and Props edits its own props;
+ * with nothing selected, Props asks for a variant.
  */
 export function ToolbarInspect({
   design,
@@ -152,7 +155,7 @@ export function ToolbarInspect({
 }: {
   /** The artboard that renders this Inspect. */
   design?: CanvasDestination | undefined;
-  /** The Action that the reader selected on the Default · Light frame. */
+  /** The Action that the reader selected on the Toolbar · Light frame. */
   selected?: ToolbarInstanceId | undefined;
 }) {
   const chosen = selected !== undefined;
@@ -162,19 +165,24 @@ export function ToolbarInspect({
         component={COMPONENT_IDENTITIES.toolbar}
         entry={CANVAS_ENTRIES.toolbar}
       />
-      <InspectVariants variants={[{ label: "Default", current: chosen }]} />
-      <InspectFrames count={2} filter={SET_FILTER} />
+      <InspectVariants
+        variants={[
+          { label: COMPONENT_IDENTITIES.toolbar.title, current: chosen },
+          { label: "Default" },
+        ]}
+      />
+      <InspectFrames count={4} filter={SET_FILTER} />
       {selected === undefined ? (
         <InspectSelection />
       ) : (
         <InspectSelected initial instance={TOOLBAR_INSTANCES[selected]} />
       )}
       <InspectFold
-        count={chosen ? VARIANT_FIELDS["toolbar-default"] : undefined}
+        count={chosen ? VARIANT_FIELDS.toolbar : undefined}
         name="props"
         title="Props"
       >
-        {chosen ? <ToolbarDefaultControls /> : <ChooseVariant />}
+        {chosen ? <ToolbarControls /> : <ChooseVariant />}
       </InspectFold>
       <InspectFold count={2} name="usage" title="Usage">
         <ToolbarUsage />
