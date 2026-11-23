@@ -35,13 +35,43 @@
   ):hover {
   text-decoration: underline;
 }
-.ce-design a:focus-visible,
-.ce-design button:focus-visible,
-.ce-design summary:focus-visible,
-.ce-design input:focus-visible,
-.ce-design select:focus-visible {
-  outline: 2px solid var(--mbk-sage-deep);
-  outline-offset: 3px;
+/* A focused sample control draws the shell's focus glow, as the package's
+   reset sheet does: the --mbk-focus-glow that each package element passes
+   down, or the same mix of the Canvas signal where none does. The rule weighs
+   one pseudo-class, so a part's own focus rule, such as a row's inset glow,
+   wins. A search input leaves its focus to the search field around it, and a
+   link control of a depicted screen keeps the focus outline that Mokly gives
+   link controls. Forced colours drop the glow, so there focus takes a 2px
+   system outline. */
+:where(
+  .ce-design
+    :is(
+      a:not([data-mokly-link-control]),
+      button,
+      summary,
+      input:not([type="search"]),
+      select
+    )
+):focus-visible {
+  outline: none;
+  box-shadow: var(
+    --mbk-focus-glow,
+    0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+  );
+}
+@media (forced-colors: active) {
+  :where(
+    .ce-design
+      :is(
+        a:not([data-mokly-link-control]),
+        button,
+        summary,
+        input:not([type="search"]),
+        select
+      )
+  ):focus-visible {
+    outline: 2px solid Highlight;
+  }
 }
 :where(.ce-design summary) {
   font: inherit;

@@ -24,9 +24,9 @@ through one lookup.
 `nav_moves.ts`
 records that path on each row; under Changes a moved row reads
 `<label> · Moved` in place of the changed mark, and under All it carries the
-mark only when `materialChangedEntries` lists it. Details add a `Moved from`
-row after Source, and the comparison details name the previous path as the
-earlier side. A pure move is in Changes without changing, so workspace
+mark only when `materialChangedEntries` lists it. Inspect's Details rows add
+a `Moved from` row after Source and a screen's Address, and the comparison
+details name the previous path as the earlier side. A pure move is in Changes without changing, so workspace
 statuses count material changes only and keep it Unmodified: the projection
 sets `materialEntries` from each entry's `changes.kind`. The same lookup
 contract owns
@@ -42,14 +42,14 @@ without a link, and `parentOf` locates a current entry or removed record first.
 that entry, in record order. `previousPath` gives only accepted move pairs.
 Results retain current entries or complete removed records. The lookup pairs
 no counterparts: the entry detail already carries the paired input changes. Usage
-links, the variant bar, removed tree rows, workspace keys, breadcrumbs,
-details and the public workspace all use it.
+links, Inspect's Variants, removed tree rows, workspace keys, the breadcrumbs
+of the Path row, the Details rows and the public workspace all use it.
 [`branch_point_guard.test.ts`](../../../../tests/branch_point_guard.test.ts)
 fails when a shell or viewer module outside the lookup reads `previousPaths`,
 follows a `variantOf`, or case-folds a path.
 
 These React components are the Browse shell tree: catalogue, stages,
-navigation and inspector. The tree renders only in the browser:
+navigation and the right panel. The tree renders only in the browser:
 `src/browser.tsx` mounts the standalone shell into the stub that Serve and
 `build` deliver, and React hosts render it inside `MoklyViewer`, with
 host-owned slots as ordinary children. The
@@ -129,8 +129,8 @@ not already a changed entry. Later navigation within Changes keeps the sticky
 view axes; container redirection still applies. The shared typed query
 parser applies each valid viewport or scheme independently and ignores invalid
 or repeated values; the embedded host and standalone router consume the same
-route result. `details_rows.tsx` resolves the inspector's
-metadata rows, including links between a screen and its variants, the
+route result. `details_rows.tsx` resolves the lookups of Inspect's
+Details rows, including links between a screen and its variants, the
 `Changed views` row, and Related docs links, and `@mokly/ui/metadata-row`
 draws them. A related doc links to its
 document when it is a public `mock:<path>` reference or, in Serve and the
@@ -138,22 +138,24 @@ static build, the source path of a current document; a removed entry keeps
 plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
-axes that name a view, their reader labels, and the rule
-that decides whether the theme and viewport controls carry a mark.
-`workspace_views.ts` resolves the requested axes to the views actually shown,
-including Dark-to-Light fallback, and carries the matching status, comparison
-eligibility, and evidence provenance as one decision. `workspace_controls.tsx`
-applies the rule to that effective scheme while retaining the requested scheme
-as the control state, so navigation and controlled-host updates cannot leave
-stale indicators, and it passes the marks, their ids, and their wording to
-`@mokly/ui/view-controls`.
+axes that name a view, their reader labels, and the ids and the wording of
+the change marks. `frames_filter.ts` holds the Frames choice of the screens,
+one choice of the shell that in-shell navigation keeps and a full page load
+resets to every frame, and the rule that marks a toggle while it hides a
+changed view. A use case keeps its own choice in `use_case_choice.ts`.
+`workspace_views.ts` resolves the views that the filter shows on the wide
+canvas, or the compact layout's picked frame, to the views actually shown,
+including Dark-to-Light fallback, and carries the matching status,
+comparison eligibility, and evidence provenance as one decision.
+`inspect_frames.tsx` passes the marks, their ids, and their wording to
+`@mokly/ui/frames-filter` at each render, so navigation and controlled-host
+updates cannot leave stale indicators.
 `public_workspace_views.ts` derives the changed views themselves from
 the published catalogue's ready per-view comparisons. Workspace data keys
 those lists by component variant path or screen path, and
 `workspace_views_data.ts` reads the list of the shown selection, so every
 reader selects the evidence that belongs to the preview;
-`@mokly/ui/change-mark` draws the dot and clips its wording, and
-`@mokly/ui/view-controls` mutes the dot on a disabled control.
+`@mokly/ui/change-mark` draws the dot and clips its wording.
 The parallel `viewStates` map keeps each ready view's axes and index
 `comparison`, including `kind` and `eligible`, in index order under the same
 key. A missing key means per-view status is
@@ -169,10 +171,11 @@ of Changes. `workspace_views.ts` then keeps the comparison eligible for each
 shown view that reads Unmodified while its usage holds one of those
 components, so a pure move, a component variant, and an entry whose other
 views changed compare as an affected-only entry does.
-`workspace_context.tsx` owns one routed workspace and its resolved views for
-the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
-shared resolution on every viewport, scheme, component variant, or evidence
-change and passes the effective scheme to controls and comparison presentation.
+`workspace_context.tsx` owns one routed workspace and the views that it
+shows. `workspace.tsx` consumes that shared resolution on every change of the
+Frames choice, the selection's viewport and scheme, a component variant, or
+the evidence, and passes the effective scheme to the comparison
+presentation.
 The comparison holds one generation for each row that it demands, under the
 [selected comparisons contract](../../../../docs/protocol/mokly-selected-comparisons.md):
 each row of the shown frames that `useComparison` receives, a screen or one
@@ -230,16 +233,21 @@ Every element of the shell is a `@mokly/ui` component under
 renders is a container. It reads the store, the contexts, and the frames, and
 it renders package components with props and callbacks, as `appearance.tsx`
 reads the identifier and workspace contexts and renders
-`@mokly/ui/appearance-selector`. `top_bar.tsx`, `nav.tsx`, and `head.tsx` render
-the top bar, the catalogue navigation, and the screen header the same way,
-and `head.tsx`'s viewport and scheme switches render
-`@mokly/ui/segmented-control`. `tags.tsx` renders the search field's tag
-picker with `@mokly/ui/tag-picker` and each tag chip of the details with
-`@mokly/ui/tag-chip`. `workspace_controls.tsx` renders
-`@mokly/ui/view-controls`, and `views.tsx` and `workspace.tsx` render the
-status beside a title with `@mokly/ui/change-status`. `inspector.tsx` renders
-`@mokly/ui/inspector`, and `details.tsx` renders `@mokly/ui/details-panel`.
-The inspector's panels render `@mokly/ui/prop-field`,
+`@mokly/ui/appearance-selector`. `top_bar.tsx` and `nav.tsx` render the top
+bar and the catalogue navigation the same way, and `head.tsx` gives a view's
+title and folder crumbs. `tags.tsx` renders the search field's tag picker
+with `@mokly/ui/tag-picker` and each tag chip of the Details rows with
+`@mokly/ui/tag-chip`. `right_panel.tsx` renders the right panel's tabs with
+`@mokly/ui/panel-tabs`, `workspace_inspect.tsx`, `target_panel.tsx`, and
+`inspect_head.tsx` render Inspect with `@mokly/ui/inspect-panel`,
+`@mokly/ui/metadata-row`, and `@mokly/ui/inspect-selection`, and
+`inspect_frames.tsx` renders `@mokly/ui/frames-filter`.
+`selection_overlay.tsx` draws the canvas selection with
+`@mokly/ui/canvas-selection`, and `workspace_selection_view.tsx` the compact
+layout's pill with `@mokly/ui/selection-pill`. `views.tsx` and
+`workspace.tsx` render the status beside a title with
+`@mokly/ui/change-status`. Inspect's Props, Usage, and Components render
+`@mokly/ui/prop-field`,
 `@mokly/ui/controls-panel`, `@mokly/ui/props-panel`, `@mokly/ui/usage-list`,
 `@mokly/ui/instance-tree`, and `@mokly/ui/comparison-evidence`, from records
 that their containers build, and the preview shows the status of an edit's
@@ -248,10 +256,10 @@ render with `@mokly/ui/edit-status`. The controls' wording of
 render `@mokly/ui/canvas-stage`, `@mokly/ui/canvas-frame`,
 `@mokly/ui/canvas-missing-view`, `@mokly/ui/canvas-state`,
 `@mokly/ui/canvas-previous-version`, `@mokly/ui/preview-frame`,
-`@mokly/ui/device-frame`, `@mokly/ui/preview-state`,
+`@mokly/ui/preview-state`,
 `@mokly/ui/canvas-comparison`, `@mokly/ui/swipe-divider`,
 `@mokly/ui/comparison-stage`, `@mokly/ui/comparison-pane`,
-`@mokly/ui/empty-state`, and `@mokly/ui/variant-bar`. Each `<iframe>` element
+and `@mokly/ui/empty-state`. Each `<iframe>` element
 is `PreviewIframe` of `@mokly/ui/preview-frame`: a container passes its `ref`,
 its `src` or `srcDoc`, its `key`, and its data attributes, and it keeps the
 mount hooks, the sources, the read-only guard, and the scroll controllers.
@@ -259,10 +267,10 @@ mount hooks, the sources, the read-only guard, and the scroll controllers.
 region of `@mokly/ui/shell-layout`, `workspace.tsx` lays out the workspace
 with `@mokly/ui/workspace-layout`, and `embedded_viewer.tsx` lays out an
 embedded root and its host slots with `@mokly/ui/embedded-layout`, which
-places each slot's content and never reads it. `sheets.tsx` renders the
-right panel with `@mokly/ui/floating-panel`, the compact layout's dock with
-`@mokly/ui/canvas-dock`, and the catalogue's sheet state that both roots
-pass to their layout, and the views render the compact layout's entry bar
+places each slot's content and never reads it. `right_panel.tsx` renders
+the right panel with `@mokly/ui/floating-panel`, and `sheets.tsx` the compact
+layout's dock with `@mokly/ui/canvas-dock`, and the catalogue's sheet state
+that both roots pass to their layout, and the views render the compact layout's entry bar
 with `@mokly/ui/entry-bar`. The standalone shell's root
 and the loading, failure, and version states of both roots render
 `@mokly/ui/shell-layout`, and the highlight labels of the workspace and of a
@@ -311,11 +319,13 @@ hidden flags, and ancestor titles. `filterHierarchy` derives and orders each
 navigation section. The catalogue's `publicModel` joins held details separately.
 A detail commit replaces that model and retains the index lookups and sections.
 `tag_selection.ts` captures the open picker before a tag changes the search state.
-An inspector tag then returns focus to the toggle in its own shell. Picker
+A tag of Inspect's Details rows then returns focus to the toggle in its own
+shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.
 
 `store.tsx` and the focused `store_*` modules own the shared route,
-selection, disclosure, sheet, details and scroll state. Every container
+selection, disclosure, sheet, right panel tab, Frames choice and scroll
+state. Every container
 renders under `ShellStoreProvider` and reads that state through
 `useShellStore`, also in tests. `store_browser.ts`
 owns standalone history, and `store_host.ts` owns host selection commits.
@@ -426,13 +436,13 @@ and a sheet's close control returns focus to the dock's control that opens
 it. The catalogue's width is the reader's choice or the starting width of
 `canvas_layout.ts`, 252px or 224px below the panel step, and a double click
 on the separator forgets the choice. `nav.tsx` passes the index's `base` to
-the catalogue's foot. A target view puts its head band, a workspace's
-comparison band and variant bar, and the inspector or a page's Details in
-the right panel of `sheets.tsx`; `diffs.tsx` gives the band to the panel, and
-`comparison_canvas.tsx` draws the compare on the canvas. The dock's Fit
-refits the canvas that `canvas_stage.tsx` registers in `root_context.tsx`
-while it shows, also during a compare, and it hides while the state of a
-comparison covers the canvas.
+the catalogue's foot. A target view puts its tabs in the right panel of
+`right_panel.tsx`: Inspect, and Changes where the entry has it, which holds
+a workspace's comparison band and the comparison details; `diffs.tsx` gives
+the band to the panel, and `comparison_canvas.tsx` draws the compare on the
+canvas. The dock's Fit refits the canvas that `canvas_stage.tsx` registers in
+`root_context.tsx` while it shows, also during a compare, and it hides while
+the state of a comparison covers the canvas.
 
 `stages.tsx` shows the routed screen, component, page or document on the
 canvas of `@mokly/ui/canvas-stage`, under the
@@ -443,12 +453,13 @@ asks `workspace_canvas.ts` for its entry's frames, which reads
 `canvas_frames.ts`: a screen's frames, Desktop
 beside Mobile and Light above Dark, or a component's variant set, a row for
 its own example and then one for each current saved variant, Light beside
-Dark, each with the row's desktop view. A viewport choice keeps one column of
-a screen's frames on the canvas; the other column's frames stay mounted with
+Dark, each with the row's desktop view. The Frames filter keeps the columns
+and the rows that it shows on the canvas; the other frames stay mounted with
 their documents but take no room. In the compact layout `canvas_compact.ts`
 keeps the picked frame alone: a screen's frame of the selection's viewport
-and scheme, with Both read as Mobile, or a routed saved variant's frame in
-the selection's scheme, while a component's own route shows its whole set.
+and scheme, with Both read as Mobile, or its first shown frame while the
+filter hides that one, or a variant set's selected frame, while a set
+without a selected frame shows its whole set.
 The entry bar's frame picker lists the shown frames of the model, a screen's
 Mobile frames first, and a pick sets the selection's viewport and scheme or
 opens the picked row's entry in its scheme through the store's `openEntry`,
@@ -457,8 +468,8 @@ frames stay mounted out of the
 section, and the picked screen frame's label leads with the entry's slug. A
 live edit renders the view of each shown frame of the edited screen or
 row (`canvasEditContexts`), one context for each viewport and scheme: every
-frame of the viewport choice on the wide canvas, and the picked frame in the
-compact layout, so a pick of another frame changes the contexts and cancels
+shown frame on the wide canvas, and the picked frame in the compact
+layout, so a pick of another frame changes the contexts and cancels
 the old render. A component's own route in the compact layout shows its
 whole set, so an edit of its row renders both of its frames.
 `withEditPreviews` gives the frames the edit's renders. The workspace passes
@@ -516,9 +527,9 @@ Primary, modified, middle, and named-target activations therefore share the
 same `/view/` destination. An unknown path installs the missing view only for
 standalone/uncontrolled shells and is recoverable by any later selection;
 controlled viewers emit an error and keep their display.
-Details omits derived route
-and generated-path rows because the address bar and path chip already identify
-the entry.
+Inspect's Details rows omit derived route
+and generated-path rows because the browser's address bar and the Path row
+already identify the entry.
 
 Snapshot selection is route-owned state as well as public selection state. One
 validated query/parser/resolver carries it through the first render,
@@ -537,8 +548,11 @@ detail records: every catalogue of a delivery carries its published records.
 `publicWorkspace` reads from the routed entry detail's `reasons`, the selected
 screen's or variant's projected and live view evidence, and a loaded
 comparison by path and rule key, so Current and a loaded comparison show the
-same facts once. `workspace_evidence_merge.ts` clears held reasons that a newer
-publication no longer carries. `workspace_stylesheet_evidence.ts` turns that evidence into
+same facts once. It takes the ignored content ids from each shown view whose
+evidence is ready, then from a loaded comparison's views, and lists each id
+once. An `unchanged` view adds none. `workspace_evidence_merge.ts` clears held
+reasons that a newer publication no longer carries.
+`workspace_stylesheet_evidence.ts` turns that evidence into
 one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
 styles. `@mokly/ui/comparison-evidence` draws each file once with its
@@ -548,7 +562,7 @@ evidence sentences, status lines and pane labels from them. A component's
 sentences name the shown variant, while its file list and its own rules name
 the component.
 `evidence_details.ts` builds the files and exclusions records, so
-`workspace_evidence.tsx` and a page's Details pass the same facts to
+`workspace_evidence.tsx` and `page_evidence.tsx` pass the same facts to
 `@mokly/ui/comparison-evidence`, which draws the shared heading and block.
 `workspace_evidence.tsx` words each reason and decides which facts show, and
 the package follows the designs' order: the reason
@@ -568,7 +582,7 @@ when its usage holds a changed component that the detail names:
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `shellContext` supplies an empty one, so its
-Details keep the rest of the evidence without that sentence. `workspace_data.ts`
+comparison details keep the rest of the evidence without that sentence. `workspace_data.ts`
 passes the shell's known name to `publicWorkspace`, so a workspace keeps the
 sentence while its entry detail loads. The workspace projects the selected
 views' `resourceEvidence` from the held entry detail through
@@ -576,7 +590,8 @@ views' `resourceEvidence` from the held entry detail through
 whole-document page has no workspace: `page_evidence_data.ts` reads its status
 from the index record and its evidence record from the page's entry detail,
 and `page_evidence.tsx` passes them with the page wording to
-`@mokly/ui/comparison-evidence` in the page's `details.tsx` panel. `views.tsx`
+`@mokly/ui/comparison-evidence` in the page's Changes tab, or in its Inspect
+while the Changes filter does not list the page. `views.tsx`
 shows that status beside the page title.
 
 An entry detail that is not held carries `omitted` usage, and no list is
@@ -621,12 +636,19 @@ a label column and then its value, help, and error, as the
 draws them. Numeric fields use the effective bounds and step of the index's `controls`.
 `control_numbers.ts` aligns those bounds with the HTML input's zero-based step.
 The focused `workspace_*` containers turn evidence, usage, instances and
-supplied props into the records of the package's panels. `@mokly/ui/inspector`
-owns the tab keys and returns focus from Close to the tab pressed last.
-`inspector.tsx` closes the inspector the same way on Escape anywhere in its
-shell root, and `workspace_inspector.tsx` gives it a workspace's panels. In
-the right panel the inspector takes the height of its content, so it has no
-divider or sheet of its own. `root_context.tsx` shares the root ref, drag
+supplied props into the records of Inspect's sections, and
+`@mokly/ui/panel-tabs` owns the keys of the right panel's tabs.
+`use_canvas_selection.ts` and `canvas_selection.ts` hold the canvas
+selection under the
+[selection contract](../../../../docs/protocol/mokly-viewer-selection-canvas.md):
+in Inspect, a click on a frame selects the innermost instance under the
+pointer, a click that follows a link selects nothing, a host pick takes the
+click in either tab, and the empty canvas and Escape anywhere in the shell
+root clear the selection. A frame's session tells the selection when its
+document is replaced or the instance leaves its ready usage. A request to
+show the selection is an event: each explicit choice and each route's
+instance counts once, and Inspect scrolls to its Selection section at each
+count, so a usage revision never opens or scrolls it. `root_context.tsx` shares the root ref, drag
 state, focus targets, host slots, the dock's controls, named scroll regions,
 and the shown canvas. Containers use package refs for focus
 and measurement. `focus_after.ts` moves focus after a recovery action of the
@@ -644,22 +666,23 @@ step as its last usage-revision check, so usage adopted during mounting always
 reaches the frame. Public-handle inspection and
 `workspace_inspection.tsx` coordinate through the registry's inspection owner.
 `instance_box_model.ts` owns the selected instance's box model reader and its
-rounded sizes. It coalesces geometry requests and rejects stale session results.
+rounded sizes, and an adapter without `boxModel` gives the smallest rectangle
+of the instance's boxes. It coalesces geometry requests and rejects stale session results.
 Workspace masks and labels, public inspection, and host markers acquire the registry's single geometry
 scheduler; a usage revision supersedes any unresolved measurement before fresh
-evidence is read. Navigation and inspector resize drag state stays on the
+evidence is read. The navigation's resize drag state stays on the
 owning shell root so independent embedded viewers cannot alter the host page or
 each other. Embedded roots also own their flex containment, and
 `@mokly/ui/embedded-layout` measures host stage overlays against the current
-preview, keeping sibling viewers, navigation and the inspector outside an
+preview, keeping sibling viewers, navigation and the right panel outside an
 overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [rendering boundary of the component controls contract](../../../../docs/protocol/mokly-component-controls.md#rendering-boundary)
 defines route loading, revision fencing, and the absence of the render
 capability in the static build.
 
-Before the first render, the browser entry reads the stored disclosure map,
-the Details choice and the navigation width through
+Before the first render, the browser entry reads the stored disclosure map
+and the navigation width through
 [`../standalone/preferences.ts`](../standalone/preferences.ts), so the shell
 paints them at once. Disclosure helpers treat native `<details>` groups and the
 button-controlled entry-variant lists as the same persisted state. Folder

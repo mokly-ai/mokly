@@ -5,6 +5,7 @@
 
 import { CanvasReadingStage } from "./canvas_reading.js";
 import { CanvasUseCaseStage } from "./canvas_use_case.js";
+import type { UseCaseFramesChoice } from "./canvas_use_case_frames.js";
 import {
   CanvasWorkspaceStage,
   type WorkspaceCanvas,
@@ -23,6 +24,8 @@ export function TargetStage(props: {
   catalogue: Catalogue;
   fragment?: string;
   target: RouteTarget;
+  /** The viewport and the scheme that a use case's step frames show. */
+  useCaseChoice?: UseCaseFramesChoice | undefined;
   /** The step frame that the compact layout shows of a use case. */
   useCaseStep?: string | undefined;
 }) {
@@ -40,10 +43,11 @@ export function TargetStage(props: {
   // After a Try again of the stage, its first frame takes focus.
   return (
     <RetryContent value={focus}>
-      {current.kind === "use-case" ? (
+      {current.kind === "use-case" && props.useCaseChoice ? (
         // Another use case mounts its own step frames.
         <CanvasUseCaseStage
           catalogue={props.catalogue}
+          choice={props.useCaseChoice}
           entry={current}
           fragment={props.fragment}
           key={current.path}

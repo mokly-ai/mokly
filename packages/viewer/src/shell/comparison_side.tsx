@@ -10,7 +10,7 @@
 
 import { FrameComparison } from "@mokly/ui/canvas-comparison";
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
-import { ComparisonPane } from "@mokly/ui/comparison-pane";
+import { ComparisonLayer, ComparisonPane } from "@mokly/ui/comparison-pane";
 
 import { useCanvasFrameInput } from "./canvas_frame_input.js";
 import type { ComparisonFrameCell } from "./comparison_cells.js";
@@ -27,9 +27,10 @@ const MISSING = {
 } as const;
 
 /**
- * One version of the compared frame in its own canvas frame. A version
- * without a document keeps its explicit message under its Before or Current
- * label, worded for the entry's kind.
+ * One version of the compared frame in its own canvas frame, in the layer of
+ * its version, as a stack holds each version. A version without a document
+ * keeps its explicit message under its Before or Current label, worded for
+ * the entry's kind.
  */
 export function SideComparisonFrame({
   cell,
@@ -58,11 +59,13 @@ export function SideComparisonFrame({
       <FrameComparison mode="side">
         {document ? (
           <ComparisonViewport sync={sync}>
-            <ComparisonFrame
-              {...document}
-              canvasInput={input.listener}
-              onMeasure={cell.onMeasure}
-            />
+            <ComparisonLayer side={side}>
+              <ComparisonFrame
+                {...document}
+                canvasInput={input.listener}
+                onMeasure={cell.onMeasure}
+              />
+            </ComparisonLayer>
           </ComparisonViewport>
         ) : (
           <ComparisonPane missing={wording.label(MISSING[side])} side={side} />

@@ -15,6 +15,7 @@ import type { Box, FrameAdapter, FrameMount, MountedFrame } from "@mokly/frame";
 
 import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
 import {
+  EVERY_FRAME,
   workspaceFrames,
   type CanvasFramePlan,
 } from "../src/shell/canvas_frames.js";
@@ -68,7 +69,7 @@ export function canvasPlans(path: string): CanvasFramePlan[] {
   const entry = catalogue.byPath.get(path) as ShellCatalogueRoutedEntry;
   assert.ok(entry.kind === "screen" || entry.kind === "component", path);
   const data = publicWorkspace(catalogue, model, entry);
-  return workspaceFrames(data, "both", data.views);
+  return workspaceFrames(data, EVERY_FRAME, data.views);
 }
 
 /**

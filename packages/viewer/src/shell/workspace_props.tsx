@@ -1,13 +1,14 @@
 /**
- * Supplied props and slots for a saved view or a selected component
- * instance. These containers decode the props, word their values, and choose
- * the line that says why the tab has none. `@mokly/ui/props-panel` renders
- * them.
+ * Inspect's Props section and the read-only props of an edit form. The
+ * section shows the props of the entry that Props edits: a screen's own
+ * props, or a variant set's selected frame's variant, which a reader
+ * chooses first. These containers decode the props, word their values, and
+ * choose the line that says why the section has none. `@mokly/ui/props-panel`
+ * renders them.
  */
 
 import type { ReactNode } from "react";
 
-import type { ComponentInstanceRecord } from "@mokly/model";
 import {
   PropsMessage,
   PropsPanel,
@@ -20,23 +21,16 @@ import type {
   ComponentWireProps,
   PropValue as WirePropValue,
 } from "../components/prop_types.js";
-import type { ComponentViewRecord } from "../components/view_types.js";
-import { viewHref } from "../navigation/routes.js";
 
 import { CONTROLS_COPY } from "./component_controls_copy.js";
-import type { ControlTarget } from "./control_values.js";
+import { controlEntries, type ControlTarget } from "./control_values.js";
 import type { DetailDelivery } from "./data_requests.js";
 import type { RetryFocus } from "./retry_focus.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
-/** Current inspector selection independent of its rendering surface. */
-export interface WorkspaceInspectorSelection {
-  instance?: ComponentInstanceRecord;
-  props?: ComponentWireProps;
-  slots?: readonly string[];
-  usage?: ComponentViewRecord;
-}
+/** What a variant set's Props say while no frame is selected. */
+export const CHOOSE_VARIANT = "Choose a variant to edit its props.";
 
 /** Human-readable supplied values preserve negative zero and nested data. */
 export function propText(value: WirePropValue): string {
@@ -64,35 +58,45 @@ export function propValues(
   });
 }
 
-/**
- * The Props tab of an entry without own props and no selected instance:
- * waiting for its usage, without props, unavailable, or a selection prompt.
- */
-function emptyProps(
-  data: WorkspaceData,
-  usage: ComponentViewRecord | undefined,
-): string {
-  if (data.viewUsagePending) return WAITING_REASON;
-  if (usage && !usage.instances.length) return CONTROLS_COPY.noProps;
-  if (!usage && data.entry.kind === "screen")
-    return CONTROLS_COPY.propsUnavailable;
-  return "Select a component instance to see its supplied props.";
+/** A screen shows its own props when it has controls, saved props, or slots. */
+function ownProps(target: ControlTarget): boolean {
+  return (
+    Object.keys(target.controls).length > 0 ||
+    Object.keys(decodeProps(target.props)).length > 0 ||
+    target.suppliedSlots.length > 0
+  );
+}
+
+/** Whether Props shows the edit form or the saved props of `target`. */
+export function editsProps(target: ControlTarget | undefined): boolean {
+  return (
+    target !== undefined && (target.kind === "component" || ownProps(target))
+  );
+}
+
+/** The number of fields of the form that Props shows, where it has fields. */
+export function propsFieldCount(
+  target: ControlTarget | undefined,
+): number | undefined {
+  if (!target || !editsProps(target)) return undefined;
+  return controlEntries(target).length || undefined;
 }
 
 /**
- * The Props tab: a selected instance's props; else the shown entry's own
- * fields or saved props, once the route's details arrive; else why the
- * tab has none to show.
+ * The Props section: the entry's own fields or saved props, once the route's
+ * details arrive, or why the section has none to show.
  */
-export function WorkspacePropsTab({
+export function WorkspacePropsSection({
+  choose,
   controls,
   data,
   delivery,
   focus,
-  instance,
   target,
-  usage,
+  unavailable,
 }: {
+  /** Whether Props waits for the choice of a variant set's frame. */
+  choose: boolean;
   /** The editable props, whose heading ends the recovery of `focus`. */
   controls: ReactNode;
   data: WorkspaceData;
@@ -100,20 +104,16 @@ export function WorkspacePropsTab({
   delivery: DetailDelivery;
   /** The focus of Try again, which moves to the loading status first. */
   focus: RetryFocus;
-  instance: ComponentInstanceRecord | undefined;
   target: ControlTarget | undefined;
-  usage: ComponentViewRecord | undefined;
+  /**
+   * Whether the shown view of a screen has no usage record, as a view
+   * without inspection metadata has, so its props are unknown.
+   */
+  unavailable: boolean;
 }) {
-  if (instance)
-    return (
-      <WorkspaceProps
-        data={data}
-        selection={{ instance, ...(usage ? { usage } : {}) }}
-      />
-    );
   // The fields wait for the detail, so they never move from name order.
   // After Try again, focus moves to the loading status, then to the panel.
-  if (target && (target.kind === "component" || ownProps(target)))
+  if (editsProps(target))
     return delivery.status === "ready" ? (
       controls
     ) : (
@@ -132,61 +132,29 @@ export function WorkspacePropsTab({
         }}
       />
     );
-  return <WorkspaceProps data={data} selection={usage ? { usage } : {}} />;
-}
-
-/** A screen shows its own props when it has controls, saved props, or slots. */
-function ownProps(target: ControlTarget): boolean {
+  if (choose) return <PropsMessage>{CHOOSE_VARIANT}</PropsMessage>;
   return (
-    Object.keys(target.controls).length > 0 ||
-    Object.keys(decodeProps(target.props)).length > 0 ||
-    target.suppliedSlots.length > 0
+    <PropsMessage pending={data.viewUsagePending}>
+      {data.viewUsagePending
+        ? WAITING_REASON
+        : unavailable
+          ? CONTROLS_COPY.propsUnavailable
+          : CONTROLS_COPY.noProps}
+    </PropsMessage>
   );
 }
 
-/** Read-only prop details used for inspected instances and undeclared fields. */
-export function WorkspaceProps({
-  data,
-  selection,
+/** The props of an edit form that no control declares, with its slots. */
+export function UncontrolledProps({
+  props,
+  slots,
 }: {
-  data: WorkspaceData;
-  selection: WorkspaceInspectorSelection;
+  props: ComponentWireProps;
+  slots: readonly string[];
 }) {
-  const props = selection.instance?.props ?? selection.props;
-  if (!props)
-    return (
-      <PropsMessage pending={data.viewUsagePending}>
-        {emptyProps(data, selection.usage)}
-      </PropsMessage>
-    );
-  const instance = selection.instance;
-  const component = instance
-    ? data.components.find((item) => item.path === instance.componentId)
-    : undefined;
-  const slots = instance
-    ? selection.usage?.slots
-        .filter((slot) => slot.instanceKey === instance.key)
-        .map(
-          (slot) =>
-            `${slot.name} · ${
-              slot.owner.kind === "entry"
-                ? "Supplied by this page"
-                : "Supplied by a parent component"
-            }`,
-        )
-    : selection.slots;
   const values = decodeProps(props);
   return (
     <PropsPanel
-      instance={
-        instance
-          ? {
-              ...(component ? { href: viewHref(component.path) } : {}),
-              id: instance.id,
-              title: component?.title ?? instance.componentId,
-            }
-          : undefined
-      }
       slots={slots}
       values={propValues(Object.keys(values), values)}
     />

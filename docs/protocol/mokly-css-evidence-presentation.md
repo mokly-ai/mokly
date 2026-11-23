@@ -31,7 +31,11 @@ variant, so Current shows the same files and sentences as a loaded
 comparison. Records merge by stylesheet and selector, with sorted selector
 unions and unresolved precedence. Keep each rule's owner. A retained file
 suppresses its exclusion across all selected views; rendered-resource and
-ignored-content details remain available. Loaded evidence is selection-scoped
+ignored-content details remain available. The ignored-content details name,
+once each, the paired ignore ids of every selected view whose state is not
+`unchanged`, in Current and in a loaded comparison alike. An `unchanged` view
+names none, because its ignored content did not change, and naming it would
+repeat the line on every screen that renders the region. Loaded evidence is selection-scoped
 and clears on classification invalidation. Component change facts come from
 the review entries of the components and the rules they own. Do not infer them
 from a consumer's matches, file owners or the loaded comparison subset. A

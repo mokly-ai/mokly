@@ -14,7 +14,9 @@
  * place, its size and its label, and holds a note in its place in place of
  * a document. In a comparison, a frame of Side by side leads its label with
  * the tag of its version, and what lies over the document, such as Swipe's
- * divider, keeps its size at every zoom.
+ * divider, keeps its size at every zoom. The frame's marks, such as the
+ * canvas selection, stand over its document and outside its clip, so they can
+ * reach beyond the frame's edges.
  */
 
 import { useId, type CSSProperties, type ReactNode } from "react";
@@ -108,6 +110,8 @@ export function CanvasFrame({
   label,
   lightOnly = false,
   link,
+  marks,
+  onSelect,
   overlay,
   place,
   retry,
@@ -150,6 +154,16 @@ export function CanvasFrame({
    * use-case step that opens the step's screen.
    */
   link?: CanvasFrameLink | undefined;
+  /**
+   * The frame's marks, unclipped over its document, such as the canvas
+   * selection, which the frame's scale places.
+   */
+  marks?: ReactNode;
+  /**
+   * Receives each press of the frame's name, which makes the name a button,
+   * such as on a variant set, where a press selects the frame.
+   */
+  onSelect?: (() => void) | undefined;
   /**
    * What lies over the frame's document inside its box, at the frame's size
    * rather than the document's, so it keeps its size at every zoom, such as
@@ -201,6 +215,8 @@ export function CanvasFrame({
         label={label}
         lightOnly={lightOnly}
         link={link}
+        onSelect={onSelect}
+        selected={selected}
         side={side}
         size={
           kind !== "document" &&
@@ -227,6 +243,7 @@ export function CanvasFrame({
           {children}
         </FrameBox>
       )}
+      {marks}
     </figure>
   );
 }

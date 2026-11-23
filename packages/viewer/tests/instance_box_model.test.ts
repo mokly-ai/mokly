@@ -24,6 +24,7 @@ test("the reader measures selection, readiness and usage revisions with geometry
   requests[0]!.result.resolve(model);
   await setImmediate();
   assert.deepEqual(reader.read(selected, firstKey), {
+    box: model.box,
     model,
     sizes: {
       width: 160,
@@ -120,6 +121,25 @@ test("the reader keeps one request in flight and one trailing measurement", asyn
   await setImmediate();
   assert.deepEqual(reader.read(selected, firstKey)?.model, trailing);
   assert.equal(requests.length, 3);
+});
+
+test("an instance without a box model takes the smallest rectangle of its boxes", async (t) => {
+  const boxes = [
+    { x: 10, y: 30, width: 40, height: 10 },
+    { x: 20, y: 20, width: 50, height: 5 },
+  ];
+  const { reader, selected } = boxModelReaderFixture(t, false, [
+    { key: firstKey, ranges: [{ id: "r-0", boxes }] },
+    {
+      key: secondKey,
+      ranges: [{ id: "r-1", boxes: [{ x: 0, y: 0, width: 5, height: 5 }] }],
+    },
+  ]);
+  reader.select(selected, firstKey);
+  await setImmediate();
+  assert.deepEqual(reader.read(selected, firstKey), {
+    box: { x: 10, y: 20, width: 60, height: 20 },
+  });
 });
 
 test("the reader has no box model for an absent method, a null result or a rejection", async (t) => {

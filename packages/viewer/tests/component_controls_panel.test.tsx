@@ -22,7 +22,6 @@ import {
   controlDraft,
   type ControlTarget,
 } from "../src/shell/control_values.js";
-import type { WorkspaceData } from "../src/shell/workspace_data.js";
 
 const target: ControlTarget = {
   path: "components/action/default",
@@ -40,7 +39,6 @@ const target: ControlTarget = {
   removed: false,
 };
 const saved = initialComponentEditorState(target, "s", controlDraft(target));
-const data = { components: [] } as unknown as WorkspaceData;
 const actions = {
   onChange: () => undefined,
   onCurrent: () => undefined,
@@ -57,7 +55,6 @@ function panel(
 ) {
   return ComponentControlsPanel({
     ...actions,
-    data,
     ...(focus ? { focus } : {}),
     mode,
     state: { ...saved, ...state },

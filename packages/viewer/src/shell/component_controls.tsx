@@ -263,7 +263,6 @@ export function useComponentControls({
     panel:
       target && mode ? (
         <ComponentControlsPanel
-          data={data}
           focus={named}
           mode={mode}
           onChange={change}

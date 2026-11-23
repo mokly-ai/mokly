@@ -7,8 +7,9 @@
  * opens at its compact height. Its grabber, the accessible size toggle,
  * switches it to its expanded height and back, also with a drag, and its
  * close control closes it. The grabber and the close control stand outside
- * the panel's body. The sheet is not modal, and a closed sheet stays
- * mounted, so its content keeps its state.
+ * the panel's body. An optional head, such as the right panel's tabs, stands
+ * above the body and stays in place while the body scrolls. The sheet is not
+ * modal, and a closed sheet stays mounted, so its content keeps its state.
  */
 
 import { useState, type CSSProperties, type ReactNode, type Ref } from "react";
@@ -34,6 +35,7 @@ export type FloatingPanelSide = "left" | "right";
 
 export function FloatingPanel({
   children,
+  head,
   label,
   noun,
   ref,
@@ -43,6 +45,11 @@ export function FloatingPanel({
 }: {
   /** The panel's content. */
   children?: ReactNode;
+  /**
+   * A strip above the body, such as the right panel's tabs, which stays in
+   * place while the body scrolls.
+   */
+  head?: ReactNode;
   /**
    * The panel's accessible name, which makes it a region. A panel whose
    * content names itself, such as the catalogue's navigation, leaves it out.
@@ -94,6 +101,9 @@ export function FloatingPanel({
       >
         <CanvasIcon name="close" size={18} />
       </button>
+      {head === undefined ? null : (
+        <div className="mbk-float-head mbk-reset">{head}</div>
+      )}
       <div
         className="mbk-float-body mbk-reset"
         data-floating-scroll={scroll ? "" : undefined}

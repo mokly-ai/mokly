@@ -18,6 +18,12 @@ import { InspectSection } from "./inspect.js";
 import { changePosition } from "./nav_rows.js";
 
 /**
+ * The content of Welcome that the example excludes from comparisons, its
+ * navigation. The comparison details of a Welcome that differs name it.
+ */
+export const WELCOME_EXCLUDED_CONTENT = ["example-nav"];
+
+/**
  * Compared: the version before and the current version on a two-dot rail.
  * The version before is the branch point on the base, and the current
  * version is the branch. An entry that the branch added has no version
@@ -74,13 +80,14 @@ export function ChangesCompared({
  * The comparison details of today's inspector: the shipped evidence with one
  * sentence for each reason, after the previous path of a moved entry, which
  * the evidence names as the earlier side, then each changed file with its
- * outcomes and the stylesheets that were examined and excluded. The rail
- * above names the base, so the evidence leaves out its branch-point
- * sentence.
+ * outcomes, the stylesheets that were examined and excluded, and the content
+ * that the comparison leaves out. The rail above names the base, so the
+ * evidence leaves out its branch-point sentence.
  */
 export function ChangesEvidence({
   excluded,
   files,
+  ignored,
   initial,
   mark = "data-workspace-evidence",
   previousPath,
@@ -90,6 +97,8 @@ export function ChangesEvidence({
   excluded?: EvidenceExclusions | undefined;
   /** The changed files, each named once with its outcomes. */
   files?: EvidenceFiles | undefined;
+  /** The ids of the content that the comparison leaves out. */
+  ignored?: readonly string[] | undefined;
   /** The panel opens scrolled to the comparison details. */
   initial?: boolean | undefined;
   /** The mark of the evidence: a whole-document page has its own. */
@@ -108,6 +117,7 @@ export function ChangesEvidence({
         base=""
         excluded={excluded}
         files={files}
+        ignored={ignored}
         mark={mark}
         previousPath={previousPath}
         reasons={reasonEvidence(reasons)}
@@ -120,8 +130,9 @@ export function ChangesEvidence({
  * The Changes tab of Welcome, the first of the branch's changes: the
  * stepper, whose Next change opens Details in Changes; Compared; the compare
  * modes in the shown mode, with the compared frame of Side by side; and the
- * comparison details. The cloud's check stands between the stepper and
- * Compared; the open-source panel leaves that place empty.
+ * comparison details, which end with Welcome's excluded content. The cloud's
+ * check stands between the stepper and Compared; the open-source panel
+ * leaves that place empty.
  */
 export function WelcomeChanges({
   frame,
@@ -153,7 +164,10 @@ export function WelcomeChanges({
           )}
         />
       </InspectSection>
-      <ChangesEvidence reasons={["material"]} />
+      <ChangesEvidence
+        ignored={WELCOME_EXCLUDED_CONTENT}
+        reasons={["material"]}
+      />
     </>
   );
 }

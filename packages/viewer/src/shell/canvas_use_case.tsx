@@ -6,10 +6,10 @@
  * frame is mounted by `canvas_use_case_frame.tsx`.
  *
  * The use case shows its own Frames choice, apart from a screen's frames and
- * from the selection's preview scheme: the choice that it opens on, Desktop
- * and Light at and above the layout breakpoint, and Mobile and Light in the
- * compact layout. The compact layout shows the picked step frame alone, from
- * `canvas_use_case_pick.ts`; the others stay mounted out of the section.
+ * from the selection's preview scheme, which `use_case_choice.ts` holds and
+ * its Frames filter changes. The compact layout shows the picked step frame
+ * alone, from `canvas_use_case_pick.ts`; the others stay mounted out of the
+ * section.
  */
 
 import type { CatalogueUseCase } from "@mokly/model";
@@ -20,8 +20,8 @@ import { useCanvasLayout } from "./canvas_layout.js";
 import { CanvasEntryStage } from "./canvas_stage.js";
 import { CanvasUseCaseFrame } from "./canvas_use_case_frame.js";
 import {
-  openingUseCaseChoice,
   useCaseFrames,
+  type UseCaseFramesChoice,
 } from "./canvas_use_case_frames.js";
 import type { Catalogue } from "./catalogue.js";
 import { targetHead } from "./head.js";
@@ -29,18 +29,20 @@ import { publicEntryStatus } from "./public_workspace.js";
 
 export function CanvasUseCaseStage({
   catalogue,
+  choice,
   entry,
   fragment,
   picked,
 }: {
   catalogue: Catalogue;
+  /** The viewport and the scheme that every step frame shows. */
+  choice: UseCaseFramesChoice;
   entry: CatalogueUseCase;
   fragment?: string | undefined;
   /** The key of the step frame that the compact layout shows alone. */
   picked?: string | undefined;
 }) {
   const wide = useCanvasLayout();
-  const choice = openingUseCaseChoice(wide);
   const head = targetHead(catalogue, { kind: "entry", entry });
   const size =
     choice.viewport === "desktop" ? DESKTOP_FRAME_SIZE : MOBILE_FRAME_SIZE;

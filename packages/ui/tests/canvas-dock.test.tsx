@@ -40,6 +40,8 @@ test("with nothing selected the dock holds Catalogue alone, and Fit shows only w
   assert.deepEqual(names(group), ["Catalogue"]);
   rerender(<CanvasDock onCatalogue={() => undefined} tab="inspect" />);
   assert.deepEqual(names(group), ["Catalogue", "Inspect"]);
+  rerender(<CanvasDock onCatalogue={() => undefined} tab="changes" />);
+  assert.deepEqual(names(group), ["Catalogue", "Changes"]);
 });
 
 test("the host receives Catalogue and the tab, which it focuses when a sheet closes", () => {

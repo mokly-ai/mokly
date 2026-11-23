@@ -122,6 +122,7 @@ export function CanvasEntryStage({
   fitKey: liveKey,
   frames: live,
   kind,
+  onEmptyClick,
   path,
   quietLabel,
   status,
@@ -131,6 +132,8 @@ export function CanvasEntryStage({
   fitKey: string;
   frames: readonly CanvasSectionFrame[];
   kind: CanvasSectionKind;
+  /** Hears of a click on the empty canvas, such as to clear a selection. */
+  onEmptyClick?: (() => void) | undefined;
   path: string;
   /** The head's quiet label, such as a removed entry's `Showing previous version`. */
   quietLabel?: string | undefined;
@@ -170,6 +173,7 @@ export function CanvasEntryStage({
         <CanvasStage
           canvasRef={canvas}
           fitKey={fitKey}
+          onEmptyClick={onEmptyClick}
           onViewChange={viewChange}
           ref={handle}
           routed

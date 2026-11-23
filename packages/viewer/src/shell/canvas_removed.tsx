@@ -105,12 +105,15 @@ export function CanvasRemovedStage({
   colorScheme,
   data,
   retry,
+  schemes,
   state,
   viewport,
 }: {
   colorScheme: ViewerSelection["colorScheme"];
   data: RemovedPreviewData;
   retry(): void;
+  /** The schemes whose rows a removed screen's section shows. */
+  schemes?: readonly ("dark" | "light")[] | undefined;
   state: RemovedPreviewState;
   viewport: ViewerSelection["viewport"];
 }) {
@@ -136,6 +139,7 @@ export function CanvasRemovedStage({
   return content.kind === "screen" ? (
     <RemovedScreenSection
       {...section}
+      schemes={schemes}
       viewport={viewport}
       views={content.views}
     />

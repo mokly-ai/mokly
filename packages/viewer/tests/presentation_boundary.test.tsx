@@ -82,5 +82,10 @@ test("the embedded viewer uses effective Light evidence for light-only screens a
     },
   });
   assert.match(componentHtml, /data-workspace-status="">Changed<\/span>/);
-  assert.match(componentHtml, /data-view-changed="scheme" hidden=""/);
+  // The set has no dark view, so no Dark frame hides a changed view.
+  assert.match(
+    componentHtml,
+    /data-frames-toggle="dark" disabled="" type="checkbox"\/>[\s\S]*?Light only/,
+  );
+  assert.doesNotMatch(componentHtml, /data-view-changed="scheme">/);
 });

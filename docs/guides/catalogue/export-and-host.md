@@ -38,9 +38,10 @@ follow the CORS rules in [static delivery](/docs/reference/export-delivery/).
 
 ## Browse the site
 
-Readers can browse, search, inspect, and select saved viewports and schemes.
+Readers can browse, search, and inspect every saved view on the canvas.
 Component props are read-only. The static shell makes no live render or update
-request. Comparison content loads when a reader selects a comparison.
+request. Comparison content loads when a reader chooses Side by side, Overlay,
+Difference or Swipe.
 
 The catalogue uses origin-root URLs. Use a dedicated origin rather than a
 subpath. Open it through HTTP(S), rather than `file://`.

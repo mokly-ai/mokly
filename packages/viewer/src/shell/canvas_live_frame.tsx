@@ -6,9 +6,12 @@
  * component frame measures its document's content once after each load, and
  * its workspace then gives it the size that the content needs. The frame's
  * document forwards its canvas input to the canvas that holds the frame.
+ * What lies over the frame, such as the canvas selection, comes from the
+ * workspace, and a variant set's frame names itself in a button that selects
+ * it.
  */
 
-import { useContext } from "react";
+import { useContext, type ReactNode } from "react";
 
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
@@ -66,14 +69,20 @@ function sizeListener(
 export function CanvasLiveFrame({
   fragment,
   hasDarkFragments,
+  onSelect,
   onSize,
+  overlay,
   plan,
   size,
 }: {
   fragment?: string | undefined;
   hasDarkFragments: boolean;
+  /** Receives each press of the frame's name, which then is a button. */
+  onSelect?: (() => void) | undefined;
   /** Receives a component frame's nominal size after each load of its document. */
   onSize?: ((key: string, size: CanvasFrameSize) => void) | undefined;
+  /** What lies over the frame, such as the canvas selection. */
+  overlay?: ReactNode;
   plan: CanvasFramePlan;
   size: CanvasFrameSize;
 }) {
@@ -103,6 +112,8 @@ export function CanvasLiveFrame({
       height={size.height}
       kind={plan.kind}
       label={plan.label}
+      onSelect={onSelect}
+      marks={overlay}
       retry={{ onClick: focusThen(frame.frameRef, frame.retry) }}
       scheme={scheme}
       selected={plan.selected}

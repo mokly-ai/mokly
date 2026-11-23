@@ -5,9 +5,10 @@
  * Light row alone without a historical dark view. In the Dark row, a
  * viewport without a dark view keeps its Light view and says so. A viewport
  * without any historical view has the place of each of its frames, which
- * holds the note that no previous version was captured. A viewport choice
- * keeps one column, as it does for a current screen. A removed page or
- * document has one reading frame instead.
+ * holds the note that no previous version was captured. The Frames filter
+ * keeps the columns of its viewports and the rows of its schemes, as it does
+ * for a current screen. A removed page or document has one reading frame
+ * instead.
  */
 
 import type { ViewerSelection } from "../host/types.js";
@@ -25,7 +26,7 @@ export interface RemovedViewAxes {
 /** One frame of a removed screen's section, or the place of a missing view. */
 export interface RemovedFramePlan<View extends RemovedViewAxes> {
   column: number;
-  /** Whether the viewport choice hides the frame. */
+  /** Whether the Frames filter hides the frame. */
   hidden: boolean;
   /** Names the frame among the section's frames, such as `mobile-light`. */
   key: string;
@@ -55,7 +56,12 @@ const VIEWPORTS = ["desktop", "mobile"] as const;
  */
 export function removedScreenFrames<View extends RemovedViewAxes>(
   views: readonly View[],
-  shown: { compact: boolean; viewport: ViewerSelection["viewport"] },
+  shown: {
+    compact: boolean;
+    /** The schemes whose rows show; every row without it. */
+    schemes?: readonly CanvasScheme[] | undefined;
+    viewport: ViewerSelection["viewport"];
+  },
 ): RemovedFramePlan<View>[] {
   const schemes: readonly CanvasScheme[] = views.some(
     (view) => view.colorScheme === "dark",
@@ -65,9 +71,12 @@ export function removedScreenFrames<View extends RemovedViewAxes>(
   const columns = VIEWPORTS.filter(
     (size) => shown.viewport === "both" || shown.viewport === size,
   );
+  const rows = schemes.filter(
+    (scheme) => shown.schemes?.includes(scheme) ?? true,
+  );
   const of = (size: "desktop" | "mobile", scheme: CanvasScheme) =>
     views.find((view) => view.viewport === size && view.colorScheme === scheme);
-  return schemes.flatMap((scheme, row) =>
+  return schemes.flatMap((scheme) =>
     VIEWPORTS.flatMap((size) => {
       const captured = views.some((view) => view.viewport === size);
       const exact = of(size, scheme);
@@ -78,12 +87,12 @@ export function removedScreenFrames<View extends RemovedViewAxes>(
       return [
         {
           column: Math.max(0, columns.indexOf(size)),
-          hidden: !columns.includes(size),
+          hidden: !columns.includes(size) || !rows.includes(scheme),
           key: `${size}-${scheme}`,
           label: viewportFrameLabel(size, scheme),
           lightOnly: view !== undefined && !exact,
           otherShown: !shown.compact && columns.includes(other),
-          row,
+          row: Math.max(0, rows.indexOf(scheme)),
           scheme: view?.colorScheme ?? scheme,
           view,
           viewport: size,

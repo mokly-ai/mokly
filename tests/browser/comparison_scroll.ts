@@ -6,7 +6,7 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { modeButton } from "./comparison_ui.js";
+import { comparisonFrames, modeButton } from "./comparison_ui.js";
 import { passRenderingUpdates } from "./page_settling.js";
 import { chooseViewport } from "./workspace_actions.js";
 
@@ -34,9 +34,22 @@ export async function openComparison(
   await chooseViewport(page, viewport);
   await modeButton(page, mode).click();
   await expect(modeButton(page, mode)).toHaveAttribute("aria-pressed", "true");
-  const frames = page.locator("[data-diff-stage] iframe");
-  await expect(frames).toHaveCount(viewport === "both" ? 4 : 2);
-  for (const frame of await frames.all())
+  // Side by side compares one frame's pair; a stack compares every frame.
+  const shown =
+    mode === "Side by side"
+      ? []
+      : viewport === "both"
+        ? (["mobile", "desktop"] as const)
+        : [viewport];
+  for (const each of shown)
+    await expect(
+      comparisonSection(page, each).locator(
+        "iframe[data-mokly-comparison-frame]",
+      ),
+    ).toHaveCount(2);
+  if (mode === "Side by side")
+    await expect(comparisonFrames(page)).toHaveCount(2);
+  for (const frame of await comparisonFrames(page).all())
     await expect(frame.contentFrame().locator("body")).not.toBeEmpty();
 }
 
@@ -45,7 +58,15 @@ export function comparisonSection(
   page: Page,
   viewport: "desktop" | "mobile",
 ): Locator {
-  return page.locator(`[data-diff-stage] [data-diff-viewport="${viewport}"]`);
+  const stage = page.locator("[data-mokly-stage]");
+  // A stack is the Light frame of the viewport; Side by side is its pair.
+  const stack = stage.locator(
+    `.mbk-canvas-cell:not([hidden]) > figure[data-canvas-frame="${viewport}"][data-preview-color-scheme="light"]:has([data-compare-mode]:not([data-compare-mode="side"]))`,
+  );
+  const pair = stage.locator(
+    `.mbk-canvas-frames:has(figure[data-canvas-frame="${viewport}"] [data-compare-mode="side"])`,
+  );
+  return stack.or(pair);
 }
 
 /** The frame showing one version inside a comparison section. */
@@ -105,7 +126,9 @@ export async function wheelOver(
   deltaX = 0,
 ): Promise<void> {
   await target.evaluate((element) =>
-    element.closest(".mb-panes")?.scrollIntoView({ block: "nearest" }),
+    element
+      .closest("[data-compare-mode]")
+      ?.scrollIntoView({ block: "nearest" }),
   );
   const box = await target.boundingBox();
   if (!box) throw new Error("The wheel target is not rendered");
@@ -238,18 +261,8 @@ export async function wheelOverRegion(
   deltaX = 0,
 ): Promise<void> {
   const region = frame.contentFrame().locator(selector);
-  const stage = (await page.locator("[data-diff-stage]").boundingBox())!;
-  let box = await region.boundingBox();
+  const box = await region.boundingBox();
   if (!box) throw new Error(`The region ${selector} is not rendered`);
-  const centre = box.y + box.height / 2;
-  if (centre < stage.y + 40 || centre > stage.y + stage.height - 40) {
-    await frame.evaluate(
-      (element, delta) =>
-        element.closest("[data-diff-stage]")?.scrollBy(0, delta),
-      centre - (stage.y + stage.height / 2),
-    );
-    box = (await region.boundingBox())!;
-  }
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.wheel(deltaX, deltaY);
 }

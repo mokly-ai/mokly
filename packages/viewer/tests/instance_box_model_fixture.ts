@@ -1,6 +1,10 @@
 import type { TestContext } from "node:test";
 
-import type { InstanceBoxModel, MountedFrame } from "@mokly/frame";
+import type {
+  InstanceBoundary,
+  InstanceBoxModel,
+  MountedFrame,
+} from "@mokly/frame";
 
 import {
   ShellFrameRegistry,
@@ -26,7 +30,11 @@ export function deferred<T>() {
   return { promise, resolve, reject };
 }
 
-export function boxModelReaderFixture(t: TestContext, supported = true) {
+export function boxModelReaderFixture(
+  t: TestContext,
+  supported = true,
+  boundaries: readonly InstanceBoundary[] = [],
+) {
   const requests: {
     key: string;
     result: ReturnType<typeof deferred<InstanceBoxModel | null>>;
@@ -35,7 +43,7 @@ export function boxModelReaderFixture(t: TestContext, supported = true) {
     dispose() {},
     async highlight() {},
     async listInstanceBoundaries() {
-      return [];
+      return boundaries;
     },
     async scrollTo() {},
     subscribe: () => () => {},

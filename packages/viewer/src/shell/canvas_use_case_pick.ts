@@ -15,8 +15,8 @@ import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import { frameChoices } from "./canvas_compact.js";
 import { useCanvasLayout } from "./canvas_layout.js";
 import {
-  openingUseCaseChoice,
   useCaseFrames,
+  type UseCaseFramesChoice,
 } from "./canvas_use_case_frames.js";
 import type { Catalogue } from "./catalogue.js";
 
@@ -34,15 +34,12 @@ export interface UseCasePick {
 export function useUseCasePick(
   catalogue: Catalogue,
   entry: ShellCatalogueRoutedEntry | undefined,
+  choice: UseCaseFramesChoice,
 ): UseCasePick | undefined {
   const wide = useCanvasLayout();
   const [pick, setPick] = useState<{ key: string; path: string }>();
   if (wide || entry?.kind !== "use-case") return undefined;
-  const frames = useCaseFrames(
-    catalogue.publicModel.screens,
-    entry,
-    openingUseCaseChoice(false),
-  );
+  const frames = useCaseFrames(catalogue.publicModel.screens, entry, choice);
   const first = frames[0];
   if (!first) return undefined;
   const picked =
