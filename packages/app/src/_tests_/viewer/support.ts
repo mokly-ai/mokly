@@ -78,10 +78,17 @@ export async function openSettingsFromAccount(page: Page): Promise<void> {
   await expect(page.getByTestId("settings-dialog")).toBeVisible();
 }
 
-/** The Notice variant reads both consumer lists from its parent's detail. */
+/**
+ * The Notice variant reads both consumer lists from its parent's detail, in
+ * the Usage section of Inspect. The section starts folded, and a press on its
+ * head, `Usage` with its count, unfolds it.
+ */
 export async function expectParentUsage(page: Page): Promise<void> {
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  const usage = page
+    .getByRole("tabpanel", { name: "Inspect", exact: true })
+    .getByRole("group")
+    .filter({ hasText: /^Usage/ });
+  await usage.getByText(/^Usage( \d+)?$/).click();
   await expect(usage.getByRole("heading")).toHaveText([
     "Used by",
     "Affected screens and components",
@@ -133,10 +140,12 @@ export async function expectShownViewport(
 }
 
 /**
- * The link to one of the shown component's saved variants, by its title. The
- * bar marks the variant that the reader is on as the current page. A dialog
- * makes the page beneath it inert and hides it from assistive technology, so
- * a read beneath one sets `includeHidden`.
+ * A row of the shown component's variant set in the Variants list of Inspect,
+ * by its title: the component's own example, then each saved variant. Each
+ * row is a button that selects its frame, and the row whose frame holds the
+ * selection is pressed. An address that names a saved variant opens with its
+ * frame selected. A dialog makes the page beneath it inert and hides it from
+ * assistive technology, so a read beneath one sets `includeHidden`.
  */
 export function savedVariant(
   page: Page,
@@ -144,8 +153,8 @@ export function savedVariant(
   { includeHidden = false }: { includeHidden?: boolean } = {},
 ): Locator {
   return page
-    .getByRole("navigation", { name: "Saved variants", includeHidden })
-    .getByRole("link", { name: title, exact: true, includeHidden });
+    .getByRole("region", { name: "Variants", exact: true, includeHidden })
+    .getByRole("button", { name: title, exact: true, includeHidden });
 }
 
 /**

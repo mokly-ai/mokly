@@ -35,11 +35,9 @@ test("a listed screen response cannot erase a selected component variant", async
   ).toBeVisible();
   // The variant entry itself, not its parent showing its first variant.
   await expect(
-    page
-      .getByRole("region", { name: "Panel" })
-      .getByRole("button", { name: "Copy path notice/draft", exact: true }),
+    page.getByRole("button", { name: "Copy path notice/draft", exact: true }),
   ).toBeVisible();
-  await expect(chosen).toHaveAttribute("aria-current", "page");
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toHaveValue("notice");
@@ -88,7 +86,7 @@ test("a listed screen response cannot erase a selected component variant", async
     "data-mokly-color-scheme",
     "dark",
   );
-  await expect(chosen).toHaveAttribute("aria-current", "page");
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toHaveValue("notice");
@@ -103,7 +101,7 @@ test("a listed screen response cannot erase a selected component variant", async
     "data-mokly-color-scheme",
     "dark",
   );
-  await expect(chosen).toHaveAttribute("aria-current", "page");
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toHaveValue("notice");

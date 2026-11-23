@@ -139,7 +139,7 @@ test("private settings keep an exact branch and viewer query through email sign-
   );
   await expect(
     savedVariant(page, "Draft", { includeHidden: true }),
-  ).toHaveAttribute("aria-current", "page");
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("input[data-mokly-search]")).toHaveValue(
     "notice tag:a tag:b",
   );

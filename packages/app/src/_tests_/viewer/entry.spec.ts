@@ -174,7 +174,7 @@ test("a reference alias carries the whole selection to the publication", async (
     await expect(
       page.getByRole("heading", { level: 2, name: "Notice" }),
     ).toBeVisible();
-    await expect(chosen).toHaveAttribute("aria-current", "page");
+    await expect(chosen).toHaveAttribute("aria-pressed", "true");
     await expectParentUsage(page);
     await expect(page).toHaveURL(/catalogueScreen=notice%2Fdraft/);
     await expect(page).toHaveURL(/viewport=both/);

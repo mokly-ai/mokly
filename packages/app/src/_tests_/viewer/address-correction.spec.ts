@@ -1,11 +1,6 @@
 import { expect, open, test } from "../harness";
 
-import {
-  corrected,
-  publishedViewerReady,
-  publishedProject,
-  savedVariant,
-} from "./support";
+import { corrected, publishedViewerReady, publishedProject } from "./support";
 
 /**
  * Addresses the pinned viewer cannot take as they are. Each is corrected
@@ -24,26 +19,23 @@ test("an earlier variant address keeps its component and drops the key", async (
   await corrected(page, /variantId=/);
   // Only the catalogue knows which entry an old variant name became, so the
   // route keeps the component and the package shows the component's own
-  // page, the first row of its variant bar.
+  // page, which the catalogue marks as the current page.
   expect(new URL(page.url()).search).toBe("?catalogueScreen=notice");
   await publishedViewerReady(page);
   await expect(
     page.getByRole("heading", { level: 2, name: "Notice" }),
   ).toBeVisible();
-  // The canvas section's head and the panel's head both name the entry's path.
+  // The head of the canvas section names the entry's path.
   await expect(
-    page
-      .getByRole("region", { name: "Panel" })
-      .getByRole("button", { name: "Copy path notice", exact: true }),
+    page.getByRole("button", { name: "Copy path notice", exact: true }),
   ).toBeVisible();
-  await expect(savedVariant(page, "Notice")).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-  await expect(savedVariant(page, "Draft")).not.toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  const catalogue = page.getByRole("navigation", { name: "Catalogue" });
+  await expect(
+    catalogue.getByRole("link", { name: /^Notice( Changed)?$/ }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    catalogue.getByRole("link", { name: /^Draft( Changed)?$/ }),
+  ).not.toHaveAttribute("aria-current", "page");
 });
 
 test("a snapshot the package would refuse is corrected before it mounts", async ({
