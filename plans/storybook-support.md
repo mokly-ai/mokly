@@ -616,7 +616,7 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 - [x] Apply the answer to decision B2 to the `beforeAll` rule of
       `docs/protocol/mokly-storybook.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
+- [x] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-entry-props.md`, and `docs/protocol/mokly-variants.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Apply the answer to decision B4 to the protocol pages.
@@ -909,6 +909,10 @@ Design calls of track B, made on 2026-11-18:
   `meta.story()` writes that placeholder into an untitled factory meta while
   the stories file evaluates, before the reader runs. Only an authored title
   of exactly `ComposedStory` loses, in favour of the fallback title.
+- B-f. Made on 2026-11-23. When a requested data prop has the key of a
+  non-data arg of the same story, the requested value renders. Reason: the
+  answer to B1 renders exactly the requested data props, and Storybook lays
+  extra args over a story's own args.
 
 ## Milestone 3: Story reader
 
