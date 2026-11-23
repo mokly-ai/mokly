@@ -12,7 +12,7 @@ use mokly_graph::error::{GraphError, InternalError};
 use mokly_graph::fragments::MemoFragments;
 use mokly_graph::graph::Graph;
 use mokly_graph::key::NodeKey;
-use mokly_graph::render_inputs::{RenderInputs, RenderKeys};
+use mokly_graph::render_inputs::with_catalogue_inputs;
 use mokly_graph::types::{RenderGeneration, RenderGraph};
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::{DeferredFragments, FragmentRenderer};
@@ -24,8 +24,10 @@ use crate::declarations;
 use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
 use crate::imported_assets;
+use crate::leases::FinishPreparation;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
+use crate::stylesheets::StylesheetAttempt;
 use crate::{definition_handle, sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
@@ -39,13 +41,24 @@ impl RenderGraph for JavaScriptGraph {
         mut catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> mokly_graph::error::Result<Arc<dyn RenderGeneration>> {
+        let _preparation = FinishPreparation(catalogue.javascript.generation.as_ref().and_then(
+            |generation| {
+                self.runtime
+                    .prepared
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
+                    .get(&generation.css_context)
+                    .and_then(Weak::upgrade)
+                    .and_then(|prepared| prepared.context.clone())
+            },
+        ));
         if (config.modules.postcss.is_some() || catalogue.javascript.generation.is_some())
             && let Some(warning) = self.runtime.base_warning()
             && !catalogue.warnings.contains(&warning)
         {
             catalogue.warnings.push(warning);
         }
-        let graph = match self.graph(&config, &mut catalogue) {
+        let (graph, attempt) = match self.graph(&config, &mut catalogue) {
             Ok(graph) => graph,
             Err(source) => {
                 return Err(GraphError::Attempt {
@@ -61,7 +74,12 @@ impl RenderGraph for JavaScriptGraph {
         };
         let warnings = catalogue.warnings.clone();
         match graph.prepare(config, catalogue, output) {
-            Ok(generation) => Ok(generation),
+            Ok(generation) => {
+                if self.runtime.serve_head() {
+                    attempt.retire_used();
+                }
+                Ok(generation)
+            }
             Err(source) => Err(GraphError::Attempt {
                 failures: vec![source],
                 warnings,
@@ -75,7 +93,7 @@ impl JavaScriptGraph {
         &self,
         config: &ResolvedConfig,
         catalogue: &mut PreparedCatalogue,
-    ) -> Result<Arc<dyn RenderGraph>> {
+    ) -> Result<(Arc<dyn RenderGraph>, StylesheetAttempt)> {
         let mut side = self.runtime.side(config);
         let assets = sources::reader(&self.runtime, config, &side);
         let mut inputs = DeliveryInputs {
@@ -90,7 +108,7 @@ impl JavaScriptGraph {
             component_stylesheets: BTreeMap::new(),
             entry_modules: BTreeMap::new(),
         };
-        let mut compiler = None;
+        let mut attempt = None;
         let declarations = declarations::validate(self.runtime.tree.clone(), config, catalogue)?;
         let mut fragments: Arc<dyn FragmentRenderer> = Arc::new(DeferredFragments);
         if let Some(generation) = &catalogue.javascript.generation {
@@ -103,7 +121,10 @@ impl JavaScriptGraph {
                 .get(&generation.css_context)
                 .and_then(Weak::upgrade)
             {
-                compiler = Some(prepared.compiler.clone());
+                attempt = Some(StylesheetAttempt {
+                    compiler: prepared.compiler.clone(),
+                    context: prepared.context.clone(),
+                });
             }
             let bindings = Bindings {
                 generation: generation.id.clone(),
@@ -138,26 +159,9 @@ impl JavaScriptGraph {
                 .as_bytes(),
             );
             let renderer = config.renderer();
-            let declaring: BTreeMap<_, _> = catalogue
-                .model
-                .entries
-                .iter()
-                .filter_map(|entry| {
-                    let source = catalogue.javascript.entries.get(&entry.metadata.path)?;
-                    Some((source.handle.clone(), entry.metadata.source.path.clone()))
-                })
-                .collect();
-            let keys = Arc::new(RenderKeys::build_with_workers(
-                &RenderInputs {
-                    generation,
-                    bindings: &catalogue.javascript.bindings,
-                    renderer: renderer.as_deref(),
-                    entries: &catalogue.javascript.entries,
-                    declarations: &declaring,
-                },
-                NodeKey(fingerprint),
-                self.runtime.workers.as_ref(),
-            ));
+            let keys = with_catalogue_inputs(config, catalogue, generation, |inputs| {
+                self.runtime.render_keys(inputs, NodeKey(fingerprint))
+            });
             fragments = Arc::new(MemoFragments::new(
                 keys.clone(),
                 Arc::new(Fragments {
@@ -214,7 +218,8 @@ impl JavaScriptGraph {
                     .as_ref()
                     .and_then(|generation| generation.persistence_identity.clone()),
             });
-        Ok(Arc::new(Graph {
+        let attempt = attempt.unwrap_or_else(|| stylesheets::attempt(&self.runtime, config, &side));
+        let graph: Arc<dyn RenderGraph> = Arc::new(Graph {
             inputs,
             tree: Arc::new(LeasedTree {
                 tree: self.runtime.tree.clone(),
@@ -222,11 +227,11 @@ impl JavaScriptGraph {
                 _base: self.runtime.base.clone(),
             }),
             composer: Arc::new(HtmlComposer { fragments }),
-            stylesheets: compiler
-                .unwrap_or_else(|| stylesheets::compiler(&self.runtime, config, &side)),
+            stylesheets: attempt.compiler.clone(),
             cache: self.runtime.cache.clone(),
             workers: self.runtime.workers.clone(),
             version: self.runtime.version.clone(),
-        }))
+        });
+        Ok((graph, attempt))
     }
 }

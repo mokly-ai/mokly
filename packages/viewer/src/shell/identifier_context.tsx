@@ -1,6 +1,6 @@
 /** React-owned identifier scoping for independent embedded shell roots. */
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useCallback, useContext, type ReactNode } from "react";
 
 const IdentifierPrefix = createContext("");
 
@@ -27,7 +27,7 @@ export function useShellIdentifier(value: string): string {
 /** Resolve a dynamic family of package-owned identifiers in one shell root. */
 export function useShellIdentifierScope(): (value: string) => string {
   const prefix = useContext(IdentifierPrefix);
-  return (value) => `${prefix}${value}`;
+  return useCallback((value: string) => `${prefix}${value}`, [prefix]);
 }
 
 /** Resolve a same-document link to one package-owned identifier. */

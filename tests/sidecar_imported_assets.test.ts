@@ -90,6 +90,10 @@ test("a restored asset compilation reuses the captured module records", async (c
     compiled: original.compiled,
     modules: original.modules,
   });
+  assert.deepEqual(await restored.call("bundle", params), {
+    generation: original.generation,
+    restoredGeneration: original.generation,
+  });
   const reused = await restored.call<BundleResult>("bundle", {
     ...params,
     evaluation: "reused",

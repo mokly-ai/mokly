@@ -1,8 +1,10 @@
-//! Fake validated producer follows the graph's batch, summary, and failure protocol.
+//! Fake validated producer records facts and hands off encoded inputs in route order.
 
 use mokly_catalogue::diagnostic::normalize_warnings;
 use mokly_graph::collection::ComparisonCollector;
+use mokly_graph::collection_input::EncodedComparisonDocument;
 use mokly_graph::error::{GraphError, Result};
+use mokly_graph::types::ComparisonDocument;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock, RenderSummary};
 use unimock::{Clause, MockFn, matching};
 
@@ -24,28 +26,22 @@ fn produce(
     collector.summary(&summary);
     let mut failures = Vec::new();
     let mut collection_failure = None;
-    for batch in routes.chunks(source.comparison_parallelism().max(1)) {
-        let mut ready = Vec::with_capacity(batch.len());
-        for route in batch {
-            match source.comparison_input(route) {
-                Ok(input) => {
-                    summary.closure.extend(input.closure.files.iter().cloned());
-                    if let Some(document) = &input.artifact.document {
-                        summary.warnings.extend(document.warnings.iter().cloned());
-                    }
-                    ready.push((route, input));
+    for route in &routes {
+        match source.comparison_input(route) {
+            Ok(input) => {
+                summary.closure.extend(input.closure.files.iter().cloned());
+                if let Some(document) = &input.artifact.document {
+                    summary.warnings.extend(document.warnings.iter().cloned());
                 }
-                Err(error) => failures.push(error),
+                collector.summary(&summary);
+                if collection_failure.is_none() {
+                    collection_failure = source
+                        .check_cancelled()
+                        .and_then(|()| collect(collector, route, input))
+                        .err();
+                }
             }
-        }
-        collector.summary(&summary);
-        for (route, input) in ready {
-            if collection_failure.is_none() {
-                collection_failure = source
-                    .check_cancelled()
-                    .and_then(|()| collector.collect(route, input))
-                    .err();
-            }
+            Err(error) => failures.push(error),
         }
     }
     if !failures.is_empty() {
@@ -60,4 +56,13 @@ fn produce(
         return Err(error);
     }
     Ok(summary)
+}
+
+pub(crate) fn collect(
+    collector: &mut dyn ComparisonCollector,
+    route: &str,
+    input: ComparisonDocument,
+) -> Result<()> {
+    let encoded = EncodedComparisonDocument::encode(route, input, collector.encoder().as_ref())?;
+    collector.collect(route, encoded)
 }

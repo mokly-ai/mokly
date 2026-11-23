@@ -11,6 +11,8 @@ and temporary prop previews. `mokly-graph` owns rendering and resource closure.
 - Bind IPv4 loopback and select one stable port.
 - Serve one data-free stub on each declared shell route.
 - Deliver an atomic index, current entry details, and live descriptor.
+- Compress JSON for clients that accept gzip.
+- Revalidate stylesheets and assets with strong `ETag` values.
 - Render generated documents on request through an injected graph adapter.
 - Read only reached authored resources through confined file handles.
 - Authenticate live prop edits and retain previews in bounded process memory.
@@ -55,8 +57,28 @@ each publication kind: rebuild, usage completion, a Changes status update, and
 ready Changes evidence. A record shares a typed detail, its `detailId`, and its
 encoded payload. A new detail takes that id and payload only when it equals the
 record apart from `detailId` and `revision`, and both details have or both
-lack `revision`. A supplied id alone never proves equality. Reuse never
-changes the typed `revision` that a phase stamps on its details.
+lack `revision`. A supplied id alone never proves equality.
+
+A detail that a publication builds or changes takes the revision of that
+publication. A detail that a publication shares keeps the typed `revision` of
+the publication that built it, so this value can be older than the revision of
+the snapshot. No response serves the older value, because every served detail
+takes the current revision from `RevisionFile`. The `detailId` and the payload
+do not depend on the typed value, because the detail identity preimage sets
+`revision` to `0`. Three readers use the typed value, and each stays correct:
+
+- [`detail_validation.rs`](../mokly-model/src/detail_validation.rs) in
+  `mokly-model` checks only that a current detail has a revision and a removed
+  detail has none, and that the revision is at most 9,007,199,254,740,991. An
+  older revision meets both rules.
+- The rebuild path in [`src/replacement.rs`](./src/replacement.rs) copies the
+  revision of an equivalent previous detail into the rebuilt detail. The two
+  details are then equal, so the snapshot shares the previous detail. No
+  response serves the copied value.
+- The current detail fence of
+  [`detail_context.rs`](../mokly-model/src/detail_context.rs) in `mokly-model`
+  requires the revision of the index. Give it a served detail or the result of
+  `Snapshot::detail`, not a stored detail.
 
 A detail that matches no record serializes its
 [detail identity](../../docs/protocol/mokly-catalogue-serialization.md#detail-identity)
@@ -68,61 +90,21 @@ hold no snapshot, generation, render backend, or history. A candidate copies
 them, so a rejected candidate leaves the live records unchanged.
 
 `UsagePass` and `ChangesPass` run the background work of Serve: current usage
-first, then Changes classification against one pinned merge base. The
+first, then Changes classification against one pinned merge base. A Changes
+continuation can also give the pass the base preparation that its command
+started early, as a `PendingChanges`. The pass owns that work until its
+Changes work ends, so a replaced pass cancels it and waits for it. The
 [background work](./background.md) page holds the guidance for their window,
 the lookup and the miss of each view, the `Stages` bounds and budget, the ready
 state, and the write leases of the Changes reference probes.
 
-`MemoryComparisons` implements `dyn Comparisons`, the store of the
-[selected comparison contract](../../docs/protocol/mokly-selected-comparisons.md).
-Classification generations start with the removed details. Selected captures
-find one screen, component, or variant in the retained review and copy only
-its view closures; they hold no JSON. A variant selection captures only the
-selected variant's documents. The selection route redirects to the root of the
-captured generation, and a GET or HEAD of a retained root renews its idle
-window with 204. Historical routes capture the removed entry from the same
-pinned base. Captures preserve original document bytes. `FrozenResources`
-retains document and resource hashes. It rejects changed public bytes or an
-inconsistent document after cache eviction before a capture can install a
-mixed generation. Its `comparison_capture` method returns `None`, so capture
-creation and smaller budgets cannot bypass these checks through the wrapped
-generation. It forwards `comparison_parallelism`, `schedule_comparison`,
-`schedule_comparison_tasks`, and `schedule_comparison_stream` to the wrapped
-generation. Scheduled tasks still call its checked reads. It keeps the default `None` of
-`retained_comparison_input`, because a forward could bypass these checks or
-need source IO. The contract owns the admission, retention, and capacity
-limits.
-
-`GraphDocuments` implements `dyn Documents`. It coalesces requests for the
-same document. Public authored reads require both reached closure membership
-and a fresh policy check under the
-[public closure contract](../../docs/protocol/mokly-public-closure.md).
-`ConfinedReader` opens each directory and the final regular file without
-following symlinks. Routes never fall back to repository files. The built
-viewer's browser manifest lists the only client modules served. The shared
-shell declares the Browse brand SVG at `/mokly-viewer/client/brand.svg`, and
-the asset loader serves the matching packaged icon for both Serve and static
-output.
-
-Generated opaque assets follow the
-[CSS assets contract](../../docs/protocol/mokly-imported-styles-assets.md).
-Browse, edited previews, and comparison resource routes use the JavaScript
-asset content-type table for generated assets, including media and document
-types. Authored files retain their MIME fallback.
-`GraphDocuments::asset_request` reserves the capture of a route before
-foreground worker admission, without IO. `GraphDocuments` keeps a weak entry
-for each route, so concurrent requests of its generation join one capture.
-A request that waits for a worker already holds its capture. The first
-admitted request verifies the asset through `dyn AssetStreams` into an
-unnamed temporary file. The other requests wait for that result and share it.
-A failure keeps its original type, so the CLI still requests a new generation
-after an input change. Each response reads the shared file at its
-own byte offset, with `read_at` on Unix and `seek_read` on Windows. The last
-request or response that holds the capture closes the file, and no idle copy
-stays. Worker parallelism bounds active captures, and the opened length bounds
-each file. Live response files have no aggregate byte bound. The OS temporary
-directory can use `tmpfs`, whose storage consumes memory outside process RSS
-measurements.
+The [HTTP delivery](./delivery.md) page holds the guidance for the routes, the
+generated and authored assets, the cache headers, JSON compression, the
+comparison generations, and the temporary previews.
+Browse, edited previews, and comparison resource routes use the
+[JavaScript asset content types](../../docs/protocol/mokly-imported-assets.md#imported-types)
+for generated assets, including media and documents. Authored files retain
+their MIME fallback.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
 Serve attempt. Saved and temporary renders deliver private composition
@@ -132,24 +114,6 @@ them: `UsagePass` reports them through `Documents::report`, in catalogue
 order, directly before a failure's diagnostic. The CLI owns sorting,
 deduplication, and attempt fences.
 HTTP bodies and public models contain no warning records.
-
-Authored GET responses stream from the confined handle without a file-size
-limit. HEAD opens the same handle and sends no bytes. Serve delivers document
-and preview HTML without frame probe injection.
-
-Temporary renders follow the
-[live controls contract](../../docs/protocol/mokly-component-controls.md),
-which owns the `Host`, `Origin`, and token checks and the preview store
-limits. They validate the installed revision, view, controls, and complete
-props. The props check uses the prepared validators that each snapshot copies
-from its generation's catalogue. They use the graph's shared prop render path
-outside the HTTP event
-loop. Body reads keep only the authorization token. Validation and render
-admission take the current snapshot after the body arrives, so a stalled body
-cannot retain a replaced snapshot or its comparison capture. The CLI supplies
-the shared JavaScript runtime, so React entries use the same pool, cache,
-renderer, PostCSS, and fragment keys as their saved views. `MemoryPreviews`
-holds the preview bundles.
 
 ## Quick Start
 
@@ -184,6 +148,20 @@ public-file replacement, encoded attacks, previews, and event-stream shutdown.
 to the router in process and keep response bodies open. They cover one copy
 for concurrent `GET` and `HEAD` requests, its release, and separate routes and
 generations.
+[JSON delivery tests](./src/_tests_/json_delivery_tests.rs) cover gzip
+negotiation, HEAD parity, one encode for concurrent and later publication
+requests, and a separate encoding for each comparison request.
+[Authored capture lifetime tests](./tests/authored_capture_lifetime_tests.rs)
+check that sequential requests leave no open temporary copies.
+[Generated asset digest tests](./tests/generated_asset_digest_tests.rs)
+check that Serve reads the recorded digest after verifying the copy.
+[Cache tests](./tests/shared_assets/cache_tests.rs) cover the `ETag` and 304
+answers of stylesheets and assets, also after a stylesheet or an authored file
+changes at the same URL.
+[JSON cache tests](./tests/shared_assets/json_cache_tests.rs) cover the gzip
+copy of an authored JSON file and its own `ETag`.
+[Comparison cache tests](./src/_tests_/comparison_cache_tests.rs) cover the
+immutable generation files and the `no-store` root and selection.
 
 ### Key Code
 
@@ -193,7 +171,12 @@ generations.
   dispatches every HTTP route over the current publication.
 - [`src/publication.rs`](./src/publication.rs) defines `Publications`,
   `FixedPublication`, and `SharedPublication`, the atomic public state and its
-  ordered updates.
+  ordered updates, and `Delivery`, the snapshot of one publication with its
+  gzip bodies. The default `Publications::delivery` keeps no gzip bodies
+  between requests.
+- [`src/shared_publication.rs`](./src/shared_publication.rs) implements
+  `Publications` for `SharedPublication`, including atomic reads of the
+  current snapshot and its gzip cache.
 - [`src/snapshot.rs`](./src/snapshot.rs) defines `Snapshot`,
   `SnapshotFactory`, and `Projector`, the canonical bytes of one revision.
 - [`src/replacement.rs`](./src/replacement.rs) provides `reuse_usage` and
@@ -202,6 +185,8 @@ generations.
 - [`src/evidence.rs`](./src/evidence.rs) and
   [`src/changes.rs`](./src/changes.rs) provide `complete` and `project`, which
   publish usage completion and Changes from the current snapshot.
+  [`src/changes_detail.rs`](./src/changes_detail.rs) projects and publishes
+  the entry details of one Changes publication.
 - [`src/detail_encoding.rs`](./src/detail_encoding.rs) defines
   `DetailEncoder` and `EncodedDetails`, which hash and encode each detail that
   matches no recent record.
@@ -209,8 +194,17 @@ generations.
   `RecentDetails`, the bounded equality records shared by the publication paths.
 - [`src/revision_file.rs`](./src/revision_file.rs) defines `RevisionFile`, the
   shared payload that each response completes with the current revision.
+  `RevisionFile::body` gives the payload and the revision as a `JsonBody`.
+- [`src/json_delivery.rs`](./src/json_delivery.rs) defines `JsonBody`,
+  `GzipFiles`, and `Gzip`, the negotiation and the shared encoding of
+  [JSON compression](./delivery.md#json-compression). `accepts_gzip` reads
+  every `Accept-Encoding` line. An explicit `gzip;q=0` refuses gzip, also when
+  `*` accepts it.
 - [`src/backend.rs`](./src/backend.rs) defines `Documents` and
   `GraphDocuments`, the graph-backed documents and read-time confinement.
+  `Documents::generated` reads a declared document, `Documents::stylesheet`
+  reads a generated stylesheet with its `ETag`, and
+  `Documents::authored` returns the capture of an authored file.
   `Documents::background_read` looks up one background view, and its default
   `Ok(None)` declines the lookup. `GraphDocuments::background` renders one view
   on the ordinary path.
@@ -221,25 +215,49 @@ generations.
   nothing when that usage is already settled.
 - [`src/public_read.rs`](./src/public_read.rs) defines `ConfinedReader`, which
   opens authored files without following symlinks.
+- [`src/authored_assets.rs`](./src/authored_assets.rs) defines
+  `AuthoredAssets`, the [authored file](./delivery.md#authored-files) validator
+  records of one generation. `AuthoredRequest` holds the route gate before a
+  worker prepares its copy.
+- [`src/asset_file.rs`](./src/asset_file.rs) defines `CaptureWriter`, which
+  can hash bytes while it writes a temporary copy.
+- [`src/validator.rs`](./src/validator.rs) computes the strong SHA-256 `ETag`
+  of a resource, and `validator::deliver` answers a matching `If-None-Match`
+  with 304. A `*` or the weak form of the tag also matches.
 - [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
   `TemporaryAssets`, `AssetRequest`, `AssetResult`, and `SharedAsset`, the
-  verified asset copy that concurrent requests share.
+  captured asset. Generated responses can share its verified `AssetVersion`
+  while the capture is active.
 - [`src/backend_assets.rs`](./src/backend_assets.rs) keeps the weak route
   entries and the shared capture result that `GraphDocuments::asset_request`
-  reserves before worker admission.
-- [`src/asset_response.rs`](./src/asset_response.rs) streams a verified asset,
-  and each response reads the shared file at its own offset.
+  reserves before worker admission. The generation's digest supplies its
+  `ETag` after verification.
+- [`src/asset_response.rs`](./src/asset_response.rs) defines
+  `asset_response::deliver`, which revalidates or streams an asset capture.
+  Authored JSON can use a request-owned gzip copy.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.
   `UsagePass::fill_window` starts each view in catalogue order with its own
   `Dispatch`. `ChangesPass::activity` holds the render store's activity, and
   the private `Reference` keeps a probe result together with its lease.
+  After a committed
+  Ready or Unavailable completion, and after `execute` and its write lease end,
+  `ChangesPass` runs the optional `ChangeSource::settled` work and waits for it.
+  [`src/changes_seed.rs`](./src/changes_seed.rs) skips that work when Serve
+  stops, the classification is cancelled, or the head is no longer current.
+  `AfterUsage::prepare` moves the pending base preparation of the origin's
+  head attempt into the pass as a `PendingChanges`, through
+  `ChangeSource::pending`. The pass calls `PendingChanges::dispatched` after it
+  starts the last view, and `PendingChanges::cancel_and_join` when its
+  Changes work ends or the pass is replaced. `ChangesPass` calls
+  `ChangeSource::settle_pending` after each classification.
 - [`src/background_batch.rs`](./src/background_batch.rs) defines `Window`, the
   bounded window of the current usage pass, which keeps catalogue order for
   starts, warnings, and failure reports. `Window::start_dispatched` adds a view
-  with its `Dispatch`. The window counts only the views that have not handed
-  off, and a handoff event lets it start the next view.
+  with its `Dispatch`. `Window::settle` releases the held reports. The window
+  counts only the views that have not handed off, and a handoff event lets it
+  start the next view.
   [`src/background_dispatch.rs`](./src/background_dispatch.rs) defines
   `Dispatch`, the window place of one view, which its `Stage` wakes at the
   handoff. `Dispatch::new` creates it from the shared `Stages`.
@@ -259,11 +277,13 @@ generations.
 - [`src/work.rs`](./src/work.rs) defines `Work` and `Workers`, the bounded
   render scheduler that HTTP and background renders share.
   `Work::parallelism` gives the fixed worker count that bounds the window, and
-  `Work::background` runs one view with its `Dispatch`.
+  `Work::background` runs one view with its `Dispatch`. `Work::stylesheet` and
+  `Work::authored` read a stylesheet or an authored capture with its `ETag` on
+  a worker.
   `Workers::with_activity` takes the `WriteActivity` of the render store, and
   each queued or active job, native work included, holds a lease of it. A
-  file response holds its lease until the file opens, and its body streams
-  after that.
+  file response holds its lease while a worker reads, captures, or hashes its
+  bytes, and its body streams after that.
   [`src/work_background.rs`](./src/work_background.rs) runs the lookup job of
   one background view and, after a miss, its resumed job, in
   `RenderClass::Background`. One lease and one count of
@@ -275,22 +295,44 @@ generations.
   and `MemoryComparisons`, the bounded selected comparison generations.
   `MemoryComparisons::with_activity` takes the same activity, and each queued
   capture and its detached native work hold a lease.
+- [`src/comparison_routes.rs`](./src/comparison_routes.rs) answers the
+  selection, the root, and the files of comparison generations. It negotiates
+  gzip for each JSON response.
 - [`src/render_request.rs`](./src/render_request.rs) and
   [`src/preview.rs`](./src/preview.rs) validate live prop requests and define
   `PreviewStore` and `MemoryPreviews`.
+- [`src/preview_route.rs`](./src/preview_route.rs) answers the live prop
+  render route and the files of temporary previews.
 - [`src/shutdown.rs`](./src/shutdown.rs) defines `Lifecycle`, the ordered
   shutdown hooks.
 - [`src/assets.rs`](./src/assets.rs) defines `ViewerAssets` and
-  `PackageAssets`, the built viewer inventory, and the generated asset
-  content-type lookup. The shell stub comes from
+  `PackageAssets`, the built viewer inventory, and `Stylesheet`, a generated
+  stylesheet with its `ETag`. It also supplies the generated asset content-type
+  lookup. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
+
+- [`src/comparison_collector.rs`](./src/comparison_collector.rs) defines `CheckedCollector`, whose worker-side encoder checks frozen document and resource digests before capture.
+- [`src/comparison_graph.rs`](./src/comparison_graph.rs) defines
+  `FrozenResources`, which checks frozen document and resource hashes for the
+  generation that it wraps.
+  [`src/comparison_head.rs`](./src/comparison_head.rs) gives it the head
+  validation methods. It forwards `validate_head` to the wrapped generation,
+  checks each `validation_document` read against the frozen document digest,
+  and answers `validation_identity` for head proofs. The document read of a
+  proof is the wrapped document identity, so a proof needs no document read.
+  `validation_checks` exports the frozen digest of a checked read.
+  `adopt_validation` freezes the kept digest of a proven document when this
+  state froze no other digest and the wrapped generation adopts the document,
+  so every later read of that document meets the same digest check.
 
 ### Related Docs
 
 - [Shell delivery](../../docs/protocol/mokly-shell-delivery.md).
-- [On-demand Serve](../../docs/protocol/mokly-on-demand.md) and its
-  [background pass](../../docs/protocol/mokly-on-demand-background.md).
-- [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md).
+- [On-demand Serve](../../docs/protocol/mokly-on-demand.md), its
+  [background pass](../../docs/protocol/mokly-on-demand-background.md), and
+  [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md).
+- [Selected comparisons](../../docs/protocol/mokly-selected-comparisons.md) and
+  [comparison serving](../../docs/protocol/mokly-comparison-serving.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Render store](../../docs/protocol/mokly-render-store.md).
 - [Live controls](../../docs/protocol/mokly-component-controls.md).

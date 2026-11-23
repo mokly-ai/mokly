@@ -56,6 +56,8 @@ export function auditPublicPackageExports(repositoryRoot, git) {
   for (const [componentRoot, packageConfig] of Object.entries(components)) {
     const releasedVersion = releaseManifest[componentRoot];
     if (releasedVersion === undefined || releasedVersion === "0.0.0") continue;
+    if (privateWorkspace(repositoryRoot, packageConfig["package-name"]))
+      continue;
     const packageRoot = publicPackageRoot(
       repositoryRoot,
       componentRoot,
@@ -250,6 +252,19 @@ function releasedPackageRoot(git, tag, currentRoot, name) {
   if (matches.length !== 1)
     throw new Error(`${name} has no unique package location at ${tag}`);
   return matches[0];
+}
+
+/** A component that releases a private workspace, such as the desktop shell, exports no API. */
+function privateWorkspace(repositoryRoot, name) {
+  const workspace = readCurrentJson(repositoryRoot, "package.json");
+  const roots = Array.isArray(workspace.workspaces) ? workspace.workspaces : [];
+  return roots.some((root) => {
+    const manifest = readCurrentJson(
+      repositoryRoot,
+      packagePath(root, "package.json"),
+    );
+    return name !== undefined && manifest.name === name && manifest.private;
+  });
 }
 
 /** A release component can own a public package beneath the private root. */

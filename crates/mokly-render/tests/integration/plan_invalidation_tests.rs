@@ -124,7 +124,7 @@ fn serve_edit_plans_follow_content_import_candidate_manifest_configuration_and_l
             _ => unreachable!(),
         };
         assert_eq!(fixture.prepare(), expected, "modules {name}");
-        let direct = name == "content" || name == "existing import";
+        let direct = name == "content" || name == "existing import" || name == "new module";
         assert_eq!(
             fixture.sent_plan(),
             direct,

@@ -1,4 +1,5 @@
 import { fork } from "node:child_process";
+import type { ChildProcess, ForkOptions } from "node:child_process";
 import { once } from "node:events";
 import type { EventEmitter } from "node:events";
 import path from "node:path";
@@ -14,17 +15,45 @@ import { ModulePaths } from "./module-paths.js";
 import { PostcssProcess } from "./postcss-process.js";
 import { sourceDependency } from "./source-dependencies.js";
 
+type ContextParams = Omit<ProcessCssParams, "sourcePath" | "text">;
+type Launch = (
+  file: URL,
+  args: readonly string[],
+  options: ForkOptions,
+) => ChildProcess;
+interface Started {
+  paths: ModulePaths;
+  file: string;
+  worker: PostcssProcess;
+}
+
 /** Children retain one module instance until their explicit context is disposed. */
 export class PostcssWorkers {
   private workers = new Map<string, PostcssProcess>();
+  private preparations = new Map<string, Promise<Started>>();
+  private starting = new Map<string, Set<{ active: boolean }>>();
+  private stopped = false;
+  private used = new WeakSet<PostcssProcess>();
   private id = 0;
 
   constructor(
     private readonly diagnostic: (message: string) => void,
     private readonly operation: (operation: Operation) => void = () => {},
-    private readonly launch: typeof fork = fork,
+    private readonly launch: Launch = fork,
     private readonly phase: (line: string) => void = () => {},
   ) {}
+
+  prepare(params: ContextParams): Promise<void> {
+    let preparation = this.preparations.get(params.context);
+    if (!preparation) {
+      preparation = this.start(params);
+      this.preparations.set(params.context, preparation);
+    }
+    return preparation.then(
+      () => {},
+      () => {},
+    );
+  }
 
   async process(params: ProcessCssParams): Promise<CssResult> {
     try {
@@ -41,6 +70,48 @@ export class PostcssWorkers {
   }
 
   private async transform(params: ProcessCssParams): Promise<CssResult> {
+    const preparation = this.preparations.get(params.context);
+    this.preparations.delete(params.context);
+    let started = await (preparation ?? this.start(params));
+    if (preparation) {
+      const file = await started.paths.resolve(
+        path.resolve(started.paths.sourceRoot, params.postcss),
+      );
+      if (file !== started.file) {
+        const key = JSON.stringify([params.context, started.file]);
+        if (
+          !this.used.has(started.worker) &&
+          this.workers.get(key) === started.worker
+        ) {
+          this.workers.delete(key);
+          await this.stop(started.worker);
+        }
+        started = await this.start(params);
+      }
+    }
+    const { paths, worker } = started;
+    const physical = stylesheetSource(paths, params.sourcePath);
+    const sourcePath = (await sourceDependency(paths, physical)) ?? physical;
+    this.used.add(worker);
+    return worker.request(++this.id, { ...params, sourcePath });
+  }
+
+  private start(params: ContextParams): Promise<Started> {
+    const owner = { active: !this.stopped };
+    let starting = this.starting.get(params.context);
+    if (!starting) this.starting.set(params.context, (starting = new Set()));
+    starting.add(owner);
+    return this.load(params, owner).finally(() => {
+      starting.delete(owner);
+      if (!starting.size && this.starting.get(params.context) === starting)
+        this.starting.delete(params.context);
+    });
+  }
+
+  private async load(
+    params: ContextParams,
+    owner: { active: boolean },
+  ): Promise<Started> {
     const paths = await ModulePaths.create(params);
     const root = paths.sourceRoot;
     const file = await paths.resolve(path.resolve(root, params.postcss));
@@ -49,6 +120,8 @@ export class PostcssWorkers {
         "bundle-failed",
         "postcss module has an unsupported suffix",
       );
+    if (!owner.active)
+      throw new SidecarError("bundle-failed", "PostCSS context was disposed");
     const key = JSON.stringify([params.context, file]);
     let worker = this.workers.get(key);
     if (!worker) {
@@ -91,24 +164,30 @@ export class PostcssWorkers {
         repositoryRoots: paths.repositoryRoots,
       });
     }
-    const physical = stylesheetSource(paths, params.sourcePath);
-    const sourcePath = (await sourceDependency(paths, physical)) ?? physical;
-    return worker.request(++this.id, { ...params, sourcePath });
+    return { paths, file, worker };
   }
 
   async dispose(context?: string): Promise<void> {
+    if (context === undefined) this.stopped = true;
+    for (const [id, starting] of this.starting)
+      if (context === undefined || id === context) {
+        for (const owner of starting) owner.active = false;
+        this.starting.delete(id);
+      }
+    for (const id of this.preparations.keys())
+      if (context === undefined || id === context) this.preparations.delete(id);
     const selected = [...this.workers].filter(
       ([key]) => context === undefined || JSON.parse(key)[0] === context,
     );
     for (const [key] of selected) this.workers.delete(key);
-    await Promise.all(
-      selected.map(async ([, { child: worker }]) => {
-        if (worker.exitCode !== null || worker.signalCode !== null) return;
-        const exited = once(worker, "exit");
-        worker.kill("SIGKILL");
-        await exited;
-      }),
-    );
+    await Promise.all(selected.map(([, worker]) => this.stop(worker)));
+  }
+
+  private async stop({ child: worker }: PostcssProcess): Promise<void> {
+    if (worker.exitCode !== null || worker.signalCode !== null) return;
+    const exited = once(worker, "exit");
+    worker.kill("SIGKILL");
+    await exited;
   }
 }
 

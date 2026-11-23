@@ -110,7 +110,8 @@ fn retained_definition_compilers_keep_their_original_bytes_after_cache_eviction(
                                 digest: Some("css".into()),
                                 imported_asset: None,
                             },
-                        ],
+                        ]
+                        .into(),
                     })),
                     Call::CssModules(_) | Call::Dispose(_) => MethodResult::Empty,
                     Call::Describe(_) => MethodResult::Definitions(Definitions {

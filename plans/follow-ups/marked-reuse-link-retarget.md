@@ -7,7 +7,7 @@
   `0fd6eced4`.
 - **Location:** `packages/mokly/src/sidecar/resolution-inputs.ts:11` to line
   39, `packages/mokly/src/sidecar/resolution-inputs.ts:50` to line 51,
-  `packages/mokly/src/sidecar/module-paths.ts:122`,
+  `packages/mokly/src/sidecar/module-paths.ts:123` (`ModulePaths.metadata`),
   `packages/mokly/src/sidecar/compiled.ts:111`,
   `crates/mokly-sidecar/src/compiled.rs:136` to line 138, and
   `crates/mokly-render/src/bundle_attempt.rs:113`.
@@ -39,7 +39,7 @@
     earlier `paths` targets of each authored bare import.
   - `resolutionInputs`, at `packages/mokly/src/sidecar/resolution-inputs.ts:50`
     to line 51, turns each lookup folder into its real path through
-    `ModulePaths.metadata`, at `packages/mokly/src/sidecar/module-paths.ts:122`.
+    `ModulePaths.metadata`, at `packages/mokly/src/sidecar/module-paths.ts:123`.
     `directoryFiles`, at lines 11 to 39 of the first file, records only the
     names of the files and links in a folder. So the live checks hold the
     real folder behind a link, not the link and its target.

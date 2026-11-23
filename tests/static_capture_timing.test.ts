@@ -106,11 +106,27 @@ test(
       const byId = new Map(
         starts.map((record) => [`${record.session}:${record.id}`, record]),
       );
+      const baseCapture = base[0]!;
+      const basePreparation = byId.get(
+        `${baseCapture.session}:${baseCapture.parentId}`,
+      );
+      assert.ok(basePreparation);
+      assert.equal(basePreparation.stage, "review.base-tree");
+      assert.equal(basePreparation.session, classify.session);
+      assert.equal(basePreparation.parentId, classify.id);
+      const preparationStart = records.indexOf(basePreparation);
+      const preparationEnd = records.findIndex(
+        (record) =>
+          record.event === "end" &&
+          record.session === basePreparation.session &&
+          record.id === basePreparation.id,
+      );
+      assert.ok(preparationEnd > preparationStart);
       const documents = starts.filter(
         (record) => record.stage === "render.document",
       );
       assert.ok(documents.length > 0, "core document renders were recorded");
-      for (const document of documents) {
+      const jobs = documents.map((document) => {
         const ancestors: string[] = [];
         let parentId = document.parentId;
         while (parentId !== undefined) {
@@ -119,10 +135,33 @@ test(
           ancestors.push(parent.stage);
           parentId = parent.parentId;
         }
+        return {
+          document,
+          ancestors,
+          earlyBase:
+            document.session === basePreparation.session &&
+            document.parentId === basePreparation.id,
+        };
+      });
+      for (const { document, ancestors } of jobs.filter(
+        (job) => !job.earlyBase,
+      )) {
         assert.ok(
           ancestors.includes("review.capture-side"),
           `render.document ${document.id} must have a review.capture-side ancestor: ${ancestors.join(" -> ")}`,
         );
+      }
+      for (const { document } of jobs.filter((job) => job.earlyBase)) {
+        const documentStart = records.indexOf(document);
+        const documentEnd = records.findIndex(
+          (record) =>
+            record.event === "end" &&
+            record.session === document.session &&
+            record.id === document.id,
+        );
+        assert.ok(preparationStart < documentStart);
+        assert.ok(documentEnd > documentStart);
+        assert.ok(documentEnd < preparationEnd);
       }
     } finally {
       await fs.rm(root, { recursive: true, force: true });

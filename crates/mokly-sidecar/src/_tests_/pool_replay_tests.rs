@@ -68,7 +68,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
         }));
         state.available.push_back(0);
         state.epochs.insert("g".into(), 0);
-        state.modules.insert("g".into(), Vec::new());
+        state.modules.insert("g".into(), Default::default());
         state.compiled.insert("g".into(), Arc::new(compiled("g")));
         state.bundles.insert(
             "g".into(),

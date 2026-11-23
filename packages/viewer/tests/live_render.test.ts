@@ -45,7 +45,7 @@ function fakeServe(options: {
         status,
         url: url.href,
         headers: new Headers({ "content-type": "application/json" }),
-        json: async () => body,
+        json: async () => structuredClone(body),
       }) as Response;
     if (init.method === "HEAD")
       return reply(url.pathname.includes("/expired/") ? 410 : 200);

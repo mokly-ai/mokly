@@ -34,7 +34,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                     cache: None,
                     compile_count: 1,
                     generation: id.clone(),
-                    modules: vec![],
+                    modules: Default::default(),
 
                     compiled: Arc::new(CompiledGeneration {
                         toolchain: "fixture".into(),
@@ -93,6 +93,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
     );
     for evaluation in ["first", "second"] {
         pool.request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: Bundle {
                 evaluation: Some(evaluation.into()),

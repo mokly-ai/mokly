@@ -14,6 +14,7 @@ use crate::comparison_views::{ImmutableView, PendingView};
 use crate::reuse_budget::{Charge, Resident};
 use crate::reuse_probes::Probes;
 use crate::reuse_reads::Recorder;
+use crate::validation_inputs::arena_bytes;
 use crate::{reuse_digest, reuse_weight};
 
 pub(crate) struct SavedView {
@@ -50,11 +51,16 @@ impl Collection {
     ) -> Self {
         let fixed = mem::size_of::<Classification>() + 64;
         let candidate = fence.and_then(|fence| {
-            resident.reserve(fixed).map(|charge| Classification {
-                fence,
-                views: BTreeMap::new(),
-                charge,
-                bytes: fixed,
+            resident.reserve(fixed).map(|mut charge| {
+                if let Some(owner) = resident.register_optional(arena_bytes()) {
+                    charge.attach_optional(owner);
+                }
+                Classification {
+                    fence,
+                    views: BTreeMap::new(),
+                    charge,
+                    bytes: fixed,
+                }
             })
         });
         let overflowed = fence.is_some() && candidate.is_none();
@@ -171,5 +177,11 @@ impl Collection {
         candidate.views.insert(key, view);
         self.work.candidate_views += 1;
         self.work.candidate_bytes = candidate.bytes;
+    }
+}
+
+impl Classification {
+    pub(crate) fn fact_id(&self) -> Option<usize> {
+        self.charge.optional_id()
     }
 }

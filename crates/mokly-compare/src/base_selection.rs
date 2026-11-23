@@ -19,6 +19,25 @@ pub struct PinnedBase {
     pub commit: ObjectId,
 }
 
+impl PinnedBase {
+    /// Pin `commit`, the merge base of `reference` and HEAD that the caller resolved.
+    /// It opens the repository at `root` with the errors of a lookup, and it resolves no
+    /// reference and no merge base.
+    pub fn resolved(
+        repositories: &dyn Repositories,
+        root: &Path,
+        reference: &str,
+        commit: &str,
+    ) -> Result<Self> {
+        let repository = repositories.open(root).base()?;
+        Ok(Self {
+            reference: reference.into(),
+            repository,
+            commit: ObjectId::parse(commit).base()?,
+        })
+    }
+}
+
 /// Git lookup boundary, separate from current-side validation and rendering.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BaseLookupMock))]
 pub trait BaseLookup: Send + Sync {

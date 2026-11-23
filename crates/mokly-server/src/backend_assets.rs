@@ -3,12 +3,15 @@
 use std::sync::{Arc, Weak};
 
 use mokly_graph::types::RenderGeneration;
+use mokly_model::namespace::generated;
 
-use crate::asset_streams::{AssetRequest, AssetResult, AssetStreams, Capture, SharedAsset};
+use crate::asset_streams::{
+    AssetOwner, AssetRequest, AssetResult, AssetStreams, AssetVersion, Capture, SharedAsset,
+};
 use crate::assets::generated_content_type;
 use crate::backend::GraphDocuments;
 use crate::error::{Result, ServerError};
-use crate::public_read::OpenedFile;
+use crate::validator;
 
 struct Request {
     capture: Arc<Capture>,
@@ -49,17 +52,19 @@ impl AssetRequest for Request {
             return Err(Arc::new(ServerError::Render { source }));
         }
         let result = self.capture.get_or_init(|| match self.verify() {
-            Ok(opened) => Ok(opened.map(Arc::new)),
+            Ok(version) => Ok(version.map(Arc::new)),
             Err(error) => Err(Arc::new(error)),
         });
         match result {
-            Ok(Some(opened)) => {
+            Ok(Some(version)) => {
                 if let Err(source) = self.generation.check_cancelled() {
                     return Err(Arc::new(ServerError::Render { source }));
                 }
                 Ok(Some(SharedAsset {
-                    opened: opened.clone(),
-                    _capture: self.capture.clone(),
+                    version: version.clone(),
+                    owner: AssetOwner::Generated {
+                        _capture: self.capture.clone(),
+                    },
                 }))
             }
             Ok(None) => Ok(None),
@@ -69,14 +74,21 @@ impl AssetRequest for Request {
 }
 
 impl Request {
-    fn verify(&self) -> Result<Option<OpenedFile>> {
+    fn verify(&self) -> Result<Option<AssetVersion>> {
         let mut asset = match self.generation.open_asset(&self.route) {
             Ok(Some(asset)) => asset,
             Ok(None) => return Ok(None),
             Err(source) => return Err(ServerError::Render { source }),
         };
-        self.streams
-            .capture(asset.as_mut(), &generated_content_type(&self.route))
-            .map(Some)
+        let opened = self
+            .streams
+            .capture(asset.as_mut(), &generated_content_type(&self.route))?;
+        let digest = match self.generation.resource_digest(&generated(&self.route)) {
+            Ok(Some(digest)) => digest,
+            Ok(None) => return Err(ServerError::InvalidAssets),
+            Err(source) => return Err(ServerError::Render { source }),
+        };
+        let etag = validator::recorded_digest(&digest)?;
+        Ok(Some(AssetVersion::with_tag(opened, etag)))
     }
 }

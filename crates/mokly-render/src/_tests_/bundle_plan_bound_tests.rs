@@ -17,12 +17,7 @@ use super::bundle_plan_support::{evidence, marked, params, plan, result, runtime
 fn total_retention_evicts_the_oldest_record_and_equal_settings_replace_the_previous_record() {
     let calls = Arc::new(Mutex::new(vec![]));
     let mut large = plan();
-    Arc::make_mut(&mut large)
-        .imports
-        .values_mut()
-        .next()
-        .unwrap()
-        .path = "x".repeat(4 * 1024 * 1024);
+    Arc::make_mut(&mut large).paths[1] = "x".repeat(4 * 1024 * 1024);
     let mut runtime = runtime(
         Unimock::new(
             PhysicalInputsMock::matches
@@ -41,11 +36,11 @@ fn total_retention_evicts_the_oldest_record_and_equal_settings_replace_the_previ
     .with_serve_edit_plans();
     let first = params();
     let mut second = params();
-    second.renderer = Some("renderer.tsx".into());
-    let _ = request(&runtime, &first).unwrap();
-    let _ = request(&runtime, &second).unwrap();
+    second.configuration_directory = "nested".into();
+    let _ = request(&runtime, &first, None).unwrap();
+    let _ = request(&runtime, &second, None).unwrap();
     runtime.bundle_capture = BundleCapture::ServeEdit;
-    let _ = request(&runtime, &first).unwrap();
+    let _ = request(&runtime, &first, None).unwrap();
     assert_eq!(
         calls
             .lock()
@@ -54,15 +49,17 @@ fn total_retention_evicts_the_oldest_record_and_equal_settings_replace_the_previ
             .unwrap()
             .plan
             .as_ref()
-            .map(|plan| plan.imports["edge"].path.len()),
+            .map(|plan| plan.paths[1].len()),
         None
     );
-    let _ = request(&runtime, &second).unwrap();
+    let _ = request(&runtime, &second, None).unwrap();
     assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(large));
     runtime.bundle_capture = BundleCapture::Full;
-    let _ = request(&runtime, &second).unwrap();
+    let mut replacement = second.clone();
+    replacement.renderer = Some("renderer.tsx".into());
+    let _ = request(&runtime, &replacement, None).unwrap();
     runtime.bundle_capture = BundleCapture::ServeEdit;
-    let _ = request(&runtime, &second).unwrap();
+    let _ = request(&runtime, &second, None).unwrap();
     assert_eq!(calls.lock().unwrap().last().unwrap().plan, Some(plan()));
 }
 
@@ -77,15 +74,15 @@ fn retained_settings_are_charged_inside_the_total_record_bound() {
     )
     .with_serve_edit_plans();
     let mut params = params();
-    params.renderer = Some("x".repeat(8 * 1024 * 1024));
-    let _ = request(&runtime, &params).unwrap();
+    params.configuration_directory = "x".repeat(8 * 1024 * 1024);
+    let _ = request(&runtime, &params, None).unwrap();
     assert_eq!(
         Arc::strong_count(&evidence),
         1,
         "oversized settings must not retain their evidence"
     );
     runtime.bundle_capture = BundleCapture::ServeEdit;
-    let _ = request(&runtime, &params).unwrap();
+    let _ = request(&runtime, &params, None).unwrap();
     assert_eq!(calls.lock().unwrap().last().unwrap().plan, None);
 }
 
@@ -98,11 +95,7 @@ fn an_ineligible_later_capture_keeps_the_older_plan_and_checks_its_own_evidence(
         let mut replacement_evidence = evidence();
         Arc::make_mut(&mut replacement_evidence).inputs.clear();
         let mut replacement_plan = plan();
-        Arc::make_mut(&mut replacement_plan)
-            .imports
-            .get_mut("edge")
-            .unwrap()
-            .path = if name == "oversized" {
+        Arc::make_mut(&mut replacement_plan).paths[1] = if name == "oversized" {
             "x".repeat(8 * 1024 * 1024)
         } else {
             "/repo/replacement.ts".into()
@@ -134,13 +127,13 @@ fn an_ineligible_later_capture_keeps_the_older_plan_and_checks_its_own_evidence(
             calls.clone(),
         )
         .with_serve_edit_plans();
-        let _ = request(&runtime, &params()).unwrap();
-        let _ = request(&runtime, &params()).unwrap();
+        let _ = request(&runtime, &params(), None).unwrap();
+        let _ = request(&runtime, &params(), None).unwrap();
         assert_eq!(Arc::strong_count(&old_evidence), 2, "{name}");
         runtime.bundle_capture = BundleCapture::ServeEdit;
         for expected in [true, false, true] {
             current.store(expected, Ordering::Release);
-            let _ = request(&runtime, &params()).unwrap();
+            let _ = request(&runtime, &params(), None).unwrap();
             assert_eq!(
                 calls.lock().unwrap().last().unwrap().plan,
                 expected.then(plan),

@@ -6,6 +6,7 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import type { DetailView } from "../../packages/model/dist/index.js";
 import { serveProcess } from "../../scripts/verification/serve-process.mjs";
 
 const workspace = fileURLToPath(new URL("../../", import.meta.url));
@@ -53,9 +54,19 @@ export async function serve(
   root: string,
   environment: NodeJS.ProcessEnv = process.env,
   extra: string[] = [],
+  watch = false,
 ) {
   const managed = await serveProcess(
-    [shim, "serve", "--no-watch", "--port", "0", "--sidecars", "1", ...extra],
+    [
+      shim,
+      "serve",
+      watch ? "--watch" : "--no-watch",
+      "--port",
+      "0",
+      "--sidecars",
+      "1",
+      ...extra,
+    ],
     root,
     environment,
   );
@@ -120,6 +131,12 @@ export async function completed(
   signal: AbortSignal,
   path: string,
   request: typeof fetch = fetch,
+  options: {
+    afterRevision?: number;
+    baseCommit?: string;
+    settledUsage?: boolean;
+    requireReady?: boolean;
+  } = {},
 ) {
   const events = await request(`${url}/mokly-viewer/events`, { signal });
   const stream = events.body!.getReader();
@@ -131,6 +148,11 @@ export async function completed(
       const detail = await (
         await request(`${url}/mokly-viewer/entries/${path}.json`, { signal })
       ).json();
+      if (
+        options.requireReady &&
+        ["unavailable", "disabled"].includes(index.changesStatus)
+      )
+        throw new Error(`Changes is ${index.changesStatus}`);
       if (
         detail.revision === index.revision &&
         ["ready", "unavailable", "disabled"].includes(index.changesStatus) &&
@@ -145,9 +167,16 @@ export async function completed(
           )?.detailId,
         );
       if (
+        index.revision > (options.afterRevision ?? 0) &&
+        (options.baseCommit === undefined ||
+          index.baseCommit === options.baseCommit) &&
         detail.revision === index.revision &&
         ["ready", "unavailable", "disabled"].includes(index.changesStatus) &&
-        detail.workspace !== undefined
+        detail.workspace !== undefined &&
+        (!options.settledUsage ||
+          detail.views.every(
+            (view: DetailView) => view.usage.status !== "pending",
+          ))
       )
         return { index, detail };
       await stream.read();

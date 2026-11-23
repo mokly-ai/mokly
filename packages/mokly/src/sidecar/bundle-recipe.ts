@@ -6,7 +6,7 @@ import type { BuildResult } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
-import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
+import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { importedAssetPaths } from "./asset-imports.js";
@@ -19,6 +19,7 @@ import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
+import { prepareRecipeEncoding } from "./recipe-encoding.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
@@ -36,7 +37,7 @@ export interface CompiledBundle {
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
-  plan: ReadonlyMap<string, PlannedImport> | undefined;
+  plan: ResolutionPlan | undefined;
 }
 
 /** The module graph, consumed digests, resolution inputs, and the recipe. */
@@ -68,6 +69,9 @@ export async function bundleRecipe(
   );
   // The compilation identity: module paths, imports and non-CSS source and
   // loader bytes, then the metadata inputs and the settings hashed below.
+  // Without a full capture owner the evidence is never complete, so the
+  // random runtime key keeps the identity fresh and the sources stay out.
+  const sourced = evidence !== undefined;
   const hash = createHash("sha256");
   const physicalInputs: Record<string, string | null> = {};
   const metadataInputs: Record<string, string | null> = {};
@@ -85,11 +89,13 @@ export async function bundleRecipe(
         );
       module.digest = createHash("sha256").update(text).digest("hex");
       if (importedAssets.has(module.path)) module.importedAsset = true;
-      hash.update(
-        JSON.stringify([module.path, module.imports, module.importedAsset]),
-      );
+      if (sourced) {
+        hash.update(
+          JSON.stringify([module.path, module.imports, module.importedAsset]),
+        );
+      }
       if (!module.path.endsWith(".css")) {
-        hash.update(text);
+        if (sourced) hash.update(text);
         physicalInputs[absolute] = module.digest;
       }
     }
@@ -205,7 +211,18 @@ export async function bundleRecipe(
     metadataInputs,
   };
   const generation = restore(params, compilation, graph);
-  const result = bundleResult(generation, capturedPlan(plan, reuseEvidence));
+  const originalPathCount = plan?.paths.length ?? 0;
+  const namedPlan = evidence
+    ? evidence.candidates.attach(plan, reuseEvidence)
+    : plan;
+  let retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  if (!retainedPlan && namedPlan?.candidates) {
+    namedPlan.paths.length = originalPathCount;
+    delete namedPlan.candidates;
+    retainedPlan = capturedPlan(namedPlan, reuseEvidence);
+  }
+  const encoding = new Map<object, string>();
+  const result = bundleResult(generation, retainedPlan, encoding);
   if (reusable && !compilation.reuseEvidence.complete) {
     delete compilation.metadataIdentity;
     compilation.identity = createHash("sha256")
@@ -214,6 +231,6 @@ export async function bundleRecipe(
       .digest("hex");
     generation.id = generationId(compilation.identity, params.evaluation);
     result.generation = generation.id;
-  }
+  } else prepareRecipeEncoding(result, encoding);
   return { generation, result };
 }

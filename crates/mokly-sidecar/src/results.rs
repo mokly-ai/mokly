@@ -74,7 +74,7 @@ pub struct Bundle {
     /// Content-addressed bundle id.
     pub generation: String,
     /// Complete module graph.
-    pub modules: Vec<Module>,
+    pub modules: Arc<Vec<Module>>,
 }
 
 /// Rendered fragment and its declared resources.

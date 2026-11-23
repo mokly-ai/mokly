@@ -8,6 +8,9 @@
 
 - **Source:** Review.
 - **Category:** Performance.
+- **Related:** `plans/follow-ups/early-base-capture-evicted-results.md` records extra
+  compact restores after early results leave the full cache. Fewer restores reduce
+  this decoder cost. Neither fix replaces the other.
 - **Terms:**
   - **Render cache:** the in-memory store of rendered documents that both sides of Changes share in one command. `MemoryCache` in `crates/mokly-graph/src/cache.rs` implements it.
   - **Compact tier:** the part of the render cache that holds evicted documents in the lossless compressed encoding of `EncodedView`.

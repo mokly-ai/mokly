@@ -1,13 +1,11 @@
 //! Uniform response headers and public error envelopes.
 
+use crate::json_delivery;
+use crate::render_request::Rejection;
 use axum::body::{Body, Bytes};
 use axum::http::{HeaderValue, StatusCode};
 use axum::response::Response;
 use serde::Serialize;
-use tokio::io::AsyncReadExt;
-
-use crate::public_read::OpenedFile;
-use crate::render_request::Rejection;
 
 #[derive(Serialize)]
 struct PublicError {
@@ -19,7 +17,13 @@ pub(crate) fn bytes(status: StatusCode, content_type: &str, bytes: Bytes) -> Res
     let length = bytes.len();
     let mut response = Response::new(Body::from(bytes));
     *response.status_mut() = status;
-    if let Ok(value) = HeaderValue::from_str(content_type) {
+    if is_json(content_type) {
+        response.headers_mut().insert(
+            "content-type",
+            HeaderValue::from_static(json_delivery::CONTENT_TYPE),
+        );
+        json_delivery::vary(&mut response);
+    } else if let Ok(value) = HeaderValue::from_str(content_type) {
         response.headers_mut().insert("content-type", value);
     }
     if let Ok(value) = HeaderValue::from_str(&length.to_string()) {
@@ -33,6 +37,14 @@ pub(crate) fn bytes(status: StatusCode, content_type: &str, bytes: Bytes) -> Res
         HeaderValue::from_static("nosniff"),
     );
     response
+}
+
+/// Whether a stored file has a JSON media type, with or without a charset.
+pub(crate) fn is_json(content_type: &str) -> bool {
+    let mime = content_type
+        .split_once(';')
+        .map_or(content_type, |(mime, _)| mime);
+    mime.trim().eq_ignore_ascii_case("application/json")
 }
 
 /// A bodiless answer, such as a redirect or a 204, with the uniform caching and sniffing headers.
@@ -61,26 +73,6 @@ pub(crate) fn missing() -> Response {
         "not-found",
         "The requested file was not found.",
     )
-}
-
-pub(crate) fn stream(opened: OpenedFile) -> Response {
-    let mut response = bytes(StatusCode::OK, &opened.content_type, Bytes::new());
-    if let Ok(value) = HeaderValue::from_str(&opened.length.to_string()) {
-        response.headers_mut().insert("content-length", value);
-    }
-    let mut file = tokio::fs::File::from_std(opened.file).take(opened.length);
-    let chunks = async_stream::stream! {
-        let mut buffer = vec![0; 64 * 1024];
-        loop {
-            match file.read(&mut buffer).await {
-                Ok(0) => break,
-                Ok(length) => yield Ok::<_, std::io::Error>(axum::body::Bytes::copy_from_slice(&buffer[..length])),
-                Err(error) => { yield Err(error); break; }
-            }
-        }
-    };
-    *response.body_mut() = Body::from_stream(chunks);
-    response
 }
 
 pub(crate) fn method(allow: &'static str) -> Response {

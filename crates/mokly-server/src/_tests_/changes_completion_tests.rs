@@ -38,13 +38,16 @@ async fn completion_follows_committed_ready_or_unavailable_and_excludes_replacem
             let (stop, stopping) = watch::channel(false);
             let observed = Arc::new(Mutex::new(Vec::new()));
             let statuses = observed.clone();
+            let settled = observed.clone();
+            let complete_stop = stop.clone();
             let published = Arc::downgrade(&publications);
+            let completed = published.clone();
             let common = (
                 ChangeSourceMock::references
                     .some_call(matching!(_))
                     .returns(Ok("refs".into())),
                 ChangeSourceMock::classify
-                    .some_call(matching!(_, _))
+                    .some_call(matching!(_, _, _))
                     .returns(match outcome {
                         Outcome::Ready => Ok(result.unwrap()),
                         Outcome::Unavailable => Err(ServerError::ChangesUnavailable),
@@ -53,23 +56,33 @@ async fn completion_follows_committed_ready_or_unavailable_and_excludes_replacem
                 ChangeSourceMock::discarded
                     .some_call(matching!())
                     .answers_arc(Arc::new(move |_| {
-                        stop.send_replace(true);
+                        if matches!(outcome, Outcome::Replaced) {
+                            stop.send_replace(true);
+                        }
                     })),
             );
-            source = match outcome {
-                Outcome::Replaced => Unimock::new(common),
-                Outcome::Ready | Outcome::Unavailable => Unimock::new((
-                    common,
-                    ChangeSourceMock::finished
-                        .some_call(matching!(_, _))
-                        .answers_arc(Arc::new(move |_, _, _| {
-                            statuses
-                                .lock()
-                                .unwrap()
-                                .push(published.upgrade().unwrap().current().index.changes_status);
-                        })),
-                )),
-            };
+            source =
+                match outcome {
+                    Outcome::Replaced => Unimock::new(common),
+                    Outcome::Ready | Outcome::Unavailable => Unimock::new((
+                        common,
+                        ChangeSourceMock::finished
+                            .some_call(matching!(_, _))
+                            .answers_arc(Arc::new(move |_, _, _| {
+                                statuses.lock().unwrap().push(
+                                    published.upgrade().unwrap().current().index.changes_status,
+                                );
+                            })),
+                        ChangeSourceMock::settled
+                            .some_call(matching!())
+                            .answers_arc(Arc::new(move |_| {
+                                settled.lock().unwrap().push(
+                                    completed.upgrade().unwrap().current().index.changes_status,
+                                );
+                                complete_stop.send_replace(true);
+                            })),
+                    )),
+                };
             let mut origin = (*origin).clone();
             let input: Arc<dyn ChangeSource> = Arc::new(source.clone());
             Arc::make_mut(&mut origin.generation).changes = Some(input);
@@ -95,8 +108,10 @@ async fn completion_follows_committed_ready_or_unavailable_and_excludes_replacem
             });
             pass.run(Arc::new(origin), stopping).await;
             let expected = match outcome {
-                Outcome::Ready => vec![ChangesStatus::Ready],
-                Outcome::Unavailable => vec![ChangesStatus::Unavailable],
+                Outcome::Ready => vec![ChangesStatus::Ready, ChangesStatus::Ready],
+                Outcome::Unavailable => {
+                    vec![ChangesStatus::Unavailable, ChangesStatus::Unavailable]
+                }
                 Outcome::Replaced => vec![],
             };
             assert_eq!(*observed.lock().unwrap(), expected, "{outcome:?}");
