@@ -58,6 +58,36 @@ test("the handle opens the compact search where the field takes no focus", () =>
   assert.equal(header.getAttribute("data-compact-search"), "open");
 });
 
+test("the key hint names ⌘K by default and Ctrl K for the control shortcut, hidden from assistive technology", () => {
+  const { container, rerender } = render(
+    <TopBar {...IDS} drawerOpen={false} tagPicker={<span data-picker="" />} />,
+  );
+  const hint = () => {
+    const kbd = container.querySelector(".mbk-search > kbd");
+    assert.ok(kbd);
+    return kbd;
+  };
+  // The drawn ⌘ and K, between the input and the tag picker.
+  assert.equal(hint().getAttribute("aria-hidden"), "true");
+  assert.equal(hint().textContent, "K");
+  assert.equal(hint().firstElementChild?.tagName.toLowerCase(), "svg");
+  assert.equal(hint().previousElementSibling?.tagName.toLowerCase(), "input");
+  assert.ok(hint().nextElementSibling?.hasAttribute("data-picker"));
+  rerender(
+    <TopBar
+      {...IDS}
+      drawerOpen={false}
+      searchShortcut="control"
+      tagPicker={<span data-picker="" />}
+    />,
+  );
+  assert.equal(hint().textContent, "Ctrl K");
+  assert.equal(hint().querySelector("svg"), null);
+  // A static depiction draws the hint too, as a picture of the bar.
+  rerender(<TopBar {...IDS} drawerOpen={false} interactive={false} />);
+  assert.equal(hint().textContent, "K");
+});
+
 test("the field of an interactive bar names the search keys, and a static bar's field names none", () => {
   const { rerender } = render(<TopBar {...IDS} drawerOpen={false} />);
   assert.equal(

@@ -3,7 +3,11 @@ import { after, before, test } from "node:test";
 
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 
-import { isSearchKey, type SearchKeyEvent } from "../src/shell/search_keys.js";
+import {
+  isSearchKey,
+  searchShortcut,
+  type SearchKeyEvent,
+} from "../src/shell/search_keys.js";
 
 before(() => GlobalRegistrator.register());
 after(() => GlobalRegistrator.unregister());
@@ -112,6 +116,29 @@ test("/ stays a text field's own", () => {
       false,
       markup,
     );
+});
+
+test("the key hint names ⌘K on Apple's platforms and Ctrl K on the others", () => {
+  const cases: readonly [string, string][] = [
+    [
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+      "command",
+    ],
+    [
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1",
+      "command",
+    ],
+    [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      "control",
+    ],
+    [
+      "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0",
+      "control",
+    ],
+  ];
+  for (const [userAgent, shortcut] of cases)
+    assert.equal(searchShortcut(userAgent), shortcut, userAgent);
 });
 
 test("a handled key or a key of a composition asks for nothing", () => {

@@ -1,37 +1,16 @@
 /* The Canvas look of the viewer drawings that only the drawings need: the
-   inline end of the bar's two compositions, which the open menus share, and
-   the search field's hint. The bar's composition and its controls, which the
-   application draws too, are in the shared `viewer-bar.css` and
-   `viewer-controls.css`. `chrome.tsx` imports this sheet, so Mokly bundles it
-   into each viewer entry's own stylesheet, after the product sheets that the
-   configuration links, and the application never loads it. Every rule is
-   scoped to the renderer's wrapper, the element that carries
-   `data-color-scheme`, and styles cloud elements only. */
+   inline end of the bar's two compositions, which the open menus share. The
+   bar's composition and its controls, which the application draws too, are
+   in the shared `viewer-bar.css` and `viewer-controls.css`. `chrome.tsx`
+   imports this sheet, so Mokly bundles it into each viewer entry's own
+   stylesheet, after the product sheets that the configuration links, and the
+   application never loads it. Every rule is scoped to the renderer's wrapper,
+   the element that carries `data-color-scheme`, and styles cloud elements
+   only. */
 
 [data-color-scheme] .fo-viewer-screen {
   /* The inline end of the full bar and of the compact bar, which the open
      menus under each bar's last control share. */
   --fo-canvas-bar-end: var(--mk-space-3);
   --fo-canvas-compact-end: var(--mk-space-2);
-}
-
-/* The `⌘K` hint at the end of the package's search field. */
-[data-color-scheme] .fo-canvas-kbd {
-  display: inline-flex;
-  align-items: center;
-  flex: none;
-  gap: 1px;
-  height: 1.125rem;
-  padding: 0 var(--mk-space-1) 0 3px;
-  border-radius: var(--mk-radius-tight);
-  background: var(--mk-color-surface-muted);
-  box-shadow: inset 0 0 0 1px var(--mk-color-border);
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-mono);
-  font-size: 0.6875rem;
-  font-weight: var(--mk-font-medium);
-  line-height: 1;
-}
-[data-color-scheme] .fo-canvas-kbd-command {
-  flex: none;
 }

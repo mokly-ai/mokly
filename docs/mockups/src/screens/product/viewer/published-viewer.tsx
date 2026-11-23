@@ -27,7 +27,6 @@ import {
 } from "./published-slots";
 import type { PublishedSubject } from "./published-slots";
 import { PublishedWorkspace } from "./published-workspace";
-import { SearchHint } from "./search-hint";
 
 const defaultSubject: PublishedSubject = {
   label: publication.branch,
@@ -53,7 +52,7 @@ const ids = {
  * Every part draws its controls as pictures or native controls, so the
  * drawing runs no script, and the layout states the document's scheme as its
  * appearance. The top bar takes no end control, because the cloud's bar has
- * no theme toggle, and its search field ends with the `⌘K` hint.
+ * no theme toggle, and its search field ends with the package's `⌘K` hint.
  *
  * A pull request's desktop drawing fills the `sidePanel` slot with the
  * cloud's Mokly check. A phone draws no side panel, because the package's
@@ -170,7 +169,6 @@ export function PublishedViewer({
             interactive={false}
             navigationId={ids.navigation}
             searchId={ids.search}
-            tagPicker={<SearchHint />}
           />
         )}
       />

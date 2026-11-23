@@ -7,7 +7,7 @@
  * opens a compact search over the bar; the field then takes focus, and Escape
  * or Close search returns focus to the toggle. A host moves focus to the
  * field through the bar's handle, which opens the compact search first where
- * the field is hidden.
+ * the field is hidden. The field's key hint names the host's shortcut.
  */
 
 import {
@@ -21,7 +21,10 @@ import {
 
 import { IconSvg, SearchIcon } from "../icons/icons.js";
 
+import { SearchHint, type SearchShortcut } from "./search-hint.js";
 import { Brand, Menu } from "./top-bar-links.js";
+
+export type { SearchShortcut } from "./search-hint.js";
 
 /**
  * The shortcuts that move focus to the search field, which the field of an
@@ -62,6 +65,7 @@ export function TopBar({
   query,
   ref,
   searchId,
+  searchShortcut = "command",
   tagPicker,
 }: {
   /**
@@ -103,6 +107,11 @@ export function TopBar({
   ref?: Ref<TopBarHandle> | undefined;
   /** The id of the search field, unique in the document. */
   searchId: string;
+  /**
+   * The shortcut that the search field's key hint names: `command`, the
+   * default, names `⌘K` and `control` names `Ctrl K`.
+   */
+  searchShortcut?: SearchShortcut | undefined;
   /** The control at the end of the search field, such as a tag picker. */
   tagPicker?: ReactNode;
 }) {
@@ -185,6 +194,7 @@ export function TopBar({
               type="search"
               value={query}
             />
+            <SearchHint shortcut={searchShortcut} />
             {tagPicker}
           </div>
           {interactive ? (

@@ -6,13 +6,15 @@
  * top bar binds them on the whole document of a standalone shell, and only
  * on an embedded root, so that the host page keeps its own keys. A key that
  * moves focus loses its default action, such as the browser's own search or
- * the typed `/`; every other key keeps it.
+ * the typed `/`; every other key keeps it. The field's key hint names `⌘K`
+ * on Apple's platforms, whose keyboards carry the ⌘ key, and `Ctrl K` on
+ * every other platform.
  */
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import type { RefObject } from "react";
 
-import type { TopBarHandle } from "@mokly/ui/top-bar";
+import type { SearchShortcut, TopBarHandle } from "@mokly/ui/top-bar";
 
 import { useShellRoot } from "./root_context.js";
 import { useShellStore } from "./store_context.js";
@@ -76,6 +78,35 @@ export function isSearchKey(event: SearchKeyEvent): boolean {
   if (event.metaKey || event.ctrlKey)
     return event.metaKey !== event.ctrlKey && !event.shiftKey && isK(event);
   return event.key === "/" && !inTextField(event.target);
+}
+
+/** A user agent of Apple's platforms, an iPad's desktop agent included. */
+const APPLE_AGENT = /Mac|iPhone|iPad|iPod/u;
+
+/** The shortcut that the key hint names for a browser's user agent. */
+export function searchShortcut(userAgent: string): SearchShortcut {
+  return APPLE_AGENT.test(userAgent) ? "command" : "control";
+}
+
+/** The platform never changes while the shell runs. */
+function subscribe(): () => void {
+  return () => undefined;
+}
+
+/**
+ * The shortcut that the key hint names for the reader's platform. A render
+ * without a browser, such as a server render, names `⌘K`, as a static
+ * depiction does.
+ */
+export function useSearchShortcut(): SearchShortcut {
+  return useSyncExternalStore(
+    subscribe,
+    () =>
+      searchShortcut(
+        typeof navigator === "undefined" ? "" : navigator.userAgent,
+      ),
+    () => "command",
+  );
 }
 
 /**

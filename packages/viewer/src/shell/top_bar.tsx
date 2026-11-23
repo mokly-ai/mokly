@@ -21,7 +21,7 @@ import {
 import { AppearanceSelect, type AppearanceState } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
 import { useShellIdentifier } from "./identifier_context.js";
-import { useSearchKeys } from "./search_keys.js";
+import { useSearchKeys, useSearchShortcut } from "./search_keys.js";
 import { useShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
 
@@ -36,6 +36,7 @@ export function TopBar(props: {
   const searchId = useShellIdentifier("mb-search");
   const bar = useRef<TopBarHandle>(null);
   useSearchKeys(bar);
+  const searchShortcut = useSearchShortcut();
   return (
     <TopBarView
       drawerOpen={store.state.drawerOpen}
@@ -55,6 +56,7 @@ export function TopBar(props: {
       query={store.state.query}
       ref={bar}
       searchId={searchId}
+      searchShortcut={searchShortcut}
       tagPicker={<SearchTagPicker tags={props.catalogue.tags} />}
     />
   );
