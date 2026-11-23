@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import type { Viewport } from "@mokly/mokly";
 
-import "../../../../styles/product/viewer-canvas-panels.css";
 import { LayerBeneath } from "../../../components/layer-beneath";
 import { Panel } from "../../../entries/design/panel.mockup";
 import type { ScreenState } from "../../../fixtures/product-states";
@@ -194,8 +193,8 @@ export function ViewerPanelScreen({
         role="main"
         className={
           search === undefined
-            ? "fo-viewer-surface"
-            : "fo-viewer-surface fo-canvas-panel-searching"
+            ? "fo-viewer-surface fo-canvas-panel"
+            : "fo-viewer-surface fo-canvas-panel fo-canvas-panel-searching"
         }
       >
         <Panel

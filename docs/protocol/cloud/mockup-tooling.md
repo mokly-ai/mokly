@@ -50,6 +50,12 @@ with a side-effect import. Mokly bundles imported CSS into the
 entry's stylesheet and links it after the configured sheets. No mockup imports
 `@mokly/viewer/styles.css` or a component stylesheet of `@mokly/ui`.
 
+The Canvas look of the cloud's own stage, of the panels that the viewer's slots
+open and of the settings dialog and its layer comes from the product
+stylesheets that the configured links reach and that the application copies,
+not from a drawing's own import, so the catalogue and the application draw
+these surfaces from one source.
+
 The package stylesheet names Geist and Geist Mono, the faces of the
 [Canvas palette](../mokly-viewer-palette.md#canvas-palette), and loads no font
 file, so the viewer drawings use the catalogue's own self-hosted Geist and

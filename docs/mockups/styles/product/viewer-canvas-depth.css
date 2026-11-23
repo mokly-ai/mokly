@@ -1,13 +1,16 @@
-/* The depth of the Canvas drawings: the shade that their shadows and scrims
+/* The depth of the Canvas surfaces: the shade that their shadows and scrims
    mix, the radius of a floating surface, and the shadows of a card that
    floats on the canvas and of a panel over it. Light mixes the ink. Dark
    mixes the near-black background, because a light ink would glow around a
-   dark card. Only the drawings load this sheet: each Canvas sheet that draws
-   a floating surface imports it, so Mokly bundles it into that entry's own
-   stylesheet, and the application never loads it. The properties sit on the
-   renderer's wrapper, the element that carries `data-color-scheme`, and the
-   dark rule follows the light rule, which it overrides by order. No other
-   sheet declares these properties. */
+   dark card. Each Canvas sheet that draws a floating surface imports this
+   sheet, so the application and every drawing that loads one of them read
+   the same values. The application's panel and dialog cards are the package
+   modal's surface, which takes the radius and the deep shadow through its
+   public surface style rather than through a rule here. The properties sit
+   on the element that carries `data-color-scheme`, the renderer's wrapper in
+   a drawing and the document root in the application, and the dark rule
+   follows the light rule, which it overrides by order. No other sheet
+   declares these properties. */
 [data-color-scheme] {
   --fo-canvas-shade: var(--mk-color-text);
   --fo-canvas-radius: 12px;

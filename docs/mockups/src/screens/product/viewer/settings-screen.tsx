@@ -1,6 +1,5 @@
 import type { Viewport } from "@mokly/mokly";
 
-import "../../../../styles/product/viewer-canvas-settings.css";
 import { MembersPane } from "../settings/members-pane";
 
 /** The drawing of the settings dialog's Canvas look over the viewer. */
@@ -13,9 +12,8 @@ export const viewerSettingsPath = "product/viewer/standalone/settings";
  * the pane and its controls show the look. The settings family's own pane
  * draws it, so `SettingsSurface` hosts it in the registered dialog over the
  * blank stage on desktop and in the registered layer on a phone, as every
- * settings screen does. The document lies under the viewer, so it takes the
- * Canvas palette, and this module's sheet draws the dialog and the layer in
- * Canvas.
+ * settings screen does, in the Canvas look that `viewer.css` gives the dialog
+ * and the layer of every settings drawing and of the application.
  */
 export function ViewerSettingsScreen({ viewport }: { viewport: Viewport }) {
   return (

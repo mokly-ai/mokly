@@ -1,11 +1,10 @@
-/* The cloud's own stage in the Canvas drawings: the dot-grid canvas behind
-   the fallback bar, and each card that the stage holds floating on it. Only
-   the drawings load this sheet: `chrome.tsx` and the settings sheet import
-   it, so Mokly bundles it into those entries' own stylesheets, and the
-   application never loads it. Every rule is scoped to the renderer's
-   wrapper, the element that carries `data-color-scheme`, and to the cloud's
-   stage, so it outweighs a product sheet's rule for the same element. The
-   package's own stage keeps its own look. */
+/* The cloud's own stage in Canvas: the dot-grid canvas behind the fallback
+   bar, and each card that the stage holds floating on it. `viewer.css`
+   imports this sheet, so the application and every product drawing load it.
+   Every rule is scoped to the element that carries `data-color-scheme`, the
+   renderer's wrapper in a drawing and the document root in the application,
+   and to the cloud's stage, so it outweighs a product sheet's rule for the
+   same element. The package's own stage keeps its own look. */
 @import "viewer-canvas-depth.css";
 
 /* The canvas: the background with a dot grid on a 24px pitch. */

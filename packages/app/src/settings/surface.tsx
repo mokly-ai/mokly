@@ -16,13 +16,17 @@ import type { SettingsScopeSlugs } from "./routes";
 // The dialog is 960px wide, never taller than 90dvh, and never shorter than
 // 700px, so a short pane is not mostly empty and most pane switches leave the
 // frame where the reader's pointer left it. The minimum yields to the cap on a
-// short window, where 90dvh is the smaller of the two.
+// short window, where 90dvh is the smaller of the two. It floats over the stage
+// in the Canvas depth: the 12px floating radius and the deep shadow, named by
+// the shared Canvas depth sheet's custom properties, which the drawings' dialog
+// reads too.
 const surfaceStyle: ViewStyle = {
   maxWidth: 960,
   width: "100%",
   minHeight: "min(700px, 90dvh)" as unknown as number,
   maxHeight: "90dvh" as unknown as number,
-  borderRadius: 10,
+  borderRadius: "var(--fo-canvas-radius)",
+  boxShadow: "var(--fo-canvas-shadow-deep)",
 };
 
 // The frame's own header is not drawn: the rail runs the dialog's full height,
