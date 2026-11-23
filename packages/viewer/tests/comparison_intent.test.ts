@@ -7,11 +7,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { comparisonEligibilityKnown } from "../src/shell/comparison_intent.js";
+import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { renderHook } from "@testing-library/react";
+import { createElement, type ReactNode } from "react";
+
+import {
+  comparisonEligibilityKnown,
+  useComparisonIntent,
+} from "../src/shell/comparison_intent.js";
 import { shellStateWithCatalogue } from "../src/shell/data_commit.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { shellStore } from "../src/shell/store_actions.js";
+import { ShellStoreBoundary } from "../src/shell/store_context.js";
 import { withRoute } from "../src/shell/store_filters.js";
 import { hostRoute, withHostRoute } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
@@ -98,6 +106,43 @@ test("a publication that rebinds the route keeps the settled intent", () => {
   assert.equal(rebound.routeInstallation, installed.routeInstallation);
   assert.equal(rebound.comparisonIntent, false);
   assert.equal(rebound.route.comparison, "side");
+});
+
+test("an honoured intent selects the Changes tab, and an intent for an ineligible view leaves the tab as it was", (t) => {
+  GlobalRegistrator.register();
+  t.after(() => GlobalRegistrator.unregister());
+  for (const [eligible, before, after, selected] of [
+    [true, "inspect", "changes", 1],
+    [false, "inspect", "inspect", 0],
+    [false, "changes", "changes", 0],
+  ] as const) {
+    const { store, state } = storeOver({
+      ...createInitialShellState(
+        catalogue,
+        context,
+        route("?comparison=side"),
+        undefined,
+      ),
+      panelTab: before,
+    });
+    let selects = 0;
+    const view = renderHook(
+      () =>
+        useComparisonIntent(eligible, true, () => {
+          selects += 1;
+        }),
+      {
+        wrapper: ({ children }: { children: ReactNode }) =>
+          createElement(ShellStoreBoundary, { value: store }, children),
+      },
+    );
+    assert.deepEqual(
+      [state().panelTab, selects, state().comparisonIntent],
+      [after, selected, false],
+      `${eligible ? "eligible" : "ineligible"} view on ${before}`,
+    );
+    view.unmount();
+  }
 });
 
 test("an embedded host's route installation carries no intent", () => {

@@ -2,10 +2,13 @@
  * The right panel of a page, a Markdown document, a use case, or a removed
  * page or document. Inspect holds the entry's head. A use case adds its
  * Frames filter, which chooses one viewport and one scheme for every step,
- * and the Selection section. A page that the Changes filter lists has
- * Changes, which holds its comparison evidence; any other page keeps its
- * evidence in Inspect, after the head. An embedded root keeps the Dark
- * preview control of a document's one preview scheme in the head.
+ * and the Selection section. An entry that the Changes filter lists has
+ * Changes, which holds the stepper, the host's slot, the Compared rail and
+ * the comparison details, and no compare modes: a current page's evidence,
+ * or the sentences of the entry's reasons and a use case's changed steps.
+ * Any other page keeps its evidence in Inspect, after the head. An embedded
+ * root keeps the Dark preview control of a document's one preview scheme in
+ * the head.
  */
 
 import type { CatalogueUseCase } from "@mokly/model";
@@ -19,14 +22,17 @@ import { MetadataRow } from "@mokly/ui/metadata-row";
 
 import type { UseCaseFramesChoice } from "./canvas_use_case_frames.js";
 import type { Catalogue } from "./catalogue.js";
+import { ChangesTab } from "./changes_tab.js";
 import type { ShellContext } from "./context.js";
 import { UseCaseFrames } from "./inspect_frames.js";
 import { EntryInspectHead } from "./inspect_head.js";
 import { PageEvidence } from "./page_evidence.js";
 import type { PageComparisonEvidence } from "./page_evidence_data.js";
+import { publicEntryStatus } from "./public_workspace.js";
 import { EntryRightPanel } from "./right_panel.js";
 import { useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
+import { TargetEvidence } from "./target_evidence.js";
 
 /** An embedded root's Dark preview control of a document's one scheme. */
 function DarkPreview() {
@@ -84,13 +90,28 @@ export function TargetPanel({
   const store = useShellStore();
   const entry = target.entry;
   const listed = store.context.changedEntries?.includes(entry.path) === true;
-  const evidence = page ? (
-    <PageEvidence base={context.base} evidence={page} />
-  ) : null;
-  const changes = page && listed;
+  // The Compared rail names the branch point, so the details of the Changes
+  // tab leave out its sentence.
+  const changes = listed ? (
+    <ChangesTab
+      details={
+        page ? (
+          <PageEvidence base="" evidence={page} />
+        ) : (
+          <TargetEvidence
+            catalogue={catalogue}
+            entry={entry}
+            snapshotId={context.snapshotId}
+          />
+        )
+      }
+      path={entry.path}
+      status={publicEntryStatus(entry)}
+    />
+  ) : undefined;
   return (
     <EntryRightPanel
-      changes={changes ? evidence : undefined}
+      changes={changes}
       inspect={
         <InspectPanel>
           <EntryInspectHead
@@ -105,7 +126,9 @@ export function TargetPanel({
             entry={entry}
             status={status ? <ChangeStatus status={status} /> : undefined}
           />
-          {changes ? null : evidence}
+          {page && !listed ? (
+            <PageEvidence base={context.base} evidence={page} />
+          ) : null}
           {entry.kind === "use-case" && useCase ? (
             <>
               <UseCaseFrames

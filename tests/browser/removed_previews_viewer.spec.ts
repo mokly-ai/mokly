@@ -12,6 +12,7 @@ import { expect, type Page, type Request } from "@playwright/test";
 
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -94,7 +95,7 @@ for (const adapter of ["same-origin", "cross"] as const) {
       page.locator("#viewer"),
       comparisonPaths.removedScreen,
     );
-    await expect(page.locator("#viewer .mbk-diff-toolbar")).toHaveCount(0);
+    await expectNoComparison(page.locator("#viewer"));
     // No generation read carries a query: each reads the pinned generation's file.
     expect(
       requests.filter(

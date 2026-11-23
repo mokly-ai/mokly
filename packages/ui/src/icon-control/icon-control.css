@@ -92,6 +92,9 @@ details[open] > summary.mbk-icon-button {
   border-color: var(--chrome-border);
 }
 
+/* A disabled button dims to 42%, also while it is pressed, as every icon
+   control without a fill or an edge at rest does, such as a step of the
+   change stepper. */
 .mbk-icon-button:disabled,
 .mbk-icon-button:has(> input:disabled) {
   opacity: 0.42;

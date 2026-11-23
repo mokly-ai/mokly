@@ -13,32 +13,42 @@ import {
   importedCssImage,
 } from "../helpers/imported_css_sources.js";
 
+import { comparisonSection, paneFrame } from "./comparison_sections.js";
+import type { DiffMode } from "./comparison_ui.js";
+
 const comparisonModes = {
   Overlay: "overlay",
   Difference: "difference",
   "Side by side": "side",
-} as const;
+} as const satisfies Partial<Record<DiffMode, string>>;
 
 /** The byte length of the PNG that the CSS Module loads through `url()`. */
 export async function importedImageSize(): Promise<number> {
   return (await fs.stat(importedCssImage)).size;
 }
 
-/** Each side's pane renders its own module colour and loads the image bytes. */
+/**
+ * Each side's pane of the Desktop · Light frame, which every mode compares,
+ * renders its own module colour and loads the image bytes.
+ */
 export async function expectStyledPanes(
   page: Page,
   imageSize: number,
   mode: keyof typeof comparisonModes,
 ): Promise<void> {
-  const panes = page.locator(
-    `[data-diff-viewport="desktop"] [data-compare-mode="${comparisonModes[mode]}"]`,
-  );
+  const section = comparisonSection(page, "desktop");
+  // A stack names its mode once; Side by side names it on each version.
+  await expect(
+    section.locator(`[data-compare-mode="${comparisonModes[mode]}"]`),
+  ).toHaveCount(mode === "Side by side" ? 2 : 1);
   for (const [side, color] of [
     ["before", importedCssColors.Before],
     ["after", importedCssColors.After],
   ] as const) {
-    const frame = panes.locator(
-      `[data-mokly-comparison-frame][data-mokly-preview-source*="/snapshots/${side}/"]`,
+    const frame = paneFrame(section, side);
+    await expect(frame).toHaveAttribute(
+      "data-mokly-preview-source",
+      new RegExp(`/snapshots/${side}/`, "u"),
     );
     await expect(frame).toHaveAttribute("srcdoc", /\S/u);
     const button = frame

@@ -62,6 +62,23 @@ test("the embedded viewer renders the public fixture, default state and every ho
   );
 });
 
+test("the embedded viewer places the host's changesStart content in the Changes tab, after the change stepper and before Compared", () => {
+  const html = embeddedMarkup({
+    defaultSelection: { screenPath: "product/browse/home" },
+    slots: { changesStart: <button>Re-run check</button> },
+  });
+  const order = [
+    "Change 3 of 5",
+    '<div data-mokly-slot="changesStart"><button>Re-run check</button></div>',
+    'aria-label="Compared"',
+  ].map((text) => [text, html.indexOf(text)] as const);
+  for (const [text, position] of order) assert.ok(position >= 0, text);
+  assert.deepEqual(
+    order.map(([text]) => text),
+    [...order].sort((a, b) => a[1] - b[1]).map(([text]) => text),
+  );
+});
+
 for (const screenPath of [
   null,
   ...fixture.screens.map((entry) => entry.path),
