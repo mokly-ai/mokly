@@ -16,6 +16,7 @@ import {
   setViewerMarkers,
   variantInstance,
 } from "./viewer_marker_test_helpers.js";
+import { canvasFrame, NARROW_WINDOW } from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -28,9 +29,13 @@ test.afterAll(async () => fixture?.close());
 for (const cross of [false, true]) {
   const adapter = cross ? "postMessage" : "same-origin";
 
-  test(`${adapter} marker tracks outer scroll, resize and frame expansion without remounting`, async ({
+  // The one-frame stage below the layout breakpoint scrolls, scales its
+  // frames to the root and expands a frame; `viewer_markers_canvas.spec.ts`
+  // covers the canvas's pan, zoom and refit.
+  test(`${adapter} below the layout breakpoint, marker tracks outer scroll, resize and frame expansion without remounting`, async ({
     page,
   }) => {
+    await page.setViewportSize(NARROW_WINDOW);
     await openMarkerViewer(page, fixture, cross);
     await page.locator(".mbk-stage").evaluate((stage) => {
       stage.style.height = "600px";
@@ -158,9 +163,7 @@ for (const cross of [false, true]) {
     await expectMarkerState(page, "lower", "hidden");
     await expectMarkerState(page, "nested", "hidden");
     await expectMarkerState(page, "hidden", "hidden");
-    const frame = page
-      .locator('iframe[data-workspace-frame="mobile"]')
-      .contentFrame();
+    const frame = page.locator(canvasFrame("mobile")).contentFrame();
     await frame.locator("html").evaluate(() => window.scrollTo(0, 650));
     await expectMarkerState(page, "lower", "visible");
     await expectMarkerState(page, "nested", "hidden");
@@ -231,6 +234,7 @@ for (const cross of [false, true]) {
     await expectMarkerAligned(page, "flow", 1, "Visible");
 
     await page.evaluate(() => window.viewerHarness.remove("one"));
+    // The canvas shows the variant's row of its set in desktop views.
     await page.evaluate(
       ({ cross, instance }) => {
         const host = window.viewerHarness.start("one", {
@@ -242,15 +246,13 @@ for (const cross of [false, true]) {
         });
         host.setMarkers([{ id: "variant", instance }]);
       },
-      { cross, instance: variantInstance(fixture) },
+      { cross, instance: variantInstance(fixture, "desktop") },
     );
+    const second = `${canvasFrame("desktop")}[data-workspace-variant="pane/second"]`;
     await expectMarkerState(page, "variant", "visible");
     await expect(
-      page
-        .locator('iframe[data-workspace-frame="mobile"]')
-        .contentFrame()
-        .getByText("Second content"),
+      page.locator(second).contentFrame().getByText("Second content"),
     ).toBeVisible();
-    await expectMarkerAligned(page, "variant", 0, "Inside");
+    await expectMarkerAligned(page, "variant", second, "Inside");
   });
 }

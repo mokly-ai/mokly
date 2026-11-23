@@ -7,6 +7,10 @@ import {
   startInspection,
 } from "./viewer_inspection_fixture.js";
 import { startViewerPick } from "./viewer_pick.js";
+import { canvasFrame } from "./workspace_actions.js";
+
+/** The frames of one viewport on the canvas: its Light and Dark frames. */
+const SHOWN_FRAMES = 2;
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -48,7 +52,7 @@ for (const cross of [false, true]) {
     const before = { reads: await reads(), withheld: await withheld() };
 
     await page
-      .locator('iframe[data-workspace-frame="mobile"]')
+      .locator(canvasFrame("mobile"))
       .contentFrame()
       .locator("body")
       .evaluate((body) => body.append(body.ownerDocument.createElement("div")));
@@ -112,9 +116,11 @@ for (const cross of [false, true]) {
             else host.ref.current.cancelPick();
           }, replacement);
           await startViewerPick(page);
+          // The pick labels the instance in each shown frame: on the canvas,
+          // the chosen viewport's Light and Dark frames.
           const labels = page.locator("[data-mokly-label-layer] button");
-          await expect(labels).toHaveCount(1);
-          const label = await labels.elementHandle();
+          await expect(labels).toHaveCount(SHOWN_FRAMES);
+          const label = await labels.first().elementHandle();
           if (operation !== "geometry")
             await expect
               .poll(() => page.evaluate(() => window.inspectionProbe.outcome))
@@ -139,7 +145,7 @@ for (const cross of [false, true]) {
             },
             { name: "pick-start", value: null },
           ]);
-          await expect(labels).toHaveCount(1);
+          await expect(labels).toHaveCount(SHOWN_FRAMES);
           expect(await label!.evaluate((element) => element.isConnected)).toBe(
             true,
           );

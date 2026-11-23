@@ -5,8 +5,8 @@ import type { FrameAdapter } from "@mokly/viewer";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
-
 import type {} from "./viewer_harness.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
@@ -32,13 +32,16 @@ test("an inspection error keeps a frame, and a reported failure recovers with Tr
     const host = window.viewerHarness.start("one");
     const adapter: FrameAdapter = {
       async mount(frame) {
-        // On its first mount, the hidden desktop frame reports an inspection
-        // limit. Then the shown mobile frame reports a session timeout, a
-        // failure after load, so its line renders after the limit was handled.
+        // On their first mount, the hidden desktop frames and the shown
+        // Mobile · Dark frame report an inspection limit. Then the shown
+        // Mobile · Light frame reports a session timeout, a failure after
+        // load, so its line renders after the limit was handled.
         state.mounts++;
         const first = !mounted.has(frame);
         mounted.add(frame);
-        const mobile = frame.dataset["workspaceFrame"] === "mobile";
+        const mobile =
+          frame.dataset["workspaceFrame"] === "mobile" &&
+          frame.dataset["workspaceColorScheme"] === "light";
         return {
           listInstanceBoundaries: async () => [],
           highlight: async () => {},
@@ -68,18 +71,26 @@ test("an inspection error keeps a frame, and a reported failure recovers with Tr
     .filter({ hasText: "This preview could not be loaded." });
   await expect(line).toHaveCount(1);
   const frames = page.locator("#one iframe");
-  await expect(
-    page.locator('#one iframe[data-workspace-frame="mobile"]'),
-  ).toHaveAttribute("data-mokly-frame-state", "error");
-  await expect(
-    page.locator('#one iframe[data-workspace-frame="desktop"]'),
-  ).toHaveAttribute("data-mokly-frame-state", "ready");
+  await expect(frames).toHaveCount(4);
+  await expect(page.locator(`#one ${canvasFrame("mobile")}`)).toHaveAttribute(
+    "data-mokly-frame-state",
+    "error",
+  );
+  for (const [viewport, scheme] of [
+    ["mobile", "dark"],
+    ["desktop", "light"],
+    ["desktop", "dark"],
+  ] as const)
+    await expect(
+      page.locator(`#one ${canvasFrame(viewport, scheme)}`),
+    ).toHaveAttribute("data-mokly-frame-state", "ready");
   await line.getByRole("button", { name: "Try again" }).click();
   await expect(line).toHaveCount(0);
   for (const frame of await frames.all())
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
-  // Two frames mounted once each, and Try again mounted the failed one again.
+  // The canvas's four frames mounted once each, and Try again mounted the
+  // failed one again.
   expect(
     await page.evaluate(() => (window as unknown as { mounts: number }).mounts),
-  ).toBe(3);
+  ).toBe(5);
 });

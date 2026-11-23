@@ -1,7 +1,8 @@
 /**
  * Live prop edits across their contexts in Serve, under the component
- * controls contract and its design: a viewport and scheme switch, an expired
- * temporary preview, and a scheme change while the first render is pending.
+ * controls contract and its design: on the canvas both schemes of an edited
+ * row; below the layout breakpoint a viewport and scheme switch, and a scheme
+ * change while the first render is pending; and an expired temporary preview.
  */
 
 import { expect, type Route } from "@playwright/test";
@@ -14,7 +15,11 @@ import {
   serveLiveCatalogue,
 } from "./live_shell_fixture.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseViewport,
+  NARROW_WINDOW,
+} from "./workspace_actions.js";
 
 /** The temporary preview of one view of the card. */
 const preview = (viewport: "desktop" | "mobile", scheme: string) =>
@@ -23,9 +28,52 @@ const preview = (viewport: "desktop" | "mobile", scheme: string) =>
     "u",
   );
 
-test("a viewport switch keeps the edit and shows it in each frame that it shows", async ({
+test("on the canvas, an edit renders the Light and Dark frames of its row, and the viewport and scheme choices keep them", async ({
   page,
 }) => {
+  const server = await serveLiveCatalogue({
+    config: { colorSchemes: ["light", "dark"] },
+  });
+  try {
+    const props = await openProps(page, server.url);
+    const sent = renders(page);
+    const label = props.getByRole("textbox", { name: "label" });
+    await label.fill("Both schemes");
+    const shown = (scheme: "dark" | "light") => ({
+      url: expect.stringMatching(
+        preview("desktop", scheme === "dark" ? "\\.dark" : ""),
+      ),
+      text: expect.stringContaining("Both schemes 1"),
+    });
+    for (const scheme of ["light", "dark"] as const)
+      await expect
+        .poll(() => frameDocument(page, "desktop", scheme))
+        .toEqual(shown(scheme));
+    const contexts = () =>
+      sent
+        .map((request) => request.postDataJSON())
+        .map((body) => `${body.viewport}/${body.colorScheme}`);
+    expect(contexts().sort()).toEqual(["desktop/dark", "desktop/light"]);
+    // A component's frames show its desktop views whatever the choices, so
+    // they keep the edit without another render.
+    await chooseViewport(page, "mobile");
+    await chooseScheme(page, "dark");
+    for (const scheme of ["light", "dark"] as const)
+      await expect
+        .poll(() => frameDocument(page, "desktop", scheme))
+        .toEqual(shown(scheme));
+    await passRenderingUpdates(page);
+    expect(contexts()).toHaveLength(2);
+    await expect(label).toHaveValue("Both schemes");
+  } finally {
+    await closeServe(page, server);
+  }
+});
+
+test("below the layout breakpoint, a viewport switch keeps the edit and shows it in each frame that it shows", async ({
+  page,
+}) => {
+  await page.setViewportSize(NARROW_WINDOW);
   const server = await serveLiveCatalogue({
     config: { colorSchemes: ["light", "dark"] },
   });
@@ -129,9 +177,12 @@ test("an expired preview keeps the edit and shows the saved props, and Update pr
   }
 });
 
-test("a scheme change while the first render is pending shows only the new scheme's preview", async ({
+test("below the layout breakpoint, a scheme change while the first render is pending shows only the new scheme's preview", async ({
   page,
 }) => {
+  // The one-frame stage renders the chosen scheme alone; the canvas renders
+  // both schemes of an edited row at once.
+  await page.setViewportSize(NARROW_WINDOW);
   const server = await serveLiveCatalogue({
     config: { colorSchemes: ["light", "dark"] },
   });

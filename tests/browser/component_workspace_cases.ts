@@ -5,6 +5,7 @@ import { designDocumentFixture } from "./component_design_fixture.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 type Viewport = "desktop" | "mobile";
 
@@ -177,7 +178,8 @@ export function registerComponentWorkspace(
     // the panel, so the page gives the frame the full layout.
     await page.setViewportSize({ width: 1920, height: 1000 });
     await page.goto("/view/design/canvas/overview/");
-    const frame = page.frameLocator(".mbk-frame-desktop iframe");
+    // The design screen's Desktop · Light frame on the canvas.
+    const frame = page.frameLocator(canvasFrame("desktop"));
     // The Frames filter hides the frames that it turns off.
     const light = frame.locator('[data-cv-frames="light"]');
     const desktop = frame.locator('.cv-frame[data-cv-frame="desktop-light"]');

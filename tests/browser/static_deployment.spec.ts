@@ -12,6 +12,7 @@ import { hasMarker, markPage } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { deploymentReadsOf } from "./shell_route_fixture.js";
 import { staticRequests } from "./static_delivery_assertions.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 /** Where the outgoing document records an unavailable stage. */
 const UNAVAILABLE_SEEN = "mokly-test-unavailable-seen";
@@ -113,7 +114,7 @@ test("a copied catalogue reloads on another deployment without comparison change
     await page.evaluate((key) => sessionStorage.getItem(key), UNAVAILABLE_SEEN),
   ).toBeNull();
   await expect(
-    page.frameLocator(".mbk-frame-mobile iframe").locator("main"),
+    page.frameLocator(canvasFrame("mobile")).locator("main"),
   ).toHaveText("New deployment detail");
   expect(deployments).toEqual(["/mokly-viewer/deployment.json"]);
   await page.goBack();

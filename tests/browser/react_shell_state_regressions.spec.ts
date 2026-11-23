@@ -1,9 +1,12 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
-const componentPath = "/view/example/components/action/";
-const variantPath = "/view/example/components/action/disabled/";
+const component = "example/components/action";
+const variant = `${component}/disabled`;
+const componentPath = `/view/${component}/`;
+const variantPath = `/view/${variant}/`;
 const variantRow =
   'a[data-nav-row][data-route="example/components/action/disabled/index.html"]';
 const fragment = "react-native-stylesheet";
@@ -64,13 +67,21 @@ async function expectInitialVariantEntry(page: Page): Promise<void> {
       .getByRole("navigation", { name: "Saved variants" })
       .getByRole("link", { name: "Disabled", exact: true }),
   ).toHaveAttribute("aria-current", "page");
-  for (const viewport of ["mobile", "desktop"])
-    await expect(
-      page.locator(`iframe[data-workspace-frame="${viewport}"]`),
-    ).toHaveAttribute(
-      "src",
-      new RegExp(`action/disabled/index\\.${viewport}\\.html#${fragment}$`),
-    );
+  // The variant's own row of the set opens at the fragment, and the parent's
+  // row, another entry, does not.
+  await expect(
+    page.locator(
+      `${canvasFrame("desktop")}[data-workspace-variant="${variant}"]`,
+    ),
+  ).toHaveAttribute(
+    "src",
+    new RegExp(`action/disabled/index\\.desktop\\.html#${fragment}$`),
+  );
+  await expect(
+    page.locator(
+      `${canvasFrame("desktop")}[data-workspace-variant="${component}"]`,
+    ),
+  ).toHaveAttribute("src", /components\/action\/index\.desktop\.html$/);
 }
 
 /** Align the fixture edges so integer scroll offsets can meet exact containment. */

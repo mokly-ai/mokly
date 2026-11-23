@@ -11,6 +11,7 @@ import { expect } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { unexpectedDesignScripts } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 /** The shipped scrim of the highlight mask, which the shipped theme declares. */
 const SCRIM = "rgba(244, 246, 244, 0.72)";
@@ -38,7 +39,8 @@ for (const [path, labels] of [
   }) => {
     await page.setViewportSize(WIDE_PAGE);
     await page.goto(`/view/${path}/`);
-    const frame = page.frameLocator(".mbk-frame-desktop iframe");
+    // The artboard's Desktop · Light frame on the canvas.
+    const frame = page.frameLocator(canvasFrame("desktop"));
     const toggle = frame.getByRole("switch", { name: "Highlight components" });
     // The stage's frames: each viewport in both schemes.
     const views = frame.locator(".cv-frame[data-cv-frame]:visible");

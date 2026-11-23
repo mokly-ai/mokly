@@ -15,6 +15,7 @@ import {
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
+import { canvasFrame, NARROW_WINDOW } from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
 
@@ -39,21 +40,22 @@ test("a logical link right after the first mount is host-owned while the frame s
     release = resolve;
   });
   let images = 0;
-  // The desktop document cannot finish loading while its image is held.
+  // The desktop documents, Light and Dark on the canvas, cannot finish
+  // loading while their image is held.
   await page.route("**/slow-navigation-desktop.svg", async (route) => {
     images += 1;
-    if (images === 1) await held;
+    await held;
     await route.continue();
   });
   const opened = page.goto(
     `${navigation.url}/view/fixture/nested/home/?viewport=desktop`,
   );
   try {
-    await expect.poll(() => images).toBe(1);
-    const frame = page.locator(".mbk-frame-desktop iframe");
+    await expect.poll(() => images).toBe(2);
+    const frame = page.locator(canvasFrame("desktop"));
     await expect(frame).toHaveAttribute("data-mokly-frame-state", "loading");
     await page
-      .frameLocator(".mbk-frame-desktop iframe")
+      .frameLocator(canvasFrame("desktop"))
       .locator("#raw-link")
       .evaluate((element) =>
         element.dispatchEvent(
@@ -61,7 +63,7 @@ test("a logical link right after the first mount is host-owned while the frame s
         ),
       );
     await expectDestination(page);
-    expect(images).toBe(1);
+    expect(images).toBe(2);
   } finally {
     release();
     await opened;
@@ -85,6 +87,9 @@ test("a scheme change that loads the exact resource the frame shows keeps the ol
     if (requests > 1) await held;
     await route.continue();
   });
+  // The appearance replaces a frame's document on the one-frame stage, below
+  // the layout breakpoint; a canvas frame keeps its own scheme.
+  await page.setViewportSize(NARROW_WINDOW);
   await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   const element = page.locator(".mbk-frame-mobile iframe");
   const frame = page.frameLocator(".mbk-frame-mobile iframe");

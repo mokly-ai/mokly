@@ -2,7 +2,11 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
-import { chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseViewport,
+  expectCanvasViewport,
+} from "./workspace_actions.js";
 
 /**
  * The Canvas overview's link that opens the catalogue artboard, and that
@@ -37,7 +41,7 @@ export function registerDesignLinks(
     viewport: "mobile" | "desktop",
     entryPath: string,
   ): Promise<void> {
-    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+    await expect(page.locator(canvasFrame(viewport))).toHaveAttribute(
       "src",
       `/static/mokly-generated/${entryPath}/index.${viewport}.html`,
     );
@@ -51,7 +55,7 @@ export function registerDesignLinks(
       await page.setViewportSize({ width: 1600, height: 1000 });
       await page.goto("/view/design/canvas/stage/home/");
       await chooseViewport(page, viewport);
-      const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+      const frame = page.frameLocator(canvasFrame(viewport));
       await frame
         .getByRole("link", { name: "Open the first screen", exact: true })
         .click();
@@ -74,10 +78,7 @@ export function registerDesignLinks(
       );
       await expect(row).toHaveAttribute("aria-current", "page");
       await expect(row).toBeVisible();
-      await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-        "data-viewport",
-        viewport,
-      );
+      await expectCanvasViewport(page, viewport);
       await page.goBack();
       await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
       await expectFrameRoute(page, viewport, "design/canvas/overview");
@@ -88,14 +89,11 @@ export function registerDesignLinks(
       await frame.getByRole("link", { name: links.close, exact: true }).click();
       await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
       await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
-      const iframe = page.locator(`.mbk-frame-${viewport} iframe`);
+      const iframe = page.locator(canvasFrame(viewport));
       expect(
         (await iframe.getAttribute("sandbox"))?.split(/\s+/),
       ).not.toContain("allow-scripts");
-      await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-        "data-viewport",
-        viewport,
-      );
+      await expectCanvasViewport(page, viewport);
     });
   }
 }

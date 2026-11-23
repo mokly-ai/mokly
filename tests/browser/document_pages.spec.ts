@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import { DOCUMENT_FRAME, expectFrameSource } from "./workspace_actions.js";
 
 /** One labelled metadata row in the open Details panel. */
 function metaRow(page: Page, label: string) {
@@ -17,7 +17,7 @@ for (const width of [390, 1280])
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/workspace-guide/");
     const head = page.locator("#mb-main .mbk-screen-head");
-    const frame = page.locator(".mbk-stage-embed iframe");
+    const frame = page.locator(DOCUMENT_FRAME);
     const fallback = page.locator(".mbk-scheme-fallback");
     for (const scheme of ["light", "dark"] as const) {
       await page.getByLabel("Appearance", { exact: true }).selectOption(scheme);
@@ -39,7 +39,7 @@ for (const width of [390, 1280])
         scheme === "dark" ? /index\.dark\.html$/u : /index\.html$/u,
       );
       await expect(fallback).toHaveCount(0);
-      const image = page.frameLocator(".mbk-stage-embed iframe").locator("img");
+      const image = page.frameLocator(DOCUMENT_FRAME).locator("img");
       await expect(image).toBeVisible();
       await expect
         .poll(() =>

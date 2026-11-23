@@ -9,6 +9,12 @@ export const WELCOME = "example/screens/welcome";
 export const DETAILS = "example/screens/details";
 export const MEMBERS = "example/team/members";
 
+/**
+ * The frames of an example screen on the canvas: Desktop beside Mobile, in
+ * Light and Dark.
+ */
+export const CANVAS_FRAMES = 4;
+
 /** Entry titles from the served index, so the specs never copy them. */
 export async function titles(request: APIRequestContext) {
   const index = (await (

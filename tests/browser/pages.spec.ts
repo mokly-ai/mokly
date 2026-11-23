@@ -2,7 +2,11 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { missingResourceNotice } from "./document_error_allowance.js";
-import { chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseViewport,
+  DOCUMENT_FRAME,
+} from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
   test(`catalogue guidance includes documents at ${width}px`, async ({
@@ -36,7 +40,7 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/getting-started/?fragment=next-steps");
     await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
-    const frame = page.locator(".mbk-stage-embed iframe");
+    const frame = page.locator(DOCUMENT_FRAME);
     await expect(frame).toHaveCount(1);
     await expect(frame).toHaveAttribute(
       "src",
@@ -49,7 +53,7 @@ for (const width of [390, 1280]) {
       ),
     ).toHaveCount(0);
     await expect(
-      page.frameLocator(".mbk-stage-embed iframe").locator("#next-steps"),
+      page.frameLocator(DOCUMENT_FRAME).locator("#next-steps"),
     ).toBeVisible();
     await page.locator("[data-mokly-details] summary").click();
     await expect(page.locator("[data-mokly-details]")).not.toContainText(
@@ -94,7 +98,7 @@ for (const width of [390, 1280]) {
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
     if (width < 700) await chooseViewport(page, "mobile");
     const screenFrame =
-      width < 700 ? ".mbk-frame-mobile iframe" : ".mbk-frame-desktop iframe";
+      width < 700 ? ".mbk-frame-mobile iframe" : canvasFrame("desktop");
     await page
       .frameLocator(screenFrame)
       .getByRole("link", { name: "Read the handbook" })

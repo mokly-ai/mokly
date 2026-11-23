@@ -5,12 +5,14 @@
  */
 
 import { useContext, useMemo, useRef } from "react";
+import type { RefObject } from "react";
 
 import { currentDocumentPath } from "@mokly/model";
 import { DocumentFrame, PreviewIframe } from "@mokly/ui/preview-frame";
 import { LightOnlyBand } from "@mokly/ui/scheme-fallback";
 
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
+import type { ViewerSelection } from "../host/types.js";
 import { documentRoute } from "../navigation/routes.js";
 
 import { DisplaySelection } from "./display_context.js";
@@ -26,29 +28,41 @@ import { documentLightOnly, schemeValue } from "./scheme_fallback.js";
 import { framePath, unavailableUsage } from "./stage_sources.js";
 import { useShellStore } from "./store_context.js";
 
-/** A whole-document page with the same adapter-owned logical navigation. */
-export function DocumentStageFrame({
-  entry,
-  fragment,
-  hasDarkFragments,
-}: {
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" | "document" }>;
-  fragment?: string;
-  hasDarkFragments: boolean;
-}) {
-  const elements = useShellRoot()?.elements;
-  const localStage = useRef<HTMLDivElement>(null);
-  const stage = elements?.scrolls.ref("embed") ?? localStage;
-  const store = useShellStore();
-  const registry = useOptionalShellFrameRegistry();
-  const selection = useContext(DisplaySelection);
-  const scheme = schemeValue<"dark" | "light">(
-    selection.colorScheme,
+/** A page or a Markdown document, whose one document stands in a frame. */
+export type DocumentEntry = Extract<
+  ShellCatalogueRoutedEntry,
+  { kind: "page" | "document" }
+>;
+
+/**
+ * The scheme of a document's shown render: the preview scheme, or Light
+ * for a page and for a document without a dark render.
+ */
+export function documentScheme(
+  entry: DocumentEntry,
+  colorScheme: ViewerSelection["colorScheme"],
+): "dark" | "light" {
+  return schemeValue<"dark" | "light">(
+    colorScheme,
     "light",
     entry.kind === "document" && entry.colorSchemes.includes("dark")
       ? "dark"
       : undefined,
   );
+}
+
+/**
+ * Mount a document's frame through its adapter, with the same logical
+ * navigation as a view's frame.
+ */
+export function useDocumentFrame(
+  entry: DocumentEntry,
+  scheme: "dark" | "light",
+  fragment: string | undefined,
+  stage: RefObject<HTMLDivElement | null> | undefined,
+) {
+  const store = useShellStore();
+  const registry = useOptionalShellFrameRegistry();
   const source = framePath(
     currentDocumentPath(documentRoute(entry.path, scheme)),
     fragment,
@@ -83,6 +97,25 @@ export function DocumentStageFrame({
     generation,
   );
   useRetryContent(mounted.frameRef);
+  return { ...mounted, generation, initialSource, source };
+}
+
+/** A whole-document page with the same adapter-owned logical navigation. */
+export function DocumentStageFrame({
+  entry,
+  fragment,
+  hasDarkFragments,
+}: {
+  entry: DocumentEntry;
+  fragment?: string;
+  hasDarkFragments: boolean;
+}) {
+  const elements = useShellRoot()?.elements;
+  const localStage = useRef<HTMLDivElement>(null);
+  const stage = elements?.scrolls.ref("embed") ?? localStage;
+  const selection = useContext(DisplaySelection);
+  const scheme = documentScheme(entry, selection.colorScheme);
+  const mounted = useDocumentFrame(entry, scheme, fragment, stage);
   return (
     <>
       {documentLightOnly(entry, hasDarkFragments) ? <LightOnlyBand /> : null}
@@ -92,16 +125,16 @@ export function DocumentStageFrame({
         retry={{ onClick: focusThen(mounted.frameRef, mounted.retry) }}
         scheme={scheme}
       >
-        {source ? (
+        {mounted.source ? (
           <PreviewIframe
             busy={mounted.status === "loading"}
             data={{
               "data-mokly-fragment-frame": "",
               "data-mokly-frame-state": mounted.status,
             }}
-            key={generation}
+            key={mounted.generation}
             ref={mounted.frameRef}
-            src={initialSource}
+            src={mounted.initialSource}
             title={entry.title}
           />
         ) : null}
@@ -112,7 +145,7 @@ export function DocumentStageFrame({
 
 /** The document key of a page, or of one scheme's render of a document. */
 export function documentKeyOf(
-  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" | "document" }>,
+  entry: DocumentEntry,
   scheme: "dark" | "light",
 ): string | undefined {
   return entry.kind === "page"

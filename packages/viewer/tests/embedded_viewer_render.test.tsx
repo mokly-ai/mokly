@@ -135,8 +135,17 @@ test("the embedded viewer renders its default selection and host slots", () => {
   assert.match(html, /data-mokly-color-scheme="dark"/);
   assert.match(html, /<option class="mbk-reset" value="mobile" selected="">/);
   assert.match(html, /value="phrase tag:forms"/);
-  // The selected viewport reaches the stage once the entry's detail is held.
-  assert.match(heldEmbeddedMarkup({ selection }), /data-viewport="mobile"/);
+  // The selected viewport reaches the stage once the entry's detail is held:
+  // the canvas shows the Mobile frames alone, and keeps the Desktop frames
+  // mounted in hidden cells.
+  const held = heldEmbeddedMarkup({ selection });
+  const cells = held.split(/(?=<div class="mbk-canvas-cell)/u).slice(1);
+  const shown = cells.filter((cell) => !/^<div[^>]*\shidden=""/u.test(cell));
+  const frames = (viewport: string, of: readonly string[]) =>
+    of.filter((cell) => cell.includes(`data-workspace-frame="${viewport}"`));
+  assert.ok(frames("mobile", shown).length > 0);
+  assert.deepEqual(frames("desktop", shown), []);
+  assert.ok(frames("desktop", cells).length > 0);
 });
 
 /** The prefix every id of one root carries: its main region's id less `mb-main`. */

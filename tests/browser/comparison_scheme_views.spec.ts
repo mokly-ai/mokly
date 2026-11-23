@@ -11,10 +11,12 @@ import {
 import { comparisonPaths, test } from "./comparison_test.js";
 import { awaitRoutedDetail, modeButton, showMode } from "./comparison_ui.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseVariant,
   chooseViewport,
   expectFrameSource,
+  NARROW_WINDOW,
 } from "./workspace_actions.js";
 
 const SCHEME_DOT = '[data-view-changed="scheme"]';
@@ -145,14 +147,15 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
     "data-mokly-color-scheme",
     "dark",
   );
-  await expectFrameSource(
-    page.locator('[data-workspace-frame="mobile"]'),
-    /screens\/stable\/index\.mobile\.html$/,
-  );
-  await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
-    "data-color-scheme-fallback",
-    "",
-  );
+  // The light-only screen stands on the canvas as its Light frames alone.
+  for (const viewport of ["mobile", "desktop"] as const)
+    await expectFrameSource(
+      page.locator(canvasFrame(viewport)),
+      new RegExp(`screens/stable/index\\.${viewport}\\.html$`),
+    );
+  await expect(
+    page.locator('iframe[data-workspace-color-scheme="dark"]'),
+  ).toHaveCount(0);
   await expectShownStatus(page, comparisonPaths.unchanged, "Unmodified", false);
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
     "aria-pressed",
@@ -169,7 +172,9 @@ test("a light-only screen keeps light frames and says so", async ({ page }) => {
     `a[data-nav-row][data-route="${comparisonPaths.unchanged}/index.html"]`,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Stable screen");
-
+  // Below the layout breakpoint the one-frame stage keeps the light frames
+  // and names the fallback in their labels. The test above checks the canvas.
+  await page.setViewportSize(NARROW_WINDOW);
   await expectFrameSource(
     page.locator(mobileFrame),
     /screens\/stable\/index\.mobile\.html$/,
@@ -234,10 +239,13 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
     "Rendered content changed.",
   );
+  // Current shows the variant set, whose rows show their desktop views.
   await modeButton(page, "Current").click();
   await expect(
     page
-      .frameLocator('[data-workspace-frame="mobile"]')
+      .frameLocator(
+        `${canvasFrame("desktop")}[data-workspace-variant="${comparisonPaths.changedVariant}"]`,
+      )
       .getByRole("heading", { name: "Featured After" }),
   ).toBeVisible();
   await chooseVariant(page, "Fresh");
@@ -248,7 +256,9 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(page.locator(TOOLBAR)).toBeHidden();
   await expect(
     page
-      .frameLocator('[data-workspace-frame="mobile"]')
+      .frameLocator(
+        `${canvasFrame("desktop")}[data-workspace-variant="${comparisonPaths.addedVariant}"]`,
+      )
       .getByRole("heading", { name: "Fresh card" }),
   ).toBeVisible();
 });

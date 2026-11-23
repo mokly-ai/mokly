@@ -16,6 +16,7 @@ import { shellRoot } from "./browse_assertions.js";
 import { awaitRoutedDetail, chooseFilter, navRow } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseVariant,
   expectFrameSource,
@@ -51,7 +52,7 @@ test("a background classification moves the marks without reloading the frames",
   const row = page.locator("[data-workspace-changed-views]");
   await expect(page.locator(SCHEME_DOT)).toBeHidden();
   await expect(row).toBeHidden();
-  const frame = page.frameLocator('[data-workspace-frame="mobile"]');
+  const frame = page.frameLocator(canvasFrame("mobile"));
   await expect(frame.locator("h1")).toHaveText("Dusk screen");
   await frame
     .locator("body")
@@ -110,7 +111,8 @@ test("Changes lands on the first changed view and every other arrival stays stic
   const stable = changes.paths.unchanged;
   const scheme = page.locator(shellRoot);
   const viewport = page.getByLabel("Viewport", { exact: true });
-  const mobileFrame = page.locator('[data-workspace-frame="mobile"]');
+  const mobileFrame = page.locator(canvasFrame("mobile"));
+  const darkMobileFrame = page.locator(canvasFrame("mobile", "dark"));
   await page.goto(`/view/${stable}/`);
 
   await navRow(page, dusk).click();
@@ -131,7 +133,10 @@ test("Changes lands on the first changed view and every other arrival stays stic
   await expect(page).toHaveURL(new RegExp(`/view/${dusk}/$`, "u"));
   await expect(scheme).toHaveAttribute("data-mokly-color-scheme", "dark");
   await expect(viewport).toHaveValue("mobile");
-  await expectFrameSource(mobileFrame, /dusk\/index\.mobile\.dark\.html/u);
+  // The canvas shows the changed view's column, and its Dark frame shows it.
+  await expect(darkMobileFrame).toBeVisible();
+  await expect(page.locator(canvasFrame("desktop", "dark"))).toBeHidden();
+  await expectFrameSource(darkMobileFrame, /dusk\/index\.mobile\.dark\.html/u);
   await expect(page.locator(SCHEME_DOT)).toBeHidden();
   await expect(page.locator(VIEWPORT_DOT)).toBeVisible();
   await expectShownStatus(page, dusk, "Changed", true);

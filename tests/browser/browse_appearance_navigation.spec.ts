@@ -4,42 +4,43 @@ import {
   appearance,
   appearanceSelect,
   computedStyle,
-  desktopFrame,
   detailsRow,
   expectSchemeSelected,
   face,
   mobileFrame,
 } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
-import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  expectFrameSource,
+} from "./workspace_actions.js";
 
 test("scheme selection survives progressive navigation", async ({ page }) => {
   await page.goto("/view/example/screens/welcome/");
   await chooseScheme(page, "dark");
+  await expectSchemeSelected(page, "dark");
+  // Each canvas frame shows its own scheme's document, whatever the choice.
   await expectFrameSource(
-    page.locator(mobileFrame),
+    page.locator(canvasFrame("mobile", "dark")),
     /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
-  );
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
   );
   await page.click(detailsRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expectFrameSource(
-    page.locator(mobileFrame),
+    page.locator(canvasFrame("mobile", "dark")),
     /example\/screens\/details\/index\.mobile\.dark\.html$/,
   );
   await expectFrameSource(
-    page.locator(desktopFrame),
-    /example\/screens\/details\/index\.desktop\.dark\.html$/,
+    page.locator(canvasFrame("desktop", "light")),
+    /example\/screens\/details\/index\.desktop\.html$/,
   );
   await expectSchemeSelected(page, "dark");
 
   await page.goBack();
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expectFrameSource(
-    page.locator(mobileFrame),
+    page.locator(canvasFrame("mobile", "dark")),
     /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
   );
   await expectSchemeSelected(page, "dark");
@@ -47,9 +48,10 @@ test("scheme selection survives progressive navigation", async ({ page }) => {
   await page.goForward();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expectFrameSource(
-    page.locator(mobileFrame),
+    page.locator(canvasFrame("mobile", "dark")),
     /example\/screens\/details\/index\.mobile\.dark\.html$/,
   );
+  await expectSchemeSelected(page, "dark");
 });
 
 test("Appearance stays reachable at both widths", async ({ page }) => {

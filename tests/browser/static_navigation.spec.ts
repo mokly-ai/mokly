@@ -13,8 +13,10 @@ import {
 } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
+  DOCUMENT_FRAME,
   expectFrameSource,
 } from "./workspace_actions.js";
 
@@ -27,7 +29,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await chooseViewport(page, viewport);
     await markPage(page);
     const next = page
-      .frameLocator(`.mbk-frame-${viewport} iframe`)
+      .frameLocator(canvasFrame(viewport))
       .getByRole("link", { name: "View details", exact: true });
     await next.focus();
     await page.keyboard.press("Enter");
@@ -39,7 +41,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "page",
     );
     await expectFrameSource(
-      page.locator(`.mbk-frame-${viewport} iframe`),
+      page.locator(canvasFrame(viewport)),
       /index\.(?:mobile|desktop)\.html#details$/,
     );
     expect(await hasMarker(page)).toBe(true);
@@ -49,9 +51,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
     await page.reload();
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
+    // Each canvas frame keeps its own scheme: the Dark frame shows the dark
+    // document at the fragment whatever the appearance.
     await chooseScheme(page, "dark");
     await expectFrameSource(
-      page.locator(`.mbk-frame-${viewport} iframe`),
+      page.locator(canvasFrame(viewport, "dark")),
       /\.dark\.html#details$/,
     );
     requests.assert();
@@ -100,7 +104,7 @@ for (const suffix of ["/", "", "/index.html"]) {
     await page.goto(`/view/example/workspace-guide${suffix}`);
     await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
     await expect(
-      page.frameLocator(".mbk-stage-embed iframe").locator("body"),
+      page.frameLocator(DOCUMENT_FRAME).locator("body"),
     ).toContainText("workspace");
     await page.reload();
     await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
@@ -149,10 +153,7 @@ test("copied Current never polls revisions, opens events or requests renders", a
   const requests = staticRequests(page);
   await page.goto("/view/example/screens/welcome/");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  await staticFramesLoaded(
-    page,
-    /\/example\/screens\/welcome\/index\.(?:mobile|desktop)\.html$/,
-  );
+  await staticFramesLoaded(page, "example/screens/welcome");
   await page.clock.fastForward(120_000);
   await page.locator(detailsRow).click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");

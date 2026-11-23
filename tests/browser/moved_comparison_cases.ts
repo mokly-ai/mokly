@@ -13,6 +13,7 @@ import {
   type MovedHost,
 } from "./moved_rows.js";
 import { loadComparison } from "./serve_comparison_ui.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 /** The comparison panes for one side, named by the snapshot path they show. */
 function panes(page: Page, side: "after" | "before", path: string) {
@@ -62,7 +63,9 @@ export function registerMovedComparisonCases(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, INVOICE);
-    await expect(page.locator(".mbk-entry-status")).toHaveText("Changed");
+    await expect(page.locator(".mbk-screen-head .mbk-entry-status")).toHaveText(
+      "Changed",
+    );
     await expect(modeButton(page, "Current")).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -71,7 +74,7 @@ export function registerMovedComparisonCases(
       page.locator("iframe[data-mokly-comparison-frame]"),
     ).toHaveCount(0);
     await expect(
-      page.frameLocator('[data-workspace-frame="mobile"]').locator("p"),
+      page.frameLocator(canvasFrame("mobile")).locator("p"),
     ).toHaveText("Due on 14 March");
     const sides = [
       [`${PREVIOUS}/invoice`, INVOICE],

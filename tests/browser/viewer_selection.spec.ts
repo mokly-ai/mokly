@@ -5,8 +5,8 @@ import type { ViewerSelection } from "@mokly/viewer";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
-
 import type {} from "./viewer_harness.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
@@ -77,14 +77,18 @@ for (const cross of [false, true])
         .getByRole("navigation", { name: "Saved variants" })
         .getByRole("link", { name: "Disabled", exact: true }),
     ).toHaveAttribute("aria-current", "page");
+    // The variant's row of its set opens at the fragment, in the desktop
+    // views that the canvas shows for a component.
     await expect
       .poll(async () => {
         const element = await page
-          .locator('iframe[data-workspace-frame="mobile"]')
+          .locator(
+            `${canvasFrame("desktop")}[data-workspace-variant="action/disabled"]`,
+          )
           .elementHandle();
         return (await element?.contentFrame())?.url();
       })
-      .toMatch(/disabled\/index\.mobile\.html(?:\?[^#]*)?#details$/);
+      .toMatch(/disabled\/index\.desktop\.html(?:\?[^#]*)?#details$/);
     expect(
       await page.evaluate(() =>
         window.viewerHarness

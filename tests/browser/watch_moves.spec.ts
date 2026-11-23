@@ -12,7 +12,7 @@ import {
   toggleFolder,
   watchedScreen,
 } from "./watch_fixture.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { canvasFrame, chooseViewport } from "./workspace_actions.js";
 
 test("watched path moves keep the missing old URL until the new row is selected", async ({
   page,
@@ -73,7 +73,7 @@ test("watched folder moves prune old disclosure keys and keep unrelated document
   await page.goto(`${watched.url}/view/fixture/other/`);
   await chooseViewport(page, "mobile");
   await markPage(page);
-  const frame = page.locator(".mbk-frame-mobile iframe");
+  const frame = page.locator(canvasFrame("mobile"));
   await expect(frame.contentFrame().locator("h1")).toHaveText("Other");
   await markDocument(frame);
   const screens = folder(page, "screens");

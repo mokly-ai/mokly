@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import {
   appearance,
   desktopFrame,
+  expectCanvasFrames,
   mobileFrame,
   screen,
   select,
@@ -51,17 +52,25 @@ for (const catalogue of ["mixed", "light-only"] as const) {
             theme,
             value: theme,
           });
-        for (const [frame, frameViewport] of [
-          [mobileFrame, "mobile"],
-          [desktopFrame, "desktop"],
-        ] as const) {
-          const dark =
-            scheme === "dark" && catalogue === "mixed" ? ".dark" : "";
-          await expectFrameSource(
-            page.locator(frame),
-            new RegExp(`${entry}/index\\.${frameViewport}${dark}\\.html$`, "u"),
-          );
-        }
+        // From 900px wide the canvas keeps each frame's own scheme; below it
+        // the one-frame stage follows the appearance.
+        if (viewport.width >= 900)
+          await expectCanvasFrames(page, entry, catalogue === "mixed");
+        else
+          for (const [frame, frameViewport] of [
+            [mobileFrame, "mobile"],
+            [desktopFrame, "desktop"],
+          ] as const) {
+            const dark =
+              scheme === "dark" && catalogue === "mixed" ? ".dark" : "";
+            await expectFrameSource(
+              page.locator(frame),
+              new RegExp(
+                `${entry}/index\\.${frameViewport}${dark}\\.html$`,
+                "u",
+              ),
+            );
+          }
       }
     });
   }
@@ -78,10 +87,7 @@ test("a scheme pin paints the document without being saved", async ({
       theme: "dark",
       value: "dark",
     });
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
-  );
+  await expectCanvasFrames(page, "example/screens/welcome", true);
   // A pin dresses one document; it is not the reader's saved preference.
   expect(
     await page.evaluate(() => localStorage.getItem("mokly:theme")),
@@ -107,10 +113,7 @@ test("a saved appearance is restored on a later visit", async ({ page }) => {
       theme: "dark",
       value: "dark",
     });
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
-  );
+  await expectCanvasFrames(page, "example/screens/welcome", true);
 });
 
 test("a light-only catalogue mounts with a saved Dark appearance", async ({
@@ -121,10 +124,7 @@ test("a light-only catalogue mounts with a saved Dark appearance", async ({
   await expect
     .poll(() => appearance(page))
     .toEqual({ scheme: "dark", theme: "dark", value: "dark" });
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /home\/index\.mobile\.html$/,
-  );
+  await expectCanvasFrames(page, "home", false);
 });
 
 for (const width of [390, 1280])
@@ -160,18 +160,22 @@ for (const width of [390, 1280])
           ),
         ).toBe(false);
       }
-      await expect(page.locator(".phone-screen")).toHaveCSS(
-        "background-color",
-        "rgb(255, 255, 255)",
-      );
-      await expect(page.locator(".phone-status")).toHaveCSS(
-        "color",
-        "rgb(26, 29, 28)",
-      );
-      await expect(page.locator(".browser-viewport")).toHaveCSS(
-        "background-color",
-        "rgb(255, 255, 255)",
-      );
+      // The canvas draws no device chrome; below 900px the phone and the
+      // browser window keep the light context too.
+      if (width < 900) {
+        await expect(page.locator(".phone-screen")).toHaveCSS(
+          "background-color",
+          "rgb(255, 255, 255)",
+        );
+        await expect(page.locator(".phone-status")).toHaveCSS(
+          "color",
+          "rgb(26, 29, 28)",
+        );
+        await expect(page.locator(".browser-viewport")).toHaveCSS(
+          "background-color",
+          "rgb(255, 255, 255)",
+        );
+      }
       await expect(page.locator(".mbk-frame-scheme-note")).toHaveCount(0);
     }
   });

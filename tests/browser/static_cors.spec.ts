@@ -10,6 +10,7 @@ import {
 } from "./static_delivery_assertions.js";
 import { staticEmbeddedFixture } from "./static_embedded_fixture.js";
 import { copiedStaticDirectory } from "./static_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof staticEmbeddedFixture>>;
 test.beforeAll(async () => {
@@ -38,23 +39,21 @@ test("a public embedded viewer fetches copied data without credentials or live e
   await page
     .getByRole("button", { name: "Highlight components", exact: true })
     .click();
-  await expect(
-    page.locator('.mbk-highlight-layer[data-highlight-viewport="mobile"]'),
-  ).toBeVisible();
+  // The switch draws on every shown frame: on the canvas, each scheme's.
   await expect(
     page
-      .frameLocator('iframe[data-workspace-frame="mobile"]')
-      .locator("[data-mokly-overlay]"),
+      .locator('.mbk-highlight-layer[data-highlight-viewport="mobile"]')
+      .first(),
+  ).toBeVisible();
+  await expect(
+    page.frameLocator(canvasFrame("mobile")).locator("[data-mokly-overlay]"),
   ).toHaveCount(0);
   await page.keyboard.press("Escape");
   await page
     .locator('a[data-route="example/screens/details/index.html"]')
     .click();
   await expect(page.locator("#viewer h2")).toHaveText("Details");
-  await staticFramesLoaded(
-    page,
-    /\/example\/screens\/details\/index\.(?:mobile|desktop)\.html$/,
-  );
+  await staticFramesLoaded(page, "example/screens/details");
   await page.clock.fastForward(120_000);
   const data = fixture.frames.requests
     .map((route, index) => ({

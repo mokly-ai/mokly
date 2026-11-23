@@ -31,10 +31,11 @@ export type DetailDelivery =
 
 /**
  * The details a route renders from: the routed entry's own, a current
- * component variant's parent, and each use-case step screen. Only an entry or
- * a removed record that the given index lists has a detail, so a publication
- * that drops or renames the routed entry requests none and installs; the route
- * then shows the missing state.
+ * component variant's parent, each current saved variant of a component's
+ * variant set, whose rows the canvas shows, and each use-case step screen.
+ * Only an entry or a removed record that the given index lists has a detail,
+ * so a publication that drops or renames the routed entry requests none and
+ * installs; the route then shows the missing state.
  */
 export function routeDetailRequests(
   index: CatalogueReadModel,
@@ -58,10 +59,17 @@ export function routeDetailRequests(
   const requests: DetailRequest[] = [{ path: entry.path }];
   const workspace = workspaceDetailRequest(entry, true);
   if (workspace.path !== entry.path) requests.push(workspace);
+  const listed = (path: string) =>
+    requests.some((request) => request.path === path);
+  // Each row of a component's variant set shows its own views' usage.
+  if (entry.kind === "component")
+    for (const variant of index.components)
+      if (variant.variantOf === workspace.path && !listed(variant.path))
+        requests.push({ path: variant.path });
   if (entry.kind === "use-case")
     for (const step of entry.steps)
       if (
-        !requests.some((request) => request.path === step.screenPath) &&
+        !listed(step.screenPath) &&
         index.screens.some((screen) => screen.path === step.screenPath)
       )
         requests.push({ path: step.screenPath });

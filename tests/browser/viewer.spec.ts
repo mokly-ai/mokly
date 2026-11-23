@@ -6,6 +6,7 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
 import { startViewerPick } from "./viewer_pick.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -25,7 +26,9 @@ test("uncontrolled selection, slots and handle lifecycle", async ({ page }) => {
   await page.waitForFunction(
     () => window.viewerHarness.get("one").ref.current !== null,
   );
-  await expect(page.locator("#one .mbk-frag").first()).toHaveAttribute(
+  // The first shown frame: the canvas keeps the hidden Desktop frames
+  // mounted.
+  await expect(page.locator("#one .mbk-frag:visible").first()).toHaveAttribute(
     "src",
     /\/static\/mokly-generated\/home\/index.mobile.html/,
   );
@@ -196,7 +199,7 @@ test("postMessage frames emit pick/hover/click and support imperative rejection"
     const host = window.viewerHarness.get("one");
     await host.ref.current.startPick();
   });
-  const frame = page.frameLocator('#one iframe[data-workspace-frame="mobile"]');
+  const frame = page.frameLocator(`#one ${canvasFrame("mobile")}`);
   await frame.getByText("Visible", { exact: true }).hover();
   await expect
     .poll(() =>

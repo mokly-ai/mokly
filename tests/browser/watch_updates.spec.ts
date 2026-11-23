@@ -11,6 +11,7 @@ import {
   watchedScreen,
 } from "./watch_fixture.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
   expectFrameSource,
@@ -40,12 +41,12 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(archive).toHaveAttribute("open", "");
     await chooseViewport(page, "mobile");
     await chooseScheme(page, "dark");
-    const frame = page.locator(".mbk-frame-mobile iframe");
-    await expectFrameSource(frame, /home\/index\.mobile\.dark\.html$/u);
-    await expect(frame.contentFrame().locator("h1")).toHaveText(
+    // The canvas's Mobile · Dark frame shows the dark document.
+    const canvas = page.locator(canvasFrame("mobile", "dark"));
+    await expectFrameSource(canvas, /home\/index\.mobile\.dark\.html$/u);
+    await expect(canvas.contentFrame().locator("h1")).toHaveText(
       "Original home",
     );
-    await markDocument(frame);
     const details = page.locator("[data-workspace-inspector]");
     await expect(details).not.toHaveAttribute("data-open", "true");
     await page.getByRole("tab", { name: "Details", exact: true }).click();
@@ -54,6 +55,13 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(details).not.toHaveAttribute("data-open", "true");
     await page.setViewportSize({ width: 420, height: 900 });
     await page.locator("[data-mokly-menu]").click();
+    // Below the layout breakpoint the one frame shows the chosen scheme.
+    const frame = page.locator(".mbk-frame-mobile iframe");
+    await expectFrameSource(frame, /home\/index\.mobile\.dark\.html$/u);
+    await expect(frame.contentFrame().locator("h1")).toHaveText(
+      "Original home",
+    );
+    await markDocument(frame);
     const first = await watched.index();
     const keys = screenKeys(first, "screens/home");
     const { after } = await watched.change(
@@ -130,7 +138,7 @@ test("watched publications keep collapsed active ancestry until a route change r
       ),
     (index) => screenKeys(index, "screens/home")?.[0] !== keys?.[0],
   );
-  const frame = page.frameLocator(".mbk-frame-mobile iframe");
+  const frame = page.frameLocator(canvasFrame("mobile"));
   await expect(frame.locator("h1")).toHaveText("Edited home");
   expect(await hasMarker(page)).toBe(true);
   await expect(page.locator("[data-mokly-search]")).toHaveValue("home");

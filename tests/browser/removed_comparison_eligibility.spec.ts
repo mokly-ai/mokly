@@ -16,7 +16,11 @@ import {
   modeButton,
   snapshotOf,
 } from "./comparison_ui.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 const PREVIEW = "[data-mokly-preview]";
 
@@ -63,7 +67,7 @@ test("added and removed screens stay current while a light-only comparison keeps
   await awaitRoutedDetail(page, comparisonPaths.added);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(
-    page.frameLocator('iframe[data-workspace-frame="mobile"]').locator("h1"),
+    page.frameLocator(canvasFrame("mobile")).locator("h1"),
   ).toHaveText("Added screen");
 
   await page.goto(`/view/${comparisonPaths.removedScreen}/`);

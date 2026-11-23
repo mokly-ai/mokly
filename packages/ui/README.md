@@ -188,7 +188,48 @@ the designs' order. The host supplies each text that it derives from the
 catalogue, and the controls' wording, which the design catalogue shares.
 `TextButton` is the text button of these panels.
 
-`Stage` draws the dotted stage of a preview. `PreviewFrame` draws one frame on
+`CanvasStage` draws the canvas of the wide layout: a full-bleed dot grid that
+holds one section, with the zoom pill at the bottom centre of its stage. The
+canvas keeps its view, the zoom and the position of the section, itself, so a
+pan or a zoom renders the canvas alone and not the host's tree. The host
+reaches the view through the `CanvasStageHandle` that `ref` receives: `fit`,
+`zoomIn`, `zoomOut`, `zoomTo`, and `run`, which runs the command that
+`canvasKeyCommand` gives for a key. The host listens for the keys where they
+belong, such as on a whole document or on one root, and a later control, such
+as a dock's Fit, uses the same handle. The host passes the section as
+`section`, a `CanvasSection` without its reading size, and names it with
+`fitKey`: a new name fits the canvas again, a fitted canvas refits when its
+stage or the section's lengths change, and `onViewChange` hears of each pan,
+zoom, and Fit. The stage is the canvas less `--mbk-canvas-inset-top`,
+`--mbk-canvas-inset-end`, `--mbk-canvas-inset-bottom`, and
+`--mbk-canvas-inset-start`, each 0 until a layout sets it, and less the zoom
+pill's room. The canvas measures an invisible box of that size, so a change
+of an inset refits like a resize. The canvas takes the drags, wheels, and
+pinches around the frames; a frame's document keeps its own.
+
+`CanvasSection` draws the section: the box of a screen or a document, or the
+dashed outline of a component's variant set, its head with the title tag, the
+`Component` kind tag, the path chip that reports `onCopyPath`, and the status
+slot, and its frames in a grid. Each frame takes its cell from its `column`
+and `row`. A `hidden` frame stays mounted, with its document, but takes no
+room in the grid or in Fit. `section-layout.ts` holds the padding, the gaps,
+and the reading size, which the section draws and Fit reads, so the two
+agree. `CanvasFrame`
+draws one bare frame at its nominal `width` and `height` times the canvas's
+zoom, `--mbk-canvas-zoom`, with its label and size tag, and holds its
+document at the nominal size, scaled. A nominal size can hold a fraction of a
+pixel, as a component's measured document does: the size tag reads whole
+pixels, rounded, and the document's box rounds the size up, so the document
+fits without a scrollbar and the frame clips the fraction. A frame too narrow
+for its label and its size tag drops the tag. A reading frame has no tag and takes the reading size
+that its section gives. `CanvasZoomPill` draws the pill, a group named Zoom,
+from the zoom and three callbacks, and `CanvasIcon` the canvas glyphs on the
+Canvas design's 16-unit grid. The canvas parts mix their rings, fills, and
+shadows from the Canvas roles through `light-dark()`, so they follow the
+colour scheme that the shell root states for its appearance.
+
+`Stage` draws the dotted stage of a preview, which the narrow layout keeps.
+`PreviewFrame` draws one frame on
 it: the wrapper that records the scheme of the shown render, the viewport's
 label with the `LightOnlyNote` of `scheme-fallback`, and the lines of a
 preview that is unavailable or that failed to load. The failed line shows Try
@@ -229,7 +270,9 @@ the same parts and its host's slots. Its `topBar` function receives the
 containers of the three top-bar slots, which the bar places in its columns.
 It places each slot's content
 without reading it, keeps the host's stage overlay over the shown preview,
-and takes the host's `MarkerLayer` and label layer. `WorkspaceLayout` lays out
+and takes the host's `MarkerLayer` and label layer. The shown preview is a
+workspace's preview, a use case's flow, a document's stage, or the routed
+canvas that holds a document's reading frame. `WorkspaceLayout` lays out
 a workspace's header, variant bar, preview, and inspector. `RootState` takes
 a root's place while its catalogue loads, cannot be loaded, or needs a
 compatible viewer, or when the requested view is unavailable, as the
@@ -248,7 +291,8 @@ The package gives a host each element that the host measures, focuses, or
 scrolls through a ref. `WorkspaceLayout` gives its preview pane and its panes
 to `previewRef` and `panesRef`. `BrowserFrame`, `FlowStage`, `DocumentFrame`,
 `Stage`, and `MainRegion` give their element to `ref`, and `Inspector` its
-panels' region to `contentRef`. `TagPicker` gives its button and its picker to
+panels' region to `contentRef`. `CanvasStage` gives its canvas, which clips
+its frames, to `canvasRef`. `TagPicker` gives its button and its picker to
 `toggleRef` and `pickerRef`, and `ViewControls` its Highlight components
 button to `highlightRef`. `CatalogueNavigation` gives the current page's row
 to `currentRowRef`, and each section and folder summary, by its disclosure
@@ -406,7 +450,7 @@ override the desktop layout rules.
   `canvas` is the only palette and the source of the generated stylesheets
 - [`src/icons/icons.tsx`](./src/icons/icons.tsx) — the shell glyphs and the
   workspace control icons, with `IconSvg` as their frame; the icons entry
-  also exports `BrandIcon`
+  also exports `BrandIcon` and `CanvasIcon`
 - [`src/change-mark/change-mark.tsx`](./src/change-mark/change-mark.tsx) —
   `ChangeMark`, the dot and the screen reader wording that mark a view control
   whose other view changed
@@ -497,6 +541,32 @@ override the desktop layout rules.
   `evidence-files.tsx`
 - [`src/text-button/text-button.tsx`](./src/text-button/text-button.tsx) —
   `TextButton`, the text button of the inspector's panels
+- [`src/canvas-stage/canvas-stage.tsx`](./src/canvas-stage/canvas-stage.tsx)
+  — `CanvasStage` and `CanvasStageHandle`: the dot-grid canvas with its
+  section and its zoom pill, and the handle with Fit and the zoom steps
+- [`src/canvas-stage/use-canvas-view.ts`](./src/canvas-stage/use-canvas-view.ts)
+  — the measured stage, the fitted view, and the handle's commands
+- [`src/canvas-stage/canvas-view.ts`](./src/canvas-stage/canvas-view.ts) —
+  Fit, the zoom steps, a zoom about a point, and a pan, over the section's
+  fixed and scaled lengths
+- [`src/canvas-stage/canvas-gestures.ts`](./src/canvas-stage/canvas-gestures.ts)
+  — the drag, the wheel, and the pinch of the canvas
+- [`src/canvas-stage/canvas-keys.ts`](./src/canvas-stage/canvas-keys.ts) —
+  `canvasKeyCommand`: the keys of the canvas and the rules of a text field and
+  the modifiers
+- [`src/canvas-section/canvas-section.tsx`](./src/canvas-section/canvas-section.tsx)
+  — `CanvasSection`: the section box or the variant set's outline, its head,
+  and its grid of frames
+- [`src/canvas-section/section-layout.ts`](./src/canvas-section/section-layout.ts)
+  — the section's padding and gaps, the reading size, and `sectionExtent`, the
+  lengths that Fit reads
+- [`src/canvas-frame/canvas-frame.tsx`](./src/canvas-frame/canvas-frame.tsx) —
+  `CanvasFrame`: a bare frame, its label and size tag, and its scaled
+  document
+- [`src/canvas-zoom-pill/canvas-zoom-pill.tsx`](./src/canvas-zoom-pill/canvas-zoom-pill.tsx)
+  — `CanvasZoomPill`: Zoom out, the zoom, Zoom in, and Fit
+- [`src/icons/canvas-icons.tsx`](./src/icons/canvas-icons.tsx) — `CanvasIcon`,
+  the glyphs of the frames' kinds and the zoom pill
 - [`src/stage/stage.tsx`](./src/stage/stage.tsx) — `Stage`, the dotted
   surface of live frames, of a component's canvases, or of a state
 - [`src/preview-frame/preview-frame.tsx`](./src/preview-frame/preview-frame.tsx)

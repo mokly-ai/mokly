@@ -3,8 +3,10 @@ import { expect } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
+  DOCUMENT_FRAME,
   expectFrameSource,
 } from "./workspace_actions.js";
 
@@ -82,7 +84,7 @@ for (const viewport of ["mobile", "desktop"] as const)
       await page.goto("/view/example/team/invite/");
       await chooseViewport(page, viewport);
       await chooseScheme(page, scheme);
-      const invite = page.locator(`.mbk-frame-${viewport} iframe`);
+      const invite = page.locator(canvasFrame(viewport, scheme));
       await expectFrameSource(
         invite,
         new RegExp(document("invite").replaceAll(".", "\\.") + "$", "u"),
@@ -92,5 +94,5 @@ for (const viewport of ["mobile", "desktop"] as const)
         .getByRole("link", { name: "Read about roles", exact: true })
         .click();
       await expect(page).toHaveURL(/\/view\/example\/team\/member-roles\/$/u);
-      await expectFrameSource(page.locator(".mbk-stage-embed iframe"), roles);
+      await expectFrameSource(page.locator(DOCUMENT_FRAME), roles);
     });

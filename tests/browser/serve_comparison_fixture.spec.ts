@@ -6,6 +6,7 @@ import { expectBadgeAffected } from "./branch_point_affected.js";
 import { expectComparisonFixture } from "./comparison_fixture_membership.js";
 import { expectMovedInputs } from "./moved_fixture_assertions.js";
 import { test } from "./serve_comparison_test.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 test("shared Serve comparison fixture publishes a private pinned base and CSS evidence", async ({
   page,
@@ -38,7 +39,7 @@ test("shared Serve comparison fixture publishes a private pinned base and CSS ev
   await page.goto(`/view/${changes.paths.changed}/?viewport=desktop`);
   await expect(page.locator('[data-changes-status="ready"]')).toBeVisible();
   await expect(
-    page.frameLocator('iframe[data-workspace-frame="desktop"]').locator("h1"),
+    page.frameLocator(canvasFrame("desktop")).locator("h1"),
   ).toHaveText("After screen");
 });
 

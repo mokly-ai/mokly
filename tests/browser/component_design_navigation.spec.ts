@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { expectFrameLoaded } from "./workspace_actions.js";
+import { canvasFrame, expectFrameLoaded } from "./workspace_actions.js";
 
 /** The served document of a Canvas design route in the desktop frame. */
 function desktopDocument(route: string): RegExp {
@@ -27,7 +27,8 @@ test("the served catalogue follows a component design's variant link with delaye
       'a[data-nav-row][data-route="design/canvas/stage/component-set/index.html"]',
     ),
   ).toHaveAttribute("aria-current", "page");
-  const iframe = page.locator(".mbk-frame-desktop iframe");
+  // The design screen's Desktop · Light frame on the canvas.
+  const iframe = page.locator(canvasFrame("desktop"));
   const desktop = iframe.contentFrame();
   await expectFrameLoaded(
     iframe,

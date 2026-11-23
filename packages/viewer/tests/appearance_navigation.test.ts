@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { environment } from "./appearance_fixture.js";
 
 test("route pins update the whole appearance without storing a preference", async (t) => {
-  const world = await environment(t, { stored: "light" });
+  const world = await environment(t, { stored: "light", narrow: true });
   await world.start();
   await world.navigate("dark");
   assert.equal(world.theme(), "dark");

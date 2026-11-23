@@ -13,7 +13,7 @@ import { isRender, renderBody } from "./live_shell_fixture.js";
 import { test } from "./serve_comparison_test.js";
 import { expectCardPane, loadComparison } from "./serve_comparison_ui.js";
 import { responseFailure } from "./shell_error_allowances.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { canvasFrame, chooseViewport } from "./workspace_actions.js";
 
 test("failed and superseded edits keep the last valid preview; comparisons restore saved props", async ({
   page,
@@ -28,9 +28,16 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
   const props = await showProps(page);
   const label = props.getByRole("textbox", { name: "label" });
   await expect(label).toBeEditable();
-  const preview = page.frameLocator('[data-workspace-frame="desktop"]');
+  // The edited row of the variant set: the card's own example, whose Light
+  // and Dark frames each render the edit.
+  const row = (scheme: "dark" | "light") =>
+    page.frameLocator(
+      `${canvasFrame("desktop", scheme)}[data-workspace-variant="${changes.paths.component}"]`,
+    );
+  const preview = row("light");
   await label.fill("Valid");
   await expect(preview.locator("h2")).toHaveText("Valid");
+  await expect(row("dark").locator("h2")).toHaveText("Valid");
 
   const held: Route[] = [];
   await page.route("**/mokly-viewer/components/render", async (route) => {
@@ -54,13 +61,14 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
     if (isRender(request)) aborted.push(renderBody(request).label);
   });
   await label.fill("Hang");
-  await expect.poll(() => held.length).toBe(1);
+  // One render for each frame of the row.
+  await expect.poll(() => held.length).toBe(2);
   // The edit status sits outside the busy preview, beside the stage.
   await expect(page.locator(".mbk-edit-status")).toContainText(
     "Updating preview",
   );
   await label.fill("Newest");
-  await expect.poll(() => aborted).toEqual(["Hang"]);
+  await expect.poll(() => aborted).toEqual(["Hang", "Hang"]);
   await expect(preview.locator("h2")).toHaveText("Newest");
 
   await loadComparison(page, "Overlay");

@@ -9,7 +9,12 @@ import {
 } from "react";
 import type { RefObject } from "react";
 
-import type { FrameAdapter, FrameErrorCode, FrameEvent } from "@mokly/frame";
+import type {
+  FrameAdapter,
+  FrameErrorCode,
+  FrameEvent,
+  MountedFrame,
+} from "@mokly/frame";
 import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
@@ -38,9 +43,21 @@ interface MountedFrameInput {
   layout?: FrameLayout;
   sources?: readonly string[];
   onEvent?(event: FrameEvent): void;
+  /**
+   * Hears once for each document that the frame mounts, when the document's
+   * session is ready. `signal` aborts when that session ends, such as when
+   * the frame loads another document. The listener must not throw.
+   */
+  onReady?: FrameReadyListener | undefined;
   source: string | undefined;
   usage: CatalogueUsage;
 }
+
+/** Hears of a mounted document whose session is ready. */
+export type FrameReadyListener = (
+  mounted: MountedFrame,
+  signal: AbortSignal,
+) => void;
 
 /**
  * Mount one frame and adopt evidence without replacing its DOM element.
@@ -58,6 +75,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const active = useRef<ActiveSession | undefined>(undefined);
   const latestEvent = useRef(input.onEvent);
+  const latestReady = useRef(input.onReady);
   const latestLayout = useRef(input.layout);
   const latestSources = useRef(input.sources);
   latestLayout.current = input.layout;
@@ -73,6 +91,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         : "unavailable",
   );
   latestEvent.current = input.onEvent;
+  latestReady.current = input.onReady;
   latestIdentity.current = input.identity;
   latestUsage.current = input.usage;
 
@@ -152,6 +171,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
             session.status = "ready";
             setStatus("ready");
             registry.changed();
+            latestReady.current?.(mounted, controller.signal);
           }
         });
       })

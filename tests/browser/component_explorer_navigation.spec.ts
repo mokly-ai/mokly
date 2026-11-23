@@ -90,9 +90,13 @@ test("a generated MockLink opens a component variant entry", async ({
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
+  // The variant's page opens its parent's variant set; the Disabled row's
+  // Light frame shows the saved variant.
   await expect(
     page
-      .frameLocator('[data-workspace-frame="mobile"]')
+      .frameLocator(
+        'iframe[data-workspace-variant="action/disabled"][data-workspace-color-scheme="light"]',
+      )
       .getByRole("button", { name: "Continue" }),
   ).toBeDisabled();
 });

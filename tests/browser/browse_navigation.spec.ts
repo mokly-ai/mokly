@@ -10,9 +10,11 @@ import {
   type NavigationFixture,
 } from "./navigation_fixture.js";
 import {
+  canvasFrame,
   expectFrameSource,
   chooseScheme,
   chooseViewport,
+  NARROW_WINDOW,
 } from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
@@ -30,42 +32,16 @@ test.beforeEach(async ({ page, allowBrowserError }) => {
   await routeNavigationNestedFrame(page);
 });
 
-async function actAndWaitForFrameLoad(
-  page: Page,
-  frameSelector: string,
-  act: () => Promise<void>,
-): Promise<void> {
-  const frame = page.locator(frameSelector);
-  await frame.evaluate((element) => {
-    element.setAttribute("data-test-load-state", "pending");
-    element.addEventListener(
-      "load",
-      () => element.setAttribute("data-test-load-state", "complete"),
-      { once: true },
-    );
-  });
-  await act();
-  await expect(frame).toHaveAttribute("data-test-load-state", "complete", {
-    timeout: 15_000,
-  });
-  await frame.evaluate((element) =>
-    element.removeAttribute("data-test-load-state"),
-  );
-}
-
 test("MockLink navigation reveals the destination and preserves shell state", async ({
   page,
 }) => {
   await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await chooseViewport(page, "mobile");
-  // Changing the appearance reloads the frame, which is what this exercises.
-  await actAndWaitForFrameLoad(page, ".mbk-frame-mobile iframe", () =>
-    chooseScheme(page, "dark"),
-  );
-  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-    "data-mokly-frame-state",
-    "ready",
-  );
+  // The appearance leaves each canvas frame's own scheme; the Mobile · Dark
+  // frame holds the link.
+  await chooseScheme(page, "dark");
+  const mobile = page.locator(canvasFrame("mobile", "dark"));
+  await expect(mobile).toHaveAttribute("data-mokly-frame-state", "ready");
   const detailsPanel = page.locator("[data-workspace-inspector]");
   if ((await detailsPanel.getAttribute("data-open")) === "true") {
     await page.getByRole("tab", { name: "Details", exact: true }).click();
@@ -81,7 +57,7 @@ test("MockLink navigation reveals the destination and preserves shell state", as
   );
   await expect(detailsRow).toBeHidden();
   await page
-    .frameLocator(".mbk-frame-mobile iframe")
+    .frameLocator(canvasFrame("mobile", "dark"))
     .locator("#mock-link")
     .click();
 
@@ -104,16 +80,15 @@ test("MockLink navigation reveals the destination and preserves shell state", as
     await expect(ancestor).toHaveAttribute("open", "");
   }
   await expect(detailsPanel).not.toHaveAttribute("data-open", "true");
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "mobile",
-  );
+  // The viewport choice keeps the Mobile column alone on the canvas.
+  await expect(page.locator(canvasFrame("desktop", "dark"))).toBeHidden();
+  await expect(mobile).toBeVisible();
   await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
   await expectFrameSource(
-    page.locator(".mbk-frame-mobile iframe"),
+    mobile,
     /details\/index\.mobile\.dark\.html#section$/,
   );
 
@@ -128,10 +103,7 @@ test("keyboard navigation retains constraints that already show the destination"
 }) => {
   await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await page.fill("[data-mokly-search]", "details");
-  await page
-    .frameLocator(".mbk-frame-mobile iframe")
-    .locator("#mock-link")
-    .focus();
+  await page.frameLocator(canvasFrame("mobile")).locator("#mock-link").focus();
   await page.keyboard.press("Enter");
 
   await expectDestination(page);
@@ -150,9 +122,9 @@ test("keyboard navigation retains constraints that already show the destination"
 test("raw native links navigate from desktop, area, SVG, flow, and legacy frames", async ({
   page,
 }) => {
-  await navigateFrom(page, ".mbk-frame-desktop iframe", "#raw-link");
-  await navigateFrom(page, ".mbk-frame-mobile iframe", "#area-link", true);
-  await navigateFrom(page, ".mbk-frame-mobile iframe", "#svg-link");
+  await navigateFrom(page, canvasFrame("desktop"), "#raw-link");
+  await navigateFrom(page, canvasFrame("mobile"), "#area-link", true);
+  await navigateFrom(page, canvasFrame("mobile"), "#svg-link");
 
   await page.goto(`${navigation.url}/view/fixture/nested/tour/`);
   await expect(page.locator(".mbk-flow-screen iframe").first()).toHaveAttribute(
@@ -166,13 +138,14 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
     .click();
   await expectDestination(page);
 
+  // A page stands on the canvas as one reading frame.
   await page.goto(`${navigation.url}/view/guide/`);
-  await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+  await expect(page.locator("[data-mokly-stage] iframe")).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
   );
   await page
-    .frameLocator(".mbk-stage-embed iframe")
+    .frameLocator("[data-mokly-stage] iframe")
     .locator("#legacy-link")
     .click();
   await expectDestination(page);
@@ -199,6 +172,9 @@ test("logical activation stays host-owned during a frame source handoff", async 
   );
 
   try {
+    // The appearance swaps a frame's source on the one-frame stage, below the
+    // layout breakpoint; a canvas frame keeps its own scheme.
+    await page.setViewportSize(NARROW_WINDOW);
     await page.goto(`${navigation.url}/view/fixture/nested/home/`);
     await chooseViewport(page, "mobile");
     await chooseScheme(page, "dark");

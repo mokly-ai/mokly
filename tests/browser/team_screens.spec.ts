@@ -2,7 +2,11 @@ import { expect } from "@playwright/test";
 
 import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 for (const viewport of ["mobile", "desktop"] as const)
   for (const scheme of ["light", "dark"] as const)
@@ -12,7 +16,8 @@ for (const viewport of ["mobile", "desktop"] as const)
       await page.goto("/view/example/team/members/");
       await chooseViewport(page, viewport);
       await chooseScheme(page, scheme);
-      const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+      // The canvas frame of the viewport in its own scheme.
+      const frame = page.frameLocator(canvasFrame(viewport, scheme));
       await expect(
         frame.getByRole("heading", { name: "Team", exact: true }),
       ).toBeVisible();

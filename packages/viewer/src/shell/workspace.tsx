@@ -6,6 +6,12 @@ import { ChangeStatus } from "@mokly/ui/change-status";
 import type { InspectorHandle } from "@mokly/ui/inspector";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
+import {
+  canvasEditContexts,
+  framesViews,
+  workspaceFrames,
+} from "./canvas_frames.js";
+import { useCanvasLayout } from "./canvas_layout.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
@@ -85,10 +91,22 @@ export function ComponentWorkspace({
     data.removed,
     data.controlOrder,
   );
+  // In the wide layout the canvas shows every chosen frame, and the
+  // highlights draw on each of them. A component's edit renders both frames
+  // of its row.
+  const wide = useCanvasLayout();
+  const editRow = editTarget?.kind === "component" ? editTarget.path : "";
+  const contexts = useMemo(
+    () =>
+      wide && editRow
+        ? canvasEditContexts(data.views, editRow, savedViews)
+        : savedViews,
+    [data.views, editRow, savedViews, wide],
+  );
   const propsRecovery = useRetryFocus();
   const controls = useComponentControls({
     comparing,
-    contexts: savedViews,
+    contexts,
     data,
     onCurrent: () => comparison.selectMode("current"),
     recovery: propsRecovery,
@@ -104,6 +122,16 @@ export function ComponentWorkspace({
         colorScheme,
       ),
     [colorScheme, controls.previewViews, data, variantPath, viewport],
+  );
+  const canvasFrames = useMemo(
+    () =>
+      wide ? workspaceFrames(data, viewport, controls.previewViews) : undefined,
+    [controls.previewViews, data, viewport, wide],
+  );
+  const shownViews = useMemo(
+    () =>
+      canvasFrames ? framesViews(controls.previewViews, canvasFrames) : views,
+    [canvasFrames, controls.previewViews, views],
   );
   const sizing = useInspectorResize(inspectorRef, panesRef, store.interactive);
   const {
@@ -122,7 +150,7 @@ export function ComponentWorkspace({
     invalidSelection: Boolean(data.removed || variant?.removed),
     onSelect: selectInstance,
     ...(selectedKey ? { selectedKey } : {}),
-    views,
+    views: shownViews,
   });
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
@@ -133,6 +161,18 @@ export function ComponentWorkspace({
     : undefined;
   const stage = (
     <WorkspaceStage
+      canvas={
+        canvasFrames
+          ? {
+              fitKey:
+                entry.kind === "screen"
+                  ? `${entry.path}:${viewport}`
+                  : (data.component?.path ?? entry.path),
+              frames: canvasFrames,
+              status: headStatus,
+            }
+          : undefined
+      }
       catalogue={catalogue}
       context={context}
       data={data}
