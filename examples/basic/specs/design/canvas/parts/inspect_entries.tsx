@@ -27,9 +27,10 @@ import { InspectVariants } from "./inspect_variants.js";
 
 /**
  * The Details rows of today's inspector that a depicted screen has, after
- * its path and source. A related doc that no Canvas artboard shows is named
- * as text, because Canvas links stay inside the Canvas family. The use case
- * in Used by opens its Canvas artboard. The chip of the tag that the search
+ * its path and source: the address that the screen declares comes first, in
+ * the mono face. A related doc that no Canvas artboard shows is named as
+ * text, because Canvas links stay inside the Canvas family. The use case in
+ * Used by opens its Canvas artboard. The chip of the tag that the search
  * enters reads active.
  */
 export function SubjectRows({
@@ -42,6 +43,11 @@ export function SubjectRows({
   const metadata = SUBJECTS[subject];
   return (
     <>
+      {metadata.address ? (
+        <MetaRow name="address" label="Address">
+          <MetadataCode>{metadata.address}</MetadataCode>
+        </MetaRow>
+      ) : null}
       {metadata.previousPath ? (
         <MetaRow name="moved-from" label="Moved from">
           <MetadataCode>

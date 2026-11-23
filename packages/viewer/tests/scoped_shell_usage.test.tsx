@@ -8,7 +8,8 @@ import { publicWorkspace } from "../src/shell/public_workspace.js";
 import { shellFrameUsage } from "../src/shell/stage_sources.js";
 import { inspectionAvailability } from "../src/shell/workspace_inspection_runtime.js";
 import { WorkspaceInstances } from "../src/shell/workspace_instances.js";
-import { WorkspaceProps } from "../src/shell/workspace_props.js";
+import { RetryFocus } from "../src/shell/retry_focus.js";
+import { WorkspacePropsSection } from "../src/shell/workspace_props.js";
 import { WorkspaceUsage } from "../src/shell/workspace_usage.js";
 
 import {
@@ -81,19 +82,25 @@ test("a workspace whose detail is not held shows the mockup's inspection waiting
 
   const instances = renderToStaticMarkup(
     <WorkspaceInstances
-      activeViewport="desktop"
       data={data}
       onFocus={() => undefined}
       onSelect={() => undefined}
-      onViewport={() => undefined}
-      views={views}
+      view={views.find(({ viewport }) => viewport === "desktop")}
     />,
   );
   assert.match(instances, /Waiting for the component preview\./);
   assert.doesNotMatch(instances, /inspection is unavailable/);
 
   const props = renderToStaticMarkup(
-    <WorkspaceProps data={data} selection={{}} />,
+    <WorkspacePropsSection
+      choose={false}
+      controls={null}
+      data={data}
+      delivery={{ status: "ready" }}
+      focus={new RetryFocus()}
+      target={undefined}
+      unavailable={false}
+    />,
   );
   assert.match(props, /Waiting for the component preview\./);
   assert.equal(

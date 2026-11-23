@@ -1,6 +1,19 @@
+/**
+ * The selected instance's box on its frame and its box model. The reader
+ * measures the box model through the frame adapter's `boxModel`, again after
+ * each `geometry` event, and fences each result to the session revision that
+ * asked for it. An instance without a box model, or a frame whose adapter
+ * has none, takes the smallest rectangle that holds its boxes instead.
+ */
+
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 
-import type { BoxSides, InstanceBoxModel } from "@mokly/frame";
+import type {
+  Box,
+  BoxSides,
+  InstanceBoundary,
+  InstanceBoxModel,
+} from "@mokly/frame";
 
 import {
   captureFrame,
@@ -22,8 +35,31 @@ export interface InstanceBoxSizes {
 }
 
 export interface InstanceBoxReading {
-  model: InstanceBoxModel;
-  sizes: InstanceBoxSizes;
+  /**
+   * The instance's border box, or without a box model the smallest rectangle
+   * that holds its boxes, in the frame's CSS pixels.
+   */
+  box: Box;
+  /** The box model, when the frame measured one. */
+  model?: InstanceBoxModel;
+  /** The rounded sizes of the box model. */
+  sizes?: InstanceBoxSizes;
+}
+
+/** The smallest rectangle that holds the boxes of one instance, if it has any. */
+export function boundaryBox(
+  boundaries: readonly InstanceBoundary[],
+  key: string,
+): Box | undefined {
+  const boxes = boundaries
+    .filter((boundary) => boundary.key === key)
+    .flatMap((boundary) => boundary.ranges.flatMap((range) => range.boxes));
+  if (!boxes.length) return undefined;
+  const left = Math.min(...boxes.map((box) => box.x));
+  const top = Math.min(...boxes.map((box) => box.y));
+  const right = Math.max(...boxes.map((box) => box.x + box.width));
+  const bottom = Math.max(...boxes.map((box) => box.y + box.height));
+  return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
 /** Derive shown lengths from unrounded CSS pixels. */
@@ -158,12 +194,12 @@ export class InstanceBoxModelReader {
       session.status !== "ready" ||
       session.controller.signal.aborted ||
       !this.registry.values().includes(session) ||
-      !mounted?.boxModel
+      !mounted
     )
       return;
     const capture = captureFrame(session);
     const request = this.request;
-    const apply = (model: InstanceBoxModel | null) => {
+    const apply = (reading: InstanceBoxReading | undefined) => {
       if (
         request === this.request &&
         key === this.key &&
@@ -173,17 +209,21 @@ export class InstanceBoxModelReader {
         currentFrameCapture(this.registry, capture)
       ) {
         this.capture = capture;
-        this.publish(
-          model ? { model, sizes: instanceBoxSizes(model) } : undefined,
-        );
+        this.publish(reading);
       }
     };
     this.inFlight = true;
     try {
       if (!frameHasInstance(session, key)) return;
-      apply(await mounted.boxModel(key));
+      const model = mounted.boxModel ? await mounted.boxModel(key) : null;
+      if (model) {
+        apply({ box: model.box, model, sizes: instanceBoxSizes(model) });
+        return;
+      }
+      const box = boundaryBox(await mounted.listInstanceBoundaries(), key);
+      apply(box ? { box } : undefined);
     } catch {
-      apply(null);
+      apply(undefined);
     } finally {
       this.inFlight = false;
       if (this.pending) void this.measure();

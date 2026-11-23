@@ -3,7 +3,7 @@ import test from "node:test";
 
 import type { CatalogueNode } from "@mokly/model";
 
-import { EntryDetailsBody } from "../src/shell/details.js";
+import { EntryInspectHead } from "../src/shell/inspect_head.js";
 
 import { catalogueFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import {
@@ -36,7 +36,7 @@ function details(path: string): string {
   const shell = catalogueFixture(model);
   const entry = shell.byPath.get(path);
   assert.ok(entry, path);
-  return storeMarkup(<EntryDetailsBody catalogue={shell} entry={entry} />, {
+  return storeMarkup(<EntryInspectHead catalogue={shell} entry={entry} />, {
     index: model,
   });
 }
@@ -54,12 +54,14 @@ test("a related document opens its entry, labelled with its title", () => {
   assert.doesNotMatch(html, /mock:product/u);
 });
 
-test("a document's Details show its description, tags, and Markdown source", () => {
+test("a document's Inspect head shows its tags and Markdown source, and no empty description", () => {
   const html = details("product");
   const shell = catalogue();
   const entry = shell.byPath.get("product");
   assert.ok(entry?.kind === "document");
-  assert.match(html, new RegExp(`>${entry.details.description}</p>`, "u"));
+  // The fixture's document has no description, so the head draws no line.
+  assert.equal(entry.details.description, "");
+  assert.doesNotMatch(html, /mbk-inspect-description/u);
   assert.match(html, /data-mokly-tag="guide"/u);
   assert.match(
     html,
@@ -99,7 +101,7 @@ test("the catalogue record's source path links its current document", () => {
   const render = (path: string) => {
     const entry = shell.byPath.get(path);
     assert.ok(entry, path);
-    return storeMarkup(<EntryDetailsBody catalogue={shell} entry={entry} />);
+    return storeMarkup(<EntryInspectHead catalogue={shell} entry={entry} />);
   };
   const current = render("billing");
   assert.match(
@@ -123,7 +125,7 @@ test("a served document shows its source without the removed dependency list", (
   assert.ok(published);
   const document = published;
   const markup = storeMarkup(
-    <EntryDetailsBody catalogue={shell} entry={document} />,
+    <EntryInspectHead catalogue={shell} entry={document} />,
   );
   assert.match(markup, /Source<\/span>.*specs\/guide\/terms\.md/u);
   assert.doesNotMatch(markup, /Dependencies|terms\.svg/u);

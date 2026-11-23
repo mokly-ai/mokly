@@ -133,19 +133,16 @@ test("the embedded viewer renders its default selection and host slots", () => {
   });
   assert.match(html, /<b>Account<\/b>/);
   assert.match(html, /data-mokly-color-scheme="dark"/);
-  assert.match(html, /<option class="mbk-reset" value="mobile" selected="">/);
   assert.match(html, /value="phrase tag:forms"/);
-  // The selected viewport reaches the stage once the entry's detail is held:
-  // the canvas shows the Mobile frames alone, and keeps the Desktop frames
-  // mounted in hidden cells.
+  // On the wide canvas the Frames filter, not the selection's viewport,
+  // chooses the shown frames, and it starts with every frame shown.
   const held = heldEmbeddedMarkup({ selection });
   const cells = held.split(/(?=<div class="mbk-canvas-cell)/u).slice(1);
   const shown = cells.filter((cell) => !/^<div[^>]*\shidden=""/u.test(cell));
-  const frames = (viewport: string, of: readonly string[]) =>
-    of.filter((cell) => cell.includes(`data-workspace-frame="${viewport}"`));
-  assert.ok(frames("mobile", shown).length > 0);
-  assert.deepEqual(frames("desktop", shown), []);
-  assert.ok(frames("desktop", cells).length > 0);
+  const frames = (viewport: string) =>
+    shown.filter((cell) => cell.includes(`data-workspace-frame="${viewport}"`));
+  assert.ok(frames("mobile").length > 0);
+  assert.ok(frames("desktop").length > 0);
 });
 
 /** The prefix every id of one root carries: its main region's id less `mb-main`. */
@@ -204,21 +201,28 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
     const detail = details.current[entry.path]!;
     detail.controlOrder = [...detail.controlOrder!, "mb-main"];
   }
+  // Props edit the variant of the selected frame, and a routed saved
+  // variant's frame is selected from the first render.
+  const variant = index.components.find(
+    ({ variantOf }) => variantOf === component.path,
+  )!;
   const markup = (identifierPrefix: string) =>
     embeddedMarkup({
       index,
-      defaultSelection: { screenPath: component.path },
+      defaultSelection: { screenPath: variant.path },
       identifierPrefix,
     });
+  const propsOf = (html: string) =>
+    html.slice(
+      html.indexOf('data-inspect-section="props"'),
+      html.indexOf('data-inspect-section="usage"'),
+    );
   const first = markup("x");
   const firstIds = htmlIds(first);
   const secondIds = htmlIds(markup("x-mb-prop-action"));
   // Until the routed detail arrives, the viewer's Props show no fields.
   assert.match(
-    first.slice(
-      first.indexOf('data-inspector-panel="props"'),
-      first.indexOf('data-inspector-panel="usage"'),
-    ),
+    propsOf(first),
     /<p class="mbk-reset" role="status" tabindex="-1">Loading props…<\/p>/,
   );
 
@@ -226,15 +230,12 @@ test("distinct identifier prefixes keep roots apart; published props have no fie
   const held = heldEmbeddedMarkup({
     index,
     details: detailPairs(undefined, details),
-    selection: { screenPath: component.path },
+    selection: { screenPath: variant.path },
   });
-  const props = held.slice(
-    held.indexOf('data-inspector-panel="props"'),
-    held.indexOf('data-inspector-panel="usage"'),
-  );
+  const props = propsOf(held);
   assert.match(
     props,
-    /<h3 class="mbk-reset" tabindex="-1">Saved props<\/h3><p class="mbk-reset">Action<\/p><\/div><\/div><p class="mbk-controls-notice mbk-reset">Open this catalogue locally to edit props\.<\/p>/,
+    /<h3 class="mbk-reset" tabindex="-1">Saved props<\/h3><p class="mbk-reset">Default<\/p><\/div><\/div><p class="mbk-controls-notice mbk-reset">Open this catalogue locally to edit props\.<\/p>/,
   );
   assert.match(props, /<dt class="mbk-reset">mb-main<\/dt>/);
   assert.doesNotMatch(props, /<input|<select|mb-prop-/);

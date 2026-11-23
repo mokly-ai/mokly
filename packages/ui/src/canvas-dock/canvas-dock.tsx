@@ -12,12 +12,13 @@ import type { Ref } from "react";
 import { CanvasIcon, type CanvasIconName } from "../icons/canvas-icons.js";
 
 /** A tab of the right panel, which the dock names and opens. */
-export type CanvasDockTab = "inspect";
+export type CanvasDockTab = "changes" | "inspect";
 
 /** The name and the glyph of each tab, as the dock shows it. */
 const TABS: Readonly<
   Record<CanvasDockTab, { icon: CanvasIconName; label: string }>
 > = {
+  changes: { icon: "changes", label: "Changes" },
   inspect: { icon: "inspect", label: "Inspect" },
 };
 

@@ -1,9 +1,9 @@
 /**
- * The metadata rows of the details inspector that read the catalogue: the
- * views a classification marked changed, the related docs, the tags, the use
- * cases a screen belongs to, and the links between a screen and the variants
- * it declares. These containers resolve the entries and their addresses, and
- * `@mokly/ui/metadata-row` renders the rows and their chips.
+ * The Details rows of Inspect's head that read the catalogue: the views a
+ * classification marked changed, the related docs, the tags, the use cases a
+ * screen belongs to, and the parent of a variant. These containers resolve
+ * the entries and their addresses, and `@mokly/ui/metadata-row` renders the
+ * rows and their chips.
  */
 
 import { parseLogicalTarget } from "@mokly/model";
@@ -135,41 +135,6 @@ export function UsedByChips(props: {
             key={useCase.path}
             kind="use-case"
             title={useCase.title}
-          />
-        ))}
-      </MetadataChips>
-    </MetadataRow>
-  );
-}
-
-/** The variants a screen or component declares, in index order. */
-export function VariantChips(props: {
-  catalogue: Catalogue;
-  entry: ShellCatalogueRoutedEntry;
-}) {
-  if (props.entry.kind !== "screen" && props.entry.kind !== "component") {
-    return null;
-  }
-  const historical = props.catalogue.removedEntries.some(
-    ({ entry }) => entry.path === props.entry.path,
-  );
-  const variants = historical
-    ? branchPoints(props.catalogue)
-        .removedVariants(props.entry)
-        .map(({ entry }) => entry)
-    : (props.catalogue.hierarchy.variantsByPath.get(props.entry.path) ?? []);
-  if (variants.length === 0) {
-    return null;
-  }
-  return (
-    <MetadataRow label="Variants">
-      <MetadataChips>
-        {variants.map((variant) => (
-          <EntryChip
-            href={entryHref(props.catalogue, variant)}
-            key={variant.path}
-            kind="variant"
-            title={variant.title}
           />
         ))}
       </MetadataChips>

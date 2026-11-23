@@ -18,6 +18,10 @@ function element(html: string, pattern: RegExp): string {
   return match[0];
 }
 
+/** The Path row of Inspect's head, up to the end of its path. */
+const PATH_ROW =
+  /<div class="mbk-meta-row mbk-reset" data-inspect-path=""[\s\S]*?<\/code>/;
+
 test("a folder's own document is its first row, labelled Overview with the document icon", () => {
   const html = render("product");
   const folder = element(
@@ -58,26 +62,25 @@ test("the Specs section holds every kind but components, which keep their own se
     assert.match(specs, new RegExp(`data-entry-kind="${kind}"`), kind);
 });
 
-test("breadcrumbs link a folder's page and reveal a folder without one", () => {
-  const html = render("product/browse/home");
-  const crumbs = element(
-    html,
-    /<p aria-label="Catalogue location"[\s\S]*?<\/p>/,
+test("the Path row's folder segments link a folder's page and reveal a folder without one", () => {
+  const path = element(render("product/browse/home"), PATH_ROW);
+  assert.match(
+    path,
+    /<a class="mbk-path-crumb mbk-reset" href="\/view\/product\/">product<\/a>/,
   );
   assert.match(
-    crumbs,
-    /<a class="mbk-crumb-link mbk-reset" href="\/view\/product\/">Product overview<\/a>/,
+    path,
+    /<button class="mbk-path-crumb mbk-reset" data-crumb-folder="product\/browse" type="button">browse<\/button>/,
   );
-  assert.match(
-    crumbs,
-    /<button class="mbk-crumb-link mbk-reset" data-crumb-folder="product\/browse" type="button">Browse<\/button>/,
-  );
+  assert.match(path, /<span class="mbk-path-part mbk-reset">home<\/span>/);
 });
 
 test("component details show the shown entry's path above its source", () => {
   const html = render("components/action/default");
+  const path = element(html, PATH_ROW);
+  assert.equal(path.replace(/<[^>]+>/g, ""), "Pathcomponents/action/default");
   assert.match(
-    html,
-    /Path<\/[^>]+>[\s\S]{0,120}<code class="mbk-code mbk-reset">components\/action\/default<\/code>[\s\S]*?Source/,
+    html.slice(html.indexOf(path) + path.length),
+    /^<\/span><\/div><div class="mbk-meta-row mbk-reset"><span class="mbk-meta-k mbk-reset">Source<\/span>/,
   );
 });

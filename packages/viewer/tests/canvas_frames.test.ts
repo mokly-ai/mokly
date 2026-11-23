@@ -5,6 +5,7 @@ import { VIEWER_DIRECTORY } from "@mokly/model";
 
 import { generatedViews } from "../src/components/views.js";
 import {
+  EVERY_FRAME,
   framesViews,
   readingFrameLabel,
   workspaceFrames,
@@ -27,7 +28,7 @@ function shown(frames: readonly CanvasFramePlan[]) {
 
 test("a screen opens as Desktop beside Mobile, its Light row above its Dark row", () => {
   const data = workspace("product/browse/home", true);
-  assert.deepEqual(shown(workspaceFrames(data, "both", data.views)), [
+  assert.deepEqual(shown(workspaceFrames(data, EVERY_FRAME, data.views)), [
     {
       cell: [0, 0],
       key: "desktop-light",
@@ -63,10 +64,10 @@ test("a screen opens as Desktop beside Mobile, its Light row above its Dark row"
   ]);
 });
 
-test("a screen without a dark view has the Light row alone, and the viewport choice keeps one column", () => {
+test("a screen without a dark view has the Light row alone, and the Frames filter keeps the shown columns and rows", () => {
   const data = workspace("product/browse/home", false);
   assert.deepEqual(
-    shown(workspaceFrames(data, "both", data.views)).map(({ cell, key }) => [
+    shown(workspaceFrames(data, EVERY_FRAME, data.views)).map(({ cell, key }) => [
       key,
       cell,
     ]),
@@ -76,7 +77,11 @@ test("a screen without a dark view has the Light row alone, and the viewport cho
     ],
   );
   const dark = workspace("product/browse/home", true);
-  const mobile = workspaceFrames(dark, "mobile", dark.views);
+  const mobile = workspaceFrames(
+    dark,
+    { schemes: ["light", "dark"], viewports: ["mobile"] },
+    dark.views,
+  );
   // The Desktop frames stay mounted, hidden, and Mobile takes the first
   // column.
   assert.deepEqual(
@@ -103,11 +108,29 @@ test("a screen without a dark view has the Light row alone, and the viewport cho
       ["mobile", "dark"],
     ],
   );
+  // With Light off, the Dark row takes the first row.
+  assert.deepEqual(
+    workspaceFrames(
+      dark,
+      { schemes: ["dark"], viewports: ["desktop", "mobile"] },
+      dark.views,
+    ).map((frame) => [
+      frame.key,
+      frame.hidden === true,
+      [frame.column, frame.row],
+    ]),
+    [
+      ["desktop-light", true, [0, 0]],
+      ["mobile-light", true, [1, 0]],
+      ["desktop-dark", false, [0, 0]],
+      ["mobile-dark", false, [1, 0]],
+    ],
+  );
 });
 
 test("a component opens as its variant set: its own example, then each saved variant, Light beside Dark", () => {
   const data = workspace("components/action", true);
-  const frames = workspaceFrames(data, "both", data.views);
+  const frames = workspaceFrames(data, EVERY_FRAME, data.views);
   assert.deepEqual(shown(frames), [
     {
       cell: [0, 0],
@@ -156,15 +179,26 @@ test("a component opens as its variant set: its own example, then each saved var
       ["components/action/default", "desktop", "dark"],
     ],
   );
+  // A set has no viewports; with Light off, its Dark frames take the first
+  // column.
+  assert.deepEqual(
+    workspaceFrames(data, { schemes: ["dark"], viewports: ["desktop"] })
+      .filter((frame) => !frame.hidden)
+      .map((frame) => [frame.key, frame.column]),
+    [
+      ["components/action:dark", 0],
+      ["components/action/default:dark", 0],
+    ],
+  );
 });
 
-test("a saved variant's page opens the set with its Light frame selected, and a live edit shows in its row", () => {
+test("a live edit of a saved variant shows in its row, and the frames name no selection", () => {
   const data = workspace("components/action/default", true);
   const edited = generatedViews(data.variants[1]!.value).map((view) => ({
     ...view,
     path: `/${VIEWER_DIRECTORY}/components/renders/${view.viewport}-${view.colorScheme}.html`,
   }));
-  const frames = workspaceFrames(data, "both", [
+  const frames = workspaceFrames(data, EVERY_FRAME, [
     ...data.views.filter(
       (view) => view.variantPath !== "components/action/default",
     ),
@@ -185,7 +219,7 @@ test("a saved variant's page opens the set with its Light frame selected, and a 
       ["components/action:dark", false, saved("dark")],
       [
         "components/action/default:light",
-        true,
+        false,
         `/${VIEWER_DIRECTORY}/components/renders/desktop-light.html`,
       ],
       [
@@ -201,7 +235,9 @@ test("a component without saved variants has one row for its own example, withou
   const data = workspace("components/action", false);
   const own = { ...data, variants: data.variants.slice(0, 1) };
   assert.deepEqual(
-    shown(workspaceFrames(own, "both", data.views)).map(({ key }) => key),
+    shown(workspaceFrames(own, EVERY_FRAME, data.views)).map(
+      ({ key }) => key,
+    ),
     ["components/action:light"],
   );
   const removed = {
@@ -212,7 +248,9 @@ test("a component without saved variants has one row for its own example, withou
     })),
   };
   assert.deepEqual(
-    shown(workspaceFrames(removed, "both", data.views)).map(({ key }) => key),
+    shown(workspaceFrames(removed, EVERY_FRAME, data.views)).map(
+      ({ key }) => key,
+    ),
     ["components/action:light"],
   );
 });

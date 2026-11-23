@@ -144,3 +144,21 @@ test("a drag of the grabber moves the sheet's top edge and snaps it to the neare
     ["expanded", true],
   ]);
 });
+
+test("a panel's head stands before its scrolling body, outside it", () => {
+  const { container } = render(
+    <FloatingPanel
+      head={<p>Tabs</p>}
+      label="Panel"
+      noun="panel"
+      scroll
+      sheet={sheet([])}
+      side="right"
+    >
+      <p>Body</p>
+    </FloatingPanel>,
+  );
+  const body = container.querySelector("[data-floating-scroll]");
+  assert.equal(body?.textContent, "Body");
+  assert.equal(body?.previousElementSibling?.textContent, "Tabs");
+});

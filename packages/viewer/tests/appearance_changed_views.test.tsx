@@ -38,23 +38,20 @@ function render(colorScheme: "light" | "dark", home = false): string {
   });
 }
 
-test("standalone Appearance retains hidden-view change evidence", () => {
-  const html = render("light");
-  const appearance = html.match(
-    /<label class="mbk-appearance mbk-reset"[\s\S]*?<\/label>/,
-  )?.[0];
-  assert.ok(appearance);
-  assert.match(appearance, /data-view-changed="scheme"(?! hidden)/);
-  assert.match(appearance, /aria-describedby="mb-view-changed-scheme"/);
-  assert.match(appearance, /Other theme changed/);
-  assert.doesNotMatch(html, /data-workspace-scheme/);
-
-  for (const unmarked of [render("dark"), render("light", true)]) {
-    const control = unmarked.match(
+test("a screen's hidden changed view marks no standalone Appearance, whose Frames filter carries the marks", () => {
+  for (const html of [render("light"), render("dark"), render("light", true)]) {
+    const control = html.match(
       /<label class="mbk-appearance mbk-reset"[\s\S]*?<\/label>/,
     )?.[0];
     assert.ok(control);
     assert.match(control, /data-view-changed="scheme" hidden=""/);
     assert.doesNotMatch(control, /aria-describedby/);
   }
+  // Every frame shows at a full page load, so no toggle hides the changed
+  // view and none is marked.
+  const filter = render("light").match(
+    /<div aria-label="Frames" class="mbk-frames mbk-reset"[\s\S]*?<\/div><label/,
+  )?.[0];
+  assert.ok(filter);
+  assert.doesNotMatch(filter, /data-view-changed/);
 });

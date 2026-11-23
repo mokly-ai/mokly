@@ -175,6 +175,35 @@
   text-underline-offset: 2px;
 }
 
+/* The name of a frame that a press selects is a button with the label's
+   look. Its label keeps 4px around the line for the button's focus glow,
+   and the line keeps its place, 7px above the frame. */
+.mbk-canvas-frame-label:has(.mbk-canvas-frame-select) {
+  right: -4px;
+  bottom: calc(100% + 3px);
+  left: -4px;
+  height: 22px;
+  padding: 4px;
+  row-gap: 8px;
+}
+
+.mbk-canvas-frame-select {
+  display: inline-flex;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mbk-canvas-frame-select:hover > .mbk-canvas-frame-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .mbk-canvas-frame-link > svg {
   flex: none;
   color: var(--cv-text-muted);
