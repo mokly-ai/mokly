@@ -13,7 +13,6 @@ export function WorkspaceLayout({
   entryBar,
   overlay,
   panel,
-  panesRef,
   preview,
   previewRef,
   previewStatus,
@@ -30,8 +29,6 @@ export function WorkspaceLayout({
    * with the right panel's tabs as its head.
    */
   panel?: ReactNode;
-  /** Receives the panes, which hold the preview pane. */
-  panesRef?: Ref<HTMLDivElement> | undefined;
   /** The preview: the stage, or the comparison around it. */
   preview: ReactNode;
   /**
@@ -52,7 +49,7 @@ export function WorkspaceLayout({
       ref={ref}
     >
       {entryBar}
-      <div className="mbk-workspace-panes mbk-reset" ref={panesRef}>
+      <div className="mbk-workspace-panes mbk-reset">
         <div
           className="mbk-preview-pane mbk-reset"
           data-workspace-preview=""

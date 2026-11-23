@@ -60,7 +60,6 @@ export function createInitialShellState(
     navScroll: 0,
     panelTab: "inspect",
     query: "",
-    regionScrolls: {},
     revealedFolder: undefined,
     route,
     routeInstallation: 0,

@@ -16,8 +16,6 @@ import type { ShellResizing } from "@mokly/ui/shell-layout";
 
 import { ElementRefs } from "./element_refs.js";
 
-export type ScrollRegion = "stage" | "inspector";
-
 /** The dock's controls that a closed sheet returns focus to. */
 export type DockControl = "catalogue" | "tab";
 
@@ -31,7 +29,6 @@ export class ShellElements {
   readonly markers = createRef<HTMLDivElement>();
   readonly dock = new ElementRefs<DockControl, HTMLButtonElement>();
   readonly slots = new ElementRefs<HostSlotName, HTMLDivElement>();
-  readonly scrolls = new ElementRefs<ScrollRegion, HTMLDivElement>();
 
   inTagPicker(target: Node): boolean {
     return Boolean(

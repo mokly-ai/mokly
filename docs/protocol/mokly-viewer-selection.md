@@ -173,9 +173,8 @@ A mounted viewer keeps this shell state:
   [disclosure persistence contract](./mokly-disclosure-persistence.md).
   Split-width choices persist per origin; the sheets and the tag picker panel
   reset on a full page load.
-- **Scroll** is tracked per shell `data-mokly-scroll` region for history;
-  comparison-document regions and the Scroll together choice follow their
-  [scrolling contracts](./mokly-comparison-scrolling.md).
+- **Scroll** of comparison-document regions and the Scroll together choice
+  follow their [scrolling contracts](./mokly-comparison-scrolling.md).
 - **Workspace** state (props under edit, the unfolded sections of Inspect, the
   canvas selection and its box model, active pick, highlight scope) lives with
   the mounted view and is discarded on route change or source replacement.
