@@ -1,8 +1,9 @@
 /**
- * The recorded component instance hierarchy of the active preview context.
- * This container picks the shown view, orders its instances, and builds their
- * tree with each component's title. `@mokly/ui/instance-tree` renders the
- * tree, its disclosures, and the viewport choice.
+ * The recorded component instance hierarchy of one frame's view: the frame
+ * that holds the canvas selection, else the first shown frame. This
+ * container orders the view's instances and builds their tree with each
+ * component's title. `@mokly/ui/instance-tree` renders the tree and its
+ * disclosures.
  */
 
 import type { ComponentInstanceRecord } from "@mokly/model";
@@ -61,42 +62,30 @@ function instanceUsage(
   };
 }
 
-/** Components or nested components panel for the selected preview. */
+/** The Components or Nested components section of one frame's view. */
 export function WorkspaceInstances({
-  activeViewport,
   data,
   onFocus,
   onSelect,
-  onViewport,
   selectedKey,
-  views,
+  view,
 }: {
-  activeViewport: "desktop" | "mobile";
   data: WorkspaceData;
-  onFocus(key: string, viewport: "desktop" | "mobile"): void;
-  onSelect(key: string, viewport: "desktop" | "mobile"): void;
-  onViewport(viewport: "desktop" | "mobile"): void;
+  /** Receives the instance to point out when a nested list opens or closes. */
+  onFocus(key: string): void;
+  onSelect(key: string): void;
   selectedKey?: string | undefined;
-  views: readonly GeneratedComponentView[];
+  /** The frame's view; none while the canvas shows no frame. */
+  view: GeneratedComponentView | undefined;
 }) {
-  const view =
-    views.find((item) => item.viewport === activeViewport) ?? views[0];
   return (
     <InstanceTree
-      onFocus={(key) => {
-        if (view) onFocus(key, view.viewport);
-      }}
-      onSelect={(key) => {
-        if (view) onSelect(key, view.viewport);
-      }}
-      onViewport={onViewport}
+      onFocus={onFocus}
+      onSelect={onSelect}
       selectedKey={selectedKey}
       usage={instanceUsage(data, view?.usage)}
-      viewport={activeViewport}
-      viewports={[...views].reverse().map((context) => ({
-        key: `${context.viewport}/${context.colorScheme}`,
-        viewport: context.viewport,
-      }))}
+      viewport={view?.viewport ?? "desktop"}
+      viewports={[]}
     />
   );
 }

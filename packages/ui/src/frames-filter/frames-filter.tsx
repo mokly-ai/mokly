@@ -103,6 +103,7 @@ function Toggle({
 }
 
 export function FramesFilter({
+  descriptionId,
   highlight,
   highlightRef,
   onHighlight,
@@ -110,6 +111,11 @@ export function FramesFilter({
   single = false,
   toggles,
 }: {
+  /**
+   * The id of the switch's description, which must be unique in the
+   * document. Without it, the filter takes an id from React's `useId`.
+   */
+  descriptionId?: string | undefined;
   /** The Highlight components switch. Without it, the switch is disabled. */
   highlight?: FramesHighlight | undefined;
   /** Receives the switch, which the host focuses when a pick in a frame ends. */
@@ -124,7 +130,8 @@ export function FramesFilter({
   toggles: readonly FramesToggle[];
 }) {
   const group = useId();
-  const description = useId();
+  const generated = useId();
+  const description = descriptionId ?? generated;
   const available = highlight?.available === true;
   const reason = available ? undefined : highlight?.reason;
   return (

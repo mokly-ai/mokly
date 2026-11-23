@@ -6,7 +6,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { PropSchema } from "@mokly/model";
 
 import { encodeProps } from "../src/components/codec.js";
-import type { ComponentViewRecord } from "../src/components/view_types.js";
 import { ComponentControlsPanel } from "../src/shell/component_controls_panel.js";
 import {
   controlsMode,
@@ -23,10 +22,7 @@ import type { LiveEditingStatus } from "../src/shell/data_descriptor.js";
 import type { ShellDataStore } from "../src/shell/data_store.js";
 import { RetryFocus } from "../src/shell/retry_focus.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
-import {
-  WorkspaceProps,
-  WorkspacePropsTab,
-} from "../src/shell/workspace_props.js";
+import { WorkspacePropsSection } from "../src/shell/workspace_props.js";
 
 function data(kind: "screen" | "component", pending = false): WorkspaceData {
   return {
@@ -36,39 +32,40 @@ function data(kind: "screen" | "component", pending = false): WorkspaceData {
   } as unknown as WorkspaceData;
 }
 
-function usage(instances: number): ComponentViewRecord {
-  return {
-    instances: Array.from({ length: instances }, (_, index) => ({
-      key: `${index}`,
-    })),
-    slots: [],
-  } as unknown as ComponentViewRecord;
+/** The Props section of an entry without an edit form, as markup. */
+function section(
+  input: WorkspaceData,
+  { choose = false, unavailable = false } = {},
+): string {
+  return renderToStaticMarkup(
+    <WorkspacePropsSection
+      choose={choose}
+      controls={null}
+      data={input}
+      delivery={{ status: "ready" }}
+      focus={new RetryFocus()}
+      target={undefined}
+      unavailable={unavailable}
+    />,
+  );
 }
 
-test("a screen's Props tab without own props names why nothing is selected", () => {
-  const props = (input: WorkspaceData, view?: ComponentViewRecord) =>
-    renderToStaticMarkup(
-      <WorkspaceProps data={input} selection={view ? { usage: view } : {}} />,
-    );
+test("Props without an edit form say why: no props, a pending or missing usage, or a variant to choose", () => {
   assert.equal(
-    props(data("screen"), usage(0)),
+    section(data("screen")),
     '<p class="mbk-empty-copy mbk-reset">This entry renders without props.</p>',
   );
   assert.equal(
-    props(data("screen")),
-    '<p class="mbk-empty-copy mbk-reset">Props are unavailable for this screen.</p>',
-  );
-  assert.equal(
-    props(data("screen"), usage(2)),
-    '<p class="mbk-empty-copy mbk-reset">Select a component instance to see its supplied props.</p>',
-  );
-  assert.equal(
-    props(data("screen", true)),
+    section(data("screen", true)),
     '<p class="mbk-reset" role="status">Waiting for the component preview.</p>',
   );
   assert.equal(
-    props(data("component")),
-    '<p class="mbk-empty-copy mbk-reset">Select a component instance to see its supplied props.</p>',
+    section(data("screen"), { unavailable: true }),
+    '<p class="mbk-empty-copy mbk-reset">Props are unavailable for this screen.</p>',
+  );
+  assert.equal(
+    section(data("component"), { choose: true }),
+    '<p class="mbk-empty-copy mbk-reset">Choose a variant to edit its props.</p>',
   );
 });
 
@@ -105,7 +102,7 @@ test("live editing prepares, or offers its retry, until the capability installs"
   assert.deepEqual(start(undefined), { ready: false, shown: undefined });
 });
 
-test("a screen whose props have no controls shows them, with or without instances", () => {
+test("a screen whose props have no controls shows them as its saved props", () => {
   const screen: ControlTarget = {
     path: "home",
     title: "Home",
@@ -120,33 +117,27 @@ test("a screen whose props have no controls shows them, with or without instance
     suppliedSlots: [],
     removed: false,
   };
-  const tab = (target: ControlTarget, view: ComponentViewRecord | undefined) =>
+  const tab = (target: ControlTarget) =>
     renderToStaticMarkup(
-      <WorkspacePropsTab
+      <WorkspacePropsSection
+        choose={false}
         controls={<p>Own props</p>}
         data={data("screen")}
         delivery={{ status: "ready" }}
         focus={new RetryFocus()}
-        instance={undefined}
         target={target}
-        usage={view}
+        unavailable={false}
       />,
     );
-  for (const view of [usage(0), usage(2), undefined])
-    assert.equal(tab(screen, view), "<p>Own props</p>");
+  assert.equal(tab(screen), "<p>Own props</p>");
   assert.equal(
-    tab({ ...screen, props: encodeProps({}) }, usage(2)),
-    '<p class="mbk-empty-copy mbk-reset">Select a component instance to see its supplied props.</p>',
-  );
-  assert.equal(
-    tab({ ...screen, props: encodeProps({}) }, usage(0)),
+    tab({ ...screen, props: encodeProps({}) }),
     '<p class="mbk-empty-copy mbk-reset">This entry renders without props.</p>',
   );
   const mode = controlsMode(screen, false, "ready");
   assert.equal(mode, "read-only");
   const panel = renderToStaticMarkup(
     ComponentControlsPanel({
-      data: data("screen"),
       mode,
       onChange: () => undefined,
       onCurrent: () => undefined,
@@ -175,18 +166,18 @@ test("own props wait for the routed detail, which alone carries their order", ()
   } satisfies ControlTarget;
   let retries = 0;
   const tab = (
-    delivery: Parameters<typeof WorkspacePropsTab>[0]["delivery"],
+    delivery: Parameters<typeof WorkspacePropsSection>[0]["delivery"],
     target: ControlTarget = component,
   ) =>
     renderToStaticMarkup(
-      <WorkspacePropsTab
+      <WorkspacePropsSection
+        choose={false}
         controls={<p>Own props</p>}
         data={data(target.kind)}
         delivery={delivery}
         focus={new RetryFocus()}
-        instance={undefined}
         target={target}
-        usage={undefined}
+        unavailable={false}
       />,
     );
   assert.equal(
@@ -211,7 +202,7 @@ test("own props wait for the routed detail, which alone carries their order", ()
   };
   assert.equal(
     tab({ status: "loading" }, bare),
-    '<p class="mbk-empty-copy mbk-reset">Props are unavailable for this screen.</p>',
+    '<p class="mbk-empty-copy mbk-reset">This entry renders without props.</p>',
   );
   assert.equal(retries, 0);
 });

@@ -147,6 +147,7 @@
   left: -4px;
   height: 22px;
   padding: 4px;
+  row-gap: 8px;
 }
 
 .mbk-canvas-frame-select {

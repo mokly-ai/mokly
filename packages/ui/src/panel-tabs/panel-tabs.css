@@ -70,6 +70,10 @@
   min-width: 0;
 }
 
+.mbk-panel-tab-body[hidden] {
+  display: none;
+}
+
 /* A narrowed panel takes narrower tabs, and a sheet larger ones. */
 @media (width < 73.75rem) {
   .mbk-panel-tab {

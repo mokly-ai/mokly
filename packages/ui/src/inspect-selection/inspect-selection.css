@@ -126,3 +126,18 @@ a.mbk-inspect-chip:hover {
   color: var(--cv-text-secondary);
   white-space: nowrap;
 }
+
+/* The slots that the instance fills, under a small heading of the
+   section's type. */
+.mbk-inspect-section[data-inspect-section="selection"] > h4 {
+  margin: 12px 0 4px;
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.mbk-inspect-section[data-inspect-section="selection"] > h4 ~ p {
+  margin: 0;
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+}

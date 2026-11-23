@@ -40,8 +40,8 @@ export function PanelTabs({
   label?: string;
   /** Receives each tab that the reader chooses. */
   onSelect(tab: PanelTab): void;
-  /** The id of the panel that the tabs control. */
-  panelId: string;
+  /** The id of the panel that each tab controls. */
+  panelId(tab: PanelTab): string;
   selected: PanelTab;
   /** The id of each tab, which names the panel through `aria-labelledby`. */
   tabId(tab: PanelTab): string;
@@ -68,7 +68,7 @@ export function PanelTabs({
         const chosen = tab.id === selected;
         return (
           <button
-            aria-controls={panelId}
+            aria-controls={panelId(tab.id)}
             aria-selected={chosen}
             className="mbk-panel-tab mbk-reset"
             data-panel-tab={tab.id}
@@ -97,23 +97,28 @@ export function PanelTabs({
 }
 
 /**
- * The body of the selected tab: the tab panel that the selected tab names,
- * which a host scrolls with its panel.
+ * The body of one tab: the tab panel that its tab names, which a host
+ * scrolls with its panel. A host keeps the body of a tab that is not
+ * selected mounted and hidden, so its content keeps its state.
  */
 export function PanelTabBody({
   children,
+  hidden = false,
   id,
   labelledBy,
 }: {
   children?: ReactNode;
+  /** Whether the tab is not selected, which hides its body. */
+  hidden?: boolean | undefined;
   id: string;
-  /** The id of the selected tab. */
+  /** The id of the body's tab. */
   labelledBy: string;
 }) {
   return (
     <div
       aria-labelledby={labelledBy}
       className="mbk-panel-tab-body mbk-reset"
+      hidden={hidden}
       id={id}
       role="tabpanel"
     >

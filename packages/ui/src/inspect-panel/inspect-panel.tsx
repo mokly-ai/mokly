@@ -11,6 +11,13 @@ import { useState, type ReactNode, type Ref } from "react";
 
 import { CanvasIcon } from "../icons/canvas-icons.js";
 
+export {
+  InspectHead,
+  InspectRationale,
+  InspectVariants,
+  type InspectVariant,
+} from "./inspect-head.js";
+
 /** The body of Inspect, which sets its sections in Inspect's type. */
 export function InspectPanel({ children }: { children?: ReactNode }) {
   return <div className="mbk-inspect mbk-reset">{children}</div>;

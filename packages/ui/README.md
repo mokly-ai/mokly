@@ -182,9 +182,7 @@ the inspector's size: `height`, `minimumHeight`, and `maximumHeight` give the
 height on a desktop and the separator's value, `expanded` the state of the
 narrow sheet, and `sheetHeight` the sheet's height during a drag. The host
 attaches its drag and its keys to the separator and the sheet grab through
-`resizeRef` and `grabRef`. In the right panel of the Canvas layout the
-inspector takes the height of its content, and the layout's stylesheet hides
-the separator and the grab. `DetailsPanel` draws
+`resizeRef` and `grabRef`. `DetailsPanel` draws
 the collapsible Details below a page's stage, and `DetailsBody` the body that
 it and the Details tab show. `MetadataRow` draws one labelled value, as a row
 of the metadata column or, in its `props` presentation, as a `dt` and `dd`
@@ -194,11 +192,47 @@ the native control of its kind; its help and its error take the ids
 `{id}-help` and `{id}-error`. `ControlsPanel` and `SavedPropsPanel` draw the
 edit form and the saved props, and `EditStatus` draws the status of a render
 of edited props over the preview. `PropsPanel`, `UsageList`, and
-`InstanceTree` draw the Props, Usage, and Components tabs from plain records,
+`InstanceTree` draw the content of Props, Usage, and Components from plain
+records,
 and `ComparisonEvidence` draws the comparison facts of an entry's Details in
 the designs' order. The host supplies each text that it derives from the
 catalogue, and the controls' wording, which the design catalogue shares.
 `TextButton` is the text button of these panels.
+
+`PanelTabs` draws the strip of the right panel's tabs, Inspect and Changes,
+as a tab list. The host holds the selected tab and receives each choice
+through `onSelect`. The arrow keys, Home, and End move between the tabs and
+select them, and `tabId` and `panelId` give the ids that join each tab to
+its `PanelTabBody`. A hidden body stays mounted, so its folded sections and
+fields keep their state. `InspectPanel` holds Inspect's sections in their
+order. `InspectSection` draws one section with its head and an optional
+count, and `InspectFold` a folded section, a native disclosure, with its
+count. `InspectHead` draws an entry's title, its `Component` tag, its status,
+and its description above the rows that the host gives, `InspectRationale`
+the rationale, and `InspectVariants` the list of an entry's variants, whose
+rows are links, or buttons where the host handles the choice. `MetadataPath`
+draws a path in a code chip whose folder segments are breadcrumbs: a link to
+a folder's own page, or a button that reveals the folder. `FramesFilter` draws
+the Frames filter: the Mobile, Desktop, Light, and Dark toggles, or with
+`single` the radio pairs of one viewport and one scheme, the note of a
+disabled toggle, such as `Light only`, and the change mark of a toggle that
+hides a changed view, whose wording the toggle names through
+`aria-describedby`. It holds the Highlight components switch, whose
+description takes the id `descriptionId`. `InspectSelection` draws the
+Selection section for nothing, an instance, or a frame, and `BoxModel` the
+box model as one image whose accessible name gives the same numbers in
+words.
+
+`CanvasSelection` draws the selection on a frame: a signal outline with
+square handles and a size tag below its middle. A selected instance has eight
+handles, a tag above its top-left corner that names its component, and the
+redline of its left padding, which hides while the padding is too narrow on
+screen to read. A selected frame has a handle at each corner. `CanvasFrame`
+holds the selection as its `overlay`, over its document and outside its
+clip. With `selected`, the frame's label reads in the signal colour, and with
+`onSelect`, its name is a button. `SelectionPill` draws the compact layout's
+pill above the dock, which names the selected instance and opens the panel's
+sheet.
 
 `CanvasStage` draws the canvas of the wide layout: a full-bleed dot grid that
 holds one section, with the zoom pill at the bottom centre of its stage. The
@@ -228,7 +262,11 @@ pinches around the frames, Safari's `gesturestart`, `gesturechange` and
 frame's document keeps its own. Below the layout breakpoint the canvas has no
 zoom pill and no pill room, and a section with `compact` draws no box and no
 head, leaves only its frames' labels' room, and Fit stands it at the stage's
-top.
+top. `onEmptyClick` hears of each click on the empty canvas, away from the
+frames and the controls, that no drag made. While the zoom is below
+`CANVAS_TAG_ZOOM`, 60%, the canvas hides the fixed-size tags on its frames,
+such as a highlight's labels and the selection's tags, and the marks that they
+name stay. `canvasTagsShown` gives the same rule for a frame's scale.
 
 `FloatingPanel` draws a panel that floats over the canvas at its `side`, the
 catalogue at the left or the right panel at the right, and below the layout
@@ -236,9 +274,10 @@ breakpoint is a bottom sheet: it shows only while its `sheet` is open, at its
 compact or expanded height, with a grabber, the size toggle that a press or a
 drag switches, and a close control, which `noun` names, such as `Close
 catalogue`. A `label` makes the panel a region, and `scroll` makes its body
-scroll its content. `CanvasDock` draws the compact layout's dock, a group
-named `Canvas controls` with Catalogue, the right panel's current tab, and
-Fit, each from its callback, and gives Catalogue and the tab to the host's
+scroll its content. A `head`, such as the right panel's tabs, stands above
+the body and stays while the body scrolls. `CanvasDock` draws the compact
+layout's dock, a group named `Canvas controls` with Catalogue, the right
+panel's current tab, Inspect or Changes, and Fit, each from its callback, and gives Catalogue and the tab to the host's
 refs. `EntryBar` draws the compact layout's entry bar: the title tag, the
 `Component` kind tag, the status slot, an optional `quietLabel`, such as
 "Showing previous version", and the frame picker, a native select named
@@ -342,8 +381,8 @@ and takes the host's `MarkerLayer` and label layer. The shown preview is a
 workspace's preview, or the routed canvas that holds a use case's section or
 a document's reading frame. `WorkspaceLayout` lays out
 a workspace's preview with its `entryBar` and the right `panel` that holds
-the header, the variant bar, and the inspector, or, without a panel, the
-header and the variant bar above the preview beside the inspector.
+its tabs, Inspect and Changes, or, without a panel, the header and the
+variant bar above the preview beside the inspector.
 `RootState` takes a root's place while its catalogue loads, cannot be loaded, or needs a
 compatible viewer, or when the requested view is unavailable, as the
 `EmptyState` of the standalone root or of an embedded root, with the root class
@@ -367,8 +406,10 @@ to `previewRef` and `panesRef`. `BrowserFrame`, `FlowStage`, `DocumentFrame`,
 panels' region to `contentRef`. `CanvasStage` gives its canvas, which clips
 its frames, to `canvasRef`, and its stage's invisible box, the canvas between
 the floating panels and above the zoom pill, to `stageRef`. `TagPicker` gives its button and its picker to
-`toggleRef` and `pickerRef`, and `ViewControls` its Highlight components
-button to `highlightRef`. `CatalogueNavigation` gives the current page's row
+`toggleRef` and `pickerRef`, `ViewControls` its Highlight components
+button to `highlightRef`, and `FramesFilter` its Highlight components switch
+to `highlightRef`. `InspectSelection` gives its section to `sectionRef`, which
+the host scrolls into view. `CatalogueNavigation` gives the current page's row
 to `currentRowRef`, and each section and folder summary, by its disclosure
 key, to `summaryRef`. `EmbeddedLayout` names each host slot's container
 through `slotRef`. `TopBar` gives its `TopBarHandle` to `ref`: `focusSearch()`
@@ -599,7 +640,27 @@ override the desktop layout rules.
   with the description, the rationale, and the metadata column
 - [`src/metadata-row/metadata-row.tsx`](./src/metadata-row/metadata-row.tsx)
   — `MetadataRow` in its metadata and props presentations, and the code
-  chips, links, chip groups, and entry chips of a value
+  chips, paths, links, chip groups, and entry chips of a value
+- [`src/panel-tabs/panel-tabs.tsx`](./src/panel-tabs/panel-tabs.tsx) —
+  `PanelTabs` and `PanelTabBody`: the right panel's tab list with its keys,
+  and the body of one tab
+- [`src/inspect-panel/inspect-panel.tsx`](./src/inspect-panel/inspect-panel.tsx)
+  — `InspectPanel`, `InspectSection`, and `InspectFold`: Inspect's sections
+  and its folded sections with their counts
+- [`src/inspect-panel/inspect-head.tsx`](./src/inspect-panel/inspect-head.tsx)
+  — `InspectHead`, `InspectRationale`, and `InspectVariants`: the head with
+  the title, the tag, and the status, the rationale, and the variants
+- [`src/frames-filter/frames-filter.tsx`](./src/frames-filter/frames-filter.tsx)
+  — `FramesFilter`: the toggles or the radio pairs of the frames, their
+  change marks, and the Highlight components switch
+- [`src/inspect-selection/inspect-selection.tsx`](./src/inspect-selection/inspect-selection.tsx)
+  — `InspectSelection`: the Selection section for nothing, an instance, or a
+  frame, with the box model of `box-model.tsx`
+- [`src/canvas-selection/canvas-selection.tsx`](./src/canvas-selection/canvas-selection.tsx)
+  — `CanvasSelection`: the outline, the handles, the name and size tags, and
+  the padding redline of the selection on a frame
+- [`src/selection-pill/selection-pill.tsx`](./src/selection-pill/selection-pill.tsx)
+  — `SelectionPill`: the compact layout's pill of the selected instance
 - [`src/prop-field/prop-field.tsx`](./src/prop-field/prop-field.tsx) —
   `PropField` and `PropFields`: a field with its label, help, error, and
   optional supply, and the native control of each kind in `prop-input.tsx`;
@@ -630,7 +691,8 @@ override the desktop layout rules.
   `TextButton`, the text button of the inspector's panels
 - [`src/canvas-stage/canvas-stage.tsx`](./src/canvas-stage/canvas-stage.tsx)
   — `CanvasStage` and `CanvasStageHandle`: the dot-grid canvas with its
-  section and its zoom pill, and the handle with Fit and the zoom steps
+  section and its zoom pill, the handle with Fit and the zoom steps, the
+  click on the empty canvas, and the zoom rule of the fixed-size tags
 - [`src/canvas-stage/use-canvas-view.ts`](./src/canvas-stage/use-canvas-view.ts)
   — the measured stage, the fitted view, and the handle's commands
 - [`src/canvas-stage/canvas-view.ts`](./src/canvas-stage/canvas-view.ts) —
@@ -652,7 +714,7 @@ override the desktop layout rules.
   `sectionExtent`, the lengths that Fit reads
 - [`src/canvas-frame/canvas-frame.tsx`](./src/canvas-frame/canvas-frame.tsx) —
   `CanvasFrame`: a bare frame, its label and size tag, a step's description,
-  and its scaled document or the place that holds a note
+  its scaled document or the place that holds a note, and its overlay
 - [`src/canvas-frame/frame-label.tsx`](./src/canvas-frame/frame-label.tsx) —
   the frame's label: its glyph, a step's number, its name or the link that it
   is, `Light only`, and its size tag
@@ -673,8 +735,9 @@ override the desktop layout rules.
 - [`src/entry-bar/entry-bar.tsx`](./src/entry-bar/entry-bar.tsx) —
   `EntryBar`: the compact layout's entry name, status, and frame picker
 - [`src/floating-panel/floating-panel.tsx`](./src/floating-panel/floating-panel.tsx)
-  — `FloatingPanel` and `FloatingPanelSheet`: the panel over the canvas and
-  its bottom sheet, with the grabber of `sheet-grab.tsx` and the close control
+  — `FloatingPanel` and `FloatingPanelSheet`: the panel over the canvas with
+  its head, and its bottom sheet, with the grabber of `sheet-grab.tsx` and
+  the close control
 - [`src/icons/canvas-icons.tsx`](./src/icons/canvas-icons.tsx) — `CanvasIcon`,
   the glyphs of the frames' kinds, the zoom pill, the dock, the sheet, and
   the frame picker
@@ -727,8 +790,8 @@ override the desktop layout rules.
   `host-slot.tsx`, and `MarkerLayer`, the host's markers
 - [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
   — `WorkspaceLayout`: the preview on the canvas with the entry bar and the
-  right panel, or the header, the variant bar, and the preview beside the
-  inspector
+  right panel's tabs, or the header, the variant bar, and the preview beside
+  the inspector
 - [`src/highlight-label/highlight-label.tsx`](./src/highlight-label/highlight-label.tsx)
   — `LabelLayer` and `HighlightLabel`: the layer and the labels of
   highlighted instances, as buttons or as the links and pictures of a static

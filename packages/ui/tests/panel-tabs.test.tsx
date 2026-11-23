@@ -29,14 +29,21 @@ function Host({ chosen }: { chosen: PanelTab[] }) {
           chosen.push(tab);
           setSelected(tab);
         }}
-        panelId="body"
+        panelId={(tab) => `body-${tab}`}
         selected={selected}
         tabId={(tab) => `tab-${tab}`}
         tabs={TABS}
       />
-      <PanelTabBody id="body" labelledBy={`tab-${selected}`}>
-        {selected}
-      </PanelTabBody>
+      {TABS.map(({ id }) => (
+        <PanelTabBody
+          hidden={id !== selected}
+          id={`body-${id}`}
+          key={id}
+          labelledBy={`tab-${id}`}
+        >
+          {id}
+        </PanelTabBody>
+      ))}
     </>
   );
 }
@@ -58,6 +65,12 @@ test("the strip is a tab list named Panel whose selected tab names its panel", (
   );
   const panel = screen.getByRole("tabpanel", { name: "Inspect" });
   assert.equal(panel.textContent, "inspect");
+  assert.equal(tabs[1]?.getAttribute("aria-controls"), "body-changes");
+  // The body of a tab that is not selected stays mounted and hidden.
+  assert.equal(
+    document.getElementById("body-changes")?.hasAttribute("hidden"),
+    true,
+  );
   // Each label keeps the width of its bold form.
   assert.equal(
     tabs[1]?.querySelector("[data-text]")?.getAttribute("data-text"),
