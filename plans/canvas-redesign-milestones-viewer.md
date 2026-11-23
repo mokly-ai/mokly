@@ -1,6 +1,6 @@
 # Canvas redesign: viewer milestones
 
-This file holds Milestones 10 to 13 and the added Milestones 15 to 23 of the
+This file holds Milestones 10 to 13 and the added Milestones 15 to 24 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
 status, the summary and the other milestones.
@@ -62,12 +62,12 @@ Depends on: 10, 11
 - [ ] List the Example tour as a change in the depicted branch, as
       `mokly-changes.md` requires: Changes counts 11, and the tour gets a
       Changed status and a Changes tab with the stepper and the comparison
-      details but no compare modes. Draw the artboards first.
-- [ ] Add the own-example row to the other Canvas artboards that draw a
+      details but no compare modes. Milestone 24 draws the artboards.
+- [ ] Milestone 24: add the own-example row to the other Canvas artboards that draw a
       variant set: the Toolbar's `component-set/toolbar*` variants and the
       Action's sets on `canvas/props/**`, `canvas/components/**` and
       `canvas/evidence/unchanged`.
-- [ ] Draw each component frame of the Canvas variant sets at its measured
+- [ ] Milestone 24: draw each component frame of the Canvas variant sets at its measured
       document size, as the canvas frames contract says (Milestone 18,
       item 9): for example the Action's own example at 148 × 86 and the
       Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`.
@@ -121,8 +121,8 @@ Depends on: 12
 - [ ] Give the registered Button an optional content node, so the pill draws
       its branch in mono and is one control (decision 39).
 - [ ] Add Docs and Changelog rows to the account menu and to More on phones
-      (decision 22, option B). Change the account menu mockup first, then
-      `marketing-site.md` and the other docs that describe the menu.
+      (decision 22, option B). Milestone 24 changes the account menu mockup
+      and the docs first.
 
 ## Milestone 15: Mockup fixes from the docs
 
@@ -328,3 +328,22 @@ needs the measured size of both versions in a compare.
 - [x] Bring the frame probe, wire and adapter pages in line, and run
       `cargo xtask mokly-fixtures`. Branch:
       `calummoore/canvas-redesign-m23-frame-content-size-nsqf`.
+
+## Milestone 24: Mockups for Milestones 12 and 13
+
+Tags: mockup
+
+Depends on: 18
+
+Cal, 2026-11-22: start work early. The mockup parts of Milestones 12 and 13
+run now, beside Milestone 11, because they touch only mockup files.
+
+- [ ] Draw the Example tour as a listed change in the depicted branch:
+      Changes counts 11, a Changed status, and a Changes tab with the stepper
+      and the comparison details but no compare modes. Remove the status line
+      of `mokly-shell-design-catalogue.md` that records the gap.
+- [ ] Add the own-example row and the measured frame sizes to the Canvas
+      variant sets, as the two Milestone 12 TODOs above name them.
+- [ ] Add Docs and Changelog rows to the cloud account menu mockup and to
+      More on phones (decision 22, option B), and bring
+      `marketing-site.md` and the menu docs in line.
