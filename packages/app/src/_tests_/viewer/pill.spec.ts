@@ -1,13 +1,16 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { expect, open, test } from "../harness";
+import { emulateMacWindow } from "../mac-window/regions";
 
 import { makePublic, publishedProject, publishedViewerReady } from "./support";
+import { macAgent, openWidestCentre, widestPull } from "./widest-centre";
 
 /*
  * The publication pill is one control. A press anywhere on it opens the
  * switcher, its decorative parts and its hairline included, it draws its
- * branch in regular mono, and a hovering pointer darkens it.
+ * branch in regular mono, a hovering pointer darkens it, and a squeezed pill
+ * keeps its whole name.
  */
 
 /** Press the middle of one part of the pill, as a pointer does. */
@@ -123,4 +126,43 @@ test("a hovering pointer darkens the pill's fill and hairline, and a press darke
   await page.mouse.move(8, 450);
   await expect(control).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(pill).toHaveCSS("border-top-color", "rgb(225, 228, 222)");
+});
+
+test.describe("on a Mac", () => {
+  test.use({ userAgent: macAgent });
+
+  test("squeezed by the widest centre beside the window buttons, the pill keeps its whole name and tooltip", async ({
+    page,
+  }) => {
+    const { viewer, head } = await openWidestCentre(
+      page,
+      "viewer-pill-widest-name",
+    );
+    await emulateMacWindow(page, "start");
+    const pill = viewer.locator(".fo-package-slot-center .fo-canvas-pill");
+    // At a 1022px window the pill keeps its glyph and the start of its
+    // reference: it cuts the reference, and it draws neither the state's
+    // phrase nor the short SHA.
+    await expect
+      .poll(
+        () =>
+          pill
+            .locator(".fo-canvas-pill-name")
+            .evaluate((name) => name.scrollWidth > name.clientWidth),
+        "the reference is cut",
+      )
+      .toBe(true);
+    await expect(pill.locator(".fo-top-state-detail")).toBeHidden();
+    await expect(pill.locator(".mono-value")).toBeHidden();
+    // The tooltip and the Button's name still give the whole reference, the
+    // state's phrase and the short SHA, in the order the full pill shows them.
+    const whole = new RegExp(
+      `^#${widestPull.number} ${widestPull.title}, ${widestPull.author} · ` +
+        `Ready · [^,]+, ${head.slice(0, 7)}$`,
+    );
+    await expect(pill).toHaveAttribute("title", whole);
+    await expect(viewer.getByTestId("viewer-publication")).toHaveAccessibleName(
+      whole,
+    );
+  });
 });
