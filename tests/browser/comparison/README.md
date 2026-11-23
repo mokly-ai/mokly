@@ -137,3 +137,20 @@ The source hooks live in `tests/helpers/`:
 [`react_evidence_sources.ts`](../../helpers/react_evidence_sources.ts). The
 imported CSS and React evidence hooks link the repository's `node_modules`,
 which Git ignores.
+
+## Changes tab copy
+
+`changes_tab_test.ts` supplies a `test` whose `baseURL` serves a static build
+of [`changes_tab_catalogue.ts`](../../helpers/changes_tab_catalogue.ts), built
+with its Changes once per worker, and re-exports `changesTabPaths` and
+`tourSteps`. The catalogue is small, so the Changes filter lists five entries
+in an order that a reader can work out by hand: the stepper's places and its
+count stay fixed when the shared comparison copy grows. It adds a use case
+whose second step changed, and an unmodified screen that only a changed
+component affects. `changes_tab_ui.ts` holds the locators of the Changes tab.
+
+`changes_slot_host.ts` serves a copy of the native comparison copy with the
+host page of `changes_slot_entry.tsx`, an embedded viewer that fills the
+`changesStart` slot with a link, or with a host component that renders
+nothing, or leaves it empty. The shared viewer harness fills fixed slots, so
+the slot specs use this page instead.
