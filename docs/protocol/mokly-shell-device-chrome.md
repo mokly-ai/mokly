@@ -1,7 +1,5 @@
 # Shell Canvas Frames, Preview Scheme And Compact Layout
 
-Status: The Frames filter, the selection with its pill above the dock, the Changes tab that the dock names, and compare on every frame with the Side by side tags are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Canvas Frames
 
 Every view on the canvas stands in a frame. The

@@ -1,7 +1,5 @@
 # Component Pages And Screen Inspection
 
-Status: Inspect with its Frames filter, the canvas selection and compare on every shown frame are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components

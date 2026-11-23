@@ -1,7 +1,5 @@
 # Mokly Shell Design Contract
 
-Status: The right panel's Inspect and Changes tabs, with compare on every frame and Swipe, are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Scope
 
 This document records the design of the package-owned Browse shell and its

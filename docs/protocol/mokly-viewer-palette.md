@@ -1,7 +1,5 @@
 # Viewer Semantic Palette
 
-Status: The canvas selection and the Changes tab, whose parts read this palette, are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 The shell draws in Canvas, the look of a design file: a dot-grid canvas,
 white frames and panels with hairlines, near-black ink, one signal green, and
 Geist with Geist Mono. Dark uses neutral graphite with a lighter signal green.

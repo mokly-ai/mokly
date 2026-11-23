@@ -1,7 +1,5 @@
 # Component Inspector Design
 
-Status: The Inspect tab of the right panel, with its sections and its box model, is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
-
 ## Right Panel
 
 Every entry shares one inspector: the right panel, which floats over the

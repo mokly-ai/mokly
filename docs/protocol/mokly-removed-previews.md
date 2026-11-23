@@ -1,7 +1,5 @@
 # Removed Content Previews
 
-Status: Inspect, the Changes tab with its Compared rail, and the Frames filter that this page names are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Behavior
 
 Opening a removed screen, page, or document shows its previous version: the

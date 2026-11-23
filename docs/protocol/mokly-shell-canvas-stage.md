@@ -1,7 +1,5 @@
 # Shell Canvas Stage
 
-Status: The Frames filter in Inspect is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
-
 This continues the [shell design contract](./mokly-shell-design.md#layout). It
 fixes the canvas below the top bar: the panels that float over it, the selected
 entry's section with its frames, a use case's section, the Frames filter, and

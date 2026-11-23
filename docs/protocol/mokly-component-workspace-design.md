@@ -1,7 +1,5 @@
 # Component Workspace Design
 
-Status: The right panel's tabs, its Nested components section and its Frames filter are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Frames Filter And Highlighting
 
 The [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) in Inspect

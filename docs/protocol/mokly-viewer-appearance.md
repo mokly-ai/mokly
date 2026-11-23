@@ -1,7 +1,5 @@
 # Viewer Appearance
 
-Status: The right panel's tabs and sections and the Frames filter in Inspect are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them. Until then, the Appearance control, or the Dark preview control of an embedded root, marks a change in the other scheme of a screen or a component, in place of a Frames filter toggle.
-
 ## Interface Appearance And Frame Schemes
 
 The model has two inputs: the interface appearance around the frames, and the

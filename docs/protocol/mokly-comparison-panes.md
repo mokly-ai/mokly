@@ -1,7 +1,5 @@
 # Comparison Pane Presentation
 
-Status: Compare on every frame of the canvas, Swipe, and Side by side on one chosen frame are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Behavior
 
 Compare works on the frames of the

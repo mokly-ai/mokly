@@ -1,7 +1,5 @@
 # Comparison Scrolling
 
-Status: Comparison frames at the nominal size of their canvas frame at every zoom, Swipe, and scrolling on every frame of the canvas are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Page Scroller
 
 Each comparison frame is exactly the nominal size of its
