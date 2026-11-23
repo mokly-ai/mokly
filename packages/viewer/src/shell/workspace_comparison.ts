@@ -24,6 +24,7 @@ import {
   type ComparisonFramePlan,
 } from "./comparison_rows.js";
 import { comparedFrames, type ComparedFrame } from "./comparison_selection.js";
+import { useShellStore } from "./store_context.js";
 import type { ComparisonController } from "./use_comparison.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
@@ -64,17 +65,19 @@ export function useWorkspaceComparison({
   variant: WorkspaceVariant | undefined;
 }): WorkspaceComparison {
   const choice = useComparedFrameChoice();
+  const shown = useShellStore().state.frames;
   const entry = variant?.value ?? data.entry;
   const routed = entry.path;
   // A removed component or variant has no live frames: its compare draws
-  // the frames of its own views alone.
+  // the frames of its own views alone, of the schemes that the Frames
+  // filter shows.
   const removed = data.removed || variant?.removed === true;
   const plans = useMemo(
     () =>
       removed
-        ? removedComparisonPlans(data.compared, entry)
+        ? removedComparisonPlans(data.compared, entry, shown)
         : comparisonFramePlans(frames),
-    [data.compared, entry, frames, removed],
+    [data.compared, entry, frames, removed, shown],
   );
   const byKey = useMemo(
     () => new Map(plans.map((plan) => [plan.key, plan])),
