@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
+import type { ArtboardViewport } from "../../../parts/artboards.js";
 import { COMPONENT_NAVIGATION } from "../../../parts/component_nav_data.js";
-import type { ArtboardViewport } from "../../../parts/shell.js";
 import type { PendingDetails } from "../../loading/parts/details.js";
 import { DetailsStage } from "../../loading/parts/stage_state.js";
 import type { CanvasDestination } from "../../parts/destinations.js";

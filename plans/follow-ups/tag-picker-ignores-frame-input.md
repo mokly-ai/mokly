@@ -95,6 +95,8 @@
 - **Wider fix:** C. It makes the picker's outside-click rule hold for frames,
   so the order of Escape cannot differ.
 - **Previous examples:** None found.
+- **Related:** [changes-click-on-gated-set-untested.md](changes-click-on-gated-set-untested.md)
+  adds a workspace test of the same frame click and Escape handling.
 - **Recommendation:** C. It applies both rules of the tag picker page inside
   frames, with a small change in the shell's bindings.
 - **Action:** fix after merge, apply C, because the likelihood is Rare and

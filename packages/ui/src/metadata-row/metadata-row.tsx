@@ -8,13 +8,13 @@
 
 import { Fragment, type ReactNode } from "react";
 
+import type { DataAttribute } from "../data-attribute/data-attribute.js";
 import {
   FlowIcon,
   ScreenIcon,
   VariantIcon,
   WorkspaceIcon,
 } from "../icons/icons.js";
-import type { DataAttribute } from "../segmented-control/segmented-control.js";
 
 /** The empty data attribute that names an element, when there is one. */
 function dataMark(mark: DataAttribute | undefined) {

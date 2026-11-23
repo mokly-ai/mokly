@@ -1,11 +1,6 @@
 [
   {
     "kind": "screen",
-    "path": "design/browse/views/screen/tag-picker",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "screen",
     "path": "design/canvas/changes/current",
     "colorSchemes": ["light", "dark"]
   },
@@ -823,35 +818,6 @@
   },
   {
     "kind": "component",
-    "path": "design/library/chrome/screen-header",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "component",
-    "path": "design/library/chrome/screen-header/changed",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/chrome/screen-header"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/chrome/screen-header/component",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/chrome/screen-header"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/chrome/screen-header/removed",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/chrome/screen-header"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/chrome/screen-header/screen",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/chrome/screen-header"
-  },
-  {
-    "kind": "component",
     "path": "design/library/chrome/top-bar",
     "colorSchemes": ["light", "dark"]
   },
@@ -956,41 +922,6 @@
   },
   {
     "kind": "component",
-    "path": "design/library/controls/view-controls",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/view-controls/both",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/view-controls"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/view-controls/changed-views",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/view-controls"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/view-controls/default",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/view-controls"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/view-controls/highlighted",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/view-controls"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/controls/view-controls/unavailable",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/controls/view-controls"
-  },
-  {
-    "kind": "component",
     "path": "design/library/inspector/box-model",
     "colorSchemes": ["light"]
   },
@@ -1034,29 +965,6 @@
     "path": "design/library/inspector/frames-filter/screen",
     "colorSchemes": ["light"],
     "variantOf": "design/library/inspector/frames-filter"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/inspector/inspector",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "component",
-    "path": "design/library/inspector/inspector/closed",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/inspector/inspector"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/inspector/inspector/details",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/inspector/inspector"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/inspector/inspector/props",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/inspector/inspector"
   },
   {
     "kind": "component",
@@ -1224,41 +1132,6 @@
     "path": "design/library/panels/phone-dock/inspect",
     "colorSchemes": ["light"],
     "variantOf": "design/library/panels/phone-dock"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/device-frame",
-    "colorSchemes": ["light"]
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/device-frame/browser",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/device-frame"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/device-frame/dark",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/device-frame"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/device-frame/failed",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/device-frame"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/device-frame/light-only",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/device-frame"
-  },
-  {
-    "kind": "component",
-    "path": "design/library/preview/device-frame/phone",
-    "colorSchemes": ["light"],
-    "variantOf": "design/library/preview/device-frame"
   },
   {
     "kind": "component",

@@ -149,9 +149,10 @@ function screenFrames(
 }
 
 /**
- * A component's variant set: one row for each current row of its variant
- * bar, in order, with its Light frame beside its Dark frame. The shown
- * schemes form the columns; a hidden scheme's frames stay mounted.
+ * A component's variant set: one row for each current row of the
+ * workspace, its own example and then each saved variant, in order, with its
+ * Light frame beside its Dark frame. The shown schemes form the columns; a
+ * hidden scheme's frames stay mounted.
  */
 function variantSetFrames(
   rows: readonly WorkspaceVariant[],

@@ -12,8 +12,8 @@
 
 import { Fragment } from "react";
 
+import type { DataAttribute } from "../data-attribute/data-attribute.js";
 import { MetadataCode, MetadataRow } from "../metadata-row/metadata-row.js";
-import type { DataAttribute } from "../segmented-control/segmented-control.js";
 
 import {
   ComparisonHeading,

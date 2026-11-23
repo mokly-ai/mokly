@@ -116,20 +116,3 @@ test("each step shows its Desktop view from the layout breakpoint up, and its Mo
   await page.setViewportSize({ width: 900, height: 900 });
   await expectStepView(page, 1, "desktop");
 });
-
-test("a step frame is a bare canvas frame at every width, with no window to expand", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(TEAM_FLOW);
-  for (const width of [1280, 760]) {
-    await page.setViewportSize({ width, height: 900 });
-    await expectStepView(page, 1, width < 900 ? "mobile" : "desktop");
-    await expect(
-      page.getByRole("button", { name: "Expand to a wider viewport" }),
-    ).toHaveCount(0);
-    await expect(
-      page.locator("[data-mokly-stage] :is(.browser-frame, .phone-frame)"),
-    ).toHaveCount(0);
-  }
-});

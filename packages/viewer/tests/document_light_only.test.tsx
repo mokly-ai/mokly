@@ -58,21 +58,31 @@ test("on the canvas, a document with no dark render names its fallback in its la
       </DisplaySelection>,
       { index },
     );
-    assert.doesNotMatch(html, /mbk-scheme-fallback/u);
-    return /<span class="mbk-canvas-frame-name mbk-reset">([^<]*)<\/span>/u.exec(
-      html,
-    )?.[1];
+    // The label names the fallback, and the markup names it nowhere else.
+    return {
+      label:
+        /<span class="mbk-canvas-frame-name mbk-reset">([^<]*)<\/span>/u.exec(
+          html,
+        )?.[1],
+      named: html.split("Light only").length - 1,
+    };
   };
-  assert.equal(
-    label(["light"], ["light", "dark"], "dark"),
-    "README.md · Light only",
-  );
-  assert.equal(label(["light"], ["light", "dark"], "light"), "README.md");
-  assert.equal(
-    label(["light", "dark"], ["light", "dark"], "dark"),
-    "README.md",
-  );
-  assert.equal(label(["light"], ["light"], "dark"), "README.md");
+  assert.deepEqual(label(["light"], ["light", "dark"], "dark"), {
+    label: "README.md · Light only",
+    named: 1,
+  });
+  assert.deepEqual(label(["light"], ["light", "dark"], "light"), {
+    label: "README.md",
+    named: 0,
+  });
+  assert.deepEqual(label(["light", "dark"], ["light", "dark"], "dark"), {
+    label: "README.md",
+    named: 0,
+  });
+  assert.deepEqual(label(["light"], ["light"], "dark"), {
+    label: "README.md",
+    named: 0,
+  });
 });
 
 /** A removed document under the fixture's product folder. */

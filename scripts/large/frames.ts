@@ -24,5 +24,4 @@ export function viewFrame(viewport: Viewport): string {
 }
 
 /** The frame of a page or a Markdown document in either layout. */
-export const DOCUMENT_FRAME =
-  "[data-mokly-stage] iframe, .mbk-stage-embed iframe";
+export const DOCUMENT_FRAME = "[data-mokly-stage] iframe";

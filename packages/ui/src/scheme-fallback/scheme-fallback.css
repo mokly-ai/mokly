@@ -1,6 +1,0 @@
-/* The Light-only note is hidden until a Dark shell reveals it in the label of
-   a frame that keeps a light render. The frame's stylesheet reveals it. */
-.mbk-frame-scheme-note {
-  display: none;
-  font-weight: 500;
-}

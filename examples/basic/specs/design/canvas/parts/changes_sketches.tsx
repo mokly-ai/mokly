@@ -1,8 +1,8 @@
 import type { CompareModesProps } from "../../library/panels/compare-modes.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
 import type { DepictedView } from "../../parts/depicted_view.js";
 import { MiniDetails, MiniWelcome } from "../../parts/mini_screens.js";
 import { miniView } from "../../parts/mini_views.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
 
 import {
   compareFrames,

@@ -5,7 +5,7 @@ import {
 import { optional, useDesignInstance } from "../library/composition.js";
 
 import { useDesignNavigation } from "./design_navigation.js";
-import { CHANGED_COUNT, NAV_TREE } from "./nav_data.js";
+import { CHANGED_COUNT } from "./nav_data.js";
 
 export type NavNode = CatalogueNavigationProps["rows"][number];
 export type ChangesStatus = NonNullable<
@@ -15,41 +15,33 @@ export type ChangesStatus = NonNullable<
 interface NavTreeProps {
   changes?: boolean | undefined;
   activeKey?: string | undefined;
-  activeLabel?: string | undefined;
   changedCount?: number | undefined;
   changedOnly?: boolean | undefined;
   changesStatus?: ChangesStatus | undefined;
-  nodes?: readonly NavNode[] | undefined;
+  nodes: readonly NavNode[];
 }
 
-function CatalogueNavigation({
+export function NavTree({
   activeKey,
   changes = true,
-  activeLabel,
   changedCount,
   changedOnly,
   changesStatus,
   nodes,
-  drawer,
-}: NavTreeProps & { drawer: boolean }) {
+}: NavTreeProps) {
   const navigation = useDesignNavigation();
   return (
     <catalogueNavigation.Component
       moklyInstance={useDesignInstance("navigation")}
-      rows={nodes ?? NAV_TREE}
+      rows={nodes}
       changedCount={changedCount ?? CHANGED_COUNT}
       showChanges={changes}
       changedOnly={changedOnly ?? false}
-      presentation={drawer ? "drawer" : "responsive"}
+      presentation="responsive"
       {...optional("changesStatus", changesStatus)}
       {...optional("activeKey", activeKey)}
-      {...optional("activeLabel", activeLabel)}
       {...optional("allDestination", navigation.all)}
       {...optional("changesDestination", navigation.changes)}
     />
   );
-}
-
-export function NavTree(props: NavTreeProps) {
-  return <CatalogueNavigation {...props} drawer={false} />;
 }

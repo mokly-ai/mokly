@@ -119,7 +119,6 @@ const SHELL = [
   themed("--mbk-accent-edge", tint("signal", 0.45)),
   themed("--mbk-guide", canvas("border")),
   themed("--mbk-dot", canvas("dot")),
-  themed("--mbk-browser-bar", canvas("surfaceMuted")),
   ...STATUS.map(([property, light, dark]) =>
     themed(property, fixed(light, dark)),
   ),
@@ -162,12 +161,6 @@ export const PREVIEW_ROLES = [
   ["--mbk-screen-ink", "#1a1d1c"],
   ["--mbk-dark-screen-bg", "#121514"],
   ["--mbk-dark-screen-ink", "#eef1ef"],
-  ["--mbk-device-body", "#171a18"],
-  ["--mbk-device-notch", "#0b0d0c"],
-  ["--mbk-device-home", "rgba(20, 24, 20, 0.4)"],
-  ["--mbk-device-light-close", "#d9655b"],
-  ["--mbk-device-light-minimise", "#dba43d"],
-  ["--mbk-device-light-expand", "#50a86d"],
   ["--mbk-highlight-scrim", "rgba(244, 246, 244, 0.72)"],
   ["--mbk-highlight-edge", "#336249"],
 ].map(([property, value]) => shared(property, literal(value)));

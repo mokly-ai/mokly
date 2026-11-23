@@ -16,8 +16,9 @@ else Added when any is Added, else Removed when any is Removed, else
 Unmodified. Comparison eligibility follows
 that shown status under the kind rule: Changed is eligible, and
 Removed is eligible only for a component. Thus an entry with
-changes can show Unmodified with no compare modes while the marks on the view
-controls and the `Changed views` row point to the views that changed. Changed
+changes can show Unmodified with no compare modes while the marks on the
+Frames filter's toggles and the `Changed views` row point to the views that
+changed. Changed
 components make the one exception: when the entry detail marks the entry
 comparison-eligible, an Unmodified view whose usage holds a changed component
 that the detail's `relatedComponents` names stays eligible while it shows

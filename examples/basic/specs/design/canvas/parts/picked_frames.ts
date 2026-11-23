@@ -1,5 +1,5 @@
 import { useRenderedAppearance } from "../../parts/appearance.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
 
 import type { CanvasFrameSpec, FrameScheme } from "./frames.js";
 import { frameOf } from "./set_sketches.js";
