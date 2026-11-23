@@ -82,9 +82,13 @@ sizing, page ranges and measurement, instant writes, shorter-document
 translation, value-based echoes, inner-region mirroring, keys, and anchors; the
 [region pairing contract](./mokly-comparison-region-pairing.md) owns how regions
 pair, and the [Scroll together contract](./mokly-comparison-scroll-together.md)
-owns the reader preference. Sizing a frame to its document is rejected: it
-distorts viewport units, fixed bars, and sticky headers and can feed a
-document's height back into itself without converging.
+owns the reader preference. Sizing a screen's frame to its document is
+rejected: it distorts viewport units, fixed bars, and sticky headers and can
+feed a document's height back into itself without converging. A component's
+frame is the one exception: it takes the larger width and height of its two
+versions, measured once when both documents load, under the
+[canvas frames contract](./mokly-shell-device-chrome.md#canvas-frames), so no
+later measurement changes its size.
 
 ## Layout
 

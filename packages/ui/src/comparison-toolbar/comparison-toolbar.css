@@ -124,6 +124,18 @@ span.mbk-diff-refresh {
   cursor: default;
 }
 
+/* The outcome line of each compared frame, below the band's controls. */
+.mbk-diff-outcomes {
+  display: grid;
+  flex: 1 1 100%;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  color: var(--chrome-ink-2);
+  font-size: 12px;
+  list-style: none;
+}
+
 @media (width < 56.25rem) {
   .mbk-diff-toolbar {
     padding: 8px 12px;

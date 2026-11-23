@@ -14,7 +14,6 @@ import {
   type FloatingPanelSheet,
 } from "@mokly/ui/floating-panel";
 
-import { useShellComparisonMode } from "./comparison_mode.js";
 import { useNavigationWidth } from "./nav_resize.js";
 import { useShellRoot, useShownCanvas } from "./root_context.js";
 import { useShellStore } from "./store_context.js";
@@ -59,22 +58,20 @@ function useSheet(sheet: ShellSheet): FloatingPanelSheet {
 
 /**
  * The dock: Catalogue, the right panel's current tab while an entry is
- * selected, and Fit while the canvas holds a section. It hides while a sheet
- * is open, and Fit hides while a compare mode shows its stage in the
- * canvas's place.
+ * selected, and Fit while the canvas holds a section, also during a compare.
+ * It hides while a sheet is open.
  */
 function ShellDock() {
   const store = useShellStore();
   const elements = useShellRoot()?.elements;
   const canvas = useShownCanvas()?.handle;
-  const comparing = useShellComparisonMode() !== "current";
   if (store.state.sheet !== undefined) return null;
   const selected = store.state.route.view.kind === "target";
   return (
     <CanvasDock
       catalogueRef={elements?.dock.ref("catalogue")}
       onCatalogue={() => store.setSheet("catalogue")}
-      onFit={canvas && !comparing ? () => canvas.fit() : undefined}
+      onFit={canvas ? () => canvas.fit() : undefined}
       onTab={() => store.setSheet("panel")}
       tab={selected ? "inspect" : undefined}
       tabRef={elements?.dock.ref("tab")}
