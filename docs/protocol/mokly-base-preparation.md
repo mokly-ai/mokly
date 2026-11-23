@@ -1,7 +1,5 @@
 # Base Source And Dependency Preparation
 
-Status: The Vite adapter for a catalogue without JavaScript is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
-
 This page defines how Mokly prepares the sources and the dependencies of the
 base side. The [comparison contract](./mokly-comparison.md#sides) owns rendered
 sides. The [Git runtime](./mokly-git.md) owns history, blobs and extraction.

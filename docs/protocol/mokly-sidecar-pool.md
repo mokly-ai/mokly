@@ -11,6 +11,8 @@ A sidecar starts when the catalogue uses any of these inputs:
 - A Storybook stories file.
 - A configured renderer module.
 - A stylesheet processed by a consumer PostCSS module.
+- A local stylesheet under the
+  [Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript).
 
 HTML, YAML, and Markdown alone start no sidecar. The
 [sidecar contract](./mokly-sidecar.md) defines pool size, deadlines, recycling,

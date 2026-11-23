@@ -1,7 +1,5 @@
 # Imported Stylesheet PostCSS And Dependency Inventory
 
-Status: The Vite stylesheet transform is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
-
 This is the PostCSS and inventory companion to the
 [imported stylesheet contract](./mokly-imported-styles.md).
 [Exact diagnostics](./mokly-imported-styles-errors.md) apply throughout. Under

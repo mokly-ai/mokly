@@ -1,6 +1,6 @@
 # Vite Adapter Inputs
 
-Status: The optional file and the Vite stylesheet transform are not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds the optional file, and the [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds the transform.
+Status: The optional file is not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
 
 This page continues the [Vite adapter contract](./mokly-vite-adapter.md). It
 defines the inputs of a Vite compile, how Serve rebuilds, and the setup of the

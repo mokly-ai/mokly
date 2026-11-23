@@ -1,7 +1,5 @@
 # Imported Stylesheet CSS Modules
 
-Status: The Vite stylesheet transform is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
-
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 The [error catalogue](./mokly-imported-styles-errors.md) gives exact messages.
 

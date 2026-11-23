@@ -1,7 +1,5 @@
 # Imported Stylesheet Diagnostics
 
-Status: The Vite stylesheet transform and the fix text of the route collision row are not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds them.
-
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`
@@ -62,7 +60,7 @@ repository-relative path. It includes the one-based line and column of the
 location, as for a PostCSS `CssSyntaxError`. That file can be a partial that
 the stylesheet imports. Without a location, `{stylesheet}` is the logical path
 of the stylesheet. A location in a virtual module, or in a file outside the
-source root and the selected dependency roots, counts as no location.
+source root, counts as no location.
 
 Decision: the Vite setup row names the file and the position of the failure,
 as the PostCSS `CssSyntaxError` rule does on the esbuild path. Always naming

@@ -1,7 +1,5 @@
 # Mokly Package And Authoring Contract
 
-Status: The Vite stylesheet transform is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
-
 ## Scope
 
 Mokly is shared developer tooling for repositories that keep visual mockups
@@ -230,9 +228,11 @@ release-managed version literals, and package boundary.
 The shim passes `MOKLY_PACKAGE_ROOT` as the executing `@mokly/mokly` package
 root and `MOKLY_NODE_EXECUTABLE` as its `process.execPath`. The binary starts
 `dist/sidecar.js` from that package with the resolved repository as its working
-directory. An HTML-only catalogue without a renderer or configured PostCSS needs neither
-Node nor a sidecar entry. Configured PostCSS starts a sidecar when the CSS
-pipeline processes a stylesheet. Direct binary execution uses `node` from
+directory. An HTML-only catalogue without a renderer, configured PostCSS, or a
+local stylesheet under the Vite adapter needs neither Node nor a sidecar entry.
+Configured PostCSS starts a sidecar when the CSS pipeline processes a
+stylesheet. Under the Vite adapter, a local stylesheet also starts a sidecar.
+Direct binary execution uses `node` from
 `PATH` when `MOKLY_NODE_EXECUTABLE` is absent. It first checks the adjacent installed package, then
 walks invocation-directory and executable ancestors for
 `node_modules/@mokly/mokly/dist/sidecar.js` or `packages/mokly/dist/sidecar.js`.

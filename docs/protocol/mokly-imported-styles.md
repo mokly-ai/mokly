@@ -1,7 +1,5 @@
 # Imported Stylesheet Delivery
 
-Status: The Vite stylesheet transform is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
-
 ## Delivery
 
 A configured or component-declared local stylesheet, and CSS that an entry module, a stories file,

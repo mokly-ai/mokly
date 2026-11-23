@@ -21,7 +21,8 @@ extraction, the base configuration, discovery, and the clean dependency
 identities of both sides. It builds an extraction only when discovery shows
 that the base needs a sidecar, under the
 [source rules](./mokly-base-preparation.md#sources). So an HTML base without a
-renderer or PostCSS builds no extraction and starts no sidecar.
+renderer, PostCSS, or a local stylesheet under the Vite adapter builds no
+extraction and starts no sidecar.
 
 The configured size is the exact size from `--sidecars` or `MOKLY_SIDECARS`,
 or the core count that bounds a

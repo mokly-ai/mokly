@@ -110,9 +110,10 @@ The Rust binary reads the configuration, composes HTML screens and Markdown
 documents, assembles every document, serves the catalogue, and writes the
 static site. JavaScript runs only in the render sidecar. The sidecar bundles
 your entry modules and your renderer module with your module resolution and
-your own React. It also runs your PostCSS module on local stylesheets. A
-catalogue of HTML files without a renderer or a PostCSS module starts no
-sidecar.
+your own React. It also runs your PostCSS module on local stylesheets. Under
+the Vite adapter, it transforms them through your Vite setup instead. A
+catalogue of HTML files without a renderer, a PostCSS module, or a local
+stylesheet under the Vite adapter starts no sidecar.
 
 The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
 [module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and

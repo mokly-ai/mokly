@@ -1,7 +1,5 @@
 # Tree Comparison And Changes
 
-Status: The Vite stylesheet transform is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
-
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head

@@ -1,6 +1,6 @@
 # Rust Core Architecture
 
-Status: The [Vite stylesheet transform](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) is not available yet. The sidecar release thread and finite file response bodies do not tell the render store that Serve is busy yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them.
+Status: The sidecar release thread and finite file response bodies do not tell the render store that Serve is busy yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them.
 
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the

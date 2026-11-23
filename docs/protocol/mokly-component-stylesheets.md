@@ -1,7 +1,5 @@
 # Component Stylesheets
 
-Status: Declared stylesheets in Vite's other stylesheet languages are not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds them.
-
 ## Two Kinds Of Component CSS
 
 A component's CSS reaches a document in two ways. Styles that a

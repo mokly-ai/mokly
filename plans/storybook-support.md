@@ -865,10 +865,11 @@ own lines of this plan.
   of a CSS Module reads is also a protected input. Reason: the source policy
   keeps stylesheet sources private, and such a file is a stylesheet source.
 - D25. Made on 2026-11-23. The location that a failing plugin reports can be
-  in a virtual module, or in a file outside the source root and the selected
-  dependency roots. Such a location counts as no location, so `{stylesheet}`
-  is the logical path of the stylesheet. Reason: design call D16 keeps
-  absolute paths and virtual modules out of every message.
+  in a virtual module, or in a file outside the source root. Such a location
+  counts as no location, so `{stylesheet}` is the logical path of the
+  stylesheet. Reason: design call D16 keeps absolute paths and virtual modules
+  out of every message, and a file outside the source root has no
+  repository-relative path that a message can show.
 - D26. Made on 2026-11-23. When no plugin reports a failure, `{plugin}` of the
   Vite setup row is `vite`. Reason: the code already uses this fallback, and
   the row then has one rule for each failure.
@@ -1312,7 +1313,7 @@ Merge justifications of the merge of the primary branch with `main`, on
 2026-11-20: `.context/storybook-support/merge-justifications.md`. The pull
 request description copies them.
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
