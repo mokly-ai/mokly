@@ -1,7 +1,5 @@
 # Web Application
 
-Status: Theme on the device as the source of the app's scheme is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
-
 `packages/app` is the Expo application that serves Mokly Cloud's account entry and
 its logged-in product. It targets the web. The account and settings surfaces
 are DOM compositions over `@firna/ui` controls, so they render in a browser and

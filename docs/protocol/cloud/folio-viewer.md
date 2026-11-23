@@ -1,6 +1,6 @@
 # Viewer Compositions
 
-Status: The five-action bar, the account menu, the check card, the cloud's dot-grid stage and the Canvas panels, dialog and layer of these compositions are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
+Status: The check card is not built yet, and the application's panels and settings dialog lay the package modal's backdrop instead of the Overlay scrim. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the check card, and the [modal backdrop item](../../../plans/follow-ups/modal-backdrop-misses-canvas-scrim.md) brings the scrim.
 
 The compositions of the viewer and of the surfaces layered over it, from
 [Folio chrome](./folio-chrome.md): the stage, the viewer top bar, the

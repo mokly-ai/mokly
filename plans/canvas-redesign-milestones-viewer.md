@@ -140,29 +140,36 @@ Tags: ui
 
 Depends on: 12, only for the check slot
 
-- [ ] Rebuild the bar: project switcher, publication pill, Search, History,
+- [x] Rebuild the bar: project switcher, publication pill, Search, History,
       Share and account. Remove the Settings button.
-- [ ] Build the account menu with Theme, Settings and Sign out. Store the
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
+- [x] Build the account menu with Theme, Settings and Sign out. Store the
       theme choice on the device.
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
 - [ ] Fill the Changes check slot with the Mokly check.
-- [ ] Restyle the panels, the switcher, Share, History and the settings
+- [x] Restyle the panels, the switcher, Share, History and the settings
       dialog.
-- [ ] End the More menu with the same account rows on compact widths.
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
+- [x] End the More menu with the same account rows on compact widths.
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
 - [ ] After Settings leaves the bar, measure the bar's label and SHA widths
       again, so History's label and the SHA show at 1180px, as the prototype
       shows them.
-- [ ] Give the registered Button an optional content node, so the pill draws
+- [x] Give the registered Button an optional content node, so the pill draws
       its branch in mono and is one control (decision 39).
-- [ ] Add Docs and Changelog rows to the account menu and to More on phones
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
+- [x] Add Docs and Changelog rows to the account menu and to More on phones
       (decision 22, option B). Milestone 24 changes the account menu mockup
       and the docs first.
       `@firna/ui` menu rows take no `href`, and that package lives in another
       repository, so the cloud draws its own link row (an anchor with the
       `menuitem` role) inside the same list chrome. Record a follow-up item to
       move the link row into `@firna/ui`.
-- [ ] Give `siteLinks` in `packages/app/src/config.ts` and the mockup fixture
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
+- [x] Give `siteLinks` in `packages/app/src/config.ts` and the mockup fixture
       `docs/mockups/src/fixtures/site.ts` the site's trailing slash: `/docs/`
       and `/changelog/`.
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
 - [x] Make `both` the cloud's viewport default, as in the package (Milestone
       11, item 9, option C), so a phone opens a screen on its Mobile frame and
       a wide canvas shows both columns. Change the address mapping, Share,

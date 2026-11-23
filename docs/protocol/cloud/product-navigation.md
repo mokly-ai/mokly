@@ -1,7 +1,5 @@
 # Product Navigation
 
-Status: The account menu with Theme, Settings, Docs and Changelog is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
-
 The product's routes, their resolution and fallbacks, and the navigation shell
 around the hosted viewer. Accounts, onboarding, roles and settings are in
 [Product accounts and roles](./product-accounts-and-roles.md). See

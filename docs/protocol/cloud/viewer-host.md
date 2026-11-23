@@ -1,7 +1,5 @@
 # Viewer Host
 
-Status: Theme on the device as the source of `theme` is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds Theme.
-
 This is the package-host sub-contract of [Viewer](./viewer.md). It defines
 what the cloud guarantees to the workspace `@mokly/viewer`
 and what the reader sees when the package reports a version

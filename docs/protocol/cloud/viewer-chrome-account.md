@@ -1,7 +1,5 @@
 # Viewer Chrome: Account Menu
 
-Status: The account menu that the avatar trigger opens, Theme on the device and the account rows of More are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
-
 This is the account sub-contract of [Viewer chrome](./viewer-chrome.md): the
 `account` trigger, the account menu that it opens, the Theme choice in that
 menu, and the account rows that end the compact **More** menu. Their

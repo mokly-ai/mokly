@@ -30,4 +30,4 @@
 - **Previous examples:** The modal's surface shadow, which the application already replaces through `surfaceStyle` in `packages/app/src/viewer/panel.tsx` and `packages/app/src/settings/surface.tsx`.
 - **Recommendation:** B. It keeps the scrim in the theme mapping, as `docs/protocol/cloud/shared-controls.md` asks for every control colour, and one release reaches every modal and sheet. A is the smaller change if the package should not grow a theme role.
 - **Action:** ask the user, because the fix changes the public API of `@firna/ui` in its own repository and moves this repository's one `@firna/ui` pin, and the user owns both.
-- **Done when:** The application's viewer panels and settings dialog lay the Overlay scrim over the viewer, and the status line of `docs/protocol/cloud/design-tokens.md` no longer names this item.
+- **Done when:** The application's viewer panels and settings dialog lay the Overlay scrim over the viewer, and the status lines of `docs/protocol/cloud/design-tokens.md` and `docs/protocol/cloud/folio-viewer.md` no longer name this item.

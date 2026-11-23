@@ -1,6 +1,6 @@
 # Viewer Chrome
 
-Status: The five-action bar, the account menu and the Mokly check in the Changes tab are not built yet: the live bar also holds Settings, and its avatar opens the Account settings pane. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the bar and the account menu, and [Viewer chrome: check slot](./viewer-chrome-check.md) says when the check comes.
+Status: The Mokly check in the Changes tab is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the check, in the slot that [Milestone 12](../../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds.
 
 This is the slot and publication-chrome sub-contract of [Viewer](./viewer.md).
 The slots are those of the workspace `@mokly/viewer` of

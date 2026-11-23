@@ -1,7 +1,5 @@
 # Web Product Shell
 
-Status: The five-action bar, the account menu and the More sheet of a touch viewport are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
-
 The signed-in web application composes the settings surfaces and the published
 viewer into one browser-history contract. Read [Web application](./web-app.md)
 for routes, sessions and API access, [Settings dialog](./settings-dialog.md) for

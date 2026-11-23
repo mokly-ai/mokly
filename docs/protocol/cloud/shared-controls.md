@@ -1,7 +1,5 @@
 # Shared Controls
 
-Status: The surfaces of the account menu and More are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
-
 Common controls come from the public `@firna/ui` package. The catalogue
 registers them as thin wrappers, and the product uses the same controls through
 the same theme mapping. See [Design tokens](./design-tokens.md) and

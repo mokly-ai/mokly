@@ -1,7 +1,5 @@
 # Marketing Site
 
-Status: The Docs and Changelog rows of the account menu and of More are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
-
 The public website and documentation live in this repository as the static
 Astro npm workspace `apps/site`. Marketing lives here, not in `packages/app`,
 because the site documents the cloud from the cloud protocol docs and consumes
