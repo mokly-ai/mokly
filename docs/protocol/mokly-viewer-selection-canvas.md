@@ -50,7 +50,8 @@ size. When the instance has a box model and a left padding, a redline measures
 that padding from the inside of the border to the content, with the value in a
 tag outside the box. The redline hides while the padding is too narrow on
 screen to read. The handles and the tags keep their size at every zoom, and
-the redline's length follows the frame's scale.
+the redline's length follows the frame's scale. The tags hide at a small zoom,
+as [tags at a small zoom](#tags-at-a-small-zoom) says.
 
 The outline follows the instance's geometry as a highlight does, and the
 viewer measures the box model again after each `geometry` event. A frame
@@ -71,6 +72,25 @@ each corner and the frame's size in a tag below its middle. The frame's
 selection has no name tag and no redline. The variant set's Props then edits
 the variant of that frame, under the
 [inspector design](./mokly-component-inspector-design.md#inspect).
+
+## Tags At A Small Zoom
+
+The tags on a frame keep their size at every zoom: the selection's name tag,
+its size tag and its padding redline with the value, and the
+[highlight labels](./mokly-component-workspace-design.md#view-controls) of
+Highlight components. While the canvas draws its frames at less than 60% of
+their size, it hides these tags, and a zoom to 60% or more shows them again.
+The outlines, the handles and the highlight's cutouts stay, and Inspect's
+Selection section still names the selection. The
+[compact layout](./mokly-shell-device-chrome.md#compact-layout) follows the
+same rule.
+
+Decision: one zoom threshold for every tag on a frame. Below 60%, a tag covers
+more of a frame than the part that it names, so it hides the content that the
+reader inspects. A rule for each tag that compares the tag with its box would
+show some tags of one frame and hide others. Tags outside the frames would
+stand far from the boxes that they name, and tags that scale with the zoom
+would be too small to read.
 
 ## Sizes
 

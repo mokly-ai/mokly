@@ -3,7 +3,7 @@
 import { expect, type Page, type Request } from "@playwright/test";
 
 import { isRender } from "./live_shell_fixture.js";
-import { revealInPanel } from "./workspace_actions.js";
+import { openInspectFold } from "./workspace_actions.js";
 
 /** The text that every stage frame shows, read through the parent page. */
 export function frameTexts(page: Page): Promise<string[]> {
@@ -41,15 +41,34 @@ export async function frameText(
 }
 
 /**
- * Show the Props panel; a click on the selected tab would close it. In the
- * compact layout the inspector stands in the panel's sheet.
+ * Open Inspect's Props, a folded section, and return its content; a press on
+ * an open section's head would fold it. In the compact layout Inspect stands
+ * in the panel's sheet. On a variant set, Props edits the row of the
+ * selected frame, so while no frame is selected this chooses the routed
+ * entry's own row in Variants.
  */
 export async function showProps(page: Page) {
-  const tab = page.getByRole("tab", { name: "Props" });
-  await revealInPanel(page, tab);
-  await expect(tab).toBeVisible();
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  return page.getByRole("tabpanel", { name: "Props" });
+  const props = await openInspectFold(page, "props");
+  const choose = props.getByText("Choose a variant to edit its props.");
+  if (await choose.isVisible()) {
+    await chooseRow(page, new URL(page.url()).pathname);
+    await expect(choose).toBeHidden();
+  }
+  return props;
+}
+
+/**
+ * Choose a row of a variant set in Inspect's Variants, which selects the
+ * row's Light frame, so Props edits that row. `route` names the row by its
+ * entry path or by its route, such as `/view/card/`.
+ */
+export async function chooseRow(page: Page, route: string): Promise<void> {
+  const path = route.replace(/^\/view\/|\/$/gu, "");
+  await page
+    .locator(
+      `[data-inspect-section="variants"] [data-inspect-variant="${path}"]`,
+    )
+    .click();
 }
 
 /**
