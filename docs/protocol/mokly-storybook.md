@@ -1,6 +1,6 @@
 # Storybook Stories
 
-Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 6](../../plans/storybook-support.md#milestone-6-the-first-story-as-the-parent-page) adds the first story as the parent page, variant props without the parent's props, the rule for `required` keys, and the render with exactly the requested data props. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
+Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
 
 ## Stories Files
 

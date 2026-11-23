@@ -1012,7 +1012,8 @@ The first included story becomes the parent page, as decision 3 says.
       Branch: `conductor/storybook-support-b-story-reading`.
 - [x] Test that a meta without args builds, and that no base state repeats.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 7: Globals from the `mokly` parameter
 

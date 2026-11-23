@@ -23,28 +23,31 @@ const meta = {
   parameters: {
     docs: { description: { component: "Buttons trigger actions." } },
   },
-  args: { label: "Continue", disabled: false },
+  args: { label: "Continue" },
   argTypes: {
     label: { name: "Button label", options: ["Continue", "Save"] },
   },
 } satisfies Meta<typeof Button>;
 
 export default meta;
+export const Default: StoryObj<typeof meta> = { args: { label: "Save" } };
 export const Disabled: StoryObj<typeof meta> = {
   name: "Disabled button",
   args: { disabled: true },
 };
 ```
 
-The file supplies one component entry. Its own props come from the meta's
-`args`. Each story supplies a variant whose slug is its export name.
-The example has paths `components/Button` and `components/Button/Disabled`
-under the default `specs` root. The meta title supplies the display title's
-last segment. It does not change the path.
+The first included story in source order becomes the component entry's parent
+page. Its data args supply the entry's props. Each other included story
+renders as a variant at the entry path plus its export name. Under the default
+`specs` root, `Default` renders at `components/Button`. `Disabled` renders at
+`components/Button/Disabled`. Mokly does not repeat `Default` as a variant.
 
-The meta can omit `title`. Mokly then uses the component's
-`displayName`, else its `name`, else the file name without the stories
-extension.
+Mokly does not render a page for the meta itself, so the meta's `args` do not
+need to be complete. The last segment of the meta's `title` gives the entry's
+display title. It does not change the path. If the meta omits `title`, Mokly
+uses the component's `displayName`, else its `name`, else the file name
+without the stories extension.
 
 Each variant's title is its story's `name`, else its `storyName`, else
 Storybook's start case of the export name. For example, `LargeButton` shows as
@@ -79,9 +82,10 @@ import { Button } from "./button.js";
 const meta = preview.meta({
   title: "Controls/Button",
   component: Button,
-  args: { label: "Continue", disabled: false },
+  args: { label: "Continue" },
 });
 
+export const Default = meta.story({ args: { label: "Save" } });
 export const Disabled = meta.story({ args: { disabled: true } });
 ```
 
@@ -124,9 +128,17 @@ included story. Each variant keeps that description.
 
 ## Props and controls
 
-Mokly infers the schema from data args. `argTypes` supplies control hints:
-options, number bounds and step, a label, and help text. It does not supply a
-schema or change validation.
+Each story starts with the data args that Storybook composes for it, including
+shared args from the meta. A variant does not inherit props from the parent
+page. In the example, `Default` sets `label` to `"Save"`. `Disabled` keeps
+`"Continue"` from the meta.
+
+Mokly infers one prop schema from all included stories. A top-level prop is
+required only when every included story sets it. In the example, `label` is
+required and `disabled` is optional.
+
+`argTypes` supplies control hints: options, number bounds and step, a label,
+and help text. It does not supply a schema or change validation.
 
 Each story keeps the meta's select choices and number bounds, even for an
 entry prop that the story does not set. A story's own `argTypes` can override
@@ -142,7 +154,8 @@ React element args and arrays of React elements do too. Their file values
 remain available to the story. Other non-data args, such as a `Map`, still
 give a `props-not-data` warning.
 
-Saved states use Storybook's composed args. Live data props overlay those args.
+Mokly renders each story with exactly the data props it shows for that story.
+If you unset an optional prop in `mokly serve`, the story renders without it.
 Non-data args keep the values the file defines.
 
 ## Decorators and themes
