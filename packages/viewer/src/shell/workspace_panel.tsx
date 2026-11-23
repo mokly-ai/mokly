@@ -144,6 +144,10 @@ export function WorkspacePanel({ input }: { input: WorkspacePanelInput }) {
       changes={
         input.changes ? (
           <ChangesTab
+            // The gate that offers every compare mode also names both
+            // versions on the rail, so a set's added row shows them while
+            // another shown row compares.
+            compares={input.eligible}
             details={<Evidence changes input={input} />}
             modes={modes}
             path={input.routed.path}

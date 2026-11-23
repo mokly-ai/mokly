@@ -138,9 +138,11 @@ empty, and an empty slot takes no space.
 Compared names the two versions on a rail. Before reads `Branch point on` and
 the base, such as `origin/main`, and Current reads `This branch`. An entry
 that the branch added has no version before, so its rail holds Current alone
-with the line `Added on this branch, so there is no base to compare.` An entry
-that the branch removed has no current version, so its rail holds the version
-before alone with the line
+with the line `Added on this branch, so there is no base to compare.` A
+variant set opened on a row that the branch added names both versions, as for
+a changed entry, while another of its shown rows compares; the added row's own
+frames stay current. An entry that the branch removed has no current version,
+so its rail holds the version before alone with the line
 `Removed on this branch, so there is no current version to compare.`
 
 The compare modes are tiles in the order of their keys: Current (1), Side by

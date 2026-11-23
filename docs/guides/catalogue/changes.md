@@ -232,7 +232,8 @@ An added entry shows its current frames and an Added status. If no other
 shown row can compare, its Changes tab offers Current alone because the entry
 has no earlier version. In this case, Compared names This branch alone.
 You can choose all five modes on an added variant while another shown row in
-its set can compare.
+its set can compare. Compared then names both versions, the branch point and
+This branch, and the added variant's own frames show its current version.
 
 A removed entry appears only in Changes. All shows the catalogue as it is now,
 so it lists no Removed row.

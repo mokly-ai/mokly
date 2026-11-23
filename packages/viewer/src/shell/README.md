@@ -776,7 +776,10 @@ filter lists, in its order, and whose steps open those entries at their
 catalogue rows' addresses, which name no viewport and no scheme; the
 `changesStart` slot of `changes_start.tsx`, whose container the shell
 registers as a host slot; the Compared rail of `@mokly/ui/compared-rail`,
-with the index's base and the one version of an added or a removed entry;
+with the index's base and the one version of a removed entry, or of an added
+entry that offers no comparison (`comparedOutcome`): the workspace panel
+passes the gate that offers every compare mode, so a variant set's added row
+names both versions while another of its shown rows compares;
 then the modes and the details that the caller gives. An entry that the
 Changes filter does not list has no stepper. `compare_modes.tsx` gives a
 screen's or a component's modes to the tab: the offer rule of the
