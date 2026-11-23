@@ -18,6 +18,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { sample } from "../fixtures/product";
+import { site } from "../fixtures/site";
 import { Icon } from "../screens/product/icons";
 import type { IconName } from "../screens/product/icons";
 
@@ -172,4 +173,25 @@ test("Docs and Changelog draw the external glyph in place of a glyph of their ow
           where,
         );
     }
+});
+
+test("Docs and Changelog are links to the site's pages, and the other items lead to their drawings", () => {
+  for (const viewport of ["desktop", "mobile"] as const)
+    for (const menu of roles(page(viewport), "menu", "Account"))
+      assert.deepEqual(
+        roles(menu, "menuitem").map((row) => [
+          label(row),
+          row.tagName,
+          attribute(row, "href")?.startsWith("https:")
+            ? attribute(row, "href")
+            : "catalogue",
+        ]),
+        [
+          ["Settings", "a", "catalogue"],
+          ["Docs", "a", site.docs],
+          ["Changelog", "a", site.changelog],
+          ["Sign out", "a", "catalogue"],
+        ],
+        viewport,
+      );
 });

@@ -1,8 +1,5 @@
 import { Action } from "../components/action";
 
-import { Slot } from "./chrome";
-import type { BarPress } from "./chrome";
-
 /**
  * The initials of the reader's avatar: the first letters of the first two
  * words of their name or, for a reader named by their address, of the
@@ -21,57 +18,77 @@ export function readerInitials(name: string): string {
 }
 
 /**
+ * The reader's avatar: their initials in a circle in the signed-in person's
+ * colour. It is a picture, so assistive technology skips it; whatever it
+ * stands beside names the reader. The account menu draws it larger than the
+ * bar.
+ */
+export function ReaderAvatar({
+  name,
+  large = false,
+}: {
+  name: string;
+  large?: boolean;
+}) {
+  return (
+    <span
+      className={
+        large ? "fo-canvas-avatar fo-canvas-avatar-large" : "fo-canvas-avatar"
+      }
+      aria-hidden="true"
+    >
+      {readerInitials(name)}
+    </span>
+  );
+}
+
+/**
  * The full bar's account control, as the catalogue draws it: the reader's
  * avatar laid over the quiet registered Button that is the control. The
- * Button's own text is what the bar calls the reader, and its accessible name
- * and tooltip are the whole name or address, so the initials stay a picture
- * that assistive technology skips. It opens the Account settings pane. While
+ * Button's own text, its accessible name and its tooltip are the reader's
+ * whole name, or their whole address when they have set none, so the
+ * initials stay a picture that assistive technology skips. It opens the
+ * account menu, so it announces a menu and whether that menu is open. While
  * the route reads the project it keeps its label, draws itself disabled and
  * fades its avatar.
  */
 export function AccountTrigger({
-  label,
-  whole,
-  testID,
+  name,
+  open = false,
   onPress,
-  open,
-  disabled,
-  slotRef,
-  waiting,
-}: BarPress & {
-  /** What the bar calls the reader. */
-  label: string;
-  /** The whole name or address, when the label is a shortened form of it. */
-  whole?: string;
+  waiting = false,
+  testID,
+}: {
+  /** The reader's whole name, or their whole address. */
+  name: string;
+  open?: boolean;
+  onPress?: () => void;
+  waiting?: boolean;
+  testID?: string;
 }) {
-  const name = whole ?? label;
   return (
-    <Slot name="account" slotRef={slotRef} className="fo-top-fixed">
-      <span
-        className={
-          waiting
-            ? "fo-canvas-account fo-canvas-account-off"
-            : "fo-canvas-account"
-        }
-        title={name}
-      >
-        <Action
-          label={label}
-          accessibilityLabel={name}
-          tone="quiet"
-          size="sm"
-          block
-          singleLine
-          expanded={open}
-          hasPopup="dialog"
-          disabled={waiting === true || disabled}
-          onPress={onPress}
-          testID={testID}
-        />
-        <span className="fo-canvas-avatar" aria-hidden="true">
-          {readerInitials(name)}
-        </span>
-      </span>
-    </Slot>
+    <span
+      className={
+        waiting
+          ? "fo-canvas-account fo-canvas-account-off"
+          : "fo-canvas-account"
+      }
+      title={name}
+    >
+      <Action
+        label={name}
+        accessibilityLabel={name}
+        tone="quiet"
+        size="sm"
+        block
+        singleLine
+        expanded={open}
+        hasPopup="menu"
+        disabled={waiting}
+        onPress={onPress}
+        testID={testID}
+      />
+      <ReaderAvatar name={name} />
+    </span>
   );
 }

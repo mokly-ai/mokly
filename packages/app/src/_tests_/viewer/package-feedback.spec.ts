@@ -1,6 +1,6 @@
 import { expect, open, test } from "../harness";
 
-import { publishedProject } from "./support";
+import { openSettingsFromAccount, publishedProject } from "./support";
 
 test("a listed screen response cannot erase a selected component variant", async ({
   page,
@@ -85,8 +85,7 @@ test("a listed screen response cannot erase a selected component variant", async
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toHaveValue("notice");
 
-  await page.getByTestId("viewer-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await openSettingsFromAccount(page);
   await page.getByTestId("close-settings").click();
   await expect(
     page.getByRole("heading", { level: 2, name: "Notice" }),
@@ -128,8 +127,7 @@ test("package filters survive panels, Back and settings rerenders", async ({
   await expect(page).toHaveURL(/search=notice/);
   await expect(page).toHaveURL(/tag=review/);
 
-  await page.getByTestId("viewer-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await openSettingsFromAccount(page);
   await page.getByTestId("close-settings").click();
   await expect(search).toHaveValue("notice tag:review");
   await expect(page).toHaveURL(/viewport=both/);

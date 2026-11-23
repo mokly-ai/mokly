@@ -22,13 +22,7 @@ export type ViewerTheme = "light" | "dark";
 
 /** A logical cloud control that can occupy fallback and package chrome. */
 export type ViewerSlotName =
-  | "projects"
-  | "switcher"
-  | "history"
-  | "share"
-  | "settings"
-  | "account"
-  | "more";
+  "projects" | "switcher" | "history" | "share" | "account" | "more";
 
 /** The typed form of the viewer's URL keys. */
 export interface ViewerSelection {
@@ -52,9 +46,9 @@ export interface ViewerSlots {
   publication?: ReactNode;
   history?: ReactNode;
   share?: ReactNode;
-  settings?: ReactNode;
+  /** The reader's avatar and the account menu it opens. */
   account?: ReactNode;
-  /** The compact composition of project, history, share, settings and account. */
+  /** The compact composition of project, history, share and the account. */
   more?: ReactNode;
 }
 

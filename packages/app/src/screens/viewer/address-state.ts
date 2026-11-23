@@ -6,15 +6,12 @@ import {
   useAddressPathname,
   useAddressSearch,
 } from "../../navigation/address";
-import { useReaderScheme } from "../../theme/scheme";
+import { usePreviewScheme } from "../../theme/scheme";
 import { readBuildAddressState } from "../../viewer/build-address";
 import type { ViewerEntry } from "../../viewer/entry";
 import type { ViewerScheme } from "../../viewer/host";
 import { readViewerState } from "../../viewer/selection";
 import type { SelectionDefaults, ViewerUrlState } from "../../viewer/selection";
-
-/** Which settings pane the address asked for, if it asked for one. */
-export type SettingsPane = "sections" | "account";
 
 /** The viewer's state, as the address and the resolved publication decide it. */
 export interface ViewerAddressState {
@@ -26,7 +23,7 @@ export interface ViewerAddressState {
   defaults: SelectionDefaults;
   /** The open panel, which the settings dialog displaces while it is open. */
   panel: ViewerUrlState["panel"];
-  settingsPane?: SettingsPane;
+  /** Whether the address asks for the settings dialog, on any pane. */
   settingsRequested: boolean;
   /** Whether this publication has a comparison to list screens from. */
   comparable: boolean;
@@ -63,17 +60,11 @@ export function useViewerAddressState(
 ): ViewerAddressState {
   const pathname = useAddressPathname();
   const search = useAddressSearch();
-  const preferred: ViewerScheme = useReaderScheme();
+  // An address without `scheme` shows its previews in the system preference,
+  // never in the Theme the reader chose for the application.
+  const preferred: ViewerScheme = usePreviewScheme();
   const query = useMemo(() => readQuery(search), [search]);
   const settingsRequested = query.settings !== undefined;
-  // Which pane the address asked for, so the trigger that opens it is the one
-  // that reports itself expanded.
-  const settingsPane: SettingsPane | undefined =
-    query.settings === "account"
-      ? "account"
-      : settingsRequested
-        ? "sections"
-        : undefined;
 
   const comparable =
     publication?.state === "ready" &&
@@ -105,7 +96,6 @@ export function useViewerAddressState(
     corrected,
     defaults,
     panel: settingsRequested ? undefined : state.panel,
-    settingsPane,
     settingsRequested,
     comparable,
   };

@@ -25,23 +25,38 @@ const interactiveRoles = new Set([
   "treeitem",
 ]);
 
-function documentRole(node: ts.Node, tag: string): boolean {
+function documentRole(node: ts.Node, allowed: ReadonlySet<string>): boolean {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
     return node.text
       .split(/\s+/)
-      .every(
-        (role) =>
-          !interactiveRoles.has(role) || (tag === "a" && role === "link"),
-      );
+      .every((role) => !interactiveRoles.has(role) || allowed.has(role));
   if (ts.isIdentifier(node)) return node.text === "undefined";
   if (node.kind === ts.SyntaxKind.NullKeyword) return true;
   if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node))
-    return documentRole(node.expression, tag);
+    return documentRole(node.expression, allowed);
   if (ts.isConditionalExpression(node))
     return (
-      documentRole(node.whenTrue, tag) && documentRole(node.whenFalse, tag)
+      documentRole(node.whenTrue, allowed) &&
+      documentRole(node.whenFalse, allowed)
     );
   return false;
+}
+
+/**
+ * The interactive roles that plain HTML may still take: an anchor is a link,
+ * and a navigation anchor, one with an address, may also be an item of a
+ * menu, as a menu's link to the site is.
+ */
+function anchorRoles(
+  tag: string,
+  attributes: ts.JsxAttributes,
+  source: ts.SourceFile,
+): ReadonlySet<string> {
+  if (tag !== "a") return new Set();
+  const navigation = attributes.properties.some(
+    (prop) => ts.isJsxAttribute(prop) && prop.name.getText(source) === "href",
+  );
+  return new Set(navigation ? ["link", "menuitem"] : ["link"]);
 }
 
 /** A literal `tabIndex` value, or nothing when the value is not a literal. */
@@ -139,7 +154,13 @@ export function interactiveRoleViolations(file: SourceFile): string[] {
             const value = prop.initializer;
             const expression =
               value && ts.isJsxExpression(value) ? value.expression : value;
-            if (expression && !documentRole(expression, tag))
+            if (
+              expression &&
+              !documentRole(
+                expression,
+                anchorRoles(tag, node.attributes, source),
+              )
+            )
               violations.push(
                 file.path + ": interactive role requires a registered control",
               );

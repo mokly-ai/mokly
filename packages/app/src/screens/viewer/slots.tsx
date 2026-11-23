@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { displayName } from "../../api/labels";
 import type { Project, Session, User } from "../../api/types";
 import { StatusBadge } from "../../components/controls";
-import { AccountTrigger } from "../../viewer/account-trigger";
+import { AccountMenu } from "../../viewer/account-menu";
+import type { AccountActions, AccountReader } from "../../viewer/account-menu";
 import type { BarPlacement } from "../../viewer/bar";
 import {
   BarAction,
@@ -34,28 +35,18 @@ import { MoreMenu } from "./more-menu";
 import type { ChromeSubject } from "./subject";
 
 /**
- * What the account slot calls the reader, and the whole value behind it when
- * the label is a shortened form.
+ * What the account calls the reader: their whole display name, with their
+ * address beneath it in the account rows, or their whole address, once, when
+ * they have set no name. Every account is created by email, so a person who
+ * has not set a name is named by their address.
  *
- * Every account is created by email, so a person who has not set a name is
- * named by their address, which is wider than the compact bar's first row and
- * pushes the publication row off a 320px screen. The local part is the part
- * that identifies them, and the whole address stays reachable as the control's
- * title and accessible name.
- *
- * A reader who has set a name is called by it and nothing else: an accessible
- * name that replaced their name with their address would leave the one word on
- * screen unsayable to voice control and unheard by a screen reader.
+ * A reader who has set a name is called by it and nothing else on the avatar:
+ * an accessible name that replaced their name with their address would leave
+ * the name they chose unheard by a screen reader.
  */
-export function accountLabel(
-  user: User,
-  compact: boolean,
-): { label: string; whole?: string } {
+export function accountLabel(user: User): AccountReader {
   const name = displayName(user);
-  if (name) return { label: name };
-  const email = user.email;
-  if (!compact) return { label: email };
-  return { label: email.split("@")[0] ?? email, whole: email };
+  return name ? { name, address: user.email } : { name: user.email };
 }
 
 /** What the state beside the publication trigger says, in the reader's terms. */
@@ -94,20 +85,22 @@ export interface SlotInput {
   /** Which of the package's two views the address selected. */
   view: ViewerView;
   panel?: ViewerPanel;
-  /** Which settings pane is open, so the trigger that opened it says so. */
-  settingsOpen?: "sections" | "account";
+  /** Whether the settings dialog is open, on any pane. */
+  settingsOpen: boolean;
   /** Where the bar's composition puts each action, which More's rows follow. */
   placement: BarPlacement;
-  /** The compact menu is controlled above either slot implementation. */
+  /** The menus are controlled above either slot implementation. */
   moreOpen: boolean;
+  accountOpen: boolean;
   shareable: boolean;
   refs: SlotRefs;
   /** Each opener names its action, whichever control carried it. */
   onPanel: (panel: ViewerPanel) => void;
-  onSettings: () => void;
-  onAccount: () => void;
+  /** What the account rows do, in the account menu and in More. */
+  account: AccountActions;
   onLatest?: () => void;
   onMoreOpen: (open: boolean) => void;
+  onAccountOpen: (open: boolean) => void;
 }
 
 /** A pull request's publication is also somebody's, so its author leads. */
@@ -179,14 +172,14 @@ function publicationSlot(input: SlotInput): ReactNode {
 }
 
 /**
- * The six cloud actions composed into the package's two top-bar slots, with
- * the More menu that carries the ones the placement groups. Each trigger and
- * each More row opens exactly one overlay under its action's name, and the
- * control that carries that action when the overlay closes is where focus
- * returns.
+ * The five cloud actions composed into the package's top-bar slots, with the
+ * More menu that carries the ones the placement groups. Each trigger and each
+ * More row opens exactly one overlay under its action's name, and the control
+ * that carries that action when the overlay closes is where focus returns.
+ * The avatar and More open menus, whose account rows hold Settings.
  */
 export function viewerSlots(input: SlotInput): ViewerSlots {
-  const reader = accountLabel(input.session.user, true);
+  const reader = accountLabel(input.session.user);
   return {
     project: (
       <ProjectTrigger
@@ -214,7 +207,7 @@ export function viewerSlots(input: SlotInput): ViewerSlots {
         label="Share"
         testID="viewer-share"
         tone="secondary"
-        filled={input.panel === undefined && input.settingsOpen === undefined}
+        filled={input.panel === undefined && !input.settingsOpen}
         open={input.panel === "share"}
         disabled={!input.shareable}
         onPress={() => input.onPanel("share")}
@@ -222,26 +215,15 @@ export function viewerSlots(input: SlotInput): ViewerSlots {
         slotRef={input.refs.share}
       />
     ),
-    settings: (
-      <BarAction
-        label="Settings"
-        testID="viewer-settings"
-        icon="settings"
-        open={input.settingsOpen === "sections"}
-        onPress={input.onSettings}
-        slot="settings"
-        slotRef={input.refs.settings}
-      />
-    ),
     account: (
-      <AccountTrigger
-        {...accountLabel(input.session.user, input.placement.compact)}
-        testID="viewer-account"
-        open={input.settingsOpen === "account"}
-        onPress={input.onAccount}
+      <AccountMenu
+        reader={reader}
+        open={input.accountOpen}
+        onOpenChange={input.onAccountOpen}
+        actions={input.account}
         slotRef={input.refs.account}
       />
     ),
-    more: <MoreMenu input={input} reader={reader.whole ?? reader.label} />,
+    more: <MoreMenu input={input} reader={reader} />,
   };
 }

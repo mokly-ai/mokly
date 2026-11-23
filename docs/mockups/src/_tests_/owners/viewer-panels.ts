@@ -21,13 +21,18 @@ export const viewerPanelOwners = {
       "screens/viewer/more-menu.tsx",
     ],
   },
-  // The account menu and the compact More menu with its account rows. No
-  // application file draws them yet: Milestone 13 of the Canvas redesign
-  // builds `viewer/account-menu.tsx`, and its arrival makes this owner name
-  // the files that write the menus' labels.
+  // The account menu and the compact More menu with its account rows, over
+  // the bar that opens them. The Theme choice is the menus' one control that
+  // the comparison reads, and `viewer/account-menu.tsx` writes it; the bar's
+  // controls are the slot bar's.
   "product/viewer/standalone/account-menu": {
     region: "bar",
-    pending: "viewer/account-menu.tsx",
+    files: [
+      "viewer/chrome.tsx",
+      "screens/viewer/slots.tsx",
+      "screens/viewer/more-menu.tsx",
+      "viewer/account-menu.tsx",
+    ],
   },
   // The settings dialog over the viewer, on the Members pane that its rail
   // opens, which the members pane's own parts draw. Nothing on it has

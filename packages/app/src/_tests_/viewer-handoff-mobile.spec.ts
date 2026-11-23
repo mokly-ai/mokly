@@ -110,10 +110,10 @@ test("a More press survives the package slot handoff", async ({ page }) => {
   await expect.poll(handoff.catalogue.seen).toBe(true);
   handoff.catalogue.release();
   await publishedViewerReady(page);
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
+  const menu = page.getByRole("menu", { name: "More" });
   await expect(menu).toBeVisible();
   await expect(menu).toHaveCount(1);
-  await menu.getByText("Share", { exact: true }).click();
+  await menu.getByRole("menuitem", { name: "Share", exact: true }).click();
   await expect(page.getByTestId("viewer-panel-share")).toBeVisible();
   expect(await page.evaluate(() => window.history.length)).toBe(
     historyLength + 1,

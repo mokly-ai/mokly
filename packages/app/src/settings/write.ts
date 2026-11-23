@@ -164,10 +164,18 @@ export function failureAfterInput(
  * A write that ends by leaving the page, for GitHub or Stripe, is done when the
  * page goes, so it does not come back to rest when its work returns: `leave`
  * keeps it in flight until the page unloads, and `done` does not run for it.
+ *
+ * `failed` is a failure of the same write that another control met before
+ * this one mounted, such as the account menu's Sign out. The control shows it
+ * as its own, until its next attempt.
  */
-export function useWrite(done: () => void, sendable: boolean): Write {
+export function useWrite(
+  done: () => void,
+  sendable: boolean,
+  failed?: ApiError,
+): Write {
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<ApiError | undefined>(undefined);
+  const [error, setError] = useState<ApiError | undefined>(failed);
   const inFlight = useRef(false);
   // Whether the attempt in flight handed the tab to another site.
   const leaving = useRef(false);

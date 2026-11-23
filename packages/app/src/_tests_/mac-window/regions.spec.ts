@@ -4,7 +4,11 @@ import { branchPathFor } from "../addresses";
 import { failWith } from "../api-responses";
 import { expect, open, test } from "../harness";
 import { notFoundPaths } from "../not-found-cases";
-import { publishedProject, publishedViewerReady } from "../viewer/support";
+import {
+  openAccountMenu,
+  publishedProject,
+  publishedViewerReady,
+} from "../viewer/support";
 
 import {
   clearMacWindow,
@@ -166,16 +170,21 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
 
   // A dialog or a menu over the bar takes its clicks.
   await page.getByTestId("viewer-more").click();
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
+  const menu = page.getByRole("menu", { name: "More" });
   await expectTakesClicks(menu, "More's menu");
-  await menu.getByText("History", { exact: true }).click();
+  await menu.getByRole("menuitem", { name: "History", exact: true }).click();
   await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
   await expectTakesClicks(page.getByRole("dialog"), "the History panel");
   await page.getByTestId("close-history").click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByTestId("viewer-settings").click();
+  const account = await openAccountMenu(page);
+  await expectTakesClicks(account, "the account menu");
+  await account
+    .getByRole("menuitem", { name: "Settings", exact: true })
+    .click();
+  await expect(page.getByTestId("settings-dialog")).toBeVisible();
   await expectTakesClicks(page.getByRole("dialog"), "the settings dialog");
 });
 

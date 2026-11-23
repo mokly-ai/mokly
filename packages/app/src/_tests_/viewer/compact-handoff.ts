@@ -84,9 +84,9 @@ export async function openHeldViewer(
 
 export async function openShareFromMore(page: Page) {
   await page.getByTestId("viewer-more").click();
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
+  const menu = page.getByRole("menu", { name: "More" });
   await expect(menu).toBeVisible();
-  await menu.getByText("Share", { exact: true }).click();
+  await menu.getByRole("menuitem", { name: "Share", exact: true }).click();
   const panel = page.getByTestId("viewer-panel-share");
   await expect(panel).toBeVisible();
   return panel;

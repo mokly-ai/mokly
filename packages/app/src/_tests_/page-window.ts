@@ -29,12 +29,14 @@ export function shellPage(): TestLocation {
 
 /**
  * The parts of a page's `window` the modules under test use: its location,
- * the popup it opens, its tab-scoped storage and its focus listeners.
+ * the popup it opens, its tab-scoped and device storage and its focus
+ * listeners.
  */
 export interface TestPage {
   location?: TestLocation;
   open?: (address: string, target?: string, features?: string) => unknown;
   sessionStorage?: Storage;
+  localStorage?: Storage;
   addEventListener?: (type: string, listener: () => void) => void;
   removeEventListener?: (type: string, listener: () => void) => void;
 }

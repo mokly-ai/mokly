@@ -62,6 +62,21 @@ export function publicationReference(scope: Page | Locator): Locator {
   return scope.getByTestId("viewer-publication").locator(".fo-top-reference");
 }
 
+/** The full bar's account menu, opened from the reader's avatar. */
+export async function openAccountMenu(page: Page): Promise<Locator> {
+  await page.getByTestId("viewer-account").click();
+  const menu = page.getByRole("menu", { name: "Account" });
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
+/** The settings dialog, opened on its index by the account menu's Settings. */
+export async function openSettingsFromAccount(page: Page): Promise<void> {
+  const menu = await openAccountMenu(page);
+  await menu.getByRole("menuitem", { name: "Settings", exact: true }).click();
+  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+}
+
 /** The Notice variant reads both consumer lists from its parent's detail. */
 export async function expectParentUsage(page: Page): Promise<void> {
   await page.getByRole("tab", { name: "Usage", exact: true }).click();

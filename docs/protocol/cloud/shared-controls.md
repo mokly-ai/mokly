@@ -48,16 +48,11 @@ Use public subpaths so a button does not load the entire library:
 `/dropdown`, `/segmented`, `/switch`, `/modal`, `/toast`, `/skeleton`,
 `/list`, `/table`, `/typography`, and `/theme`, prefixed with `@firna/ui`.
 Another published subpath may be used when an owning screen needs it;
-document that use first. The viewer's account menu and its compact **More**
-menu each open from a quiet Firna Button trigger: as a non-modal popover on a
-pointer viewport, and **More** as the registered panel's bottom sheet on a
-touch viewport, as
-[Viewer chrome: account menu](./viewer-chrome-account.md#menus) defines. A
-settings row gathers the actions that belong to it behind one icon-only
-trigger instead, so a list of rows carries one control each rather than a
-line of competing buttons: a quiet square Button drawing the lucide
-`Ellipsis` glyph, named for its row, announcing a menu popup and whether it is
-expanded. It opens a responsive menu.
+document that use first. A settings row gathers the actions that belong to it
+behind one icon-only trigger, so a list of rows carries one control each
+rather than a line of competing buttons: a quiet square Button drawing the
+lucide `Ellipsis` glyph, named for its row, announcing a menu popup and whether
+it is expanded. It opens a responsive menu.
 On a wide surface that is `ResponsiveMenu` from `/popover`, whose web build is
 a non-modal popover anchored 6px below the trigger and aligned to its end edge.
 On a compact surface — the same breakpoint that selects the settings layer —
@@ -67,9 +62,27 @@ the registered panel's bar and dismissed by **Cancel**, exactly as a settings
 confirmation is on that surface. Firna's own `Sheet` is not used there, because
 its web build draws the frame's header with an icon close control rather than
 the panel bar every other compact settings overlay shares. Choosing a row
-closes the menu before anything that row opens appears. This is the one
-documented use of `/popover`. Never import private implementation files or
-patch the package.
+closes the menu before anything that row opens appears.
+
+The viewer's account menu and its compact **More** menu each open from a quiet
+Firna Button trigger, as
+[Viewer chrome: account menu](./viewer-chrome-account.md#menus) defines. On a
+pointer viewport each is `Popover` from `/popover`: a 260px non-modal popover
+in the package's menu chrome, anchored 6px below the trigger and aligned to its
+end edge. It takes focus to the menu's first item as it opens, and returns it
+to the trigger when Escape or a press outside closes it. On a touch viewport
+**More** is the registered panel's bottom sheet. In both, the rows are the
+cloud's own: one `menu` for each group of rows, each row a `menuitem` in the
+package's menu row metrics, a link for a page of the site and a button for an
+action. The Theme choice is the registered segmented control above the
+account's items, outside the menus. One keyboard model covers every row of the
+popover or the sheet: ArrowDown and ArrowUp move through the items in order and
+wrap, Home and End reach the first and the last, Enter and Space activate the
+item, and Tab moves between the Theme choice and the menus. Decision: the cloud
+draws these rows rather than using `DropdownMenu` or `ResponsiveMenu`, because
+the package's rows cannot be links and its menu keyboard takes Enter and Space
+from the Theme choice. These are the two documented uses of `/popover`. Never
+import private implementation files or patch the package.
 
 Keep `page-frame`, `header`, `card`, the comment-thread composition and the
 catalogue illustrations local. They arrange shared controls; they do not

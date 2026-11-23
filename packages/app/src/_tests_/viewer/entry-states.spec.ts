@@ -62,7 +62,7 @@ test("Set up publishing is offered to an administrator and named for a member", 
   await expect(canvas.getByTestId("stage-choose-publication")).toBeVisible();
   // The chrome stays mounted in every state, so the reader is never outside
   // the viewer.
-  await expect(page.getByTestId("viewer-settings")).toBeVisible();
+  await expect(page.getByTestId("viewer-account")).toBeVisible();
 });
 
 test("a member is told who publishes, and is offered no way to do it", async ({

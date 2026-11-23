@@ -1,7 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { expect, open, test } from "../harness";
-import { publishedProject, publishedViewerReady } from "../viewer/support";
+import {
+  openSettingsFromAccount,
+  publishedProject,
+  publishedViewerReady,
+} from "../viewer/support";
 
 import { countHitTests, drawnTwice } from "./hit-tests";
 import {
@@ -165,7 +169,7 @@ test("in the Mac window, an open settings dialog over the bar keeps the bar movi
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
 
-  await page.getByTestId("viewer-settings").click();
+  await openSettingsFromAccount(page);
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect

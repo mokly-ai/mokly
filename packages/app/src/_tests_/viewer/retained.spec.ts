@@ -1,7 +1,12 @@
 import { expect, open, test } from "../harness";
 
 import { retainedFixture } from "./retained-fixture";
-import { makePublic, publishedViewerReady, publishedProject } from "./support";
+import {
+  makePublic,
+  openSettingsFromAccount,
+  publishedViewerReady,
+  publishedProject,
+} from "./support";
 
 test("a removed entry opens its advertised snapshot in Changes", async ({
   page,
@@ -76,7 +81,7 @@ test("Share copies a nested screen path that another browser can open", async ({
       .locator('iframe[title="Current form — desktop"]')
       .elementHandle();
     expect(settingsFrame).not.toBeNull();
-    await page.getByTestId("viewer-settings").click();
+    await openSettingsFromAccount(page);
     const settings = page.getByTestId("settings-dialog");
     await expect(settings).toBeVisible();
     await expect(
