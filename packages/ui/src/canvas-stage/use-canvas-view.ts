@@ -46,6 +46,12 @@ export interface CanvasStageHandle {
   zoomOut(): void;
   /** Show a zoom about the stage's centre, such as 1 for 100%. */
   zoomTo(zoom: number): void;
+  /**
+   * Multiply the zoom by a factor about a point of the page, in CSS pixels
+   * from the viewport's top left, so the point stays in its place, as a
+   * wheel or a pinch that a frame's document forwards does.
+   */
+  zoomAt(factor: number, clientX: number, clientY: number): void;
 }
 
 /** A change of the view, from the shown section's extent and the stage. */
@@ -99,8 +105,32 @@ function useStage(box: RefObject<HTMLDivElement | null>) {
   return stage;
 }
 
-/** The handle's commands over one change function. */
-function commands(change: (next: CanvasViewChange) => void): CanvasStageHandle {
+/**
+ * The handle's zoom about a point of the page, which a host forwards from a
+ * frame's document, where the canvas's own gestures cannot reach. The stage
+ * box's parent is the canvas, whose box places the point on it.
+ */
+function pointZoom(
+  change: (next: CanvasViewChange) => void,
+  box: RefObject<HTMLDivElement | null>,
+): Pick<CanvasStageHandle, "zoomAt"> {
+  return {
+    zoomAt: (factor, clientX, clientY) => {
+      const canvas = box.current?.parentElement;
+      if (!canvas) return;
+      const bounds = canvas.getBoundingClientRect();
+      const point = { x: clientX - bounds.left, y: clientY - bounds.top };
+      change((view, extent) =>
+        zoomAbout(view, extent, view.zoom * factor, point),
+      );
+    },
+  };
+}
+
+/** The handle's commands over one change function, less its point zoom. */
+function commands(
+  change: (next: CanvasViewChange) => void,
+): Omit<CanvasStageHandle, "zoomAt"> {
   const zoomTo = (zoom: number) =>
     change((view, extent, stage) =>
       zoomAbout(view, extent, zoom, stageCentre(stage)),
@@ -170,6 +200,9 @@ export function useCanvasView(
     if (!shown || !measured(room)) return;
     setView((current) => next(current, shown, room));
   }, []);
-  const handle = useMemo(() => commands(change), [change]);
+  const handle = useMemo(
+    () => ({ ...commands(change), ...pointZoom(change, box) }),
+    [box, change],
+  );
   return { change, handle, reading, view };
 }

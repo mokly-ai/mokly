@@ -14,6 +14,7 @@ function canvasAt(zoom: number) {
   const handle: CanvasStageHandle = {
     fit: () => calls.push(["fit", ""]),
     run: (command) => calls.push(["run", command]),
+    zoomAt: (factor) => calls.push(["zoomAt", factor]),
     zoomIn: () => calls.push(["zoomIn", ""]),
     zoomOut: () => calls.push(["zoomOut", ""]),
     zoomTo: (value) => calls.push(["zoomTo", value]),

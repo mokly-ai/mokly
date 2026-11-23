@@ -19,6 +19,7 @@ import type {
 import type { GeneratedComponentView } from "../components/views.js";
 import { entryRoute } from "../navigation/routes.js";
 
+import type { CanvasInputListener } from "./canvas_input.js";
 import { DisplaySelection } from "./display_context.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import {
@@ -55,6 +56,8 @@ export interface ViewFrameInput {
   /** Whether the frame's browser window covers the page. */
   expanded: boolean;
   fragment?: string | undefined;
+  /** Receives the canvas input of the frame's document, on a canvas. */
+  onCanvasInput?: CanvasInputListener | undefined;
   /** Hears once for each document that the frame mounts, when it is ready. */
   onReady?: FrameReadyListener | undefined;
   /** A live edit's render, which the frame shows in place of the view. */
@@ -108,6 +111,7 @@ export function useViewFrame(input: ViewFrameInput) {
     generation,
     identity,
     layout: { stage: input.stage, expanded: input.expanded },
+    onCanvasInput: input.onCanvasInput,
     onReady: input.onReady,
     sources: input.sources,
     source,
