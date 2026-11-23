@@ -31,8 +31,11 @@
 @import "./preview-frame/preview-frame.css";
 @import "./canvas-zoom-pill/canvas-zoom-pill.css";
 @import "./canvas-frame/canvas-frame.css";
+@import "./canvas-missing-view/canvas-missing-view.css";
 @import "./canvas-section/canvas-section.css";
 @import "./canvas-stage/canvas-stage.css";
+@import "./canvas-state/canvas-state.css";
+@import "./canvas-previous-version/canvas-previous-version.css";
 @import "./canvas-dock/canvas-dock.css";
 @import "./entry-bar/entry-bar.css";
 @import "./browser-bar/browser-bar.css";

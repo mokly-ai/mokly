@@ -1,6 +1,6 @@
 import { inspectionError } from "./inspection.js";
 import { probeNavigation } from "./links.js";
-import { readMetadata, type ProbeMetadata } from "./metadata.js";
+import { readMetadata, unavailableMetadata } from "./metadata.js";
 import { probeRuntime } from "./runtime.js";
 import { encodeMessage, validHostMessage, type MessageBody } from "./schema.js";
 import { boundedJson, BYTE_LIMIT, origin } from "./values.js";
@@ -49,11 +49,7 @@ const receive = (event: MessageEvent<unknown>): void => {
         maps.length === 1
           ? readMetadata(maps[0]!.content.textContent)
           : undefined;
-      const accepted: ProbeMetadata = metadata ?? {
-        ranges: [],
-        links: [],
-        error: "unavailable",
-      };
+      const accepted = metadata ?? unavailableMetadata("unavailable");
       runtime = probeRuntime(
         win,
         accepted,
@@ -73,28 +69,24 @@ const receive = (event: MessageEvent<unknown>): void => {
   if (requestId <= lastRequest) return;
   lastRequest = requestId;
   try {
-    if (type === "list")
-      return send({
-        type: "boundaries",
-        requestId,
-        boundaries: runtime.__list(),
-      });
-    if (type === "measure")
-      return send({
-        type: "box-model",
-        requestId,
-        boxModel: runtime.__boxModel(message.key),
-      });
-    if (type === "measure-content")
-      return send({
-        type: "content-box",
-        requestId,
-        contentBox: runtime.__contentBox(),
-      });
     if (type === "highlight") runtime.__highlight(message.keys, message.mode);
     else if (type === "scroll-to") runtime.__scroll(message.key);
     else if (type === "subscribe") runtime.__subscribe(message.events);
-    send({ type: "ack", requestId });
+    const reply =
+      type === "list"
+        ? { type: "boundaries" as const, boundaries: runtime.__list() }
+        : type === "measure"
+          ? {
+              type: "box-model" as const,
+              boxModel: runtime.__boxModel(message.key),
+            }
+          : type === "measure-content"
+            ? {
+                type: "content-box" as const,
+                contentBox: runtime.__contentBox(),
+              }
+            : { type: "ack" as const };
+    send({ requestId, ...reply });
   } catch (error) {
     send({ type: "error", requestId, code: inspectionError(error) });
   }

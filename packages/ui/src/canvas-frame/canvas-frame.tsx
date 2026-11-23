@@ -7,11 +7,16 @@
  * above its left edge, the glyph of its kind and its name, and the size tag
  * above its right edge; a frame too narrow for both keeps the label. A
  * reading frame reflows its document instead, so it has no size tag.
+ *
+ * A use case's step frame leads its label with the step's number, its name
+ * is the link that opens the step's screen, and the step's description reads
+ * muted below the label. A frame whose view was never captured keeps its
+ * place, its size and its label, and holds a note in its place in place of
+ * a document.
  */
 
-import type { CSSProperties, ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 
-import { CanvasIcon, type CanvasIconName } from "../icons/icons.js";
 import {
   FrameFailure,
   FrameUnavailable,
@@ -19,19 +24,15 @@ import {
   type FrameScheme,
 } from "../preview-frame/preview-frame.js";
 
+import { FrameLabel, type CanvasFrameLink } from "./frame-label.js";
+
+export type { CanvasFrameLink } from "./frame-label.js";
+
 /**
  * What a frame shows: a screen's `desktop` or `mobile` view, a `component`'s
  * view, or the `document` of a page or a Markdown document.
  */
 export type CanvasFrameKind = "component" | "desktop" | "document" | "mobile";
-
-/** The glyph that each kind of frame shows in its label. */
-const GLYPHS: Readonly<Record<CanvasFrameKind, CanvasIconName>> = {
-  component: "component",
-  desktop: "desktop",
-  document: "document",
-  mobile: "mobile",
-};
 
 /**
  * A frame's size tag: its nominal width and height in whole CSS pixels,
@@ -61,21 +62,61 @@ function sizeStyle(
   } as CSSProperties;
 }
 
+/** The frame's box: its document, or the line of a missing or failed one. */
+function FrameBox({
+  children,
+  error,
+  retry,
+}: {
+  children: ReactNode;
+  error: boolean;
+  retry: FrameRetry | undefined;
+}) {
+  const unavailable = children === undefined || children === null;
+  return (
+    <div className="mbk-canvas-frame-clip mbk-reset">
+      <div className="mbk-canvas-frame-document mbk-reset">{children}</div>
+      {unavailable || error ? (
+        <div className="mbk-canvas-frame-note mbk-reset">
+          {unavailable ? <FrameUnavailable /> : null}
+          {error ? <FrameFailure retry={retry} /> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function CanvasFrame({
   children,
+  description,
   error = false,
+  focusVisible = false,
   height,
   kind,
   label,
+  lightOnly = false,
+  link,
+  place,
   retry,
   scheme,
   selected = false,
+  step,
   width,
 }: {
   /** The frame's document, such as a `PreviewIframe`. Without it, the preview is unavailable. */
   children?: ReactNode;
+  /**
+   * A line below the label, such as a use-case step's description. It reads
+   * muted, and a line too long for the frame ends in an ellipsis.
+   */
+  description?: string | undefined;
   /** Whether the frame's document failed to load. */
   error?: boolean;
+  /**
+   * Whether the frame's document shows keyboard focus, as the document
+   * reports it, which draws the focus glow on the frame's box.
+   */
+  focusVisible?: boolean;
   /**
    * The nominal height in CSS pixels, which can hold a fraction of a pixel,
    * as a component's measured document does. A reading frame leaves it out
@@ -85,47 +126,80 @@ export function CanvasFrame({
   kind: CanvasFrameKind;
   /** The frame's name, such as `Desktop · Light` or `payment-terms.md`. */
   label: string;
+  /**
+   * Whether the frame keeps its light view while Dark is chosen, because its
+   * view has no dark render. The label then adds `Light only`.
+   */
+  lightOnly?: boolean;
+  /**
+   * The link that the frame's name is, with a chevron, such as the link of a
+   * use-case step that opens the step's screen.
+   */
+  link?: CanvasFrameLink | undefined;
+  /**
+   * What stands in the frame's place in place of its document, such as the
+   * note of a view that was never captured. The place keeps the frame's size
+   * and label, but draws no surface, ring, shadow or size tag, and what it
+   * holds keeps its size at every zoom.
+   */
+  place?: ReactNode;
   /** Try again on the line of a document that failed to load. */
   retry?: FrameRetry | undefined;
   /** The scheme of the frame's document, whose preview surface it paints. */
   scheme: FrameScheme;
   /** Whether the frame holds the selection, which lights its label. */
   selected?: boolean;
+  /** The number of a use case's step, which leads the label in a dark tag. */
+  step?: number | undefined;
   /**
    * The nominal width in CSS pixels, which can hold a fraction of a pixel;
    * a reading frame leaves it out.
    */
   width?: number | undefined;
 }) {
-  const unavailable = children === undefined || children === null;
+  const descriptionId = useId();
+  const placed = place !== undefined && place !== null;
   return (
     <figure
+      aria-describedby={description ? descriptionId : undefined}
       className="mbk-canvas-frame mbk-reset"
       data-canvas-frame={kind}
+      data-canvas-place={placed ? "" : undefined}
+      data-focus-visible={focusVisible ? "" : undefined}
       data-preview-color-scheme={scheme}
       data-selected={selected ? "" : undefined}
       style={sizeStyle(width, height)}
     >
-      <figcaption className="mbk-canvas-frame-label mbk-reset">
-        <span className="mbk-canvas-frame-title mbk-reset">
-          <CanvasIcon name={GLYPHS[kind]} size={12} />
-          <span className="mbk-canvas-frame-name mbk-reset">{label}</span>
-        </span>
-        {kind !== "document" && width !== undefined && height !== undefined ? (
-          <span className="mbk-canvas-frame-size mbk-reset">
-            {frameSizeTag(width, height)}
-          </span>
-        ) : null}
-      </figcaption>
-      <div className="mbk-canvas-frame-clip mbk-reset">
-        <div className="mbk-canvas-frame-document mbk-reset">{children}</div>
-        {unavailable || error ? (
-          <div className="mbk-canvas-frame-note mbk-reset">
-            {unavailable ? <FrameUnavailable /> : null}
-            {error ? <FrameFailure retry={retry} /> : null}
-          </div>
-        ) : null}
-      </div>
+      <FrameLabel
+        kind={kind}
+        label={label}
+        lightOnly={lightOnly}
+        link={link}
+        size={
+          kind !== "document" &&
+          !placed &&
+          width !== undefined &&
+          height !== undefined
+            ? frameSizeTag(width, height)
+            : undefined
+        }
+        step={step}
+      />
+      {description ? (
+        <p
+          className="mbk-canvas-frame-description mbk-reset"
+          id={descriptionId}
+        >
+          {description}
+        </p>
+      ) : null}
+      {placed ? (
+        <div className="mbk-canvas-frame-place mbk-reset">{place}</div>
+      ) : (
+        <FrameBox error={error} retry={retry}>
+          {children}
+        </FrameBox>
+      )}
     </figure>
   );
 }

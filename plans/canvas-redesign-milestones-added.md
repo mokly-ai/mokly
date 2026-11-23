@@ -1,6 +1,6 @@
 # Canvas redesign: added milestones
 
-This file holds the added Milestones 15 to 24 of the
+This file holds the added Milestones 15 to 25 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. Milestones 10 to 13 are
 in [the viewer milestones file](./canvas-redesign-milestones-viewer.md).
@@ -231,3 +231,20 @@ run now, beside Milestone 11, because they touch only mockup files.
       More on phones (decision 22, option B), and bring
       `marketing-site.md` and the menu docs in line. Branch:
       `calummoore/canvas-redesign-m24-mockups-for-708g`.
+
+## Milestone 25: Canvas gestures inside a frame
+
+Depends on: 23
+
+The frame document holds Ctrl+wheel, pinch and the canvas keys, so they do
+not reach the canvas when the pointer or focus is inside a frame.
+
+- [x] Forward Ctrl+wheel, pinch and the canvas keys from the frame probe as
+      frame wire version 4 messages, which `main` has not released, and raise
+      them as frame events in both adapters, with unit tests. The orchestrator
+      added the focus events and `listenForCanvasInput` on 2026-11-23. Branch:
+      `calummoore/canvas-redesign-m25-canvas-gestures-mp0s`.
+- [x] Keep the probe inside its 10,240-byte budget, and bring the frame probe,
+      wire and adapter pages in line. The orchestrator raised the budget to
+      11,264 bytes on 2026-11-23. Branch:
+      `calummoore/canvas-redesign-m25-canvas-gestures-mp0s`.

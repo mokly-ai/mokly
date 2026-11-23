@@ -7,3 +7,14 @@ export const PREVIEW_UNAVAILABLE = {
   },
   title: "Previous version unavailable",
 } as const;
+
+/**
+ * The previous version's other copy: the state while it loads, and the quiet
+ * label of its section's head, whose Light-only form names a document that
+ * keeps its light version under Dark.
+ */
+export const PREVIOUS_VERSION = {
+  label: "Showing previous version",
+  lightOnlyLabel: "Showing previous version — Light only",
+  loading: "Loading previous version…",
+} as const;

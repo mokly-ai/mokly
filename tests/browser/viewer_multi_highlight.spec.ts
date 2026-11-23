@@ -8,6 +8,7 @@ import type {
 } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
+import { useCaseSteps } from "./use_case_steps.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
 import { NARROW_WINDOW } from "./workspace_actions.js";
@@ -158,7 +159,7 @@ for (const cross of [false, true]) {
     await page.waitForFunction(
       () => window.viewerHarness.get("one").ref.current !== null,
     );
-    await expect(page.locator(".mbk-flow-screen iframe")).toHaveCount(2);
+    await expect(useCaseSteps(page)).toHaveCount(2);
     await page.evaluate(
       (refs) =>
         window.viewerHarness.get("one").ref.current.highlightInstances(refs),

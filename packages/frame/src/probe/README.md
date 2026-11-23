@@ -18,9 +18,9 @@ name collisions; semantic regression tests cover its transformations.
 Requests and responses have separate validators, so the frame probe bundle
 includes only the host-message decoder. Exact field counts reject unknown
 fields. Outgoing fields are validated ASCII identities, control states, and
-numeric geometry, so their serialized character count also bounds their UTF-8
-bytes. Incoming messages and metadata always receive the full UTF-8 check
-before parsing. The
+numeric geometry and input values, so their serialized character count also
+bounds their UTF-8 bytes. Incoming messages and metadata receive the full
+UTF-8 check before parsing. The
 [frame probe handshake and wire protocol](../../../../docs/protocol/mokly-frame-probe-wire.md)
 define the handshake, the messages, and their limits.
 
@@ -42,6 +42,16 @@ keys and mode of the pick listeners. Hover, pick, Escape, and navigation reports
 keep the same wire messages. Text-only ranges scroll their real rectangles
 through inner containers and the document viewport.
 
+## Canvas input
+
+The shared runtime installs its focus listeners when it starts. They do
+nothing until the subscription names `canvas-focus`. Wheel and gesture
+listeners exist only while subscribed. The runtime batches the pointer and
+focus reports on the same animation-frame tick as geometry. It sends canvas
+key events immediately through the same rule that the shell can call. The
+[canvas input contract](../../../../docs/protocol/mokly-frame-canvas-input.md)
+defines the events, default actions and rate limits.
+
 ## Development
 
 The [package README](../../README.md#development) gives the build and check
@@ -56,6 +66,8 @@ commands and the path of the built script.
   observers and input handling of one document. Its direct methods list,
   highlight, scroll, measure instance box models and the document's content
   box, subscribe, and dispose without wire messages.
+- [`canvas_input.ts`](./canvas_input.ts) holds the wheel and pinch input
+  handlers and `canvasKey`, which `@mokly/frame/internal` also exports.
 - [`runtime_types.ts`](./runtime_types.ts) defines the core's event callback,
   link classifier, and observer and timer environment. The caller supplies
   the callback realm separately from the measured window.

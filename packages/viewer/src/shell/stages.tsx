@@ -1,17 +1,16 @@
 // The route stage renderer of the served Mokly shell: the routed entry's
-// stage, which waits for the entry's detail. A screen, a component, a page
-// and a Markdown document stand on the canvas in both layouts; a use case
-// keeps its stage. All embedded consumer documents are sandboxed without
-// script permission.
+// stage, which waits for the entry's detail. A screen, a component, a page,
+// a Markdown document and a use case stand on the canvas in both layouts.
+// All embedded consumer documents are sandboxed without script permission.
 
 import { CanvasReadingStage } from "./canvas_reading.js";
+import { CanvasUseCaseStage } from "./canvas_use_case.js";
 import {
   CanvasWorkspaceStage,
   type WorkspaceCanvas,
 } from "./canvas_workspace.js";
 import type { Catalogue } from "./catalogue.js";
 import { useRouteDelivery } from "./data_context.js";
-import { PublicStage } from "./public_stage.js";
 import { RetryContent, useRetryFocus } from "./retry_focus.js";
 import { routedEntries } from "./selection.js";
 import { StageDelivery } from "./stage_delivery.js";
@@ -39,8 +38,16 @@ export function TargetStage(props: {
   // After a Try again of the stage, its first frame takes focus.
   return (
     <RetryContent value={focus}>
-      {props.canvas &&
-      (current.kind === "screen" || current.kind === "component") ? (
+      {current.kind === "use-case" ? (
+        // Another use case mounts its own step frames.
+        <CanvasUseCaseStage
+          catalogue={props.catalogue}
+          entry={current}
+          fragment={props.fragment}
+          key={current.path}
+        />
+      ) : props.canvas &&
+        (current.kind === "screen" || current.kind === "component") ? (
         <CanvasWorkspaceStage
           canvas={props.canvas}
           catalogue={props.catalogue}
@@ -52,13 +59,6 @@ export function TargetStage(props: {
           catalogue={props.catalogue}
           entry={current}
           fragment={props.fragment}
-        />
-      ) : current.kind === "use-case" ? (
-        <PublicStage
-          catalogue={model}
-          entry={current}
-          hasDarkFragments={props.catalogue.hasDarkFragments}
-          {...(props.fragment ? { fragment: props.fragment } : {})}
         />
       ) : null}
     </RetryContent>

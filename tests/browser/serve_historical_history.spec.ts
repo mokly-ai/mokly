@@ -9,6 +9,11 @@ import { expect, type Page } from "@playwright/test";
 import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 
 import { awaitRoutedDetail, chooseFilter, navRow } from "./comparison_ui.js";
+import {
+  historicalFrame,
+  previousVersionLabel,
+  PREVIOUS,
+} from "./previous_version.js";
 import { test } from "./serve_comparison_test.js";
 
 /** One removed entry, the current entry beside it in Changes, and their titles. */
@@ -35,7 +40,7 @@ async function expectHistorical(page: Page, entry: HistoryEntry) {
   await expect(page.locator("#mb-main h2").first()).toHaveText(
     entry.previousTitle,
   );
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(
@@ -50,13 +55,17 @@ async function expectHistorical(page: Page, entry: HistoryEntry) {
     await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
     for (const viewport of ["mobile", "desktop"] as const)
       await expect(
-        page
-          .frameLocator(`[data-mokly-preview] .mbk-frame-${viewport} iframe`)
+        historicalFrame(page, viewport)
+          .locator("iframe")
+          .contentFrame()
           .locator("h1"),
       ).toHaveText("Historical screen");
     await expect(page.locator("[data-workspace-highlight]")).toBeDisabled();
   } else {
-    await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
+    // The section's head holds the Removed status.
+    await expect(
+      page.locator(PREVIOUS).getByText("Removed", { exact: true }),
+    ).toBeVisible();
     await expect(
       page.frameLocator("[data-mokly-preview] iframe").locator("h1"),
     ).toHaveText("Historical page");

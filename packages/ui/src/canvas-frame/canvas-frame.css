@@ -79,6 +79,107 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A use case's step frame: the step's number in a dark tag leads the label,
+   and the name is the link that opens the step's screen, with a chevron. The
+   label of a step frame or a linked frame holds the 18px tag on its line and
+   keeps 4px around the line for the link's focus glow, which it clips
+   otherwise: its box grows 4px on each side, and the line keeps its place,
+   7px above the frame. */
+.mbk-canvas-frame-label:has(.mbk-canvas-frame-link, .mbk-canvas-frame-step) {
+  right: -4px;
+  bottom: calc(100% + 3px);
+  left: -4px;
+  height: 26px;
+  padding: 4px;
+  row-gap: 8px;
+}
+
+.mbk-canvas-frame-label:has(.mbk-canvas-frame-link, .mbk-canvas-frame-step)
+  > .mbk-canvas-frame-title {
+  height: 18px;
+}
+
+.mbk-canvas-frame-step {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--cv-text);
+  color: var(--cv-surface);
+  font: 600 10.5px/1 var(--cv-mono);
+}
+
+/* The word stays in the caption's text, so the number reads as a step. */
+.mbk-canvas-frame-step-word {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mbk-canvas-frame-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  border-radius: 4px;
+  color: var(--cv-text);
+  text-decoration: none;
+}
+
+.mbk-canvas-frame-link:hover > .mbk-canvas-frame-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mbk-canvas-frame-link > svg {
+  flex: none;
+  color: var(--cv-text-muted);
+}
+
+/* A frame that keeps its light view under Dark names the fallback after its
+   name, in a lighter weight of the same label. */
+.mbk-canvas-frame-fallback {
+  flex: none;
+  font-weight: 400;
+}
+
+/* The description reads muted on its own line between the label and the
+   frame, and a line too long for the frame ends in an ellipsis. The label
+   then stands above it. */
+.mbk-canvas-frame-description {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 7px);
+  left: 0;
+  height: 16px;
+  margin: 0;
+  overflow: hidden;
+  color: var(--cv-text-muted);
+  font: 400 12px/16px var(--cv-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbk-canvas-frame:has(> .mbk-canvas-frame-description)
+  > .mbk-canvas-frame-label {
+  bottom: calc(100% + 30px);
+}
+
+.mbk-canvas-frame:has(> .mbk-canvas-frame-description)
+  > .mbk-canvas-frame-label:has(
+    .mbk-canvas-frame-link,
+    .mbk-canvas-frame-step
+  ) {
+  bottom: calc(100% + 26px);
+}
+
 /* The frame that holds the selection lights its glyph and name; its size
    stays quiet. */
 .mbk-canvas-frame[data-selected] > .mbk-canvas-frame-label {
@@ -91,7 +192,8 @@
 
 /* The frame's box clips its document and paints the opaque preview surface
    of the frame's own scheme behind it. A document with keyboard focus draws
-   the focus glow on the box. */
+   the focus glow on the box, also when the frame reports that focus from
+   inside its document. */
 .mbk-canvas-frame-clip {
   position: absolute;
   inset: 0;
@@ -106,7 +208,8 @@
   background: var(--mbk-dark-screen-bg);
 }
 
-.mbk-canvas-frame-clip:has(.mbk-frag:focus-visible) {
+.mbk-canvas-frame-clip:has(.mbk-frag:focus-visible),
+.mbk-canvas-frame[data-focus-visible] > .mbk-canvas-frame-clip {
   box-shadow:
     var(--mbk-focus-glow),
     0 0 0 1px var(--mbk-canvas-frame-ring),
@@ -151,6 +254,23 @@
 
 .mbk-canvas-frame-note > .mbk-empty {
   padding: 0;
+}
+
+/* The place of a frame whose view was never captured keeps the frame's size
+   and label, but holds no document, so it draws no surface, ring, shadow or
+   size tag: a dashed outline marks it on the canvas. What it holds, such as
+   a note, stands in its middle at its own size, so it reads at every
+   zoom. */
+.mbk-canvas-frame-place {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  outline: 1.5px dashed
+    color-mix(in srgb, var(--cv-border-strong) 80%, transparent);
+  outline-offset: -1.5px;
 }
 
 .mbk-canvas-frame-note > .mbk-frame-error {

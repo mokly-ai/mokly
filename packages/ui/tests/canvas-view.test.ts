@@ -117,6 +117,29 @@ test("a hidden frame takes no room in the section, so Fit leaves it out", () => 
   );
 });
 
+test("a use case's section keeps its step frames in one row, with room above it for the steps' descriptions", () => {
+  assert.deepEqual(
+    sectionExtent(
+      "use-case",
+      [
+        { column: 0, row: 0, width: 1280, height: 800 },
+        { column: 1, row: 0, width: 1280, height: 800 },
+      ],
+      { width: 0, height: 0 },
+    ),
+    {
+      columns: [
+        { fixed: 22 },
+        { scaled: 1280 },
+        { fixed: 44 },
+        { scaled: 1280 },
+        { fixed: 22 },
+      ],
+      rows: [{ fixed: 92 }, { scaled: 800 }, { fixed: 22 }],
+    },
+  );
+});
+
 test("Zoom in and Zoom out step by 1.25 and 0.8 between 8% and 400%", () => {
   const view: CanvasView = { fitted: true, x: 0, y: 0, zoom: 0.5 };
   const larger = stepZoom(view, SCREEN, STAGE, "in");

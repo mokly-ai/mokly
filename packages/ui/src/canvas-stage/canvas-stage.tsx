@@ -35,6 +35,7 @@ import { useCanvasView, type CanvasStageHandle } from "./use-canvas-view.js";
 export { canvasKeyCommand, type CanvasCommand } from "./canvas-keys.js";
 export type { CanvasKeyEvent } from "./canvas-keys.js";
 export {
+  wheelZoom,
   ZOOM_MAX,
   ZOOM_MIN,
   type CanvasExtent,

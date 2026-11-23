@@ -11,8 +11,12 @@ import {
   type CanvasTrack,
 } from "../canvas-stage/canvas-view.js";
 
-/** What a section holds: a screen's frames, a variant set, or a reading frame. */
-export type CanvasSectionKind = "component" | "document" | "screen";
+/**
+ * What a section holds: a screen's frames, a variant set, a reading frame, or
+ * a use case's step frames.
+ */
+export type CanvasSectionKind =
+  "component" | "document" | "screen" | "use-case";
 
 /** A frame's nominal size in CSS pixels. */
 export interface CanvasSize {
@@ -45,6 +49,21 @@ export const SECTION_PADDING = {
   top: 64,
 } as const;
 
+/** A section's padding on each side, in CSS pixels. */
+export type CanvasPadding = Readonly<
+  Record<"bottom" | "left" | "right" | "top", number>
+>;
+
+/**
+ * The padding of each kind of section. A use case's section leaves more room
+ * at its top, for each step's description between its label and its frame.
+ */
+export function sectionPadding(kind: CanvasSectionKind): CanvasPadding {
+  return kind === "use-case"
+    ? { ...SECTION_PADDING, top: 92 }
+    : SECTION_PADDING;
+}
+
 /** The gaps between the columns and the rows of each kind of section. */
 export const SECTION_GAPS: Readonly<
   Record<CanvasSectionKind, { column: number; row: number }>
@@ -52,6 +71,7 @@ export const SECTION_GAPS: Readonly<
   component: { column: 40, row: 64 },
   document: { column: 0, row: 0 },
   screen: { column: 44, row: 48 },
+  "use-case": { column: 44, row: 48 },
 };
 
 /**
@@ -65,6 +85,14 @@ export const COMPACT_PADDING = {
   top: 22,
 } as const;
 
+/**
+ * The compact padding of each kind of section. A use case's step frame
+ * keeps the room of its taller label and of its description above it.
+ */
+export function compactPadding(kind: CanvasSectionKind): CanvasPadding {
+  return kind === "use-case" ? { ...COMPACT_PADDING, top: 52 } : COMPACT_PADDING;
+}
+
 /** The gaps of a section in the compact layout, such as a whole variant set. */
 export const COMPACT_GAPS: Readonly<
   Record<CanvasSectionKind, { column: number; row: number }>
@@ -72,6 +100,7 @@ export const COMPACT_GAPS: Readonly<
   component: { column: 16, row: 34 },
   document: { column: 0, row: 0 },
   screen: { column: 16, row: 34 },
+  "use-case": { column: 16, row: 34 },
 };
 
 /** The padding and the gaps of a section, in its layout's form. */
@@ -80,11 +109,11 @@ export function sectionSpacing(
   compact: boolean,
 ): {
   gaps: { column: number; row: number };
-  padding: { bottom: number; left: number; right: number; top: number };
+  padding: CanvasPadding;
 } {
   return compact
-    ? { gaps: COMPACT_GAPS[kind], padding: COMPACT_PADDING }
-    : { gaps: SECTION_GAPS[kind], padding: SECTION_PADDING };
+    ? { gaps: COMPACT_GAPS[kind], padding: compactPadding(kind) }
+    : { gaps: SECTION_GAPS[kind], padding: sectionPadding(kind) };
 }
 
 /** The widest reading frame, a comfortable measure for a document. */

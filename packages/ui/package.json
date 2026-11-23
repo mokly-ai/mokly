@@ -24,6 +24,14 @@
       "types": "./dist/canvas-frame/canvas-frame.d.ts",
       "import": "./dist/canvas-frame/canvas-frame.js"
     },
+    "./canvas-missing-view": {
+      "types": "./dist/canvas-missing-view/canvas-missing-view.d.ts",
+      "import": "./dist/canvas-missing-view/canvas-missing-view.js"
+    },
+    "./canvas-previous-version": {
+      "types": "./dist/canvas-previous-version/canvas-previous-version.d.ts",
+      "import": "./dist/canvas-previous-version/canvas-previous-version.js"
+    },
     "./canvas-section": {
       "types": "./dist/canvas-section/canvas-section.d.ts",
       "import": "./dist/canvas-section/canvas-section.js"
@@ -31,6 +39,10 @@
     "./canvas-stage": {
       "types": "./dist/canvas-stage/canvas-stage.d.ts",
       "import": "./dist/canvas-stage/canvas-stage.js"
+    },
+    "./canvas-state": {
+      "types": "./dist/canvas-state/canvas-state.d.ts",
+      "import": "./dist/canvas-state/canvas-state.js"
     },
     "./canvas-zoom-pill": {
       "types": "./dist/canvas-zoom-pill/canvas-zoom-pill.d.ts",

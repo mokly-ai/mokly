@@ -1,7 +1,5 @@
 # Mokly Design Mockup Links
 
-Status: The outer viewer's canvas, which shows the Light and Dark frames of a design screen at once, is not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds it.
-
 Two linked pages hold the destination tables: the [navigation
 links](./mokly-design-links-navigation.md) cover the navigation controls and the
 screen variants, and the [scheme, comparison, and tag

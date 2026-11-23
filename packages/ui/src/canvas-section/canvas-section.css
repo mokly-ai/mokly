@@ -105,6 +105,12 @@ span.mbk-canvas-path-chip {
   line-height: 1;
 }
 
+/* The quiet label after the status, such as "Showing previous version". */
+.mbk-canvas-quiet-label {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+}
+
 /* The frames: each cell takes its column and its row from its frame, and a
    column or a row is as long as its longest frame. */
 .mbk-canvas-frames {

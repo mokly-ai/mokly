@@ -12,6 +12,30 @@ import { ShellStoreProvider } from "../src/shell/store.js";
 import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { FakeDataSource, flush } from "./data_fakes.js";
 
+/**
+ * Give each document `fonts`, as each browser document has: a previous
+ * version's frame forwards its document's canvas input, whose listener reads
+ * it, and happy-dom gives a document none. A frame's document shares the
+ * prototype that this stub extends.
+ */
+function stubDocumentFonts(): void {
+  const prototype: object = Object.getPrototypeOf(
+    Object.getPrototypeOf(document),
+  );
+  if ("fonts" in prototype) return;
+  const sets = new WeakMap<object, EventTarget>();
+  Object.defineProperty(prototype, "fonts", {
+    configurable: true,
+    get(this: object) {
+      const known = sets.get(this);
+      if (known) return known;
+      const created = new EventTarget();
+      sets.set(this, created);
+      return created;
+    },
+  });
+}
+
 test("a rejected removed detail shows no preview and Retry requests the route detail again", async (t) => {
   const index = indexFixture();
   const record = index.removedEntries.find(
@@ -24,6 +48,7 @@ test("a rejected removed detail shows no preview and Retry requests the route de
   const origin = "https://catalogue.test";
   const url = `${origin}/view/${request.path}/?snapshot=${request.snapshotId}`;
   GlobalRegistrator.register({ url });
+  stubDocumentFonts();
   const source = new FakeDataSource();
   const requests: string[] = [];
   const environment: ComparisonEnvironment = {

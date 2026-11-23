@@ -164,6 +164,8 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [CSS Evidence Presentation](./mokly-css-evidence-presentation.md)
 - [Embeddable Mokly Viewer](./mokly-viewer.md)
 - [Embeddable Viewer API](./mokly-viewer-api.md)
+- [Frame Box Model](./mokly-frame-box-model.md)
+- [Frame Canvas Input](./mokly-frame-canvas-input.md)
 - [Frame Content Box](./mokly-frame-content-box.md)
 - [Frame Link Navigation](./mokly-frame-link-navigation.md)
 - [Frame Package](./mokly-frame-package.md)

@@ -6,12 +6,10 @@ import type { ColorScheme } from "@mokly/model";
 
 import { shellCatalogueModel } from "../src/catalogue/shell_model.js";
 import { CanvasReadingStage } from "../src/shell/canvas_reading.js";
+import { CanvasRemovedStage } from "../src/shell/canvas_removed.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { DisplaySelection } from "../src/shell/display_context.js";
-import {
-  removedPreviewData,
-  RemovedPreviewStage,
-} from "../src/shell/previews.js";
+import { removedPreviewData } from "../src/shell/previews.js";
 import { defaultSelection } from "../src/shell/selection.js";
 
 import { indexFixture } from "./catalogue_v9_fixture.js";
@@ -83,13 +81,19 @@ const REMOVED = "product/terms";
 /** A stable 64-digit hash for a test identity. */
 const hash = (seed: string) => createHash("sha256").update(seed).digest("hex");
 
+/** The address of a removed document's historical version of one scheme. */
+const historical = (colorScheme: ColorScheme) =>
+  `https://catalogue.test/snapshots/before/${REMOVED}/index.${colorScheme}.html`;
+
 /**
- * The previous-version stage of a removed document in a published catalogue
- * whose current screens render `screenSchemes`.
+ * The loaded previous version of a removed document in a published catalogue
+ * whose current screens render `screenSchemes`, under the preview scheme
+ * `colorScheme`.
  */
 function removedStage(
   screenSchemes: readonly ColorScheme[],
   documentSchemes: readonly ColorScheme[],
+  colorScheme: ColorScheme = "dark",
 ): string {
   const index = indexFixture((raw) => {
     for (const screen of raw.screens) {
@@ -136,26 +140,60 @@ function removedStage(
     removed,
   );
   assert.ok(data);
-  return storeMarkup(<RemovedPreviewStage data={data} />, { index });
+  const views = documentSchemes.map((scheme) => ({
+    colorScheme: scheme,
+    url: historical(scheme),
+  }));
+  return storeMarkup(
+    <CanvasRemovedStage
+      colorScheme={colorScheme}
+      data={data}
+      retry={() => undefined}
+      state={{
+        status: "ready",
+        loaded: {
+          content: { kind: "document", views },
+          generation: "https://catalogue.test/",
+          url: `https://catalogue.test/previews/${REMOVED}/index.json`,
+        },
+        presentations: new Map(
+          views.map(({ url }) => [url, { snapshotAddress: url, srcdoc: "" }]),
+        ),
+      }}
+      viewport="both"
+    />,
+    { index },
+  );
 }
 
-test("a removed document with no dark render adds the note to its label", () => {
-  assert.match(
-    removedStage(["light", "dark"], ["light"]),
-    /<p class="mbk-previous mbk-reset" data-color-scheme-fallback="">Showing previous version<span class="mbk-frame-scheme-note mbk-reset"> — Light only<\/span><\/p>/u,
-  );
-  for (const [screens, documents] of [
-    [
-      ["light", "dark"],
-      ["light", "dark"],
-    ],
-    [["light"], ["light"]],
-  ] as const) {
-    const html = removedStage(screens, documents);
-    assert.match(
-      html,
-      /<p class="mbk-previous mbk-reset">Showing previous version<\/p>/u,
-    );
-    assert.doesNotMatch(html, /Light only/u);
-  }
+/** The quiet label of the section's head, and the document that it shows. */
+function shown(html: string) {
+  return {
+    label:
+      /<span class="mbk-canvas-quiet-label mbk-reset">([^<]*)<\/span>/u.exec(
+        html,
+      )?.[1],
+    source: /data-mokly-preview-source="([^"]*)"/u.exec(html)?.[1],
+  };
+}
+
+test("a removed document with no dark render keeps its light version under Dark, and its section's label says so", () => {
+  assert.deepEqual(shown(removedStage(["light", "dark"], ["light"])), {
+    label: "Showing previous version — Light only",
+    source: historical("light"),
+  });
+  assert.deepEqual(shown(removedStage(["light", "dark"], ["light"], "light")), {
+    label: "Showing previous version",
+    source: historical("light"),
+  });
+  // A document with a dark version shows it under Dark, and a catalogue
+  // without a dark axis names no fallback.
+  assert.deepEqual(shown(removedStage(["light", "dark"], ["light", "dark"])), {
+    label: "Showing previous version",
+    source: historical("dark"),
+  });
+  assert.deepEqual(shown(removedStage(["light"], ["light"])), {
+    label: "Showing previous version",
+    source: historical("light"),
+  });
 });
