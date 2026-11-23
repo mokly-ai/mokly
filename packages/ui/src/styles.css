@@ -4,6 +4,9 @@
 @import "./appearance-selector/appearance-selector.css";
 @import "./change-mark/change-mark.css";
 @import "./comparison-toolbar/comparison-toolbar.css";
+@import "./change-stepper/change-stepper.css";
+@import "./compared-rail/compared-rail.css";
+@import "./compare-modes/compare-modes.css";
 @import "./top-bar/top-bar.css";
 @import "./tag-picker/tag-picker.css";
 @import "./catalogue-tree/catalogue-tree.css";
@@ -22,6 +25,7 @@
 @import "./usage-list/usage-list.css";
 @import "./text-button/text-button.css";
 @import "./comparison-evidence/comparison-evidence.css";
+@import "./changes-panel/changes-panel.css";
 @import "./prop-field/prop-field.css";
 @import "./controls-panel/controls-panel.css";
 @import "./edit-status/edit-status.css";

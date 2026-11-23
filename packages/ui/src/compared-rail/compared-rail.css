@@ -1,0 +1,75 @@
+/* Compared: the version before and the current version as two dots on a
+   rail that runs from the strong line to the signal, the current one in
+   signal. A rail with one version, an added or a removed entry's, draws no
+   rail, and a quiet line under it says why. The dots are decoration: the
+   words Before and Current name each version. */
+.mbk-compared-rail {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mbk-compared-rail::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 5.25px;
+  width: 1.5px;
+  background: linear-gradient(var(--cv-border-strong), var(--cv-signal));
+}
+
+.mbk-compared-rail[data-compared-outcome]::before {
+  display: none;
+}
+
+.mbk-compared-version {
+  position: relative;
+  display: grid;
+  grid-template-columns: 12px 52px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 24px;
+}
+
+.mbk-compared-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cv-surface);
+  box-shadow: inset 0 0 0 2px var(--cv-border-strong);
+}
+
+.mbk-compared-version[data-compared-side="current"] > .mbk-compared-dot {
+  background: var(--cv-signal-soft);
+  box-shadow: inset 0 0 0 2px var(--cv-signal);
+}
+
+.mbk-compared-side {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+}
+
+/* A long base name wraps inside its column. */
+.mbk-compared-name {
+  min-width: 0;
+  color: var(--cv-text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.mbk-compared-name > code {
+  font: 12px/1 var(--cv-mono);
+}
+
+/* The rule weighs two classes, so a container's rule for its paragraphs,
+   such as the inspector's, leaves the line alone. */
+.mbk-compared > .mbk-compared-note {
+  margin: 10px 0 0;
+  color: var(--cv-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}

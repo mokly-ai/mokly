@@ -1,0 +1,275 @@
+/* The compare modes of Changes: a tile for each mode with its icon, its name
+   and its key, Current across the row above the four comparisons in a 2 × 2
+   grid; the compared frame's chips in Side by side; and, in a comparison,
+   the Scroll together switch and Refresh. The shown mode's tile and the
+   compared frame's chip take the soft signal fill and the deep signal edge.
+   A link, a button and inert text read alike. The tile and chip rules weigh
+   two classes, so a container's rule for its links leaves them alone. */
+.mbk-compare-modes {
+  display: grid;
+  gap: 10px;
+}
+
+.mbk-compare-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mbk-compare-tiles > .mbk-compare-tile:first-child {
+  grid-column: 1 / -1;
+}
+
+.mbk-compare-tiles > .mbk-compare-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  padding: 9px 9px 8px;
+  border: 1px solid var(--cv-border);
+  border-radius: 9px;
+  background: none;
+  color: var(--cv-text-secondary);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 540;
+  line-height: 1.4;
+  text-align: left;
+  text-decoration: none;
+}
+
+button.mbk-compare-tile {
+  cursor: pointer;
+}
+
+.mbk-compare-tiles
+  > :is(a, button).mbk-compare-tile:not(
+    [aria-current="page"],
+    [aria-pressed="true"]
+  ):hover {
+  background: var(--chrome-hover);
+}
+
+/* A marked edge draws the deep accent, the deep signal of the shell's theme,
+   which the palette contract gives a selected control. */
+.mbk-compare-tiles
+  > .mbk-compare-tile:is([aria-current="page"], [aria-pressed="true"]) {
+  border-color: var(--mbk-accent-deep);
+  background: var(--cv-signal-soft);
+  box-shadow: inset 0 0 0 0.5px var(--mbk-accent-deep);
+  color: var(--cv-text);
+  font-weight: 600;
+}
+
+/* The shown tile keeps its inner edge under the focus glow. */
+.mbk-compare-tiles
+  > .mbk-compare-tile:is(
+    [aria-current="page"],
+    [aria-pressed="true"]
+  ):focus-visible {
+  box-shadow:
+    var(--mbk-focus-glow),
+    inset 0 0 0 0.5px var(--mbk-accent-deep);
+}
+
+.mbk-compare-tile > .mbk-compare-icon {
+  flex: none;
+  color: var(--cv-text-muted);
+}
+
+.mbk-compare-tile:is([aria-current="page"], [aria-pressed="true"])
+  > .mbk-compare-icon {
+  color: var(--cv-signal-deep);
+}
+
+.mbk-compare-tile > .mbk-compare-key {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: var(--cv-surface-muted);
+  box-shadow: inset 0 0 0 1px var(--cv-border);
+  color: var(--cv-text-muted);
+  font: 500 10.5px/1 var(--cv-mono);
+}
+
+.mbk-compare-tile:is([aria-current="page"], [aria-pressed="true"])
+  > .mbk-compare-key {
+  background: var(--cv-surface);
+}
+
+/* Side by side compares one frame, which its chip names. */
+.mbk-compare-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mbk-compare-chips > .mbk-compare-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  margin: 0;
+  padding: 0 9px;
+  border: 1px solid var(--cv-border);
+  border-radius: 13px;
+  background: none;
+  color: var(--cv-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+button.mbk-compare-chip {
+  cursor: pointer;
+}
+
+.mbk-compare-chips
+  > :is(a, button).mbk-compare-chip:not(
+    [aria-current="page"],
+    [aria-pressed="true"]
+  ):hover {
+  background: var(--chrome-hover);
+}
+
+.mbk-compare-chips
+  > .mbk-compare-chip:is([aria-current="page"], [aria-pressed="true"]) {
+  border-color: var(--mbk-accent-deep);
+  background: var(--cv-signal-soft);
+  color: var(--cv-text);
+}
+
+.mbk-compare-chip:is([aria-current="page"], [aria-pressed="true"]) > svg {
+  color: var(--cv-signal-deep);
+}
+
+/* Forced colours drop the fill and the signal edge, so there the shown tile
+   and the chosen chip draw their edge in the system highlight. */
+@media (forced-colors: active) {
+  .mbk-compare-tiles
+    > .mbk-compare-tile:is([aria-current="page"], [aria-pressed="true"]),
+  .mbk-compare-chips
+    > .mbk-compare-chip:is([aria-current="page"], [aria-pressed="true"]) {
+    border-color: Highlight;
+  }
+}
+
+/* Scroll together and Refresh share a row. Refresh keeps its column while a
+   comparison loads, so the switch stays in place when Refresh shows. */
+.mbk-compare-sync {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  gap: 6px;
+  align-items: center;
+  min-height: 30px;
+}
+
+/* Scroll together: a transparent native switch covers the whole control,
+   so the label is its hit area and focus stays on the switch. */
+.mbk-compare-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.mbk-compare-switch-name {
+  flex: 1;
+}
+
+.mbk-compare-switch > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.mbk-compare-switch-track {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 18px;
+  border: 1px solid var(--cv-border-strong);
+  border-radius: 999px;
+  background: var(--cv-surface);
+}
+
+.mbk-compare-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cv-border-strong);
+}
+
+.mbk-compare-switch > input:checked + .mbk-compare-switch-track {
+  border-color: var(--mbk-accent-deep);
+  background: var(--mbk-accent-deep);
+}
+
+.mbk-compare-switch > input:checked + .mbk-compare-switch-track::after {
+  background: var(--cv-surface);
+  transform: translateX(14px);
+}
+
+/* The track draws the glow of the transparent switch over it. */
+.mbk-compare-switch > input:focus-visible + .mbk-compare-switch-track {
+  box-shadow: var(--mbk-focus-glow);
+}
+
+/* Forced colours drop the glow and every fill, so there the track takes the
+   system outline, and the knob keeps the system text colour, so its place
+   still shows whether the switch is on. */
+@media (forced-colors: active) {
+  .mbk-compare-switch > input:focus-visible + .mbk-compare-switch-track {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .mbk-compare-switch-track::after,
+  .mbk-compare-switch > input:checked + .mbk-compare-switch-track::after {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}
+
+/* Refresh: the refresh glyph in a square icon control at the row's end. */
+.mbk-compare-sync > .mbk-compare-refresh {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--cv-text-secondary);
+}
+
+.mbk-compare-sync > button.mbk-compare-refresh {
+  cursor: pointer;
+}
+
+.mbk-compare-sync > button.mbk-compare-refresh:hover {
+  background: var(--chrome-hover);
+  color: var(--cv-text);
+}

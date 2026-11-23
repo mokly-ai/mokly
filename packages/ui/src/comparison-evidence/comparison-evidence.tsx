@@ -1,12 +1,12 @@
 /**
  * The comparison facts in an entry's Details, in the designs' order: the
  * heading and the branch point, the path of a moved entry's earlier side, one
- * sentence for each reason, the saved variant and whether its saved props
- * stayed the same, the changed and excluded stylesheets, the paired
- * prop values, the changed components that the entry uses, the ignored
- * content, the shared-component sentence, the changed saved props, and the
- * line of an entry without changes. The host words every sentence that it
- * derives from the catalogue.
+ * sentence for each reason, a use case's changed steps, the saved variant and
+ * whether its saved props stayed the same, the changed and excluded
+ * stylesheets, the paired prop values, the changed components that the entry
+ * uses, the ignored content, the shared-component sentence, the changed saved
+ * props, and the line of an entry without changes. The host words every
+ * sentence that it derives from the catalogue.
  */
 
 import { Fragment } from "react";
@@ -59,6 +59,7 @@ export interface EvidenceReason {
 export function ComparisonEvidence({
   base,
   changedComponents = [],
+  changedSteps = [],
   excluded,
   files,
   hidden,
@@ -76,6 +77,12 @@ export function ComparisonEvidence({
   base: string;
   /** The changed components that the entry uses. */
   changedComponents?: readonly EvidenceLink[] | undefined;
+  /**
+   * A use case's steps whose screen changed, each with its title and the
+   * address of its screen. Their lines are the sentences of the `screen`
+   * reason, so they follow the other reasons.
+   */
+  changedSteps?: readonly EvidenceLink[] | undefined;
   excluded?: EvidenceExclusions | undefined;
   files?: EvidenceFiles | undefined;
   /** Hides the section, which then holds nothing, until facts are known. */
@@ -120,6 +127,14 @@ export function ComparisonEvidence({
           {reasons.map((reason) => (
             <p className="mbk-reset" key={reason.key}>
               {reason.text}
+            </p>
+          ))}
+          {changedSteps.map((step) => (
+            <p className="mbk-reset" key={step.key}>
+              {"Changed step:"}{" "}
+              <a className="mbk-reset" href={step.href}>
+                {step.title}
+              </a>
             </p>
           ))}
           {savedVariant ? (

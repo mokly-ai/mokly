@@ -1,0 +1,56 @@
+/* The change stepper under the right panel's tabs: a slim full-width row
+   with the entry's place among the listed changes, then Previous change and
+   Next change as 28px icon controls at its end. A disabled step is quiet.
+   The step rules weigh two classes, so a container's rule for its links,
+   such as the inspector's, leaves the steps alone. */
+.mbk-change-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 6px 0 14px;
+  border-bottom: 1px solid var(--cv-border);
+}
+
+.mbk-change-stepper-count {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mbk-change-stepper-steps {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.mbk-change-stepper-steps > .mbk-change-stepper-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--cv-text-secondary);
+  text-decoration: none;
+}
+
+.mbk-change-stepper-steps > a.mbk-change-stepper-step:hover {
+  background: var(--chrome-hover);
+  color: var(--cv-text);
+}
+
+.mbk-change-stepper-steps > .mbk-change-stepper-step:disabled {
+  color: var(--cv-text-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The chevron points down, so Previous change turns it upside down. */
+.mbk-change-stepper-step[data-change-step="previous"] > svg {
+  transform: rotate(180deg);
+}

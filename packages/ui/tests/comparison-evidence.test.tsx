@@ -200,3 +200,43 @@ test("each changed component links to its page", () => {
     "H3",
   );
 });
+
+test("a use case's changed steps follow the reason sentences, each a link with its step's title, before the saved variant and the files", () => {
+  assert.equal(
+    renderToStaticMarkup(
+      <ComparisonEvidence
+        base=""
+        changedSteps={[
+          {
+            href: "/view/screens/welcome/",
+            key: "welcome",
+            title: "Open the welcome screen",
+          },
+          {
+            href: "/view/screens/details/",
+            key: "details",
+            title: "Read the details",
+          },
+        ]}
+        files={{
+          lead: "Changes to these files may affect this screen:",
+          stylesheets: [{ path: "styles/a.css", outcomes: [] }],
+        }}
+        mark="data-workspace-evidence"
+        reasons={[
+          {
+            key: "metadata/0",
+            text: "Page details or saved examples changed.",
+          },
+        ]}
+        savedVariant={{ savedPropsUnchanged: false, title: "Default" }}
+      />,
+    ),
+    `<section class="mbk-comparison-evidence mbk-reset" data-workspace-evidence="">${HEADING}` +
+      '<p class="mbk-reset">Page details or saved examples changed.</p>' +
+      '<p class="mbk-reset">Changed step: <a class="mbk-reset" href="/view/screens/welcome/">Open the welcome screen</a></p>' +
+      '<p class="mbk-reset">Changed step: <a class="mbk-reset" href="/view/screens/details/">Read the details</a></p>' +
+      '<dl class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">Saved variant</dt><dd class="mbk-reset">Default</dd></div></dl>' +
+      '<p class="mbk-reset">Changes to these files may affect this screen:</p><ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">styles/a.css</li></ul></section>',
+  );
+});

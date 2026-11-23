@@ -116,6 +116,26 @@ current page. Scroll together stays a native switch in every band. The mode
 group renders the package's segmented control, and the package stylesheet
 gives a link and inert text the line box and centring of a button.
 
+`ChangesPanel` draws the body of the right panel's Changes tab, with its parts
+in a fixed order: the `ChangeStepper` row, which reads `Change N of M` with
+Previous change and Next change, disabled at the ends of the list; the host's
+`changesStart` slot; Compared, the `ComparedRail` of the version before at the
+branch point on the base and the current version on this branch, or of one
+version and the line of an added or a removed entry; Compare, the
+`CompareModes` tiles with their icons, names and keys, the frame chips of Side
+by side, Scroll together and Refresh; and the comparison details, whose
+evidence brings its own heading. An absent part draws nothing. The slot's
+container carries no reset class, because its content stays the host's: the
+panel draws no container for an absent slot, hides a container that the
+host's component leaves empty, and gives the container to `slotRef`. The host
+holds the mode, the compared frame and the switch, and binds the mode keys.
+
+A static mockup draws each part of the Changes tab without a script: a step, a
+tile or a chip with an address is a link, and a step without one is a picture
+of itself. On `CompareModes`, `interactive={false}` draws a tile or a chip
+without an address as inert text and Refresh as a picture, and Scroll together
+stays a native switch.
+
 `TopBar`, `CatalogueNavigation`, and `ScreenHeader` draw controls that act
 through a script. A static mockup gives `TopBar` a `brandHref`, which draws
 the brand as a link, and sets `interactive={false}`, which draws a brand
@@ -624,8 +644,21 @@ override the desktop layout rules.
   "3 instances"
 - [`src/comparison-evidence/comparison-evidence.tsx`](./src/comparison-evidence/comparison-evidence.tsx)
   — `ComparisonEvidence`: the comparison facts of Details in the designs'
-  order, with the saved variant's rows, the heading, and the files of
-  `evidence-files.tsx`
+  order, with a use case's changed steps, the saved variant's rows, the
+  heading, and the files of `evidence-files.tsx`
+- [`src/changes-panel/changes-panel.tsx`](./src/changes-panel/changes-panel.tsx)
+  — `ChangesPanel`: the Changes tab's parts in their order, the `changesStart`
+  host slot, and the sections of Compared, Compare, and the comparison details
+- [`src/change-stepper/change-stepper.tsx`](./src/change-stepper/change-stepper.tsx)
+  — `ChangeStepper`: `Change N of M`, then Previous change and Next change as
+  links, disabled buttons at the ends, or pictures of a static depiction
+- [`src/compared-rail/compared-rail.tsx`](./src/compared-rail/compared-rail.tsx)
+  — `ComparedRail`: the version before and the current version on a rail, or
+  one version with the line of an added or a removed entry
+- [`src/compare-modes/compare-modes.tsx`](./src/compare-modes/compare-modes.tsx)
+  — `CompareModes`, `CompareMode`, `COMPARE_MODES`, and `CompareFrame`: the
+  tiles of `mode-tile.tsx`, the frame chips of `frame-chips.tsx`, Scroll
+  together, and Refresh, with the private glyphs of `compare-icons.tsx`
 - [`src/text-button/text-button.tsx`](./src/text-button/text-button.tsx) —
   `TextButton`, the text button of the inspector's panels
 - [`src/canvas-stage/canvas-stage.tsx`](./src/canvas-stage/canvas-stage.tsx)
@@ -765,6 +798,8 @@ override the desktop layout rules.
   Canvas stage, its frames, pan, zoom and Fit, and the compact layout
 - [Component inspector design](../../docs/protocol/mokly-component-inspector-design.md),
   the right panel with Inspect and Changes,
+  [Changes screen controls](../../docs/protocol/mokly-changes-controls.md#changes-tab),
+  the parts of the Changes tab,
   [Canvas selection](../../docs/protocol/mokly-viewer-selection-canvas.md),
   the selection on a frame and its box model, and
   [Comparison panes](../../docs/protocol/mokly-comparison-panes.md), the
