@@ -2,12 +2,16 @@ import { expect } from "@playwright/test";
 
 import { comparisonSection, paneFrame } from "./comparison_sections.js";
 import {
-  COMPARE_MODES,
   comparedViewports,
   expectSectionMode,
 } from "./comparison_static_frames.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { chooseMode, comparisonFrames, modeButton } from "./comparison_ui.js";
+import {
+  chooseMode,
+  COMPARE_MODES,
+  comparisonFrames,
+  modeButton,
+} from "./comparison_ui.js";
 import { inspectTitle } from "./inspect_head.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 import { chooseViewport, setFrames } from "./workspace_actions.js";

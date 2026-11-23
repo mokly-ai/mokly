@@ -10,20 +10,10 @@
 import { expect, type Locator } from "@playwright/test";
 
 import { frameLabels, frameModes } from "./comparison_sections.js";
+import type { CompareMode } from "./comparison_ui.js";
 
 /** A screen viewport. */
 export type ScreenViewport = "desktop" | "mobile";
-
-/** The `data-compare-mode` of each diff mode. */
-export const COMPARE_MODES = {
-  "Side by side": "side",
-  Overlay: "overlay",
-  Difference: "difference",
-  Swipe: "swipe",
-} as const;
-
-/** A diff mode, by its `data-compare-mode`. */
-export type CompareMode = (typeof COMPARE_MODES)[keyof typeof COMPARE_MODES];
 
 /** The window width below which the shell uses its compact layout. */
 const COMPACT_BELOW = 900;

@@ -12,14 +12,12 @@ import { expect, type Page, type Route } from "@playwright/test";
 
 import { markPaneDocuments } from "./comparison_scroll.js";
 import { comparisonSection, paneFrame } from "./comparison_sections.js";
-import {
-  COMPARE_MODES,
-  comparedViewports,
-} from "./comparison_static_frames.js";
+import { comparedViewports } from "./comparison_static_frames.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   chooseMode,
   compareStage,
+  COMPARE_MODES,
   comparisonFrames,
   comparisonIndex,
   modeButton,

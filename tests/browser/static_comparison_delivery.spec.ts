@@ -10,17 +10,20 @@ import {
 } from "./comparison_delivery_assertions.js";
 import { comparisonSection, paneFrame } from "./comparison_sections.js";
 import {
-  COMPARE_MODES,
   comparedViewports,
   expectSectionMode,
-  type CompareMode,
 } from "./comparison_static_frames.js";
 import {
   comparisonPaths,
   copiedComparisonDirectory,
   test,
 } from "./comparison_test.js";
-import { chooseMode, comparisonFrames } from "./comparison_ui.js";
+import {
+  chooseMode,
+  COMPARE_MODES,
+  comparisonFrames,
+  type CompareMode,
+} from "./comparison_ui.js";
 import {
   chooseViewport,
   openPanelTab,

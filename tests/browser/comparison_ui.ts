@@ -115,7 +115,7 @@ export async function chooseFilter(
 }
 
 /** The value of `data-compare-mode` that each diff mode draws on the frames. */
-const MODES = {
+export const COMPARE_MODES = {
   "Side by side": "side",
   Overlay: "overlay",
   Difference: "difference",
@@ -123,7 +123,10 @@ const MODES = {
 } as const;
 
 /** A diff mode, by its name on the band. */
-export type DiffMode = keyof typeof MODES;
+export type DiffMode = keyof typeof COMPARE_MODES;
+
+/** A diff mode, by the `data-compare-mode` that it draws. */
+export type CompareMode = (typeof COMPARE_MODES)[DiffMode];
 
 /** A comparison mode, by its name on the band: Current or a diff mode. */
 export type ModeName = "Current" | DiffMode;
@@ -180,7 +183,9 @@ export async function showMode(
 ): Promise<void> {
   await chooseMode(page, name);
   await expect(
-    page.locator(`[data-mokly-stage] [data-compare-mode="${MODES[name]}"]`),
+    page.locator(
+      `[data-mokly-stage] [data-compare-mode="${COMPARE_MODES[name]}"]`,
+    ),
   ).not.toHaveCount(0);
   await expect(comparisonFrames(page)).toHaveCount(frames);
 }
