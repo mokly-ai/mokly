@@ -30,8 +30,8 @@ settings rail and the stage, `viewer.css` the stage cards and what a panel
 holds, `viewer-bar.css`, which `viewer.css` imports, the viewer root as the
 bar's container with the window insets that it gives the package bar, both
 compositions of the top bar with the centre's caps and the pill's label widths,
-its one switch width, the label rule of History and Settings and the
-application's probes, `viewer-controls.css`, which `viewer.css` imports too, the
+its one switch width, the label rule of History and the application's
+probes, `viewer-controls.css`, which `viewer.css` imports too, the
 bar's publication pill, the reader's avatar and the account control,
 `viewer-depiction.css`, which only the drawing's module imports, its sample
 screen and its comparison message, `overlays.css` the registered panel frame and

@@ -4,11 +4,12 @@ import { resolve } from "node:path";
 import { test } from "node:test";
 
 import { defaultSharedUiTheme } from "@firna/ui/theme";
-import { documentPalettes } from "@mokly-cloud/tokens/palettes";
+import { documentPalettes, paletteColors } from "@mokly-cloud/tokens/palettes";
 import {
   paletteUiTheme,
   pillUiTheme,
   primaryActionUiTheme,
+  quietOnMutedUiTheme,
   sharedUiColors,
   sharedUiThemes,
   staticUiTheme,
@@ -203,4 +204,26 @@ test("primary action themes keep the resting fill on hover in both families and 
       assert.deepEqual(action, expected);
       assert.equal(base.colors.primaryDeep, tokens.color[scheme].signalDeep);
     }
+});
+
+test("a quiet Button on the muted surface hovers on the ink at 5% and presses on it at 7%", () => {
+  // The Canvas ink over `surfaceMuted`, mixed by hand in sRGB.
+  const washes = {
+    light: { soft: "#ebedea", bg2: "#e7e8e5" },
+    dark: { soft: "#212123", bg2: "#262627" },
+  } as const;
+  for (const scheme of ["light", "dark"] as const) {
+    const base = sharedUiThemes[scheme];
+    const quiet = quietOnMutedUiTheme(base);
+    assert.deepEqual(quiet.colors, { ...base.colors, ...washes[scheme] });
+    assert.deepEqual(
+      [quiet.fonts, quiet.radii, quiet.focusIndicator, quiet.scheme],
+      [base.fonts, base.radii, base.focusIndicator, base.scheme],
+    );
+    // The pill's reference, phrase and short SHA stay readable on each wash.
+    const roles = paletteColors(scheme);
+    for (const wash of Object.values(washes[scheme]))
+      for (const text of [roles.text, roles.textSecondary, roles.textMuted])
+        assert.ok(contrast(text, wash) >= 4.5, text + " on " + wash);
+  }
 });

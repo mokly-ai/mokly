@@ -18,7 +18,7 @@ with its [color tables](../../docs/protocol/cloud/design-tokens-color.md).
   the paper family of Design components.
 - Emit every `--mk-*` property on the document root, or the caller's selector,
   with the paper scope rule.
-- Derive live, static, primary-action and header-pill control themes from the same tokens.
+- Derive live, static, primary-action, header-pill and muted-surface control themes from the same tokens.
 
 The package ships no stylesheet. The styles under `docs/mockups/styles` use
 its properties. Each surface loads its own self-hosted Geist and Geist Mono.
@@ -83,6 +83,14 @@ The base theme keeps `primaryDeep` as accent ink for ghost labels and soft
 badges. Product code draws no solid Firna badge because its dark fills cannot
 support the white label at 4.5:1.
 
+`quietOnMutedUiTheme(base: SharedUiTheme): SharedUiTheme` scopes a quiet
+Button that stands on the muted surface, such as the publication pill's. The
+plain hover and press washes are `soft` and `bg2`, which the mapping binds to
+that same surface. The theme sets them to the base `ink` at 5% and at 7% over
+the base `soft`, mixed in sRGB, so a hover shows on the muted surface and
+muted text keeps 4.5:1 on the press wash. Other colors, fonts and radii stay
+unchanged.
+
 `sharedUiRadii` parses the pixel radius tokens as numbers. It maps `sm` from
 `small`, `md` from `medium`, `lg` from `large`, `xl` and `xxl` from `xlarge`,
 and `pill` from `pill`. `avatarRatio` is `small / xlarge`, or 0.25. The paper
@@ -129,7 +137,7 @@ table above aligned with the theme module. The catalogue policy test reads it.
 - `src/tokens.ts` — `tokens` imports Canvas values and font stacks, adds semantic accent names, and holds the token-owned tables.
 - `src/palettes.ts` — `DocumentPalette`, `documentPalettes` and `paletteColors` select default Canvas or paper surface roles.
 - `src/token-css.ts` — `cssVariables` flattens token trees, including people colors. `tokenCss` and `responsiveTokenCss` emit root tokens and the paper scope.
-- `src/shared-ui-theme.ts` — `sharedUiColors`, `sharedUiRadii`, `sharedUiThemes`, `paletteUiTheme`, `staticUiTheme` and `pillUiTheme` derive the Firna themes. `primaryActionUiTheme` keeps a primary Button's hover fill equal to its resting fill.
+- `src/shared-ui-theme.ts` — `sharedUiColors`, `sharedUiRadii`, `sharedUiThemes`, `paletteUiTheme`, `staticUiTheme` and `pillUiTheme` derive the Firna themes. `primaryActionUiTheme` keeps a primary Button's hover fill equal to its resting fill, and `quietOnMutedUiTheme` gives a quiet Button on the muted surface its hover and press washes.
 
 ### Related Docs
 

@@ -1,3 +1,5 @@
+import { SharedUiThemeProvider, useSharedUiTheme } from "@firna/ui/theme";
+import { quietOnMutedUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
 import type { ReactNode } from "react";
 
 import { StatusDot } from "../../../entries/design/status-dot.mockup";
@@ -49,8 +51,11 @@ export function pillName(
  * The publication pill's frame: one rounded box on the muted surface with a
  * hairline. A ready pill holds one quiet registered Button that fills it, so
  * the pill is the control the reader presses, and the frame gives the
- * Button's name as its tooltip. While a read decides the reference, the pill
- * holds no control: the reference's placeholder, which takes the muted
+ * Button's name as its tooltip. The Button stands on the muted surface, so
+ * the frame scopes the theme whose hover and press washes darken that
+ * surface, as the application's does; a static drawing draws no hover, so
+ * its pill keeps its look at rest. While a read decides the reference, the
+ * pill holds no control: the reference's placeholder, which takes the muted
  * surface itself, so the pill takes the bar's surface. A desktop drawing
  * draws one pill for each composition, which carries the composition's class.
  */
@@ -65,6 +70,7 @@ export function Pill({
   title?: string;
   children: ReactNode;
 }) {
+  const quiet = quietOnMutedUiTheme(useSharedUiTheme());
   return (
     <span
       className={["fo-canvas-pill", waiting && "fo-canvas-pill-waiting", part]
@@ -72,7 +78,11 @@ export function Pill({
         .join(" ")}
       title={title}
     >
-      {children}
+      {waiting ? (
+        children
+      ) : (
+        <SharedUiThemeProvider theme={quiet}>{children}</SharedUiThemeProvider>
+      )}
     </span>
   );
 }

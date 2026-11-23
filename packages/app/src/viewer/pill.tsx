@@ -1,3 +1,6 @@
+import { SharedUiThemeProvider, useSharedUiTheme } from "@firna/ui/theme";
+import { quietOnMutedUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
+import { useMemo } from "react";
 import type { ReactNode } from "react";
 
 import { Action } from "../components/action";
@@ -34,9 +37,12 @@ export function pillName(
  * The publication pill's frame, as the catalogue draws it: one rounded box
  * on the muted surface with a hairline. A ready pill holds the one quiet
  * Button that fills it, so the pill is the control the reader presses, and
- * the frame gives the Button's name as its tooltip. While nothing names the
- * reference, the pill holds no control: the reference's placeholder, which
- * takes the muted surface itself, so the pill takes the bar's surface.
+ * the frame gives the Button's name as its tooltip. The Button stands on the
+ * muted surface, so the frame scopes the theme whose hover and press washes
+ * darken that surface; the frame's own hairline darkens with the hover. While
+ * nothing names the reference, the pill holds no control: the reference's
+ * placeholder, which takes the muted surface itself, so the pill takes the
+ * bar's surface.
  */
 export function PublicationPill({
   waiting = false,
@@ -47,6 +53,8 @@ export function PublicationPill({
   title?: string;
   children: ReactNode;
 }) {
+  const theme = useSharedUiTheme();
+  const quiet = useMemo(() => quietOnMutedUiTheme(theme), [theme]);
   return (
     <span
       className={
@@ -54,7 +62,11 @@ export function PublicationPill({
       }
       title={title}
     >
-      {children}
+      {waiting ? (
+        children
+      ) : (
+        <SharedUiThemeProvider theme={quiet}>{children}</SharedUiThemeProvider>
+      )}
     </span>
   );
 }
