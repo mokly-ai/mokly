@@ -44,9 +44,11 @@
   color: var(--cv-text);
 }
 
+/* A disabled step dims to 42%, as every icon control without a fill or an
+   edge at rest does, such as the workspace's disabled icon button. */
 .mbk-change-stepper-steps > .mbk-change-stepper-step:disabled {
   color: var(--cv-text-muted);
-  opacity: 0.45;
+  opacity: 0.42;
   cursor: default;
 }
 

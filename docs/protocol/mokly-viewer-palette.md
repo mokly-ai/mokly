@@ -198,30 +198,31 @@ validation alert are labels rather than controls: each names its own state in
 information and is held to the decorative hairline standard. The badges draw
 `--chrome-border`, and the alert draws `--mbk-danger-edge`.
 
-Eight controls keep a hairline boundary. The segmented control group, such as
-the All/Changes filter, and the compare-mode tiles of the Changes tab draw
-`--chrome-border`, and the resting resize grip on the floating catalogue's
-edge draws `--chrome-border-strong`. A pressed icon control, such as the
-pressed Highlight components toggle, draws `--chrome-border`, and so do a
-resting tag chip and a selected instance of the component tree. The address
-pill and the expand toggle of a browser frame's bar draw `--chrome-border`,
-and the toggle draws `--chrome-border-strong` on hover. The group shows its
-value through the filled selected segment, a tile shows the selected mode with
-a `--mbk-accent-deep` edge, and the grip draws the accent while hovered, focused
-or dragged. A pressed icon control fills with the accent tint and draws its
-glyph in the accent, a selected instance fills with the accent tint and draws
-its text in the accent, and a selected tag chip fills with the accent. On
-hover, the address pill draws its copy glyph in the accent, and the toggle
-draws its glyph in the accent. Decision: the shipped hairlines, not the
+Nine controls keep a hairline boundary. These draw `--chrome-border`: the
+segmented control group, such as the All/Changes filter; the compare-mode tiles
+and frame chips of the Changes tab; a pressed icon control, such as the
+Highlight components toggle; a resting tag chip; a selected instance of the
+component tree; and the address pill and expand toggle of a browser frame's
+bar. The resting resize grip on the floating catalogue's edge and the hovered
+toggle draw `--chrome-border-strong`. The group fills its selected segment, a
+selected tile and a chosen frame chip draw a `--mbk-accent-deep` edge, the chip
+also fills with `signalSoft`, and the grip draws the accent while hovered,
+focused or dragged. A pressed icon control and a selected instance fill with
+the accent tint and draw their glyph or text in the accent, and a selected tag
+chip fills with the accent. On hover, the address pill draws its copy glyph and
+the toggle its glyph in the accent. Decision: the shipped hairlines, not the
 control edge, because each control already shows its state through a fill or
-the accent, and the design mockups render these shipped controls. No other
-boundary may claim these exceptions; a control state that draws a boundary
-must reach 3:1 against its own fill or the surface around it.
+the accent, a frame chip's label also names its frame, and the design mockups
+render them. No other boundary may claim these exceptions; a control state that
+draws a boundary must reach 3:1 against its own fill or the surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
 rather than a dimmed copy of the enabled colours, so a disabled control reads
-the same way in both appearances.
+the same way in both appearances. An icon control without a fill or an edge at
+rest, such as Previous change, Next change or Highlight components, dims to 42%
+opacity instead, also while it is pressed. Decision: dimming, not the disabled
+tokens, because on such a control the disabled ink reads almost as enabled.
 
 ## Role Use
 

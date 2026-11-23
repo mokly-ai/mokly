@@ -29,7 +29,7 @@
   min-width: 0;
   margin: 0;
   padding: 9px 9px 8px;
-  border: 1px solid var(--cv-border);
+  border: 1px solid var(--chrome-border);
   border-radius: 9px;
   background: none;
   color: var(--cv-text-secondary);
@@ -116,7 +116,7 @@ button.mbk-compare-tile {
   height: 26px;
   margin: 0;
   padding: 0 9px;
-  border: 1px solid var(--cv-border);
+  border: 1px solid var(--chrome-border);
   border-radius: 13px;
   background: none;
   color: var(--cv-text-secondary);
