@@ -27,12 +27,13 @@ type Layout = "canvas" | "narrow";
 
 /**
  * The desktop frame whose mask the test reads: the scaled Desktop · Light
- * frame of the canvas, or the one desktop frame below the layout breakpoint.
+ * frame of the canvas, which the compact layout below the layout breakpoint
+ * shows alone for a Desktop and Light selection.
  */
 function desktopFrame(layout: Layout): string {
   return layout === "canvas"
     ? canvasFrame("desktop")
-    : 'iframe[data-workspace-frame="desktop"]';
+    : `.mbk-canvas-cell:not([hidden]) ${canvasFrame("desktop")}`;
 }
 
 /** How much the shell scales the frame's document, in page pixels per pixel. */

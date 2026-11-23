@@ -14,6 +14,7 @@ import {
   canvasFrame,
   chooseScheme,
   chooseViewport,
+  openCatalogueSheet,
 } from "./workspace_actions.js";
 
 const stage = "[data-diff-stage]";
@@ -181,7 +182,7 @@ test("narrow diffs fit the shell and retain the catalogue drawer", async ({
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
-  await page.getByRole("button", { name: "Open catalogue navigation" }).click();
+  await openCatalogueSheet(page);
   await expect(navRow(page, comparisonPaths.unchanged)).toBeVisible();
   await navRow(page, comparisonPaths.unchanged).click();
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");

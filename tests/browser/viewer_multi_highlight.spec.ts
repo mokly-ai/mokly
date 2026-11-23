@@ -215,13 +215,11 @@ for (const cross of [false, true]) {
   test(`${adapter} below the layout breakpoint, rejects a mixed-scheme ref without changing the prior highlight`, async ({
     page,
   }) => {
-    // The one-frame stage shows the Light views alone under Light.
+    // The compact layout shows one frame, Mobile · Light under Light, so a
+    // ref of its Dark view names a view that it does not show.
     await page.setViewportSize(NARROW_WINDOW);
     await openViewer(page, cross);
-    const refs = [
-      homeInstance("mobile", "light"),
-      homeInstance("desktop", "light"),
-    ];
+    const refs = [homeInstance("mobile", "light")];
     await page.waitForFunction(
       () => window.viewerHarness.get("one").ref.current !== null,
     );
@@ -230,8 +228,8 @@ for (const cross of [false, true]) {
         window.viewerHarness.get("one").ref.current.highlightInstances(refs),
       refs,
     );
-    await expectPresentation(page, cross, [0, 1]);
-    const mismatched = homeInstance("desktop", "dark");
+    await expectPresentation(page, cross, [0]);
+    const mismatched = homeInstance("mobile", "dark");
     const outcome = await page.evaluate(
       async ({ refs, mismatched }) => {
         try {
@@ -246,7 +244,7 @@ for (const cross of [false, true]) {
       { refs, mismatched },
     );
     expect(outcome).toBe("rejected");
-    await expectPresentation(page, cross, [0, 1]);
+    await expectPresentation(page, cross, [0]);
     expect(
       await page.evaluate(() =>
         window.viewerHarness

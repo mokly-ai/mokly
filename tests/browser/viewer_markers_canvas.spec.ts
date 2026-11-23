@@ -48,10 +48,15 @@ for (const cross of [false, true])
       frame.dataset["markerIdentity"] = "retained";
     });
 
-    // A wheel over the canvas around the frames pans it.
-    const stage = (await page
-      .locator("#one [data-mokly-stage]")
-      .boundingBox())!;
+    // A wheel over the canvas around the frames pans it: over the stage,
+    // the canvas between the floating panels, which cover its edges. The
+    // stage's box is invisible, so its rectangle is read directly.
+    const stage = await page
+      .locator("#one [data-mokly-stage] .mbk-canvas-stage")
+      .evaluate((element) => {
+        const { x, y } = element.getBoundingClientRect();
+        return { x, y };
+      });
     const before = await markerBox(page);
     await page.mouse.move(stage.x + 8, stage.y + 8);
     await page.mouse.wheel(-60, 0);

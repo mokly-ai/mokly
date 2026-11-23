@@ -3,6 +3,7 @@
 import { expect, type Page, type Request } from "@playwright/test";
 
 import { isRender } from "./live_shell_fixture.js";
+import { revealInPanel } from "./workspace_actions.js";
 
 /** The text that every stage frame shows, read through the parent page. */
 export function frameTexts(page: Page): Promise<string[]> {
@@ -39,9 +40,13 @@ export async function frameText(
   return (await frameDocument(page, viewport)).text;
 }
 
-/** Show the Props panel; a click on the selected tab would close it. */
+/**
+ * Show the Props panel; a click on the selected tab would close it. In the
+ * compact layout the inspector stands in the panel's sheet.
+ */
 export async function showProps(page: Page) {
   const tab = page.getByRole("tab", { name: "Props" });
+  await revealInPanel(page, tab);
   await expect(tab).toBeVisible();
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
   return page.getByRole("tabpanel", { name: "Props" });

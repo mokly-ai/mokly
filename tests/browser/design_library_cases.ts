@@ -14,6 +14,7 @@ import {
 } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+import { openCatalogueSheet } from "./workspace_actions.js";
 
 /**
  * Run one viewport's assertions against a catalogue delivery. Each viewport
@@ -129,10 +130,7 @@ export function registerDesignLibrary(
       const isolated = await typography(page);
       const inScreen = await inShell(browser, baseURL!, async (shell) => {
         // A phone draws the catalogue in the drawer that its top bar opens.
-        if (viewport === "mobile")
-          await shell
-            .getByRole("button", { name: "Open catalogue navigation" })
-            .click();
+        if (viewport === "mobile") await openCatalogueSheet(shell);
         await expect(
           shell.locator(".mbk-nav-section-head").first(),
         ).toBeVisible();

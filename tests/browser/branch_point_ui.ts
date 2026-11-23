@@ -121,8 +121,12 @@ export async function expectSavedProps(
  */
 export async function openChanges(page: Page): Promise<Locator> {
   const nav = page.locator("nav.mbk-nav");
-  const menu = page.locator("[data-mokly-menu]");
-  if (!(await nav.isVisible()) && (await menu.isVisible())) await menu.click();
+  // Below the layout breakpoint the dock's Catalogue opens the catalogue.
+  const catalogue = page
+    .getByRole("group", { name: "Canvas controls" })
+    .getByRole("button", { name: "Catalogue" });
+  if (!(await nav.isVisible()) && (await catalogue.isVisible()))
+    await catalogue.click();
   await expect(nav).toBeVisible();
   const filter = nav.locator("[data-filter=changed]");
   if ((await filter.getAttribute("aria-pressed")) !== "true")

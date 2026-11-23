@@ -143,7 +143,7 @@ test("breadcrumbs open a folder's page or reveal a folder without changing the v
   await expect(page.locator("#mb-main h2")).toHaveText("Setup");
 });
 
-test("a narrow breadcrumb reveal opens the drawer at the folder", async ({
+test("a narrow breadcrumb reveal opens the catalogue's sheet at the folder", async ({
   page,
 }) => {
   await page.setViewportSize({ height: 844, width: 390 });
@@ -151,10 +151,16 @@ test("a narrow breadcrumb reveal opens the drawer at the folder", async ({
   const root = page.locator(".mbk[data-drawer]");
   await expect(root).toHaveAttribute("data-drawer", "closed");
   await expect(page.locator(".mbk-nav")).toBeHidden();
+  // The breadcrumbs stand in the right panel, which the dock opens as a sheet.
+  await page
+    .getByRole("group", { name: "Canvas controls" })
+    .getByRole("button", { name: "Inspect" })
+    .click();
   await page
     .getByLabel("Catalogue location")
     .getByRole("button", { name: "Tools" })
     .click();
+  await expect(page.getByRole("region", { name: "Panel" })).toBeHidden();
   await expect(root).toHaveAttribute("data-drawer", "open");
   await expect(page.locator(".mbk-nav")).toBeVisible();
   await expect(

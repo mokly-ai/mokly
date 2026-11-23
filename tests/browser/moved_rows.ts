@@ -77,12 +77,14 @@ export async function showDetails(page: Page): Promise<void> {
 
 /** Open the narrow layout's drawer when the catalogue is behind it. */
 export async function showCatalogue(page: Page): Promise<void> {
-  // Wait for the mounted shell: either the menu or the catalogue shows.
+  // Wait for the mounted shell: either the dock or the catalogue shows.
   await expect(
-    page.locator("[data-mokly-menu]:visible, nav.mbk-nav:visible").first(),
+    page.locator("[data-canvas-dock]:visible, nav.mbk-nav:visible").first(),
   ).toBeVisible();
-  const menu = page.locator("[data-mokly-menu]");
-  if (await menu.isVisible()) await menu.click();
+  const catalogue = page
+    .getByRole("group", { name: "Canvas controls" })
+    .getByRole("button", { name: "Catalogue" });
+  if (await catalogue.isVisible()) await catalogue.click();
   await expect(page.locator('button[data-filter="all"]')).toBeVisible();
 }
 

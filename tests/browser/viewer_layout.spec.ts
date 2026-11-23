@@ -110,15 +110,16 @@ for (const width of [1440, 900, 390, 320]) {
             detailsDisplay: getComputedStyle(
               document.querySelector("#one .mbk-details-body")!,
             ).display,
-            navRight: navBounds.right,
+            navLeft: navBounds.left,
             navTop: navBounds.top,
             stageLeft: stageBounds.left,
             stageTop: stageBounds.top,
           };
         });
         expect(desktop.detailsDisplay).toBe("grid");
-        expect(desktop.navRight).toBeLessThanOrEqual(desktop.stageLeft);
-        expect(desktop.navTop).toBe(desktop.stageTop);
+        // The rail host floats over the stage, 8px from its top and its start.
+        expect(desktop.navLeft).toBe(desktop.stageLeft + 8);
+        expect(desktop.navTop).toBe(desktop.stageTop + 8);
       }
 
       if (width <= 390) {

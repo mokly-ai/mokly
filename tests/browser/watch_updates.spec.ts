@@ -15,6 +15,8 @@ import {
   chooseScheme,
   chooseViewport,
   expectFrameSource,
+  openCatalogueSheet,
+  viewportFrame,
 } from "./workspace_actions.js";
 
 test("watched authored edits replace the changed document and retain Browse state", async ({
@@ -54,9 +56,11 @@ test("watched authored edits replace the changed document and retain Browse stat
     await page.getByRole("tab", { name: "Details", exact: true }).click();
     await expect(details).not.toHaveAttribute("data-open", "true");
     await page.setViewportSize({ width: 420, height: 900 });
-    await page.locator("[data-mokly-menu]").click();
-    // Below the layout breakpoint the one frame shows the chosen scheme.
-    const frame = page.locator(".mbk-frame-mobile iframe");
+    await openCatalogueSheet(page);
+    // Below the layout breakpoint the compact layout shows one frame, the
+    // frame of the chosen viewport and scheme: Mobile · Dark.
+    const frame = page.locator(viewportFrame("mobile"));
+    await expect(frame).toHaveAttribute("data-workspace-color-scheme", "dark");
     await expectFrameSource(frame, /home\/index\.mobile\.dark\.html$/u);
     await expect(frame.contentFrame().locator("h1")).toHaveText(
       "Original home",
@@ -89,7 +93,7 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
     await expect(screens).toHaveAttribute("open", "");
     await expect(archive).toHaveAttribute("open", "");
-    await expect(page.locator(".mbk-frame-desktop")).toBeHidden();
+    await expect(page.locator(viewportFrame("desktop"))).toHaveCount(0);
     await expect(page.locator(shellRoot)).toHaveAttribute(
       "data-mokly-color-scheme",
       "dark",

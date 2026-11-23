@@ -1,13 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-import {
-  accentFill,
-  computedStyle,
-  desktopFrame,
-  mobileFrame,
-  overlayStyle,
-  shellRoot,
-} from "./browse_assertions.js";
+import { accentFill, shellRoot } from "./browse_assertions.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { awaitRoutedDetail, modeButton, showMode } from "./comparison_ui.js";
 import {
@@ -172,40 +165,24 @@ test("a light-only screen keeps light frames and says so", async ({ page }) => {
     `a[data-nav-row][data-route="${comparisonPaths.unchanged}/index.html"]`,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Stable screen");
-  // Below the layout breakpoint the one-frame stage keeps the light frames
-  // and names the fallback in their labels. The test above checks the canvas.
+  // Below the layout breakpoint the compact layout keeps the light frame
+  // under Dark: its picker lists the Light frames alone, and the one frame's
+  // label names Light. The test above checks the canvas.
   await page.setViewportSize(NARROW_WINDOW);
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /screens\/stable\/index\.mobile\.html$/,
+  const shown = page.locator(
+    ".mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame]",
   );
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /screens\/stable\/index\.desktop\.html$/,
-  );
-  await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
-    "data-color-scheme-fallback",
-    "",
-  );
-  const note = page.locator(".mbk-frame-mobile .mbk-frame-scheme-note");
-  await expect(note).toBeVisible();
-  await expect(note).toHaveText("— Light only");
-  expect(
-    await computedStyle(
-      page,
-      ".mbk-frame-mobile .mbk-frame-label",
-      "textTransform",
-    ),
-  ).toBe("uppercase");
+  await expect(shown).toHaveCount(1);
+  await expectFrameSource(shown, /screens\/stable\/index\.mobile\.html$/);
   await expect(
-    page.locator(".mbk-frame-desktop .mbk-frame-scheme-note"),
-  ).toBeVisible();
-  expect(
-    await overlayStyle(page, ".mbk-frame-mobile .phone-screen", "boxShadow"),
-  ).toBe("none");
+    page.getByRole("combobox", { name: "Frame" }).locator("option"),
+  ).toHaveText(["Mobile · Light", "Desktop · Light"]);
+  const label = page.locator(".mbk-canvas-frame-name:visible");
+  await expect(label).toHaveText("stable · Mobile · Light");
 
   await chooseScheme(page, "light");
-  await expect(note).toBeHidden();
+  await expect(label).toHaveText("stable · Mobile · Light");
+  await expectFrameSource(shown, /screens\/stable\/index\.mobile\.html$/);
 });
 
 test("component comparisons follow changed variants while added variants stay current", async ({

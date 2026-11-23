@@ -2,15 +2,13 @@ import { expect, type Page } from "@playwright/test";
 
 import {
   appearance,
-  desktopFrame,
   expectCanvasFrames,
-  mobileFrame,
   screen,
   select,
   store,
 } from "./appearance_assertions.js";
 import { test } from "./browser_test.js";
-import { expectFrameSource, NARROW_WINDOW } from "./workspace_actions.js";
+import { canvasFrame, NARROW_WINDOW } from "./workspace_actions.js";
 
 test("a saved appearance outranks the system and the pin outranks it", async ({
   page,
@@ -102,8 +100,8 @@ test("Auto keeps following the system after a back-forward cache restore", async
 
 /**
  * Restore a saved Dark appearance and count each frame's document loads: a
- * canvas frame loads its own scheme's document once, and a frame of the
- * one-frame stage starts with its dark document.
+ * canvas frame loads its own scheme's document once, in both layouts, and
+ * the compact layout shows the dark frame at once.
  */
 async function restoredDark(page: Page, canvas: boolean): Promise<void> {
   await store(page, "dark");
@@ -119,17 +117,13 @@ async function restoredDark(page: Page, canvas: boolean): Promise<void> {
       requests.push(url.pathname);
   });
   await page.goto(screen);
-  if (canvas) await expectCanvasFrames(page, "example/screens/welcome", true);
-  else {
-    await expectFrameSource(
-      page.locator(mobileFrame),
-      /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
-    );
-    await expectFrameSource(
-      page.locator(desktopFrame),
-      /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
-    );
-  }
+  await expectCanvasFrames(page, "example/screens/welcome", true);
+  if (!canvas)
+    await expect(
+      page.locator(
+        `.mbk-canvas-cell:not([hidden]) ${canvasFrame("mobile", "dark")}`,
+      ),
+    ).toBeVisible();
   await page.locator("iframe").evaluateAll((frames) =>
     Promise.all(
       frames.map((frame) => {
@@ -151,12 +145,7 @@ async function restoredDark(page: Page, canvas: boolean): Promise<void> {
     const light = requests.filter((path) =>
       path.endsWith(`example/screens/welcome/index.${viewport}.html`),
     );
-    if (canvas)
-      expect(light, `${viewport} loaded its Light frame once`).toHaveLength(1);
-    else
-      expect(light, `${viewport} started with its dark document`).toHaveLength(
-        0,
-      );
+    expect(light, `${viewport} loaded its Light frame once`).toHaveLength(1);
   }
 }
 
@@ -164,7 +153,7 @@ for (const canvas of [true, false])
   test(
     canvas
       ? "on the canvas, a restored dark appearance loads each frame's document once"
-      : "below the layout breakpoint, a restored dark appearance swaps each frame at most once",
+      : "below the layout breakpoint, a restored dark appearance shows the dark frame and loads each frame's document once",
     async ({ page }) => {
       if (!canvas) await page.setViewportSize(NARROW_WINDOW);
       await restoredDark(page, canvas);

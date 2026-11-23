@@ -5,7 +5,10 @@ import { missingResourceNotice } from "./document_error_allowance.js";
 import {
   canvasFrame,
   chooseViewport,
+  closeOpenSheet,
   DOCUMENT_FRAME,
+  openCatalogueSheet,
+  revealInPanel,
 } from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
@@ -55,6 +58,8 @@ for (const width of [390, 1280]) {
     await expect(
       page.frameLocator(DOCUMENT_FRAME).locator("#next-steps"),
     ).toBeVisible();
+    // A page's Details stand in the right panel, a sheet of the compact layout.
+    await revealInPanel(page, page.locator("[data-mokly-details]"));
     await page.locator("[data-mokly-details] summary").click();
     await expect(page.locator("[data-mokly-details]")).not.toContainText(
       "example/getting-started/index.html",
@@ -63,10 +68,7 @@ for (const width of [390, 1280]) {
       "documents",
     );
     await page.locator("[data-mokly-details] summary").click();
-    if (width < 700)
-      await page
-        .getByRole("button", { name: "Open catalogue navigation" })
-        .click();
+    if (width < 700) await openCatalogueSheet(page);
     await expect(
       page.locator(
         '[data-nav-section="specs"] [data-nav-folder="folder:example"]',
@@ -96,9 +98,14 @@ for (const width of [390, 1280]) {
       .click();
     await page.locator('[data-entry-id="example/screens/welcome"]').click();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-    if (width < 700) await chooseViewport(page, "mobile");
+    if (width < 700) {
+      await chooseViewport(page, "mobile");
+      await closeOpenSheet(page);
+    }
     const screenFrame =
-      width < 700 ? ".mbk-frame-mobile iframe" : canvasFrame("desktop");
+      width < 700
+        ? `.mbk-canvas-cell:not([hidden]) ${canvasFrame("mobile")}`
+        : canvasFrame("desktop");
     await page
       .frameLocator(screenFrame)
       .getByRole("link", { name: "Read the handbook" })

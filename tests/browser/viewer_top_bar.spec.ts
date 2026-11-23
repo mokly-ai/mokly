@@ -145,17 +145,16 @@ for (const width of [1440, 800]) {
     expect(
       Math.abs((centre.left + centre.right) / 2 - (bar.left + bar.right) / 2),
     ).toBeLessThanOrEqual(0.5);
-    const menu = (await measure(page)).menu;
-    expect(Boolean(menu)).toBe(width < 900);
+    // The dock opens the catalogue, so the bar has no menu at any width.
+    expect((await measure(page)).menu).toBeUndefined();
     expectInOrder([
-      ...(menu ? [["menu", menu] as [string, Box]] : []),
       ["mark", mark],
       ["start", start],
       ["centre", centre],
       ["search", search],
       ["end", end],
     ]);
-    expect((menu ?? mark).left - bar.left).toBe(12);
+    expect(mark.left - bar.left).toBe(12);
     expect(bar.right - end.right).toBe(12);
     // The start slot fills its column, up to the gap before the centre.
     expect(centre.left - start.right).toBeCloseTo(12, 0);
@@ -203,17 +202,16 @@ test("the compact embedded bar holds its parts in one row, and its start slot ta
   await startBar(page, 390);
   const parts = await shown(page, [
     "bar",
-    "menu",
     "mark",
     "start",
     "centre",
     "toggle",
     "end",
   ]);
-  const { bar, menu, start, centre, end } = parts;
+  const { bar, mark, start, centre, end } = parts;
+  expect((await measure(page)).menu).toBeUndefined();
   expectInOrder([
-    ["menu", menu],
-    ["mark", parts.mark],
+    ["mark", mark],
     ["start", start],
     ["centre", centre],
     ["search button", parts.toggle],
@@ -227,7 +225,7 @@ test("the compact embedded bar holds its parts in one row, and its start slot ta
       ).toBe(true);
   // The start slot grows up to the centre slot's gap.
   expect(centre.left - start.right).toBe(8);
-  expect(menu.left - bar.left).toBe(8);
+  expect(mark.left - bar.left).toBe(8);
   expect(bar.right - end.right).toBe(8);
 });
 
@@ -239,11 +237,8 @@ for (const [width, padding] of [
     page,
   }) => {
     await startBar(page, width);
-    // The first part of the bar: the menu where it shows, or else the mark.
-    const first = async () => {
-      const boxes = await measure(page);
-      return (boxes.menu ?? boxes.mark)!;
-    };
+    // The first part of the bar: the mark.
+    const first = async () => (await measure(page)).mark!;
     await setInsets(page, "80px", "50px");
     let { bar, end } = await shown(page, ["bar", "end"]);
     expect((await first()).left - bar.left).toBe(80);

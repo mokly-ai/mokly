@@ -1,11 +1,12 @@
 /**
  * Live prop edits across their contexts in Serve, under the component
- * controls contract and its design: on the canvas both schemes of an edited
- * row; below the layout breakpoint a viewport and scheme switch, and a scheme
- * change while the first render is pending; and an expired temporary preview.
+ * controls contract and its design: on the canvas and in the compact layout
+ * both schemes of an edited row through a viewport and scheme switch; below
+ * the layout breakpoint a scheme change while the first render is pending;
+ * and an expired temporary preview.
  */
 
-import { expect, type Route } from "@playwright/test";
+import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { frameDocument, frameText, openProps, renders } from "./live_props.js";
@@ -28,22 +29,25 @@ const preview = (viewport: "desktop" | "mobile", scheme: string) =>
     "u",
   );
 
-test("on the canvas, an edit renders the Light and Dark frames of its row, and the viewport and scheme choices keep them", async ({
-  page,
-}) => {
+/**
+ * Edit the card's label, then expect the edit in the Light and Dark frames
+ * of its row, one render for each, which the viewport and scheme choices
+ * keep without another render.
+ */
+async function expectRowEdit(page: Page, text: string, query = "") {
   const server = await serveLiveCatalogue({
     config: { colorSchemes: ["light", "dark"] },
   });
   try {
-    const props = await openProps(page, server.url);
+    const props = await openProps(page, server.url, { query });
     const sent = renders(page);
     const label = props.getByRole("textbox", { name: "label" });
-    await label.fill("Both schemes");
+    await label.fill(text);
     const shown = (scheme: "dark" | "light") => ({
       url: expect.stringMatching(
         preview("desktop", scheme === "dark" ? "\\.dark" : ""),
       ),
-      text: expect.stringContaining("Both schemes 1"),
+      text: expect.stringContaining(`${text} 1`),
     });
     for (const scheme of ["light", "dark"] as const)
       await expect
@@ -64,58 +68,28 @@ test("on the canvas, an edit renders the Light and Dark frames of its row, and t
         .toEqual(shown(scheme));
     await passRenderingUpdates(page);
     expect(contexts()).toHaveLength(2);
-    await expect(label).toHaveValue("Both schemes");
+    expect(new Set(sent.map((request) => renderBody(request).label))).toEqual(
+      new Set([text]),
+    );
+    await expect(label).toHaveValue(text);
   } finally {
     await closeServe(page, server);
   }
+}
+
+test("on the canvas, an edit renders the Light and Dark frames of its row, and the viewport and scheme choices keep them", async ({
+  page,
+}) => {
+  await expectRowEdit(page, "Both schemes");
 });
 
 test("below the layout breakpoint, a viewport switch keeps the edit and shows it in each frame that it shows", async ({
   page,
 }) => {
+  // The compact layout shows the card's whole set as the canvas does: its
+  // desktop views, Light beside Dark, whatever the viewport choice.
   await page.setViewportSize(NARROW_WINDOW);
-  const server = await serveLiveCatalogue({
-    config: { colorSchemes: ["light", "dark"] },
-  });
-  try {
-    const props = await openProps(page, server.url, {
-      query: "?viewport=desktop",
-    });
-    const sent = renders(page);
-    const label = props.getByRole("textbox", { name: "label" });
-    await label.fill("Switched");
-    await expect.poll(() => frameText(page, "desktop")).toContain("Switched 1");
-
-    await chooseViewport(page, "mobile");
-    await expect.poll(() => frameText(page, "mobile")).toContain("Switched 1");
-    await expect(label).toHaveValue("Switched");
-    await chooseViewport(page, "both");
-    for (const viewport of ["mobile", "desktop"] as const)
-      await expect
-        .poll(() => frameText(page, viewport))
-        .toContain("Switched 1");
-    // Dark renders the kept edit in both frames.
-    await chooseScheme(page, "dark");
-    for (const viewport of ["mobile", "desktop"] as const)
-      await expect
-        .poll(() => frameDocument(page, viewport))
-        .toEqual({
-          url: expect.stringMatching(preview(viewport, "\\.dark")),
-          text: expect.stringContaining("Switched 1"),
-        });
-    const sentBodies = sent.map((request) => request.postDataJSON());
-    expect(new Set(sentBodies.map((body) => body.viewport))).toEqual(
-      new Set(["desktop", "mobile"]),
-    );
-    expect(new Set(sentBodies.map((body) => body.colorScheme))).toEqual(
-      new Set(["light", "dark"]),
-    );
-    expect(new Set(sent.map((request) => renderBody(request).label))).toEqual(
-      new Set(["Switched"]),
-    );
-  } finally {
-    await closeServe(page, server);
-  }
+  await expectRowEdit(page, "Switched", "?viewport=desktop");
 });
 
 test("an expired preview keeps the edit and shows the saved props, and Update preview renders it again", async ({

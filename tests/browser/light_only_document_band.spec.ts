@@ -2,9 +2,8 @@
  * A copy whose catalogue rendered Light and Dark at the branch point and
  * renders Light only now. Its removed screens keep their dark renders, so the
  * shell still offers Dark, while the current Payment terms document has a
- * light page only. Under Dark the reading frame's label names that fallback
- * on the canvas, and a quiet band above the pane names it in the narrow
- * layout.
+ * light page only. Under Dark the reading frame's label names that fallback,
+ * on the canvas and in the compact layout alike.
  */
 
 import {
@@ -13,10 +12,7 @@ import {
 } from "../helpers/light_only_sources.js";
 
 import { additionsCopyTest } from "./additions_copy_test.js";
-import {
-  expectLightOnlyDocumentBand,
-  expectLightOnlyDocumentLabel,
-} from "./light_only_band.js";
+import { expectLightOnlyDocumentLabel } from "./light_only_band.js";
 
 const test = additionsCopyTest(
   "browser-light-only-current",
@@ -35,10 +31,15 @@ test("1280px: a current light-only document names its light page in its label un
   );
 });
 
-test("390px: a current light-only document names its light page in a band under Dark", async ({
+test("390px: a current light-only document names its light page in its label under Dark", async ({
   page,
 }) => {
+  // The compact layout's reading frame names the fallback as the canvas does.
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto(`/view/${paths.currentDocument}/`);
-  await expectLightOnlyDocumentBand(page, paths.currentDocument, 390);
+  await expectLightOnlyDocumentLabel(
+    page,
+    paths.currentDocument,
+    "payment-terms.md",
+  );
 });

@@ -18,10 +18,6 @@ export const appearanceSelect = "[data-mokly-appearance-select]";
 export const face = (value: string) =>
   `[data-appearance-option="${value}"] .mbk-appearance-value`;
 
-export const mobileFrame = ".mbk-frame-mobile iframe";
-
-export const desktopFrame = ".mbk-frame-desktop iframe";
-
 export const darkSurface = "rgb(18, 21, 20)";
 
 export const formsChip =
