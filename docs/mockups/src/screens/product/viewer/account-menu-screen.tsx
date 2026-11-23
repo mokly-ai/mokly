@@ -17,10 +17,10 @@ const viewerPath = "product/viewer/standalone";
 
 /**
  * Where the menus' items lead in the catalogue, in their order. Settings
- * opens the settings dialog on its index, as the bar's Settings did, because
- * it names no pane; Docs and Changelog open the site's pages; Sign out ends on
- * sign-in. The last link shows the dialog's Canvas look over the viewer, on a
- * pane that its rail opens.
+ * opens the settings dialog on its index, because it names no pane; Docs and
+ * Changelog open the site's pages; Sign out ends on sign-in. The last link
+ * shows the dialog's Canvas look over the viewer, on a pane that its rail
+ * opens.
  */
 function MenuDestinations() {
   return (

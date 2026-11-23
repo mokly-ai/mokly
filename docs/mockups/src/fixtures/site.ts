@@ -4,11 +4,11 @@ export const siteOrigin = "https://mokly.ai";
 /** Outbound destinations owned by the public site, never catalogue entries. */
 export const site = {
   home: siteOrigin + "/",
-  docs: siteOrigin + "/docs",
+  docs: siteOrigin + "/docs/",
   /** The CI setup guide, which the installed package's guides publish. */
   publishFromCi: siteOrigin + "/docs/ci/publish-from-ci/",
   pricing: siteOrigin + "/pricing",
-  changelog: siteOrigin + "/changelog",
+  changelog: siteOrigin + "/changelog/",
   terms: siteOrigin + "/terms",
   privacy: siteOrigin + "/privacy",
 } as const;

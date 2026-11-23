@@ -1,16 +1,15 @@
-import { DropdownList, useDropdownSurfaceStyles } from "@firna/ui/dropdown";
-import type { DropdownListEntry } from "@firna/ui/dropdown";
+import { useDropdownSurfaceStyles } from "@firna/ui/dropdown";
 import { PopoverSurface } from "@firna/ui/popover";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import type { ViewStyle } from "react-native";
 
 import type { ColorScheme } from "@mokly/mokly";
+import { MockLink } from "@mokly/mokly";
 
-import "../../../../styles/product/viewer-canvas-menu.css";
-import { staticNoop } from "../../../components/static-controls";
 import { Segmented } from "../../../entries/design/segmented.mockup";
 import { sample } from "../../../fixtures/product";
+import { site } from "../../../fixtures/site";
 import { Icon } from "../icons";
 
 import { ReaderAvatar } from "./account-trigger";
@@ -19,15 +18,14 @@ import { ShareGlyph } from "./glyphs";
 /**
  * The open account menu and the open More menu. The live menus portal from
  * effects and draw nothing in static markup, so these drawings compose the
- * same public parts as the registered responsive menu: Firna's popover
- * surface and dropdown list in Firna's surface chrome on a pointer viewport,
- * and the rows inside the registered panel's bottom sheet on a touch one. The
- * rows are static pictures of their actions; the drawing's catalogue links
- * lead where they open.
+ * same public parts: Firna's popover surface in Firna's surface chrome on a
+ * pointer viewport, and the rows inside the registered panel's bottom sheet
+ * on a touch one. Firna's menu rows take no address, so the cloud draws each
+ * menu's list itself: one menu per group of rows, each row a menu item.
+ * Docs and Changelog are links to the site, as the application draws them;
+ * every other row leads to the drawing of what it opens, so a press in the
+ * catalogue goes where the row goes in the product.
  */
-
-/** The height that a menu's list takes before it scrolls, in px. */
-const listHeight = 320;
 
 /**
  * Where a popover opens in its layer: its end edge on the trigger's, at the
@@ -36,17 +34,57 @@ const listHeight = 320;
 const placement: ViewStyle = { top: 0, right: 0, width: 260 };
 
 /**
- * One menu row, with its action's glyph in a column of one width, so every
- * label in the menu starts at one edge.
+ * One menu row: its glyph, its label, and where it leads: the catalogue
+ * entry its action opens, or the page of the public site that it links.
  */
-function row(id: string, label: string, glyph: ReactNode): DropdownListEntry {
-  return {
-    id,
-    label,
-    type: "item",
-    leading: <span className="fo-canvas-menu-glyph">{glyph}</span>,
-    onPress: staticNoop,
-  };
+type DrawnRow = { id: string; label: string; glyph: ReactNode } & (
+  { to: string; href?: undefined } | { href: string; to?: undefined }
+);
+
+/**
+ * One menu: its rows, each with its glyph in a column of one width, so every
+ * label starts at one edge. A popover marks the keyboard's row, the first as
+ * it opens, with the library's ring; the sheet has no keyboard and marks
+ * none.
+ */
+function Menu({
+  label,
+  rows,
+  marked,
+}: {
+  label: string;
+  rows: readonly DrawnRow[];
+  marked?: string;
+}) {
+  return (
+    <div className="fo-canvas-menu-list" role="menu" aria-label={label}>
+      {rows.map((row) => {
+        const className =
+          "fo-canvas-menu-row" +
+          (row.id === marked ? " fo-canvas-menu-row-marked" : "");
+        const parts = (
+          <>
+            <span className="fo-canvas-menu-glyph">{row.glyph}</span>
+            <span className="fo-canvas-menu-text">{row.label}</span>
+          </>
+        );
+        return row.href === undefined ? (
+          <MockLink
+            key={row.id}
+            className={className}
+            to={row.to}
+            role="menuitem"
+          >
+            {parts}
+          </MockLink>
+        ) : (
+          <a key={row.id} className={className} href={row.href} role="menuitem">
+            {parts}
+          </a>
+        );
+      })}
+    </div>
+  );
 }
 
 /** Who is signed in: the avatar, the name and the address. */
@@ -92,12 +130,40 @@ function ThemeChoice({
 }
 
 /**
+ * The account menu's items. Docs and Changelog open the site, so each carries
+ * the external glyph in place of a glyph of its own, and Settings stays the
+ * first item.
+ */
+const accountItems: readonly DrawnRow[] = [
+  {
+    id: "settings",
+    label: "Settings",
+    glyph: <Icon name="settings" />,
+    to: "product/settings/sections",
+  },
+  {
+    id: "docs",
+    label: "Docs",
+    glyph: <Icon name="external" />,
+    href: site.docs,
+  },
+  {
+    id: "changelog",
+    label: "Changelog",
+    glyph: <Icon name="external" />,
+    href: site.changelog,
+  },
+  {
+    id: "sign-out",
+    label: "Sign out",
+    glyph: <Icon name="signOut" />,
+    to: "product/account/sign-in",
+  },
+];
+
+/**
  * The account rows that end both menus: who is signed in and the Theme
- * choice, above the menu's own items, Settings, Docs, Changelog and Sign out.
- * Docs and Changelog open the site, so each carries the external glyph in
- * place of a glyph of its own, and Settings stays the first item. A popover
- * marks the keyboard's row, the first as it opens, with the library's ring;
- * the sheet has no keyboard and marks none.
+ * choice, then the menu's own items, Settings, Docs, Changelog and Sign out.
  */
 function AccountRows({
   scheme,
@@ -109,27 +175,17 @@ function AccountRows({
   marked: boolean;
 }) {
   return (
-    <DropdownList
-      label="Account"
-      listRole="menu"
-      activeId={marked ? "settings" : null}
-      highlightVariant="ringFill"
-      maxHeight={listHeight}
-      onClose={staticNoop}
-      onActiveIdChange={staticNoop}
-      header={
-        <>
-          <Identity />
-          <ThemeChoice scheme={scheme} instance={instance} />
-        </>
-      }
-      entries={[
-        row("settings", "Settings", <Icon name="settings" />),
-        row("docs", "Docs", <Icon name="external" />),
-        row("changelog", "Changelog", <Icon name="external" />),
-        row("sign-out", "Sign out", <Icon name="signOut" />),
-      ]}
-    />
+    <>
+      <div className="fo-canvas-menu-head">
+        <Identity />
+        <ThemeChoice scheme={scheme} instance={instance} />
+      </div>
+      <Menu
+        label="Account"
+        rows={accountItems}
+        marked={marked ? "settings" : undefined}
+      />
+    </>
   );
 }
 
@@ -140,22 +196,28 @@ function AccountRows({
  */
 function MoreRows({ marked }: { marked: boolean }) {
   return (
-    <DropdownList
+    <Menu
       label="More"
-      listRole="menu"
-      activeId={marked ? "project" : null}
-      highlightVariant="ringFill"
-      maxHeight={listHeight}
-      onClose={staticNoop}
-      onActiveIdChange={staticNoop}
-      entries={[
-        row(
-          "project",
-          sample.workspace + " / " + sample.project,
-          <Icon name="project" />,
-        ),
-        row("history", "History", <Icon name="history" />),
-        row("share", "Share", <ShareGlyph />),
+      marked={marked ? "project" : undefined}
+      rows={[
+        {
+          id: "project",
+          label: sample.workspace + " / " + sample.project,
+          glyph: <Icon name="project" />,
+          to: "product/viewer/projects",
+        },
+        {
+          id: "history",
+          label: "History",
+          glyph: <Icon name="history" />,
+          to: "product/viewer/history",
+        },
+        {
+          id: "share",
+          label: "Share",
+          glyph: <ShareGlyph />,
+          to: "product/viewer/share",
+        },
       ]}
     />
   );
@@ -166,7 +228,9 @@ function Popover({ label, children }: { label: string; children: ReactNode }) {
   const chrome = useDropdownSurfaceStyles();
   return (
     <View style={[chrome.surface, placement]}>
-      <PopoverSurface label={label}>{children}</PopoverSurface>
+      <PopoverSurface label={label}>
+        <div className="fo-canvas-menu-body">{children}</div>
+      </PopoverSurface>
     </View>
   );
 }
@@ -197,7 +261,7 @@ export function MorePopover({ scheme }: { scheme: ColorScheme }) {
  */
 export function MoreSheetRows({ scheme }: { scheme: ColorScheme }) {
   return (
-    <div className="fo-canvas-menu-sheet">
+    <div className="fo-canvas-menu-body fo-canvas-menu-sheet">
       <MoreRows marked={false} />
       <span className="fo-canvas-menu-rule" />
       <AccountRows scheme={scheme} instance="more-sheet" marked={false} />

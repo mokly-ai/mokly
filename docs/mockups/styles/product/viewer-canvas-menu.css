@@ -1,8 +1,8 @@
-/* The open account menu and the open More menu, which only the account
-   menu's drawing imports, so Mokly bundles this sheet into that entry's own
-   stylesheet and the application never loads it. Every rule is scoped to
-   the renderer's wrapper, the element that carries `data-color-scheme`, so
-   it outweighs a product sheet's rule for the same element, and styles cloud
+/* The open account menu and the open More menu, which the application and
+   the viewer drawings both draw: `viewer.css` imports this sheet. Every rule
+   is scoped to the element that carries `data-color-scheme`, the document
+   root in the application and the renderer's wrapper in a drawing, so it
+   outweighs a product sheet's rule for the same element, and styles cloud
    elements only.
 
    A desktop drawing opens each menu as a popover in a layer at the viewer's
@@ -23,7 +23,22 @@
   inset-inline-end: var(--fo-canvas-compact-end);
 }
 
-/* Who is signed in, above the Theme choice. */
+/* The rows inside the popover's surface, which scroll when the window is
+   shorter than the menu. */
+[data-color-scheme] .fo-canvas-menu-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Who is signed in and the Theme choice, above the account's items, with a
+   hairline beneath. */
+[data-color-scheme] .fo-canvas-menu-head {
+  margin-bottom: var(--mk-space-1);
+  padding: 2px 10px var(--mk-space-2);
+  border-bottom: 1px solid var(--mk-color-border);
+}
 [data-color-scheme] .fo-canvas-menu-identity {
   display: flex;
   align-items: center;
@@ -35,6 +50,12 @@
   gap: 2px;
   min-width: 0;
 }
+[data-color-scheme] .fo-canvas-menu-name,
+[data-color-scheme] .fo-canvas-menu-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 [data-color-scheme] .fo-canvas-menu-name {
   color: var(--mk-color-text);
   font-size: var(--mk-type-ui-size);
@@ -42,12 +63,9 @@
   font-weight: var(--mk-font-semibold);
 }
 [data-color-scheme] .fo-canvas-menu-email {
-  overflow: hidden;
   color: var(--mk-color-text-muted);
   font-size: var(--mk-type-ui-small-size);
   line-height: var(--mk-type-ui-small-line);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* The Theme choice: its label, and the two options at their own width. */
@@ -68,24 +86,79 @@
   flex: none;
 }
 
+/* One menu's rows, in the package's menu row metrics, so a cloud menu reads
+   as the package's own: a 13px bold label on an 18px line, padded 8px and
+   10px, with a 7px radius. A row is a button for an action and a link for a
+   page of the site, so the rule undoes what each draws by default. */
+[data-color-scheme] .fo-canvas-menu-list {
+  display: flex;
+  flex-direction: column;
+}
+[data-color-scheme] .fo-canvas-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  outline: none;
+  background: none;
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-ui-size);
+  font-weight: var(--mk-font-bold);
+  line-height: 1.125rem;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+[data-color-scheme] .fo-canvas-menu-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The keyboard's row, which a pointer moves too: the package's ring and soft
+   fill, with the label in the accent ink. A drawing marks the row that a
+   popover opens on. */
+[data-color-scheme]
+  .fo-canvas-menu-row:is(:focus, .fo-canvas-menu-row-marked):not(:disabled) {
+  background: var(--mk-color-accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--mk-color-accent-solid);
+  color: var(--mk-color-accent);
+}
+[data-color-scheme] .fo-canvas-menu-row:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+@media (forced-colors: active) {
+  [data-color-scheme] .fo-canvas-menu-row:focus {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
 /* A row's leading glyph, muted, in a column of one width. */
 [data-color-scheme] .fo-canvas-menu-glyph {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: center;
   width: 16px;
   color: var(--mk-color-text-muted);
 }
-/* In a phone's sheet each row is a 44px touch target: the glyph's column
-   takes the height that the row's own 8px padding above and below leaves of
-   it, and the label stays centred beside it. */
-[data-color-scheme] .fo-canvas-menu-sheet .fo-canvas-menu-glyph {
-  min-height: calc(var(--mk-layout-control-min) - 16px);
+/* In a phone's sheet each row is a 44px touch target. */
+[data-color-scheme] .fo-canvas-menu-sheet .fo-canvas-menu-row {
+  min-height: var(--mk-layout-control-min);
 }
 
 /* The hairline between More's own rows and the account rows. */
 [data-color-scheme] .fo-canvas-menu-rule {
   display: block;
+  flex: none;
   height: 1px;
   margin: var(--mk-space-1) 0;
   background: var(--mk-color-border);

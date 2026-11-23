@@ -3,6 +3,7 @@
    two sheets this one imports. */
 @import "viewer-bar.css";
 @import "viewer-controls.css";
+@import "viewer-canvas-menu.css";
 .fo-viewer-main {
   display: flex;
   flex-direction: column;

@@ -44,9 +44,10 @@ import and the application never loads: `viewer-canvas.css` the inline end of
 the bar's two compositions, `viewer-canvas-stage.css` the
 dot-grid stage and its floating cards, `viewer-canvas-depth.css` the shade, the
 radius and the shadows of a floating surface, `viewer-canvas-panels.css` the
-panels that the slots open, `viewer-canvas-menu.css` the open account and More
-menus, `viewer-canvas-check.css` the Mokly check beside the stage, and
-`viewer-canvas-settings.css` the settings dialog over the viewer.
+panels that the slots open, `viewer-canvas-check.css` the Mokly check beside the
+stage, and `viewer-canvas-settings.css` the settings dialog over the viewer.
+`viewer-canvas-menu.css`, the open account and More menus, is the one that
+`viewer.css` imports, so the application and the drawings load the same rules.
 `styles/fonts/` holds the self-hosted Geist and Geist Mono variable faces of the
 Canvas palette, copied from the `geist` npm package, with their SIL Open Font
 License. `styles/site/fonts/` holds the Instrument Serif face of the site's
