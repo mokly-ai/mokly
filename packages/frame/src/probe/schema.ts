@@ -1,4 +1,5 @@
 import type {
+  FrameEvent,
   FrameNavigation,
   InstanceBoundary,
   InstanceBoxModel,
@@ -8,6 +9,7 @@ import type {
 import {
   array,
   boxes,
+  coordinate,
   shape,
   key,
   navigation,
@@ -16,6 +18,7 @@ import {
   requestId,
   unique,
   textMatch,
+  type CANVAS_EVENTS,
   EVENTS,
   type ProbeEventType,
 } from "./values.js";
@@ -87,6 +90,7 @@ export type MessageBody =
       type: "pick-end";
       reason: "escape";
     }
+  | Extract<FrameEvent, { type: (typeof CANVAS_EVENTS)[number] }>
   | {
       type: "error";
       requestId: number | null;
@@ -191,7 +195,7 @@ export const validHostMessage = (
   if (type === "scroll-to" || type === "measure") return key(value.key);
   return (
     type === "subscribe" &&
-    uniqueList(value.events, 5, (event) =>
+    uniqueList(value.events, 10, (event) =>
       EVENTS.includes(event as ProbeEventType),
     )
   );
@@ -210,6 +214,7 @@ const validFrameMessage = (
   switch (value.type) {
     case "ready":
     case "geometry":
+    case "canvas-blur":
       return messageFields(value, 0);
     case "ack":
       return messageFields(value, 0, true);
@@ -236,6 +241,34 @@ const validFrameMessage = (
       return messageFields(value, 1) && navigation(value.navigation);
     case "pick-end":
       return messageFields(value, 1) && value.reason === "escape";
+    case "canvas-wheel":
+      return (
+        messageFields(value, 4) &&
+        coordinate(value.deltaY, -1000000) &&
+        (value.deltaMode === 0 ||
+          value.deltaMode === 1 ||
+          value.deltaMode === 2) &&
+        coordinate(value.x, -1000000) &&
+        coordinate(value.y, -1000000)
+      );
+    case "canvas-pinch":
+      return (
+        messageFields(value, 3) &&
+        coordinate(value.scale, 0) &&
+        value.scale > 0 &&
+        coordinate(value.x, -1000000) &&
+        coordinate(value.y, -1000000)
+      );
+    case "canvas-key":
+      return (
+        messageFields(value, 1) &&
+        (value.key === "zoom-in" ||
+          value.key === "zoom-out" ||
+          value.key === "zoom-100" ||
+          value.key === "fit")
+      );
+    case "canvas-focus":
+      return messageFields(value, 1) && typeof value.visible === "boolean";
     case "error":
       return (
         messageFields(value, 2) &&

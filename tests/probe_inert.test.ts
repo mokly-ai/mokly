@@ -15,7 +15,7 @@ const harness = (query: string, hasMap = true) =>
 
 test("probe bundle is a bounded standalone IIFE without top-window access", () => {
   assert.ok(
-    Buffer.byteLength(bundle) <= 10240,
+    Buffer.byteLength(bundle) <= 11264,
     `${Buffer.byteLength(bundle)} bytes`,
   );
   assert.doesNotMatch(
@@ -81,6 +81,51 @@ test("missing, duplicate, opaque and noncanonical host parameters remain inert",
       trapped: 0,
     });
   }
+});
+
+test("the built probe installs canvas pointer listeners on subscription and forwards wheel with its nonce", () => {
+  const fixture = harness("?mokly-host=https%3A%2F%2Fapp.test");
+  const pointerListeners = () =>
+    [...fixture.documentListeners.keys()].filter(
+      (name) => name === "wheel" || name.startsWith("gesture"),
+    );
+  fixture.send(encodeMessage(nonce, { type: "hello" }));
+  assert.deepEqual(pointerListeners(), []);
+  fixture.send(
+    encodeMessage(nonce, {
+      type: "subscribe",
+      requestId: 1,
+      events: ["canvas-wheel", "canvas-pinch"],
+    }),
+  );
+  assert.deepEqual(pointerListeners(), [
+    "wheel",
+    "gesturestart",
+    "gesturechange",
+    "gestureend",
+  ]);
+  assert.equal(
+    fixture.wheel({ ctrlKey: true, deltaY: -120, clientX: 31, clientY: 44 }),
+    true,
+  );
+  assert.equal(fixture.messages.length, 2);
+  fixture.flush();
+  assert.equal(fixture.messages[2]!.origin, "https://app.test");
+  assert.deepEqual(JSON.parse(fixture.messages[2]!.data), {
+    channel: "mokly-frame-probe",
+    version: 4,
+    nonce,
+    type: "canvas-wheel",
+    deltaY: -120,
+    deltaMode: 0,
+    x: 31,
+    y: 44,
+  });
+  fixture.send(
+    encodeMessage(nonce, { type: "subscribe", requestId: 2, events: [] }),
+  );
+  assert.deepEqual(pointerListeners(), []);
+  fixture.send(encodeMessage(nonce, { type: "dispose" }));
 });
 
 test("top, parent and named navigation never access trapped outer windows", () => {

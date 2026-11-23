@@ -33,6 +33,7 @@ interface FrameMount {
   usage: CatalogueUsage;
   signal?: AbortSignal;
   onEvent?: (event: FrameEvent) => void;
+  canvasInput?: boolean;
 }
 type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
@@ -58,6 +59,17 @@ type FrameEvent =
   | { type: "navigation"; navigation: FrameNavigation }
   | { type: "pick-end"; reason: "escape" }
   | { type: "geometry" }
+  | {
+      type: "canvas-wheel";
+      deltaY: number;
+      deltaMode: 0 | 1 | 2;
+      x: number;
+      y: number;
+    }
+  | { type: "canvas-pinch"; scale: number; x: number; y: number }
+  | { type: "canvas-key"; key: "zoom-in" | "zoom-out" | "zoom-100" | "fit" }
+  | { type: "canvas-focus"; visible: boolean }
+  | { type: "canvas-blur" }
   | { type: "error"; code: FrameErrorCode };
 interface MountedFrame {
   updateUsage?(usage: CatalogueUsage): Promise<void>;
@@ -121,18 +133,20 @@ refresh of the current session. It starts no competing boundary list and is
 not lost behind a stale result.
 
 Automatic inspection subscriptions require that frame's own ready, validated,
-bounded usage. Pending/unavailable usage (or a usage limit failure) subscribes
-only to navigation: no hover/click measurements, geometry refreshes or instance
-events are triggered by ordinary pointer input. Both adapters share this rule;
-explicit inspection requests still reject unavailable usage normally.
+bounded usage. Pending or unavailable usage and usage limit failures still
+allow navigation and opted-in canvas input. Ordinary pointer input then
+triggers no hover or click measurement, geometry refresh, or instance event.
+Both adapters share this rule. Explicit inspection requests still reject
+unavailable usage.
 
 Both built-in adapters implement optional `updateUsage` for validated evidence
 on the same document. It clears that frame's old inspection state,
 replaces the usage snapshot and updates its event subscription. A
 pending/unavailable-to-ready update enables hover/click inspection without a
-document load or new session; the reverse transition disables it while preserving
-navigation. The viewer calls `updateUsage` when the URL, viewport, scheme and
-step stay the same. A custom adapter that omits it receives a replacement mount
+document load or new session. The reverse transition disables inspection.
+Navigation and opted-in canvas input continue. The viewer calls `updateUsage`
+when the URL, viewport, scheme and step stay the same. A custom adapter that
+omits it receives a replacement mount
 for changed usage. Updates reject after disposal and their failures retain
 session cancellation ownership. `updateUsage` is a host-side method. The wire
 protocol has no message for it.
@@ -186,37 +200,20 @@ extracted from consumer text.
 
 ## Box Model
 
-`boxModel(key)` measures one instance of the mount's ready usage, so that
-Inspect can show the instance's size, padding and content size. It resolves
-with the instance's box model, or with null when the instance has no single
-element root or that element renders no box. An instance has a single element
-root when it has exactly one range and that range holds exactly one element,
-apart from comments and whitespace-only text.
-
-`box` is the element's border box in CSS pixels, relative to the frame's
-visible content viewport and before host scaling. Unlike the boxes of an
-`InstanceBoundary`, clipping and occlusion do not cut it. `border` and
-`padding` hold the element's border and padding widths on each side, in CSS
-pixels. The content size is the size of `box` less the border and the padding
-on each axis, and it is never less than zero. `box` follows the box bounds of
-the [wire protocol](./mokly-frame-probe-wire.md#wire-protocol-v3), and each
-side is a finite number from 0 to 1,000,000. A value outside these bounds
-rejects with `limit`. A key outside the mount's ready
-usage rejects with `missing-instance`, and unavailable usage rejects as the
-other inspection requests do. A result describes the document when the adapter
-measured it, so the viewer measures again after a `geometry` event.
-
-Both built-in adapters implement `boxModel` and give the same result for the
-same document. A custom adapter that omits it shows no box model, and the rest
-of inspection stays available. Decision: the adapter reports these bounded
-numbers, not computed styles or elements, because consumer content never
-leaves the frame and the host validates every value it receives.
+`boxModel(key)` measures the box model of one instance. The
+[frame box model contract](./mokly-frame-box-model.md) defines it.
 
 ## Content Box
 
 `contentBox()` measures the rendered content of the mount's document, so
 that the viewer can size a component's frame to it. The
 [frame content box contract](./mokly-frame-content-box.md) defines it.
+
+## Canvas Input
+
+Set `canvasInput` to forward canvas input and focus from the frame's document.
+The [frame canvas input contract](./mokly-frame-canvas-input.md) defines the
+events and the subscription.
 
 ## Same-Origin Documents
 
@@ -236,6 +233,8 @@ that the static build injects.
 ## Related Docs
 
 - [Frame package](./mokly-frame-package.md)
+- [Frame box model](./mokly-frame-box-model.md)
+- [Frame canvas input](./mokly-frame-canvas-input.md)
 - [Frame content box](./mokly-frame-content-box.md)
 - [Same-origin frame documents](./mokly-frame-adapter-same-origin.md)
 - [Frame probe handshake and wire protocol](./mokly-frame-probe-wire.md)
