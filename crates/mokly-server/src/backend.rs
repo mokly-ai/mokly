@@ -4,19 +4,22 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, Weak};
 
 use axum::body::Bytes;
+use axum::http::HeaderValue;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
-use crate::asset_streams::{AssetRequest, AssetStreams, Capture, SharedAsset};
+use crate::asset_streams::{AssetRequest, AssetStreams, Capture};
 use crate::assets::{File, Stylesheet, content_type};
 use crate::authored_assets::AuthoredAssets;
+pub use crate::authored_assets::AuthoredRequest;
 use crate::backend_preview::ArtifactBytes;
 use crate::background_read::BackgroundRead;
 use crate::error::{Result, ServerError};
 use crate::public_read::PublicReader;
+use crate::validator::Fingerprint;
 use crate::warnings::RenderWarnings;
 
 /// Encoded preview data before bounded memory admission.
@@ -38,7 +41,7 @@ pub trait Documents: Send + Sync {
     }
     /// Read a declared generated document.
     fn generated(&self, route: &str) -> Result<Option<File>>;
-    /// Read or reuse a rendered stylesheet and its validator.
+    /// Read a rendered stylesheet and prepare its validator.
     fn stylesheet(&self, route: &str) -> Result<Option<Stylesheet>>;
     /// Reserve shared storage with no IO before foreground worker admission.
     fn asset_request(&self, route: &str) -> Box<dyn AssetRequest>;
@@ -50,8 +53,8 @@ pub trait Documents: Send + Sync {
     fn report(&self, warnings: &[Warning], failed: bool);
     /// Completed usage, retained separately from evictable document trees.
     fn usage(&self, route: &str) -> Option<CatalogueUsage>;
-    /// Read an already reached authored file through the live confinement boundary.
-    fn authored(&self, path: &str) -> Result<Option<SharedAsset>>;
+    /// Check public membership and reserve admission for a fresh authored read.
+    fn authored_request(&self, path: String) -> Option<AuthoredRequest>;
     /// Render complete edited props through the shared graph without saving the document.
     fn preview(&self, route: &str, props: &Props) -> Result<PreviewDocument>;
 }
@@ -68,11 +71,16 @@ pub struct GraphDocuments {
     pub(crate) locks: BTreeMap<String, Arc<Mutex<Option<CatalogueUsage>>>>,
     /// Only live requests and responses own the capture and its temporary file.
     pub(crate) asset_copies: Mutex<BTreeMap<String, Weak<Capture>>>,
-    pub(crate) stylesheets: Mutex<BTreeMap<String, StylesheetSlot>>,
+    stylesheets: Mutex<BTreeMap<String, StylesheetSlot>>,
     authored_assets: AuthoredAssets,
 }
 
-pub(crate) type StylesheetSlot = Arc<Mutex<Option<Stylesheet>>>;
+type StylesheetSlot = Arc<Mutex<Option<StylesheetRecord>>>;
+
+struct StylesheetRecord {
+    fingerprint: Fingerprint,
+    etag: HeaderValue,
+}
 
 impl GraphDocuments {
     /// Construct synchronization without starting any render.
@@ -167,11 +175,11 @@ impl Documents for GraphDocuments {
             .unwrap_or_else(|error| error.into_inner())
             .clone()
     }
-    fn authored(&self, path: &str) -> Result<Option<SharedAsset>> {
-        if !self.generation.contains_public_file(path) {
-            return Ok(None);
+    fn authored_request(&self, path: String) -> Option<AuthoredRequest> {
+        if !self.generation.contains_public_file(&path) {
+            return None;
         }
-        self.authored_assets.open(path, self.public.as_ref())
+        Some(self.authored_assets.reserve(path, self.public.clone()))
     }
     fn preview(&self, route: &str, props: &Props) -> Result<PreviewDocument> {
         let rendered = match self.generation.render_props(route, props) {
@@ -207,14 +215,25 @@ impl GraphDocuments {
                 return Ok(None);
             }
         };
+        let Some(file) = self.read_resource(route)? else {
+            return Ok(None);
+        };
+        let fingerprint = Fingerprint::of_bytes(&file.bytes);
         let mut current = slot.lock().unwrap_or_else(|error| error.into_inner());
-        if current.is_none() {
-            *current = self
-                .read_resource(route)?
-                .map(Stylesheet::new)
-                .transpose()?;
+        if let Some(record) = current.as_ref()
+            && record.fingerprint == fingerprint
+        {
+            return Ok(Some(Stylesheet {
+                file,
+                etag: record.etag.clone(),
+            }));
         }
-        Ok(current.clone())
+        let stylesheet = Stylesheet::new(file)?;
+        *current = Some(StylesheetRecord {
+            fingerprint,
+            etag: stylesheet.etag.clone(),
+        });
+        Ok(Some(stylesheet))
     }
 
     fn has_resource(&self, route: &str) -> bool {

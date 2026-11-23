@@ -39,9 +39,13 @@ measurements.
 
 ## Authored files
 
-An authored GET or HEAD reads the confined handle once into an unnamed
-temporary file and computes the XXH3-128 digest of those bytes. Each
-`GraphDocuments` retains one record per served route of its public closure.
+An authored GET or HEAD takes foreground priority before it checks closure
+membership on a blocking thread. A request for a reached route waits for its
+async gate before it takes a render worker. The gate drops when no request
+holds it. Each admitted request opens a fresh confined handle and copies its
+bytes once into an unnamed temporary file while it computes the XXH3-128
+digest. Each `GraphDocuments` retains one record per served route of its
+public closure.
 The record holds the length, digest, and SHA-256 `ETag` of the identity form.
 It also holds the gzip length and SHA-256 `ETag` once Serve encodes that form.
 The records drop with their render generation.
@@ -60,8 +64,9 @@ Generated stylesheets, generated assets, and authored assets carry a strong
 SHA-256 `ETag` of their bytes and `Cache-Control: no-cache`, under the
 [runtime routes](../../docs/protocol/mokly-runtime.md#routes). A matching
 `If-None-Match` gets 304 without a body. Each `ETag` is computed once for each
-version of a resource. `GraphDocuments` keeps each generated stylesheet that it
-serves, with its `ETag`, for the rest of its generation. The files of a
+version of a resource. A stylesheet request reads its bytes from the graph.
+`GraphDocuments` retains only the length, XXH3-128 digest, and `ETag` for
+each served stylesheet route in its generation. The files of a
 comparison generation carry `Cache-Control: private, max-age=31536000, immutable`,
 under the
 [generation rule](../../docs/protocol/mokly-comparison-serving.md#generation-and-serving).
@@ -81,9 +86,8 @@ last response ends. Each comparison and temporary preview JSON response
 uses its own encoding. The stores retain only the identity bytes. An authored
 JSON response uses a request-owned gzip file and takes its tag and length
 from the matching record when available. A matching gzip validator returns
-304 without encoding again. A generated JSON asset computes the gzip tag
-while writing the encoded copy. Compression runs on a blocking thread and
-takes no render worker.
+304 without encoding again. Compression runs on a blocking thread and takes
+no render worker.
 A failed encoding sends the identity body. Error bodies always use the
 identity encoding.
 

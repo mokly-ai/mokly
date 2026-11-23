@@ -6,10 +6,8 @@ use std::sync::{Arc, OnceLock};
 use axum::http::HeaderValue;
 use mokly_graph::asset_delivery::AssetRead;
 
-use crate::asset_file::gzip_copy;
 use crate::authored_assets::AuthoredRecord;
 use crate::error::{InternalError, Result, ServerError};
-use crate::json_delivery::Gzip;
 use crate::public_read::OpenedFile;
 
 pub(crate) type CaptureResult = std::result::Result<Option<Arc<AssetVersion>>, Arc<ServerError>>;
@@ -27,7 +25,7 @@ pub struct SharedAsset {
     pub(crate) owner: AssetOwner,
 }
 
-/// State used by delivery when a request needs gzip.
+/// Keep a generated capture or an authored validator record alive during delivery.
 #[derive(Clone)]
 pub(crate) enum AssetOwner {
     Generated { _capture: Arc<Capture> },
@@ -45,28 +43,12 @@ pub(crate) enum GzipDelivery {
 pub(crate) struct AssetVersion {
     pub(crate) opened: OpenedFile,
     pub(crate) etag: HeaderValue,
-    gzip: Gzip<Arc<Self>>,
 }
 
 impl AssetVersion {
     /// Attach the strong tag for an already checked capture.
     pub(crate) fn with_tag(opened: OpenedFile, etag: HeaderValue) -> Self {
-        Self {
-            opened,
-            etag,
-            gzip: Gzip::default(),
-        }
-    }
-
-    /// Share the compressed copy of a generated capture with its live responses.
-    pub(crate) async fn gzip(self: &Arc<Self>) -> Option<Arc<Self>> {
-        let source = self.clone();
-        self.gzip
-            .get(move || {
-                let (opened, metadata) = gzip_copy(&source.opened, None)?;
-                Ok(Arc::new(Self::with_tag(opened, metadata.etag)))
-            })
-            .await
+        Self { opened, etag }
     }
 }
 

@@ -165,7 +165,7 @@ impl Work for Workers {
         documents: Arc<dyn Documents>,
         path: String,
     ) -> Result<Option<SharedAsset>> {
-        self.file_delivery(move || documents.authored(&path)).await
+        self.authored_delivery(documents, path).await
     }
     async fn preview(
         &self,

@@ -2,9 +2,10 @@
 
 use std::collections::BTreeMap;
 use std::io::{self, Read, Write};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use axum::http::{HeaderMap, HeaderValue};
+use tokio::sync;
 use xxhash_rust::xxh3::Xxh3Default;
 
 use crate::asset_file::{AtOffset, CaptureWriter, GzipMetadata, gzip_copy};
@@ -12,18 +13,26 @@ use crate::asset_streams::{AssetOwner, AssetVersion, GzipDelivery, SharedAsset};
 use crate::error::{InternalError, Result};
 use crate::json_delivery::Gzip;
 use crate::public_read::{OpenedFile, PublicReader};
-use crate::validator;
+use crate::validator::{self, Fingerprint};
 
 type RecordSlot = Arc<Mutex<Option<Arc<AuthoredRecord>>>>;
 
-/// Retain one validator record per reached authored route in this generation.
+/// Retain one validator record and a weak gate per reached authored route.
 #[derive(Default)]
-pub(crate) struct AuthoredAssets(Mutex<BTreeMap<String, RecordSlot>>);
+pub(crate) struct AuthoredAssets(Mutex<BTreeMap<String, Route>>);
 
-#[derive(Eq, PartialEq)]
-struct Fingerprint {
-    length: u64,
-    xxh3: u128,
+#[derive(Default)]
+struct Route {
+    gate: Weak<sync::Mutex<()>>,
+    record: RecordSlot,
+}
+
+/// Reservation for a fresh read of a reached authored route.
+pub struct AuthoredRequest {
+    gate: Arc<sync::Mutex<()>>,
+    record: RecordSlot,
+    path: String,
+    reader: Arc<dyn PublicReader>,
 }
 
 /// The identity and gzip validators of one version. No file lives in this record.
@@ -34,46 +43,67 @@ pub(crate) struct AuthoredRecord {
 }
 
 impl AuthoredAssets {
-    /// Open through the live policy while serialized with other reads of this route.
-    pub(crate) fn open(
-        &self,
-        path: &str,
-        reader: &dyn PublicReader,
-    ) -> Result<Option<SharedAsset>> {
-        let slot = {
-            let mut versions = self.0.lock().unwrap_or_else(|error| error.into_inner());
-            versions.entry(path.to_owned()).or_default().clone()
-        };
-        let mut current = slot.lock().unwrap_or_else(|error| error.into_inner());
-        let Some(source) = reader.open(path) else {
-            *current = None;
-            return Ok(None);
-        };
-        let hash_while_copying = current
-            .as_ref()
-            .is_none_or(|record| record.fingerprint.length != source.length);
-        let (opened, fingerprint, tag) = capture(source, hash_while_copying)?;
-        let record = match current.as_ref() {
-            Some(record) if record.fingerprint == fingerprint => record.clone(),
-            _ => {
-                let etag = match tag {
-                    Some(tag) => tag,
-                    None => validator::reader(&mut AtOffset::new(&opened, 0))?,
-                };
-                let record = Arc::new(AuthoredRecord {
-                    fingerprint,
-                    etag,
-                    gzip: Mutex::default(),
-                });
-                *current = Some(record.clone());
-                record
-            }
-        };
-        Ok(Some(SharedAsset {
-            version: Arc::new(AssetVersion::with_tag(opened, record.etag.clone())),
-            owner: AssetOwner::Authored(record),
-        }))
+    /// Keep the route gate alive only while a request waits or reads.
+    pub(crate) fn reserve(&self, path: String, reader: Arc<dyn PublicReader>) -> AuthoredRequest {
+        let mut routes = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        let route = routes.entry(path.clone()).or_default();
+        let gate = route.gate.upgrade().unwrap_or_else(|| {
+            let gate = Arc::new(sync::Mutex::new(()));
+            route.gate = Arc::downgrade(&gate);
+            gate
+        });
+        AuthoredRequest {
+            gate,
+            record: route.record.clone(),
+            path,
+            reader,
+        }
     }
+}
+
+impl AuthoredRequest {
+    /// Hold the route through the blocking read, even if its HTTP request is cancelled.
+    pub(crate) async fn admit(
+        self,
+    ) -> impl FnOnce() -> Result<Option<SharedAsset>> + Send + 'static {
+        let guard = self.gate.lock_owned().await;
+        move || {
+            let _guard = guard;
+            open(&self.record, &self.path, self.reader.as_ref())
+        }
+    }
+}
+
+fn open(slot: &RecordSlot, path: &str, reader: &dyn PublicReader) -> Result<Option<SharedAsset>> {
+    let mut current = slot.lock().unwrap_or_else(|error| error.into_inner());
+    let Some(source) = reader.open(path) else {
+        *current = None;
+        return Ok(None);
+    };
+    let hash_while_copying = current
+        .as_ref()
+        .is_none_or(|record| record.fingerprint.length != source.length);
+    let (opened, fingerprint, tag) = capture(source, hash_while_copying)?;
+    let record = match current.as_ref() {
+        Some(record) if record.fingerprint == fingerprint => record.clone(),
+        _ => {
+            let etag = match tag {
+                Some(tag) => tag,
+                None => validator::reader(&mut AtOffset::new(&opened, 0))?,
+            };
+            let record = Arc::new(AuthoredRecord {
+                fingerprint,
+                etag,
+                gzip: Mutex::default(),
+            });
+            *current = Some(record.clone());
+            record
+        }
+    };
+    Ok(Some(SharedAsset {
+        version: Arc::new(AssetVersion::with_tag(opened, record.etag.clone())),
+        owner: AssetOwner::Authored(record),
+    }))
 }
 
 impl AuthoredRecord {

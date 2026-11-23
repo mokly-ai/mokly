@@ -6,9 +6,27 @@ use axum::http::header::{CACHE_CONTROL, ETAG, IF_NONE_MATCH};
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::Response;
 use sha2::{Digest, Sha256};
+use xxhash_rust::xxh3::xxh3_128;
 
 use crate::error::{InternalError, Result};
 use crate::response;
+
+/// Byte length and XXH3-128 digest for matching a resource's validator record.
+#[derive(Eq, PartialEq)]
+pub(crate) struct Fingerprint {
+    pub(crate) length: u64,
+    pub(crate) xxh3: u128,
+}
+
+impl Fingerprint {
+    /// Identify the version of a buffered resource.
+    pub(crate) fn of_bytes(bytes: &[u8]) -> Self {
+        Self {
+            length: bytes.len() as u64,
+            xxh3: xxh3_128(bytes),
+        }
+    }
+}
 
 /// Hash a buffered resource once for its immutable version.
 pub(crate) fn bytes(bytes: &[u8]) -> Result<HeaderValue> {

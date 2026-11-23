@@ -213,7 +213,8 @@ immutable generation files and the `no-store` root and selection.
   opens authored files without following symlinks.
 - [`src/authored_assets.rs`](./src/authored_assets.rs) defines
   `AuthoredAssets`, the [authored file](./delivery.md#authored-files) validator
-  records of one generation. `AuthoredAssets::open` prepares a request's copy.
+  records of one generation. `AuthoredRequest` holds the route gate before a
+  worker prepares its copy.
 - [`src/asset_file.rs`](./src/asset_file.rs) defines `CaptureWriter`, which
   can hash bytes while it writes a temporary copy.
 - [`src/validator.rs`](./src/validator.rs) computes the strong SHA-256 `ETag`
@@ -221,15 +222,15 @@ immutable generation files and the `no-store` root and selection.
   with 304. A `*` or the weak form of the tag also matches.
 - [`src/asset_streams.rs`](./src/asset_streams.rs) defines `AssetStreams`,
   `TemporaryAssets`, `AssetRequest`, `AssetResult`, and `SharedAsset`, the
-  captured asset. Generated responses can share its `AssetVersion` and gzip
-  copy while the capture is active.
+  captured asset. Generated responses can share its verified `AssetVersion`
+  while the capture is active.
 - [`src/backend_assets.rs`](./src/backend_assets.rs) keeps the weak route
   entries and the shared capture result that `GraphDocuments::asset_request`
   reserves before worker admission. The generation's digest supplies its
   `ETag` after verification.
 - [`src/asset_response.rs`](./src/asset_response.rs) defines
-  `asset_response::deliver`, which answers with the gzip copy, a 304, or the
-  stream of a generated or authored asset capture.
+  `asset_response::deliver`, which revalidates or streams an asset capture.
+  Authored JSON can use a request-owned gzip copy.
 - [`src/background.rs`](./src/background.rs) and
   [`src/changes_background.rs`](./src/changes_background.rs) define
   `UsagePass` and `ChangesPass`, the background usage and Changes work.

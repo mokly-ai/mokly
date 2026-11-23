@@ -18,13 +18,11 @@ trait AssetChunks: Send + Sync {
 /// Revalidate a captured asset or stream its bytes from independent offsets.
 pub(crate) async fn deliver(mut asset: SharedAsset, headers: &HeaderMap) -> Response {
     let json = response::is_json(&asset.version.opened.content_type);
-    let encoding = if json && json_delivery::accepts_gzip(headers) {
-        match &asset.owner {
-            AssetOwner::Generated { .. } => asset.version.gzip().await.map(GzipDelivery::File),
-            AssetOwner::Authored(record) => record.gzip(asset.version.clone(), headers).await,
+    let encoding = match &asset.owner {
+        AssetOwner::Authored(record) if json && json_delivery::accepts_gzip(headers) => {
+            record.gzip(asset.version.clone(), headers).await
         }
-    } else {
-        None
+        _ => None,
     };
     let encoded = match encoding {
         Some(GzipDelivery::Unchanged(etag)) => {

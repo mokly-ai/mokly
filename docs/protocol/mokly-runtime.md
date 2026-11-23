@@ -233,8 +233,8 @@ commit point and never leave a partial output directory in place.
 
 No command writes into the repository except `build` into its output directory. Serve,
 Changes, live prop editing, and comparison generations keep every result in process memory.
-The [caches](./mokly-base-cache.md) outside the repository are the only other files Mokly writes.
-Deleting them changes time only, except for [unsupported inputs](./mokly-render-store.md#restarts-and-deletion).
+The [caches](./mokly-base-cache.md) outside the repository are the only other files Mokly writes, apart from the unnamed temporary copies of asset responses. Serve writes such a copy of a generated or authored asset so that a response sends exactly the bytes of its `ETag`. The copy goes away when the last request or response that holds it ends.
+Deleting the caches changes time only, except for [unsupported inputs](./mokly-render-store.md#restarts-and-deletion).
 
 ## Related Docs
 
