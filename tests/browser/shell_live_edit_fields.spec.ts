@@ -168,21 +168,22 @@ test("each prop field is a row with its name in a label column", async ({
         .boundingBox();
       return { name: name!, value: value! };
     };
-    // Desktop: a 120px label column, then the value 12px to its right.
+    // The right panel: a 112px label column, then the value 12px to its
+    // right.
     const label = await row("label");
-    expect(label.name.width).toBe(120);
-    expect(label.value.x).toBe(label.name.x + 120 + 12);
+    expect(label.name.width).toBe(112);
+    expect(label.value.x).toBe(label.name.x + 112 + 12);
     // Each field has its own row, so the names share one column.
     const count = await row("count");
     expect(count.name.x).toBe(label.name.x);
     expect(Math.abs(count.name.y - label.name.y)).toBeGreaterThanOrEqual(
       label.name.height,
     );
-    // Below 900px the inspector stands in the panel's sheet, and the label
-    // column is 100px.
+    // Below 900px Inspect stands in the panel's sheet, whose label column is
+    // as wide.
     await page.setViewportSize({ width: 390, height: 844 });
     await revealInPanel(page, props);
-    await expect.poll(async () => (await row("label")).name.width).toBe(100);
+    await expect.poll(async () => (await row("label")).name.width).toBe(112);
   } finally {
     await closeServe(page, server);
   }

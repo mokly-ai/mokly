@@ -52,22 +52,20 @@ for (const width of [390, 1280]) {
     await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
     await expect(
       page.locator(
-        "#mb-main [data-diff-screen], #mb-main [data-viewport-option], #mb-main [data-color-scheme-option]",
+        "#mb-main [data-diff-screen], #mb-main [data-viewport-option], #mb-main [data-color-scheme-option], #mb-main [data-frames-toggle]",
       ),
     ).toHaveCount(0);
     await expect(
       page.frameLocator(DOCUMENT_FRAME).locator("#next-steps"),
     ).toBeVisible();
-    // A page's Details stand in the right panel, a sheet of the compact layout.
-    await revealInPanel(page, page.locator("[data-mokly-details]"));
-    await page.locator("[data-mokly-details] summary").click();
-    await expect(page.locator("[data-mokly-details]")).not.toContainText(
+    // A page's Details rows stand in Inspect's head, in the right panel, a
+    // sheet of the compact layout.
+    const details = page.locator('[data-inspect-section="details"]');
+    await revealInPanel(page, details);
+    await expect(details).not.toContainText(
       "example/getting-started/index.html",
     );
-    await expect(page.locator("[data-mokly-details]")).toContainText(
-      "documents",
-    );
-    await page.locator("[data-mokly-details] summary").click();
+    await expect(details).toContainText("documents");
     if (width < 700) await openCatalogueSheet(page);
     await expect(
       page.locator(

@@ -5,7 +5,7 @@ import { test } from "./browser_test.js";
 const detailsRow =
   'a[data-nav-row][data-route="example/screens/details/index.html"]';
 const inspectorChip =
-  '[data-inspector-panel="details"] [data-mokly-tag="forms"]';
+  '[data-inspect-section="details"] [data-mokly-tag="forms"]';
 const panel = "#mb-tag-picker";
 const search = "[data-mokly-search]";
 const toggle = "[data-mokly-tag-toggle]";
@@ -91,11 +91,11 @@ test("a click outside closes the picker without taking focus", async ({
   await expect(page.locator(search)).toBeFocused();
 });
 
-test("an inspector tag closes the open picker and restores toggle focus", async ({
+test("a tag of Inspect's Details rows closes the open picker and restores toggle focus", async ({
   page,
 }) => {
   await page.goto("/view/example/screens/welcome/");
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
+  await expect(page.locator(inspectorChip)).toBeVisible();
   await openPicker(page);
 
   await page.locator(inspectorChip).click();

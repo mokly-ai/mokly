@@ -25,22 +25,21 @@ export function registerDesignLibraryRuntime(
       await page.goto(
         `${running.url}/view/design/browse/views/screen/tag-picker/`,
       );
-      // In the compact layout the viewport choice opens the panel's sheet,
-      // which holds the inspector, and its grabber expands it.
+      // In the compact layout the Frames filter opens the panel's sheet,
+      // which holds Inspect, and its grabber expands it.
       await chooseViewport(page, viewport);
-      await page.getByRole("tab", { name: "Components", exact: true }).click();
       if (viewport === "mobile")
         await page
           .getByRole("button", { name: "Expand panel", exact: true })
           .click();
-      const panel = page.getByRole("tabpanel", {
-        name: "Components",
-        exact: true,
-      });
+      const components = page.locator('[data-inspect-section="components"]');
+      await components.locator(":scope > summary").click();
+      await expect(components).toHaveAttribute("open", "");
+      const panel = components.locator(":scope > .mbk-inspect-fold-body");
       await expect(panel).toContainText("Top bar");
       await expect(panel).toContainText("Tag picker");
       await expect(panel).toContainText("Tag chip");
-      const highlight = page.getByRole("button", {
+      const highlight = page.getByRole("switch", {
         name: "Highlight components",
         exact: true,
       });
@@ -54,26 +53,25 @@ export function registerDesignLibraryRuntime(
       await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
       for (const summary of await panel.locator("details > summary").all()) {
         await summary.click();
-        await expect(
-          page.getByRole("tab", { name: "Components", exact: true }),
-        ).toHaveAttribute("aria-selected", "true");
+        await expect(components).toHaveAttribute("open", "");
       }
+      // A choice in the component tree selects the instance, and Inspect's
+      // Selection names its props and opens its component.
       await panel
         .locator(".mbk-instance-select")
         .filter({ hasText: "Tag chip" })
         .first()
         .click();
-      await expect(
-        page.getByRole("tabpanel", { name: "Props", exact: true }),
-      ).toContainText("forms");
-      await page
-        .getByRole("link", { name: "Open component", exact: true })
+      const selection = page.locator('[data-inspect-section="selection"]');
+      await expect(selection).toContainText("forms");
+      await selection
+        .getByRole("link", { name: "Tag chip", exact: true })
         .click();
       await expect(page).toHaveURL(
         /\/view\/design\/library\/controls\/tag-chip\//,
       );
-      await page.getByRole("tab", { name: "Usage", exact: true }).click();
-      const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+      const usage = page.locator('[data-inspect-section="usage"]');
+      await usage.locator(":scope > summary").click();
       await usage
         .getByRole("link", { name: "Tag picker", exact: true })
         .first()

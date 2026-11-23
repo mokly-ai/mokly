@@ -49,12 +49,6 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(canvas.contentFrame().locator("h1")).toHaveText(
       "Original home",
     );
-    const details = page.locator("[data-workspace-inspector]");
-    await expect(details).not.toHaveAttribute("data-open", "true");
-    await page.getByRole("tab", { name: "Details", exact: true }).click();
-    await expect(details).toHaveAttribute("data-open", "true");
-    await page.getByRole("tab", { name: "Details", exact: true }).click();
-    await expect(details).not.toHaveAttribute("data-open", "true");
     await page.setViewportSize({ width: 420, height: 900 });
     await openCatalogueSheet(page);
     // Below the layout breakpoint the compact layout shows one frame, the
@@ -105,7 +99,10 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
       "dark",
     );
-    await expect(details).not.toHaveAttribute("data-open", "true");
+    // The publication keeps the Frames filter's choice of the Mobile frames.
+    await expect(
+      page.locator('[data-frames-toggle="desktop"]'),
+    ).not.toBeChecked();
     await expect(page.locator(".mbk[data-mokly-shell]")).toHaveAttribute(
       "data-drawer",
       "open",

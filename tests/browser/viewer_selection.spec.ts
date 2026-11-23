@@ -72,11 +72,11 @@ for (const cross of [false, true])
         "/view/action/disabled/?fragment=details";
     });
     await action.click();
+    // The routed saved variant's frame is selected, so Inspect's Variants
+    // checks its row.
     await expect(
-      page
-        .getByRole("navigation", { name: "Saved variants" })
-        .getByRole("link", { name: "Disabled", exact: true }),
-    ).toHaveAttribute("aria-current", "page");
+      page.locator('[data-inspect-section="variants"] [data-checked]'),
+    ).toHaveText("Disabled");
     // The variant's row of its set opens at the fragment, in the desktop
     // views that the canvas shows for a component.
     await expect

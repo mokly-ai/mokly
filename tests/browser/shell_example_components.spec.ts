@@ -2,32 +2,21 @@
  * The example's React components in the shell on the example Serve host,
  * under the component explorer and controls contracts: live edits through
  * the sidecar with their Usage consumers, each view's actual render context,
- * and the inspector icons.
+ * and Inspect's folded sections.
  */
 
 import { expect, type FrameLocator, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { showProps } from "./live_props.js";
 import {
   canvasFrame,
   chooseScheme,
   NARROW_WINDOW,
-  revealInPanel,
+  openInspectFold,
 } from "./workspace_actions.js";
 
 const ACTION = "/view/example/components/action/";
-
-/**
- * Open an inspector panel; a click on the selected icon would close it. In
- * the compact layout the inspector stands in the panel's sheet.
- */
-async function openPanel(page: Page, name: string) {
-  const tab = page.getByRole("tab", { name, exact: true });
-  await revealInPanel(page, tab);
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-  return page.getByRole("tabpanel", { name, exact: true });
-}
 
 for (const viewport of ["desktop", "mobile"] as const)
   test(`${viewport}: the example's React action renders live edits and lists its Usage consumers`, async ({
@@ -39,11 +28,12 @@ for (const viewport of ["desktop", "mobile"] as const)
         : { width: 390, height: 844 },
     );
     await page.goto(`${ACTION}?viewport=${viewport}`);
-    const props = await openPanel(page, "Props");
+    // Props edits the row of the selected frame, the component's own one.
+    const props = await showProps(page);
     if (viewport === "mobile")
       await page.getByRole("button", { name: "Expand panel" }).click();
     // A row of the variant set shows the edit in its Light and Dark frames,
-    // on the canvas and in the compact layout, which shows the whole set.
+    // on the canvas and in the compact layout, which shows the selected one.
     const rowFrame = (row: string, scheme: "dark" | "light" = "light") =>
       page.frameLocator(
         `${canvasFrame("desktop", scheme)}[data-workspace-variant="${row}"]`,
@@ -65,7 +55,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(ready(dark)).toHaveCSS("border-radius", "24px");
     await expect(label).toHaveValue("Ready to continue");
 
-    const usage = await openPanel(page, "Usage");
+    const usage = await openInspectFold(page, "usage");
     for (const name of ["Welcome", "Details", "Toolbar"])
       await expect(
         usage.getByRole("link", { name, exact: true }).first(),
@@ -81,14 +71,14 @@ for (const viewport of ["desktop", "mobile"] as const)
         ".example-toolbar",
       ),
     ).toHaveCSS("border-radius", "12px");
-    const nested = await openPanel(page, "Nested components");
+    const nested = await openInspectFold(page, "components");
     await expect(nested.locator("[data-instance-key]")).toHaveCount(2);
-    const highlight = page.getByRole("button", {
+    const highlight = page.getByRole("switch", {
       name: "Highlight components",
       exact: true,
     });
     await highlight.click();
-    await expect(highlight).toHaveAttribute("aria-pressed", "true");
+    await expect(highlight).toBeChecked();
   });
 
 /**
@@ -133,63 +123,26 @@ test("below the layout breakpoint, each frame of a component renders its desktop
   await expectComponentViews(page);
 });
 
-test("the inspector icons open, switch, and close panels, and only a composed component lists nested components", async ({
+test("Inspect folds Props and Usage, and only a composed component lists its nested components", async ({
   page,
 }) => {
-  // A leaf component has Details, Props, and Usage, and Details opens first.
+  // A leaf component folds Props and Usage, and has no Components section.
   await page.goto(ACTION);
-  await expect(page.getByRole("tab")).toHaveCount(3);
-  for (const name of ["Details", "Props", "Usage"])
-    await expect(page.getByRole("tab", { name, exact: true })).toBeVisible();
-  await expect(
-    page.getByRole("tab", { name: "Details", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
-  await expect(
-    page.getByRole("tab", { name: "Nested components" }),
-  ).toHaveCount(0);
-  const usage = page.getByRole("tab", { name: "Usage", exact: true });
-  await usage.click();
-  await expect(usage).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("tabpanel", { name: "Usage" })).toBeVisible();
-  // The active icon collapses its panel, and Close collapses any panel.
-  await usage.click();
-  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
+  const folds = page.locator(".mbk-inspect-fold > summary");
+  await expect(folds).toHaveText([/^Props\b/u, /^Usage\b/u]);
+  await expect(page.locator('[data-inspect-section="components"]')).toHaveCount(
     0,
   );
-  await openPanel(page, "Props");
-  await page.getByRole("button", { name: "Close inspector" }).click();
-  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
-    0,
-  );
+  const usage = page.locator('[data-inspect-section="usage"]');
+  await expect(usage).not.toHaveAttribute("open", "");
+  await usage.locator(":scope > summary").click();
+  await expect(usage).toHaveAttribute("open", "");
+  await expect(usage.locator("[data-usage-section]").first()).toBeVisible();
+  await usage.locator(":scope > summary").click();
+  await expect(usage).not.toHaveAttribute("open", "");
   // A composed component also lists its nested components.
   await page.goto("/view/example/components/toolbar/");
   await expect(
-    page.getByRole("tab", { name: "Nested components", exact: true }),
-  ).toBeVisible();
-});
-
-test("Escape in another shell control closes the inspector and returns focus to the tab that opened it", async ({
-  page,
-}) => {
-  await page.goto(ACTION);
-  const usage = page.getByRole("tab", { name: "Usage", exact: true });
-  await usage.click();
-  await expect(usage).toHaveAttribute("aria-selected", "true");
-  await expect(
-    page.getByRole("tabpanel", { name: "Usage", exact: true }),
-  ).toBeVisible();
-  // Escape reaches the inspector from any control of its shell.
-  const search = page.getByRole("searchbox", { name: "Search catalogue" });
-  await search.focus();
-  await expect(search).toBeFocused();
-  await page.keyboard.press("Escape");
-  await expect(page.locator("[data-workspace-inspector]")).toHaveAttribute(
-    "data-open",
-    "false",
-  );
-  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
-    0,
-  );
-  await expect(page.getByRole("tabpanel")).toHaveCount(0);
-  await expect(usage).toBeFocused();
+    page.locator('[data-inspect-section="components"] > summary'),
+  ).toHaveText(/^Nested components\b/u);
 });
