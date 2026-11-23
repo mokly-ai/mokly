@@ -19,7 +19,7 @@ test("Serve opens Overlay for the Card variant with parent-owned stylesheet evid
         response.url().endsWith("/") &&
         response.request().method() === "GET",
     ),
-    showMode(page, "Overlay"),
+    showMode(page, "Overlay", 2),
   ]);
   expect(selected.status()).toBe(204);
   // The variant's detail carries the comparison facts that the panes show.

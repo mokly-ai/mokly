@@ -10,7 +10,7 @@ import {
   type Page,
 } from "@playwright/test";
 
-import { revealInPanel } from "./workspace_actions.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 /** The index fields the comparison UI specs compare with the shell. */
 export interface ComparisonIndexEntry {
@@ -114,16 +114,7 @@ export async function chooseFilter(
   await expect(button).toHaveAttribute("aria-pressed", "true");
 }
 
-/** The comparison mode buttons by their visible names. */
-export function modeButton(
-  page: Page,
-  name: "Current" | "Side by side" | "Overlay" | "Difference" | "Swipe",
-): Locator {
-  return page
-    .getByRole("group", { name: "Comparison mode" })
-    .getByRole("button", { name, exact: true });
-}
-
+/** The value of `data-compare-mode` that each diff mode draws on the frames. */
 const MODES = {
   "Side by side": "side",
   Overlay: "overlay",
@@ -131,29 +122,91 @@ const MODES = {
   Swipe: "swipe",
 } as const;
 
+/** A diff mode, by its name on the band. */
+export type DiffMode = keyof typeof MODES;
+
+/** A comparison mode, by its name on the band: Current or a diff mode. */
+export type ModeName = "Current" | DiffMode;
+
+/** The comparison mode buttons by their visible names. */
+export function modeButton(page: Page, name: ModeName): Locator {
+  return page
+    .getByRole("group", { name: "Comparison mode" })
+    .getByRole("button", { name, exact: true });
+}
+
+/**
+ * Choose a comparison mode: open the right panel's Changes tab, which holds
+ * the band, press the mode, and wait until the band marks it pressed.
+ */
+export async function chooseMode(page: Page, name: ModeName): Promise<void> {
+  await openPanelTab(page, "Changes");
+  await modeButton(page, name).click();
+  await expect(modeButton(page, name)).toHaveAttribute("aria-pressed", "true");
+}
+
 /** Every version's frame that the canvas compares on its frames. */
 export function comparisonFrames(page: Page): Locator {
   return page.locator("[data-mokly-stage] iframe[data-mokly-comparison-frame]");
 }
 
 /**
- * Select a diff mode and wait for its frames to hold the loaded versions:
- * `frames` documents in all, two for each compared frame of a stacked mode,
+ * The compare on the canvas, which names its entry in `data-diff-screen` and
+ * is busy while its comparison or its documents load.
+ */
+export function compareStage(page: Page): Locator {
+  return page.locator("[data-diff-screen]");
+}
+
+/**
+ * The state that the canvas holds in place of its frames, `Loading
+ * comparison…` or the failure with Try again. It exists only while the
+ * comparison loads or failed, and it never holds a pane.
+ */
+export function compareState(page: Page): Locator {
+  return page.locator("[data-diff-stage]");
+}
+
+/**
+ * Choose a diff mode and wait for its frames to hold the loaded versions:
+ * `frames` pane documents in all, two for each compared frame of Overlay,
+ * Difference or Swipe, such as eight for the four frames of a wide canvas,
  * and two for the compared frame of Side by side.
  */
 export async function showMode(
   page: Page,
-  name: keyof typeof MODES,
-  frames = 2,
+  name: DiffMode,
+  frames: number,
 ): Promise<void> {
-  // In the compact layout the comparison band stands in the panel's sheet.
-  await revealInPanel(page, modeButton(page, name));
-  await modeButton(page, name).click();
-  await expect(modeButton(page, name)).toHaveAttribute("aria-pressed", "true");
+  await chooseMode(page, name);
   await expect(
     page.locator(`[data-mokly-stage] [data-compare-mode="${MODES[name]}"]`),
   ).not.toHaveCount(0);
   await expect(comparisonFrames(page)).toHaveCount(frames);
+}
+
+/**
+ * Expect the routed entry to offer no compare mode: its Changes tab, when it
+ * has one, shows no band, so the check never passes only because Inspect is
+ * the selected tab. Call it once the entry's detail settled, such as after
+ * `awaitRoutedDetail`.
+ */
+export async function expectNoCompareModes(page: Page): Promise<void> {
+  if (await page.getByRole("tab", { name: "Changes", exact: true }).count())
+    await openPanelTab(page, "Changes");
+  await expect(
+    page.getByRole("group", { name: "Comparison mode" }),
+  ).toBeHidden();
+}
+
+/**
+ * The outcome line of each compared frame, which the band lists in a diff
+ * mode, such as `Desktop · Light · Screen changed`, in the frames' order.
+ */
+export function outcomeLines(scope: Page | Locator): Locator {
+  return scope
+    .getByRole("list", { name: "Compared frames" })
+    .getByRole("listitem");
 }
 
 /**

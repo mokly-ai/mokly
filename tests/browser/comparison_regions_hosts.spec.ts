@@ -9,15 +9,17 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
   expectRegionsAt,
-  openComparison,
-  paneFrame,
   regionOffset,
-  scrollTogether,
   settleRegion,
   wheelOverRegion,
-} from "./comparison_scroll.js";
+} from "./comparison_region_offsets.js";
+import { scrollTogether } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { modeButton, navRow } from "./comparison_ui.js";
 import {

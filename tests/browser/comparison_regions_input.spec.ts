@@ -1,15 +1,17 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
   expectRegionsAt,
   expectRegionsAtRest,
-  expectStackAt,
-  openComparison,
-  paneFrame,
   regionOffsets,
   regionRange,
-} from "./comparison_scroll.js";
+} from "./comparison_region_offsets.js";
+import { expectStackAt } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 
 const changed = comparisonPaths.changed;

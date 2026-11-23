@@ -1,21 +1,25 @@
 import { expect, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
-  expectPaneDocumentsKept,
   expectRegionsAt,
+  regionOffset,
+  settleRegion,
+  wheelOverRegion,
+} from "./comparison_region_offsets.js";
+import {
+  expectPaneDocumentsKept,
   expectStackAt,
   markPaneDocuments,
-  openComparison,
-  paneFrame,
-  regionOffset,
   scrollTogether,
-  settleRegion,
   viewportOffset,
   wheelOver,
-  wheelOverRegion,
 } from "./comparison_scroll.js";
 import { registerScrollTogetherMemory } from "./comparison_scroll_memory_cases.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { modeButton } from "./comparison_ui.js";
 

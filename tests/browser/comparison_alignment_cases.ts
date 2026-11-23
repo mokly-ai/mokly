@@ -13,21 +13,22 @@ import {
   expectPaneFrameAttributes,
   generationAddress,
 } from "./comparison_frames.js";
+import { regionOffset, wheelOverRegion } from "./comparison_region_offsets.js";
 import {
-  comparisonSection,
   documentExtent,
   documentOffset,
   expectCoincidentLayers,
   expectStackAt,
   layerOffsets,
-  openComparison,
-  paneFrame,
-  regionOffset,
-  sharedViewports,
   viewportOffset,
   wheelOver,
-  wheelOverRegion,
 } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+  sharedViewports,
+} from "./comparison_sections.js";
 import { modeButton } from "./comparison_ui.js";
 
 /** Register the alignment cases on the host that `test` supplies as its base URL. */

@@ -17,16 +17,18 @@ import {
   generationAddress,
 } from "./comparison_frames.js";
 import {
-  comparisonSection,
   expectCoincidentLayers,
   expectStackAt,
   layerOffsets,
-  openComparison,
-  paneFrame,
-  sharedViewports,
   viewportOffset,
   wheelOver,
 } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+  sharedViewports,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { comparisonIndex, modeButton } from "./comparison_ui.js";
 import {

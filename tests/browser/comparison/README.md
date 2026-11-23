@@ -30,8 +30,23 @@ write the sources of each entry on both commits.
 pins the expected Changes state of each entry, the moved pairs, and the
 removed paths.
 
-The `comparison_ui.ts` and `comparison_scroll.ts` helpers read the index,
-switch filters and modes, and measure pane, viewport, and region offsets.
+`comparison_ui.ts` reads the index and switches the catalogue filter. Its
+`chooseMode` opens the right panel's Changes tab, which holds the comparison
+band, and presses a mode. `showMode` also waits for an exact count of pane
+frames: two for each frame that Overlay, Difference, or Swipe compares, and
+two for the pair of Side by side. `outcomeLines` reads the band's line for
+each compared frame, and `expectNoCompareModes` checks, with the Changes tab
+open, that an entry offers no mode. `compareStage` is the compare, busy while
+it loads, and `compareState` is its loading or failure state, which exists
+only then and never holds a pane.
+`comparison_sections.ts` opens a comparison and finds one compared frame by
+its kind and its scheme: in Overlay, Difference, and Swipe the frame's
+figure, whose one viewport stacks both versions, and in Side by side the
+canvas section that holds the frame's Before and Current pair. Its readers
+take that section: each version's pane frame, the page viewports, the shown
+mode, and the frame labels. `comparison_scroll.ts` measures the page offsets
+and ranges in the documents' CSS pixels, which the canvas zoom does not
+change, and `comparison_region_offsets.ts` measures inner scroll regions.
 `comparison_evidence_page.ts` holds the Details copy and readers that the
 stylesheet Details specs share. Its readers require one Comparison details
 heading and exactly one changed-files list. `openEvidence` also requires the
@@ -64,7 +79,8 @@ host origin behind a strict Content Security Policy. `/viewer.html` takes
 `responsive=1`. The host page records `frameMessages`, `viewerErrors`, and
 `viewerNavigations`, and `replaceSource()` renders an equal copy of the index.
 `comparisonViewerHost(source)` mounts another copy instead, such as the
-branch copy's `branchCopy.directory`.
+branch copy's `branchCopy.directory`. `openEmbeddedComparison` opens an entry
+in that viewer and shows a diff mode until its pane documents load.
 
 ## Comparison scrolling suites
 

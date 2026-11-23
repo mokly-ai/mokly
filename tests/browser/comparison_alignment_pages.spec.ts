@@ -11,16 +11,18 @@ import { expect, type Locator } from "@playwright/test";
 import { LATE_IMAGE_HEIGHT } from "../helpers/comparison_scroll_groups.js";
 
 import {
-  comparisonSection,
   documentOffset,
   expectStackAt,
-  openComparison,
-  paneFrame,
   sampleFrames,
-  sharedViewports,
   viewportOffset,
   wheelOver,
 } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+  sharedViewports,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 
 /** One computed length of an element, in CSS pixels. */

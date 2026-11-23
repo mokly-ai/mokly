@@ -190,7 +190,7 @@ test("component comparisons follow changed variants while added variants stay cu
 }) => {
   await page.goto(`/view/${comparisonPaths.component}/`);
   await chooseViewport(page, "mobile");
-  await showMode(page, "Overlay");
+  await showMode(page, "Overlay", 2);
   await expect(
     page.locator("[data-diff-stage] [data-workspace-evidence]"),
   ).toHaveCount(0);
@@ -245,7 +245,7 @@ test("Side by side stays authoritative while switching sibling variants", async 
 }) => {
   await page.goto(`/view/${comparisonPaths.component}/`);
   await chooseViewport(page, "mobile");
-  await showMode(page, "Side by side");
+  await showMode(page, "Side by side", 2);
   await chooseVariant(page, "Featured");
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",

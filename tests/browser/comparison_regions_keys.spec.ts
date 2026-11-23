@@ -9,17 +9,21 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
-  documentExtent,
   expectRegionsAt,
   expectRegionsAtRest,
-  expectStackAt,
-  openComparison,
-  paneFrame,
   regionOffsets,
   regionRange,
+} from "./comparison_region_offsets.js";
+import {
+  documentExtent,
+  expectStackAt,
   sampleFrames,
 } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 
 const regionsPage = comparisonPaths.regionsPage;

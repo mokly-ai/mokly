@@ -10,16 +10,18 @@ import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 import { test as baseTest } from "./browser_test.js";
 import {
-  comparisonSection,
   documentExtent,
   expectStackAt,
   layerOffsets,
-  openComparison,
-  paneFrame,
-  sharedViewports,
   viewportOffset,
   wheelOver,
 } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+  sharedViewports,
+} from "./comparison_sections.js";
 import { modeButton } from "./comparison_ui.js";
 
 /** Expect Side by side's two documents and viewports at one offset. */

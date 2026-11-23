@@ -8,7 +8,8 @@ import { expect } from "@playwright/test";
 import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 import { test as baseTest } from "./browser_test.js";
-import { openComparison, scrollTogether } from "./comparison_scroll.js";
+import { scrollTogether } from "./comparison_scroll.js";
+import { openComparison } from "./comparison_sections.js";
 import { modeButton } from "./comparison_ui.js";
 
 /** The storage key of the Scroll together contract. */

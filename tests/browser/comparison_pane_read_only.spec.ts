@@ -11,14 +11,16 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { snapshotViewPath } from "../../packages/viewer/src/navigation/routes.js";
 
 import {
-  comparisonSection,
   documentExtent,
   layerOffsets,
+  viewportOffset,
+} from "./comparison_scroll.js";
+import {
+  comparisonSection,
   openComparison,
   paneFrame,
   sharedViewports,
-  viewportOffset,
-} from "./comparison_scroll.js";
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { comparisonIndex } from "./comparison_ui.js";
 import { blockedFormSubmission } from "./shell_error_allowances.js";

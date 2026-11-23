@@ -251,7 +251,7 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
     .toBeCloseTo(start + 64, 0);
   expect(reviews).toEqual([]);
 
-  await showMode(page, "Overlay");
+  await showMode(page, "Overlay", 2);
   await expect(handle).toHaveAttribute("aria-valuenow", String(start + 64));
   await handle.focus();
   await page.keyboard.press("ArrowLeft");

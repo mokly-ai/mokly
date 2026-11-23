@@ -48,7 +48,7 @@ test("Changes and screen browsing stay lazy until a diff is selected", async ({
   );
   expect(requests).toEqual([]);
 
-  await showMode(page, "Overlay");
+  await showMode(page, "Overlay", 2);
   await expect(page.locator(`${stage} .mb-panes`)).toHaveAttribute(
     "data-compare-mode",
     "overlay",
@@ -63,7 +63,7 @@ test("Changes and screen browsing stay lazy until a diff is selected", async ({
   );
   expect(requests.some((url) => url.includes("/snapshots/"))).toBe(true);
   for (const name of ["Side by side", "Difference"] as const)
-    await showMode(page, name);
+    await showMode(page, name, 2);
   // Static Refresh reads the same immutable generation again.
   const sources = () =>
     page
@@ -96,12 +96,12 @@ test("unchanged views omit comparisons while changed views retain all modes", as
   await chooseScheme(page, "dark");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await chooseViewport(page, "desktop");
-  await showMode(page, "Overlay");
+  await showMode(page, "Overlay", 2);
   for (const [name, mode] of [
     ["Difference", "difference"],
     ["Side by side", "side"],
   ] as const) {
-    await showMode(page, name);
+    await showMode(page, name, 2);
     await expect(page.locator(`${stage} .mb-panes`)).toHaveAttribute(
       "data-compare-mode",
       mode,
@@ -158,7 +158,7 @@ test("added and removed screens stay current without comparison controls", async
 test("snapshot panes keep marked links inert", async ({ page }) => {
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseViewport(page, "desktop");
-  await showMode(page, "Side by side");
+  await showMode(page, "Side by side", 2);
   const iframe = page.locator(`${stage} .mb-pane--before iframe`);
   const source = await iframe.getAttribute("data-mokly-preview-source");
   const before = page.url();
@@ -192,7 +192,7 @@ test("a desktop pane's address pill copies its address from its copy icon", asyn
   });
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseViewport(page, "desktop");
-  await showMode(page, "Side by side");
+  await showMode(page, "Side by side", 2);
   const icon = page.locator(`${stage} .browser-bar .address-copy svg`).first();
   await expect(icon).toBeVisible();
   const box = await icon.boundingBox();
@@ -218,7 +218,7 @@ test("narrow diffs fit the shell and retain the catalogue drawer", async ({
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseViewport(page, "mobile");
-  await showMode(page, "Overlay");
+  await showMode(page, "Overlay", 2);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
@@ -233,7 +233,7 @@ test("mode switches keep frames and focus and cannot expand one side alone", asy
 }) => {
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseViewport(page, "desktop");
-  await showMode(page, "Overlay");
+  await showMode(page, "Overlay", 2);
   const frame = await page.locator(`${stage} iframe`).first().elementHandle();
   expect(frame).not.toBeNull();
   await expect(page.locator(`${stage} .browser-expand`)).toHaveCount(0);
