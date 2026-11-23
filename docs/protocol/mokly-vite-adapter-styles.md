@@ -20,9 +20,44 @@ Under the adapter, Vite's stylesheet languages are stylesheets: `.css`,
 these languages. A `.module.` stylesheet in one of these languages is a CSS
 Module.
 
+Only the lowercase forms of these suffixes make a file a stylesheet, as in the
+project's own Vite build. A configured or declared stylesheet whose suffix is
+not lowercase, such as `Action.CSS`, fails with the Vite setup row of the
+[diagnostics](./mokly-imported-styles-errors.md#build-build-invalid). The
+esbuild path keeps its case-insensitive `.css` rule.
+
+Decision: the adapter matches suffixes as the project's own Vite build does,
+because the adapter compiles through that build's setup. A case-insensitive
+match was rejected under the adapter, because that build does not treat
+`Action.CSS` as a stylesheet.
+
 Mokly orders, bundles, delivers, and attributes the result under the
 [imported stylesheet contract](./mokly-imported-styles.md), as on the esbuild
 path. The files that the transform reports as dependencies are watched inputs.
+Each such file also joins the source inventory of the
+[source protection contract](./mokly-source-protection.md) as a protected
+input, as on the esbuild path. A document that references such a file as a
+public file fails with the protected-target diagnostic of the
+[referenced closure](./mokly-public-closure.md). Its reason names the Vite
+setup and the Tailwind exclusion, as the
+[diagnostics](./mokly-imported-styles-errors.md#build-build-invalid) state.
+
+Each file that a `composes` of a CSS Module reads is a protected input too,
+even when no plugin reports it. A document that references a file that only a
+`composes` reads fails with the protected-target diagnostic. Its reason is the
+imported stylesheet reason, which names the CSS Module that composes from the
+file, as the
+[diagnostics](./mokly-imported-styles-errors.md#build-build-invalid) state.
+
+Decision: reported files are protected inputs on both compile paths, so both
+paths publish the same files. Inputs that are only watched were rejected under
+the adapter, because a document could then publish a file that the esbuild
+path protects. A file that a `composes` reads is protected too, because it is
+a stylesheet source, and the source policy keeps stylesheet sources private.
+A file that only a `composes` reads gets the imported stylesheet reason,
+because a `composes` from another file imports that file. The stylesheet of
+the CSS Module also delivers the CSS of that file. A new reason for this case
+was rejected, because the imported stylesheet reason fits.
 
 ## Imports Inside Stylesheets
 

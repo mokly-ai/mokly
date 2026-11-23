@@ -23,11 +23,15 @@ a transform of older bytes than the bytes that the graph reports.
 
 A plugin's report of a file outside the source root and the selected
 dependency roots is skipped with a sidecar
-[`diagnostic` event](./mokly-sidecar.md#transport).
+[`diagnostic` event](./mokly-sidecar.md#transport). Each other file that the
+setup reports for a stylesheet is also a protected input under the
+[stylesheet rules](./mokly-vite-adapter-styles.md#stylesheet-transforms).
 
 Each file that a `composes` of a CSS Module reads is an input of that CSS
 Module, also when no plugin reports the file. A change to the file has the
-same effect as an edit of that CSS Module.
+same effect as an edit of that CSS Module. Such a file is also a protected
+input under the
+[stylesheet rules](./mokly-vite-adapter-styles.md#stylesheet-transforms).
 
 A file that a plugin of the setup writes is a watched change like any other
 edit. Decision: Mokly makes no exception for these writes. The plugins of the

@@ -833,6 +833,53 @@ own lines of this plan.
   the idle head worker that compiled last, as a head `bundle` does. Reason:
   that worker already holds the Vite server of the side, which the transform
   reuses.
+- D20. Made on 2026-11-23 by the orchestrator. Under the adapter, a local
+  stylesheet alone selects base extraction and an installation, as the
+  `postcss` module does. So the base side of a catalogue without JavaScript
+  transforms its stylesheets through the base commit's setup. Reason: design
+  call D12 requires it, and the orchestrator allowed the change in the CLI
+  behind the `vite` field.
+- D21. Made on 2026-11-23 by the orchestrator. The plugin that fails a
+  stylesheet transform can report a location. Then `{stylesheet}` of the Vite
+  setup row, which D14 adds, names the authored file of that location. It is
+  a repository-relative path with the one-based line and column of the
+  location, as in the PostCSS `CssSyntaxError` rule. That file can be a
+  partial that the stylesheet imports. Without a location, `{stylesheet}` is
+  the logical path of the stylesheet. Reason: it keeps the help that the
+  esbuild path gives.
+- D22. Made on 2026-11-23 by the orchestrator. Each file that the setup
+  reports for a stylesheet joins the source inventory as a protected input,
+  as without the adapter. A document that references such a file as a public
+  file fails with the protected-target diagnostic. Its reason is
+  `protected target {reference}: the Vite setup reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not "{relative-file}")`.
+  The PostCSS rows for a missing explicit dependency and for a malformed
+  dependency message do not apply under the adapter. Reason: both compile
+  paths then publish the same files.
+- D23. Made on 2026-11-23 by the orchestrator. Under the adapter, only
+  lowercase stylesheet suffixes count, as in the project's own Vite build. A
+  configured or declared stylesheet whose suffix is not lowercase, such as
+  `Action.CSS`, fails with the Vite setup row. The esbuild path keeps its
+  case-insensitive `.css` rule. Reason: the user's decision 16 follows the
+  project's Vite build.
+- D24. Made on 2026-11-23. Under the adapter, a file that only a `composes`
+  of a CSS Module reads is also a protected input. Reason: the source policy
+  keeps stylesheet sources private, and such a file is a stylesheet source.
+- D25. Made on 2026-11-23. The location that a failing plugin reports can be
+  in a virtual module, or in a file outside the source root and the selected
+  dependency roots. Such a location counts as no location, so `{stylesheet}`
+  is the logical path of the stylesheet. Reason: design call D16 keeps
+  absolute paths and virtual modules out of every message.
+- D26. Made on 2026-11-23. When no plugin reports a failure, `{plugin}` of the
+  Vite setup row is `vite`. Reason: the code already uses this fallback, and
+  the row then has one rule for each failure.
+- D27. Made on 2026-11-23. When a document references a file that only a
+  `composes` reads, the protected-target reason is the existing imported
+  stylesheet reason,
+  `protected target {reference}: imported by {stylesheet}; reference the delivered route under static/mokly-generated/ or keep a separate public copy`.
+  Its `{stylesheet}` is the CSS Module that composes from that file. Reason:
+  a `composes ... from` is an import of that file by the CSS Module, and its
+  CSS is delivered inside the module's stylesheet, so no new message is
+  needed.
 
 Decisions of track D. Decisions 1 and 5 have answers. Decisions 2, 3, and 4
 wait for the user.
@@ -1589,3 +1636,7 @@ Depends on: every other milestone
 
 - [ ] Run the released package against a new `react-vite` Storybook project
       with and without the Vite adapter.
+- [ ] Split `crates/mokly-graph/README.md`, which passes 300 lines, after
+      tracks C and D both merge into the primary branch,
+      `calummoore/mokly-storybook-integration`. Do not split it before.
+      Reason: both tracks change that README.

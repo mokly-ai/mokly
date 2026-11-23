@@ -45,7 +45,12 @@ configuration file like a configured local stylesheet, to an existing,
 regular stylesheet input inside `repoRoot` with a case-insensitive
 `.css` suffix. Under the
 [Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), a
-declared stylesheet may use any of Vite's stylesheet languages.
+declared stylesheet may use any of Vite's stylesheet languages. Under the
+adapter, only the lowercase form of a stylesheet suffix makes a file a
+stylesheet, as in the project's own Vite build. A declared stylesheet whose
+suffix is not lowercase, such as `Action.CSS`, fails with the Vite setup row
+of the
+[imported style diagnostics](./mokly-imported-styles-errors.md#build-build-invalid).
 Reject absolute paths, backslashes, empty, dot, or parent segments,
 query or fragment suffixes, other URL schemes, HTTP(S) URLs, non-CSS files,
 missing files, directories, protected source, and paths whose real targets
