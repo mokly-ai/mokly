@@ -16,6 +16,7 @@ use mokly_sidecar::pool_admission::PoolCapacity;
 use mokly_sidecar::wire::MethodResult;
 use mokly_sidecar::workers::Diagnostics;
 
+use crate::serve_eager_admission::EagerAdmission;
 use crate::serve_gate::Gate;
 use crate::serve_return::{self, ReturnAdmission};
 
@@ -31,6 +32,12 @@ pub(super) trait BaseCompletion: Send + Sync {
 pub(super) trait PoolScheduling: Foreground + BaseCompletion {
     /// Current work has priority; a base handle observes its attempt's cancellation.
     fn pool(&self, base: Option<Arc<dyn ChangeCancellation>>) -> Arc<dyn SidecarPool>;
+    /// Pending work uses only spare claims and eligible slots until adoption.
+    fn eager_pool(
+        &self,
+        cancel: Arc<dyn ChangeCancellation>,
+        phase: Arc<dyn EagerAdmission>,
+    ) -> Arc<dyn SidecarPool>;
     /// The number of sidecar calls that admission runs at once, at least one.
     fn limit(&self) -> usize;
 }
@@ -77,7 +84,7 @@ impl ServePool {
 
 impl Foreground for ServePool {
     fn enter(&self) -> Box<dyn ForegroundLease> {
-        Box::new(self.gate.foreground())
+        Box::new(self.gate.http())
     }
 }
 
@@ -88,6 +95,34 @@ impl BaseCompletion for ServePool {
 }
 
 impl PoolScheduling for ServePool {
+    fn eager_pool(
+        &self,
+        cancel: Arc<dyn ChangeCancellation>,
+        phase: Arc<dyn EagerAdmission>,
+    ) -> Arc<dyn SidecarPool> {
+        let wake = self
+            .gate
+            .return_wake
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .clone();
+        if let Some(wake) = wake {
+            let observer: Arc<dyn ReturnWake> = wake;
+            self.gate
+                .capacity
+                .observe_admission(Arc::downgrade(&observer));
+        }
+        let signal: Arc<dyn ChangeSignal> = self.gate.clone();
+        cancel.observe(Arc::downgrade(&signal));
+        phase.observe(Arc::downgrade(&signal));
+        Arc::new(ScheduledPool {
+            inner: self.inner.clone(),
+            gate: self.gate.clone(),
+            base: Some(cancel),
+            phase: Some(phase),
+        })
+    }
+
     fn pool(&self, base: Option<Arc<dyn ChangeCancellation>>) -> Arc<dyn SidecarPool> {
         if let Some(cancel) = &base {
             let signal: Arc<dyn ChangeSignal> = self.gate.clone();
@@ -97,6 +132,7 @@ impl PoolScheduling for ServePool {
             inner: self.inner.clone(),
             gate: self.gate.clone(),
             base,
+            phase: None,
         })
     }
     fn limit(&self) -> usize {
@@ -108,6 +144,7 @@ struct ScheduledPool {
     inner: Arc<dyn SidecarPool>,
     gate: Arc<Gate>,
     base: Option<Arc<dyn ChangeCancellation>>,
+    phase: Option<Arc<dyn EagerAdmission>>,
 }
 
 impl SidecarPool for ScheduledPool {
@@ -129,9 +166,15 @@ impl SidecarPool for ScheduledPool {
     fn request(&self, call: Call) -> Result<MethodResult> {
         let _activity = self.gate.activity();
         let _foreground = self.base.is_none().then(|| self.gate.foreground());
-        let admission = self
-            .gate
-            .acquire(self.base.as_deref(), RenderClass::current())?;
+        let admission = match (&self.base, &self.phase) {
+            (Some(cancel), Some(phase)) => {
+                self.gate
+                    .acquire_eager(cancel.as_ref(), phase.as_ref(), &call)?
+            }
+            _ => self
+                .gate
+                .acquire(self.base.as_deref(), RenderClass::current())?,
+        };
         self.inner.request_claimed(call, &admission.claim)
     }
     fn release_generation(&self, generation: &str, epoch: u64) {
@@ -165,6 +208,10 @@ mod serve_pool_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_capacity_tests.rs"]
 mod serve_capacity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/serve_capture_workers_tests.rs"]
+mod serve_capture_workers_tests;
 
 #[cfg(test)]
 #[path = "_tests_/serve_priority_tests.rs"]
@@ -201,3 +248,11 @@ mod serve_claim_retirement_tests;
 #[cfg(test)]
 #[path = "_tests_/serve_warmup_activity_tests.rs"]
 mod serve_warmup_activity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/eager_gate_tests.rs"]
+mod eager_gate_tests;
+
+#[cfg(test)]
+#[path = "_tests_/eager_observer_tests.rs"]
+mod eager_observer_tests;

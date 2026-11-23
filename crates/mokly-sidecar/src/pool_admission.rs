@@ -1,11 +1,12 @@
 //! Shared prospective capacity and memory admission for lazy pool slots.
 
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use crate::error::{Error, Result};
 use crate::host_memory::HostMemory;
 use crate::memory_schedule::MEMORY_LIMIT;
-use crate::pool::Pool;
+use crate::methods::Call;
+use crate::pool::{Pool, ReturnWake};
 use crate::pool_claim::{self, CallClaim};
 use crate::pool_state::State;
 
@@ -19,11 +20,15 @@ pub(super) struct Admission {
 /// Prospective concurrency, including already reserved worker slots.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = CapacityMock))]
 pub trait PoolCapacity: Send + Sync {
+    /// Wake queued Serve admission when a returned or released slot becomes eligible.
+    fn observe_admission(&self, _wake: Weak<dyn ReturnWake>) {}
     /// Read the current memory-permitted capacity without reserving a slot.
     fn capacity(&self) -> usize;
     /// Atomically hold capacity for one call without creating a worker slot.
     /// A temporary shortage returns `Ok(None)`; a stopped pool returns `Cancelled`.
     fn try_claim(&self) -> Result<Option<CallClaim>>;
+    /// Reserve spare capacity and a slot that does not replace a head process.
+    fn try_eager_claim(&self, call: &Call) -> Result<Option<CallClaim>>;
 }
 
 impl Pool {
@@ -82,6 +87,12 @@ impl Pool {
 }
 
 impl PoolCapacity for Pool {
+    fn observe_admission(&self, wake: Weak<dyn ReturnWake>) {
+        self.lock().head.admission = Some(wake);
+    }
+    fn try_eager_claim(&self, call: &Call) -> Result<Option<CallClaim>> {
+        self.eager_claim(call)
+    }
     fn capacity(&self) -> usize {
         self.admission(&self.lock()).capacity
     }
@@ -93,16 +104,22 @@ impl PoolCapacity for Pool {
         if state.claims.len() >= self.admission(&state).capacity {
             return Ok(None);
         }
+        Ok(Some(self.claim(&mut state)))
+    }
+}
+
+impl Pool {
+    pub(super) fn claim(&self, state: &mut State) -> CallClaim {
         let reserved = state.allocated() - state.retired.len();
         let growth = if self.admission.is_some() {
-            (state.claims.len() + 1).saturating_sub(reserved + pool_claim::growth(&state))
+            (state.claims.len() + 1).saturating_sub(reserved + pool_claim::growth(state))
         } else {
             0
         };
         let id = state.next_claim;
         state.next_claim += 1;
         state.claims.insert(id, growth);
-        Ok(Some(CallClaim::new(&self.state, &self.ready, id)))
+        CallClaim::new(&self.state, &self.ready, id)
     }
 }
 

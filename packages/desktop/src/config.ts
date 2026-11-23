@@ -3,6 +3,8 @@ export interface BuildConfig {
   appOrigin: string;
   catalogueBaseDomain: string;
   revision: string;
+  /** True only in the packages that a release publishes. */
+  updates?: boolean;
 }
 
 export interface ConfigurationFiles {

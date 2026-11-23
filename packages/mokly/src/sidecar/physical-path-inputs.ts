@@ -2,6 +2,8 @@ import path from "node:path";
 
 import type { PhysicalInput } from "../generated/sidecar/PhysicalInput.js";
 
+import type { CaptureDurability } from "./capture-durability.js";
+import type { PhysicalInputObserver } from "./physical-input-observer.js";
 import {
   EVIDENCE_LIMIT,
   PhysicalInputReader,
@@ -13,6 +15,13 @@ export abstract class PhysicalPathInputs extends PhysicalInputReader {
   private linkBytes = 0;
   private inspectionBytes = 0;
   private readonly inspectedPaths = new Map<string, boolean>();
+
+  constructor(
+    durability?: CaptureDurability,
+    protected readonly observer?: PhysicalInputObserver,
+  ) {
+    super(durability);
+  }
 
   protected abstract save(file: string, value: PhysicalInput): void;
 
@@ -116,6 +125,7 @@ export abstract class PhysicalPathInputs extends PhysicalInputReader {
     this.linkBytes += bytes;
     this.durability?.budget(this.linkBytes + this.inspectionBytes);
     this.pathKinds.set(file, undefined);
+    this.observer?.path(file);
     const parent = path.dirname(file);
     if (parent !== file) this.pathLinks(parent);
     if (!this.complete) return;
@@ -125,6 +135,9 @@ export abstract class PhysicalPathInputs extends PhysicalInputReader {
       return;
     }
     const target = this.linkTarget(file);
-    if (target !== undefined) this.save(file, { kind: "link", target });
+    if (target !== undefined) {
+      this.save(file, { kind: "link", target });
+      this.observer?.link(file, target);
+    }
   }
 }

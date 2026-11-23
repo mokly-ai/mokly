@@ -125,9 +125,8 @@ async fn a_stop_drops_renders_that_wait_for_admission() {
     assert!(script.published.lock().unwrap().is_empty());
 }
 
-/// A pass whose route 1 failure waits while routes 0 and 2 run behind their gates. No
-/// render can end until the test releases a gate, so the test picks the path that ends
-/// the pass. A third worker stays free for a replacement's render.
+/// A two-view window starts route 2 only after route 1's failure has settled behind
+/// gated route 0. Routes 0 and 2 then keep their workers until the test releases them.
 struct HeldFailure {
     renders: Renders,
     script: Script,
@@ -139,7 +138,7 @@ struct HeldFailure {
 async fn held_failure(publishes: bool) -> HeldFailure {
     let (mut renders, documents) = Renders::new(&[&route(0), &route(2)], &[&route(1)]);
     let origin = publication_support::snapshot(3, documents);
-    let work = Arc::new(Workers::new(3, Arc::new(Unimock::new(()))));
+    let work = Arc::new(Workers::new(2, Arc::new(Unimock::new(()))));
     let (diagnostics, reported) = reports();
     let (script, pass, stopping) = pass(origin, 2, work.clone(), diagnostics, publishes);
     let task = tokio::spawn(async move { pass.run(stopping).await });

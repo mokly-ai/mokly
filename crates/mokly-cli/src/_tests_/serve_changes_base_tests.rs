@@ -1,5 +1,6 @@
 //! Historical preparation retains only dependency warnings and respects cancellation.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use mokly_catalogue::diagnostic::WarningSubject;
@@ -10,6 +11,7 @@ use mokly_compare::base_render::{
 use mokly_compare::error::Error;
 use mokly_git::identity::ObjectId;
 use mokly_graph::error::GraphError;
+use mokly_graph::prefetch::{PrefetchGuard, PrefetchMock};
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
 use mokly_model::public_metadata::ChangesStatus;
 use mokly_server::changes::ChangeProgressMock;
@@ -21,6 +23,13 @@ use crate::warning_support::{catalogue, config, warning};
 #[test]
 fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
     for active in [true, false] {
+        let joined = Arc::new(AtomicBool::new(false));
+        let stopped = joined.clone();
+        let prefetch = Unimock::new(
+            PrefetchMock::cancel_and_join
+                .next_call(matching!())
+                .answers_arc(Arc::new(move |_| stopped.store(true, Ordering::SeqCst))),
+        );
         let mut dependency = warning("Uses current dependencies.");
         dependency.code = "base-dependencies";
         dependency.subject = WarningSubject::Configuration("mokly.config.json".into());
@@ -35,6 +44,7 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
             BaseProviderMock::prepare
                 .next_call(matching!(_))
                 .returns(Ok(PreparedBase {
+                    prefetch: Some(PrefetchGuard::new(Arc::new(prefetch.clone()))),
                     generation: graph,
                     scripts_off: true,
                     freshness: None,
@@ -66,6 +76,11 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
             steps: Arc::new(Unimock::new(())),
         });
         assert_eq!(*warnings.lock().unwrap(), [dependency]);
+        assert_eq!(
+            joined.load(Ordering::SeqCst),
+            !active,
+            "a cancelled preparation joins early work; an active preparation passes its guard to capture"
+        );
         if active {
             assert!(result.is_ok());
             assert!(result.unwrap().scripts_off);
@@ -73,6 +88,7 @@ fn base_preparation_retains_dependency_warnings_and_never_composes_a_view() {
             assert!(matches!(result, Err(error)
                 if error.scripts_off && matches!(*error.source, Error::Cancelled)));
         }
+        assert!(joined.load(Ordering::SeqCst));
     }
 }
 

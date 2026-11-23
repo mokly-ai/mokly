@@ -8,35 +8,38 @@ import type {
 
 import { entryRoute, viewHref } from "../navigation/routes.js";
 
-import type { ShellContext } from "./context.js";
+import type { NavigationContext } from "./context.js";
 import {
   navLeafVisible,
   navNodeVisible,
   navigationFiltering,
   variantDisclosureKey,
+  type NavigationSelection,
 } from "./nav_model.js";
 import { navRowPresentation } from "./nav_moves.js";
 import type { NavLeafNode, NavSectionNode } from "./nav_tree.js";
-import type { ShellStore } from "./store_context.js";
+import type { ShellState } from "./store_state.js";
 
 /**
  * What the rows of one render read. The store's disclosures hold every
  * current key, because the store builds them from the same sections.
  */
 export interface NavRowsSource {
-  /** The column's context; its `activeId` marks the current row. */
-  context: ShellContext;
+  activeId: string | undefined;
+  context: NavigationContext;
   /** Resolves a package-owned identifier in the shell root. */
   identifier: (value: string) => string;
-  store: Pick<ShellStore, "context" | "state">;
+  state: Pick<ShellState, "disclosures" | "filterBaseline"> & {
+    selection: NavigationSelection;
+  };
 }
 
 /** The open state of `key` from before search or Changes began to filter. */
 export function filterOpen(
-  store: NavRowsSource["store"],
+  state: NavRowsSource["state"],
   key: string,
 ): boolean | undefined {
-  const baseline = store.state.filterBaseline;
+  const baseline = state.filterBaseline;
   return baseline ? Boolean(baseline[key]) : undefined;
 }
 
@@ -47,16 +50,16 @@ function navLink(
   hidden: boolean,
   source: NavRowsSource,
 ): NavigationLink {
-  const { store } = source;
+  const { activeId, context, state } = source;
   const { changed, changedVariants, label } = navRowPresentation(
     node,
-    store.state.selection.view === "changes",
-    store.context,
+    state.selection.view === "changes",
+    context,
   );
   return {
     changed,
     changedVariants,
-    current: node.entryId === source.context.activeId,
+    current: node.entryId === activeId,
     depth,
     entry: node.entryId,
     hidden,
@@ -89,17 +92,17 @@ export function navLeaf(
   source: NavRowsSource,
   members: readonly NavigationRow[],
 ): NavigationLeaf {
-  const { store } = source;
-  const { selection } = store.state;
+  const { context, state } = source;
+  const { selection } = state;
   const variants = node.variants ?? [];
   const memberNodes = node.members ?? [];
   const parentId = node.entryId;
   if (
     (variants.length === 0 && memberNodes.length === 0) ||
     !parentId ||
-    !listShows(node, selection.view, store.context)
+    !listShows(node, selection.view, context)
   ) {
-    const hidden = !navLeafVisible(node, selection, store.context);
+    const hidden = !navLeafVisible(node, selection, context);
     return { kind: "leaf", link: navLink(node, depth, hidden, source) };
   }
   const key = variantDisclosureKey(parentId);
@@ -108,24 +111,24 @@ export function navLeaf(
     link: navLink(node, depth, false, source),
     list: {
       disclosure: key,
-      filterOpen: filterOpen(store, key),
-      hidden: !navNodeVisible(node, selection, store.context),
+      filterOpen: filterOpen(state, key),
+      hidden: !navNodeVisible(node, selection, context),
       id: source.identifier(`mb-nav-variants-${sectionId}-${parentId}`),
       open: navigationFiltering(selection)
         ? variants.some((variant) =>
-            navLeafVisible(variant, selection, store.context),
+            navLeafVisible(variant, selection, context),
           ) ||
           memberNodes.some((member) =>
-            navNodeVisible(member, selection, store.context),
+            navNodeVisible(member, selection, context),
           )
-        : Boolean(store.state.disclosures[key]),
+        : Boolean(state.disclosures[key]),
       rows: members,
       title: node.title,
       variants: variants.map((variant) =>
         navLink(
           variant,
           depth + 1,
-          !navLeafVisible(variant, selection, store.context),
+          !navLeafVisible(variant, selection, context),
           source,
         ),
       ),
@@ -142,7 +145,7 @@ export function navLeaf(
 function listShows(
   node: NavLeafNode,
   view: "all" | "changes",
-  context: ShellContext,
+  context: NavigationContext,
 ): boolean {
   if (view === "changes") return true;
   const all = { view, search: "", tags: [] };

@@ -4,6 +4,7 @@ import { extname, resolve, sep } from "node:path";
 
 import {
   app,
+  autoUpdater as nativeUpdater,
   BrowserWindow,
   dialog,
   Menu,
@@ -19,6 +20,7 @@ import { contentSecurityPolicy, readConfiguration } from "./config.js";
 import { safeDiagnostic } from "./diagnostics.js";
 import { exportHandler, registerScheme } from "./export-handler.js";
 import { exchangeObserver } from "./handoff.js";
+import { offerApplicationsMove, readOnlyFolder } from "./install-location.js";
 import { startDesktop } from "./lifecycle.js";
 import { installMenu } from "./menu.js";
 import { installNavigation } from "./navigation.js";
@@ -109,13 +111,33 @@ startDesktop({
       warn,
     });
   },
-  updates: () =>
-    startUpdates(
+  updates: () => {
+    const mode = updateMode(
+      app.isPackaged,
+      configuration.config.updates === true,
+      process.platform,
+      process.env.APPIMAGE,
+    );
+    void offerApplicationsMove({
+      updates: mode === "install",
+      platform: process.platform,
+      version: app.getVersion(),
+      executable: app.getPath("exe"),
+      userData: app.getPath("userData"),
+      inApplications: () => app.isInApplicationsFolder(),
+      readOnly: (folder) => readOnlyFolder(folder),
+      showDialog: (options) => dialog.showMessageBox(options),
+      move: () => app.moveToApplicationsFolder(),
+      warn,
+    });
+    return startUpdates(
       {
         updater:
           process.platform === "linux" && !process.env.APPIMAGE
             ? new electronUpdater.DebUpdater()
             : electronUpdater.autoUpdater,
+        nativeUpdater:
+          process.platform === "darwin" ? nativeUpdater : undefined,
         showDialog: (options) => dialog.showMessageBox(options),
         openExternal: (url) => shell.openExternal(url),
         every: (callback, milliseconds) => {
@@ -124,9 +146,10 @@ startDesktop({
         },
         warn,
       },
-      updateMode(app.isPackaged, process.platform, process.env.APPIMAGE),
-    ),
-  menu: (check) =>
+      mode,
+    );
+  },
+  menu: (updates) =>
     installMenu(
       {
         current: () => Menu.getApplicationMenu(),
@@ -135,7 +158,7 @@ startDesktop({
         set: (menu) => Menu.setApplicationMenu(menu),
         focusedWindow: () => BrowserWindow.getFocusedWindow(),
       },
-      check,
+      updates,
       process.platform,
     ),
 });

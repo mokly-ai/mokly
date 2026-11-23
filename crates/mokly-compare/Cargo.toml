@@ -28,6 +28,7 @@ yaml-rust2 = "0.13.0"
 percent-encoding = "2.3.2"
 dunce = "1.0.5"
 getrandom = "0.4.3"
+arc-swap = "1.9.5"
 
 [features]
 mock = ["dep:unimock"]
@@ -54,5 +55,13 @@ workspace = true
 features = ["mock"]
 
 [dev-dependencies.mokly-catalogue]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-html]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-css]
 workspace = true
 features = ["mock"]

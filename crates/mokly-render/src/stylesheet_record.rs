@@ -1,4 +1,4 @@
-//! A stylesheet record keeps the read evidence of its own inputs. Module evidence grows through
+//! A stylesheet record keeps the read evidence of its own inputs. Private evidence grows through
 //! a chain of shared context entries, and each entry stores only its added versions.
 
 use std::collections::BTreeSet;
@@ -17,13 +17,13 @@ use crate::stylesheet_capture::Capture;
 use crate::stylesheet_compiler::Compilation;
 use crate::stylesheet_weight;
 
-/// The added module evidence of one PostCSS context.
+/// The added private read evidence of one PostCSS context.
 pub(crate) struct ContextEvidence {
-    /// Digest of the full evidence. A bundle with equal module evidence may reuse the entry.
+    /// Digest of the full evidence. A bundle with equal private evidence may reuse the entry.
     pub(crate) digest: String,
     /// The entry whose full evidence this entry extends.
     pub(crate) base: Option<Arc<ContextEvidence>>,
-    /// Module paths and versions that the base entry does not contain.
+    /// Private input paths and versions that the base entry does not contain.
     pub(crate) evidence: ReadEvidence,
     pub(crate) stamp: InputStamp,
     consistent: bool,
@@ -33,7 +33,7 @@ pub(crate) struct ContextEvidence {
 /// One stylesheet root's bundle with the stamp of its own inputs.
 pub(crate) struct Record {
     pub(crate) stamp: InputStamp,
-    /// The bundle without the module evidence of its context.
+    /// The bundle without the private read evidence of its context.
     bundle: Bundle,
     core_evidence: ReadEvidence,
     pub(crate) context: Option<Arc<ContextEvidence>>,
@@ -107,7 +107,7 @@ impl ContextEvidence {
         entries
     }
 
-    /// Restore exactly the module evidence represented by this chain.
+    /// Restore exactly the private read evidence represented by this chain.
     pub(crate) fn append_full_evidence(&self, target: &mut ReadEvidence) {
         for entry in self.entries() {
             target.extend(entry.evidence.clone());
@@ -129,7 +129,7 @@ impl Drop for ContextEvidence {
 }
 
 impl Record {
-    /// Stamp a new bundle. `context` returns the entry for the bundle's module evidence and its
+    /// Stamp a new bundle. `context` returns the entry for the bundle's private evidence and its
     /// digest.
     pub(crate) fn new(
         tree: &dyn SourceTree,
@@ -146,9 +146,9 @@ impl Record {
                     consistent: captured_consistent,
                 },
         } = compiled;
-        let modules = module_evidence(&mut bundle.read_evidence);
-        let context = (!modules.inputs.is_empty())
-            .then(|| context(digest(format!("{:?}", modules.inputs).as_bytes()), modules));
+        let private = context_evidence(&mut bundle.read_evidence);
+        let context = (!private.inputs.is_empty())
+            .then(|| context(digest(format!("{:?}", private.inputs).as_bytes()), private));
         for path in bundle.inputs.keys().chain(bundle.dependency_digests.keys()) {
             if !stamp.files.contains_key(&root.join(path)) {
                 stamp.file(tree, root.join(path));
@@ -191,7 +191,7 @@ impl Record {
         &self.bundle.read_evidence
     }
 
-    /// Exact successful core reads remain separate from context-wide module evidence.
+    /// Exact successful core reads remain separate from context-wide private evidence.
     pub(crate) fn core_evidence(&self) -> &ReadEvidence {
         &self.core_evidence
     }
@@ -206,15 +206,15 @@ impl Record {
     }
 }
 
-/// Move the module evidence out of a bundle's evidence. Its own inputs carry the source prefix.
-fn module_evidence(evidence: &mut ReadEvidence) -> ReadEvidence {
-    let (own, modules) = std::mem::take(&mut evidence.inputs)
+/// Move the context evidence out of a bundle's evidence. Its own inputs carry the source prefix.
+fn context_evidence(evidence: &mut ReadEvidence) -> ReadEvidence {
+    let (own, private) = std::mem::take(&mut evidence.inputs)
         .into_iter()
         .partition(|(path, _)| path.starts_with(SOURCE_INPUT_PREFIX));
     evidence.inputs = own;
     ReadEvidence {
         coverage: evidence.coverage.clone(),
-        inputs: modules,
+        inputs: private,
     }
 }
 
@@ -248,6 +248,8 @@ fn stamp_evidence(
             if let Some(previous) = files.insert(absolute, Some(first.into())) {
                 consistent &= previous.as_deref() == Some(first);
             }
+        } else {
+            consistent = false;
         }
     }
     consistent

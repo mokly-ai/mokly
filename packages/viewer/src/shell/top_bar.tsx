@@ -6,13 +6,15 @@
  * with dark previews, the preview scheme switch.
  */
 
+import { useMemo } from "react";
+
 import { TopBar as TopBarView } from "@mokly/ui/top-bar";
 
 import { AppearanceSelect, type AppearanceState } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
 import { SchemeSwitch } from "./head.js";
 import { useShellIdentifier } from "./identifier_context.js";
-import { useShellStore } from "./store_context.js";
+import { useLatestShellStore, useShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
 
 /** The shared 48px catalogue header keeps search available at every width. */
@@ -21,30 +23,40 @@ export function TopBar(props: {
   catalogue: Catalogue;
 }) {
   const store = useShellStore();
+  const latest = useLatestShellStore(store);
   const navigationId = useShellIdentifier("mb-nav");
   const searchId = useShellIdentifier("mb-search");
-  return (
-    <TopBarView
-      drawerOpen={store.state.drawerOpen}
-      end={
-        store.context.embedded ? (
-          props.catalogue.hasDarkFragments ? (
-            <SchemeSwitch />
-          ) : null
-        ) : (
-          <AppearanceSelect
-            ready={props.appearance?.ready ?? false}
-            theme={props.appearance?.theme ?? "auto"}
-            onChange={props.appearance?.onChange}
-          />
-        )
-      }
-      navigationId={navigationId}
-      onDrawer={(open) => store.setDrawer(open)}
-      onSearch={(query) => store.setSearch(query)}
-      query={store.state.query}
-      searchId={searchId}
-      tagPicker={<SearchTagPicker tags={props.catalogue.tags} />}
-    />
+  const { embedded } = store.context;
+  const { drawerOpen, query } = store.state;
+  const { hasDarkFragments, tags } = props.catalogue;
+  const ready = props.appearance?.ready ?? false;
+  const theme = props.appearance?.theme ?? "auto";
+  const onChange = props.appearance?.onChange;
+  const end = useMemo(
+    () =>
+      embedded ? (
+        hasDarkFragments ? (
+          <SchemeSwitch />
+        ) : null
+      ) : (
+        <AppearanceSelect ready={ready} theme={theme} onChange={onChange} />
+      ),
+    [embedded, hasDarkFragments, onChange, ready, theme],
+  );
+  const tagPicker = useMemo(() => <SearchTagPicker tags={tags} />, [tags]);
+  return useMemo(
+    () => (
+      <TopBarView
+        drawerOpen={drawerOpen}
+        end={end}
+        navigationId={navigationId}
+        onDrawer={(open) => latest.current.setDrawer(open)}
+        onSearch={(query) => latest.current.setSearch(query)}
+        query={query}
+        searchId={searchId}
+        tagPicker={tagPicker}
+      />
+    ),
+    [drawerOpen, end, latest, navigationId, query, searchId, tagPicker],
   );
 }

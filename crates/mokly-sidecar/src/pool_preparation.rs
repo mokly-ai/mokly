@@ -7,10 +7,12 @@ use crate::compiled::{CompiledGeneration, RestoreGeneration};
 use crate::error::{Error, Result};
 use crate::methods::{Bundle, BundleRequest, Call, CssModules, Generation};
 use crate::pool::Pool;
+use crate::pool_bundle_cache::BundleAttempt;
 use crate::pool_recipes::same_settings;
 use crate::pool_state::{Slot, State};
 use crate::results::Module;
 use crate::reusable_recipe::ReusableRecipe;
+use crate::source_digests::rules_out;
 use crate::wire::Request;
 
 /// Inputs that must already be installed before a generation call runs.
@@ -58,12 +60,21 @@ impl Pool {
         &self,
         slot: &mut Slot,
         request: &BundleRequest,
+        attempt: &mut BundleAttempt,
     ) -> Result<bool> {
         let params = &request.params;
         let capture = request.capture.unwrap_or_default();
-        let (stored, mut candidate, fallback) = {
+        let (stored, newest, mut candidate, fallback) = {
             let mut state = self.lock();
             let stored = state.recipes.seed(params, capture);
+            let newest = stored.as_ref().and_then(|_| {
+                state
+                    .bundles
+                    .iter()
+                    .filter(|(_, retained)| same_settings(retained, params))
+                    .max_by_key(|(id, _)| (state.epochs[*id], *id))
+                    .map(|(id, _)| state.compiled[id].clone())
+            });
             let candidates = state
                 .bundles
                 .iter()
@@ -108,27 +119,30 @@ impl Pool {
                             )
                         })
                 });
-            (stored, candidate, fallback)
+            (stored, newest, candidate, fallback)
         };
         let complete = stored.is_some() || candidate.is_some();
+        let stored = stored.filter(|recipe| {
+            newest
+                .as_ref()
+                .is_none_or(|live| !rules_out(&recipe.compiled, live, self.source_digests.as_ref()))
+        });
         if stored
             .as_ref()
             .is_some_and(|recipe| !recipe.compiled.reuse_evidence.captured())
             && candidate.as_ref().is_some_and(|(_, _, captured)| *captured)
             && let Some((generation, preparation, _)) = candidate.take()
         {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         if let Some(recipe) = stored {
-            let generation = recipe.generation.clone();
-            self.prerequisite(slot, Call::RestoreGeneration(recipe), false)?;
-            slot.generations.insert(generation, 0);
+            self.install_released(slot, attempt, recipe)?;
         }
         if let Some((generation, preparation, _)) = candidate {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         if let Some((generation, preparation)) = fallback {
-            self.restore(slot, &generation, false, preparation, false)?;
+            self.install_live(slot, attempt, &generation, preparation)?;
         }
         Ok(complete)
     }
@@ -227,10 +241,17 @@ pub(super) struct Preparation {
 struct Recipe {
     params: Bundle,
     compiled: Arc<CompiledGeneration>,
-    modules: Vec<Module>,
+    modules: Arc<Vec<Module>>,
 }
 
 impl Preparation {
+    /// Keep the recipe that this preparation restores until the attempt ends.
+    pub(super) fn pin(&self, attempt: &mut BundleAttempt) {
+        if let Some(recipe) = &self.recipe {
+            attempt.pin(&recipe.compiled, &recipe.modules);
+        }
+    }
+
     /// Take the inputs that the slot lacks; the pool must retain each input that is needed.
     pub(super) fn snapshot(
         state: &State,

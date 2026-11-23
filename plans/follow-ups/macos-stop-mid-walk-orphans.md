@@ -7,7 +7,7 @@
   its plan found the gap. A design call of the same day reworded the limit,
   and the coordinator's review withdrew that call.
 - **Location:** `docs/protocol/mokly-base-install-processes.md:67` to line 70,
-  `docs/protocol/mokly-runtime.md:231` to line 232,
+  `docs/protocol/mokly-runtime.md:227` to line 228,
   `crates/mokly-platform/src/unix_process_tree/group.rs:50` to line 68,
   `crates/mokly-platform/src/unix_process_tree/walk.rs:39` to line 70,
   `crates/mokly-platform/src/unix_process_table/macos.rs:20` to line 46, and
@@ -80,7 +80,7 @@
   - The Git runner, at `crates/mokly-git/src/system.rs:72`, and the render
     sidecar, at `crates/mokly-sidecar/src/process_factory.rs:111`, attach the
     same owner of process trees. So the same macOS gap reaches their trees.
-  - `docs/protocol/mokly-runtime.md:231` to line 232 makes an exception only
+  - `docs/protocol/mokly-runtime.md:227` to line 228 makes an exception only
     for "the base install limits". That exception does not cover a Git or
     sidecar tree.
   - `docs/protocol/mokly-git.md` says that a Git helper process never

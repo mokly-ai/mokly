@@ -2,94 +2,56 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::Ordering;
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
 use mokly_catalogue::definition_provider::DefinitionProvider;
 use mokly_catalogue::discovery::{SourceFile, SourceKind};
+use mokly_catalogue::error::Result;
 use mokly_catalogue::working_tree::WorkingTree;
 use mokly_graph::cache::MemoryCache;
 use mokly_graph::workers::ThreadWorkers;
-use mokly_platform::processes::SystemProcessGroups;
 use mokly_render::physical_inputs::SystemPhysicalInputs;
 use mokly_render::runtime::Runtime;
-use mokly_sidecar::bundle_store::{BundleStoreMock, ReadMiss, ReadOutcome, WriteOutcome};
 use mokly_sidecar::methods::BundleCapture;
-use mokly_sidecar::operations::Operation;
-use mokly_sidecar::pool::{Pool, SidecarPool};
-use mokly_sidecar::pool_options::{Launch, PoolOptions};
-use mokly_sidecar::process_clock::SystemClock;
-use mokly_sidecar::process_factory::NodeFactory;
-use mokly_sidecar::process_memory::SystemMemory;
-use mokly_sidecar::workers::Diagnostics;
+use mokly_sidecar::pool::SidecarPool;
+use mokly_test_support::durable_fixture::{self, Owner};
 use tempfile::TempDir;
-use unimock::{MockFn, Unimock, matching};
 
-use super::plan_capture::{InitialCapture, PlanPool};
-use super::support::{CapturedPool, package_version, workspace};
+use super::plan_capture::InitialCapture;
+use super::plan_results::{Counts, Results};
+use super::support::package_version;
 
-#[derive(Default)]
-struct Counts(AtomicUsize);
-
-impl Diagnostics for Counts {
-    fn emit(&self, message: &str) {
-        eprintln!("{message}");
-    }
-    fn operation(&self, operation: Operation, _: u32) {
-        if operation == Operation::Esbuild {
-            self.0.fetch_add(1, Ordering::SeqCst);
-        }
-    }
-}
+static FIXTURE: Mutex<()> = Mutex::new(());
 
 pub(super) struct Fixture {
     _directory: TempDir,
     root: PathBuf,
     pub(super) runtime: Runtime,
-    pool: Arc<PlanPool>,
+    pub(super) config: Config,
+    pool: Arc<Results>,
     counts: Arc<Counts>,
+    _guard: MutexGuard<'static, ()>,
 }
 
 impl Fixture {
+    pub(super) fn new() -> Self {
+        let guard = FIXTURE.lock().unwrap_or_else(|error| error.into_inner());
+        let directory = durable_fixture::create(Owner::RenderPlanCandidates).unwrap();
+        Self::in_directory(directory, guard)
+    }
+
     pub(super) fn in_parent(parent: &Path) -> Self {
+        let guard = FIXTURE.lock().unwrap_or_else(|error| error.into_inner());
         let directory = tempfile::tempdir_in(parent).unwrap();
+        Self::in_directory(directory, guard)
+    }
+
+    fn in_directory(directory: TempDir, guard: MutexGuard<'static, ()>) -> Self {
         let root = dunce::canonicalize(directory.path()).unwrap();
         let counts = Arc::new(Counts::default());
-        let clock = Arc::new(SystemClock::new());
-        let pool = Arc::new(PlanPool::new(CapturedPool {
-            calls: Mutex::new(vec![]),
-            inner: Arc::new(
-                Pool::new(
-                    Arc::new(NodeFactory::new(
-                        Arc::new(SystemProcessGroups),
-                        clock.clone(),
-                        counts.clone(),
-                        Arc::new(SystemMemory),
-                    )),
-                    clock,
-                    Launch {
-                        capture_durability: false,
-                        node: "node".into(),
-                        entry: workspace().join("packages/mokly/dist/sidecar.js"),
-                        repository: root.clone(),
-                        version: package_version::read(),
-                    },
-                    PoolOptions {
-                        size: 1.try_into().unwrap(),
-                        timeout_ms: None,
-                    },
-                )
-                .with_bundle_store(Arc::new(Unimock::new((
-                    BundleStoreMock::load
-                        .each_call(matching!(_))
-                        .returns(ReadOutcome::Miss(ReadMiss::Absent)),
-                    BundleStoreMock::save
-                        .each_call(matching!(_))
-                        .returns(WriteOutcome::Written),
-                )))),
-            ),
-        }));
+        let pool = Arc::new(Results::new(&root, counts.clone()));
         let runtime = Runtime::new(
             Arc::new(WorkingTree),
             Arc::new(WorkingTree),
@@ -105,8 +67,10 @@ impl Fixture {
             _directory: directory,
             root,
             runtime,
+            config: Config::default(),
             pool,
             counts,
+            _guard: guard,
         };
         fixture.write("package.json", "{}");
         fixture.write("tsconfig.json", r#"{"compilerOptions":{"strict":true}}"#);
@@ -126,30 +90,45 @@ impl Fixture {
     }
 
     pub(super) fn prepare(&self) -> Vec<String> {
+        self.prepare_entries(&["entry.ts"])
+    }
+
+    pub(super) fn prepare_entries(&self, entries: &[&str]) -> Vec<String> {
+        self.try_prepare(entries).unwrap()
+    }
+
+    pub(super) fn try_prepare(&self, entries: &[&str]) -> Result<Vec<String>> {
         let config = ResolvedConfig {
-            input: Config::default(),
+            input: self.config.clone(),
             file: self.root.join("mokly.config.json"),
             repo_root: self.root.clone(),
             modules: Default::default(),
             authored_inputs: vec![],
             roots: vec![],
         };
-        let files = [SourceFile {
-            path: "entry.ts".into(),
-            absolute: self.root.join("entry.ts"),
-            identity: "entry.ts".into(),
-            root_index: 0,
-            kind: SourceKind::Module,
-            excluded: false,
-        }];
-        self.runtime
-            .describe(&config, &files)
-            .unwrap()
+        let files: Vec<_> = entries
+            .iter()
+            .map(|file| SourceFile {
+                path: (*file).into(),
+                absolute: self.root.join(file),
+                identity: (*file).into(),
+                root_index: 0,
+                kind: SourceKind::Module,
+                excluded: false,
+            })
+            .collect();
+        Ok(self
+            .runtime
+            .describe(&config, &files)?
             .generation
             .unwrap()
             .modules
             .into_keys()
-            .collect()
+            .collect())
+    }
+
+    pub(super) fn assert_native(&self) {
+        self.pool.assert_native(&self.root);
     }
 
     pub(super) fn edit(&mut self) {
@@ -159,10 +138,10 @@ impl Fixture {
         self.counts.0.load(Ordering::SeqCst)
     }
     pub(super) fn sent_plan(&self) -> bool {
-        self.pool.sent_plan()
+        self.pool.inner.sent_plan()
     }
     pub(super) fn initial_capture(&self) -> Option<InitialCapture> {
-        self.pool.initial_capture()
+        self.pool.inner.initial_capture()
     }
 }
 

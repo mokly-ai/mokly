@@ -49,6 +49,7 @@ test("cloud changes do not create a published package release", async () => {
       repositoryRoot,
       [file],
       FIXED_MANIFEST,
+      ["."],
     );
     assert.deepEqual([...updates], [], file);
   }
@@ -56,6 +57,7 @@ test("cloud changes do not create a published package release", async () => {
     repositoryRoot,
     [...cloudPaths.values()],
     FIXED_MANIFEST,
+    ["."],
   );
   assert.deepEqual([...updates], []);
 });
@@ -69,8 +71,12 @@ test("the private workspace releases the CLI, UI, model, frame, and viewer packa
   ]);
   for (const key of ["bin", "exports", "files", "publishConfig", "types"])
     assert.equal(manifest[key], undefined, key);
-  assert.deepEqual(Object.keys(config.packages), ["."]);
-  assert.deepEqual(Object.keys(versions).sort(), [".", "packages/viewer"]);
+  assert.deepEqual(Object.keys(config.packages), [".", "packages"]);
+  assert.deepEqual(Object.keys(versions).sort(), [
+    ".",
+    "packages",
+    "packages/viewer",
+  ]);
   assert.equal(config.plugins, undefined);
   const entry = config.packages["."];
   assert.equal(entry.component, "mokly");
@@ -119,12 +125,22 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
       path.join(os.tmpdir(), "mokly-release-versions-"),
     );
     t.after(() => fs.rm(root, { recursive: true, force: true }));
-    const fixed = await releaseUpdates(repositoryRoot, changed, FIXED_MANIFEST);
+    const fixed = await releaseUpdates(
+      repositoryRoot,
+      changed,
+      FIXED_MANIFEST,
+      ["."],
+    );
     assert.match(
       fixed.get("packages/viewer/CHANGELOG.md") ?? "",
       /Shared release version: 0\.16\.0/,
     );
-    const updates = await releaseUpdates(repositoryRoot, changed);
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      changed,
+      await json(".release-please-manifest.json"),
+      ["."],
+    );
     const lock = JSON.parse(updates.get("package-lock.json") ?? "null");
     assert.ok(lock);
     for (const file of [
@@ -208,5 +224,68 @@ test("pinned Release Please updates all manifest and lockfile edges and retains 
     assert.equal(frame.version, cli.version);
     assert.match(cli.version, /^0\./);
     assert.match(viewer.version, /^0\./);
+  }
+});
+
+/** After the first desktop release, a breaking release stays on 0.x. */
+const DESKTOP_MANIFEST = { packages: "0.1.0" };
+
+test("the desktop release covers its bundle and stays on the 0.x minor stream", async () => {
+  const config = (await json("release-please-config.json")).packages.packages;
+  assert.equal(
+    (await json("release-please-config.json"))["separate-pull-requests"],
+    true,
+  );
+  assert.equal(config.component, "desktop");
+  assert.equal(config["include-component-in-tag"], true);
+  assert.equal(config.prerelease, true);
+  const desktop = await json("packages/desktop/package.json");
+  for (const file of [
+    "packages/desktop/src/main.ts",
+    "packages/app/src/index.ts",
+    "packages/tokens/src/tokens.ts",
+    "packages/viewer/src/index.ts",
+    "packages/ui/scripts/build.mjs",
+    "packages/model/src/index.ts",
+    "packages/frame/src/index.ts",
+  ]) {
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      [file],
+      DESKTOP_MANIFEST,
+      ["packages"],
+    );
+    assert.deepEqual(
+      [...updates.keys()].sort(),
+      [
+        ".release-please-manifest.json",
+        "package-lock.json",
+        "packages/desktop/CHANGELOG.md",
+        "packages/desktop/package.json",
+      ],
+      file,
+    );
+    const after = JSON.parse(updates.get("packages/desktop/package.json")!);
+    assert.deepEqual(after, { ...desktop, version: "0.2.0" }, file);
+    const lock = JSON.parse(updates.get("package-lock.json")!);
+    assert.equal(lock.packages["packages/desktop"].version, "0.2.0", file);
+    assert.match(
+      updates.get("packages/desktop/CHANGELOG.md")!,
+      /## \[0\.2\.0\]/,
+    );
+  }
+  for (const file of [
+    "packages/mokly/src/index.ts",
+    "packages/native-darwin-x64/package.json",
+    "apps/site/src/home.ts",
+    "crates/mokly-css/src/compiler.rs",
+  ]) {
+    const updates = await releaseUpdates(
+      repositoryRoot,
+      [file],
+      DESKTOP_MANIFEST,
+      ["packages"],
+    );
+    assert.deepEqual([...updates], [], file);
   }
 });

@@ -17,6 +17,7 @@ use crate::side::{BaseSide, SideInputs, dependency_roots};
 use crate::source_paths::{self, INSTALLED_INPUT_PREFIX};
 
 /// Dependency paths retain logical names while source bytes use their own tree.
+#[derive(Clone)]
 pub(crate) struct SideTree {
     pub(crate) _base: Option<Arc<BaseSide>>,
     pub(crate) sources: Arc<dyn SourceTree>,
@@ -259,7 +260,7 @@ pub(crate) fn reader(
     runtime: &Runtime,
     config: &ResolvedConfig,
     side: &SideInputs,
-) -> Arc<dyn SourceTree> {
+) -> Arc<SideTree> {
     Arc::new(SideTree {
         _base: runtime.base.clone(),
         usage: runtime.dependency_usage.clone(),

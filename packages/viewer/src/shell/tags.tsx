@@ -5,12 +5,18 @@
  * `@mokly/ui/tag-chip` renders each tag chip of an entry's details.
  */
 
+import { useMemo } from "react";
+
 import { TagChip as TagChipView } from "@mokly/ui/tag-chip";
 import { TagPicker } from "@mokly/ui/tag-picker";
 
 import { useShellIdentifier } from "./identifier_context.js";
 import { useShellRoot } from "./root_context.js";
-import { useShellStore, type ShellStore } from "./store_context.js";
+import {
+  useLatestShellStore,
+  useShellStore,
+  type ShellStore,
+} from "./store_context.js";
 import { selectTag } from "./tag_selection.js";
 
 /** Whether a tag filters the catalogue; the parsed query holds lower case. */
@@ -44,20 +50,46 @@ export function TagChip({ tag }: { tag: string }) {
 /** The search field's tag button and the picker that it opens. */
 export function SearchTagPicker({ tags }: { tags: readonly string[] }) {
   const store = useShellStore();
+  const latest = useLatestShellStore(store);
   const elements = useShellRoot()?.elements;
   const pickerId = useShellIdentifier("mb-tag-picker");
-  return (
-    <TagPicker
-      focusedIndex={store.state.tagPickerIndex}
-      id={pickerId}
-      interactive={store.interactive}
-      onFocusChange={(index) => store.setTagPicker(true, index)}
-      onOpenChange={(open, index) => store.setTagPicker(open, index)}
-      onSelect={(tag) => store.toggleTag(tag)}
-      open={store.state.tagPickerOpen}
-      toggleRef={elements?.tagToggle}
-      pickerRef={elements?.tagPicker}
-      tags={tags.map((tag) => ({ selected: tagSelected(store, tag), tag }))}
-    />
+  const { interactive } = store;
+  const {
+    tagPickerIndex,
+    tagPickerOpen,
+    selection: { tags: selected },
+  } = store.state;
+  const options = useMemo(
+    () =>
+      tags.map((tag) => ({
+        selected: selected.includes(tag.toLowerCase()),
+        tag,
+      })),
+    [selected, tags],
+  );
+  return useMemo(
+    () => (
+      <TagPicker
+        focusedIndex={tagPickerIndex}
+        id={pickerId}
+        interactive={interactive}
+        onFocusChange={(index) => latest.current.setTagPicker(true, index)}
+        onOpenChange={(open, index) => latest.current.setTagPicker(open, index)}
+        onSelect={(tag) => latest.current.toggleTag(tag)}
+        open={tagPickerOpen}
+        toggleRef={elements?.tagToggle}
+        pickerRef={elements?.tagPicker}
+        tags={options}
+      />
+    ),
+    [
+      elements,
+      interactive,
+      latest,
+      options,
+      pickerId,
+      tagPickerIndex,
+      tagPickerOpen,
+    ],
   );
 }

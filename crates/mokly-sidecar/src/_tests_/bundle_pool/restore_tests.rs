@@ -158,6 +158,7 @@ fn cancellation_during_restore_does_not_retire_or_write_the_record() {
     let pool = pool(store, worker);
     assert!(matches!(
         pool.request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: params(),
             capture: None

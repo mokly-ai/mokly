@@ -31,7 +31,7 @@ async fn selected_capacity_retries_at_one_second_and_cancellation_ends_the_wait(
     for cancelled in [false, true] {
         let (origin, result, _graph) = fixture();
         let classify = ChangeSourceMock::classify
-            .next_call(matching!(_, _))
+            .next_call(matching!(_, _, _))
             .returns(Ok(result));
         let discarded = Arc::new(AtomicUsize::new(0));
         let cleanup_count = discarded.clone();
@@ -186,7 +186,7 @@ async fn oversized_metadata_publishes_unavailable_without_admission_or_installat
     let origin = Arc::new(origin);
     let source = Arc::new(Unimock::new((
         ChangeSourceMock::classify
-            .next_call(matching!(_, _))
+            .next_call(matching!(_, _, _))
             .returns(Ok(result)),
         ChangeSourceMock::finished
             .next_call(matching!(_, _))

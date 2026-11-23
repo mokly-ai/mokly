@@ -1,29 +1,62 @@
 //! Each response reads one shared verified file at its own explicit byte offset.
 
-use std::io::{self, ErrorKind};
-#[cfg(unix)]
-use std::os::unix::fs::FileExt;
-#[cfg(windows)]
-use std::os::windows::fs::FileExt;
+use std::io::{self, ErrorKind, Read};
 use std::sync::Arc;
 
 use axum::body::{Body, Bytes};
-use axum::http::{HeaderValue, StatusCode};
+use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::Response;
 
-use crate::asset_streams::SharedAsset;
-use crate::response;
+use crate::asset_file::AtOffset;
+use crate::asset_streams::{AssetOwner, GzipDelivery, SharedAsset};
+use crate::{json_delivery, response, validator};
 
 trait AssetChunks: Send + Sync {
     fn read(&self, offset: u64) -> io::Result<Vec<u8>>;
 }
 
-pub(crate) fn stream(asset: SharedAsset) -> Response {
-    let mut response = response::bytes(StatusCode::OK, &asset.opened.content_type, Bytes::new());
-    if let Ok(value) = HeaderValue::from_str(&asset.opened.length.to_string()) {
-        response.headers_mut().insert("content-length", value);
+/// Revalidate a captured asset or stream its bytes from independent offsets.
+pub(crate) async fn deliver(mut asset: SharedAsset, headers: &HeaderMap) -> Response {
+    let json = response::is_json(&asset.version.opened.content_type);
+    let encoding = match &asset.owner {
+        AssetOwner::Authored(record) if json && json_delivery::accepts_gzip(headers) => {
+            record.gzip(asset.version.clone(), headers).await
+        }
+        _ => None,
+    };
+    let encoded = match encoding {
+        Some(GzipDelivery::Unchanged(etag)) => {
+            let mut response = response::empty(StatusCode::NOT_MODIFIED);
+            validator::set_cache_headers(&mut response, etag);
+            json_delivery::vary(&mut response);
+            return response;
+        }
+        Some(GzipDelivery::File(gzip)) => {
+            asset.version = gzip;
+            true
+        }
+        None => false,
+    };
+    let mut response = validator::deliver(headers, asset.version.etag.clone(), || {
+        let mut response = stream(asset);
+        if encoded {
+            json_delivery::mark_gzip(&mut response);
+        }
+        response
+    });
+    if json {
+        json_delivery::vary(&mut response);
     }
-    let length = asset.opened.length;
+    response
+}
+
+fn stream(asset: SharedAsset) -> Response {
+    let opened = &asset.version.opened;
+    let mut response = response::bytes(StatusCode::OK, &opened.content_type, Bytes::new());
+    let length = opened.length;
+    response
+        .headers_mut()
+        .insert("content-length", HeaderValue::from(length));
     let reader: Arc<dyn AssetChunks> = Arc::new(asset);
     let chunks = async_stream::stream! {
         let mut offset = 0;
@@ -49,13 +82,11 @@ pub(crate) fn stream(asset: SharedAsset) -> Response {
 
 impl AssetChunks for SharedAsset {
     fn read(&self, offset: u64) -> io::Result<Vec<u8>> {
-        let mut buffer = vec![0; (self.opened.length - offset).min(64 * 1024) as usize];
+        let opened = &self.version.opened;
+        let mut buffer = vec![0; (opened.length - offset).min(64 * 1024) as usize];
+        let mut reader = AtOffset::new(opened, offset);
         loop {
-            #[cfg(unix)]
-            let result = self.opened.file.read_at(&mut buffer, offset);
-            #[cfg(windows)]
-            let result = self.opened.file.seek_read(&mut buffer, offset);
-            match result {
+            match reader.read(&mut buffer) {
                 Ok(length) => {
                     buffer.truncate(length);
                     return Ok(buffer);

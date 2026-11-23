@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex, Weak};
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_css::dependencies::DirectoryDependency;
 use mokly_graph::cache::Artifact;
+use mokly_graph::capture_window::CaptureConsumer;
 use mokly_graph::closure::{Closure, GeneratedResources};
 use mokly_graph::collection::ComparisonCollector;
 use mokly_graph::comparison_proof::{
@@ -14,34 +15,36 @@ use mokly_graph::comparison_proof::{
 };
 use mokly_graph::comparison_stream::ComparisonConsumer;
 use mokly_graph::error::{GraphError, InternalError, Result};
+use mokly_graph::head_validation::{DocumentChecks, HeadValidation, ValidationRead};
 
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::{
-    ComparisonCapture, ComparisonDocument, DocumentPlan, RenderGeneration, RenderSummary,
-    TemporaryDocument,
+    ComparisonCapture, DocumentPlan, RenderGeneration, RenderSummary, TemporaryDocument,
 };
-use mokly_graph::workers::{ComparisonTask, ComparisonWorker};
+use mokly_graph::workers::ComparisonTask;
 use mokly_model::data::Props;
 use mokly_model::material::digest;
 use mokly_model::namespace::generated;
 
+use crate::comparison_collector::CheckedCollector;
 use crate::error::ServerError;
 
 /// Retain only hashes; the render graph still owns documents, resources, and leases.
+#[derive(Clone)]
 pub struct FrozenResources {
-    inner: Arc<dyn RenderGeneration>,
-    digests: Mutex<BTreeMap<String, Option<String>>>,
+    pub(crate) inner: Arc<dyn RenderGeneration>,
+    pub(crate) digests: Arc<Mutex<BTreeMap<String, Option<String>>>>,
 }
 impl FrozenResources {
     /// Wrap one immutable graph without reading or rendering anything.
     pub fn new(inner: Arc<dyn RenderGeneration>) -> Self {
         Self {
             inner,
-            digests: Mutex::new(BTreeMap::new()),
+            digests: Arc::new(Mutex::new(BTreeMap::new())),
         }
     }
 
-    fn check(&self, route: &str, observed: Option<String>) -> Result<()> {
+    pub(crate) fn check(&self, route: &str, observed: Option<String>) -> Result<()> {
         let mut digests = self
             .digests
             .lock()
@@ -57,7 +60,11 @@ impl FrozenResources {
         }
         Ok(())
     }
-    fn document_identity(&self, route: &str, mode: ProofMode) -> Option<ContentIdentity> {
+    pub(crate) fn document_identity(
+        &self,
+        route: &str,
+        mode: ProofMode,
+    ) -> Option<ContentIdentity> {
         let digest = self
             .digests
             .lock()
@@ -81,6 +88,25 @@ impl GeneratedResources for FrozenResources {
     }
 }
 impl RenderGeneration for FrozenResources {
+    fn validate_head(&self, validation: &dyn HeadValidation) -> Result<RenderSummary> {
+        self.head_summary(validation)
+    }
+    fn validation_document(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.checked_head(route)
+    }
+    fn validation_identity(&self, kind: ValidationRead, route: &str) -> Option<ContentIdentity> {
+        self.head_input(kind, route)
+    }
+    fn validation_checks(&self, route: &str) -> Option<DocumentChecks> {
+        self.head_checks(route)
+    }
+    fn adopt_validation(&self, route: &str, checks: &DocumentChecks) -> bool {
+        self.adopt_head(route, checks)
+    }
+    fn prepare_render_reuse(&self) {
+        self.inner.prepare_render_reuse();
+    }
+
     fn comparison_document_proof(&self, route: &str) -> Option<DocumentProof> {
         let artifact = self.comparison_document(route).ok()?;
         Some(DocumentProof {
@@ -130,6 +156,16 @@ impl RenderGeneration for FrozenResources {
             }
         }
     }
+    fn capture_parallelism(&self) -> usize {
+        self.inner.capture_parallelism()
+    }
+    fn schedule_capture_window(
+        &self,
+        task: &dyn ComparisonTask,
+        consumer: &mut dyn CaptureConsumer,
+    ) {
+        self.inner.schedule_capture_window(task, consumer);
+    }
     fn comparison_parallelism(&self) -> usize {
         self.inner.comparison_parallelism()
     }
@@ -142,13 +178,6 @@ impl RenderGeneration for FrozenResources {
     }
     fn schedule_comparison_tasks(&self, count: usize, task: &dyn ComparisonTask) {
         self.inner.schedule_comparison_tasks(count, task);
-    }
-    fn schedule_comparison(
-        &self,
-        routes: &[String],
-        worker: &dyn ComparisonWorker,
-    ) -> Vec<Result<ComparisonDocument>> {
-        self.inner.schedule_comparison(routes, worker)
     }
     fn check_cancelled(&self) -> Result<()> {
         self.inner.check_cancelled()
@@ -239,25 +268,6 @@ impl RenderGeneration for FrozenResources {
     }
     fn contains_public_file(&self, path: &str) -> bool {
         self.inner.contains_public_file(path)
-    }
-}
-
-struct CheckedCollector<'a> {
-    resources: &'a FrozenResources,
-    inner: &'a mut dyn ComparisonCollector,
-}
-
-impl ComparisonCollector for CheckedCollector<'_> {
-    fn summary(&mut self, summary: &RenderSummary) {
-        self.inner.summary(summary);
-    }
-    fn collect(&mut self, route: &str, input: ComparisonDocument) -> Result<()> {
-        self.resources
-            .check(&generated(route), Some(digest(&input.artifact.bytes)))?;
-        for resource in input.closure.edges.keys() {
-            self.resources.resource_digest(resource)?;
-        }
-        self.inner.collect(route, input)
     }
 }
 

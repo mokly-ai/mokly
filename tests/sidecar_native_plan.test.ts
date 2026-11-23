@@ -10,6 +10,7 @@ import type { Bundled } from "../packages/mokly/src/sidecar/bundle.js";
 import { bundle, bundleWith } from "../packages/mokly/src/sidecar/bundle.js";
 import { evaluate } from "../packages/mokly/src/sidecar/evaluate.js";
 import { unmeasured } from "../packages/mokly/src/sidecar/measurements.js";
+import { PlanLookup } from "../packages/mokly/src/sidecar/resolution-plan.js";
 
 import {
   assertFullPathResult,
@@ -186,12 +187,14 @@ const rows: Array<{
 ];
 
 /** A plan that records each import that the planned compile takes from it. */
-class RecordedPlan extends Map<string, PlannedImport> {
-  readonly found = new Set<string>();
+class RecordedPlan extends PlanLookup {
+  readonly found = new Set<PlannedImport>();
 
-  override get(key: string): PlannedImport | undefined {
-    const planned = super.get(key);
-    if (planned) this.found.add(key);
+  override get(
+    ...args: Parameters<PlanLookup["get"]>
+  ): PlannedImport | undefined {
+    const planned = super.get(...args);
+    if (planned) this.found.add(planned);
     return planned;
   }
 }
@@ -204,8 +207,8 @@ async function assertPlanUsed(params: BundleParams): Promise<void> {
   assert.ok(!("generation" in native) && native.plan, "native result stood");
   const plan = new RecordedPlan(native.plan);
   await bundleWith(params, build, unmeasured, { mode: "planned", plan });
-  assert.ok(plan.size > 0);
-  assert.deepEqual([...plan.found].sort(), [...plan.keys()].sort());
+  assert.ok(plan.plan.imports.length > 0);
+  assert.deepEqual(plan.found, new Set(plan.plan.imports));
 }
 
 for (const row of rows)

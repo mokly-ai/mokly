@@ -328,10 +328,11 @@ and Review regressions against `mokly serve` of the example catalogue.
   [`src/shell/assets/fonts/inter.css`](./src/shell/assets/fonts/inter.css) and
   the UI package's `styles.css`: the font's address in each delivery and the
   embedded font family
-- [`src/catalogue`](./src/catalogue) — the readers of the catalogue index, the
-  entry detail, and the live descriptor, which gate the format version and
-  return a typed copy; the reader of the optional deployment file; the detail
-  fences of `detail_fences.ts`; and the public catalogue types
+- [`src/catalogue`](./src/catalogue) — the version gates for the catalogue
+  index, entry detail, and live descriptor. The public readers return typed
+  copies. The index and detail transports adopt the JSON they fetch directly.
+  This directory also holds the optional deployment reader, detail fences,
+  and public catalogue types.
 - [`src/catalogue/sources.ts`](./src/catalogue/sources.ts) — the shared object
   and URL source validation and the index, detail, and deployment transports
 - [`src/data.ts`](./src/data.ts) — the `./data` entry: path functions,

@@ -51,6 +51,9 @@ impl DocumentStore for DocumentWriter {
     fn identity(&self) -> Option<String> {
         self.startup.as_ref()?.current()
     }
+    fn contains(&self, key: &StoreKey) -> bool {
+        !self.shared.disabled.load(Ordering::Acquire) && self.backend.contains(key)
+    }
     fn resume(&self) {
         self.shared.admission.resume();
     }

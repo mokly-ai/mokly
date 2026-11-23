@@ -1,5 +1,6 @@
 //! Declared shell, JSON, document, asset, and event routes share one fixed state.
 
+use mokly_model::namespace::generated;
 use mokly_model::usage::CatalogueUsage;
 use mokly_model::{canonical, detail_context, readers};
 use mokly_server::publication::{PublicationWriter, Publications};
@@ -147,14 +148,19 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
             .keys()
             .map(|route| format!("static/mokly-generated/{route}")),
     );
-    paths.extend(
-        harness
-            .generation
-            .resource_routes()
-            .iter()
-            .map(|route| format!("static/mokly-generated/{route}")),
-    );
+    let resources: Vec<_> = harness
+        .generation
+        .resource_routes()
+        .iter()
+        .map(|route| generated(route))
+        .collect();
+    paths.extend(resources.iter().cloned());
     for path in paths {
+        let cache = if resources.contains(&path) {
+            "no-cache"
+        } else {
+            "no-store"
+        };
         let response = harness
             .client
             .get(format!("{}/{path}", harness.url))
@@ -167,7 +173,7 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
             "{path}: {}",
             response.text().await.unwrap()
         );
-        support::headers(&response);
+        support::headers_with_cache(&response, cache);
         let content_type = response.headers()["content-type"].clone();
         let length = response.bytes().await.unwrap().len();
         let head = harness
@@ -177,7 +183,7 @@ async fn every_route_has_exact_bytes_headers_and_head_parity() {
             .await
             .unwrap();
         assert_eq!(head.status(), 200, "{path}");
-        support::headers(&head);
+        support::headers_with_cache(&head, cache);
         assert_eq!(head.headers()["content-type"], content_type);
         assert_eq!(head.headers()["content-length"], length.to_string());
         assert!(head.bytes().await.unwrap().is_empty());

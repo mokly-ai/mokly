@@ -39,6 +39,7 @@ pub mod render_segment_buffer;
 mod render_segment_header;
 mod render_sequence;
 pub mod render_store;
+mod render_store_index;
 mod render_store_read;
 mod render_store_state;
 mod render_store_write;
@@ -129,6 +130,7 @@ mod base_reader;
 pub mod base_render;
 pub mod base_retention;
 pub mod base_selection;
+pub mod base_sources;
 pub mod comparison;
 pub mod install_inputs;
 
@@ -250,6 +252,10 @@ mod capture_producer;
 mod capture_collection;
 
 #[cfg(test)]
+#[path = "_tests_/capture_window_fixture.rs"]
+mod capture_window_fixture;
+
+#[cfg(test)]
 #[path = "_tests_/bundle_fixture.rs"]
 mod bundle_fixture;
 
@@ -262,8 +268,17 @@ mod reuse_collection;
 mod reuse_digest;
 mod reuse_generation;
 mod reuse_memo;
+mod reuse_optional;
 mod reuse_probes;
 mod reuse_reads;
 mod reuse_usage;
 mod reuse_weight;
 mod rule_weight;
+mod validation_arena;
+mod validation_facts;
+mod validation_head;
+mod validation_inputs;
+mod validation_kept;
+mod validation_outputs;
+mod validation_pass;
+mod validation_recording;
