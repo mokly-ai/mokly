@@ -5,14 +5,16 @@
 - **Added:** 2026-11-22, from the branch
   `calummoore/mokly-viewer-live-update-lpaj`, implementation review round 1,
   finding 2, "Authored file copies delay shutdown". The check of that day
-  confirmed it with the severity Medium, not High.
+  confirmed it with the severity Medium, not High. Updated 2026-11-23 for the
+  route gate and the removed generated gzip copy of the second review fix
+  round.
 - **Location:** `crates/mokly-server/src/authored_assets.rs`
-  (`AuthoredAssets::open` and `AuthoredRecord::gzip`),
-  `crates/mokly-server/src/work_delivery.rs` (`Workers::file_delivery` and
-  `Workers::asset_delivery`), `crates/mokly-server/src/work.rs`
-  (`Workers::stop` and `Work::authored`),
+  (`AuthoredAssets::reserve`, `AuthoredRequest::admit`, and
+  `AuthoredRecord::gzip`), `crates/mokly-server/src/work_delivery.rs`
+  (`Workers::authored_delivery`, `Workers::prepared_file_delivery`,
+  `Workers::file_delivery`, and `Workers::asset_delivery`),
+  `crates/mokly-server/src/work.rs` (`Workers::stop` and `Work::authored`),
   `crates/mokly-server/src/json_delivery.rs` (`Gzip::get`),
-  `crates/mokly-server/src/asset_streams.rs` (`AssetVersion::gzip`),
   `crates/mokly-server/src/runtime.rs` (`BoundServer::run` for `Listener`),
   and `crates/mokly-cli/src/serve_lifecycle.rs` (`runtime`).
 - **Reason:** The fix rule gives `fix after merge` to a Medium product bug
@@ -45,34 +47,44 @@
   - `Workers::stop` in `crates/mokly-server/src/work.rs` sets `Workers.closed`
     before it waits. Then it takes back every worker permit, so it waits for
     each blocking job that holds one.
-  - `Workers::file_delivery` in `crates/mokly-server/src/work_delivery.rs`
-    runs `Work::authored`, `Work::generated`, and `Work::stylesheet` in a
-    `spawn_blocking` job that holds a worker permit. `Workers::asset_delivery`
-    does the same for generated assets.
+  - `Workers::prepared_file_delivery` in
+    `crates/mokly-server/src/work_delivery.rs` runs a file job in a
+    `spawn_blocking` job that holds a worker permit. `Workers::file_delivery`
+    uses it for `Work::generated` and `Work::stylesheet`, and
+    `Workers::authored_delivery` uses it for `Work::authored`.
+    `Workers::asset_delivery` does the same for generated assets.
   - `HttpClients::shutdown` in `crates/mokly-server/src/clients.rs` gives
     event streams a grace period of 250 ms, then aborts every other client
     connection. The abort drops the request future, but a blocking job that
     started runs to its end.
   - Before the branch, an authored `HEAD` request opened the source and sent
-    its metadata. Now `AuthoredAssets::open` in
-    `crates/mokly-server/src/authored_assets.rs` reads the source of each
-    authored GET and HEAD once into a temporary copy, and computes the
-    XXH3-128 digest of those bytes, before the headers. A changed version also
-    gets a new SHA-256 tag: Serve hashes during the copy when it already knows
-    the version changed, and it hashes the copy in a second pass otherwise. A
-    304 discards the copy, and a 200 streams it. The route record lets a
-    request reuse the tag of an unchanged version.
-  - `AuthoredAssets::open` holds the lock of its route for the whole capture.
-    So concurrent requests for one route run their captures one after
-    another, and each waiting request already holds a worker permit.
+    its metadata. Now the capture that `AuthoredRequest::admit` in
+    `crates/mokly-server/src/authored_assets.rs` hands to the worker reads the
+    source of each authored GET and HEAD once into a temporary copy, and
+    computes the XXH3-128 digest of those bytes, before the headers. A changed
+    version also gets a new SHA-256 tag: Serve hashes during the copy when it
+    already knows the version changed, and it hashes the copy in a second pass
+    otherwise. A 304 discards the copy, and a 200 streams it. The route record
+    lets a request reuse the tag of an unchanged version.
+  - Since the review fix of 2026-11-23, an authored request waits for the
+    async gate of its route without a worker permit.
+    `Workers::authored_delivery` checks the closure membership on a blocking
+    thread, waits in `AuthoredRequest::admit` for the gate that
+    `AuthoredAssets::reserve` hands out, and only then takes a worker permit
+    in `Workers::prepared_file_delivery`. So a queued request holds no
+    blocking job, and the abort of its connection drops it. This shortens the
+    shutdown wait. The admitted capture keeps the gate through its blocking
+    read, also when its request is cancelled, and it still runs to its end.
   - The opened length bounds each pass, so shutdown waits only until the file
     work ends. The check graded the finding Medium for this reason: a visible
     defect, not wrong output or blocked work.
-  - The gzip encode of a JSON file asset is a detached encode.
-    `AuthoredRecord::gzip` and `AssetVersion::gzip` start it through
-    `Gzip::get` in `crates/mokly-server/src/json_delivery.rs`, which runs it in
-    a `spawn_blocking` job. `Workers::stop` does not wait for it, but the drop
-    of the tokio runtime waits for each blocking task. The CLI builds the
+  - The gzip encode of an authored JSON file is a detached encode.
+    `AuthoredRecord::gzip` starts it through `Gzip::get` in
+    `crates/mokly-server/src/json_delivery.rs`, which runs it in a
+    `spawn_blocking` job. The review fix of 2026-11-23 removed the generated
+    gzip copy and `AssetVersion::gzip`, so only authored JSON has a gzip path.
+    `Workers::stop` does not wait for the encode, but the drop of the tokio
+    runtime waits for each blocking task. The CLI builds the
     Serve runtime in `runtime` in `crates/mokly-cli/src/serve_lifecycle.rs`.
     It drops the runtime at the end of the Serve entry in
     `crates/mokly-cli/src/entry_serve.rs`.
@@ -90,12 +102,11 @@
 - **Problem:** An authored GET or HEAD reads a whole large file into a copy,
   and hashes it, before it sends headers. Closing the connection does not
   stop that blocking job, and the job holds its worker permit until the file
-  work ends. A detached encode of a large JSON file asset also runs to its
+  work ends. A detached encode of a large authored JSON file also runs to its
   end before the process exits.
 - **Impact if no action:** An interrupt during the capture of a large authored
-  file makes Serve wait for the rest of that file, and for each capture of
-  the same route that waits for its lock. Only then can Serve cancel Git,
-  stop the sidecars, release the port, and exit.
+  file makes Serve wait for the rest of that file. Only then can Serve cancel
+  Git, stop the sidecars, release the port, and exit.
 - **Root question:** How can Serve finish its shutdown promptly while a
   request still prepares a large file?
 - **Options:**
@@ -122,8 +133,8 @@
     in `crates/mokly-cli/src/entry_serve.rs`, which has 300 lines on
     2026-11-22, the cap of the Rust file length lint. Effort: Medium.
   - **E.** Stop an authored capture when its request ends. A drop guard in
-    `Workers::file_delivery` sets a flag when the request future drops, and
-    the capture checks the flag at each chunk. Shutdown aborts every
+    `Workers::authored_delivery` sets a flag when the request future drops,
+    and the capture checks the flag at each chunk. Shutdown aborts every
     connection first, so the capture stops then too, and a normal disconnect
     frees its worker sooner. E drops the assumption that only shutdown stops
     the work. Risk: shared work cannot use it. It covers only authored
@@ -175,16 +186,24 @@
   - `plans/follow-ups/json-gzip-route-test-gaps.md`, the same code. Option B
     can move the gzip encode of file assets into one delivery job and change
     `Gzip::get`. Then each direct caller of `Gzip::get` must use the changed
-    call: `AuthoredRecord::gzip`, `AssetVersion::gzip`,
-    `JsonBody::temporary_response`, and the unit test
-    `overlapping_and_later_gzip_callers_start_one_encode` in
+    call: `AuthoredRecord::gzip`, `JsonBody::temporary_response`, and the
+    unit test `overlapping_and_later_gzip_callers_start_one_encode` in
     `crates/mokly-server/src/_tests_/json_delivery_tests.rs`. The route-level
     count of that item stays valid.
   - `plans/follow-ups/render-store-idle-work-owners.md`, the same code. That
     item carries the write-activity lease of a finite file response until its
-    body ends. `Workers::file_delivery` and `Workers::asset_delivery` take
-    that lease, and option B rebuilds these jobs. Design the two owners
-    together. Neither fix replaces the other.
+    body ends. `Workers::prepared_file_delivery` and
+    `Workers::asset_delivery` take that lease, and option B rebuilds these
+    jobs. Design the two owners together. Neither fix replaces the other.
+  - `plans/follow-ups/same-route-waits-hold-workers.md`, the same code and a
+    shared wider fix. Its option C needs one admission path that also owns
+    cancellation and cleanup, and option B here is that cancellation part.
+    Its option D lets the requests of one route share a capture, so option E
+    here cannot apply to that shared capture, but option B can.
+  - `plans/follow-ups/authored-requests-need-temporary-space.md`, the same
+    code. Its option B changes the passes that the stop checks here must
+    cover: a read with no copy, a second read on a conditional miss, and a
+    gzip encode with no file.
 - **Recommendation:** B. It covers the full job, including the detached gzip
   encode that the runtime drop waits for, and its owner can pass
   `Workers.closed`, so no CLI change is needed. A regression test can pass a

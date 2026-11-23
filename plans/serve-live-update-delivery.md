@@ -83,6 +83,6 @@ Depends on: 2, 3, 4
 - [x] Prove the same static output of `examples/basic` against `main`, and save the diff under `.context/viewer-live-update/`.
 - [x] Measure the branch against `main` on mokly-cloud with probe v3: bytes, first and last frame paint, Changes pane paint, published Changes, core CPU, memory peak.
 - [x] Commit with Conventional Commits and push the branch. Send the SHA to the performance orchestrator.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, and the follow-up items that the change adds. Let CI run the complete gate.
