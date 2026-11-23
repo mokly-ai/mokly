@@ -1,6 +1,6 @@
 # Viewer Chrome: Check Slot
 
-Status: The Mokly check in the Changes tab's slot is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
+Status: The check card's moved line is not built yet. The [check card's moved line item](../../../plans/follow-ups/check-card-moved-line.md) builds it.
 
 This is the check sub-contract of [Viewer chrome](./viewer-chrome.md#slot-inventory).
 
