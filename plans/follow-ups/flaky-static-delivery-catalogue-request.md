@@ -173,8 +173,26 @@
         would also not show which side closed the connection.
       - 20 clean modes do not show that the failure is gone. They give no
         failure rate.
+  - A second failure, on 2026-11-22:
+    - CI run 45082370564, attempt 1, job 137393220488, on GitHub-hosted
+      `ubuntu-24.04` with Node 22.15.0 and Playwright 1.61.1, for pull
+      request #481 at commit `de8e97a20`. That pull request changed no test,
+      host, or browser code.
+    - The first delivery mode passed 655 tests. In the second mode, the
+      catalogue request of "desktop: design/browse/appearance/states/auto
+      only offers comparisons with changes and an opaque toolbar"
+      (`tests/browser/design_comparison_cases.ts:113`) failed with "Error:
+      apiRequestContext.get: socket hang up" for
+      `GET http://127.0.0.1:41795/mokly-viewer/index.json`. 1 test failed,
+      65 did not run, and 589 passed.
+    - Rerun outcome: the rerun of the failed jobs, attempt 2 of the same run,
+      was cancelled when the branch merged `main` at `9639d0a5c`. The run of
+      the new head `8e270a1c6`, run 45085570588, passed every job, Static
+      delivery included.
+    - So the failure also occurs on GitHub-hosted runners, after PR #342
+      moved the job there.
 - **Problem:** The catalogue request can fail before its test starts, so a
-  healthy delivery run can fail. The source of the one recorded failure is
+  healthy delivery run can fail. The source of the two recorded failures is
   unknown.
 - **Impact if no action:** A healthy CI run or remote gate can fail, and
   the developer must rerun it.
