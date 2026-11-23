@@ -14,9 +14,11 @@ import { EmptyState } from "@mokly/ui/empty-state";
 
 import type { ViewerSelection } from "../host/types.js";
 import { PREVIOUS_VERSION } from "../previews/copy.js";
+import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { PreviewContent } from "../previews/request.js";
 
 import { removedReadingView } from "./canvas_removed_frames.js";
+import { useCanvasFrameInput } from "./canvas_removed_input.js";
 import { RemovedScreenSection } from "./canvas_removed_screen.js";
 import {
   RemovedHolding,
@@ -27,6 +29,35 @@ import {
 import { SnapshotFrame } from "./preview_frame.js";
 import type { RemovedPreviewData } from "./previews.js";
 import type { RemovedPreviewState } from "./use_removed_preview.js";
+
+/** The reading frame of a historical document, which forwards its input. */
+function HistoricalReadingFrame({
+  label,
+  presentation,
+  scheme,
+  title,
+}: {
+  label: string;
+  presentation: SnapshotPresentation;
+  scheme: "dark" | "light";
+  title: string;
+}) {
+  const input = useCanvasFrameInput();
+  return (
+    <CanvasFrame
+      focusVisible={input.focusVisible}
+      kind="document"
+      label={label}
+      scheme={scheme}
+    >
+      <SnapshotFrame
+        canvasInput={input.listener}
+        presentation={presentation}
+        title={title}
+      />
+    </CanvasFrame>
+  );
+}
 
 /**
  * A removed page's or document's section of its one reading frame, which
@@ -54,13 +85,12 @@ function RemovedReadingSection({
           column: 0,
           key: "reading",
           node: (
-            <CanvasFrame
-              kind="document"
+            <HistoricalReadingFrame
               label={data.readingLabel ?? data.title}
+              presentation={presentation}
               scheme={view.colorScheme}
-            >
-              <SnapshotFrame presentation={presentation} title={data.title} />
-            </CanvasFrame>
+              title={data.title}
+            />
           ),
           row: 0,
         },

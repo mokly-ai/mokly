@@ -689,7 +689,13 @@ the Dark row, with a viewport choice that keeps one column, as for a current
 screen. A viewport without a historical view holds the note of
 `@mokly/ui/canvas-missing-view` in its frames' places; its second sentence
 shows only while no frame of the other viewport shows. A removed page or
-document opens as one reading frame, named by its source file. The React
+document opens as one reading frame, named by its source file. A previous
+version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
+input of each document that it presents with `listenForCanvasInput`, and
+`canvas_removed_input.ts` routes it through the `CanvasControlContext` of
+`canvas_stage.tsx`: a canvas key runs its command, a zoom wheel or a pinch
+zooms the canvas about the stage's centre, and the document's keyboard focus
+draws the frame's focus glow. The React
 request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays

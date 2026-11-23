@@ -250,6 +250,27 @@ test("a step that keeps its Light view under Dark says so after its name", () =>
   assertSameElement(plain?.querySelector(":scope > p"), null);
 });
 
+test("a frame whose document reports keyboard focus is marked for the focus glow", () => {
+  const { container } = render(
+    <>
+      <CanvasFrame
+        focusVisible
+        kind="document"
+        label="retired.md"
+        scheme="light"
+      >
+        <span title="Retired document" />
+      </CanvasFrame>
+      <CanvasFrame kind="document" label="handbook.md" scheme="light">
+        <span title="Handbook" />
+      </CanvasFrame>
+    </>,
+  );
+  const [focused, quiet] = container.querySelectorAll("figure");
+  assert.equal(focused?.getAttribute("data-focus-visible"), "");
+  assert.equal(quiet?.hasAttribute("data-focus-visible"), false);
+});
+
 test("a frame's place keeps its size and label, and holds what stands there in place of a document", () => {
   const { container } = render(
     <CanvasFrame

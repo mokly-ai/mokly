@@ -89,6 +89,9 @@ cargo xtask check --suite viewer
 - [`presented_document.ts`](./presented_document.ts) holds
   `followPresentedDocument`, which finds a frame's viewer-owned `srcdoc`
   document as soon as it commits.
+- [`canvas_input.ts`](./canvas_input.ts) holds `forwardCanvasInput`, which
+  forwards the canvas input of each document that a frame without an adapter
+  presents, until the frame replaces it.
 - [`descriptor.ts`](./descriptor.ts) holds `previewKey`, the identity of one
   route-owned preview request. The shell passes preview data through props.
 - [`copy.ts`](./copy.ts) holds `PREVIOUS_VERSION`, the loading copy and the

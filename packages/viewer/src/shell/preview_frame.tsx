@@ -7,8 +7,10 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
+import type { CanvasInputEvent } from "@mokly/frame/internal";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
 
+import { forwardCanvasInput } from "../previews/canvas_input.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import { enforcePreviewReadOnly } from "../previews/read_only.js";
 
@@ -21,11 +23,32 @@ export interface ComparisonFrameOptions {
 }
 
 /**
+ * Forward the canvas input of the frame's presented documents while a
+ * listener is given, to the latest listener.
+ */
+function useCanvasInput(
+  frame: RefObject<HTMLIFrameElement | null>,
+  listener: ((event: CanvasInputEvent) => void) | undefined,
+): void {
+  const latest = useRef(listener);
+  latest.current = listener;
+  const forwards = listener !== undefined;
+  useEffect(() => {
+    const element = frame.current;
+    if (!element || !forwards) return;
+    return forwardCanvasInput(element, (event) => latest.current?.(event));
+  }, [forwards, frame]);
+}
+
+/**
  * Render a reachable, script-disabled snapshot document from `srcdoc`. A
  * comparison pane's frame is marked as such and is never user-scrollable: its
- * document is scrolled only by the pane's shared viewport.
+ * document is scrolled only by the pane's shared viewport. A frame on the
+ * canvas can forward the canvas input of its document to `canvasInput`.
  */
 export function SnapshotFrame(props: {
+  /** Receives the zoom gestures, canvas keys and focus from inside the document. */
+  canvasInput?: ((event: CanvasInputEvent) => void) | undefined;
   comparison?: ComparisonFrameOptions;
   presentation: SnapshotPresentation;
   title: string;
@@ -44,6 +67,7 @@ export function SnapshotFrame(props: {
         : undefined,
     [frame, props.presentation, reveal],
   );
+  useCanvasInput(frame, props.canvasInput);
   const comparison = props.comparison !== undefined;
   return (
     <PreviewIframe

@@ -1,8 +1,9 @@
 /**
  * A removed screen's section on the canvas: one canvas frame for each
  * historical view, from `canvas_removed_frames.ts`, each holding its
- * historical document in a read-only `srcdoc` frame, and the note of a
- * viewport never captured in its frames' places.
+ * historical document in a read-only `srcdoc` frame, which forwards its
+ * canvas input through `canvas_removed_input.ts`, and the note of a viewport
+ * never captured in its frames' places.
  */
 
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
@@ -22,6 +23,7 @@ import {
   removedScreenFrames,
   type RemovedFramePlan,
 } from "./canvas_removed_frames.js";
+import { useCanvasFrameInput } from "./canvas_removed_input.js";
 import {
   RemovedSection,
   RemovedUnavailable,
@@ -44,6 +46,7 @@ function HistoricalFrame({
   /** The removed screen's title. */
   title: string;
 }) {
+  const input = useCanvasFrameInput();
   if (!plan.view)
     return (
       <CanvasMissingView
@@ -57,6 +60,7 @@ function HistoricalFrame({
     );
   return (
     <CanvasFrame
+      focusVisible={input.focusVisible}
       height={size.height}
       kind={plan.viewport}
       label={plan.label}
@@ -66,6 +70,7 @@ function HistoricalFrame({
     >
       {presentation ? (
         <SnapshotFrame
+          canvasInput={input.listener}
           presentation={presentation}
           title={`${title} — ${plan.viewport} — ${plan.scheme}`}
         />

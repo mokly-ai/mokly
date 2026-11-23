@@ -196,7 +196,9 @@ reaches the view through the `CanvasStageHandle` that `ref` receives: `fit`,
 `zoomIn`, `zoomOut`, `zoomTo`, and `run`, which runs the command that
 `canvasKeyCommand` gives for a key. The host listens for the keys where they
 belong, such as on a whole document or on one root, and a later control, such
-as a dock's Fit, uses the same handle. The host passes the section as
+as a dock's Fit, uses the same handle. `wheelZoom` gives the zoom after a
+wheel distance, at the canvas's own rate, for a host that zooms the canvas
+from input that it receives elsewhere. The host passes the section as
 `section`, a `CanvasSection` without its reading size, and names it with
 `fitKey`: a new name fits the canvas again, a fitted canvas refits when its
 stage or the section's lengths change, and `onViewChange` hears of each pan,
@@ -229,7 +231,8 @@ that its section gives. A use case's step frame takes the step's number as
 which makes its name a link with a chevron and an accessible name of the
 host's, and a `description`, which reads muted below the label. Its label
 keeps room around the link for the focus glow. `lightOnly` adds `Light only`
-after the name. `place` replaces the document with what stands in the frame's
+after the name. `focusVisible` draws the focus glow on the frame's box while
+the host reports keyboard focus inside the frame's document. `place` replaces the document with what stands in the frame's
 place: the place keeps the frame's size and label, draws a dashed outline and
 no surface, ring, shadow or size tag, and holds its content unscaled.
 `CanvasMissingView` puts the note of `PreviewNotCaptured` there for a view

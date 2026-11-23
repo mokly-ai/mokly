@@ -90,6 +90,7 @@ export function CanvasFrame({
   children,
   description,
   error = false,
+  focusVisible = false,
   height,
   kind,
   label,
@@ -111,6 +112,11 @@ export function CanvasFrame({
   description?: string | undefined;
   /** Whether the frame's document failed to load. */
   error?: boolean;
+  /**
+   * Whether the frame's document shows keyboard focus, as the document
+   * reports it, which draws the focus glow on the frame's box.
+   */
+  focusVisible?: boolean;
   /**
    * The nominal height in CSS pixels, which can hold a fraction of a pixel,
    * as a component's measured document does. A reading frame leaves it out
@@ -159,6 +165,7 @@ export function CanvasFrame({
       className="mbk-canvas-frame mbk-reset"
       data-canvas-frame={kind}
       data-canvas-place={placed ? "" : undefined}
+      data-focus-visible={focusVisible ? "" : undefined}
       data-preview-color-scheme={scheme}
       data-selected={selected ? "" : undefined}
       style={sizeStyle(width, height)}
