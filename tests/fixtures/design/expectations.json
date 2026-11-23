@@ -1326,8 +1326,17 @@
     {
       "source": "design/canvas/components/affected/direct",
       "viewports": ["mobile"],
+      "colorSchemes": ["light"],
       "within": "cv-mode-frames",
       "name": "Mobile · Light",
+      "target": "design/canvas/components/affected/direct"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "viewports": ["mobile"],
+      "colorSchemes": ["dark"],
+      "within": "cv-mode-frames",
+      "name": "Mobile · Dark",
       "target": "design/canvas/components/affected/direct"
     },
     {

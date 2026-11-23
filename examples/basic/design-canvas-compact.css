@@ -139,6 +139,13 @@
     --cv-zoom: 0.27;
   }
 
+  /* A desktop frame stands below 60% of its size, so it draws no tags, while
+     a phone frame keeps them. */
+  .cv-frame[data-cv-viewport="desktop"]
+    :is(.ce-highlight-labels, .cv-sel-name, .cv-sel-size, .cv-sel-pad) {
+    display: none;
+  }
+
   /* A component's frames take the compact zoom of the artboard, which fits
      the whole set, a picked frame alone, or a compared pair. */
   .cv-frame[data-cv-kind="component"] {
