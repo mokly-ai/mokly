@@ -42,7 +42,7 @@ export interface CanvasCell {
  * The section's padding: the head stands in the top padding, and each
  * frame's label in the padding or the gap above the frame.
  */
-export const SECTION_PADDING = {
+const SECTION_PADDING = {
   bottom: 22,
   left: 22,
   right: 22,
@@ -65,7 +65,7 @@ export function sectionPadding(kind: CanvasSectionKind): CanvasPadding {
 }
 
 /** The gaps between the columns and the rows of each kind of section. */
-export const SECTION_GAPS: Readonly<
+const SECTION_GAPS: Readonly<
   Record<CanvasSectionKind, { column: number; row: number }>
 > = {
   component: { column: 40, row: 64 },
@@ -78,7 +78,7 @@ export const SECTION_GAPS: Readonly<
  * The padding of a section in the compact layout, which draws no box and no
  * head: only the room of the frames' labels above them.
  */
-export const COMPACT_PADDING = {
+const COMPACT_PADDING = {
   bottom: 0,
   left: 0,
   right: 0,
@@ -89,14 +89,14 @@ export const COMPACT_PADDING = {
  * The compact padding of each kind of section. A use case's step frame
  * keeps the room of its taller label and of its description above it.
  */
-export function compactPadding(kind: CanvasSectionKind): CanvasPadding {
+function compactPadding(kind: CanvasSectionKind): CanvasPadding {
   return kind === "use-case"
     ? { ...COMPACT_PADDING, top: 52 }
     : COMPACT_PADDING;
 }
 
 /** The gaps of a section in the compact layout, such as a whole variant set. */
-export const COMPACT_GAPS: Readonly<
+const COMPACT_GAPS: Readonly<
   Record<CanvasSectionKind, { column: number; row: number }>
 > = {
   component: { column: 16, row: 34 },

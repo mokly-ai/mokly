@@ -101,7 +101,7 @@ function viewOf(
  * `desktop` or `mobile` keeps that column alone on the canvas; the other
  * column's frames stay mounted, so a later choice shows them at once.
  */
-export function screenFrames(
+function screenFrames(
   screen: ShellCatalogueScreen,
   viewport: ViewerSelection["viewport"],
 ): CanvasFramePlan[] {
@@ -131,7 +131,7 @@ export function screenFrames(
  * bar, in order, with its Light frame beside its Dark frame. The saved
  * variant that `selectedPath` names holds the selection on its Light frame.
  */
-export function variantSetFrames(
+function variantSetFrames(
   rows: readonly WorkspaceVariant[],
   selectedPath: string | undefined,
 ): CanvasFramePlan[] {

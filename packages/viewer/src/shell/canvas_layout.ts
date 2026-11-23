@@ -10,7 +10,7 @@ import { useSyncExternalStore } from "react";
 import { NARROW_PANELS, NARROW_SHELL } from "./layout_breakpoint.js";
 
 /** The catalogue's starting widths, from the panel step up and below it. */
-export const STARTING_NAVIGATION_WIDTH = { narrow: 224, wide: 252 } as const;
+const STARTING_NAVIGATION_WIDTH = { narrow: 224, wide: 252 } as const;
 
 function media(query: string): MediaQueryList | undefined {
   return typeof window === "undefined" ||

@@ -25,7 +25,7 @@ import { useViewFrame, viewSources } from "./stage_frame.js";
  * The accessible name of a step's link: the step's title, which the link
  * shows, and the screen that the link opens.
  */
-export function stepLinkLabel(
+function stepLinkLabel(
   step: Pick<CanvasStepPlan, "title">,
   screen: Pick<ShellCatalogueScreen, "title">,
 ): string {

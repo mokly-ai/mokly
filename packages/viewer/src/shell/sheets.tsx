@@ -36,7 +36,7 @@ export function useCanvasLayoutParts() {
 }
 
 /** The state of one sheet, and its actions on the store. */
-export function useSheet(sheet: ShellSheet): FloatingPanelSheet {
+function useSheet(sheet: ShellSheet): FloatingPanelSheet {
   const store = useShellStore();
   const elements = useShellRoot()?.elements;
   const open = store.state.sheet === sheet;
@@ -63,7 +63,7 @@ export function useSheet(sheet: ShellSheet): FloatingPanelSheet {
  * is open, and Fit hides while a compare mode shows its stage in the
  * canvas's place.
  */
-export function ShellDock() {
+function ShellDock() {
   const store = useShellStore();
   const elements = useShellRoot()?.elements;
   const canvas = useShownCanvas()?.handle;

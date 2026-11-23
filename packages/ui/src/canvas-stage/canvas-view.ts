@@ -14,7 +14,7 @@ export const ZOOM_MIN = 0.08;
 export const ZOOM_MAX = 4;
 
 /** The factor of one Zoom in. Zoom out multiplies by its inverse, 0.8. */
-export const ZOOM_STEP = 1.25;
+const ZOOM_STEP = 1.25;
 
 /** The room that Fit leaves between the section and each edge of the stage. */
 export const FIT_MARGIN = 16;
@@ -57,7 +57,7 @@ export interface CanvasPoint {
 }
 
 /** Keep a zoom between 8% and 400%. */
-export function clampZoom(zoom: number): number {
+function clampZoom(zoom: number): number {
   if (Number.isNaN(zoom)) return ZOOM_MIN;
   return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom));
 }
@@ -76,10 +76,7 @@ function lengths(tracks: readonly CanvasTrack[]): {
 }
 
 /** The length of an axis at a zoom. */
-export function axisLength(
-  tracks: readonly CanvasTrack[],
-  zoom: number,
-): number {
+function axisLength(tracks: readonly CanvasTrack[], zoom: number): number {
   const { fixed, scaled } = lengths(tracks);
   return fixed + scaled * zoom;
 }

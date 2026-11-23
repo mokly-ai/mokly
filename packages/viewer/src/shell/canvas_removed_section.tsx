@@ -33,7 +33,7 @@ export interface RemovedSectionProps {
  * version`, or its Light-only form for a document that keeps its light
  * version while the preview scheme is Dark.
  */
-export function previousVersionLabel(
+function previousVersionLabel(
   data: Pick<RemovedPreviewData, "lightOnly">,
   colorScheme: ViewerSelection["colorScheme"],
 ): string {
