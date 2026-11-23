@@ -27,10 +27,7 @@ const INSPECT: PanelTabItem = { id: "inspect", label: "Inspect" };
 const CHANGES: PanelTabItem = { id: "changes", label: "Changes" };
 
 /** The tab that the panel shows: the store's, where the entry has it. */
-export function shownPanelTab(
-  stored: PanelTab,
-  hasChanges: boolean,
-): PanelTab {
+export function shownPanelTab(stored: PanelTab, hasChanges: boolean): PanelTab {
   return stored === "changes" && hasChanges ? "changes" : "inspect";
 }
 

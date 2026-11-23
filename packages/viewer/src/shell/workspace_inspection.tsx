@@ -236,7 +236,9 @@ export function useWorkspaceInspection(
       <WorkspaceInspectionOverlay
         labels={labels}
         measured={measured}
-        onSelect={(label) => latest.current.input.onLabel(label.session, label.key)}
+        onSelect={(label) =>
+          latest.current.input.onLabel(label.session, label.key)
+        }
       />
     ),
   };

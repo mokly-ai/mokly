@@ -5,10 +5,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
+import { RetryFocus } from "../src/shell/retry_focus.js";
 import { shellFrameUsage } from "../src/shell/stage_sources.js";
 import { inspectionAvailability } from "../src/shell/workspace_inspection_runtime.js";
 import { WorkspaceInstances } from "../src/shell/workspace_instances.js";
-import { RetryFocus } from "../src/shell/retry_focus.js";
 import { WorkspacePropsSection } from "../src/shell/workspace_props.js";
 import { WorkspaceUsage } from "../src/shell/workspace_usage.js";
 
