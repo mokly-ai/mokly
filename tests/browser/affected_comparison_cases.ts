@@ -12,13 +12,19 @@ import { expect, type Page } from "@playwright/test";
 import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 import type { test as baseTest } from "./browser_test.js";
+import { rowOutcomes, screenOutcomes } from "./comparison_outcomes.js";
 import {
   awaitRoutedDetail,
   chooseFilter,
+  chooseMode,
+  comparisonFrames,
+  expectNoCompareModes,
   modeButton,
   navRow,
+  outcomeLines,
 } from "./comparison_ui.js";
 import { awaitSelectedComparison } from "./serve_comparison_ui.js";
+import { openInspectFold, openPanelTab } from "./workspace_actions.js";
 
 /** Where the catalogue comes from: Serve, or a static build. */
 export type ComparisonHost = "serve" | "static";
@@ -36,7 +42,10 @@ async function comparing(
   else await action();
 }
 
-/** The shown status, and whether the comparison band offers its modes. */
+/**
+ * The shown status, and whether the Changes tab's band offers the compare
+ * modes; an entry without a comparison shows no band.
+ */
 async function expectBand(
   page: Page,
   path: string,
@@ -46,23 +55,27 @@ async function expectBand(
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
-  if (offered) await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  else await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+  if (!offered) return expectNoCompareModes(page);
+  await openPanelTab(page, "Changes");
+  await expect(
+    page.getByRole("group", { name: "Comparison mode" }),
+  ).toBeVisible();
 }
 
-/** Side by side of every shown view: each heading, and both versions. */
+/**
+ * Side by side: the outcome line of every compared frame, and the two
+ * versions of the one frame that it compares.
+ */
 async function expectSideBySide(
   page: Page,
-  headings: readonly string[],
+  lines: readonly string[],
 ): Promise<void> {
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  await expect(page.locator("[data-diff-viewport] > h3")).toHaveText(headings);
-  await expect(
-    page.locator("[data-diff-stage] iframe[data-mokly-comparison-frame]"),
-  ).toHaveCount(headings.length * 2);
+  await expect(outcomeLines(page)).toHaveText(lines);
+  await expect(comparisonFrames(page)).toHaveCount(2);
 }
 
 /** Register the affected-only comparison journeys for one host. */
@@ -74,19 +87,17 @@ export function registerAffectedComparisons(
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    for (const [path, heading] of [
-      [comparisonPaths.consumer, SCREEN_HEADING],
-      [comparisonPaths.consumingComponent, VARIANT_HEADING],
+    for (const [path, lines] of [
+      [comparisonPaths.consumer, screenOutcomes(SCREEN_HEADING)],
+      [
+        comparisonPaths.consumingComponent,
+        rowOutcomes("Toolbar", VARIANT_HEADING),
+      ],
     ] as const) {
       await page.goto(`/view/${path}/`);
       await expectBand(page, path, true);
-      await comparing(page, host, () =>
-        modeButton(page, "Side by side").click(),
-      );
-      await expectSideBySide(page, [
-        `Mobile · ${heading}`,
-        `Desktop · ${heading}`,
-      ]);
+      await comparing(page, host, () => chooseMode(page, "Side by side"));
+      await expectSideBySide(page, lines);
       // The comparison keeps the entry Unmodified and out of Changes.
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
@@ -109,8 +120,7 @@ export function registerAffectedComparisons(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`/view/${comparisonPaths.component}/`);
-    await page.getByRole("tab", { name: "Usage", exact: true }).click();
-    const link = page
+    const link = (await openInspectFold(page, "usage"))
       .locator('[data-usage-section="affected"]')
       .getByRole("link", { name: "Consumer screen", exact: true });
     await expect(link).toHaveAttribute("href", /[?&]comparison=side(?:&|$)/u);
@@ -119,8 +129,9 @@ export function registerAffectedComparisons(
       new RegExp(`/view/${comparisonPaths.consumer}/\\?`, "u"),
     );
     await expectBand(page, comparisonPaths.consumer, true);
-    // The link names the consumer's first affected view: mobile, light.
-    await expectSideBySide(page, [`Mobile · ${SCREEN_HEADING}`]);
+    // The canvas keeps every frame through the in-shell navigation, so
+    // each of the consumer's frames compares.
+    await expectSideBySide(page, screenOutcomes(SCREEN_HEADING));
     await chooseFilter(page, "changed");
     await expect(navRow(page, comparisonPaths.consumer)).toBeHidden();
   });

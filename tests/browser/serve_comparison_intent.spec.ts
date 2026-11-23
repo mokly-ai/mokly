@@ -6,12 +6,19 @@
 
 import { expect } from "@playwright/test";
 
-import { modeButton, navRow } from "./comparison_ui.js";
+import {
+  chooseMode,
+  compareState,
+  comparisonFrames,
+  modeButton,
+  navRow,
+} from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import {
   awaitSelectedComparison,
   selectedRequests,
 } from "./serve_comparison_ui.js";
+import { openInspectFold, openPanelTab } from "./workspace_actions.js";
 
 /** A source outside Card and Consumer, so the update leaves both unchanged. */
 const STABLE_SOURCE = "specs/screens/stable.screen.html";
@@ -23,24 +30,20 @@ test("a watched update keeps Current after an Affected link opened Side by side"
   await page.setViewportSize({ width: 1280, height: 900 });
   const requests = selectedRequests(page);
   await page.goto(`/view/${changes.paths.component}/`);
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const link = page
+  const link = (await openInspectFold(page, "usage"))
     .locator('[data-usage-section="affected"]')
     .getByRole("link", { name: "Consumer screen", exact: true });
   await expect(link).toHaveAttribute("href", /[?&]comparison=side(?:&|$)/u);
   await awaitSelectedComparison(page, () => link.click());
   await expect(page).toHaveURL(/[?&]comparison=side(?:&|$)/u);
+  await openPanelTab(page, "Changes");
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   expect(requests).toHaveLength(1);
 
-  await modeButton(page, "Current").click();
-  await expect(modeButton(page, "Current")).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await chooseMode(page, "Current");
 
   await changes.edit(
     STABLE_SOURCE,
@@ -57,11 +60,16 @@ test("a watched update keeps Current after an Affected link opened Side by side"
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
-  await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
+  await openPanelTab(page, "Changes");
+  await expect(
+    page.getByRole("group", { name: "Comparison mode" }),
+  ).toBeVisible();
   await expect(modeButton(page, "Current")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  await expect(page.locator("[data-diff-stage]")).toBeHidden();
+  // The canvas shows no comparison: neither its load nor its versions.
+  await expect(compareState(page)).toBeHidden();
+  await expect(comparisonFrames(page)).toHaveCount(0);
   expect(requests).toHaveLength(1);
 });

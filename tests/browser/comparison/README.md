@@ -38,7 +38,9 @@ two for the pair of Side by side. `outcomeLines` reads the band's line for
 each compared frame, and `expectNoCompareModes` checks, with the Changes tab
 open, that an entry offers no mode. `compareStage` is the compare, busy while
 it loads, and `compareState` is its loading or failure state, which exists
-only then and never holds a pane.
+only then and never holds a pane. `comparison_outcomes.ts` builds the
+expected outcome lines of a screen's shown frames, the Light row first, or of
+one row of a variant set.
 `comparison_sections.ts` opens a comparison and finds one compared frame by
 its kind and its scheme: in Overlay, Difference, and Swipe the frame's
 figure, whose one viewport stacks both versions, and in Side by side the
