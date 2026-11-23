@@ -1039,7 +1039,8 @@ Depends on: 2, 3, 4, 5, 6, 7
       user, apply the fix rule, and open a pull request into this branch.
 
 The justifications of the track B merges of the primary branch are in
-`.context/storybook-support/merge-2-justifications.md`. The pull request
+`.context/storybook-support/merge-2-justifications.md` and
+`.context/storybook-support/merge-3-justifications.md`. The pull request
 description copies them.
 
 ## Milestone 9: Imported assets documentation
