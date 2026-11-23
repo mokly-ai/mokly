@@ -172,11 +172,10 @@ viewport must be visible.
 Share offers the screen the link points at, beneath the link itself: the whole
 catalogue or one of the publication's own current screens, narrowed to the ones
 it draws at the selected single viewport and scheme. For Both, a current screen
-with either viewport in that scheme remains selectable; Share omits the
-unsupported API viewport and the host appends `viewport=both` to the canonical
-URL it receives. Under the dark scheme, Share still offers a current screen
-with no dark view at the selected viewport, or in either viewport for Both. The
-viewer shows that screen through its
+with either viewport in that scheme remains selectable, and the link names no
+viewport, so it opens on Both. Under the dark scheme, Share still offers a
+current screen with no dark view at the selected viewport, or in either
+viewport for Both. The viewer shows that screen through its
 [light fallback](./viewer-address-state.md#sharing), so its link carries
 `scheme=light`. A current-only publication has no released API screen
 inventory, so the choice is not offered, the package selection stays intact

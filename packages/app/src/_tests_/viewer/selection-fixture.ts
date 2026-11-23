@@ -5,7 +5,7 @@ export function selection(
 ): ViewerSelection {
   return {
     view: "all",
-    viewport: "desktop",
+    viewport: "both",
     scheme: "light",
     search: "",
     tags: [],

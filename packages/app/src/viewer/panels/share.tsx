@@ -11,7 +11,6 @@ import type { Resource } from "../../data/use-resource";
 import type { ViewerSelection } from "../host";
 import { shareableScreens } from "../screens";
 import type { SelectionDefaults } from "../selection";
-import { sharedViewerUrl } from "../share-selection";
 import { shareLinkState } from "../share-state";
 
 import { Link, LinkWait } from "./share-link";
@@ -217,12 +216,7 @@ export function SharePanel({
         failure="The link couldn’t be prepared"
         onRetry={link.reload}
       >
-        {(value) => (
-          <Link
-            link={{ ...value, url: sharedViewerUrl(value.url, selection) }}
-            visibility={visibility}
-          />
-        )}
+        {(value) => <Link link={value} visibility={visibility} />}
       </PaneResource>
       {comparable && (
         <ScreenChoice

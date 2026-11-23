@@ -129,12 +129,13 @@ function SharePage({
   const selected = offers.find(
     (offer) => offer.screen.id === shareSelection.screen,
   );
-  // The address leaves out the desktop viewport and the reader's own scheme,
-  // and so does the link. Only a screen that the light fallback shows names
-  // its scheme, so that the link opens the view the reader sees.
+  // The address names the document's single viewport and leaves out the
+  // reader's own scheme, and so does the link. Only a screen that the light
+  // fallback shows names its scheme, so that the link opens the view the
+  // reader sees.
   const link = publicationLink({
     screen: selected?.screen.id,
-    viewport: viewport === "mobile" ? viewport : undefined,
+    viewport,
     scheme: selected?.scheme === colorScheme ? undefined : selected?.scheme,
   });
   return (

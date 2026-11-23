@@ -17,7 +17,7 @@ const path = "/acme/website/publications/p1";
 function selection(over: Partial<ViewerSelection> = {}): ViewerSelection {
   return {
     view: "all",
-    viewport: "desktop",
+    viewport: "both",
     scheme: "light",
     search: "",
     tags: [],
@@ -90,13 +90,13 @@ test("a snapshot's membership stays the package's", () => {
 test("a correction drops the malformed snapshot and keeps everything else", () => {
   const search =
     "?settings=account&catalogueScreen=product%2Fbrowse%2Fhome%2Fretired" +
-    "&catalogueSnapshot=ABC&viewport=both";
+    "&catalogueSnapshot=ABC&viewport=mobile";
   const { state, corrected } = readViewerState(readQuery(search), defaults);
   assert.equal(corrected, true);
   assert.equal(
     viewerHref(path, state, defaults, search),
     path +
-      "?settings=account&catalogueScreen=product%2Fbrowse%2Fhome%2Fretired&viewport=both",
+      "?settings=account&catalogueScreen=product%2Fbrowse%2Fhome%2Fretired&viewport=mobile",
   );
 });
 
@@ -104,14 +104,14 @@ test("a snapshot is written beside its screen and round-trips", () => {
   const selected = selection({
     screen: removed.screen,
     snapshotId: removed.snapshotId,
-    viewport: "both",
+    viewport: "mobile",
   });
   const written = viewerHref(path, { selection: selected }, defaults);
   assert.equal(
     written,
     path +
       `?catalogueScreen=${encodeURIComponent(removed.screen)}` +
-      `&catalogueSnapshot=${removed.snapshotId}&viewport=both`,
+      `&catalogueSnapshot=${removed.snapshotId}&viewport=mobile`,
   );
   const read = readViewerState(
     readQuery(new URL(written, "https://app.example.com").search),
@@ -137,7 +137,7 @@ test("returning to current content takes the snapshot off the address", () => {
 });
 
 test("an old variant link drops its key and invents no entry", () => {
-  const search = "?catalogueScreen=notice&variantId=draft&viewport=both";
+  const search = "?catalogueScreen=notice&variantId=draft&viewport=mobile";
   const { state, corrected } = readViewerState(readQuery(search), defaults);
   // Variants are entries with paths of their own, which only the catalogue
   // knows: the parent stays selected and the retired key goes.
@@ -145,7 +145,7 @@ test("an old variant link drops its key and invents no entry", () => {
   assert.equal(state.selection.screen, "notice");
   assert.equal("snapshotId" in state.selection, false);
   const written = viewerHref(path, state, defaults, search);
-  assert.equal(written, path + "?catalogueScreen=notice&viewport=both");
+  assert.equal(written, path + "?catalogueScreen=notice&viewport=mobile");
   assert.doesNotMatch(written, /notice%2Fdraft|variantId/);
 
   for (const query of [{ variantId: "draft" }, { variantId: "" }]) {

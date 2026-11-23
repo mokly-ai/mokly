@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { sharedViewerUrl, shareSelection } from "../../viewer/share-selection";
+import { shareSelection } from "../../viewer/share-selection";
 
 import { defaults, removed } from "./fixtures";
 import { selection } from "./selection-fixture";
@@ -60,37 +60,24 @@ test("a share link pins the screen and how it is drawn, never the panel", () => 
     );
 });
 
-test("Both stays out of the API input and on the URL its recipient opens", () => {
-  const selected = selection({
-    screen: "start",
-    viewport: "both",
-    scheme: "dark",
-  });
-  assert.deepEqual(
-    shareSelection(selected, defaults, { path: "start", scheme: "dark" }),
-    {
-      screen: "start",
-      viewport: undefined,
-      scheme: "dark",
-    },
-  );
-
-  const canonical =
-    "https://app.example.com/acme/website/publications/publication" +
-    "?catalogueScreen=start&scheme=dark";
-  assert.equal(
-    sharedViewerUrl(canonical, selected),
-    canonical + "&viewport=both",
-  );
-  assert.equal(
-    sharedViewerUrl(
-      "https://app.example.com/acme/website/publications/publication" +
-        "?catalogueScreen=start&viewport=mobile",
-      selection({ screen: "start", viewport: "mobile" }),
-    ),
-    "https://app.example.com/acme/website/publications/publication" +
-      "?catalogueScreen=start&viewport=mobile",
-  );
+test("Share requests a single viewport and leaves Both, the default, out", () => {
+  // A link without a viewport opens on Both, so each recipient opens the
+  // viewport the reader shared from.
+  for (const [viewport, requested] of [
+    ["desktop", "desktop"],
+    ["mobile", "mobile"],
+    ["both", undefined],
+  ] as const) {
+    assert.deepEqual(
+      shareSelection(
+        selection({ screen: "start", viewport, scheme: "dark" }),
+        defaults,
+        { path: "start", scheme: "dark" },
+      ),
+      { screen: "start", viewport: requested, scheme: "dark" },
+      viewport,
+    );
+  }
 });
 
 test("current-only sharing omits a real package selection without erasing it", () => {

@@ -57,9 +57,9 @@ The workspace's `manageUrl` is the organization's.
 - `publicationLink` builds the canonical link Share copies beneath
   `/mokly-team/mokly-cloud` on the shared site origin, with an opaque
   publication ID and only the screen, viewport and scheme that a selection
-  carries. Each Share document passes its own view, so the link leaves out the
-  desktop viewport and the reader's own scheme, and names `scheme=light` only
-  for a screen that the light fallback shows. It is a mockup value, not a live
+  carries. Each Share document passes its own view, so the link names the
+  document's viewport, leaves out the reader's own scheme, and names
+  `scheme=light` only for a screen that the light fallback shows. It is a mockup value, not a live
   destination.
 
 `builds.ts` supplies the cloud builds the viewer draws:

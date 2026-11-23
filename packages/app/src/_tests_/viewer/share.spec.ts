@@ -39,7 +39,8 @@ test("Share copies the canonical link and says who can open it", async ({
   expect(copied).toBe(await link.inputValue());
 
   // A screen this publication draws at this viewport and scheme pins the link
-  // to it, and the address follows.
+  // to it, and the address follows. Both is the default viewport, so neither
+  // the address nor the link names one.
   await panel
     .getByRole("listitem")
     .filter({ hasText: "Start" })
@@ -50,74 +51,53 @@ test("Share copies the canonical link and says who can open it", async ({
     new RegExp(`${path}\\?catalogueScreen=start$`),
   );
 
+  // Its recipient opens the screen on Both, in its Mobile and Desktop frames.
+  // The package's viewport select shows the selection, also beneath a panel.
   await open(page, await link.inputValue());
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "desktop",
-  );
+  const viewport = page.locator("select[data-workspace-viewport]");
+  await expect(viewport).toHaveValue("both");
   await expect(
     page.getByRole("heading", { level: 2, name: "Start" }),
   ).toBeVisible();
-  await expect(page.getByTitle("Start — desktop")).toBeVisible();
-  await page.getByTestId("viewer-share").click();
+  for (const frame of ["Start — mobile", "Start — desktop"])
+    await expect(
+      page
+        .frameLocator(`iframe[title^="${frame} — "]`)
+        .getByRole("heading", { level: 1, name: "Publish the draft" }),
+      frame,
+    ).toBeVisible();
 
-  // Both is package working state rather than a Share API viewport. It stays
-  // out of that request, then the host carries it on the canonical URL the API
-  // returned so the recipient sees the same supported package viewport.
-  await page.goBack();
-  await page.getByRole("combobox", { name: "Viewport" }).selectOption("both");
-  await expect(page).toHaveURL(/viewport=both/);
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "both",
-  );
+  // One viewport is the reader's own choice, so the address and the link both
+  // name it, and the link's recipient opens on that viewport.
+  await viewport.selectOption("desktop");
+  await expect(page).toHaveURL(/viewport=desktop/);
   await page.getByTestId("viewer-share").click();
   await expect(
-    page
-      .getByTestId("viewer-panel-share")
-      .getByRole("listitem")
-      .filter({ hasText: "Start" }),
+    panel.getByRole("listitem").filter({ hasText: "Start" }),
   ).toContainText("Selected");
   await expect(link).toHaveValue(
-    new RegExp(`${path}\\?catalogueScreen=start&viewport=both$`),
+    new RegExp(`${path}\\?catalogueScreen=start&viewport=desktop$`),
   );
-  const bothLink = new URL(await link.inputValue());
-  expect(bothLink.searchParams.get("catalogueScreen")).toBe("start");
-  expect(bothLink.searchParams.get("viewport")).toBe("both");
+  const desktopLink = await link.inputValue();
 
   await panel.getByTestId("share-copy").click();
   await expect
     .poll(() => page.evaluate(() => globalThis.navigator.clipboard.readText()))
-    .toBe(bothLink.href);
-  const copiedBoth = await page.evaluate(() =>
-    globalThis.navigator.clipboard.readText(),
-  );
-  expect(copiedBoth).toBe(bothLink.href);
+    .toBe(desktopLink);
   // Preparing and copying the link does not reduce the controlled sender.
-  await expect(page).toHaveURL(/viewport=both/);
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "both",
-  );
+  await expect(page).toHaveURL(/viewport=desktop/);
+  await expect(viewport).toHaveValue("desktop");
 
   const recipient = await page.context().newPage();
-  await open(recipient, copiedBoth);
+  await open(recipient, desktopLink);
   await expect(recipient).toHaveURL(/catalogueScreen=start/);
-  await expect(recipient).toHaveURL(/viewport=both/);
-  await expect(recipient.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "both",
-  );
-  await expect(recipient.getByTitle("Start — mobile")).toBeVisible();
-  await expect(recipient.getByTitle("Start — desktop")).toBeVisible();
+  await expect(recipient).toHaveURL(/viewport=desktop/);
+  await expect(
+    recipient.locator("select[data-workspace-viewport]"),
+  ).toHaveValue("desktop");
   await expect(
     recipient
-      .frameLocator('iframe[title="Start — mobile"]')
-      .getByRole("heading", { level: 1, name: "Publish the draft" }),
-  ).toBeVisible();
-  await expect(
-    recipient
-      .frameLocator('iframe[title="Start — desktop"]')
+      .frameLocator('iframe[title^="Start — desktop — "]')
       .getByRole("heading", { level: 1, name: "Publish the draft" }),
   ).toBeVisible();
   await recipient.close();
@@ -173,12 +153,12 @@ test("a publication with nothing to compare still shares itself", async ({
   });
 
   const path = made.publicationPath;
+  // A link that names the default viewport stays valid and opens on Both.
   await open(page, `${path}?catalogueScreen=start&viewport=both`);
   await expect(
     page.getByRole("heading", { level: 2, name: "Start" }),
   ).toBeVisible();
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
+  await expect(page.locator("select[data-workspace-viewport]")).toHaveValue(
     "both",
   );
   await page.getByTestId("viewer-share").click();
@@ -189,11 +169,13 @@ test("a publication with nothing to compare still shares itself", async ({
   await expect(panel.getByTestId("share-copy")).toBeVisible();
   await expect(panel.getByText("Screen")).toHaveCount(0);
   await expect(panel.getByText("Whole catalogue")).toHaveCount(0);
+  // Both is the default, so the link names no viewport, and neither does the
+  // address the panel wrote.
   await expect(panel.getByLabel("Publication link")).toHaveValue(
-    appOrigin + path + "?viewport=both",
+    appOrigin + path,
   );
   await expect(page).toHaveURL(/catalogueScreen=start/);
-  await expect(page).toHaveURL(/viewport=both/);
+  await expect(page).not.toHaveURL(/viewport=/);
   await page.goBack();
   await expect(panel).toHaveCount(0);
   await expect(

@@ -99,7 +99,7 @@ export interface ViewerHostProps {
 /** The selection a route falls back to before any URL state is read. */
 export const defaultSelection: ViewerSelection = {
   view: "all",
-  viewport: "desktop",
+  viewport: "both",
   scheme: "light",
   search: "",
   tags: [],

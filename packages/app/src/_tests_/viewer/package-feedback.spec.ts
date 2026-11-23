@@ -14,10 +14,10 @@ test("a listed screen response cannot erase a selected component variant", async
   const query =
     "catalogueScreen=notice%2Fdraft&viewport=both&scheme=dark&search=notice";
   await open(page, `${path}?${query}`);
-  const chosen = page.locator('[data-workspace-variant="notice/draft"]');
+  const chosen = page.locator('a[data-workspace-variant="notice/draft"]');
 
-  const stage = page.locator("[data-mokly-stage]");
-  await expect(stage).toHaveAttribute("data-viewport", "both");
+  const viewport = page.locator("select[data-workspace-viewport]");
+  await expect(viewport).toHaveValue("both");
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
@@ -27,7 +27,9 @@ test("a listed screen response cannot erase a selected component variant", async
   ).toBeVisible();
   // The variant entry itself, not its parent showing its first variant.
   await expect(
-    page.getByRole("button", { name: "Copy path notice/draft", exact: true }),
+    page
+      .getByRole("region", { name: "Panel" })
+      .getByRole("button", { name: "Copy path notice/draft", exact: true }),
   ).toBeVisible();
   await expect(chosen).toHaveAttribute("aria-current", "page");
   await expect(
@@ -56,14 +58,12 @@ test("a listed screen response cannot erase a selected component variant", async
   expect(shared.pathname).toBe(path);
   expect(shared.searchParams.get("scheme")).toBe("dark");
   expect(shared.searchParams.has("catalogueScreen")).toBe(false);
-  // The scheme the API validated and the Both the host carries, and none of
-  // the package's working state.
-  expect([...shared.searchParams.keys()].sort()).toEqual([
-    "scheme",
-    "viewport",
-  ]);
+  // The scheme the API validated, and none of the package's working state.
+  // Both is the default viewport, so neither the link nor the address that
+  // the panel wrote names one.
+  expect([...shared.searchParams.keys()]).toEqual(["scheme"]);
   await expect(page).toHaveURL(/catalogueScreen=notice%2Fdraft/);
-  await expect(page).toHaveURL(/viewport=both/);
+  await expect(page).not.toHaveURL(/viewport=/);
   await expect(page).toHaveURL(/search=notice/);
 
   await page.goBack();
@@ -75,7 +75,7 @@ test("a listed screen response cannot erase a selected component variant", async
   await expect(page).toHaveURL(/viewport=both/);
   await expect(page).toHaveURL(/scheme=dark/);
   await expect(page).toHaveURL(/search=notice/);
-  await expect(stage).toHaveAttribute("data-viewport", "both");
+  await expect(viewport).toHaveValue("both");
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
@@ -91,7 +91,7 @@ test("a listed screen response cannot erase a selected component variant", async
   await expect(
     page.getByRole("heading", { level: 2, name: "Notice" }),
   ).toBeVisible();
-  await expect(stage).toHaveAttribute("data-viewport", "both");
+  await expect(viewport).toHaveValue("both");
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",

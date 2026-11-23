@@ -55,7 +55,7 @@ test("invalid paths clear their snapshots and preserve other address state", () 
       catalogueScreen,
       catalogueSnapshot: "a".repeat(64),
       settings: "account",
-      viewport: "both",
+      viewport: "mobile",
       search: "checkout",
     };
     const { state, corrected } = readViewerState(query, defaults);
@@ -77,7 +77,7 @@ test("invalid paths clear their snapshots and preserve other address state", () 
       "https://app.example",
     );
     assert.equal(url.searchParams.get("settings"), "account");
-    assert.equal(url.searchParams.get("viewport"), "both");
+    assert.equal(url.searchParams.get("viewport"), "mobile");
     assert.equal(url.searchParams.get("search"), "checkout");
   }
 });

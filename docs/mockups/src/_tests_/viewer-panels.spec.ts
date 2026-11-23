@@ -21,11 +21,15 @@ import { screenFile } from "./catalogue-paths";
 /**
  * The query of the link Share copies in each viewport: to Home, the screen the
  * reader is on, and to the whole catalogue of a current-only publication. The
- * address leaves out the desktop viewport and the reader's own scheme. Home
- * has a view in both schemes, so no link needs the light fallback's scheme.
+ * address names the document's single viewport and leaves out the reader's
+ * own scheme. Home has a view in both schemes, so no link needs the light
+ * fallback's scheme.
  */
 const shareQueries = {
-  desktop: { screen: "?catalogueScreen=home", catalogue: "" },
+  desktop: {
+    screen: "?catalogueScreen=home&viewport=desktop",
+    catalogue: "?viewport=desktop",
+  },
   mobile: {
     screen: "?catalogueScreen=home&viewport=mobile",
     catalogue: "?viewport=mobile",

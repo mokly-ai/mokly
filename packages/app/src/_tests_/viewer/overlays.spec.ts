@@ -25,11 +25,11 @@ test("invalid cloud values are corrected while package routes stay authoritative
   await expect(
     page.getByRole("heading", { level: 2, name: "Item not found" }),
   ).toBeVisible();
+  // An address that names no viewport opens on Both, the default.
   await open(page, `${path}?catalogueScreen=start`);
   await expect(page).toHaveURL(/catalogueScreen=start/);
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "desktop",
+  await expect(page.locator("select[data-workspace-viewport]")).toHaveValue(
+    "both",
   );
 });
 
