@@ -222,9 +222,8 @@ captured before filtering began, except that an ancestor opened for the
 navigated destination stays open so the active row stays visible.
 
 Enhanced navigation preserves the selected viewport, colour scheme, and the
-right panel's tab. It collapses an expanded frame before installing the
-destination. Filters and search stay unchanged when the destination is already
-visible. Destination queries for the view axes and removed-entry snapshots
+right panel's tab. Filters and search stay unchanged when the destination is
+already visible. Destination queries for the view axes and removed-entry snapshots
 follow the [shell destination contract](./mokly-shell-destinations.md).
 
 ## Related Docs
