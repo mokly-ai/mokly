@@ -70,7 +70,10 @@ Swipe divider's line and grip take the surface of the document under them.
 `canvas/canvas-frame.css` imports the package stylesheets of the comparison
 panes and stage, whose stacked layers a frame holds in a comparison. No
 Canvas sheet names a colour: a role that the Canvas palette lacks mixes
-Canvas roles with `color-mix()`.
+Canvas roles with `color-mix()`. A focused control of a part draws the
+shell's focus glow, not an outline: the package's `--mbk-focus-glow`, or the
+same mix of `--cv-signal-deep` where no package element passes that property
+down, and a 2px `Highlight` outline in forced colours.
 
 `design-canvas-changes.css` sets the shipped comparison evidence in Inspect's
 type without the evidence's package stylesheet. No design sheet imports that

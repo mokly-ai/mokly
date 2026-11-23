@@ -49,7 +49,7 @@ const implementationOnly: ComparedEntry = {
 
 /** The live workspace of the component `card`, before any comparison loads. */
 function cardWorkspace(): WorkspaceData {
-  const card = { path: "card", title: "Card", kind: "component" };
+  const card = { path: "card", title: "Card", kind: "component", views: [] };
   return {
     base: "main",
     status: "Changed",
