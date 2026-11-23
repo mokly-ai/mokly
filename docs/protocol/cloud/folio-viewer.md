@@ -49,45 +49,45 @@ beside it when each applies; then the package's compact search, whose field
 draws the shortcut hint before its tag picker, as `⌘K`, or as `Ctrl K` off Apple
 platforms, its end control, and `topBarEnd` with History, Share and the
 account's avatar. The two outer columns are equal, so the pill stays in the
-middle. The project switcher gives up its width first; inside the centre's room
-the state's phrase gives way, then the reference, down to the room of a short
-name, and the controls keep their width. As the full bar narrows, the pill drops
-its short SHA, then History becomes a square quiet Button that draws its clock
-alone and keeps its accessible name and tooltip, then the pill drops its phrase
-and divider and keeps its dot. A narrower bar, as on mobile, cannot fit those
-five cloud targets, so `topBarStart` stays empty, `topBarCenter` keeps only the
-pill, which starts right after the mark and takes the free room, and `topBarEnd`
-carries one quiet **More** trigger with a chevron. Its rows are the current
-project, History and Share, which open the same overlays as the desktop
-controls, then the account rows; dismissal returns focus to the action's
-current trigger, as [Viewer chrome](./viewer-chrome.md#slot-inventory)
-defines. At a viewer width of 560px or less the package's search field is its
-own 30px search button, which opens a full-width search over the same row with
-both slots still mounted; Close or Escape returns to the button. That width is
-the viewer's container rather than the window, so between it and the product's
-compact breakpoint the compact row still carries the whole search field. Non-ready
-cloud-owned stages use the same order around the cloud's Mokly mark in three
-groups, without a search, because no catalogue is mounted, rather than inventing
-package navigation: the mark and the project, the centred pill, then the
-actions, or the mark, the pill and **More** in the compact form. The project
-switcher, the publication pill, History and **More** are `quiet` registered
-Buttons, so the bar reads as one control strip. The project switcher is one
-Button labelled with the project, with the workspace as its muted `lead` before
-a slash, and the switcher's up-down chevron, on one line, so a press anywhere on
-`workspace / project` opens the projects. The workspace gives up its width
-before the project does, and the whole `workspace / project` is the Button's
-accessible name and tooltip. History carries the history glyph, a clock with a
-back arrow, as its Button's icon, and **More** carries the switcher's chevron.
-Share is the screen's one filled action on the ready viewer: the `primary` tone,
-which Canvas paints `signalFill` with `onSignalFill` text. Under a panel, a
-sheet or the dialog, and over a non-ready stage, Share keeps the `secondary`
-tone, because the layer or the stage card owns the screen's filled action. The
-bar stays in one row. A narrower bar uses the compact composition described
-above. The compact row keeps the current publication, the package's own controls
-and **More** visible, while the menu gives every grouped action a 44px target.
-The document's `h1` is the project and its selected publication, carried by the
-chrome and visually hidden, because the triggers already name both and a second
-visible title would repeat them.
+middle. The project switcher gives up its width first; inside the centre's room the
+state's phrase gives way, then the reference, down to the pill's floor, and the
+controls keep their width. With the widest centre, a pull request's publication in
+Changes beside GitHub and View latest, the pill keeps only its glyph and the start
+of its reference from 1022px to about 1069px with the Mac window's buttons. As the
+full bar narrows, the pill drops its short SHA, then History becomes a square quiet
+Button that draws its clock alone and keeps its accessible name and tooltip, then
+the pill drops its phrase and divider and keeps its dot. A narrower bar, as on
+mobile, cannot fit those five cloud targets, so `topBarStart` stays empty,
+`topBarCenter` keeps only the pill, which starts right after the mark and takes the
+free room, and `topBarEnd` carries one quiet **More** trigger with a chevron. Its
+rows are the current project, History and Share, which open the same overlays as the
+desktop controls, then the account rows; dismissal returns focus to the action's
+current trigger, as [Viewer chrome](./viewer-chrome.md#slot-inventory) defines. At a
+viewer width of 560px or less the package's search field is its own 30px search
+button, which opens a full-width search over the same row with both slots still
+mounted; Close or Escape returns to the button. That width is the viewer's container
+rather than the window, so between it and the product's compact breakpoint the
+compact row still carries the whole search field. Non-ready cloud-owned stages use
+the same order around the cloud's Mokly mark in three groups, without a search,
+because no catalogue is mounted, rather than inventing package navigation: the mark
+and the project, the centred pill, then the actions, or the mark, the pill and
+**More** in the compact form. The project switcher, the publication pill, History
+and **More** are `quiet` registered Buttons, so the bar reads as one control strip.
+The project switcher is one Button labelled with the project, with the workspace as
+its muted `lead` before a slash, and the switcher's up-down chevron, on one line, so
+a press anywhere on `workspace / project` opens the projects. The workspace gives up
+its width before the project does, and the whole `workspace / project` is the
+Button's accessible name and tooltip. History carries the history glyph, a clock
+with a back arrow, as its Button's icon, and **More** carries the switcher's
+chevron. Share is the screen's one filled action on the ready viewer: the `primary`
+tone, which Canvas paints `signalFill` with `onSignalFill` text. Under a panel, a
+sheet or the dialog, and over a non-ready stage, Share keeps the `secondary` tone,
+because the layer or the stage card owns the screen's filled action. The bar stays
+in one row. A narrower bar uses the compact composition described above. The compact
+row keeps the current publication, the package's own controls and **More** visible,
+while the menu gives every grouped action a 44px target. The document's `h1` is the
+project and its selected publication, carried by the chrome and visually hidden,
+because the triggers already name both and a second visible title would repeat them.
 
 **Publication pill**. The branch or pull request and what the stage shows of
 it, as one quiet registered Button that draws them as its content, so a press
