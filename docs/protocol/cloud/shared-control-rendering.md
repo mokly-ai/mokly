@@ -46,8 +46,8 @@ A catalogue link around a registered control adapts the wrapper's single
 rendered Firna root to a native anchor; the supported roots are `a`, `button`,
 `div` and `span`, and the adapted control keeps its classes, styles and label.
 No outer wrapper is added around a Button and no interactive node is put in
-its decorative trailing slot. Disabled controls stay inert. Both file
-navigation and the served Browse shell work.
+its decorative trailing slot or its content. Disabled controls stay inert.
+Both file navigation and the served Browse shell work.
 
 The pinned `@mokly/mokly` release checks link placement in tiers — the
 ancestors, the root, then the descendants — and the closest error beats a

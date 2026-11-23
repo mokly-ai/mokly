@@ -70,7 +70,7 @@ cloud-owned stages use the same order around the cloud's Mokly mark in three
 groups, without a search, because no catalogue is mounted, rather than inventing
 package navigation: the mark and the project, the centred pill, then the
 actions, or the mark, the pill and **More** in the compact form. The project
-switcher, the publication trigger, History and **More** are `quiet` registered
+switcher, the publication pill, History and **More** are `quiet` registered
 Buttons, so the bar reads as one control strip. The project switcher is one
 Button labelled with the project, with the workspace as its muted `lead` before
 a slash, and the switcher's up-down chevron, on one line, so a press anywhere on
@@ -89,23 +89,30 @@ The document's `h1` is the project and its selected publication, carried by the
 chrome and visually hidden, because the triggers already name both and a second
 visible title would repeat them.
 
-**Publication pill**. The branch or pull request trigger and what the stage
-shows of it, in one rounded control on `surfaceMuted` with a hairline and the
-8px chrome radius, 32px tall and 40px on a phone, where the trigger keeps its
-44px target. The full pill holds the reference's glyph, branch or pull
-request, the reference trigger, a short divider, the decorative status dot,
-the state's phrase in secondary ink at the 13px `ui` size, such as
-`Ready · 15 Sep`, the short SHA in muted mono and a trailing chevron in muted
-ink; a pull request's phrase starts with its author. The compact pill holds
-the status dot, the glyph and the reference's compact name, a pull request's
-number or the last segment of a branch, with the chevron on the trigger. The
-trigger is a quiet registered Button with no frame of its own, so the pill is
-the frame the reader sees. Its label is the reference alone, and its
-accessible name and tooltip are the whole reference, so the glyph, the state
-and the chevron stay decorative. While a read decides the reference, the
-trigger is a placeholder in its own frame and the pill takes the bar's
-surface. A name that stands in for a reference that no read has reached, such
-as This build, draws no glyph.
+**Publication pill**. The branch or pull request and what the stage shows of
+it, as one quiet registered Button that draws them as its content, so a press
+anywhere on the pill, its hairline included, opens the switcher and never
+moves the Mac window. The pill is a rounded frame on `surfaceMuted` with a
+hairline and the 8px chrome radius, 32px tall and 40px on a phone, where the
+Button keeps its 44px target; the Button has no frame of its own. The full
+pill draws the reference's glyph, branch or pull request, the reference, a
+short divider, the decorative status dot, the state's phrase in secondary ink
+at the 13px `ui` size, such as `Ready · 15 Sep`, the short SHA in muted mono
+and a trailing chevron in muted ink; a pull request's phrase starts with its
+author. The compact pill draws the status dot, the glyph, the reference's
+compact name, a pull request's number or the last segment of a branch, and
+the chevron. A branch reads in regular mono at the `ui` size, as a reference
+does; a pull request keeps its number in semibold before its title in sans.
+The Button's accessible name and the pill's tooltip are the whole reference,
+the state's phrase and the short SHA, separated by commas, in both
+compositions, so the name holds every word that the pill shows. While a read
+decides the reference, the pill holds no control: a placeholder in the
+reference's own frame beside the state, and the pill takes the bar's surface.
+A name that stands in for a reference that no read has reached, such as This
+build, draws no glyph and reads in sans. Decision: the whole pill is one
+Button (decision 39, option B), so it has no dead area and can draw the branch
+in mono; a second control for the branch was rejected, because one action
+would then have two tab stops.
 
 **Account menu**. The account trigger is a quiet registered Button named by
 the reader, 34px wide, with the avatar laid over its middle as a decorative

@@ -6,7 +6,6 @@ import { AccountTrigger } from "./account-trigger";
 import type { AccountLabel } from "./account-trigger";
 import { HistoryTrigger, MoreTrigger, ShareTrigger } from "./bar-actions";
 import type { CheckedPullRequest } from "./check-panel";
-import { Pill, PillDot, PillGlyph, PillState } from "./pill";
 import type { ReferenceKind } from "./pill";
 import { ProjectTrigger } from "./project-trigger";
 import { slotBars, slotClass } from "./published-bar";
@@ -61,31 +60,6 @@ function SlotButton({
 }
 
 /**
- * The publication pill of one composition. The full pill holds the glyph, the
- * whole reference and the publication's state, and the compact pill the
- * status dot, the glyph and the reference's compact name. The published
- * viewer always shows a ready publication.
- */
-function PublishedPill({
-  bar,
-  subject,
-}: {
-  bar: SlotBar;
-  subject: PublishedSubject;
-}) {
-  return (
-    <Pill>
-      {bar.compact && <PillDot state="ready" />}
-      <PillGlyph kind={subject.kind} />
-      <ReferenceTrigger bar={bar} reference={subject.label} />
-      {!bar.compact && (
-        <PillState state="ready" detail={subject.detail} sha={subject.sha} />
-      )}
-    </Pill>
-  );
-}
-
-/**
  * The `topBarStart` slot: the quiet workspace and project switcher on the full
  * bar. The compact bar carries the project in More and draws nothing here, so
  * a phone leaves the slot empty and the package gives the centre column the
@@ -117,8 +91,9 @@ export function PublishedSlotStart({
 
 /**
  * The `topBarCenter` slot: the publication pill, in the middle of the full bar
- * and right after the mark on the compact bar. The full bar draws the
- * publication's Changes badge, GitHub and View latest beside it.
+ * and right after the mark on the compact bar. The published viewer always
+ * shows a ready publication. The full bar draws the publication's Changes
+ * badge, GitHub and View latest beside the pill.
  */
 export function PublishedSlotCenter({
   viewport,
@@ -133,7 +108,12 @@ export function PublishedSlotCenter({
       className={slotClass("fo-package-slot-center", bar)}
     >
       <span className="fo-package-publication">
-        <PublishedPill bar={bar} subject={subject} />
+        <ReferenceTrigger
+          bar={bar}
+          kind={subject.kind}
+          reference={subject.label}
+          meta={{ state: "ready", detail: subject.detail, sha: subject.sha }}
+        />
         {!bar.compact && subject.changes && (
           <span className="fo-top-badge">
             <Badge tone="neutral" size="sm">

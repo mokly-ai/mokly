@@ -10,7 +10,7 @@ import {
   endSession,
   retireAddressSlugs,
 } from "./settings-address-handoff";
-import { publishedProject } from "./viewer/support";
+import { publicationReference, publishedProject } from "./viewer/support";
 
 test("a signed-out retired settings link redirects without reading scope", async ({
   page,
@@ -123,7 +123,7 @@ test("private settings keep an exact branch and viewer query through email sign-
     "Publishing tokens",
     "notice/draft",
   );
-  await expect(page.getByTestId("viewer-publication")).toHaveText(branch);
+  await expect(publicationReference(page)).toHaveText(branch);
   await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
     "data-viewport",
     "both",

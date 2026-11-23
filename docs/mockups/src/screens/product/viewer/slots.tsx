@@ -5,7 +5,7 @@ import { SiteLink } from "../page-parts";
 import { WaitingDot } from "../placeholder-rows";
 import { ControlPlaceholder, TextBar } from "../placeholders";
 
-import { Pill, PillChevron, PillDot, PillGlyph, PillState } from "./pill";
+import { Pill, PillChevron, PillDot, PillState } from "./pill";
 import type { ReferenceKind } from "./pill";
 import { slotBars } from "./published-bar";
 import { ReferenceTrigger, switcherPath } from "./reference-trigger";
@@ -26,8 +26,8 @@ export interface SlotPullRequest {
 }
 
 /**
- * The width of the reference trigger's placeholder, in px: the 9rem frame
- * that `viewer-bar.css` gives the trigger, which a branch name such as the one
+ * The width of the reference's placeholder, in px: the 9rem frame that
+ * `viewer-bar.css` gives the reference, which a branch name such as the one
  * Cal reads fills.
  */
 const referenceFrameWidth = 144;
@@ -41,10 +41,9 @@ function compactPart(viewport: Viewport) {
 }
 
 /**
- * The reference trigger while nothing names the reference: a placeholder in
- * the reference's own frame, hidden from assistive technology like every
- * placeholder. The frame is the same in both compositions, so one placeholder
- * serves both.
+ * The reference while nothing names it: a placeholder in the reference's own
+ * frame, hidden from assistive technology like every placeholder. The frame
+ * is the same in both compositions, so one placeholder serves both.
  */
 function ReferencePlaceholder() {
   return (
@@ -55,32 +54,10 @@ function ReferencePlaceholder() {
 }
 
 /**
- * The reference trigger of each composition that the drawing's bar can show,
- * each opening the switcher. A phone draws the compact bar only, and a desktop
- * drawing draws both for the switch in `viewer-bar.css` to show one.
- */
-function ReferenceTriggers({
-  viewport,
-  reference,
-}: {
-  viewport: Viewport;
-  reference: string;
-}) {
-  return slotBars(viewport).map((bar) => (
-    <ReferenceTrigger
-      key={bar.part ?? "compact"}
-      bar={bar}
-      reference={reference}
-      to={switcherPath}
-    />
-  ));
-}
-
-/**
- * The publication pill of the cloud's bar: the compact bar's dot, the glyph
- * of the reference's kind, the trigger of each composition and the state
- * that the full bar shows. A glyph is drawn only once a branch or pull
- * request names the reference.
+ * The publication pill of the cloud's bar, which opens the switcher: one pill
+ * for each composition that the drawing's bar can show. A phone draws the
+ * compact bar only, and a desktop drawing draws both for the switch in
+ * `viewer-bar.css` to show one.
  */
 function SlotPill({
   viewport,
@@ -93,22 +70,24 @@ function SlotPill({
   reference: string;
   meta: SlotMeta;
 }) {
-  return (
-    <Pill>
-      <PillDot state={meta.state} part={compactPart(viewport)} />
-      {kind && <PillGlyph kind={kind} />}
-      <ReferenceTriggers viewport={viewport} reference={reference} />
-      <PillState state={meta.state} detail={meta.detail} sha={meta.sha} />
-    </Pill>
-  );
+  return slotBars(viewport).map((bar) => (
+    <ReferenceTrigger
+      key={bar.part ?? "compact"}
+      bar={bar}
+      kind={kind}
+      reference={reference}
+      meta={meta}
+      to={switcherPath}
+    />
+  ));
 }
 
 /**
- * The branch trigger, which opens the switcher, and what the stage shows of
- * it, in the pill. Until the address or a read names the reference, the
- * trigger is its placeholder, and the state beside it keeps its words. A
- * name that stands in for a reference no read has reached, such as This
- * build, draws no branch glyph.
+ * The branch and what the stage shows of it, in the pill that opens the
+ * switcher. Until the address or a read names the reference, the pill holds
+ * no control: the reference is its placeholder, and the state beside it keeps
+ * its words. A name that stands in for a reference no read has reached, such
+ * as This build, draws no branch glyph and reads in sans.
  */
 export function BranchSlot({
   viewport,
@@ -143,10 +122,11 @@ export function BranchSlot({
 
 /**
  * The publication slot while the route reads the project. The reference and
- * its state are the project's to tell, so the trigger is a placeholder in the
- * reference's own frame and the state is a dot and a bar in its own line, both
- * hidden from assistive technology like every placeholder. The pill keeps its
- * frame, its hairline and its chevron around them.
+ * its state are the project's to tell, so the pill holds no control: the
+ * reference is a placeholder in its own frame and the state is a dot and a
+ * bar in its own line, both hidden from assistive technology like every
+ * placeholder. The pill keeps its frame, its hairline and its chevron around
+ * them.
  */
 export function SlotPlaceholder({ viewport }: { viewport: Viewport }) {
   return (
@@ -166,8 +146,8 @@ export function SlotPlaceholder({ viewport }: { viewport: Viewport }) {
 }
 
 /**
- * The pull request trigger in the pill, with its author beside the state, and
- * the pull request on GitHub beside the pill in the full bar.
+ * The pull request in the pill, with its author beside the state, and the
+ * pull request on GitHub beside the pill in the full bar.
  */
 export function PullRequestSlot({
   viewport,

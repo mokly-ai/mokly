@@ -111,7 +111,10 @@ product screen passes to a Firna control.
 Typography may select a semantic color role, including inverse text for arrows
 on solid buttons; raw colors are forbidden. External layout containers may
 provide spacing, alignment and width; they must not change a control's own
-rendering. Use the public size and minimum-touch-target props for geometry. The
+rendering. The parts a registered Button draws as its content are the
+screen's own content and take the screen's styles; the Button around them
+keeps the package's geometry, tone and focus. Use the public size and
+minimum-touch-target props for geometry. The
 header pill is the package Button under a scoped theme whose medium radius is
 the pill radius.
 

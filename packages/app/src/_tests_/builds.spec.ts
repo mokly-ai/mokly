@@ -5,7 +5,7 @@ import { buildScenario } from "./build-scenario";
 import { expect, open, test } from "./harness";
 import { createToken, publish } from "./publish";
 import { build, buildId, branchRow } from "./viewer/build-fixtures";
-import { publishedViewerReady } from "./viewer/support";
+import { publicationReference, publishedViewerReady } from "./viewer/support";
 
 /** One step's column on the build card. */
 function steps(page: Page, step: string) {
@@ -51,7 +51,7 @@ test("Publish this branch follows its build to the published catalogue", async (
   }
   await expect(page.getByTestId("build-cancel")).toBeVisible();
   await expect(page.getByTestId("build-output")).toHaveCount(0);
-  await expect(page.getByTestId("viewer-publication")).toHaveText("topic");
+  await expect(publicationReference(page)).toHaveText("topic");
   await expect(page.locator(".fo-top-state")).toContainText("Publishing now");
 
   // The worker starts it: the next read moves the steps and shows output.
@@ -112,7 +112,7 @@ test("Publish this branch follows its build to the published catalogue", async (
       url.searchParams.get("view") === "changes",
   );
   await publishedViewerReady(page);
-  await expect(page.getByTestId("viewer-publication")).toHaveText("topic");
+  await expect(publicationReference(page)).toHaveText("topic");
 });
 
 test("a hidden tab stops reading and a visible one reads at once", async ({

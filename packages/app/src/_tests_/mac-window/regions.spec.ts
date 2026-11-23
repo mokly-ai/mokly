@@ -13,6 +13,7 @@ import {
   expectBarsClearOfButtons,
   expectMovesWindow,
   expectTakesClicks,
+  expectTakesClicksThroughout,
   partsUnderButtons,
   spaceAfter,
   windowInsets,
@@ -109,6 +110,15 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
   await expect(fallback.getByTestId("viewer-history")).toBeVisible();
   await expectBarRegions(fallback, "the fallback bar");
   await expectBarsClearOfButtons(page, { "the fallback bar": fallback });
+  // The whole pill is one control, so no press on it moves the window, on
+  // its hairline neither.
+  await emulateMacWindow(page, "start");
+  await expectTakesClicksThroughout(
+    page,
+    fallback.locator(".fo-canvas-pill"),
+    "the fallback bar's pill",
+  );
+  await clearMacWindow(page);
 
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
@@ -134,6 +144,13 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
       await expectBarRegions(slot, `the ${composition} bar's ${label}`);
     }
     await expectBarsClearOfButtons(page, slots);
+    await emulateMacWindow(page, "start");
+    await expectTakesClicksThroughout(
+      page,
+      centre.locator(".fo-canvas-pill"),
+      `the ${composition} bar's pill`,
+    );
+    await clearMacWindow(page);
     // The space after the project, up to the pill, and on the compact bar the
     // space after the pill, up to the search, belong to the cloud's slots, so
     // they move the window too.

@@ -5,7 +5,7 @@ import { Label } from "@firna/ui/typography";
 import { primaryActionUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { useCompact } from "../layout/viewport";
 import { follow } from "../navigation/follow";
@@ -71,6 +71,16 @@ export type ActionProps = ActionSemantics &
      * word alone.
      */
     lead?: string;
+    /**
+     * Parts the Button draws inside itself in place of its label, through the
+     * package Button's own content, such as a reference in mono beside its
+     * state. The label stays the control's name, unless an
+     * `accessibilityLabel` gives one. It takes the place of the lead, the
+     * icon, the arrow and the chevron, which the parts draw when they need
+     * them; the icon-only form and a working word take its place. It holds no
+     * interactive node.
+     */
+    content?: ReactNode;
     icon?: ActionIcon;
     /**
      * Draw the icon alone in a square box, with the label as the accessible
@@ -133,12 +143,14 @@ function primaryHoverLift({
  * no box, so its hover keeps the resting fill and the lift above stands in
  * for a darker one. A control with a lead draws it through the Button's own
  * content, and without an `accessibilityLabel` it is named by the lead, the
- * slash and the label. An icon-only control draws the package Button's own
+ * slash and the label. A control with content draws its parts the same way,
+ * named by its label. An icon-only control draws the package Button's own
  * square icon box, and the element around it carries its tooltip.
  */
 export function Action({
   label,
   lead,
+  content,
   tone = "secondary",
   size = "lg",
   block,
@@ -174,6 +186,9 @@ export function Action({
   // The icon alone, named by the label, or by the caller's whole name.
   const glyph = iconOnly === true && icon !== undefined;
   const name = semantics.accessibilityLabel ?? label;
+  // The caller's parts, unless the icon alone or a working word is drawn.
+  const parts =
+    glyph || running !== undefined || content == null ? undefined : content;
   const button = (
     <Button
       tone={tone === "quiet" ? "plain" : tone}
@@ -193,13 +208,14 @@ export function Action({
       style={tone === "primary" ? primaryHoverLift : undefined}
       {...semantics}
       accessibilityLabel={
-        glyph
+        glyph || parts !== undefined
           ? name
           : (semantics.accessibilityLabel ??
             (lead === undefined ? undefined : lead + " / " + label))
       }
       content={
-        glyph || lead === undefined || running !== undefined ? undefined : (
+        parts ??
+        (glyph || lead === undefined || running !== undefined ? undefined : (
           <LeadLabel
             lead={lead}
             label={label}
@@ -207,7 +223,7 @@ export function Action({
             size={size}
             chevron={chevron === true}
           />
-        )
+        ))
       }
       trailing={
         glyph ? undefined : arrow ? (

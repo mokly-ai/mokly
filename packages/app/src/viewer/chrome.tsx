@@ -2,14 +2,10 @@ import type { ReactNode, RefObject } from "react";
 
 import { Action } from "../components/action";
 import type { ActionIcon } from "../components/action";
-import { StateDot } from "../components/controls";
 import { SiteLink } from "../components/page-parts";
 
 import { useBarLabels, useCompactBar } from "./bar-width";
 import type { ViewerSlotName } from "./host";
-import { PillChevron } from "./pill";
-import type { PublicationState } from "./resolution";
-import { publicationTones } from "./resolution";
 import { useViewerSlotSource } from "./slot-source";
 
 /**
@@ -92,77 +88,6 @@ export function ProjectTrigger({
         />
       </span>
     </Slot>
-  );
-}
-
-/**
- * The branch or pull request the stage is showing, and the way to another:
- * the quiet Button inside the publication pill, which is the frame the reader
- * sees. The compact pill's trigger carries the chevron, and the full pill
- * draws its chevron after the state.
- */
-export function PublicationTrigger({
-  label,
-  open,
-  onOpen,
-}: {
-  label: string;
-  open: boolean;
-  onOpen: () => void;
-}) {
-  const compact = useCompactBar();
-  const slash = label.lastIndexOf("/");
-  const space = label.indexOf(" ");
-  const shown =
-    compact && label.startsWith("#") && space > 0
-      ? label.slice(0, space)
-      : compact && slash >= 0
-        ? label.slice(slash + 1)
-        : label;
-  return (
-    <span className="fo-top-reference" title={label}>
-      <Action
-        label={shown}
-        accessibilityLabel={label}
-        tone="quiet"
-        size="sm"
-        chevron={compact}
-        block
-        singleLine
-        expanded={open}
-        hasPopup="dialog"
-        onPress={onOpen}
-        testID="viewer-publication"
-      />
-    </span>
-  );
-}
-
-/**
- * What the full pill says about the publication the stage is showing, after
- * its trigger: a hairline, the decorative status dot, the state's phrase, the
- * short SHA in mono and the chevron at the pill's end. The state sits outside
- * the trigger, so the trigger's label stays the reference the reader
- * recognizes and the publication's own identity stays secondary. The compact
- * bar hides it.
- */
-export function PublicationMeta({
-  state,
-  detail,
-  sha,
-}: {
-  state: PublicationState;
-  detail: string;
-  sha?: string;
-}) {
-  return (
-    <span className="fo-top-state" data-mkc-publication-state={state}>
-      <span className="fo-canvas-pill-rule" />
-      <StateDot tone={publicationTones[state]} />
-      <span className="fo-top-state-detail">{detail}</span>
-      {sha && <code className="mono-value">{sha}</code>}
-      <PillChevron />
-    </span>
   );
 }
 

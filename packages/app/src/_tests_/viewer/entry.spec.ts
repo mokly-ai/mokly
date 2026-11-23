@@ -12,7 +12,11 @@ import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import { pullRequest } from "./fixtures";
-import { expectParentUsage, publishedViewerReady } from "./support";
+import {
+  expectParentUsage,
+  publicationReference,
+  publishedViewerReady,
+} from "./support";
 
 /** A signed-in reader with a project whose publications this test writes. */
 async function project(page: Page, label: string): Promise<string> {
@@ -29,7 +33,7 @@ test("standalone entry opens a ready publication and names its branch", async ({
 
   await open(page, await projectPathFor(page, projectId));
   await expect(page).toHaveURL(new RegExp(`publications/${main.id}$`));
-  await expect(page.getByTestId("viewer-publication")).toHaveText("main");
+  await expect(publicationReference(page)).toHaveText("main");
   await expect(page.locator(".fo-top-state")).toContainText("Ready · ");
   const viewer = page.locator("[data-mokly-shell]");
   await expect(viewer).toBeVisible();
@@ -59,7 +63,7 @@ test("a branch alias resolves that branch's newest ready publication", async ({
   await open(page, await branchPathFor(page, projectId, "topic"));
   await expect(page).toHaveURL(new RegExp(`publications/${newer.id}$`));
   expect(newer.id).not.toBe(older.id);
-  await expect(page.getByTestId("viewer-publication")).toHaveText("topic");
+  await expect(publicationReference(page)).toHaveText("topic");
   await publishedViewerReady(page);
 
   // Switching from the chrome resolves the other branch the same way.
@@ -70,7 +74,7 @@ test("a branch alias resolves that branch's newest ready publication", async ({
     .filter({ hasText: "main" })
     .getByText("Open")
     .click();
-  await expect(page.getByTestId("viewer-publication")).toHaveText("main");
+  await expect(publicationReference(page)).toHaveText("main");
 });
 
 test("a pull request alias resolves its publication and can land on Changes", async ({
@@ -213,7 +217,7 @@ test("a routed move from a screen-bearing address keeps its path", async ({
     .filter({ hasText: "topic" })
     .getByText("Open")
     .click();
-  await expect(page.getByTestId("viewer-publication")).toHaveText("topic");
+  await expect(publicationReference(page)).toHaveText("topic");
   // The path names the page, with nothing of the reserved key's value in it.
   const path = new URL(page.url()).pathname;
   expect(path, "the rebuilt path carries no navigator segment").not.toContain(

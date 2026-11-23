@@ -8,15 +8,18 @@ import type { BarPlacement } from "../../viewer/bar";
 import {
   BarAction,
   ProjectTrigger,
-  PublicationMeta,
-  PublicationTrigger,
   PullRequestLink,
   Slot,
   ViewLatest,
 } from "../../viewer/chrome";
 import { ReferenceTriggerWait } from "../../viewer/chrome-wait";
 import type { ViewerSlots, ViewerView } from "../../viewer/host";
-import { PillDot, PillGlyph, PublicationPill } from "../../viewer/pill";
+import {
+  PillDot,
+  PublicationMeta,
+  PublicationPill,
+  PublicationTrigger,
+} from "../../viewer/pill";
 import type { ReferenceKind } from "../../viewer/pill";
 import type { PublicationState } from "../../viewer/resolution";
 import {
@@ -124,41 +127,42 @@ function referenceKind(subject: ChromeSubject): ReferenceKind | undefined {
 }
 
 /**
- * The publication pill: the compact bar's status dot, the reference's glyph,
- * the reference trigger and the state that the full bar shows. Until the
- * address or a read names the reference, the trigger draws its placeholder in
- * its own frame. Beside the pill, the full bar draws the Changes badge, the
- * pull request on GitHub and View latest, when each applies.
+ * The publication pill: one control that draws the compact bar's status dot,
+ * the reference's glyph, the reference and the state that the full bar
+ * shows, and opens the switcher. Until the address or a read names the
+ * reference, the pill holds no control: the reference's placeholder in its
+ * own frame, beside the state. Beside the pill, the full bar draws the
+ * Changes badge, the pull request on GitHub and View latest, when each
+ * applies.
  */
 function publicationSlot(input: SlotInput): ReactNode {
   const current = meta(input.subject);
+  const detail = attributed(current.detail, input.subject.author);
   const label = input.subject.label;
   const compact = input.placement.compact;
-  const kind = label === undefined ? undefined : referenceKind(input.subject);
   return (
-    <Slot
-      name="switcher"
-      slotRef={input.refs.switcher}
-      title={compact ? label : undefined}
-    >
-      <PublicationPill waiting={label === undefined}>
-        {compact && <PillDot state={current.state} />}
-        {kind && <PillGlyph kind={kind} />}
-        {label === undefined ? (
+    <Slot name="switcher" slotRef={input.refs.switcher}>
+      {label === undefined ? (
+        <PublicationPill waiting>
+          {compact && <PillDot state={current.state} />}
           <ReferenceTriggerWait />
-        ) : (
-          <PublicationTrigger
-            label={label}
-            open={input.panel === "switcher"}
-            onOpen={() => input.onPanel("switcher")}
+          <PublicationMeta
+            state={current.state}
+            detail={detail}
+            sha={current.sha}
           />
-        )}
-        <PublicationMeta
+        </PublicationPill>
+      ) : (
+        <PublicationTrigger
+          label={label}
+          kind={referenceKind(input.subject)}
           state={current.state}
-          detail={attributed(current.detail, input.subject.author)}
+          detail={detail}
           sha={current.sha}
+          open={input.panel === "switcher"}
+          onOpen={() => input.onPanel("switcher")}
         />
-      </PublicationPill>
+      )}
       {!compact && input.view === "changes" && (
         <span className="fo-top-badge">
           <StatusBadge label="Changes" />

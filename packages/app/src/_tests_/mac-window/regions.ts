@@ -81,6 +81,64 @@ export async function expectBarRegions(bar: Locator, label: string) {
 }
 
 /**
+ * What the Mac app's window does at one point, as Electron collects the
+ * page's regions: the region of the last element in document order whose box
+ * holds the point and that sets `drag` or `no-drag`, else `none`. An element
+ * that sets no region, such as a control's hit area drawn past its box,
+ * takes no click away from the region beneath it.
+ */
+export function regionAt(page: Page, x: number, y: number): Promise<string> {
+  return page.evaluate(
+    ([pointX, pointY, property]) => {
+      let region = "none";
+      for (const element of document.querySelectorAll("*")) {
+        const value = getComputedStyle(element).getPropertyValue(property);
+        if (value !== "drag" && value !== "no-drag") continue;
+        const box = element.getBoundingClientRect();
+        if (
+          pointX >= box.left &&
+          pointX < box.right &&
+          pointY >= box.top &&
+          pointY < box.bottom
+        )
+          region = value;
+      }
+      return region;
+    },
+    [x, y, appRegion] as const,
+  );
+}
+
+/**
+ * The part takes clicks at every point of its box in the Mac app's window,
+ * so no press on it moves the window: one pixel inside each edge, where its
+ * hairline is, and at its middle.
+ */
+export async function expectTakesClicksThroughout(
+  page: Page,
+  part: Locator,
+  label: string,
+) {
+  const box = await part.boundingBox();
+  expect(box, `${label} is drawn`).not.toBeNull();
+  if (box === null) return;
+  const { x, y, width, height } = box;
+  for (const [where, pointX, pointY] of [
+    ["start edge", x + 0.5, y + height / 2],
+    ["end edge", x + width - 0.5, y + height / 2],
+    ["top edge", x + width / 2, y + 0.5],
+    ["bottom edge", x + width / 2, y + height - 0.5],
+    ["middle", x + width / 2, y + height / 2],
+  ] as const)
+    await expect
+      .poll(
+        () => regionAt(page, pointX, pointY),
+        `${label} takes clicks at its ${where}`,
+      )
+      .toBe("no-drag");
+}
+
+/**
  * What the page draws in the free space after a part, inside the slot that
  * holds it: the space's width, and the computed region of the element at its
  * middle, which says whether that space moves the Mac window.

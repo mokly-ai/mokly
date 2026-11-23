@@ -3,8 +3,9 @@
  * bar holds the project switcher, the publication pill, History, Share and
  * the account's avatar, and the compact bar the pill and More. The project
  * switcher is one control that leads with the workspace and keeps the whole
- * name; the pill's trigger keeps the reference as its own label, with the
- * state and the SHA outside it; the avatar's control keeps the reader's whole
+ * name; each pill is one control that draws the reference in its face, the
+ * state and the SHA, named by all of them; the avatar's control keeps the
+ * reader's whole
  * name, with the initials outside it; History's clock and More's chevron are
  * their controls' own. Share is filled only where it is the screen's one
  * primary action. The menus that the avatar and More open are checked in
@@ -21,7 +22,7 @@ import type { DefaultTreeAdapterMap } from "parse5";
 
 import { sample } from "../fixtures/product";
 import { denseViewerChrome } from "../fixtures/product-states";
-import { publication } from "../fixtures/publications";
+import { publication, pullRequest } from "../fixtures/publications";
 
 import { screenFile } from "./catalogue-paths";
 import type { Scheme, Viewport } from "./catalogue-paths";
@@ -68,7 +69,18 @@ function linksIn(node: Node): Element[] {
 const named = sample.workspace + " / " + sample.project;
 const menuPath = "product/viewer/standalone/account-menu";
 
-test("the full pill keeps the reference as its trigger's label and the state beside it", () => {
+/** The ready pill's phrase: the state word and the day it was published. */
+const readyPhrase = "Ready · " + publication.time.split(",")[0];
+
+/** The one control that fills a pill, or a failure naming the pill. */
+function pillControl(pill: Element, where: string): Element {
+  const [control, ...more] = buttonsIn(pill);
+  assert.ok(control, where);
+  assert.equal(more.length, 0, where);
+  return control;
+}
+
+test("each composition's pill is one control, named by every word it can show", () => {
   const drawn = page("product/viewer/standalone");
   // Both bars draw their pill in the centre slot, and the compact bar leaves
   // its start slot empty, so its pill comes right after the package's mark.
@@ -87,17 +99,64 @@ test("the full pill keeps the reference as its trigger's label and the state bes
   );
   const full = one(fullCentre, "fo-canvas-pill");
   const compact = one(compactCentre, "fo-canvas-pill");
-  assert.deepEqual(buttonsIn(full).map(label), [publication.branch]);
-  const state = one(full, "fo-top-state");
+  // Each pill is one Button, which the pill's frame titles, named by the
+  // whole branch, the state's phrase and the short SHA, so a part that the
+  // compact pill leaves out stays in the name.
+  const whole = [publication.branch, readyPhrase, publication.sha].join(", ");
+  for (const [pill, where] of [
+    [full, "full"],
+    [compact, "compact"],
+  ] as const) {
+    const control = pillControl(pill, where);
+    assert.equal(attribute(control, "aria-label"), whole, where);
+    assert.equal(attribute(pill, "title"), whole, where);
+    assert.equal(byClass(control, "fo-canvas-pill-chevron").length, 1, where);
+  }
+  // The full pill draws the whole branch in mono, the state's phrase and the
+  // short SHA inside its control.
+  const control = pillControl(full, "full");
   assert.equal(
-    label(one(state, "fo-top-state-detail")),
-    "Ready · " + publication.time.split(",")[0],
+    label(one(control, "fo-canvas-pill-branch")),
+    publication.branch,
   );
+  const state = one(control, "fo-top-state");
+  assert.equal(label(one(state, "fo-top-state-detail")), readyPhrase);
   assert.equal(label(one(state, "mono-value")), publication.sha);
-  assert.equal(buttonsIn(state).length, 0);
-  // The compact pill names the branch's last segment and leaves the state out.
-  assert.deepEqual(buttonsIn(compact).map(label), ["sydney-v1"]);
+  // The compact pill draws its dot and the branch's last segment in mono,
+  // and leaves the state out.
+  const short = pillControl(compact, "compact");
+  assert.equal(byClass(short, "fo-canvas-pill-dot").length, 1);
+  assert.equal(label(one(short, "fo-canvas-pill-branch")), "sydney-v1");
   assert.equal(byClass(compact, "fo-top-state").length, 0);
+});
+
+test("a pull request's pill keeps its number in semibold before its title in sans", () => {
+  const drawn = page("product/viewer/pull-request");
+  const reference = pullRequest.number + " " + pullRequest.title;
+  // The day of the fixture's published line, as the pill words it.
+  const phrase = "Ready · 15 Sep";
+  const [full, compact, ...more] = byClass(drawn, "fo-canvas-pill");
+  assert.ok(full && compact);
+  assert.equal(more.length, 0);
+  for (const [pill, shown] of [
+    [full, reference],
+    [compact, pullRequest.number],
+  ] as const) {
+    const control = pillControl(pill, shown);
+    assert.equal(
+      attribute(control, "aria-label"),
+      [reference, pullRequest.author + " · " + phrase, pullRequest.sha].join(
+        ", ",
+      ),
+      shown,
+    );
+    assert.equal(label(one(control, "fo-canvas-pill-name")), shown);
+    assert.equal(
+      label(one(control, "fo-canvas-pill-number")),
+      pullRequest.number,
+    );
+    assert.equal(byClass(control, "fo-canvas-pill-branch").length, 0, shown);
+  }
 });
 
 test("the avatar's control keeps the reader's whole name, and its initials stay outside it", () => {
@@ -181,15 +240,17 @@ test("the cloud's bar leads each control to its screen and draws no Settings", (
   const glyph = linksIn(bar).find((link) => label(link) === "");
   assert.ok(glyph && glyph.parentNode && "tagName" in glyph.parentNode);
   assert.equal(attribute(glyph.parentNode, "title"), "History");
+  // Each pill is one link, named by the branch and the state's phrase.
+  const pill = publication.branch + ", Not published";
   assert.deepEqual(
     linksIn(bar).map((link) => [
-      label(link) || attribute(link, "aria-label"),
+      attribute(link, "aria-label") ?? label(link),
       destination(link),
     ]),
     [
       [named, "product/viewer/projects"],
-      [publication.branch, "product/viewer/switcher"],
-      ["sydney-v1", "product/viewer/switcher"],
+      [pill, "product/viewer/switcher"],
+      [pill, "product/viewer/switcher"],
       ["History", "product/viewer/history"],
       ["History", "product/viewer/history"],
       ["Share", "product/viewer/share"],

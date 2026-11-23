@@ -70,14 +70,18 @@ stylesheet, so its 44px target and its marker are declared once for both
 surfaces.
 
 **Accessible name**. A control's accessible name contains the words it shows.
-A label shortened to fit — the compact bar's publication trigger, which shows
-a pull request's number or the last segment of a branch that the row cannot
+A label shortened to fit — the compact bar's publication pill, which shows a
+pull request's number or the last segment of a branch that the row cannot
 hold whole — takes the whole value as its accessible name, which contains what
 is on screen; a label that is already whole takes no other name, so the name a
 reader says is the name the control answers to. The property holds wherever a
 label is shortened: the visible text finds the control by role. A control that
 shows a picture in place of its label, as the account trigger shows the
 reader's avatar, takes the whole value as its accessible name and its tooltip.
+A control that draws parts inside itself, as the publication pill draws its
+reference beside the publication's state and short SHA, takes the words of
+every part that it can show, in the order shown, as its accessible name and
+its tooltip, so a part that a narrower bar drops stays in the name.
 
 **Wait**. What a region draws while a read that it needs runs: the layout that
 it waits for, in the shape that the answer fills. A screen draws this wait for
