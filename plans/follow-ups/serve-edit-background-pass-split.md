@@ -30,9 +30,11 @@
   - `packages/mokly/src/sidecar/transport.ts:8`: the frame decoder.
   - `packages/mokly/src/sidecar/evaluate.ts:47`: the `new Function`
     evaluation of the bundle.
-  - `packages/mokly/src/sidecar/styles.ts:150` and
-    `packages/mokly/src/sidecar/registry-styles.ts:32`: the per-render parse of
-    the whole style registry.
+  - `packages/mokly/src/sidecar/styles.ts:153` in `collectStyles`, and
+    `packages/mokly/src/sidecar/registry-index.ts:56` (`registryIndexOf`) and
+    `:74` (`RegistryIndex`): the style registry index of C1. Its fallback is
+    `registryStyles` at `packages/mokly/src/sidecar/registry-styles.ts:92`,
+    which parses the whole text on each call.
   - `crates/mokly-server/src/changes_execution.rs:22`: `changes.classify`, and
     `crates/mokly-cli/src/serve_base.rs:124`, where the kept-base check reads
     the dependency directories that the renders record.
@@ -75,8 +77,8 @@
     numbers. The baseline is `main` at
     `9bdb0569d3ac0214bf303c599854a70b20dc2b2c`, PR #467. Each number and each
     code fact of this Background and of that section is of that commit,
-    before PR #468, PR #469, and the cuts B1, B2, and B4, except in a bullet
-    that names another commit, pull request, or cut.
+    before PR #468, PR #469, and the cuts B1, B2, B4, and C1, except in a
+    bullet that names another commit, pull request, or cut.
   - The second speed change of the branch, H, W1, and C1 of 2026-11-22, was
     built in commits `ea6724a03` (H), `f453c0440` (W1), `a9a09edf2` (C1), and
     `0910565bf` (the C1 index under a weak key), and reverted in `11f8e4ac4`.
@@ -90,12 +92,20 @@
     passes, the time to the last view is 23.6 ms plus 0.273 times the CPU of
     the pass. So each millisecond of CPU that leaves the pass saves about
     0.27 ms.
-  - C1 did not confirm this fit. A probe in the sidecars timed the 44 filter
-    calls of each warm edit at a mean of 2.8 ms each, about 100 to 120 ms of
-    wall time inside the busy sidecars. But `serve.background` did not get
-    shorter in the timed gate of `a9a09edf2` against `main` `a2ae56360`
-    (+8 ms) or in the timed split of `0910565bf` against `main` `c699b35d3`
-    (+4 ms). That figure is wall time, not a measured CPU saving.
+  - C1 did not confirm this fit on warm edits. A probe in the sidecars timed
+    the 44 filter calls of each warm edit at a mean of 2.8 ms each, about 100
+    to 120 ms of wall time inside the busy sidecars. But `serve.background`
+    did not get shorter in the timed gate of `a9a09edf2` against `main`
+    `a2ae56360` (+8 ms) or in the timed split of `0910565bf` against `main`
+    `c699b35d3` (+4 ms). That figure is wall time, not a measured CPU saving.
+  - On 2026-11-23, two checks measured C1 at the cold start of Serve, a start
+    with a fresh cache. On mokly-cloud, the first Changes of a cold session
+    came 756 ms and 1,078 ms sooner on the paired means. The head pass and the
+    base capture of a cold start render about 3,000 views. So these checks do
+    not test the fit of the warm pass, which renders 44 views. On that date
+    the performance orchestrator chose to bring C1 back for the cold start.
+    The section "C1 at the cold start, measured on 2026-11-23" gives the
+    numbers.
   - All four sidecars render in each pass. The holder starts its first render
     at a median of 17 ms. Each of the three cold sidecars first spends a
     median of 200 ms on its preparation, so it starts its first render at a
@@ -135,23 +145,25 @@
     10-edit sessions stayed equal, 3,110 to 3,109 MiB. A confirm check of the
     final code on 4 rounds measured `changes.classify` 190 to 152 ms.
 - **Problem:** After B1, B2, and B4, each warm mokly-cloud edit still spends
-  about 410 ms in the CPU-bound background pass, and the safe CPU cuts of the
-  pass are not built. The goal of 100 ms is not reached: the gate measured
-  -87 ms. The second speed change, H, W1, and C1, was measured on
-  2026-11-22 and reverted, because its pooled untimed check missed its bar. Until 2026-11-22 the
-  problem was: each warm edit spends about 400 ms in the CPU-bound background
-  pass and about 160 ms in serial work after its last view; no single cut
-  saves 60 ms, and the cuts without a protocol change reach about 75 ms only
-  together.
+  about 410 ms in the CPU-bound background pass. C2 and C3, two of the three
+  safe CPU cuts of the pass, are not built. The goal of 100 ms is not reached:
+  the gate measured -87 ms. The second speed change, H, W1, and C1, was
+  measured on 2026-11-22 and reverted, because its pooled untimed check missed
+  its bar. On 2026-11-23 the performance orchestrator chose to bring back C1,
+  the third safe cut, for its gain at the cold start. C1 gives no measured
+  gain on warm edits. Until 2026-11-22 the problem was: each warm
+  edit spends about 400 ms in the CPU-bound background pass and about 160 ms
+  in serial work after its last view; no single cut saves 60 ms, and the cuts
+  without a protocol change reach about 75 ms only together.
 - **Impact if no action:** Each warm edit on mokly-cloud keeps the work that
   C2 and C3 would remove: two of the three encodes of the 5.9 MB restore
   request, 13 to 17 ms each, and the byte loop of the frame decode, about
   7 ms for each 10.3 MB frame. No measurement shows how much of it the pass
-  would gain, because C1 did not confirm the 0.27 ms fit. The first edit
-  after a warm start keeps the watch candidate that W2 and W4 would shorten,
-  up to about 33 ms. Until 2026-11-22 the impact was: a background pass of about 320 to 540 ms,
-  median 400 ms, and about 150 to 180 ms of serial work after the last view,
-  in the local runs of that date.
+  would gain, because C1 did not confirm the 0.27 ms fit on warm edits. The
+  first edit after a warm start keeps the watch candidate that W2 and W4
+  would shorten, up to about 33 ms. Until 2026-11-22 the impact was: a
+  background pass of about 320 to 540 ms, median 400 ms, and about 150 to
+  180 ms of serial work after the last view, in the local runs of that date.
 - **Root question:** How can a warm edit publish Changes at least 100 ms
   sooner, by removing CPU work and serial waits from the background pass and
   the work after it, with the same output and a whole-tree peak within 2% of
@@ -207,9 +219,13 @@
     index was built and measured as C1 on 2026-11-22 and reverted: it cut
     filter calls that took about 100 to 120 ms of wall time for each warm
     edit inside the busy sidecars, but `serve.background` did not get shorter
-    in either timed run. No test covered its fallback to `registryStyles`. The
-    section "H, W1, and C1, measured on 2026-11-22" gives the numbers. The one
-    encode of each restore request is C2, and the native frame scan is C3.
+    in either timed run. On 2026-11-22 no test covered its fallback to
+    `registryStyles`. The section "H, W1, and C1, measured on 2026-11-22" gives
+    the numbers. On 2026-11-23 the orchestrator chose to bring C1 back for its
+    gain at the cold start of Serve. The code came back with a test of that
+    fallback. The section "C1 at the cold start, measured on 2026-11-23" gives
+    the cold-start numbers. The one encode of each restore request is C2, and
+    the native frame scan is C3.
     - Two more parts touch the seed path and the released-recipe release: a
       release without the lock-held encode and without the one-at-a-time
       disposes, about 3 to 8 ms, and a render-only restore, about 15 to
@@ -308,6 +324,12 @@
     render sidecars run `describe` after Changes publishes. This split shows
     three prerequisite `describe` calls inside each warm pass, before
     Changes.
+  - [registry-index-analysis-growth.md](./registry-index-analysis-growth.md)
+    holds a cost of the C1 index. With hundreds of keyframes, font-face, or
+    property names, or with many rules of one name, its build time and its
+    memory grow faster than the registry text. React Native Web does not write
+    such registries in practice. The fix of that item changes the C1 code that
+    the section "C1 at the cold start, measured on 2026-11-23" describes.
 - **Decisions:**
   - 2026-11-22, the performance orchestrator chose B of the first decision of
     this item: split the serial work after the last view with the same probe,
@@ -367,6 +389,21 @@
     needs a protocol decision that is not taken for 15 to 18 ms.
   - 2026-11-22, the performance orchestrator: D, E, and the V8 code cache stay
     recorded as ranked here.
+  - 2026-11-23, the performance orchestrator: C1 comes back for the cold start
+    of Serve. For C1 only, this replaces the decision of 2026-11-22 that H, W1,
+    and C1 do not merge. That decision stays in force for H and W1.
+    - The mechanism: on mokly-cloud, the head pass and the base capture of a
+      cold start render about 3,000 views on the sidecars. That work is
+      CPU-bound. Before C1, each render ran `postcss.parse` on the whole
+      registry text.
+    - The diagnostic of the orchestrator on that date measured the first
+      Changes of a cold mokly-cloud start 756 ms sooner on the paired mean.
+      5 of 6 pairs were faster. The whole-tree peak was 2,987 to 2,992 MiB on
+      the mean (+4 MiB, +0.1%).
+    - Branch `calummoore/mokly-style-registry-index-h75s` brought C1 back. The
+      section "C1 at the cold start, measured on 2026-11-23" gives the
+      numbers, the rule of the official check of the orchestrator, and its
+      result.
 - **The watch candidate of the first edit after a warm start:**
   - Measured on 2026-11-22 on mokly-cloud with a probe on one clock: the
     candidate of the first edit takes 36 to 52 ms, and the candidates of
@@ -420,9 +457,11 @@
       resolver probe.
     - W3, equal resolver probes in both bundles, stays out, because it changes
       the resolution records of the bundler.
-- **Recommendation:** G. Its parts are the cuts that stay open: B1, B2, and
-  B4 of option F merged in #472, and C1 and W1 were measured and reverted on
-  2026-11-22. Until 2026-11-22 the recommendation was F without B3.
+- **Recommendation:** G. Its parts are the cuts that stay open: C2, C3, W2,
+  and W4. B1, B2, and B4 of option F merged in #472. C1 and W1 were measured
+  and reverted on 2026-11-22. On 2026-11-23 the performance orchestrator chose
+  to bring C1 back for the cold start of Serve. Until 2026-11-22 the
+  recommendation was F without B3.
 - **Action:** ask the user, because the performance orchestrator chose on
   2026-11-22 to wait with C2, C3, W2, and W4 until it chooses them. H comes
   back only through option I of
@@ -435,8 +474,8 @@
 All times are in milliseconds. They are local measurements with a probe, not
 official Changes timings, and the performance orchestrator owns the official
 measurements. Each number and each code fact of this section is of `main` at
-`9bdb0569d`, before PR #468, PR #469, and the cuts B1, B2, and B4, except in a
-bullet that names another commit, pull request, or cut.
+`9bdb0569d`, before PR #468, PR #469, and the cuts B1, B2, B4, and C1, except
+in a bullet that names another commit, pull request, or cut.
 
 ### Method
 
@@ -657,9 +696,12 @@ https://github.com/mokly-ai/mokly/blob/0910565bf3a7abac064b2bc7b04845e913ee1260/
   that a later candidate with equal inputs reused it.
 - **C1:** each sidecar generation kept an index of the React Native Web
   style registry text, at most 1 text and 64 outputs, so that a render found
-  its needed rules with no parse. The filter of `main` stayed as the
-  fallback. The review of 2026-11-22 found that no test covered that
-  fallback, for a registry text that the index cannot read.
+  its needed rules with no parse. `registryStyles`, the filter of `main` on
+  that date, stayed as the fallback. The review of 2026-11-22 found that no
+  test covered that fallback, for a registry text that the index cannot read.
+  On 2026-11-23 branch `calummoore/mokly-style-registry-index-h75s` brought
+  this code back with a test of that fallback. The section "C1 at the cold
+  start, measured on 2026-11-23" gives its tests and its checks.
 
 ### Measurements of the performance orchestrator
 
@@ -732,11 +774,11 @@ check: all edits at least 15 ms sooner, and edit 1 not slower than `main`.
   edit-1 bundle took 955 to 1,133 ms in every arm, and all 4 sidecars
   rendered in every edit. The factorial found no mechanism for the +118 ms
   of the confirm.
-- C1 in the sidecar: the filter of `main` took a median of 1.88 ms for each
-  call inside the sidecars, and the same registry text repeated in 2,033 of
-  2,049 calls. Outside the sidecar, on that text, the filter of `main` took
-  411 to 603 us, an index hit 23 to 103 us, and a memo miss 98 to 245 us.
-  One index held about 297 KiB.
+- C1 in the sidecar: `registryStyles`, the filter of `main` on that date,
+  took a median of 1.88 ms for each call inside the sidecars, and the same
+  registry text repeated in 2,033 of 2,049 calls. Outside the sidecar, on
+  that text, `registryStyles` took 411 to 603 us, an index hit 23 to 103 us,
+  and a memo miss 98 to 245 us. One index held about 297 KiB.
 - W1: the copy held 3.0 MiB net (the inputs, the plan with its private
   indexes, and 5,104 targets), and its build took 54 ms once for each
   session.
@@ -744,3 +786,136 @@ check: all edits at least 15 ms sooner, and edit 1 not slower than `main`.
   [changes-detail-revision-copies.md](./changes-detail-revision-copies.md),
   and the retained core RSS is in the item
   [core-rss-retained-free-pages.md](./core-rss-retained-free-pages.md).
+
+## C1 at the cold start, measured on 2026-11-23
+
+On 2026-11-23 the performance orchestrator chose to bring C1 back for the
+cold start of Serve. Branch `calummoore/mokly-style-registry-index-h75s`
+brought back the code of C1 as built at `0910565bf`. The **Decisions** list
+above gives the decision and its reason.
+
+The checks below use these words:
+
+- A cold start is a Serve start with a fresh cache.
+- Cold first Changes is the time from the Serve start of a cold session to
+  its first published Changes result.
+- A cold 10-edit session is one cold Serve session with ten one-line edits. A
+  pair is one session of each arm, `main` and C1.
+- An untimed session runs without `--debug-timings`.
+- The listening line is the line that Serve prints when it listens for
+  requests.
+- The whole-tree peak is the highest sample of the anonymous memory and swap
+  of one session, read from its cgroup.
+- Each difference is C1 minus `main`. A negative time is sooner. A paired mean
+  or median is the mean or median of the differences of the pairs.
+
+### What came back
+
+- The code: `RegistryIndex` in `packages/mokly/src/sidecar/registry-index.ts`.
+  `registryIndexOf` keeps one index for each generation object under a weak
+  key. An index ends with its generation: at `dispose`, at `shutdown`, or when
+  a `bundle` result replaces the generation. It holds at most 1 text and 64
+  outputs for each text, the least recently used first out. It parses a held
+  text once. When a text comes back after its eviction, it parses the text
+  again. The React Native Web sheet of a generation only grows, so this does
+  not happen in practice. It does not keep a text whose analysis throws, such
+  as a text that does not parse. Each call with that text runs the analysis
+  again and then calls `registryStyles`, which parses the text again and
+  gives its own output or error.
+- The two test files of `0910565bf`: `tests/sidecar_registry_index.test.ts`
+  and `tests/sidecar_registry_index_bounds.test.ts`.
+- Two new tests in `tests/sidecar_registry_index_edge_cases.test.ts`:
+  - A fallback test. It checks two texts: `.a,.\110000{color:red}`, which the
+    index cannot analyse, and a text that does not parse. For both, the index
+    gives the output or the error of `registryStyles`. In the first text, the
+    escape above U+10FFFF makes the analysis of the index throw. But
+    `registryStyles` returns the rule for a fragment with the class `a`.
+  - A differential test. It compares the index with `registryStyles` over 128
+    generated registry texts. The texts hold escaped class names,
+    `@keyframes`, `@font-face`, and `@property` rules, custom properties,
+    nested at-rules, CSS nesting, and comments. It filters each text with
+    several fragments, and each fragment three times, so it also compares
+    held outputs.
+
+### Checks
+
+- The diagnostic of the orchestrator, on 2026-11-23 from 01:13 to 01:26 UTC.
+  The orchestrator wrote its rule before the data: continue with C1 only if,
+  over 6 cold pairs, the first Changes comes at least 300 ms sooner in at
+  least 4 of 6 pairs, and the memory peak stays within 2%.
+  - Both arms used the release core of `main` at `9639d0a5c`. The `main` arm
+    used the sidecar dist of `main` at `439c6bb99`. The C1 arm used the same
+    dist with the C1 diff.
+  - The catalogue was mokly-cloud at `194fdb78`, on 4 vCPU, with 4 sidecars
+    and `--base HEAD`. The check ran 6 untimed pairs of cold 10-edit sessions,
+    interleaved. Each session had a fresh cache.
+  - Cold first Changes: 14.70 s on `main` and 13.95 s with C1. The paired
+    mean was -756 ms, and the paired median was -825 ms. 5 of 6 pairs were
+    faster. The differences of the pairs were +1,343, -534, -978, -1,555,
+    -2,141, and -672 ms.
+  - The listening line: -67 ms. This is noise.
+  - The whole-tree peak: 2,987 to 2,992 MiB on the mean (+4 MiB, +0.1%).
+  - The CPU time of the session: -3.2 s, or -4.3%. 5 of 6 pairs were lower.
+- The rule of the official check of the orchestrator. The orchestrator wrote
+  it before the data of the branch. The check compares the final commit of
+  the branch with `main`. Both arms use release builds made in the same way.
+  - On mokly-cloud, 8 untimed pairs of cold 10-edit sessions: the paired mean
+    of cold first Changes is at least 300 ms sooner. At least 5 of 8 pairs
+    are faster.
+  - In the same pairs, the paired mean of the whole-tree peak is not more than
+    2% higher.
+  - On mokly-cloud, 6 untimed warm rounds of 3 one-line edits: the mean of all
+    edits is not more than 20 ms later.
+  - On `examples/basic`, with 2 sidecars, 4 cold pairs: the whole-tree peak is
+    not more than 2% higher. Cold first Changes is not more than 100 ms later.
+  - The byte proof of the branch: strict builds of mokly-cloud,
+    `examples/basic`, and the large HTML and large React fixtures give equal
+    bytes and equal output streams. Serve sessions of `examples/basic` and
+    mokly-cloud give the same published states.
+- The stop check of the branch, on 2026-11-23, with the harness of the
+  orchestrator:
+  - Both arms used the release core of `main` at `720b1f85b`. The `main` arm
+    used the sidecar dist of `main` at `720b1f85b`. The C1 arm used the same
+    dist with the C1 files.
+  - The catalogue was mokly-cloud at `194fdb78`, on 4 vCPU, with 4 sidecars
+    and `--base HEAD`. The check ran 8 untimed pairs of cold 10-edit sessions.
+    Each session had a fresh cache. The pairs were interleaved, with the order
+    of the arms alternating.
+  - Each session ran in a systemd user unit with `MemoryMax=6G` and
+    `MemorySwapMax=0`. The whole-tree peak was read from that unit.
+  - Cold first Changes: 14.83 s on `main` and 13.75 s with C1. The paired
+    mean was -1,078 ms, and the paired median was -590 ms. All 8 pairs were
+    faster: -325, -2,536, -2,019, -363, -1,641, -562, -574, and -606 ms.
+  - The listening line: -55 ms. This is noise.
+  - The mean of the 10 edits of each session: +28 ms, with a median of
+    -14 ms. 5 of 8 pairs were lower. This is noise.
+  - The whole-tree peak: +19 MiB, or +0.67%, with a median of +0.59%.
+  - The CPU time of the session: -2.3 s, or -3.7%. 7 of 8 pairs were lower.
+  - The stop rule of the orchestrator was to stop the work when this check
+    showed cold first Changes less than 300 ms sooner. The check showed
+    1,078 ms sooner, so the rule did not stop the work.
+- The official check of the performance orchestrator, on 2026-11-23, of the
+  branch commit `d18cb6983` against `main` `720b1f85b`, with the release core
+  of `main` in both arms. It passed every bar:
+  - mokly-cloud, 8 untimed pairs of cold 10-edit sessions: cold first Changes
+    754 ms sooner on the paired mean, with a median of 792 ms sooner. 7 of 8
+    pairs were faster. The bar was at least 300 ms sooner, with at least 5 of
+    8 pairs faster.
+  - The same pairs: the paired mean of the whole-tree peak (anonymous memory
+    and swap) was 1.19% higher. The bar was at most 2%.
+  - mokly-cloud, 6 untimed warm rounds of 3 one-line edits: the mean of all
+    edits was 24 ms sooner. The bar was at most 20 ms later.
+  - `examples/basic`, 2 sidecars, 8 cold pairs of 5+5 edits. The orchestrator
+    announced the last 4 pairs before their data, because the first 4 pairs
+    gave a `memory.peak` of +3.00% that one pair carried. Pooled, the paired
+    mean of `memory.peak` was 0.62% higher (median 1.19% lower). The bar was
+    at most 2%. Cold first Changes was 936 ms sooner. The bar was at most
+    100 ms later.
+  - The byte proof of the branch passed. Strict builds of mokly-cloud (5,485
+    files), `examples/basic` (2,391), and the large HTML and React fixtures
+    (20,821 each) gave equal bytes, an equal standard output, and an equal
+    standard error. Serve sessions of `examples/basic` and mokly-cloud, cold
+    and warm, gave equal routes at each stage. Only the per-session values
+    of the index and the live descriptor differed: the deployment id, the
+    comparison URL, the render generation, and the capability token. Two
+    Serve sessions of `main` differ in the same values.
