@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
+import type { ViewerSelection } from "../host/types.js";
+
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
@@ -194,9 +196,9 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
   // filter or the compact layout's frame picker, replaces the address's
   // `viewport` query, so the address names the shown viewport. A route
   // installation brings its own address.
-  const placed = useRef<{ installation: number; viewport: string } | undefined>(
-    undefined,
-  );
+  const placed = useRef<
+    { installation: number; viewport: ViewerSelection["viewport"] } | undefined
+  >(undefined);
   const installation = input.state.routeInstallation;
   const viewport = input.state.selection.viewport;
   useEffect(() => {

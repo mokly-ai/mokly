@@ -45,6 +45,7 @@ test("the compact layout picks the wide canvas's viewport, and its pick sets the
   page,
 }) => {
   await page.goto(`${WELCOME}?viewport=desktop`);
+  await expect(page.locator(canvasFrame("desktop"))).toBeVisible();
   await expect(page.locator(canvasFrame("mobile"))).toBeHidden();
   await page.setViewportSize(NARROW_WINDOW);
   const picker = page.getByRole("combobox", { name: "Frame" });
