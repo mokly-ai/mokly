@@ -39,7 +39,13 @@ export type DepictedView =
       highlight: "available" | "on";
       regions: ViewRegions;
     }
-  | { highlight: HighlightReason };
+  | {
+      /**
+       * Why the shell does not highlight the view. `comparison` is a shown
+       * compare mode, which hides Inspect, so no Frames filter says why.
+       */
+      highlight: HighlightReason | "comparison";
+    };
 
 const View = createContext<DepictedView | undefined>(undefined);
 

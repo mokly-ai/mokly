@@ -156,6 +156,8 @@ subpaths and exports:
   `@mokly/ui/comparison-stage`. `ComparisonPanes` and `ComparisonFailure`
   stay.
 - `WorkspaceLayout` no longer takes `header`, `variantBar`, or `inspector`.
+- `SavedPropsPanel` of `@mokly/ui/controls-panel` no longer takes `current`,
+  `currentHref`, or `onCurrent`, and it draws no Switch to Current action.
 
 ## Republish hosted catalogues
 

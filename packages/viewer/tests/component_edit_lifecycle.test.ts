@@ -127,21 +127,19 @@ test("the Props panel edits only a current entry with controls in Serve", () => 
     suppliedSlots: [],
     removed: false,
   };
-  assert.equal(controlsMode(target, false, "ready"), "editable");
-  assert.equal(controlsMode(target, false, "preparing"), "preparing");
-  assert.equal(controlsMode(target, false, "failed"), "preparing-failed");
-  assert.equal(controlsMode(target, false, undefined), "published");
-  assert.equal(controlsMode(target, true, "ready"), "comparison");
-  assert.equal(controlsMode(target, true, undefined), "comparison");
+  assert.equal(controlsMode(target, "ready"), "editable");
+  assert.equal(controlsMode(target, "preparing"), "preparing");
+  assert.equal(controlsMode(target, "failed"), "preparing-failed");
+  assert.equal(controlsMode(target, undefined), "published");
   const removed = { ...target, removed: true };
-  assert.equal(controlsMode(removed, false, "ready"), "removed");
-  assert.equal(controlsMode(removed, true, undefined), "removed");
+  assert.equal(controlsMode(removed, "ready"), "removed");
+  assert.equal(controlsMode(removed, undefined), "removed");
   const readOnly = { ...target, controls: {} };
-  assert.equal(controlsMode(readOnly, false, "ready"), "read-only");
-  assert.equal(controlsMode(readOnly, true, undefined), "read-only");
+  assert.equal(controlsMode(readOnly, "ready"), "read-only");
+  assert.equal(controlsMode(readOnly, undefined), "read-only");
   const slotsOnly = { ...readOnly, props: {}, suppliedSlots: ["header"] };
-  assert.equal(controlsMode(slotsOnly, false, "ready"), "read-only");
+  assert.equal(controlsMode(slotsOnly, "ready"), "read-only");
   const empty = { ...readOnly, props: {} };
-  assert.equal(controlsMode(empty, false, "ready"), "no-props");
-  assert.equal(controlsMode(empty, true, undefined), "no-props");
+  assert.equal(controlsMode(empty, "ready"), "no-props");
+  assert.equal(controlsMode(empty, undefined), "no-props");
 });

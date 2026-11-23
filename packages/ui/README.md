@@ -399,9 +399,9 @@ draws itself in the field's label column, Set check box, Not set line, help,
 and error. An optional field draws both its control and its Not set line under
 `data-native-supply`, and the package stylesheet shows the one that matches
 the Set check box. `TextButton` with an `href` is a link with the button's
-look, and the controls panels take `resetHref`, `retryHref`, `startHref`, and
-`currentHref`, which draw Reset while the props differ, the alert's action, a
-failed start's action, and Switch to Current as links. `PropsStatus` and
+look, and the controls panel takes `resetHref`, `retryHref`, and `startHref`,
+which draw Reset while the props differ, the alert's action, and a failed
+start's action as links. `PropsStatus` and
 `UsageStatus` take `retryHref`, which draws Try again of a failed load as a
 link. `InstanceTree` draws an
 instance with an `href` as a link with the button's look, whose selected one is

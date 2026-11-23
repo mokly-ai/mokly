@@ -134,7 +134,6 @@ export function ComponentWorkspace({
     comparing,
     contexts,
     data,
-    onCurrent: () => comparison.selectMode("current"),
     recovery: propsRecovery,
     target: editTarget,
     workspaceRef,
