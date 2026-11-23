@@ -203,7 +203,7 @@ for (const [failure, answer, indexReads] of FAILURES)
       .filter({ hasText: "This screen could not be shown" });
     await expect(alert).toBeVisible();
     expect(indexReadsSoFar()).toBe(indexReads);
-    await expect(heading(page).first()).toHaveText(names.get(DETAILS)!);
+    await expect(heading(page)).toHaveText(names.get(DETAILS)!);
     await expect(page.locator("#mb-main iframe")).toHaveCount(0);
     await expect(navLink(page, WELCOME)).toBeVisible();
     failing = false;

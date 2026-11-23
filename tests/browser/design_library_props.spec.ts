@@ -56,12 +56,23 @@ for (const viewport of ["desktop", "mobile"] as const)
 
     await query.fill("New search");
     await expect(search).toHaveValue("New search");
+    // A scheme change keeps the edit, and the Dark frame renders it. The
+    // wide canvas shows that frame beside the Light frame. The compact layout
+    // renders an edit in its shown frame only, so its picker picks the Dark
+    // frame and then the Light frame again.
+    const picker = page.getByRole("combobox", { name: "Frame" });
+    if (viewport === "mobile")
+      await picker.selectOption({ label: "Search · Dark" });
     await expect(
       frameOf("dark").getByRole("searchbox", {
         name: "Search catalogue",
         includeHidden: true,
       }),
     ).toHaveValue("New search");
+    if (viewport === "mobile") {
+      await picker.selectOption({ label: "Search · Light" });
+      await expect(search).toHaveValue("New search");
+    }
     // The tag picker renders tag chips that the saved variant does not show;
     // the preview brings their styles with them.
     await props.locator('[data-prop-control="pickerOpen"]').check();

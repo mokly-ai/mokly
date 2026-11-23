@@ -15,6 +15,14 @@ const ORIGIN = "design/library/canvas/selection";
 const DESTINATION = "design/library/canvas/zoom-pill";
 const DECLARED = ["zoom", "presentation"];
 
+/**
+ * The routed entry's title in the right panel's head. The panel follows the
+ * canvas, so a failure card's own heading on the canvas comes first.
+ */
+function title(page: Page) {
+  return page.locator("#mb-main .mbk-screen-head h2");
+}
+
 /** Hold the first read of the destination's detail; later reads continue. */
 async function holdDetail(page: Page, fail = false) {
   const held: Route[] = [];
@@ -29,7 +37,7 @@ async function holdDetail(page: Page, fail = false) {
 /** Open Props on the origin, then move to the destination in the page. */
 async function openDestination(page: Page) {
   await page.goto(`/view/${ORIGIN}/`);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Selection");
+  await expect(title(page)).toHaveText("Selection");
   const tab = page.getByRole("tab", { name: "Props", exact: true });
   // A click on the selected icon would close the panel.
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
@@ -52,7 +60,7 @@ async function moveToDestination(page: Page) {
       `nav.mbk-nav a[data-nav-row][data-route="${DESTINATION}/index.html"]`,
     )
     .click();
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Zoom pill");
+  await expect(title(page)).toHaveText("Zoom pill");
   return page.getByRole("tabpanel", { name: "Props", exact: true });
 }
 
