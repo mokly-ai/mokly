@@ -21,17 +21,24 @@
   cursor: pointer;
 }
 
-.mbk-panel-tab:hover {
+button.mbk-panel-tab:hover {
   color: var(--cv-text);
 }
 
-.mbk-panel-tab[aria-selected="true"] {
+/* The picture of a tab in a static depiction acts on nothing, so it keeps
+   its resting look and the default pointer. Its current mark draws the
+   selected tab's look. */
+span.mbk-panel-tab {
+  cursor: default;
+}
+
+.mbk-panel-tab:is([aria-selected="true"], [aria-current="true"]) {
   color: var(--cv-text);
   font-weight: 600;
 }
 
 /* The rule lies on the head's hairline, under the selected tab's label. */
-.mbk-panel-tab[aria-selected="true"]::after {
+.mbk-panel-tab:is([aria-selected="true"], [aria-current="true"])::after {
   position: absolute;
   right: 10px;
   bottom: -1px;
@@ -81,7 +88,7 @@
     font-size: 12.5px;
   }
 
-  .mbk-panel-tab[aria-selected="true"]::after {
+  .mbk-panel-tab:is([aria-selected="true"], [aria-current="true"])::after {
     right: 8px;
     left: 8px;
   }
@@ -93,7 +100,7 @@
     font-size: 14px;
   }
 
-  .mbk-panel-tab[aria-selected="true"]::after {
+  .mbk-panel-tab:is([aria-selected="true"], [aria-current="true"])::after {
     right: 12px;
     left: 12px;
   }

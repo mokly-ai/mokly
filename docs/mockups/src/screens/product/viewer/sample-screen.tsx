@@ -24,8 +24,8 @@ type SamplePalette = CSSProperties &
 
 /**
  * The Canvas palette of the shown view's scheme, which the viewer documents
- * bind, read from the shared tokens. A frame can show a light view in a dark
- * document, so the sample does not read the document's own palette.
+ * bind, read from the shared tokens. The canvas shows light and dark frames
+ * in every document, so the sample does not read the document's own palette.
  */
 function samplePalette(scheme: ColorScheme): SamplePalette {
   const color = paletteColors(scheme);
@@ -39,11 +39,11 @@ function samplePalette(scheme: ColorScheme): SamplePalette {
 }
 
 /**
- * The publication's current screen inside a device frame: a sample of the
- * page that the frame would load, laid out for the frame's own viewport and
- * painted in the scheme of the view that the frame shows. It is one picture,
- * so its title and links stay out of the drawing's outline, as a framed
- * document's would.
+ * The publication's current screen inside a canvas frame: a sample of the
+ * page that the frame would load, laid out for the frame's own viewport at
+ * the frame's nominal size and painted in the scheme of the view that the
+ * frame shows. It is one picture, so its title and links stay out of the
+ * drawing's outline, as a framed document's would.
  */
 export function SampleScreen({
   viewport,

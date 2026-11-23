@@ -5,6 +5,8 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
+import { currentScreen } from "../fixtures/viewer-catalogue";
+
 import { catalogueEntries } from "./catalogue-index";
 import { catalogueRoot, screenFile } from "./catalogue-paths";
 import { drawnPalette, viewPalette } from "./catalogue-reads";
@@ -167,10 +169,16 @@ test("ready viewer pages render the published package shell and cloud slots", ()
         assert.ok(html.includes('data-mokly-slot="topBarEnd"'), label);
         assert.ok(!html.includes('href="/'), label);
         assert.ok(html.includes(">Home<"), label);
-        // The frames hold the cloud's sample screen and load no document.
+        // The canvas frames hold the cloud's sample screen and load no
+        // document: a frame for each view of the screen on a desktop, and
+        // the compact layout's one frame on a phone.
         assert.ok(!html.includes("<iframe"), label);
-        const frames = byClass(parse(html), "mbk-frame-wrap");
-        assert.equal(frames.length, 2, label);
+        const frames = byClass(parse(html), "mbk-canvas-frame");
+        assert.equal(
+          frames.length,
+          viewport === "desktop" ? currentScreen.views.length : 1,
+          label,
+        );
         for (const frame of frames)
           assert.equal(
             elements(

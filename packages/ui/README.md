@@ -452,6 +452,19 @@ link with the label's look, which `current` marks as the current page, and
 `interactive={false}` draws a label without an address as a picture of itself
 that keeps the arrow.
 
+A static mockup cannot measure its canvas either, so it gives `CanvasStage`
+its `view`: the zoom and the canvas position of the section's top left, which
+the canvas draws in place of its own view. `fitView` gives the view that Fit
+shows for a section's lengths, which `sectionExtent` gives, on a stage that
+the mockup knows. On `CanvasStage` and `CanvasZoomPill`,
+`interactive={false}` draws Zoom out, Zoom in, and Fit as pictures of
+themselves. On `CanvasDock` it draws Catalogue, the tab, and Fit as pictures,
+and on `FloatingPanel` the sheet's grabber and close control. Each picture is
+named by what it would do and takes neither the pointer nor the hover look.
+On `PanelTabs`, `interactive={false}` draws a group named `Panel` whose tabs
+are pictures of themselves. The selected tab's picture is marked as the
+current one and keeps the tab's id, so the body that it shows keeps its name.
+
 ## Development
 
 From the repository root, `npm run build` builds this package before the
@@ -643,7 +656,7 @@ override the desktop layout rules.
   chips, paths, links, chip groups, and entry chips of a value
 - [`src/panel-tabs/panel-tabs.tsx`](./src/panel-tabs/panel-tabs.tsx) —
   `PanelTabs` and `PanelTabBody`: the right panel's tab list with its keys,
-  and the body of one tab
+  or the pictures of its tabs in a static depiction, and the body of one tab
 - [`src/inspect-panel/inspect-panel.tsx`](./src/inspect-panel/inspect-panel.tsx)
   — `InspectPanel`, `InspectSection`, and `InspectFold`: Inspect's sections
   and its folded sections with their counts
@@ -692,7 +705,8 @@ override the desktop layout rules.
 - [`src/canvas-stage/canvas-stage.tsx`](./src/canvas-stage/canvas-stage.tsx)
   — `CanvasStage` and `CanvasStageHandle`: the dot-grid canvas with its
   section and its zoom pill, the handle with Fit and the zoom steps, the
-  click on the empty canvas, and the zoom rule of the fixed-size tags
+  click on the empty canvas, the zoom rule of the fixed-size tags, and the
+  view that a static depiction gives
 - [`src/canvas-stage/use-canvas-view.ts`](./src/canvas-stage/use-canvas-view.ts)
   — the measured stage, the fitted view, and the handle's commands
 - [`src/canvas-stage/canvas-view.ts`](./src/canvas-stage/canvas-view.ts) —
@@ -731,16 +745,17 @@ override the desktop layout rules.
   — `CanvasPreviousVersion`: the host of a removed entry's previous version on
   the canvas
 - [`src/canvas-zoom-pill/canvas-zoom-pill.tsx`](./src/canvas-zoom-pill/canvas-zoom-pill.tsx)
-  — `CanvasZoomPill`: Zoom out, the zoom, Zoom in, and Fit
+  — `CanvasZoomPill`: Zoom out, the zoom, Zoom in, and Fit, as buttons or as
+  the pictures of a static depiction
 - [`src/canvas-dock/canvas-dock.tsx`](./src/canvas-dock/canvas-dock.tsx) —
   `CanvasDock`: the compact layout's group of Catalogue, the current tab, and
-  Fit
+  Fit, as buttons or as the pictures of a static depiction
 - [`src/entry-bar/entry-bar.tsx`](./src/entry-bar/entry-bar.tsx) —
   `EntryBar`: the compact layout's entry name, status, and frame picker
 - [`src/floating-panel/floating-panel.tsx`](./src/floating-panel/floating-panel.tsx)
   — `FloatingPanel` and `FloatingPanelSheet`: the panel over the canvas with
   its head, and its bottom sheet, with the grabber of `sheet-grab.tsx` and
-  the close control
+  the close control, or their pictures in a static depiction
 - [`src/icons/canvas-icons.tsx`](./src/icons/canvas-icons.tsx) — `CanvasIcon`,
   the glyphs of the frames' kinds, the zoom pill, the dock, the sheet, and
   the frame picker
