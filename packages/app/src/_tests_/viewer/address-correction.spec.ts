@@ -1,6 +1,11 @@
 import { expect, open, test } from "../harness";
 
-import { corrected, publishedViewerReady, publishedProject } from "./support";
+import {
+  corrected,
+  publishedViewerReady,
+  publishedProject,
+  savedVariant,
+} from "./support";
 
 /**
  * Addresses the pinned viewer cannot take as they are. Each is corrected
@@ -25,15 +30,20 @@ test("an earlier variant address keeps its component and drops the key", async (
   await expect(
     page.getByRole("heading", { level: 2, name: "Notice" }),
   ).toBeVisible();
+  // The canvas section's head and the panel's head both name the entry's path.
   await expect(
-    page.getByRole("button", { name: "Copy path notice", exact: true }),
+    page
+      .getByRole("region", { name: "Panel" })
+      .getByRole("button", { name: "Copy path notice", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.locator('[data-workspace-variant="notice"]'),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(
-    page.locator('[data-workspace-variant="notice/draft"]'),
-  ).not.toHaveAttribute("aria-current", "page");
+  await expect(savedVariant(page, "Notice")).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(savedVariant(page, "Draft")).not.toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 });
 
 test("a snapshot the package would refuse is corrected before it mounts", async ({

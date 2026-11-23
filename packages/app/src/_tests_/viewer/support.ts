@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
+import type { ViewerViewport } from "../../viewer/host";
 import { projectAddress, publicationPathFor } from "../addresses";
 import { expect, freshEmail, signIn } from "../harness";
 import { createProject } from "../project-setup";
@@ -93,6 +94,58 @@ export async function expectParentUsage(page: Page): Promise<void> {
       "StartDirect use · 1 instance · 2 views",
     ]);
   }
+}
+
+/**
+ * A frame on the canvas, found by the start of its title. The title names the
+ * screen or the variant set's row, the viewport and the scheme, such as
+ * `Start — mobile — light`: `Start — mobile` finds the screen's Mobile frame
+ * in a catalogue without dark views, and `Draft` the frame of a variant set's
+ * Draft row.
+ */
+export function canvasFrame(page: Page, start: string): Locator {
+  const literal = start.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return page.getByTitle(new RegExp(`^${literal} — `));
+}
+
+/**
+ * Expect the canvas to show a screen in one viewport choice, as the reader
+ * sees it: Both shows the screen's Mobile and Desktop frames, and one viewport
+ * shows its own frame and not the other's.
+ */
+export async function expectShownViewport(
+  page: Page,
+  screen: string,
+  viewport: ViewerViewport,
+): Promise<void> {
+  const sizes = ["mobile", "desktop"] as const;
+  const shown = sizes.filter(
+    (size) => viewport === "both" || size === viewport,
+  );
+  for (const size of shown) {
+    const frame = `${screen} — ${size}`;
+    await expect(canvasFrame(page, frame), frame).toBeVisible();
+  }
+  for (const size of sizes.filter((size) => !shown.includes(size))) {
+    const frame = `${screen} — ${size}`;
+    await expect(canvasFrame(page, frame), frame).toBeHidden();
+  }
+}
+
+/**
+ * The link to one of the shown component's saved variants, by its title. The
+ * bar marks the variant that the reader is on as the current page. A dialog
+ * makes the page beneath it inert and hides it from assistive technology, so
+ * a read beneath one sets `includeHidden`.
+ */
+export function savedVariant(
+  page: Page,
+  title: string,
+  { includeHidden = false }: { includeHidden?: boolean } = {},
+): Locator {
+  return page
+    .getByRole("navigation", { name: "Saved variants", includeHidden })
+    .getByRole("link", { name: title, exact: true, includeHidden });
 }
 
 /**
