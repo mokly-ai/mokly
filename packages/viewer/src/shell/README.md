@@ -321,7 +321,10 @@ file during navigation. `data_requests.ts` lists the details a route renders
 from. A current component variant requests its own detail and its parent's
 detail. A component's route, the parent's or a variant's, also requests the
 detail of each current saved variant of the set, whose rows the canvas shows
-with their usage. A use case also requests each step screen's detail. The
+with their usage. The catalogue's hierarchy lists those variants, as
+`public_variants.ts` reads them, so the module follows no `variantOf`. A
+publication refresh builds the hierarchy of its new index. A use case also
+requests each step screen's detail. The
 module loads
 each detail under the fences of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
