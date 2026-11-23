@@ -7,12 +7,19 @@
  * recaptures its snapshots, so the removed-preview journeys use the same
  * failed renewal only to exercise the shell's reacquire of the advertised
  * URL. The shell must renew, then reacquire the comparison or preview before
- * it shows the new view, and never request an old document address.
+ * it shows the new view, and never request an old document address. On the
+ * canvas the Frames filter changes the shown views: a standalone shell's
+ * Appearance colours only the chrome, and a variant set has no viewport.
  */
 
 import { expect, type Page } from "@playwright/test";
 
-import { modeButton } from "./comparison_ui.js";
+import {
+  comparisonSection,
+  frameModes,
+  paneFrame,
+} from "./comparison_sections.js";
+import { chooseMode, compareStage, comparisonFrames } from "./comparison_ui.js";
 import { historicalFrame } from "./previous_version.js";
 import { test } from "./serve_comparison_test.js";
 import {
@@ -24,13 +31,9 @@ import {
 } from "./serve_comparison_ui.js";
 import { removeGeneration } from "./serve_generation_removal.js";
 import { responseFailure } from "./shell_error_allowances.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import { chooseViewport, setFrames } from "./workspace_actions.js";
 
-const after = ".mb-pane--after iframe";
-const before = ".mb-pane--before iframe";
 const stage = "[data-mokly-preview]";
-// The documents that must finish loading before a generation goes.
-const panes = "[data-diff-stage] iframe";
 const previews = `${stage} iframe`;
 
 /** Every snapshot response that failed while the spec ran. */
@@ -54,54 +57,60 @@ for (const change of ["theme", "viewport"] as const)
     const failed = failedSnapshots(page);
     await page.goto(`/view/${changed}/`);
     await chooseViewport(page, "desktop");
-    await chooseScheme(page, "light");
+    await setFrames(page, { light: true, dark: false });
     await loadComparison(page, "Overlay");
-    await modeButton(page, "Difference").click();
+    await chooseMode(page, "Difference");
     // The mode switch renews the generation first; its panes show only after.
-    await expect(page.locator(".mb-panes")).toHaveAttribute(
+    const first = comparisonSection(page, "desktop");
+    await expect(frameModes(first)).toHaveAttribute(
       "data-compare-mode",
       "difference",
     );
-    await expect(page.frameLocator(before).locator("h1")).toHaveText(
-      "Before screen",
-    );
-    await expect(page.frameLocator(after).locator("h1")).toHaveText(
-      "After screen",
-    );
-    await expect(page.locator("[data-diff-stage]")).not.toHaveAttribute(
-      "aria-busy",
-      "true",
-    );
+    await expect(
+      paneFrame(first, "before").contentFrame().locator("h1"),
+    ).toHaveText("Before screen");
+    await expect(
+      paneFrame(first, "after").contentFrame().locator("h1"),
+    ).toHaveText("After screen");
+    await expect(compareStage(page)).not.toHaveAttribute("aria-busy", "true");
     const expired = generationOf(
-      (await page.locator(after).getAttribute(PANE_SOURCE))!,
+      (await paneFrame(first, "after").getAttribute(PANE_SOURCE))!,
     );
     allowBrowserError(
       responseFailure(changes.url, new URL(expired).pathname, 404),
     );
-    const removal = await removeGeneration(page, expired, page.locator(panes));
+    const removal = await removeGeneration(
+      page,
+      expired,
+      comparisonFrames(page),
+    );
 
-    if (change === "theme") await chooseScheme(page, "dark");
+    if (change === "theme") await setFrames(page, { dark: true, light: false });
     else await chooseViewport(page, "mobile");
 
-    await expect(page.locator(after)).toHaveAttribute(
+    const shown =
+      change === "theme"
+        ? comparisonSection(page, "desktop", "dark")
+        : comparisonSection(page, "mobile");
+    await expect(paneFrame(shown, "after")).toHaveAttribute(
       PANE_SOURCE,
       change === "theme" ? /\.desktop\.dark\.html$/u : /\.mobile\.html$/u,
     );
-    await expect(page.frameLocator(before).locator("h1")).toHaveText(
-      "Before screen",
-    );
-    await expect(page.frameLocator(after).locator("h1")).toHaveText(
-      "After screen",
-    );
-    await expect(page.locator(".mb-panes")).toHaveAttribute(
+    await expect(
+      paneFrame(shown, "before").contentFrame().locator("h1"),
+    ).toHaveText("Before screen");
+    await expect(
+      paneFrame(shown, "after").contentFrame().locator("h1"),
+    ).toHaveText("After screen");
+    await expect(frameModes(shown)).toHaveAttribute(
       "data-compare-mode",
       "difference",
     );
     // The reacquired comparison is a new generation, and the shell asked the
     // collected one for nothing after its renewal failed.
-    for (const pane of [before, after])
+    for (const side of ["before", "after"] as const)
       expect(
-        generationOf((await page.locator(pane).getAttribute(PANE_SOURCE))!),
+        generationOf((await paneFrame(shown, side).getAttribute(PANE_SOURCE))!),
       ).not.toBe(expired);
     expect(removal.renewed()).toBe(true);
     expect(removal.refused()).toEqual([]);
@@ -120,26 +129,24 @@ test("snapshot recovery keeps the selected saved variant", async ({
   const requests = selectedRequests(page);
   const failed = failedSnapshots(page);
   await page.goto(`/view/${variant}/`);
-  await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expectCardPane(page, "after", "Featured After");
-  const expired = generationOf(
-    (await page.locator(after).getAttribute(PANE_SOURCE))!,
-  );
+  const light = paneFrame(comparisonSection(page, "component"), "after");
+  const expired = generationOf((await light.getAttribute(PANE_SOURCE))!);
   allowBrowserError(
     responseFailure(changes.url, new URL(expired).pathname, 404),
   );
-  const removal = await removeGeneration(page, expired, page.locator(panes));
-  await chooseViewport(page, "mobile");
-  await expect(page.locator(after)).toHaveAttribute(
-    PANE_SOURCE,
-    /\.mobile\.html$/u,
+  const removal = await removeGeneration(page, expired, comparisonFrames(page));
+  // Side by side compares the first shown frame, so hiding the Light frames
+  // compares the variant's Dark frame, whose documents are new.
+  await setFrames(page, { dark: true, light: false });
+  const dark = paneFrame(comparisonSection(page, "component", "dark"), "after");
+  await expect(dark).toHaveAttribute(PANE_SOURCE, /\.desktop\.dark\.html$/u);
+  await expectCardPane(page, "before", "Featured Before", "dark");
+  await expectCardPane(page, "after", "Featured After", "dark");
+  expect(generationOf((await dark.getAttribute(PANE_SOURCE))!)).not.toBe(
+    expired,
   );
-  await expectCardPane(page, "before", "Featured Before");
-  await expectCardPane(page, "after", "Featured After");
-  expect(
-    generationOf((await page.locator(after).getAttribute(PANE_SOURCE))!),
-  ).not.toBe(expired);
   expect(removal.renewed()).toBe(true);
   expect(removal.refused()).toEqual([]);
   expect(requests).toHaveLength(2);
