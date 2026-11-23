@@ -88,7 +88,8 @@ its switch are native controls that work in place.
    list of the frames that its chips name. A frame record has an id, a label
    and a kind `desktop/mobile/component`. Without a list, the chips name a
    screen's four frames by viewport and scheme. A variant set gives its own
-   frames, named by saved variant and scheme, such as `Default · Light`.
+   frames, named as their labels name them, such as `Action · Light` and
+   `Default · Light`.
    Controls: mode, comparable and Scroll together. Each mode is a tile with
    its key. An entry that is not comparable offers Current alone. The compared
    frame's chip links to its destination, and every other chip is a picture of

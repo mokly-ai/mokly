@@ -132,7 +132,13 @@ export function registerDesignComparisonStacks(
                     "dark" | "light",
                   scrollerHeight: node.getBoundingClientRect().height,
                   scrolls: node.scrollTop,
-                  size: [node.clientWidth, node.clientHeight],
+                  // The viewport's own size, before the stage's zoom, in
+                  // unrounded pixels: a component's frame takes its
+                  // document's measured size, which holds fractions.
+                  size: [
+                    parseFloat(getComputedStyle(node).width),
+                    parseFloat(getComputedStyle(node).height),
+                  ],
                 };
               }),
           );
@@ -147,8 +153,13 @@ export function registerDesignComparisonStacks(
               expect(height, where).toBeGreaterThanOrEqual(
                 facts.scrollerHeight - 1,
               );
-            expect(facts.size, `${where}: the frame's own size`).toEqual(
-              facts.nominal,
+            // Layout keeps 1/64 of a pixel, so the size matches the nominal
+            // size to within a twentieth of a pixel.
+            facts.size.forEach((value, index) =>
+              expect(value, `${where}: the frame's own size`).toBeCloseTo(
+                facts.nominal[index]!,
+                1,
+              ),
             );
             expect(facts.range, where).toBe(0);
             expect(facts.scrolls, where).toBe(0);

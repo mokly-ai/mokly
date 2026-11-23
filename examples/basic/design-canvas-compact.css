@@ -139,8 +139,10 @@
     --cv-zoom: 0.27;
   }
 
+  /* A component's frames take the compact zoom of the artboard, which fits
+     the whole set, a picked frame alone, or a compared pair. */
   .cv-frame[data-cv-kind="component"] {
-    --cv-zoom: 0.5;
+    --cv-zoom: var(--cv-compact-zoom, 1);
   }
 
   .cv-frames[data-cv-kind="component"] {
@@ -149,7 +151,7 @@
   }
 
   /* A variant set with a frame picked, as after a selection on it, shows
-     that frame alone at full size; the picker swaps it in place. */
+     that frame alone; the picker swaps it in place. */
   .cv-work:has([data-cv-frame-pick]) .cv-frames[data-cv-kind="component"] {
     display: block;
   }
@@ -157,7 +159,6 @@
   .cv-work:has([data-cv-frame-pick])
     .cv-frames[data-cv-kind="component"]
     .cv-frame {
-    --cv-zoom: 1;
     display: none;
   }
 
@@ -165,6 +166,10 @@
     .cv-frame[data-cv-frame="action-light"],
   .cv-work:has(option[value="action-dark"]:checked)
     .cv-frame[data-cv-frame="action-dark"],
+  .cv-work:has(option[value="toolbar-light"]:checked)
+    .cv-frame[data-cv-frame="toolbar-light"],
+  .cv-work:has(option[value="toolbar-dark"]:checked)
+    .cv-frame[data-cv-frame="toolbar-dark"],
   .cv-work:has(option[value="default-light"]:checked)
     .cv-frame[data-cv-frame="default-light"],
   .cv-work:has(option[value="default-dark"]:checked)

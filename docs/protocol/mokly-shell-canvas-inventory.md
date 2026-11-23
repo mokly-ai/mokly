@@ -31,8 +31,8 @@ compact height unless the column says expanded.
 | `design/canvas/stage/component-set`                   | Canvas stage              | The Action opened as its variant set                      | None              |
 | `design/canvas/stage/component-set/disabled`          | Canvas stage (variant)    | Disabled chosen: its Light frame selected for Props       | Inspect           |
 | `design/canvas/stage/component-set/toolbar`           | Canvas stage (variant)    | The Toolbar's variant set with its nested components      | None              |
-| `design/canvas/stage/component-set/toolbar-primary`   | Canvas stage (variant)    | The Toolbar's first Action selected on Default · Light    | None              |
-| `design/canvas/stage/component-set/toolbar-secondary` | Canvas stage (variant)    | The Toolbar's second Action selected on Default · Light   | None              |
+| `design/canvas/stage/component-set/toolbar-primary`   | Canvas stage (variant)    | The Toolbar's first Action selected on Toolbar · Light    | None              |
+| `design/canvas/stage/component-set/toolbar-secondary` | Canvas stage (variant)    | The Toolbar's second Action selected on Toolbar · Light   | None              |
 | `design/canvas/stage/document`                        | Canvas stage              | Payment terms as one reading frame                        | None              |
 | `design/canvas/stage/document/light-only`             | Canvas stage (variant)    | Payment terms without a dark page: Light only under Dark  | None              |
 | `design/canvas/stage/catalogue`                       | Canvas stage              | The catalogue in Changes, naming its base                 | Catalogue         |

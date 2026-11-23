@@ -5,7 +5,6 @@ import type { ArtboardViewport } from "../../parts/shell.js";
 import { frameOf } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
-import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
 
 import {
@@ -20,7 +19,7 @@ import { EXPLORER_PAGES as E } from "./parts/destinations.js";
 import { RemovedInspect } from "./parts/inspect_states.js";
 import { explorerChangesMetadata, explorerState } from "./parts/metadata.js";
 import {
-  PAIR_PHONE_FIT,
+  PAIR_FITS,
   compactFrames,
   removedSetFrames,
   removedSideFrames,
@@ -28,9 +27,10 @@ import {
 
 /**
  * The removed Compact on the removal branch, opened from the Changes filter
- * on Inspect: its parent's variant set with the Compact row after the
- * current variants, whose frames hold the missing current version, and its
- * Light frame selected; on a phone, that frame alone.
+ * on Inspect: its parent's variant set, its own example and its current
+ * variants, with the Compact row after them, whose frames hold the missing
+ * current version, and its Light frame selected; on a phone, that frame
+ * alone.
  */
 function RemovedOnInspect({ viewport }: { viewport: ArtboardViewport }) {
   const frames = removedSetFrames();
@@ -39,11 +39,11 @@ function RemovedOnInspect({ viewport }: { viewport: ArtboardViewport }) {
       catalogue={removalChanges(EXPLORER_KEYS.compact, "inspect")}
       design={E.explorerRemoved}
       entry={REMOVED_COMPACT}
+      fit={REMOVED_FIT}
       frames={frames}
       panel={<RemovedInspect />}
       selection={{ frame: frameOf(frames, "compact-light") }}
       viewport={viewport}
-      zoom={REMOVED_FIT}
     />
   );
 }
@@ -60,13 +60,13 @@ function RemovedComparison({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <CanvasShell
       catalogue={removalChanges(EXPLORER_KEYS.compact, "changes")}
-      compactZoom={PAIR_PHONE_FIT}
+      compactZoom={PAIR_FITS.compact.phone}
       design={E.explorerRemovedChanges}
       entry={REMOVED_COMPACT}
       panel={<RemovedChanges />}
       tab="changes"
       viewport={viewport}
-      zoom={FITS.action}
+      zoom={PAIR_FITS.compact.zoom}
     >
       <CanvasStage
         compare="side-by-side"
@@ -74,7 +74,7 @@ function RemovedComparison({ viewport }: { viewport: ArtboardViewport }) {
         frames={removedSideFrames()}
         pickable={compactFrames()}
         picked={COMPACT_FRAME}
-        zoom={FITS.action}
+        zoom={PAIR_FITS.compact.zoom}
       />
     </CanvasShell>
   );

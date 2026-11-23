@@ -15,25 +15,43 @@ import { instanceLabel, type CanvasInstance } from "./instances.js";
 /**
  * The zoom in percent that fits each stage: a screen's four frames, Welcome's
  * two Light frames once the Frames filter hides Dark, Profile's two, the two
- * versions of a desktop frame side by side, the Action's and the Toolbar's
- * variant sets and a reading frame at full size, and, in the compact form, a
- * phone frame, a desktop frame, a whole variant set, a variant set's picked
- * frame, and two phone frames side by side.
+ * versions of a desktop frame side by side, a reading frame at full size,
+ * and, in the compact form, a phone frame, a desktop frame, and two phone
+ * frames side by side. `SET_FITS` holds the zooms of the variant sets.
  */
 export const FITS = {
   welcome: 38,
   welcomeLight: 42,
   profile: 42,
   sideBySide: 29,
-  action: 100,
-  toolbar: 100,
   document: 100,
   phone: 72,
   phoneDesktop: 27,
-  phoneSet: 50,
-  phonePicked: 100,
   phoneSide: 44,
 } as const;
+
+/**
+ * The zooms in percent that fit a variant set: the whole set on the stage of
+ * a 1440 × 900 desktop, the largest zoom up to 100% that keeps the set at
+ * least 10px inside the stage; and in the compact form, the whole set, and
+ * one picked frame alone, each the largest zoom up to 100% that keeps the
+ * frames 1px inside the 366px stage of a phone.
+ */
+export interface SetFit {
+  zoom: number;
+  phoneSet: number;
+  phonePicked: number;
+}
+
+/**
+ * The zooms of the Action's set, its own example's row and three saved
+ * variants, whose widest frame is Default's, and of the Toolbar's set, whose
+ * two 401px rows narrow the stage.
+ */
+export const SET_FITS = {
+  action: { zoom: 100, phoneSet: 74, phonePicked: 100 },
+  toolbar: { zoom: 94, phoneSet: 43, phonePicked: 90 },
+} as const satisfies Record<string, SetFit>;
 
 /**
  * Welcome's four frames: its current version on the canonical branch, the

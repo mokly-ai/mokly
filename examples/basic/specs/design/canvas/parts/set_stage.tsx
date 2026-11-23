@@ -16,22 +16,22 @@ import {
   selectionOverlays,
 } from "./selection.js";
 import { CanvasShell, type CanvasSheet } from "./shell.js";
-import { FITS } from "./sketches.js";
+import type { SetFit } from "./sketches.js";
 import { CanvasStage } from "./stage.js";
 
 /** What the reader selected on a variant set: a frame, or an instance on one. */
 type SetSelection = { frame: CanvasFrameSpec } | { instance: CanvasInstance };
 
 /**
- * A component opened as its variant set: its saved variants' frames at the
- * set's fitted zoom, and the Inspect that the caller gives. A selected frame
- * draws its corners and size, and a selected instance draws its selection on
- * its frame; the frame that holds the selection lights its label. The
- * compact form shows the
- * whole set until a selection picks a frame, and then that frame at full
- * size with the frame picker, the pill of a selected instance, and the open
- * sheet that the state asks for. On the Changes tab, the frames keep the
- * compare mode that the state shows.
+ * A component opened as its variant set: its own example's frames and its
+ * saved variants' frames at the set's fitted zoom, and the Inspect that the
+ * caller gives. A selected frame draws its corners and size, and a selected
+ * instance draws its selection on its frame; the frame that holds the
+ * selection lights its label. The compact form shows the whole set at the
+ * set's compact zoom until a selection picks a frame, and then that frame
+ * alone at the zoom that fits it, with the frame picker, the pill of a
+ * selected instance, and the open sheet that the state asks for. On the
+ * Changes tab, the frames keep the compare mode that the state shows.
  */
 export function VariantSetArtboard({
   catalogue,
@@ -39,6 +39,7 @@ export function VariantSetArtboard({
   design,
   entry,
   expanded,
+  fit,
   frames,
   panel,
   selection,
@@ -46,7 +47,6 @@ export function VariantSetArtboard({
   tab,
   view,
   viewport,
-  zoom,
 }: {
   catalogue: CatalogueView;
   /** The compare mode that the frames show; Current by default. */
@@ -55,6 +55,8 @@ export function VariantSetArtboard({
   entry: CanvasEntry;
   /** The open sheet takes its expanded height. */
   expanded?: boolean | undefined;
+  /** The zooms that fit the set, on a desktop and in the compact form. */
+  fit: SetFit;
   frames: readonly CanvasFrameSpec[];
   panel: ReactNode;
   selection?: SetSelection | undefined;
@@ -64,8 +66,6 @@ export function VariantSetArtboard({
   /** The set's depicted view, where its frames render registered instances. */
   view?: DepictedView | undefined;
   viewport: ArtboardViewport;
-  /** The zoom that fits the set, in percent. */
-  zoom: number;
 }) {
   const frame =
     selection !== undefined && "frame" in selection
@@ -79,7 +79,7 @@ export function VariantSetArtboard({
   return (
     <CanvasShell
       catalogue={catalogue}
-      compactZoom={picked === undefined ? FITS.phoneSet : FITS.phonePicked}
+      compactZoom={picked === undefined ? fit.phoneSet : fit.phonePicked}
       design={design}
       entry={entry}
       expanded={expanded}
@@ -92,7 +92,7 @@ export function VariantSetArtboard({
       sheet={sheet}
       tab={tab}
       viewport={viewport}
-      zoom={zoom}
+      zoom={fit.zoom}
     >
       <CanvasStage
         compare={compare}
@@ -108,7 +108,7 @@ export function VariantSetArtboard({
         picked={picked}
         selected={picked}
         view={view}
-        zoom={zoom}
+        zoom={fit.zoom}
       />
     </CanvasShell>
   );

@@ -47,9 +47,10 @@ function ScreenLink({
 
 /**
  * A bare frame on the canvas: a rectangle with a ring and a soft shadow, a
- * mono label above its left edge and its size above the right edge. The
- * frame holds its document at the nominal size, scaled by the zoom, in the
- * frame's own scheme, so a dark frame's sketch reads the dark preview tokens.
+ * mono label above its left edge and its size in whole CSS pixels above the
+ * right edge. The frame holds its document at the nominal size, scaled by
+ * the zoom, in the frame's own scheme, so a dark frame's sketch reads the
+ * dark preview tokens.
  * A reading frame is responsive, so its label names no size. The entry's
  * slug leads the label where one frame stands for the entry, as on a phone.
  * In a comparison, the frame holds both versions, the version before under
@@ -58,8 +59,9 @@ function ScreenLink({
  * selection, lies over the document unclipped, so its marks can stand
  * outside the frame; the caller places it at the frame's scale, which the
  * frame gives as `--cv-frame-scale`. A screen's frame is named by its
- * viewport and scheme, and a component's frame by its saved variant and
- * scheme, as the compact frame picker names them. The label of the frame
+ * viewport and scheme, and a component's frame by its saved variant, or by
+ * the component's title for its own example, and its scheme, as the compact
+ * frame picker names them. The label of the frame
  * that holds the selection, an instance on it or the frame itself, takes the
  * signal. A use case's step frame is named by its step: the step's number
  * in a tag leads the label, the step's title is the link that opens the
@@ -149,7 +151,7 @@ export function CanvasFrameView({
         ) : null}
         {kind === "document" ? null : (
           <span className="cv-frame-size">
-            {width} × {height}
+            {Math.round(width)} × {Math.round(height)}
           </span>
         )}
         {description === undefined ? null : (
