@@ -99,10 +99,7 @@ function reconciled(
   const frame = frames.get(selected.frame);
   if (!frame?.shown) return selectedNow(state, undefined);
   if (selected.kind === "frame") return state;
-  if (
-    state.generation !== undefined &&
-    frame.generation !== state.generation
-  )
+  if (state.generation !== undefined && frame.generation !== state.generation)
     return withoutInstance(state, selected.frame, set);
   if (frame.usage && !frame.usage.has(selected.key))
     return withoutInstance(state, selected.frame, set);
@@ -145,4 +142,3 @@ export function canvasSelectionReducer(
       return reconciled(state, action.frames, action.set);
   }
 }
-
