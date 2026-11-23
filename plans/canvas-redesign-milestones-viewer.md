@@ -163,7 +163,8 @@ Depends on: 12, only for the check slot
 - [ ] Give `siteLinks` in `packages/app/src/config.ts` and the mockup fixture
       `docs/mockups/src/fixtures/site.ts` the site's trailing slash: `/docs/`
       and `/changelog/`.
-- [ ] Make `both` the cloud's viewport default, as in the package (Milestone
+- [x] Make `both` the cloud's viewport default, as in the package (Milestone
       11, item 9, option C), so a phone opens a screen on its Mobile frame and
       a wide canvas shows both columns. Change the address mapping, Share,
       their tests and `docs/protocol/cloud/viewer-address-state.md:62`.
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
