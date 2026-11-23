@@ -84,6 +84,8 @@ of the plan, and the pull request that deletes the plan deletes it too.
 - **Action:** ask the user, because legal text needs Cal's approval and a new
   effective date.
 - **Answer:** Cal chose **C** on 2026-11-22. Milestone 20 does the work.
+  Cal approved Milestone 20's legal text, with the effective date
+  2026-11-22, on 2026-11-23.
 
 ## 22. How a signed-in reader reaches the site
 
