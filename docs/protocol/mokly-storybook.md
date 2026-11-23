@@ -1,6 +1,6 @@
 # Storybook Stories
 
-Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 6](../../plans/storybook-support.md#milestone-6-the-first-story-as-the-parent-page) adds the first story as the parent page. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
+Status: Milestones of the Storybook support plan add the parts of this page that are not implemented yet. [Milestone 6](../../plans/storybook-support.md#milestone-6-the-first-story-as-the-parent-page) adds the first story as the parent page, variant props without the parent's props, the rule for `required` keys, and the render with exactly the requested data props. [Milestone 7](../../plans/storybook-support.md#milestone-7-globals-from-the-mokly-parameter) adds the `mokly` parameter.
 
 ## Stories Files
 
@@ -49,9 +49,10 @@ that no catalogue path changes.
 The first included story in source order is the parent page. Its
 [data args](#args-and-props) are the parent's props, and the parent's views
 render that story. Each other included story is a variant at the parent's
-path plus its export name as the slug. Its data args are its props, and its
-views render that story. The entry is a component entry, so the read model
-needs no new kind. Decision: the first story is the parent page, as on
+path plus its export name as the slug. Its props are only its own data args,
+and its views render that story. Mokly does not lay a variant's props over the
+parent's props. The entry is a component entry, so the read model needs no new
+kind. Decision: the first story is the parent page, as on
 Storybook's docs page. The meta then needs no complete args, and no page
 repeats the state of the first story. A meta page with a fallback and a
 summary page were rejected.
@@ -59,10 +60,18 @@ summary page were rejected.
 The story id is the file path, `#`, and the export name. `describe` lists
 every included story of the generation. Mokly infers the schema from the
 props of every included story under the
-[entry props contract](./mokly-entry-props.md#schema-inference). A
-`renderStory` request carries the merged data props. The sidecar applies them
-over the composed story's own args, so non-data args stay as the file defines
-them.
+[entry props contract](./mokly-entry-props.md#schema-inference). At the top
+level, a key is `required` when the props of every included story contain it.
+Every other top-level key is optional. Each included story renders with its
+own non-data args and exactly the data props of its render request. A data arg
+of the story that the request leaves out is unset in the render.
+
+Decision: each story shows, edits, compares, and renders exactly its own args,
+so that each story renders as in Storybook. A render that lays the requested
+data props over the story's own args was rejected, because an optional prop
+that a control unsets then keeps the story's value. Inheritance from a parent
+with only the args that every story shares was rejected, and so was one schema
+for each story, because some args then have no control.
 
 ## Args And Props
 

@@ -31,7 +31,9 @@ a render over props, and each variant declares `slug`, `title`, and `props`
 that replace top-level keys of the parent's props and never deep merge. The
 variant renders the parent's render with the merged props and has no render of
 its own; a state that needs another tree is a separate entry. A story variant
-renders its own story under the
+takes its props only from its own story under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
+A story variant renders its own story under the
 [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 
 `defineScreen` and `defineComponent` accept an optional `variants` list.

@@ -15,7 +15,9 @@ Every screen and component is a render over props:
   declares `props`.
 - `variants`: optional. Each declares `slug`, `title`, and `props` that
   replace top-level keys of the entry's props and never deep merge, plus the
-  metadata overrides of the variants contract.
+  metadata overrides of the variants contract. A story variant takes its props
+  only from its own story under the
+  [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 - Controls: derived from the schema. A text control for `string` with
   `maxLength`; a toggle for `boolean`; a number control for `number` and
   `integer` with `minimum` and `maximum` as its bounds and a step that offers
@@ -110,7 +112,10 @@ When an entry declares no `propSchema`, the schema is inferred, in the
 profile, from the entry's own props and every variant's merged props. Each key
 seen is a property. At the top level the keys of the entry's own props are
 `required`, and a key that only a variant adds is optional; inside an object,
-a key present in every object value of that key is `required`. A value's
+a key present in every object value of that key is `required`. For a stories
+file, the top-level `required` keys follow the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants)
+instead. A value's
 `type` comes from the value: `string`, `number`, `boolean`, `null`, `object`
 with inferred properties and `additionalProperties: false`, or `array` whose
 `items` is inferred from every element across the sets. Kinds that differ across sets or across elements form a `type`

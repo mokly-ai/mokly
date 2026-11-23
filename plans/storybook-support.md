@@ -616,16 +616,27 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 - [x] Apply the answer to decision B2 to the `beforeAll` rule of
       `docs/protocol/mokly-storybook.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Apply the answers to decisions B1 and B4 to the protocol pages.
+- [ ] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
+      `docs/protocol/mokly-entry-props.md`, and `docs/protocol/mokly-variants.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [ ] Apply the answer to decision B4 to the protocol pages.
       Branch: `conductor/storybook-support-b-story-reading`.
 
 Track B raised four decisions on 2026-11-18, while it wrote these docs. The
 orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
-call, and B2 on 2026-11-20 with option D. B1 and B4 are open. B1 blocks
-Milestone 6, and B4 blocks the rule for malformed `mokly` parameter values in
+call, B2 on 2026-11-20 with option D, and B1 on 2026-11-23 with option C. B4
+is open. It blocks the rule for malformed `mokly` parameter values in
 Milestone 7.
 
 ### B1. Stories inherit the first story's args
+
+Answered on 2026-11-23: C. The orchestrator of this plan made this design
+call, because the user's decisions 3 and 7 already require that each story
+renders as in Storybook. A story variant's props are only its own data args,
+and the core does not lay them over the parent's props. A key is required
+only when every included story sets it. Each story renders with its own
+non-data args and exactly the requested data props, and the sidecar sets each
+data arg that the request leaves out to `undefined`.
 
 - **Severity:** High. **Effort:** Medium.
 - **Source:** Implementation.
@@ -972,13 +983,22 @@ Loaders and `beforeEach` run before each story render, as decision 12 says.
 
 ## Milestone 6: The first story as the parent page
 
-Depends on: 4, and the answer to decision B1
+Depends on: 4
 
 The first included story becomes the parent page, as decision 3 says.
 
 - [ ] Render the first included story in source order as the parent page,
       with its composed args as the parent's props.
 - [ ] Make the other included stories the parent's variants.
+- [ ] Apply the answer to decision B1: a story variant's props are only its
+      own data args, a key is required only when every included story sets
+      it, and a story renders with exactly the requested data props, each
+      left-out data arg `undefined`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [ ] Test that the variants of Storybook's Button template keep exactly
+      their own args, and that unset of an optional prop renders the story
+      without it.
+      Branch: `conductor/storybook-support-b-story-reading`.
 - [x] Give a file without an included story no entry, as design call 3 says.
       Branch: `conductor/storybook-support-b-story-reading`.
 - [ ] Delete the meta-only composition and move each consumer that "Replaced
