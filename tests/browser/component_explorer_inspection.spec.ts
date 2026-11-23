@@ -80,7 +80,7 @@ test("the right panel holds the inspector, and the compact layout's panel sheet 
   ).toBe(true);
 });
 
-test("the inspector divider lights up like the navigation divider", async ({
+test("the navigation divider lights up on hover and marks its root while it drags", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -96,36 +96,26 @@ test("the inspector divider lights up like the navigation divider", async ({
       line: [style.width, style.height].sort().join(" "),
     };
   };
-  const dividers = {
-    navigation: page.getByRole("separator", {
-      name: "Resize navigation panel",
-    }),
-    inspector: page.getByRole("separator", { name: "Resize inspector" }),
-  };
-  await expect(dividers.inspector).toBeVisible();
-  const resting = await dividers.inspector.evaluate(grip);
-  // At rest the inspector grip draws the Light control edge, while the
-  // navigation grip keeps its strong border; both share the line and shadow.
-  expect(resting).toEqual({
-    ...(await dividers.navigation.evaluate(grip)),
-    background: "rgb(98, 106, 100)",
+  const divider = page.getByRole("separator", {
+    name: "Resize navigation panel",
   });
+  await expect(divider).toBeVisible();
+  const resting = await divider.evaluate(grip);
 
-  const box = (await dividers.inspector.boundingBox())!;
+  const box = (await divider.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  const hovered = await dividers.inspector.evaluate(grip);
+  const hovered = await divider.evaluate(grip);
   expect(hovered).not.toEqual(resting);
-  await dividers.navigation.hover();
-  expect(await dividers.navigation.evaluate(grip)).toEqual(hovered);
 
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2, box.y - 60, { steps: 8 });
+  await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2, {
+    steps: 8,
+  });
   await expect(page.locator(".mbk[data-mokly-shell]")).toHaveClass(
-    /mbk-inspector-resizing/,
+    /mbk-nav-resizing/,
   );
   await page.mouse.up();
   await expect(page.locator(".mbk[data-mokly-shell]")).not.toHaveClass(
-    /mbk-inspector-resizing/,
+    /mbk-nav-resizing/,
   );
 });

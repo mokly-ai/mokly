@@ -1,14 +1,6 @@
 import { expect } from "@playwright/test";
 
-import {
-  detailsRow,
-  openScreensGroup,
-  shellRoot,
-} from "./browse_assertions.js";
 import { test } from "./browser_test.js";
-
-/** A use case, whose steps keep their screens in browser windows. */
-const TOUR = "/view/example/tour/";
 
 test("path chips copy their path without navigating", async ({ page }) => {
   await page.addInitScript(() => {
@@ -58,85 +50,4 @@ test("path chips copy their path without navigating", async ({ page }) => {
       "Copied path example/screens/welcome",
     );
   }
-});
-
-test("the address pill copies its address from its copy icon", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: {
-        writeText(text: string) {
-          (window as Window & { __copiedUrl?: string }).__copiedUrl = text;
-          return Promise.resolve();
-        },
-      },
-    });
-  });
-  await page.goto(TOUR);
-  const icon = page.locator(".browser-bar .address-copy svg").first();
-  await expect(icon).toBeVisible();
-  const box = await icon.boundingBox();
-  expect(box?.width).toBe(13);
-  expect(box?.height).toBe(13);
-
-  await icon.click();
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () => (window as Window & { __copiedUrl?: string }).__copiedUrl,
-      ),
-    )
-    .toBe("example.test/welcome");
-  await expect(page.locator(".address-copied").first()).toHaveText(
-    "URL copied",
-  );
-});
-
-test("the expand toggle swaps its icon while the frame is expanded", async ({
-  page,
-}) => {
-  await page.goto(TOUR);
-  const toggle = page.locator(".browser-expand").first();
-  const expandIcon = toggle.locator(".i-expand svg");
-  const collapseIcon = toggle.locator(".i-collapse svg");
-  await expect(expandIcon).toBeVisible();
-  await expect(collapseIcon).toBeHidden();
-  const box = await expandIcon.boundingBox();
-  expect(box?.width).toBe(13);
-  expect(box?.height).toBe(13);
-
-  await toggle.click();
-  await expect(expandIcon).toBeHidden();
-  await expect(collapseIcon).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(expandIcon).toBeVisible();
-  await expect(collapseIcon).toBeHidden();
-});
-
-/** The class that marks the shell root while a browser window is expanded. */
-const expandedMark = /(?:^|\s)frame-expanded(?:\s|$)/u;
-
-test("the browser frame expands to an overlay and collapses again", async ({
-  page,
-}) => {
-  await page.goto(TOUR);
-  const toggle = page.locator(".browser-expand").first();
-  await toggle.click();
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  // The shell marks its own root, which draws the scrim, and not the page.
-  await expect(page.locator(shellRoot)).toHaveClass(expandedMark);
-  await expect(page.locator("body")).not.toHaveClass(expandedMark);
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
-  await toggle.click();
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  await page.mouse.click(8, 300);
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
-  await expect(page.locator(shellRoot)).not.toHaveClass(expandedMark);
-  await openScreensGroup(page);
-  await page.click(detailsRow);
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
 });

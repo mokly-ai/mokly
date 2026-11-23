@@ -66,27 +66,17 @@ test("the picker enters, keeps, and clears a tag term", async ({ page }) => {
   await expect(page.locator(tourRow)).toBeVisible();
 });
 
-test("the open picker takes Escape ahead of the expanded frame", async ({
+test("Escape closes the open picker, keeps the query, and returns focus to its toggle", async ({
   page,
 }) => {
-  // A use case's steps keep their screens in browser windows.
   await page.goto("/view/example/tour/");
   await page.fill(search, "welcome");
-  await page.locator(".browser-expand").first().click();
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-
-  // Synthesised state: the expand scrim covers the bar, so no real click opens the panel here.
-  await page.locator(toggle).dispatchEvent("click");
-  await expect(page.locator(panel)).toBeVisible();
+  await openPicker(page);
   await page.keyboard.press("Escape");
 
   await expectClosed(page);
   await expect(page.locator(toggle)).toBeFocused();
   await expect(page.locator(search)).toHaveValue("welcome");
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
 });
 
 test("a click outside closes the picker without taking focus", async ({

@@ -4,7 +4,6 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
 import type {} from "./viewer_harness.js";
-import { NARROW_WINDOW } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 
@@ -62,29 +61,4 @@ test("outside clicks close embedded pickers with conditional focus return", asyn
   await expect(
     page.getByRole("button", { name: "Outside host" }),
   ).toBeFocused();
-});
-
-test("below the layout breakpoint, an outside click collapses an expanded frame", async ({
-  page,
-}) => {
-  // The one-frame stage's browser window expands; canvas frames do not.
-  await page.setViewportSize(NARROW_WINDOW);
-  await page.goto(fixture.host.url);
-  await page.waitForFunction(() => Boolean(window.viewerHarness));
-  await page.evaluate(() =>
-    window.viewerHarness.start("one", {
-      defaultSelection: { viewport: "desktop" },
-      slots: true,
-    }),
-  );
-  await page
-    .getByRole("button", { name: "Expand to a wider viewport" })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Collapse viewport" }),
-  ).toBeVisible();
-  await page.mouse.click(2, 2);
-  await expect(
-    page.getByRole("button", { name: "Expand to a wider viewport" }),
-  ).toBeVisible();
 });

@@ -7,7 +7,11 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
 import type {} from "./viewer_harness.js";
-import { canvasFrame, NARROW_WINDOW } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  NARROW_WINDOW,
+  revealInPanel,
+} from "./workspace_actions.js";
 
 declare global {
   interface Window {
@@ -212,34 +216,20 @@ for (const layout of ["canvas", "narrow"] as const)
         .poll(() => outlineTop(page, desktop))
         .toBeGreaterThan(top! + 40 * scale);
       await expectReportedMask(page, desktop);
-
-      // The one-frame stage's expanded frame keeps the mask above it.
-      if (layout === "narrow") {
-        await page.locator(".browser-expand").click();
-        await expect(page.locator(".mbk-highlight-layer")).toHaveCSS(
-          "z-index",
-          "951",
-        );
-        await expect(
-          page.locator("[data-mokly-label-layer]").filter({
-            has: page.getByRole("button", { name: "Action · action" }),
-          }),
-        ).toHaveCSS("z-index", "952");
-        await expectReportedMask(page, desktop);
-        await page.locator(".browser-expand").click();
-      }
       await page.evaluate(() =>
         window.viewerHarness.get("one").ref.current.highlightInstance(null),
       );
       await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
 
       // The Highlight components switch draws on every shown frame: on the
-      // canvas, the Desktop column's Light and Dark frames.
+      // canvas, the Desktop column's Light and Dark frames. In the compact
+      // layout the switch stands in the panel's sheet.
       const shown = layout === "canvas" ? 2 : 1;
       const toggle = page.getByRole("button", {
         name: "Highlight components",
         exact: true,
       });
+      await revealInPanel(page, toggle);
       await toggle.click();
       await expect(toggle).toHaveAttribute("aria-pressed", "true");
       await expectReportedMask(page, desktop, shown);

@@ -37,9 +37,8 @@ for (const cross of [false, true]) {
   // The compact layout below the layout breakpoint shows one frame, pans
   // its canvas, shows the frame that the entry bar's picker names, and fits
   // that frame to the root; `viewer_markers_canvas.spec.ts` covers the
-  // canvas's pan, zoom and refit from 900px wide. Canvas frames do not
-  // expand, so the last step keeps the one-frame stage's expansion.
-  test(`${adapter} below the layout breakpoint, marker tracks the canvas's pan, a picked frame, a resize and frame expansion without remounting`, async ({
+  // canvas's pan, zoom and refit from 900px wide.
+  test(`${adapter} below the layout breakpoint, marker tracks the canvas's pan, a picked frame and a resize without remounting`, async ({
     page,
   }) => {
     await page.setViewportSize(NARROW_WINDOW);
@@ -154,19 +153,6 @@ for (const cross of [false, true]) {
     await expect(
       page.locator('iframe[data-marker-identity="retained"]'),
     ).toHaveCount(1);
-
-    await page.locator(".browser-expand").click();
-    await expect(page.locator(".mokly-viewer")).toHaveClass(/frame-expanded/);
-    await expect(page.locator("[data-mokly-marker-layer]")).toHaveCSS(
-      "z-index",
-      "952",
-    );
-    await expectMarkerState(page, "desktop", "visible");
-    await expectMarkerAligned(page, "desktop", 1, "Visible");
-    await page.locator(".browser-expand").click();
-    await expect(page.locator(".mokly-viewer")).not.toHaveClass(
-      /frame-expanded/,
-    );
   });
 
   test(`${adapter} markers distinguish in-frame visibility and nested scrolling`, async ({

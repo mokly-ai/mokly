@@ -148,64 +148,58 @@ test("snapshot recovery keeps the selected saved variant", async ({
   expect(failed).toEqual([]);
 });
 
-for (const change of ["scheme", "viewport"] as const)
-  test(`an expired preview is reacquired before changing the ${change}`, async ({
-    page,
-    changes,
-    allowBrowserError,
-  }) => {
-    const index = await changes.index();
-    const record = index.removedEntries.find(
-      ({ entry }) => entry.path === changes.paths.removedScreen,
-    )!;
-    const root = new URL(index.comparisonUrl!, changes.url).href;
-    // A removed screen's preview renews its removed detail in the generation.
-    const detail = `${root}entries/${record.entry.path}.json`;
-    allowBrowserError(
-      responseFailure(changes.url, new URL(detail).pathname, 404),
-    );
-    const selections = selectedRequests(page);
-    const failed = failedSnapshots(page);
-    await page.goto(
-      `/view/${record.entry.path}/?snapshot=${record.snapshotId}&viewport=desktop`,
-    );
-    const desktop = historicalFrame(page, "desktop").locator("iframe");
-    await expect(desktop.contentFrame().locator("h1")).toHaveText(
-      "Historical screen",
-    );
-    const metadata: string[] = [];
-    page.on("request", (request) => {
-      if (request.url() === detail) metadata.push(request.method());
-    });
-    const removal = await removeGeneration(
-      page,
-      root,
-      page.locator(previews),
-      detail,
-    );
-
-    if (change === "scheme") await chooseScheme(page, "dark");
-    else await chooseViewport(page, "mobile");
-
-    // The section's frame of the new scheme or the kept viewport.
-    const renewed = (
-      change === "scheme"
-        ? historicalFrame(page, "desktop", "dark")
-        : historicalFrame(page, "mobile")
-    ).locator("iframe");
-    await expect(renewed).toHaveAttribute(
-      PANE_SOURCE,
-      change === "scheme" ? /\.desktop\.dark\.html$/u : /\.mobile\.html$/u,
-    );
-    await expect(renewed.contentFrame().locator("h1")).toHaveText(
-      "Historical screen",
-    );
-    // The preview reacquired its advertised generation before it asked the
-    // generation for any document of the new view.
-    expect(generationOf((await renewed.getAttribute(PANE_SOURCE))!)).toBe(root);
-    expect(removal.renewed()).toBe(true);
-    expect(removal.refused()).toEqual([]);
-    expect(metadata).toEqual(["HEAD", "GET"]);
-    expect(selections).toEqual([]);
-    expect(failed).toEqual([]);
+// On the canvas a removed screen's section holds the frames of both schemes,
+// so a scheme change requests nothing; a viewport choice requests the other
+// viewport's documents.
+test("an expired preview is reacquired before changing the viewport", async ({
+  page,
+  changes,
+  allowBrowserError,
+}) => {
+  const index = await changes.index();
+  const record = index.removedEntries.find(
+    ({ entry }) => entry.path === changes.paths.removedScreen,
+  )!;
+  const root = new URL(index.comparisonUrl!, changes.url).href;
+  // A removed screen's preview renews its removed detail in the generation.
+  const detail = `${root}entries/${record.entry.path}.json`;
+  allowBrowserError(
+    responseFailure(changes.url, new URL(detail).pathname, 404),
+  );
+  const selections = selectedRequests(page);
+  const failed = failedSnapshots(page);
+  await page.goto(
+    `/view/${record.entry.path}/?snapshot=${record.snapshotId}&viewport=desktop`,
+  );
+  const desktop = historicalFrame(page, "desktop").locator("iframe");
+  await expect(desktop.contentFrame().locator("h1")).toHaveText(
+    "Historical screen",
+  );
+  const metadata: string[] = [];
+  page.on("request", (request) => {
+    if (request.url() === detail) metadata.push(request.method());
   });
+  const removal = await removeGeneration(
+    page,
+    root,
+    page.locator(previews),
+    detail,
+  );
+
+  await chooseViewport(page, "mobile");
+
+  // The section's frame of the newly chosen viewport.
+  const renewed = historicalFrame(page, "mobile").locator("iframe");
+  await expect(renewed).toHaveAttribute(PANE_SOURCE, /\.mobile\.html$/u);
+  await expect(renewed.contentFrame().locator("h1")).toHaveText(
+    "Historical screen",
+  );
+  // The preview reacquired its advertised generation before it asked the
+  // generation for any document of the new view.
+  expect(generationOf((await renewed.getAttribute(PANE_SOURCE))!)).toBe(root);
+  expect(removal.renewed()).toBe(true);
+  expect(removal.refused()).toEqual([]);
+  expect(metadata).toEqual(["HEAD", "GET"]);
+  expect(selections).toEqual([]);
+  expect(failed).toEqual([]);
+});

@@ -1,5 +1,7 @@
 import { expect } from "@playwright/test";
 
+import { entryRoute } from "../../packages/viewer/src/navigation/routes.js";
+
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -172,6 +174,42 @@ test("snapshot panes keep marked links inert", async ({ page }) => {
       (frame: HTMLIFrameElement) => frame.contentDocument?.URL,
     ),
   ).toBe("about:srcdoc");
+});
+
+test("a desktop pane's address pill copies its address from its copy icon", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(text: string) {
+          (window as Window & { __copiedUrl?: string }).__copiedUrl = text;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  await page.goto(`/view/${comparisonPaths.changed}/`);
+  await chooseViewport(page, "desktop");
+  await showMode(page, "Side by side");
+  const icon = page.locator(`${stage} .browser-bar .address-copy svg`).first();
+  await expect(icon).toBeVisible();
+  const box = await icon.boundingBox();
+  expect(box?.width).toBe(13);
+  expect(box?.height).toBe(13);
+
+  await icon.click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __copiedUrl?: string }).__copiedUrl,
+      ),
+    )
+    .toBe(entryRoute(comparisonPaths.changed));
+  await expect(page.locator(".address-copied").first()).toHaveText(
+    "URL copied",
+  );
 });
 
 test("narrow diffs fit the shell and retain the catalogue drawer", async ({
