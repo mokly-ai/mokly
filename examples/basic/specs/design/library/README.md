@@ -265,7 +265,10 @@ selection; `CanvasStage` draws the selected entry's section with its frames,
 panned onto a frame where the state asks, with what lies over each frame,
 such as the selection, and the compact entry bar with the frame picker,
 which a variant set shows only once a selection picks a frame, and then that
-frame alone. Each frame stands in a slot that draws no box. The Frames
+frame alone. While a stage draws its frames at less than 60% of their
+size, as the compact form draws a desktop frame, the frames draw no
+highlight labels and no selection tags. Each frame stands in a slot that
+draws no box. The Frames
 filter hides the slot, so a frame that it turns off stays hidden whatever
 rule shows the frame, and each frame takes its grid cell by its viewport
 and scheme, so the filter keeps one row per scheme when it hides a

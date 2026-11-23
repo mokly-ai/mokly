@@ -11,7 +11,7 @@ import {
 } from "../../parts/depicted_view.js";
 
 import type { CanvasEntry } from "./entries.js";
-import type { CanvasFrameSpec } from "./frames.js";
+import { stageTags, type CanvasFrameSpec } from "./frames.js";
 
 /** A compare mode of the Changes tab. */
 type CompareMode = CompareModesProps["mode"];
@@ -141,7 +141,8 @@ interface CanvasStageProps {
  * title, the status, and the frame picker of a screen, or of a variant set
  * with a frame picked. A depicted view that the shell highlights shows its
  * highlight also where no switch is drawn, as in the compact form while the
- * panel sheet is closed.
+ * panel sheet is closed. Below 60%, the frames draw no tags: the highlight
+ * keeps its outlines and cutouts without its labels.
  */
 export function CanvasStage({
   compare,
@@ -206,6 +207,7 @@ export function CanvasStage({
         className="cv-view"
         data-cv-highlight={view?.highlight === "on" ? "on" : undefined}
         data-cv-pan={pan}
+        data-cv-tags={stageTags(zoom)}
       >
         {view === undefined ? (
           section

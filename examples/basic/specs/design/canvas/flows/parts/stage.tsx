@@ -5,7 +5,7 @@ import {
 } from "../../../library/composition.js";
 import { DepictedViewScope } from "../../../parts/depicted_view.js";
 import type { CanvasEntry } from "../../parts/entries.js";
-import type { CanvasFrameSpec } from "../../parts/frames.js";
+import { stageTags, type CanvasFrameSpec } from "../../parts/frames.js";
 import { EntryStatus, FramePicker } from "../../parts/stage.js";
 
 import type { StepFrames, UseCaseStep } from "./steps.js";
@@ -75,9 +75,10 @@ interface UseCaseStageProps {
 /**
  * A use case on the canvas: one section whose head names the use case, its
  * path and its change status, with no kind tag, and one step frame for each
- * step, in step order, in one row at one zoom. The compact form's entry bar
- * names the use case, and its frame picker lists the steps by number and
- * title and shows the picked step's frame alone.
+ * step, in step order, in one row at one zoom, whose frames draw no tags
+ * below 60%. The compact form's entry bar names the use case, and its frame
+ * picker lists the steps by number and title and shows the picked step's
+ * frame alone.
  */
 export function UseCaseStage({
   chosen,
@@ -101,7 +102,11 @@ export function UseCaseStage({
           picked={`step-${picked}`}
         />
       </div>
-      <div className="cv-view" data-cv-kind={entry.kind}>
+      <div
+        className="cv-view"
+        data-cv-kind={entry.kind}
+        data-cv-tags={stageTags(zoom)}
+      >
         <div className="cv-section" data-cv-kind={entry.kind}>
           <div className="cv-section-head">
             <span className="cv-title-tag">{entry.title}</span>

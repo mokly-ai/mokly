@@ -16,13 +16,31 @@ const framesToggle = (page: Page, frames: string) =>
 /**
  * The Canvas artboards' native controls and measurements: the Frames filter
  * hides the frames that it turns off, also the frame that the compact frame
- * picker shows, and keeps one row per scheme; a selection's box model and
- * padding redline follow the selected element's own box.
+ * picker shows, and keeps one row per scheme; a frame below 60% draws no
+ * highlight labels; a selection's box model and padding redline follow the
+ * selected element's own box.
  */
 export function registerCanvasCases(
   test: typeof baseTest,
   design: DesignDocument,
 ) {
+  test("mobile: a picked desktop frame draws the highlight without its labels", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(design("design/canvas/inspect/frames", "mobile"));
+    const labels = (id: string) =>
+      stageFrame(page, id).locator(".mbk-highlight-label:visible");
+    await expect(labels("mobile-light")).toHaveCount(2);
+    await page
+      .getByRole("combobox", { name: "Frame" })
+      .selectOption("desktop-light");
+    await expect(
+      stageFrame(page, "desktop-light").locator(".mbk-highlight-mask"),
+    ).toBeVisible();
+    await expect(labels("desktop-light")).toHaveCount(0);
+  });
+
   test("mobile: the Frames filter hides the picked Canvas frame that it turns off", async ({
     page,
   }) => {
