@@ -35,12 +35,19 @@ removed paths.
 band, and presses a mode. `showMode` also waits for an exact count of pane
 frames: two for each frame that Overlay, Difference, or Swipe compares, and
 two for the pair of Side by side. `outcomeLines` reads the band's line for
-each compared frame, and `expectNoCompareModes` checks, with the Changes tab
-open, that an entry offers no mode. `compareStage` is the compare, busy while
-it loads, and `compareState` is its loading or failure state, which exists
-only then and never holds a pane. `comparison_outcomes.ts` builds the
-expected outcome lines of a screen's shown frames, the Light row first, or of
-one row of a variant set.
+each compared frame, and `expectNoCompareModes` checks, in a page or in one
+viewer's root, that an entry offers no mode: it opens the Changes tab of an
+entry that has one first, also from the compact layout's closed panel sheet.
+`compareStage` is the compare, busy while it loads, and `compareState` is its
+loading or failure state, which exists only then and never holds a pane.
+`comparison_outcomes.ts` builds the expected outcome lines of a screen's
+shown frames, the Light row first, or of one row of a variant set.
+`comparison_static_frames.ts` names which frames a mode compares on the copy:
+every shown frame in Overlay, Difference, and Swipe, the first shown frame in
+Side by side, and the compact layout's one frame. Its `expectSectionMode`
+checks that a compared frame shows a mode as one stack or a Before and
+Current pair. `comparison_absence.ts` checks that an entry, such as a removed
+entry's previous version, renders no band, no comparison state, and no pane.
 `comparison_sections.ts` opens a comparison and finds one compared frame by
 its kind and its scheme: in Overlay, Difference, and Swipe the frame's
 figure, whose one viewport stacks both versions, and in Side by side the
@@ -54,12 +61,18 @@ group, the `Scroll together` switch and Refresh: its geometry, the order of
 its controls, and the drawn state of the switch.
 `comparison_evidence_page.ts` holds the Details copy and readers that the
 stylesheet Details specs share. Its readers require one Comparison details
-heading and exactly one changed-files list. `openEvidence` also requires the
+heading and exactly one changed-files list. `openEvidence` and
+`openPageEvidence` show the comparison details in the right panel's tab that
+holds them: Changes for an entry that has that tab, and Inspect otherwise.
+An entry that the Changes filter does not list gains its Changes tab once its
+detail makes it comparison-eligible, so a spec waits for `awaitRoutedDetail`
+before it opens such an entry's details. `openEvidence` also requires the
 branch-point sentence, or its absence when a spec passes `null` for an index
 without a base. `expectExcludedOnly` checks Details that hold one examined
 list and no changed-files list. `configuredStylesheets` and
 `pageStylesheets` in `comparison_evidence_groups.ts` name the copy's
-stylesheets as the shell shows them.
+stylesheets as the shell shows them. `inspect_head.ts` reads the routed
+entry's title and status in Inspect's head, which the old screen head held.
 `comparison_frames.ts` checks every pane frame attribute that the comparison
 panes contract requires, on the copied output and in an embedded viewer
 through both frame adapters.

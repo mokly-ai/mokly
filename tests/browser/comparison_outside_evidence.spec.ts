@@ -36,10 +36,16 @@ import {
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { awaitRoutedDetail } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  comparisonFrames,
+  expectNoCompareModes,
+  outcomeLines,
+} from "./comparison_ui.js";
 import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { ownExampleServerUrl } from "./example_servers.js";
+import { viewportFrame } from "./workspace_actions.js";
 
 const CARD_FILES: EvidenceFile[] = [
   [
@@ -82,6 +88,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
+      // Its detail makes the comparison eligible, which adds the Changes tab
+      // that then holds the comparison details.
+      await awaitRoutedDetail(page, comparisonPaths.consumingComponent);
       const evidence = await openEvidence(page);
       await expect(
         evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
@@ -98,7 +107,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         VARIANT_SHARED_IMPACT,
       );
       await expect(evidence).not.toContainText(VARIANT_TERMINAL);
-      await expect(page.locator(".mbk-diff-view")).toHaveCount(0);
+      // Current loads no comparison, so no frame compares.
+      await expect(outcomeLines(page)).toHaveCount(0);
+      await expect(comparisonFrames(page)).toHaveCount(0);
     });
 
     test("the changed component keeps its own sentence beside its saved view's", async ({
@@ -158,14 +169,15 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
       await expect(evidence.locator("p")).toHaveText([BASE, ...sentences]);
       await expect(evidence.locator("li")).toHaveText([sheets.theme]);
-      await expect(page.locator("[data-current-screen]")).toBeVisible();
+      // The canvas keeps the current frames, and no frame compares.
+      await expect(page.locator(viewportFrame("mobile"))).toBeVisible();
       await awaitRoutedDetail(page, comparisonPaths.unchanged);
-      await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+      await expectNoCompareModes(page);
       await expect(
         page.getByRole("button", { name: "Side by side", exact: true }),
       ).toBeHidden();
-      await expect(page.locator("[data-diff-stage]")).toBeHidden();
-      await expect(page.locator(".mbk-diff-view h3")).toHaveCount(0);
+      await expect(comparisonFrames(page)).toHaveCount(0);
+      await expect(outcomeLines(page)).toHaveCount(0);
       await page.goto(designUrl("design/canvas/evidence/unchanged", name));
       const card = page.locator(".cv-evidence [data-workspace-evidence]");
       await expect(card.locator("p")).toHaveText([DESIGN_BASE, ...sentences]);

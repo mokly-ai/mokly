@@ -8,6 +8,7 @@ import {
   copiedComparisonDirectory,
   test,
 } from "./comparison_test.js";
+import { openInspectFold } from "./workspace_actions.js";
 
 test("the native comparison copy remains usable after its two-commit source repository is removed", async ({
   page,
@@ -57,38 +58,10 @@ test("the native comparison copy remains usable after its two-commit source repo
     parentDetail.workspace?.affected,
   );
   await page.goto(`/view/${comparisonPaths.changedVariant}/`);
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  const usage = await openInspectFold(page, "usage");
   await expect(
     usage.locator('[data-usage-section="used-by"]').getByRole("link"),
   ).toHaveText(["Toolbar", "Changed screen", "Consumer screen"]);
-
-  const parentRequests: string[] = [];
-  page.on("request", (request) => {
-    if (request.url().includes("/entries/components/card.json"))
-      parentRequests.push(request.url());
-  });
-  await page.goto(
-    `/view/${comparisonPaths.removedVariant}/?snapshot=${removed.snapshotId}`,
-  );
-  await expect(
-    page.getByRole("tab", { name: "Usage", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const removedUsage = page.getByRole("tabpanel", {
-    name: "Usage",
-    exact: true,
-  });
-  await expect(
-    removedUsage.getByRole("heading", { name: "Used by" }),
-  ).toBeVisible();
-  await expect(removedUsage).toContainText("No recorded consumers.");
-  await expect(
-    removedUsage.getByRole("heading", {
-      name: "Affected screens and components",
-    }),
-  ).toBeVisible();
-  expect(parentRequests).toEqual([]);
   expect(
     index.screens.find(
       (entry: { path: string }) => entry.path === comparisonPaths.unchanged,
@@ -182,4 +155,26 @@ test("the native comparison copy remains usable after its two-commit source repo
     "specs/screens/changed.screen.html",
   ])
     expect((await request.get(`${baseURL}/${source}`)).status()).toBe(404);
+
+  // A removed variant's Usage reads its own removed detail, never the
+  // parent's.
+  const parentRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/entries/components/card.json"))
+      parentRequests.push(request.url());
+  });
+  await page.goto(
+    `/view/${comparisonPaths.removedVariant}/?snapshot=${removed.snapshotId}`,
+  );
+  const removedUsage = await openInspectFold(page, "usage");
+  await expect(
+    removedUsage.getByRole("heading", { name: "Used by" }),
+  ).toBeVisible();
+  await expect(removedUsage).toContainText("No recorded consumers.");
+  await expect(
+    removedUsage.getByRole("heading", {
+      name: "Affected screens and components",
+    }),
+  ).toBeVisible();
+  expect(parentRequests).toEqual([]);
 });

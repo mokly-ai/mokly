@@ -115,7 +115,7 @@ export async function chooseFilter(
 }
 
 /** The value of `data-compare-mode` that each diff mode draws on the frames. */
-const MODES = {
+export const COMPARE_MODES = {
   "Side by side": "side",
   Overlay: "overlay",
   Difference: "difference",
@@ -123,7 +123,10 @@ const MODES = {
 } as const;
 
 /** A diff mode, by its name on the band. */
-export type DiffMode = keyof typeof MODES;
+export type DiffMode = keyof typeof COMPARE_MODES;
+
+/** A diff mode, by the `data-compare-mode` that it draws. */
+export type CompareMode = (typeof COMPARE_MODES)[DiffMode];
 
 /** A comparison mode, by its name on the band: Current or a diff mode. */
 export type ModeName = "Current" | DiffMode;
@@ -180,22 +183,33 @@ export async function showMode(
 ): Promise<void> {
   await chooseMode(page, name);
   await expect(
-    page.locator(`[data-mokly-stage] [data-compare-mode="${MODES[name]}"]`),
+    page.locator(
+      `[data-mokly-stage] [data-compare-mode="${COMPARE_MODES[name]}"]`,
+    ),
   ).not.toHaveCount(0);
   await expect(comparisonFrames(page)).toHaveCount(frames);
 }
 
 /**
- * Expect the routed entry to offer no compare mode: its Changes tab, when it
- * has one, shows no band, so the check never passes only because Inspect is
- * the selected tab. Call it once the entry's detail settled, such as after
- * `awaitRoutedDetail`.
+ * Expect the routed entry of a page or of one viewer's root to offer no
+ * compare mode: its Changes tab, when it has one, shows no band, so the
+ * check never passes only because Inspect is the selected tab or the compact
+ * layout's panel sheet is closed. Call it once the entry's detail settled,
+ * such as after `awaitRoutedDetail`.
  */
-export async function expectNoCompareModes(page: Page): Promise<void> {
-  if (await page.getByRole("tab", { name: "Changes", exact: true }).count())
-    await openPanelTab(page, "Changes");
+export async function expectNoCompareModes(
+  scope: Page | Locator,
+): Promise<void> {
+  const changes = scope.getByRole("tab", {
+    name: "Changes",
+    exact: true,
+    includeHidden: true,
+  });
+  // The tab stands in the panel's sheet in the compact layout, which
+  // `openPanelTab` opens.
+  if (await changes.count()) await openPanelTab(scope, "Changes");
   await expect(
-    page.getByRole("group", { name: "Comparison mode" }),
+    scope.getByRole("group", { name: "Comparison mode" }),
   ).toBeHidden();
 }
 
