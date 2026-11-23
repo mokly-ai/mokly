@@ -173,10 +173,38 @@ views changed compare as an affected-only entry does.
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
 change and passes the effective scheme to controls and comparison presentation.
-`comparison_request.ts` establishes a comparison's generation root: a
-pinned catalogue's advertised root without a request, or the root that
-Serve's selection endpoint redirects to, which a HEAD request renews. A failed
-request shows the comparison failure with Try again; Current remains
+The comparison holds one generation for each row that it demands, under the
+[selected comparisons contract](../../../../docs/protocol/mokly-selected-comparisons.md):
+each row of the shown frames that `useComparison` receives, a screen or one
+row of a component's variant set, or without frames the routed entry's row
+alone. `comparisonFrames` in `comparison_eligible_frames.ts` gives the shown
+frames whose rows compare under the
+[screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
+the row's shown views are eligible, or a shown view that reads Unmodified uses
+a changed component that the row's own detail names. `comparison_presentation.ts`
+turns the frames into the demand, with one key for each row: each row with the
+axes of its frames, or in Side by side the row of the compared frame alone.
+Without frames, the routed row is keyed on the selection's axes.
+`comparison_request.ts` establishes one row's generation root: a pinned
+catalogue's advertised root without a request, or the root that Serve's
+selection endpoint redirects to, which a HEAD request renews.
+`comparison_row_lifecycle.ts` runs each demanded row on its own. A row without
+a generation gets one request, a loaded row whose key changes renews first,
+and a key change while the row's work runs keeps that work, whose completion
+applies the row's latest key. In a static build, the rows that start together
+share one deployment check (`comparison_deployment_check.ts`). A row that
+leaves the demand aborts its work and keeps its generation, which renews when
+the row returns. A failed row keeps its failure for its key while the other
+rows continue; `retry` requests one row again, the routed row by default, and
+`refresh` every demanded row. `comparison_row_snapshot.ts` shows the demanded
+rows to the controller: `generations`, by entry id, with the rows that still
+load and the rows that failed, keeps its identity while nothing in it changes,
+and the presentation follows the latest mode and axes once every demanded row
+has settled. `use_comparison_documents.ts` presents and aborts each row's
+documents on its own, starts nothing new for a row that renews, reads a failed
+row's failure, and keeps the accepted presentations while `generations` is
+absent, as Inspect makes it, so a return shows the mode with no new load. A
+failed request shows the comparison failure with Try again; Current remains
 available.
 Every failed comparison uses the details sentence "The comparison is
 unavailable.". The shell never shows server or browser error text there.
@@ -186,8 +214,10 @@ navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
 resolves, so a removed variant of a moved or case-renamed parent opens in its
-siblings' workspace and keeps their mode. The mode owner also includes the
-index revision, so a publication returns an active comparison to Current.
+siblings' workspace and keeps their mode, and every row's generation. The
+mode owner also includes the index revision, so a publication returns an
+active comparison to Current. Current, a new owner, a new comparison
+environment and unmount cancel every row, and a late response changes nothing.
 `comparison_intent.ts` applies a route's comparison intent once. The store
 counts route installations and keeps the installed route's intent; the
 routed workspace settles it when `comparisonEligibilityKnown` first reports
