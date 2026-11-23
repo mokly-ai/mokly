@@ -7,6 +7,10 @@ import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 import {
+  CanvasStage,
+  type CanvasStageSection,
+} from "../src/canvas-stage/canvas-stage.js";
+import {
   EmbeddedLayout,
   MarkerLayer,
   type EmbeddedSlots,
@@ -147,6 +151,63 @@ test("the overlay finds a flow or an embedded document when no workspace shows",
   );
   assert.equal(overlay(container).hidden, false);
   assert.equal(overlay(container).style.width, "11px");
+});
+
+/** A document's section: its one reading frame, which takes the reading size. */
+const READING: CanvasStageSection = {
+  frames: [{ key: "document", column: 0, row: 0, node: <i /> }],
+  kind: "document",
+  path: "example/getting-started",
+  title: "Getting started",
+};
+
+/** The overlay's place in the stage host and its size. */
+function placement(element: HTMLElement): string[] {
+  const { height, left, top, width } = element.style;
+  return [left, top, width, height];
+}
+
+test("the overlay covers the routed canvas that holds a document's reading frame", () => {
+  boxes.set(".mokly-stage-host", { left: 100, top: 40 });
+  boxes.set(".mbk-canvas", { left: 110, top: 50, width: 640, height: 480 });
+  const { container } = render(
+    layout(<CanvasStage routed section={READING} />, { stageOverlay: NOTE }),
+  );
+  const element = overlay(container);
+  assert.equal(element.hidden, false);
+  assert.deepEqual(placement(element), ["10px", "10px", "640px", "480px"]);
+});
+
+test("a workspace's preview keeps the overlay over the canvas that it holds", () => {
+  boxes.set(".mokly-stage-host", { left: 100, top: 40 });
+  boxes.set("[data-workspace-preview]", {
+    left: 100,
+    top: 90,
+    width: 900,
+    height: 600,
+  });
+  boxes.set(".mbk-canvas", { left: 110, top: 150, width: 640, height: 480 });
+  const { container } = render(
+    layout(
+      <div data-workspace-preview="">
+        <CanvasStage routed section={READING} />
+      </div>,
+      { stageOverlay: NOTE },
+    ),
+  );
+  assert.deepEqual(placement(overlay(container)), [
+    "0px",
+    "50px",
+    "900px",
+    "600px",
+  ]);
+});
+
+test("a canvas that is not the routed stage takes no overlay", () => {
+  const { container } = render(
+    layout(<CanvasStage section={READING} />, { stageOverlay: NOTE }),
+  );
+  assert.equal(overlay(container).hidden, true);
 });
 
 test("the overlay hides while the host gives no content or no preview shows", () => {

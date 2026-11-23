@@ -267,7 +267,9 @@ the same parts and its host's slots. Its `topBar` function receives the
 containers of the three top-bar slots, which the bar places in its columns.
 It places each slot's content
 without reading it, keeps the host's stage overlay over the shown preview,
-and takes the host's `MarkerLayer` and label layer. `WorkspaceLayout` lays out
+and takes the host's `MarkerLayer` and label layer. The shown preview is a
+workspace's preview, a use case's flow, a document's stage, or the routed
+canvas that holds a document's reading frame. `WorkspaceLayout` lays out
 a workspace's header, variant bar, preview, and inspector. `RootState` takes
 a root's place while its catalogue loads, cannot be loaded, or needs a
 compatible viewer, or when the requested view is unavailable, as the
