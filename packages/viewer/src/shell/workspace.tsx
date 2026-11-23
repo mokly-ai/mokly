@@ -22,7 +22,6 @@ import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { controlTarget } from "./control_values.js";
-import { ComparisonBand } from "./diffs.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import { targetHead } from "./head.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
@@ -104,7 +103,10 @@ export function ComponentWorkspace({
     entryId: variantPath ?? entry.path,
     ...(data.component ? { owner: data.component.path } : {}),
   });
-  const comparing = comparison.mode !== "current";
+  // The canvas shows the chosen compare mode only while Changes is the
+  // selected tab, so Inspect, its highlight and its Props see the current
+  // frames, and the mode and the loaded comparison stay for Changes.
+  const comparing = tab === "changes" && comparison.mode !== "current";
   const picked = picks.state;
   // Props on a variant set edit the variant of the selected frame.
   const editTarget = controlTarget(
@@ -214,21 +216,17 @@ export function ComponentWorkspace({
       panel={
         <WorkspacePanel
           input={{
-            band:
-              data.comparisons && !preview ? (
-                <ComparisonBand
-                  comparison={compare.controller}
-                  eligible={presentation.comparisonEligible}
-                  outcomes={compare.outcomes}
-                />
-              ) : null,
             catalogue,
             changedViews,
             changes,
+            compare,
             compared: comparison.loaded !== undefined,
             controls: controls.panel,
             data,
             delivery: workspace.detailDelivery,
+            eligible: Boolean(
+              data.comparisons && presentation.comparisonEligible,
+            ),
             frames: {
               changed: changedViews,
               choice: store.state.frames,
@@ -249,6 +247,7 @@ export function ComponentWorkspace({
             onFrames: views.toggleFrames,
             previousPath,
             propsFocus: propsRecovery,
+            removedScreen: preview !== undefined,
             reveal: picked.reveal,
             routed: entry,
             selection: views.details,
@@ -271,7 +270,9 @@ export function ComponentWorkspace({
           {preview ? (
             <RemovedPreviewStage data={preview} onShown={previous.onShown} />
           ) : data.comparisons ? (
-            <ComparisonCanvas {...compare.canvas}>{stage}</ComparisonCanvas>
+            <ComparisonCanvas {...compare.canvas} shown={tab === "changes"}>
+              {stage}
+            </ComparisonCanvas>
           ) : (
             stage
           )}

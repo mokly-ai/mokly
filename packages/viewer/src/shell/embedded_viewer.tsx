@@ -12,6 +12,7 @@ import type {
   ViewerTheme,
 } from "../host/types.js";
 
+import { ChangesStartProvider } from "./changes_start.js";
 import { ShellFrameMarkerLayer } from "./frame_marker_layer.js";
 import { useShellFragment, useShellIdentifier } from "./identifier_context.js";
 import { CatalogueNav } from "./nav.js";
@@ -75,11 +76,13 @@ export function EmbeddedViewerShell({
       }
       labelLayer={inspection}
       main={
-        <ShellMain
-          catalogue={store.catalogue}
-          context={store.context}
-          view={store.state.route.view}
-        />
+        <ChangesStartProvider content={slots?.changesStart}>
+          <ShellMain
+            catalogue={store.catalogue}
+            context={store.context}
+            view={store.state.route.view}
+          />
+        </ChangesStartProvider>
       }
       mainHref={mainFragment}
       markerLayer={
