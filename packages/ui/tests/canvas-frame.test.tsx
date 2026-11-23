@@ -133,6 +133,30 @@ test("a reading frame has no size tag, and the frame that holds the selection is
   );
 });
 
+test("a frame that a press selects names itself in a button, and an overlay lies outside its clip", () => {
+  let pressed = 0;
+  const { container } = render(
+    <CanvasFrame
+      height={86}
+      kind="component"
+      label="Disabled · Light"
+      onSelect={() => (pressed += 1)}
+      overlay={<span title="Selection" />}
+      scheme="light"
+      selected
+      width={148}
+    >
+      <span title="Disabled — desktop — light" />
+    </CanvasFrame>,
+  );
+  const name = screen.getByRole("button", { name: "Disabled · Light" });
+  assert.equal(name.getAttribute("aria-pressed"), "true");
+  fireEvent.click(name);
+  assert.equal(pressed, 1);
+  const overlay = screen.getByTitle("Selection");
+  assertSameElement(overlay.parentElement, container.querySelector("figure"));
+});
+
 test("a frame without a document says so, and a failed one offers Try again", () => {
   let retries = 0;
   const { container } = render(

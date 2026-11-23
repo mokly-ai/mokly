@@ -54,6 +54,19 @@ export type CanvasStageSection = Omit<
 /** The pitch of the dot grid, which moves with the section when it pans. */
 const GRID_PITCH = 24;
 
+/**
+ * The smallest zoom at which the canvas shows the fixed-size tags on its
+ * frames, such as a highlight's labels and the selection's name and size
+ * tags. Below it, a tag would cover more of a frame than it names, so the
+ * tags hide; the marks that they name stay.
+ */
+export const CANVAS_TAG_ZOOM = 0.6;
+
+/** Whether the fixed-size tags on a frame show at a frame's scale. */
+export function canvasTagsShown(scale: number): boolean {
+  return scale >= CANVAS_TAG_ZOOM;
+}
+
 /** Whether a press on a target belongs to a control, not to the canvas. */
 function onControl(target: EventTarget | null): boolean {
   return (
@@ -65,9 +78,20 @@ function onControl(target: EventTarget | null): boolean {
   );
 }
 
+/** Whether a click lands on the empty canvas: on no frame and no control. */
+function onEmptyCanvas(target: EventTarget | null): boolean {
+  return (
+    target !== null &&
+    "closest" in target &&
+    !onControl(target) &&
+    (target as Element).closest(".mbk-canvas-frame, .mbk-canvas-pill") === null
+  );
+}
+
 export function CanvasStage({
   canvasRef,
   fitKey = "",
+  onEmptyClick,
   onViewChange,
   ref,
   routed = false,
@@ -81,6 +105,11 @@ export function CanvasStage({
    * another entry opens or the shown frames change.
    */
   fitKey?: string | undefined;
+  /**
+   * Hears of each click on the empty canvas, around the frames and away
+   * from every control, that no drag made, such as to clear a selection.
+   */
+  onEmptyClick?: (() => void) | undefined;
   /** Hears of each pan, zoom and Fit, such as to measure frames again. */
   onViewChange?: ((view: CanvasView) => void) | undefined;
   /** Receives the handle with Fit and the zoom steps. */
@@ -111,6 +140,21 @@ export function CanvasStage({
   useEffect(() => {
     viewChange.current?.(view);
   }, [view]);
+
+  // A drag swallows the click that its release makes, so a click that
+  // reaches the canvas is a press without movement.
+  const emptyClick = useRef(onEmptyClick);
+  emptyClick.current = onEmptyClick;
+  useEffect(() => {
+    const element = canvas.current;
+    if (!element) return;
+    const click = (event: MouseEvent) => {
+      if (!event.defaultPrevented && onEmptyCanvas(event.target))
+        emptyClick.current?.();
+    };
+    element.addEventListener("click", click);
+    return () => element.removeEventListener("click", click);
+  }, []);
 
   const holds = section !== undefined;
   useEffect(() => {
@@ -146,6 +190,7 @@ export function CanvasStage({
     <div
       className="mbk-canvas mbk-reset"
       data-canvas-panning={panning ? "" : undefined}
+      data-canvas-tags={canvasTagsShown(view.zoom) ? undefined : "hidden"}
       data-mokly-stage={routed ? "" : undefined}
       ref={canvasElement}
       style={{

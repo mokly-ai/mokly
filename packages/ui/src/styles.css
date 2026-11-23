@@ -16,6 +16,9 @@
 @import "./change-status/change-status.css";
 @import "./details-panel/details-panel.css";
 @import "./metadata-row/metadata-row.css";
+@import "./inspect-panel/inspect-panel.css";
+@import "./inspect-selection/inspect-selection.css";
+@import "./frames-filter/frames-filter.css";
 @import "./inspector/inspector.css";
 @import "./instance-tree/instance-tree.css";
 @import "./props-panel/props-panel.css";
@@ -31,12 +34,14 @@
 @import "./preview-frame/preview-frame.css";
 @import "./canvas-zoom-pill/canvas-zoom-pill.css";
 @import "./canvas-frame/canvas-frame.css";
+@import "./canvas-selection/canvas-selection.css";
 @import "./canvas-missing-view/canvas-missing-view.css";
 @import "./canvas-section/canvas-section.css";
 @import "./canvas-stage/canvas-stage.css";
 @import "./canvas-state/canvas-state.css";
 @import "./canvas-previous-version/canvas-previous-version.css";
 @import "./canvas-dock/canvas-dock.css";
+@import "./selection-pill/selection-pill.css";
 @import "./entry-bar/entry-bar.css";
 @import "./browser-bar/browser-bar.css";
 @import "./device-frame/device-frame.css";
@@ -49,6 +54,7 @@
 @import "./highlight-label/highlight-label.css";
 @import "./highlight-mask/highlight-mask.css";
 @import "./floating-panel/floating-panel.css";
+@import "./panel-tabs/panel-tabs.css";
 @import "./shell-layout/shell-layout.css";
 @import "./workspace-layout/workspace-layout.css";
 @import "./embedded-layout/embedded-layout.css";

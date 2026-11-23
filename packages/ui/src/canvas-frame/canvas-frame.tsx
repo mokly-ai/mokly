@@ -12,7 +12,9 @@
  * is the link that opens the step's screen, and the step's description reads
  * muted below the label. A frame whose view was never captured keeps its
  * place, its size and its label, and holds a note in its place in place of
- * a document.
+ * a document. What lies over the frame, such as the canvas selection, stands
+ * over its document and outside its clip, so its marks can reach beyond the
+ * frame's edges.
  */
 
 import { useId, type CSSProperties, type ReactNode } from "react";
@@ -96,6 +98,8 @@ export function CanvasFrame({
   label,
   lightOnly = false,
   link,
+  onSelect,
+  overlay,
   place,
   retry,
   scheme,
@@ -137,6 +141,16 @@ export function CanvasFrame({
    */
   link?: CanvasFrameLink | undefined;
   /**
+   * Receives each press of the frame's name, which makes the name a button,
+   * such as on a variant set, where a press selects the frame.
+   */
+  onSelect?: (() => void) | undefined;
+  /**
+   * What lies over the frame's document, unclipped, such as the canvas
+   * selection, which the frame's scale places.
+   */
+  overlay?: ReactNode;
+  /**
    * What stands in the frame's place in place of its document, such as the
    * note of a view that was never captured. The place keeps the frame's size
    * and label, but draws no surface, ring, shadow or size tag, and what it
@@ -175,6 +189,8 @@ export function CanvasFrame({
         label={label}
         lightOnly={lightOnly}
         link={link}
+        onSelect={onSelect}
+        selected={selected}
         size={
           kind !== "document" &&
           !placed &&
@@ -200,6 +216,7 @@ export function CanvasFrame({
           {children}
         </FrameBox>
       )}
+      {overlay}
     </figure>
   );
 }

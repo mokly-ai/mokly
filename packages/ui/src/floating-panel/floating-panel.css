@@ -64,6 +64,15 @@
   width: 312px;
 }
 
+.mbk-float-head {
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  height: 44px;
+  padding: 0 6px 0 4px;
+  border-bottom: 1px solid var(--cv-border);
+}
+
 .mbk-float-body {
   display: flex;
   flex: 1;
@@ -130,6 +139,12 @@
 
   .mbk-float-body[data-floating-scroll] {
     border-radius: 0;
+  }
+
+  /* The sheet's head takes the close control at its end. */
+  .mbk-float-head {
+    height: 46px;
+    padding-right: 52px;
   }
 
   /* The grabber: a wide target at the sheet's top centre that draws the
