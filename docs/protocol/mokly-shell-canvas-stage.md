@@ -88,9 +88,9 @@ hides only the frames that they do not compare.
   on.
 - Each axis keeps one toggle on, so its last shown toggle does not turn off.
 - In the [compact layout](./mokly-shell-device-chrome.md#compact-layout), the
-  selection's viewport names the picked frame. The viewport toggles then show
-  that frame's viewport, and the frame picker lists the frames of both
-  viewports.
+  selection's viewport names the picked frame, with Both read as Mobile. So
+  the viewport toggles there choose the picked frame's viewport, and the frame
+  picker lists the frames of both viewports.
 
 Decision: the viewport toggles are part of the public selection, not local
 view state, so an address, a Share link and a host selection keep the shown
