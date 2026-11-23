@@ -17,8 +17,8 @@ import { PREVIOUS_VERSION } from "../previews/copy.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { PreviewContent } from "../previews/request.js";
 
+import { useCanvasFrameInput } from "./canvas_frame_input.js";
 import { removedReadingView } from "./canvas_removed_frames.js";
-import { useCanvasFrameInput } from "./canvas_removed_input.js";
 import { RemovedScreenSection } from "./canvas_removed_screen.js";
 import {
   RemovedHolding,
