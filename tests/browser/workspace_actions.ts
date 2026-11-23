@@ -1,9 +1,24 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
+import { revealInPanel } from "./panel_actions.js";
+
+export {
+  closeOpenSheet,
+  openCatalogueSheet,
+  openPanelSheet,
+  openPanelTab,
+  revealInPanel,
+} from "./panel_actions.js";
+
+/** A toggle of the Frames filter in Inspect. */
+export type FramesToggleName = "mobile" | "desktop" | "light" | "dark";
+
 /**
  * Choose an appearance. A standalone document has one Appearance control that
- * sets the interface and the previews together; an embedded root keeps its own
- * preview switch, so both are supported here.
+ * sets the interface and the previews together. An embedded root has no
+ * Appearance: a document's Dark preview control stands in Inspect's head, and
+ * a screen, a variant set or a use case shows the scheme's frames alone
+ * through its Frames filter.
  */
 export async function chooseScheme(
   page: Page,
@@ -12,7 +27,7 @@ export async function chooseScheme(
   await expect(
     page
       .locator(
-        "[data-mokly-appearance-select], [data-workspace-scheme], [data-color-scheme-option]",
+        "[data-mokly-appearance-select], [data-workspace-scheme], [data-frames-toggle]",
       )
       .first(),
   ).toBeAttached();
@@ -21,7 +36,6 @@ export async function chooseScheme(
     await appearance.selectOption(value);
     return;
   }
-  // An embedded root's preview control stands in the right panel's head.
   const toggle = page.locator("[data-workspace-scheme]");
   if (await toggle.count()) {
     await revealInPanel(page, toggle);
@@ -29,27 +43,69 @@ export async function chooseScheme(
       (await toggle.getAttribute("aria-pressed")) !== String(value === "dark")
     )
       await toggle.click();
-  } else {
-    const segment = page.locator(`[data-color-scheme-option="${value}"]`);
-    await revealInPanel(page, segment.first());
-    await page.locator(`[data-color-scheme-option="${value}"]:visible`).click();
+    return;
   }
+  await setFrames(page, {
+    dark: value === "dark",
+    light: value === "light",
+  });
 }
+
+/**
+ * Show the frames of one viewport, or of both, through the Frames filter. A
+ * variant set shows each row's desktop view and has no viewport toggles, so
+ * its canvas stays as it is.
+ */
 export async function chooseViewport(
   page: Page,
   value: "mobile" | "desktop" | "both",
 ): Promise<void> {
-  const select = page.getByLabel("Viewport", { exact: true });
-  await revealInPanel(page, select);
-  await select.selectOption(value);
+  const toggles = page.locator(
+    '[data-frames-toggle="mobile"], [data-frames-toggle="desktop"]',
+  );
+  await expect(page.locator("[data-frames-toggle]").first()).toBeAttached();
+  if (!(await toggles.count())) return;
+  await setFrames(page, {
+    desktop: value !== "mobile",
+    mobile: value !== "desktop",
+  });
 }
-/** Navigate through the workspace's entry-backed saved-variant bar. */
+
+/**
+ * Turn toggles of the Frames filter on or off: the ones to turn on first,
+ * because an axis keeps one of its toggles on. A use case's filter is radio
+ * pairs, so only the toggles to turn on act there.
+ */
+export async function setFrames(
+  scope: Page | Locator,
+  choice: Partial<Record<FramesToggleName, boolean>>,
+): Promise<void> {
+  const toggle = (name: string) =>
+    scope.locator(`[data-frames-toggle="${name}"]`);
+  await revealInPanel(scope, toggle(Object.keys(choice)[0] ?? "light"));
+  const entries = Object.entries(choice);
+  for (const [name, on] of entries)
+    if (on && !(await toggle(name).isChecked())) await toggle(name).check();
+  for (const [name, on] of entries)
+    if (
+      !on &&
+      (await toggle(name).getAttribute("type")) === "checkbox" &&
+      (await toggle(name).isChecked())
+    )
+      await toggle(name).uncheck();
+}
+
+/**
+ * Choose a row of Inspect's Variants: a screen's variant is a link that opens
+ * it, and a variant set's row selects that row's Light frame.
+ */
 export async function chooseVariant(page: Page, title: string): Promise<void> {
-  const link = page
-    .getByRole("navigation", { name: "Saved variants" })
-    .getByRole("link", { name: title, exact: true });
-  await revealInPanel(page, link);
-  await link.click();
+  const variants = page.locator('[data-inspect-section="variants"]');
+  const row = variants
+    .getByRole("link", { name: title, exact: true })
+    .or(variants.getByRole("button", { name: title, exact: true }));
+  await revealInPanel(page, row);
+  await row.click();
 }
 export async function expectFrameSource(
   frame: Locator,
@@ -93,20 +149,22 @@ export function viewportFrame(viewport: "desktop" | "mobile"): string {
 }
 
 /**
- * Expect the canvas to keep a chosen viewport: the Viewport control holds it,
- * its column of frames shows, and the other column stays hidden.
+ * Expect the canvas to keep a chosen viewport: the Frames filter shows it
+ * alone, its column of frames shows, and the other column stays hidden.
  */
 export async function expectCanvasViewport(
   page: Page,
   viewport: "desktop" | "mobile",
 ): Promise<void> {
-  await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
-    viewport,
-  );
-  await expect(page.locator(canvasFrame(viewport))).toBeVisible();
+  const other = viewport === "desktop" ? "mobile" : "desktop";
   await expect(
-    page.locator(canvasFrame(viewport === "desktop" ? "mobile" : "desktop")),
-  ).toBeHidden();
+    page.locator(`[data-frames-toggle="${viewport}"]`),
+  ).toBeChecked();
+  await expect(
+    page.locator(`[data-frames-toggle="${other}"]`),
+  ).not.toBeChecked();
+  await expect(page.locator(canvasFrame(viewport))).toBeVisible();
+  await expect(page.locator(canvasFrame(other))).toBeHidden();
 }
 
 /**
@@ -122,77 +180,6 @@ export const DOCUMENT_FRAME =
  * the catalogue and the right panel open as sheets from the dock.
  */
 export const NARROW_WINDOW = { width: 860, height: 800 } as const;
-
-/**
- * Close the open sheet of the compact layout, if one is open: the dock hides
- * while a sheet is open, and a sheet covers the canvas below it.
- */
-export async function closeOpenSheet(scope: Page | Locator): Promise<void> {
-  for (const name of ["Close panel", "Close catalogue"]) {
-    const close = scope.getByRole("button", { name, exact: true });
-    if (await close.isVisible()) await close.click();
-  }
-}
-
-/**
- * Open the compact layout's catalogue sheet with the dock's Catalogue, in a
- * page or in one viewer root, after closing the panel's sheet.
- */
-export async function openCatalogueSheet(scope: Page | Locator): Promise<void> {
-  await closeOpenSheet(scope);
-  await scope
-    .getByRole("group", { name: "Canvas controls" })
-    .getByRole("button", { name: "Catalogue" })
-    .click();
-}
-
-/**
- * Open the compact layout's panel sheet with the dock's current tab, after
- * closing the catalogue's sheet.
- */
-export async function openPanelSheet(scope: Page | Locator): Promise<void> {
-  await closeOpenSheet(scope);
-  await scope
-    .getByRole("group", { name: "Canvas controls" })
-    .getByRole("button", { name: "Inspect" })
-    .click();
-}
-
-/**
- * Show a control of the right panel: in the compact layout the panel is a
- * sheet, which the dock opens while the control is hidden. Until the shell
- * shows the control or the way to it, the dock's Inspect or the open
- * catalogue sheet over the dock, it is still rendering, so this waits.
- */
-export async function revealInPanel(
-  scope: Page | Locator,
-  control: Locator,
-): Promise<void> {
-  const tab = scope
-    .getByRole("group", { name: "Canvas controls" })
-    .getByRole("button", { name: "Inspect" });
-  const catalogue = scope.getByRole("button", {
-    name: "Close catalogue",
-    exact: true,
-  });
-  await expect(
-    control.or(tab).or(catalogue).filter({ visible: true }).first(),
-  ).toBeVisible();
-  if (await control.isVisible()) return;
-  if ((await tab.isVisible()) || (await closeVisibleCatalogue(scope)))
-    await openPanelSheet(scope);
-}
-
-/** Close an open catalogue sheet, and say whether one was open. */
-async function closeVisibleCatalogue(scope: Page | Locator): Promise<boolean> {
-  const close = scope.getByRole("button", {
-    name: "Close catalogue",
-    exact: true,
-  });
-  if (!(await close.isVisible())) return false;
-  await close.click();
-  return true;
-}
 
 /** Wait for the matching same-origin document and its blocking resources together. */
 export async function expectFrameLoaded(

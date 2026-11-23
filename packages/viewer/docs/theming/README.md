@@ -56,7 +56,7 @@ reads them before its first render:
 | `mokly:nav-disclosure:v4`          | Open navigation groups                                  |
 | `mokly:comparison-scroll-together` | `on` or `off`; missing means on                         |
 
-The Details disclosure and the navigation split width also persist per origin.
+The navigation split width also persists per origin.
 Scroll together appears after the comparison modes in Side by side, Overlay,
 and Difference, and it updates the open comparison without reloading panes. An
 embedded `MoklyViewer` reads no browser storage; it keeps these choices for the

@@ -19,13 +19,7 @@ import {
   type Dispatch,
 } from "react";
 
-import {
-  canvasFrameStates,
-  frameSessions,
-  frameStatesSignature,
-  routeSelection,
-  sessionFrame,
-} from "./canvas_selection_frames.js";
+import type { CanvasFramePlan } from "./canvas_frames.js";
 import {
   canvasSelectionReducer,
   NO_SELECTION,
@@ -33,7 +27,13 @@ import {
   type CanvasSelectionAction,
   type CanvasSelectionState,
 } from "./canvas_selection.js";
-import type { CanvasFramePlan } from "./canvas_frames.js";
+import {
+  canvasFrameStates,
+  frameSessions,
+  frameStatesSignature,
+  routeSelection,
+  sessionFrame,
+} from "./canvas_selection_frames.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameSession,
@@ -125,7 +125,11 @@ export function useCanvasSelection({
   const latestPlans = useRef(plans);
   latestPlans.current = plans;
   useEffect(() => {
-    const named = routeSelection(store.state.route, latestPlans.current, routed);
+    const named = routeSelection(
+      store.state.route,
+      latestPlans.current,
+      routed,
+    );
     dispatch(
       named === undefined
         ? { type: "route" }

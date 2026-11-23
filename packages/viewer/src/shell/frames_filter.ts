@@ -51,7 +51,9 @@ export function toggledFrames(
 
 /** The viewports that the choice shows, Desktop before Mobile. */
 export function shownViewports(choice: FramesChoice): Viewport[] {
-  return (["desktop", "mobile"] as const).filter((viewport) => choice[viewport]);
+  return (["desktop", "mobile"] as const).filter(
+    (viewport) => choice[viewport],
+  );
 }
 
 /**

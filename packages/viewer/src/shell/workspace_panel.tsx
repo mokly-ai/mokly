@@ -20,23 +20,22 @@ import type { CanvasFramePlan } from "./canvas_frames.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ControlTarget } from "./control_values.js";
 import type { DetailDelivery } from "./data_requests.js";
-import type { FramesHighlightControl, FramesSectionModel } from "./inspect_frames.js";
+import type {
+  FramesHighlightControl,
+  FramesSectionModel,
+} from "./inspect_frames.js";
 import { EntryInspectHead } from "./inspect_head.js";
 import { screenVariants, setVariants } from "./inspect_variants.js";
 import type { RetryFocus } from "./retry_focus.js";
 import { EntryRightPanel } from "./right_panel.js";
-import { usageRows } from "./workspace_usage.js";
-import { WorkspaceUsage } from "./workspace_usage.js";
 import type { ChangedView } from "./view_marks.js";
 import type { EntryStatus } from "./view_status.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { WorkspaceInspect } from "./workspace_inspect.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
-import {
-  propsFieldCount,
-  WorkspacePropsSection,
-} from "./workspace_props.js";
+import { propsFieldCount, WorkspacePropsSection } from "./workspace_props.js";
+import { WorkspaceUsage, usageRows } from "./workspace_usage.js";
 
 /** What the workspace gives its right panel. */
 export interface WorkspacePanelInput {
@@ -71,9 +70,7 @@ export interface WorkspacePanelInput {
   reveal: number;
   selection: InspectSelectionState;
   /** A variant set's row that Props edits, and how a reader chooses one. */
-  set:
-    | { chosen: string | undefined; choose(path: string): void }
-    | undefined;
+  set: { chosen: string | undefined; choose(path: string): void } | undefined;
   settled: boolean;
   status: EntryStatus | undefined;
   target: ControlTarget | undefined;
