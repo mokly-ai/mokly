@@ -62,7 +62,15 @@ export function registryIndexOf(generation: object): RegistryIndex {
   return index;
 }
 
-/** The registry texts that one generation filtered, each parsed once. */
+/**
+ * The registry texts that one generation filtered, with the analysis and the
+ * outputs of each held text. The index parses a held text once. When a text
+ * comes back after its eviction, the index parses it again. The React Native
+ * Web sheet of a generation only grows, so this does not happen in practice.
+ * The index does not keep a text whose analysis throws. So each call with
+ * that text runs the analysis again and then calls `registryStyles`, which
+ * parses the text again.
+ */
 export class RegistryIndex {
   private readonly held = new Map<string, IndexedText>();
 
@@ -122,7 +130,7 @@ interface Owner<Node> {
   readonly values: string[];
 }
 
-/** Parse the text once and record what `registryStyles` reads on each call. */
+/** Parse the text and record what `registryStyles` reads on each call. */
 function indexText(css: string): IndexedText {
   const root = postcss.parse(css);
   const rules: Owner<Rule>[] = [];

@@ -32,10 +32,9 @@
     evaluation of the bundle.
   - `packages/mokly/src/sidecar/styles.ts:153` in `collectStyles`, and
     `packages/mokly/src/sidecar/registry-index.ts:56` (`registryIndexOf`) and
-    `:66` (`RegistryIndex`): the style registry index of C1. It parses each
-    registry text of a generation once. Its fallback is `registryStyles` at
-    `packages/mokly/src/sidecar/registry-styles.ts:92`, which parses the whole
-    text on each call.
+    `:74` (`RegistryIndex`): the style registry index of C1. Its fallback is
+    `registryStyles` at `packages/mokly/src/sidecar/registry-styles.ts:92`,
+    which parses the whole text on each call.
   - `crates/mokly-server/src/changes_execution.rs:22`: `changes.classify`, and
     `crates/mokly-cli/src/serve_base.rs:124`, where the kept-base check reads
     the dependency directories that the renders record.
@@ -325,6 +324,12 @@
     render sidecars run `describe` after Changes publishes. This split shows
     three prerequisite `describe` calls inside each warm pass, before
     Changes.
+  - [registry-index-analysis-growth.md](./registry-index-analysis-growth.md)
+    holds a cost of the C1 index. With hundreds of keyframes, font-face, or
+    property names, or with many rules of one name, its build time and its
+    memory grow faster than the registry text. React Native Web does not write
+    such registries in practice. The fix of that item changes the C1 code that
+    the section "C1 at the cold start, measured on 2026-11-23" describes.
 - **Decisions:**
   - 2026-11-22, the performance orchestrator chose B of the first decision of
     this item: split the serial work after the last view with the same probe,
@@ -393,7 +398,8 @@
       registry text.
     - The diagnostic of the orchestrator on that date measured the first
       Changes of a cold mokly-cloud start 756 ms sooner on the paired mean.
-      5 of 6 pairs were faster. The whole-tree peak rose by 0.19%.
+      5 of 6 pairs were faster. The whole-tree peak was 2,987 to 2,992 MiB on
+      the mean (+4 MiB, +0.1%).
     - Branch `calummoore/mokly-style-registry-index-h75s` brought C1 back. The
       section "C1 at the cold start, measured on 2026-11-23" gives the
       numbers, the rule of the official check of the orchestrator, and its
@@ -808,10 +814,14 @@ The checks below use these words:
 - The code: `RegistryIndex` in `packages/mokly/src/sidecar/registry-index.ts`.
   `registryIndexOf` keeps one index for each generation object under a weak
   key. An index ends with its generation: at `dispose`, at `shutdown`, or when
-  a `bundle` result replaces the generation. An index parses each registry
-  text once. It holds at most 1 text and 64 outputs for each text, the least
-  recently used first out. For a text that it cannot read, it calls
-  `registryStyles`, which gives its own output or error.
+  a `bundle` result replaces the generation. It holds at most 1 text and 64
+  outputs for each text, the least recently used first out. It parses a held
+  text once. When a text comes back after its eviction, it parses the text
+  again. The React Native Web sheet of a generation only grows, so this does
+  not happen in practice. It does not keep a text whose analysis throws, such
+  as a text that does not parse. Each call with that text runs the analysis
+  again and then calls `registryStyles`, which parses the text again and
+  gives its own output or error.
 - The two test files of `0910565bf`: `tests/sidecar_registry_index.test.ts`
   and `tests/sidecar_registry_index_bounds.test.ts`.
 - Two new tests in `tests/sidecar_registry_index_edge_cases.test.ts`:
@@ -844,7 +854,7 @@ The checks below use these words:
     faster. The differences of the pairs were +1,343, -534, -978, -1,555,
     -2,141, and -672 ms.
   - The listening line: -67 ms. This is noise.
-  - The whole-tree peak: +0.19%, or +4 MiB.
+  - The whole-tree peak: 2,987 to 2,992 MiB on the mean (+4 MiB, +0.1%).
   - The CPU time of the session: -3.2 s, or -4.3%. 5 of 6 pairs were lower.
 - The rule of the official check of the orchestrator. The orchestrator wrote
   it before the data of the branch. The check compares the final commit of
@@ -884,4 +894,28 @@ The checks below use these words:
   - The stop rule of the orchestrator was to stop the work when this check
     showed cold first Changes less than 300 ms sooner. The check showed
     1,078 ms sooner, so the rule did not stop the work.
-- The official check of the performance orchestrator: not run yet.
+- The official check of the performance orchestrator, on 2026-11-23, of the
+  branch commit `d18cb6983` against `main` `720b1f85b`, with the release core
+  of `main` in both arms. It passed every bar:
+  - mokly-cloud, 8 untimed pairs of cold 10-edit sessions: cold first Changes
+    754 ms sooner on the paired mean, with a median of 792 ms sooner. 7 of 8
+    pairs were faster. The bar was at least 300 ms sooner, with at least 5 of
+    8 pairs faster.
+  - The same pairs: the paired mean of the whole-tree peak (anonymous memory
+    and swap) was 1.19% higher. The bar was at most 2%.
+  - mokly-cloud, 6 untimed warm rounds of 3 one-line edits: the mean of all
+    edits was 24 ms sooner. The bar was at most 20 ms later.
+  - `examples/basic`, 2 sidecars, 8 cold pairs of 5+5 edits. The orchestrator
+    announced the last 4 pairs before their data, because the first 4 pairs
+    gave a `memory.peak` of +3.00% that one pair carried. Pooled, the paired
+    mean of `memory.peak` was 0.62% higher (median 1.19% lower). The bar was
+    at most 2%. Cold first Changes was 936 ms sooner. The bar was at most
+    100 ms later.
+  - The byte proof of the branch passed. Strict builds of mokly-cloud (5,485
+    files), `examples/basic` (2,391), and the large HTML and React fixtures
+    (20,821 each) gave equal bytes, an equal standard output, and an equal
+    standard error. Serve sessions of `examples/basic` and mokly-cloud, cold
+    and warm, gave equal routes at each stage. Only the per-session values
+    of the index and the live descriptor differed: the deployment id, the
+    comparison URL, the render generation, and the capability token. Two
+    Serve sessions of `main` differ in the same values.
