@@ -20,3 +20,4 @@
 - **Impact if no action:** Dead cutover code and two runbooks of finished work stay in the repository, and new cloud workspaces miss the pinned cloud tools.
 - **Needs:** Conductor organization admin access for task 2.
 - **Done when:** No file reads `MKC_LEGACY_REPOSITORY_ID`, `moved.tf` is gone, the foundation plan has no changes, new cloud workspaces have Terraform and Helm, and no page describes the cutover as a procedure to run.
+- **Related:** `plans/follow-ups/workspace-setup-misses-gate-tools.md`, the same code. The rebuild of the Conductor cloud computer in the second task should also install the tool list of that item. When the third task moves the parts that stay true, it can carry the "Prepare Conductor" lines with the corrections of that item.

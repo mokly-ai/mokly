@@ -76,6 +76,6 @@
   - A separate command that checks the tools, because a contributor must know to run it. It reaches the same readers as A, and A already gives the two check commands.
 - **Wider fix:** B, because the gate then names the missing tool for every contributor.
 - **Previous examples:** The Bun version check of the required type check, `runRequiredTypecheck` in `scripts/verification/typecheck-ci-runner.mjs`, described in `docs/development/README.md`. For C, the warning of `runFastTypecheck` in `scripts/verification/typecheck-fast-runner.mjs`.
-- **Related:** None.
+- **Related:** `plans/follow-ups/workspace-setup-misses-gate-tools.md`, the same code at the start of the gate. Option C of that item adds a check there that names every missing tool of the selected suites. That check is the same kind as option B of this item, so one answer should settle both.
 - **Recommendation:** B. It names missing Git LFS or an unsupported development Git version before the long checks. C is the best option that adds no gate failure.
 - **Action:** ask the user, because option B adds a new gate failure, and only the user can approve one. On 2026-11-19 the user also asked to decide B.
