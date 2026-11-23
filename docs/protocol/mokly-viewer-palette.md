@@ -197,19 +197,17 @@ validation alert are labels rather than controls: each names its own state in
 information and is held to the decorative hairline standard. The badges draw
 `--chrome-border`, and the alert draws `--mbk-danger-edge`.
 
-Nine controls keep a hairline boundary. These draw `--chrome-border`: the
-segmented control group, such as the All/Changes filter; the compare-mode tiles
-and frame chips of the Changes tab; a pressed icon control, such as the
-Highlight components toggle; a resting tag chip; a selected instance of the
-component tree; and the address pill and expand toggle of a browser frame's
-bar. The resting resize grip on the floating catalogue's edge and the hovered
-toggle draw `--chrome-border-strong`. The group fills its selected segment, a
+Seven controls keep a hairline boundary. These draw `--chrome-border`: the
+segmented control group of the All/Changes filter; the compare-mode tiles and
+frame chips of the Changes tab; a pressed icon control, such as an embedded
+document's Dark preview toggle; a resting tag chip; and a selected instance of
+the component tree. The resting resize grip on the floating catalogue's edge
+draws `--chrome-border-strong`. The group fills its selected segment, a
 selected tile and a chosen frame chip draw a `--mbk-accent-deep` edge, the chip
 also fills with `signalSoft`, and the grip draws the accent while hovered,
 focused or dragged. A pressed icon control and a selected instance fill with
 the accent tint and draw their glyph or text in the accent, and a selected tag
-chip fills with the accent. On hover, the address pill draws its copy glyph and
-the toggle its glyph in the accent. Decision: the shipped hairlines, not the
+chip fills with the accent. Decision: the shipped hairlines, not the
 control edge, because each control already shows its state through a fill or
 the accent, a frame chip's label also names its frame, and the design mockups
 render them. No other boundary may claim these exceptions; a control state that
@@ -219,8 +217,8 @@ Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
 rather than a dimmed copy of the enabled colours, so a disabled control reads
 the same way in both appearances. An icon control without a fill or an edge at
-rest, such as Previous change, Next change or Highlight components, dims to 42%
-opacity instead, also while it is pressed. Decision: dimming, not the disabled
+rest, such as Previous change or Next change, dims to 42% opacity instead, also
+while it is pressed. Decision: dimming, not the disabled
 tokens, because on such a control the disabled ink reads almost as enabled.
 
 ## Role Use
@@ -229,7 +227,8 @@ tokens, because on such a control the disabled ink reads almost as enabled.
   heads, counts and field hints as normal text.
 - `--chrome-control-edge` draws the boundary of the appearance control, the
   mobile sheet grabber and native fields, including the prop field's input
-  border. The view controls draw no boundary at rest.
+  border. The icon controls, such as Previous change and Next change, draw no
+  boundary at rest.
   `--chrome-border-strong` keeps the pane frames.
 - The invalid-field border uses `--mbk-danger-ink`, matching the message it
   accompanies.

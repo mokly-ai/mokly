@@ -3,7 +3,7 @@
  * Removed, or Unmodified, in the colour of its status.
  */
 
-import type { DataAttribute } from "../segmented-control/segmented-control.js";
+import type { DataAttribute } from "../data-attribute/data-attribute.js";
 
 /** An entry's change status, which the badge shows as its word. */
 export type ChangeStatusValue = "Added" | "Changed" | "Removed" | "Unmodified";

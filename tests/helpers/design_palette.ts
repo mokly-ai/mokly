@@ -164,14 +164,14 @@ export async function auditPalettes(): Promise<
 const PREVIEW_BLOCK = /:root\s*\{([^}]*)\}/;
 
 /**
- * The sheet of the preview tokens: the Canvas route links it, and the stage
- * sheet of the other design routes imports it.
+ * The sheet of the preview tokens, which the Canvas and the library routes
+ * link.
  */
 export const PREVIEW_SHEET = "design-preview.css";
 
 /**
- * The preview tokens of the preview stylesheet: the screen, device, and
- * traffic light colours, which stay independent of the interface appearance.
+ * The preview tokens of the preview stylesheet: the screen colours, which
+ * stay independent of the interface appearance.
  */
 export async function designPreviewTokens(): Promise<Map<string, string>> {
   const source = await fs.readFile(

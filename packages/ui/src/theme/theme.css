@@ -81,7 +81,6 @@
   --mbk-accent-edge: rgba(18, 183, 106, 0.45);
   --mbk-guide: #e1e4de;
   --mbk-dot: #c9cec5;
-  --mbk-browser-bar: #f7f8f5;
   --mbk-status-changed-bg: #fff7e6;
   --mbk-status-changed-edge: #ead6ac;
   --mbk-status-changed-ink: #805d1d;
@@ -117,12 +116,6 @@
   --mbk-screen-ink: #1a1d1c;
   --mbk-dark-screen-bg: #121514;
   --mbk-dark-screen-ink: #eef1ef;
-  --mbk-device-body: #171a18;
-  --mbk-device-notch: #0b0d0c;
-  --mbk-device-home: rgba(20, 24, 20, 0.4);
-  --mbk-device-light-close: #d9655b;
-  --mbk-device-light-minimise: #dba43d;
-  --mbk-device-light-expand: #50a86d;
   --mbk-highlight-scrim: rgba(244, 246, 244, 0.72);
   --mbk-highlight-edge: #336249;
 }
@@ -200,7 +193,6 @@
     --mbk-accent-edge: rgba(34, 201, 125, 0.45);
     --mbk-guide: #2c2c31;
     --mbk-dot: #2b2b30;
-    --mbk-browser-bar: #161618;
     --mbk-status-changed-bg: #332a15;
     --mbk-status-changed-edge: #5d4d24;
     --mbk-status-changed-ink: #e6c179;
@@ -278,7 +270,6 @@
   --mbk-accent-edge: rgba(34, 201, 125, 0.45);
   --mbk-guide: #2c2c31;
   --mbk-dot: #2b2b30;
-  --mbk-browser-bar: #161618;
   --mbk-status-changed-bg: #332a15;
   --mbk-status-changed-edge: #5d4d24;
   --mbk-status-changed-ink: #e6c179;

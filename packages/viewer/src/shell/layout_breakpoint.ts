@@ -1,4 +1,8 @@
-/** The shell's layout and device breakpoints, from the device chrome contract. */
+/**
+ * The shell's layout breakpoint and panel step, from the canvas frames
+ * contract. The `@mokly/ui` stylesheets repeat these queries, and the
+ * viewer's styles test holds them to this module.
+ */
 
 /**
  * The media query of a shell narrower than 900px, the compact layout: one
@@ -15,10 +19,3 @@ export const NARROW_SHELL = "(width < 56.25rem)";
  * 252px and 312px.
  */
 export const NARROW_PANELS = "(width < 73.75rem)";
-
-/**
- * The media query of the device breakpoint: at most 760px wide, the shell
- * lays out for phones. The `@mokly/ui` stylesheets repeat these queries, and
- * the viewer's styles test holds them to this module.
- */
-export const NARROW_LAYOUT = "(max-width: 760px)";

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-layout-theme`, during the theme milestone of the shell views plan.
-- **Location:** The 77 selectors with `:where(.mbk-reset)` in `packages/ui/src/browser-bar/browser-bar.css`, `packages/ui/src/device-frame/device-frame.css`, `packages/ui/src/catalogue-tree/catalogue-tree.css`, `packages/ui/src/comparison-pane/comparison-pane.css`, `packages/ui/src/comparison-stage/comparison-stage.css`, `packages/ui/src/flow-step/flow-step.css`, and `packages/ui/src/preview-frame/preview-frame.css`, and the components that render these classes.
+- **Location:** The 22 selectors with `:where(.mbk-reset)` in `packages/ui/src/catalogue-tree/catalogue-tree.css`, `packages/ui/src/comparison-pane/comparison-pane.css`, and `packages/ui/src/comparison-stage/comparison-stage.css`, and the components that render these classes.
 - **Reason:** The rename changes the shell's class names, which the browser specs, the tests, and the design mockups read, and the theme milestone kept every class name.
 
 - **Source:** Implementation.
@@ -13,8 +13,8 @@
     every element that it renders, apart from host slots. It gives border-box
     sizing and the reader's reduced motion.
   - **Generic class name:** a shell class without the `mbk-` or `mokly-`
-    prefix, such as `address`, `browser-frame`, `phone-frame`, `flow-step`,
-    `lights`, `i-expand`, or `mb-pane`.
+    prefix, such as `mb-pane`, `mb-pane-label`, `mb-viewport`, or
+    `mb-panes`.
   - **Host slot:** an element with `data-mokly-slot` in an embedded viewer
     root. The host page owns its content.
 - **Background:**
@@ -22,11 +22,11 @@
     root class `mbk`, that each component uses the reset class, and that the
     embedded stylesheet drops its
     `@scope (.mokly-viewer) to ([data-mokly-slot])` wrapper.
-  - Without the wrapper, a rule such as `.address { … }` also styles a host
-    page element with the class `address`.
+  - Without the wrapper, a rule such as `.mb-pane { … }` also styles a host
+    page element with the class `mb-pane`.
   - The theme milestone therefore wrote each selector that names only
     generic classes with the guard `:where(.mbk-reset)`, for example
-    `.address:where(.mbk-reset)`. The guard adds no specificity, and a host
+    `.mb-pane:where(.mbk-reset)`. The guard adds no specificity, and a host
     element does not carry `mbk-reset`.
   - `pageRuleFailures` in `packages/viewer/tests/style_rules.ts` fails the
     viewer styles test for each package selector that names no `mbk` or

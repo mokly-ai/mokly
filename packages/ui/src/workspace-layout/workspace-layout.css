@@ -1,5 +1,5 @@
-/* The workspace fills the main region: the header and the variant bar above
-   the panes, and the preview pane beside the inspector. */
+/* The workspace fills the main region: the entry bar of the compact layout,
+   the panes, whose preview pane fills them, and the right panel. */
 .mbk-workspace {
   display: flex;
   flex: 1;
@@ -11,10 +11,6 @@
 
 .mbk-workspace [hidden] {
   display: none !important;
-}
-
-.mbk-workspace .mbk-screen-head {
-  align-items: center;
 }
 
 .mbk-workspace-panes {
@@ -44,32 +40,6 @@
   min-width: 0;
 }
 
-/* The stage of a workspace shows the frames of the chosen viewport only. */
-.mbk-workspace [data-mokly-stage][data-viewport="mobile"] .mbk-frame-desktop,
-.mbk-workspace [data-mokly-stage][data-viewport="desktop"] .mbk-frame-mobile {
-  display: none;
-}
-
-@media (width < 56.25rem) {
-  .mbk-workspace .mbk-screen-head {
-    gap: 8px;
-    padding: 12px;
-  }
-
-  .mbk-workspace-panes {
-    padding-bottom: 46px;
-  }
-}
-
-/* In the Canvas layout the preview fills the canvas under the floating
-   panels, and a compare mode's stage stands in the stage area between them,
-   on the canvas's dot grid. */
-.mbk-workspace[data-workspace-canvas] .mbk-diff-stage {
-  margin: var(--mbk-canvas-inset-top, 0px) var(--mbk-canvas-inset-end, 0px)
-    var(--mbk-canvas-inset-bottom, 0px) var(--mbk-canvas-inset-start, 0px);
-  background: none;
-}
-
 /* The status of a render stands at the top of the stage, clear of the zoom
    pill and the dock at the bottom. */
 .mbk-workspace[data-workspace-canvas] .mbk-edit-status {
@@ -80,41 +50,14 @@
 }
 
 @media (width < 56.25rem) {
-  .mbk-workspace[data-workspace-canvas] .mbk-workspace-panes {
-    padding-bottom: 0;
-  }
-
   .mbk-workspace[data-workspace-canvas] .mbk-edit-status {
     left: 0;
     right: 0;
   }
 }
 
-/* The right panel's Changes tab holds the comparison band and then the
-   comparison details, one below the other in the panel's width; the panel
-   scrolls them together. */
-.mbk-float[data-floating-panel="right"] .mbk-diff-toolbar {
-  padding: 8px 16px;
-  background: transparent;
-}
-
-/* The compare modes share the panel's width, each on one line. */
-.mbk-float[data-floating-panel="right"] .mbk-diff-toolbar .mbk-seg {
-  width: 100%;
-}
-
-.mbk-float[data-floating-panel="right"]
-  .mbk-diff-toolbar
-  .mbk-seg
-  :is(button, a, span) {
-  flex: 1;
-  padding: 6px;
-  white-space: nowrap;
-  font-size: 11px;
-}
-
 /* The comparison details stand in the panel's padding, under a hairline:
-   in Changes after the band, and in Inspect after the head. */
+   in Changes after the compare modes, and in Inspect after the head. */
 .mbk-float[data-floating-panel="right"] .mbk-comparison-evidence {
   margin: 0;
   padding: 14px 16px 20px;

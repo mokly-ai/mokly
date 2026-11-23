@@ -12,10 +12,6 @@
       "types": "./dist/appearance-selector/appearance-selector.d.ts",
       "import": "./dist/appearance-selector/appearance-selector.js"
     },
-    "./browser-bar": {
-      "types": "./dist/browser-bar/browser-bar.d.ts",
-      "import": "./dist/browser-bar/browser-bar.js"
-    },
     "./canvas-comparison": {
       "types": "./dist/canvas-comparison/canvas-comparison.d.ts",
       "import": "./dist/canvas-comparison/canvas-comparison.js"
@@ -100,21 +96,9 @@
       "types": "./dist/comparison-stage/comparison-stage.d.ts",
       "import": "./dist/comparison-stage/comparison-stage.js"
     },
-    "./comparison-toolbar": {
-      "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
-      "import": "./dist/comparison-toolbar/comparison-toolbar.js"
-    },
     "./controls-panel": {
       "types": "./dist/controls-panel/controls-panel.d.ts",
       "import": "./dist/controls-panel/controls-panel.js"
-    },
-    "./details-panel": {
-      "types": "./dist/details-panel/details-panel.d.ts",
-      "import": "./dist/details-panel/details-panel.js"
-    },
-    "./device-frame": {
-      "types": "./dist/device-frame/device-frame.d.ts",
-      "import": "./dist/device-frame/device-frame.js"
     },
     "./edit-status": {
       "types": "./dist/edit-status/edit-status.d.ts",
@@ -164,10 +148,6 @@
       "types": "./dist/inspect-selection/inspect-selection.d.ts",
       "import": "./dist/inspect-selection/inspect-selection.js"
     },
-    "./inspector": {
-      "types": "./dist/inspector/inspector.d.ts",
-      "import": "./dist/inspector/inspector.js"
-    },
     "./instance-tree": {
       "types": "./dist/instance-tree/instance-tree.d.ts",
       "import": "./dist/instance-tree/instance-tree.js"
@@ -200,18 +180,6 @@
       "types": "./dist/props-panel/props-panel.d.ts",
       "import": "./dist/props-panel/props-panel.js"
     },
-    "./scheme-fallback": {
-      "types": "./dist/scheme-fallback/scheme-fallback.d.ts",
-      "import": "./dist/scheme-fallback/scheme-fallback.js"
-    },
-    "./screen-header": {
-      "types": "./dist/screen-header/screen-header.d.ts",
-      "import": "./dist/screen-header/screen-header.js"
-    },
-    "./segmented-control": {
-      "types": "./dist/segmented-control/segmented-control.d.ts",
-      "import": "./dist/segmented-control/segmented-control.js"
-    },
     "./selection-pill": {
       "types": "./dist/selection-pill/selection-pill.d.ts",
       "import": "./dist/selection-pill/selection-pill.js"
@@ -219,10 +187,6 @@
     "./shell-layout": {
       "types": "./dist/shell-layout/shell-layout.d.ts",
       "import": "./dist/shell-layout/shell-layout.js"
-    },
-    "./stage": {
-      "types": "./dist/stage/stage.d.ts",
-      "import": "./dist/stage/stage.js"
     },
     "./styles.css": "./dist/styles.css",
     "./swipe-divider": {
@@ -248,10 +212,6 @@
     "./usage-list": {
       "types": "./dist/usage-list/usage-list.d.ts",
       "import": "./dist/usage-list/usage-list.js"
-    },
-    "./view-controls": {
-      "types": "./dist/view-controls/view-controls.d.ts",
-      "import": "./dist/view-controls/view-controls.js"
     },
     "./workspace-layout": {
       "types": "./dist/workspace-layout/workspace-layout.d.ts",

@@ -4,11 +4,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { embeddedStyles, standaloneStyles } from "../scripts/styles.mjs";
-import {
-  NARROW_LAYOUT,
-  NARROW_PANELS,
-  NARROW_SHELL,
-} from "../src/shell/layout_breakpoint.js";
+import { NARROW_PANELS, NARROW_SHELL } from "../src/shell/layout_breakpoint.js";
 
 import {
   pageRuleFailures,
@@ -75,7 +71,7 @@ test("the embedded stylesheet names its own fonts and has no scope", () => {
     assert.doesNotMatch(styles, /@scope\b|:scope\b/u);
     assert.doesNotMatch(styles, /-:scope/);
     assert.match(styles, /\.mbk-body\s*\{/);
-    assert.match(styles, /\.mbk-details-body\s*\{/);
+    assert.match(styles, /\.mbk-panel-tab-body\s*\{/);
   }
   // The shell root class itself holds a rule, which reaches every root.
   assert.match(EMBEDDED_CSS, /\n\.mbk \{/u);
@@ -191,20 +187,18 @@ test("no shell stylesheet declares a cascade layer", () => {
 
 /**
  * The media queries of the package rules: the shell's layout breakpoint, its
- * panel step, its device breakpoint, the reader's reduced motion, the system
- * appearance of Auto, and the forced colours that replace the focus glow
- * with an outline.
+ * panel step, the reader's reduced motion, the system appearance of Auto, and
+ * the forced colours that replace the focus glow with an outline.
  */
 const PACKAGE_QUERIES = new Set<string>([
   NARROW_SHELL,
   NARROW_PANELS,
-  NARROW_LAYOUT,
   "(prefers-reduced-motion: reduce)",
   "(prefers-color-scheme: dark)",
   "(forced-colors: active)",
 ]);
 
-test("the package rules switch at the shell's layout and device breakpoints", () => {
+test("the package rules switch at the shell's layout breakpoint and panel step", () => {
   const queries = [...PACKAGE_CSS.matchAll(/@media ([^{]+)\{/g)].map((match) =>
     match[1]!.trim(),
   );

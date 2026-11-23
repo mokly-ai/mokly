@@ -9,9 +9,9 @@
 - **Source:** Review.
 - **Category:** Code structure.
 - **Terms:**
-  - **Failed frame line:** "This preview could not be loaded.", which `PreviewFrame` and `DocumentFrame` in `@mokly/ui` show below a frame whose document failed to load.
+  - **Failed frame line:** "This preview could not be loaded.", which `CanvasFrame` in `@mokly/ui` shows in a frame whose document failed to load.
 - **Background:**
-  - `PreviewFrame` and `DocumentFrame` take `error`, a flag, and `retry`, an optional callback or address. With both, the line ends with Try again, which mounts the frame again.
+  - `CanvasFrame` takes `error`, a flag, and `retry`, an optional callback or address. With both, the line ends with Try again, which mounts the frame again.
   - `docs/protocol/mokly-viewer.md` requires Try again on every failed preview frame.
   - Browser specs `tests/browser/preview_retry.spec.ts` and `tests/browser/viewer_frame_retry.spec.ts` check that the shell's screen and document frames show Try again and recover.
 - **Problem:** A host can pass `error` without `retry`. The line then has no way to recover, and only the tests notice.

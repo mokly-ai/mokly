@@ -434,9 +434,8 @@ step frames stay mounted out of the section.
 as one media query, narrower than 900px, which every shell and viewer rule and script
 reads, so the floating panels, their sheets, the dock and the entry bar
 switch at the same width. It also holds the 1180px panel step, below which
-the floating panels narrow, and the device breakpoint, a window at most 760px
-wide, of the device frame stylesheets. The `@mokly/ui` stylesheets cannot
-import these queries, so they repeat them, and the viewer's
+the floating panels narrow. The `@mokly/ui` stylesheets cannot import these
+queries, so they repeat them, and the viewer's
 [styles test](../../tests/styles.test.ts) holds them to these.
 
 Both roots draw the Canvas layout: the standalone shell and an embedded root

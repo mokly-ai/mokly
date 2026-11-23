@@ -23,11 +23,6 @@ export function registerPhoneChrome(test = baseTest) {
       await closeOpenSheet(page);
       const frame = page.locator(canvasFrame("mobile"));
       await expect(frame).toBeVisible();
-      await expect(
-        page.locator(
-          "#mb-main :is(.phone-frame, .phone-home, .phone-notch, .browser-frame)",
-        ),
-      ).toHaveCount(0);
       // The frame's centre hits its own preview, and nothing drawn over it.
       const hit = await frame.evaluate((node) => {
         const bounds = node.getBoundingClientRect();

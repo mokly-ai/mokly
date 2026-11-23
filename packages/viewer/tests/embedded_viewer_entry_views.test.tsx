@@ -221,7 +221,7 @@ test("an embedded root with dark previews draws the preview scheme control of a 
     assert.ok(bar, `${screenPath}: the top bar renders`);
     assert.doesNotMatch(
       bar,
-      /data-mokly-schemeswitch|data-workspace-scheme|data-frames-toggle/u,
+      /data-workspace-scheme|data-frames-toggle/u,
       screenPath,
     );
     const inspect = html.slice(html.indexOf('class="mbk-inspect mbk-reset"'));

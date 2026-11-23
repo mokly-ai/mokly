@@ -66,9 +66,7 @@ test("the right panel holds Inspect, and the compact layout's panel sheet expand
   const panel = page.getByRole("region", { name: "Panel", exact: true });
   const inspect = panel.getByRole("tabpanel", { name: "Inspect" });
   await expect(inspect).toBeVisible();
-  await expect(
-    page.getByRole("separator", { name: "Resize inspector" }),
-  ).toHaveCount(0);
+  await expect(panel.getByRole("separator")).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(panel).toBeHidden();
   await openPanelSheet(page);

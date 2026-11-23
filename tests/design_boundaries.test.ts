@@ -18,7 +18,7 @@ import {
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.mbk-icon-button|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
 
 /**
  * `@mokly/ui` stylesheets that style a control through a base class whose
@@ -200,8 +200,8 @@ test("every control boundary is a readable control edge", async () => {
 
 /**
  * Sheets that define a palette, where a literal is the definition itself:
- * the interface palette, the preview palette with its fixed device hardware,
- * and the shipped theme that the package components draw in.
+ * the interface palette, the preview palette, and the shipped theme that the
+ * package components draw in.
  */
 const PALETTE_SOURCES = new Set([
   "design.css",
