@@ -75,35 +75,32 @@ async function expectComparisonDetails(
 }
 
 /**
- * Select the Details tab and return the comparison details it shows, which
- * start with the branch-point sentence `base`.
+ * Show a screen's or a component's comparison details and return them, which
+ * start with the branch-point sentence `base`. The right panel's Changes tab
+ * holds them when the entry has that tab, and Inspect holds them after its
+ * head otherwise; in the compact layout the panel is a sheet. An entry that
+ * the Changes filter does not list gains its Changes tab only once its
+ * detail makes its comparison eligible, so wait for `awaitRoutedDetail`
+ * before showing such an entry's details.
  */
 export async function openEvidence(
   page: Page,
   base: string | null = BASE,
 ): Promise<Locator> {
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  // In the compact layout the inspector stands in the panel's sheet.
-  await revealInPanel(page, tab);
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
   const evidence = page.locator("[data-workspace-evidence]");
+  await revealInPanel(page, evidence);
   await expectComparisonDetails(evidence, base);
   return evidence;
 }
 
 /**
- * Open a whole page's Details and return its comparison details. The panel
- * keeps its last choice, so open it only while it is closed.
+ * Show a whole page's comparison details and return them: the Changes tab
+ * holds them for a page that the Changes filter lists, and Inspect after its
+ * head for any other page.
  */
 export async function openPageEvidence(page: Page): Promise<Locator> {
-  const details = page.locator("[data-mokly-details]");
-  // In the compact layout a page's Details stand in the panel's sheet.
-  await revealInPanel(page, details);
-  await expect(details).toBeVisible();
-  if (!(await details.evaluate((element) => element.hasAttribute("open"))))
-    await details.locator("summary").click();
   const evidence = page.locator("[data-page-evidence]");
+  await revealInPanel(page, evidence);
   await expectComparisonDetails(evidence, BASE);
   return evidence;
 }

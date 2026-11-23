@@ -108,7 +108,6 @@ their values from the Canvas roles. Names below are the theme's role names.
 | `--mbk-accent-edge`                        | `signal` at 45% opacity                             |
 | `--mbk-guide`                              | `border`                                            |
 | `--mbk-dot`                                | `dot`                                               |
-| `--mbk-browser-bar`                        | `surfaceMuted`                                      |
 | `--chrome-count-bg`                        | `text` at 8% opacity                                |
 | `--chrome-scrim`                           | the shade at 40% opacity                            |
 
@@ -231,7 +230,7 @@ tokens, because on such a control the disabled ink reads almost as enabled.
 - `--chrome-control-edge` draws the boundary of the appearance control, the
   mobile sheet grabber and native fields, including the prop field's input
   border. The view controls draw no boundary at rest.
-  `--chrome-border-strong` keeps the device and pane frames.
+  `--chrome-border-strong` keeps the pane frames.
 - The invalid-field border uses `--mbk-danger-ink`, matching the message it
   accompanies.
 
@@ -239,8 +238,8 @@ tokens, because on such a control the disabled ink reads almost as enabled.
 
 The [preview palette](./mokly-viewer-palette-preview.md) holds the preview
 tokens: the colours of what a frame shows, which never change with the
-interface appearance. It also holds the fixed device artwork, the highlight
-mask and the component explorer's preview tokens.
+interface appearance. It also holds the highlight mask and the component
+explorer's preview tokens.
 
 ## Related Docs
 

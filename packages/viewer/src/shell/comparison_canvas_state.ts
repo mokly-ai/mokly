@@ -1,14 +1,15 @@
 /**
  * What the canvas shows while a compare mode shows, under the
  * [comparison panes lifecycle](../../../../docs/protocol/mokly-comparison-panes.md#lifecycle):
- * `Loading comparison…` until every shown frame's documents are presented,
- * the failure with Try again when the request or every shown row failed, the
- * line of an entry without a comparison, or the compared frames, each with
- * its versions or its own row's failure.
+ * `Loading comparison…` until every demanded row has a generation and every
+ * shown frame's documents are presented, the failure with Try again when
+ * every drawn row failed, the line of an entry without a comparison, or the
+ * compared frames, each with its versions or its own row's failure.
  */
 
 import type { ComparisonDocumentsState } from "./comparison_documents.js";
 import type { ComparisonMode } from "./comparison_presentation.js";
+import type { ComparisonGenerations } from "./comparison_row_snapshot.js";
 import type { ComparedFrame } from "./comparison_selection.js";
 import type { ComparisonRowsState } from "./use_comparison_documents.js";
 
@@ -24,13 +25,17 @@ export type CanvasCompareState =
 
 /**
  * The mode that the frames show: the presented mode, or Side by side while a
- * compared frame misses a version, because one version cannot stack.
+ * compared frame misses one of its two versions, because one version cannot
+ * stack. A failed row's frame has neither version, and keeps the mode.
  */
 export function shownCompareMode(
   presented: CanvasCompareMode,
   frames: readonly Pick<ComparedFrame, "documents">[],
 ): CanvasCompareMode {
-  return frames.some(({ documents }) => !documents.before || !documents.after)
+  return frames.some(
+    ({ documents }) =>
+      (documents.before === undefined) !== (documents.after === undefined),
+  )
     ? "side"
     : presented;
 }
@@ -47,24 +52,30 @@ export function shownComparedFrames<Frame extends Pick<ComparedFrame, "key">>(
 }
 
 /**
- * The canvas's state from the request's failure, the shown mode, the frames
- * that it draws and the state of each of their rows' documents.
+ * The canvas's state from the demanded rows' generations, the shown mode, the
+ * frames that it draws and the state of each of their rows' documents. A
+ * demanded row that waits for its first generation keeps the canvas loading,
+ * so the canvas never shows a part of the comparison and then loads again.
  */
 export function canvasCompareState({
-  failure,
   frames,
+  generations,
   mode,
   rows,
 }: {
-  failure: string | undefined;
   /** The frames that the shown mode draws, from `shownComparedFrames`. */
   frames: readonly Pick<ComparedFrame, "entry">[];
+  /** The demanded rows' generations, with the rows that still load. */
+  generations: ComparisonGenerations | undefined;
   /** The mode that the frames show, once the loaded comparison presents one. */
   mode: CanvasCompareMode | undefined;
   rows: ComparisonRowsState;
 }): CanvasCompareState {
-  if (failure !== undefined) return { message: failure, status: "failed" };
   if (mode === undefined) return { status: "loading" };
+  const waiting = [...(generations?.pending ?? [])].some(
+    (entry) => generations?.has(entry) !== true,
+  );
+  if (waiting) return { status: "loading" };
   if (!frames.length) return { status: "unavailable" };
   const states = frames.map(
     ({ entry }): ComparisonDocumentsState =>

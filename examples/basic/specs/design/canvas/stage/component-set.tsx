@@ -13,10 +13,10 @@ import {
   type ToolbarInstanceId,
 } from "../parts/instance_records.js";
 import { canvasDesignMetadata } from "../parts/metadata.js";
+import { useChosenFrame } from "../parts/picked_frames.js";
 import {
   TOOLBAR_VIEW,
   actionSetFrames,
-  frameOf,
   toolbarSetFrames,
 } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
@@ -25,9 +25,9 @@ import { SET_FITS } from "../parts/sketches.js";
 /**
  * The Action component opened as its variant set: its own example, then
  * Default, Disabled, and Secondary, each in Light and Dark, with Inspect for
- * a component. Once Disabled is chosen, its Light frame is selected and
- * Props edits it; on a phone, the frame picker shows that frame, under the
- * open Inspect sheet.
+ * a component. Once Disabled is chosen, its Light frame is selected, and on
+ * a phone its frame of the appearance's scheme, and Props edits it; on a
+ * phone, the frame picker shows that frame, under the open Inspect sheet.
  */
 function ActionSet({
   chosen,
@@ -37,7 +37,8 @@ function ActionSet({
   viewport: ArtboardViewport;
 }) {
   const frames = actionSetFrames();
-  const disabled = chosen ? frameOf(frames, "disabled-light") : undefined;
+  const chosenFrame = useChosenFrame(frames, "disabled", viewport);
+  const disabled = chosen ? chosenFrame : undefined;
   const design = chosen
     ? CANVAS_PAGES.componentSetDisabled
     : CANVAS_PAGES.componentSet;
@@ -61,7 +62,9 @@ function ActionSet({
  * example, then Default, each in Light and Dark. With one of its Actions
  * selected on the Toolbar · Light frame, the set's first frame, Inspect opens
  * at the Selection section; on a phone, the frame shows the selection, and
- * the pill above the dock names it.
+ * the pill above the dock names it. The component tree lists the instances
+ * of the set's first frame, so a Dark phone keeps the selection on Toolbar ·
+ * Light.
  */
 function ToolbarSet({
   selected,
@@ -120,7 +123,7 @@ export const canvasComponentSetScreen = defineScreen({
       setState(
         "disabled",
         "Variant chosen",
-        "Disabled chosen in Variants: its Light frame is selected, with its corners and its size, and Props edits the Disabled variant. On a phone, the frame picker shows Disabled · Light, and the Inspect sheet is open at Props.",
+        "Disabled chosen in Variants: its Light frame is selected, with its corners and its size, and Props edits the Disabled variant. On a phone, its frame of the appearance's scheme is selected, Disabled · Light or, in a Dark appearance, Disabled · Dark, the frame picker shows it, and the Inspect sheet is open at Props.",
         (viewport) => <ActionSet chosen viewport={viewport} />,
       ),
       setState(

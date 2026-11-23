@@ -1,25 +1,38 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { accentFill, shellRoot } from "./browse_assertions.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { awaitRoutedDetail, modeButton, showMode } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  comparisonFrames,
+  modeButton,
+} from "./comparison_ui.js";
 import {
   canvasFrame,
   chooseScheme,
-  chooseVariant,
-  chooseViewport,
   expectFrameSource,
   NARROW_WINDOW,
+  openPanelTab,
+  revealInPanel,
+  setFrames,
 } from "./workspace_actions.js";
 
 const SCHEME_DOT = '[data-view-changed="scheme"]';
 const VIEWPORT_DOT = '[data-view-changed="viewport"]';
-const TOOLBAR = ".mbk-diff-toolbar";
+
+/** Inspect's Frames filter, whose toggles carry the change marks. */
+function framesFilter(page: Page): Locator {
+  return page.getByRole("group", {
+    name: "Frames",
+    exact: true,
+    includeHidden: true,
+  });
+}
 
 /** The mark's painted geometry, so a hidden dot cannot pass as a drawn one. */
-function dotStyle(page: Page, selector: string) {
-  return page.locator(selector).evaluate((mark) => {
-    const style = getComputedStyle(mark);
+function dotStyle(mark: Locator) {
+  return mark.evaluate((dot) => {
+    const style = getComputedStyle(dot);
     return {
       display: style.display,
       fill: style.backgroundColor,
@@ -30,6 +43,12 @@ function dotStyle(page: Page, selector: string) {
   });
 }
 
+/**
+ * Expect the status of the shown views, and whether the entry offers compare
+ * modes, which the band of its Changes tab holds. The tab of an entry that
+ * has one opens first, also from the compact layout's closed sheet, so the
+ * check never passes only because Inspect is selected.
+ */
 async function expectShownStatus(
   page: Page,
   path: string,
@@ -38,8 +57,15 @@ async function expectShownStatus(
 ): Promise<void> {
   await awaitRoutedDetail(page, path);
   await expect(page.locator("[data-workspace-status]")).toHaveText(status);
-  if (comparison) await expect(page.locator(TOOLBAR)).toBeVisible();
-  else await expect(page.locator(TOOLBAR)).toBeHidden();
+  const changes = page.getByRole("tab", {
+    name: "Changes",
+    exact: true,
+    includeHidden: true,
+  });
+  if (await changes.count()) await openPanelTab(page, "Changes");
+  const modes = page.getByRole("group", { name: "Comparison mode" });
+  if (comparison) await expect(modes).toBeVisible();
+  else await expect(modes).toBeHidden();
 }
 
 test("a dark-only change marks the views it hides and opens on one", async ({
@@ -50,24 +76,15 @@ test("a dark-only change marks the views it hides and opens on one", async ({
     if (request.url().includes("/mokly-viewer/diffs/"))
       diffs.push(request.url());
   });
+  // The compact layout shows one frame, Mobile · Light, whose view stays
+  // unmodified.
+  await page.setViewportSize(NARROW_WINDOW);
   await page.goto(`/view/${comparisonPaths.darkOnly}/?comparison=side`);
-  const scheme = page.getByLabel("Appearance", { exact: true });
   await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "light",
   );
-  await expect(
-    page.locator(".mbk-appearance").locator(SCHEME_DOT),
-  ).toBeVisible();
-  await expect(scheme).toHaveAttribute(
-    "aria-describedby",
-    "mb-view-changed-scheme",
-  );
-  await expect(page.locator('[data-view-changed-text="scheme"]')).toHaveText(
-    "Other theme changed",
-  );
-  await expect(page.locator(VIEWPORT_DOT)).toBeHidden();
-  // The deep link asked for Side by side, but the Light views are unmodified.
+  // The deep link asked for Side by side, but the shown view is unmodified.
   await expectShownStatus(page, comparisonPaths.darkOnly, "Unmodified", false);
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
     "aria-pressed",
@@ -75,53 +92,64 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   );
   expect(diffs).toEqual([]);
 
-  await scheme.selectOption("dark");
-  await expect(page.locator(shellRoot)).toHaveAttribute(
-    "data-mokly-color-scheme",
-    "dark",
-  );
-  await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
-    "both",
-  );
+  // The wide canvas shows every frame, so no toggle hides a changed view.
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(`/view/${comparisonPaths.darkOnly}/`);
   await expectShownStatus(page, comparisonPaths.darkOnly, "Changed", true);
+  const filter = framesFilter(page);
+  await revealInPanel(page, filter);
+  await expect(filter.locator(`${SCHEME_DOT}, ${VIEWPORT_DOT}`)).toHaveCount(0);
 
-  await scheme.selectOption("light");
+  // With Dark off, the Dark toggle hides the changed views and is marked.
+  await setFrames(page, { light: true, dark: false });
   await expectShownStatus(page, comparisonPaths.darkOnly, "Unmodified", false);
-  expect(await dotStyle(page, SCHEME_DOT)).toEqual({
+  await revealInPanel(page, filter);
+  const dark = page.locator('[data-frames-toggle="dark"]');
+  await expect(filter.locator(SCHEME_DOT)).toBeVisible();
+  await expect(dark).toHaveAccessibleDescription("Other theme changed");
+  await expect(filter.locator(VIEWPORT_DOT)).toHaveCount(0);
+  expect(await dotStyle(filter.locator(SCHEME_DOT))).toEqual({
     display: "block",
     fill: accentFill,
     radius: "50%",
     shadow: "rgb(255, 255, 255) 0px 0px 0px 1.5px",
     width: "6px",
   });
-
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
   const row = page.locator("[data-workspace-changed-views]");
   await expect(row).toHaveText("Changed viewsMobile · Dark, Desktop · Dark");
 
-  await chooseViewport(page, "mobile");
-  await expect(page.locator(VIEWPORT_DOT)).toBeVisible();
-  await expect(page.getByLabel("Viewport", { exact: true })).toHaveAttribute(
-    "aria-describedby",
-    "mb-view-changed-viewport",
-  );
+  // With Desktop off too, the Desktop toggle hides Desktop · Dark.
+  await setFrames(page, { mobile: true, desktop: false });
+  await expect(filter.locator(VIEWPORT_DOT)).toBeVisible();
+  await expect(
+    page.locator('[data-frames-toggle="desktop"]'),
+  ).toHaveAccessibleDescription("Other viewport changed");
 
-  await scheme.selectOption("dark");
-  await expect(page.locator(SCHEME_DOT)).toBeHidden();
-  await expect(scheme).not.toHaveAttribute("aria-describedby", /.*/);
-  await expect(page.locator(VIEWPORT_DOT)).toBeVisible();
+  // The Dark frames alone hide no changed view of their scheme.
+  await setFrames(page, { dark: true, light: false });
+  await expect(filter.locator(SCHEME_DOT)).toBeHidden();
+  await expect(dark).not.toHaveAttribute("aria-describedby", /.*/u);
+  await expect(filter.locator(VIEWPORT_DOT)).toBeVisible();
   await expectShownStatus(page, comparisonPaths.darkOnly, "Changed", true);
 
+  // In the compact layout, a deep link to a changed view opens on its
+  // comparison: the frame picker picks that view's frame, which compares.
+  await page.setViewportSize(NARROW_WINDOW);
   await page.goto(
     `/view/${comparisonPaths.darkOnly}/?viewport=mobile&scheme=dark&comparison=side`,
   );
-  await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
-    "mobile",
+  await expect(page.getByRole("combobox", { name: "Frame" })).toHaveValue(
+    "mobile-dark",
   );
   await expectShownStatus(page, comparisonPaths.darkOnly, "Changed", true);
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",
     "true",
+  );
+  await expect(comparisonFrames(page)).toHaveCount(2);
+  await expect(comparisonFrames(page).last()).toHaveAttribute(
+    "data-mokly-preview-source",
+    /\/screens\/dusk\/index\.mobile\.dark\.html$/u,
   );
 });
 
@@ -150,10 +178,8 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
     page.locator('iframe[data-workspace-color-scheme="dark"]'),
   ).toHaveCount(0);
   await expectShownStatus(page, comparisonPaths.unchanged, "Unmodified", false);
-  await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  // The rejected deep link leaves the current frames: no frame compares.
+  await expect(comparisonFrames(page)).toHaveCount(0);
   expect(diffs).toEqual([]);
 });
 
@@ -183,94 +209,4 @@ test("a light-only screen keeps light frames and says so", async ({ page }) => {
   await chooseScheme(page, "light");
   await expect(label).toHaveText("stable · Mobile · Light");
   await expectFrameSource(shown, /screens\/stable\/index\.mobile\.html$/);
-});
-
-test("component comparisons follow changed variants while added variants stay current", async ({
-  page,
-}) => {
-  await page.goto(`/view/${comparisonPaths.component}/`);
-  await chooseViewport(page, "mobile");
-  await showMode(page, "Overlay");
-  await expect(
-    page.locator("[data-diff-stage] [data-workspace-evidence]"),
-  ).toHaveCount(0);
-  await expect(page.locator("[data-workspace-evidence]")).toHaveCount(1);
-  await expect(
-    page.locator('[data-inspector-panel="details"] [data-workspace-evidence]'),
-  ).toHaveCount(1);
-  await expect(
-    page.getByRole("button", { name: "Highlight components", exact: true }),
-  ).toBeDisabled();
-  await chooseVariant(page, "Featured");
-  await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
-    "data-mokly-preview-source",
-    /card\/featured\/index\.mobile\.html$/,
-  );
-  await expect(
-    page
-      .locator("[data-diff-stage] .mb-pane--after iframe")
-      .contentFrame()
-      .getByRole("heading", { name: "Featured After" }),
-  ).toBeVisible();
-  // The loaded comparison adds the variant's own reasons to Details.
-  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
-    "Rendered content changed.",
-  );
-  // Current shows the variant set, whose rows show their desktop views.
-  await modeButton(page, "Current").click();
-  await expect(
-    page
-      .frameLocator(
-        `${canvasFrame("desktop")}[data-workspace-variant="${comparisonPaths.changedVariant}"]`,
-      )
-      .getByRole("heading", { name: "Featured After" }),
-  ).toBeVisible();
-  await chooseVariant(page, "Fresh");
-  await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-    "Fresh · Added",
-  );
-  await awaitRoutedDetail(page, comparisonPaths.addedVariant);
-  await expect(page.locator(TOOLBAR)).toBeHidden();
-  await expect(
-    page
-      .frameLocator(
-        `${canvasFrame("desktop")}[data-workspace-variant="${comparisonPaths.addedVariant}"]`,
-      )
-      .getByRole("heading", { name: "Fresh card" }),
-  ).toBeVisible();
-});
-
-test("Side by side stays authoritative while switching sibling variants", async ({
-  page,
-}) => {
-  await page.goto(`/view/${comparisonPaths.component}/`);
-  await chooseViewport(page, "mobile");
-  await showMode(page, "Side by side");
-  await chooseVariant(page, "Featured");
-  await expect(modeButton(page, "Side by side")).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
-    "data-mokly-preview-source",
-    /card\/featured\/index\.mobile\.html$/,
-  );
-  await page.getByRole("tab", { name: "Props", exact: true }).click();
-  const props = page.getByRole("tabpanel", { name: "Props", exact: true });
-  await expect(
-    props.getByText("Comparisons show the saved props.", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    props.getByRole("button", { name: "Switch to Current", exact: true }),
-  ).toBeVisible();
-  await expect(props.getByRole("textbox")).toHaveCount(0);
-  const highlight = page.getByRole("button", {
-    name: "Highlight components",
-    exact: true,
-  });
-  await expect(highlight).toBeDisabled();
-  await expect(highlight).toHaveAttribute(
-    "title",
-    "A comparison is selected. Highlighting is available in Current.",
-  );
 });

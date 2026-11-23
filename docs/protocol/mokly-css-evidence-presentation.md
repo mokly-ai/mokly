@@ -178,7 +178,7 @@ and selector. Union page selectors separately from component-only and
 unresolved selectors. Never merge away the stylesheet-to-selector relationship.
 The excluded files are the sorted union of excluded files minus any retained
 file. Use singular or
-plural excluded copy by file count. The view controls do not change the
+plural excluded copy by file count. The Frames filter does not change the
 comparison details, which hold the same facts for every viewport and scheme. Loaded comparisons and
 classification evidence merge once, without duplicate paragraphs or files.
 

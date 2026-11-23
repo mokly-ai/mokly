@@ -45,9 +45,13 @@ reject without committing. A partial selection that explicitly supplies
 `screenPath` without `snapshotId` returns to current content and clears a
 historical selection; viewport, scheme, filter, search and tag changes keep
 it. Shell links and pending route intents propose `{ screenPath, snapshotId }`
-atomically. The component page's variant bar links to the parent's own entry
-and its variant entries, proposing `select({ screenPath })` for the chosen
-entry; comparison mode across siblings follows
+atomically. On a screen, Inspect's
+[Variants list](./mokly-component-inspector-design.md#inspect) links to the
+parent's own entry and its variant entries, proposing `select({ screenPath })`
+for the chosen entry. On a component's variant set, choosing a variant selects
+its frame under the
+[canvas selection](./mokly-viewer-selection-canvas.md#clicks-by-tab) contract.
+Comparison mode across siblings follows
 [variant navigation](./mokly-variant-navigation.md). A committed selection
 replaces frames and announces `onScreenNavigate` once. Switching control mode
 requires remounting. Never mutate supplied objects or arrays.

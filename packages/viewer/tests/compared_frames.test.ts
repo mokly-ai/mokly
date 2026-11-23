@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { ComparedEntry, ReviewView } from "../src/review/types.js";
+import { shownCompareMode } from "../src/shell/comparison_canvas_state.js";
 import {
   comparedFrames,
   comparedRowDocuments,
@@ -166,5 +167,39 @@ test("a frame compares its own viewport and scheme, a missing side, and a moved 
         scheme: "dark",
       },
     ],
+  );
+});
+
+test("a failed row's frames compare without documents, so a stack keeps its mode", () => {
+  const rows = new Map([
+    [ACTION, row(ACTION, [view("desktop", "light")])],
+    [DEFAULT, row(DEFAULT, [view("desktop", "light")])],
+  ]);
+  const generations = Object.assign(new Map([[ACTION, { url: ONE }]]), {
+    failures: new Map([[DEFAULT, "The comparison is unavailable."]]),
+  });
+  const frames = comparedFrames(
+    [frame(ACTION, "light"), frame(DEFAULT, "light")],
+    generations,
+    (entry) => rows.get(entry),
+  );
+  assert.deepEqual(
+    frames.map(({ documents, entry }) => ({ documents, entry })),
+    [
+      {
+        documents: {
+          after: `${ONE}snapshots/after/mokly-generated/example/components/action/index.desktop.html`,
+          before: `${ONE}snapshots/before/mokly-generated/example/components/action/index.desktop.html`,
+        },
+        entry: ACTION,
+      },
+      { documents: {}, entry: DEFAULT },
+    ],
+  );
+  assert.equal(shownCompareMode("overlay", frames), "overlay");
+  // A frame that misses one version cannot stack.
+  assert.equal(
+    shownCompareMode("overlay", [{ documents: { after: `${ONE}after` } }]),
+    "side",
   );
 });

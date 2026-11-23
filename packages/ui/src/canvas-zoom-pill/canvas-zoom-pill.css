@@ -1,7 +1,8 @@
 /* The canvas zoom: a raised 36px pill on the surface, with a hairline ring
    and the Canvas design's second shadow, holding Zoom out, the zoom level in
-   the mono face, Zoom in, a rule, and Fit. The shadow follows the colour
-   scheme that the shell root states for its appearance: the light layers
+   the mono face, Zoom in, a rule, and Fit, as buttons or as the pictures of
+   a static depiction. The shadow follows the colour scheme that the shell
+   root states for its appearance: the light layers
    shade with the ink, and the dark layers with the canvas, each clear in the
    other appearance. */
 .mbk-zoom-pill {
@@ -82,10 +83,17 @@
   flex: none;
 }
 
-.mbk-zoom-step:hover,
-.mbk-zoom-fit:hover {
+button.mbk-zoom-step:hover,
+button.mbk-zoom-fit:hover {
   background: var(--chrome-hover);
   color: var(--cv-text);
+}
+
+/* The picture of a control in a static depiction acts on nothing, so it
+   keeps its resting look and the default pointer. */
+span.mbk-zoom-step,
+span.mbk-zoom-fit {
+  cursor: default;
 }
 
 .mbk-zoom-step:focus-visible,

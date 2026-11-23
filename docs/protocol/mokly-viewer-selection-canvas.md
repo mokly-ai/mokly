@@ -24,7 +24,10 @@ selects nothing. On a variant set, a click on a frame's label selects that
 frame, and choosing a variant in Inspect selects the variant's Light frame.
 Selecting an instance in the component tree selects it as a click does, on the
 frame whose instances the tree lists. A click on the empty canvas, or Escape,
-clears the selection. At most one instance or one frame is selected at a time.
+clears the selection. An Escape that a canvas frame forwards under the
+[canvas input rules](./mokly-frame-canvas-input.md#keys) clears it too. While
+Highlight components is on or a host pick is active, Escape ends that first and
+keeps the selection. At most one instance or one frame is selected at a time.
 
 In Changes, a click on a frame selects nothing, and the canvas draws no
 selection. The frames keep the compare mode, and a drag on the Swipe divider
@@ -57,7 +60,8 @@ size. When the instance has a box model and a left padding, a redline measures
 that padding from the inside of the border to the content, with the value in a
 tag outside the box. The redline hides while the padding is too narrow on
 screen to read. The handles and the tags keep their size at every zoom, and
-the redline's length follows the frame's scale.
+the redline's length follows the frame's scale. The tags hide at a small zoom,
+as [tags at a small zoom](#tags-at-a-small-zoom) says.
 
 The outline follows the instance's geometry as a highlight does, and the
 viewer measures the box model again after each `geometry` event. A frame
@@ -79,6 +83,26 @@ selection has no name tag and no redline. The variant set's Props then edits
 the variant of that frame, under the
 [inspector design](./mokly-component-inspector-design.md#inspect).
 
+## Tags At A Small Zoom
+
+The tags on a frame keep their size at every zoom: the selection's name tag,
+its size tag and its padding redline with the value, and the
+[highlight labels](./mokly-component-workspace-design.md#frames-filter-and-highlighting) of
+Highlight components. While the canvas draws its frames at less than 60% of
+their size, in whole percent as the zoom pill reads it, it hides these tags,
+and a zoom to 60% or more shows them again.
+The outlines, the handles and the highlight's cutouts stay, and Inspect's
+Selection section still names the selection. The
+[compact layout](./mokly-shell-device-chrome.md#compact-layout) follows the
+same rule.
+
+Decision: one zoom threshold for every tag on a frame. Below 60%, a tag covers
+more of a frame than the part that it names, so it hides the content that the
+reader inspects. A rule for each tag that compares the tag with its box would
+show some tags of one frame and hide others. Tags outside the frames would
+stand far from the boxes that they name, and tags that scale with the zoom
+would be too small to read.
+
 ## Sizes
 
 The selection and Inspect show each length in CSS pixels, rounded to a whole
@@ -96,6 +120,11 @@ The pill above the dock of the
 [compact layout](./mokly-shell-device-chrome.md#compact-layout) names the
 selected instance: its component, its first prop, and its left padding when it
 has a box model. The one frame draws the selection as the wide layout does.
+The selection's scheme names that frame: choosing a variant in Inspect
+selects its row's frame of that scheme, and a variant set's selected frame
+moves to its row's frame of the scheme that the selection names, such as
+after an Appearance change. A row without a frame of that scheme keeps its
+Light frame. A Used by link's instance is selected on that frame too.
 
 ## Related Docs
 

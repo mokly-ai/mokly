@@ -1,82 +1,24 @@
 /**
- * Scroll checks for the comparison panes on the copied comparison output.
- * Pane documents are same-origin srcdoc frames, so reads go through the
- * parent page; settling waits on animation frames, never on a sleep.
+ * Page scroll checks for the comparison panes: each version's document
+ * offset and range, each page viewport's offset, the wheel over a pane, and
+ * marks that prove a pane document stayed. Pane documents are same-origin
+ * `srcdoc` frames, so reads go through the parent page; settling waits on
+ * animation frames, never on a sleep. Every offset, range and size here is in
+ * the documents' CSS pixels, which the canvas zoom does not change.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { comparisonFrames, modeButton } from "./comparison_ui.js";
-import { passRenderingUpdates } from "./page_settling.js";
-import { chooseViewport } from "./workspace_actions.js";
-
-/** One version of a comparison. */
-export type Side = "after" | "before";
+import {
+  paneFrame,
+  sharedViewports,
+  type Side,
+} from "./comparison_sections.js";
 
 /** A two-dimensional scroll offset in CSS pixels. */
 export interface Offset {
   x: number;
   y: number;
-}
-
-/** Open one entry at a wide window and load a diff mode for a viewport. */
-export async function openComparison(
-  page: Page,
-  entryPath: string,
-  viewport: "both" | "desktop" | "mobile",
-  mode: "Difference" | "Overlay" | "Side by side",
-): Promise<void> {
-  // The stage stands between the floating panels, and each Side by side pane
-  // keeps more than the 600px at which the regions shell drops its right
-  // column and its footer.
-  await page.setViewportSize({ width: 1920, height: 1000 });
-  await page.goto(`/view/${entryPath}/`);
-  await chooseViewport(page, viewport);
-  await modeButton(page, mode).click();
-  await expect(modeButton(page, mode)).toHaveAttribute("aria-pressed", "true");
-  // Side by side compares one frame's pair; a stack compares every frame.
-  const shown =
-    mode === "Side by side"
-      ? []
-      : viewport === "both"
-        ? (["mobile", "desktop"] as const)
-        : [viewport];
-  for (const each of shown)
-    await expect(
-      comparisonSection(page, each).locator(
-        "iframe[data-mokly-comparison-frame]",
-      ),
-    ).toHaveCount(2);
-  if (mode === "Side by side")
-    await expect(comparisonFrames(page)).toHaveCount(2);
-  for (const frame of await comparisonFrames(page).all())
-    await expect(frame.contentFrame().locator("body")).not.toBeEmpty();
-}
-
-/** The comparison section of one viewport. */
-export function comparisonSection(
-  page: Page,
-  viewport: "desktop" | "mobile",
-): Locator {
-  const stage = page.locator("[data-mokly-stage]");
-  // A stack is the Light frame of the viewport; Side by side is its pair.
-  const stack = stage.locator(
-    `.mbk-canvas-cell:not([hidden]) > figure[data-canvas-frame="${viewport}"][data-preview-color-scheme="light"]:has([data-compare-mode]:not([data-compare-mode="side"]))`,
-  );
-  const pair = stage.locator(
-    `.mbk-canvas-frames:has(figure[data-canvas-frame="${viewport}"] [data-compare-mode="side"])`,
-  );
-  return stack.or(pair);
-}
-
-/** The frame showing one version inside a comparison section. */
-export function paneFrame(section: Locator, side: Side): Locator {
-  return section.locator(`.mb-pane--${side} iframe`);
-}
-
-/** The user-scrollable shared viewports inside a comparison section. */
-export function sharedViewports(section: Locator): Locator {
-  return section.locator("[data-comparison-viewport]");
 }
 
 /** Read the scroll offset of the document shown by a pane frame. */
@@ -97,7 +39,7 @@ export async function layerOffsets(
   };
 }
 
-/** Read the scroll offset of a shared viewport. */
+/** Read the scroll offset of a page viewport. */
 export function viewportOffset(viewport: Locator): Promise<Offset> {
   return viewport.evaluate((element) => ({
     x: element.scrollLeft,
@@ -118,7 +60,10 @@ export function documentExtent(
   });
 }
 
-/** Scroll with the wheel over the centre of a pane frame. */
+/**
+ * Scroll with the wheel over the centre of a pane frame, after bringing its
+ * frame's document into view.
+ */
 export async function wheelOver(
   page: Page,
   target: Locator,
@@ -136,7 +81,7 @@ export async function wheelOver(
   await page.mouse.wheel(deltaX, deltaY);
 }
 
-/** Expect both stacked documents and the shared viewport at one offset. */
+/** Expect both stacked documents and the shared viewport of a stack at one offset. */
 export async function expectStackAt(
   section: Locator,
   y: number,
@@ -176,126 +121,30 @@ export async function expectCoincidentLayers(section: Locator): Promise<void> {
   expect(after).toEqual(before);
 }
 
-/** Read one region's scroll offset inside a pane frame. */
-export function regionOffset(
-  frame: Locator,
-  selector: string,
-): Promise<Offset> {
-  return frame.evaluate((element: HTMLIFrameElement, css) => {
-    const node = element.contentDocument!.querySelector(css)!;
-    return { x: node.scrollLeft, y: node.scrollTop };
-  }, selector);
-}
-
-/** One region's vertical scroll range in one version. */
-export function regionRange(frame: Locator, selector: string): Promise<number> {
-  return frame.evaluate((element: HTMLIFrameElement, css) => {
-    const node = element.contentDocument!.querySelector(css)!;
-    return node.scrollHeight - node.clientHeight;
-  }, selector);
-}
-
-/** Read one region's offsets in both versions within one task of the page. */
-export function regionOffsets(
-  section: Locator,
-  selector: string,
-): Promise<Record<Side, Offset>> {
-  return section.evaluate((element, css) => {
-    const read = (side: Side): Offset => {
-      const frame = element.querySelector<HTMLIFrameElement>(
-        `.mb-pane--${side} iframe`,
-      );
-      const region = frame?.contentDocument?.querySelector(css);
-      if (!region) throw new Error(`No ${css} in the ${side} pane`);
-      return { x: region.scrollLeft, y: region.scrollTop };
-    };
-    return { before: read("before"), after: read("after") };
-  }, selector);
-}
-
-/** Expect a region's offsets, `[before, after]`, to settle. */
-export async function expectRegionsAt(
-  section: Locator,
-  selector: string,
-  expected: [number, number],
-  axis: keyof Offset = "y",
-): Promise<void> {
-  await expect
-    .poll(async () => {
-      const offsets = await regionOffsets(section, selector);
-      return [offsets.before[axis], offsets.after[axis]];
-    })
-    .toEqual(expected);
-}
-
-/**
- * Wait until both versions of a region agree on an offset that `accept`
- * allows and keep it while a few rendering updates pass, then return it.
- */
-export async function expectRegionsAtRest(
-  section: Locator,
-  selector: string,
-  accept: (offset: number) => boolean,
-  message?: string,
-): Promise<number> {
-  let reached = 0;
-  await expect
-    .poll(async () => {
-      const offsets = await regionOffsets(section, selector);
-      reached = offsets.after.y;
-      if (offsets.before.y !== reached || !accept(reached)) return false;
-      await passRenderingUpdates(section.page());
-      const later = await regionOffsets(section, selector);
-      return later.before.y === reached && later.after.y === reached;
-    }, message)
-    .toBe(true);
-  return reached;
-}
-
-/** Wheel over the centre of one region inside a pane frame. */
-export async function wheelOverRegion(
-  page: Page,
-  frame: Locator,
-  selector: string,
-  deltaY: number,
-  deltaX = 0,
-): Promise<void> {
-  const region = frame.contentFrame().locator(selector);
-  const box = await region.boundingBox();
-  if (!box) throw new Error(`The region ${selector} is not rendered`);
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.wheel(deltaX, deltaY);
-}
-
-/** Wait until a region reaches an offset, then let rendering updates pass. */
-export async function settleRegion(
-  page: Page,
-  frame: Locator,
-  selector: string,
-  y: number,
-): Promise<void> {
-  await expect
-    .poll(async () => (await regionOffset(frame, selector)).y)
-    .toBe(y);
-  await passRenderingUpdates(page);
-}
-
 /** The Scroll together switch of the comparison band. */
 export function scrollTogether(page: Page): Locator {
   return page.getByRole("switch", { name: "Scroll together" });
 }
 
-/** Mark every pane document so a later check can prove none reloaded. */
-export async function markPaneDocuments(section: Locator): Promise<void> {
-  for (const frame of await section.locator("iframe").all())
+/**
+ * Mark every pane document of `scope`, a section or the stage, so a later
+ * check can prove none reloaded. It fails when `scope` holds no pane frame,
+ * so a scope that misses the panes cannot pass the later check unchecked.
+ */
+export async function markPaneDocuments(scope: Locator): Promise<void> {
+  const frames = scope.locator("iframe[data-mokly-comparison-frame]");
+  await expect(frames).not.toHaveCount(0);
+  for (const frame of await frames.all())
     await frame.evaluate((element: HTMLIFrameElement) => {
       element.contentDocument!.documentElement.dataset["probe"] = "kept";
     });
 }
 
-/** Expect every pane document marked earlier to be the same document. */
-export async function expectPaneDocumentsKept(section: Locator): Promise<void> {
-  for (const frame of await section.locator("iframe").all())
+/** Expect every pane document of `scope` that was marked earlier to be the same document. */
+export async function expectPaneDocumentsKept(scope: Locator): Promise<void> {
+  const frames = scope.locator("iframe[data-mokly-comparison-frame]");
+  await expect(frames).not.toHaveCount(0);
+  for (const frame of await frames.all())
     expect(
       await frame.evaluate(
         (element: HTMLIFrameElement) =>

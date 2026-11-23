@@ -7,7 +7,9 @@
  * revision replaces it, never asks again. A route's instance waits for its
  * frame's ready usage and applies once. A frame's replacement, and an
  * instance that leaves its frame's ready usage, clear an instance; on a
- * variant set the frame stays selected, so its Props keep their variant.
+ * variant set the frame stays selected, so its Props keep their variant. A
+ * frame that follows the selection's scheme moves only from the frame that
+ * it followed, so a route's own choice in the same render wins.
  */
 
 /** What the canvas holds selected. */
@@ -51,6 +53,12 @@ export type CanvasSelectionAction =
       reveal: boolean;
     }
   | { type: "clear" }
+  | {
+      type: "follow";
+      /** The selected frame that the move starts from. */
+      from: string;
+      frame: string;
+    }
   | { type: "restore"; state: CanvasSelectionState }
   | { type: "reveal" }
   | { type: "route"; instance?: { frame: string; key: string }; frame?: string }
@@ -122,6 +130,11 @@ export function canvasSelectionReducer(
     case "clear":
       return state.selected || state.pending
         ? selectedNow(state, undefined)
+        : state;
+    case "follow":
+      return state.selected?.kind === "frame" &&
+        state.selected.frame === action.from
+        ? selectedNow(state, { kind: "frame", frame: action.frame })
         : state;
     case "restore":
       return action.state;

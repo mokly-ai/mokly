@@ -5,6 +5,7 @@ import { revealInPanel } from "./panel_actions.js";
 export {
   closeOpenSheet,
   openCatalogueSheet,
+  openInspectFold,
   openPanelSheet,
   openPanelTab,
   revealInPanel,
@@ -168,11 +169,31 @@ export async function expectCanvasViewport(
 }
 
 /**
- * The selector of the routed page's or Markdown document's frame: the
- * canvas's reading frame from 900px wide, and the document pane's frame below.
+ * Zoom the wide canvas in until it draws its frames at 60% of their size or
+ * more, where the tags on its frames show, such as a highlight's labels and
+ * the selection's tags. The compact layout has no zoom pill, and its one
+ * frame keeps its own zoom.
  */
-export const DOCUMENT_FRAME =
-  "[data-mokly-stage] iframe, .mbk-stage-embed iframe";
+export async function zoomToTags(scope: Page | Locator): Promise<void> {
+  const pill = scope.getByRole("group", { name: "Zoom" });
+  await expect(
+    pill.or(scope.locator("[data-canvas-dock]")).first(),
+  ).toBeVisible();
+  if (!(await pill.isVisible())) return;
+  const zoom = async () =>
+    Number.parseInt(
+      (await pill.locator(".mbk-zoom-value").textContent()) ?? "0",
+      10,
+    );
+  while ((await zoom()) < 60)
+    await pill.getByRole("button", { name: "Zoom in" }).click();
+}
+
+/**
+ * The selector of the routed page's or Markdown document's frame: the
+ * canvas's reading frame, in both layouts.
+ */
+export const DOCUMENT_FRAME = "[data-mokly-stage] iframe";
 
 /**
  * A window narrower than the 900px layout breakpoint, where the compact

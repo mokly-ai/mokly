@@ -136,10 +136,6 @@
       "types": "./dist/floating-panel/floating-panel.d.ts",
       "import": "./dist/floating-panel/floating-panel.js"
     },
-    "./flow-step": {
-      "types": "./dist/flow-step/flow-step.d.ts",
-      "import": "./dist/flow-step/flow-step.js"
-    },
     "./frames-filter": {
       "types": "./dist/frames-filter/frames-filter.d.ts",
       "import": "./dist/frames-filter/frames-filter.js"
@@ -195,10 +191,6 @@
     "./preview-state": {
       "types": "./dist/preview-state/preview-state.d.ts",
       "import": "./dist/preview-state/preview-state.js"
-    },
-    "./previous-version": {
-      "types": "./dist/previous-version/previous-version.d.ts",
-      "import": "./dist/previous-version/previous-version.js"
     },
     "./prop-field": {
       "types": "./dist/prop-field/prop-field.d.ts",
@@ -256,10 +248,6 @@
     "./usage-list": {
       "types": "./dist/usage-list/usage-list.d.ts",
       "import": "./dist/usage-list/usage-list.js"
-    },
-    "./variant-bar": {
-      "types": "./dist/variant-bar/variant-bar.d.ts",
-      "import": "./dist/variant-bar/variant-bar.js"
     },
     "./view-controls": {
       "types": "./dist/view-controls/view-controls.d.ts",

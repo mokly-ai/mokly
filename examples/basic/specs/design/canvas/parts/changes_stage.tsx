@@ -9,6 +9,7 @@ import {
 } from "./changes_sketches.js";
 import { CANVAS_PAGES, WELCOME_MODES } from "./destinations.js";
 import { CANVAS_ENTRIES } from "./entries.js";
+import { useOpeningFrame } from "./picked_frames.js";
 import { CanvasShell } from "./shell.js";
 import { FITS, WELCOME_VIEW, welcomeFrames } from "./sketches.js";
 import { CanvasStage } from "./stage.js";
@@ -17,10 +18,11 @@ import { CanvasStage } from "./stage.js";
  * Welcome on the Changes tab in one compare mode: the catalogue in the
  * Changes filter with Welcome selected, the frames in the mode, and the
  * Changes body. The catalogue's rows keep the Changes tab: Details opens
- * its Changes. Side by side compares Desktop · Light on a desktop and
- * Mobile · Light on a phone, as two frames at a smaller zoom. A comparison
- * cannot be highlighted; Current can, as in Inspect. On a phone, Current
- * shows the Changes sheet open, and every other mode its one frame.
+ * its Changes. Side by side compares Desktop · Light on a desktop and, on a
+ * phone, the frame that the phone opens on, as two frames at a smaller
+ * zoom. A comparison cannot be highlighted; Current can, as in Inspect. On a
+ * phone, Current shows the Changes sheet open, and every other mode its one
+ * frame.
  */
 export function WelcomeChangesArtboard({
   mode,
@@ -32,8 +34,9 @@ export function WelcomeChangesArtboard({
   const entry = CANVAS_ENTRIES.welcome;
   const design = WELCOME_MODES[mode];
   const side = mode === "side-by-side";
+  const opening = useOpeningFrame(welcomeFrames());
   const frame: CompareFrame =
-    side && viewport === "desktop" ? "desktop-light" : "mobile-light";
+    side && viewport === "desktop" ? "desktop-light" : opening;
   const zoom = side ? FITS.sideBySide : FITS.welcome;
   return (
     <CanvasShell

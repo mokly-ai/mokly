@@ -122,20 +122,20 @@ preview scheme and the compact layout.
   field is compact: about 180px on the muted field surface, led by a 15px
   stroked magnifier icon and ended by the tag picker control. It gives way when
   its column runs short. In the standalone bar it keeps at least 150px down to
-  a 320px window, and an embedded root switches to its
-  [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
-  Search uses `Search catalogue` as its accessible name and `Search` as its
-  placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
-  and Ctrl+K move focus to the search field from anywhere in the shell. `/`
-  does the same while focus is not in a text field. At or above 900px, a key
-  hint before the tag picker names `⌘K` on Apple's platforms and `Ctrl K`
-  elsewhere. Assistive technology skips the hint, and the field names its keys
-  to it. The standalone bar carries no preview mode switch; Appearance is the
-  one setting that belongs there.
-  Decision: the standalone shell keeps Appearance in its top bar, not in an
-  account menu, because it has no account menu. Matching uses the single
-  [search rule](./mokly-folders.md#titles). Filtering hides empty groups and
-  opens retained groups, and composes with the All/Changes filter.
+  a 320px window, and an embedded root switches to its [compact
+  search](./mokly-viewer.md#rendered-features-and-slots) instead. Search uses
+  `Search catalogue` as its accessible name and `Search` as its placeholder in
+  both viewport sizes, covering screens, pages, and flows. `⌘K` and Ctrl+K move
+  focus to the search field from anywhere in the shell, and from a canvas frame
+  [outside its editable elements](./mokly-frame-canvas-input.md#keys). `/` does
+  the same while focus is not in a text field. At or above 900px, a key hint
+  before the tag picker names `⌘K` on Apple's platforms and `Ctrl K` elsewhere.
+  Assistive technology skips the hint, and the field names its keys to it. The
+  standalone bar carries no preview mode switch; Appearance is the one setting
+  that belongs there. Decision: the standalone shell keeps Appearance in its top
+  bar, not in an account menu, because it has no account menu. Matching uses the
+  single [search rule](./mokly-folders.md#titles). Filtering hides empty groups
+  and opens retained groups, and composes with the All/Changes filter.
 - **Tag picker** — the tag-icon control at the trailing edge of the search
   field and the panel of tag chips that it opens, under the
   [tag picker design](./mokly-shell-design-tag-picker.md).
@@ -155,30 +155,30 @@ preview scheme and the compact layout.
   exists, and otherwise expands that folder in the catalogue.
 
 Inspect's head names the entry, its kind and its change status, and shows its
-description and its Details rows: Path, Source, Moved from, Schemes, Changed
-views, Tags, Related docs, Dependencies and Used by, in that order. A section
-named for the entry's kind, such as `Why this screen`, holds its rationale.
-Paths render as monospace chips that may wrap after each `/`; use cases
-render as pill chips with the flow icon; a related doc that is itself a
-catalogue document links to its entry; the Schemes row is plain text naming
-the schemes the screen renders in (`light, dark`). The Changed views row is
-plain text naming the views a ready classification marked changed
-(`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before
-dark; it is hidden while no view is named. The Tags row lists the tags the
-entry declares as pill chips with the tag icon: selecting one enters
-`tag:<tag>` in the search field, so the filter stays visible and clearable
-there, and the chip whose tag is in the entered query carries the accent active
-state with contrast text and glyph. An entry that declares no tags omits the
-row.
+description and its Details rows: Path, Source, Address, Moved from, Schemes,
+Changed views, Tags, Related docs, Dependencies and Used by, in that order. A
+section named for the entry's kind, such as `Why this screen`, holds its
+rationale. Paths render as monospace chips that may wrap after each `/`; use
+cases render as pill chips with the flow icon; a related doc that is itself a
+catalogue document links to its entry; the Schemes row is plain text naming the
+schemes the screen renders in (`light, dark`). The Changed views row is plain
+text naming the views a ready classification marked changed
+(`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before dark;
+it is hidden while no view is named. The Tags row lists the tags the entry
+declares as pill chips with the tag icon: selecting one enters `tag:<tag>` in
+the search field, so the filter stays visible and clearable there, and the chip
+whose tag is in the entered query carries the accent active state with contrast
+text and glyph. An entry that declares no tags omits the row.
 
 Details have no rendered-file or route row: every file derives from the entry's
 path, and the address bar already shows the shell URL. A moved entry's Details
 add a `Moved from` row holding its previous path, the `Moved` label its Changes
 row carries, and its comparison details name that path as the earlier side. A
-removed entry's Details add a `Location` row before Tags. It names the
-folders that held the entry at the branch point, as text with `›` separators.
-A document's Details show its description, path, tags, and Markdown source
-file.
+screen that declares an `address` adds an Address row, which shows the address
+as a monospace chip. A removed entry's Details add a `Location` row before Tags.
+It names the folders that held the entry at the branch point, as text with `›`
+separators. A document's Details show its description, path, tags, and Markdown
+source file.
 
 Shared home guidance asks visitors to choose an item from the navigation.
 With nothing selected, the canvas holds the guidance and no right panel shows.

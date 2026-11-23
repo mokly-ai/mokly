@@ -5,9 +5,9 @@ colours of what a frame shows, which never follow the interface appearance.
 
 ## Preview Tokens
 
-Preview tokens describe what a device screen shows and never change with the
-interface appearance, so a light phone inside a dark catalogue keeps light
-surfaces, ink and status indicators.
+Preview tokens describe what a frame shows and never change with the
+interface appearance, so a light frame inside a dark catalogue keeps light
+surfaces and ink.
 
 | Role                       | Light preview | Dark preview                        |
 | -------------------------- | ------------- | ----------------------------------- |
@@ -23,19 +23,8 @@ surfaces, ink and status indicators.
 | `--mbk-screen-danger-ink`  | `#8a3423`     | `#8a3423`                           |
 
 These values are the authored fragment's own colors, not the viewer interface.
-Each device screen also sets its own CSS `color-scheme`, so native controls and
-scrollbars inside a preview follow the preview rather than the interface. Fixed
-phone hardware and the browser traffic lights keep their intended colors in both
-appearances, and are named so no stylesheet repeats them:
-
-| Role                          | Both appearances        |
-| ----------------------------- | ----------------------- |
-| `--mbk-device-body`           | `#171a18`               |
-| `--mbk-device-notch`          | `#0b0d0c`               |
-| `--mbk-device-home`           | `rgba(20, 24, 20, 0.4)` |
-| `--mbk-device-light-close`    | `#d9655b`               |
-| `--mbk-device-light-minimise` | `#dba43d`               |
-| `--mbk-device-light-expand`   | `#50a86d`               |
+Each preview also sets its own CSS `color-scheme`, so native controls and
+scrollbars inside it follow the preview rather than the interface.
 
 The highlight mask over a preview dims the preview around the highlighted
 component instances and outlines each instance. It marks the preview, not the

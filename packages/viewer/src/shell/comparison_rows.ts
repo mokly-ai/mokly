@@ -3,8 +3,9 @@
  * that they show. A screen's and a variant set's frames are the shown frames
  * of the canvas, which the Frames filter and the compact layout choose. A
  * removed component or variant has no live frames, so its compare draws the
- * frames of its own views: each view of its desktop viewport, Light then
- * Dark, as a variant set's row draws them.
+ * frames of its own views: each view of its desktop viewport, of the schemes
+ * that the Frames filter shows, Light then Dark, as a variant set's row draws
+ * them.
  */
 
 import type { ComparedEntry } from "../review/types.js";
@@ -12,6 +13,7 @@ import type { ComparedEntry } from "../review/types.js";
 import type { CanvasFramePlan } from "./canvas_frames.js";
 import { viewportFrameLabel } from "./canvas_frames.js";
 import type { ComparedFramePlan, ComparedRow } from "./comparison_selection.js";
+import { shownSchemes, type FramesChoice } from "./frames_filter.js";
 import { publicComparedEntry } from "./public_compared.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
@@ -56,33 +58,33 @@ export function comparisonFramePlans(
 
 /**
  * The frames of a removed component or variant, which has no live frames:
- * one for each desktop view of its comparison, Light then Dark, named by the
- * entry's title and the view's scheme.
+ * one for each desktop view of its comparison, of the schemes that the
+ * Frames filter shows, Light then Dark, as a variant set's row draws them,
+ * named by the entry's title and the view's scheme. An entry without a dark
+ * view keeps its Light frame, as the filter's disabled Dark toggle does.
  */
 export function removedComparisonPlans(
   compared: ComparedEntry | undefined,
   entry: { path: string; title: string },
+  choice: FramesChoice,
 ): ComparisonFramePlan[] {
   if (!compared) return [];
-  return (["light", "dark"] as const).flatMap((scheme, column) =>
+  const captured = (scheme: "dark" | "light") =>
     compared.views.some(
       (view) => view.viewport === "desktop" && view.colorScheme === scheme,
-    )
-      ? [
-          {
-            column,
-            entry: { path: entry.path },
-            key: `${entry.path}:${scheme}`,
-            kind: "component" as const,
-            label: `${entry.title} · ${SCHEMES[scheme]}`,
-            name: `${entry.title} · ${SCHEMES[scheme]}`,
-            row: 0,
-            scheme,
-            viewport: "desktop" as const,
-          },
-        ]
-      : [],
-  );
+    );
+  const shown = shownSchemes(choice, captured("dark"));
+  return shown.filter(captured).map((scheme) => ({
+    column: shown.indexOf(scheme),
+    entry: { path: entry.path },
+    key: `${entry.path}:${scheme}`,
+    kind: "component" as const,
+    label: `${entry.title} · ${SCHEMES[scheme]}`,
+    name: `${entry.title} · ${SCHEMES[scheme]}`,
+    row: 0,
+    scheme,
+    viewport: "desktop" as const,
+  }));
 }
 
 /**

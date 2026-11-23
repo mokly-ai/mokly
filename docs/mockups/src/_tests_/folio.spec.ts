@@ -4,6 +4,8 @@ import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { paletteUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
 import { expect, test } from "@playwright/test";
 
+import { currentScreen } from "../fixtures/viewer-catalogue";
+
 import { screenFile } from "./catalogue-paths";
 import { rgb } from "./color-metrics";
 import { permanentScreens } from "./folio-inventory";
@@ -38,11 +40,16 @@ for (const viewport of ["mobile", "desktop"] as const)
               "border-radius",
               paletteUiTheme(scheme, palette).radii.md + "px",
             );
-          // The viewer's stage draws the publication's screen in its phone
-          // and browser frames; no Folio screen frames a document.
+          // The viewer's canvas draws the publication's screen in each frame:
+          // a frame for each view on a desktop and one frame on a phone; no
+          // Folio screen frames a document.
+          const frames =
+            viewport === "desktop" ? currentScreen.views.length : 1;
           await expect(
-            page.locator("[data-mokly-stage] [data-mkc-sample-screen]"),
-          ).toHaveCount(id.startsWith("product/viewer/") ? 2 : 0);
+            page.locator(
+              "[data-mokly-stage] [data-canvas-frame] [data-mkc-sample-screen]",
+            ),
+          ).toHaveCount(id.startsWith("product/viewer/") ? frames : 0);
           await expect(page.locator("iframe")).toHaveCount(0);
           if (id.startsWith("product/settings/")) {
             const frame = page.locator(

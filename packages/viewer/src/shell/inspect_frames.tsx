@@ -4,7 +4,8 @@
  * a variant set's only its schemes, and a use case's chooses one viewport
  * and one scheme. A light-only entry's Dark toggle is disabled and reads
  * `Light only`. A toggle that hides a changed view carries the change mark,
- * whose wording it names through `aria-describedby`. The section holds the
+ * whose wording it names through `aria-describedby`; each toggle's wording
+ * has its own id, apart from the Appearance's. The section holds the
  * Highlight components switch. `@mokly/ui/frames-filter` draws the filter.
  */
 
@@ -21,12 +22,11 @@ import { InspectSection } from "@mokly/ui/inspect-panel";
 import { DESKTOP_FRAME_SIZE, MOBILE_FRAME_SIZE } from "./canvas_frame_size.js";
 import type { UseCaseFramesChoice } from "./canvas_use_case_frames.js";
 import { hidesChangedView, type FramesChoice } from "./frames_filter.js";
-import { useShellIdentifier } from "./identifier_context.js";
 import {
-  VIEW_CHANGED_IDS,
-  VIEW_CHANGED_TEXT,
-  type ChangedView,
-} from "./view_marks.js";
+  useShellIdentifier,
+  useShellIdentifierScope,
+} from "./identifier_context.js";
+import { VIEW_CHANGED_TEXT, type ChangedView } from "./view_marks.js";
 
 /** A size as a toggle's note, such as `390 × 844`. */
 const size = ({ height, width }: { height: number; width: number }) =>
@@ -48,10 +48,7 @@ export interface FramesSectionModel {
 
 /** The toggles of a screen's or a variant set's filter, with their marks. */
 function useToggles(model: FramesSectionModel): FramesToggle[] {
-  const ids = {
-    scheme: useShellIdentifier(VIEW_CHANGED_IDS.scheme),
-    viewport: useShellIdentifier(VIEW_CHANGED_IDS.viewport),
-  };
+  const identifier = useShellIdentifierScope();
   const toggle = (
     name: FramesToggleName,
     axis: "scheme" | "viewport",
@@ -60,13 +57,12 @@ function useToggles(model: FramesSectionModel): FramesToggle[] {
     const checked = model.choice[name] && rest.disabled !== true;
     return {
       checked,
-      // Only the toggle that is off can hide a changed view, so each axis
-      // names its wording once.
+      // Only the toggle that is off can hide a changed view.
       ...(checked || rest.disabled
         ? {}
         : {
             mark: {
-              id: ids[axis],
+              id: identifier(`mb-frames-changed-${name}`),
               marked: hidesChangedView(name, checked, model.changed),
               text: VIEW_CHANGED_TEXT[axis],
             },

@@ -7,6 +7,7 @@ import {
   tourRow,
   welcomeRow,
 } from "./browse_assertions.js";
+import { showProps } from "./live_props.js";
 import {
   staticFramesLoaded,
   staticRequests,
@@ -80,14 +81,11 @@ test("copied static search, folders, tags, details and flows retain the shell", 
   await expect(page.locator("[data-mokly-search]")).toHaveValue("tag:forms");
   await expect(page.locator(tourRow)).toBeHidden();
   await page.locator("[data-mokly-search]").fill("");
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Details", exact: true }),
-  ).toBeVisible();
+  // Inspect's head shows the Details rows on every entry.
+  const details = page.locator('[data-inspect-section="details"]');
+  await expect(details).toBeVisible();
   await page.locator(detailsRow).click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Details", exact: true }),
-  ).toBeVisible();
+  await expect(details).toBeVisible();
   await page.locator(tourRow).click();
   await expect(useCaseSteps(page)).toHaveCount(2);
   // The use case keeps its own Light frames under Dark.
@@ -123,8 +121,8 @@ test("copied component variants retain their fragment and read-only props after 
   const requests = staticRequests(page);
   await page.goto("/view/example/components/action/disabled/?fragment=action");
   await expect(page.locator("#mb-main h2")).toContainText("Action");
-  await page.getByRole("tab", { name: "Props", exact: true }).click();
-  const props = page.getByRole("tabpanel", { name: "Props", exact: true });
+  // The routed saved variant's frame is selected, so Props shows its row.
+  const props = await showProps(page);
   await expect(props).toContainText(
     "Open this catalogue locally to edit props.",
   );
@@ -132,11 +130,7 @@ test("copied component variants retain their fragment and read-only props after 
     props.getByRole("heading", { name: "Saved props" }),
   ).toBeVisible();
   await expect(props).toContainText("disabled");
-  await expect(
-    page
-      .getByRole("tabpanel", { name: "Props", exact: true })
-      .locator("input, textarea, select"),
-  ).toHaveCount(0);
+  await expect(props.locator("input, textarea, select")).toHaveCount(0);
   await page.reload();
   await expect(page).toHaveURL(/\/action\/disabled\/\?fragment=action$/);
   await expect(page.locator("#mb-main h2")).toContainText("Action");

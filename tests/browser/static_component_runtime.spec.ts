@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 
+import { showProps } from "./live_props.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
 import {
@@ -9,6 +10,7 @@ import {
   chooseViewport,
   expectFrameSource,
   NARROW_WINDOW,
+  openInspectFold,
 } from "./workspace_actions.js";
 
 /**
@@ -33,8 +35,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const requests = staticRequests(page);
     await page.goto("/view/example/components/action/disabled/");
     await chooseViewport(page, viewport);
-    await page.getByRole("tab", { name: "Props", exact: true }).click();
-    const props = page.getByRole("tabpanel", { name: "Props", exact: true });
+    // The routed saved variant's frame is selected, so Props shows its row.
+    const props = await showProps(page);
     await expect(
       props.getByRole("heading", { name: "Saved props" }),
     ).toBeVisible();
@@ -48,30 +50,30 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const dark = page.locator(variantFrame("disabled", "dark"));
     await expect(dark).toBeVisible();
     await expectFrameSource(dark, /\/disabled\/index\.desktop\.dark\.html$/);
+    // A row of Variants selects that row's frame, in the chosen scheme in
+    // the compact layout.
     await chooseVariant(page, "Default");
-    await expect(page).toHaveURL(
-      /\/view\/example\/components\/action\/default\/$/,
-    );
-    // Dark stays chosen, so the compact layout shows the Dark frame.
+    await expect(
+      page.locator('[data-inspect-section="variants"] [data-checked]'),
+    ).toHaveText("Default");
     await expect(
       page
         .frameLocator(variantFrame("default", "dark"))
         .getByRole("button")
         .first(),
     ).toBeEnabled();
-    await page.getByRole("tab", { name: "Usage", exact: true }).click();
-    await page
-      .getByRole("tabpanel", { name: "Usage", exact: true })
+    const usage = await openInspectFold(page, "usage");
+    await usage
       .getByRole("link", { name: "Welcome", exact: true })
       .first()
       .click();
     await expect(page).toHaveURL(
       /\/view\/example\/screens\/welcome\/\?.*instance=/,
     );
-    await expect(
-      page.getByRole("tabpanel", { name: "Props", exact: true }),
-    ).toContainText("Action");
-    const highlight = page.getByRole("button", {
+    // The link selects its instance, which Inspect's Selection names.
+    const selection = page.locator('[data-inspect-section="selection"]');
+    await expect(selection).toContainText("Action");
+    const highlight = page.getByRole("switch", {
       name: "Highlight components",
       exact: true,
     });
@@ -81,9 +83,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page.locator(".mbk-highlight-layer").first()).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
-    await page
-      .getByRole("link", { name: "Open component", exact: true })
-      .click();
+    await selection.getByRole("link", { name: "Action", exact: true }).click();
     await expect(page.locator("#mb-main h2")).toHaveText("Action");
     requests.assert();
   });

@@ -1,6 +1,6 @@
 # Viewer Chrome: Check Slot
 
-Status: The Changes tab's check slot and the check in it are not built yet. [Milestone 12](../../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab's check slot, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the check in that slot.
+Status: The Mokly check in the Changes tab's slot is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds it.
 
 This is the check sub-contract of [Viewer chrome](./viewer-chrome.md#slot-inventory).
 

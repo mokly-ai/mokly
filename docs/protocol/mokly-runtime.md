@@ -169,8 +169,9 @@ renders ordered steps that reference those views; a page or document embeds
 its complete document. Frames are sandboxed without script permission,
 so a document cannot alter the shell; the explicit cross-origin exception is
 confined to the [frame adapter](./mokly-frame-adapter.md). The All/Changes
-filter, the per-view status beside the title, and the marks on the view
-controls derive from the Changes evidence of the index and the detail under
+filter, the per-view status beside the title, and the marks on the
+[Frames filter](./mokly-shell-canvas-stage.md#frames-filter) toggles derive
+from the Changes evidence of the index and the detail under
 the [Changes contract](./mokly-changes.md#changes-membership); a pending
 calculation shows a spinner, an unavailable one keeps All browsable, and a
 removed entry opens its base render under

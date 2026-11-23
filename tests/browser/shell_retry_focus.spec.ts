@@ -9,7 +9,9 @@
 import { expect, type Locator, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { showProps } from "./live_props.js";
 import { networkFailure } from "./shell_error_allowances.js";
+import { openInspectFold } from "./workspace_actions.js";
 
 const ENTRY = "example/components/action";
 const DETAIL = `/mokly-viewer/entries/${ENTRY}.json`;
@@ -47,12 +49,13 @@ async function retry(
   await held[0]!.continue();
 }
 
-/** Select an inspector tab, and return its panel. */
-async function panel(page: Page, name: string): Promise<Locator> {
-  const tab = page.getByRole("tab", { name, exact: true });
-  // A click on the selected icon would close the panel.
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  return page.getByRole("tabpanel", { name, exact: true });
+/**
+ * Open Props or Usage, Inspect's folded sections, and return its content.
+ * Props edits the row of the selected frame, so it chooses the component's
+ * own row first.
+ */
+function panel(page: Page, name: "Props" | "Usage"): Promise<Locator> {
+  return name === "Props" ? showProps(page) : openInspectFold(page, "usage");
 }
 
 test.beforeEach(({ allowBrowserError, baseURL }) => {

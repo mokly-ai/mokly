@@ -9,9 +9,11 @@ import {
   importedCssPaths,
 } from "../helpers/imported_css_sources.js";
 
+import { chooseMode } from "./comparison_ui.js";
 import { expectStyledPanes, importedImageSize } from "./imported_css_panes.js";
 import { test } from "./serve_comparison_test.js";
 import { loadComparison } from "./serve_comparison_ui.js";
+import { chooseViewport } from "./workspace_actions.js";
 
 test.use({ comparisonSources: { add: addImportedCssSources } });
 
@@ -20,11 +22,11 @@ test("Serve comparison panes retain CSS Modules and url assets", async ({
 }) => {
   const imageSize = await importedImageSize();
   await page.goto(`/view/${importedCssPaths.screen}/`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
+  await chooseViewport(page, "desktop");
   await loadComparison(page, "Overlay");
   await expectStyledPanes(page, imageSize, "Overlay");
   for (const mode of ["Difference", "Side by side"] as const) {
-    await page.getByRole("button", { name: mode, exact: true }).click();
+    await chooseMode(page, mode);
     await expectStyledPanes(page, imageSize, mode);
   }
 });

@@ -138,8 +138,9 @@ static build, the source path of a current document; a removed entry keeps
 plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
-axes that name a view, their reader labels, and the ids and the wording of
-the change marks. `frames_filter.ts` holds the Frames choice of the screens,
+axes that name a view, their reader labels, the wording of the change marks,
+and the id of the Appearance's mark; each toggle of the Frames filter names
+its own wording's id. `frames_filter.ts` holds the Frames choice of the screens,
 one choice of the shell that in-shell navigation keeps and a full page load
 resets to every frame, and the rule that marks a toggle while it hides a
 changed view. A use case keeps its own choice in `use_case_choice.ts`.
@@ -176,11 +177,43 @@ shows. `workspace.tsx` consumes that shared resolution on every change of the
 Frames choice, the selection's viewport and scheme, a component variant, or
 the evidence, and passes the effective scheme to the comparison
 presentation.
-`comparison_request.ts` establishes a comparison's generation root: a
-pinned catalogue's advertised root without a request, or the root that
-Serve's selection endpoint redirects to, which a HEAD request renews. A failed
-request shows the comparison failure with Try again; Current remains
-available.
+The comparison holds one generation for each row that it demands, under the
+[selected comparisons contract](../../../../docs/protocol/mokly-selected-comparisons.md):
+each row of the shown frames that `useComparison` receives, a screen or one
+row of a component's variant set, or without frames the routed entry's row
+alone. `workspace.tsx` passes the canvas's frames that compare. A removed
+component or variant has no live frames, so it passes none, and the removed
+row compares alone. `comparisonFrames` in `comparison_eligible_frames.ts`
+gives the shown frames whose rows compare under the
+[screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls):
+the row's shown views are eligible, or a shown view that reads Unmodified uses
+a changed component that the row's own detail names. `comparison_presentation.ts`
+turns the frames into the demand, with one key for each row: each row with the
+axes of its frames, or in Side by side the row of the compared frame alone.
+Without frames, the routed row is keyed on the selection's axes.
+`comparison_request.ts` establishes one row's generation root: a pinned
+catalogue's advertised root without a request, or the root that Serve's
+selection endpoint redirects to, which a HEAD request renews.
+`comparison_row_lifecycle.ts` runs each demanded row on its own. A row without
+a generation gets one request, a loaded row whose key changes renews first,
+and a key change while the row's work runs keeps that work, whose completion
+applies the row's latest key. In a static build, the rows that start together
+share one deployment check (`comparison_deployment_check.ts`). A row that
+leaves the demand aborts its work and keeps its generation, which renews when
+the row returns. A failed row keeps its failure for its key while the other
+rows continue; `retry` requests one row again, the routed row by default, and
+`refresh` every demanded row. `comparison_row_snapshot.ts` shows the demanded
+rows to the controller, for the demand of each render: `generations`, by
+entry id, with the rows that still load and the rows that failed, keeps its
+identity while nothing in it changes, and the presentation follows the latest
+mode and axes once every demanded row has settled. A row whose key a render
+changes reads as loading in that render, so no document of its new frames
+loads before its renewal. `use_comparison_documents.ts` presents and aborts
+each row's documents on its own, starts nothing new for a row that renews,
+reads a failed row's failure, and keeps the accepted presentations while
+`generations` is absent, as Inspect makes it, so a return shows the mode with
+no new load. A failed row shows the comparison failure with Try again on
+its own frames while the other rows compare; Current remains available.
 Every failed comparison uses the details sentence "The comparison is
 unavailable.". The shell never shows server or browser error text there.
 `use_comparison.ts` owns the chosen comparison mode through
@@ -191,8 +224,10 @@ mounted. The workspace reads the same shown mode, so Props and highlighting
 are read-only only while Changes shows a compare.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
 resolves, so a removed variant of a moved or case-renamed parent opens in its
-siblings' workspace and keeps their mode. The mode owner also includes the
-index revision, so a publication returns an active comparison to Current.
+siblings' workspace and keeps their mode, and every row's generation. The
+mode owner also includes the index revision, so a publication returns an
+active comparison to Current. Current, a new owner, a new comparison
+environment and unmount cancel every row, and a late response changes nothing.
 `comparison_intent.ts` applies a route's comparison intent once. The store
 counts route installations and keeps the installed route's intent; the
 routed workspace settles it when `comparisonEligibilityKnown` first reports
@@ -265,7 +300,7 @@ rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
 that the shell derives from catalogue data stays here and reaches the
 components as props, such as the sentences of `entry_wording.ts` and the
-change-mark ids and wording of `view_marks.ts`. The design library and the
+change-mark wording of `view_marks.ts`. The design library and the
 artboards under `examples/basic/specs/design` render the same package
 sources, so a change to a package component also changes its design mockups.
 
@@ -316,6 +351,9 @@ the top bar shows: ⌘K and Ctrl+K from anywhere, and `/` outside a text field.
 It listens on the document of a standalone shell and on an embedded root
 only, so the host page keeps its own keys. A key that acts loses its default
 action and moves focus through the `TopBarHandle` that `top_bar.tsx` holds.
+A search key that a canvas frame's document forwards arrives as the
+`mokly-shell-key` event of `canvas_input.ts` on the same target, and it moves
+focus the same way. The frame has already cancelled its default action.
 `useSearchShortcut` makes the field's key hint name `⌘K` on Apple's platforms
 and `Ctrl K` on the others.
 `routes.ts`,
@@ -470,8 +508,13 @@ frame, mounts with the adapter's canvas input: the mount hook's
 `CanvasControlContext`.
 `canvas_input.ts` maps a point of the frame's viewport to the page through
 the frame's box and scale: ⌘ or Ctrl with the wheel and a pinch zoom the
-canvas about that point with the handle's `zoomAt`, and a canvas key runs
-its command. While the document reports keyboard focus, the frame's
+canvas about that point with the handle's `zoomAt`, and a zoom key runs
+its command. Escape and the search keys belong to the shell, not to the
+canvas: `useCanvasFrameInput` sends each from the frame element as a bubbling
+`mokly-shell-key` DOM event, which `canvas_input.ts` owns, so
+`use_canvas_selection.ts` and `search_keys.ts` hear it on the same target as
+their own keydown listeners.
+While the document reports keyboard focus, the frame's
 `focusVisible` draws its focus glow; `canvas-blur`, a focus without
 `visible`, and the end of the document's mount put the glow out, since the
 mount hook sends `canvas-blur` when it disposes of or replaces the mount.
@@ -627,12 +670,20 @@ selection under the
 [selection contract](../../../../docs/protocol/mokly-viewer-selection-canvas.md):
 in Inspect, a click on a frame selects the innermost instance under the
 pointer, a click that follows a link selects nothing, a host pick takes the
-click in either tab, and the empty canvas and Escape anywhere in the shell
-root clear the selection. A frame's session tells the selection when its
-document is replaced or the instance leaves its ready usage. A request to
-show the selection is an event: each explicit choice and each route's
-instance counts once, and Inspect scrolls to its Selection section at each
-count, so a usage revision never opens or scrolls it. `root_context.tsx` shares the root ref, drag
+click in either tab, and the empty canvas and Escape clear the selection.
+Escape acts on the whole document of a standalone shell and only on an
+embedded root, and Highlight components and a host pick take it first. An
+Escape that a canvas frame's document forwards arrives as the
+`mokly-shell-key` event of `canvas_input.ts` on the same target, and it clears
+the selection under the same rule. A
+frame's session tells the selection when its document is replaced or the
+instance leaves its ready usage. A request to show the selection is an
+event: each explicit choice and each route's instance counts once, and
+Inspect scrolls to its Selection section at each count, so a usage revision
+never opens or scrolls it. `workspace_picks.ts` joins the selection to the
+canvas: in the compact layout a variant set's selected frame is the picked
+frame, which follows the selection's scheme, and a pick of another row
+opens that row's entry. `root_context.tsx` shares the root ref, drag
 state, focus targets, host slots, the dock's controls, named scroll regions,
 and the shown canvas. Containers use package refs for focus
 and measurement. `focus_after.ts` moves focus after a recovery action of the
@@ -688,16 +739,16 @@ Standalone route installation passes scheme pins to the React appearance
 owner through a callback. It never changes preview selection separately.
 A reader's choice wins over later pins through navigation and browser history.
 Each preview wrapper records its actual
-file's scheme for iframe media queries, native controls, device colors and
+file's scheme for iframe media queries, native controls, preview surfaces and
 comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
 in a catalogue with a dark axis. A current document's reading frame then
 names the fallback in its label, in both layouts. A removed document's
 section head, and in the compact layout its entry bar, read `Showing previous
 version — Light only` instead while the preview scheme is Dark. The
-stylesheets of `@mokly/ui/preview-frame`, `@mokly/ui/device-frame`, and
-`@mokly/ui/comparison-pane` set every preview surface background and iframe
-color scheme from the wrapper's scheme.
+stylesheets of `@mokly/ui/canvas-frame`, `@mokly/ui/preview-frame`,
+`@mokly/ui/comparison-pane`, and `@mokly/ui/canvas-comparison` set every
+preview surface background and iframe color scheme from the wrapper's scheme.
 Transparent content therefore keeps its selected Light or Dark base in screen,
 page, component, historical and comparison frames, independently of interface
 appearance.
@@ -744,15 +795,18 @@ no live frames, gets the frames of its own views and its own section), and
 the frame that Side by side compares, which starts on the first compared
 frame, the picked frame in the compact layout, and which `setComparedFrame`
 of `comparison_compared_frame.ts` chooses. `comparison_canvas_state.ts`
-decides what the canvas holds: `Loading comparison…`, the failure with Try
-again, or the line of an entry without a comparison, which
+decides what the canvas holds: `Loading comparison…` until every demanded row
+has a generation, the failure when every drawn row failed, whose Try again
+requests every row again, or the line of an entry without a comparison, which
 `@mokly/ui/canvas-comparison` draws on a canvas in place of the section while
 the section's live frames stay mounted out of sight, or the compared frames.
 Through the context of `comparison_canvas_context.ts`, `canvas_stage.tsx`
 then takes the section of `comparison_cells.tsx`: in Overlay, Difference and
 Swipe each compared frame takes its live frame's cell, and in Side by side
 the section holds the compared frame's Before and Current frames. A frame
-whose version is missing makes the compare fall back to Side by side. The
+that misses one of its two versions makes the compare fall back to Side by
+side. A failed row's frames have no versions: each draws the row's failure in
+its cell, whose Try again requests that row again. The
 container's `shown` input, true by default, gates the compare: while it is
 false the canvas shows its live frames, while the mode, the loaded comparison
 and its presentations stay. `comparison_canvas_parts.ts` keeps one scroll
@@ -790,9 +844,9 @@ and `comparison_frame.tsx` reuses `preview_frame.tsx`'s `SnapshotFrame` and the
 read-only guard for each version, marked `data-mokly-comparison-frame` with
 `scrolling="no"`. Each version forwards its canvas input with
 `listenForCanvasInput` to the `useCanvasFrameInput` hook of
-`canvas_frame_input.tsx`, so ⌘ or Ctrl with the wheel, a pinch and the canvas
-keys reach the canvas from a pane, and its keyboard focus draws its frame's
-focus glow.
+`canvas_frame_input.tsx`, so ⌘ or Ctrl with the wheel, a pinch and the zoom
+keys reach the canvas from a pane, Escape and the search keys reach the shell,
+and its keyboard focus draws its frame's focus glow.
 
 `comparison_scroll_sync.ts` is the per-section scroll controller behind the
 interfaces in `comparison_scroll_types.ts`: it follows each layer document from
@@ -856,10 +910,11 @@ version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
 input of each document that it presents with `listenForCanvasInput`, with
 the frame element, and the `useCanvasFrameInput` hook of
 `canvas_frame_input.tsx`, which the live frames share, routes it through the
-`CanvasControlContext` of `canvas_stage.tsx`: a canvas key runs its command,
+`CanvasControlContext` of `canvas_stage.tsx`: a zoom key runs its command,
 a zoom wheel or a pinch, a two-finger pinch included, zooms the canvas about
 its point in the frame, and the document's keyboard focus draws the frame's
-focus glow. The React
+focus glow. Escape and the search keys go to the shell, as from a live frame.
+The React
 request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays

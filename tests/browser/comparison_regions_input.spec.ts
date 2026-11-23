@@ -1,15 +1,18 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
   expectRegionsAt,
   expectRegionsAtRest,
-  expectStackAt,
-  openComparison,
-  paneFrame,
   regionOffsets,
   regionRange,
-} from "./comparison_scroll.js";
+} from "./comparison_region_offsets.js";
+import { expectStackAt } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+  paneZoom,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 
 const changed = comparisonPaths.changed;
@@ -181,16 +184,20 @@ test.describe("touch input", () => {
       .locator(panel)
       .boundingBox();
     expect(box).not.toBeNull();
+    // The finger moves in the page's pixels, so the drag scales by the
+    // canvas zoom to move 100 of the documents' pixels, within both panels'
+    // ranges.
+    const zoom = await paneZoom(paneFrame(desktop, "after"));
     const client = await page.context().newCDPSession(page);
     const x = Math.round(box!.x + box!.width / 2);
-    const y = Math.round(box!.y + box!.height - 20);
+    const y = box!.y + box!.height - 20 * zoom;
     const touch = (
       type: "touchEnd" | "touchMove" | "touchStart",
       points: { x: number; y: number }[],
     ) => client.send("Input.dispatchTouchEvent", { type, touchPoints: points });
     await touch("touchStart", [{ x, y }]);
     for (let step = 1; step <= 10; step += 1)
-      await touch("touchMove", [{ x, y: y - step * 10 }]);
+      await touch("touchMove", [{ x, y: y - step * 10 * zoom }]);
     await touch("touchEnd", []);
     // Both versions' panels rest together past the top; the page stays.
     await expectRegionsAtRest(desktop, panel, (offset) => offset > 0);

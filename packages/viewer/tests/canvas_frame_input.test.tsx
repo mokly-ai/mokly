@@ -9,6 +9,10 @@ import { PreviewIframe } from "@mokly/ui/preview-frame";
 
 import { DESKTOP_FRAME_SIZE } from "../src/shell/canvas_frame_size.js";
 import type { CanvasFramePlan } from "../src/shell/canvas_frames.js";
+import {
+  listenForShellKeys,
+  type ShellKey,
+} from "../src/shell/canvas_input.js";
 import { CanvasLiveFrame } from "../src/shell/canvas_live_frame.js";
 import { CanvasReadingStage } from "../src/shell/canvas_reading.js";
 import {
@@ -30,11 +34,16 @@ import {
 import { shellModelFixture } from "./catalogue_v9_fixture.js";
 import { flush } from "./data_fakes.js";
 
-/** The canvas input of one document, and an event that no canvas reads. */
+/**
+ * The canvas input of one document, the keys of the shell that it forwards,
+ * and an event that no canvas reads.
+ */
 const EVENTS: readonly FrameEvent[] = [
   { type: "canvas-wheel", deltaY: -40, deltaMode: 0, x: 10, y: 20 },
   { type: "canvas-pinch", scale: 1.5, x: 10, y: 20 },
   { type: "canvas-key", key: "fit" },
+  { type: "canvas-key", key: "escape" },
+  { type: "canvas-key", key: "search" },
   { type: "hover", key: null, boxes: [] },
 ];
 
@@ -82,7 +91,7 @@ function recordingControl(): { calls: unknown[][]; control: CanvasControl } {
   };
 }
 
-test("a screen or component frame asks for canvas input and hands its wheel, pinch and keys to the canvas", async (t) => {
+test("a screen or component frame asks for canvas input, hands its wheel, pinch and zoom keys to the canvas, and sends the shell's keys from the frame", async (t) => {
   registerDom(t);
   const [desktop] = canvasPlans("product/browse/home");
   const [component] = canvasPlans("components/action");
@@ -105,7 +114,12 @@ test("a screen or component frame asks for canvas input and hands its wheel, pin
       await act(flush);
       assert.equal(mounts.length, 1, plan.key);
       assert.equal(mounts[0]!.canvasInput, true, plan.key);
+      const element = frame.container.querySelector("iframe");
+      assert.ok(element, plan.key);
+      const keys: ShellKey[] = [];
+      const stop = listenForShellKeys(element, (key) => keys.push(key));
       act(() => EVENTS.forEach((event) => mounts[0]!.onEvent!(event)));
+      stop();
       // The frame is known, so the wheel and the pinch zoom about their
       // point in it: happy-dom lays the frame out at the page's top left.
       assert.deepEqual(calls, [
@@ -113,6 +127,7 @@ test("a screen or component frame asks for canvas input and hands its wheel, pin
         ["zoomAt", 1.5, 10, 20],
         ["run", "fit"],
       ]);
+      assert.deepEqual(keys, ["escape", "search"], plan.key);
     } finally {
       frame.unmount();
     }

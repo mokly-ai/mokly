@@ -21,7 +21,7 @@ test.afterAll(async () => {
  * use, such as the device chrome's `address` and `browser-frame`.
  */
 const HOST_MARKUP =
-  '<div class="host-content" data-host-content=""><a class="address" href="#host">Host link</a><p class="flow-step-head">Host text</p><h2 class="mb-pane">Host title</h2><span class="browser-frame lights"><i>Host i</i></span><button class="browser-expand" type="button">Host button</button><input aria-label="Host field"><iframe title="Host frame"></iframe></div>';
+  '<div class="host-content" data-host-content=""><a class="address" href="#host">Host link</a><p class="mb-pane-label">Host text</p><h2 class="mb-pane">Host title</h2><span class="browser-frame lights"><i>Host i</i></span><button class="browser-expand" type="button">Host button</button><input aria-label="Host field"><iframe title="Host frame"></iframe></div>';
 
 test("no viewer rule matches the host page or host slot content", async ({
   page,
@@ -44,7 +44,7 @@ test("no viewer rule matches the host page or host slot content", async ({
   await expect(link).toHaveCSS("color", "rgb(0, 0, 238)");
   await expect(link).toHaveCSS("box-sizing", "content-box");
   await expect(
-    page.locator('#one [data-mokly-slot="sidePanel"] p.flow-step-head'),
+    page.locator('#one [data-mokly-slot="sidePanel"] p.mb-pane-label'),
   ).not.toHaveCSS("margin-top", "0px");
   await page.evaluate(() => {
     // Every mark of the root at once, so a rule that applies only while one
