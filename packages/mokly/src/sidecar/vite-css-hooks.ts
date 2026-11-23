@@ -61,7 +61,7 @@ export function configureViteCss(
       const resolved = await lookup.stylesheet(file, importer, (target, from) =>
         original(target, from, aliasOnly, ssr),
       );
-      if (resolved) await css.active.read(resolved);
+      if (resolved) await css.active.read(resolved, importer);
       return resolved;
     };
   };

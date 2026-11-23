@@ -199,22 +199,24 @@ impl Graph {
                         asset: Some(asset),
                     });
             }
-            let dependencies = bundle
-                .dependency_digests
-                .into_keys()
-                .filter(|_| !config.vite());
             catalogue.model.sources.extend(
                 bundle
                     .inputs
                     .into_keys()
                     .chain(asset_inputs)
-                    .chain(dependencies)
+                    .chain(bundle.dependency_digests.keys().cloned())
                     .filter(|path| {
-                        (!path.split('/').any(|part| part == "node_modules")
-                            || bundle.repository_aliases.contains(path)
-                            || bundle.plugin_inputs.contains_key(path))
+                        let reported = bundle.plugin_inputs.contains_key(path);
+                        let vite_dependency =
+                            config.vite() && bundle.dependency_digests.contains_key(path);
+                        let protected = reported || bundle.imported_by.contains_key(path);
+                        (!vite_dependency || protected)
+                            && (!path.split('/').any(|part| part == "node_modules")
+                                || bundle.repository_aliases.contains(path)
+                                || reported)
                             && (!markdown_assets.files.contains(path)
-                                || original_sources.contains(path))
+                                || original_sources.contains(path)
+                                || (vite_dependency && protected))
                     }),
             );
             imported_by.extend(bundle.imported_by);

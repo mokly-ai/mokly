@@ -3,7 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { component, stylesheetConfig } from "./fixtures/vite_stylesheets.js";
+import {
+  component,
+  htmlScreen,
+  stylesheetConfig,
+} from "./fixtures/vite_stylesheets.js";
 import { consumer } from "./helpers/mokly_serve.js";
 import { build, git, write } from "./helpers/static_changes.js";
 
@@ -59,4 +63,33 @@ test("Vite's lightningcss class maps agree with CSS on both sides of Changes", a
     classes.push(scoped);
   }
   assert.equal(classes[0], classes[1]);
+});
+
+test("Vite Changes shows a configured Sass edit without JavaScript", async (context) => {
+  const root = await consumer(context, {
+    ".gitignore": "node_modules\n.context/\n",
+    "mokly.config.json": stylesheetConfig(["site.scss"], {
+      review: { base: "fixture-base" },
+    }),
+    "src/home.screen.html": htmlScreen,
+    "site.scss": "$ink: teal; .site { color: $ink }",
+  });
+  for (const args of [
+    ["init", "-q"],
+    ["config", "user.name", "Mokly Test"],
+    ["config", "user.email", "test@example.com"],
+    ["add", "."],
+    ["commit", "-qm", "base styles"],
+    ["branch", "fixture-base"],
+  ])
+    await git(root, ...args);
+  await write(root, "site.scss", "$ink: maroon; .site { color: $ink }");
+  await git(root, "commit", "-qam", "edit styles");
+
+  const built = await build(root, ["--sidecars=1"]);
+  assert.equal(built.index.changesStatus, "ready", built.stderr);
+  assert.deepEqual(
+    built.index.screens.map(({ path, changes }) => ({ path, ...changes })),
+    [{ path: "home", status: "ready", included: true, kind: "changed" }],
+  );
 });

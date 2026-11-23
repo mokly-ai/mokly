@@ -6,6 +6,7 @@ use mokly_model::material::digest;
 use mokly_source_interface::read_evidence::ReadBaseline;
 
 use crate::compiler::Compiler;
+use crate::dependencies::PluginInput;
 use crate::error::{AssetFailure, CssError, Result, TransformFailure};
 use crate::types::{Bundle, StylesheetRoot};
 use crate::{paths, syntax};
@@ -20,6 +21,8 @@ pub struct Stylesheet {
     pub source_digest: String,
     /// Files read or reported by the transform.
     pub dependencies: BTreeMap<String, Option<String>>,
+    /// Importers of stylesheet inputs that the transform did not report.
+    pub imported_by: BTreeMap<String, String>,
     /// Vite setup files and resolution candidates, separate from the closure.
     pub metadata: BTreeMap<String, Option<String>>,
 }
@@ -89,12 +92,31 @@ pub fn bundle(
                 .css_modules
                 .insert(path.clone(), source.class_map.clone());
         }
-        prepared
-            .result
-            .dependency_digests
-            .extend(source.dependencies.iter().filter_map(|(path, digest)| {
-                digest.as_ref().map(|digest| (path.clone(), digest.clone()))
-            }));
+        let origin = PluginInput {
+            plugin: "unknown".into(),
+            stylesheet: path.clone(),
+        };
+        for (dependency, digest) in &source.dependencies {
+            let Some(digest) = digest else { continue };
+            prepared
+                .result
+                .dependency_digests
+                .insert(dependency.clone(), digest.clone());
+            if dependency.split('/').any(|part| part == "node_modules") {
+                continue;
+            }
+            if let Some(importer) = source.imported_by.get(dependency) {
+                prepared
+                    .result
+                    .imported_by
+                    .insert(dependency.clone(), importer.clone());
+            } else {
+                prepared
+                    .result
+                    .plugin_inputs
+                    .insert(dependency.clone(), origin.clone());
+            }
+        }
         for (path, digest) in source.dependencies.iter().chain(&source.metadata) {
             prepared.result.resolution_files.insert(path.clone());
             if let Some(digest) = digest {

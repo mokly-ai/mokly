@@ -14,6 +14,7 @@ use mokly_git::error;
 use mokly_git::identity::ObjectId;
 use mokly_git::repository::Repository;
 use mokly_git::source_key::CheckoutIdentity;
+use mokly_graph::styles::local_roots;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::base_dependencies::DependencySources;
@@ -113,8 +114,7 @@ impl NativeBase {
             Ok(inventory) => inventory,
             Err(source) => return Err(Error::Catalogue { source }),
         };
-        let needs_sidecar = config.modules.postcss.is_some()
-            || config.modules.renderer.is_some()
+        let needs_sidecar = configured_sidecar(&config)
             || inventory.files.iter().any(|file| {
                 !file.excluded && matches!(file.kind, SourceKind::Module | SourceKind::Stories)
             });
@@ -134,8 +134,7 @@ impl NativeBase {
 
     /// An existing complete extraction can serve configuration reads without building one.
     fn early_sources(&self, request: &BaseSourcesRequest<'_>) -> Result<Option<Arc<Lease>>> {
-        let modules = &request.working_config.modules;
-        if modules.renderer.is_none() && modules.postcss.is_none() {
+        if !configured_sidecar(request.working_config) {
             return Ok(None);
         }
         let attached = self
@@ -157,4 +156,10 @@ impl NativeBase {
             result => result,
         }
     }
+}
+
+fn configured_sidecar(config: &ResolvedConfig) -> bool {
+    config.modules.renderer.is_some()
+        || config.modules.postcss.is_some()
+        || (config.vite() && !local_roots(config, &Default::default()).is_empty())
 }

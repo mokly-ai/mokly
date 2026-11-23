@@ -3,12 +3,12 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use mokly_catalogue::config_types::Config;
+use mokly_catalogue::config_types::{Config, StylesheetRule, ViteConfig};
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::Error;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::base_dependencies::BaseDependenciesMock;
+use crate::base_dependencies::{BaseDependenciesMock, DependencySources};
 
 use super::base_source_support::{
     Events, lease, prepare, side, side_with_tier, sources, steps, tree,
@@ -91,6 +91,51 @@ fn a_renderer_configuration_attaches_an_existing_extraction_before_the_configura
     assert_eq!(events.first(), Some(&"attach"));
     assert!(events.contains(&"read configuration"));
     assert!(events.ends_with(&["attach", "rendering"]));
+}
+
+#[test]
+fn a_vite_stylesheet_attaches_an_existing_extraction_before_loading_the_base_configuration() {
+    let events = Events::default();
+    let dependencies = Unimock::new((
+        BaseDependenciesMock::existing_sources
+            .some_call(matching!(_))
+            .returns(Ok(Some(lease()))),
+        BaseDependenciesMock::sources
+            .some_call(matching!(_, _))
+            .answers(&|_, _, early| {
+                Ok(DependencySources {
+                    sources: early.unwrap_or_else(lease),
+                    base: Default::default(),
+                    head: Default::default(),
+                })
+            }),
+        BaseDependenciesMock::prepare
+            .some_call(matching!(_, _, _, _))
+            .answers(&|_, _, _, _, early| Ok(side(early.sources))),
+    ))
+    .no_verify_in_drop();
+    let error = prepare(
+        Config {
+            vite: Some(ViteConfig::Flag(true)),
+            stylesheets: Some(vec![StylesheetRule {
+                r#match: "**".into(),
+                stylesheets: vec!["site.scss".into()],
+                light_stylesheets: None,
+                dark_stylesheets: None,
+            }]),
+            ..Config::default()
+        },
+        dependencies,
+        tree(events.clone()),
+        sources(events.clone(), 2).no_verify_in_drop(),
+        false,
+        steps(events.clone()),
+    );
+    assert!(matches!(*error.source, Error::Catalogue { .. }));
+    assert_eq!(
+        events.lock().unwrap().as_slice(),
+        ["attach", "read configuration", "attach", "rendering"]
+    );
 }
 
 #[test]

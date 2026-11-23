@@ -101,3 +101,30 @@ test("Vite reports a late local import dropped by its default transformer", asyn
   );
   await sidecar.call("shutdown");
 });
+
+test("Vite reports the authored position of a Sass syntax error in a partial", async (context) => {
+  const fixture = await viteFixture(context);
+  const stylesheet = "src/site.scss";
+  await write(fixture.root, stylesheet, '@use "./colors";');
+  await write(fixture.root, "src/_colors.scss", "\n$ink: ;");
+  const sidecar = startSidecar(context, fixture.root);
+  await sidecar.call("hello");
+  await assert.rejects(
+    sidecar.call("transformViteCss", {
+      setup: { ...fixture.params, entryFiles: [], renderer: null },
+      stylesheet,
+      file: path.join(fixture.root, stylesheet),
+    }),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.match(
+        error.message,
+        /^Vite plugin vite:css failed for src\/_colors\.scss:2:7: \[sass\] Expected expression\.[\s\S]*; fix the Vite setup or the stylesheet$/,
+      );
+      assert.ok(!error.message.includes(fixture.parent), error.message);
+      assert.doesNotMatch(error.message, /file:\/\/|virtual:|\/@id\/|\0/);
+      return true;
+    },
+  );
+  await sidecar.call("shutdown");
+});

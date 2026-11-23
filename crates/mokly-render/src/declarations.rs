@@ -61,12 +61,12 @@ pub(crate) fn validate(
         let mut seen: BTreeMap<PathBuf, String> = BTreeMap::new();
         let mut paths = Vec::new();
         for path in &render.stylesheets {
+            let lowercase = path.to_ascii_lowercase();
             if path.is_empty()
                 || path.starts_with('/')
                 || path.contains(['\\', ':', '?', '#', '\0'])
                 || path.split('/').any(|part| matches!(part, "" | "." | ".."))
-                || !(path.to_ascii_lowercase().ends_with(".css")
-                    || config.vite() && vite::stylesheet(path))
+                || !(lowercase.ends_with(".css") || config.vite() && vite::stylesheet(&lowercase))
             {
                 return Err(RenderError::StylesheetPath {
                     component: entry.metadata.path.clone(),

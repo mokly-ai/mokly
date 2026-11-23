@@ -17,6 +17,16 @@ pub enum PublicDenial {
         /// Stylesheet-relative file for the recovery action.
         relative_file: String,
     },
+    /// A Vite stylesheet transform reported this private source.
+    #[error(
+        "[mokly-graph/public-policy] the Vite setup reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not \"{relative_file}\")"
+    )]
+    Vite {
+        /// Logical stylesheet input.
+        stylesheet: String,
+        /// Stylesheet-relative file for the recovery action.
+        relative_file: String,
+    },
     /// Authored files cannot occupy the generated resource namespace.
     #[error("[mokly-graph/public-policy] reserved generated namespace")]
     Generated,
@@ -73,6 +83,12 @@ impl PublicDenial {
                 relative_file,
             } => format!(
                 "PostCSS plugin {plugin} reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not \"{relative_file}\" or source(none) with explicit @source)"
+            ),
+            Self::Vite {
+                stylesheet,
+                relative_file,
+            } => format!(
+                "the Vite setup reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not \"{relative_file}\")"
             ),
             Self::Generated => "reserved generated namespace".into(),
             Self::Unsafe => "unsafe or escaping path".into(),

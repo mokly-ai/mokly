@@ -164,3 +164,75 @@ test("Vite reports a stylesheet transform failure with its logical path", async 
   assert.ok(!built.stderr.includes(root), built.stderr);
   assert.doesNotMatch(built.stderr, /virtual:/);
 });
+
+test("Vite protects a stylesheet dependency that a document references", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig(["styles/site.css"]),
+    "src/home.screen.html":
+      htmlScreen + '<img src="../../images/logo.svg" alt="Logo">',
+    "images/logo.svg": '<svg xmlns="http://www.w3.org/2000/svg"/>',
+    "styles/site.css": ".site { color: teal }",
+    "vite.config.ts": `import { resolve } from 'node:path';
+export default { plugins: [{ name: 'report-logo', transform(_code, id) {
+  if (id.endsWith('styles/site.css?inline'))
+    this.addWatchFile(resolve(import.meta.dirname, 'images/logo.svg'));
+} }] };`,
+  });
+  const built = await stylesheetBuild(root);
+  assert.notEqual(built.code, 0, built.stderr);
+  assert.ok(
+    built.stderr.includes(
+      'protected target ../../images/logo.svg: the Vite setup reported it as a dependency of styles/site.css; exclude it from the plugin\'s sources (Tailwind: @source not "../images/logo.svg")',
+    ),
+    built.stderr,
+  );
+});
+
+test("Vite rejects a declared stylesheet with an uppercase suffix", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig([]),
+    "src/card.mockup.tsx": component("", "<p>Card</p>", "Action.CSS"),
+    "Action.CSS": ".card { color: teal }",
+  });
+  const built = await stylesheetBuild(root);
+  assert.notEqual(built.code, 0, built.stderr);
+  assert.match(
+    built.stderr,
+    /Vite plugin vite failed for Action\.CSS: Vite reads only a lowercase stylesheet suffix; fix the Vite setup or the stylesheet/,
+  );
+});
+
+test("Vite protects a composed stylesheet as an import of its CSS Module", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig(["styles/site.module.css"]),
+    "src/home.screen.html":
+      htmlScreen + '<a href="../../styles/colors.css">Colors</a>',
+    "styles/site.module.css":
+      '.site { composes: shared from "./shared.module.css"; display: block }',
+    "styles/shared.module.css":
+      '.shared { composes: shade from "./colors.css"; color: teal }',
+    "styles/colors.css": ".shade { background: blue }",
+  });
+  const built = await stylesheetBuild(root);
+  assert.notEqual(built.code, 0, built.stderr);
+  assert.ok(
+    built.stderr.includes(
+      "protected target ../../styles/colors.css: imported by styles/shared.module.css; reference the delivered route under static/mokly-generated/ or keep a separate public copy",
+    ),
+    built.stderr,
+  );
+});
+
+test("Vite rejects a declaration that does not name a stylesheet", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig([]),
+    "src/card.mockup.tsx": component("", "<p>Card</p>", "notes.txt"),
+    "notes.txt": "Not a stylesheet",
+  });
+  const built = await stylesheetBuild(root);
+  assert.notEqual(built.code, 0, built.stderr);
+  assert.match(
+    built.stderr,
+    /component card declares invalid stylesheet notes\.txt/,
+  );
+});

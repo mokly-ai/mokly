@@ -141,6 +141,8 @@ export class ViteCompiler {
     try {
       return await withVitePeers(params, compile, async (require) => {
         const vite = await loadVite(require);
+        if (!vite.api.isCSSRequest(request.stylesheet))
+          throw new Error("Vite reads only a lowercase stylesheet suffix");
         const { setup, input, directory } = await this.context.open(
           vite.api,
           require,

@@ -111,6 +111,8 @@ pub struct ViteCss {
     pub source_digest: String,
     /// Files reached by this transform, including files read by `composes`.
     pub dependencies: BTreeMap<String, Option<String>>,
+    /// Logical importers of dependencies that the resolver read without a report.
+    pub imported_by: BTreeMap<String, String>,
     /// Setup and resolution inputs, including missing watch candidates.
     pub metadata_inputs: BTreeMap<String, Option<String>>,
 }

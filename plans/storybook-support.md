@@ -1279,10 +1279,10 @@ Depends on: 14
 
 - [x] Transform each local stylesheet as design call 21 says, in place of
       the configured PostCSS module. Branch: `conductor/storybook-support-d-vite-adapter`.
-- [ ] Under the adapter, send every local stylesheet of a catalogue without
+- [x] Under the adapter, send every local stylesheet of a catalogue without
       JavaScript through the setup, as design call D12 says. A sidecar then
       starts, and the base side extracts its sources and selects an
-      installation, as for the `postcss` module.
+      installation, as for the `postcss` module. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [x] Keep Mokly's order, bundling, delivery, and attribution on the result. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [x] Test Sass, CSS Modules class names, and Tailwind's Vite plugin. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [x] Update `docs/guides/authoring/vite.md` and

@@ -19,6 +19,10 @@ sourceDigest: string,
  */
 dependencies: { [key in string]: string | null },
 /**
+ * Logical importers of dependencies that the resolver read without a report.
+ */
+importedBy: { [key in string]: string },
+/**
  * Setup and resolution inputs, including missing watch candidates.
  */
 metadataInputs: { [key in string]: string | null }, };

@@ -91,6 +91,7 @@ impl Transform for ViteStylesheets {
             class_map: result.class_map,
             source_digest: result.source_digest,
             dependencies: result.dependencies,
+            imported_by: result.imported_by,
             metadata: result.metadata_inputs,
         });
         transformed.insert(path.into(), result.clone());

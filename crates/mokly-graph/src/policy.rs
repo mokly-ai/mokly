@@ -47,6 +47,7 @@ pub struct FilePolicy {
     pub plugin_inputs: BTreeMap<String, PluginInput>,
     /// Private dependency, package, and actual output trees.
     pub private: Vec<PathBuf>,
+    vite: bool,
     decisions: Mutex<BTreeMap<String, result::Result<PublicFile, PublicDenial>>>,
 }
 
@@ -86,6 +87,7 @@ impl FilePolicy {
             imported_by,
             plugin_inputs: BTreeMap::new(),
             private,
+            vite: config.vite(),
             decisions: Mutex::new(BTreeMap::new()),
         })
     }
@@ -127,6 +129,12 @@ impl FilePolicy {
                     } else {
                         format!("./{relative}")
                     };
+                    if self.vite {
+                        return PublicDenial::Vite {
+                            stylesheet: origin.stylesheet.clone(),
+                            relative_file,
+                        };
+                    }
                     return PublicDenial::Postcss {
                         plugin: origin.plugin.clone(),
                         stylesheet: origin.stylesheet.clone(),

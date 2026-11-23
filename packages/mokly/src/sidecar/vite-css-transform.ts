@@ -13,6 +13,7 @@ class InlineStylesheet {
   readonly id: string;
   readonly urls: ViteCssUrls;
   readonly reports = new Set<string>();
+  readonly imports = new Map<string, string>();
   classMap: Record<string, string> = {};
   text: string | undefined;
 
@@ -30,11 +31,11 @@ class InlineStylesheet {
     if (file !== this.file) this.reports.add(file);
   };
 
-  async read(id: string): Promise<void> {
+  async read(id: string, importer?: string): Promise<void> {
     const file = viteFile(id);
     if (!file || file === this.file) return;
     await recordViteInput(this.input, file);
-    this.report(file);
+    this.imports.set(file, viteFile(importer ?? "") ?? this.file);
   }
 }
 
@@ -80,18 +81,26 @@ export class ViteCssTransform {
       if (prior) graph.invalidateModule(prior);
       await environment.transformRequest(`/@fs/${active.id}`);
       const dependencies: ViteCssResult["dependencies"] = {};
+      const importedBy: ViteCssResult["importedBy"] = {};
+      const reported = new Set<string>();
       const reports = new Map<string, string | null>();
-      for (const report of [...active.reports].sort()) {
-        if (active.urls.owns(report)) continue;
-        const file = await input.paths.metadata(report);
+      const inputs = new Set([...active.reports, ...active.imports.keys()]);
+      for (const dependency of [...inputs].sort()) {
+        if (active.urls.owns(dependency)) continue;
+        const file = await input.paths.metadata(dependency);
         const digest = await metadataDigest(file, {}, input.files.get(file));
-        dependencies[input.paths.name(file)] = digest;
+        const name = input.paths.name(file);
+        dependencies[name] = digest;
+        const importer = active.imports.get(dependency);
+        if (active.reports.has(dependency)) reported.add(name);
+        else if (importer) importedBy[name] = input.paths.name(importer);
         reports.set(file, digest);
       }
+      for (const name of reported) delete importedBy[name];
       const metadata = await viteMetadata(
         input,
         setupFiles,
-        new Set([file, ...active.reports]),
+        new Set([file, ...inputs]),
       );
       const sourceDigest = await metadataDigest(
         file,
@@ -113,6 +122,7 @@ export class ViteCssTransform {
           classMap: active.classMap,
           sourceDigest,
           dependencies,
+          importedBy,
           metadataInputs: metadata.metadataInputs,
         },
       };
