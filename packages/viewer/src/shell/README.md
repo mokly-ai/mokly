@@ -218,7 +218,7 @@ render with `@mokly/ui/edit-status`. The controls' wording of
 render `@mokly/ui/canvas-stage`, `@mokly/ui/canvas-frame`,
 `@mokly/ui/canvas-missing-view`, `@mokly/ui/canvas-state`,
 `@mokly/ui/canvas-previous-version`, `@mokly/ui/preview-frame`,
-`@mokly/ui/device-frame`, `@mokly/ui/preview-state`,
+`@mokly/ui/preview-state`,
 `@mokly/ui/canvas-comparison`, `@mokly/ui/swipe-divider`,
 `@mokly/ui/comparison-stage`, `@mokly/ui/comparison-pane`,
 `@mokly/ui/empty-state`, and `@mokly/ui/variant-bar`. Each `<iframe>` element
