@@ -479,13 +479,19 @@ its requests and results. The paths below are relative to the package root.
   replaces the generation. The index of a generation holds at most
   `REGISTRY_TEXT_LIMIT` registry texts, which is 1, and `REGISTRY_OUTPUT_LIMIT`
   filtered outputs for each text, which is 64. At a limit, the least recently
-  used entry leaves first. A measurement on 2026-11-23 used the
-  12,821-character registry text of the mokly-cloud catalogue. With that text
-  and one output, one index retains about 0.37 MB. With 64 outputs that each
-  hold almost the whole text, it retains about 2.8 MB. In a strict build of
-  that catalogue, 1,557 distinct fragments gave only 2 distinct outputs of
-  that text. For a text that the index cannot analyse, such as a text that
-  does not parse, the index calls `registryStyles` in
+  used entry leaves first. So the memory of an index is a function of its one
+  text. The index holds the text, the parsed tree and the analysis of the
+  text, and at most 64 outputs. Each output is at most the size of the text.
+  The key of an output takes a few characters for each rule that the output
+  keeps. A measurement on 2026-11-23 used the 12,821-character registry text
+  of the mokly-cloud catalogue. It counted each output as one flat string, as
+  the sidecar holds it after it encodes the response. With that text and one
+  output, one index retains about 0.33 MB. A strict build of that catalogue
+  filtered 1,557 distinct fragments with that text. They gave only 2 distinct
+  outputs, and with them the index retains about the same, 0.31 MB. With 64
+  outputs that each hold almost the whole text, it retains about 1.2 MB. For a
+  text that the index cannot analyse, such as a text that does not parse, the
+  index calls `registryStyles` in
   [`src/sidecar/registry-styles.ts`](./registry-styles.ts), the filter without
   an index, which gives its own output or error. The index gives the same
   bytes as `registryStyles`.
