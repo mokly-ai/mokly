@@ -45,6 +45,7 @@ pub(super) fn source(fixture: &Fixture, sidecars: Arc<dyn PoolScheduling>) -> So
         head: Arc::new(Unimock::new(())),
         warnings,
         services: ServeChanges {
+            purge_delay: Arc::new(Unimock::new(())),
             routing: None,
             eager: None,
             diagnostics: Arc::new(Unimock::new(())),

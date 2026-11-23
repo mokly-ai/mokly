@@ -266,6 +266,9 @@ its requests and results. The paths below are relative to the package root.
   metadata bytes of the existing evidence capture. It adds no physical read.
   Matching absolute `paths` mappings and other unproved forms keep whole
   comparisons. Collector overflow keeps the plan without candidate names.
+  [`src/sidecar/plan-candidate-names.ts`](./plan-candidate-names.ts)
+  defines fixed-name charges, the name block test, and the upper bound on
+  name charges.
   [`src/sidecar/plan-candidate-directories.ts`](./plan-candidate-directories.ts)
   merges lexical names into recorded canonical directories and adds their
   table positions. It skips each canonical directory that the evidence does
