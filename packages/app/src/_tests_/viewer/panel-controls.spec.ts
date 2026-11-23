@@ -4,7 +4,11 @@ import { expect, freshEmail, open, signIn, test } from "../harness";
 import { appOrigin } from "../origins";
 import { createProject } from "../project-setup";
 
-import { publishedViewerReady, publishedProject } from "./support";
+import {
+  openSettingsFromAccount,
+  publishedViewerReady,
+  publishedProject,
+} from "./support";
 
 test("the projects panel lists what the reader can open and creates the next", async ({
   page,
@@ -50,8 +54,7 @@ test("one overlay is one entry, however the reader reached it", async ({
 
   // And the settings dialog obeys the same rule the panels do: one entry,
   // undone on close, so one press of Back leaves the page.
-  await page.getByTestId("viewer-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await openSettingsFromAccount(page);
   await page.getByTestId("close-settings").click();
   await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
   await expect(page).toHaveURL((url) => url.pathname === here);
@@ -67,18 +70,18 @@ test("a trigger says which overlay it opens, and whether it is open", async ({
   await open(page, path);
   await publishedViewerReady(page);
 
-  // Every bar trigger opens one overlay, and says so before it is pressed.
-  for (const slot of [
-    "viewer-project",
-    "viewer-publication",
-    "viewer-history",
-    "viewer-share",
-    "viewer-settings",
-    "viewer-account",
-  ]) {
+  // Every bar trigger opens one overlay or, for the avatar, its menu, and
+  // says so before it is pressed.
+  for (const [slot, popup] of [
+    ["viewer-project", "dialog"],
+    ["viewer-publication", "dialog"],
+    ["viewer-history", "dialog"],
+    ["viewer-share", "dialog"],
+    ["viewer-account", "menu"],
+  ] as const) {
     await expect(page.getByTestId(slot)).toHaveAttribute(
       "aria-haspopup",
-      "dialog",
+      popup,
     );
     await expect(page.getByTestId(slot)).toHaveAttribute(
       "aria-expanded",
@@ -86,8 +89,9 @@ test("a trigger says which overlay it opens, and whether it is open", async ({
     );
   }
 
-  // Exactly the open one reports itself expanded, for a panel and for each
-  // settings pane, so a reader who cannot see the overlay is still told.
+  // Exactly the open one reports itself expanded, so a reader who cannot see
+  // the overlay is still told. The avatar reports its menu, not the dialog
+  // that the menu's items open.
   const open_ = async (address: string, expanded: string, shut: string) => {
     await open(page, `${path}${address}`);
     await expect(page.getByTestId(expanded)).toHaveAttribute(
@@ -100,6 +104,10 @@ test("a trigger says which overlay it opens, and whether it is open", async ({
     );
   };
   await open_("?panel=history", "viewer-history", "viewer-share");
-  await open_("?settings=", "viewer-settings", "viewer-account");
-  await open_("?settings=account", "viewer-account", "viewer-settings");
+  await open(page, `${path}?settings=account`);
+  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await expect(page.getByTestId("viewer-account")).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
 });

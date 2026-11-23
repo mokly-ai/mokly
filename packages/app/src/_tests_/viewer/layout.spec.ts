@@ -1,5 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
+import { projectName } from "../../screens/account/project-name";
+import { installedRepository } from "../database-fixture";
 import { expect, open, test } from "../harness";
 
 import { taggedLayoutFixture } from "./layout-fixture";
@@ -137,18 +139,17 @@ test("the top bar keeps controls readable and follows its own width", async ({
     await expect(more).toBeVisible();
 
     await more.click();
-    const menu = page.getByRole("menu", { name: "Viewer actions" });
-    await expect(menu).toBeVisible();
-    for (const label of [
-      "Projects",
+    // More carries the project, History and Share, then the account's rows.
+    const menu = page.getByRole("menu", { name: "More" });
+    await expect(menu.getByRole("menuitem")).toHaveText([
+      `${made.workspaceName} / ${projectName(installedRepository)}`,
       "History",
       "Share",
-      "Settings",
-      "Account",
-    ]) {
-      await expect(menu.getByText(label, { exact: true })).toBeVisible();
-    }
-    await menu.getByText("History", { exact: true }).click();
+    ]);
+    await expect(
+      page.getByRole("menu", { name: "Account" }).getByRole("menuitem"),
+    ).toHaveText(["Settings", "Docs", "Changelog", "Sign out"]);
+    await menu.getByRole("menuitem", { name: "History", exact: true }).click();
     await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
     await page.getByTestId("close-history").click();
 
@@ -169,7 +170,7 @@ test("the top bar keeps controls readable and follows its own width", async ({
     await expectReadableBar(viewer);
     await more.click();
     await expect(menu).toBeVisible();
-    await menu.getByText("History", { exact: true }).click();
+    await menu.getByRole("menuitem", { name: "History", exact: true }).click();
     await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
     await container.evaluate((element) =>
       element.style.removeProperty("width"),

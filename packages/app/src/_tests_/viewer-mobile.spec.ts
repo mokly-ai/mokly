@@ -74,16 +74,14 @@ test("the bar fits a person who has not set a name, at 320px", async ({
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
   await page.getByTestId("viewer-more").click();
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
-  await expect(menu).toContainText(made.email);
+  const sheet = page.getByTestId("viewer-panel-more");
+  await expect(sheet).toBeVisible();
+  // More's account rows name the reader by their whole address, once.
+  await expect(sheet.getByText(made.email, { exact: true })).toHaveCount(1);
   expect(
     await sidewaysOverflow(page),
     "the viewer does not scroll sideways at 320px",
   ).toBe(0);
-  // The whole address is still reachable without hovering: it is the
-  // control's own accessible name, which is what a screen reader announces
-  // and what voice control matches on.
-  await expect(menu.getByText("Account", { exact: true })).toBeVisible();
 });
 
 /**
@@ -153,10 +151,12 @@ test("a reader who set a name is called by it, at every width", async ({
   for (const width of [1440, 320]) {
     await page.setViewportSize({ width, height: 844 });
     if (width === 320) {
+      // More's account rows name the reader by their name, with their
+      // address beneath it.
       await page.getByTestId("viewer-more").click();
-      const menu = page.getByRole("menu", { name: "Viewer actions" });
-      await expect(menu, `${width}px`).toContainText(named);
-      await expect(menu, `${width}px`).not.toContainText(made.email);
+      const sheet = page.getByTestId("viewer-panel-more");
+      await expect(sheet.getByText(named, { exact: true })).toBeVisible();
+      await expect(sheet.getByText(made.email, { exact: true })).toBeVisible();
       await page.keyboard.press("Escape");
     } else {
       await expect(page.getByTestId("viewer-account"), `${width}px`).toHaveText(

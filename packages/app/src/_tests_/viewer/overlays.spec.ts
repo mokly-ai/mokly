@@ -1,6 +1,11 @@
 import { expect, open, test } from "../harness";
 
-import { corrected, publishedViewerReady, publishedProject } from "./support";
+import {
+  corrected,
+  openSettingsFromAccount,
+  publishedViewerReady,
+  publishedProject,
+} from "./support";
 
 test("invalid cloud values are corrected while package routes stay authoritative", async ({
   page,
@@ -104,11 +109,11 @@ test("closing the settings dialog returns focus to the trigger that opened it", 
   const { publicationPath: path } = await publishedProject(page, "focus");
   await open(page, path);
   await publishedViewerReady(page);
-  await page.getByTestId("viewer-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  // The account menu's Settings opened it, so focus returns to the avatar.
+  await openSettingsFromAccount(page);
   await page.getByTestId("close-settings").click();
   await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
-  await expect(page.getByTestId("viewer-settings")).toBeFocused();
+  await expect(page.getByTestId("viewer-account")).toBeFocused();
 
   // Every slot answers the same way, so a reader never loses their place.
   await page.getByTestId("viewer-history").click();
@@ -145,8 +150,7 @@ test("settings opens over the viewer and closes back onto its selection", async 
   const { publicationPath: path } = await publishedProject(page, "beneath");
   await open(page, `${path}?view=changes`);
   await publishedViewerReady(page);
-  await page.getByTestId("viewer-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await openSettingsFromAccount(page);
   await page.getByTestId("close-settings").click();
   await expect(page).toHaveURL(/view=changes/);
   await expect(page.getByRole("button", { name: /^Changes/ })).toHaveAttribute(

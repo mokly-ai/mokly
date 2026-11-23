@@ -28,7 +28,7 @@ async function expectFrameWait(page: Page): Promise<void> {
   await expect(heading).toHaveAccessibleName("Opening your project…");
   await expect(page.getByText("Opening your project…")).toHaveCount(1);
   // The controls whose labels are known wait in their places, disabled.
-  for (const name of ["History", "Share", "Settings"])
+  for (const name of ["History", "Share"])
     await expect(
       page.getByRole("button", { name, exact: true }),
     ).toBeDisabled();
