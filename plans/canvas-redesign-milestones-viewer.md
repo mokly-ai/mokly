@@ -26,23 +26,32 @@ Tags: ui
 
 Depends on: 15, 17. It starts before 18 and 22 merge, and takes them in as they land (Cal, 2026-11-22).
 
-- [ ] Restyle the catalogue, the compare toolbar and the search in Canvas.
-      Milestone 22 does the top bar.
-- [ ] Build the canvas stage: each screen as desktop and mobile frames in
+- [x] Restyle the catalogue, the compare toolbar and the search in Canvas.
+      Milestone 22 does the top bar. Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Build the canvas stage: each screen as desktop and mobile frames in
       light and dark, with frame labels and size tags. A component opens as
-      its variant set.
-- [ ] Add pan, zoom, pinch, the zoom pill, Fit and their keys.
-- [ ] Build the use case's section with its step frames, and the removed
+      its variant set. Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Add pan, zoom, pinch, the zoom pill, Fit and their keys. Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Build the use case's section with its step frames, and the removed
       entry's section of historical views with its missing-view note
-      (decisions 33 and 34).
-- [ ] Float the catalogue and the right panel over the canvas.
-- [ ] Build the compact layout: one frame with a frame picker, the dock with
-      Catalogue, the current tab and Fit, and the panels as sheets.
-- [ ] Restyle the standalone Appearance control. Add `⌘K` and `/` for
-      search.
-- [ ] Give every viewer focus ring the `@firna/ui` focus glow (decision 38).
-- [ ] Remove the preview scheme switch from the top bar; the Frames filter
-      chooses the scheme.
+      (decisions 33 and 34). Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Float the catalogue and the right panel over the canvas. Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Build the compact layout: one frame with a frame picker, the dock with
+      Catalogue, the current tab and Fit, and the panels as sheets. Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Restyle the standalone Appearance control. Add `⌘K` and `/` for
+      search. Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Give every viewer focus ring the `@firna/ui` focus glow (decision 38).
+      Branch: `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
+- [x] Remove the preview scheme switch from the top bar; the Frames filter
+      chooses the scheme. Branch:
+      `calummoore/canvas-redesign-m11-canvas-stage-in-knaz`.
 
 ## Milestone 12: Right panel and compare
 
