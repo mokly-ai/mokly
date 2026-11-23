@@ -125,6 +125,18 @@
   display: none;
 }
 
+/* The tags on a frame keep their size at every zoom, so they hide while the
+   stage draws its frames at less than 60% of their size: a highlight's
+   labels, and a selection's name tag, size tag and padding redline. The
+   outlines, the handles and the highlight's cutouts stay. The compact form
+   draws its one frame at a zoom of its own, which its sheet reads. */
+@container cv (width >= 56.25rem) {
+  .cv-view[data-cv-tags="hidden"]
+    :is(.ce-highlight-labels, .cv-sel-name, .cv-sel-size, .cv-sel-pad) {
+    display: none;
+  }
+}
+
 /* Small laptops narrow the panels, so the canvas keeps its room. */
 @container cv (width < 73.75rem) {
   .cv-work > .cv-float[data-side="left"] {

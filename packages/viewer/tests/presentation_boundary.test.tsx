@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { rawIndexFixture } from "./catalogue_v9_fixture.js";
-import { embeddedMarkup, withDarkViews } from "./presentation_v7_helpers.js";
+import {
+  embeddedMarkup,
+  offeredModeTiles,
+  withDarkViews,
+} from "./presentation_v7_helpers.js";
 
 test("the embedded viewer preserves pending entry and saved-variant comparison eligibility", () => {
   for (const screenPath of [
@@ -27,7 +31,9 @@ test("the embedded viewer preserves pending entry and saved-variant comparison e
 
     const html = embeddedMarkup({ index, defaultSelection: { screenPath } });
     assert.match(html, /data-workspace-status="">Changed<\/span>/);
-    assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
+    // The entry's Changes tab offers no compare mode until it is eligible.
+    assert.match(html, /aria-label="Compared"/);
+    assert.deepEqual(offeredModeTiles(html), [], screenPath);
   }
 });
 
@@ -55,7 +61,8 @@ test("the embedded viewer uses effective Light evidence for light-only screens a
     },
   });
   assert.match(screenHtml, /data-workspace-status="">Unmodified<\/span>/);
-  assert.match(screenHtml, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
+  assert.match(screenHtml, /aria-label="Compared"/);
+  assert.deepEqual(offeredModeTiles(screenHtml), []);
 
   const componentIndex = rawIndexFixture();
   const screen = componentIndex.screens[0]!;

@@ -155,6 +155,7 @@ function hostSlots(slots: ViewerSlots, errors: HostErrors): ViewerSlots {
   const guarded: ViewerSlots = { ...slots };
   const { sidePanel, stageOverlay } = slots;
   for (const name of [
+    "changesStart",
     "emptyState",
     "railEnd",
     "railStart",

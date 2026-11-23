@@ -1,6 +1,6 @@
 # Component Explorer Design
 
-Status: Inspect's sections, the Changes tab and compare on every frame of a variant set are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
+Status: Inspect's sections and compare on every frame of a variant set are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Owning Catalogue
 

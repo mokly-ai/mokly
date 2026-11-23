@@ -124,8 +124,12 @@ frame at a time:
   `1 · Welcome`. The bar and its picker stay while the selected entry's
   preview loads or failed.
 - The canvas shows the picked frame alone, large enough to read. A screen
-  opens on its Mobile · Light frame, or on its first shown frame while the
-  Frames filter hides that one. A use case opens on its first step. A variant
+  opens on its Mobile frame of the
+  [preview scheme](./mokly-viewer-appearance.md#interface-appearance-and-frame-schemes),
+  which standalone Browse takes from the effective appearance: Mobile · Light
+  in a Light appearance and Mobile · Dark in a Dark appearance. While the
+  screen has no such frame or the Frames filter hides it, the screen opens on
+  its first shown frame. A use case opens on its first step. A variant
   set shows the whole set until a selection picks a frame, and then shows that
   frame alone with the picker. A reading frame has no picker. It takes the
   canvas width and reflows its document instead of scaling it.

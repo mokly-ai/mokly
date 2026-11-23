@@ -24,11 +24,15 @@ const named = (): CatalogueReadModel =>
     index.base = BASE;
   });
 
-/** The published fixture's screen, saved component view and document page. */
+/**
+ * The published fixture's screen, saved component view and document page,
+ * and whether the Changes filter lists it: a listed entry's Changes tab
+ * names the branch point on its Compared rail, in place of the sentence.
+ */
 const ENTRIES = [
-  ["screen", "product/browse/details", "workspace"],
-  ["saved component view", "components/action/default", "workspace"],
-  ["document page", "guide", "page"],
+  ["screen", "product/browse/details", "workspace", true],
+  ["saved component view", "components/action/default", "workspace", false],
+  ["document page", "guide", "page", false],
 ] as const;
 
 /**
@@ -50,7 +54,9 @@ const section = (markup: string) =>
     markup,
   )?.[0];
 
-for (const [kind, screenPath, evidence] of ENTRIES)
+for (const [kind, screenPath, evidence] of ENTRIES.filter(
+  ([, , , changes]) => !changes,
+))
   test(`an exported ${kind} names the known branch point before and after its data loads`, () => {
     const opening =
       `<section class="mbk-comparison-evidence mbk-reset" data-${evidence}-evidence="">` +

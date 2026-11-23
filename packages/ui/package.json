@@ -72,6 +72,22 @@
       "types": "./dist/change-status/change-status.d.ts",
       "import": "./dist/change-status/change-status.js"
     },
+    "./change-stepper": {
+      "types": "./dist/change-stepper/change-stepper.d.ts",
+      "import": "./dist/change-stepper/change-stepper.js"
+    },
+    "./changes-panel": {
+      "types": "./dist/changes-panel/changes-panel.d.ts",
+      "import": "./dist/changes-panel/changes-panel.js"
+    },
+    "./compare-modes": {
+      "types": "./dist/compare-modes/compare-modes.d.ts",
+      "import": "./dist/compare-modes/compare-modes.js"
+    },
+    "./compared-rail": {
+      "types": "./dist/compared-rail/compared-rail.d.ts",
+      "import": "./dist/compared-rail/compared-rail.js"
+    },
     "./comparison-evidence": {
       "types": "./dist/comparison-evidence/comparison-evidence.d.ts",
       "import": "./dist/comparison-evidence/comparison-evidence.js"
