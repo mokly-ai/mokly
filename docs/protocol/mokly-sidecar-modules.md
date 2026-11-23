@@ -1,5 +1,7 @@
 # Sidecar Module Sources
 
+Status: Vite's own CSS Modules in a Vite compile are not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds them.
+
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
@@ -129,8 +131,11 @@ metadata under the
 source file names resolve from the configuration directory before conversion
 to repository-relative invocation paths.
 
-The core scopes each `*.module.css` stylesheet after PostCSS and supplies all
-class maps with `cssModules` before `describe` evaluates the bundle.
+On the esbuild path, the core scopes each `*.module.css` stylesheet after
+PostCSS. The
+[Vite adapter stylesheet rules](./mokly-vite-adapter-styles.md#css-modules)
+define the CSS Modules of a Vite compile. The core supplies all class maps
+with `cssModules` before `describe` evaluates the bundle.
 `cssModules` installs the maps without bundling or reading source files. A
 root import and a subpath import of a style library use the same package copy
 of its style registry. Wrappers keep the importer's CommonJS default-import interop:

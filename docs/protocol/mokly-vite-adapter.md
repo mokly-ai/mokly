@@ -113,8 +113,9 @@ the setup keep the consumer build's trust, as consumer PostCSS does under the
 ## Mokly's Plugin
 
 Mokly adds its own Vite plugin, named `mokly`, to every setup. The plugin
-handles the items below, and each item keeps its rule from the esbuild path.
-The plugin handles each import in this list before every plugin of the setup:
+handles the items below. Each item keeps its rule from the esbuild path,
+except the class map of a CSS Module. The plugin handles each import in this
+list before every plugin of the setup:
 
 - the virtual entry, which exports every entry module, stories file, the
   renderer, and the Storybook preview, under the
@@ -123,9 +124,10 @@ The plugin handles each import in this list before every plugin of the setup:
   `@mokly/mokly`, and the unattributed API for installed packages, under the
   same rules;
 - Mokly's reserved runtime module: a consumer import of it fails `bundle`;
-- `.css` and `.module.css` imports, which give an empty module or Mokly's
-  class map and enter the module graph as stylesheets, under the
-  [CSS Modules contract](./mokly-imported-styles-modules.md);
+- `.css` and `.module.css` imports, which give an empty module or the class
+  map of the
+  [Vite adapter stylesheet rules](./mokly-vite-adapter-styles.md#css-modules),
+  and enter the module graph as stylesheets;
 - React, React DOM, and the JSX development shim, under the
   [bundling rules](./mokly-sidecar.md#bundling);
 - confinement and logical names, under the

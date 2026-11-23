@@ -25,6 +25,10 @@ A plugin's report of a file outside the source root and the selected
 dependency roots is skipped with a sidecar
 [`diagnostic` event](./mokly-sidecar.md#transport).
 
+Each file that a `composes` of a CSS Module reads is an input of that CSS
+Module, also when no plugin reports the file. A change to the file has the
+same effect as an edit of that CSS Module.
+
 A file that a plugin of the setup writes is a watched change like any other
 edit. Decision: Mokly makes no exception for these writes. The plugins of the
 setup keep the consumer build's trust, as PostCSS plugins do.

@@ -92,6 +92,10 @@ rule. A file shared by two entry roots is not suppressed. Remote `@import`s,
 inventoried. Prelude imports are placed at the start of the bundle in their
 order; a local `@import` after a style rule fails at its authored file.
 
+Under the Vite adapter, the
+[import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets)
+replaces the resolution and the pruning of nested imports in this section.
+
 `@import` resolution prepends `style` to the consumer's conditions and main
 fields, or to `main,module` when the consumer sets none, because the `style`
 export condition and the `style` main field are not selected by default.
@@ -116,8 +120,11 @@ module; scopes a `*.module.css` file under the
 [CSS Modules contract](./mokly-imported-styles-modules.md); and then bundles
 the root on `lightningcss`: `@import`s inlined in prelude order, `url()`
 references rewritten to asset routes, no minification, no source maps, no
-syntax lowering, no vendor prefixing, and one trailing newline. `lightningcss`
-reprints the stylesheet, so an authored comment may be dropped. Repeated
+syntax lowering, no vendor prefixing, and one trailing newline. Under the
+[Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
+setup's transform takes the place of the `processCss` step and of the scoping
+step. `lightningcss` reprints the stylesheet, so an authored comment may be
+dropped. Repeated
 builds with the same inputs and deterministic plugins give byte-identical
 output; plugin determinism is the consumer's responsibility. The plain and the
 module form of a stylesheet differ only in their scoped names.

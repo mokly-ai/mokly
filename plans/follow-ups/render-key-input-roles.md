@@ -1,10 +1,10 @@
 # Report input roles and module dependencies to the core
 
 - **Severity:** Medium. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from the branch `conductor/storybook-support-d-vite-adapter`, review round 1, finding 3, and review round 2, finding 5.
 - **Location:** `crates/mokly-graph/src/render_inputs.rs:140`, `crates/mokly-sidecar/src/compiled.rs:134`, `crates/mokly-sidecar/src/results.rs:1`, `packages/mokly/src/sidecar/vite-metadata.ts:14`, `packages/mokly/src/sidecar/bundle-recipe.ts:87`.
-- **Reason:** The fix changes the boundary between the sidecar and the core and adds a field that no rule covers, so the user decides it, and the branch that found the defect applied a direct fix in the sidecar.
+- **Reason:** Option C is Large and changes the boundary types between the sidecar and the core and the core's key code, so it needs its own branch. The branch that found the defect applied only a direct fix in the sidecar.
 
 - **Source:** Review.
 - **Category:** Performance.
@@ -29,4 +29,5 @@
 - **Wider fix:** C. The core then keeps module digests per entry for every compile path.
 - **Previous examples:** The Vite compile path put module digests into `metadataInputs` on the branch `conductor/storybook-support-d-vite-adapter`, until its review round 1 fix.
 - **Recommendation:** C. One rule in the core protects every compile path, and each plugin dependency then moves only the keys of its users. B is a smaller step that keeps the rule in the sidecar.
-- **Action:** ask the user, because C adds fields to the boundary between the sidecar and the core, which no rule covers.
+- **Design call:** C, chosen by the orchestrator of the Storybook support work on 2026-11-23, not by the user. C adds fields to the boundary between the sidecar and the core. The watch contract in `docs/protocol/mokly-watch.md` already requires that each render key moves only when its own inputs change. So C applies a requirement in force, and it needs no user answer.
+- **Action:** fix after merge, apply C, because C is Large and reaches the boundary types, their generated TypeScript, the Rust fixtures that build them, and the core's key and closure code, beyond the purpose of the branch that found the defect.

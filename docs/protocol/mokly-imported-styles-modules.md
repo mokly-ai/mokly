@@ -1,7 +1,16 @@
 # Imported Stylesheet CSS Modules
 
+Status: The Vite stylesheet transform is not available yet. The [stylesheet milestone](../../plans/storybook-support.md#milestone-16-stylesheets-through-vite) adds it.
+
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 The [error catalogue](./mokly-imported-styles-errors.md) gives exact messages.
+
+Under the Vite adapter, the
+[Vite adapter stylesheet rules](./mokly-vite-adapter-styles.md#css-modules)
+replace the scoper. The scoping, composition, and export rules of this page
+do not apply under the adapter. The scoper's checks do not run. On Vite's
+default CSS transformer, the naming rule of this page still gives the scoped
+names.
 
 ## CSS Modules And Import Loaders
 

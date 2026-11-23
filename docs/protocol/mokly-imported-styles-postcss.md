@@ -69,7 +69,10 @@ a plugin reports that excluded file as a `dependency`, the build fails with
 the nested-import diagnostic before the inventory checks; it never silently
 duplicates the file. The diagnostic names the intermediate file that imports
 the excluded file, which for a deeper chain is its direct importer. When no
-plugin reports it, the bundler prunes it at the nested file as usual.
+plugin reports it, the bundler prunes it at the nested file as usual. Under
+the Vite adapter, this check does not run, as the
+[import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets)
+says.
 
 ## Dependency Inventory
 

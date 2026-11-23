@@ -818,8 +818,16 @@ own lines of this plan.
   diagnostic or `diagnostic` event shows an absolute path or a virtual
   module. Reason: the module sources contract already keeps other checkouts
   and implementation paths out of every diagnostic.
+- D17. Made on 2026-11-23. Under the adapter, the renderer stylesheets that
+  answer A of track D decision 1 removes are the files of the renderer's
+  closure. That closure holds the renderer's top-level stylesheets and each
+  file that their transform reports as a dependency. Reason: the options of
+  track D decision 1 call each file of the renderer's closure a renderer
+  stylesheet, such as the shared Sass partial of option B, and answer A
+  changes only where Mokly removes them.
 
-Open decisions of track D. They wait for the user, with decision 22.
+Decisions of track D. Decisions 1 and 5 have answers. Decisions 2, 3, and 4
+wait for the user.
 
 #### Track D decision 1: Renderer CSS inside nested imports under Vite
 
@@ -901,6 +909,9 @@ Open decisions of track D. They wait for the user, with decision 22.
   shared Sass partial. D and F keep today's pruning, at Large effort.
 - **Action:** ask the user, because A changes the renderer pruning
   requirement under the adapter, and no user decision covers that.
+- **Answer:** A, an orchestrator design call on 2026-11-23. The user's
+  decision 16 settles it: the setup transforms stylesheets, and Mokly keeps
+  no copy of Vite's CSS rules.
 
 #### Track D decision 2: Files that the setup reads outside the graph
 
@@ -1131,6 +1142,9 @@ Open decisions of track D. They wait for the user, with decision 22.
   key conversion, which decision 16 removes.
 - **Action:** ask the user, because every option either leaves wrong output
   or adds a rule at the CSS Modules boundary, and F changes design call D10.
+- **Answer:** F, an orchestrator design call on 2026-11-23. The user's
+  decision 16 settles it: the setup transforms stylesheets, and Mokly keeps
+  no copy of Vite's CSS rules. It replaces design call D10.
 
 - [x] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
       for a catalogue without a Storybook folder, the optional file, the

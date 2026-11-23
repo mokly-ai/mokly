@@ -35,6 +35,12 @@ For a PostCSS `CssSyntaxError`, `{stylesheet}` includes its one-based line
 and column, and `{detail}` is its reason. The diagnostic uses the logical
 stylesheet path, without PostCSS's physical-path or plugin framing.
 
+Under the [Vite adapter](./mokly-vite-adapter-styles.md#css-modules), Mokly's
+scoper does not run, so the CSS Modules rows do not apply. A CSS Module that
+the setup cannot transform fails with the Vite setup row. Under the
+[import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets),
+the row for a nested renderer-owned import does not apply either.
+
 | Failure                                                 | Exact message                                                                                                                                                                                                             |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Root stylesheet route not portable                      | `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`                                                    |
