@@ -1,0 +1,54 @@
+/* The canvas that holds a state in place of a section fills its area as the
+   canvas does. */
+.mbk-canvas-state {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* The state stands in the middle of the stage: the canvas less the insets
+   that a layout sets, such as for floating panels. The place lets the
+   reader's pointer through to the canvas around the card. */
+.mbk-canvas-state-place {
+  position: absolute;
+  top: var(--mbk-canvas-inset-top, 0px);
+  right: var(--mbk-canvas-inset-end, 0px);
+  bottom: var(--mbk-canvas-inset-bottom, 0px);
+  left: var(--mbk-canvas-inset-start, 0px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+}
+
+/* The card of the state, as the home guidance's card: the surface with a
+   hairline and a soft lift, which mix the Canvas roles of the interface
+   appearance. */
+.mbk-canvas-state-card {
+  display: flex;
+  max-width: 440px;
+  border-radius: 16px;
+  background: var(--cv-surface);
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    0 1px 1px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 4%, transparent),
+        color-mix(in srgb, var(--cv-background) 50%, transparent)
+      ),
+    0 4px 10px -2px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 6%, transparent),
+        color-mix(in srgb, var(--cv-background) 50%, transparent)
+      ),
+    0 18px 36px -14px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 14%, transparent),
+        color-mix(in srgb, var(--cv-background) 60%, transparent)
+      );
+  pointer-events: auto;
+}

@@ -11,8 +11,12 @@ import {
   type CanvasTrack,
 } from "../canvas-stage/canvas-view.js";
 
-/** What a section holds: a screen's frames, a variant set, or a reading frame. */
-export type CanvasSectionKind = "component" | "document" | "screen";
+/**
+ * What a section holds: a screen's frames, a variant set, a reading frame, or
+ * a use case's step frames.
+ */
+export type CanvasSectionKind =
+  "component" | "document" | "screen" | "use-case";
 
 /** A frame's nominal size in CSS pixels. */
 export interface CanvasSize {
@@ -45,6 +49,21 @@ export const SECTION_PADDING = {
   top: 64,
 } as const;
 
+/** A section's padding on each side, in CSS pixels. */
+export type CanvasPadding = Readonly<
+  Record<"bottom" | "left" | "right" | "top", number>
+>;
+
+/**
+ * The padding of each kind of section. A use case's section leaves more room
+ * at its top, for each step's description between its label and its frame.
+ */
+export function sectionPadding(kind: CanvasSectionKind): CanvasPadding {
+  return kind === "use-case"
+    ? { ...SECTION_PADDING, top: 92 }
+    : SECTION_PADDING;
+}
+
 /** The gaps between the columns and the rows of each kind of section. */
 export const SECTION_GAPS: Readonly<
   Record<CanvasSectionKind, { column: number; row: number }>
@@ -52,6 +71,7 @@ export const SECTION_GAPS: Readonly<
   component: { column: 40, row: 64 },
   document: { column: 0, row: 0 },
   screen: { column: 44, row: 48 },
+  "use-case": { column: 44, row: 48 },
 };
 
 /** The widest reading frame, a comfortable measure for a document. */
@@ -127,22 +147,23 @@ export function sectionExtent(
       width: kind === "document" ? reading.width : (cell.width ?? 0),
     }));
   const gaps = SECTION_GAPS[kind];
+  const padding = sectionPadding(kind);
   return {
     columns: axis(
-      SECTION_PADDING.left,
+      padding.left,
       trackSizes(
         sized.map(({ column, width }) => ({ index: column, size: width })),
       ),
       gaps.column,
-      SECTION_PADDING.right,
+      padding.right,
     ),
     rows: axis(
-      SECTION_PADDING.top,
+      padding.top,
       trackSizes(
         sized.map(({ height, row }) => ({ index: row, size: height })),
       ),
       gaps.row,
-      SECTION_PADDING.bottom,
+      padding.bottom,
     ),
   };
 }

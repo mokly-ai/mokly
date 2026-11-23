@@ -1,10 +1,11 @@
 /**
  * The selected entry on the canvas: a section that holds its frames in a
- * grid, with a head at its top left. A screen's or a document's section is a
- * box with a faint fill and a hairline ring; a component's section, its
- * variant set, is a dashed outline. The head names the entry: its title in a
- * dark tag, a `Component` kind tag for a component, the path chip that
- * copies the entry's path, and its change status.
+ * grid, with a head at its top left. A screen's, a document's or a use case's
+ * section is a box with a faint fill and a hairline ring; a component's
+ * section, its variant set, is a dashed outline. The head names the entry:
+ * its title in a dark tag, a `Component` kind tag for a component, the path
+ * chip that copies the entry's path, its change status, and a quiet label,
+ * such as `Showing previous version`.
  */
 
 import type { CSSProperties, ReactNode } from "react";
@@ -13,7 +14,7 @@ import { CanvasIcon } from "../icons/icons.js";
 
 import {
   SECTION_GAPS,
-  SECTION_PADDING,
+  sectionPadding,
   type CanvasCell,
   type CanvasSectionKind,
   type CanvasSize,
@@ -23,7 +24,9 @@ export {
   READING_MAX_WIDTH,
   readingSize,
   sectionExtent,
+  sectionPadding,
   type CanvasCell,
+  type CanvasPadding,
   type CanvasSectionKind,
   type CanvasSize,
 } from "./section-layout.js";
@@ -89,6 +92,7 @@ export function CanvasSection({
   kind,
   onCopyPath,
   path,
+  quietLabel,
   reading,
   status,
   title,
@@ -105,6 +109,11 @@ export function CanvasSection({
   /** The entry's path as written, which the path chip shows. */
   path: string;
   /**
+   * A quiet label after the status, which says what the section shows, such
+   * as `Showing previous version` for a removed entry.
+   */
+  quietLabel?: string | undefined;
+  /**
    * The nominal size of a document's reading frame, which the canvas sets
    * from its stage, so the document reflows to the room on the stage.
    */
@@ -114,12 +123,13 @@ export function CanvasSection({
   title: string;
 }) {
   const gaps = SECTION_GAPS[kind];
+  const padding = sectionPadding(kind);
   return (
     <section
       className="mbk-canvas-section mbk-reset"
       data-canvas-section={kind}
       style={{
-        padding: `${SECTION_PADDING.top}px ${SECTION_PADDING.right}px ${SECTION_PADDING.bottom}px ${SECTION_PADDING.left}px`,
+        padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
       }}
     >
       <div className="mbk-canvas-section-head mbk-reset">
@@ -136,6 +146,9 @@ export function CanvasSection({
           path={path}
         />
         {status}
+        {quietLabel ? (
+          <span className="mbk-canvas-quiet-label mbk-reset">{quietLabel}</span>
+        ) : null}
       </div>
       <div
         className="mbk-canvas-frames mbk-reset"

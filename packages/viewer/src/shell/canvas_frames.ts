@@ -44,10 +44,29 @@ export interface CanvasFramePlan {
   scheme: CanvasScheme;
   /** Whether the frame holds the selection, which lights its label. */
   selected: boolean;
+  /** The use-case step that a step frame shows. */
+  step?: CanvasStepPlan;
   /** A variant set's row, by the path of its entry. */
   variantPath?: string;
   view: ShellCatalogueView | undefined;
   viewport: "desktop" | "mobile";
+}
+
+/** The step of a use case that a step frame shows, with its screen. */
+export interface CanvasStepPlan {
+  /** The step's description, or its screen's when the step has none. */
+  description: string | undefined;
+  /** The step's place in the use case, from 0. */
+  index: number;
+  /**
+   * Whether the step keeps its screen's Light view while Dark is chosen,
+   * because the screen has no dark view of the chosen viewport.
+   */
+  lightOnly: boolean;
+  /** The step's number, from 1. */
+  number: number;
+  /** The step's title, or its screen's when the step has none. */
+  title: string;
 }
 
 const SCHEMES: Readonly<Record<CanvasScheme, string>> = {
@@ -194,6 +213,17 @@ export function framesViews(
     );
     return view ? [view] : [];
   });
+}
+
+/**
+ * The name of a screen's frame of one viewport and one scheme, such as
+ * `Desktop · Light`, also for the historical views of a removed screen.
+ */
+export function viewportFrameLabel(
+  viewport: "desktop" | "mobile",
+  scheme: CanvasScheme,
+): string {
+  return `${VIEWPORTS[viewport]} · ${SCHEMES[scheme]}`;
 }
 
 /**

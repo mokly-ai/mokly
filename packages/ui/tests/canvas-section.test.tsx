@@ -118,3 +118,60 @@ test("a variant set names its kind, and a reading frame takes the reading size",
     "620",
   );
 });
+
+test("a use case's section has no kind tag and leaves room above its row for each step's description", () => {
+  const { container } = render(
+    <CanvasSection
+      frames={[
+        {
+          key: "step-0",
+          column: 0,
+          row: 0,
+          width: 1280,
+          height: 800,
+          node: <i>Welcome</i>,
+        },
+        {
+          key: "step-1",
+          column: 1,
+          row: 0,
+          width: 1280,
+          height: 800,
+          node: <i>Details</i>,
+        },
+      ]}
+      kind="use-case"
+      path="example/tour"
+      status={<ChangeStatus status="Changed" />}
+      title="Example tour"
+    />,
+  );
+  const section = container.querySelector("section");
+  assert.equal(section?.getAttribute("data-canvas-section"), "use-case");
+  assert.equal(
+    container.querySelector(".mbk-canvas-section-head")?.textContent,
+    "Example tourexample/tourChanged",
+  );
+  assert.equal(section?.style.padding, "92px 22px 22px");
+  const grid = container.querySelector<HTMLElement>(".mbk-canvas-frames");
+  assert.equal(grid?.style.columnGap, "44px");
+});
+
+test("a removed entry's head ends with the quiet label after its status", () => {
+  const { container } = render(
+    <CanvasSection
+      frames={[]}
+      kind="screen"
+      path="example/screens/timeline"
+      quietLabel="Showing previous version"
+      status={<ChangeStatus status="Removed" />}
+      title="Timeline"
+    />,
+  );
+  const head = container.querySelector(".mbk-canvas-section-head");
+  assert.equal(
+    head?.textContent,
+    "Timelineexample/screens/timelineRemovedShowing previous version",
+  );
+  assert.equal(head?.lastElementChild?.textContent, "Showing previous version");
+});

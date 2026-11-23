@@ -1,0 +1,19 @@
+/* The note in the place of a frame whose view was never captured: it reads
+   in the canvas's own ink, in the middle of the place, at its own size. */
+.mbk-canvas-missing-view {
+  display: flex;
+  min-width: 0;
+}
+
+.mbk-canvas-missing-view .mbk-preview-note {
+  padding: 0;
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+/* The second sentence names the other viewport, so it is hidden while a
+   frame of that viewport shows. */
+.mbk-canvas-missing-view[data-other-shown] .mbk-preview-switch {
+  display: none;
+}

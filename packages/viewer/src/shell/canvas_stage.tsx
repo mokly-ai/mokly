@@ -9,7 +9,10 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
-import type { CanvasSectionFrame } from "@mokly/ui/canvas-section";
+import type {
+  CanvasSectionFrame,
+  CanvasSectionKind,
+} from "@mokly/ui/canvas-section";
 import {
   CanvasStage,
   canvasKeyCommand,
@@ -92,14 +95,17 @@ export function CanvasEntryStage({
   frames,
   kind,
   path,
+  quietLabel,
   status,
   title,
 }: {
   /** Names the shown section; a new name fits the canvas again. */
   fitKey: string;
   frames: readonly CanvasSectionFrame[];
-  kind: "component" | "document" | "screen";
+  kind: CanvasSectionKind;
   path: string;
+  /** The head's quiet label, such as a removed entry's `Showing previous version`. */
+  quietLabel?: string | undefined;
   status?: ChangeStatusValue | undefined;
   title: string;
 }) {
@@ -121,6 +127,7 @@ export function CanvasEntryStage({
           kind,
           onCopyPath: (value) => store.copy(value, `Copied path ${value}`),
           path,
+          quietLabel,
           status: status ? <ChangeStatus status={status} /> : undefined,
           title,
         }}
