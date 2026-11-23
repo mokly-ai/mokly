@@ -42,12 +42,13 @@ content manifest in the cache entry, because it changes the cache format. A
 complete cache entry is trusted when the process first leases it, as the
 sidecar trusts it. Before it loads the base
 configuration, a preparation leases an existing complete extraction when the
-working configuration names a renderer or a PostCSS module. That lookup never
-builds an extraction. Decision: lease only an existing extraction before the
-configuration loads. Rejected: a build at that point, because a base that
-needs no sidecar would then get an extraction. Rejected: a switch only after
-the dependency step, because configuration and discovery would keep their Git
-reads.
+working configuration names a renderer or a PostCSS module. Under the Vite
+adapter, a local stylesheet that the working configuration names also selects
+that lease. That lookup never builds an extraction. Decision: lease only an
+existing extraction before the configuration loads. Rejected: a build at that
+point, because a base that needs no sidecar would then get an extraction.
+Rejected: a switch only after the dependency step, because configuration and
+discovery would keep their Git reads.
 
 If a remaining tree, file, or command budget prevents comparison, Changes is
 unavailable. The diagnostic names the requested path or root and the limit.

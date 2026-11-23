@@ -638,7 +638,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   entries, the logical stylesheet path, and the selected physical file. Its
   result is `results::ViteCss`: the CSS, the class map of a CSS Module, and
   the digests of the inputs. The generated types name them
-  `TransformViteCssParams` and `ViteCssResult`.
+  `TransformViteCssParams` and `ViteCssResult`. The `imported_by` field,
+  `ViteCssResult.importedBy` on the wire, maps each input that the stylesheet
+  resolver resolved without a plugin report to the logical path of its direct
+  importer.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the
   inventory that `describe` returns.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the fail-closed error

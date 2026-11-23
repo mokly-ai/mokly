@@ -45,10 +45,16 @@ their authored paths.
 `vite::bundle` delivers the stylesheets of one root that the
 [Vite adapter](../../docs/protocol/mokly-vite-adapter-styles.md) transformed.
 A `dyn vite::Transform` from `mokly-render` gives it each `vite::Stylesheet`:
-the CSS, the class map of a CSS Module, and the digests of its inputs. It runs
+the CSS, the class map of a CSS Module, the digests of its inputs, and the
+importer of each input that no plugin reported. It runs
 no import walk and no CSS Modules scoping. It rejects a stylesheet that changed
 during the transform and a local `@import` that remains. It rewrites and
-delivers each local `url()` as `Compiler` does.
+delivers each local `url()` as `Compiler` does. It records the digest of each
+input in `Bundle::dependency_digests`. An input outside `node_modules` with an
+importer goes into `Bundle::imported_by`. Any other input outside
+`node_modules` goes into `Bundle::plugin_inputs`, with the transformed
+stylesheet as its origin. `mokly-graph` adds both kinds to the source
+inventory as protected inputs.
 
 `modules::scope` returns CSS and sorted class exports from the one naming rule
 of the [CSS Modules contract](../../docs/protocol/mokly-imported-styles-modules.md).

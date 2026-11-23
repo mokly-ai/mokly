@@ -54,13 +54,15 @@ window by the current admission bound of the sidecar pool, under the
 The npm shim supplies its package root and Node
 executable. Direct binary execution checks the adjacent installed package and
 development ancestors, and uses `node` from `PATH` when the shim has not
-supplied `MOKLY_NODE_EXECUTABLE`. An HTML-only catalogue without a renderer or
-PostCSS starts no sidecar and needs no package lookup result. A configured
+supplied `MOKLY_NODE_EXECUTABLE`. An HTML-only catalogue without a renderer,
+PostCSS, or a local stylesheet under the Vite adapter starts no sidecar and
+needs no package lookup result. A configured
 renderer contributes its complete bundle source inventory even when the
 catalogue has only HTML entries. The browser bundle comes from the matching
 installed `@mokly/viewer` package. When the working configuration names a
-renderer or PostCSS, base preparation leases an existing extraction of the
-base commit before it loads the base configuration, and base reads use it. The
+renderer, PostCSS, or a local stylesheet under the Vite adapter, base
+preparation leases an existing extraction of the base commit before it loads
+the base configuration, and base reads use it. The
 dependency step then reuses that lease, or it extracts the sources and
 attaches the new lease before catalogue and graph preparation. Base preparation
 passes the working repository root and the repository's cache namespace, the
@@ -461,6 +463,11 @@ changed.
   `validate_sources`, which selects the dependencies and validates the graph.
   `NativePhases::validate` prepares the graph without document work, and
   `NativePhases::admit` admits that work after head usage.
+  `configured_sidecar` in the source phase tells whether one configuration
+  needs a sidecar. A renderer, a `postcss` module, or a local stylesheet under
+  the Vite adapter makes it true. On the working configuration, it selects the
+  early lease of an existing extraction. On the base configuration, it selects
+  the dependency step, as a discovered entry module or stories file does.
   [`src/changes_source_admission.rs`](./src/changes_source_admission.rs)
   defines `SourceAdmission`, and
   [`src/serve_eager_source_gate.rs`](./src/serve_eager_source_gate.rs)

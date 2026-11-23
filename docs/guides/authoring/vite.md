@@ -80,7 +80,8 @@ and the stylesheet's preprocessor. The default CSS transformer also uses the
 PostCSS config that Vite loads. Vite runs stylesheet transforms from plugins
 such as `@tailwindcss/vite`.
 
-Import, configure, or declare local stylesheets with these extensions:
+Import, configure, or declare local stylesheets with these lowercase suffixes,
+as in your project's own Vite build:
 `.css`, `.scss`, `.sass`, `.less`, `.styl`, `.stylus`, `.pcss`, `.postcss`,
 and `.sss`. Install the preprocessor in your project as you do for `vite dev`.
 For example, install `sass` to use `.scss` files.
@@ -113,6 +114,20 @@ differ from the names without the adapter. In Changes, both sides get the same
 names if they use the same transformer and keep the same stylesheet paths
 and local class names.
 
+### Private stylesheet inputs
+
+Files that a stylesheet transform reports as dependencies stay private, with
+or without the adapter. This includes files that Tailwind reports after a scan.
+With the adapter, files that `composes` reads also stay private. A document
+fails to build if it links to one of these files as a public file.
+
+If the error says the Vite setup reported the file, exclude it from the
+plugin's sources. For Tailwind, use `@source not "../images/logo.svg";` with
+a path relative to the stylesheet.
+
+For a file that only `composes` reads, the error names the CSS Module.
+Link to the module's delivered stylesheet or keep a separate public copy.
+
 ## Development changes
 
 Mokly writes no file into the project when it loads and runs the Vite setup.
@@ -140,3 +155,11 @@ If Vite cannot transform a stylesheet, the build fails with this message:
 ```text
 Vite plugin {plugin} failed for {stylesheet}: {detail}; fix the Vite setup or the stylesheet
 ```
+
+If the plugin reports a location in your repository, the error shows the file,
+line, and column. For example, an imported Sass partial can appear as
+`src/_colors.scss:2:7`. Without a location, the error names the stylesheet.
+
+A configured or component-declared stylesheet such as `Action.CSS` fails with
+the detail `Vite reads only a lowercase stylesheet suffix`. Use a lowercase
+suffix.

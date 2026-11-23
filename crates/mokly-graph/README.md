@@ -336,7 +336,9 @@ retention disabled.
   generations.
 - [`src/policy.rs`](./src/policy.rs) and [`src/closure.rs`](./src/closure.rs)
   define `FilePolicy` and `Walker`, the public-file policy and the referenced
-  closure walk.
+  closure walk. `FilePolicy` gives a reported stylesheet input the
+  `PublicDenial::Vite` reason of [`src/public_denial.rs`](./src/public_denial.rs)
+  under the Vite adapter, and the `PublicDenial::Postcss` reason otherwise.
 - `ClosureBuilder::collect_recorded` reports each input of the walk to a
   `ValidationRecorder`. Its default marks the walk unknown, so a builder that
   cannot record its inputs keeps no facts. The private

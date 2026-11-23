@@ -563,18 +563,28 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   [`vite-errors.ts`](./vite-errors.ts) reports `bundle-failed` with the logical
   module, plugin, and, once loaded, the installed and tested Vite versions. It
   rewrites absolute paths to logical names and virtual names to “entry module”.
-  `viteStylesheetFailure` uses the requested stylesheet path instead.
+  `viteStylesheetFailure` uses the requested stylesheet path instead. When the
+  failure has a line and a column in a file inside the side's source root, it
+  names that file with the line and the column. A location in a virtual module
+  or outside the source root gives only the requested stylesheet path.
 
 ### Vite Stylesheets
 
 - `ViteCompiler.stylesheet` in [`vite-compiler.ts`](./vite-compiler.ts) answers
-  `transformViteCss`. It requests one stylesheet through the setup as an inline
-  module. [`vite-css-transform.ts`](./vite-css-transform.ts) defines
-  `ViteCssTransform`, which runs that request. It returns the CSS, the class
-  map of a CSS Module, and the digests of the inputs of the transform.
+  `transformViteCss`. It first checks the requested path with Vite's own
+  `isCSSRequest`. A path that Vite does not read as a stylesheet, such as
+  `Action.CSS`, fails with "Vite reads only a lowercase stylesheet suffix". It
+  requests one stylesheet through the setup as an inline module.
+  [`vite-css-transform.ts`](./vite-css-transform.ts) defines
+  `ViteCssTransform`, whose `run` method runs that request. It returns the CSS,
+  the class map of a CSS Module, and the digests of the inputs of the
+  transform. The `importedBy` field of the result maps each input that the
+  stylesheet resolver resolved without a plugin report to the logical path of
+  its direct importer.
 - [`vite-css-hooks.ts`](./vite-css-hooks.ts) holds the hooks that `viteSetup`
   installs. They set Mokly's scoped names on both CSS transformers. They route
   Vite's stylesheet resolver through `ViteLookup.stylesheet` during a transform.
+  For each file that this resolver resolves, they record the direct importer.
   They wrap `vite:css` and `vite:css-post`, so one native transform gives the
   class map and the inline CSS. A late `@import` that Vite drops is a failure.
 - [`vite-css-paths.ts`](./vite-css-paths.ts) decides which files are Vite

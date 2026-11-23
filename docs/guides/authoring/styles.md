@@ -76,6 +76,11 @@ Keep file and directory names URL-safe. Use `url(...)` around a local image
 inside `image-set()`. Root-absolute URLs are not portable.
 Remote HTTP(S), data, and fragment URLs keep their meanings.
 
+A document link fails if it points to a file that a stylesheet transform
+reports as a dependency. With Vite, a link also fails if it points to a file
+that `composes` reads. See [private stylesheet inputs](/docs/authoring/vite/#private-stylesheet-inputs)
+for fixes.
+
 ## Consumer PostCSS
 
 With the [Vite adapter](/docs/authoring/vite/), Mokly does not use the `postcss`
@@ -171,10 +176,12 @@ a build. A page and a Markdown document receive no configured links. A page
 links its own CSS; a Markdown document uses Mokly's document styles.
 
 With the [Vite adapter](/docs/authoring/vite/), configured and component-declared
-local stylesheets can use any stylesheet language that Vite supports. If the
-source path does not end in `.css`, Mokly adds `.css` to the output path. For
-example, `design/base.scss` becomes `styles/design/base.scss.css` in the
-generated output.
+local stylesheets must use a lowercase suffix that Vite supports. For example,
+use `Action.css`, not `Action.CSS`. Without the adapter, Mokly accepts `Action.CSS`.
+
+With the adapter, if the source path does not end in `.css`, Mokly adds `.css`
+to the output path. For example, `design/base.scss` becomes
+`styles/design/base.scss.css` in the generated output.
 
 ## Place component styles
 
