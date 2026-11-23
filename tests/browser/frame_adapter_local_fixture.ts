@@ -14,11 +14,12 @@ export async function mountLocalFrame(
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
   path = "/static/mokly-generated/home/index.mobile.html",
   usage: CatalogueUsage = fixture.usage,
+  canvasInput = false,
 ) {
   await page.goto(fixture.host.url);
   // Direct adapter calls arrange inspection without adding host UI.
   await page.evaluate(
-    async ({ path, usageJson }) => {
+    async ({ path, usageJson, canvasInput }) => {
       const { sameOriginAdapter } = (await import(
         `${location.origin}/test-adapters.js`
       )) as typeof LocalAdapter;
@@ -30,6 +31,7 @@ export async function mountLocalFrame(
       state.mounted = await sameOriginAdapter().mount(frame, {
         url: new URL(path, location.origin),
         usage,
+        canvasInput,
       });
       state.unsubscribe = state.mounted.subscribe((event) =>
         state.frameEvents.push(event),
@@ -37,6 +39,6 @@ export async function mountLocalFrame(
       if (usage.status === "ready")
         await state.mounted.listInstanceBoundaries();
     },
-    { path, usageJson: JSON.stringify(usage) },
+    { path, usageJson: JSON.stringify(usage), canvasInput },
   );
 }

@@ -30,6 +30,8 @@ export interface FrameMount {
   onEvent?: (event: FrameEvent) => void;
   url: URL;
   usage: CatalogueUsage;
+  /** Forward the document's canvas input as canvas events while a listener is subscribed. */
+  canvasInput?: boolean;
 }
 export type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
@@ -55,6 +57,17 @@ export type FrameEvent =
   | { type: "navigation"; navigation: FrameNavigation }
   | { type: "pick-end"; reason: "escape" }
   | { type: "geometry" }
+  | {
+      type: "canvas-wheel";
+      deltaY: number;
+      deltaMode: 0 | 1 | 2;
+      x: number;
+      y: number;
+    }
+  | { type: "canvas-pinch"; scale: number; x: number; y: number }
+  | { type: "canvas-key"; key: "zoom-in" | "zoom-out" | "zoom-100" | "fit" }
+  | { type: "canvas-focus"; visible: boolean }
+  | { type: "canvas-blur" }
   | { type: "error"; code: FrameErrorCode };
 export interface MountedFrame {
   /** Refresh validated usage for the same document without replacing its session. */

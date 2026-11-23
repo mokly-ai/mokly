@@ -220,7 +220,7 @@ test("the core cancels pending measurements and listeners on disposal", (t) => {
   const { runtime, signals, cancelled, frames } = fixture;
   fixture.changed();
   assert.equal(frames.size, 1);
-  assert.equal(signals.length, 2);
+  assert.equal(signals.length, 4);
   assert.ok(signals.every((signal) => !signal.aborted));
   runtime.__dispose();
   assert.ok(signals.every((signal) => signal.aborted));

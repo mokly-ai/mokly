@@ -75,6 +75,14 @@ unavailable inspection. The
 [frame adapter contract](../../docs/protocol/mokly-frame-adapter.md) defines
 `updateUsage`, the usage rules, and the inspection ownership.
 
+### Canvas input
+
+A mount with `canvasInput: true` forwards modified wheel input, WebKit
+pinches, canvas keys and document focus while it has a listener. Both
+adapters do this while instance usage is pending or unavailable. The
+[canvas input contract](../../docs/protocol/mokly-frame-canvas-input.md)
+defines the reports.
+
 ### Frames without an adapter
 
 Frames that hold a previous version and comparison pane frames do not use a
@@ -141,6 +149,12 @@ of spelling them in source.
   `temporaryPreviewAdapter`, `clipNode`, the rectangle helpers, and the
   `LinkActivation` type. `measureContentBox` measures a document without a
   frame adapter.
+- `canvasKey` in [`src/internal.ts`](./src/internal.ts) maps keyboard events
+  from the shell or a frame to the canvas key actions.
+- `listenForCanvasInput` in [`src/internal.ts`](./src/internal.ts) runs the
+  shared runtime on a same-origin document without an adapter. It takes a
+  document, a canvas event listener and an optional callback environment.
+  Call its cleanup to remove the listeners and cancel pending work.
 - [`src/frame_adapter.ts`](./src/frame_adapter.ts) — the public
   `FrameAdapter`, `FrameMount`, `MountedFrame`, and `FrameEvent` types, which
   the built-in adapters implement and `@mokly/viewer` re-exports
@@ -182,7 +196,7 @@ of spelling them in source.
   same-origin adapter outside the public adapter contract
 - [`src/probe`](./src/probe/README.md) — the frame probe IIFE and
   `probeRuntime`, the shared core for geometry, instance box models, document
-  content boxes, hover, click, picks, Escape, and navigation
+  content boxes, hover, click, picks, Escape, navigation and canvas input
 - [`src/navigation`](./src/navigation) — the link rules that only the frame
   code uses: `frameLinkActivation` in `activation.ts`, `parseLogicalMarker`
   and `logicalMarker` in `logical.ts`, and `parseBrowsingTarget` in
@@ -197,6 +211,7 @@ of spelling them in source.
 - [Frame package contract](../../docs/protocol/mokly-frame-package.md)
 - [Frame adapter contract](../../docs/protocol/mokly-frame-adapter.md)
 - [Frame content box contract](../../docs/protocol/mokly-frame-content-box.md)
+- [Frame canvas input contract](../../docs/protocol/mokly-frame-canvas-input.md)
 - [Frame probe contract](../../docs/protocol/mokly-frame-probe.md)
 - [Frame probe wire protocol](../../docs/protocol/mokly-frame-probe-wire.md)
 - [Frame link navigation](../../docs/protocol/mokly-frame-link-navigation.md)

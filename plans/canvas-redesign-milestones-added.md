@@ -239,8 +239,12 @@ Depends on: 23
 The frame document holds Ctrl+wheel, pinch and the canvas keys, so they do
 not reach the canvas when the pointer or focus is inside a frame.
 
-- [ ] Forward Ctrl+wheel, pinch and the canvas keys from the frame probe as
+- [x] Forward Ctrl+wheel, pinch and the canvas keys from the frame probe as
       frame wire version 4 messages, which `main` has not released, and raise
-      them as frame events in both adapters, with unit tests.
-- [ ] Keep the probe inside its 10,240-byte budget, and bring the frame probe,
-      wire and adapter pages in line.
+      them as frame events in both adapters, with unit tests. The orchestrator
+      added the focus events and `listenForCanvasInput` on 2026-11-23. Branch:
+      `calummoore/canvas-redesign-m25-canvas-gestures-mp0s`.
+- [x] Keep the probe inside its 10,240-byte budget, and bring the frame probe,
+      wire and adapter pages in line. The orchestrator raised the budget to
+      11,264 bytes on 2026-11-23. Branch:
+      `calummoore/canvas-redesign-m25-canvas-gestures-mp0s`.
