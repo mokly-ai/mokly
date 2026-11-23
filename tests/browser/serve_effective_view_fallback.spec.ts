@@ -7,6 +7,7 @@
 
 import { expect } from "@playwright/test";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import { awaitRoutedDetail, expectNoCompareModes } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import { selectedRequests } from "./serve_comparison_ui.js";
@@ -47,11 +48,9 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
   );
   await awaitRoutedDetail(page, stable);
   await expectNoCompareModes(page);
-  // The hidden band keeps Current as its only selection.
-  await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  // The rejected deep link keeps the current frames: no mode, not even a
+  // hidden one, and no frame compares.
+  await expectNoComparison(page);
   await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
     "dark",
   );

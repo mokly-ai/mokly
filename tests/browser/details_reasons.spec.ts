@@ -10,12 +10,11 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { configuredStylesheets as sheets } from "../helpers/comparison_evidence_groups.js";
 
 import {
-  BASE,
   FILES_LEAD,
   MATCHED_LEAD,
   OUTSIDE_LEAD,
   UNRESOLVED_LEAD,
-  openEvidence,
+  openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
@@ -71,9 +70,11 @@ test("Current, a loaded comparison and Changes show the same facts once", async 
 }) => {
   const requests = comparisonRequests(page);
   await page.goto(`/view/${comparisonPaths.changed}/`);
-  const evidence = await openEvidence(page);
+  // The Changes tab holds the details, whose Compared rail names the branch
+  // point in place of their sentence.
+  const evidence = await openChangesEvidence(page);
   const expected = {
-    sentences: [BASE, MATERIAL, FILES_LEAD, "Changed component: Card"],
+    sentences: [MATERIAL, FILES_LEAD, "Changed component: Card"],
     files: [
       [sheets.changed, [UNRESOLVED_LEAD, ":root"]],
       [sheets.theme, [OUTSIDE_LEAD, ".accent"]],
@@ -116,9 +117,9 @@ test("classification evidence arrives first and survives the comparison", async 
 }) => {
   const requests = comparisonRequests(page);
   await page.goto(`/view/${comparisonPaths.mobileOnlyChange}/`);
-  const evidence = await openEvidence(page);
+  const evidence = await openChangesEvidence(page);
   const expected = {
-    sentences: [BASE, FILES_LEAD],
+    sentences: [FILES_LEAD],
     files: [[sheets.compact, [MATCHED_LEAD, ".auth"]]],
   };
   await expect.poll(() => facts(evidence)).toEqual(expected);

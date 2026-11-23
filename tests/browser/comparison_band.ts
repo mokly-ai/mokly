@@ -1,9 +1,9 @@
 /**
- * The comparison band of the right panel's Changes tab, read through its
- * hooks: the `Comparison mode` group, the `Scroll together` switch, whose
- * label draws its track, and Refresh. The Scroll together specs read the
- * band's geometry, the order of its controls and the drawn state of the
- * switch.
+ * The compare modes of the right panel's Changes tab, the band, read through
+ * its hooks: the `Comparison mode` group of mode tiles, the `Scroll together`
+ * switch, whose label draws its track, and Refresh. The Scroll together specs
+ * read the band's geometry, the order of its controls and the drawn state of
+ * the switch, whose knob a translation carries to the far end when it is on.
  */
 
 import type { Locator, Page } from "@playwright/test";
@@ -44,6 +44,10 @@ export function bandFacts(page: Page) {
       };
       const style = getComputedStyle(toolbar);
       const knob = getComputedStyle(track, "::after");
+      // The knob's drawn place: its offset and the translation that carries
+      // it to the far end of the track.
+      const knobLeft =
+        parseFloat(knob.left) + new DOMMatrixReadOnly(knob.transform).m41;
       const token = (name: string) => {
         const probe = document.createElement("span");
         probe.style.color = `var(${name})`;
@@ -93,7 +97,6 @@ export function bandFacts(page: Page) {
           accent: token("--mbk-accent-deep"),
           edge: token("--chrome-control-edge"),
           glow: glow("--mbk-focus-glow"),
-          glowInset: glow("--mbk-focus-glow-inset"),
           ink: token("--chrome-ink-2"),
           onAccent: token("--_mokly-private-on-accent-deep"),
           surface: token("--chrome-surface"),
@@ -107,7 +110,7 @@ export function bandFacts(page: Page) {
               parseFloat(knob.borderTopWidth) > 0
                 ? knob.borderTopColor
                 : knob.backgroundColor,
-            left: knob.left,
+            left: `${knobLeft}px`,
             size: [knob.width, knob.height],
             top: knob.top,
           },

@@ -98,13 +98,13 @@ test("the switch is drawn as designed, on, off and focused", async ({
   const focused = await bandFacts(page);
   expect(focused.track.outline[0]).toBe("none");
   expect(focused.track.shadow).toBe(focused.tokens.glow);
-  // A mode draws the inset glow, and the shown mode keeps its raised shadow
-  // under the glow.
+  // A mode tile is a control, so it draws the glow outside its box, and the
+  // shown mode keeps its inner edge under the glow.
   await page.keyboard.press("Shift+Tab");
   await expect(modeButton(page, "Swipe")).toBeFocused();
   await expect(modeButton(page, "Swipe")).toHaveCSS(
     "box-shadow",
-    focused.tokens.glowInset,
+    focused.tokens.glow,
   );
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Shift+Tab");
@@ -112,7 +112,7 @@ test("the switch is drawn as designed, on, off and focused", async ({
   const shown = await modeButton(page, "Overlay").evaluate(
     (button) => getComputedStyle(button).boxShadow,
   );
-  expect(shown.startsWith(`${focused.tokens.glowInset}, `)).toBe(true);
+  expect(shown.startsWith(`${focused.tokens.glow}, `)).toBe(true);
   // Tab passes Difference and Swipe to reach the switch.
   for (let tabs = 0; tabs < 3; tabs += 1) await page.keyboard.press("Tab");
   await expect(scrollTogether(page)).toBeFocused();

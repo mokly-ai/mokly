@@ -1,11 +1,13 @@
 /**
  * A component's compare across its sibling variants on the copied comparison
- * output, under the variant navigation and comparison panes contracts. A
- * variant set compares the frames of each shown row that compares.
- * Navigation to a sibling variant keeps the mode, which then compares the
- * sibling's own frames; an added sibling's own frame stays current while the
- * set offers its modes for the other rows. While a mode shows, Props stay
- * read-only and highlighting waits for Current.
+ * output, under the variant navigation, selected comparison and comparison
+ * panes contracts. A variant set compares each row whose shown views are
+ * eligible, and an added variant's row keeps its current frames. Navigation
+ * to a sibling variant keeps the mode and the rows' comparisons; on an added
+ * sibling's route the set still offers its modes while another row compares.
+ * While a mode stays chosen, Inspect shows the current frames, so Props shows
+ * their controls without a comparison line, and the comparison leaves
+ * highlighting alone.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -55,8 +57,9 @@ test("component comparisons follow changed variants while added variants stay cu
   page,
 }) => {
   await page.goto(`/view/${comparisonPaths.component}/`);
-  // A variant set's frames show desktop views. Card and Featured compare, so
-  // the Light and Dark frames of both rows each hold both versions.
+  // A variant set's frames show desktop views. Each eligible row compares its
+  // Light and Dark frames, each with both versions: the own example's and the
+  // changed Featured variant's. The added Fresh variant's row stays current.
   await showMode(page, "Overlay", 8);
   // The comparison details stand in the Changes tab, never on the canvas.
   await expect(
@@ -68,17 +71,19 @@ test("component comparisons follow changed variants while added variants stay cu
       .locator("[data-workspace-evidence]"),
   ).toHaveCount(1);
   await expect(page.locator("[data-workspace-evidence]")).toHaveCount(1);
+  // Inspect shows the current frames, so the comparison leaves highlighting
+  // alone; Card renders no registered component.
   await revealInPanel(page, highlightSwitch(page));
   await expect(highlightSwitch(page)).toBeDisabled();
+  await expect(highlightSwitch(page)).toHaveAccessibleDescription(
+    "No registered components are used in this view.",
+  );
   // A changed sibling keeps the mode and compares its own frames, beside
-  // Card's. The canvas shows the compare only while Changes is the selected
-  // tab, and the Highlight switch stands in Inspect.
+  // Card's, which the canvas shows while Changes is the selected tab.
   await openSibling(page, comparisonPaths.changedVariant);
   await openPanelTab(page, "Changes");
   const featured = paneFrame(
-    comparisonSection(page, "component").and(
-      page.getByRole("figure", { name: /^Featured · Light\b/u }),
-    ),
+    comparisonSection(page, "component", "light", "Featured"),
     "after",
   );
   await expect(featured).toHaveAttribute(
@@ -100,7 +105,7 @@ test("component comparisons follow changed variants while added variants stay cu
   await openSibling(page, comparisonPaths.addedVariant);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
   // Card and Featured still compare, so the set offers its modes on Fresh's
-  // route too, while Fresh's own frame stays current.
+  // route too, while Fresh's own frame stays current (decision 16 = B).
   await openPanelTab(page, "Changes");
   await expect(modeButton(page, "Overlay")).toBeVisible();
   await expect(
@@ -124,16 +129,25 @@ test("Side by side stays authoritative while switching sibling variants", async 
     "data-mokly-preview-source",
     /card\/featured\/index\.desktop\.html$/,
   );
+  // Inspect shows the current frames, so Props shows their controls, which a
+  // static build keeps read-only, without a comparison line, and the
+  // comparison leaves highlighting alone: Featured renders no registered
+  // component.
   const props = await openInspectFold(page, "props");
   await expect(
-    props.getByText("Comparisons show the saved props.", { exact: true }),
+    props.getByText("Open this catalogue locally to edit props.", {
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
+    props.getByText("Comparisons show the saved props.", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
     props.getByRole("button", { name: "Switch to Current", exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(props.getByRole("textbox")).toHaveCount(0);
   await expect(highlightSwitch(page)).toBeDisabled();
   await expect(highlightSwitch(page)).toHaveAccessibleDescription(
-    "A comparison is selected. Highlighting is available in Current.",
+    "No registered components are used in this view.",
   );
 });

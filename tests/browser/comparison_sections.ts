@@ -1,11 +1,13 @@
 /**
  * The compared frames of the canvas, on the copied comparison output, Serve
  * and an embedded viewer. In Overlay, Difference and Swipe every shown frame
- * compares its own view: its figure stacks both versions in one shared
- * viewport. Side by side compares one frame, the first shown frame, as a pair
- * of figures, Before and Current, each with its own viewport. A section is
- * what holds one compared frame's versions, and every reader of a version or
- * a viewport takes a section.
+ * of a compared row compares its own view: its figure stacks both versions in
+ * one shared viewport. A screen is one row, and on a component's variant set
+ * every eligible row compares, so a component's kind and scheme can name a
+ * frame in each of several rows. Side by side compares one frame, the first
+ * shown frame, as a pair of figures, Before and Current, each with its own
+ * viewport. A section is what holds one compared frame's versions, and every
+ * reader of a version or a viewport takes a section.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -25,6 +27,23 @@ export type FrameKind = "component" | "desktop" | "mobile";
 
 /** A compared frame's own colour scheme. */
 export type FrameScheme = "dark" | "light";
+
+/** Each scheme as a frame's label names it, such as `Card · Light`. */
+const SCHEME_NAMES: Readonly<Record<FrameScheme, string>> = {
+  dark: "Dark",
+  light: "Light",
+};
+
+/**
+ * The figures in `scope` whose accessible name, the frame's label, starts
+ * with `name`, such as `Featured · Light`, and then holds the size tag.
+ */
+function namedFigures(scope: Locator | Page, name: string): Locator {
+  const literal = name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  return scope.getByRole("figure", {
+    name: new RegExp(`^${literal}(?:\\s|$)`, "u"),
+  });
+}
 
 /**
  * Wait until the canvas shows a diff mode's pane frames, and until each of
@@ -65,11 +84,19 @@ export async function openComparison(
  * section that holds the frame's pair, a Before figure and a Current figure,
  * each with its own viewport; Side by side compares one frame, so only the
  * compared frame has a pair.
+ *
+ * On a variant set where several rows compare, `row` names the frame's row
+ * by its title, the start of the frame's label: the component's title for its
+ * own example, such as `Card`, or a saved variant's title, such as `Featured`
+ * for the frame `Featured · Light`. The frame's figure, or in Side by side its
+ * Before figure, is then found by its accessible name. Without `row`, every
+ * compared frame of the kind and the scheme matches.
  */
 export function comparisonSection(
   page: Page,
   kind: FrameKind,
   scheme: FrameScheme = "light",
+  row?: string,
 ): Locator {
   const frame = `[data-canvas-frame="${kind}"][data-preview-color-scheme="${scheme}"]`;
   const stage = page.locator("[data-mokly-stage]");
@@ -79,7 +106,11 @@ export function comparisonSection(
   const pair = stage.locator(
     `[data-canvas-section]:has(figure${frame}[data-canvas-side="before"])`,
   );
-  return stack.or(pair);
+  if (row === undefined) return stack.or(pair);
+  const name = `${row} · ${SCHEME_NAMES[scheme]}`;
+  return stack
+    .and(namedFigures(stage, name))
+    .or(pair.filter({ has: namedFigures(page, `Before ${name}`) }));
 }
 
 /** The frame that shows one version of a section. */

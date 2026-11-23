@@ -179,8 +179,8 @@ export function registerComparisonAlignment(test = baseTest): void {
         })
         .toEqual([Math.min(offset, before.range), offset]);
       expect((await viewportOffset(sharedViewports(desktop))).y).toBe(offset);
-      // Content that both versions hold keeps one position on the page. The
-      // zoom's scale leaves a rounding error far below a millionth of a pixel.
+      // Content that both versions hold keeps one position on the page.
+      // Zoom and pan are floats; the tolerance is far below one device pixel.
       for (const css of ["h1", "#panel"])
         expect(await pageTop("after", css), css).toBeCloseTo(
           await pageTop("before", css),

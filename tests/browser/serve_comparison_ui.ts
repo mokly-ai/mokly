@@ -228,16 +228,19 @@ export async function expectPresentedPane(
  * to show `heading` and the `.accent` colour of that side's commit, in the
  * compared component frame of `scheme`, Light by default. Card's own heading
  * is the same in both commits, so only the colour proves which version the
- * pane shows.
+ * pane shows. While several rows of the Card set compare, `row` names the
+ * frame's row by its title, such as `Featured`, as `comparisonSection` reads
+ * it.
  */
 export async function expectCardPane(
   page: Page,
   side: Side,
   heading: string,
   scheme: FrameScheme = "light",
+  row?: string,
 ): Promise<void> {
   const frame = paneFrame(
-    comparisonSection(page, "component", scheme),
+    comparisonSection(page, "component", scheme, row),
     side,
   ).contentFrame();
   await expect(frame.locator("h2")).toHaveText(heading);

@@ -36,8 +36,11 @@ band, and presses a mode. `showMode` also waits for an exact count of pane
 frames: two for each frame that Overlay, Difference, or Swipe compares, and
 two for the pair of Side by side. `outcomeLines` reads the band's line for
 each compared frame, and `expectNoCompareModes` checks, in a page or in one
-viewer's root, that an entry offers no mode: it opens the Changes tab of an
+viewer's root, that an entry offers no mode, as an Unmodified view without a
+changed component and a removed screen do: it opens the Changes tab of an
 entry that has one first, also from the compact layout's closed panel sheet.
+`expectCurrentAlone` checks that an entry whose shown status is Added offers
+one mode tile, Current, in its Changes tab.
 `compareStage` is the compare, busy while it loads, and `compareState` is its
 loading or failure state, which exists only then and never holds a pane.
 `comparison_outcomes.ts` builds the expected outcome lines of a screen's
@@ -51,25 +54,33 @@ entry's previous version, renders no band, no comparison state, and no pane.
 `comparison_sections.ts` opens a comparison and finds one compared frame by
 its kind and its scheme: in Overlay, Difference, and Swipe the frame's
 figure, whose one viewport stacks both versions, and in Side by side the
-canvas section that holds the frame's Before and Current pair. Its readers
+canvas section that holds the frame's Before and Current pair. On a variant
+set every eligible row compares, so a spec also names a component frame's row
+by its title, such as `Featured`, and the helper finds the frame's figure, or
+its Before figure in Side by side, by its accessible name. Its readers
 take that section: each version's pane frame, the page viewports, the shown
 mode, and the frame labels. `comparison_scroll.ts` measures the page offsets
 and ranges in the documents' CSS pixels, which the canvas zoom does not
 change, and `comparison_region_offsets.ts` measures inner scroll regions.
 `comparison_band.ts` reads the band through its hooks, the `Comparison mode`
-group, the `Scroll together` switch and Refresh: its geometry, the order of
-its controls, and the drawn state of the switch.
+group of mode tiles, the `Scroll together` switch and Refresh: its geometry,
+the order of its controls, and the drawn state of the switch, whose knob's
+place adds the translation that carries it to the far end when it is on.
 `comparison_evidence_page.ts` holds the Details copy and readers that the
 stylesheet Details specs share. Its readers require one Comparison details
-heading and exactly one changed-files list. `openEvidence` and
-`openPageEvidence` show the comparison details in the right panel's tab that
-holds them: Changes for an entry that has that tab, and Inspect otherwise.
-An entry that the Changes filter does not list gains its Changes tab once its
-detail makes it comparison-eligible, so a spec waits for `awaitRoutedDetail`
-before it opens such an entry's details. `openEvidence` also requires the
-branch-point sentence, or its absence when a spec passes `null` for an index
-without a base. `expectExcludedOnly` checks Details that hold one examined
-list and no changed-files list. `configuredStylesheets` and
+heading and exactly one changed-files list. Each reader shows the details in
+the right panel's tab that the spec expects to hold them, also from the
+compact layout's closed panel sheet. `openEvidence` reads the details of an
+entry without a Changes tab in Inspect and requires the branch-point
+sentence, or its absence when a spec passes `null` for an index without a
+base. `openChangesEvidence` reads them in the entry's Changes tab, where
+`expectRailBase` requires the Compared rail to name the branch point in place
+of the sentence. `openPageEvidence` reads a whole page's details in the tab
+that the spec names. An entry that the Changes filter does not list gains its
+Changes tab once its detail makes it comparison-eligible, so a spec waits for
+`awaitRoutedDetail` before it opens such an entry's details in Changes.
+`expectExcludedOnly` checks Details that hold one examined list and no
+changed-files list. `configuredStylesheets` and
 `pageStylesheets` in `comparison_evidence_groups.ts` name the copy's
 stylesheets as the shell shows them. `inspect_head.ts` reads the routed
 entry's title and status in Inspect's head, which the old screen head held.

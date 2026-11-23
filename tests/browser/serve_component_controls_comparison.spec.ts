@@ -1,8 +1,9 @@
 /**
  * Temporary prop edits in Serve keep the last valid preview through a failed
  * and a superseded render, and selecting a comparison restores the saved
- * props: the comparison shows them, the controls stay unavailable, and
- * Current shows the saved props again.
+ * props: the comparison that the Changes tab shows compares them, Inspect,
+ * which shows the current frames, offers their editable controls without a
+ * comparison line, and Current shows the saved props again.
  */
 
 import { expect, type Route } from "@playwright/test";
@@ -76,16 +77,22 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
   await expect(preview.locator("h2")).toHaveText("Newest");
 
   await loadComparison(page, "Overlay");
-  // The mode stands in the Changes tab; Props stands in Inspect.
+  // The edited row's Light frame compares the saved props: its Current
+  // version shows the saved label and the current commit's `.accent` colour.
+  // The canvas shows the mode while the Changes tab is selected.
+  await expectCardPane(page, "after", "Card content", "light", "Card");
+  // Inspect shows the current frames, and Props edits them: its controls show
+  // the saved props that the comparison restored, without a comparison line.
   await openPanelTab(page, "Inspect");
+  await expect(label).toBeEditable();
+  await expect(label).toHaveValue("Card content");
+  await expect(preview.locator("h2")).toHaveText("Card content");
   await expect(
     props.getByText("Comparisons show the saved props.", { exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     props.getByRole("button", { name: "Switch to Current", exact: true }),
-  ).toBeVisible();
-  await expect(props.getByRole("textbox")).toHaveCount(0);
-  await expectCardPane(page, "after", "Card content");
+  ).toHaveCount(0);
 
   await chooseMode(page, "Current");
   await openPanelTab(page, "Inspect");

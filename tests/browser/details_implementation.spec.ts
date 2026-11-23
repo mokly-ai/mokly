@@ -15,11 +15,10 @@ import {
 
 import { additionsCopyTest } from "./additions_copy_test.js";
 import {
-  BASE,
   EXAMINED_LEAD,
   INSPECTOR_VIEWPORTS,
   VARIANT_EXCLUDED_LEAD,
-  openEvidence,
+  openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import {
   awaitRoutedDetail,
@@ -55,20 +54,20 @@ const COMPONENTS_CHANGED = "Components this screen uses changed";
 
 /**
  * The consuming screen's outcome lines in Side by side, at each inspector
- * size: on the wide canvas every shown frame compares, and the compact
- * layout compares the Light frame of the viewport that the link names.
+ * size, for the viewport that the Affected link names: the wide canvas
+ * compares that viewport's column, Light above Dark (decision 20 = A), and
+ * the compact layout compares its Light frame.
  */
-const CONSUMER_OUTCOMES = {
-  desktop: [
-    `Desktop · Light · ${COMPONENTS_CHANGED}`,
-    `Mobile · Light · ${COMPONENTS_CHANGED}`,
-    `Desktop · Dark · ${COMPONENTS_CHANGED}`,
-    `Mobile · Dark · ${COMPONENTS_CHANGED}`,
-  ],
-  mobile: [
-    new RegExp(`^(?:Desktop|Mobile) · Light · ${COMPONENTS_CHANGED}$`, "u"),
-  ],
-} as const;
+function consumerOutcomes(
+  size: (typeof INSPECTOR_VIEWPORTS)[number][0],
+  linked: string | null,
+): string[] {
+  const column = linked === "mobile" ? "Mobile" : "Desktop";
+  const schemes = size === "desktop" ? ["Light", "Dark"] : ["Light"];
+  return schemes.map(
+    (scheme) => `${column} · ${scheme} · ${COMPONENTS_CHANGED}`,
+  );
+}
 
 /** The sentences of the comparison details, in order. */
 function sentences(evidence: Locator) {
@@ -87,13 +86,15 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     const documents = snapshotDocuments(page);
     await page.goto(`/view/${paths.component}/`);
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
-    // Its own saved views are unchanged, so it offers no comparison.
+    // Its own saved views are unchanged, so it offers no comparison. Changes
+    // lists it, so its Changes tab holds the details, whose Compared rail
+    // names the branch point in place of their sentence.
     await awaitRoutedDetail(page, paths.component);
     await expectNoCompareModes(page);
-    const evidence = await openEvidence(page);
+    const evidence = await openChangesEvidence(page);
     await expect
       .poll(() => sentences(evidence))
-      .toEqual([BASE, IMPLEMENTATION, ...EXCLUDED]);
+      .toEqual([IMPLEMENTATION, ...EXCLUDED]);
     await expect(evidence).not.toContainText("Rendered content changed.");
     expect(documents).toEqual([]);
 
@@ -105,6 +106,10 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       "href",
       new RegExp(`^/view/${paths.consumer}/\\?viewport=.*&comparison=side$`),
     );
+    const linked = new URL(
+      (await affected.first().getAttribute("href"))!,
+      page.url(),
+    ).searchParams.get("viewport");
     await affected.first().click();
     await expect(page).toHaveURL(new RegExp(`/view/${paths.consumer}/`));
     await expect(page.locator("[data-workspace-status]")).toHaveText(
@@ -116,8 +121,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       "aria-pressed",
       "true",
     );
-    await expect(outcomeLines(page)).toHaveText([...CONSUMER_OUTCOMES[name]]);
-    await openEvidence(page);
+    await expect(outcomeLines(page)).toHaveText(consumerOutcomes(name, linked));
+    await openChangesEvidence(page);
     await expect(
       evidence.getByRole("link", { name: "Chip", exact: true }),
     ).toHaveAttribute("href", `/view/${paths.component}/`);

@@ -1,9 +1,11 @@
 /**
  * Tally's Affected destinations in the branch-point cases, and what each one
- * shows once its link opens it: the shown status, whether the Changes tab's
- * band offers the compare modes, and the outcome line of each compared frame.
- * The wide canvas compares every shown frame of the routed entry's row; the
- * compact layout compares its one shown frame, which the link names.
+ * shows once its link opens it: the shown status, the compare modes that the
+ * Changes tab's band offers, and the outcome line of each compared frame.
+ * The wide canvas compares every shown frame of the routed entry's row: a
+ * screen shows the column of the viewport that the link names (decision
+ * 20 = A), and a variant set's row its Light and Dark frames. The compact
+ * layout compares its one shown frame, which the link names.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -13,7 +15,7 @@ import { branchPointPaths as paths } from "../helpers/branch_point_sources.js";
 import type { BranchPointHost } from "./branch_point_ui.js";
 import { rowOutcomes, screenOutcomes } from "./comparison_outcomes.js";
 import {
-  expectNoCompareModes,
+  expectCurrentAlone,
   modeButton,
   outcomeLines,
 } from "./comparison_ui.js";
@@ -49,9 +51,19 @@ export interface Destination {
   text: string;
 }
 
+/** A viewport as a frame's name says it. */
+function viewportName(viewport: Viewport): "Desktop" | "Mobile" {
+  return viewport === "mobile" ? "Mobile" : "Desktop";
+}
+
 /** The compact layout's one frame of a screen: the linked view's Light frame. */
 function linkedFrame(viewport: Viewport, label: string): string {
-  return `${viewport === "mobile" ? "Mobile" : "Desktop"} · Light · ${label}`;
+  return `${viewportName(viewport)} · Light · ${label}`;
+}
+
+/** A screen's frames on the wide canvas: the linked viewport's column. */
+function linkedColumn(viewport: Viewport, label: string): string[] {
+  return screenOutcomes(label, ["Light", "Dark"], [viewportName(viewport)]);
 }
 
 export const TALLY_AFFECTED: readonly Destination[] = [
@@ -90,28 +102,29 @@ export const TALLY_AFFECTED: readonly Destination[] = [
     shows: (layout, viewport) => ({
       lines:
         layout === "wide"
-          ? screenOutcomes(SCREEN)
+          ? linkedColumn(viewport, SCREEN)
           : [linkedFrame(viewport, SCREEN)],
       status: "Unmodified",
     }),
     text: "Slip",
   },
   {
-    // Ledger's desktop views changed, so the wide canvas, which also shows
-    // them, reads Changed; the linked view alone reads Unmodified.
+    // Ledger's desktop views changed and its mobile views stay Unmodified.
+    // Each layout shows the linked viewport's frames, so the status and the
+    // lines follow the viewport that the link names.
     comparison: "side",
     listed: true,
     path: paths.impactLedger,
-    shows: (layout, viewport) =>
-      layout === "wide"
-        ? {
-            lines: ["Light", "Dark"].flatMap((scheme) => [
-              `Desktop · ${scheme} · Screen changed`,
-              `Mobile · ${scheme} · ${SCREEN}`,
-            ]),
-            status: "Changed",
-          }
-        : { lines: [linkedFrame(viewport, SCREEN)], status: "Unmodified" },
+    shows: (layout, viewport) => {
+      const label = viewport === "desktop" ? "Screen changed" : SCREEN;
+      return {
+        lines:
+          layout === "wide"
+            ? linkedColumn(viewport, label)
+            : [linkedFrame(viewport, label)],
+        status: viewport === "desktop" ? "Changed" : "Unmodified",
+      };
+    },
     text: "Ledger",
   },
   {
@@ -126,7 +139,7 @@ export const TALLY_AFFECTED: readonly Destination[] = [
 /**
  * Unmodified destinations offer the band for the linked view. Serve and the
  * copy open Side by side, which lists the outcome of each compared frame; a
- * React host opens Current. Added destinations keep Current without a band.
+ * React host opens Current. Added destinations offer Current alone.
  */
 export async function expectAffectedBand(
   page: Page,
@@ -139,9 +152,9 @@ export async function expectAffectedBand(
   const { lines, status } = destination.shows(layout, viewport);
   await expect(page.locator("[data-workspace-status]")).toHaveText(status);
   // Show the panel, which the compact layout holds in a sheet, so a check
-  // that its band is absent reads the panel's tabs.
+  // of its band reads the panel's tabs.
   await openPanelTab(page, "Inspect");
-  if (destination.comparison === null) return expectNoCompareModes(page);
+  if (destination.comparison === null) return expectCurrentAlone(page);
   await openPanelTab(page, "Changes");
   await expect(
     page.getByRole("group", { name: "Comparison mode" }),

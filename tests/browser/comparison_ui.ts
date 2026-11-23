@@ -192,7 +192,8 @@ export async function showMode(
 
 /**
  * Expect the routed entry of a page or of one viewer's root to offer no
- * compare mode: its Changes tab, when it has one, shows no band, so the
+ * compare mode, as an Unmodified view without a changed component and a
+ * removed screen do: its Changes tab, when it has one, shows no band, so the
  * check never passes only because Inspect is the selected tab or the compact
  * layout's panel sheet is closed. Call it once the entry's detail settled,
  * such as after `awaitRoutedDetail`.
@@ -211,6 +212,22 @@ export async function expectNoCompareModes(
   await expect(
     scope.getByRole("group", { name: "Comparison mode" }),
   ).toBeHidden();
+}
+
+/**
+ * Expect the routed entry of a page or of one viewer's root, whose shown
+ * status is Added, to offer Current alone: its Changes tab's `Comparison
+ * mode` group holds one tile, Current, which shows. Call it once the
+ * entry's detail settled, such as after `awaitRoutedDetail`.
+ */
+export async function expectCurrentAlone(scope: Page | Locator): Promise<void> {
+  await openPanelTab(scope, "Changes");
+  const modes = scope.getByRole("group", { name: "Comparison mode" });
+  await expect(modes).toMatchAriaSnapshot(`
+    - group "Comparison mode":
+      - /children: equal
+      - button "Current" [pressed]
+  `);
 }
 
 /**

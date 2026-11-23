@@ -105,7 +105,9 @@ test("a component frame in a compare takes the larger size of its two versions",
   page,
 }) => {
   await openMode(page, comparisonPaths.component, "Overlay");
-  const frame = comparisonSection(page, "component");
+  // Every eligible row of the variant set compares; this reads the Light
+  // frame of the routed row, the component's own example.
+  const frame = comparisonSection(page, "component", "light", "Card");
   const panes = frame.locator("iframe[data-mokly-comparison-frame]");
   await expect(panes).toHaveCount(2);
   // Each version's own size: its content's box with the same margin on its

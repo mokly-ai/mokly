@@ -19,6 +19,7 @@ import {
   VARIANT_EXCLUDED_LEAD,
   VARIANT_TERMINAL,
   evidenceFiles,
+  openChangesEvidence,
   openEvidence,
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
@@ -60,7 +61,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
@@ -90,7 +91,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         "Unmodified",
       );
       // The Frames filter stands in Inspect; the details show in Changes.
-      await openEvidence(page);
+      await openChangesEvidence(page);
       await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       await expect(
         evidence.getByText(EXCLUDED_LEAD, { exact: true }),
@@ -104,7 +105,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -118,7 +119,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${comparisonPaths.changed}/`);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
@@ -173,7 +174,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       // Its detail makes the comparison eligible, which adds the Changes tab
       // that then holds the comparison details.
       await awaitRoutedDetail(page, comparisonPaths.consumer);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([[sheets.theme, [[MATCHED_LEAD, [".accent"]]]]]);
@@ -202,7 +203,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
-      const evidence = await openEvidence(page);
+      // Its set's removed variant compares, so the set offers its Changes
+      // tab, which holds the details.
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(VARIANT_EXCLUDED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -234,7 +237,7 @@ test("the comparison heading leads with the style outcome", async ({
     "Mobile · Dark · Screen changed",
   ]);
   await page.goto(`/view/${comparisonPaths.component}/`);
-  const evidence = await openEvidence(page);
+  const evidence = await openChangesEvidence(page);
   await expect
     .poll(() => evidenceFiles(evidence))
     .toEqual([
@@ -250,10 +253,15 @@ test("the comparison heading leads with the style outcome", async ({
   await expect(
     evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
   ).toBeVisible();
-  // The parent's comparison holds its own example's frames, Light and Dark.
-  await showMode(page, "Overlay", 4);
+  // Each eligible row compares its Light and Dark frames: the own example,
+  // whose only reasons are its stylesheets, then the changed Featured
+  // variant, whose rendered content also changed. The added Fresh variant's
+  // row stays current.
+  await showMode(page, "Overlay", 8);
   await expect(outcomeLines(page)).toHaveText([
     "Card · Light · Styles this variant uses changed",
     "Card · Dark · Styles this variant uses changed",
+    "Featured · Light · Variant changed",
+    "Featured · Dark · Variant changed",
   ]);
 });

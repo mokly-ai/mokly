@@ -6,16 +6,16 @@
 
 /**
  * The lines of a screen's shown frames: its Light row, Desktop beside
- * Mobile, then its Dark row, unless `schemes` names fewer rows.
+ * Mobile, then its Dark row, unless `schemes` names fewer rows or
+ * `viewports` fewer columns, as a link that names one viewport shows.
  */
 export function screenOutcomes(
   label: string,
   schemes: readonly ("Dark" | "Light")[] = ["Light", "Dark"],
+  viewports: readonly ("Desktop" | "Mobile")[] = ["Desktop", "Mobile"],
 ): string[] {
   return schemes.flatMap((scheme) =>
-    ["Desktop", "Mobile"].map(
-      (viewport) => `${viewport} · ${scheme} · ${label}`,
-    ),
+    viewports.map((viewport) => `${viewport} · ${scheme} · ${label}`),
   );
 }
 

@@ -1,11 +1,11 @@
 /**
  * Comparison eligibility in the copied comparison output, under the
  * comparison modes and removed previews contracts. An added screen and a
- * removed screen have no comparison; a removed screen opens its previous
- * version under its snapshot address, also from an affected-screen link and
- * from a legacy comparison URL. A light-only screen under Dark has its Light
- * frames alone, which compare their light versions, and its Frames filter
- * names it Light only.
+ * removed screen have no comparison, and the added screen offers Current
+ * alone. A removed screen opens its previous version under its snapshot
+ * address, also from an affected-screen link and from a legacy comparison
+ * URL. A light-only screen under Dark has its Light frames alone, which
+ * compare their light versions, and its Frames filter names it Light only.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -17,7 +17,7 @@ import {
   awaitRoutedDetail,
   comparisonFrames,
   comparisonIndex,
-  expectNoCompareModes,
+  expectCurrentAlone,
   outcomeLines,
   showMode,
   snapshotOf,
@@ -72,7 +72,7 @@ test("added and removed screens stay current while a light-only comparison keeps
     .toEqual([`/view/${comparisonPaths.added}/`, false, false]);
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
   await awaitRoutedDetail(page, comparisonPaths.added);
-  await expectNoCompareModes(page);
+  await expectCurrentAlone(page);
   await expect(
     page.frameLocator(canvasFrame("mobile")).locator("h1"),
   ).toHaveText("Added screen");

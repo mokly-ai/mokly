@@ -9,7 +9,9 @@
  * URL. The shell must renew, then reacquire the comparison or preview before
  * it shows the new view, and never request an old document address. On the
  * canvas the Frames filter changes the shown views: a standalone shell's
- * Appearance colours only the chrome, and a variant set has no viewport.
+ * Appearance colours only the chrome, and a variant set has no viewport. The
+ * filter stands in Inspect, and the canvas shows a mode only while Changes is
+ * the selected tab, so a comparison selects Changes again after the filter.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -31,7 +33,11 @@ import {
 } from "./serve_comparison_ui.js";
 import { removeGeneration } from "./serve_generation_removal.js";
 import { responseFailure } from "./shell_error_allowances.js";
-import { chooseViewport, setFrames } from "./workspace_actions.js";
+import {
+  chooseViewport,
+  openPanelTab,
+  setFrames,
+} from "./workspace_actions.js";
 
 const stage = "[data-mokly-preview]";
 const previews = `${stage} iframe`;
@@ -87,6 +93,7 @@ for (const change of ["theme", "viewport"] as const)
 
     if (change === "theme") await setFrames(page, { dark: true, light: false });
     else await chooseViewport(page, "mobile");
+    await openPanelTab(page, "Changes");
 
     const shown =
       change === "theme"
@@ -140,6 +147,7 @@ test("snapshot recovery keeps the selected saved variant", async ({
   // Side by side compares the first shown frame, so hiding the Light frames
   // compares the variant's Dark frame, whose documents are new.
   await setFrames(page, { dark: true, light: false });
+  await openPanelTab(page, "Changes");
   const dark = paneFrame(comparisonSection(page, "component", "dark"), "after");
   await expect(dark).toHaveAttribute(PANE_SOURCE, /\.desktop\.dark\.html$/u);
   await expectCardPane(page, "before", "Featured Before", "dark");

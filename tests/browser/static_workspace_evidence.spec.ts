@@ -9,11 +9,11 @@
 
 import { expect, type Page } from "@playwright/test";
 
-import { openEvidence } from "./comparison_evidence_page.js";
+import { openChangesEvidence } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
 import { inspectTitle } from "./inspect_head.js";
-import { openInspectFold } from "./workspace_actions.js";
+import { openInspectFold, openPanelTab } from "./workspace_actions.js";
 
 const CARD = `/view/${comparisonPaths.component}/`;
 
@@ -45,10 +45,13 @@ async function expectAffectedConsumers(page: Page): Promise<void> {
   ]);
 }
 
-/** The changed screen's Details name the changed component that affects it. */
+/**
+ * The changed screen's Details, in its Changes tab, name the changed
+ * component that affects it.
+ */
 async function expectChangedComponent(page: Page): Promise<void> {
   await expect(inspectTitle(page)).toHaveText("Changed screen");
-  const evidence = await openEvidence(page);
+  const evidence = await openChangesEvidence(page);
   await expect(
     evidence.getByText("Changed component: Card", { exact: true }),
   ).toBeVisible();
@@ -89,8 +92,13 @@ for (const suffix of ["", "/", "/index.html"])
       .locator('[data-usage-section="affected"]')
       .getByRole("link", { name: "Changed screen", exact: true })
       .click();
+    // The link names the screen's comparison, which opens on the Changes tab.
+    await expect(
+      page.getByRole("tab", { name: "Changes", exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
     // The routed instance is the selection once its detail arrives: Inspect's
     // Selection section names its component.
+    await openPanelTab(page, "Inspect");
     await expect(
       page
         .locator('[data-inspect-section="selection"]')

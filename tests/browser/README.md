@@ -204,7 +204,9 @@ for a selected comparison request and a held renewal of its generation.
 `loadComparison` opens the right panel's Changes tab before it presses a mode
 or Refresh. `expectCardPane` checks one pane of the compared Card frame,
 Light unless a spec names Dark, by its heading and by the `.accent` colour of
-its side, because Card's own heading is the same on both sides. `serve_changes_emulation.ts` rewrites the index body into a pending,
+its side, because Card's own heading is the same on both sides. While
+several rows of the Card set compare, a spec also names the frame's row, such
+as `Featured`. `serve_changes_emulation.ts` rewrites the index body into a pending,
 preparing, or unavailable Changes state, the shape Serve writes before
 classification completes. Each step still arrives as a real watched
 publication, and Serve keeps no test seam. `serve_generation_removal.ts`
