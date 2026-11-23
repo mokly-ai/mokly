@@ -110,8 +110,8 @@
     - `design_support/scopes.rs` loads `tests/fixtures/design/inventory.json`
       at lines 49 to 52. It compares the design screens with that list at
       line 59. Then line 65 pins the `design/components/` count again, now 56.
-    - `scopes.rs:72` pins the 20 controls screens. Line 39 still pins 69
-      saved variants, one fewer than the library holds.
+    - `scopes.rs:72` pins the 20 controls screens, and line 39 pins the 70
+      saved variants.
     - Two `insta` snapshots in `design_support/snapshots/` list the design
       screens that draw the top bar. They hold lines such as
       `design/library/chrome/top-bar -> design/components/states/removed`.
@@ -238,8 +238,9 @@
 - **Previous examples:** On 2026-11-19, commit `3e09c615` on `main` added
   the saved variant `design/library/preview/device-frame/failed`. It updated
   the Node count to 70 and the browser inventory. It did not update
-  `crates/mokly-cli/tests/design_support/scopes.rs:39`, which still pins 69.
-  So the nightly test fails at its first scope check.
+  `crates/mokly-cli/tests/design_support/scopes.rs:39`, which kept 69. So the
+  nightly test failed at its first scope check, until the branch
+  `conductor/storybook-support-a-mockups` set the count to 70 on 2026-11-23.
 - **Related:** `plans/follow-ups/design-external-link-check.md`, same code.
   That item says that the browser link checks run only on the entries of
   `browser-inventory.json`. D deletes that file, so the branch that applies D
