@@ -3,28 +3,22 @@
  * adapter. A canvas key inside a frame's document runs its command on the
  * canvas that holds the frame, as the canvas's own keys do. A wheel with Ctrl
  * or Command, or a pinch, zooms the canvas at the canvas's own wheel rate,
- * about the stage's centre, because the canvas's handle zooms about that
- * point. While the document shows keyboard focus, its frame shows the focus
- * glow.
+ * about its point in the frame under the pointer. While the document shows
+ * keyboard focus, its frame shows the focus glow.
  */
 
-import { useCallback, useContext, useState, type RefObject } from "react";
+import { useCallback, useContext, useState } from "react";
 
 import type { CanvasInputEvent } from "@mokly/frame/internal";
-import {
-  wheelZoom,
-  type CanvasCommand,
-  type CanvasStageHandle,
-} from "@mokly/ui/canvas-stage";
 
+import {
+  hoveredFrame,
+  routeFrameInput,
+  type CanvasInputTarget,
+} from "./canvas_input.js";
 import { CanvasControlContext } from "./canvas_stage.js";
 
-/** What the routing reads of the canvas: its height, its handle, its zoom. */
-export interface CanvasInputTarget {
-  canvas: RefObject<Pick<HTMLElement, "clientHeight"> | null>;
-  handle: RefObject<CanvasStageHandle | null>;
-  zoom: RefObject<number>;
-}
+export type { CanvasInputTarget } from "./canvas_input.js";
 
 /** The input that acts on the canvas: its keys, the wheel and the pinch. */
 export type CanvasZoomInput = Extract<
@@ -32,43 +26,16 @@ export type CanvasZoomInput = Extract<
   { type: "canvas-key" | "canvas-pinch" | "canvas-wheel" }
 >;
 
-/** The canvas command of each key that a frame forwards. */
-const COMMANDS = {
-  fit: "fit",
-  "zoom-100": "actual-size",
-  "zoom-in": "zoom-in",
-  "zoom-out": "zoom-out",
-} as const satisfies Record<
-  Extract<CanvasInputEvent, { type: "canvas-key" }>["key"],
-  CanvasCommand
->;
-
-/** CSS pixels in one wheel line, as the canvas's own wheel counts them. */
-const LINE_HEIGHT = 16;
-
-/** Act on the canvas for one zoom gesture or key from inside a frame. */
+/**
+ * Act on the canvas for one zoom gesture or key from inside a frame. No
+ * adapter names the frame, so a wheel or a pinch zooms about its point in
+ * the frame under the pointer, and about the stage's centre without one.
+ */
 export function routeCanvasInput(
   target: CanvasInputTarget,
   event: CanvasZoomInput,
 ): void {
-  const handle = target.handle.current;
-  if (!handle) return;
-  if (event.type === "canvas-key") {
-    handle.run(COMMANDS[event.key]);
-    return;
-  }
-  const zoom = target.zoom.current;
-  if (event.type === "canvas-pinch") {
-    handle.zoomTo(zoom * event.scale);
-    return;
-  }
-  const unit =
-    event.deltaMode === 1
-      ? LINE_HEIGHT
-      : event.deltaMode === 2
-        ? (target.canvas.current?.clientHeight ?? 0)
-        : 1;
-  handle.zoomTo(wheelZoom(zoom, event.deltaY * unit));
+  routeFrameInput(target, event, hoveredFrame(target.canvas.current));
 }
 
 /**

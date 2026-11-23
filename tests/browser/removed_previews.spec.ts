@@ -145,13 +145,18 @@ test("a previous version's frame forwards its canvas keys and its zoom wheel to 
   await expect.poll(width).toBeCloseTo(fitted * 1.25, 0);
   await page.keyboard.press("Shift+Digit1");
   await expect.poll(width).toBeCloseTo(fitted, 0);
-  // Ctrl with the wheel over the document zooms the canvas, not the page.
+  // Ctrl with the wheel over the document zooms the canvas, not the page,
+  // about the pointer: the frame's middle stays under it.
   const box = (await frame.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await page.mouse.move(middle.x, middle.y);
   await page.keyboard.down("Control");
   await page.mouse.wheel(0, -60);
   await page.keyboard.up("Control");
   await expect.poll(width).toBeGreaterThan(fitted * 1.2);
+  const after = (await frame.boundingBox())!;
+  expect(Math.abs(after.x + after.width / 2 - middle.x)).toBeLessThan(2);
+  expect(Math.abs(after.y + after.height / 2 - middle.y)).toBeLessThan(2);
 });
 
 test("browsing current entries requests no historical bytes", async ({

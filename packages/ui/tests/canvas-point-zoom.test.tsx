@@ -9,29 +9,34 @@ import { createRef } from "react";
 import { wheelPixels } from "../src/canvas-stage/canvas-gestures.js";
 import {
   CanvasStage,
+  wheelZoom,
   type CanvasStageHandle,
 } from "../src/canvas-stage/canvas-stage.js";
 
 import { SECTION, laidOut, placed, zoomText } from "./canvas-stage-fixture.js";
 
-test("the handle zooms about a canvas point for a forwarded wheel and pinch", () => {
+test("the handle zooms by a factor about a point of the page", () => {
   const handle = createRef<CanvasStageHandle>();
   const { container } = render(
     <CanvasStage canvasRef={laidOut} ref={handle} section={SECTION} />,
   );
+  // happy-dom places the canvas at the page's top left, so a page point is
+  // the same canvas point.
   assert.equal(zoomText(), "38%");
   assert.equal(placed(container), "translate(330px, 16px)");
   // The section's top left keeps its place when the zoom is about it.
-  act(() => handle.current?.zoomByAt(2, { x: 330, y: 16 }));
+  act(() => handle.current?.zoomAt(2, 330, 16));
   assert.equal(zoomText(), "76%");
   assert.equal(placed(container), "translate(330px, 16px)");
   // A wheel of -100 pixels multiplies the zoom by e to the power of 0.8.
-  act(() => handle.current?.zoomWheelAt(-100, { x: 330, y: 16 }));
+  act(() => handle.current?.zoomAt(wheelZoom(1, -100), 330, 16));
   assert.equal(zoomText(), "168%");
   assert.equal(placed(container), "translate(330px, 16px)");
-  // The zoom stays within 8% and 400%.
-  act(() => handle.current?.zoomByAt(100, { x: 330, y: 16 }));
+  // Another point moves the section away from it; the zoom stays within
+  // 8% and 400%.
+  act(() => handle.current?.zoomAt(100, 0, 0));
   assert.equal(zoomText(), "400%");
+  assert.notEqual(placed(container), "translate(330px, 16px)");
 });
 
 test("a wheel distance counts pixels, lines of 16 pixels, or pages", () => {

@@ -4,11 +4,15 @@ import test from "node:test";
 import { act } from "@testing-library/react";
 
 import type { FrameEvent } from "@mokly/frame";
+import { wheelZoom, type CanvasStageHandle } from "@mokly/ui/canvas-stage";
 
-import { CanvasInputContext } from "../src/shell/canvas_frame_input.js";
 import { DESKTOP_FRAME_SIZE } from "../src/shell/canvas_frame_size.js";
 import { CanvasLiveFrame } from "../src/shell/canvas_live_frame.js";
 import { CanvasReadingStage } from "../src/shell/canvas_reading.js";
+import {
+  CanvasControlContext,
+  type CanvasControl,
+} from "../src/shell/canvas_stage.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import {
   DocumentStageFrame,
@@ -39,6 +43,27 @@ function documentEntry(path: string): DocumentEntry {
   return entry;
 }
 
+/** A canvas whose handle records what the frames ask of it. */
+function recordingControl(): { calls: unknown[][]; control: CanvasControl } {
+  const calls: unknown[][] = [];
+  const handle: CanvasStageHandle = {
+    fit: () => calls.push(["fit"]),
+    run: (command) => calls.push(["run", command]),
+    zoomAt: (factor, x, y) => calls.push(["zoomAt", factor, x, y]),
+    zoomIn: () => calls.push(["zoomIn"]),
+    zoomOut: () => calls.push(["zoomOut"]),
+    zoomTo: (zoom) => calls.push(["zoomTo", zoom]),
+  };
+  return {
+    calls,
+    control: {
+      canvas: { current: null },
+      handle: { current: handle },
+      zoom: { current: 1 },
+    },
+  };
+}
+
 test("a screen or component frame asks for canvas input and hands its wheel, pinch and keys to the canvas", async (t) => {
   registerDom(t);
   const [desktop] = canvasPlans("product/browse/home");
@@ -46,34 +71,30 @@ test("a screen or component frame asks for canvas input and hands its wheel, pin
   for (const plan of [desktop, component]) {
     assert.ok(plan);
     const { adapter, mounts } = fakeAdapter();
-    const routed: [string, Element][] = [];
+    const { calls, control } = recordingControl();
     const frame = renderInShell(
       adapter,
       plan.entry.path,
-      <CanvasInputContext
-        value={(event, element) => routed.push([event.type, element])}
-      >
+      <CanvasControlContext value={control}>
         <CanvasLiveFrame
           hasDarkFragments={false}
           plan={plan}
           size={DESKTOP_FRAME_SIZE}
         />
-      </CanvasInputContext>,
+      </CanvasControlContext>,
     );
     try {
       await act(flush);
       assert.equal(mounts.length, 1, plan.key);
       assert.equal(mounts[0]!.canvasInput, true, plan.key);
       act(() => EVENTS.forEach((event) => mounts[0]!.onEvent!(event)));
-      const iframe = frame.container.querySelector("iframe");
-      assert.deepEqual(
-        routed.map(([type, element]) => [type, element === iframe]),
-        [
-          ["canvas-wheel", true],
-          ["canvas-pinch", true],
-          ["canvas-key", true],
-        ],
-      );
+      // The frame is known, so the wheel and the pinch zoom about their
+      // point in it: happy-dom lays the frame out at the page's top left.
+      assert.deepEqual(calls, [
+        ["zoomAt", wheelZoom(1, -40), 10, 20],
+        ["zoomAt", 1.5, 10, 20],
+        ["run", "fit"],
+      ]);
     } finally {
       frame.unmount();
     }

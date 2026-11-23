@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { CanvasStageHandle } from "@mokly/ui/canvas-stage";
+import { wheelZoom, type CanvasStageHandle } from "@mokly/ui/canvas-stage";
 
 import {
   framePagePoint,
   isCanvasInput,
-  routeCanvasInput,
+  routeFrameInput,
+  type CanvasInputTarget,
 } from "../src/shell/canvas_input.js";
+import { routeCanvasInput } from "../src/shell/canvas_removed_input.js";
 
 /** A box on the page, as `getBoundingClientRect` gives it. */
 function box(left: number, top: number, width: number, height: number) {
@@ -37,25 +39,31 @@ function frame(border = 0): HTMLIFrameElement {
   } as unknown as HTMLIFrameElement;
 }
 
-/** A canvas 40px from the page's left and 20px from its top, 600px tall. */
-const canvas = {
-  clientHeight: 600,
-  getBoundingClientRect: () => box(40, 20, 900, 600),
-} as unknown as HTMLElement;
-
-/** A handle that records the calls that the route makes. */
-function recordingHandle() {
+/**
+ * A canvas 600px tall at a zoom of 0.5, whose handle records each call. The
+ * canvas reports `hovered` as the frame under the pointer.
+ */
+function target(hovered: HTMLIFrameElement | null = null) {
   const calls: unknown[][] = [];
   const handle: CanvasStageHandle = {
     fit: () => calls.push(["fit"]),
     run: (command) => calls.push(["run", command]),
-    zoomByAt: (factor, point) => calls.push(["zoomByAt", factor, point]),
+    zoomAt: (factor, x, y) => calls.push(["zoomAt", factor, x, y]),
     zoomIn: () => calls.push(["zoomIn"]),
     zoomOut: () => calls.push(["zoomOut"]),
     zoomTo: (zoom) => calls.push(["zoomTo", zoom]),
-    zoomWheelAt: (deltaY, point) => calls.push(["zoomWheelAt", deltaY, point]),
   };
-  return { calls, handle };
+  const canvas = {
+    clientHeight: 600,
+    querySelector: (selector: string) =>
+      selector === "iframe:hover" ? hovered : null,
+  } as unknown as HTMLElement;
+  const control: CanvasInputTarget = {
+    canvas: { current: canvas },
+    handle: { current: handle },
+    zoom: { current: 0.5 },
+  };
+  return { calls, control };
 }
 
 test("a point of a frame's viewport maps to the page through the frame's box and scale", () => {
@@ -71,47 +79,63 @@ test("a point of a frame's viewport maps to the page through the frame's box and
   });
 });
 
-test("a forwarded wheel zooms about its point on the canvas, in pixels", () => {
-  const { calls, handle } = recordingHandle();
-  // (200, 100) in the frame stands at (200, 100) on the page, which is
-  // (160, 80) on the canvas.
-  const at = { x: 160, y: 80 };
+test("a forwarded wheel zooms about its point in the frame at the canvas's wheel rate", () => {
+  const { calls, control } = target();
   for (const [deltaY, deltaMode] of [
     [-40, 0],
     [-3, 1],
     [1, 2],
   ] as const)
-    routeCanvasInput(
+    routeFrameInput(
+      control,
       { type: "canvas-wheel", deltaY, deltaMode, x: 200, y: 100 },
       frame(),
-      canvas,
-      handle,
     );
-  // Lines count 16 pixels and pages the canvas's height, as its own wheel.
+  // Lines count 16 pixels and pages the canvas's height, as its own wheel;
+  // (200, 100) in the frame stands at (200, 100) on the page.
   assert.deepEqual(calls, [
-    ["zoomWheelAt", -40, at],
-    ["zoomWheelAt", -48, at],
-    ["zoomWheelAt", 600, at],
+    ["zoomAt", wheelZoom(1, -40), 200, 100],
+    ["zoomAt", wheelZoom(1, -48), 200, 100],
+    ["zoomAt", wheelZoom(1, 600), 200, 100],
   ]);
 });
 
-test("a forwarded pinch multiplies the zoom about its point, and a key runs its command", () => {
-  const { calls, handle } = recordingHandle();
-  routeCanvasInput(
+test("a forwarded pinch zooms by its scale about its point, and a key runs its command", () => {
+  const { calls, control } = target();
+  routeFrameInput(
+    control,
     { type: "canvas-pinch", scale: 1.25, x: 0, y: 0 },
     frame(),
-    canvas,
-    handle,
   );
   for (const key of ["zoom-in", "zoom-out", "zoom-100", "fit"] as const)
-    routeCanvasInput({ type: "canvas-key", key }, frame(), canvas, handle);
+    routeFrameInput(control, { type: "canvas-key", key }, frame());
   assert.deepEqual(calls, [
-    ["zoomByAt", 1.25, { x: 60, y: 30 }],
+    ["zoomAt", 1.25, 100, 50],
     ["run", "zoom-in"],
     ["run", "zoom-out"],
     ["run", "actual-size"],
     ["run", "fit"],
   ]);
+});
+
+test("a previous version's wheel or pinch zooms about its point in the frame under the pointer", () => {
+  const hovered = target(frame());
+  routeCanvasInput(hovered.control, {
+    type: "canvas-pinch",
+    scale: 2,
+    x: 200,
+    y: 100,
+  });
+  assert.deepEqual(hovered.calls, [["zoomAt", 2, 200, 100]]);
+  // Without a frame under the pointer, it zooms about the stage's centre.
+  const elsewhere = target();
+  routeCanvasInput(elsewhere.control, {
+    type: "canvas-pinch",
+    scale: 2,
+    x: 200,
+    y: 100,
+  });
+  assert.deepEqual(elsewhere.calls, [["zoomTo", 1]]);
 });
 
 test("only the canvas events of a frame count as canvas input", () => {

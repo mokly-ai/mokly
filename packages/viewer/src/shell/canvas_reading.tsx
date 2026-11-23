@@ -11,7 +11,7 @@ import { useContext } from "react";
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
 
-import { useCanvasFrameInput } from "./canvas_frame_input.js";
+import { useLiveFrameInput } from "./canvas_frame_input.js";
 import { readingFrameLabel } from "./canvas_frames.js";
 import { CanvasEntryStage } from "./canvas_stage.js";
 import type { Catalogue } from "./catalogue.js";
@@ -40,7 +40,7 @@ function ReadingFrame({
   scheme: "dark" | "light";
 }) {
   const stage = useContext(FrameStageContext);
-  const onCanvasInput = useCanvasFrameInput();
+  const onCanvasInput = useLiveFrameInput();
   const frame = useDocumentFrame(entry, scheme, fragment, stage, onCanvasInput);
   return (
     <CanvasFrame

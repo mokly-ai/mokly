@@ -392,7 +392,14 @@ own size with its fractions, which the size tag rounds. An adapter
 without the measurement, a failed measurement, and a document without
 content keep the desktop size, and a measurement that ends after the frame
 loads another document is dropped. A fitted canvas refits to the measured
-frames.
+frames. Each live canvas frame, a screen's, a component's or a reading
+frame, mounts with the adapter's canvas input: the mount hook's
+`onCanvasInput` receives it with the frame element, and
+`canvas_frame_input.tsx` routes it through `CanvasControlContext`.
+`canvas_input.ts` maps a point of the frame's viewport to the page through
+the frame's box and scale: ⌘ or Ctrl with the wheel and a pinch zoom the
+canvas about that point with the handle's `zoomAt`, and a canvas key runs
+its command.
 `canvas_reading.tsx` shows a page or a Markdown document as one reading frame,
 named by its source file, through the mount hook of `document_stage_frame.tsx`.
 A Markdown document without a dark render keeps its light document under
@@ -694,8 +701,8 @@ version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
 input of each document that it presents with `listenForCanvasInput`, and
 `canvas_removed_input.ts` routes it through the `CanvasControlContext` of
 `canvas_stage.tsx`: a canvas key runs its command, a zoom wheel or a pinch
-zooms the canvas about the stage's centre, and the document's keyboard focus
-draws the frame's focus glow. The React
+zooms the canvas about its point in the frame under the pointer, and the
+document's keyboard focus draws the frame's focus glow. The React
 request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays

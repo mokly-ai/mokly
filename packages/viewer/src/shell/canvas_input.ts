@@ -7,10 +7,13 @@
  * maps to the page through the frame's box on screen.
  */
 
+import type { RefObject } from "react";
+
 import type { FrameEvent } from "@mokly/frame";
 import type { CanvasInputEvent } from "@mokly/frame/internal";
 import {
   wheelPixels,
+  wheelZoom,
   type CanvasCommand,
   type CanvasStageHandle,
 } from "@mokly/ui/canvas-stage";
@@ -27,6 +30,13 @@ export type CanvasGestureEvent = Exclude<
   { type: "canvas-blur" | "canvas-focus" }
 >;
 
+/** What the route reads of the canvas: the canvas, its handle, its zoom. */
+export interface CanvasInputTarget {
+  canvas: RefObject<Pick<HTMLElement, "clientHeight"> | null>;
+  handle: RefObject<CanvasStageHandle | null>;
+  zoom: RefObject<number>;
+}
+
 const CANVAS_INPUT: ReadonlySet<FrameEvent["type"]> = new Set([
   "canvas-blur",
   "canvas-focus",
@@ -41,17 +51,15 @@ export function isCanvasInput(event: FrameEvent): event is CanvasInputEvent {
 }
 
 /** The canvas command of each forwarded key. */
-const KEY_COMMANDS: Readonly<
-  Record<
-    Extract<CanvasInputEvent, { type: "canvas-key" }>["key"],
-    CanvasCommand
-  >
-> = {
+const KEY_COMMANDS = {
   fit: "fit",
   "zoom-100": "actual-size",
   "zoom-in": "zoom-in",
   "zoom-out": "zoom-out",
-};
+} as const satisfies Record<
+  Extract<CanvasInputEvent, { type: "canvas-key" }>["key"],
+  CanvasCommand
+>;
 
 /**
  * A point of a frame's visible viewport on the page: the frame's box on
@@ -71,27 +79,50 @@ export function framePagePoint(
 }
 
 /**
- * Move the canvas for one forwarded input: a wheel's distance, in lines or
- * pages counted as the canvas's own wheel counts them, and a pinch's factor
- * zoom about the input's point on the canvas, and a key runs its command.
+ * The frame under the pointer on a canvas, for input whose frame the route
+ * does not know: a wheel or a pinch over a frame keeps the pointer over it.
  */
-export function routeCanvasInput(
+export function hoveredFrame(
+  canvas: Pick<HTMLElement, "clientHeight"> | null,
+): HTMLIFrameElement | null {
+  if (!canvas || !("querySelector" in canvas)) return null;
+  return (canvas as HTMLElement).querySelector<HTMLIFrameElement>(
+    "iframe:hover",
+  );
+}
+
+/**
+ * Move the canvas for one forwarded input of a frame. A key runs its
+ * command. A wheel, whose lines and pages count as the canvas's own wheel
+ * counts them, and a pinch zoom by their factor about their point in
+ * `frame`, or about the stage's centre without a frame.
+ */
+export function routeFrameInput(
+  target: CanvasInputTarget,
   event: CanvasGestureEvent,
-  frame: HTMLIFrameElement,
-  canvas: HTMLElement,
-  handle: CanvasStageHandle,
+  frame: HTMLIFrameElement | null,
 ): void {
+  const handle = target.handle.current;
+  if (!handle) return;
   if (event.type === "canvas-key") {
     handle.run(KEY_COMMANDS[event.key]);
     return;
   }
+  const factor =
+    event.type === "canvas-pinch"
+      ? event.scale
+      : wheelZoom(
+          1,
+          wheelPixels(
+            event.deltaY,
+            event.deltaMode,
+            target.canvas.current?.clientHeight ?? 0,
+          ),
+        );
+  if (!frame) {
+    handle.zoomTo(target.zoom.current * factor);
+    return;
+  }
   const page = framePagePoint(frame, event);
-  const bounds = canvas.getBoundingClientRect();
-  const point = { x: page.x - bounds.left, y: page.y - bounds.top };
-  if (event.type === "canvas-pinch") handle.zoomByAt(event.scale, point);
-  else
-    handle.zoomWheelAt(
-      wheelPixels(event.deltaY, event.deltaMode, canvas.clientHeight),
-      point,
-    );
+  handle.zoomAt(factor, page.x, page.y);
 }

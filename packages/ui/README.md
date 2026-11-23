@@ -193,12 +193,16 @@ holds one section, with the zoom pill at the bottom centre of its stage. The
 canvas keeps its view, the zoom and the position of the section, itself, so a
 pan or a zoom renders the canvas alone and not the host's tree. The host
 reaches the view through the `CanvasStageHandle` that `ref` receives: `fit`,
-`zoomIn`, `zoomOut`, `zoomTo`, and `run`, which runs the command that
-`canvasKeyCommand` gives for a key. The host listens for the keys where they
-belong, such as on a whole document or on one root, and a later control, such
-as a dock's Fit, uses the same handle. `wheelZoom` gives the zoom after a
-wheel distance, at the canvas's own rate, for a host that zooms the canvas
-from input that it receives elsewhere. The host passes the section as
+`zoomIn`, `zoomOut`, `zoomTo`, `zoomAt`, and `run`, which runs the command
+that `canvasKeyCommand` gives for a key. `zoomAt` multiplies the zoom by a
+factor about a point of the page, which keeps its place, for a wheel or a
+pinch that a frame's document forwards. The host listens for the keys where
+they belong, such as on a whole document or on one root, and a later control,
+such as a dock's Fit, uses the same handle. `wheelZoom` gives the zoom after a
+wheel distance, at the canvas's own rate, and `wheelPixels` counts a wheel's
+lines and pages in pixels as the canvas's own wheel does, for a host that
+zooms the canvas from input that it receives elsewhere. The host passes the
+section as
 `section`, a `CanvasSection` without its reading size, and names it with
 `fitKey`: a new name fits the canvas again, a fitted canvas refits when its
 stage or the section's lengths change, and `onViewChange` hears of each pan,
