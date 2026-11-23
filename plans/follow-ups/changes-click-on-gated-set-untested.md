@@ -109,6 +109,9 @@
 - **Wider fix:** None. The getter already reads the same shown tab that the
   right panel draws, and B catches a later change that splits them.
 - **Previous examples:** None found.
+- **Related:** [tag-picker-ignores-frame-input.md](tag-picker-ignores-frame-input.md)
+  changes the same Escape handling in `use_canvas_selection.ts`. Its test can
+  share the workspace harness that this item adds.
 - **Recommendation:** B. It is the only option that checks the workspace's own
   value without a margin of time.
 - **Action:** fix after merge, apply B, because it needs a new unit harness and
