@@ -47,7 +47,7 @@ export interface InstanceBoxReading {
 }
 
 /** The smallest rectangle that holds the boxes of one instance, if it has any. */
-export function boundaryBox(
+function boundaryBox(
   boundaries: readonly InstanceBoundary[],
   key: string,
 ): Box | undefined {

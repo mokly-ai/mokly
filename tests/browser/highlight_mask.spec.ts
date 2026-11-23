@@ -9,6 +9,7 @@ import { test } from "./browser_test.js";
 import type {} from "./viewer_harness.js";
 import {
   canvasFrame,
+  chooseViewport,
   NARROW_WINDOW,
   revealInPanel,
 } from "./workspace_actions.js";
@@ -222,16 +223,18 @@ for (const layout of ["canvas", "narrow"] as const)
       await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
 
       // The Highlight components switch draws on every shown frame: on the
-      // canvas, the Desktop column's Light and Dark frames. In the compact
-      // layout the switch stands in the panel's sheet.
+      // canvas, the Desktop column's Light and Dark frames, which the Frames
+      // filter shows alone. In the compact layout the switch stands in the
+      // panel's sheet.
       const shown = layout === "canvas" ? 2 : 1;
-      const toggle = page.getByRole("button", {
+      if (layout === "canvas") await chooseViewport(page, "desktop");
+      const toggle = page.getByRole("switch", {
         name: "Highlight components",
         exact: true,
       });
       await revealInPanel(page, toggle);
       await toggle.click();
-      await expect(toggle).toHaveAttribute("aria-pressed", "true");
+      await expect(toggle).toBeChecked();
       await expectReportedMask(page, desktop, shown);
       const workspaceTop = await outlineTop(page, desktop);
       expect(workspaceTop).not.toBeNull();
@@ -246,7 +249,7 @@ for (const layout of ["canvas", "narrow"] as const)
         .toBeGreaterThan(workspaceTop! + 20 * scale);
       await expectReportedMask(page, desktop, shown);
       await toggle.click();
-      await expect(toggle).toHaveAttribute("aria-pressed", "false");
+      await expect(toggle).not.toBeChecked();
       await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
     });
   }

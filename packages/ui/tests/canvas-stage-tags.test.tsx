@@ -26,6 +26,8 @@ test("the fixed-size tags on the frames hide while the canvas draws them below 6
   act(() => handle.current?.zoomTo(0.6));
   assert.equal(canvas.getAttribute("data-canvas-tags"), null);
   assert.deepEqual([0.59, 0.6, 1].map(canvasTagsShown), [false, true, true]);
+  // The rule counts in whole percent, as the zoom pill reads the zoom.
+  assert.deepEqual([0.594, 0.5995].map(canvasTagsShown), [false, true]);
 });
 
 test("a click on the empty canvas is heard, but not one on a frame, a control or a drag's end", () => {

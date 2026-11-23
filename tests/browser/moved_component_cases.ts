@@ -6,7 +6,7 @@ import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js"
 
 import type { test as baseTest } from "./browser_test.js";
 import { expectHostPath } from "./entry_hosts.js";
-import { ACTION, row, type MovedHost } from "./moved_rows.js";
+import { ACTION, dot, row, type MovedHost } from "./moved_rows.js";
 import { openInspectFold, revealInPanel } from "./workspace_actions.js";
 
 /** Inspect's Variants of the moved Action: its own example, then its variants. */
@@ -44,14 +44,22 @@ export function registerMovedComponentCases(
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    for (const [entry, status, checked] of [
-      [moves.unchangedMovedVariant, "Unmodified", "Primary"],
-      [moves.metadataMovedVariant, "Changed", "Ghost"],
-      [moves.nestedMovedVariant, "Changed", "Iconic"],
+    // Inspect's head describes the shown views, so Ghost's metadata-only
+    // change reads Unmodified there; the catalogue marks the variant's own
+    // change, never the move, and its Changes filter lists Ghost.
+    for (const [entry, status, checked, marked] of [
+      [moves.unchangedMovedVariant, "Unmodified", "Primary", false],
+      [moves.metadataMovedVariant, "Unmodified", "Ghost", true],
+      [moves.nestedMovedVariant, "Changed", "Iconic", true],
     ] as const) {
       await host.open(page, entry);
       await expectVariants(page, status, checked);
+      await expect(row(page, entry)).toBeVisible();
+      if (marked) expect(await dot(page, entry)).not.toBe("none");
+      else expect(await dot(page, entry)).toBe("none");
     }
+    await page.locator('[data-filter="changed"]').click();
+    await expect(row(page, moves.metadataMovedVariant)).toBeVisible();
   });
 
   test("a variant deleted during its parent's move opens with that parent's workspace", async ({

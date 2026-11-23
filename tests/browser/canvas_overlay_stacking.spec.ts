@@ -16,6 +16,7 @@ import {
   screenInstance,
   setViewerMarkers,
 } from "./viewer_marker_test_helpers.js";
+import { setFrames, zoomToTags } from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -46,18 +47,60 @@ async function rightmost(elements: Locator): Promise<Locator> {
 }
 
 /**
- * Pan the canvas with a wheel over the stage's corner until the target's
- * left edge stands 24px inside the panel.
+ * Show the Mobile frames alone and zoom in until the canvas draws them at
+ * 60% of their size or more, where the highlight labels show, and then turn
+ * Highlight components on.
  */
-async function panUnder(page: Page, root: Locator, target: Locator) {
+async function highlightAtLabelZoom(root: Locator): Promise<void> {
+  await setFrames(root, { desktop: false, mobile: true });
+  await zoomToTags(root);
+  await root
+    .getByRole("switch", { name: "Highlight components", exact: true })
+    .check();
+}
+
+/**
+ * A point of the stage over the empty canvas, which takes the wheel: a
+ * zoomed-in frame can cover the stage's corner, and a frame's document takes
+ * a wheel over it.
+ */
+async function emptyStagePoint(root: Locator): Promise<Point> {
   const stage = await root
     .locator(".mbk-canvas-stage")
-    .evaluate((element) => element.getBoundingClientRect().toJSON() as Point);
+    .evaluate((element) => element.getBoundingClientRect().toJSON() as DOMRect);
+  const candidates = [
+    [8, 8],
+    [8, stage.height / 2],
+    [8, stage.height - 8],
+    [stage.width - 8, 8],
+    [stage.width - 8, stage.height / 2],
+  ].map(([x, y]) => ({ x: stage.x + x!, y: stage.y + y! }));
+  const point = await root.page().evaluate(
+    (points) =>
+      points.find(({ x, y }) => {
+        const hit = document.elementFromPoint(x, y);
+        return (
+          hit?.closest(".mbk-canvas") &&
+          !hit.closest(".mbk-canvas-frame, .mbk-zoom-pill")
+        );
+      }),
+    candidates,
+  );
+  expect(point).toBeDefined();
+  return point!;
+}
+
+/**
+ * Pan the canvas with a wheel over the empty stage until the target's left
+ * edge stands 24px inside the panel.
+ */
+async function panUnder(page: Page, root: Locator, target: Locator) {
   const panel = await box(root.locator('[data-floating-panel="right"]'));
   const distance = Math.round(panel.x + 24 - (await box(target)).x);
   expect(distance).toBeGreaterThan(0);
   const start = (await box(target)).x;
-  await page.mouse.move(stage.x + 8, stage.y + 8);
+  const point = await emptyStagePoint(root);
+  await page.mouse.move(point.x, point.y);
   await page.mouse.wheel(-distance, 0);
   await expect
     .poll(async () => Math.round((await box(target)).x - start))
@@ -114,12 +157,10 @@ test("in the standalone root, the right panel covers the highlight labels of a f
       'iframe[data-workspace-frame][data-mokly-frame-state="ready"]',
     ),
   ).toHaveCount(4);
-  await page
-    .getByRole("button", { name: "Highlight components", exact: true })
-    .click();
+  const root = page.locator(".mbk[data-mokly-shell]");
+  await highlightAtLabelZoom(root);
   const labels = page.locator(".mbk-highlight-label");
   await expect(labels.first()).toBeVisible();
-  const root = page.locator(".mbk[data-mokly-shell]");
   await panUnder(page, root, await rightmost(labels));
   await expectPanelOver(page, await pointsOverPanel(root, labels));
 });
@@ -133,9 +174,7 @@ test("in an embedded root, the right panel covers the highlight labels of a fram
     { id: "primary", instance: screenInstance(fixture, "mobile", "action") },
   ]);
   await expectMarkerState(page, "primary", "visible");
-  await root
-    .getByRole("button", { name: "Highlight components", exact: true })
-    .click();
+  await highlightAtLabelZoom(root);
   const labels = root.locator(".mbk-highlight-label");
   await expect(labels.first()).toBeVisible();
   // The Mobile frames' instances start at the same left edge, so the

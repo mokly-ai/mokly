@@ -32,13 +32,12 @@ test("a public embedded viewer fetches copied data without credentials or live e
     "sandbox",
     "allow-same-origin allow-scripts",
   );
-  await page.getByRole("tab", { name: "Components", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Highlight components", exact: true }),
-  ).toBeEnabled();
-  await page
-    .getByRole("button", { name: "Highlight components", exact: true })
-    .click();
+  const highlight = page.getByRole("switch", {
+    name: "Highlight components",
+    exact: true,
+  });
+  await expect(highlight).toBeEnabled();
+  await highlight.click();
   // The switch draws on every shown frame: on the canvas, each scheme's.
   await expect(
     page

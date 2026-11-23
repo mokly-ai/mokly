@@ -58,11 +58,11 @@ function commit(page: Page, selection: ViewerSelection) {
 const tools = (page: Page) =>
   page.locator('#one details[data-nav-disclosure="folder:specs:tools"]');
 
+/** Press the folder segment of Inspect's Path row, which reveals the folder. */
 async function revealTools(page: Page) {
   await page
-    .locator("#one")
-    .getByLabel("Catalogue location")
-    .getByRole("button", { name: "Tools" })
+    .locator("#one [data-inspect-path]")
+    .getByRole("button", { name: "tools", exact: true })
     .click();
 }
 
