@@ -77,6 +77,16 @@ Depends on: 10, 11
       item 9): for example the Action's own example at 148 × 86 and the
       Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`. Branch:
       `calummoore/canvas-redesign-m24-mockups-for-708g`.
+- [ ] Put comparison panes on the canvas input: `comparison_frame.tsx` gives
+      each pane's `SnapshotFrame` the `canvasInput` prop, its listener calls
+      `routeFrameInput(control, event, frame.current)` with `control` from
+      `CanvasControlContext`, the pane's `focusVisible` follows `canvas-focus`
+      and `canvas-blur`, and the panes render inside the canvas providers.
+- [ ] Update the guides that describe the old stage:
+      `docs/guides/catalogue/browse.md` ("Look at a screen", the drawer,
+      "Details"), `docs/guides/catalogue/changes.md:196-206`,
+      `docs/guides/authoring/screens.md:189` and
+      `docs/guides/authoring/storybook.md:67`.
 - [ ] Comparison panes measure each version with
       `measureContentBox(doc)` from `@mokly/frame/internal` (Milestone 23),
       for decision 23 below.
