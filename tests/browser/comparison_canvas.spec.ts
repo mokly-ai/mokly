@@ -1,7 +1,13 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import {
+  awaitPaneDocuments,
+  comparisonSection,
+  frameLabels,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { comparisonFrames, modeButton } from "./comparison_ui.js";
+import { chooseMode } from "./comparison_ui.js";
 
 /** Open an entry on a wide canvas and show one compare mode on its frames. */
 async function openMode(
@@ -11,9 +17,8 @@ async function openMode(
 ): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto(`/view/${path}/`);
-  await modeButton(page, mode).click();
-  await expect(modeButton(page, mode)).toHaveAttribute("aria-pressed", "true");
-  await expect(comparisonFrames(page).first()).toBeAttached();
+  await chooseMode(page, mode);
+  await awaitPaneDocuments(page);
 }
 
 /** Every grip of Swipe's dividers, one for each compared frame. */
@@ -34,11 +39,8 @@ test("Swipe draws one divider at the same place on every frame, which a drag and
   expect(await grips(page).count()).toBeGreaterThan(1);
   await expectGripsAt(page, "50");
 
-  const frame = page
-    .locator("[data-mokly-stage] figure")
-    .filter({ has: grips(page) })
-    .first();
-  const grip = frame.getByRole("slider", { name: /^Divider, / });
+  const frame = comparisonSection(page, "desktop");
+  const grip = page.getByRole("slider", { name: "Divider, Desktop · Light" });
   const area = (await frame.boundingBox())!;
   const start = (await grip.boundingBox())!;
   await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
@@ -59,9 +61,10 @@ test("Swipe draws one divider at the same place on every frame, which a drag and
   await page.keyboard.press("Home");
   await expectGripsAt(page, "0");
   // The current version shows only to the right of the divider.
-  await expect(
-    frame.locator("[data-compare-mode='swipe'] .mb-pane--after"),
-  ).toHaveCSS("clip-path", "inset(0px 0px 0px 0%)");
+  await expect(frame.locator(".mb-pane--after")).toHaveCSS(
+    "clip-path",
+    "inset(0px 0px 0px 0%)",
+  );
 
   // The grip keeps its size at every zoom.
   const size = (await grip.boundingBox())!;
@@ -80,11 +83,7 @@ test("a zoom gesture and a canvas key inside a pane reach the canvas", async ({
   await openMode(page, comparisonPaths.changed, "Overlay");
   const zoom = page.getByRole("group", { name: "Zoom" });
   const fitted = await zoom.textContent();
-  const current = page
-    .locator(
-      "[data-mokly-stage] [data-compare-mode='overlay'] .mb-pane--after iframe",
-    )
-    .first();
+  const current = paneFrame(comparisonSection(page, "desktop"), "after");
   await expect(current.contentFrame().locator("body")).not.toBeEmpty();
   const box = (await current.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -106,10 +105,7 @@ test("a component frame in a compare takes the larger size of its two versions",
   page,
 }) => {
   await openMode(page, comparisonPaths.component, "Overlay");
-  const frame = page
-    .locator("[data-mokly-stage] figure")
-    .filter({ has: page.locator("[data-compare-mode='overlay']") })
-    .first();
+  const frame = comparisonSection(page, "component");
   const panes = frame.locator("iframe[data-mokly-comparison-frame]");
   await expect(panes).toHaveCount(2);
   // Each version's own size: its content's box with the same margin on its
@@ -133,9 +129,9 @@ test("a component frame in a compare takes the larger size of its two versions",
       );
       const width = Math.round(Math.max(before!.width, after!.width));
       const height = Math.round(Math.max(before!.height, after!.height));
-      const label = await frame.locator("figcaption").textContent();
+      const label = await frameLabels(frame).textContent();
       return label?.includes(`${width} × ${height}`) ?? false;
     })
     .toBe(true);
-  await expect(frame.locator("figcaption")).not.toContainText("1280 × 800");
+  await expect(frameLabels(frame)).not.toContainText("1280 × 800");
 });
