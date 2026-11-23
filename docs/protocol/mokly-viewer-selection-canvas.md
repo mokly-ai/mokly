@@ -81,7 +81,8 @@ The tags on a frame keep their size at every zoom: the selection's name tag,
 its size tag and its padding redline with the value, and the
 [highlight labels](./mokly-component-workspace-design.md#view-controls) of
 Highlight components. While the canvas draws its frames at less than 60% of
-their size, it hides these tags, and a zoom to 60% or more shows them again.
+their size, in whole percent as the zoom pill reads it, it hides these tags,
+and a zoom to 60% or more shows them again.
 The outlines, the handles and the highlight's cutouts stay, and Inspect's
 Selection section still names the selection. The
 [compact layout](./mokly-shell-device-chrome.md#compact-layout) follows the
@@ -115,7 +116,7 @@ The selection's scheme names that frame: choosing a variant in Inspect
 selects its row's frame of that scheme, and a variant set's selected frame
 moves to its row's frame of the scheme that the selection names, such as
 after an Appearance change. A row without a frame of that scheme keeps its
-Light frame.
+Light frame. A Used by link's instance is selected on that frame too.
 
 ## Related Docs
 

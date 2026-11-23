@@ -62,7 +62,12 @@ export function useWorkspacePicks({
   const picks = useCanvasSelection({
     dispatch,
     plans: canvas.frames,
-    routed: { path: entry.path, savedVariant, scheme: routedScheme },
+    routed: {
+      compact: !wide,
+      path: entry.path,
+      savedVariant,
+      scheme: routedScheme,
+    },
     selecting,
     set,
     state: picked,

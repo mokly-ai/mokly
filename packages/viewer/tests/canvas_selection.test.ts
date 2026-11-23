@@ -127,6 +127,7 @@ test("a Used by link selects its instance on the frame of its viewport and schem
   const light = workspace("product/browse/home", false);
   const plans = workspaceFrames(light, EVERY_FRAME);
   const routed = {
+    compact: false,
     path: light.entry.path,
     savedVariant: false,
     scheme: "light",
@@ -149,6 +150,17 @@ test("a Used by link selects its instance on the frame of its viewport and schem
     routeSelection({ view: { kind: "home" } }, plans, routed),
     undefined,
   );
+  // The compact layout shows the frame of the selection's scheme alone, so
+  // the link's instance selects there.
+  const dark = workspace("product/browse/home", true);
+  assert.deepEqual(
+    routeSelection(
+      { view: { kind: "home" }, colorScheme: "light", instance: "k" },
+      workspaceFrames(dark, EVERY_FRAME),
+      { ...routed, compact: true, scheme: "dark" },
+    ),
+    { instance: { frame: "mobile-dark", key: "k" } },
+  );
 });
 
 test("a routed saved variant selects its frame in the scheme that the layout names", () => {
@@ -157,16 +169,27 @@ test("a routed saved variant selects its frame in the scheme that the layout nam
   const route = { view: { kind: "home" } } as const;
   const path = "components/action/default";
   assert.deepEqual(
-    routeSelection(route, plans, { path, savedVariant: true, scheme: "light" }),
+    routeSelection(route, plans, {
+      compact: false,
+      path,
+      savedVariant: true,
+      scheme: "light",
+    }),
     { frame: "components/action/default:light" },
   );
   assert.deepEqual(
-    routeSelection(route, plans, { path, savedVariant: true, scheme: "dark" }),
+    routeSelection(route, plans, {
+      compact: true,
+      path,
+      savedVariant: true,
+      scheme: "dark",
+    }),
     { frame: "components/action/default:dark" },
   );
   // The set's own route selects no frame.
   assert.equal(
     routeSelection(route, plans, {
+      compact: false,
       path: "components/action",
       savedVariant: false,
       scheme: "light",

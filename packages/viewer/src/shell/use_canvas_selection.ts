@@ -88,10 +88,16 @@ export function useCanvasSelection({
   /** Every frame of the canvas, the hidden ones included. */
   plans: readonly CanvasFramePlan[];
   /**
-   * The routed entry, whether it is a saved variant of a set, and the scheme
-   * of the frame that a routed variant selects.
+   * The routed entry, whether it is a saved variant of a set, the scheme of
+   * the frame that a routed variant selects, and whether the compact layout
+   * shows one frame.
    */
-  routed: { path: string; savedVariant: boolean; scheme: "dark" | "light" };
+  routed: {
+    compact: boolean;
+    path: string;
+    savedVariant: boolean;
+    scheme: "dark" | "light";
+  };
   /** Whether a click on a frame selects, as it does in Inspect. */
   selecting: boolean;
   /** Whether the canvas holds a variant set. */

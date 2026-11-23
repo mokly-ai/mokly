@@ -125,12 +125,19 @@ function routedFrame(
  * The selection that a route names: the instance of a Used by link on the
  * frame of the link's viewport and scheme, or the frame of a variant set's
  * routed saved variant in `routed.scheme`: Light on the wide canvas, and the
- * selection's scheme in the compact layout, which picks that frame.
+ * selection's scheme in the compact layout, which picks that frame. The
+ * compact layout shows the frame of the selection's scheme alone, so a
+ * link's instance selects there on that frame.
  */
 export function routeSelection(
   route: ShellRoute,
   plans: readonly CanvasFramePlan[],
-  routed: { path: string; savedVariant: boolean; scheme: "dark" | "light" },
+  routed: {
+    compact: boolean;
+    path: string;
+    savedVariant: boolean;
+    scheme: "dark" | "light";
+  },
 ):
   { instance: { frame: string; key: string } } | { frame: string } | undefined {
   const viewport = route.viewport === "desktop" ? "desktop" : "mobile";
@@ -139,7 +146,7 @@ export function routeSelection(
       plans,
       routed.path,
       viewport,
-      route.colorScheme ?? "light",
+      routed.compact ? routed.scheme : (route.colorScheme ?? "light"),
     );
     return frame
       ? { instance: { frame: frame.key, key: route.instance } }

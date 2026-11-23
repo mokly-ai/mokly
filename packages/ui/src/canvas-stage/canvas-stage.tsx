@@ -62,9 +62,13 @@ const GRID_PITCH = 24;
  */
 export const CANVAS_TAG_ZOOM = 0.6;
 
-/** Whether the fixed-size tags on a frame show at a frame's scale. */
+/**
+ * Whether the fixed-size tags on a frame show at a frame's scale, which
+ * counts in whole percent as the zoom pill shows it, so a pill that reads
+ * 60% shows the tags.
+ */
 export function canvasTagsShown(scale: number): boolean {
-  return scale >= CANVAS_TAG_ZOOM;
+  return Math.round(scale * 100) >= Math.round(CANVAS_TAG_ZOOM * 100);
 }
 
 /** Whether a press on a target belongs to a control, not to the canvas. */
