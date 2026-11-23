@@ -1,22 +1,13 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { tabTo } from "./tab_to.js";
 
 /** The focus glow's ring: a 4px spread without blur, before any other shadow. */
 const GLOW = /^(?:rgba?|color)\([^)]*\) 0px 0px 0px 4px(?:,|$)/u;
 
 async function shadow(locator: Locator): Promise<string> {
   return locator.evaluate((element) => getComputedStyle(element).boxShadow);
-}
-
-/** Press Tab until `target` holds the focus, as a keyboard reader moves it. */
-async function tabTo(page: Page, target: Locator): Promise<void> {
-  for (let step = 0; step < 80; step += 1) {
-    await page.keyboard.press("Tab");
-    if (await target.evaluate((element) => element === document.activeElement))
-      return;
-  }
-  throw new Error("The control was not reachable with Tab");
 }
 
 test("the zoom pill's buttons and the path chip draw the focus glow", async ({

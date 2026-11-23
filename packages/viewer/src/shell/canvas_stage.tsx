@@ -3,7 +3,8 @@
  * `@mokly/ui/canvas-stage` the entry's section and the path chip's copy,
  * binds the canvas's keys, and measures the frames again after each pan and
  * zoom, which fire no scroll or resize event. The canvas is the stage that
- * clips each frame's highlights and markers.
+ * clips each frame's highlights and markers, and the frames' documents
+ * forward their canvas input to it.
  */
 
 import { useCallback, useEffect, useRef } from "react";
@@ -17,7 +18,7 @@ import {
 } from "@mokly/ui/canvas-stage";
 import { ChangeStatus, type ChangeStatusValue } from "@mokly/ui/change-status";
 
-import { FrameStageContext } from "./frame_layout_context.js";
+import { CanvasFrameContexts } from "./canvas_frame_input.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameRegistry,
@@ -109,7 +110,7 @@ export function CanvasEntryStage({
   useCanvasKeys(canvas, handle, store.context.embedded ?? false);
   const refresh = useGeometryRefresh(useOptionalShellFrameRegistry());
   return (
-    <FrameStageContext value={canvas}>
+    <CanvasFrameContexts canvas={canvas} handle={handle} shown={shown}>
       <CanvasStage
         canvasRef={canvas}
         fitKey={fitKey}
@@ -125,6 +126,6 @@ export function CanvasEntryStage({
           title,
         }}
       />
-    </FrameStageContext>
+    </CanvasFrameContexts>
   );
 }

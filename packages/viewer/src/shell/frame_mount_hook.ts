@@ -18,6 +18,7 @@ import type {
 import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
+import { isCanvasInput, type CanvasInputListener } from "./canvas_input.js";
 import { runCleanup } from "./cleanup.js";
 import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
@@ -42,6 +43,12 @@ interface MountedFrameInput {
   identity: ShellFrameIdentity;
   layout?: FrameLayout;
   sources?: readonly string[];
+  /**
+   * Receives the canvas input that the frame's document forwards, with the
+   * frame element. With it, each mount asks its adapter for canvas input,
+   * and no other listener receives that input.
+   */
+  onCanvasInput?: CanvasInputListener | undefined;
   onEvent?(event: FrameEvent): void;
   /**
    * Hears once for each document that the frame mounts, when the document's
@@ -75,6 +82,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const active = useRef<ActiveSession | undefined>(undefined);
   const latestEvent = useRef(input.onEvent);
+  const latestCanvas = useRef(input.onCanvasInput);
   const latestReady = useRef(input.onReady);
   const latestLayout = useRef(input.layout);
   const latestSources = useRef(input.sources);
@@ -91,6 +99,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         : "unavailable",
   );
   latestEvent.current = input.onEvent;
+  latestCanvas.current = input.onCanvasInput;
   latestReady.current = input.onReady;
   latestIdentity.current = input.identity;
   latestUsage.current = input.usage;
@@ -124,8 +133,13 @@ export function useMountedShellFrame(input: MountedFrameInput): {
     active.current = session;
     registry.add(session);
     setStatus("loading");
+    const canvasInput = latestCanvas.current !== undefined;
     const receive = (event: FrameEvent) => {
       if (controller.signal.aborted) return;
+      if (isCanvasInput(event)) {
+        latestCanvas.current?.(event, element);
+        return;
+      }
       if (
         event.type === "error" &&
         isFrameFailure(event.code, session.status === "loading")
@@ -146,6 +160,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
       .then(() => {
         mountedUsageRevision = session.usageRevision;
         return (input.adapter ?? registry.adapter).mount(element, {
+          ...(canvasInput ? { canvasInput: true } : {}),
           onEvent: receive,
           signal: controller.signal,
           url,

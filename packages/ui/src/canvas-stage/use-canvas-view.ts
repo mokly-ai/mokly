@@ -28,8 +28,10 @@ import {
   fitView,
   stageCentre,
   stepZoom,
+  wheelZoom,
   zoomAbout,
   type CanvasExtent,
+  type CanvasPoint,
   type CanvasRect,
   type CanvasView,
 } from "./canvas-view.js";
@@ -46,6 +48,16 @@ export interface CanvasStageHandle {
   zoomOut(): void;
   /** Show a zoom about the stage's centre, such as 1 for 100%. */
   zoomTo(zoom: number): void;
+  /**
+   * Multiply the zoom by a factor about a point of the canvas, in CSS pixels
+   * from its top left, as a pinch that a frame's document forwards does.
+   */
+  zoomByAt(factor: number, point: CanvasPoint): void;
+  /**
+   * Zoom for a wheel distance in CSS pixels about a point of the canvas, as
+   * ⌘ or Ctrl with the wheel over a frame's document does.
+   */
+  zoomWheelAt(deltaY: number, point: CanvasPoint): void;
 }
 
 /** A change of the view, from the shown section's extent and the stage. */
@@ -99,6 +111,25 @@ function useStage(box: RefObject<HTMLDivElement | null>) {
   return stage;
 }
 
+/**
+ * The handle's zooms about a point, which a host forwards from a frame's
+ * document, where the canvas's own gestures cannot reach.
+ */
+function pointZooms(
+  change: (next: CanvasViewChange) => void,
+): Pick<CanvasStageHandle, "zoomByAt" | "zoomWheelAt"> {
+  return {
+    zoomByAt: (factor, point) =>
+      change((view, extent) =>
+        zoomAbout(view, extent, view.zoom * factor, point),
+      ),
+    zoomWheelAt: (deltaY, point) =>
+      change((view, extent) =>
+        zoomAbout(view, extent, wheelZoom(view.zoom, deltaY), point),
+      ),
+  };
+}
+
 /** The handle's commands over one change function. */
 function commands(change: (next: CanvasViewChange) => void): CanvasStageHandle {
   const zoomTo = (zoom: number) =>
@@ -121,6 +152,7 @@ function commands(change: (next: CanvasViewChange) => void): CanvasStageHandle {
     zoomIn,
     zoomOut,
     zoomTo,
+    ...pointZooms(change),
   };
 }
 

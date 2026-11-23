@@ -30,6 +30,20 @@ const DRAG_THRESHOLD = 4;
 /** CSS pixels in one wheel line, for a wheel that counts lines. */
 const LINE_HEIGHT = 16;
 
+/**
+ * A wheel distance in CSS pixels: a wheel `deltaMode` of 0 counts pixels, 1
+ * counts lines of 16 pixels, and 2 counts pages of `pageHeight` pixels.
+ */
+export function wheelPixels(
+  delta: number,
+  deltaMode: number,
+  pageHeight: number,
+): number {
+  if (deltaMode === 1) return delta * LINE_HEIGHT;
+  if (deltaMode === 2) return delta * pageHeight;
+  return delta;
+}
+
 interface Drag {
   id: number;
   moved: boolean;
@@ -128,14 +142,8 @@ export function bindCanvasGestures(
 
   const wheel = (event: WheelEvent) => {
     event.preventDefault();
-    const unit =
-      event.deltaMode === 1
-        ? LINE_HEIGHT
-        : event.deltaMode === 2
-          ? canvas.clientHeight
-          : 1;
-    const dx = event.deltaX * unit;
-    const dy = event.deltaY * unit;
+    const dx = wheelPixels(event.deltaX, event.deltaMode, canvas.clientHeight);
+    const dy = wheelPixels(event.deltaY, event.deltaMode, canvas.clientHeight);
     if (event.ctrlKey || event.metaKey)
       handlers().zoomWheel(dy, local({ x: event.clientX, y: event.clientY }));
     else if (event.shiftKey && dx === 0) handlers().pan(-dy, 0);

@@ -4,7 +4,8 @@
  * `@mokly/ui/canvas-frame` draws the bare frame with its label and size tag.
  * The frame shows the view of its own scheme, whatever the appearance. A
  * component frame measures its document's content once after each load, and
- * its workspace then gives it the size that the content needs.
+ * its workspace then gives it the size that the content needs. The frame's
+ * document forwards its canvas input to the canvas that holds the frame.
  */
 
 import { useContext } from "react";
@@ -12,6 +13,7 @@ import { useContext } from "react";
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
 
+import { useCanvasFrameInput } from "./canvas_frame_input.js";
 import {
   measuredFrameSize,
   type CanvasFrameSize,
@@ -76,11 +78,13 @@ export function CanvasLiveFrame({
   size: CanvasFrameSize;
 }) {
   const stage = useContext(FrameStageContext);
+  const onCanvasInput = useCanvasFrameInput();
   const { entry, scheme, viewport } = plan;
   const frame = useViewFrame({
     entry,
     expanded: false,
     fragment,
+    onCanvasInput,
     // A screen's frames keep the size of their viewport.
     onReady:
       plan.kind === "component" && onSize

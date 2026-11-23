@@ -15,6 +15,7 @@ import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { ViewerSelection } from "../host/types.js";
 import { documentRoute } from "../navigation/routes.js";
 
+import type { CanvasInputListener } from "./canvas_input.js";
 import { DisplaySelection } from "./display_context.js";
 import { useMountedShellFrame } from "./frame_mount_hook.js";
 import {
@@ -53,13 +54,15 @@ export function documentScheme(
 
 /**
  * Mount a document's frame through its adapter, with the same logical
- * navigation as a view's frame.
+ * navigation as a view's frame. A reading frame on the canvas passes
+ * `onCanvasInput`, which receives its document's canvas input.
  */
 export function useDocumentFrame(
   entry: DocumentEntry,
   scheme: "dark" | "light",
   fragment: string | undefined,
   stage: RefObject<HTMLDivElement | null> | undefined,
+  onCanvasInput?: CanvasInputListener,
 ) {
   const store = useShellStore();
   const registry = useOptionalShellFrameRegistry();
@@ -77,6 +80,7 @@ export function useDocumentFrame(
     generation,
     identity,
     layout: { stage, expanded: false },
+    onCanvasInput,
     sources:
       entry.kind === "document"
         ? entry.colorSchemes.map((colorScheme) =>
