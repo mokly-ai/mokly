@@ -1,8 +1,9 @@
 /**
  * The key hint of the catalogue search field: a small key cap that names the
  * shortcut that moves focus to the field. It is a picture of the keys, so
- * assistive technology skips it, and the field names its shortcuts itself.
- * The `⌘` is drawn as a glyph, because not every font draws the character.
+ * assistive technology skips it, and the field of an interactive bar names
+ * its shortcuts itself. The `⌘` is drawn as a glyph, because not every font
+ * draws the character.
  */
 
 /**

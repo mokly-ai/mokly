@@ -289,6 +289,14 @@ owns standalone history, and `store_host.ts` owns host selection commits.
 `store_interactions.ts` binds both roots to clicks and Escape. It dismisses
 the picker and expanded frame on an outside click, including a click outside
 an embedded root. It returns picker focus only when the panel held focus.
+`search_keys.ts` binds the search keys of the
+[shell design](../../../../docs/protocol/mokly-shell-design.md#layout) while
+the top bar shows: ⌘K and Ctrl+K from anywhere, and `/` outside a text field.
+It listens on the document of a standalone shell and on an embedded root
+only, so the host page keeps its own keys. A key that acts loses its default
+action and moves focus through the `TopBarHandle` that `top_bar.tsx` holds.
+`useSearchShortcut` makes the field's key hint name `⌘K` on Apple's platforms
+and `Ctrl K` on the others.
 `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
 helpers. `selection.ts` owns selection changes and query equality.

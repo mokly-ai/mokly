@@ -6,9 +6,9 @@
  * top bar binds them on the whole document of a standalone shell, and only
  * on an embedded root, so that the host page keeps its own keys. A key that
  * moves focus loses its default action, such as the browser's own search or
- * the typed `/`; every other key keeps it. The field's key hint names `⌘K`
- * on Apple's platforms, whose keyboards carry the ⌘ key, and `Ctrl K` on
- * every other platform.
+ * the typed `/`. Every other key keeps it. The field's key hint names `⌘K` on
+ * Apple's platforms, whose keyboards carry the ⌘ key, and `Ctrl K` on every
+ * other platform.
  */
 
 import { useEffect, useSyncExternalStore } from "react";
