@@ -510,8 +510,9 @@ screen's or variant's projected and live view evidence, and a loaded
 comparison by path and rule key, so Current and a loaded comparison show the
 same facts once. It takes the ignored content ids from each shown view whose
 evidence is ready, then from a loaded comparison's views, and lists each id
-once. `workspace_evidence_merge.ts` clears held reasons that a newer
-publication no longer carries. `workspace_stylesheet_evidence.ts` turns that evidence into
+once. An `unchanged` view adds none. `workspace_evidence_merge.ts` clears held
+reasons that a newer publication no longer carries.
+`workspace_stylesheet_evidence.ts` turns that evidence into
 one item per changed file, with the contract's outcome sentences in order: own
 component rules, page selectors, unresolved rules, or else the full matched
 styles. `@mokly/ui/comparison-evidence` draws each file once with its

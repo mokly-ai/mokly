@@ -99,7 +99,9 @@ function mergeReasons(reasons: readonly ChangeReason[]): ChangeReason[] {
 /**
  * The paired ignore ids of each shown view whose classification evidence is
  * ready, then those of a loaded comparison's views, each id once in the order
- * first seen. A view whose evidence is unknown, pending or partial adds none.
+ * first seen. Only a view that differs names them: an `unchanged` view's
+ * ignored content is the same on both sides. A view whose evidence is
+ * unknown, pending or partial adds none.
  */
 function mergeIgnoredIds(
   shown: readonly ShellCatalogueView[],
@@ -107,10 +109,15 @@ function mergeIgnoredIds(
 ): string[] {
   const classified = shown.flatMap((view) =>
     view.state && view.ignoredIds && view.resourceEvidence
-      ? view.ignoredIds
+      ? namedIgnoredIds({ state: view.state, ignoredIds: view.ignoredIds })
       : [],
   );
-  return [
-    ...new Set([...classified, ...loaded.flatMap((view) => view.ignoredIds)]),
-  ];
+  return [...new Set([...classified, ...loaded.flatMap(namedIgnoredIds)])];
+}
+
+/** A view's paired ignore ids, unless the view is unchanged. */
+function namedIgnoredIds(
+  view: Pick<ReviewView, "ignoredIds" | "state">,
+): readonly string[] {
+  return view.state === "unchanged" ? [] : view.ignoredIds;
 }
