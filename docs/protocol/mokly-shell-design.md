@@ -1,6 +1,6 @@
 # Mokly Shell Design Contract
 
-Status: The canvas stage with its floating panels and its compact layout, the search keys, and the right panel with compare on every frame are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the stage, the panels, the compact layout and the search keys, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and compare.
+Status: The canvas stage with its floating panels and its compact layout, and the right panel with compare on every frame are not built yet. [Milestone 11](../../plans/canvas-redesign-milestones-viewer.md#milestone-11-canvas-stage-in-moklyui) builds the stage, the panels and the compact layout, and [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the right panel and compare.
 
 ## Scope
 
@@ -129,8 +129,11 @@ preview scheme and the compact layout.
   Search uses `Search catalogue` as its accessible name and `Search` as its
   placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
   and Ctrl+K move focus to the search field from anywhere in the shell. `/`
-  does the same while focus is not in a text field. The standalone bar carries
-  no preview mode switch; Appearance is the one setting that belongs there.
+  does the same while focus is not in a text field. At or above 900px, a key
+  hint before the tag picker names `⌘K` on Apple's platforms and `Ctrl K`
+  elsewhere. Assistive technology skips the hint, and the field names its keys
+  to it. The standalone bar carries no preview mode switch; Appearance is the
+  one setting that belongs there.
   Decision: the standalone shell keeps Appearance in its top bar, not in an
   account menu, because it has no account menu. Matching uses the single
   [search rule](./mokly-folders.md#titles). Filtering hides empty groups and

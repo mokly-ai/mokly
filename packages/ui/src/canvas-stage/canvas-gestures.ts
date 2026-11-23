@@ -2,12 +2,14 @@
  * The reader's gestures on the canvas: a drag around the frames pans it, and
  * a press without movement stays a click; the wheel and a two-finger
  * trackpad scroll pan it; ⌘ or Ctrl with the wheel, a trackpad pinch, which
- * arrives as a wheel event with Ctrl, and a two-finger touch pinch zoom it
- * about the pointer or the pinch. One finger on a touch screen pans. A frame's
- * document is its own page, so the wheel and a swipe over a frame scroll that
- * document and never reach the canvas.
+ * arrives as a wheel event with Ctrl, Safari's gesture events, and a
+ * two-finger touch pinch zoom it about the pointer or the pinch. One finger
+ * on a touch screen pans. A frame's document is its own page, so its wheel
+ * and swipes never reach these listeners: a host forwards a frame's zoom
+ * input through the handle instead.
  */
 
+import { bindGesturePinch } from "./canvas-gesture-pinch.js";
 import type { CanvasPoint } from "./canvas-view.js";
 
 /** What the canvas does for each gesture. */
@@ -29,6 +31,20 @@ const DRAG_THRESHOLD = 4;
 
 /** CSS pixels in one wheel line, for a wheel that counts lines. */
 const LINE_HEIGHT = 16;
+
+/**
+ * A wheel distance in CSS pixels: a wheel `deltaMode` of 0 counts pixels, 1
+ * counts lines of 16 pixels, and 2 counts pages of `pageHeight` pixels.
+ */
+export function wheelPixels(
+  delta: number,
+  deltaMode: number,
+  pageHeight: number,
+): number {
+  if (deltaMode === 1) return delta * LINE_HEIGHT;
+  if (deltaMode === 2) return delta * pageHeight;
+  return delta;
+}
 
 interface Drag {
   id: number;
@@ -128,14 +144,8 @@ export function bindCanvasGestures(
 
   const wheel = (event: WheelEvent) => {
     event.preventDefault();
-    const unit =
-      event.deltaMode === 1
-        ? LINE_HEIGHT
-        : event.deltaMode === 2
-          ? canvas.clientHeight
-          : 1;
-    const dx = event.deltaX * unit;
-    const dy = event.deltaY * unit;
+    const dx = wheelPixels(event.deltaX, event.deltaMode, canvas.clientHeight);
+    const dy = wheelPixels(event.deltaY, event.deltaMode, canvas.clientHeight);
     if (event.ctrlKey || event.metaKey)
       handlers().zoomWheel(dy, local({ x: event.clientX, y: event.clientY }));
     else if (event.shiftKey && dx === 0) handlers().pan(-dy, 0);
@@ -148,7 +158,14 @@ export function bindCanvasGestures(
   canvas.addEventListener("pointercancel", up);
   canvas.addEventListener("click", click, true);
   canvas.addEventListener("wheel", wheel, { passive: false });
+  const unbindPinch = bindGesturePinch(
+    canvas,
+    (factor, point) => handlers().zoomBy(factor, point),
+    local,
+    () => pointers.size > 1,
+  );
   return () => {
+    unbindPinch();
     canvas.removeEventListener("pointerdown", down);
     canvas.removeEventListener("pointermove", move);
     canvas.removeEventListener("pointerup", up);

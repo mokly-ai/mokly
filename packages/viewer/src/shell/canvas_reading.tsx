@@ -11,6 +11,7 @@ import { useContext } from "react";
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
 
+import { useCanvasFrameInput } from "./canvas_frame_input.js";
 import { readingFrameLabel } from "./canvas_frames.js";
 import { CanvasEntryStage } from "./canvas_stage.js";
 import type { Catalogue } from "./catalogue.js";
@@ -39,10 +40,18 @@ function ReadingFrame({
   scheme: "dark" | "light";
 }) {
   const stage = useContext(FrameStageContext);
-  const frame = useDocumentFrame(entry, scheme, fragment, stage);
+  const input = useCanvasFrameInput();
+  const frame = useDocumentFrame(
+    entry,
+    scheme,
+    fragment,
+    stage,
+    input.listener,
+  );
   return (
     <CanvasFrame
       error={frame.status === "error"}
+      focusVisible={input.focusVisible}
       kind="document"
       label={label}
       retry={{ onClick: focusThen(frame.frameRef, frame.retry) }}

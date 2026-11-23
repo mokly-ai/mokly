@@ -17,6 +17,7 @@ import type {
 } from "../catalogue/scoped_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
+import type { CanvasInputListener } from "./canvas_input.js";
 import {
   useMountedShellFrame,
   type FrameReadyListener,
@@ -46,6 +47,8 @@ type ViewEntry = Extract<
 export interface ViewFrameInput {
   entry: ViewEntry;
   fragment?: string | undefined;
+  /** Receives the canvas input of the frame's document, on a canvas. */
+  onCanvasInput?: CanvasInputListener | undefined;
   /** Hears once for each document that the frame mounts, when it is ready. */
   onReady?: FrameReadyListener | undefined;
   /** A live edit's render, which the frame shows in place of the view. */
@@ -99,6 +102,7 @@ export function useViewFrame(input: ViewFrameInput) {
     generation,
     identity,
     layout: { stage: input.stage },
+    onCanvasInput: input.onCanvasInput,
     onReady: input.onReady,
     sources: input.sources,
     source,

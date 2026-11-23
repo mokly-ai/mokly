@@ -293,6 +293,14 @@ owns standalone history, and `store_host.ts` owns host selection commits.
 `store_interactions.ts` binds both roots to clicks and Escape. It dismisses
 the tag picker on an outside click, including a click outside an embedded
 root. It returns picker focus only when the panel held focus.
+`search_keys.ts` binds the search keys of the
+[shell design](../../../../docs/protocol/mokly-shell-design.md#layout) while
+the top bar shows: ⌘K and Ctrl+K from anywhere, and `/` outside a text field.
+It listens on the document of a standalone shell and on an embedded root
+only, so the host page keeps its own keys. A key that acts loses its default
+action and moves focus through the `TopBarHandle` that `top_bar.tsx` holds.
+`useSearchShortcut` makes the field's key hint name `⌘K` on Apple's platforms
+and `Ctrl K` on the others.
 `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
 helpers. `selection.ts` owns selection changes and query equality.
@@ -431,7 +439,18 @@ own size with its fractions, which the size tag rounds. An adapter
 without the measurement, a failed measurement, and a document without
 content keep the desktop size, and a measurement that ends after the frame
 loads another document is dropped. A fitted canvas refits to the measured
-frames.
+frames. Each live canvas frame, a screen's, a component's or a reading
+frame, mounts with the adapter's canvas input: the mount hook's
+`onCanvasInput` receives it with the frame element, and the
+`useCanvasFrameInput` hook of `canvas_frame_input.tsx` routes it through
+`CanvasControlContext`.
+`canvas_input.ts` maps a point of the frame's viewport to the page through
+the frame's box and scale: ⌘ or Ctrl with the wheel and a pinch zoom the
+canvas about that point with the handle's `zoomAt`, and a canvas key runs
+its command. While the document reports keyboard focus, the frame's
+`focusVisible` draws its focus glow; `canvas-blur`, a focus without
+`visible`, and the end of the document's mount put the glow out, since the
+mount hook sends `canvas-blur` when it disposes of or replaces the mount.
 `canvas_reading.tsx` shows a page or a Markdown document as one reading frame,
 named by its source file, through the mount hook of `document_stage_frame.tsx`.
 A Markdown document without a dark render keeps its light document under
@@ -736,11 +755,13 @@ dock's Fit hides while the canvas holds a state, because only a section
 registers the canvas. A removed page or
 document opens as one reading frame, named by its source file. A previous
 version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
-input of each document that it presents with `listenForCanvasInput`, and
-`canvas_removed_input.ts` routes it through the `CanvasControlContext` of
-`canvas_stage.tsx`: a canvas key runs its command, a zoom wheel or a pinch
-zooms the canvas about the stage's centre, and the document's keyboard focus
-draws the frame's focus glow. The React
+input of each document that it presents with `listenForCanvasInput`, with
+the frame element, and the `useCanvasFrameInput` hook of
+`canvas_frame_input.tsx`, which the live frames share, routes it through the
+`CanvasControlContext` of `canvas_stage.tsx`: a canvas key runs its command,
+a zoom wheel or a pinch, a two-finger pinch included, zooms the canvas about
+its point in the frame, and the document's keyboard focus draws the frame's
+focus glow. The React
 request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays

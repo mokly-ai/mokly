@@ -72,11 +72,14 @@
   cursor: pointer;
 }
 
+/* The rounded corners shape the focus glow of the brand link, as the other
+   controls of the bar shape theirs. */
 .mbk-brand {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: none;
+  border-radius: 6px;
   color: inherit;
   text-decoration: none;
 }
@@ -157,10 +160,45 @@
   color: var(--chrome-muted);
 }
 
-/* Below the breakpoint the brand keeps only its mark, and the scheme switch
-   moves to the screen header. The start column keeps the width of its
-   content and the end column takes the rest, so the search keeps its room
-   down to a 320px window. */
+/* The baseline focus rule leaves a search input to its field, so the field
+   draws the focus glow while its input holds focus. Forced colours drop the
+   glow, so there the field takes the system outline. */
+.mbk-search:has(> input:focus-visible) {
+  box-shadow: var(--mbk-focus-glow);
+}
+
+@media (forced-colors: active) {
+  .mbk-search:has(> input:focus-visible) {
+    outline: 2px solid Highlight;
+  }
+}
+
+/* The key hint before the tag picker: a small muted mono key cap. The drawn
+   `⌘` leaves room inside its own box, so it starts 1px closer to the edge. */
+.mbk-search-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex: none;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--cv-surface-muted);
+  box-shadow: inset 0 0 0 1px var(--cv-border);
+  color: var(--cv-text-muted);
+  font: 500 11px/1 var(--cv-mono);
+  white-space: nowrap;
+}
+
+.mbk-search-hint > svg {
+  flex: none;
+  margin-inline-start: -1px;
+}
+
+/* Below the breakpoint the brand keeps only its mark. The start column keeps
+   the width of its content and the end column takes the rest, so the search
+   keeps its room down to a 320px window. The key hint hides, which leaves
+   that room to the query. */
 @media (width < 56.25rem) {
   .mbk-topbar {
     grid-template-columns: auto auto minmax(0, 1fr);
@@ -174,7 +212,7 @@
     position: static;
   }
 
-  .mbk-topbar-end > [data-mokly-schemeswitch] {
+  .mbk-search-hint {
     display: none;
   }
 }

@@ -102,9 +102,10 @@ test("the tag picker ends the search field and the end control ends the bar", ()
   );
   const search = container.querySelector(".mbk-search");
   assert.ok(search);
+  // The magnifier, the input, the key hint, then the tag picker.
   assert.deepEqual(
     [...search.children].map((child) => child.tagName.toLowerCase()),
-    ["svg", "input", "span"],
+    ["svg", "input", "kbd", "span"],
   );
   assert.ok(search.lastElementChild?.hasAttribute("data-picker"));
   const end =

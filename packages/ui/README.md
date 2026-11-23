@@ -154,6 +154,11 @@ picker and the end control as slots. An embedded root also gives it `host`,
 the `TopBarHost` containers of its three top-bar slots: the bar places the
 start slot after the brand, the centre slot in its middle column, and the end
 slot after the end control, and a bar with host slots draws the mark alone.
+The search field shows a key hint before the tag picker, a picture of the keys
+that `searchShortcut` names: `⌘K` by default, or `Ctrl K` for `control`. The
+hint hides below the layout breakpoint. The field of an interactive bar names
+the search keys, `⌘K`, Ctrl+K, and `/`, to assistive technology through
+`aria-keyshortcuts`, and its host binds them.
 `ScreenHeader` takes the view's status and controls as slots.
 
 `TagPicker` draws the tag button of the search field and the picker that it
@@ -200,12 +205,16 @@ holds one section, with the zoom pill at the bottom centre of its stage. The
 canvas keeps its view, the zoom and the position of the section, itself, so a
 pan or a zoom renders the canvas alone and not the host's tree. The host
 reaches the view through the `CanvasStageHandle` that `ref` receives: `fit`,
-`zoomIn`, `zoomOut`, `zoomTo`, and `run`, which runs the command that
-`canvasKeyCommand` gives for a key. The host listens for the keys where they
-belong, such as on a whole document or on one root, and a later control, such
-as a dock's Fit, uses the same handle. `wheelZoom` gives the zoom after a
-wheel distance, at the canvas's own rate, for a host that zooms the canvas
-from input that it receives elsewhere. The host passes the section as
+`zoomIn`, `zoomOut`, `zoomTo`, `zoomAt`, and `run`, which runs the command
+that `canvasKeyCommand` gives for a key. `zoomAt` multiplies the zoom by a
+factor about a point of the page, which keeps its place, for a wheel or a
+pinch that a frame's document forwards. The host listens for the keys where
+they belong, such as on a whole document or on one root, and a later control,
+such as a dock's Fit, uses the same handle. `wheelZoom` gives the zoom after a
+wheel distance, at the canvas's own rate, and `wheelPixels` counts a wheel's
+lines and pages in pixels as the canvas's own wheel does, for a host that
+zooms the canvas from input that it receives elsewhere. The host passes the
+section as
 `section`, a `CanvasSection` without its reading size, and names it with
 `fitKey`: a new name fits the canvas again, a fitted canvas refits when its
 stage or the section's lengths change, and `onViewChange` hears of each pan,
@@ -214,10 +223,12 @@ zoom, and Fit. The stage is the canvas less `--mbk-canvas-inset-top`,
 `--mbk-canvas-inset-start`, each 0 until a layout sets it, and less the zoom
 pill's room. The canvas measures an invisible box of that size, so a change
 of an inset refits like a resize. The canvas takes the drags, wheels, and
-pinches around the frames; a frame's document keeps its own. Below the layout
-breakpoint the canvas has no zoom pill and no pill room, and a section with
-`compact` draws no box and no head, leaves only its frames' labels' room, and
-Fit stands it at the stage's top.
+pinches around the frames, Safari's `gesturestart`, `gesturechange` and
+`gestureend` included, and cancels the page's own zoom for each gesture; a
+frame's document keeps its own. Below the layout breakpoint the canvas has no
+zoom pill and no pill room, and a section with `compact` draws no box and no
+head, leaves only its frames' labels' room, and Fit stands it at the stage's
+top.
 
 `FloatingPanel` draws a panel that floats over the canvas at its `side`, the
 catalogue at the left or the right panel at the right, and below the layout
@@ -359,7 +370,9 @@ its frames, to `canvasRef`. `TagPicker` gives its button and its picker to
 button to `highlightRef`. `CatalogueNavigation` gives the current page's row
 to `currentRowRef`, and each section and folder summary, by its disclosure
 key, to `summaryRef`. `EmbeddedLayout` names each host slot's container
-through `slotRef`.
+through `slotRef`. `TopBar` gives its `TopBarHandle` to `ref`: `focusSearch()`
+moves focus to the search field, and where the compact search hides the
+field, it opens the compact search first, whose field then takes focus.
 
 A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
 native disclosure of one group, named by `contentId`: a tab opens its panel
@@ -465,9 +478,11 @@ after the glow, as the shown segment of a segmented control does. Write one
 for a control in a container that clips or scrolls, which draws the inset
 glow, as a catalogue row does on its pill. Write one for a drawn control
 under a transparent native control, which shows the glow with `:has()` and
-adds its own forced-colours outline. A focus rule sets only the shadow, so
-the baseline keeps the forced-colours outline. `palette.test.ts` holds the
-glow at 3:1 on each surface in both appearances.
+adds its own forced-colours outline. The baseline rule leaves a search input
+to its field, so the top bar's search field draws its input's glow the same
+way. A focus rule sets only the shadow, so the baseline keeps the
+forced-colours outline. `palette.test.ts` holds the glow at 3:1 on each
+surface in both appearances.
 
 Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
 `rem`. A `rem` length follows the root font size of the page. A host page that
@@ -532,10 +547,13 @@ override the desktop layout rules.
   — `SegmentedControl`, the named group of segments that the viewport and
   scheme switches and the comparison modes render, as buttons or as the links
   and inert text of a static depiction
-- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar` and
-  `TopBarHost`: the three columns with the brand, the catalogue search with
-  its compact form and its focus return, and an embedded root's top-bar
-  slots
+- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`,
+  `TopBarHost`, and `TopBarHandle`: the three columns with the brand, the
+  catalogue search with its compact form, its focus return, and the handle
+  that moves focus to it, and an embedded root's top-bar slots
+- [`src/top-bar/search-hint.tsx`](./src/top-bar/search-hint.tsx) —
+  `SearchHint`, the search field's key cap of `⌘K` or `Ctrl K`, and the
+  `SearchShortcut` that it names
 - [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
   brand, as a control, a link, or a picture
 - [`src/top-bar/brand-icon.tsx`](./src/top-bar/brand-icon.tsx) — `BrandIcon`,
@@ -618,7 +636,10 @@ override the desktop layout rules.
   Fit, the zoom steps, a zoom about a point, and a pan, over the section's
   fixed and scaled lengths
 - [`src/canvas-stage/canvas-gestures.ts`](./src/canvas-stage/canvas-gestures.ts)
-  — the drag, the wheel, and the pinch of the canvas
+  — the drag, the wheel, and the pinch of the canvas, and `wheelPixels`
+- [`src/canvas-stage/canvas-gesture-pinch.ts`](./src/canvas-stage/canvas-gesture-pinch.ts)
+  — Safari's pinch: the gesture events that zoom the canvas about their
+  point
 - [`src/canvas-stage/canvas-keys.ts`](./src/canvas-stage/canvas-keys.ts) —
   `canvasKeyCommand`: the keys of the canvas and the rules of a text field and
   the modifiers
