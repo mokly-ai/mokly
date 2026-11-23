@@ -1,6 +1,8 @@
 import { useRenderedAppearance } from "../../parts/appearance.js";
+import type { ArtboardViewport } from "../../parts/shell.js";
 
 import type { CanvasFrameSpec, FrameScheme } from "./frames.js";
+import { frameOf } from "./set_sketches.js";
 
 /** A frame as the compact frame picker lists it. */
 type ListedFrame = Pick<CanvasFrameSpec, "id" | "kind" | "scheme">;
@@ -62,4 +64,26 @@ export function openingFrame(
  */
 export function useOpeningFrame(frames: readonly ListedFrame[]): string {
   return openingFrame(frames, useRenderedAppearance());
+}
+
+/**
+ * The frame that a saved variant's choice selects, as the Variants list of
+ * Inspect or the variant's own route chooses it: its row's Light frame on
+ * the wide canvas, and on a phone its row's frame of the selection's scheme,
+ * which standalone Browse takes from the appearance that the artboard
+ * renders in. A row without a frame of that scheme keeps its Light frame.
+ */
+export function useChosenFrame(
+  frames: readonly CanvasFrameSpec[],
+  variant: string,
+  viewport: ArtboardViewport,
+): CanvasFrameSpec {
+  const scheme = useRenderedAppearance();
+  const compact =
+    viewport === "mobile"
+      ? frames.find(
+          (frame) => frame.variant === variant && frame.scheme === scheme,
+        )
+      : undefined;
+  return compact ?? frameOf(frames, `${variant}-light`);
 }

@@ -9,6 +9,7 @@ import {
 } from "../../loading/parts/details.js";
 import { COMPONENT_IDENTITIES } from "../../parts/component_identity.js";
 import type { CanvasDestination } from "../../parts/destinations.js";
+import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { InspectFold, InspectFrames } from "../../parts/inspect.js";
 import {
   actionUsedBy,
@@ -22,7 +23,6 @@ import {
   DETAILS_INSTANCES,
   WELCOME_INSTANCES,
 } from "../../parts/instance_records.js";
-import { actionSetFrames, frameOf } from "../../parts/set_sketches.js";
 
 import { CHANGED_DEFAULT } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
@@ -72,24 +72,28 @@ export const PENDING_DETAILS = {
 
 /**
  * Inspect for the Action's saved variant Default on the Action branch, with
- * its Light frame selected: the Action's head with Default's path and its
- * Changed status, the Action itself and its saved variants with Default
- * checked, the eight frames, and the selected frame. Props edits Default in Current; while a compare mode
- * is on, Props shows its saved props read-only, and Highlight components
- * waits for Current. Usage holds the Action's own lists, Used by and the
- * affected screens, from the parent's detail. A current variant waits for
- * its own detail and its parent's, so until both arrive Props and Usage
- * wait without counts, and no frame mounts, so Highlight components waits
- * for the component preview. After the parent's load failed, Props and
- * Usage say so, and each Try again loads it again. A leaf component has no
- * nested components.
+ * its Light frame selected, and on a phone its frame of the appearance's
+ * scheme: the Action's head with Default's path and its Changed status, the
+ * Action itself and its saved variants with Default checked, the eight
+ * frames, and the selected frame. Props edits Default in Current; while a
+ * compare mode is on, Props shows its saved props read-only, and Highlight
+ * components waits for Current. Usage holds the Action's own lists, Used by
+ * and the affected screens, from the parent's detail. A current variant
+ * waits for its own detail and its parent's, so until both arrive Props and
+ * Usage wait without counts, and no frame mounts, so Highlight components
+ * waits for the component preview. After the parent's load failed, Props
+ * and Usage say so, and each Try again loads it again. A leaf component has
+ * no nested components.
  */
 export function DefaultInspect({
   design,
+  frame,
   state,
 }: {
   /** The artboard that renders this Inspect. */
   design: CanvasDestination;
+  /** Default's selected frame. */
+  frame: CanvasFrameSpec;
   state: DefaultInspectState;
 }) {
   const comparing = state === "comparison";
@@ -122,10 +126,7 @@ export function DefaultInspect({
               : "loading",
         }}
       />
-      <InspectFrameSelected
-        frame={frameOf(actionSetFrames(), "default-light")}
-        variant="Default"
-      />
+      <InspectFrameSelected frame={frame} variant="Default" />
       <InspectFold
         count={
           comparing || details !== undefined ? undefined : DEFAULT_FIELD_COUNT
