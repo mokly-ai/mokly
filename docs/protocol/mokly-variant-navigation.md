@@ -32,11 +32,14 @@ variant, its list opens. Hiding a parent hides its complete leaf container and
 disclosure button. Tag terms, Changes, and free text compose as for every other
 entry.
 
-The component page's variant bar navigates to sibling variant entries. There is
-no variant query parameter. If a comparison mode is selected, navigation to a
-sibling keeps that mode and applies it to the sibling's eligible views. The
-workspace reads this single comparison-mode state: Props stay read-only and
-highlighting stays unavailable until the mode returns to Current. Late results for an earlier sibling cannot replace the selected entry.
+On the component page, Inspect's
+[Variants list](./mokly-component-inspector-design.md#inspect) chooses among
+sibling variant entries. There is no variant query parameter. If a comparison
+mode is selected, navigation to a sibling keeps that mode and applies it to the
+sibling's eligible views. The workspace reads this single comparison-mode
+state: Props stay read-only and highlighting stays unavailable until the mode
+returns to Current. Late results for an earlier sibling cannot replace the
+selected entry.
 
 ## Changes Rows
 
@@ -77,9 +80,9 @@ had at the base commit. Resolve its parent with the
 When the result is a current parent, attach
 the removed row after current variants; removed siblings keep the authored
 order of the base commit, and their public records occupy the parent's ordering position.
-The parent's variant bar lists the removed variant in the same place, and the
-removed variant's own page opens with that parent's workspace in Serve, the
-static output, and the embedded viewer.
+A component parent's Variants list in Inspect names the removed variant in the
+same place, and the removed variant's own page opens with that parent's
+workspace in Serve, the static output, and the embedded viewer.
 A parent with no current variants still discloses the list. Removing both
 parent and variant yields one removed entry for each.
 

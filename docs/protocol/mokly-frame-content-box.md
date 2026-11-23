@@ -55,4 +55,4 @@ document could feed that size back into the document.
 - [Viewer frame adapter](./mokly-frame-adapter.md)
 - [Frame probe handshake and wire protocol](./mokly-frame-probe-wire.md)
 - [Frame probe](./mokly-frame-probe.md)
-- [Shell device chrome](./mokly-shell-device-chrome.md)
+- [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)

@@ -100,7 +100,7 @@ validation. A surviving parent's new title never changes this stored title.
 ## Consumers
 
 In Serve, the static build, and the embedded viewer, affected-consumer
-destinations, the variant bar, Before and Current props, supplied-input
+destinations, Inspect's Variants list, Before and Current props, supplied-input
 pairing, removed-variant tree attachment, component workspace keys, and
 parent breadcrumbs follow the rules of this page. A workspace
 key uses the resolved eligible parent's identity. It must not use the old
