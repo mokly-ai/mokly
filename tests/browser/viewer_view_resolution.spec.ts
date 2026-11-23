@@ -98,11 +98,9 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   await openPanelTab(root, "Inspect");
   await expect(root.locator('[data-view-changed="scheme"]')).toBeHidden();
   await expect(root.locator('[data-view-changed="viewport"]')).toBeVisible();
-  const dark = root.locator('[data-frames-toggle="dark"]');
-  await expect(dark).toBeDisabled();
-  await expect(root.locator("label", { has: dark })).toContainText(
-    "Light only",
-  );
+  await expect(
+    root.getByRole("checkbox", { name: "Dark Light only", exact: true }),
+  ).toBeDisabled();
   await expect(root.locator('[data-workspace-frame="mobile"]')).toHaveAttribute(
     "src",
     /home\/index\.mobile\.html$/,
