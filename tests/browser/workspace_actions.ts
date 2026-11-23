@@ -5,6 +5,7 @@ import { revealInPanel } from "./panel_actions.js";
 export {
   closeOpenSheet,
   openCatalogueSheet,
+  openInspectFold,
   openPanelSheet,
   openPanelTab,
   revealInPanel,
@@ -165,6 +166,27 @@ export async function expectCanvasViewport(
   ).not.toBeChecked();
   await expect(page.locator(canvasFrame(viewport))).toBeVisible();
   await expect(page.locator(canvasFrame(other))).toBeHidden();
+}
+
+/**
+ * Zoom the wide canvas in until it draws its frames at 60% of their size or
+ * more, where the tags on its frames show, such as a highlight's labels and
+ * the selection's tags. The compact layout has no zoom pill, and its one
+ * frame keeps its own zoom.
+ */
+export async function zoomToTags(scope: Page | Locator): Promise<void> {
+  const pill = scope.getByRole("group", { name: "Zoom" });
+  await expect(
+    pill.or(scope.locator("[data-canvas-dock]")).first(),
+  ).toBeVisible();
+  if (!(await pill.isVisible())) return;
+  const zoom = async () =>
+    Number.parseInt(
+      (await pill.locator(".mbk-zoom-value").textContent()) ?? "0",
+      10,
+    );
+  while ((await zoom()) < 60)
+    await pill.getByRole("button", { name: "Zoom in" }).click();
 }
 
 /**

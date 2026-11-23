@@ -155,30 +155,30 @@ preview scheme and the compact layout.
   exists, and otherwise expands that folder in the catalogue.
 
 Inspect's head names the entry, its kind and its change status, and shows its
-description and its Details rows: Path, Source, Moved from, Schemes, Changed
-views, Tags, Related docs, Dependencies and Used by, in that order. A section
-named for the entry's kind, such as `Why this screen`, holds its rationale.
-Paths render as monospace chips that may wrap after each `/`; use cases
-render as pill chips with the flow icon; a related doc that is itself a
-catalogue document links to its entry; the Schemes row is plain text naming
-the schemes the screen renders in (`light, dark`). The Changed views row is
-plain text naming the views a ready classification marked changed
-(`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before
-dark; it is hidden while no view is named. The Tags row lists the tags the
-entry declares as pill chips with the tag icon: selecting one enters
-`tag:<tag>` in the search field, so the filter stays visible and clearable
-there, and the chip whose tag is in the entered query carries the accent active
-state with contrast text and glyph. An entry that declares no tags omits the
-row.
+description and its Details rows: Path, Source, Address, Moved from, Schemes,
+Changed views, Tags, Related docs, Dependencies and Used by, in that order. A
+section named for the entry's kind, such as `Why this screen`, holds its
+rationale. Paths render as monospace chips that may wrap after each `/`; use
+cases render as pill chips with the flow icon; a related doc that is itself a
+catalogue document links to its entry; the Schemes row is plain text naming the
+schemes the screen renders in (`light, dark`). The Changed views row is plain
+text naming the views a ready classification marked changed
+(`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before dark;
+it is hidden while no view is named. The Tags row lists the tags the entry
+declares as pill chips with the tag icon: selecting one enters `tag:<tag>` in
+the search field, so the filter stays visible and clearable there, and the chip
+whose tag is in the entered query carries the accent active state with contrast
+text and glyph. An entry that declares no tags omits the row.
 
 Details have no rendered-file or route row: every file derives from the entry's
 path, and the address bar already shows the shell URL. A moved entry's Details
 add a `Moved from` row holding its previous path, the `Moved` label its Changes
 row carries, and its comparison details name that path as the earlier side. A
-removed entry's Details add a `Location` row before Tags. It names the
-folders that held the entry at the branch point, as text with `›` separators.
-A document's Details show its description, path, tags, and Markdown source
-file.
+screen that declares an `address` adds an Address row, which shows the address
+as a monospace chip. A removed entry's Details add a `Location` row before Tags.
+It names the folders that held the entry at the branch point, as text with `›`
+separators. A document's Details show its description, path, tags, and Markdown
+source file.
 
 Shared home guidance asks visitors to choose an item from the navigation.
 With nothing selected, the canvas holds the guidance and no right panel shows.

@@ -60,6 +60,22 @@ export async function openPanelTab(
 }
 
 /**
+ * Open one of Inspect's folded sections, Props, Usage or Components, and
+ * return its content; a press on an open section's head would fold it.
+ */
+export async function openInspectFold(
+  scope: Page | Locator,
+  name: "components" | "props" | "usage",
+): Promise<Locator> {
+  const section = scope.locator(`[data-inspect-section="${name}"]`);
+  const head = section.locator(":scope > summary");
+  await revealInPanel(scope, head);
+  if ((await section.getAttribute("open")) === null) await head.click();
+  await expect(section).toHaveAttribute("open", "");
+  return section.locator(":scope > .mbk-inspect-fold-body");
+}
+
+/**
  * Show a control of the right panel: in the compact layout the panel is a
  * sheet, which the dock opens while the control is hidden, and a control in
  * the tab that is not selected shows once its tab is. Until the shell renders

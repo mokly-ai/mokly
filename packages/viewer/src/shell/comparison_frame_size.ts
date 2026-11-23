@@ -51,7 +51,7 @@ export function comparedComponentSize(
  * size, or the desktop size when the document has no content or the
  * measurement fails.
  */
-export function documentFrameSize(doc: Document): CanvasFrameSize {
+function documentFrameSize(doc: Document): CanvasFrameSize {
   try {
     return componentFrameSize(measureContentBox(doc));
   } catch {
