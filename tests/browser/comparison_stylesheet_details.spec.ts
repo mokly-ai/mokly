@@ -250,10 +250,15 @@ test("the comparison heading leads with the style outcome", async ({
   await expect(
     evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
   ).toBeVisible();
-  // The parent's comparison holds its own example's frames, Light and Dark.
-  await showMode(page, "Overlay", 4);
+  // Each eligible row compares its Light and Dark frames: the own example,
+  // whose only reasons are its stylesheets, then the changed Featured
+  // variant, whose rendered content also changed. The added Fresh variant's
+  // row stays current.
+  await showMode(page, "Overlay", 8);
   await expect(outcomeLines(page)).toHaveText([
     "Card · Light · Styles this variant uses changed",
     "Card · Dark · Styles this variant uses changed",
+    "Featured · Light · Variant changed",
+    "Featured · Dark · Variant changed",
   ]);
 });

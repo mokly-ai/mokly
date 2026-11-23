@@ -1,10 +1,11 @@
 /**
  * A component's compare across its sibling variants on the copied comparison
- * output, under the variant navigation and comparison panes contracts. A
- * variant set compares the frames of the routed entry. Navigation to a
- * sibling variant keeps the mode, which then compares the sibling's own
- * frames; an added sibling offers Current alone. While a mode shows, Props
- * stay read-only and highlighting waits for Current.
+ * output, under the variant navigation, selected comparison and comparison
+ * panes contracts. A variant set compares each row whose shown views are
+ * eligible, and an added variant's row keeps its current frames. Navigation
+ * to a sibling variant keeps the mode and the rows' comparisons; an added
+ * sibling offers Current alone. While a mode shows, Props stay read-only and
+ * highlighting waits for Current.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -55,9 +56,10 @@ test("component comparisons follow changed variants while added variants stay cu
   page,
 }) => {
   await page.goto(`/view/${comparisonPaths.component}/`);
-  // A variant set's frames show desktop views. The parent's comparison holds
-  // its own example's frames, Light and Dark, each with both versions.
-  await showMode(page, "Overlay", 4);
+  // A variant set's frames show desktop views. Each eligible row compares its
+  // Light and Dark frames, each with both versions: the own example's and the
+  // changed Featured variant's. The added Fresh variant's row stays current.
+  await showMode(page, "Overlay", 8);
   // The comparison details stand in the Changes tab, never on the canvas.
   await expect(
     page.locator("[data-mokly-stage] [data-workspace-evidence]"),
@@ -72,7 +74,10 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(highlightSwitch(page)).toBeDisabled();
   // A changed sibling keeps the mode and compares its own frames.
   await openSibling(page, comparisonPaths.changedVariant);
-  const featured = paneFrame(comparisonSection(page, "component"), "after");
+  const featured = paneFrame(
+    comparisonSection(page, "component", "light", "Featured"),
+    "after",
+  );
   await expect(featured).toHaveAttribute(
     "data-mokly-preview-source",
     /card\/featured\/index\.desktop\.html$/,

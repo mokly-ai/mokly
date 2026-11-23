@@ -85,7 +85,9 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
     props.getByRole("button", { name: "Switch to Current", exact: true }),
   ).toBeVisible();
   await expect(props.getByRole("textbox")).toHaveCount(0);
-  await expectCardPane(page, "after", "Card content");
+  // The edited row's Light frame compares the saved props: its Current
+  // version shows the saved label and the current commit's `.accent` colour.
+  await expectCardPane(page, "after", "Card content", "light", "Card");
 
   await chooseMode(page, "Current");
   await openPanelTab(page, "Inspect");

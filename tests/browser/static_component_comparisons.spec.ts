@@ -15,29 +15,37 @@ import { staticRequests } from "./static_delivery_assertions.js";
 import { setFrames } from "./workspace_actions.js";
 
 // A variant set's frames show each row's desktop view, so a component
-// compares its desktop views.
+// compares its desktop views. With one scheme shown, Side by side compares the
+// first shown frame, the own example's, and Overlay and Difference compare the
+// shown frame of each eligible row: the own example's and the changed Featured
+// variant's, while the added Fresh variant's row stays current. Each compared
+// frame holds both versions, so each case names its count of pane frames.
 for (const scheme of ["light", "dark"] as const) {
-  for (const label of ["Side by side", "Overlay", "Difference"] as const) {
+  for (const [label, panes] of [
+    ["Side by side", 2],
+    ["Overlay", 4],
+    ["Difference", 4],
+  ] as const) {
     test(`desktop/${scheme}: a copied component comparison presents ${label} with each side's styles`, async ({
       page,
     }) => {
       const requests = staticRequests(page);
       await page.goto(`/view/${comparisonPaths.component}/`);
       await expect(inspectTitle(page)).toHaveText("Card");
-      // The Frames filter shows the frames of one scheme; the parent's
-      // comparison holds its own example's frame of that scheme.
+      // The Frames filter shows the frames of one scheme, and the checks
+      // read the routed row's frame of that scheme, the own example's.
       await setFrames(page, {
         light: scheme === "light",
         dark: scheme === "dark",
       });
       await chooseMode(page, label);
-      const section = comparisonSection(page, "component", scheme);
+      const section = comparisonSection(page, "component", scheme, "Card");
       await expectSectionMode(
         section,
         COMPARE_MODES[label],
         `Card · ${scheme === "dark" ? "Dark" : "Light"}`,
       );
-      await expect(comparisonFrames(page)).toHaveCount(2);
+      await expect(comparisonFrames(page)).toHaveCount(panes);
       for (const [title, color, side] of [
         ["Before", accentColor.Before, "before"],
         ["Current", accentColor.After, "after"],

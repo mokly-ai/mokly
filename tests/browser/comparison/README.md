@@ -51,7 +51,10 @@ entry's previous version, renders no band, no comparison state, and no pane.
 `comparison_sections.ts` opens a comparison and finds one compared frame by
 its kind and its scheme: in Overlay, Difference, and Swipe the frame's
 figure, whose one viewport stacks both versions, and in Side by side the
-canvas section that holds the frame's Before and Current pair. Its readers
+canvas section that holds the frame's Before and Current pair. On a variant
+set every eligible row compares, so a spec also names a component frame's row
+by its title, such as `Featured`, and the helper finds the frame's figure, or
+its Before figure in Side by side, by its accessible name. Its readers
 take that section: each version's pane frame, the page viewports, the shown
 mode, and the frame labels. `comparison_scroll.ts` measures the page offsets
 and ranges in the documents' CSS pixels, which the canvas zoom does not
