@@ -15,6 +15,7 @@ import {
 import type { CompareFrame, CompareMode } from "./changes_sketches.js";
 import { CANVAS_PAGES as C, WELCOME_MODES } from "./destinations.js";
 import { InspectSection } from "./inspect.js";
+import { changePosition } from "./nav_rows.js";
 
 /**
  * Compared: the version before and the current version on a two-dot rail.
@@ -133,7 +134,7 @@ export function WelcomeChanges({
     <>
       <changeStepper.Component
         moklyInstance={useDesignInstance("stepper")}
-        position={1}
+        position={changePosition("welcome")}
         total={CHANGED_COUNT}
         nextDestination={C.addedChanges}
       />
@@ -160,7 +161,7 @@ export function WelcomeChanges({
 /**
  * The Changes tab of Details, which the branch added, the second of its
  * changes: the stepper, whose Previous change opens Welcome in Changes and
- * whose Next change opens the moved Invoice in Changes, the current version
+ * whose Next change opens the Example tour in Changes, the current version
  * alone, the compare modes reduced to Current, and the comparison details
  * with the sentence of its reason.
  */
@@ -169,10 +170,10 @@ export function DetailsChanges() {
     <>
       <changeStepper.Component
         moklyInstance={useDesignInstance("stepper")}
-        position={2}
+        position={changePosition("details")}
         total={CHANGED_COUNT}
         previousDestination={C.changesCurrent}
-        nextDestination={C.moved}
+        nextDestination={C.useCaseChanges}
       />
       <ChangesCompared added />
       <InspectSection title="Compare">

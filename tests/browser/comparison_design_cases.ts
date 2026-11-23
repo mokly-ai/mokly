@@ -75,6 +75,37 @@ export function registerComparisonDesign(
       .getByRole("combobox", { name: "Frame" })
       .selectOption({ label: "2 · Details" });
     await expect(steps).toHaveText(["Details"]);
+    // The branch changed both step screens, so Changes lists the use case
+    // as Changed. Its Changes tab keeps the step frames, offers no compare
+    // mode, and names each changed step in the comparison details.
+    for (const viewport of ["mobile", "desktop"] as const) {
+      await page.goto(design("design/canvas/flows/tour/changes", viewport));
+      await expect(
+        page.locator(".cv-canvas .mbk-entry-status:visible"),
+      ).toHaveText("Changed");
+      await expect(page.locator(".cv-stepper-count")).toHaveText(
+        "Change 3 of 11",
+      );
+      await expect(modes).toHaveCount(0);
+      await expect(
+        page.locator(".cv-evidence .mbk-comparison-evidence > p"),
+      ).toHaveText(["Changed step: Welcome", "Changed step: Details"]);
+    }
+    // The desktop catalogue counts eleven changes and selects the tour's
+    // changed row, and the canvas keeps both steps.
+    await expect(page.locator(".mbk-nav-filter-count")).toHaveText("11");
+    await expect(
+      page.locator('.mbk-nav-row[aria-current="page"][data-changed="true"]'),
+    ).toContainText("Example tour");
+    await expect(steps).toHaveText(["Welcome", "Details"]);
+    // A changed step's title opens that step's screen on its Changes tab.
+    await page
+      .locator(".cv-evidence")
+      .getByRole("link", { name: "Details", exact: true })
+      .click();
+    await expect(page).toHaveURL(
+      design("design/canvas/outcomes/added/changes", "desktop"),
+    );
   });
 
   test("a removed screen's design shows its previous version without comparisons", async ({

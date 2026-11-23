@@ -6,35 +6,27 @@ import { CHANGED_COUNT } from "../../../parts/nav_data.js";
 import { ChangesCompared, ChangesEvidence } from "../../parts/changes.js";
 import { CANVAS_PAGES } from "../../parts/destinations.js";
 import { InspectSection } from "../../parts/inspect.js";
-import { CANVAS_CHANGES_ROWS } from "../../parts/nav_rows.js";
+import { changePosition } from "../../parts/nav_rows.js";
 
 import { OUTCOME_PAGES } from "./destinations.js";
 
 /**
- * Invoice's place among the entries that the Changes filter lists, in the
- * filter's order: after Welcome and Details, and before its own Overdue
- * variant.
- */
-const POSITION =
-  CANVAS_CHANGES_ROWS.filter((row) => row.kind !== "folder").findIndex(
-    (row) => row.key === "invoice",
-  ) + 1;
-
-/**
- * The Changes tab of the moved Invoice: the stepper, whose Previous change
- * opens Details in Changes and whose Next change, its Overdue variant, has
- * no artboard; Compared; the compare modes in Overlay, the one mode that an
- * artboard shows; and the comparison details, which name its previous path
- * as the earlier side before the sentence of its reason.
+ * The Changes tab of the moved Invoice, after Welcome, Details and the
+ * Example tour, and before its own Overdue variant: the stepper, whose
+ * Previous change opens the Example tour in Changes and whose Next change,
+ * its Overdue variant, has no artboard; Compared; the compare modes in
+ * Overlay, the one mode that an artboard shows; and the comparison details,
+ * which name its previous path as the earlier side before the sentence of
+ * its reason.
  */
 export function InvoiceChanges() {
   return (
     <>
       <changeStepper.Component
         moklyInstance={useDesignInstance("stepper")}
-        position={POSITION}
+        position={changePosition("invoice")}
         total={CHANGED_COUNT}
-        previousDestination={CANVAS_PAGES.addedChanges}
+        previousDestination={CANVAS_PAGES.useCaseChanges}
       />
       <ChangesCompared />
       <InspectSection title="Compare">

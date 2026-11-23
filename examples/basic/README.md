@@ -170,7 +170,7 @@ screen derives its states from real props instead.
 `specs/design/components/controls/parts/copy.ts` holds the settled copy of
 the controls in Inspect's Props section.
 
-`specs/design/canvas/` holds the Canvas viewer family: 41 screens and 66
+`specs/design/canvas/` holds the Canvas viewer family: 41 screens and 67
 saved variants in eleven folders, which the
 [Canvas inventory](../../docs/protocol/mokly-shell-canvas-inventory.md)
 lists. A screen opens as four frames on a dot-grid canvas, between the

@@ -1,7 +1,5 @@
 # Depicted Design Catalogue
 
-Status: The depicted canonical branch does not list the Example tour in Changes yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) lists it.
-
 ## Depicted Catalogue
 
 The artboards browse one fixture catalogue in the path model, so the
@@ -35,9 +33,13 @@ navigation, the entry paths and the details agree across screens:
 
 The canonical branch changed Welcome, added Details, moved `billing` under
 `account`, and removed five screens: Farewell, Survey, Invite, Archive and
-Timeline. Changes counts ten entries and lists the removed screens last.
-Invoice moved with edits; its Overdue variant and Payment terms moved
-unchanged. Each keeps one row labelled `· Moved` at its new place. The
+Timeline. The Example tour's steps name Welcome and Details, so Changes lists
+the tour as changed, under the
+[use case rule](./mokly-changes.md#changes-membership). Changes counts eleven
+entries in folder order: Welcome and Details in `Screens`, the Example tour
+after that folder, the moved entries, and the removed screens last. Invoice
+moved with edits; its Overdue variant and Payment terms moved unchanged. Each
+keeps one row labelled `· Moved` at its new place. The
 [Canvas states](#canvas-states) browse this branch, and so does the kept tag
 picker screen.
 
@@ -89,7 +91,9 @@ The Canvas states of the canonical branch depict these entries:
 - The Action and the Toolbar, two unmodified components, open as their variant
   sets, and the Props states edit and show the Action's saved variants.
 - The Example tour, a use case whose steps are Welcome and Details, opens as
-  one section of step frames. Its right panel holds Inspect alone.
+  one section of step frames with the Changed status. Its Changes tab holds
+  the stepper, Compared and the comparison details, with one
+  `Changed step:` line for each changed step, and no compare mode.
 - The five removed screens open their previous versions: Farewell on its
   Changes tab and on Inspect, the Survey as a long screen, Invite while its
   previous version loads, Archive after the request failed, and Timeline,
@@ -109,7 +113,9 @@ itself:
   `design/canvas/stage/component-set/toolbar` and the Example tour
   `design/canvas/flows/tour`. The other rows, such as the README's `Overview`
   and `Getting started`, are pictures.
-- In Changes, `Invoice · Moved` opens `design/canvas/outcomes/moved`, or
+- In Changes, `Example tour` opens `design/canvas/flows/tour/changes`, or
+  `design/canvas/flows/tour` from an artboard on the Inspect tab.
+  `Invoice · Moved` opens `design/canvas/outcomes/moved`, or
   `design/canvas/outcomes/moved/inspect` from an artboard on the Inspect tab,
   and `Payment terms · Moved` opens `design/canvas/stage/document`.
   `Farewell · Removed` opens `design/canvas/outcomes/removed`, or
@@ -119,10 +125,10 @@ itself:
   `design/canvas/outcomes/removed`. The `Overdue · Moved` row is a picture.
 - The moved Invoice's Related docs row opens `design/canvas/stage/document`.
   The stepper's Previous change and Next change open the Changes artboards of
-  Welcome, Details, Invoice, Farewell, Survey, Invite and Archive in the order
-  of the Changes filter. A control whose neighbour has no Changes artboard,
-  such as Payment terms before Farewell or Timeline after Archive, is a
-  picture.
+  Welcome, Details, the Example tour, Invoice, Farewell, Survey, Invite and
+  Archive in the order of the Changes filter. A control whose neighbour has no
+  Changes artboard, such as Payment terms before Farewell or Timeline after
+  Archive, is a picture.
 - The brand opens `design/canvas/stage/home`. The top bar's menu and the dock's
   Catalogue open `design/canvas/stage/catalogue`, whose All filter returns to
   `design/canvas/overview`. On the canonical branch, the All filter of a
@@ -133,10 +139,15 @@ itself:
   returns to the overview. Details' tabs move between
   `design/canvas/outcomes/added` and `design/canvas/outcomes/added/changes`,
   and Farewell's between `design/canvas/outcomes/removed` and
-  `design/canvas/outcomes/removed/inspect`.
+  `design/canvas/outcomes/removed/inspect`. The Changes tab of each Inspect
+  state of the Example tour opens `design/canvas/flows/tour/changes`, whose
+  Inspect tab returns to `design/canvas/flows/tour`.
 - In the use case, a step's title opens the artboard of its screen: Welcome
   opens `design/canvas/overview` and Details `design/canvas/outcomes/added`.
-  The `Used by` chips of Welcome and Details open `design/canvas/flows/tour`.
+  On its Changes tab, the title in a `Changed step:` line opens that screen's
+  Changes: Welcome `design/canvas/changes/current` and Details
+  `design/canvas/outcomes/added/changes`. The `Used by` chips of Welcome and
+  Details open `design/canvas/flows/tour`.
 - Zoom in on the overview opens `design/canvas/stage/zoomed`, whose Fit
   returns to the overview. Every other Fit opens its own fitted artboard.
 - An instance in a component tree, a highlight label and a variant in Inspect

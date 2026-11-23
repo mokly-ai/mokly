@@ -116,6 +116,15 @@
   font-size: 12px;
 }
 
+/* A link in the comparison details, such as a use case's changed step,
+   reads as a changed component's link does: in the signal ink, at its
+   weight, without an underline. */
+.cv-evidence .mbk-comparison-evidence a {
+  color: var(--cv-signal-deep);
+  font-weight: 560;
+  text-decoration: none;
+}
+
 /* ---- Side by side on the stage -------------------------------------- */
 
 /* The stage holds every frame's pair and shows the compared frame's, the

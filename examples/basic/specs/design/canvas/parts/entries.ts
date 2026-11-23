@@ -78,6 +78,7 @@ export const CANVAS_ENTRIES = {
     slug: "tour",
     path: ENTRY_PATHS.tour,
     kind: "use-case",
-    changed: false,
+    status: "changed",
+    changed: true,
   },
 } as const satisfies Record<string, CanvasEntry>;

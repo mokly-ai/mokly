@@ -33,6 +33,7 @@
     "design/canvas/evidence/unchanged",
     "design/canvas/evidence/unchanged/action",
     "design/canvas/flows/tour",
+    "design/canvas/flows/tour/changes",
     "design/canvas/flows/tour/dark",
     "design/canvas/flows/tour/mobile",
     "design/canvas/flows/tour/second-step",
