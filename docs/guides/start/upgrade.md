@@ -155,7 +155,11 @@ subpaths and exports:
 - `ComparisonStage`, `ComparisonSection`, and `ComparisonUnavailable` of
   `@mokly/ui/comparison-stage`. `ComparisonPanes` and `ComparisonFailure`
   stay.
-- `WorkspaceLayout` no longer takes `header`, `variantBar`, or `inspector`.
+- `CopyIcon`, `ExpandIcon`, and `CollapseIcon` of `@mokly/ui/icons`, and the
+  `WorkspaceIcon` names `details`, `props`, `usage`, `viewport`, and `close`.
+  `WorkspaceIcon` keeps `components`, `highlight`, and `scheme`.
+- `WorkspaceLayout` no longer takes `header`, `variantBar`, `inspector`, or
+  `panesRef`.
 
 ## Republish hosted catalogues
 

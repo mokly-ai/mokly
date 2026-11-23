@@ -380,8 +380,8 @@ names the separator that the reader drags, so the whole shell keeps the
 drag's cursor.
 
 The package gives a host each element that the host measures, focuses, or
-scrolls through a ref. `WorkspaceLayout` gives its preview pane and its panes
-to `previewRef` and `panesRef`. `MainRegion` gives its element to `ref`.
+scrolls through a ref. `WorkspaceLayout` gives its preview pane to
+`previewRef`. `MainRegion` gives its element to `ref`.
 `CanvasStage` gives its canvas, which clips its frames, to `canvasRef`, and
 its stage's invisible box, the canvas between the floating panels and above
 the zoom pill, to `stageRef`. `TagPicker` gives its button and its picker to
