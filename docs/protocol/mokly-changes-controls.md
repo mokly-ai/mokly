@@ -62,7 +62,8 @@ comparison query.
 The destination revalidates that eligibility before honoring a
 comparison query, so stale, manually edited, or historical URLs cannot bypass a
 current-only state or trigger a hidden comparison request. It honors the query
-once for each navigation, when that eligibility is first known; a watched
+once for each navigation, when that eligibility is first known, by selecting
+Side by side and the Changes tab, where the canvas shows that mode. A watched
 update or a later eligibility change never applies it again.
 
 When a ready classification marks only some of a screen's views changed, the

@@ -22,8 +22,14 @@ moves nothing. The strip is a tab list: ArrowLeft and ArrowRight move between
 the tabs and wrap, and Home and End move to the first and the last tab. The
 selected tab also sets what a click on the canvas does, under the
 [canvas selection](./mokly-viewer-selection-canvas.md#clicks-by-tab) contract.
-A full page load selects Inspect. The selected tab survives in-shell
-navigation when the destination has it, and otherwise Inspect is selected.
+A full page load selects Inspect, or Changes when it honours a comparison
+intent of the
+[Changes screen controls](./mokly-changes-controls.md#screen-controls).
+In-shell navigation selects Changes when the destination honours a comparison
+intent, and otherwise keeps the selected tab when the destination has it and
+selects Inspect when it has not. Decision: an honoured comparison intent
+selects Changes, not Inspect or the kept tab, because the link exists to show
+the comparison, and only Changes shows it.
 
 The panel's body scrolls inside the panel while the tab strip stays in place.
 A new selection scrolls Inspect to its Selection section. In the compact

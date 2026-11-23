@@ -183,10 +183,12 @@ request shows the comparison failure with Try again; Current remains
 available.
 Every failed comparison uses the details sentence "The comparison is
 unavailable.". The shell never shows server or browser error text there.
-`use_comparison.ts` owns comparison mode through `comparison_mode.tsx`,
-which shares that state with host inspection and markers: component sibling
-navigation keeps that owner mounted, and the workspace reads its mode directly
-so Props and highlighting remain read-only until Current is selected.
+`use_comparison.ts` owns the chosen comparison mode through
+`comparison_mode.tsx`, which gives host inspection and markers the mode that
+the canvas shows: the chosen mode while Changes is the selected tab, and
+Current while Inspect is. Component sibling navigation keeps that owner
+mounted. The workspace reads the same shown mode, so Props and highlighting
+are read-only only while Changes shows a compare.
 `views.tsx` keys the workspace with `workspaceKey`, the parent the lookup
 resolves, so a removed variant of a moved or case-renamed parent opens in its
 siblings' workspace and keeps their mode. The mode owner also includes the
@@ -194,7 +196,9 @@ index revision, so a publication returns an active comparison to Current.
 `comparison_intent.ts` applies a route's comparison intent once. The store
 counts route installations and keeps the installed route's intent; the
 routed workspace settles it when `comparisonEligibilityKnown` first reports
-final eligibility, and opens Side by side only for an eligible view. A
+final eligibility, and only for an eligible view it opens Side by side and
+selects the Changes tab, where the canvas shows that mode. An intent for an
+ineligible view leaves the selected tab as it is. A
 publication keeps the count, so it cannot reopen the comparison, and the mode
 owner never reads the address.
 
