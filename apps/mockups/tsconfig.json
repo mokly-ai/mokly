@@ -33,8 +33,8 @@
       "@mokly/ui/change-status": [
         "../../node_modules/@mokly/ui/dist/change-status/change-status.d.ts"
       ],
-      "@mokly/ui/comparison-toolbar": [
-        "../../node_modules/@mokly/ui/dist/comparison-toolbar/comparison-toolbar.d.ts"
+      "@mokly/ui/compare-modes": [
+        "../../node_modules/@mokly/ui/dist/compare-modes/compare-modes.d.ts"
       ],
       "@mokly/ui/embedded-layout": [
         "../../node_modules/@mokly/ui/dist/embedded-layout/embedded-layout.d.ts"

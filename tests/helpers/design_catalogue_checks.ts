@@ -171,8 +171,6 @@ export function reachabilityViolations(catalogue: ServedCatalogue): string[] {
 
 /** The sheets that the Canvas route links and no other design route links. */
 const CANVAS_ROUTE_SHEETS = [
-  "design-preview.css",
-  "design-shots.css",
   "design-canvas-inspect.css",
   "design-canvas-sections.css",
   "design-canvas-changes.css",
@@ -189,12 +187,11 @@ const CANVAS_ROUTE_SHEETS = [
 
 /**
  * The shared design sheets keep their route scopes: the design sheet links
- * from every design view; the stage, inspector, and workspace sheets from
- * every older screen; the component design sheets and the library sheet from
- * no screen; the Canvas sheet from every Canvas screen; and the other sheets
- * of the Canvas route from the Canvas screens only. The library pages and
- * their 92 saved variants link every listed sheet apart from the Canvas
- * route's own sheets.
+ * from every design view; the component design sheets and the library sheet
+ * from no screen; the preview, mini-screen, and Canvas sheets from every
+ * Canvas screen; and the other sheets of the Canvas route from the Canvas
+ * screens only. The library pages and their 75 saved variants link every
+ * listed sheet apart from the Canvas route's own sheets.
  */
 export function scopeViolations(catalogue: ServedCatalogue): string[] {
   const linked = new Map<string, Set<string>>();
@@ -217,20 +214,15 @@ export function scopeViolations(catalogue: ServedCatalogue): string[] {
   const canvas = screens(/^design\/canvas\//u);
   const scopes: [string[], string[]][] = [
     [["design.css"], [...screens(/^design\//u), ...library]],
-    [
-      [
-        "design-stage.css",
-        "design-component-inspector.css",
-        "design-component-workspace.css",
-      ],
-      [...screens(/^design\/(?!canvas\/)/u), ...library],
-    ],
     [["design-components.css", "design-component-details.css"], library],
     [["design-library.css"], library],
-    [["design-canvas.css"], [...canvas, ...library]],
+    [
+      ["design-preview.css", "design-shots.css", "design-canvas.css"],
+      [...canvas, ...library],
+    ],
     [CANVAS_ROUTE_SHEETS, canvas],
   ];
-  const violations = variants === 92 ? [] : [`${variants} saved variants`];
+  const violations = variants === 75 ? [] : [`${variants} saved variants`];
   for (const [sheets, expected] of scopes)
     for (const sheet of sheets) {
       const actual = [...(linked.get(sheet) ?? [])];

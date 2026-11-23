@@ -1,6 +1,5 @@
 {
   "screens": [
-    "design/browse/views/screen/tag-picker",
     "design/canvas/changes/current",
     "design/canvas/changes/difference",
     "design/canvas/changes/overlay",
@@ -128,7 +127,6 @@
     "design/canvas/props/states/invalid-together"
   ],
   "treeReached": [
-    "design/browse/views/screen/tag-picker",
     "design/canvas/components/affected/direct",
     "design/canvas/components/inspection/unavailable",
     "design/canvas/evidence/ignored",

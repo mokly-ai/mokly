@@ -1,8 +1,10 @@
 import { defineScreen } from "@mokly/mokly";
 
 import { useRenderedAppearance } from "../../parts/appearance.js";
-import { artboardStates } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { PaymentTermsInspect } from "../parts/inspect_entries.js";

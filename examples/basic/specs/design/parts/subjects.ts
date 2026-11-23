@@ -1,6 +1,3 @@
-import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
-
-import type { DesignDestination } from "./destinations.js";
 import { PREVIOUS_PATHS } from "./entry_paths.js";
 import type { CatalogueTag } from "./tags.js";
 
@@ -26,8 +23,6 @@ interface SubjectMetadata {
   /** The path a moved entry had at the branch point. */
   previousPath?: string;
   rationale: string;
-  /** A related document that is itself a catalogue entry, opened by its row. */
-  relatedDocument?: { title: string; to: DesignDestination };
   /** Whether the entry names a document a reader can still open. */
   relatedDocs: boolean;
   schemes: string;
@@ -114,7 +109,6 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     previousPath: PREVIOUS_PATHS.invoice,
     rationale:
       "Customers open an invoice to see what they owe and pay it, so the amount due and the payment action come first.",
-    relatedDocument: { title: "Payment terms", to: CANVAS_PAGES.document },
     relatedDocs: false,
     schemes: "light",
     source: "specs/account/billing/invoice.mockup.tsx",

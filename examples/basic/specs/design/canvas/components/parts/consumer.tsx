@@ -1,4 +1,4 @@
-import type { ArtboardViewport } from "../../../parts/shell.js";
+import type { ArtboardViewport } from "../../../parts/artboards.js";
 import { PreviousArtboard } from "../../outcomes/parts/removed_artboard.js";
 import { REMOVED_SCREEN_RECORDS } from "../../outcomes/parts/removed_entries.js";
 import {

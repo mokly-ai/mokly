@@ -1,7 +1,9 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import { DetailsStage } from "../loading/parts/stage_state.js";
 import { useChosenFrame } from "../parts/picked_frames.js";
 import { actionSetFrames } from "../parts/set_sketches.js";

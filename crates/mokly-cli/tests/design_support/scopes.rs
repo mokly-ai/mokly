@@ -1,9 +1,8 @@
 //! Exact route scopes pin every shared stylesheet and all saved library variants.
 //!
-//! The older route and the library link the stage, inspector and workspace
-//! sheets, and the library alone links the component sheets. The Canvas route
-//! links the Canvas sheets, and the library links the shared Canvas sheet for
-//! its Canvas samples.
+//! The library alone links the component sheets. The Canvas route links the
+//! Canvas sheets, and the library links the preview, mini-screen and shared
+//! Canvas sheets for its Canvas samples.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -12,11 +11,10 @@ use mokly_graph::urls::local_target;
 use mokly_html::tree::Node;
 use mokly_model::catalogue::EntryContent;
 
-/// The shared sheets that the design routes link, in link order. The stage
-/// sheet's imports, the preview and mini-screen sheets, are not listed,
-/// because their rules reach the older routes through the stage sheet.
-pub const SHEETS: [&str; 19] = [
-    "design-stage.css",
+/// The shared sheets that the design routes link, in link order.
+pub const SHEETS: [&str; 18] = [
+    "design-preview.css",
+    "design-shots.css",
     "design-canvas.css",
     "design-canvas-inspect.css",
     "design-canvas-sections.css",
@@ -32,8 +30,6 @@ pub const SHEETS: [&str; 19] = [
     "design-canvas-compact.css",
     "design-components.css",
     "design-component-details.css",
-    "design-component-inspector.css",
-    "design-component-workspace.css",
     "design-library.css",
 ];
 
@@ -54,7 +50,7 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             .iter()
             .filter(|entry| entry.metadata.variant_of.is_some())
             .count(),
-        92
+        75
     );
     let screens: BTreeSet<_> = entries
         .iter()
@@ -84,19 +80,17 @@ pub fn check(result: &ComparisonResult) -> Scopes {
         );
         let library = path.starts_with("design/library/");
         let canvas = screens.contains(path) && path.starts_with("design/canvas/");
-        let older = screens.contains(path) && !canvas;
         let sheets: Vec<_> = SHEETS
             .iter()
             .filter(|sheet| {
                 visual
                     && match **sheet {
-                        "design-stage.css"
-                        | "design-component-inspector.css"
-                        | "design-component-workspace.css" => library || older,
                         "design-components.css"
                         | "design-component-details.css"
                         | "design-library.css" => library,
-                        "design-canvas.css" => library || canvas,
+                        "design-preview.css" | "design-shots.css" | "design-canvas.css" => {
+                            library || canvas
+                        }
                         _ => canvas,
                     }
             })

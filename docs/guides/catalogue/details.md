@@ -9,9 +9,10 @@ order: 4
 
 While an entry is selected, the right panel floats at the right edge of the
 canvas. On a narrow screen, the dock opens it as a sheet. Its Inspect tab
-describes the entry. Its Changes tab compares the entry with your base, as
-[Changes](/docs/catalogue/changes/) describes, and shows when Changes lists
-the entry or the entry can be compared. A full page load opens Inspect, and
+describes the entry. Its Changes tab compares shown views with your base, as
+[Changes](/docs/catalogue/changes/) describes. The tab appears when Changes
+lists the entry or a shown view can compare. In a component's variant set,
+that view can be in any shown row. A full page load opens Inspect, and
 the tab you choose stays as you move to another entry that has it.
 
 ## What Inspect holds

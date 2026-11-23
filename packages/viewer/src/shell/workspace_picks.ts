@@ -31,8 +31,11 @@ export function useWorkspacePicks({
 }: {
   data: WorkspaceData;
   entry: WorkspaceData["entry"];
-  /** Whether a click on a frame selects, as it does in Inspect. */
-  selecting: boolean;
+  /**
+   * Whether a click on a frame selects, as it does in Inspect, asked when the
+   * click or the Escape key arrives.
+   */
+  selecting: () => boolean;
 }) {
   const store = useShellStore();
   const wide = useCanvasLayout();

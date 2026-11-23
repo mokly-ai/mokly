@@ -158,11 +158,10 @@ for (const width of [390, 1280])
           ),
         ).toBe(false);
       }
-      // The canvas and the compact layout below 900px draw no device chrome
-      // whose colours could leave the light context.
+      // The canvas of a catalogue without a dark axis names no Light-only
+      // fallback.
       await expect(
-        page.locator("#mb-main :is(.phone-screen, .browser-viewport)"),
+        page.locator("[data-mokly-stage]").getByText("Light only"),
       ).toHaveCount(0);
-      await expect(page.locator(".mbk-frame-scheme-note")).toHaveCount(0);
     }
   });

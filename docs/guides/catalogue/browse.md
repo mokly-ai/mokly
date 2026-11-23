@@ -117,8 +117,9 @@ selected, a pill above the dock names it and opens the panel.
 
 ## Inspect and Changes
 
-The right panel holds the Inspect tab and, when Changes lists the entry or the
-entry can be compared, the Changes tab. Inspect describes the entry and the
+The right panel holds the Inspect tab. The Changes tab appears when Changes
+lists the entry or a shown view can compare. In a component's variant set,
+that view can be in any shown row. Inspect describes the entry and the
 element you select on a frame, as [Details](/docs/catalogue/details/)
 explains. Changes holds the entry's comparison with your base, as
 [Changes](/docs/catalogue/changes/) explains. The selected tab also sets what

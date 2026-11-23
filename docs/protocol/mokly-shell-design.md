@@ -29,9 +29,9 @@ previous version, the comparison evidence, the component explorer pages and
 the Props states. The
 [component design inventory](./mokly-component-design-inventory.md) lists the
 component explorer and Props screens. The
-[shell design inventory](./mokly-shell-design-inventory.md) lists the Browse
-and Changes screens outside the Canvas family and owns the dual-scheme and
-owning-group rules. The
+[shell design inventory](./mokly-shell-design-inventory.md) indexes those
+inventories and owns the scheme, view and retry rules that every design screen
+follows. The
 [depicted design catalogue](./mokly-shell-design-catalogue.md) describes the
 fixture catalogue that the design screens browse.
 
@@ -146,8 +146,8 @@ preview scheme and the compact layout.
   with the zoom pill at the bottom centre, under the
   [canvas stage](./mokly-shell-canvas-stage.md).
 - **Right panel** — while an entry is selected, a panel floats at the right
-  edge of the canvas, with the Inspect tab and, where the entry has a
-  comparison, the Changes tab. The
+  edge of the canvas, with the Inspect tab and, where the Changes filter lists
+  the entry or the canvas offers the compare modes, the Changes tab. The
   [component inspector design](./mokly-component-inspector-design.md) fixes
   the panel, its tabs and its sections.
 - **Breadcrumbs** — the breadcrumb trail names the selected entry's folders,
@@ -205,15 +205,15 @@ See [responsive shell behavior](./mokly-shell-device-chrome.md#responsive-behavi
 
 ## In-place Comparisons
 
-The catalogue is the only shell. The right panel's Changes tab holds the
-compare modes, which apply to every frame on the canvas: Current, Side by side,
-Overlay, Difference and Swipe, with the keys 1 to 5. Current starts selected.
-Overlay and Difference hold both versions in each frame, Swipe splits each
-frame at one divider, and Side by side shows one frame's two versions next to
-each other. Diffs load on demand on the same canvas while navigation, Inspect,
+The catalogue is the only shell. The right panel's Changes tab holds the compare
+modes, which apply to every frame of a compared row: Current, Side by side,
+Overlay, Difference and Swipe, with the keys 1 to 5. Current starts selected. A
+row that does not compare keeps its current frames. Overlay, Difference and
+Swipe show both versions in each compared frame; Side by side shows one chosen
+frame's pair. Diffs load on demand on the same canvas while navigation, Inspect,
 Refresh, and Retry stay available. Static catalogues without comparison data
-have no Changes tab. Decision: compare on every frame, not on one chosen view,
-because the canvas shows every viewport and scheme at once.
+have no Changes tab. Decision: compare on every frame of the compared rows, not
+on one chosen view, because the canvas shows every viewport and scheme at once.
 
 Loading, failure, evidence, and ignored details stay secondary and never report
 a count or a percentage of changed pixels. The

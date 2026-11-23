@@ -99,8 +99,11 @@ export function useCanvasSelection({
     savedVariant: boolean;
     scheme: "dark" | "light";
   };
-  /** Whether a click on a frame selects, as it does in Inspect. */
-  selecting: boolean;
+  /**
+   * Whether a click on a frame selects, as it does in Inspect, asked when the
+   * click or the Escape key arrives.
+   */
+  selecting: () => boolean;
   /** Whether the canvas holds a variant set. */
   set: boolean;
   state: CanvasSelectionState;
@@ -165,7 +168,7 @@ export function useCanvasSelection({
       clicked = false;
       const frame = sessionFrame(current.sessions, session);
       const pick = registry.inspection.getSnapshot().active?.kind === "pick";
-      if (!frame || !current.selecting || pick) return;
+      if (!frame || !current.selecting() || pick) return;
       click = { before: current.state, session };
       clicked = true;
       dispatch({
@@ -194,7 +197,7 @@ export function useCanvasSelection({
       if (
         active === "workspace" ||
         active === "pick" ||
-        !latest.current.selecting ||
+        !latest.current.selecting() ||
         !latest.current.state.selected
       )
         return;

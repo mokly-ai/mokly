@@ -2,7 +2,9 @@
  * Serve compares each compared row of a variant set under its own selected
  * generation: Overlay on Card's set stacks Card's and Featured's own versions,
  * and the page requests one selection for each of those rows, and none for
- * Fresh, which the branch added, or Archived, which it removed.
+ * Fresh, which the branch added, or Archived, which it removed. A set offers
+ * its Changes tab and its compare modes while any shown row compares, also
+ * when the routed row does not.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -88,4 +90,83 @@ test("Overlay on a variant set stacks each compared row's own versions from its 
   const paths = requests.map((url) => url.searchParams.get("path"));
   for (const quiet of [addedVariant, removedVariant])
     expect(paths).not.toContain(quiet);
+});
+
+test("a variant set whose routed row has no comparison offers the Changes tab and compares its changed rows", async ({
+  page,
+  changes,
+}) => {
+  const { paths } = changes;
+  // Tag's own row and Plain are unmodified, Bold changed, and the canvas
+  // does not show Old, which the branch removed. On Card's set, the branch
+  // added Fresh and changed Card and Featured.
+  const cases = [
+    {
+      name: "the Tag set on its own route",
+      route: paths.quietParent,
+      changed: [["Bold", paths.quietVariant]],
+      current: ["Tag", "Plain"],
+    },
+    {
+      name: "the Card set opened on Fresh",
+      route: paths.addedVariant,
+      changed: [
+        ["Card", paths.component],
+        ["Featured", paths.changedVariant],
+      ],
+      current: ["Fresh"],
+    },
+  ] as const;
+  for (const { changed, current, name, route } of cases) {
+    const requests = selectedRequests(page);
+    await page.goto(`/view/${route}/`);
+    await expect(
+      page.getByRole("tab", { name: "Changes", exact: true }),
+      `${name}: the Changes tab`,
+    ).toBeVisible();
+    await openPanelTab(page, "Changes");
+    const overlay = modeButton(page, "Overlay");
+    await expect(overlay, `${name}: the Overlay mode`).toBeVisible();
+    await overlay.click();
+    const generations = new Set<string>();
+    for (const [title, path] of changed) {
+      const frame = overlayFrame(page, title);
+      for (const side of ["before", "after"] as const)
+        await expect(
+          layer(frame, side),
+          `${name}: ${title}'s ${side} layer`,
+        ).toHaveAttribute(
+          PANE_SOURCE,
+          new RegExp(
+            `/diffs/generations/selected-[^/]+/snapshots/${side}/mokly-generated/${path}/index\\.desktop\\.html$`,
+            "u",
+          ),
+        );
+      const before = await layer(frame, "before").getAttribute(PANE_SOURCE);
+      const after = await layer(frame, "after").getAttribute(PANE_SOURCE);
+      expect(
+        generationOf(before!),
+        `${name}: ${title}'s two layers come from one generation`,
+      ).toBe(generationOf(after!));
+      generations.add(generationOf(after!));
+    }
+    expect(generations.size, `${name}: each changed row's own generation`).toBe(
+      changed.length,
+    );
+    for (const title of current) {
+      const live = page.getByRole("figure", {
+        name: new RegExp(`^${title} · Light\\b`, "u"),
+      });
+      await expect(live, `${name}: ${title}'s live frame`).toBeVisible();
+      await expect(
+        live.locator("[data-compare-mode]"),
+        `${name}: ${title}'s frame compares nothing`,
+      ).toHaveCount(0);
+    }
+    await expect
+      .poll(() => requests.map((url) => url.searchParams.get("path")).sort(), {
+        message: `${name}: one selection for each changed row alone`,
+      })
+      .toEqual(changed.map(([, path]) => path).sort());
+  }
 });

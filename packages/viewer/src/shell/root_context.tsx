@@ -16,7 +16,7 @@ import type { ShellResizing } from "@mokly/ui/shell-layout";
 
 import { ElementRefs } from "./element_refs.js";
 
-export type ScrollRegion = "stage" | "flow" | "embed" | "inspector";
+export type ScrollRegion = "stage" | "inspector";
 
 /** The dock's controls that a closed sheet returns focus to. */
 export type DockControl = "catalogue" | "tab";

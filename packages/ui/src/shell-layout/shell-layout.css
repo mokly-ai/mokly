@@ -66,6 +66,21 @@
   pointer-events: none;
 }
 
+/* A root that `resizing` marks with the inspector's drag keeps the drag's
+   row cursor in the same way. */
+.mbk.mbk-inspector-resizing {
+  cursor: row-resize;
+  user-select: none;
+}
+
+.mbk.mbk-inspector-resizing .mbk-reset {
+  cursor: row-resize !important;
+}
+
+.mbk.mbk-inspector-resizing iframe.mbk-reset {
+  pointer-events: none;
+}
+
 /* The main region, which holds the routed view. It is the containing block
    of the parts that float over a view, such as the right panel. */
 .mbk-main {

@@ -1,7 +1,7 @@
 import { ExampleDocument } from "../../../../document.js";
+import type { ArtboardViewport } from "../../../parts/artboards.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
 import { miniView } from "../../../parts/mini_views.js";
-import type { ArtboardViewport } from "../../../parts/shell.js";
 import {
   readingFrame,
   screenFrames,

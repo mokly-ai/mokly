@@ -3,10 +3,10 @@ import { topBar } from "../library/chrome/top-bar.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 
 import { useRenderedAppearance } from "./appearance.js";
+import type { ArtboardViewport } from "./artboards.js";
 import { useDesignNavigation } from "./design_navigation.js";
 import type { DesignDestination } from "./destinations.js";
 import { tagPickerTarget } from "./navigation_states.js";
-import type { ArtboardViewport } from "./shell.js";
 import { designTagRecords } from "./tag_filter.js";
 
 /**
@@ -19,7 +19,6 @@ export interface TopBarLinks {
 
 interface TopBarProps {
   activeTag?: string | undefined;
-  appearanceChanged?: boolean | undefined;
   /** The family's own brand destination; the Canvas home by default. */
   links?: TopBarLinks | undefined;
   searchValue?: string | undefined;
@@ -30,7 +29,6 @@ interface TopBarProps {
 /** Map this screen's navigation and query into recorded top-bar inputs. */
 export function TopBar({
   activeTag,
-  appearanceChanged,
   links,
   searchValue,
   tagPickerOpen,
@@ -45,7 +43,6 @@ export function TopBar({
       tags={designTagRecords(navigation.tags)}
       pickerOpen={tagPickerOpen ?? false}
       appearance={appearance}
-      {...optional("appearanceChanged", appearanceChanged)}
       brandDestination={links?.brand ?? CANVAS_PAGES.home}
       {...optional("query", searchValue)}
       {...optional("activeTag", activeTag)}

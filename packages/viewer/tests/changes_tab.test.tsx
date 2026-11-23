@@ -5,16 +5,26 @@ import type { ReactNode } from "react";
 
 import { ChangesStartProvider } from "../src/shell/changes_start.js";
 import { ChangesTab, comparedOutcome } from "../src/shell/changes_tab.js";
+import { useCompareModes } from "../src/shell/compare_modes.js";
+import type { CanvasComparisonController } from "../src/shell/comparison_compared_frame.js";
 import { useShellRoot, type ShellElements } from "../src/shell/root_context.js";
 import { routeHref } from "../src/shell/routes.js";
+import type { ComparisonGenerations } from "../src/shell/use_comparison.js";
 import type { EntryStatus } from "../src/shell/view_status.js";
+import type { WorkspaceComparison } from "../src/shell/workspace_comparison.js";
 
 import {
   fakeAdapter,
+  ORIGIN,
   registerDom,
   renderInShell,
 } from "./canvas_frame_fixture.js";
 import { rawIndexFixture } from "./catalogue_v9_fixture.js";
+
+/** A variant set whose own example's row is unmodified. */
+const SET = "components/action";
+/** A changed saved variant of the set. */
+const OUTLINE = "components/action/outline";
 
 /** The shell's elements, as the last render read them. */
 let elements: ShellElements | undefined;
@@ -120,5 +130,64 @@ test("an entry that the Changes filter does not list has no stepper", (t) => {
     "Compare",
     "Rendered content changed.",
   ]);
+  view.unmount();
+});
+
+/**
+ * The set's compare in Overlay, whose routed row has no generation, with the
+ * generations of the rows that compare.
+ */
+function setComparison(
+  generations: ComparisonGenerations | undefined,
+): WorkspaceComparison {
+  const controller: CanvasComparisonController = {
+    busy: false,
+    comparedFrame: undefined,
+    ...(generations ? { generations } : {}),
+    mode: "overlay",
+    refresh: () => undefined,
+    retry: () => undefined,
+    selectMode: () => undefined,
+    setComparedFrame: () => undefined,
+  };
+  return {
+    canvas: {
+      comparison: controller,
+      entryId: SET,
+      entryKind: "component",
+      frames: [],
+      plans: new Map(),
+      sideKey: undefined,
+    },
+    compared: [],
+    controller,
+    outcomes: [],
+  };
+}
+
+/** The compare modes that the set's Changes tab holds. */
+function SetModes({ generations }: { generations?: ComparisonGenerations }) {
+  return useCompareModes({
+    compare: setComparison(generations),
+    eligible: true,
+    removedScreen: false,
+    selected: true,
+    status: "Unmodified",
+  });
+}
+
+test("Refresh shows while the comparison holds a row's generation, also when the routed row has none", (t) => {
+  registerDom(t);
+  const { adapter } = fakeAdapter();
+  const refresh = (container: HTMLElement) =>
+    container.querySelectorAll('button[aria-label="Refresh comparison"]')
+      .length;
+  const view = renderInShell(adapter, SET, <SetModes />);
+  assert.equal(refresh(view.container), 0, "before any row loaded");
+  const loaded = new Map([
+    [OUTLINE, { url: `${ORIGIN}/mokly-viewer/diffs/generations/outline/` }],
+  ]);
+  view.rerender(<SetModes generations={loaded} />);
+  assert.equal(refresh(view.container), 1, "once a changed row loaded");
   view.unmount();
 });

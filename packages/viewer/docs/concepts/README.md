@@ -115,7 +115,7 @@ controlled proposals and navigation events. A removed screen shows its
 read-only version from the base commit, with no picking, inspection, or
 comparison action.
 
-The Details panel shows the workspace of the entry detail in every delivery:
+The right panel shows the workspace of the entry detail in every delivery:
 Used by, Affected screens, related changed components, and input changes with
 Before and Current props. While Changes is ready, it also lists the rule and
 resource evidence of the selected view.

@@ -8,12 +8,12 @@ import { zoomPill } from "../../library/canvas/zoom-pill.js";
 import { optional, useDesignInstance } from "../../library/composition.js";
 import { phoneDock } from "../../library/panels/phone-dock.js";
 import { useRenderedAppearance } from "../../parts/appearance.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
 import { canvasScope } from "../../parts/canvas_palette.js";
 import {
   DesignNavigation,
   useDesignNavigation,
 } from "../../parts/design_navigation.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
 import { TopBar } from "../../parts/top_bar.js";
 
 import { CanvasCatalogue, type CatalogueView } from "./catalogue.js";

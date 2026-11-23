@@ -84,6 +84,8 @@ test("live Difference requests the active screen and keeps real before/current p
   // The Frames filter shows the Dark views alone; the same selection has them.
   await openPanelTab(page, "Inspect");
   await setFrames(page, { dark: true, light: false });
+  // The canvas shows the compare only while Changes is the selected tab.
+  await openPanelTab(page, "Changes");
   const dark = comparedFrame(page, /^Desktop · Dark\b/u);
   for (const side of ["before", "after"] as const)
     await expect(layer(dark, side)).toHaveAttribute(

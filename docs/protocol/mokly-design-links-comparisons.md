@@ -97,8 +97,7 @@ with its saved variants.
 
 The query, chips, filtered rows, and picker visibility must agree. Selection
 closes the picker; opening it must not invent a query. Use the same mapping for
-Inspect's Tags chips in Welcome's search states, and for the picker button and
-chips of `design/browse/views/screen/tag-picker`. A filtered state keeps its
+Inspect's Tags chips in Welcome's search states. A filtered state keeps its
 query: its Fit opens the same filter with the picker closed, and its Changes
 filter, Changes tab and Zoom in are depictions, because no artboard shows the
 query with them. Other subjects, other branches, and comparison states keep

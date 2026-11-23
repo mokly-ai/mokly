@@ -127,7 +127,12 @@ for (const destination of ["Current", "another screen"] as const)
       if (destination === "Current") {
         await openPanelTab(page, "Changes");
         await modeButton(page, "Current").click();
-      } else await navRow(page, changes.paths.component).click();
+      } else {
+        await navRow(page, changes.paths.component).click();
+        // The canvas shows the compare only while Changes is the selected
+        // tab, so the destination's frames are checked there.
+        await openPanelTab(page, "Changes");
+      }
       await pending.release();
       // Leaving the comparison cancelled the renewal before its response.
       expect(pending.outcomes()).toEqual(["cancelled"]);
@@ -172,6 +177,7 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
   // second change would request the failed row again for its new frames.
   await openPanelTab(page, "Inspect");
   await chooseViewport(page, "both");
+  await openPanelTab(page, "Changes");
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   await expect(comparisonFrames(page)).toHaveCount(0);
   await loadComparison(page, "Try again");
@@ -214,6 +220,7 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
     await setFrames(page, { dark: true, light: false });
     await pending.arrived;
     await navRow(page, card).click();
+    await openPanelTab(page, "Changes");
     await expectCurrent(/^Current Card · Dark\b/u, "Card content");
     await pending.release();
     // Choosing the sibling cancelled the renewal before its response.

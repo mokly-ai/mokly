@@ -1,8 +1,11 @@
 /* Standalone design samples: tokens and room for the same component markup.
-   A sample's root carries the shell root's class for its theme, and it keeps
-   the page's flow instead of the shell's full-height column. The root draws
-   its theme's ink itself, as the shell layout stylesheet does for the shell
-   root, so a sample keeps the shell's text colours without that sheet. */
+   A sample's root carries the shell root's class for its theme, so the
+   shipped shell layout, which follows the component sheets as in the
+   package's styles.css, draws the root's surface in the theme. The root keeps
+   the page's flow instead of the shell's full-height column, and it draws its
+   theme's ink itself, as the shell layout does for the shell root. */
+@import "../../packages/ui/src/shell-layout/shell-layout.css";
+
 .mbk-library {
   color: var(--chrome-ink);
   display: block;
@@ -46,21 +49,9 @@
 .mbk-library .mbk-nav-frame[data-drawer] > .mbk-nav {
   top: 0;
 }
-.mbk-library[data-library-component="inspector"] .mbk-library-host {
-  display: flex;
-  height: 680px;
-}
 .mbk-library[data-library-component="prop-field"] .mbk-library-host {
   max-width: 680px;
   padding: 16px;
-}
-.mbk-library[data-library-component="device-frame"] .mbk-library-host {
-  height: calc(100dvh - 48px);
-  min-height: 0;
-  overflow: auto;
-}
-.mbk-library .browser-frame {
-  max-width: 100%;
 }
 /* A Canvas part's sample stands on the canvas, as it does in a Canvas
    artboard. A frame leaves room for the label above it, and a floating panel

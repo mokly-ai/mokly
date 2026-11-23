@@ -1,8 +1,10 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
 import { DETAILS_VIEW, detailsFrames } from "../parts/changes_sketches.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { actionSetFrames } from "../parts/set_sketches.js";
