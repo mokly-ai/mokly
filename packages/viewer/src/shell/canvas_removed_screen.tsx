@@ -2,7 +2,7 @@
  * A removed screen's section on the canvas: one canvas frame for each
  * historical view, from `canvas_removed_frames.ts`, each holding its
  * historical document in a read-only `srcdoc` frame, which forwards its
- * canvas input through `canvas_removed_input.ts`, and the note of a viewport
+ * canvas input through `canvas_frame_input.tsx`, and the note of a viewport
  * never captured in its frames' places.
  */
 
@@ -13,6 +13,7 @@ import type { ViewerSelection } from "../host/types.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { PreviewContent } from "../previews/request.js";
 
+import { useCanvasFrameInput } from "./canvas_frame_input.js";
 import {
   DESKTOP_FRAME_SIZE,
   MOBILE_FRAME_SIZE,
@@ -23,7 +24,6 @@ import {
   removedScreenFrames,
   type RemovedFramePlan,
 } from "./canvas_removed_frames.js";
-import { useCanvasFrameInput } from "./canvas_removed_input.js";
 import {
   RemovedSection,
   RemovedUnavailable,

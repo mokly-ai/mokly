@@ -13,7 +13,7 @@ import { useContext } from "react";
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
 
-import { useLiveFrameInput } from "./canvas_frame_input.js";
+import { useCanvasFrameInput } from "./canvas_frame_input.js";
 import {
   measuredFrameSize,
   type CanvasFrameSize,
@@ -78,13 +78,13 @@ export function CanvasLiveFrame({
   size: CanvasFrameSize;
 }) {
   const stage = useContext(FrameStageContext);
-  const input = useLiveFrameInput();
+  const input = useCanvasFrameInput();
   const { entry, scheme, viewport } = plan;
   const frame = useViewFrame({
     entry,
     expanded: false,
     fragment,
-    onCanvasInput: input.onCanvasInput,
+    onCanvasInput: input.listener,
     // A screen's frames keep the size of their viewport.
     onReady:
       plan.kind === "component" && onSize

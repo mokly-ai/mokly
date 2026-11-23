@@ -1,37 +1,40 @@
 /**
- * The canvas input of a live canvas frame, whose adapter mounts its
- * document: a screen's, a component's or a reading frame. The adapter
- * forwards the document's input with the frame element, so a wheel or a
- * pinch zooms about the point under the pointer, on the canvas of
- * `CanvasControlContext` that holds the frame. While the document reports
- * keyboard focus, the frame shows the focus glow.
+ * The canvas input of a canvas frame's document, for the frames of a live
+ * entry, whose adapter forwards the input, and for a previous version's
+ * frames, which forward it with `listenForCanvasInput`. The input moves the
+ * canvas of `CanvasControlContext` that holds the frame. While the document
+ * reports keyboard focus, the frame shows the focus glow.
  */
 
 import { useCallback, useContext, useState } from "react";
 
-import { routeFrameInput, type CanvasInputListener } from "./canvas_input.js";
+import type { CanvasInputEvent } from "@mokly/frame/internal";
+
+import { routeFrameInput } from "./canvas_input.js";
 import { CanvasControlContext } from "./canvas_stage.js";
 
 /**
- * The listener of a live canvas frame's document, and whether the document
- * shows keyboard focus. Its wheel, pinch and keys move the canvas that holds
- * the frame. `canvas-focus` with `visible` lights the glow, and `canvas-blur`
- * or a focus without `visible` puts it out; the mount hook sends
- * `canvas-blur` when it disposes of or replaces the document's mount.
+ * The listener of a canvas frame's document, and whether the document shows
+ * keyboard focus. Its wheel, pinch and keys move the canvas that holds the
+ * frame: a wheel or a pinch zooms about its point in `frame`, and about the
+ * stage's centre when the caller names no frame. `canvas-focus` with
+ * `visible` lights the glow, and `canvas-blur` or a focus without `visible`
+ * puts it out; the mount hook of a live frame sends `canvas-blur` when it
+ * disposes of or replaces the document's mount.
  */
-export function useLiveFrameInput(): {
+export function useCanvasFrameInput(): {
   focusVisible: boolean;
-  onCanvasInput: CanvasInputListener;
+  listener: (event: CanvasInputEvent, frame?: HTMLIFrameElement) => void;
 } {
   const control = useContext(CanvasControlContext);
   const [focusVisible, setFocusVisible] = useState(false);
-  const onCanvasInput = useCallback<CanvasInputListener>(
-    (event, frame) => {
+  const listener = useCallback(
+    (event: CanvasInputEvent, frame?: HTMLIFrameElement) => {
       if (event.type === "canvas-focus") setFocusVisible(event.visible);
       else if (event.type === "canvas-blur") setFocusVisible(false);
-      else if (control) routeFrameInput(control, event, frame);
+      else if (control) routeFrameInput(control, event, frame ?? null);
     },
     [control],
   );
-  return { focusVisible, onCanvasInput };
+  return { focusVisible, listener };
 }

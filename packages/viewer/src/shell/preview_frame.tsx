@@ -7,12 +7,13 @@
 import { useEffect, useRef } from "react";
 import type { RefObject } from "react";
 
-import type { CanvasInputEvent } from "@mokly/frame/internal";
 import { PreviewIframe } from "@mokly/ui/preview-frame";
 
 import { forwardCanvasInput } from "../previews/canvas_input.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import { enforcePreviewReadOnly } from "../previews/read_only.js";
+
+import type { CanvasInputListener } from "./canvas_input.js";
 
 /** What a comparison pane adds to the shared read-only frame. */
 export interface ComparisonFrameOptions {
@@ -24,11 +25,12 @@ export interface ComparisonFrameOptions {
 
 /**
  * Forward the canvas input of the frame's presented documents while a
- * listener is given, to the latest listener.
+ * listener is given, to the latest listener, with the frame element, so a
+ * zoom keeps its point in the frame.
  */
 function useCanvasInput(
   frame: RefObject<HTMLIFrameElement | null>,
-  listener: ((event: CanvasInputEvent) => void) | undefined,
+  listener: CanvasInputListener | undefined,
 ): void {
   const latest = useRef(listener);
   latest.current = listener;
@@ -36,7 +38,9 @@ function useCanvasInput(
   useEffect(() => {
     const element = frame.current;
     if (!element || !forwards) return;
-    return forwardCanvasInput(element, (event) => latest.current?.(event));
+    return forwardCanvasInput(element, (event) =>
+      latest.current?.(event, element),
+    );
   }, [forwards, frame]);
 }
 
@@ -47,8 +51,11 @@ function useCanvasInput(
  * canvas can forward the canvas input of its document to `canvasInput`.
  */
 export function SnapshotFrame(props: {
-  /** Receives the zoom gestures, canvas keys and focus from inside the document. */
-  canvasInput?: ((event: CanvasInputEvent) => void) | undefined;
+  /**
+   * Receives the zoom gestures, canvas keys and focus from inside the
+   * document, with the frame element.
+   */
+  canvasInput?: CanvasInputListener | undefined;
   comparison?: ComparisonFrameOptions;
   presentation: SnapshotPresentation;
   title: string;
