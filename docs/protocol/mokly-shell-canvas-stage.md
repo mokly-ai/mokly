@@ -77,6 +77,26 @@ choice. Decision: one filter of the shown frames, not a viewport dropdown with
 a scheme control, because the canvas shows every frame at once and the reader
 hides only the frames that they do not compare.
 
+- The viewport toggles show the selection's `viewport`, whatever sets it: Both
+  turns both toggles on, and Mobile or Desktop turns that toggle on alone.
+- A change of a viewport toggle sets `viewport` to the viewport that stays on,
+  or to Both while both are on, as one selection change. A controlled host
+  receives it as a proposal, and the standalone shell writes it to its
+  [address](./mokly-viewer-selection.md#shell-tree-and-state).
+- The scheme toggles are view state of the shell, apart from the selection, as
+  the zoom is. In-shell navigation keeps them, and a full page load turns both
+  on.
+- Each axis keeps one toggle on, so its last shown toggle does not turn off.
+- In the [compact layout](./mokly-shell-device-chrome.md#compact-layout), the
+  selection's viewport names the picked frame. The viewport toggles then show
+  that frame's viewport, and the frame picker lists the frames of both
+  viewports.
+
+Decision: the viewport toggles are part of the public selection, not local
+view state, so an address, a Share link and a host selection keep the shown
+viewport. The scheme toggles stay local, because `colorScheme` keeps its
+meaning, the preview scheme.
+
 - A frame that the filter turns off leaves the canvas, and the stage refits
   around the frames that stay.
 - A screen's section keeps one row for each shown scheme, Light above Dark.
