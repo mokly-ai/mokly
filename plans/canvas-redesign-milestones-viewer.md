@@ -125,12 +125,20 @@ Depends on: 10, 11
       `mokly-css-evidence-presentation.md` requires. Today
       `workspace_evidence.tsx` lists them only while a comparison is loaded.
       Add a unit test.
+- [ ] Give every fixed-size tag on a frame one rule at a small zoom: the
+      Highlight components labels, which cover frame content at fit (Milestone
+      11, item 10), and the selection's name and size tags. Write the rule in
+      `mokly-viewer-selection-canvas.md`.
+- [ ] Draw the focus glow in the three mockup sheets that still draw an
+      outline: `examples/basic/design-components.css`,
+      `design-library/inspector/frames-filter.css` and
+      `design-library/panels/compare-modes.css`.
 
 ## Milestone 13: Cloud viewer chrome
 
 Tags: ui
 
-Depends on: 12
+Depends on: 12, only for the check slot
 
 - [ ] Rebuild the bar: project switcher, publication pill, Search, History,
       Share and account. Remove the Settings button.
@@ -155,3 +163,7 @@ Depends on: 12
 - [ ] Give `siteLinks` in `packages/app/src/config.ts` and the mockup fixture
       `docs/mockups/src/fixtures/site.ts` the site's trailing slash: `/docs/`
       and `/changelog/`.
+- [ ] Make `both` the cloud's viewport default, as in the package (Milestone
+      11, item 9, option C), so a phone opens a screen on its Mobile frame and
+      a wide canvas shows both columns. Change the address mapping, Share,
+      their tests and `docs/protocol/cloud/viewer-address-state.md:62`.

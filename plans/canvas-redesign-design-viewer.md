@@ -69,3 +69,11 @@ the plan deletes it too.
   to 11,264 bytes for the forwarded canvas input and the frame focus events.
   The probe is one cached script file. A touch pinch over a frame on Android
   is a follow-up item, because it needs a non-passive touch listener.
+
+- Calls on Milestone 11's final report, 2026-11-23: the cloud's viewport
+  default becomes `both`, as in the package (item 9, C), because Desktop
+  served the one-frame stage and phones opened on a scaled desktop frame.
+  Milestone 13 does it. The Highlight components labels keep their size
+  until Milestone 12 sets one zoom rule for every fixed-size tag on a frame
+  (item 10, A). Milestones 12 and 13 run at the same time, and Milestone 13
+  fills the check slot last, after Milestone 12 builds it.
