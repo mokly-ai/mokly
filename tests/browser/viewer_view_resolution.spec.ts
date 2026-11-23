@@ -3,8 +3,9 @@ import { expect, type Page } from "@playwright/test";
 import type { CatalogueReadModel } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
-import { awaitRoutedDetail } from "./comparison_ui.js";
+import { awaitRoutedDetail, expectNoCompareModes } from "./comparison_ui.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
+import { openPanelTab, setFrames } from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -83,16 +84,25 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   });
 
   const root = page.locator("#mixed");
+  // The wide canvas shows the frames that the Frames filter shows: the
+  // Mobile frames, whose one view is the Light view that stands in for the
+  // Dark selection.
+  await setFrames(root, { mobile: true, desktop: false });
   await expect(root.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
   await awaitRoutedDetail(root, screen.path);
-  await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
+  await expectNoCompareModes(root);
+  // The Desktop toggle hides the changed view and carries the mark; the
+  // light-only screen's Dark toggle reads Light only and marks nothing.
+  await openPanelTab(root, "Inspect");
   await expect(root.locator('[data-view-changed="scheme"]')).toBeHidden();
   await expect(root.locator('[data-view-changed="viewport"]')).toBeVisible();
-  await expect(
-    root.getByRole("button", { name: "Dark preview", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  const dark = root.locator('[data-frames-toggle="dark"]');
+  await expect(dark).toBeDisabled();
+  await expect(root.locator("label", { has: dark })).toContainText(
+    "Light only",
+  );
   await expect(root.locator('[data-workspace-frame="mobile"]')).toHaveAttribute(
     "src",
     /home\/index\.mobile\.html$/,
@@ -126,5 +136,5 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
     "Unmodified",
   );
   await awaitRoutedDetail(root, variant.path);
-  await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
+  await expectNoCompareModes(root);
 });

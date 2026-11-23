@@ -11,6 +11,7 @@ import type { CatalogueReadModel, MoklyViewerProps } from "@mokly/viewer";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
+import { chooseMode } from "./comparison_ui.js";
 import { generationDocumentsNotice } from "./document_error_allowance.js";
 import type {} from "./viewer_harness.js";
 
@@ -65,7 +66,8 @@ test("comparison is lazy, confined, and reports safe failures", async ({
     page.getByRole("heading", { name: "Home", exact: true }),
   ).toBeVisible();
   expect(comparisons).toHaveLength(0);
-  await page.locator('[data-diff-mode="side"]').click();
+  // The modes stand in the band of the right panel's Changes tab.
+  await chooseMode(page, "Side by side");
   await expect(
     page.getByText("The comparison could not be loaded.", { exact: false }),
   ).toBeVisible();
