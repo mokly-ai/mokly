@@ -1222,32 +1222,32 @@ Depends on: 14
 
 Depends on: 14
 
-- [ ] Transform each local stylesheet as design call 21 says, in place of
-      the configured PostCSS module.
+- [x] Transform each local stylesheet as design call 21 says, in place of
+      the configured PostCSS module. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [ ] Under the adapter, send every local stylesheet of a catalogue without
       JavaScript through the setup, as design call D12 says. A sidecar then
       starts, and the base side extracts its sources and selects an
       installation, as for the `postcss` module.
-- [ ] Keep Mokly's order, bundling, delivery, and attribution on the result.
-- [ ] Test Sass, CSS Modules class names, and Tailwind's Vite plugin.
-- [ ] Update `docs/guides/authoring/vite.md` and
-      `docs/guides/authoring/styles.md`.
-- [ ] Apply the answers to track D decisions 1 and 5.
-- [ ] Route Vite's stylesheet resolver through the Vite path's one lookup, so
+- [x] Keep Mokly's order, bundling, delivery, and attribution on the result. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Test Sass, CSS Modules class names, and Tailwind's Vite plugin. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Update `docs/guides/authoring/vite.md` and
+      `docs/guides/authoring/styles.md`. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Apply the answers to track D decisions 1 and 5. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Route Vite's stylesheet resolver through the Vite path's one lookup, so
       that stylesheet imports also get the selected installation and the
-      package roots. Vite's stylesheet resolver does not call Mokly's plugin.
-- [ ] Keep each authored relative `url()` of a transformed stylesheet, so
+      package roots. Vite's stylesheet resolver does not call Mokly's plugin. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Keep each authored relative `url()` of a transformed stylesheet, so
       that Mokly delivers its asset as on the esbuild path. Vite rewrites
-      such URLs, and Mokly rejects a root-absolute CSS URL.
-- [ ] Update the pages that name the PostCSS step or `.module.css` only:
+      such URLs, and Mokly rejects a root-absolute CSS URL. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Update the pages that name the PostCSS step or `.module.css` only:
       `docs/protocol/mokly-imported-styles.md`,
       `docs/protocol/mokly-imported-styles-modules.md`, and the position and
       `processCss` rules of `docs/protocol/mokly-imported-styles-errors.md`.
       Make the fix text of the "two roots at one route" error fit a `.scss`
-      and a `.scss.css` file at one route.
-- [ ] Name the Rust crates and files that this milestone changes in the
+      and a `.scss.css` file at one route. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Name the Rust crates and files that this milestone changes in the
       report. Keep each change behind the `vite` field, and do not refactor
-      track C's asset URL rewriting or generated file delivery.
+      track C's asset URL rewriting or generated file delivery. Branch: `conductor/storybook-support-d-vite-adapter`.
 
 ## Milestone 17: Vite adapter verification, review, and pull request
 
