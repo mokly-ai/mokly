@@ -2,7 +2,7 @@
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-23, from Milestone 13 of the Canvas redesign, task B, on the branch `m13-account`.
+- **Added:** 2026-11-23, from `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms` (Milestone 13).
 - **Location:** `packages/app/src/viewer/menu-list.tsx`, `packages/app/src/viewer/account-menu.tsx`, `packages/app/src/screens/viewer/more-menu.tsx`, `docs/mockups/src/screens/product/viewer/account-menu.tsx`, `docs/mockups/styles/product/viewer-canvas-menu.css`, `docs/mockups/src/_tests_/interactive-role-policy.ts`, and the Imports And Ownership section of `docs/protocol/cloud/shared-controls.md`.
 - **Reason:** The fix needs a release of `@firna/ui`, which lives in another repository.
 

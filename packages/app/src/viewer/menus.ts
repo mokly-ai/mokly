@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { asApiError, unexpectedError } from "../api/errors";
 import { useCompact } from "../layout/viewport";
 import { useSession } from "../session/context";
+import { keepSignOutFailure } from "../session/sign-out-failure";
 import type { SurfaceId } from "../settings/panes";
 
 import type { AccountActions } from "./account-menu";
@@ -42,19 +44,32 @@ export function useViewerMenus(compactBar: boolean, overlaid: boolean) {
 
 /**
  * Sign out from a menu, which has closed: end the session, and where that
- * fails, call `onFailure`, which shows the failure where the reader can try
- * again. A press while a sign-out is in flight sends nothing.
+ * fails, keep the failure for the Account pane and call `onFailure`, which
+ * opens that pane, so the reader sees why and can try again. A press while a
+ * sign-out is in flight sends nothing, and a failure that arrives after the
+ * viewer has gone opens nothing.
  */
 function useMenuSignOut(onFailure: () => void): () => void {
   const { signOut } = useSession();
   const failed = useRef(onFailure);
   failed.current = onFailure;
   const pending = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   return useCallback(() => {
     if (pending.current) return;
     pending.current = true;
     signOut()
-      .catch(() => failed.current())
+      .catch((caught: unknown) => {
+        if (!mounted.current) return;
+        keepSignOutFailure(asApiError(caught) ?? unexpectedError());
+        failed.current();
+      })
       .finally(() => {
         pending.current = false;
       });

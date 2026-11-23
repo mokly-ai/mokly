@@ -163,7 +163,7 @@ test("Settings opens the settings index, and closing it returns focus to the ava
   }
 });
 
-test("Sign out ends the session, and a failure opens the Account pane", async ({
+test("a failed Sign out from the menu opens the Account pane, which shows the failure once", async ({
   page,
 }) => {
   const made = await publishedProject(page, "account-sign-out");
@@ -183,20 +183,35 @@ test("Sign out ends the session, and a failure opens the Account pane", async ({
   const menu = await openAccountMenu(page);
   await menu.getByRole("menuitem", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/[?&]settings=account(?:&|$)/);
+  const dialog = page.getByTestId("settings-dialog");
   await expect(
-    page
-      .getByTestId("settings-dialog")
-      .getByRole("heading", { level: 1, name: "Account" }),
+    dialog.getByRole("heading", { level: 1, name: "Account" }),
   ).toBeVisible();
-  await page.unroute(sessionUrl, refuse);
+  // The pane draws the menu's failure as the failure of its own Sign out:
+  // the cause above the control, the way back and the request's Details.
+  const control = page.getByTestId("sign-out");
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "Mokly is busy. Try again in a moment.",
+  );
+  await expect(control).toHaveText("Try again");
+  await expect(dialog.getByText("Details", { exact: true })).toBeVisible();
 
+  // Closing returns focus to the avatar, and the next Account pane opens at
+  // rest, because the failure belonged to that one attempt.
   await page.getByTestId("close-settings").click();
   await expect(page.getByTestId("viewer-account")).toBeFocused();
   await (
     await openAccountMenu(page)
   )
-    .getByRole("menuitem", { name: "Sign out", exact: true })
+    .getByRole("menuitem", { name: "Settings", exact: true })
     .click();
+  await page.getByRole("link", { name: "Account", exact: true }).click();
+  await expect(control).toHaveText("Sign out");
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+
+  // With the session answering again, the pane's Sign out ends it.
+  await page.unroute(sessionUrl, refuse);
+  await control.click();
   await expect(page).toHaveURL((url) => url.pathname === signInPath);
   expect((await page.request.get(sessionUrl)).status()).toBe(401);
 });

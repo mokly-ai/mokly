@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import type { Session } from "../../api/types";
@@ -15,6 +15,10 @@ import { settingsPath } from "../../navigation/paths";
 import { currentReturnTo } from "../../navigation/return-to";
 import { openOnWeb } from "../../navigation/web-setup";
 import { useSession } from "../../session/context";
+import {
+  forgetSignOutFailure,
+  signOutFailure,
+} from "../../session/sign-out-failure";
 import { useSettings } from "../context";
 import { useDraft } from "../dirty";
 import { draftKey } from "../drafts";
@@ -171,8 +175,11 @@ export function AccountPane() {
     [name, renaming, reloadSession],
   );
   // Sign out has its own write, so a failed attempt and its retry stay beside
-  // the control that sent it.
-  const signingOut = useWrite(nothingToDo, alwaysSendable);
+  // the control that sent it. A sign-out that the account menu sent and that
+  // failed opens this pane, which shows that failure as its own, once.
+  const [menuFailure] = useState(signOutFailure);
+  useEffect(forgetSignOutFailure, []);
+  const signingOut = useWrite(nothingToDo, alwaysSendable, menuFailure);
 
   const failure = formFailure(renaming, { "validation-failed": "name" });
   return (
