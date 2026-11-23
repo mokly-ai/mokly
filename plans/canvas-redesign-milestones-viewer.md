@@ -152,9 +152,10 @@ Depends on: 12, only for the check slot
       Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
 - [x] End the More menu with the same account rows on compact widths.
       Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
-- [ ] After Settings leaves the bar, measure the bar's label and SHA widths
+- [x] After Settings leaves the bar, measure the bar's label and SHA widths
       again, so History's label and the SHA show at 1180px, as the prototype
       shows them.
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
 - [x] Give the registered Button an optional content node, so the pill draws
       its branch in mono and is one control (decision 39).
       Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
