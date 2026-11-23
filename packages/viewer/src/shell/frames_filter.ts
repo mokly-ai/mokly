@@ -1,18 +1,24 @@
 /**
  * The Frames filter of the screens: the viewports and the schemes whose
- * frames the canvas shows. It is one choice of the shell, apart from the
- * public selection: it stays the same across in-shell navigation and starts
- * with every frame shown at a full page load. A variant set reads its scheme
- * toggles. A use case keeps a choice of its own, one viewport and one
- * scheme. An axis always keeps one of its toggles on.
+ * frames the canvas shows. Its viewport toggles show and set the public
+ * selection's `viewport`: both on is `both`, and one on is that viewport, so
+ * an address, a Share link and a host selection keep the shown viewport. Its
+ * scheme toggles are one choice of the shell, apart from the public
+ * selection: they stay the same across in-shell navigation and start with
+ * both schemes shown at a full page load. In the compact layout the
+ * selection's viewport names the picked frame, so the picker lists the frames
+ * of both viewports. A variant set reads its scheme toggles. A use case keeps
+ * a choice of its own, one viewport and one scheme. An axis always keeps one
+ * of its toggles on.
  */
 
 import type { ColorScheme, Viewport } from "@mokly/model";
 import type { FramesToggleName } from "@mokly/ui/frames-filter";
 
+import type { CanvasShown } from "./canvas_frames.js";
 import type { UseCaseFramesChoice } from "./canvas_use_case_frames.js";
 
-/** The shown viewports and schemes of the Frames filter. */
+/** The toggles of the Frames filter: its shown viewports and schemes. */
 export interface FramesChoice {
   dark: boolean;
   desktop: boolean;
@@ -20,13 +26,51 @@ export interface FramesChoice {
   mobile: boolean;
 }
 
-/** Every frame shown, as a full page load starts. */
-export const ALL_FRAMES: FramesChoice = {
-  dark: true,
-  desktop: true,
-  light: true,
-  mobile: true,
-};
+/** The scheme toggles, which the shell keeps apart from the selection. */
+export type FramesSchemes = Pick<FramesChoice, "dark" | "light">;
+
+/** Both schemes shown, as a full page load starts. */
+export const BOTH_SCHEMES: FramesSchemes = { dark: true, light: true };
+
+/**
+ * The filter's toggles: the shell's scheme toggles, and the viewport toggles
+ * of the selection's viewport, where `both` turns both on.
+ */
+export function framesChoice(
+  schemes: FramesSchemes,
+  viewport: "both" | Viewport,
+): FramesChoice {
+  return {
+    dark: schemes.dark,
+    desktop: viewport !== "mobile",
+    light: schemes.light,
+    mobile: viewport !== "desktop",
+  };
+}
+
+/**
+ * The scheme toggles and the selection's viewport after one toggle changes:
+ * the viewport toggles name `both` while both are on, else the one that is
+ * on. A toggle that would leave its axis without a shown frame changes
+ * nothing.
+ */
+export function toggledFilter(
+  schemes: FramesSchemes,
+  viewport: "both" | Viewport,
+  name: FramesToggleName,
+  checked: boolean,
+): { schemes: FramesSchemes; viewport: "both" | Viewport } {
+  const next = toggledFrames(framesChoice(schemes, viewport), name, checked);
+  return {
+    schemes: { dark: next.dark, light: next.light },
+    viewport:
+      next.desktop && next.mobile
+        ? "both"
+        : next.desktop
+          ? "desktop"
+          : "mobile",
+  };
+}
 
 /** The other toggle of each toggle's axis. */
 const OTHER: Readonly<Record<FramesToggleName, FramesToggleName>> = {
@@ -62,7 +106,7 @@ export function shownViewports(choice: FramesChoice): Viewport[] {
  * `Light only`.
  */
 export function shownSchemes(
-  choice: FramesChoice,
+  choice: FramesSchemes,
   hasDark: boolean,
 ): ColorScheme[] {
   if (!hasDark) return ["light"];
@@ -70,16 +114,38 @@ export function shownSchemes(
 }
 
 /**
+ * The viewports and the schemes whose frames a workspace's canvas lists: on
+ * the wide canvas, the ones that the filter shows; in the compact layout, the
+ * frames of both viewports, among which the selection's viewport picks the
+ * shown one, in the schemes that the filter shows. A variant set's frames
+ * show the desktop view.
+ */
+export function canvasShownAxes(
+  choice: FramesChoice,
+  entry: { hasDark: boolean; set: boolean; wide: boolean },
+): CanvasShown {
+  return {
+    schemes: shownSchemes(choice, entry.hasDark),
+    viewports: entry.set
+      ? ["desktop"]
+      : entry.wide
+        ? shownViewports(choice)
+        : ["desktop", "mobile"],
+  };
+}
+
+/**
  * The views that a workspace shows, whose status, change marks and
  * comparison eligibility the shell describes: on the wide canvas, the
- * viewports and schemes that the filter shows, the selection's scheme
- * first; in the compact layout, the one picked frame, which the selection's
- * viewport and scheme name, or the first shown frame while the filter hides
- * that one. A variant set's frames show the desktop view.
+ * selection's viewport and the schemes that the filter shows, the
+ * selection's scheme first; in the compact layout, the one picked frame:
+ * the selection's viewport, with `both` read as Mobile, in the selection's
+ * scheme, or in the other one while the filter hides that one. A variant
+ * set's frames show the desktop view.
  */
 export function workspaceShownAxes(
   set: boolean,
-  choice: FramesChoice,
+  choice: FramesSchemes,
   hasDark: boolean,
   wide: boolean,
   selection: { colorScheme: ColorScheme; viewport: "both" | Viewport },
@@ -89,22 +155,14 @@ export function workspaceShownAxes(
       Number(second === selection.colorScheme) -
       Number(first === selection.colorScheme),
   );
-  const viewports: readonly Viewport[] = set
-    ? ["desktop"]
-    : shownViewports(choice);
-  if (wide)
-    return {
-      schemes,
-      viewport: viewports.length > 1 ? "both" : (viewports[0] ?? "desktop"),
-    };
+  const shown = wide ? schemes : schemes.slice(0, 1);
+  if (set) return { schemes: shown, viewport: "desktop" };
+  if (wide) return { schemes: shown, viewport: selection.viewport };
   // The picker lists Mobile before Desktop.
-  const wanted = selection.viewport === "both" ? "mobile" : selection.viewport;
-  const viewport = viewports.includes(wanted)
-    ? wanted
-    : viewports.includes("mobile")
-      ? "mobile"
-      : (viewports[0] ?? wanted);
-  return { schemes: schemes.slice(0, 1), viewport };
+  return {
+    schemes: shown,
+    viewport: selection.viewport === "both" ? "mobile" : selection.viewport,
+  };
 }
 
 /** One view of an entry, named by its viewport and scheme. */

@@ -5,7 +5,7 @@ import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { reconcileDisclosures } from "./disclosure_storage.js";
-import { ALL_FRAMES } from "./frames_filter.js";
+import { BOTH_SCHEMES } from "./frames_filter.js";
 import {
   catalogueNavSections,
   defaultDisclosures,
@@ -54,7 +54,7 @@ export function createInitialShellState(
     comparisonIntent: route.comparison === "side",
     disclosures,
     filterBaseline: undefined,
-    frames: ALL_FRAMES,
+    frames: BOTH_SCHEMES,
     navigationMaximum: initial?.navigationMaximum ?? 480,
     navigationWidth: initial?.navigationWidth,
     navScroll: 0,

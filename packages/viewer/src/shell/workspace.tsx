@@ -229,7 +229,7 @@ export function ComponentWorkspace({
             ),
             frames: {
               changed: changedViews,
-              choice: store.state.frames,
+              choice: canvas.choice,
               count: canvas.shownCount,
               hasDark: canvas.hasDark,
               viewports: !set,

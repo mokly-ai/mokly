@@ -3,13 +3,13 @@
 import { createContext, useContext } from "react";
 
 import type { FrameNavigation } from "@mokly/frame";
+import type { FramesToggleName } from "@mokly/ui/frames-filter";
 import type { PanelTab } from "@mokly/ui/panel-tabs";
 
 import type { ViewerSelection } from "../host/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import type { FramesChoice } from "./frames_filter.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import type { ShellClickEvent, ShellKeyEvent } from "./store_browser_routes.js";
 import type { ShellSheet, ShellState } from "./store_state.js";
@@ -45,8 +45,13 @@ export interface ShellStore {
   select(selection: Partial<ViewerSelection>): void;
   selectColorScheme(value: "dark" | "light"): void;
   setDisclosure(key: string, open: boolean): void;
-  /** Show the screens' frames that the Frames filter chooses. */
-  setFrames(frames: FramesChoice): void;
+  /**
+   * Turn one toggle of the screens' Frames filter on or off, while its axis
+   * keeps another toggle on. A scheme toggle stays with the shell. A
+   * viewport toggle writes the selection's viewport, `both` while both are
+   * on, as one selection change, so a controlled host hears a proposal.
+   */
+  toggleFrame(name: FramesToggleName, checked: boolean): void;
   /** Select a tab of the right panel. */
   setPanelTab(tab: PanelTab): void;
   /** Open a sheet of the compact layout, which closes the other, or close it. */

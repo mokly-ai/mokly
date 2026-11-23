@@ -7,30 +7,30 @@
  * without any historical view has the place of each of its frames, which
  * holds the note that no previous version was captured. The Frames filter
  * keeps the columns of its viewports and the rows of its schemes, as it does
- * for a current screen, and the compact layout shows the picked frame among
- * the frames that the filter shows. A removed page or document has one
- * reading frame instead.
+ * for a current screen, and the compact layout shows the picked frame of the
+ * selection's viewport in a scheme that the filter shows. A removed page or
+ * document has one reading frame instead.
  */
 
 import type { ViewerSelection } from "../host/types.js";
 import type { PreviewContent } from "../previews/request.js";
 
 import { viewportFrameLabel, type CanvasScheme } from "./canvas_frames.js";
-import { workspaceShownAxes, type FramesChoice } from "./frames_filter.js";
+import { workspaceShownAxes, type FramesSchemes } from "./frames_filter.js";
 import { schemeValue } from "./scheme_fallback.js";
 
 /**
  * The viewport and the scheme of a removed screen's section: on the wide
- * canvas, the viewports that the Frames filter shows and the selection's
- * scheme; in the compact layout, the picked frame among the shown frames,
- * as a current screen's.
+ * canvas, the selection's viewport, which the Frames filter's viewport
+ * toggles show, and the selection's scheme; in the compact layout, the
+ * picked frame in a scheme that the filter shows, as a current screen's.
  */
 export function removedSectionAxes(
-  choice: FramesChoice,
+  schemes: FramesSchemes,
   selection: Pick<ViewerSelection, "colorScheme" | "viewport">,
   wide: boolean,
 ): { colorScheme: CanvasScheme; viewport: ViewerSelection["viewport"] } {
-  const axes = workspaceShownAxes(false, choice, true, wide, selection);
+  const axes = workspaceShownAxes(false, schemes, true, wide, selection);
   return {
     colorScheme: wide
       ? selection.colorScheme

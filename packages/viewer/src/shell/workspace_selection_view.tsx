@@ -29,7 +29,6 @@ import {
   useOptionalShellFrameRegistry,
   type ShellFrameSession,
 } from "./frame_registry.js";
-import { toggledFrames } from "./frames_filter.js";
 import { useInstanceBoxModel } from "./instance_box_model.js";
 import {
   pillDetails,
@@ -192,6 +191,6 @@ export function useWorkspaceSelection({
       [frames, previewViews],
     ),
     toggleFrames: (name: FramesToggleName, checked: boolean) =>
-      store.setFrames(toggledFrames(store.state.frames, name, checked)),
+      store.toggleFrame(name, checked),
   };
 }

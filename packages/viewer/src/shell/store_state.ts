@@ -5,7 +5,7 @@ import type { PanelTab } from "@mokly/ui/panel-tabs";
 
 import type { ViewerSelection } from "../host/types.js";
 
-import type { FramesChoice } from "./frames_filter.js";
+import type { FramesSchemes } from "./frames_filter.js";
 import type { ShellRoute } from "./routes.js";
 
 /** Stored browser preferences the standalone bundle reads before its first render. */
@@ -29,10 +29,11 @@ export interface ShellState {
   disclosures: Readonly<Record<string, boolean>>;
   filterBaseline: Readonly<Record<string, boolean>> | undefined;
   /**
-   * The screens' Frames filter: the viewports and schemes that the canvas
-   * shows. It stays the same across in-shell navigation.
+   * The scheme toggles of the screens' Frames filter: the schemes that the
+   * canvas shows. They stay the same across in-shell navigation. Its
+   * viewport toggles show the selection's viewport.
    */
-  frames: FramesChoice;
+  frames: FramesSchemes;
   navigationMaximum: number;
   navScroll: number;
   /**

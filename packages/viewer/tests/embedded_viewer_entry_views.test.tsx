@@ -180,12 +180,12 @@ test("the embedded viewer resolves light fallback evidence across status, marks 
     index,
     defaultSelection: {
       screenPath: screen.path,
-      viewport: "mobile",
+      viewport: "both",
       colorScheme: "dark",
     },
   });
 
-  // The canvas shows both viewports, each in the light scheme of the
+  // The selection shows both viewports, each in the light scheme of the
   // light-only screen, so the changed desktop view decides the status and
   // offers the comparison, and no toggle hides a changed view.
   assert.match(html, /data-workspace-status="">Changed</);
