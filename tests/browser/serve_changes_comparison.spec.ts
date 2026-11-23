@@ -2,6 +2,8 @@ import { expect } from "@playwright/test";
 
 import { hasMarker, markPage } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
+import { comparisonSection, paneFrame } from "./comparison_sections.js";
+import { chooseMode, modeButton } from "./comparison_ui.js";
 import { screen, serveChanges } from "./serve_changes_fixture.js";
 
 test("native selected comparison keeps both sides and renews after a watched edit", async ({
@@ -10,43 +12,33 @@ test("native selected comparison keeps both sides and renews after a watched edi
   const fixture = await serveChanges();
   try {
     await page.goto(`${fixture.url}/view/sample/`);
-    await page.locator('[data-diff-mode="side"]').click();
-    await expect(
-      page
-        .frameLocator(
-          '.mb-pane--before iframe[title="Before — desktop — light"]',
-        )
-        .locator("p"),
-    ).toHaveText("Before sample");
-    await expect(
-      page
-        .frameLocator(
-          '.mb-pane--after iframe[title="Current — desktop — light"]',
-        )
-        .locator("p"),
-    ).toHaveText("Current sample");
-    await expect(
-      page
-        .frameLocator(
-          '.mb-pane--before iframe[title="Before — desktop — light"]',
-        )
-        .locator("p"),
-    ).toHaveCSS("color", "rgb(255, 0, 0)");
-    await expect(
-      page
-        .frameLocator(
-          '.mb-pane--after iframe[title="Current — desktop — light"]',
-        )
-        .locator("p"),
-    ).toHaveCSS("color", "rgb(0, 0, 255)");
-    const before = await page
-      .locator('.mb-pane--after iframe[title="Current — desktop — light"]')
-      .getAttribute("data-mokly-preview-source");
+    await chooseMode(page, "Side by side");
+    // Side by side compares the first shown frame, Desktop · Light.
+    const pair = comparisonSection(page, "desktop");
+    const before = paneFrame(pair, "before");
+    const after = paneFrame(pair, "after");
+    await expect(before).toHaveAttribute("title", "Before — desktop — light");
+    await expect(after).toHaveAttribute("title", "Current — desktop — light");
+    await expect(before.contentFrame().locator("p")).toHaveText(
+      "Before sample",
+    );
+    await expect(after.contentFrame().locator("p")).toHaveText(
+      "Current sample",
+    );
+    await expect(before.contentFrame().locator("p")).toHaveCSS(
+      "color",
+      "rgb(255, 0, 0)",
+    );
+    await expect(after.contentFrame().locator("p")).toHaveCSS(
+      "color",
+      "rgb(0, 0, 255)",
+    );
+    const source = await after.getAttribute("data-mokly-preview-source");
     const renewal = page.waitForRequest(
       (request) =>
         request.method() === "HEAD" && request.url().includes("/selected-"),
     );
-    await page.locator('[data-diff-mode="overlay"]').click();
+    await chooseMode(page, "Overlay");
     await renewal;
     await markPage(page);
     const index = await fixture.index();
@@ -55,25 +47,20 @@ test("native selected comparison keeps both sides and renews after a watched edi
       screen("Sample", "<p>Renewed sample</p>"),
     );
     await fixture.ready(index.revision);
-    await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
+    await expect(modeButton(page, "Current")).toHaveAttribute(
       "aria-pressed",
       "true",
     );
     expect(await hasMarker(page)).toBe(true);
-    await page.locator('[data-diff-mode="side"]').click();
-    await expect(
-      page
-        .frameLocator(
-          '.mb-pane--after iframe[title="Current — desktop — light"]',
-        )
-        .locator("p"),
-    ).toHaveText("Renewed sample");
-    expect(
-      await page
-        .locator('.mb-pane--after iframe[title="Current — desktop — light"]')
-        .getAttribute("data-mokly-preview-source"),
-    ).not.toBe(before);
-    const retained = await page.request.get(before!);
+    await chooseMode(page, "Side by side");
+    await expect(after).toHaveAttribute("title", "Current — desktop — light");
+    await expect(after.contentFrame().locator("p")).toHaveText(
+      "Renewed sample",
+    );
+    expect(await after.getAttribute("data-mokly-preview-source")).not.toBe(
+      source,
+    );
+    const retained = await page.request.get(source!);
     expect(retained.ok()).toBe(true);
     expect(await retained.text()).toContain("Current sample");
   } finally {
@@ -116,18 +103,17 @@ test("a removed native component opens a comparison with only its before side", 
     await page.goto(
       `${fixture.url}/view/widget/?snapshot=${removed.snapshotId}`,
     );
-    await page.locator('[data-diff-mode="side"]').click();
+    await chooseMode(page, "Side by side");
+    // The removed component's frame compares its version before alone.
+    const pair = comparisonSection(page, "component");
+    await expect(paneFrame(pair, "before")).toHaveAttribute(
+      "title",
+      "Before — desktop — light",
+    );
     await expect(
-      page
-        .frameLocator(
-          '.mb-pane--before iframe[title="Before — desktop — light"]',
-        )
-        .first()
-        .locator("body"),
+      paneFrame(pair, "before").contentFrame().locator("body"),
     ).toContainText("Historical widget");
-    await expect(
-      page.locator('.mb-pane--after iframe[title="Current — desktop — light"]'),
-    ).toHaveCount(0);
+    await expect(paneFrame(pair, "after")).toHaveCount(0);
     expect(
       requests.filter(
         (url) => new URL(url).pathname === "/mokly-viewer/diffs/selection",
