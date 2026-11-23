@@ -100,14 +100,13 @@ Canvas, on the Members pane that its rail opens, because the menu's Settings
 opens the index, which shows no pane. The phone shows the same pane in the
 settings layer.
 
-The desktop drawing of `product/viewer/pull-request` fills the embedded
-layout's `sidePanel` slot with the cloud's Mokly check: a floating panel
-headed Changes around the check card, which says the check succeeded, gives
-the changed, added and removed counts of the drawing's catalogue, and links the
-pull request's checks on GitHub. The panel shows only where the full bar
-shows, and the phone drawing and every branch drawing have none.
-[Viewer chrome: check slot](./viewer-chrome-check.md) places the check in the
-package's Changes tab, whose check slot the drawn package parts lack.
+The drawing of `product/viewer/pull-request` opens the right panel on Changes,
+whose check slot holds the cloud's Mokly check, as [Viewer chrome: check
+slot](./viewer-chrome-check.md) places it. The check card says the check
+succeeded, gives the changed, added and removed counts of the drawing's
+catalogue, and links the pull request's checks on GitHub. The phone drawing
+holds the same tab in the panel's closed sheet, and no branch drawing has a
+check.
 
 A read that never produced the publication is not the same as one that is gone:
 `product/viewer/standalone/unreadable` draws the address that named a publication the

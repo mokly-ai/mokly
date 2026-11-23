@@ -53,10 +53,11 @@ const ids = {
  * drawing runs no script, and the layout states the document's scheme as its
  * appearance. The top bar takes no end control, because the cloud's bar has
  * no theme toggle, and its search field ends with the package's `⌘K` hint.
+ * A phone's bar draws the search's toggle in place of the field.
  *
- * A pull request's desktop drawing fills the `sidePanel` slot with the
- * cloud's Mokly check. A phone draws no side panel, because the package's
- * compact layout has none.
+ * A pull request's drawing opens the right panel on Changes, whose tab holds
+ * the cloud's Mokly check in the `changesStart` slot, as the app fills it. A
+ * phone keeps the panel's sheet closed, as every drawing does.
  *
  * A private comparison's message goes in the `stageOverlay` slot, as the app
  * places it. The package reveals that slot by a browser measurement, which a
@@ -102,6 +103,12 @@ export function PublishedViewer({
                   <ComparisonOverlay instance="viewer-comparison-open-catalogue-preview" />
                 ) : undefined
               }
+              {...(subject.check
+                ? {
+                    tab: "changes",
+                    changesStart: <ChangesCheck pull={subject.check} />,
+                  }
+                : {})}
             />
           </MainRegion>
         }
@@ -139,16 +146,6 @@ export function PublishedViewer({
               layered={layered}
             />
           ),
-          ...(subject.check && viewport === "desktop"
-            ? {
-                sidePanel: {
-                  content: <ChangesCheck pull={subject.check} />,
-                  // The panel takes its own width, so the slot keeps none
-                  // where the panel hides with the full bar.
-                  width: "auto",
-                },
-              }
-            : {}),
           ...(comparisonBlocked
             ? {
                 stageOverlay: {

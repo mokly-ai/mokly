@@ -47,11 +47,11 @@ primitives. The Canvas sheets draw the cloud's own parts of the viewer:
 `viewer-canvas-depth.css` the shade, the radius and the shadows of a floating
 surface, `viewer-canvas-panels.css` the panels that the slots open,
 `viewer-canvas-menu.css` the open account and More menus,
-`viewer-canvas-check.css` the Mokly check beside the stage, and
+`viewer-canvas-check.css` the Mokly check in the Changes tab, and
 `viewer-canvas-settings.css` the settings dialog and its layer. `viewer.css`,
-which the application links, imports the stage, panel, settings and menu
-sheets, so every product drawing and the application draw those surfaces from
-the same rules. A Canvas sheet that only the drawings need loads only in the
+which the application links, imports the stage, panel, settings, menu and
+check sheets, so every product drawing and the application draw those surfaces
+from the same rules. A Canvas sheet that only the drawings need loads only in the
 drawings whose modules import it.
 `styles/fonts/` holds the self-hosted Geist and Geist Mono variable faces of the
 Canvas palette, copied from the `geist` npm package, with their SIL Open Font

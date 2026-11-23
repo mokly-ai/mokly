@@ -1,10 +1,11 @@
 /* The viewer: the stage placeholder beneath the top bar, and the panel a slot
-   opens over it. It imports six sheets: `viewer-bar.css`, the bar's two
+   opens over it. It imports seven sheets: `viewer-bar.css`, the bar's two
    compositions; `viewer-controls.css`, the cloud's controls in the bar;
    `viewer-canvas-stage.css`, the Canvas look of the cloud's stage;
    `viewer-canvas-panels.css`, of the panels the slots open;
-   `viewer-canvas-settings.css`, of the settings dialog and its layer; and
-   `viewer-canvas-menu.css`, of the open account and More menus. The
+   `viewer-canvas-settings.css`, of the settings dialog and its layer;
+   `viewer-canvas-menu.css`, of the open account and More menus; and
+   `viewer-canvas-check.css`, of the Mokly check in the Changes tab. The
    application links this sheet and every product drawing links it through
    `inventory.css`, so both draw these surfaces from the same rules. */
 @import "viewer-bar.css";
@@ -13,6 +14,7 @@
 @import "viewer-canvas-panels.css";
 @import "viewer-canvas-settings.css";
 @import "viewer-canvas-menu.css";
+@import "viewer-canvas-check.css";
 .fo-viewer-main {
   display: flex;
   flex-direction: column;

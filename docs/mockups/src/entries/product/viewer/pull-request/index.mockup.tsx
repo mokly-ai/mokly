@@ -20,7 +20,7 @@ const screens = {
 export default defineScreen({
   title: "Pull request",
   description:
-    "Pull request — the check link's publication, with Changes preselected. Beside the stage, the cloud's Mokly check says it succeeded, gives its changed, added and removed counts, and links the pull request's checks on GitHub. The phone draws no side panel, because the package's compact layout has none until Milestone 11.",
+    "Pull request — the check link's publication, with Changes preselected. The right panel's Changes tab holds the cloud's Mokly check, which says it succeeded, gives its changed, added and removed counts, and links the pull request's checks on GitHub. The phone keeps the panel's sheet closed.",
 
   relatedDocs: [
     "docs/protocol/cloud/product-mockups.md",

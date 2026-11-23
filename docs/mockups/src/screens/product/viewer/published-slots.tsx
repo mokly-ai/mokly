@@ -23,7 +23,7 @@ export interface PublishedSubject {
   changes?: boolean;
   github?: boolean;
   latest?: boolean;
-  /** The pull request whose Mokly check the side panel shows. */
+  /** The pull request whose Mokly check the Changes tab shows. */
   check?: CheckedPullRequest;
 }
 
