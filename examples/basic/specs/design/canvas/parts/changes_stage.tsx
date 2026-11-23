@@ -1,4 +1,4 @@
-import type { ArtboardViewport } from "../../parts/shell.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
 
 import { WelcomeChanges } from "./changes.js";
 import {

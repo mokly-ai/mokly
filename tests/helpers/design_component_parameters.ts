@@ -22,9 +22,6 @@ export const COMPONENT_PARAMETERS = new Map([
     "--mbk-canvas-inset-start",
     "the Canvas layout's root sets the room of its catalogue",
   ],
-  ["--inspector-height", "a resizable inspector sets its own height"],
-  ["--inspector-tabs", "a static inspector sets the number of its tabs"],
-  ["--inspector-tab", "each tab of a static inspector sets its own column"],
   [
     "--mbk-comparison-canvas",
     "a comparison's host paints the canvas colour of each version",

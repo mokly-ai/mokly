@@ -1,25 +1,24 @@
 import type { ReactNode } from "react";
 
+import type { ArtboardViewport } from "./artboards.js";
 import type {
   DepictedView,
   HighlightRegion,
   PreviewRegions,
 } from "./depicted_view.js";
 import { labelBox } from "./mini_action.js";
-import type { ArtboardViewport } from "./shell.js";
 
 /**
  * A depicted form of the example's Welcome or Details screen. The revised
  * Welcome adds its one-line introduction below the heading.
  */
-export type MiniForm =
-  "details" | "welcome" | "welcome-empty" | "welcome-error" | "welcome-revised";
+export type MiniForm = "details" | "welcome" | "welcome-revised";
 
 /** The Action that a form's real screen renders as its own instance. */
 interface MiniAction {
   id: string;
   label: string;
-  tone: "disabled" | "primary" | "secondary";
+  tone: "primary" | "secondary";
   /** Its fixed width, which the label never changes. */
   width: number;
 }
@@ -37,12 +36,11 @@ const WELCOME = {
 
 /**
  * The instances that each form's real screen in
- * `examples/basic/specs/catalogue.tsx` owns: its Action and its Toolbar. The
- * empty workspace has no Toolbar, and its Action waits for a name.
+ * `examples/basic/specs/catalogue.tsx` owns: its Action and its Toolbar.
  */
 const INSTANCES: Record<
   MiniForm,
-  { action: MiniAction; toolbar?: MiniToolbarContent | undefined }
+  { action: MiniAction; toolbar: MiniToolbarContent }
 > = {
   details: {
     action: {
@@ -58,15 +56,6 @@ const INSTANCES: Record<
   },
   welcome: WELCOME,
   "welcome-revised": WELCOME,
-  "welcome-empty": {
-    action: {
-      id: "create-workspace",
-      label: "Create workspace",
-      tone: "disabled",
-      width: 140,
-    },
-  },
-  "welcome-error": WELCOME,
 };
 
 /** The left edge of a mini screen's content, its padding. */
@@ -75,18 +64,15 @@ const LEFT = 20;
 /**
  * The fixed rows of a mini screen above its instances, each with its gap, as
  * `design-shots.css` draws them: the padding, the navigation, the heading, the
- * revised Welcome's introduction, the empty workspace's field, the save
- * error, and Details' text. The introduction takes one line in both
- * viewports; the error and the text take one line on a desktop and two in a
- * phone.
+ * revised Welcome's introduction, and Details' text. The introduction takes
+ * one line in both viewports; the text takes one line on a desktop and two in
+ * a phone.
  */
 const ROWS = {
   pad: 18,
   nav: 28.25 + 14,
   title: 25.5 + 10,
   intro: 19.375 + 12,
-  field: 32 + 10,
-  error: { desktop: 37.375 + 12, mobile: 56.75 + 12 },
   text: { desktop: 19.375 + 12, mobile: 38.75 + 12 },
 } as const;
 
@@ -106,10 +92,6 @@ function actionTop(form: MiniForm, viewport: ArtboardViewport): number {
       return top + ROWS.nav;
     case "welcome-revised":
       return top + ROWS.nav + ROWS.intro;
-    case "welcome-empty":
-      return top + ROWS.nav + ROWS.field;
-    case "welcome-error":
-      return top + ROWS.nav + ROWS.error[viewport];
   }
 }
 
@@ -117,13 +99,12 @@ function formRegions(
   form: MiniForm,
   viewport: ArtboardViewport,
 ): PreviewRegions {
-  const { action, toolbar } = INSTANCES[form];
+  const { action } = INSTANCES[form];
   const y = actionTop(form, viewport);
   const own: HighlightRegion = {
     box: { x: LEFT, y, width: action.width, height: ACTION_ROW.height },
     label: `Action · ${action.id}`,
   };
-  if (toolbar === undefined) return [own];
   return [
     own,
     {
@@ -174,7 +155,7 @@ export function MiniInstances({
         {action.label}
       </span>
       <div className="mbk-shot-link-row">{link}</div>
-      {toolbar === undefined ? null : <MiniToolbarCard {...toolbar} />}
+      <MiniToolbarCard {...toolbar} />
     </>
   );
 }

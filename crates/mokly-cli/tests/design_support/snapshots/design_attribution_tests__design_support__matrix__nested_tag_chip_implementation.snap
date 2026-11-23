@@ -10,7 +10,6 @@ design/library/controls/tag-chip -> attribution-status
 design/library/controls/tag-chip -> attribution-target
 design/library/controls/tag-chip -> attribution-title
 design/library/controls/tag-chip -> attribution-value
-design/library/controls/tag-chip -> design/browse/views/screen/tag-picker
 design/library/controls/tag-chip -> design/canvas/components/compare/props
 design/library/controls/tag-chip -> design/canvas/components/inspection
 design/library/controls/tag-chip -> design/canvas/components/inspection/unavailable

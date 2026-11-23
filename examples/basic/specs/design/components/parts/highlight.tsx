@@ -9,9 +9,9 @@ import {
   type HighlightLength,
   type HighlightMaskPlacement,
 } from "../../../../../../packages/ui/src/highlight-mask/highlight-mask.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
 import { useHighlightRegions } from "../../parts/depicted_view.js";
 import { useCurrentPage } from "../../parts/design_navigation.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
 
 /** The shipped mask fills the depicted document, below the labels. */
 const FILL: HighlightMaskPlacement = {

@@ -10,11 +10,10 @@ variants.
 
 Canvas links stay inside the Canvas family: a control opens the Canvas
 artboard that shows its outcome, and a control without one is a depiction.
-The kept tag picker screen outside the family links to Canvas artboards too.
 
 | Control/context                                                               | Destination or behavior                                                                                                                                               |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Brand, catalogue home crumb, missing-route recovery                           | `design/canvas/stage/home`                                                                                                                                            |
+| Brand, missing-route recovery                                                 | `design/canvas/stage/home`                                                                                                                                            |
 | Home: Open the first screen                                                   | `design/canvas/overview`                                                                                                                                              |
 | All catalogue: Welcome / Details / Profile                                    | `design/canvas/overview` / `design/canvas/outcomes/added` / `design/canvas/inspect/unchanged`                                                                         |
 | All catalogue: Action / Toolbar / Payment terms / Example tour                | `design/canvas/stage/component-set` / `design/canvas/stage/component-set/toolbar` / `design/canvas/stage/document` / `design/canvas/flows/tour`                       |

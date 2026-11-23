@@ -167,13 +167,12 @@ export function adoptionViolations(catalogue: ServedCatalogue): string[] {
 
 /**
  * The sheets that a design route links before the component sheets: the
- * older routes' stage and document sheets, and the Canvas route's preview,
- * mini-screen, and Canvas sheets. The Canvas shell and compact sheets, like
- * the older component sheets, come after them.
+ * design sheet, and the preview, mini-screen, Canvas, and document sheets.
+ * The Canvas shell and compact sheets, like the library's component design
+ * and library sheets, come after them.
  */
 const BASE_SHEETS = new Set([
   "design.css",
-  "design-stage.css",
   "design-documents.css",
   "design-preview.css",
   "design-shots.css",

@@ -40,10 +40,6 @@ const HAIRLINE_TOKENS = new Set([
  */
 const DECORATIVE_BOUNDARIES = new Map([
   [".mbk-control-alert", "a label naming its own state in 5.97:1 ink"],
-  [
-    ":where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
-    "the user kept the shipped border on 2026-10-31",
-  ],
 ]);
 
 /**
@@ -58,14 +54,11 @@ const EXEMPT_SURFACES = new Map<string, string>();
  * names a rule, by its sheet and selector, with the reason that exempts it.
  * Each entry must be reached by the control-edge audit, so a future control
  * cannot quietly inherit the exemption. A kept hairline that a state draws,
- * such as a pressed icon control's, is exempt from the marked-boundary audit
- * too: the state shows through its fill and its accent glyph.
+ * such as a pressed instance's in the component tree, is exempt from the
+ * marked-boundary audit too: the state shows through its fill and its accent
+ * text.
  */
 const EXEMPT_CONTROL_SURFACES = new Map([
-  [
-    'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
-    "the user kept the shipped border on 2026-10-30",
-  ],
   [
     "packages/ui/src/tag-chip/tag-chip.css .mbk-chip",
     "the user kept the shipped border on 2026-10-30",
@@ -86,7 +79,6 @@ const EXEMPT_CONTROL_SURFACES = new Map([
  * 3:1.
  */
 const AUDITED_BOUNDARIES = [
-  "design-components.css .ce-badge",
   "design-canvas-inspect.css .cv-variant[aria-current] > .cv-variant-mark",
   "design-library/inspector/frames-filter.css .cv-ff:has(> input:checked)",
   "design-library/inspector/frames-filter.css .cv-switch > input:checked + .cv-switch-track",
@@ -94,9 +86,7 @@ const AUDITED_BOUNDARIES = [
   "design-library/panels/compare-modes.css .cv-mode-switch > input:checked + .cv-mode-switch-track",
   "design-library/panels/compare-modes.css .cv-mode[aria-current]",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
-  "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
   "packages/ui/src/controls-panel/controls-panel.css .mbk-control-alert",
-  'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
   'packages/ui/src/instance-tree/instance-tree.css .mbk-instance-select[aria-pressed="true"], .mbk-instance-tree a.mbk-instance-select[aria-current="true"]',
   "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
 ];

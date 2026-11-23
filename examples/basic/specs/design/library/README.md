@@ -2,34 +2,28 @@
 
 ## Scope
 
-These twenty-four components render both Mokly's design artboards and
-the independent pages under **Components → Design → Shared components**. The
-footer tabs panel is `inspector/inspector`. This is the consumer's mockup
-library. Thirteen render the `@mokly/ui` component that the shipped shell
+These twenty components render both Mokly's design artboards and the independent
+pages under **Components → Design → Shared components**. This is the consumer's
+mockup library. Nine render the `@mokly/ui` component that the shipped shell
 uses: each view imports its component, and each component sheet imports the
 package stylesheets of the component and of each package component that it
-renders, each by its repository path under `packages/ui/src`, so each side of
-a comparison renders its own package files. The eleven parts of the Canvas
-viewer, which `@mokly/ui` does not provide yet, implement their own markup;
-[Canvas viewer parts](#canvas-viewer-parts) describes them. The Mokly browser
-shell itself remains in the package source.
+renders, each by its repository path under `packages/ui/src`, so each side of a
+comparison renders its own package files. The eleven parts of the Canvas viewer,
+which `@mokly/ui` does not provide yet, implement their own markup; [Canvas
+viewer parts](#canvas-viewer-parts) describes them. The Mokly browser shell
+itself remains in the package source.
 
-The artboards follow the same rule for every other part that a package
-component provides, such as the shell and workspace scaffolds of
-`../parts/shell.tsx` and `../components/parts/workspace.tsx`, the panels and
-lists of the inspector, and the highlight mask of
-`../components/parts/highlight.tsx`. Each such part renders the package
-component, its sheet imports the package stylesheets by repository path, and
-no artboard keeps a copy of that markup or CSS. The shell scaffold renders
-`ShellLayout` with its `MainRegion` in a frame that carries the artboard's
-render flag, and the workspace scaffold renders `WorkspaceLayout`, which holds
-the header and the variant bar above the preview and the inspector, as the
-shell's workspace does. A Canvas startup page draws its one state directly in
-the Canvas root, which takes the place of the viewer root. Each artboard's
-root and each sample's root carries the theme's root class `mbk` in the
-rendered appearance, so the package components draw in the shipped palette
-and with the reset class; the design catalogue's own palette in `design.css`
-stays for the artboards' own parts.
+The artboards follow the same rule for every other part that a package component
+provides, such as the Canvas scaffolds of `../canvas/parts/`, the panels and
+lists of Inspect, and the highlight mask of `../components/parts/highlight.tsx`.
+Each such part renders the package component, its sheet imports the package
+stylesheets by repository path, and no artboard keeps a copy of that markup or
+CSS. A Canvas startup page draws its one state directly in the Canvas root,
+which takes the place of the viewer root. Each artboard's root and each sample's
+root carries the theme's root class `mbk` in the rendered appearance, so the
+package components draw in the shipped palette and with the reset class; the
+design catalogue's own palette in `design.css` stays for the artboards' own
+parts.
 
 `chrome/appearance-selector` is the standalone catalogue's Auto/Light/Dark
 setting, which changes the chrome and the screens it shows together. `chrome/top-bar`
@@ -44,14 +38,12 @@ breakpoint the control draws that face on its own, as the shell does.
 
 Those two samples — the appearance selector and the top bar that composes it —
 are the only ones that render in both schemes, because their own subject is the
-catalogue's appearance; `metadata.ts` exports that set as
-`DUAL_SCHEME_SAMPLES`. A dual-scheme sample reads the props whose own subject is
-the scheme from its render context instead of pinning them in a fixture, so the
-top bar's samples name the scheme they rendered for and only `auto-appearance`
-sets the value explicitly. Every other sample stays light.
-`view-controls` draws no Dark preview toggle, so every depicted screen header
-carries the viewport select and Highlight components alone. `metadata.ts` owns that
-list, `LibraryHost` stamps the requested scheme on the sample root, and Browse's
+catalogue's appearance; `metadata.ts` exports that set as `DUAL_SCHEME_SAMPLES`.
+A dual-scheme sample reads the props whose own subject is the scheme from its
+render context instead of pinning them in a fixture, so the top bar's samples
+name the scheme they rendered for and only `auto-appearance` sets the value
+explicitly. Every other sample stays light. `metadata.ts` owns that list,
+`LibraryHost` stamps the requested scheme on the sample root, and Browse's
 Appearance control switches between the two generated files.
 
 Catalogue navigation saves each Changes availability state: **Checking for
@@ -90,78 +82,54 @@ changed mark. Each entry row names its kind in `data-entry-kind`, as the
 product's row does: a flow row is `use-case`, a variant row takes its parent's
 kind, and a folder row has none.
 
-The top bar, the catalogue navigation and the screen header are the shipped
-`@mokly/ui` components. A static artboard runs no script, so their links open
-the artboards that show each state, and each control without a destination is
-a picture of itself: Collapse all, a filter, the separator and the path chip.
-The top bar draws no menu, as the shell's bar does. Their stylesheets follow the shell's breakpoint. A frame around the
-top bar carries a compact flag that draws the narrow bar of a mobile render at
-every width, and a frame around the navigation carries a drawer flag that
-draws the open drawer of the drawer presentation and of every mobile render.
+The top bar and the catalogue navigation are the shipped `@mokly/ui` components.
+A static artboard runs no script, so their links open the artboards that show
+each state, and each control without a destination is a picture of itself:
+Collapse all, a filter and the separator. The top bar draws no menu, as the
+shell's bar does. Their stylesheets follow the shell's breakpoint. A frame
+around the top bar carries a compact flag that draws the narrow bar of a mobile
+render at every width, and a frame around the navigation carries a drawer flag
+that draws the open drawer of the drawer presentation and of every mobile
+render.
 
-The tag picker, the tag chip, the view controls and the change status are the
-shipped `@mokly/ui` components too. The search field ends with the tag picker:
-its button links to the artboard that shows the picker opened or closed, a
-closed picker draws only its button, and each chip of an open picker is the
-registered tag chip, so Top bar → Tag picker → Tag chip records every chip. A
-chip with a destination links to the artboard that shows its filter, and a
-chip without one is a picture of itself.
+The tag picker, the tag chip and the change status are the shipped `@mokly/ui`
+components too. The search field ends with the tag picker: its button links to
+the artboard that shows the picker opened or closed, a closed picker draws only
+its button, and each chip of an open picker is the registered tag chip, so Top
+bar → Tag picker → Tag chip records every chip. A chip with a destination links
+to the artboard that shows its filter, and a chip without one is a picture of
+itself.
 
-View controls saves **Changed views**, where a change confined to other views
-marks the viewport dropdown; the owning screen also marks top-bar Appearance
-when another scheme changed. The mark is evidence about
-views other than the shown one, so the details inspector names them. A static
-artboard runs no script, so the viewport select and the Highlight components
-switch are native controls: scoped `:has()` rules in the design stylesheets
-read the select's option and the switch's check, so the previews and the
-highlight change in place, even in Browse's sandboxed frames. Every header
-draws the switch in the state that the shell shows for the depicted view. One
-record per depicted view, `DepictedView` of `../parts/depicted_view.tsx`,
-holds that state and the regions that its preview highlights in each
-viewport, and the workspace scaffold gives it to the header's view controls
-and to the preview, so no artboard draws an enabled switch over a preview
-without highlights. The previews depict the Action and the Toolbar that the
-real Welcome and Details screens render, and `../parts/mini_views.tsx` holds
-their records. The switch is enabled where the shell can
-highlight the view. A comparison, a removed screen, a preview that loads or
-failed, or a view without registered components disables it, with the
-shell's own sentence for that reason. A checked switch reveals the shipped
-mask and labels over the regions; a label opens the artboard of its
-instance's selection, and a label without one is a picture of the shell's
-label.
+The Frames filter draws the Highlight components switch in the state that the
+shell shows for the depicted view. One record per depicted view, `DepictedView`
+of `../parts/depicted_view.tsx`, holds that state and the regions that its
+preview highlights in each viewport, and the Canvas stage gives it to the
+highlight over each frame. The previews depict the Action and the Toolbar that
+the real Welcome and Details screens render, and `../parts/mini_views.tsx` holds
+their records. The switch is enabled where the shell can highlight the view. A
+comparison, a removed screen, a preview that loads or failed, or a view without
+registered components disables it, with the shell's own sentence for that
+reason. A checked switch reveals the shipped mask and labels over the regions; a
+label opens the artboard of its instance's selection, and a label without one is
+a picture of the shell's label.
 
-The inspector, the metadata row and the prop field are the shipped `@mokly/ui`
-components too. A static artboard runs no script, so each inspector tab is a
-native disclosure of one group: a tab opens its panel and closes it again,
-opening a tab closes the others, and the open tab's Close is part of the tab.
-The divider grip is a picture over the workspace's native sizer, and the
-sheet's grabber is a native switch that the dock reads for the expanded
-height. The prop field frames the native control of its slot, and draws an
-optional field's Set check box, its control, and its Not set line. The
-package's rule for a static field reads the check box, so the control and Not
-set swap in place. The
-panels of the artboards render the shipped components as well: the Details
-body, the comparison evidence, the instance tree of the Components tab, the
-supplied props and the selected instance's props panel, the Usage lists and
-their loading states, the controls' form with its alerts, and the edit status
-over the preview. The panels' actions and the tree's instances link to the
-artboards that show the outcome. Their stylesheets follow the shell's
-breakpoint, and a mobile render draws the narrow sheet, details body, field
-column and status pill at every width.
+The metadata row and the prop field are the shipped `@mokly/ui` components too.
+The prop field frames the native control of its slot, and draws an optional
+field's Set check box, its control, and its Not set line. The package's rule for
+a static field reads the check box, so the control and Not set swap in place.
+The panels of the artboards render the shipped components as well: the
+comparison evidence, the instance tree of the Components section, the supplied
+props and the selected instance's props panel, the Usage lists and their loading
+states, the controls' form with its alerts, and the edit status over the
+preview. The panels' actions and the tree's instances link to the artboards that
+show the outcome. Their stylesheets follow the shell's breakpoint, and a mobile
+render draws the narrow field column and status pill at every width.
 
-The device frame and the empty state are the shipped `@mokly/ui` components
-too. The device frame renders `PreviewFrame` around `PhoneFrame` or
-`BrowserFrame`, in the scheme of the depicted screen. It stands on a stage
-and names its viewport above the chrome, as the shell's frames do. A static
-artboard runs no script, so the window's bar is a picture of itself: the
-address copies nothing, and the expand toggle expands nothing. The compact
-flag draws a small phone, and the light-only flag shows the caption's
-Light-only note, as a Dark shell shows it. The empty state's action links to
+The empty state is the shipped `@mokly/ui` component too. Its action links to
 the artboard of its outcome. On a Canvas startup page, the empty state stands
-alone in the Canvas root, which takes the place of the viewer root. The kept
-tag picker screen renders the rest of its preview slice in the same way: the
-shipped stage around its device frames. A static comparison on a Canvas frame
-draws each version's document on the shipped opaque surface.
+alone in the Canvas root, which takes the place of the viewer root. A static
+comparison on a Canvas frame draws each version's document on the shipped opaque
+surface.
 
 ## Canvas viewer parts
 
@@ -303,22 +271,21 @@ module into a screen or create a second standalone implementation. Leave whole
 screens, stage/workspace layouts and fixture selection as ordinary composition.
 
 Pass actual screen data at the boundary: labels, destinations, query, selection,
-status and counts. Slots hold caller-owned JSX, including previews, inspector
+status and counts. Slots hold caller-owned JSX, including previews, Inspect
 bodies and native inputs. Resolve scenario navigation in an adapter before
-calling a component; missing destinations stay non-links. Top-bar Appearance owns scheme selection;
-header view controls own the viewport. Inspector-body links and tag chips are
-ordinary anchors, so they can live inside native `details` panels.
-`../parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
-saved All example and the artboards, so those views stay aligned; the Canvas
-artboards retarget its rows to Canvas artboards in `../canvas/parts/nav_rows.ts`.
-`../parts/account_nav_data.ts` adds its Account area, the Profile folder's own
-screen with its `contents` list of variant and members, the moved Changes rows,
-and Profile's Changes rows, and `../parts/variant_nav_data.ts` holds Welcome's
-Changes-filtered variant rows and the removed variant's rows.
-`../parts/entry_paths.ts` owns the depicted paths that path chips show.
-`../parts/component_nav_data.ts` owns component parent and variant identities;
-the shared fixture and the Canvas artboards compose its rows instead of
-copying titles or authored order.
+calling a component; missing destinations stay non-links. Top-bar Appearance
+owns scheme selection. Inspect links and tag chips are ordinary anchors, so they
+can live inside native `details` panels. `../parts/nav_data.ts` is the canonical
+catalogue-navigation fixture for both the saved All example and the artboards,
+so those views stay aligned; the Canvas artboards retarget its rows to Canvas
+artboards in `../canvas/parts/nav_rows.ts`. `../parts/account_nav_data.ts` adds
+its Account area, the Profile folder's own screen with its `contents` list of
+variant and members, the moved Changes rows, and Profile's Changes rows, and
+`../parts/variant_nav_data.ts` holds Welcome's Changes-filtered variant rows and
+the removed variant's rows. `../parts/entry_paths.ts` owns the depicted paths
+that path chips show. `../parts/component_nav_data.ts` owns component parent and
+variant identities; the shared fixture and the Canvas artboards compose its rows
+instead of copying titles or authored order.
 
 Use explicit semantic `moklyInstance` names for repeated siblings. The
 `DesignInstances` context supplies a stable prefix for simultaneous viewport
@@ -340,8 +307,8 @@ action already in effect get the mark from `useCurrentPage` in
 nearest `DesignNavigation` artboard. Only the top bar's brand link on the home
 screen opens its own artboard without the mark.
 
-No screen draws its own frame caption. The device frame and the Canvas frame
-name their viewport, as the shell's frames do.
+No screen draws its own frame caption. The Canvas frame names its viewport, as
+the shell's frames do.
 
 ## Styles And Hosts
 
@@ -350,11 +317,8 @@ component's sheet imports the `@mokly/ui` stylesheets and how each document
 links the sheets in order.
 
 `host.tsx` supplies standalone layout and semantic parents without fixture data.
-Every inspector uses the ordinary preview workspace for its resizer and mobile
-sheet. Only icon tabs are supported. Inline samples retain intrinsic width.
-Compact phone samples fit both viewports; full-size controls use the
-scrollable frame host. Every variant has actual mobile and desktop render
-contexts; every sample is light-only except the two named above.
+Inline samples retain intrinsic width. Every variant has actual mobile and
+desktop render contexts; every sample is light-only except the two named above.
 
 ## Verification
 
@@ -396,9 +360,3 @@ artifact; commit the authored source instead.
 
 See the [adoption contract](../../../../../docs/protocol/mokly-design-components.md)
 and [inventory](../../../../../docs/protocol/mokly-design-component-library.md).
-
-The kept tag picker screen composes the shared inspector and metadata rows.
-An inspector tab
-may name an authored destination when a static scenario has separate open and
-closed artboards; that tab's link is its one keyboard stop, so its summary
-leaves the tab order. Ordinary tabs continue using native disclosure behavior.

@@ -6,6 +6,9 @@ import type {
   ScreenVariantInput,
 } from "@mokly/mokly";
 
+/** Rendering target for a design mockup artboard. */
+export type ArtboardViewport = "desktop" | "mobile";
+
 /** The desktop and mobile artboards that depict one design state. */
 export interface Artboards {
   desktop: ReactNode;

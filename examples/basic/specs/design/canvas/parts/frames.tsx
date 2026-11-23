@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { CanvasFrameProps } from "../../library/canvas/canvas-frame.js";
 import { FRAME_SIZES } from "../../library/canvas/frame_sizes.js";
 import { DesignInstances } from "../../library/composition.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
 
 /** A frame's colour scheme. */
 export type FrameScheme = "light" | "dark";
