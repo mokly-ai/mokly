@@ -211,7 +211,9 @@ zoom, and Fit. The stage is the canvas less `--mbk-canvas-inset-top`,
 `--mbk-canvas-inset-start`, each 0 until a layout sets it, and less the zoom
 pill's room. The canvas measures an invisible box of that size, so a change
 of an inset refits like a resize. The canvas takes the drags, wheels, and
-pinches around the frames; a frame's document keeps its own.
+pinches around the frames, Safari's `gesturestart`, `gesturechange` and
+`gestureend` included, and cancels the page's own zoom for each gesture; a
+frame's document keeps its own.
 
 `CanvasSection` draws the section: the box of a screen, a document or a use
 case, or the dashed outline of a component's variant set, its head with the
@@ -576,7 +578,10 @@ override the desktop layout rules.
   Fit, the zoom steps, a zoom about a point, and a pan, over the section's
   fixed and scaled lengths
 - [`src/canvas-stage/canvas-gestures.ts`](./src/canvas-stage/canvas-gestures.ts)
-  — the drag, the wheel, and the pinch of the canvas
+  — the drag, the wheel, and the pinch of the canvas, and `wheelPixels`
+- [`src/canvas-stage/canvas-gesture-pinch.ts`](./src/canvas-stage/canvas-gesture-pinch.ts)
+  — Safari's pinch: the gesture events that zoom the canvas about their
+  point
 - [`src/canvas-stage/canvas-keys.ts`](./src/canvas-stage/canvas-keys.ts) —
   `canvasKeyCommand`: the keys of the canvas and the rules of a text field and
   the modifiers

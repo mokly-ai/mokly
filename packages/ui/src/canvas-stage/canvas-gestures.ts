@@ -2,12 +2,14 @@
  * The reader's gestures on the canvas: a drag around the frames pans it, and
  * a press without movement stays a click; the wheel and a two-finger
  * trackpad scroll pan it; ⌘ or Ctrl with the wheel, a trackpad pinch, which
- * arrives as a wheel event with Ctrl, and a two-finger touch pinch zoom it
- * about the pointer or the pinch. One finger on a touch screen pans. A frame's
- * document is its own page, so the wheel and a swipe over a frame scroll that
- * document and never reach the canvas.
+ * arrives as a wheel event with Ctrl, Safari's gesture events, and a
+ * two-finger touch pinch zoom it about the pointer or the pinch. One finger
+ * on a touch screen pans. A frame's document is its own page, so its wheel
+ * and swipes never reach these listeners: a host forwards a frame's zoom
+ * input through the handle instead.
  */
 
+import { bindGesturePinch } from "./canvas-gesture-pinch.js";
 import type { CanvasPoint } from "./canvas-view.js";
 
 /** What the canvas does for each gesture. */
@@ -156,7 +158,14 @@ export function bindCanvasGestures(
   canvas.addEventListener("pointercancel", up);
   canvas.addEventListener("click", click, true);
   canvas.addEventListener("wheel", wheel, { passive: false });
+  const unbindPinch = bindGesturePinch(
+    canvas,
+    (factor, point) => handlers().zoomBy(factor, point),
+    local,
+    () => pointers.size > 1,
+  );
   return () => {
+    unbindPinch();
     canvas.removeEventListener("pointerdown", down);
     canvas.removeEventListener("pointermove", move);
     canvas.removeEventListener("pointerup", up);
