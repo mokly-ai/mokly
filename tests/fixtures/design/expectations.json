@@ -1271,11 +1271,6 @@
     },
     {
       "source": "design/canvas/components/compare/props",
-      "name": "Switch to Current",
-      "target": "design/canvas/components/usage"
-    },
-    {
-      "source": "design/canvas/components/compare/props",
       "within": "cv-ptabs",
       "name": "Changes",
       "target": "design/canvas/components/compare"

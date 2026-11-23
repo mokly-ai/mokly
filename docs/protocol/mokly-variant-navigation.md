@@ -39,10 +39,11 @@ mode is selected, a move between the entries of one variant set keeps that mode
 and, for every [compared row](./mokly-selected-comparisons.md), its comparison,
 its pending work and its presented documents, because the canvas keeps the same
 rows. The workspace reads this single comparison-mode state: Props stay
-read-only and highlighting stays unavailable until the mode returns to Current.
-Navigation to another section cancels every row's pending work and discards its
-comparison, and a late result for a row of the earlier section cannot replace
-the new section.
+read-only and highlighting stays unavailable only while the Changes tab shows a
+compare mode; Inspect shows the current frames, where Props edits and
+highlighting works. Navigation to another section cancels every row's pending
+work and discards its comparison, and a late result for a row of the earlier
+section cannot replace the new section.
 
 ## Changes Rows
 
