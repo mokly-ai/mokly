@@ -18,6 +18,12 @@ import { InspectSection } from "./inspect.js";
 import { changePosition } from "./nav_rows.js";
 
 /**
+ * The content of Welcome that the example excludes from comparisons, its
+ * navigation. The comparison details of a Welcome that differs name it.
+ */
+export const WELCOME_EXCLUDED_CONTENT = ["example-nav"];
+
+/**
  * Compared: the version before and the current version on a two-dot rail.
  * The version before is the branch point on the base, and the current
  * version is the branch. An entry that the branch added has no version
@@ -124,8 +130,9 @@ export function ChangesEvidence({
  * The Changes tab of Welcome, the first of the branch's changes: the
  * stepper, whose Next change opens Details in Changes; Compared; the compare
  * modes in the shown mode, with the compared frame of Side by side; and the
- * comparison details. The cloud's check stands between the stepper and
- * Compared; the open-source panel leaves that place empty.
+ * comparison details, which end with Welcome's excluded content. The cloud's
+ * check stands between the stepper and Compared; the open-source panel
+ * leaves that place empty.
  */
 export function WelcomeChanges({
   frame,
@@ -157,7 +164,10 @@ export function WelcomeChanges({
           )}
         />
       </InspectSection>
-      <ChangesEvidence reasons={["material"]} />
+      <ChangesEvidence
+        ignored={WELCOME_EXCLUDED_CONTENT}
+        reasons={["material"]}
+      />
     </>
   );
 }

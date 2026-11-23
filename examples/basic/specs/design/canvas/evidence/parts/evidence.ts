@@ -11,6 +11,7 @@ import {
   PAGE_STYLE_COPY,
   SCREEN_STYLE_COPY,
 } from "../../../parts/stylesheet_evidence.js";
+import { WELCOME_EXCLUDED_CONTENT } from "../../parts/changes.js";
 
 /*
  * The comparison evidence of each depicted branch, in the copy that the CSS
@@ -35,12 +36,6 @@ const EXCLUDED_SHEET: EvidenceExclusions = {
   paths: ["generated/excluded.css"],
   sentence: SCREEN_STYLE_COPY.excluded,
 };
-
-/**
- * The content of Welcome that the example excludes from comparisons, its
- * navigation. The comparison details of a Welcome that differs name it.
- */
-const WELCOME_EXCLUDED_CONTENT = ["example-nav"];
 
 /** The changed files of a screen: the configured stylesheet and its outcomes. */
 function screenFiles(outcomes: readonly EvidenceOutcome[]): EvidenceFiles {
