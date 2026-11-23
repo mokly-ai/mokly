@@ -75,7 +75,7 @@ export function useComponentControls({
   comparing: boolean;
   contexts: readonly GeneratedComponentView[];
   data: WorkspaceData;
-  /** The Try again of the Props tab, whose recovery ends on the heading. */
+  /** The Try again of the Props section, whose recovery ends on the heading. */
   recovery: RetryFocus;
   target: ControlTarget | undefined;
   workspaceRef: RefObject<HTMLElement | null>;

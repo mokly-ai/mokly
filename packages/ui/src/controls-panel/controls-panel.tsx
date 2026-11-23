@@ -1,5 +1,5 @@
 /**
- * The Props tab's controls: the form that edits the shown entry's props, and
+ * The Props section's controls: the form that edits the shown entry's props, and
  * the saved props of an entry that cannot be edited here. The host owns the
  * edit state and the wording. It names the elements that its recovery
  * actions focus through `focus`. A static depiction that runs no script gives

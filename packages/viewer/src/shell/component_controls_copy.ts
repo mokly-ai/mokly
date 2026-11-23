@@ -22,7 +22,7 @@ function characters(count: number): string {
 }
 
 /**
- * The settled copy of the Props tab's controls. It equals the design
+ * The settled copy of the Props section's controls. It equals the design
  * catalogue's controls copy, which a tooling test compares with it.
  */
 export const CONTROLS_COPY = {
