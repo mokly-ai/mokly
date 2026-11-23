@@ -24,11 +24,11 @@ import {
   WorkspaceInspectionOverlay,
 } from "./workspace_inspection_labels.js";
 import {
+  endsHighlight,
   focusWorkspaceHighlightControl,
   inspectionAvailability,
   presentWorkspaceInspection,
   receiveWorkspaceFrameEvent,
-  WAITING_REASON,
   workspaceInspectionKeys,
   type WorkspaceInspectionInput,
   type WorkspaceInspectionResult,
@@ -152,8 +152,7 @@ export function useWorkspaceInspection(
     const currentClaim = claim.current;
     if (!currentClaim || !registry.inspection.current(currentClaim)) return;
     if (!availability.available) {
-      if (availability.reason && availability.reason !== WAITING_REASON)
-        clearPresentation(false);
+      if (endsHighlight(availability)) clearPresentation(false);
       return;
     }
     const presentationClaim = registry.inspection.claim("workspace");

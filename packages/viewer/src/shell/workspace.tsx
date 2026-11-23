@@ -134,7 +134,6 @@ export function ComponentWorkspace({
     comparing,
     contexts,
     data,
-    onCurrent: () => comparison.selectMode("current"),
     recovery: propsRecovery,
     target: editTarget,
     workspaceRef,
@@ -235,7 +234,7 @@ export function ComponentWorkspace({
             eligible: offered,
             frames: {
               changed: changedViews,
-              choice: store.state.frames,
+              choice: canvas.choice,
               count: canvas.shownCount,
               hasDark: canvas.hasDark,
               viewports: !set,

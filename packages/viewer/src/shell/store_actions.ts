@@ -11,6 +11,7 @@ import {
   disclosureStorageKey,
   encodeDisclosureMap,
 } from "./disclosure_storage.js";
+import { toggledFilter } from "./frames_filter.js";
 import { NARROW_SHELL } from "./layout_breakpoint.js";
 import { navigationFiltering } from "./nav_model.js";
 import {
@@ -155,8 +156,16 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         return { ...current, disclosures };
       });
     },
-    setFrames(frames) {
-      input.setState((current) => ({ ...current, frames }));
+    toggleFrame(name, checked) {
+      const { frames, selection } = input.stateRef.current;
+      const next = toggledFilter(frames, selection.viewport, name, checked);
+      if (next.viewport !== selection.viewport)
+        updateSelection({ viewport: next.viewport });
+      if (
+        next.schemes.dark !== frames.dark ||
+        next.schemes.light !== frames.light
+      )
+        input.setState((current) => ({ ...current, frames: next.schemes }));
     },
     setPanelTab(panelTab) {
       input.setState((current) =>

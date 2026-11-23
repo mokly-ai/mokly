@@ -20,13 +20,12 @@ test("control availability and usage URLs explain the active product state", () 
   const target = controlTarget(source, variant, false);
   assert.ok(target);
   assert.equal(target.title, sourceVariant.title);
-  assert.equal(controlsMode(target, true, "ready"), "comparison");
-  assert.equal(controlsMode(target, false, undefined), "published");
-  assert.equal(controlsMode(target, false, "preparing"), "preparing");
-  assert.equal(controlsMode(target, false, "ready"), "editable");
+  assert.equal(controlsMode(target, undefined), "published");
+  assert.equal(controlsMode(target, "preparing"), "preparing");
+  assert.equal(controlsMode(target, "ready"), "editable");
   const removed = controlTarget(source, { ...variant, removed: true }, false);
   assert.ok(removed);
-  assert.equal(controlsMode(removed, false, "ready"), "removed");
+  assert.equal(controlsMode(removed, "ready"), "removed");
   assert.equal(
     usageHref({
       title: "Home",

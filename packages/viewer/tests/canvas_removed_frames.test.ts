@@ -8,7 +8,7 @@ import {
   removedSectionAxes,
   type RemovedFramePlan,
 } from "../src/shell/canvas_removed_frames.js";
-import { ALL_FRAMES } from "../src/shell/frames_filter.js";
+import { BOTH_SCHEMES } from "../src/shell/frames_filter.js";
 
 type Viewport = "desktop" | "mobile";
 type Scheme = "dark" | "light";
@@ -199,24 +199,24 @@ test("a removed document's reading frame shows its version of the preview scheme
   );
 });
 
-test("a removed screen's compact section shows the picked frame among the frames that the Frames filter shows", () => {
+test("a removed screen's section shows the selection's viewport, and its compact frame a scheme that the Frames filter shows", () => {
   const selection = { colorScheme: "light", viewport: "desktop" } as const;
-  const desktopOff = { ...ALL_FRAMES, desktop: false };
-  assert.deepEqual(removedSectionAxes(desktopOff, selection, false), {
+  assert.deepEqual(removedSectionAxes(BOTH_SCHEMES, selection, false), {
     colorScheme: "light",
-    viewport: "mobile",
+    viewport: "desktop",
   });
   assert.deepEqual(
-    removedSectionAxes({ ...ALL_FRAMES, light: false }, selection, false),
+    removedSectionAxes({ dark: true, light: false }, selection, false),
     { colorScheme: "dark", viewport: "desktop" },
   );
-  // The wide canvas shows the filter's columns.
+  // The wide canvas shows the columns of the selection's viewport.
   assert.equal(
-    removedSectionAxes(ALL_FRAMES, selection, true).viewport,
-    "both",
+    removedSectionAxes(BOTH_SCHEMES, selection, true).viewport,
+    "desktop",
   );
   assert.equal(
-    removedSectionAxes(desktopOff, selection, true).viewport,
-    "mobile",
+    removedSectionAxes(BOTH_SCHEMES, { ...selection, viewport: "both" }, true)
+      .viewport,
+    "both",
   );
 });

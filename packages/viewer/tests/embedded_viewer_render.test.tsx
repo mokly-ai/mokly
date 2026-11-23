@@ -151,15 +151,25 @@ test("the embedded viewer renders its default selection and host slots", () => {
   assert.match(html, /<b>Account<\/b>/);
   assert.match(html, /data-mokly-color-scheme="dark"/);
   assert.match(html, /value="phrase tag:forms"/);
-  // On the wide canvas the Frames filter, not the selection's viewport,
-  // chooses the shown frames, and it starts with every frame shown.
+  // The selection's viewport chooses the columns of the wide canvas, and the
+  // Frames filter's viewport toggles show it.
   const held = heldEmbeddedMarkup({ selection });
   const cells = held.split(/(?=<div class="mbk-canvas-cell)/u).slice(1);
   const shown = cells.filter((cell) => !/^<div[^>]*\shidden=""/u.test(cell));
   const frames = (viewport: string) =>
     shown.filter((cell) => cell.includes(`data-workspace-frame="${viewport}"`));
   assert.ok(frames("mobile").length > 0);
-  assert.ok(frames("desktop").length > 0);
+  assert.equal(frames("desktop").length, 0);
+  const toggle = (name: string) => {
+    const input = new RegExp(
+      `<input[^>]*data-frames-toggle="${name}"[^>]*>`,
+      "u",
+    ).exec(held)?.[0];
+    assert.ok(input, name);
+    return input;
+  };
+  assert.match(toggle("mobile"), /\schecked=""/u);
+  assert.doesNotMatch(toggle("desktop"), /\schecked=""/u);
 });
 
 /** The prefix every id of one root carries: its main region's id less `mb-main`. */

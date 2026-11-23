@@ -140,10 +140,14 @@ plain labels.
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
 axes that name a view, their reader labels, the wording of the change marks,
 and the id of the Appearance's mark; each toggle of the Frames filter names
-its own wording's id. `frames_filter.ts` holds the Frames choice of the screens,
-one choice of the shell that in-shell navigation keeps and a full page load
-resets to every frame, and the rule that marks a toggle while it hides a
-changed view. A use case keeps its own choice in `use_case_choice.ts`.
+its own wording's id. `frames_filter.ts` holds the Frames choice of the screens
+and the rule that marks a toggle while it hides a changed view. Its viewport
+toggles show the selection's viewport: `framesChoice` reads them from it, and
+the store's `toggleFrame` turns a toggle change into the next viewport through
+`toggledFilter`, as one selection change that a controlled host hears as a
+proposal. Its scheme toggles are one choice of the shell, the state's
+`frames`, which in-shell navigation keeps and a full page load turns both on.
+A use case keeps its own choice in `use_case_choice.ts`.
 `workspace_views.ts` resolves the views that the filter shows on the wide
 canvas, or the compact layout's picked frame, to the views actually shown,
 including Dark-to-Light fallback, and carries the matching status,
@@ -346,7 +350,10 @@ selection, disclosure, sheet, right panel tab, Frames choice and scroll
 state. Every container
 renders under `ShellStoreProvider` and reads that state through
 `useShellStore`, also in tests. `store_browser.ts`
-owns standalone history, and `store_host.ts` owns host selection commits.
+owns standalone history. It also writes a viewport that the reader chooses on
+the shown entry to the `viewport` query of the current history entry, while
+a route installation brings its own address. `store_host.ts` owns host
+selection commits.
 `store_routes.ts` installs each route's display for both roots.
 `store_interactions.ts` binds both roots to clicks and Escape. It dismisses
 the tag picker on an outside click, including a click outside an embedded
@@ -476,16 +483,19 @@ asks `workspace_canvas.ts` for its entry's frames, which reads
 beside Mobile and Light above Dark, or a component's variant set, a row for
 its own example and then one for each current saved variant, Light beside
 Dark, each with the row's desktop view. The Frames filter keeps the columns
-and the rows that it shows on the canvas; the other frames stay mounted with
-their documents but take no room. In the compact layout `canvas_compact.ts`
+and the rows that it shows on the wide canvas, the columns of the selection's
+viewport; the other frames stay mounted with their documents but take no
+room. In the compact layout `canvas_compact.ts`
 keeps the picked frame alone: a screen's frame of the selection's viewport
-and scheme, with Both read as Mobile, or its first shown frame while the
-filter hides that one, or a variant set's selected frame, while a set
+and scheme, with Both read as Mobile, or that viewport's other frame while
+the filter hides the scheme, or a variant set's selected frame, while a set
 without a selected frame shows its whole set.
 The entry bar's frame picker lists the shown frames of the model, a screen's
-Mobile frames first, and a pick sets the selection's viewport and scheme or
-opens the picked row's entry in its scheme through the store's `openEntry`,
-as one selection change, so a controlled host hears one proposal. The other
+frames of both viewports with its Mobile frames first, so the viewport
+toggles name the picked frame there. A pick sets the selection's viewport
+and scheme or opens the picked row's entry in its scheme through the store's
+`openEntry`, as one selection change, so a controlled host hears one
+proposal. The other
 frames stay mounted out of the
 section, and the picked screen frame's label leads with the entry's slug. A
 live edit renders the view of each shown frame of the edited screen or

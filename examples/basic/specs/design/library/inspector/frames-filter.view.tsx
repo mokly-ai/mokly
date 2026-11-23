@@ -12,7 +12,6 @@ const HIGHLIGHT_REASONS = {
   unavailable: "Component inspection is unavailable for this view.",
   loading: "Waiting for the component preview.",
   failed: "This preview could not be loaded.",
-  comparison: "A comparison is selected. Highlighting is available in Current.",
   removed: "This preview is unavailable.",
 } as const satisfies Record<
   NonNullable<FramesFilterProps["unavailable"]>,

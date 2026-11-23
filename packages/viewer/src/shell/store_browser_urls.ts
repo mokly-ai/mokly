@@ -1,6 +1,21 @@
+import type { ViewerSelection } from "../host/types.js";
 import { parseViewHref, viewHref } from "../navigation/routes.js";
 
 import type { routeFromUrl } from "./routes.js";
+
+/**
+ * The address that names the viewport which the reader chose on the shown
+ * entry: its `viewport` query takes the value in place, and every other part
+ * of the address stays.
+ */
+export function viewportUrl(
+  url: URL,
+  viewport: ViewerSelection["viewport"],
+): URL {
+  const next = new URL(url);
+  next.searchParams.set("viewport", viewport);
+  return next;
+}
 
 /** Normalize every accepted entry URL and pin inferred historical identity. */
 export function canonicalRouteUrl(

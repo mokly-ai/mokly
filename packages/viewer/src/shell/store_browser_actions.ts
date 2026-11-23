@@ -25,7 +25,6 @@ interface ShellBrowserActionInput {
   transition(
     requested: URL,
     push: boolean,
-    scrolls?: Readonly<Record<string, number>>,
     activated?: ReturnType<typeof routeFromUrl>,
   ): Promise<void>;
 }
@@ -78,5 +77,5 @@ function handleShellClick(
     ...(activated.instance ? { instance: activated.instance } : {}),
     ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
   });
-  void input.transition(new URL(href, requested), true, {}, activated);
+  void input.transition(new URL(href, requested), true, activated);
 }

@@ -7,7 +7,11 @@ import { createCatalogue } from "../src/shell/catalogue.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
 import { RetryFocus } from "../src/shell/retry_focus.js";
 import { shellFrameUsage } from "../src/shell/stage_sources.js";
-import { inspectionAvailability } from "../src/shell/workspace_inspection_runtime.js";
+import {
+  endsHighlight,
+  inspectionAvailability,
+  WAITING_REASON,
+} from "../src/shell/workspace_inspection_runtime.js";
 import { WorkspaceInstances } from "../src/shell/workspace_instances.js";
 import { WorkspacePropsSection } from "../src/shell/workspace_props.js";
 import { WorkspaceUsage } from "../src/shell/workspace_usage.js";
@@ -117,24 +121,32 @@ test("a workspace whose detail is not held shows the mockup's inspection waiting
   );
 });
 
-test("a selected comparison says so and names where highlighting works", () => {
+test("a shown compare mode makes highlighting unavailable without a reason, and ends it", () => {
   const { catalogue, model } = holding(COMPONENT);
   const entry = catalogue.byPath.get("components/action");
   assert.ok(entry?.kind === "component");
   const data = publicWorkspace(catalogue, model, entry);
-  assert.deepEqual(
-    inspectionAvailability(
-      {
-        comparisonActive: true,
-        data,
-        invalidSelection: false,
-        views: data.views,
-      },
-      [],
-    ),
+  const comparing = inspectionAvailability(
     {
-      available: false,
-      reason: "A comparison is selected. Highlighting is available in Current.",
+      comparisonActive: true,
+      data,
+      invalidSelection: false,
+      views: data.views,
     },
+    [],
   );
+  assert.deepEqual(comparing, { available: false });
+  assert.equal(endsHighlight(comparing), true);
+});
+
+test("highlighting waits for a loading preview and ends for any other cause", () => {
+  assert.equal(
+    endsHighlight({ available: false, reason: WAITING_REASON }),
+    false,
+  );
+  assert.equal(
+    endsHighlight({ available: false, reason: "This preview is unavailable." }),
+    true,
+  );
+  assert.equal(endsHighlight({ available: true }), false);
 });

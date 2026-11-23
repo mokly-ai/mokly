@@ -1,7 +1,9 @@
-/** Browser URL, history, focus, and scroll integration for the shell store. */
+/** Browser URL, history, and focus integration for the shell store. */
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
+
+import type { ViewerSelection } from "../host/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
@@ -13,14 +15,8 @@ import {
   type ShellBrowserActions,
 } from "./store_browser_actions.js";
 import { sameShellRoute } from "./store_browser_routes.js";
-import { canonicalRouteUrl } from "./store_browser_urls.js";
+import { canonicalRouteUrl, viewportUrl } from "./store_browser_urls.js";
 import { withRoute } from "./store_filters.js";
-import {
-  captureScrolls,
-  historyScrolls,
-  persistScroll,
-  restoreScrolls,
-} from "./store_scroll.js";
 import type { ShellState } from "./store_state.js";
 import { viewTitle } from "./view_title.js";
 
@@ -37,7 +33,7 @@ interface BrowserStoreInput {
 
 export type { ShellBrowserActions } from "./store_browser_actions.js";
 
-/** Bind one store to standalone history, focus and scroll. */
+/** Bind one store to standalone history and focus. */
 export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
   const elements = useShellRoot()?.elements;
   const stateRef = useRef(input.state);
@@ -48,44 +44,35 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
   latest.current = input;
   const sequence = useRef<AbortController | undefined>(undefined);
   const installedDocumentKey = useRef<string | undefined>(undefined);
-  const pendingScroll = useRef<Readonly<Record<string, number>> | undefined>(
-    undefined,
-  );
   const pendingFocus = useRef(false);
 
   const install = useCallback(
     (
       url: URL,
       push: boolean,
-      scrolls: Readonly<Record<string, number>> = {},
-      restore = true,
+      focusMain = true,
       activated?: ReturnType<typeof routeFromUrl>,
     ) => {
       const win = window;
       const { catalogue, sections, setState } = latest.current;
       const route = activated ?? routeFromUrl(catalogue, url);
       if (push) {
-        persistScroll(win, captureScrolls(elements?.scrolls));
-        win.history.pushState({ scrolls: {} }, "", url);
+        win.history.pushState(null, "", url);
       } else if (win.location.href !== url.href) {
         win.history.replaceState(win.history.state, "", url);
       }
       installedDocumentKey.current = routeDocumentKey(url);
-      if (restore) {
-        pendingScroll.current = scrolls;
-        pendingFocus.current = true;
-      }
+      if (focusMain) pendingFocus.current = true;
       latest.current.onAppearanceRoute?.(route.colorScheme);
       setState((state) => withRoute(state, route, catalogue, sections));
     },
-    [elements],
+    [],
   );
 
   const transition = useCallback(
     async (
       requested: URL,
       push: boolean,
-      scrolls: Readonly<Record<string, number>> = {},
       activated?: ReturnType<typeof routeFromUrl>,
     ) => {
       if (!latest.current.interactive) return;
@@ -113,17 +100,15 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
           install(
             canonical,
             push && win.location.href !== canonical.href,
-            scrolls,
             true,
             activated,
           );
         } else if (push && win.location.href !== requested.href)
           win.location.assign(requested.href);
-        else if (!push) restoreScrolls(elements?.scrolls, scrolls);
         if (sequence.current === controller) sequence.current = undefined;
         return;
       }
-      install(canonical, push, scrolls, true, activated);
+      install(canonical, push, true, activated);
       if (sequence.current === controller) sequence.current = undefined;
     },
     [install],
@@ -133,8 +118,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     [transition],
   );
   const navigateHistory = useCallback(
-    (url: URL, scrolls: Readonly<Record<string, number>>) =>
-      transition(url, false, scrolls),
+    (url: URL) => transition(url, false),
     [transition],
   );
 
@@ -152,53 +136,47 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       initialRoute = routeFromUrl(catalogue, initialUrl);
     }
     installedDocumentKey.current = routeDocumentKey(initialUrl);
-    persistScroll(win, captureScrolls(elements?.scrolls));
-    restoreScrolls(elements?.scrolls, stateRef.current.regionScrolls);
     if (!sameShellRoute(stateRef.current.route, initialRoute))
-      install(initialUrl, false, {}, false);
+      install(initialUrl, false, false);
     const controller = new AbortController();
-    let scrollFrame = 0;
-    document.addEventListener(
-      "scroll",
-      () => {
-        if (scrollFrame) return;
-        const scrolls = captureScrolls(elements?.scrolls);
-        persistScroll(win, scrolls);
-        latest.current.setState((state) => ({
-          ...state,
-          regionScrolls: scrolls,
-        }));
-        scrollFrame = win.requestAnimationFrame(() => {
-          scrollFrame = 0;
-        });
-      },
-      { capture: true, passive: true, signal: controller.signal },
-    );
+    // The URL alone names the route. An entry's state, such as one that an
+    // earlier viewer wrote, is never read.
     win.addEventListener(
       "popstate",
-      (event) => {
-        const url = new URL(win.location.href);
-        const scrolls = historyScrolls(event.state);
-        void navigateHistory(url, scrolls);
-      },
+      () => void navigateHistory(new URL(win.location.href)),
       { signal: controller.signal },
     );
     return () => {
       controller.abort();
       sequence.current?.abort();
-      if (scrollFrame) win.cancelAnimationFrame(scrollFrame);
     };
-  }, [elements, input.interactive, install, navigateHistory]);
+  }, [input.interactive, install, navigateHistory]);
+
+  // A viewport that the reader chooses on the shown entry, through the Frames
+  // filter or the compact layout's frame picker, replaces the address's
+  // `viewport` query, so the address names the shown viewport. A route
+  // installation brings its own address.
+  const placed = useRef<
+    { installation: number; viewport: ViewerSelection["viewport"] } | undefined
+  >(undefined);
+  const installation = input.state.routeInstallation;
+  const viewport = input.state.selection.viewport;
+  useEffect(() => {
+    if (!input.interactive) return;
+    const before = placed.current;
+    placed.current = { installation, viewport };
+    if (before?.installation !== installation || before.viewport === viewport)
+      return;
+    const win = window;
+    const url = viewportUrl(new URL(win.location.href), viewport);
+    if (url.href === win.location.href) return;
+    win.history.replaceState(win.history.state, "", url);
+    installedDocumentKey.current = routeDocumentKey(url);
+  }, [input.interactive, installation, viewport]);
 
   useLayoutEffect(() => {
     if (!input.interactive) return;
     document.title = viewTitle(input.catalogue, input.state.route.view);
-    const scrolls = pendingScroll.current;
-    if (scrolls) {
-      restoreScrolls(elements?.scrolls, scrolls);
-      pendingScroll.current = undefined;
-      requestAnimationFrame(() => restoreScrolls(elements?.scrolls, scrolls));
-    }
     if (pendingFocus.current) {
       pendingFocus.current = false;
       elements?.main.current?.focus({ preventScroll: true });

@@ -201,7 +201,9 @@ test("an expired preview is reacquired before changing the viewport", async ({
     detail,
   );
 
-  await chooseViewport(page, "mobile");
+  // The address names Desktop, so the Mobile toggle starts off: turning it
+  // on is the one viewport choice.
+  await setFrames(page, { mobile: true });
 
   // The section's frame of the newly chosen viewport.
   const renewed = historicalFrame(page, "mobile").locator("iframe");

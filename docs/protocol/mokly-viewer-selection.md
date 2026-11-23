@@ -164,7 +164,11 @@ A mounted viewer keeps this shell state:
   and normalises it to the canonical form; React hosts receive route changes
   through `onScreenNavigate` and own their own URL.
 - **Selection** is the public `ViewerSelection`. The standalone shell keeps
-  viewport, scheme and filters in memory across in-shell navigation.
+  viewport, scheme and filters in memory across in-shell navigation. When the
+  reader changes the viewport on the shown entry, by a toggle of the
+  [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) or a pick of
+  the compact frame picker, the standalone shell writes the new value to the
+  `viewport` query of the current history entry, without a new entry.
 - **Panel** is the right panel's selected tab, Inspect or Changes. It survives
   in-shell navigation when the destination has that tab; otherwise, and on a
   full page load, Inspect is selected.
@@ -173,9 +177,8 @@ A mounted viewer keeps this shell state:
   [disclosure persistence contract](./mokly-disclosure-persistence.md).
   Split-width choices persist per origin; the sheets and the tag picker panel
   reset on a full page load.
-- **Scroll** is tracked per shell `data-mokly-scroll` region for history;
-  comparison-document regions and the Scroll together choice follow their
-  [scrolling contracts](./mokly-comparison-scrolling.md).
+- **Scroll** of comparison-document regions and the Scroll together choice
+  follow their [scrolling contracts](./mokly-comparison-scrolling.md).
 - **Workspace** state (props under edit, the unfolded sections of Inspect, the
   canvas selection and its box model, active pick, highlight scope) lives with
   the mounted view and is discarded on route change or source replacement.
