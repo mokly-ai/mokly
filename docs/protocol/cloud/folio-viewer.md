@@ -94,7 +94,9 @@ it, as one quiet registered Button that draws them as its content, so a press
 anywhere on the pill, its hairline included, opens the switcher and never
 moves the Mac window. The pill is a rounded frame on `surfaceMuted` with a
 hairline and the 8px chrome radius, 32px tall and 40px on a phone, where the
-Button keeps its 44px target; the Button has no frame of its own. The full
+Button keeps its 44px target; the Button has no frame of its own. A hovering
+pointer darkens the pill's fill to the ink at 5% over `surfaceMuted`, or 7%
+while pressed, and its hairline to the stronger line of its divider. The full
 pill draws the reference's glyph, branch or pull request, the reference, a
 short divider, the decorative status dot, the state's phrase in secondary ink
 at the 13px `ui` size, such as `Ready · 15 Sep`, the short SHA in muted mono

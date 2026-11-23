@@ -49,6 +49,15 @@
 [data-color-scheme] .fo-canvas-pill:not(.fo-canvas-pill-waiting) {
   -webkit-app-region: no-drag;
 }
+/* A hovering pointer darkens the whole pill: the Button's scoped theme draws
+   its hover and press washes, and the frame's hairline takes the divider's
+   stronger line. A waiting pill holds no control, so it takes no hover, and a
+   touch draws none. */
+@media (hover: hover) {
+  [data-color-scheme] .fo-canvas-pill:not(.fo-canvas-pill-waiting):hover {
+    border-color: var(--fo-canvas-line-strong);
+  }
+}
 /* While a read decides the reference, the pill holds no control: the
    reference's placeholder, which takes the muted surface itself, so the pill
    takes the bar's surface, and the state beside it. */

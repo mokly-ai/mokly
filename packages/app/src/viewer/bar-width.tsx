@@ -9,26 +9,43 @@ import {
 import type { ReactNode, RefObject } from "react";
 
 /**
- * The room that the full bar's centre leaves the end column, which the centre's
- * caps in the shared `viewer-bar.css` read: with the labels of History and
- * Settings, and with their glyphs alone. The App's end slot also holds
- * Settings, and its package search holds the catalogue's tag filter, so it
- * needs more than a drawing, whose caps keep their own: the package bar's
- * search with its whole placeholder and the end slot, and the last group of the
- * cloud's own bar.
+ * The room that the full bar's centre leaves the end column, which the
+ * centre's caps in the shared `viewer-bar.css` read: the package's search
+ * with its whole placeholder, its key hint and the catalogue's tag picker,
+ * then the end slot with History's label, or its glyph alone, Share and the
+ * avatar. The search's key hint names `⌘K` on Apple platforms and `Ctrl K`
+ * elsewhere, which is 23px wider, so each kind of platform has its own rooms.
+ * A drawing's search draws `⌘K` and no tag picker, so a drawing's caps keep
+ * the sheet's own rooms, and so does the cloud's own bar, which has no search
+ * and whose last group is the drawings'.
  */
 const endRooms = {
-  "--fo-viewer-end-room": "25.875rem",
-  "--fo-viewer-end-room-glyphs": "18.0625rem",
-  "--fo-viewer-trail-room": "18.5rem",
-  "--fo-viewer-trail-room-glyphs": "10.6875rem",
+  apple: {
+    "--fo-viewer-end-room": "21.8125rem",
+    "--fo-viewer-end-room-glyphs": "18.125rem",
+  },
+  other: {
+    "--fo-viewer-end-room": "23.25rem",
+    "--fo-viewer-end-room-glyphs": "19.5625rem",
+  },
 } as const;
+
+/**
+ * Apple's platforms, as the package's search names its key hint for them: a
+ * user agent that names a Mac, an iPhone, an iPad or an iPod.
+ */
+const appleAgent = /Mac|iPhone|iPad|iPod/u;
+
+/** The end rooms of the platform that a user agent names. */
+function platformRooms(userAgent: string) {
+  return appleAgent.test(userAgent) ? endRooms.apple : endRooms.other;
+}
 
 /** What the bar's own width holds: its composition and its labels. */
 interface BarWidth {
   /** Whether the bar draws its compact composition. */
   compact: boolean;
-  /** Whether History and Settings draw their labels beside their glyphs. */
+  /** Whether History draws its label beside its glyph. */
   labels: boolean;
 }
 
@@ -36,19 +53,19 @@ interface BarWidth {
  * Choose the viewer top bar's composition and its labels from the width of
  * `root`, the app-owned `.fo-viewer-screen` element that the bar spans and
  * that the shared `viewer-bar.css` makes the bar's container. Its rules
- * decide: the full row when the six cloud controls fit beside the package's
- * own, or else the publication and More; and History's and Settings' labels
- * when the full row has room for them, or else their glyphs alone. The
- * returned probes are parts that only the full bar and only the labelled
- * drawings draw, hidden 1px boxes beside `root`, so each has a box exactly
- * when its rule holds. Observing them also reports a change of the reader's
- * text size, which no change to the bar's own width does.
+ * decide: the full row when the five cloud controls fit beside the package's
+ * own, or else the publication and More; and History's label when the full
+ * row has room for it, or else its glyph alone. The returned probes are parts
+ * that only the full bar and only the labelled drawings draw, hidden 1px
+ * boxes beside `root`, so each has a box exactly when its rule holds.
+ * Observing them also reports a change of the reader's text size, which no
+ * change to the bar's own width does.
  *
  * The bar is compact until the first measurement, which runs before the first
  * paint, and it stays compact when the shared styles are missing, because an
- * unstyled probe has no width. `root` also carries the end rooms that the
- * centre's caps read, which take the bar's width from its container. Render
- * the returned probes inside `root`.
+ * unstyled probe has no width. `root` also carries the end rooms of the
+ * reader's platform that the centre's caps read, which take the bar's width
+ * from its container. Render the returned probes inside `root`.
  */
 export function useViewerBarWidth(
   root: RefObject<HTMLElement | null>,
@@ -61,7 +78,8 @@ export function useViewerBarWidth(
     const fullProbe = full.current;
     const labelProbe = labelled.current;
     if (bar === null || fullProbe === null || labelProbe === null) return;
-    for (const [property, room] of Object.entries(endRooms)) {
+    const rooms = platformRooms(window.navigator.userAgent);
+    for (const [property, room] of Object.entries(rooms)) {
       bar.style.setProperty(property, room);
     }
     const measure = () => {
@@ -129,8 +147,8 @@ export function useCompactBar(): boolean {
 }
 
 /**
- * Whether History and Settings draw their labels, or their glyphs alone. Each
- * stays one control that changes its drawing in place, so it keeps its focus.
+ * Whether History draws its label, or its glyph alone. It stays one control
+ * that changes its drawing in place, so it keeps its focus.
  */
 export function useBarLabels(): boolean {
   return useContext(BarWidthContext).labels;

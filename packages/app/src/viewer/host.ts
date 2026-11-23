@@ -84,7 +84,10 @@ export interface ViewerHostProps {
   status: ViewerStatus;
   /** The in-stage card for every status other than `ready`. */
   stageMessage?: ReactNode;
-  /** The six cloud actions, composed into the package's two top-bar slots. */
+  /**
+   * The five cloud actions and More, which the bar composes into the
+   * package's three top-bar slots.
+   */
   slots?: ViewerSlots;
   /** Keep the fallback mounted while one of its slot activations concludes. */
   holdReady?: boolean;

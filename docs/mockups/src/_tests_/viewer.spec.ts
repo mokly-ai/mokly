@@ -196,6 +196,52 @@ for (const viewport of ["desktop", "mobile"] as const)
 
     if (viewport === "desktop")
       test(
+        "the full bar keeps History's label and the SHA at 1180px, then drops them and the phrase: " +
+          label,
+        async ({ page }) => {
+          await page.goto(url("standalone"));
+          const viewer = page.locator(".mokly-viewer");
+          const pill = viewer.locator(
+            ".fo-package-slot-center:not(.fo-package-slot-compact) .fo-canvas-pill",
+          );
+          const history = viewer
+            .getByRole("button", { name: "History", exact: true })
+            .filter({ visible: true });
+          const more = viewer.getByRole("button", {
+            name: "More",
+            exact: true,
+          });
+          // Each width sits between two of the bar's rules, widest first.
+          for (const [width, shown] of [
+            [1180, { label: "History", sha: true, phrase: true }],
+            [1174, { label: "History", sha: false, phrase: true }],
+            [1100, { label: "", sha: false, phrase: true }],
+            [1040, { label: "", sha: false, phrase: false }],
+          ] as const) {
+            await page.setViewportSize({ width, height: size.height });
+            const at = ` at ${width}px`;
+            await expect(history, "History" + at).toHaveText(shown.label);
+            await expect(pill.locator(".mono-value"), "SHA" + at).toBeVisible({
+              visible: shown.sha,
+            });
+            await expect(
+              pill.locator(".fo-top-state-detail"),
+              "phrase" + at,
+            ).toBeVisible({ visible: shown.phrase });
+            await expect(
+              pill.locator('.fo-top-state > [aria-hidden="true"]'),
+              "dot" + at,
+            ).toBeVisible();
+            await expect(more, "More" + at).toBeHidden();
+          }
+          await page.setViewportSize({ width: 1000, height: size.height });
+          await expect(more).toBeVisible();
+          await expect(history).toHaveCount(0);
+        },
+      );
+
+    if (viewport === "desktop")
+      test(
         "long viewer identities stay inside one top-bar row: " + label,
         async ({ page }) => {
           await page.setViewportSize(size);

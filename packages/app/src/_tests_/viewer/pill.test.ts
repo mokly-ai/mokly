@@ -93,7 +93,12 @@ test("the full pill is one Button, named and titled by every word it shows", asy
   const html = await drawn(branch, false);
   const { name, inside } = control(html);
   assert.equal(name, "calummoore/sydney-v1, Ready · 15 Sep, 72d6047");
-  assert.match(html, /<span class="fo-canvas-pill" title="([^"]*)"><button/);
+  // The frame holds the Button inside the boxless boundary of its scoped
+  // theme, so the Button fills the frame.
+  assert.match(
+    html,
+    /<span class="fo-canvas-pill" title="([^"]*)"><div style="display:contents;[^"]*"><button/,
+  );
   assert.equal(html.match(/class="fo-canvas-pill" title="([^"]*)"/)?.[1], name);
   // The Button draws the branch in mono, the state's phrase and the short
   // SHA itself, and its name holds every word that they show.
