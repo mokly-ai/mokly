@@ -17,7 +17,7 @@ switch and no Dark mode button in the component workspace, and the Frames
 filter's scheme toggles choose frames, not the appearance. The control is
 present even when the catalogue has no dark views. It stays reachable on home,
 pages, documents, flows, empty and unavailable routes, and at narrow widths,
-and preserves catalogue search and menu access.
+and preserves catalogue search.
 
 ## Choosing A Value
 

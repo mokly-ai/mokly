@@ -1,19 +1,19 @@
 /**
  * The shell's 48px top bar, in three columns. The start column holds the
- * brand and a host's start slot, after the menu of a static depiction; the
- * centre column holds a host's centre slot; the end column holds the catalogue
- * search, the end control, and a host's end slot. Search stays available at
- * every width. Where the bar is too narrow for the field, the search toggle
- * opens a compact search over the bar; the field then takes focus, and Escape
- * or Close search returns focus to the toggle. The bar of the shell has no
- * menu button: the dock's Catalogue opens the catalogue's sheet.
+ * brand and a host's start slot; the centre column holds a host's centre
+ * slot; the end column holds the catalogue search, the end control, and a
+ * host's end slot. Search stays available at every width. Where the bar is
+ * too narrow for the field, the search toggle opens a compact search over the
+ * bar; the field then takes focus, and Escape or Close search returns focus
+ * to the toggle. The bar has no menu, also in a static depiction: the dock's
+ * Catalogue opens the catalogue's sheet.
  */
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { IconSvg, SearchIcon } from "../icons/icons.js";
 
-import { Brand, Menu } from "./top-bar-links.js";
+import { Brand } from "./top-bar-links.js";
 
 /**
  * The containers of an embedded root's top-bar host slots. The bar places
@@ -28,11 +28,9 @@ export interface TopBarHost {
 
 export function TopBar({
   brandHref,
-  drawerOpen = false,
   end,
   host,
   interactive = true,
-  menuHref,
   onSearch,
   query,
   searchId,
@@ -44,8 +42,8 @@ export function TopBar({
    */
   brandHref?: string | undefined;
   /**
-   * Whether the catalogue is open, which names the menu of a static
-   * depiction: `Close catalogue navigation` or `Open catalogue navigation`.
+   * Not read: the bar has no menu, whose catalogue state this named. It
+   * stays so that a host that passes it still compiles.
    */
   drawerOpen?: boolean;
   /** The control at the end of the bar, such as the appearance selector. */
@@ -58,26 +56,18 @@ export function TopBar({
   /**
    * Whether the compact search draws its toggle and Close search, as it does
    * by default. A static depiction that runs no script sets `false`, which
-   * leaves out the compact search controls and draws a menu without an
-   * address as a picture of itself. A bar that runs its script draws no
-   * menu.
+   * leaves out the compact search controls and draws a brand without an
+   * address as a picture of itself.
    */
   interactive?: boolean;
   /**
-   * The address that the menu of a static depiction opens, such as another
-   * document that shows the catalogue opened or closed. A menu with an
-   * address is a link whose name says whether it opens or closes the
-   * catalogue.
-   */
-  menuHref?: string | undefined;
-  /**
-   * Not read: the bar has no menu button, whose catalogue this named. It
-   * stays so that a host that passes it still compiles.
+   * Not read: the bar has no menu, whose catalogue this named. It stays so
+   * that a host that passes it still compiles.
    */
   navigationId?: string | undefined;
   /**
-   * Not read: the bar has no menu button, whose drawer state this received.
-   * It stays so that a host that passes it still compiles.
+   * Not read: the bar has no menu, whose drawer state this received. It
+   * stays so that a host that passes it still compiles.
    */
   onDrawer?: ((open: boolean) => void) | undefined;
   /** Receives each search text that the reader types. */
@@ -105,11 +95,6 @@ export function TopBar({
       data-search=""
     >
       <div className="mbk-topbar-start mbk-reset">
-        <Menu
-          drawerOpen={drawerOpen}
-          href={menuHref}
-          interactive={interactive}
-        />
         <Brand
           href={brandHref ?? (interactive ? "/" : undefined)}
           wordmark={host === undefined}

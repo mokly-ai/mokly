@@ -10,11 +10,11 @@ import {
 
 /**
  * The Canvas overview's link that opens the catalogue artboard, and that
- * artboard's link back: the compact form's dock and the top bar's close, and
- * the desktop catalogue's Changes and All filters.
+ * artboard's link back: the compact form's dock and the catalogue sheet's
+ * close control, and the desktop catalogue's Changes and All filters.
  */
 export const CATALOGUE_LINKS = {
-  mobile: { open: "Catalogue", close: "Close catalogue navigation" },
+  mobile: { open: "Catalogue", close: "Close catalogue" },
   desktop: { open: /^Changes \d+$/u, close: "All" },
 } as const;
 

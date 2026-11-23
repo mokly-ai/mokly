@@ -193,7 +193,7 @@ const CANVAS_ROUTE_SHEETS = [
  * every older screen; the component design sheets and the library sheet from
  * no screen; the Canvas sheet from every Canvas screen; and the other sheets
  * of the Canvas route from the Canvas screens only. The library pages and
- * their 93 saved variants link every listed sheet apart from the Canvas
+ * their 92 saved variants link every listed sheet apart from the Canvas
  * route's own sheets.
  */
 export function scopeViolations(catalogue: ServedCatalogue): string[] {
@@ -230,7 +230,7 @@ export function scopeViolations(catalogue: ServedCatalogue): string[] {
     [["design-canvas.css"], [...canvas, ...library]],
     [CANVAS_ROUTE_SHEETS, canvas],
   ];
-  const violations = variants === 93 ? [] : [`${variants} saved variants`];
+  const violations = variants === 92 ? [] : [`${variants} saved variants`];
   for (const [sheets, expected] of scopes)
     for (const sheet of sheets) {
       const actual = [...(linked.get(sheet) ?? [])];

@@ -869,12 +869,6 @@
   },
   {
     "kind": "component",
-    "path": "design/library/chrome/top-bar/drawer-open",
-    "colorSchemes": ["light", "dark"],
-    "variantOf": "design/library/chrome/top-bar"
-  },
-  {
-    "kind": "component",
     "path": "design/library/chrome/top-bar/search",
     "colorSchemes": ["light", "dark"],
     "variantOf": "design/library/chrome/top-bar"

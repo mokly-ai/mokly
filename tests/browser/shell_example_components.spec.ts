@@ -108,7 +108,8 @@ async function expectComponentViews(page: Page): Promise<void> {
   // The top bar reads the viewport and scheme from its render context.
   for (const frame of [light, dark]) {
     await expect(frame.locator(".mbk-name")).toHaveText("mokly.");
-    await expect(frame.locator(".mbk-menu")).toBeHidden();
+    // The bar draws no menu, as the shell's bar does.
+    await expect(frame.locator("[data-mokly-menu]")).toHaveCount(0);
   }
   await expect(dark.locator("html")).toHaveCSS("color-scheme", "dark");
   await expect(light.locator("html")).not.toHaveCSS("color-scheme", "dark");

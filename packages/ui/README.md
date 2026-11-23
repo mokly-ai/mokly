@@ -117,13 +117,12 @@ group renders the package's segmented control, and the package stylesheet
 gives a link and inert text the line box and centring of a button.
 
 `TopBar`, `CatalogueNavigation`, and `ScreenHeader` draw controls that act
-through a script. A static mockup gives `TopBar` a `brandHref` and a
-`menuHref`, which draw the brand and the menu as links, and sets
-`interactive={false}`, which draws a control without an address as a picture
-of itself and leaves out the compact search. A bar that runs its script draws
-no menu, because the dock opens the catalogue's sheet; its `drawerOpen`,
-`navigationId`, and `onDrawer` props stay for earlier hosts and change
-nothing there. It gives `CatalogueNavigation` a
+through a script. A static mockup gives `TopBar` a `brandHref`, which draws
+the brand as a link, and sets `interactive={false}`, which draws a brand
+without an address as a picture of itself and leaves out the compact search.
+The bar draws no menu, also in a static mockup, because the dock opens the
+catalogue's sheet; its `drawerOpen`, `navigationId`, and `onDrawer` props
+stay for earlier hosts and change nothing. It gives `CatalogueNavigation` a
 `filterHref`, which draws each filter that has an address as a link, and sets
 `operable={false}`, which draws Collapse all and the other filters as text and
 the separator as a picture of its grip. The link or the text of the shown
@@ -538,8 +537,7 @@ override the desktop layout rules.
   its compact form and its focus return, and an embedded root's top-bar
   slots
 - [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
-  brand, as a control, a link, or a picture, and the menu of a static
-  depiction, as a link or a picture
+  brand, as a control, a link, or a picture
 - [`src/top-bar/brand-icon.tsx`](./src/top-bar/brand-icon.tsx) — `BrandIcon`,
   the Mokly mark, whose parts the top bar's stylesheet colours
 - [`src/catalogue-navigation/catalogue-navigation.tsx`](./src/catalogue-navigation/catalogue-navigation.tsx)

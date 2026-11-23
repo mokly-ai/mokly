@@ -56,27 +56,6 @@
   display: contents;
 }
 
-.mbk-menu {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  padding: 0;
-  border: 1px solid var(--chrome-border);
-  border-radius: 8px;
-  background: var(--chrome-surface);
-  color: var(--chrome-ink-2);
-  font-size: 14px;
-  cursor: pointer;
-}
-
-/* The picture of the menu in a static depiction acts on nothing. */
-span.mbk-menu {
-  cursor: default;
-}
-
 .mbk-search-toggle,
 .mbk-search-close {
   display: none;
@@ -178,17 +157,13 @@ span.mbk-menu {
   color: var(--chrome-muted);
 }
 
-/* Below the breakpoint a static depiction's menu shows, the brand keeps only
-   its mark, and the scheme switch moves to the screen header. The start column
-   keeps the width of its content and the end column takes the rest, so the
-   search keeps its room down to a 320px window. */
+/* Below the breakpoint the brand keeps only its mark, and the scheme switch
+   moves to the screen header. The start column keeps the width of its
+   content and the end column takes the rest, so the search keeps its room
+   down to a 320px window. */
 @media (width < 56.25rem) {
   .mbk-topbar {
     grid-template-columns: auto auto minmax(0, 1fr);
-  }
-
-  .mbk-menu {
-    display: inline-flex;
   }
 
   .mbk-topbar[data-search] .mbk-name {

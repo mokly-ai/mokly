@@ -129,7 +129,8 @@ export function registerDesignLibrary(
       );
       const isolated = await typography(page);
       const inScreen = await inShell(browser, baseURL!, async (shell) => {
-        // A phone draws the catalogue in the drawer that its top bar opens.
+        // A phone draws the catalogue in the sheet that the dock's
+        // Catalogue opens.
         if (viewport === "mobile") await openCatalogueSheet(shell);
         await expect(
           shell.locator(".mbk-nav-section-head").first(),
