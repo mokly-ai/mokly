@@ -5,6 +5,7 @@ import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.j
 import { test } from "./browser_test.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { startLinkControlFixture } from "./link_controls_fixture.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
 import { canvasFrame } from "./workspace_actions.js";
 
 let controls: Awaited<ReturnType<typeof startLinkControlFixture>>;
@@ -104,9 +105,8 @@ test("disabled, busy, and handler-less Firna controls stay inactive", async ({
 
 test("adapted controls navigate from use-case frames", async ({ page }) => {
   await page.goto(`${controls.url}/view/tour/`);
-  await page
-    .frameLocator(".mbk-flow-screen iframe")
-    .first()
+  await useCaseStepFrame(page, 1)
+    .contentFrame()
     .getByTestId("continue")
     .click();
   await expect(page).toHaveURL(/\/view\/details\/$/);

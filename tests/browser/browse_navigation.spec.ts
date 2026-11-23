@@ -9,6 +9,7 @@ import {
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
 import {
   canvasFrame,
   expectFrameSource,
@@ -127,15 +128,11 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
   await navigateFrom(page, canvasFrame("mobile"), "#svg-link");
 
   await page.goto(`${navigation.url}/view/fixture/nested/tour/`);
-  await expect(page.locator(".mbk-flow-screen iframe").first()).toHaveAttribute(
+  await expect(useCaseStepFrame(page, 1)).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
   );
-  await page
-    .frameLocator(".mbk-flow-screen iframe")
-    .first()
-    .locator("#raw-link")
-    .click();
+  await useCaseStepFrame(page, 1).contentFrame().locator("#raw-link").click();
   await expectDestination(page);
 
   // A page stands on the canvas as one reading frame.

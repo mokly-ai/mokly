@@ -26,26 +26,25 @@ for (const width of [390, 1280])
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/view/${paths.removedDocument}/`);
     const appearance = page.getByLabel("Appearance", { exact: true });
-    const label = page.locator(".mbk-previous");
-    const note = label.locator(".mbk-frame-scheme-note");
-    const stage = page.locator(".mbk-stage-embed[data-preview-color-scheme]");
+    const preview = page.locator("[data-mokly-preview]");
+    // The quiet label of the section's head, after the Removed status.
+    const label = preview.getByText(/^Showing previous version/u);
+    const frame = preview.getByRole("figure");
     const heading = page
       .frameLocator("iframe[data-mokly-preview-frame]")
       .getByRole("heading", { name: "Old terms", exact: true });
 
     await appearance.selectOption("light");
     await expect(heading).toBeVisible();
-    await expect(label).toHaveText(/^Showing previous version/u);
-    await expect(note).toBeHidden();
+    await expect(label).toHaveText("Showing previous version");
     await expect(page.locator(".mbk-scheme-fallback")).toHaveCount(0);
 
     await appearance.selectOption("dark");
-    await expect(note).toBeVisible();
     await expect(label).toHaveText("Showing previous version — Light only");
-    await expect(stage).toHaveAttribute("data-preview-color-scheme", "light");
+    await expect(frame).toHaveAttribute("data-preview-color-scheme", "light");
     await expect(heading).toBeVisible();
 
     await appearance.selectOption("light");
-    await expect(note).toBeHidden();
+    await expect(label).toHaveText("Showing previous version");
     await expect(heading).toBeVisible();
   });

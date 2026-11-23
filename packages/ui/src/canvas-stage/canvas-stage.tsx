@@ -36,6 +36,7 @@ export { canvasKeyCommand, type CanvasCommand } from "./canvas-keys.js";
 export { wheelPixels } from "./canvas-gestures.js";
 export type { CanvasKeyEvent } from "./canvas-keys.js";
 export {
+  wheelZoom,
   ZOOM_MAX,
   ZOOM_MIN,
   type CanvasExtent,

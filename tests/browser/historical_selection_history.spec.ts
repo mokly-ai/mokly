@@ -22,6 +22,11 @@ import {
   navRow,
   snapshotOf,
 } from "./comparison_ui.js";
+import {
+  historicalFrame,
+  previousVersionLabel,
+  PREVIOUS,
+} from "./previous_version.js";
 
 /** A removed entry and the current entry that the journey moves to. */
 interface HistoryCase {
@@ -60,7 +65,7 @@ async function expectHistorical(page: Page, entry: HistoryCase) {
   await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
     entry.previousTitle,
   );
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(navRow(page, entry.previousPath)).toHaveAttribute(
@@ -72,7 +77,10 @@ async function expectHistorical(page: Page, entry: HistoryCase) {
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
   await expect(page.locator("#mb-main .mbk-empty")).toHaveCount(0);
   if (entry.kind === "page") {
-    await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
+    // The section's head holds the Removed status.
+    await expect(
+      page.locator(PREVIOUS).getByText("Removed", { exact: true }),
+    ).toBeVisible();
     await expect(
       page.frameLocator("[data-mokly-preview] iframe").locator("h1"),
     ).toHaveText(entry.previousHeading);
@@ -81,8 +89,9 @@ async function expectHistorical(page: Page, entry: HistoryCase) {
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
   for (const viewport of ["mobile", "desktop"] as const)
     await expect(
-      page
-        .frameLocator(`[data-mokly-preview] .mbk-frame-${viewport} iframe`)
+      historicalFrame(page, viewport)
+        .locator("iframe")
+        .contentFrame()
         .locator("h1"),
     ).toHaveText(entry.previousHeading);
   await expect(page.locator("[data-workspace-highlight]")).toBeDisabled();

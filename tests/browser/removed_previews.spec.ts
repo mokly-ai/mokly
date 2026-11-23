@@ -9,11 +9,11 @@ import {
   type ComparisonIndex,
 } from "./comparison_ui.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
+import { historicalFrame, PREVIOUS } from "./previous_version.js";
 import { responseFailure } from "./shell_error_allowances.js";
 import { canvasFrame, chooseViewport } from "./workspace_actions.js";
 
 const PREVIEW = "iframe[data-mokly-preview-frame]";
-const SCREEN_PREVIEW = "[data-mokly-preview] .mbk-frame-desktop iframe";
 
 /** Every navigation the page or a frame starts after this call. */
 function documentRequests(page: Page): string[] {
@@ -121,6 +121,39 @@ test("Space scrolls a previous version while a link holds focus", async ({
   expect(page.url()).toBe(address);
 });
 
+test("a previous version's frame forwards its canvas keys and its zoom wheel to the canvas", async ({
+  page,
+  request,
+  baseURL,
+}) => {
+  const snapshot = snapshotOf(
+    await comparisonIndex(request, baseURL),
+    comparisonPaths.removedScreen,
+  );
+  await page.goto(
+    `/view/${comparisonPaths.removedScreen}/?snapshot=${snapshot}`,
+  );
+  const frame = historicalFrame(page, "desktop").locator("iframe");
+  const heading = frame.contentFrame().locator("h1");
+  await expect(heading).toHaveText("Historical screen");
+  const width = async () => (await frame.boundingBox())?.width ?? 0;
+  const fitted = await width();
+  // A canvas key inside the frame's document zooms the canvas, as a key on
+  // the canvas does, and Shift+1 fits it again.
+  await heading.click();
+  await page.keyboard.press("Equal");
+  await expect.poll(width).toBeCloseTo(fitted * 1.25, 0);
+  await page.keyboard.press("Shift+Digit1");
+  await expect.poll(width).toBeCloseTo(fitted, 0);
+  // Ctrl with the wheel over the document zooms the canvas, not the page.
+  const box = (await frame.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -60);
+  await page.keyboard.up("Control");
+  await expect.poll(width).toBeGreaterThan(fitted * 1.2);
+});
+
 test("browsing current entries requests no historical bytes", async ({
   page,
 }) => {
@@ -198,6 +231,8 @@ test("a preview that cannot be loaded offers another attempt", async ({
   await expect(
     page.getByRole("heading", { name: "Previous version unavailable" }),
   ).toBeVisible();
+  // The failure stands in place of the section, so the canvas has no pill.
+  await expect(page.getByRole("group", { name: "Zoom" })).toHaveCount(0);
   const retry = page.locator("[data-mokly-preview-retry]");
   await expect(retry).toHaveText("Retry");
   await chooseFilter(page, "changed");
@@ -231,16 +266,23 @@ test("navigation fences a late response and keeps history usable", async ({
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseFilter(page, "changed");
   await navRow(page, comparisonPaths.removedPage).click();
-  await expect(page.locator(".mbk-preview-status")).toHaveText(
-    "Loading previous version…",
-  );
+  // The canvas holds the loading state in place of the section, so it has
+  // no zoom pill until the section stands on it.
+  const loading = page
+    .locator(PREVIOUS)
+    .getByText("Loading previous version…", { exact: true });
+  const pill = page.getByRole("group", { name: "Zoom" });
+  await expect(loading).toBeVisible();
+  await expect(pill).toHaveCount(0);
   // Move on only once the shell holds a request for the page document.
   await expect.poll(() => heldRequests.length).toBeGreaterThan(0);
   await navRow(page, comparisonPaths.removedScreen).click();
-  const screen = page
-    .frameLocator(SCREEN_PREVIEW)
+  const screen = historicalFrame(page, "desktop")
+    .locator("iframe")
+    .contentFrame()
     .getByRole("heading", { name: "Historical screen" });
   await expect(screen).toBeVisible();
+  await expect(pill).toBeVisible();
   // Release the held document, wait until the browser ends that request
   // (the shell cancels it when the reader moves on), then let the shell
   // handle the outcome.
@@ -249,7 +291,7 @@ test("navigation fences a late response and keeps history usable", async ({
     .poll(() => heldRequests.every((held) => ended.has(held)))
     .toBe(true);
   await passRenderingUpdates(page);
-  await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
+  await expect(loading).toHaveCount(0);
   await expect(screen).toBeVisible();
   await page.goBack();
   await expect(

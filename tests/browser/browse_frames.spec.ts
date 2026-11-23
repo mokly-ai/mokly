@@ -12,6 +12,11 @@ import {
 } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import {
+  useCaseStep,
+  useCaseStepFrame,
+  useCaseSteps,
+} from "./use_case_steps.js";
+import {
   canvasFrame,
   chooseScheme,
   chooseViewport,
@@ -165,7 +170,7 @@ test("the viewport choice keeps a variant set's frames mounted", async ({
   await dark?.dispose();
 });
 
-test("use-case steps follow the selected scheme without a caption", async ({
+test("use-case steps keep the use case's own Light frames under Dark, each labelled by its step", async ({
   page,
 }) => {
   await page.goto(WELCOME);
@@ -174,17 +179,18 @@ test("use-case steps follow the selected scheme without a caption", async ({
   await page.click(tourRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Example tour");
 
-  const steps = page.locator(".mbk-flow-screen iframe");
-  await expect(steps).toHaveCount(2);
+  await expect(useCaseSteps(page)).toHaveCount(2);
   await expectFrameSource(
-    steps.nth(0),
-    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
+    useCaseStepFrame(page, 1),
+    /example\/screens\/welcome\/index\.desktop\.html$/,
   );
   await expectFrameSource(
-    steps.nth(1),
-    /example\/screens\/details\/index\.desktop\.dark\.html$/,
+    useCaseStepFrame(page, 2),
+    /example\/screens\/details\/index\.desktop\.html$/,
   );
-  await expect(page.locator(".mbk-flow-screen .mbk-frame-label")).toHaveCount(
-    0,
-  );
+  for (const [step, title] of [
+    [1, "Welcome"],
+    [2, "Details"],
+  ] as const)
+    await expect(useCaseStep(page, step).getByRole("link")).toHaveText(title);
 });

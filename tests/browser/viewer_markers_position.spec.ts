@@ -7,6 +7,7 @@ import type {
 } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
+import { useCaseSteps } from "./use_case_steps.js";
 import { markerFixture } from "./viewer_marker_fixture.js";
 import {
   expectMarkerAligned,
@@ -220,16 +221,23 @@ for (const cross of [false, true]) {
       return instance;
     });
     expect(flowRef.stepIndex).toBe(1);
-    await page.locator(".mbk-flow").evaluate((element) => {
-      element.style.height = "600px";
-      element.style.flex = "none";
-    });
+    // The use case opens fitted, and the marker stands on its own step's
+    // frame, the second of the row.
+    await expect(useCaseSteps(page)).toHaveCount(2);
+    await expectMarkerState(page, "flow", "visible");
+    await expectMarkerAligned(page, "flow", 1, "Visible");
+    // A pan that moves the steps off the canvas hides the marker, and Fit
+    // shows it on its step again.
+    const stage = (await page
+      .locator("#one [data-mokly-stage]")
+      .boundingBox())!;
+    await page.mouse.move(stage.x + 8, stage.y + 8);
+    await page.mouse.wheel(0, stage.height * 4);
     await expectMarkerState(page, "flow", "hidden");
-    await page.locator(".mbk-flow").evaluate((element) => {
-      const frame = element.querySelectorAll("iframe")[1]!;
-      element.scrollTop +=
-        frame.getBoundingClientRect().top - element.getBoundingClientRect().top;
-    });
+    await page
+      .getByRole("group", { name: "Zoom" })
+      .getByRole("button", { name: "Fit" })
+      .click();
     await expectMarkerState(page, "flow", "visible");
     await expectMarkerAligned(page, "flow", 1, "Visible");
 

@@ -9,6 +9,7 @@ import type {
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
 import type {} from "./viewer_harness.js";
 import { startViewerPick } from "./viewer_pick.js";
 import { canvasFrame, chooseVariant } from "./workspace_actions.js";
@@ -175,8 +176,8 @@ test("flow events preserve the screen key and identify the owning step", async (
   await page.evaluate(async () => {
     await window.viewerHarness.get("one").ref.current.startPick();
   });
-  await page
-    .frameLocator(".flow-step:nth-child(2) iframe")
+  await useCaseStepFrame(page, 2)
+    .contentFrame()
     .getByText("Visible", { exact: true })
     .click();
   await expect

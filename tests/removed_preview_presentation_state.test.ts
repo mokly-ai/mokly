@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { LoadedPreview } from "../packages/viewer/dist/previews/request.js";
-import { ReadyPreview } from "../packages/viewer/dist/shell/previews.js";
+import { CanvasRemovedStage } from "../packages/viewer/dist/shell/canvas_removed.js";
 
 import { inShellStore } from "./helpers/viewer_catalogue.js";
 
@@ -23,16 +23,15 @@ test("an incomplete ready state renders the retryable unavailable state", () => 
   assert.doesNotThrow(() => {
     html = renderToStaticMarkup(
       inShellStore(
-        createElement(ReadyPreview, {
+        createElement(CanvasRemovedStage, {
           colorScheme: "light",
           data: {
             path: "removed-page",
             kind: "page",
             title: "Removed page",
           },
-          loaded,
-          presentations: new Map(),
           retry: () => undefined,
+          state: { status: "ready", loaded, presentations: new Map() },
           viewport: "both",
         }),
       ),

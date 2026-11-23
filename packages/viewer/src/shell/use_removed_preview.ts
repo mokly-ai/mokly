@@ -20,12 +20,15 @@ import {
 } from "../previews/request.js";
 
 import {
+  removedReadingView,
+  removedScreenAddresses,
+} from "./canvas_removed_frames.js";
+import {
   snapshotPresentationEnvironment,
   useComparisonEnvironment,
 } from "./comparison_context.js";
 import { useReloadDetail, useRouteDelivery } from "./data_context.js";
 import type { RemovedPreviewData } from "./previews.js";
-import { schemeValue } from "./scheme_fallback.js";
 import { useShellStore } from "./store_context.js";
 
 /** Display state for one route-owned previous-version request. */
@@ -54,47 +57,32 @@ interface LoadedOwner {
   value: LoadedPreview;
 }
 
+/**
+ * The historical documents of the frames that the canvas shows: every view
+ * of a removed screen's shown viewports, in both schemes, or a page's or a
+ * document's one reading frame.
+ */
 function selectedAddresses(
   loaded: LoadedPreview,
   viewport: "both" | "desktop" | "mobile",
   colorScheme: "dark" | "light",
 ): readonly string[] {
-  if (loaded.content.kind === "page") return [loaded.content.url];
-  if (loaded.content.kind === "document")
-    return [
-      schemeValue(
-        colorScheme,
-        loaded.content.views[0]!,
-        loaded.content.views.find((view) => view.colorScheme === "dark"),
-      ).url,
-    ];
-  const viewports =
-    viewport === "both"
-      ? (["mobile", "desktop"] as const)
-      : ([viewport] as const);
-  return viewports.flatMap((selected) => {
-    if (loaded.content.kind !== "screen") return [];
-    const view = schemeValue(
-      colorScheme,
-      loaded.content.views.find(
-        (candidate) =>
-          candidate.viewport === selected && candidate.colorScheme === "light",
-      ),
-      loaded.content.views.find(
-        (candidate) =>
-          candidate.viewport === selected && candidate.colorScheme === "dark",
-      ),
-    );
-    return view ? [view.url] : [];
-  });
+  return loaded.content.kind === "screen"
+    ? removedScreenAddresses(loaded.content.views, viewport)
+    : [removedReadingView(loaded.content, colorScheme).url];
 }
 
-/** Load only the preview selected by this shell and fence superseded work. */
+/**
+ * Load only the preview selected by this shell and fence superseded work.
+ * Only the part of the selection that chooses the shown frames requests
+ * documents again: a screen's viewport choice, because its section shows
+ * both schemes, and a document's preview scheme. A page has one document.
+ */
 export function useRemovedPreview({
-  colorScheme,
+  colorScheme: selectedScheme,
   data,
   interactive,
-  viewport,
+  viewport: selectedViewport,
 }: {
   colorScheme: "dark" | "light";
   data: RemovedPreviewData;
@@ -117,6 +105,8 @@ export function useRemovedPreview({
         )
       : undefined;
   const key = previewKey(data);
+  const viewport = data.kind === "screen" ? selectedViewport : "both";
+  const colorScheme = data.kind === "document" ? selectedScheme : "light";
   const selection = `${viewport}:${colorScheme}`;
   const [attempt, bumpAttempt] = useReducer((value: number) => value + 1, 0);
   const [owned, setOwned] = useState<OwnedState | undefined>(undefined);
