@@ -24,6 +24,7 @@ use mokly_server::publication::SharedPublication;
 use mokly_server::snapshot::{Projector, Snapshot};
 use mokly_server::work::Workers;
 
+use crate::allocator::MimallocPurgeDelay;
 use crate::serve_changes::ServeChanges;
 use crate::serve_eager_native::NativeEagerFactory;
 use crate::serve_git::GitWork;
@@ -56,6 +57,7 @@ pub(super) fn states(input: StateInputs<'_>) -> Result<Arc<dyn ServeStateFactory
     };
     let dist = viewer_assets::dist().ok_or(ServerError::InvalidAssets)?;
     let changes = Arc::new(ServeChanges {
+        purge_delay: Arc::new(MimallocPurgeDelay),
         eager: Some(input.services.eager.clone()),
         diagnostics: input.services.diagnostics.clone(),
         routing: Some(input.services.diagnostics.clone()),

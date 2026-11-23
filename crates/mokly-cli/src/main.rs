@@ -2,6 +2,7 @@
 
 use mimalloc::MiMalloc;
 
+mod allocator;
 mod base_dependencies;
 mod base_dependency_selection;
 mod base_dependency_sources;
@@ -99,6 +100,11 @@ mod viewer_assets;
 static GLOBAL: MiMalloc = MiMalloc;
 
 fn main() -> std::process::ExitCode {
+    #[cfg(debug_assertions)]
+    if let Some(result) = test_faults::allocator_probe::purge_delay() {
+        return result;
+    }
+
     #[cfg(all(debug_assertions, unix))]
     if let Some(result) = test_faults::signal_lifecycle() {
         return result;
