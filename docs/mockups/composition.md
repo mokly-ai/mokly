@@ -41,7 +41,7 @@ the account panel with its canvas, progress strip and mobile edge-to-edge rules,
 unmatched-path state, and `chrome.css` the wordmark, identity and heading
 primitives. The viewer drawings add the Canvas sheets, which their own modules
 import and the application never loads: `viewer-canvas.css` the inline end of
-the bar's two compositions and the search hint, `viewer-canvas-stage.css` the
+the bar's two compositions, `viewer-canvas-stage.css` the
 dot-grid stage and its floating cards, `viewer-canvas-depth.css` the shade, the
 radius and the shadows of a floating surface, `viewer-canvas-panels.css` the
 panels that the slots open, `viewer-canvas-menu.css` the open account and More

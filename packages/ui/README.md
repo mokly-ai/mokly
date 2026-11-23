@@ -149,6 +149,11 @@ picker and the end control as slots. An embedded root also gives it `host`,
 the `TopBarHost` containers of its three top-bar slots: the bar places the
 start slot after the brand, the centre slot in its middle column, and the end
 slot after the end control, and a bar with host slots draws the mark alone.
+The search field shows a key hint before the tag picker, a picture of the keys
+that `searchShortcut` names: `⌘K` by default, or `Ctrl K` for `control`. The
+hint hides below the layout breakpoint. The field of an interactive bar names
+the search keys, `⌘K`, Ctrl+K, and `/`, to assistive technology through
+`aria-keyshortcuts`, and its host binds them.
 `ScreenHeader` takes the view's status and controls as slots.
 
 `TagPicker` draws the tag button of the search field and the picker that it
@@ -325,7 +330,9 @@ its frames, to `canvasRef`. `TagPicker` gives its button and its picker to
 button to `highlightRef`. `CatalogueNavigation` gives the current page's row
 to `currentRowRef`, and each section and folder summary, by its disclosure
 key, to `summaryRef`. `EmbeddedLayout` names each host slot's container
-through `slotRef`.
+through `slotRef`. `TopBar` gives its `TopBarHandle` to `ref`: `focusSearch()`
+moves focus to the search field, and where the compact search hides the
+field, it opens the compact search first, whose field then takes focus.
 
 A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
 native disclosure of one group, named by `contentId`: a tab opens its panel
@@ -431,9 +438,11 @@ after the glow, as the shown segment of a segmented control does. Write one
 for a control in a container that clips or scrolls, which draws the inset
 glow, as a catalogue row does on its pill. Write one for a drawn control
 under a transparent native control, which shows the glow with `:has()` and
-adds its own forced-colours outline. A focus rule sets only the shadow, so
-the baseline keeps the forced-colours outline. `palette.test.ts` holds the
-glow at 3:1 on each surface in both appearances.
+adds its own forced-colours outline. The baseline rule leaves a search input
+to its field, so the top bar's search field draws its input's glow the same
+way. A focus rule sets only the shadow, so the baseline keeps the
+forced-colours outline. `palette.test.ts` holds the glow at 3:1 on each
+surface in both appearances.
 
 Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
 `rem`. A `rem` length follows the root font size of the page. A host page that
@@ -493,10 +502,13 @@ override the desktop layout rules.
   — `SegmentedControl`, the named group of segments that the viewport and
   scheme switches and the comparison modes render, as buttons or as the links
   and inert text of a static depiction
-- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar` and
-  `TopBarHost`: the three columns with the drawer menu, the brand, the
-  catalogue search with its compact form and its focus return, and an
-  embedded root's top-bar slots
+- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`,
+  `TopBarHost`, and `TopBarHandle`: the three columns with the drawer menu,
+  the brand, the catalogue search with its compact form, its focus return,
+  and the handle that moves focus to it, and an embedded root's top-bar slots
+- [`src/top-bar/search-hint.tsx`](./src/top-bar/search-hint.tsx) —
+  `SearchHint`, the search field's key cap of `⌘K` or `Ctrl K`, and the
+  `SearchShortcut` that it names
 - [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
   menu and the brand, as controls, links, or pictures of a static depiction
 - [`src/top-bar/brand-icon.tsx`](./src/top-bar/brand-icon.tsx) — `BrandIcon`,

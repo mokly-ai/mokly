@@ -5,14 +5,41 @@
  * search, the end control, and a host's end slot. Search stays available at
  * every width. Where the bar is too narrow for the field, the search toggle
  * opens a compact search over the bar; the field then takes focus, and Escape
- * or Close search returns focus to the toggle.
+ * or Close search returns focus to the toggle. A host moves focus to the
+ * field through the bar's handle, which opens the compact search first where
+ * the field is hidden. The field's key hint names the host's shortcut.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ReactNode,
+  type Ref,
+} from "react";
 
 import { IconSvg, SearchIcon } from "../icons/icons.js";
 
+import { SearchHint, type SearchShortcut } from "./search-hint.js";
 import { Brand, Menu } from "./top-bar-links.js";
+
+export type { SearchShortcut } from "./search-hint.js";
+
+/**
+ * The shortcuts that move focus to the search field, which the field of an
+ * interactive bar names to assistive technology. Its host binds them.
+ */
+const SEARCH_SHORTCUTS = "Control+K Meta+K /";
+
+/** What a host can ask of the top bar that it renders. */
+export interface TopBarHandle {
+  /**
+   * Move focus to the search field. Where the compact search hides the field,
+   * the compact search opens, and its field takes focus.
+   */
+  focusSearch(): void;
+}
 
 /**
  * The containers of an embedded root's top-bar host slots. The bar places
@@ -36,7 +63,9 @@ export function TopBar({
   onDrawer,
   onSearch,
   query,
+  ref,
   searchId,
+  searchShortcut = "command",
   tagPicker,
 }: {
   /**
@@ -74,8 +103,15 @@ export function TopBar({
   onSearch?: ((query: string) => void) | undefined;
   /** The search text. Without it, the field keeps its own text. */
   query?: string | undefined;
+  /** Receives the handle through which the host moves focus to the search. */
+  ref?: Ref<TopBarHandle> | undefined;
   /** The id of the search field, unique in the document. */
   searchId: string;
+  /**
+   * The shortcut that the search field's key hint names: `command`, the
+   * default, names `⌘K` and `control` names `Ctrl K`.
+   */
+  searchShortcut?: SearchShortcut | undefined;
   /** The control at the end of the search field, such as a tag picker. */
   tagPicker?: ReactNode;
 }) {
@@ -88,6 +124,20 @@ export function TopBar({
     else if (searchWasOpen.current) searchToggle.current?.focus();
     searchWasOpen.current = compactSearchOpen;
   }, [compactSearchOpen]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      focusSearch() {
+        const input = searchInput.current;
+        if (!input) return;
+        input.focus();
+        // A hidden field takes no focus. The compact search then opens, and
+        // the effect above focuses its field once it shows.
+        if (!input.matches(":focus")) setCompactSearchOpen(true);
+      },
+    }),
+    [],
+  );
   return (
     <header
       className="mbk-topbar mbk-reset"
@@ -130,6 +180,7 @@ export function TopBar({
           <div className="mbk-search mbk-reset">
             <SearchIcon />
             <input
+              aria-keyshortcuts={interactive ? SEARCH_SHORTCUTS : undefined}
               aria-label="Search catalogue"
               className="mbk-reset"
               data-mokly-search=""
@@ -143,6 +194,7 @@ export function TopBar({
               type="search"
               value={query}
             />
+            <SearchHint shortcut={searchShortcut} />
             {tagPicker}
           </div>
           {interactive ? (
