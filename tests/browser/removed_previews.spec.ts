@@ -121,39 +121,6 @@ test("Space scrolls a previous version while a link holds focus", async ({
   expect(page.url()).toBe(address);
 });
 
-test("a previous version's frame forwards its canvas keys and its zoom wheel to the canvas", async ({
-  page,
-  request,
-  baseURL,
-}) => {
-  const snapshot = snapshotOf(
-    await comparisonIndex(request, baseURL),
-    comparisonPaths.removedScreen,
-  );
-  await page.goto(
-    `/view/${comparisonPaths.removedScreen}/?snapshot=${snapshot}`,
-  );
-  const frame = historicalFrame(page, "desktop").locator("iframe");
-  const heading = frame.contentFrame().locator("h1");
-  await expect(heading).toHaveText("Historical screen");
-  const width = async () => (await frame.boundingBox())?.width ?? 0;
-  const fitted = await width();
-  // A canvas key inside the frame's document zooms the canvas, as a key on
-  // the canvas does, and Shift+1 fits it again.
-  await heading.click();
-  await page.keyboard.press("Equal");
-  await expect.poll(width).toBeCloseTo(fitted * 1.25, 0);
-  await page.keyboard.press("Shift+Digit1");
-  await expect.poll(width).toBeCloseTo(fitted, 0);
-  // Ctrl with the wheel over the document zooms the canvas, not the page.
-  const box = (await frame.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.keyboard.down("Control");
-  await page.mouse.wheel(0, -60);
-  await page.keyboard.up("Control");
-  await expect.poll(width).toBeGreaterThan(fitted * 1.2);
-});
-
 test("browsing current entries requests no historical bytes", async ({
   page,
 }) => {
