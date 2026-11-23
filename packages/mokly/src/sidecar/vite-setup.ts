@@ -1,10 +1,12 @@
 import path from "node:path";
 
-import type { Plugin, UserConfig } from "vite";
+import type { InlineConfig, Plugin, UserConfig } from "vite";
 
 import { fileDigest } from "./file-digests.js";
 import { directoryFiles } from "./resolution-inputs.js";
 import { loadViteConfig, viteConfigFiles } from "./vite-config.js";
+import { configureViteCss, hookViteCss } from "./vite-css-hooks.js";
+import type { ViteCssTransform } from "./vite-css-transform.js";
 import type { loadVite } from "./vite-peers.js";
 import { vitePeerPlugin } from "./vite-react-peers.js";
 import type { VitePeers } from "./vite-react-peers.js";
@@ -17,10 +19,11 @@ export async function viteSetup(
   plugin: Plugin,
   lookup: ViteLookup,
   peers: () => VitePeers,
+  css: ViteCssTransform,
 ) {
   const loaded = await loadViteConfig(vite, directory, lookup);
   const config = loaded?.config ?? {};
-  const server = await vite.createServer({
+  const inline: InlineConfig = {
     ...config,
     configFile: false,
     root: config.root ? path.resolve(directory, config.root) : directory,
@@ -39,8 +42,19 @@ export async function viteSetup(
       ...(config.plugins ?? []),
       noOptimizer(),
       vitePeerPlugin(lookup, peers),
+      css.capture(),
     ],
-  });
+  };
+  const resolved = await vite.resolveConfig(
+    inline,
+    "serve",
+    "development",
+    "development",
+    false,
+    (config) => configureViteCss(config, lookup, css),
+    (plugins) => hookViteCss(plugins, css),
+  );
+  const server = await vite.createServer(resolved);
   lookup.bind(vite, server.environments.ssr!);
   const envDirectory = server.config.envDir;
   const files = [

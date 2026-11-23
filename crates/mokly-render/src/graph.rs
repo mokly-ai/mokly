@@ -38,7 +38,9 @@ impl RenderGraph for JavaScriptGraph {
         mut catalogue: PreparedCatalogue,
         output: Option<&Path>,
     ) -> mokly_graph::error::Result<Arc<dyn RenderGeneration>> {
-        if (config.modules.postcss.is_some() || catalogue.javascript.generation.is_some())
+        if (config.vite()
+            || config.modules.postcss.is_some()
+            || catalogue.javascript.generation.is_some())
             && let Some(warning) = self.runtime.base_warning()
             && !catalogue.warnings.contains(&warning)
         {
@@ -102,6 +104,25 @@ impl JavaScriptGraph {
             {
                 compiler = Some(prepared.compiler.clone());
             }
+            let mut vite_generation;
+            let generation = if config.vite() {
+                let compiler = compiler
+                    .get_or_insert_with(|| stylesheets::compiler(&self.runtime, config, &side));
+                if let Some(digest) = crate::bundle_styles::local_input_digest(
+                    compiler.as_ref(),
+                    config,
+                    &declarations,
+                )? {
+                    vite_generation = generation.clone();
+                    vite_generation.environment.push(':');
+                    vite_generation.environment.push_str(&digest);
+                    &vite_generation
+                } else {
+                    generation
+                }
+            } else {
+                generation
+            };
             let bindings = Bindings {
                 generation: generation.id.clone(),
                 entries: catalogue
@@ -125,15 +146,17 @@ impl JavaScriptGraph {
             }
             let table = serde_json::to_vec(&bindings.entries)
                 .expect("entry bindings contain only strings and string-keyed maps");
-            let fingerprint = digest(
-                format!(
-                    "{}:{}:{}",
-                    generation.id,
-                    generation.class_maps_digest,
-                    digest(&table)
-                )
-                .as_bytes(),
+            let mut identity = format!(
+                "{}:{}:{}",
+                generation.id,
+                generation.class_maps_digest,
+                digest(&table)
             );
+            if config.vite() {
+                identity.push(':');
+                identity.push_str(&generation.environment);
+            }
+            let fingerprint = digest(identity.as_bytes());
             let renderer = config.renderer();
             let declaring: BTreeMap<_, _> = catalogue
                 .model
@@ -184,12 +207,13 @@ impl JavaScriptGraph {
                 style_references: self.runtime.style_references.clone(),
                 dependency_aliases: side.dependency_aliases.clone(),
                 render_keys: Some(keys),
-                stylesheet_roots: stylesheets::roots(
+                stylesheet_roots: stylesheets::prepare_roots(
                     &generation.modules,
                     renderer.as_deref(),
                     &modules,
                     &side.module_resolution.loaders,
-                ),
+                    compiler.as_deref().filter(|_| config.vite()),
+                )?,
                 component_stylesheets: declarations,
                 entry_modules,
             };

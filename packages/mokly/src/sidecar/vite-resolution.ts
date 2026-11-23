@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import type { Alias, DevEnvironment, Rollup } from "vite";
@@ -108,6 +109,36 @@ export class ViteLookup {
 
   importers(source: string, importer?: string): string[] {
     return viteLookupImporters(this.paths, this.directory, source, importer);
+  }
+
+  async stylesheet(
+    source: string,
+    importer: string | undefined,
+    resolve: (source: string, importer: string) => Promise<string | undefined>,
+  ): Promise<string | undefined> {
+    const target = (await this.alias(source, importer)) ?? source;
+    const candidates = this.importers(target, importer);
+    for (const [index, candidate] of candidates.entries()) {
+      const resolved = await resolve(target, candidate);
+      if (!resolved) continue;
+      const file = viteFile(resolved);
+      if (!file) return resolved;
+      if (
+        index === 0 &&
+        candidates.length > 1 &&
+        this.paths.dependencyRoot &&
+        this.paths.dependencyRoot !== this.paths.sourceRoot &&
+        !viteSourceResolution(this.paths, file)
+      )
+        continue;
+      const confined = await this.paths.resolve(file);
+      await this.paths.dependencyUsage.resolved(
+        source,
+        path.dirname(candidates[0] ?? candidate),
+        confined,
+      );
+      return confined + resolved.slice(file.length);
+    }
   }
 
   async nodeEntry(

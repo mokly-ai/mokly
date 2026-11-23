@@ -13,6 +13,12 @@ import {
   jsxDevelopmentModuleSource,
   runtimeImportAllowed,
 } from "./virtual-modules.js";
+import {
+  viteCssEnabled,
+  viteCssModule,
+  viteStylesheet,
+} from "./vite-css-paths.js";
+import type { ViteCssTransform } from "./vite-css-transform.js";
 import { viteExternal } from "./vite-external.js";
 import { recordViteInput } from "./vite-inputs.js";
 import { trackVitePluginInputs } from "./vite-plugin-inputs.js";
@@ -39,16 +45,19 @@ export interface ViteInputs {
   ) => Promise<string | undefined>;
 }
 
-const stylesheet = /\.(?:css|scss|sass|less|styl|stylus|pcss|postcss|sss)$/;
-
 /** Keep authoring, peers, styles, and source confinement ahead of app transforms. */
-export function moklyVitePlugin(current: () => ViteInputs): Plugin {
+export function moklyVitePlugin(
+  current: () => ViteInputs,
+  css: ViteCssTransform,
+): Plugin {
   return {
     name: "mokly",
     enforce: "pre",
     async resolveId(source, importer) {
       const { params, paths, runtimeKey, styles, lookup, peers } = current();
       source = viteId(source);
+      const inline = css.forId(source);
+      if (inline) return inline.id;
       if (source === viteEntry || source === viteJsx) return source;
       if (source === "@mokly/mokly")
         return (
@@ -67,7 +76,7 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
           ? "mokly-authoring"
           : importer?.startsWith("\0mokly-style:")
             ? "mokly-style"
-            : importer && stylesheet.test(viteFile(importer) ?? "")
+            : importer && viteStylesheet(viteFile(importer) ?? "")
               ? "mokly-css"
               : "";
         if (!runtimeImportAllowed(source, namespace))
@@ -102,6 +111,8 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
           : path.resolve(params.sourceRoot, params.configurationDirectory),
         confined,
       );
+      if (viteStylesheet(confined))
+        return { ...resolved, external: false, id: viteCss(confined) };
       const external =
         !paths.repositoryOwned(confined) &&
         (await current().external(source, importer));
@@ -112,14 +123,13 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
           ? viteExternal(await paths.resolve(external))
           : resolved.external && !paths.repositoryOwned(confined)
             ? viteExternal(confined)
-            : stylesheet.test(confined)
-              ? viteCss(confined)
-              : confined + resolved.id.slice(file.length),
+            : confined + resolved.id.slice(file.length),
       };
     },
     async load(id) {
       const input = current();
-      trackVitePluginInputs(this, input);
+      const inline = css.forId(id);
+      trackVitePluginInputs(this, input, inline?.report);
       const { params, paths } = input;
       if (id === viteEntry) return input.entry;
       if (id === viteJsx)
@@ -141,13 +151,10 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
       if (!file) return;
       const confined = await paths.resolve(file);
       await recordViteInput(input, confined);
-      if (!stylesheet.test(confined)) return;
-      const module = /\.module\.[^.]+$/.test(confined);
-      const loaders = params.moduleResolution.loaders;
+      if (inline || !viteStylesheet(confined)) return;
       if (
-        loaders[".css"] === "empty" ||
-        (module && loaders[".module.css"] === "empty") ||
-        !module
+        !viteCssModule(confined) ||
+        !viteCssEnabled(params.moduleResolution.loaders, confined)
       )
         return "export default {};";
       const name = paths.name(confined);
@@ -157,8 +164,8 @@ export function moklyVitePlugin(current: () => ViteInputs): Plugin {
         cssModuleSource(name, "runtime")
       );
     },
-    transform() {
-      trackVitePluginInputs(this, current());
+    transform(_code, id) {
+      trackVitePluginInputs(this, current(), css.forId(id)?.report);
     },
   };
 }

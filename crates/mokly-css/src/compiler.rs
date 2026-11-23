@@ -34,17 +34,29 @@ pub(crate) struct Preparation<'a> {
 
 impl StylesheetBundler for Compiler {
     fn bundle(&self, root: &StylesheetRoot) -> Result<Bundle> {
+        let mut preparation = self.prepare(root, if root.local_css { "" } else { ".css" })?;
+        for stylesheet in &root.stylesheets {
+            if !root.excluded.contains(stylesheet) {
+                preparation.source(stylesheet, stylesheet)?;
+            }
+        }
+        preparation.finish()
+    }
+}
+
+impl Compiler {
+    pub(crate) fn prepare<'a>(
+        &'a self,
+        root: &'a StylesheetRoot,
+        suffix: &str,
+    ) -> Result<Preparation<'a>> {
         if !paths::portable(&root.path, false) {
             return Err(CssError::RootRoute {
                 path: root.path.clone(),
             });
         }
-        let route = format!(
-            "styles/{}{}",
-            root.path,
-            if root.local_css { "" } else { ".css" }
-        );
-        let mut preparation = Preparation {
+        let route = format!("styles/{}{suffix}", root.path);
+        Ok(Preparation {
             compiler: self,
             root,
             sources: BTreeMap::new(),
@@ -64,32 +76,33 @@ impl StylesheetBundler for Compiler {
                 plugin_inputs: BTreeMap::new(),
                 directories: Vec::new(),
             },
-        };
+        })
+    }
+}
+
+impl Preparation<'_> {
+    pub(crate) fn finish(mut self) -> Result<Bundle> {
+        let root = self.root;
+        let synthetic = format!("{}.mokly-root.css", root.path);
         let mut imports = String::new();
         for stylesheet in &root.stylesheets {
             if root.excluded.contains(stylesheet) {
                 continue;
             }
-            preparation.source(stylesheet, stylesheet)?;
             imports.push_str(&format!("@import \"{}\";\n", stylesheet));
-            preparation
-                .resolutions
+            self.resolutions
                 .insert((root.path.clone(), stylesheet.clone()), stylesheet.clone());
-        }
-        let synthetic = format!("{}.mokly-root.css", root.path);
-        for stylesheet in &root.stylesheets {
-            preparation
-                .resolutions
+            self.resolutions
                 .insert((synthetic.clone(), stylesheet.clone()), stylesheet.clone());
         }
-        preparation.sources.insert(synthetic.clone(), imports);
-        preparation.result.css = delivery::bundle(&synthetic, &preparation)?;
+        self.sources.insert(synthetic.clone(), imports);
+        self.result.css = delivery::bundle(&synthetic, &self)?;
         tracing::debug!(
             root = root.path,
-            inputs = preparation.result.inputs.len(),
+            inputs = self.result.inputs.len(),
             "stylesheet bundled"
         );
-        Ok(preparation.result)
+        Ok(self.result)
     }
 }
 
@@ -98,11 +111,8 @@ impl Preparation<'_> {
         if self.sources.contains_key(path) {
             return Ok(());
         }
-        let bytes = self.read(path).ok_or_else(|| CssError::Import {
-            stylesheet: importer.into(),
-            specifier: path.into(),
-        })?;
-        let source = match String::from_utf8(bytes.clone()) {
+        let bytes = self.source_bytes(path, importer)?;
+        let source = match String::from_utf8(bytes) {
             Ok(source) => source,
             Err(_) => {
                 return Err(CssError::Import {
@@ -112,12 +122,6 @@ impl Preparation<'_> {
             }
         };
         self.sources.insert(path.into(), String::new());
-        self.result.inputs.insert(path.into(), bytes.clone());
-        self.alias(path, &bytes, importer);
-        self.result
-            .imported_by
-            .entry(path.into())
-            .or_insert_with(|| importer.into());
         let mut edits = Vec::new();
         for reference in syntax::references(&source)
             .into_iter()
@@ -207,5 +211,19 @@ impl Preparation<'_> {
         };
         self.sources.insert(path.into(), transformed);
         Ok(())
+    }
+
+    pub(crate) fn source_bytes(&mut self, path: &str, importer: &str) -> Result<Vec<u8>> {
+        let bytes = self.read(path).ok_or_else(|| CssError::Import {
+            stylesheet: importer.into(),
+            specifier: path.into(),
+        })?;
+        self.result.inputs.insert(path.into(), bytes.clone());
+        self.alias(path, &bytes, importer);
+        self.result
+            .imported_by
+            .entry(path.into())
+            .or_insert_with(|| importer.into());
+        Ok(bytes)
     }
 }

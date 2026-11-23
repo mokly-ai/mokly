@@ -17,7 +17,7 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
 use crate::delivery_inputs::DeliveryInputs;
-use crate::error::{GraphError, Result};
+use crate::error::Result;
 use crate::key::{NodeKind, key};
 use crate::policy::{FilePolicy, PublicPolicy};
 use crate::route_inventory::RouteInventory;
@@ -131,12 +131,11 @@ impl Graph {
                     .iter()
                     .map(|(path, root)| (path.clone(), root.clone())),
             );
-            if let Err(source) = module_names.register(&bundle.css_modules) {
-                return Err(GraphError::Css { source });
-            }
+            styles::register_modules(&config, &mut module_names, &bundle)?;
             names.insert(&bundle.route, false)?;
             let stylesheet_key = stylesheet_keys::input(&config_key, &root, &bundle);
-            let document_key = stylesheet_keys::output(&bundle);
+            let document_key =
+                stylesheet_keys::output(&bundle, config.vite().then_some(&stylesheet_key));
             self.cache.insert(
                 stylesheet_key.clone(),
                 Arc::new(Artifact {
@@ -201,12 +200,16 @@ impl Graph {
                         asset: Some(asset),
                     });
             }
+            let dependencies = bundle
+                .dependency_digests
+                .into_keys()
+                .filter(|_| !config.vite());
             catalogue.model.sources.extend(
                 bundle
                     .inputs
                     .into_keys()
                     .chain(asset_inputs)
-                    .chain(bundle.dependency_digests.into_keys())
+                    .chain(dependencies)
                     .filter(|path| {
                         (!path.split('/').any(|part| part == "node_modules")
                             || bundle.repository_aliases.contains(path)

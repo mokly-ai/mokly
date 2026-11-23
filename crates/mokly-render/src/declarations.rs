@@ -7,6 +7,7 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::{Warning, WarningSubject};
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_css::vite;
 use mokly_graph::policy::FilePolicy;
 use mokly_source_interface::tree::SourceTree;
 
@@ -64,7 +65,8 @@ pub(crate) fn validate(
                 || path.starts_with('/')
                 || path.contains(['\\', ':', '?', '#', '\0'])
                 || path.split('/').any(|part| matches!(part, "" | "." | ".."))
-                || !path.to_ascii_lowercase().ends_with(".css")
+                || !(path.to_ascii_lowercase().ends_with(".css")
+                    || config.vite() && vite::stylesheet(path))
             {
                 return Err(RenderError::StylesheetPath {
                     component: entry.metadata.path.clone(),

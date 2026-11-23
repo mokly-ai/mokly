@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash } from "node:crypto";
 import path from "node:path";
 
 import type { build } from "esbuild";
@@ -6,64 +6,39 @@ import type { build } from "esbuild";
 import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration.js";
+import type { TransformViteCssParams } from "../generated/sidecar/TransformViteCssParams.js";
+import type { ViteCssResult } from "../generated/sidecar/ViteCssResult.js";
 
 import { entryModule } from "./bundle-entry.js";
 import type { Bundled } from "./bundle.js";
 import { bundleResult, restore } from "./compiled.js";
-import { ModulePaths } from "./module-paths.js";
-import { viteFailure } from "./vite-errors.js";
-import { viteExternalResolver } from "./vite-external.js";
+import { ViteContext, viteModulePaths } from "./vite-context.js";
+import { viteFailure, viteStylesheetFailure } from "./vite-errors.js";
 import { createViteFetch } from "./vite-fetch.js";
 import { viteGraph, walkVite } from "./vite-graph.js";
 import { verifyViteInputs } from "./vite-inputs.js";
-import {
-  changedViteInputs,
-  invalidateViteModules,
-  snapshotViteInputs,
-} from "./vite-invalidation.js";
-import type { ViteSnapshot } from "./vite-invalidation.js";
+import { snapshotViteInputs } from "./vite-invalidation.js";
 import { viteMetadata } from "./vite-metadata.js";
 import { loadVite, withVitePeers } from "./vite-peers.js";
-import { moklyVitePlugin } from "./vite-plugin.js";
-import type { ViteInputs } from "./vite-plugin.js";
-import { captureReactPeers } from "./vite-react-peers.js";
-import { ViteLookup } from "./vite-resolution.js";
-import { setupStamp, viteSetup } from "./vite-setup.js";
-import { ViteStyles } from "./vite-styles.js";
+import { setupStamp } from "./vite-setup.js";
 import { viteToolchain } from "./vite-toolchain.js";
 import { viteEntry, viteUrl } from "./vite-urls.js";
 
-interface Setup {
-  server: Awaited<ReturnType<typeof viteSetup>>["server"];
-  files: string[];
-  key: string;
-  stamp: string;
-  snapshot?: ViteSnapshot;
-  styles: ViteStyles;
-  lookup: ViteLookup;
-}
-
 /** One app server belongs to this process and root; recipes outlive that server. */
 export class ViteCompiler {
-  private setup: Setup | undefined;
-  private input: ViteInputs | undefined;
+  private readonly context: ViteContext;
 
   /** `diagnostic` sends one sidecar diagnostic event, such as a skipped plugin report. */
-  constructor(private readonly diagnostic: (line: string) => void) {}
+  constructor(diagnostic: (line: string) => void) {
+    this.context = new ViteContext(diagnostic);
+  }
 
   async bundle(
     params: BundleParams,
     compile: typeof build,
     capture: BundleCapture,
   ): Promise<Bundled> {
-    const paths = await ModulePaths.create({
-      ...params,
-      moduleResolution: {
-        ...params.moduleResolution,
-        aliases: {},
-        resolveExtensions: [],
-      },
-    });
+    const paths = await viteModulePaths(params);
     params = { ...params, sourceRoot: paths.sourceRoot };
     let version: string | undefined;
     try {
@@ -71,85 +46,20 @@ export class ViteCompiler {
         const vite = await loadVite(require);
         version = vite.api.version;
         const entry = await entryModule(params, undefined, capture);
-        const input: ViteInputs = {
+        const { setup, input, directory } = await this.context.open(
+          vite.api,
+          require,
           params,
           paths,
-          runtimeKey: `mokly:runtime:${randomBytes(24).toString("hex")}`,
-          entry: entry.contents,
-          files: new Map(),
-          pluginInputs: new Set(),
-          diagnostic: this.diagnostic,
-          cssModules: new Set(),
-          styles: new ViteStyles(),
-          external: async () => undefined,
-          lookup: new ViteLookup(
-            paths,
-            path.resolve(paths.sourceRoot, params.configurationDirectory),
-          ),
-          peers: {},
-        };
-        this.input = input;
-        const directory = path.resolve(
-          paths.sourceRoot,
-          params.configurationDirectory,
+          entry.contents,
         );
-        const key = JSON.stringify([
-          paths.sourceRoot,
-          directory,
-          paths.dependencyRoots,
-          paths.dependencyRoot,
-          paths.repositoryRoots,
-          Object.entries(require.snapshot()).sort(([a], [b]) =>
-            a < b ? -1 : a > b ? 1 : 0,
-          ),
-        ]);
-        const changed = await changedViteInputs(this.setup?.snapshot);
-        if (
-          this.setup &&
-          (this.setup.key !== key ||
-            changed.metadata ||
-            this.setup.stamp !==
-              (await setupStamp(this.setup.files, directory)))
-        )
-          await this.dispose();
-        if (!this.setup) {
-          input.styles = new ViteStyles();
-          const setup = await viteSetup(
-            vite.api,
-            directory,
-            moklyVitePlugin(() => this.input!),
-            input.lookup,
-            () => this.input!.peers,
-          );
-          this.setup = {
-            ...setup,
-            key,
-            stamp: await setupStamp(setup.files, directory),
-            styles: input.styles,
-            lookup: input.lookup,
-          };
-        }
-        input.styles = this.setup.styles;
-        input.lookup = this.setup.lookup;
-        input.lookup.updatePaths(paths);
-        input.lookup.bind(vite.api, this.setup.server.environments.ssr!);
-        input.external = viteExternalResolver(
-          vite.api,
-          this.setup.server,
-          input.lookup,
-        );
-        input.peers = await captureReactPeers(input.lookup);
-        invalidateViteModules(this.setup.server, this.setup.snapshot, changed);
-        for (const [file, bytes] of this.setup.snapshot?.files ?? [])
-          if (this.setup.snapshot?.metadata[file] !== undefined)
-            input.files.set(file, bytes);
         const imports = new Map<string, string[]>();
         const fetch = createViteFetch(
-          this.setup.server,
+          setup.server,
           input,
           imports,
           version,
-          this.setup.snapshot?.files,
+          setup.snapshot?.files,
         );
         const { recipe, children } = await walkVite(
           viteUrl(viteEntry),
@@ -164,17 +74,11 @@ export class ViteCompiler {
           input.files,
         );
         await verifyViteInputs(input);
-        if (
-          this.setup.stamp !== (await setupStamp(this.setup.files, directory))
-        )
+        if (setup.stamp !== (await setupStamp(setup.files, directory)))
           throw new Error("Vite setup changed during compilation");
         const graphFiles = new Set(physical.values());
-        const metadata = await viteMetadata(
-          input,
-          this.setup.files,
-          graphFiles,
-        );
-        this.setup.snapshot = await snapshotViteInputs(input, metadata);
+        const metadata = await viteMetadata(input, setup.files, graphFiles);
+        setup.snapshot = await snapshotViteInputs(input, metadata);
         const toolchain = await viteToolchain(version, vite.root);
         const compiled: CompiledGeneration = {
           code: "",
@@ -228,9 +132,40 @@ export class ViteCompiler {
     }
   }
 
+  async stylesheet(
+    request: TransformViteCssParams,
+    compile: typeof build,
+  ): Promise<ViteCssResult> {
+    const paths = await viteModulePaths(request.setup);
+    const params = { ...request.setup, sourceRoot: paths.sourceRoot };
+    try {
+      return await withVitePeers(params, compile, async (require) => {
+        const vite = await loadVite(require);
+        const { setup, input, directory } = await this.context.open(
+          vite.api,
+          require,
+          params,
+          paths,
+        );
+        const { result, reports } = await this.context.css.run(
+          setup.server,
+          setup.files,
+          input,
+          request.stylesheet,
+          request.file,
+        );
+        if (setup.stamp !== (await setupStamp(setup.files, directory)))
+          throw new Error("Vite setup changed during compilation");
+        setup.stylesheetReports.set(request.file, reports);
+        return result;
+      });
+    } catch (error) {
+      await this.dispose();
+      throw viteStylesheetFailure(error, paths, request.stylesheet);
+    }
+  }
+
   async dispose(): Promise<void> {
-    const setup = this.setup;
-    this.setup = undefined;
-    await setup?.server.close();
+    await this.context.dispose();
   }
 }

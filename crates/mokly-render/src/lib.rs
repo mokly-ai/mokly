@@ -6,6 +6,7 @@ mod bundle;
 mod bundle_attempt;
 mod bundle_finish;
 mod bundle_inputs;
+mod bundle_styles;
 mod declarations;
 mod definition_handle;
 mod definition_input;
@@ -46,6 +47,7 @@ mod stylesheet_watch;
 mod stylesheet_weight;
 mod stylesheets;
 mod transport_values;
+mod vite_stylesheets;
 mod watch_candidate;
 
 #[cfg(test)]

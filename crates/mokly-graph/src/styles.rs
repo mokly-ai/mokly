@@ -5,15 +5,30 @@ use std::iter;
 
 use globset::{GlobBuilder, GlobMatcher};
 use mokly_catalogue::config_types::ResolvedConfig;
-use mokly_css::types::StylesheetRoot;
+use mokly_css::names::ModuleNames;
+use mokly_css::types::{Bundle, StylesheetRoot};
+use mokly_css::vite;
 use mokly_html::tree;
 use mokly_html::tree::Node;
 use mokly_model::axes::ColorScheme;
 use mokly_model::routes;
 
 use crate::delivery_inputs::DeliveryInputs;
-use crate::error::{Result, invalid};
+use crate::error::{GraphError, Result, invalid};
 use crate::types::ResourcePlan;
+
+pub(crate) fn register_modules(
+    config: &ResolvedConfig,
+    names: &mut ModuleNames,
+    bundle: &Bundle,
+) -> Result<()> {
+    if config.vite() {
+        return Ok(());
+    }
+    names
+        .register(&bundle.css_modules)
+        .map_err(|source| GraphError::Css { source })
+}
 
 /// Compiled stylesheet `match` globs, in configuration order.
 /// `literal_separator` keeps `*` and `?` inside one path segment. Backslash escaping is
@@ -52,6 +67,20 @@ pub(crate) fn roots(
     config: &ResolvedConfig,
     inputs: &DeliveryInputs,
 ) -> BTreeMap<String, StylesheetRoot> {
+    let mut roots = local_roots(config, &inputs.component_stylesheets);
+    for root in &inputs.stylesheet_roots {
+        roots
+            .entry(root.path.clone())
+            .or_insert_with(|| root.clone());
+    }
+    roots
+}
+
+/// The standalone stylesheet roots that the catalogue config or components declare.
+pub fn local_roots(
+    config: &ResolvedConfig,
+    component_stylesheets: &BTreeMap<String, Vec<String>>,
+) -> BTreeMap<String, StylesheetRoot> {
     let mut roots = BTreeMap::new();
     for rule in config.input.stylesheets.iter().flatten() {
         for path in rule
@@ -74,7 +103,7 @@ pub(crate) fn roots(
             });
         }
     }
-    for paths in inputs.component_stylesheets.values() {
+    for paths in component_stylesheets.values() {
         for path in paths {
             let Some(logical) = config.repository_path(path) else {
                 continue;
@@ -86,11 +115,6 @@ pub(crate) fn roots(
                 local_css: true,
             });
         }
-    }
-    for root in &inputs.stylesheet_roots {
-        roots
-            .entry(root.path.clone())
-            .or_insert_with(|| root.clone());
     }
     roots
 }
@@ -193,7 +217,12 @@ pub(crate) fn links(input: &LinkInput<'_>) -> Result<Vec<String>> {
         let href = if external(&path) {
             path
         } else if let Some(logical) = config.repository_path(&path) {
-            routes::relative(route, &format!("styles/{logical}"))
+            let suffix = if config.vite() {
+                vite::suffix(&logical)
+            } else {
+                ""
+            };
+            routes::relative(route, &format!("styles/{logical}{suffix}"))
         } else {
             continue;
         };

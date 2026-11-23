@@ -11,6 +11,7 @@ use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
 use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
 use crate::resolution_plan::ResolutionPlan;
+use crate::vite_css::TransformViteCss;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
@@ -263,6 +264,8 @@ pub enum Call {
     RenderPage(RenderPage),
     /// Run consumer PostCSS.
     ProcessCss(ProcessCss),
+    /// Run the Vite setup on an inline stylesheet.
+    TransformViteCss(TransformViteCss),
     /// Install CSS Modules class maps.
     CssModules(CssModules),
     /// Release one bundle generation.
@@ -278,7 +281,7 @@ impl Call {
     pub fn timeout_ms(&self) -> u64 {
         match self {
             Self::Bundle(_) | Self::Describe(_) => 120_000,
-            Self::ProcessCss(_) => 60_000,
+            Self::ProcessCss(_) | Self::TransformViteCss(_) => 60_000,
             _ => 30_000,
         }
     }

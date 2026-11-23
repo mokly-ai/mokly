@@ -1,5 +1,6 @@
 //! Typed result payloads and diagnostic records.
 
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -95,6 +96,23 @@ pub struct Page {
     pub html: String,
     /// Declared public resource seeds.
     pub resources: Vec<String>,
+}
+
+/// Inline stylesheet and file evidence from one Vite transform.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(rename = "ViteCssResult")]
+pub struct ViteCss {
+    /// Transformed CSS, before Mokly's asset rewriting and delivery.
+    pub text: String,
+    /// Vite's original local-to-scoped exports.
+    pub class_map: BTreeMap<String, String>,
+    /// Digest of the selected stylesheet bytes.
+    pub source_digest: String,
+    /// Files reached by this transform, including files read by `composes`.
+    pub dependencies: BTreeMap<String, Option<String>>,
+    /// Setup and resolution inputs, including missing watch candidates.
+    pub metadata_inputs: BTreeMap<String, Option<String>>,
 }
 
 /// PostCSS dependency kind used by the watcher.

@@ -193,6 +193,8 @@ export class Session {
       }
       case "processCss":
         return this.workers.process(request.params);
+      case "transformViteCss":
+        return this.vite.stylesheet(request.params, this.compile);
       case "dispose":
         this.generations.delete(request.params.generation);
         return null;

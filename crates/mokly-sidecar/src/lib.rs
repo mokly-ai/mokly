@@ -73,6 +73,7 @@ pub mod results;
 pub mod reusable_recipe;
 pub mod typescript;
 pub mod usage;
+pub mod vite_css;
 pub mod wire;
 mod wire_decode;
 pub mod workers;

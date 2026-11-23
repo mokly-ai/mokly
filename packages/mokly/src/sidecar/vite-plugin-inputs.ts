@@ -11,14 +11,15 @@ import { viteFile, viteId } from "./vite-urls.js";
 export function trackVitePluginInputs(
   context: Rollup.PluginContext,
   input: ViteInputs,
+  report?: (file: string) => void,
 ): void {
   const load = context.load.bind(context);
   const watch = context.addWatchFile.bind(context);
   context.addWatchFile = (id) => {
     const file = viteFile(id);
     if (file) {
+      let scoped = file;
       try {
-        let scoped = file;
         try {
           scoped = input.paths.resolveSync(file);
         } catch (error) {
@@ -31,6 +32,7 @@ export function trackVitePluginInputs(
         );
         return;
       }
+      report?.(scoped);
     }
     watch(id);
   };

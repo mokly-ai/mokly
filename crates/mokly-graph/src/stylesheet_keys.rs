@@ -51,7 +51,7 @@ pub(crate) fn input(config: &NodeKey, root: &StylesheetRoot, bundle: &Bundle) ->
     key(NodeKind::Stylesheet, &inputs)
 }
 
-pub(crate) fn output(bundle: &Bundle) -> NodeKey {
+pub(crate) fn output(bundle: &Bundle, stylesheet_input: Option<&NodeKey>) -> NodeKey {
     let assets: Vec<_> = bundle
         .assets
         .iter()
@@ -59,5 +59,6 @@ pub(crate) fn output(bundle: &Bundle) -> NodeKey {
         .collect();
     let mut inputs = vec![bundle.route.as_bytes(), bundle.css.as_bytes()];
     inputs.extend(assets.iter().map(|value| value.as_bytes()));
+    inputs.extend(stylesheet_input.map(|input| input.0.as_bytes()));
     key(NodeKind::Stylesheet, &inputs)
 }
