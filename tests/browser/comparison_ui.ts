@@ -186,16 +186,25 @@ export async function showMode(
 }
 
 /**
- * Expect the routed entry to offer no compare mode: its Changes tab, when it
- * has one, shows no band, so the check never passes only because Inspect is
- * the selected tab. Call it once the entry's detail settled, such as after
- * `awaitRoutedDetail`.
+ * Expect the routed entry of a page or of one viewer's root to offer no
+ * compare mode: its Changes tab, when it has one, shows no band, so the
+ * check never passes only because Inspect is the selected tab or the compact
+ * layout's panel sheet is closed. Call it once the entry's detail settled,
+ * such as after `awaitRoutedDetail`.
  */
-export async function expectNoCompareModes(page: Page): Promise<void> {
-  if (await page.getByRole("tab", { name: "Changes", exact: true }).count())
-    await openPanelTab(page, "Changes");
+export async function expectNoCompareModes(
+  scope: Page | Locator,
+): Promise<void> {
+  const changes = scope.getByRole("tab", {
+    name: "Changes",
+    exact: true,
+    includeHidden: true,
+  });
+  // The tab stands in the panel's sheet in the compact layout, which
+  // `openPanelTab` opens.
+  if (await changes.count()) await openPanelTab(scope, "Changes");
   await expect(
-    page.getByRole("group", { name: "Comparison mode" }),
+    scope.getByRole("group", { name: "Comparison mode" }),
   ).toBeHidden();
 }
 
