@@ -54,16 +54,16 @@ interface PresentationInput {
   sessions: readonly ShellFrameSession[];
 }
 
-/** Explain the exact reason the current visible workspace cannot inspect. */
+/**
+ * Explain the exact reason the current visible workspace cannot inspect. A
+ * shown compare mode gives no reason: Changes shows it, and Inspect, whose
+ * Highlight components would say the reason, is hidden while it does.
+ */
 export function inspectionAvailability(
   input: WorkspaceInspectionContext,
   sessions: readonly ShellFrameSession[],
 ): InspectionAvailability {
-  if (input.comparisonActive)
-    return {
-      available: false,
-      reason: "A comparison is selected. Highlighting is available in Current.",
-    };
+  if (input.comparisonActive) return { available: false };
   if (input.invalidSelection || input.data.removed)
     return { available: false, reason: "This preview is unavailable." };
   if (!input.views.length)
@@ -104,6 +104,14 @@ export function inspectionAvailability(
       reason: "No registered components are used in this view.",
     };
   return { available: true };
+}
+
+/**
+ * An unavailable inspection ends the highlight, unless the preview is still
+ * loading. A shown compare mode ends it too, although it gives no reason.
+ */
+export function endsHighlight(availability: InspectionAvailability): boolean {
+  return !availability.available && availability.reason !== WAITING_REASON;
 }
 
 /** Serialize one complete mask and geometry presentation. */

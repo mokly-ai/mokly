@@ -37,7 +37,6 @@ export type { ControlsFocus } from "@mokly/ui/controls-panel";
 
 /** The notice of each mode that shows the saved props without fields. */
 const SAVED_NOTICES: Partial<Record<ControlsMode, string>> = {
-  comparison: CONTROLS_COPY.comparison,
   published: CONTROLS_COPY.published,
   removed: CONTROLS_COPY.removed,
   "read-only": CONTROLS_COPY.readonlyProps,
@@ -70,7 +69,6 @@ export function ComponentControlsPanel({
   focus,
   mode,
   onChange,
-  onCurrent,
   onReset,
   onRetry,
   onStart,
@@ -81,7 +79,6 @@ export function ComponentControlsPanel({
   focus?: (name: ControlsFocus) => RefCallback<HTMLElement>;
   mode: ControlsMode;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
-  onCurrent(): void;
   onReset(): void;
   onRetry(): void;
   /** Load the live descriptor again after editing could not start. */
@@ -100,13 +97,9 @@ export function ComponentControlsPanel({
     ]);
     return (
       <SavedPropsPanel
-        current={
-          mode === "comparison" ? CONTROLS_COPY.switchToCurrent : undefined
-        }
         focus={focus}
         heading={CONTROLS_COPY.readonlyHeading}
         notice={savedNotice}
-        onCurrent={onCurrent}
         title={target.title}
       >
         {names.size ? (

@@ -64,16 +64,17 @@ export function useComponentControls({
   comparing,
   contexts,
   data,
-  onCurrent,
   recovery,
   target,
   workspaceRef,
 }: {
+  /**
+   * A compare mode shows. Showing one, or leaving it, starts the edits again
+   * from the saved props, because a comparison never shows temporary props.
+   */
   comparing: boolean;
   contexts: readonly GeneratedComponentView[];
   data: WorkspaceData;
-  /** Show Current instead of the comparison. */
-  onCurrent(): void;
   /** The Try again of the Props tab, whose recovery ends on the heading. */
   recovery: RetryFocus;
   target: ControlTarget | undefined;
@@ -101,7 +102,7 @@ export function useComponentControls({
   const named = useNamedRetryContent(focus.ref, "heading", recovery);
   const pageIds = useRef(new Map<string, string>());
   const mode = target
-    ? controlsMode(target, comparing, previews ? "ready" : start?.status)
+    ? controlsMode(target, previews ? "ready" : start?.status)
     : undefined;
   const editable = mode === "editable";
   const contextKey = editContextKey(contexts, previews);
@@ -243,10 +244,6 @@ export function useComponentControls({
     focus.request("heading");
     void render(state.draft, validated.overrides);
   };
-  const current = () => {
-    focus.request("fields");
-    onCurrent();
-  };
   const restart =
     start?.status === "failed"
       ? () => {
@@ -266,7 +263,6 @@ export function useComponentControls({
           focus={named}
           mode={mode}
           onChange={change}
-          onCurrent={current}
           onReset={reset}
           onRetry={retry}
           onStart={restart}

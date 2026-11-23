@@ -160,6 +160,8 @@ subpaths and exports:
   `WorkspaceIcon` keeps `components`, `highlight`, and `scheme`.
 - `WorkspaceLayout` no longer takes `header`, `variantBar`, `inspector`, or
   `panesRef`.
+- `SavedPropsPanel` of `@mokly/ui/controls-panel` no longer takes `current`,
+  `currentHref`, or `onCurrent`, and it draws no Switch to Current action.
 
 ## Republish hosted catalogues
 

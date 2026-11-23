@@ -134,13 +134,12 @@ test("a screen whose props have no controls shows them as its saved props", () =
     tab({ ...screen, props: encodeProps({}) }),
     '<p class="mbk-empty-copy mbk-reset">This entry renders without props.</p>',
   );
-  const mode = controlsMode(screen, false, "ready");
+  const mode = controlsMode(screen, "ready");
   assert.equal(mode, "read-only");
   const panel = renderToStaticMarkup(
     ComponentControlsPanel({
       mode,
       onChange: () => undefined,
-      onCurrent: () => undefined,
       onReset: () => undefined,
       onRetry: () => undefined,
       state: initialComponentEditorState(screen, "s", {}),
