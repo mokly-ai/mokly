@@ -357,6 +357,9 @@ the top bar shows: ⌘K and Ctrl+K from anywhere, and `/` outside a text field.
 It listens on the document of a standalone shell and on an embedded root
 only, so the host page keeps its own keys. A key that acts loses its default
 action and moves focus through the `TopBarHandle` that `top_bar.tsx` holds.
+A search key that a canvas frame's document forwards arrives as the
+`mokly-shell-key` event of `canvas_input.ts` on the same target, and it moves
+focus the same way. The frame has already cancelled its default action.
 `useSearchShortcut` makes the field's key hint name `⌘K` on Apple's platforms
 and `Ctrl K` on the others.
 `routes.ts`,
@@ -513,8 +516,13 @@ frame, mounts with the adapter's canvas input: the mount hook's
 `CanvasControlContext`.
 `canvas_input.ts` maps a point of the frame's viewport to the page through
 the frame's box and scale: ⌘ or Ctrl with the wheel and a pinch zoom the
-canvas about that point with the handle's `zoomAt`, and a canvas key runs
-its command. While the document reports keyboard focus, the frame's
+canvas about that point with the handle's `zoomAt`, and a zoom key runs
+its command. Escape and the search keys belong to the shell, not to the
+canvas: `useCanvasFrameInput` sends each from the frame element as a bubbling
+`mokly-shell-key` DOM event, which `canvas_input.ts` owns, so
+`use_canvas_selection.ts` and `search_keys.ts` hear it on the same target as
+their own keydown listeners.
+While the document reports keyboard focus, the frame's
 `focusVisible` draws its focus glow; `canvas-blur`, a focus without
 `visible`, and the end of the document's mount put the glow out, since the
 mount hook sends `canvas-blur` when it disposes of or replaces the mount.
@@ -672,7 +680,10 @@ in Inspect, a click on a frame selects the innermost instance under the
 pointer, a click that follows a link selects nothing, a host pick takes the
 click in either tab, and the empty canvas and Escape clear the selection.
 Escape acts on the whole document of a standalone shell and only on an
-embedded root, and Highlight components and a host pick take it first. A
+embedded root, and Highlight components and a host pick take it first. An
+Escape that a canvas frame's document forwards arrives as the
+`mokly-shell-key` event of `canvas_input.ts` on the same target, and it clears
+the selection under the same rule. A
 frame's session tells the selection when its document is replaced or the
 instance leaves its ready usage. A request to show the selection is an
 event: each explicit choice and each route's instance counts once, and
@@ -843,9 +854,9 @@ and `comparison_frame.tsx` reuses `preview_frame.tsx`'s `SnapshotFrame` and the
 read-only guard for each version, marked `data-mokly-comparison-frame` with
 `scrolling="no"`. Each version forwards its canvas input with
 `listenForCanvasInput` to the `useCanvasFrameInput` hook of
-`canvas_frame_input.tsx`, so ⌘ or Ctrl with the wheel, a pinch and the canvas
-keys reach the canvas from a pane, and its keyboard focus draws its frame's
-focus glow.
+`canvas_frame_input.tsx`, so ⌘ or Ctrl with the wheel, a pinch and the zoom
+keys reach the canvas from a pane, Escape and the search keys reach the shell,
+and its keyboard focus draws its frame's focus glow.
 
 `comparison_scroll_sync.ts` is the per-section scroll controller behind the
 interfaces in `comparison_scroll_types.ts`: it follows each layer document from
@@ -909,10 +920,11 @@ version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
 input of each document that it presents with `listenForCanvasInput`, with
 the frame element, and the `useCanvasFrameInput` hook of
 `canvas_frame_input.tsx`, which the live frames share, routes it through the
-`CanvasControlContext` of `canvas_stage.tsx`: a canvas key runs its command,
+`CanvasControlContext` of `canvas_stage.tsx`: a zoom key runs its command,
 a zoom wheel or a pinch, a two-finger pinch included, zooms the canvas about
 its point in the frame, and the document's keyboard focus draws the frame's
-focus glow. The React
+focus glow. Escape and the search keys go to the shell, as from a live frame.
+The React
 request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays

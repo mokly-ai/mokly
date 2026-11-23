@@ -55,23 +55,60 @@ and at most 60 of each per second.
 ## Keys
 
 `canvas-key` reports a keydown immediately, including a repeated keydown. The
-frame leaves the key's default action in place. Decision: keys keep their
-default action, not a cancelled one, because outside an editable element
-they have no browser action. The document keeps its own key handling.
+document keeps its own key handling. Besides the zoom keys of the canvas, the
+frame forwards Escape and the shell's search keys: `/`, `⌘K` and Ctrl+K.
+Decision: Escape and the search keys travel as `canvas-key` values, not as a
+host listener on the frame's keys, because a host cannot read a cross-origin
+frame's key events, and the canvas key forwarding already carries keys to the
+host.
 
-A key with Ctrl, Command or Alt held does not qualify. A keydown whose target
-is an `input`, `select`, `textarea` or an element whose `isContentEditable` is
-true does not qualify.
+A keydown with Alt held does not qualify. A zoom key, Escape or `/` with Ctrl
+or Command held does not qualify. A keydown whose target is an `input` of any
+type, a `select`, a `textarea` or an element whose `isContentEditable` is true
+does not qualify. Decision: `⌘K` and Ctrl+K do not qualify in an editable
+element, not from anywhere as in the shell, because the frame cannot tell
+whether the page binds them in its own fields.
 
-| Input                    | Event `key` |
-| ------------------------ | ----------- |
-| Shift with code `Digit0` | `zoom-100`  |
-| Shift with code `Digit1` | `fit`       |
-| Key `+` or `=`           | `zoom-in`   |
-| Key `-`                  | `zoom-out`  |
+| Input                                                 | Event `key` |
+| ----------------------------------------------------- | ----------- |
+| Shift with code `Digit0`                              | `zoom-100`  |
+| Shift with code `Digit1`                              | `fit`       |
+| Key `+` or `=`                                        | `zoom-in`   |
+| Key `-`                                               | `zoom-out`  |
+| Key `Escape`                                          | `escape`    |
+| Key `/`                                               | `search`    |
+| K with exactly one of Ctrl and Command, without Shift | `search`    |
 
 Check the Shift and digit combinations first. On some layouts Shift+0 types
-`=`. Other keys send no canvas key event.
+`=`. Shift does not stop Escape, nor `/`, which some layouts type with Shift.
+A keydown is K when its `key` is `k` or `K`, or when its `key` is not a single
+ASCII letter and its `code` is `KeyK`, as on a Cyrillic layout. Other keys send
+no canvas key event.
+
+Escape and the search keys also need the document to leave the keydown
+unhandled: no listener in the document cancels it or stops its propagation
+before it reaches the frame's window. Decision: Escape and the search keys
+wait for the document's own handling, not precede it, because a page's own
+dialog, menu or command palette can use the same keys. While a highlight or a
+pick is active in the frame, Escape ends it under the
+[pick rule](./mokly-frame-adapter.md#public-interface) and sends no `escape`.
+
+A forwarded zoom key or Escape keeps its default action. A forwarded `search`
+cancels its default action. While the subscription does not name `canvas-key`,
+the frame forwards no key, and the search keys keep their default action.
+Decision: the zoom keys keep their default action, not a cancelled one,
+because outside an editable element they have no browser action. Decision: a
+forwarded `search` cancels its default action, not keeps it as the other
+canvas keys do, because `⌘K` and Ctrl+K start the browser's own search and `/`
+opens a find bar in some browsers, as the shell's own search keys cancel
+theirs. Escape keeps its default action, so that the page's own browser
+behaviour for Escape, such as closing a native dialog, stays. The frame still
+forwards such an Escape, because no listener handled it.
+
+The viewer treats a forwarded `escape` or `search` from any canvas frame as the
+same key pressed in the shell, under the
+[canvas selection](./mokly-viewer-selection-canvas.md#clicks-by-tab) and the
+[search keys](./mokly-shell-design.md#layout).
 
 ## Focus
 

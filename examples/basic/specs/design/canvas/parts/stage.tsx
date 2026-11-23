@@ -13,7 +13,7 @@ import {
 
 import type { CanvasEntry } from "./entries.js";
 import { stageTags, type CanvasFrameSpec } from "./frames.js";
-import { openingFrame } from "./opening_frame.js";
+import { openingFrame, pickerFrames } from "./picked_frames.js";
 
 /** A compare mode of the Changes tab. */
 type CompareMode = CompareModesProps["mode"];
@@ -119,7 +119,10 @@ interface CanvasStageProps {
    * selected frame, whose label takes the signal.
    */
   selected?: string | undefined;
-  /** The frames that the compact frame picker lists; every frame by default. */
+  /**
+   * The frames that the compact frame picker lists, every frame by default,
+   * in the shell's order: a screen's Mobile frames first.
+   */
   pickable?: readonly CanvasFrameSpec[] | undefined;
   /** What lies over a frame, by the frame's id, such as the selection. */
   overlays?: Readonly<Record<string, ReactNode>> | undefined;
@@ -207,7 +210,11 @@ export function CanvasStage({
           {label}
         </span>
         {picked === undefined || entry.kind === "document" ? null : (
-          <FramePicker frames={pickable} kind={entry.kind} picked={picked} />
+          <FramePicker
+            frames={pickerFrames(pickable)}
+            kind={entry.kind}
+            picked={picked}
+          />
         )}
       </div>
       <div

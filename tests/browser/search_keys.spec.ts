@@ -3,8 +3,9 @@
  * to the catalogue search field from anywhere in the shell, and / does the
  * same while focus is not in a text field. A standalone shell hears them on
  * its whole document, and an embedded root only inside the root, so that the
- * host page keeps its own keys. Where the compact bar hides the field, the
- * keys open the compact search.
+ * host page keeps its own keys. A canvas frame's document forwards the keys
+ * to the shell. Where the compact bar hides the field, the keys open the
+ * compact search.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -12,8 +13,8 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
-
 import type {} from "./viewer_harness.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 /** The focus glow's ring: a 4px spread without blur, before any other shadow. */
 const GLOW = /^(?:rgba?|color)\([^)]*\) 0px 0px 0px 4px(?:,|$)/u;
@@ -59,12 +60,18 @@ test.describe("an embedded root", () => {
     await fixture?.close();
   });
 
-  async function startRoot(page: Page, width: number): Promise<Locator> {
+  /** Start the root; `cross` mounts its frames from another origin. */
+  async function startRoot(
+    page: Page,
+    width: number,
+    cross = false,
+  ): Promise<Locator> {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(fixture.host.url);
     await page.waitForFunction(() => Boolean(window.viewerHarness));
-    await page.evaluate(() =>
-      window.viewerHarness.start("one", { responsive: true }),
+    await page.evaluate(
+      (cross) => window.viewerHarness.start("one", { cross, responsive: true }),
+      cross,
     );
     await page.waitForFunction(() =>
       Boolean(window.viewerHarness.get("one").ref.current),
@@ -96,6 +103,27 @@ test.describe("an embedded root", () => {
       await host.focus();
       await page.keyboard.press(key);
       await expect(host, key).toBeFocused();
+    }
+  });
+
+  test("the search keys pressed inside a cross-origin frame move focus to the root's search field", async ({
+    page,
+  }) => {
+    const root = await startRoot(page, 1440, true);
+    const search = root.getByRole("searchbox", { name: "Search catalogue" });
+    const frame = root.locator(canvasFrame("mobile"));
+    await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
+    for (const key of ["ControlOrMeta+K", "/"]) {
+      // A click on an empty place of the frame's document gives it focus.
+      await frame
+        .contentFrame()
+        .locator("html")
+        .click({ position: { x: 4, y: 4 } });
+      await expect(frame, key).toBeFocused();
+      await page.keyboard.press(key);
+      await expect(search, key).toBeFocused();
+      // The frame kept the key, so it typed nothing into the field.
+      await expect(search, key).toHaveValue("");
     }
   });
 

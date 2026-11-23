@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { canvasInputFixture } from "./canvas_input_fixture.js";
+import { inner } from "./probe_runtime_fixture.js";
 
 test("canvas keys map immediately, repeat and keep the document's default handling", (t) => {
   const { runtime, key, events, frames } = canvasInputFixture(t);
@@ -21,26 +22,96 @@ test("canvas keys map immediately, repeat and keep the document's default handli
   assert.equal(frames.size, 0);
 });
 
-test("canvas keys leave editable targets and command modifiers alone", (t) => {
+test("canvas keys leave editable targets and other modifier combinations alone", (t) => {
   const { runtime, doc, key, events } = canvasInputFixture(t);
   runtime.__subscribe(["canvas-key"]);
   for (const name of ["input", "select", "textarea", "div"]) {
     const target = doc.createElement(name);
     if (name === "div") target.contentEditable = "true";
     doc.body.append(target);
-    assert.equal(key({ key: "+" }, target), false, name);
-    assert.deepEqual(events, [], name);
+    for (const input of [
+      { key: "+" },
+      { key: "Escape" },
+      { key: "/" },
+      { key: "k", code: "KeyK", ctrlKey: true },
+    ]) {
+      assert.equal(key(input, target), false, `${name} ${input.key}`);
+      assert.deepEqual(events, [], `${name} ${input.key}`);
+    }
   }
   for (const modifier of ["ctrlKey", "metaKey", "altKey"] as const) {
-    assert.equal(key({ key: "+", [modifier]: true }), false, modifier);
-    assert.deepEqual(events, [], modifier);
+    for (const input of [{ key: "+" }, { key: "Escape" }, { key: "/" }]) {
+      const name = `${modifier} ${input.key}`;
+      assert.equal(key({ ...input, [modifier]: true }), false, name);
+      assert.deepEqual(events, [], name);
+    }
   }
+  for (const input of [
+    { key: "k", code: "KeyK", ctrlKey: true, shiftKey: true },
+    { key: "k", code: "KeyK", ctrlKey: true, metaKey: true },
+    { key: "k", code: "KeyK", ctrlKey: true, altKey: true },
+    // Dvorak types t on the K key.
+    { key: "t", code: "KeyK", ctrlKey: true },
+  ]) {
+    assert.equal(key(input), false, JSON.stringify(input));
+    assert.deepEqual(events, [], JSON.stringify(input));
+  }
+});
+
+test("Escape and the search keys reach the shell, and only the search keys lose their default action", (t) => {
+  const { runtime, key, events } = canvasInputFixture(t);
+  runtime.__subscribe(["canvas-key"]);
+  for (const [input, result, prevented] of [
+    [{ key: "Escape" }, "escape", false],
+    [{ key: "Escape", shiftKey: true }, "escape", false],
+    [{ key: "/", code: "Slash" }, "search", true],
+    // A German layout types / with Shift+7.
+    [{ key: "/", code: "Digit7", shiftKey: true }, "search", true],
+    [{ key: "k", code: "KeyK", ctrlKey: true }, "search", true],
+    [{ key: "K", code: "KeyK", metaKey: true }, "search", true],
+    // A Cyrillic layout types another letter on the K key.
+    [{ key: "л", code: "KeyK", ctrlKey: true }, "search", true],
+  ] as const) {
+    assert.equal(key(input), prevented, JSON.stringify(input));
+    assert.deepEqual(
+      events.splice(0),
+      [{ type: "canvas-key", key: result }],
+      JSON.stringify(input),
+    );
+  }
+});
+
+test("Escape stays the document's own when its listener or a pick handles it", (t) => {
+  const { runtime, button, key, events } = canvasInputFixture(t);
+  runtime.__subscribe(["canvas-key", "pick-end"]);
+  for (const [name, handle] of [
+    ["cancels", (event: Event) => event.preventDefault()],
+    ["stops", (event: Event) => event.stopPropagation()],
+  ] as const) {
+    button.addEventListener("keydown", handle);
+    key({ key: "Escape" });
+    button.removeEventListener("keydown", handle);
+    assert.deepEqual(events, [], `the page ${name} Escape`);
+  }
+  // Escape during a pick ends the pick and stays out of the shell.
+  runtime.__highlight([inner], "pick");
+  assert.equal(key({ key: "Escape" }), true);
+  assert.deepEqual(events.splice(0), [{ type: "pick-end", reason: "escape" }]);
+  assert.equal(key({ key: "Escape" }), false);
+  assert.deepEqual(events, [{ type: "canvas-key", key: "escape" }]);
 });
 
 test("canvas keys need their own subscription", (t) => {
   const { runtime, key, events } = canvasInputFixture(t);
   runtime.__subscribe(["canvas-wheel"]);
   assert.equal(key({ key: "+" }), false);
+  // Without it, the search keys keep their default action.
+  for (const input of [
+    { key: "Escape" },
+    { key: "/" },
+    { key: "k", code: "KeyK", ctrlKey: true },
+  ])
+    assert.equal(key(input), false, input.key);
   assert.deepEqual(events, []);
 });
 
