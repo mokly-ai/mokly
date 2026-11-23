@@ -138,9 +138,11 @@ These are my calls, made on 2026-11-20. Cal can change any of them.
 
 - Calls on Milestone 2's items, 2026-11-21. Each keeps today's behaviour or
   follows the merged mockups, so none waits for Cal:
-  - 13: the Frames filter is local view state, like the zoom. `viewport` and
-    `colorScheme` keep their meaning, and in the compact layout they name the
-    picked frame. No public type changes.
+  - 13: the Frames filter's scheme toggles are local view state, like the
+    zoom. Its viewport toggles read and write the selection's `viewport`
+    (Milestone 12, item 20, 2026-11-23), so a shared link keeps its viewport
+    on a wide canvas. `viewport` and `colorScheme` keep their meaning, and in
+    the compact layout they name the picked frame. No public type changes.
   - 14: each folder segment of Inspect's Path row is a breadcrumb.
   - 15: a saved variant opens its parent's variant set with that variant's
     Light frame selected.
