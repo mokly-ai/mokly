@@ -67,7 +67,7 @@ export const storybookLinkScreen = defineScreen({
   title: "Link to Storybook",
   colorSchemes: ["light"],
   description:
-    "The Menu's own page, which its first story, Collapsed, renders. The configuration gives the URL of the published Storybook, so Details link the same story there, directly below its source.",
+    "The Menu's own page, which its first story, Collapsed, renders. Details name that story directly below its source. The configuration gives the URL of the published Storybook, so the next row links the same story there.",
   rationale:
     "The link opens the story's own address in that Storybook, from the story's Storybook id, and each variant links its own story. Without the URL, Details show no Storybook row. The stories file declares no tags or related docs, so Details list neither.",
   ...artboards({

@@ -73,6 +73,11 @@ export interface ComponentEntryMetadata {
   title: string;
   variantOf?: ComponentId;
   /**
+   * The name of the story that the entry's page renders, as Storybook names
+   * it. Every stories entry has one, and its Details show it in a Story row.
+   */
+  story?: string;
+  /**
    * The address of the entry's story in the published Storybook, which a
    * stories entry has when the configuration gives that Storybook's URL. The
    * artboards draw the link to it without the address, because a design link
@@ -147,6 +152,7 @@ export const COMPONENT_ENTRIES = {
     component: "menu",
     path: "example/components/Menu",
     title: "Menu",
+    story: "Collapsed",
     storybook: storybookStory("components-menu--collapsed"),
   },
   /** The Expanded story, whose slug is its export name. */
@@ -155,6 +161,7 @@ export const COMPONENT_ENTRIES = {
     path: "example/components/Menu/Expanded",
     title: "Expanded",
     variantOf: "menu",
+    story: "Expanded",
     storybook: storybookStory("components-menu--expanded"),
   },
 } as const satisfies Record<string, ComponentEntryMetadata>;

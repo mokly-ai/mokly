@@ -431,7 +431,9 @@ The mockups of Milestone 1 raised decisions 23 to 27 on 2026-11-18. The
 options check of the same day rewrote the root questions of decisions 24, 25,
 and 27, added option F to decision 23, option E to decisions 24 and 25, and
 options C and D to decision 27. It also showed that rules in force settle two
-more questions, which became design calls 26 and 27.
+more questions, which became design calls 26 and 27. On 2026-11-23 the
+orchestrator settled decisions 24 and 25 with design calls 29 and 30.
+Decisions 23, 26, and 27 stay open with the user.
 
 ### 23. A new story has no published Storybook page
 
@@ -521,12 +523,13 @@ more questions, which became design calls 26 and 27.
 - **Wider fix:** E. The copy follows the real state of the frame, so it stays
   true when the cause changes.
 - **Previous examples:** None found.
-- **Related:** B and E change the viewer, and track F has no UI milestone yet.
-  The answer adds one.
+- **Related:** B and E change the viewer. Milestone 24a holds that change.
 - **Recommendation:** E. Each sentence then matches the frame, with no new
   copy.
 - **Action:** ask the user, because the option changes which settled sentence
   the shell shows, a user-visible change that no decision covers.
+- **Outcome:** E, settled by the orchestrator's design call 29 on
+  2026-11-23, with no user answer.
 
 ### 25. The first story's name never shows
 
@@ -564,12 +567,14 @@ more questions, which became design calls 26 and 27.
   3, which stays.
 - **Wider fix:** None, because the item is one design choice.
 - **Previous examples:** None found.
-- **Related:** Milestones 26 to 28 wait for this answer. D and E change the
+- **Related:** Milestones 26 to 28 apply this outcome. D and E change the
   search rule in `docs/protocol/mokly-folders.md`.
 - **Recommendation:** E. One field lets the reader both see and find the
   story. B is the smaller option if search may skip the name.
 - **Action:** ask the user, because the option adds a Details row and changes
   the search rule, and no user decision covers either.
+- **Outcome:** E, settled by the orchestrator's design call 30 on
+  2026-11-23, with no user answer.
 
 ### 26. Error document styles in dark views
 
@@ -766,6 +771,24 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     The mockups draw it as a picture without an address. Reason: the page
     around the document already names the component, the shell does not
     change for failed stories, and a design link opens a design entry.
+    Changed on 2026-11-23 by design call 31: the Story row now sits between
+    Source and the Storybook row.
+29. Made on 2026-11-23 by the orchestrator, for decision 24: E. The Props
+    tab shows the sentence that matches the preview that it shows. Until an
+    edit renders, it uses the existing sentence "The preview shows the saved
+    props." Reason: today's sentence is false for a failed story, and E needs
+    no new copy.
+30. Made on 2026-11-23 by the orchestrator, for decision 25: E. One field
+    gives a Story row in Details, and it makes search match the name of the
+    first story. Reason: the user's decision 14 keeps Storybook story names,
+    and today the name of the first story shows nowhere.
+31. Made on 2026-11-23 in track A. The mockups draw the Story row of design
+    call 30 on every page of a stories entry, directly below Source and
+    above the Storybook row. No mockup shows the search match, because search
+    keeps its query field and its filtered tree. The "Render failed" controls
+    mockup, which shows the saved preview, uses the saved-props sentence of
+    design call 29. Reason: the three rows describe where the story comes
+    from, and a mockup shows only what the reader sees.
 
 ## Tracks
 
@@ -775,18 +798,18 @@ has merged into this branch, and when the open decisions that block it have
 answers. The ledger of the workspaces is in
 `.context/storybook-support/workspaces.md`.
 
-| Track                      | Milestones | Starts after                                 |
-| -------------------------- | ---------- | -------------------------------------------- |
-| A. Mockups                 | 1          | Nothing                                      |
-| B. Story reading           | 2 to 8     | Nothing                                      |
-| C. Imported assets         | 9 to 12    | Nothing                                      |
-| D. Vite adapter            | 13 to 17   | Nothing                                      |
-| E. Storybook folders       | 18 to 22   | Track B                                      |
-| F. Failed stories          | 23 to 25   | Tracks A and B, and decisions 24 and 26      |
-| G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23, 25, and 27 |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                        |
-| I. Story component usage   | 34 to 36   | Tracks B and D                               |
-| J. Spike for decision 18   | 37         | Nothing                                      |
+| Track                      | Milestones | Starts after                            |
+| -------------------------- | ---------- | --------------------------------------- |
+| A. Mockups                 | 1          | Nothing                                 |
+| B. Story reading           | 2 to 8     | Nothing                                 |
+| C. Imported assets         | 9 to 12    | Nothing                                 |
+| D. Vite adapter            | 13 to 17   | Nothing                                 |
+| E. Storybook folders       | 18 to 22   | Track B                                 |
+| F. Failed stories          | 23 to 25   | Tracks A and B, and decision 26         |
+| G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23 and 27 |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                   |
+| I. Story component usage   | 34 to 36   | Tracks B and D                          |
+| J. Spike for decision 18   | 37         | Nothing                                 |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -823,7 +846,13 @@ Storybook.
       `conductor/storybook-support-a-mockups`.
 - [x] Update the design and the TODOs of this plan for each problem that the
       mockups show. Branch: `conductor/storybook-support-a-mockups`.
-- [ ] Update the mockups for the answers to decisions 25 and 27. Branch:
+- [x] Draw the Story row of design call 30, and the saved-props sentence of
+      design call 29 in the "Render failed" controls mockup. Branch:
+      `conductor/storybook-support-a-mockups`.
+- [ ] Draw the sentence of design call 29 in the "Invalid prop value" controls
+      mockup. It needs a new sentence in the copy of the controls. Branch:
+      `conductor/storybook-support-a-mockups`.
+- [ ] Update the mockups for the answer to decision 27. Branch:
       `conductor/storybook-support-a-mockups`.
 - [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
@@ -1145,13 +1174,16 @@ Depends on: 18, 19, 20, 21
 
 ## Milestone 23: Failed stories documentation
 
-Depends on: 1, 8, and the answers to decisions 24 and 26
+Depends on: 1, 8, and the answer to decision 26
 
 Track F. The protocol states the failure rules of decision 5.
 
 - [ ] Add the render failure rules to `docs/protocol/mokly-storybook.md`.
 - [ ] State there the reason rule of design call 26, the usage rule of
-      design call 27, and the answers to decisions 24 and 26.
+      design call 27, and the answer to decision 26.
+- [ ] State the sentence rule of design call 29 in
+      `docs/protocol/mokly-component-controls-design.md`: after a failed or
+      invalid edit, the Props tab names the preview that it shows.
 - [ ] Update `docs/protocol/mokly-build-warnings.md` with
       `story-render-failed`. In `docs/protocol/mokly-sidecar.md`, update the
       `render-failed` row and the rule that there is no fallback render, for
@@ -1178,9 +1210,26 @@ A story that cannot render no longer stops the build, as decision 5 says.
       and Affected list, as design calls 26 and 27 say.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
+## Milestone 24a: The Props sentence after a failed edit
+
+Tags: ui
+
+Depends on: 1, 23
+
+The Props tab says truthfully what the preview shows after a failed or
+invalid edit, as design call 29 says.
+
+- [ ] Choose the sentence of the failure alert and of the invalid notice
+      from the preview that the frame shows. Until an edit renders, use "The
+      preview shows the saved props."
+- [ ] Keep the viewer's copy equal to the copy of the controls mockups, which
+      `tests/viewer_controls_copy.test.ts` compares.
+- [ ] Test both sentences under `packages/viewer/tests`, for a preview that
+      shows the saved props and for one that shows an edit.
+
 ## Milestone 25: Failed stories verification, review, and pull request
 
-Depends on: 23, 24
+Depends on: 23, 24, 24a
 
 - [ ] Remove each status line whose page this track completes.
 - [ ] Run the targeted tests and `cargo xtask check`.
@@ -1189,12 +1238,15 @@ Depends on: 23, 24
 
 ## Milestone 26: Storybook links documentation
 
-Depends on: 1, 22, and the answers to decisions 23, 25, and 27
+Depends on: 1, 22, and the answers to decisions 23 and 27
 
 Track G. The protocol states the link rules of decision 15.
 
 - [ ] Add the Storybook link rule to `docs/protocol/mokly-storybook.md`.
-- [ ] State there the answers to decisions 23, 25, and 27.
+- [ ] State there the answers to decisions 23 and 27, and the Story row of
+      design call 30.
+- [ ] Add the story name of design call 30 to the search rule in
+      `docs/protocol/mokly-folders.md`.
 - [ ] Update `docs/protocol/mokly-component-design.md` with the Storybook
       link of Milestone 1.
 - [ ] Add the status lines, and run `npm run format:check` and
@@ -1211,7 +1263,10 @@ says.
       title of its `main.*` entry, with Storybook's own helpers.
 - [ ] Add the story URL to the catalogue read model when the root's
       `storybook.url` is set, with generated shared types.
-- [ ] Test the ids of titled and untitled files.
+- [ ] Add the name of the story that each page of a stories entry renders to
+      the read model, with generated shared types, as design call 30 says.
+- [ ] Test the ids of titled and untitled files, and the story names of a
+      parent page and of a variant.
 
 ## Milestone 28: The Storybook link in the shell
 
@@ -1221,6 +1276,8 @@ Depends on: 27
 
 - [ ] Add the link to `@mokly/ui` as the mockup shows, and render it from
       the viewer container for entries with a Storybook URL.
+- [ ] Render the Story row in Details, and match the story name in search,
+      as design call 30 says and the mockups show.
 - [ ] Render the package component in the design library, as `AGENTS.md`
       requires. Give it a form without an address there, as the mockups draw
       it, because a design link opens a design entry and the design library

@@ -7,8 +7,9 @@ import { COMPONENTS, type ComponentEntryMetadata } from "./metadata.js";
 /**
  * The shown entry's Details in the shipped body: its description, then its
  * path above its source, and its references, in the metadata column. A
- * stories entry links its story in the published Storybook directly below its
- * source, when the configuration gives that Storybook's URL. A design link
+ * stories entry names the story that its page renders directly below its
+ * source. Below that name, it links the story in the published Storybook,
+ * when the configuration gives that Storybook's URL. A design link
  * opens a design entry, so the artboard draws that link as a picture: an
  * anchor without an address, which the metadata column styles as a link, and
  * which opens nothing and adds no keyboard stop.
@@ -24,6 +25,11 @@ export function ComponentInfo({ entry }: { entry: ComponentEntryMetadata }) {
       <MetaRow name="source" label="Source">
         <MetadataCode>{component.source}</MetadataCode>
       </MetaRow>
+      {entry.story ? (
+        <MetaRow name="story" label="Story">
+          {entry.story}
+        </MetaRow>
+      ) : null}
       {entry.storybook ? (
         <MetaRow name="storybook" label="Storybook">
           <a>Open in Storybook</a>

@@ -10,7 +10,7 @@ import { COMPONENT_ENTRIES } from "./metadata.js";
  */
 
 /** The Storybook story that could not render, by its Storybook name. */
-const failedStory = COMPONENT_ENTRIES.menuExpanded.title;
+const failedStory = COMPONENT_ENTRIES.menuExpanded.story;
 
 /** Why the story could not render, as the server render reports it. */
 const storyFailure = "document is not defined";

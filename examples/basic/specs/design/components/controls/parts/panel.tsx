@@ -16,11 +16,15 @@ import {
   type ControlsState,
 } from "./fixtures.js";
 
-/** The alert of each state that shows one: what failed, and its action. */
+/**
+ * The alert of each state that shows one: what failed, and its action. A body
+ * names the props that the preview shows. No edit has rendered in the failed
+ * state, so its preview and its body give the saved props.
+ */
 const ALERTS: Partial<Record<ControlsState, ControlsAlert>> = {
   error: {
     action: CONTROLS_COPY.retry,
-    body: CONTROLS_COPY.failedBody,
+    body: CONTROLS_COPY.expiredBody,
     title: CONTROLS_COPY.failedTitle,
   },
   invalid: { text: CONTROLS_COPY.invalid },
