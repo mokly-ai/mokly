@@ -58,10 +58,12 @@ test("a viewport-height hero cannot grow its comparison", async ({ page }) => {
   const spacer = desktop.locator("[data-comparison-spacer]");
   const frames = desktop.locator("iframe");
   const viewport = sharedViewports(desktop);
+  // Every size is in the documents' CSS pixels, which the canvas zoom does
+  // not scale.
   const sizes = async () => ({
     spacer: await cssPixels(spacer, "height"),
     frames: await frames.evaluateAll((nodes) =>
-      nodes.map((node) => node.getBoundingClientRect().height),
+      nodes.map((node) => node.clientHeight),
     ),
     viewport: await viewport.evaluate((element) => element.clientHeight),
   });
