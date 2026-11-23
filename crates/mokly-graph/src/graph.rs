@@ -134,8 +134,7 @@ impl Graph {
             styles::register_modules(&config, &mut module_names, &bundle)?;
             names.insert(&bundle.route, false)?;
             let stylesheet_key = stylesheet_keys::input(&config_key, &root, &bundle);
-            let document_key =
-                stylesheet_keys::output(&bundle, config.vite().then_some(&stylesheet_key));
+            let document_key = stylesheet_keys::output(&bundle);
             self.cache.insert(
                 stylesheet_key.clone(),
                 Arc::new(Artifact {

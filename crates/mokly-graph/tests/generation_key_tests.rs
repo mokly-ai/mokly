@@ -15,7 +15,7 @@ use mokly_css::types::{Bundle, IdentityProcessor, StylesheetBundler, StylesheetR
 use mokly_graph::cache::MemoryCache;
 use mokly_graph::graph::Graph;
 use mokly_graph::source_snapshot::SourceSnapshot;
-use mokly_graph::types::RenderGraph;
+use mokly_graph::types::{RenderGeneration, RenderGraph};
 use mokly_graph::workers::ThreadWorkers;
 use mokly_html::composition::HtmlComposer;
 use mokly_html::fragment::DeferredFragments;
@@ -45,6 +45,10 @@ impl StylesheetBundler for Witness {
 }
 
 fn generation_key(root: &Path, versions: &Arc<AtomicUsize>) -> String {
+    prepare(root, versions).generation_key().into()
+}
+
+fn prepare(root: &Path, versions: &Arc<AtomicUsize>) -> Arc<dyn RenderGeneration> {
     let tree: Arc<dyn SourceTree> = Arc::new(WorkingTree);
     let config = Loader { tree: tree.clone() }.load(root, None).unwrap();
     let prepared = Builder {
@@ -78,11 +82,7 @@ fn generation_key(root: &Path, versions: &Arc<AtomicUsize>) -> String {
         workers: Arc::new(ThreadWorkers::new(2).unwrap()),
         version: "fixture".into(),
     };
-    graph
-        .prepare(config, prepared, None)
-        .unwrap()
-        .generation_key()
-        .into()
+    graph.prepare(config, prepared, None).unwrap()
 }
 
 #[test]
@@ -109,4 +109,40 @@ fn private_read_evidence_keeps_the_generation_key_and_delivered_css_changes_it()
     assert_eq!(first, second);
     fs::write(root.join("b.css"), "p { margin: 1px }").unwrap();
     assert_ne!(generation_key(root, &versions), first);
+}
+
+#[test]
+fn equal_vite_stylesheet_output_keeps_the_linked_html_document_key() {
+    let directory = TempDir::new().unwrap();
+    let root = directory.path();
+    fs::create_dir(root.join("specs")).unwrap();
+    fs::write(
+        root.join("mokly.config.json"),
+        r#"{"vite":true,"stylesheets":[{"match":"**","stylesheets":["a.css"]}]}"#,
+    )
+    .unwrap();
+    fs::write(
+        root.join("specs/home.screen.html"),
+        "---\ntitle: Home\n---\n<p>Home</p>",
+    )
+    .unwrap();
+    fs::write(root.join("a.css"), "p { color: red }").unwrap();
+    let versions = Arc::new(AtomicUsize::new(0));
+    let before = prepare(root, &versions);
+    let after = prepare(root, &versions);
+
+    assert_eq!(versions.load(Ordering::SeqCst), 2);
+    let route = "home/index.mobile.html";
+    let first = &before.plans()[route];
+    let second = &after.plans()[route];
+    assert_eq!(first.stylesheets, ["../styles/a.css"]);
+    assert_eq!(second.stylesheets, first.stylesheets);
+    assert_eq!(
+        before.resource("styles/a.css").unwrap().unwrap(),
+        after.resource("styles/a.css").unwrap().unwrap()
+    );
+    assert_eq!(
+        first.key, second.key,
+        "equal CSS must keep the document key"
+    );
 }
