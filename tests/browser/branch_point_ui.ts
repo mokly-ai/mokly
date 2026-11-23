@@ -64,13 +64,19 @@ export async function variantBar(page: Page): Promise<string[]> {
     );
 }
 
-/** The workspace head: its heading and its crumbs, once they settle. */
+/**
+ * The workspace head: its heading and its crumbs, once they settle. In the
+ * compact layout the head stands in the panel's sheet, which the dock's
+ * Inspect opens first.
+ */
 export async function expectHead(
   page: Page,
   heading: string,
   expected: readonly string[],
 ): Promise<void> {
-  await expect(page.locator(".mbk-screen-head h2")).toHaveText(heading);
+  const title = page.locator(".mbk-screen-head h2");
+  await revealInPanel(page, title);
+  await expect(title).toHaveText(heading);
   await expect.poll(() => crumbs(page)).toEqual(expected);
 }
 
