@@ -3,17 +3,22 @@
  * `@mokly/ui/canvas-stage` the entry's section and the path chip's copy,
  * binds the canvas's keys, and measures the frames again after each pan and
  * zoom, which fire no scroll or resize event. The canvas is the stage that
- * clips each frame's highlights and markers.
+ * clips each frame's highlights and markers. A frame that forwards the canvas
+ * input of its own document reaches the canvas through `CanvasControlContext`.
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
 import type { RefObject } from "react";
 
-import type { CanvasSectionFrame } from "@mokly/ui/canvas-section";
+import type {
+  CanvasSectionFrame,
+  CanvasSectionKind,
+} from "@mokly/ui/canvas-section";
 import {
   CanvasStage,
   canvasKeyCommand,
   type CanvasStageHandle,
+  type CanvasView,
 } from "@mokly/ui/canvas-stage";
 import { ChangeStatus, type ChangeStatusValue } from "@mokly/ui/change-status";
 
@@ -24,6 +29,22 @@ import {
 } from "./frame_registry.js";
 import { useShellRoot } from "./root_context.js";
 import { useShellStore } from "./store_context.js";
+
+/**
+ * The canvas that holds the routed entry's section, for a frame that forwards
+ * the canvas input of its own document to it: the canvas, the handle with
+ * Fit and the zoom steps, and the zoom of the latest view.
+ */
+export interface CanvasControl {
+  canvas: RefObject<HTMLDivElement | null>;
+  handle: RefObject<CanvasStageHandle | null>;
+  zoom: RefObject<number>;
+}
+
+/** The canvas of the section that holds a frame, if any. */
+export const CanvasControlContext = createContext<CanvasControl | undefined>(
+  undefined,
+);
 
 /** Whether the canvas shows, which a comparison in its place hides. */
 function shown(canvas: HTMLElement): boolean {
@@ -92,39 +113,54 @@ export function CanvasEntryStage({
   frames,
   kind,
   path,
+  quietLabel,
   status,
   title,
 }: {
   /** Names the shown section; a new name fits the canvas again. */
   fitKey: string;
   frames: readonly CanvasSectionFrame[];
-  kind: "component" | "document" | "screen";
+  kind: CanvasSectionKind;
   path: string;
+  /** The head's quiet label, such as a removed entry's `Showing previous version`. */
+  quietLabel?: string | undefined;
   status?: ChangeStatusValue | undefined;
   title: string;
 }) {
   const store = useShellStore();
   const canvas = useRef<HTMLDivElement>(null);
   const handle = useRef<CanvasStageHandle>(null);
+  const zoom = useRef(1);
+  const control = useMemo(() => ({ canvas, handle, zoom }), []);
   useCanvasKeys(canvas, handle, store.context.embedded ?? false);
   const refresh = useGeometryRefresh(useOptionalShellFrameRegistry());
+  const viewChange = useCallback(
+    (view: CanvasView) => {
+      zoom.current = view.zoom;
+      refresh();
+    },
+    [refresh],
+  );
   return (
     <FrameStageContext value={canvas}>
-      <CanvasStage
-        canvasRef={canvas}
-        fitKey={fitKey}
-        onViewChange={refresh}
-        ref={handle}
-        routed
-        section={{
-          frames,
-          kind,
-          onCopyPath: (value) => store.copy(value, `Copied path ${value}`),
-          path,
-          status: status ? <ChangeStatus status={status} /> : undefined,
-          title,
-        }}
-      />
+      <CanvasControlContext value={control}>
+        <CanvasStage
+          canvasRef={canvas}
+          fitKey={fitKey}
+          onViewChange={viewChange}
+          ref={handle}
+          routed
+          section={{
+            frames,
+            kind,
+            onCopyPath: (value) => store.copy(value, `Copied path ${value}`),
+            path,
+            quietLabel,
+            status: status ? <ChangeStatus status={status} /> : undefined,
+            title,
+          }}
+        />
+      </CanvasControlContext>
     </FrameStageContext>
   );
 }

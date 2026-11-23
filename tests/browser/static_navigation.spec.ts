@@ -12,6 +12,7 @@ import {
   staticRequests,
 } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
+import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import {
   canvasFrame,
   chooseScheme,
@@ -88,10 +89,14 @@ test("copied static search, folders, tags, details and flows retain the shell", 
     page.getByRole("tabpanel", { name: "Details", exact: true }),
   ).toBeVisible();
   await page.locator(tourRow).click();
-  await expect(page.locator(".mbk-flow-screen iframe")).toHaveCount(2);
+  await expect(useCaseSteps(page)).toHaveCount(2);
+  // The use case keeps its own Light frames under Dark.
   await chooseScheme(page, "dark");
-  for (const frame of await page.locator(".mbk-flow-screen iframe").all())
-    await expectFrameSource(frame, /\.dark\.html$/);
+  for (const step of [1, 2])
+    await expectFrameSource(
+      useCaseStepFrame(page, step),
+      /\/index\.desktop\.html$/,
+    );
   expect(await hasMarker(page)).toBe(true);
   requests.assert();
 });

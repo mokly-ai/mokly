@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import type {
   CatalogueReadModel,
@@ -8,6 +8,7 @@ import type {
 } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
+import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
 import { canvasFrame, chooseVariant } from "./workspace_actions.js";
@@ -66,7 +67,7 @@ async function highlight(
   page: Page,
   instance: InstanceRef,
   cross: boolean,
-  frame: string,
+  frame: Locator | string,
 ) {
   const frames = page.locator("iframe[data-mokly-frame-state]");
   for (let i = 0; i < (await frames.count()); i++)
@@ -79,7 +80,9 @@ async function highlight(
       window.viewerHarness.get("one").ref.current.highlightInstance(instance),
     instance,
   );
-  await expect(page.locator(frame)).toHaveAccessibleName(
+  await expect(
+    typeof frame === "string" ? page.locator(frame) : frame,
+  ).toHaveAccessibleName(
     new RegExp(`— ${instance.viewport}(?: — ${instance.colorScheme})?$`),
   );
   const labels = page.locator("[data-mokly-label-layer] button");
@@ -129,16 +132,14 @@ for (const cross of [false, true]) {
         await window.viewerHarness.get("one").ref.current.startPick();
         window.viewerHarness.get("one").ref.current.cancelPick();
       });
-      const frames = page.locator(".flow-step iframe");
-      await expect(frames).toHaveCount(3);
+      await expect(useCaseSteps(page)).toHaveCount(3);
       for (let i = 0; i < 3; i++) {
-        const frame = await (await frames
-          .nth(i)
-          .elementHandle())!.contentFrame();
+        const step = useCaseStepFrame(page, i + 1);
+        const frame = await (await step.elementHandle())!.contentFrame();
         expect(new URL(frame!.url()).hash).toBe(
           i === 0 ? "#example-anchor" : "",
         );
-        const source = await frames.nth(i).getAttribute("src");
+        const source = await step.getAttribute("src");
         expect(new URL(source!, fixture.host.url).hash).toBe(
           i === 0 ? "#example-anchor" : "",
         );
@@ -231,7 +232,7 @@ for (const cross of [false, true]) {
         page,
         instance,
         cross,
-        `.flow-step iframe >> nth=${stepIndex}`,
+        useCaseStepFrame(page, stepIndex + 1),
       );
       expect(clicked).toMatchObject({
         frame: { entryPath: "tour", stepIndex },

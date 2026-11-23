@@ -1,13 +1,14 @@
 // The route stage renderer of the served Mokly shell: the routed entry's
-// stage, which waits for the entry's detail. At and above the layout
+// stage, which waits for the entry's details. At and above the layout
 // breakpoint the entry stands on the canvas; below it, on the one-frame
-// stage. All embedded consumer documents are sandboxed without script
-// permission.
+// stage. A use case stands on the canvas at every width. All embedded
+// consumer documents are sandboxed without script permission.
 
 import type { GeneratedComponentView } from "../components/views.js";
 
 import { useCanvasLayout } from "./canvas_layout.js";
 import { CanvasReadingStage } from "./canvas_reading.js";
+import { CanvasUseCaseStage } from "./canvas_use_case.js";
 import {
   CanvasWorkspaceStage,
   type WorkspaceCanvas,
@@ -45,8 +46,16 @@ export function TargetStage(props: {
   // After a Try again of the stage, its first frame takes focus.
   return (
     <RetryContent value={focus}>
-      {props.canvas &&
-      (current.kind === "screen" || current.kind === "component") ? (
+      {current.kind === "use-case" ? (
+        // Another use case mounts its own step frames.
+        <CanvasUseCaseStage
+          catalogue={props.catalogue}
+          entry={current}
+          fragment={props.fragment}
+          key={current.path}
+        />
+      ) : props.canvas &&
+        (current.kind === "screen" || current.kind === "component") ? (
         <CanvasWorkspaceStage
           canvas={props.canvas}
           catalogue={props.catalogue}

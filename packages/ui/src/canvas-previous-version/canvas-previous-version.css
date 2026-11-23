@@ -1,0 +1,9 @@
+/* The host of a previous version fills its area, and its canvas fills the
+   host. */
+.mbk-canvas-previous {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}

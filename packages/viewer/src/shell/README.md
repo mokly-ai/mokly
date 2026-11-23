@@ -215,8 +215,9 @@ that their containers build, and the preview shows the status of an edit's
 render with `@mokly/ui/edit-status`. The controls' wording of
 `component_controls_copy.ts` reaches them as props. The preview's containers
 render `@mokly/ui/canvas-stage`, `@mokly/ui/canvas-frame`,
-`@mokly/ui/stage`, `@mokly/ui/preview-frame`, `@mokly/ui/device-frame`,
-`@mokly/ui/flow-step`, `@mokly/ui/previous-version`,
+`@mokly/ui/canvas-missing-view`, `@mokly/ui/canvas-state`,
+`@mokly/ui/canvas-previous-version`, `@mokly/ui/stage`,
+`@mokly/ui/preview-frame`, `@mokly/ui/device-frame`,
 `@mokly/ui/preview-state`, `@mokly/ui/scheme-fallback`,
 `@mokly/ui/comparison-stage`, `@mokly/ui/comparison-pane`,
 `@mokly/ui/empty-state`, and `@mokly/ui/variant-bar`. Each `<iframe>` element
@@ -340,19 +341,28 @@ reloads only the frames whose document changed. Saved component view records
 supplied by prop controls keep their index `documentKey`. Only a temporary
 render URL bypasses that key.
 
-A use case's
-stage, in `public_stage.tsx`, keeps device frames today: it shows each step
-with `@mokly/ui/flow-step` and its desktop view in a browser frame, or, while
-`narrow_layout.ts` reports a window at most 760px wide, its mobile view in a
-phone frame. The
+A use case stands on the canvas at every width, under the
 [use-case rule](../../../../docs/protocol/mokly-shell-canvas-stage.md#use-case)
-of the canvas stage contract requires one canvas frame for each step instead.
+of the canvas stage contract: `stages.tsx` routes it to
+`canvas_use_case.tsx`, which gives `canvas_stage.tsx` one section of step
+frames in one row. `canvas_use_case_frames.ts` holds the step frames, one for
+each step in step order, each labelled `{number} · {title}`, as the compact
+frame picker lists it. Every step frame shows its step screen's view of the
+use case's own Frames choice, apart from a screen's frames and from the
+selection's preview scheme: Desktop and Light at and above the layout
+breakpoint, and Mobile and Light below it. A step whose screen has no dark
+view of that viewport keeps its Light view under Dark, and its label says so.
+`canvas_use_case_frame.tsx` mounts each step frame with the mount hook of
+`stage_frame.tsx` under the step's own frame identity, so instance events and
+markers carry the step's index, and only the first step's frame opens at the
+route's fragment. The step's link, which opens its screen, has the accessible
+name `{step title}, {screen title} screen`.
 `layout_breakpoint.ts` holds the layout breakpoint of the
 [canvas frames contract](../../../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
 as one media query, narrower than 900px, which every shell and viewer rule and script
 reads, so the catalogue drawer, the inspector sheet and the embedded rail
-switch at the same width. It also holds the use-case stage's device
-breakpoint, which `narrow_layout.ts` watches. The `@mokly/ui`
+switch at the same width. It also holds the device breakpoint, a window at
+most 760px wide, of the one-frame stage's stylesheets. The `@mokly/ui`
 stylesheets cannot import either query, so they repeat them, and the viewer's
 [styles test](../../tests/styles.test.ts) holds them to both.
 
@@ -580,10 +590,11 @@ comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
 in a catalogue with a dark axis. Below the layout breakpoint a current
 document then gets a band above its pane, and on the canvas its reading
-frame's label names the fallback; a removed one gets a suffix on
-`Showing previous version`. The band and the suffix carry the `Light only`
-note of `@mokly/ui/scheme-fallback`, which the stylesheet shows only under
-Dark. The stylesheets of `@mokly/ui/preview-frame`,
+frame's label names the fallback. The band carries the `Light only` note of
+`@mokly/ui/scheme-fallback`, which the stylesheet shows only under Dark. A
+removed document's section head reads `Showing previous version — Light
+only` instead while the preview scheme is Dark. The stylesheets of
+`@mokly/ui/preview-frame`,
 `@mokly/ui/device-frame`, and `@mokly/ui/comparison-pane` set every preview
 surface background and iframe color scheme from the wrapper's scheme.
 Transparent content therefore keeps its selected Light or Dark base in screen,
@@ -664,10 +675,28 @@ owns presentation and layout, and the
 contracts own the scroll behavior.
 
 `previews.tsx` renders the one previous-version presentation a removed page and
-a removed screen share: the "Showing previous version" label, the stage host
-marked by `data-mokly-preview`, and the shared
-device chrome around captured screen views, which `@mokly/ui/previous-version`
-and `@mokly/ui/device-frame` draw. The React request lifecycle reads preview
+a removed screen share, on the canvas at every width, under the
+[removed previews contract](../../../../docs/protocol/mokly-removed-previews.md#behavior):
+the host marked by `data-mokly-preview`, which `@mokly/ui/canvas-previous-version`
+draws, around `canvas_removed.tsx`. While the request runs, or after it
+failed, the canvas of `@mokly/ui/canvas-state` holds that state in place of
+the section, with no zoom pill. Once the preview is ready, the section's head
+holds the title, the path, the Removed status and the quiet label "Showing
+previous version" (`canvas_removed_section.tsx`). `canvas_removed_screen.tsx`
+draws a removed screen's section from `canvas_removed_frames.ts`: one canvas
+frame for each historical view, Desktop beside Mobile and the Light row above
+the Dark row, with a viewport choice that keeps one column, as for a current
+screen. A viewport without a historical view holds the note of
+`@mokly/ui/canvas-missing-view` in its frames' places; its second sentence
+shows only while no frame of the other viewport shows. A removed page or
+document opens as one reading frame, named by its source file. A previous
+version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
+input of each document that it presents with `listenForCanvasInput`, and
+`canvas_removed_input.ts` routes it through the `CanvasControlContext` of
+`canvas_stage.tsx`: a canvas key runs its command, a zoom wheel or a pinch
+zooms the canvas about the stage's centre, and the document's keyboard focus
+draws the frame's focus glow. The React
+request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
 quiet. A removed screen uses the route's held, fenced detail. Its stage waits
@@ -677,8 +706,10 @@ previews fetch their own metadata. The stage also waits for its historical
 documents and offers Retry if that request fails. The request fencing lives in
 `use_removed_preview.ts`; it creates the
 shared snapshot-presentation loader for the loaded generation with only the
-`before` side enabled, then fetches and validates the historical documents
-needed by the selected views before reporting ready. Each loaded frame receives
+`before` side enabled, then fetches and validates the historical document of
+every shown frame before reporting ready. Only a screen's viewport choice and
+a document's preview scheme choose other frames, so only they request
+documents again. Each loaded frame receives
 only a script-disabled, viewer-origin `srcdoc`, with
 `data-mokly-preview-source` naming the immutable snapshot address. The
 viewer-owned guard cancels links and forms, scrolls same-document anchors
@@ -688,10 +719,10 @@ later frame navigation. The copy and Retry contract comes from
 `views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
 both drop the comparison band there, while removed component variants keep
 theirs.
-`@mokly/ui/preview-state` draws the loading, unavailable, and missing states,
-including the `mbk-preview-note` and `mbk-preview-switch` classes the design
-catalogue's stage stylesheet owns. The Both-only rule of `@mokly/ui/stage`
-reads the normalized `data-viewport` value on the live stage.
+`@mokly/ui/empty-state` draws the loading and unavailable states, and the
+note of a missing view keeps the `mbk-preview-note` and `mbk-preview-switch`
+classes of `@mokly/ui/preview-state`, which the design catalogue's
+stylesheets read.
 See [previews](../previews/README.md) for the client side.
 
 See [the package README](../../README.md), the

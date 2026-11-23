@@ -17,12 +17,15 @@ import {
   snapshotOf,
 } from "./comparison_ui.js";
 import {
+  historicalFrame,
+  previousVersionLabel,
+  PREVIOUS,
+} from "./previous_version.js";
+import {
   canvasFrame,
   chooseScheme,
   chooseViewport,
 } from "./workspace_actions.js";
-
-const PREVIEW = "[data-mokly-preview]";
 
 /** The stage shows a removed screen's previous version and no comparison. */
 async function expectRemovedPrevious(
@@ -36,11 +39,11 @@ async function expectRemovedPrevious(
   await expect(
     page.locator("[data-current-screen], [data-diff-stage]"),
   ).toHaveCount(0);
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(
-    page.frameLocator(`${PREVIEW} iframe`).first().locator("h1"),
+    page.frameLocator(`${PREVIOUS} iframe`).first().locator("h1"),
   ).toHaveText(heading);
 }
 
@@ -83,9 +86,11 @@ test("added and removed screens stay current while a light-only comparison keeps
     comparisonPaths.removedScreen,
     "Historical screen",
   );
-  await expect(page.locator(`${PREVIEW} .mbk-frame-mobile iframe`)).toHaveCount(
+  // The viewport choice keeps the Mobile column of the section.
+  await expect(historicalFrame(page, "mobile").locator("iframe")).toHaveCount(
     1,
   );
+  await expect(historicalFrame(page, "desktop")).toHaveCount(0);
 
   await page.goto(`/view/${comparisonPaths.lightOnly}/`);
   await chooseScheme(page, "dark");

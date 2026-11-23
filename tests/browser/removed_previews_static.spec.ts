@@ -1,11 +1,12 @@
 /**
  * Previous versions of removed entries in the copied comparison output, under
  * the removed previews contract. In a narrow and a wide window, a removed
- * page, document, and screen show their previous versions with the Removed
- * status and without comparison controls. Each previous version comes from
- * its generation, read once. A viewport that has no captured previous view
- * says so and names the viewport that has one. Under Dark, a screen captured
- * only in Light shows its light views and names them Light only.
+ * page, document, and screen open as the section of their previous versions
+ * on the canvas, with the Removed status and without comparison controls.
+ * Each previous version comes from its generation, read once. A viewport
+ * that has no captured previous view holds its note in its frame's place,
+ * which names the viewport that has one while no frame of it shows. Under
+ * Dark, a screen captured only in Light keeps its Light row alone.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -21,9 +22,13 @@ import {
   snapshotOf,
   type ComparisonIndex,
 } from "./comparison_ui.js";
+import {
+  historicalFrame,
+  PREVIOUS as STAGE,
+  previousVersionLabel,
+} from "./previous_version.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
-const STAGE = "[data-mokly-preview]";
 const DOCUMENTS = [
   [comparisonPaths.removedPage, "Historical page"],
   [comparisonPaths.removedDocument, "Historical document"],
@@ -38,12 +43,13 @@ async function openRemoved(
   await page.goto(
     `/view/${entryPath}/?snapshot=${snapshotOf(index, entryPath)}`,
   );
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  // The section's head holds the Removed status and the quiet label.
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
-  await expect(page.locator("#mb-main .mbk-entry-status")).toHaveText(
-    "Removed",
-  );
+  await expect(
+    page.locator(STAGE).getByText("Removed", { exact: true }),
+  ).toBeVisible();
   await expect(page.locator("#mb-main")).not.toContainText("was removed");
   await awaitRoutedDetail(page, entryPath);
   await expect(
@@ -53,8 +59,9 @@ async function openRemoved(
   ).toHaveCount(0);
 }
 
+/** The historical document of a removed screen's Light frame of a viewport. */
 function screenFrame(page: Page, viewport: "desktop" | "mobile") {
-  return page.frameLocator(`${STAGE} .mbk-frame-${viewport} iframe`);
+  return historicalFrame(page, viewport).locator("iframe").contentFrame();
 }
 
 for (const width of [390, 1280])
@@ -92,15 +99,17 @@ for (const width of [390, 1280])
         await comparisonIndex(request, baseURL),
         comparisonPaths.removedScreen,
       );
-      await expect(page.locator(`${STAGE} .phone-frame`)).toHaveCount(1);
-      await expect(page.locator(`${STAGE} .browser-frame`)).toHaveCount(1);
+      // Bare canvas frames, with no device chrome, show the historical views.
+      await expect(
+        page.locator(`${STAGE} :is(.phone-frame, .browser-frame)`),
+      ).toHaveCount(0);
       // Each frame shows its own viewport's previous document.
       for (const viewport of ["desktop", "mobile"] as const) {
         await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
           "Historical screen",
         );
         await expect(
-          page.locator(`${STAGE} .mbk-frame-${viewport} iframe`),
+          historicalFrame(page, viewport).locator("iframe"),
         ).toHaveAttribute(
           "data-mokly-preview-source",
           new RegExp(
@@ -109,8 +118,18 @@ for (const width of [390, 1280])
           ),
         );
       }
+      if (width >= 900) {
+        // Desktop stands beside Mobile, in one row, on the fitted canvas.
+        const desktop = await historicalFrame(page, "desktop").boundingBox();
+        const mobile = await historicalFrame(page, "mobile").boundingBox();
+        expect(desktop).not.toBeNull();
+        expect(mobile).not.toBeNull();
+        expect(desktop!.x + desktop!.width).toBeLessThan(mobile!.x);
+        expect(Math.abs(desktop!.y - mobile!.y)).toBeLessThanOrEqual(1);
+        await expect(page.getByRole("group", { name: "Zoom" })).toBeVisible();
+      }
       await chooseViewport(page, "mobile");
-      await expect(page.locator(`${STAGE} .browser-frame`)).toHaveCount(0);
+      await expect(historicalFrame(page, "desktop")).toHaveCount(0);
       await expect(screenFrame(page, "mobile").locator("h1")).toHaveText(
         "Historical screen",
       );
@@ -145,11 +164,15 @@ for (const width of [390, 1280])
         expect(
           paths.filter((path) => path === `${generation}${file}`),
         ).toHaveLength(reads);
-      // Each previous document is read once, from the generation's Before side.
+      // Each previous document is read once, from the generation's Before
+      // side: the page's, and one for each frame of the screen's section,
+      // whose Light row stands above its Dark row.
       const before = `${generation}snapshots/before/mokly-generated`;
       expect(paths.filter((path) => path.endsWith(".html")).sort()).toEqual([
         `${before}/${comparisonPaths.removedPage}/index.html`,
+        `${before}/${comparisonPaths.removedScreen}/index.desktop.dark.html`,
         `${before}/${comparisonPaths.removedScreen}/index.desktop.html`,
+        `${before}/${comparisonPaths.removedScreen}/index.mobile.dark.html`,
         `${before}/${comparisonPaths.removedScreen}/index.mobile.html`,
       ]);
     });
@@ -187,18 +210,30 @@ test("a viewport with no captured previous view says so", async ({
   await expect(screenFrame(page, "desktop").locator("h1")).toHaveText(
     "Historical screen",
   );
-  await expect(page.locator(`${STAGE} .mbk-frame-mobile`)).toHaveCount(0);
-  await expect(page.locator(note)).toContainText(
-    "No previous mobile version was captured.",
-  );
-  await expect(page.locator(rest)).toBeHidden();
+  // The note stands where each Mobile frame would stand, in the Light row
+  // and the Dark row, under the frame's label, with no document and no size
+  // tag. Its second sentence is hidden while the Desktop frames show.
+  for (const [scheme, label] of [
+    ["light", "Mobile · Light"],
+    ["dark", "Mobile · Dark"],
+  ] as const) {
+    const place = historicalFrame(page, "mobile", scheme);
+    await expect(place.locator("iframe")).toHaveCount(0);
+    await expect(place.locator("figcaption")).toHaveText(label);
+    await expect(place.locator(".mbk-preview-note")).toContainText(
+      "No previous mobile version was captured.",
+    );
+    await expect(place.locator(".mbk-preview-switch")).toBeHidden();
+  }
+  await expect(page.locator(rest)).toHaveCount(2);
 
   await chooseViewport(page, "mobile");
   await expect(page.locator(`${STAGE} iframe`)).toHaveCount(0);
-  await expect(page.locator(note)).toHaveText(
-    "No previous mobile version was captured. Switch to Desktop to see it.",
-  );
-  await expect(page.locator(rest)).toBeVisible();
+  const full =
+    "No previous mobile version was captured. Switch to Desktop to see it.";
+  await expect(page.locator(note)).toHaveText([full, full]);
+  for (const sentence of await page.locator(rest).all())
+    await expect(sentence).toBeVisible();
 
   await chooseViewport(page, "desktop");
   await expect(page.locator(note)).toHaveCount(0);
@@ -207,7 +242,7 @@ test("a viewport with no captured previous view says so", async ({
   );
 });
 
-test("Dark falls back to the light views a removed screen kept only", async ({
+test("under Dark, a removed screen captured only in Light keeps its Light row alone", async ({
   page,
   request,
   baseURL,
@@ -216,14 +251,14 @@ test("Dark falls back to the light views a removed screen kept only", async ({
   await openRemoved(page, await comparisonIndex(request, baseURL), entryPath);
   await chooseViewport(page, "desktop");
   await chooseScheme(page, "dark");
-  await expect(
-    page.locator(`${STAGE} .mbk-frame-desktop[data-color-scheme-fallback]`),
-  ).toHaveCount(1);
-  await expect(page.locator(`${STAGE} .mbk-frame-label`)).toHaveText(
-    "Desktop — Light only",
+  await expect(page.locator(`${STAGE} figure`)).toHaveCount(1);
+  await expect(historicalFrame(page, "desktop", "dark")).toHaveCount(0);
+  await expect(historicalFrame(page, "desktop")).toHaveAttribute(
+    "data-preview-color-scheme",
+    "light",
   );
   await expect(
-    page.locator(`${STAGE} .mbk-frame-desktop iframe`),
+    historicalFrame(page, "desktop").locator("iframe"),
   ).toHaveAttribute(
     "data-mokly-preview-source",
     new RegExp(

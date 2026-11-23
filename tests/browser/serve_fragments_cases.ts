@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
+import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import {
   canvasFrame,
   chooseScheme,
@@ -76,13 +77,16 @@ export function registerServeFragments(test = baseTest) {
   });
   test("use-case fragments apply to the first step only", async ({ page }) => {
     await page.goto("/view/example/tour/?fragment=welcome");
-    const frames = page.locator(".mbk-flow-screen iframe");
-    await expect(frames).toHaveCount(2);
-    await expectFrameSource(frames.nth(0), /#welcome$/);
-    await expectFrameSource(frames.nth(1), /\.html$/);
+    await expect(useCaseSteps(page)).toHaveCount(2);
+    const first = useCaseStepFrame(page, 1);
+    const second = useCaseStepFrame(page, 2);
+    await expectFrameSource(first, /#welcome$/);
+    await expectFrameSource(second, /\.html$/);
+    // The use case keeps its own Light frames under Dark, and the fragment
+    // still belongs to the first step alone.
     await chooseScheme(page, "dark");
-    await expectFrameSource(frames.nth(0), /\.dark\.html#welcome$/);
-    await expectFrameSource(frames.nth(1), /\.dark\.html$/);
+    await expectFrameSource(first, /\/index\.desktop\.html#welcome$/);
+    await expectFrameSource(second, /\/index\.desktop\.html$/);
   });
   test("a logical link retains its fragment through navigation and swaps", async ({
     page,

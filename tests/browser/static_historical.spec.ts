@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
+import { historicalFrame } from "./previous_version.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 import { chooseScheme } from "./workspace_actions.js";
 
@@ -74,11 +75,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
             page.getByText("Showing previous version", { exact: true }),
           ).toBeVisible();
         }
-        const frame = page.locator(
-          comparison
-            ? "iframe[data-mokly-comparison-frame]"
-            : "iframe[data-mokly-preview-frame]",
-        );
+        // A removed screen's section holds a frame for each scheme of the
+        // chosen viewport; the frame of the chosen scheme is checked here.
+        const frame = comparison
+          ? page.locator("iframe[data-mokly-comparison-frame]")
+          : kind === "screen"
+            ? historicalFrame(page, viewport, scheme).locator("iframe")
+            : page.locator("iframe[data-mokly-preview-frame]");
         await expect(frame).toHaveCount(1);
         const file =
           kind === "page"

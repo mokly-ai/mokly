@@ -1,18 +1,18 @@
 /**
  * Shared unavailable state for a removed entry's previous version, worded by
- * `previews/copy.ts`. `@mokly/ui/preview-state` draws it.
+ * `previews/copy.ts`, which the canvas holds in place of the section.
+ * `@mokly/ui/empty-state` draws it.
  */
 
-import { PreviewUnavailable as PreviewUnavailableView } from "@mokly/ui/preview-state";
+import { EmptyState } from "@mokly/ui/empty-state";
 
 import { PREVIEW_UNAVAILABLE } from "../previews/copy.js";
 
 /** Render the unavailable copy and, after a failed request, its Retry action. */
 export function PreviewUnavailable(props: { retry: (() => void) | undefined }) {
   return (
-    <PreviewUnavailableView
-      body={PREVIEW_UNAVAILABLE.body}
-      retry={
+    <EmptyState
+      action={
         props.retry
           ? {
               label: PREVIEW_UNAVAILABLE.retry.label,
@@ -21,6 +21,7 @@ export function PreviewUnavailable(props: { retry: (() => void) | undefined }) {
             }
           : undefined
       }
+      body={PREVIEW_UNAVAILABLE.body}
       title={PREVIEW_UNAVAILABLE.title}
     />
   );

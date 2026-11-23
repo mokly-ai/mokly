@@ -9,6 +9,7 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import { DOCUMENT_FRAME } from "./workspace_actions.js";
 
 /** Hold the first read of one entry detail; later reads continue. */
@@ -170,13 +171,14 @@ test("use-case and page frames load and navigate while usage and resource eviden
   );
   await page.goto("/view/example/tour/");
   await expect(page.locator("#mb-main h2").first()).toHaveText("Example tour");
-  const steps = page.locator(".mbk-flow-screen iframe");
-  await expect(steps).toHaveCount(2);
-  for (const step of await steps.all())
-    await expect(step).toHaveAttribute("data-mokly-frame-state", "ready");
-  await page
-    .frameLocator(".mbk-flow-screen iframe")
-    .first()
+  await expect(useCaseSteps(page)).toHaveCount(2);
+  for (const step of [1, 2])
+    await expect(useCaseStepFrame(page, step)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
+  await useCaseStepFrame(page, 1)
+    .contentFrame()
     .getByRole("link", { name: "View details", exact: true })
     .click();
   await expect(page).toHaveURL(

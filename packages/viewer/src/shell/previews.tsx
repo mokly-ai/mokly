@@ -1,29 +1,20 @@
 // The one previous-version presentation shared by removed documents and
 // removed screens. The React shell owns the request, lifecycle, and historical
 // frames; a shell without a request shows the explicit unavailable state.
-// `@mokly/ui/previous-version` draws the band and the stage host,
-// `@mokly/ui/preview-state` the loading and missing states, and
-// `@mokly/ui/preview-frame` and `@mokly/ui/device-frame` the frames.
+// `@mokly/ui/canvas-previous-version` draws the host of the request, and
+// `canvas_removed.tsx` the canvas that holds the section of the historical
+// views, or the loading or unavailable state in place of the section.
 
-import { PhoneFrame } from "@mokly/ui/device-frame";
-import { DocumentFrame, PreviewFrame } from "@mokly/ui/preview-frame";
-import { PreviewLoading, PreviewNotCaptured } from "@mokly/ui/preview-state";
-import { PreviousVersion } from "@mokly/ui/previous-version";
-import { Stage } from "@mokly/ui/stage";
+import { CanvasPreviousVersion } from "@mokly/ui/canvas-previous-version";
 
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { RemovedEntryPreview } from "../catalogue/types.js";
-import { entryRoute } from "../navigation/routes.js";
-import type { SnapshotPresentation } from "../previews/presentation.js";
-import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
 
+import { readingFrameLabel } from "./canvas_frames.js";
+import { CanvasRemovedStage } from "./canvas_removed.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { BrowserFrame } from "./frames.js";
-import { SnapshotFrame } from "./preview_frame.js";
-import { PreviewUnavailable } from "./preview_unavailable.js";
-import { useShellRoot } from "./root_context.js";
-import { schemeValue, documentLightOnly } from "./scheme_fallback.js";
+import { documentLightOnly } from "./scheme_fallback.js";
 import { useShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
 
@@ -38,12 +29,12 @@ export interface RemovedPreviewData {
   catalogueIdentity?: string;
   /** Exact historical record whose preview bytes may be displayed. */
   snapshotId?: string;
-  /** Address shown in a screen preview's browser chrome. */
-  address?: string;
   /** The delivery's advertised descriptor; absent when nothing is published. */
   published?: RemovedEntryPreview;
   /** A document with no historical dark render in a catalogue with Dark. */
   lightOnly?: true;
+  /** The name of a page's or a document's reading frame: its source file. */
+  readingLabel?: string;
 }
 
 /**
@@ -78,177 +69,40 @@ export function removedPreviewData(
           snapshotId: removed.snapshotId,
         }
       : {}),
-    ...(entry.kind === "screen" && entry.address
-      ? { address: entry.address }
-      : {}),
     ...(published ? { published } : {}),
     ...(documentLightOnly(entry, catalogue.hasDarkFragments)
       ? { lightOnly: true as const }
       : {}),
+    ...(entry.kind === "screen"
+      ? {}
+      : { readingLabel: readingFrameLabel(entry) }),
   };
-}
-
-function ScreenFrame(props: {
-  data: RemovedPreviewData;
-  presentation: SnapshotPresentation;
-  scheme: "dark" | "light";
-  view: PreviewScreenView;
-  viewport: "desktop" | "mobile";
-}) {
-  const content = (
-    <SnapshotFrame
-      presentation={props.presentation}
-      title={`${props.data.title} — ${props.viewport}`}
-    />
-  );
-  return (
-    <PreviewFrame
-      fallback={props.view.colorScheme !== props.scheme}
-      placement={{ kind: "frame", viewport: props.viewport }}
-      scheme={props.view.colorScheme}
-    >
-      {props.viewport === "mobile" ? (
-        <PhoneFrame>{content}</PhoneFrame>
-      ) : (
-        <BrowserFrame
-          address={props.data.address ?? entryRoute(props.data.path)}
-          expandable={false}
-        >
-          {content}
-        </BrowserFrame>
-      )}
-    </PreviewFrame>
-  );
-}
-
-/** Render a loaded preview, or the retryable unavailable state if it is incomplete. */
-export function ReadyPreview(props: {
-  colorScheme: "dark" | "light";
-  data: RemovedPreviewData;
-  loaded: LoadedPreview;
-  presentations: ReadonlyMap<string, SnapshotPresentation>;
-  retry(): void;
-  viewport: "both" | "desktop" | "mobile";
-}) {
-  const elements = useShellRoot()?.elements;
-  const content = props.loaded.content;
-  if (content.kind === "page" || content.kind === "document") {
-    const view =
-      content.kind === "document"
-        ? schemeValue(
-            props.colorScheme,
-            content.views[0]!,
-            content.views.find((view) => view.colorScheme === "dark"),
-          )
-        : { url: content.url, colorScheme: "light" as const };
-    const presentation = presentationFor(props.presentations, view.url);
-    if (!presentation) return <PreviewUnavailable retry={props.retry} />;
-    return (
-      <DocumentFrame
-        ref={elements?.scrolls.ref("embed")}
-        scheme={view.colorScheme}
-      >
-        <SnapshotFrame presentation={presentation} title={props.data.title} />
-      </DocumentFrame>
-    );
-  }
-  const viewports =
-    props.viewport === "both"
-      ? (["mobile", "desktop"] as const)
-      : ([props.viewport] as const);
-  const frames = viewports.map((viewport) => {
-    const view = schemeValue(
-      props.colorScheme,
-      content.views.find(
-        (item) => item.viewport === viewport && item.colorScheme === "light",
-      ),
-      content.views.find(
-        (item) => item.viewport === viewport && item.colorScheme === "dark",
-      ),
-    );
-    if (!view) return <PreviewNotCaptured key={viewport} viewport={viewport} />;
-    const presentation = presentationFor(props.presentations, view.url);
-    return presentation ? (
-      <ScreenFrame
-        data={props.data}
-        key={viewport}
-        presentation={presentation}
-        scheme={props.colorScheme}
-        view={view}
-        viewport={viewport}
-      />
-    ) : undefined;
-  });
-  if (frames.some((frame) => frame === undefined))
-    return <PreviewUnavailable retry={props.retry} />;
-  return (
-    <Stage
-      kind="live"
-      ref={elements?.scrolls.ref("stage")}
-      viewport={props.viewport}
-    >
-      {frames}
-    </Stage>
-  );
-}
-
-function presentationFor(
-  presentations: ReadonlyMap<string, SnapshotPresentation>,
-  address: string,
-): SnapshotPresentation | undefined {
-  return presentations.get(address);
-}
-
-function PreviewState(props: {
-  colorScheme: "dark" | "light";
-  data: RemovedPreviewData;
-  viewport: "both" | "desktop" | "mobile";
-}) {
-  const store = useShellStore();
-  const preview = useRemovedPreview({
-    colorScheme: props.colorScheme,
-    data: props.data,
-    interactive: store.interactive,
-    viewport: props.viewport,
-  });
-  if (preview.state.status === "ready")
-    return (
-      <ReadyPreview
-        colorScheme={props.colorScheme}
-        data={props.data}
-        loaded={preview.state.loaded}
-        presentations={preview.state.presentations}
-        retry={preview.retry}
-        viewport={props.viewport}
-      />
-    );
-  if (preview.state.status === "loading") return <PreviewLoading />;
-  return (
-    <PreviewUnavailable
-      retry={preview.state.status === "failed" ? preview.retry : undefined}
-    />
-  );
 }
 
 /**
  * The stage a removed entry opens in. Opening a removed entry is the request:
- * the stage shows the loading state, then the previous version. A shell that
- * cannot request it shows that the previous version is unavailable.
+ * the canvas holds the loading state, then the section of the previous
+ * version. A shell that cannot request it shows that the previous version is
+ * unavailable.
  */
 export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
   const store = useShellStore();
   const { colorScheme, viewport } = store.state.selection;
+  const preview = useRemovedPreview({
+    colorScheme,
+    data: props.data,
+    interactive: store.interactive,
+    viewport,
+  });
   return (
-    <PreviousVersion
-      descriptor=""
-      lightOnly={props.data.lightOnly === true}
-      viewport={viewport}
-    >
-      <PreviewState
+    <CanvasPreviousVersion descriptor="">
+      <CanvasRemovedStage
         colorScheme={colorScheme}
         data={props.data}
+        retry={preview.retry}
+        state={preview.state}
         viewport={viewport}
       />
-    </PreviousVersion>
+    </CanvasPreviousVersion>
   );
 }
