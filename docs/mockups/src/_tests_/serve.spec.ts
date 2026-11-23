@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
+import type { FrameLocator, Page } from "@playwright/test";
 
 import { viewHref } from "@mokly/viewer/data";
 
@@ -19,36 +20,49 @@ const screenshots = resolve(
 /** The renderer's wrapper, which carries a document's scheme and viewport. */
 const wrapper = "[data-color-scheme][data-viewport]";
 
-test("browse a settings pane over the stage and switch its theme", async ({
+/**
+ * The document of one frame of a screen on Browse's canvas, by the label
+ * that the frame shows, such as `Desktop · Light`. The canvas shows the
+ * screen's Desktop and Mobile frames in Light and in Dark at once.
+ */
+function canvasFrame(page: Page, label: string): FrameLocator {
+  return page
+    .getByRole("figure", { name: label })
+    .locator("iframe")
+    .contentFrame();
+}
+
+test("browse a settings pane on the canvas in both schemes", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(screenUrl("product/settings/project"));
-  await expect(page.locator("iframe")).toHaveCount(2);
-  for (const index of [0, 1])
+  await expect(page.locator("iframe")).toHaveCount(4);
+  for (const [label, viewport, scheme] of [
+    ["Mobile · Light", "mobile", "light"],
+    ["Desktop · Light", "desktop", "light"],
+    ["Mobile · Dark", "mobile", "dark"],
+    ["Desktop · Dark", "desktop", "dark"],
+  ] as const) {
+    const frame = canvasFrame(page, label);
     await expect(
-      page
-        .frameLocator("iframe")
-        .nth(index)
-        .locator('[data-mkc-screen="product/settings/project"]'),
+      frame.locator('[data-mkc-screen="product/settings/project"]'),
     ).toBeVisible();
-  const desktop = page.frameLocator("iframe").nth(1);
+    await expect(frame.locator(wrapper)).toHaveAttribute(
+      "data-color-scheme",
+      scheme,
+    );
+    await expect(frame.locator(wrapper)).toHaveAttribute(
+      "data-viewport",
+      viewport,
+    );
+  }
+  const desktop = canvasFrame(page, "Desktop · Light");
   await expect(desktop.locator(".fo-stage-canvas")).toBeVisible();
   await expect(desktop.locator('[role="dialog"]')).toBeVisible();
-  const appearance = page.getByRole("combobox", { name: "Appearance" });
-  await appearance.selectOption("dark");
-  await expect(
-    page.frameLocator("iframe").first().locator(wrapper),
-  ).toHaveAttribute("data-color-scheme", "dark");
-  await appearance.selectOption("light");
-  await expect(
-    page.frameLocator("iframe").first().locator(wrapper),
-  ).toHaveAttribute("data-color-scheme", "light");
-  await page
-    .frameLocator("iframe")
-    .nth(1)
+  await desktop
     .getByRole("link", { name: "Publishing tokens", exact: true })
     .click();
   await expect(page).toHaveURL(screenUrl("product/settings/tokens"));
@@ -71,7 +85,7 @@ test("every settings pane is reachable from the dialog rail", async ({
     ["Delete project", "danger"],
     ["Account", "account"],
   ] as const) {
-    const frame = page.frameLocator("iframe").nth(1);
+    const frame = canvasFrame(page, "Desktop · Light");
     await frame
       .getByRole("navigation", { name: "Settings sections" })
       .getByRole("link", { name: label, exact: true })
