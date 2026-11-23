@@ -1,25 +1,31 @@
 /**
  * A removed document's baseline context on the copied comparison output,
  * under the removed previews and folder contracts, in a narrow and a wide
- * window. The removed Markdown document keeps its title and its base-side
- * folder label in the crumbs and in Details, shows its previous version
- * without comparison controls, and is a row only in Changes, outside any
- * folder. A current document opens at its fragment, keeps it after a reload,
- * and its catalogue link navigates the shell.
+ * window. The removed Markdown document keeps its title, its path without
+ * crumb links and its base-side folder label in Inspect's head, shows its
+ * previous version without comparison controls, and is a row only in
+ * Changes, outside any folder. A current document opens at its fragment,
+ * keeps it after a reload, and its catalogue link navigates the shell.
  */
 
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { chooseFilter, comparisonIndex, snapshotOf } from "./comparison_ui.js";
 import { documentFaces, loadedViewerFaces } from "./document_faces.js";
+import { inspectHead, inspectTitle } from "./inspect_head.js";
 import {
   DOCUMENT_FRAME,
   openCatalogueSheet,
   revealInPanel,
 } from "./workspace_actions.js";
 
-const CONTROLS = "[data-diff-stage], [data-diff-mode], [data-viewport-option]";
+/** A document offers no comparison and has no Frames filter. */
+async function expectNoControls(page: Page): Promise<void> {
+  await expectNoComparison(page);
+  await expect(page.locator("[data-frames-toggle]")).toHaveCount(0);
+}
 
 for (const width of [390, 1280])
   test.describe(`${width}px window`, () => {
@@ -34,12 +40,13 @@ for (const width of [390, 1280])
       const index = await comparisonIndex(request, baseURL);
       const snapshot = snapshotOf(index, removedPath);
       await page.goto(`/view/${removedPath}/?snapshot=${snapshot}`);
-      await expect(page.locator(".mbk-screen-head h2")).toHaveText(
-        "Retired document",
-      );
-      const crumbs = page.getByLabel("Catalogue location");
-      await expect(crumbs).toHaveText("Notes");
-      await expect(crumbs.locator("a")).toHaveCount(0);
+      await expect(inspectTitle(page)).toHaveText("Retired document");
+      // Inspect's Path row is the crumb trail. The base-side folder has no
+      // current page or row, so no segment links; the Location row below
+      // names the folder.
+      const crumbs = inspectHead(page).locator("[data-inspect-path]");
+      await expect(crumbs.locator("code")).toHaveText(removedPath);
+      await expect(crumbs.locator("a, button")).toHaveCount(0);
       await expect(page.locator("#mb-main")).toContainText(
         "Showing previous version",
       );
@@ -59,12 +66,11 @@ for (const width of [390, 1280])
           ),
         );
       await expect(page.locator("[data-mokly-preview-retry]")).toHaveCount(0);
-      await expect(page.locator(CONTROLS)).toHaveCount(0);
-      // Details name the base-side folder too; in the compact layout they
-      // stand in the panel's sheet.
-      await revealInPanel(page, page.locator("[data-mokly-details]"));
-      await page.locator("[data-mokly-details] summary").click();
-      const location = page.locator(".mbk-meta-row", {
+      await expectNoControls(page);
+      // Inspect's head names the base-side folder too; in the compact layout
+      // it stands in the panel's sheet.
+      await revealInPanel(page, inspectHead(page));
+      const location = inspectHead(page).locator(".mbk-meta-row", {
         has: page.locator(".mbk-meta-k", { hasText: "Location" }),
       });
       await expect(location).toHaveText("LocationNotes");
@@ -92,7 +98,7 @@ for (const width of [390, 1280])
       );
       const document = page.frameLocator(DOCUMENT_FRAME);
       await expect(document.locator("#overview")).toBeInViewport();
-      await expect(page.locator(CONTROLS)).toHaveCount(0);
+      await expectNoControls(page);
       await page.reload();
       await expect(document.locator("#overview")).toBeInViewport();
       await expect(page.locator(DOCUMENT_FRAME)).toHaveAttribute(
@@ -102,8 +108,6 @@ for (const width of [390, 1280])
       await document
         .getByRole("link", { name: "Open the stable screen", exact: true })
         .click();
-      await expect(page.locator(".mbk-screen-head h2")).toHaveText(
-        "Stable screen",
-      );
+      await expect(inspectTitle(page)).toHaveText("Stable screen");
     });
   });

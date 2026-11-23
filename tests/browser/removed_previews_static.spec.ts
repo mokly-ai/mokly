@@ -15,6 +15,7 @@ import { readCatalogueIndex, readEntryDetail } from "@mokly/viewer";
 
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -56,11 +57,7 @@ async function openRemoved(
   ).toBeVisible();
   await expect(page.locator("#mb-main")).not.toContainText("was removed");
   await awaitRoutedDetail(page, entryPath);
-  await expect(
-    page.locator(
-      "[data-diff-stage], [data-diff-mode], [data-diff-refresh], .mbk-diff-toolbar",
-    ),
-  ).toHaveCount(0);
+  await expectNoComparison(page);
 }
 
 /** The historical document of a removed screen's Light frame of a viewport. */
@@ -106,17 +103,18 @@ for (const width of [390, 1280])
         await comparisonIndex(request, baseURL),
         comparisonPaths.removedScreen,
       );
-      // Bare canvas frames, with no device chrome, show the historical views.
-      await expect(
-        page.locator(`${STAGE} :is(.phone-frame, .browser-frame)`),
-      ).toHaveCount(0);
-      // Each frame shows its own viewport's previous document. The compact
-      // layout shows one frame at a time, which the entry bar's picker picks.
+      // Each frame, a bare canvas frame of its viewport, shows its own
+      // viewport's previous document. The compact layout shows one frame at
+      // a time, which the entry bar's picker picks.
       for (const viewport of ["mobile", "desktop"] as const) {
         if (width < 900)
           await page.getByRole("combobox", { name: "Frame" }).selectOption({
             label: `${viewport === "desktop" ? "Desktop" : "Mobile"} · Light`,
           });
+        await expect(historicalFrame(page, viewport)).toHaveAttribute(
+          "data-canvas-frame",
+          viewport,
+        );
         await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
           "Historical screen",
         );
