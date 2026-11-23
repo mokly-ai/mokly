@@ -15,6 +15,7 @@ import {
   developmentShell,
   installDevelopmentShell,
 } from "./development_shell.js";
+import { inspectTitle } from "./inspect_head.js";
 import { passRenderingUpdates } from "./page_settling.js";
 import { previousVersionLabel } from "./previous_version.js";
 
@@ -38,7 +39,7 @@ test("development React mounts removed and moved finalized routes", async ({
   const moved = movedFixturePaths.movedPage;
   const current = await page.goto(`/view/${moved}/`);
   expect(current?.status()).toBe(200);
-  await expect(page.locator(".mbk-screen-head h2")).toHaveText("Payment guide");
+  await expect(inspectTitle(page)).toHaveText("Payment guide");
   await expect(previousVersionLabel(page)).toHaveCount(0);
   await passRenderingUpdates(page);
   expect(loads()).toBe(2);

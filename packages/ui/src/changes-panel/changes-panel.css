@@ -1,0 +1,95 @@
+/* The Changes tab's body: the stepper's row, the host's slot, then each part
+   in a section padded 14px with a hairline below it, which the last part
+   leaves out. A section heading reads in the panel's head type. The rules
+   weigh at least two classes, so a container's rule for its headings,
+   paragraphs and links, such as the inspector's, leaves the panel alone. */
+.mbk-changes {
+  min-width: 0;
+}
+
+.mbk-changes > .mbk-changes-section {
+  padding: 14px;
+  border-bottom: 1px solid var(--cv-border);
+}
+
+.mbk-changes > .mbk-changes-section:last-child {
+  border-bottom: 0;
+}
+
+.mbk-changes-section > .mbk-changes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+  margin: 0 0 10px;
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* A host slot that its host's component leaves empty takes no space. The
+   rule places the container and never reaches into its content. */
+.mbk-changes > [data-mokly-slot="changesStart"]:empty {
+  display: none;
+}
+
+/* The comparison details: the evidence as a section of the panel, its
+   heading in the section's head type and each sentence in the secondary
+   text, 8px above each paragraph and list, the sentences and lists of a
+   file's item included, and 14px between a list and the paragraph after
+   it. The section's own padding and hairline frame the evidence, so the
+   evidence draws neither: this rule weighs four classes, which beats the
+   right panel's rule that pads the evidence of Inspect and rules it off. */
+.mbk-changes
+  > .mbk-changes-section.mbk-changes-details
+  > .mbk-comparison-evidence {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mbk-changes-details > .mbk-comparison-evidence > h3 {
+  margin: 0 0 8px;
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mbk-changes-details > .mbk-comparison-evidence p {
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* The outcome line of each compared frame reads as the sentences do. */
+.mbk-changes-details > .mbk-comparison-evidence .mbk-comparison-outcomes {
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mbk-changes-details > .mbk-comparison-evidence :is(p, ul, dl) {
+  margin: 8px 0 0;
+}
+
+.mbk-changes-details > .mbk-comparison-evidence :is(ul, dl) + p {
+  margin-top: 14px;
+}
+
+/* A moved entry's previous path reads in the Canvas mono, as the Compared
+   rail names the base. */
+.mbk-changes-details > .mbk-comparison-evidence .mbk-code {
+  color: var(--cv-text);
+  font-family: var(--cv-mono);
+  font-size: 12px;
+}
+
+/* A link in the details, such as a changed component or a use case's
+   changed step, reads in the deep signal ink at its weight, without an
+   underline. */
+.mbk-changes-details > .mbk-comparison-evidence a {
+  color: var(--cv-signal-deep);
+  font-weight: 560;
+  text-decoration: none;
+}

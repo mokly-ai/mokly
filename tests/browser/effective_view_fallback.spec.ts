@@ -8,16 +8,19 @@
 import { expect, type Page } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
-import { NARROW_WINDOW, revealInPanel } from "./workspace_actions.js";
+import { NARROW_WINDOW, openPanelTab } from "./workspace_actions.js";
 
 /** Open the variant under Dark, whose status and marks follow Light. */
 async function openUnderDark(page: Page): Promise<void> {
   await page.goto(`/view/${comparisonPaths.lightOnlyVariant}/?scheme=dark`);
   await expect(page.locator("#mb-main h2").first()).toHaveText("Lamp");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
-  // The band stands in the right panel, a sheet of the compact layout.
-  await revealInPanel(page, page.locator(".mbk-diff-toolbar"));
-  await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
+  // The band stands in the right panel's Changes tab, a sheet of the compact
+  // layout.
+  await openPanelTab(page, "Changes");
+  await expect(
+    page.getByRole("group", { name: "Comparison mode" }),
+  ).toBeVisible();
   // The Dark selection stays.
   await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
     "dark",

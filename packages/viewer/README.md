@@ -381,10 +381,15 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/previews/descriptor.ts`](./src/previews/descriptor.ts) — the identity
   key of a route-owned previous-version request
 - [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
-  [`src/shell/comparison_mode.tsx`](./src/shell/comparison_mode.tsx),
-  [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts),
-  and [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the comparison-mode
-  owner, request identity, and current and comparison presentation
+  [`src/shell/comparison_mode.tsx`](./src/shell/comparison_mode.tsx), and
+  [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts)
+  — the comparison-mode owner, the mode that the canvas shows, request
+  identity, and current and comparison presentation
+- [`src/shell/changes_tab.tsx`](./src/shell/changes_tab.tsx) and
+  [`src/shell/compare_modes.tsx`](./src/shell/compare_modes.tsx) — the right
+  panel's Changes tab: the change stepper, the host's `changesStart` slot,
+  the Compared rail, the compare modes with their keys, and the comparison
+  details
 - [`src/shell/view_status.ts`](./src/shell/view_status.ts) — the combined
   status and eligibility of the displayed views from their index comparisons
 - [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact

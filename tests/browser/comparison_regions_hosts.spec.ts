@@ -9,17 +9,19 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
   expectRegionsAt,
-  openComparison,
-  paneFrame,
   regionOffset,
-  scrollTogether,
   settleRegion,
   wheelOverRegion,
-} from "./comparison_scroll.js";
+} from "./comparison_region_offsets.js";
+import { scrollTogether } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { modeButton, navRow } from "./comparison_ui.js";
+import { awaitRoutedDetail, chooseMode, navRow } from "./comparison_ui.js";
 import {
   comparisonViewerHost,
   openEmbeddedComparison,
@@ -57,7 +59,7 @@ test("a static export mirrors panels and remembers Scroll together", async ({
 
   await page.reload();
   await chooseViewport(page, "desktop");
-  await modeButton(page, "Overlay").click();
+  await chooseMode(page, "Overlay");
   await expect(scrollTogether(page)).not.toBeChecked();
   await expect(paneFrame(desktop, "after")).toBeVisible();
   await expectApart(page, desktop);
@@ -108,13 +110,11 @@ test.describe("embedded viewer", () => {
 
       // Another screen of the same mount keeps the choice.
       await navRow(page, comparisonPaths.lightOnly).click();
-      await expect(page.locator(".mbk-screen-head h2")).toHaveText(
-        "Daylight screen",
-      );
-      await modeButton(page, "Overlay").click();
+      await awaitRoutedDetail(page, comparisonPaths.lightOnly);
+      await chooseMode(page, "Overlay");
       await expect(scrollTogether(page)).not.toBeChecked();
       await navRow(page, changed).click();
-      await modeButton(page, "Overlay").click();
+      await chooseMode(page, "Overlay");
       await expect(scrollTogether(page)).not.toBeChecked();
       await expectApart(page, desktop);
 
@@ -123,7 +123,7 @@ test.describe("embedded viewer", () => {
         (window as unknown as { replaceSource: () => void }).replaceSource(),
       );
       await chooseViewport(page, "desktop");
-      await modeButton(page, "Overlay").click();
+      await chooseMode(page, "Overlay");
       await expect(scrollTogether(page)).not.toBeChecked();
       await expectApart(page, desktop);
       expect(
@@ -135,7 +135,7 @@ test.describe("embedded viewer", () => {
       // A new mount starts with the switch on.
       await page.reload();
       await chooseViewport(page, "desktop");
-      await modeButton(page, "Overlay").click();
+      await chooseMode(page, "Overlay");
       await expect(scrollTogether(page)).toBeChecked();
     });
 });

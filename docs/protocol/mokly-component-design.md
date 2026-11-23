@@ -1,6 +1,6 @@
 # Component Explorer Design
 
-Status: Inspect's sections, the Changes tab and compare on every frame of a variant set are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
+Status: Inspect's sections and compare on every frame of a variant set are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
 
 ## Owning Catalogue
 
@@ -49,16 +49,22 @@ A variant without such an artboard is a depiction. Navigation variant rows
 follow the same rule. Consuming screens depict the same Action and Toolbar
 examples as the component pages.
 
-A component compares on its variant set: every frame of the set compares its
-own view in the chosen mode of the
-[comparison panes](./mokly-comparison-panes.md). Side by side shows one
-frame's two versions next to each other, each in its own frame with a Before
-or Current tag. A chip names each frame of the set as the frame's label does.
-Overlay and Difference hold both versions in each frame: Current sits on top
-at half opacity, or blends by difference over the opaque Before layer. Both
-versions of a frame share one size: the larger width and the larger height of
-the two. On the depicted Action branch, no version before is larger than its
-current version, so each frame keeps the size of its current version.
+A component compares on its variant set, row by row. Each row is its own entry
+with its own comparison, under the
+[selected comparison contract](./mokly-selected-comparisons.md). Each frame of
+a compared row compares its own view in the chosen mode of the
+[comparison panes](./mokly-comparison-panes.md). A row without a comparison,
+such as an Added variant or an Unmodified row that uses no changed component,
+keeps its current frames. A failed row shows the comparison failure on its own
+frames, and the other rows still compare. Side by side shows one frame's two
+versions next to each other, each in its own frame with a Before or Current
+tag. A chip names each frame of a compared row as the frame's label does.
+Overlay and Difference hold both versions in each frame of a compared row:
+Current sits on top at half opacity, or blends by difference over the opaque
+Before layer. Both versions of a frame share one size: the larger width and
+the larger height of the two. On the depicted Action branch, no version before
+is larger than its current version, so each frame keeps the size of its
+current version.
 
 Inspect holds the sections of the
 [inspector design](./mokly-component-inspector-design.md#inspect). Selection

@@ -200,3 +200,87 @@ test("each changed component links to its page", () => {
     "H3",
   );
 });
+
+test("a use case's changed steps follow the reason sentences, each a link with its step's title, before the saved variant and the files", () => {
+  assert.equal(
+    renderToStaticMarkup(
+      <ComparisonEvidence
+        base=""
+        changedSteps={[
+          {
+            href: "/view/screens/welcome/",
+            key: "welcome",
+            title: "Open the welcome screen",
+          },
+          {
+            href: "/view/screens/details/",
+            key: "details",
+            title: "Read the details",
+          },
+        ]}
+        files={{
+          lead: "Changes to these files may affect this screen:",
+          stylesheets: [{ path: "styles/a.css", outcomes: [] }],
+        }}
+        mark="data-workspace-evidence"
+        reasons={[
+          {
+            key: "metadata/0",
+            text: "Page details or saved examples changed.",
+          },
+        ]}
+        savedVariant={{ savedPropsUnchanged: false, title: "Default" }}
+      />,
+    ),
+    `<section class="mbk-comparison-evidence mbk-reset" data-workspace-evidence="">${HEADING}` +
+      '<p class="mbk-reset">Page details or saved examples changed.</p>' +
+      '<p class="mbk-reset">Changed step: <a class="mbk-reset" href="/view/screens/welcome/">Open the welcome screen</a></p>' +
+      '<p class="mbk-reset">Changed step: <a class="mbk-reset" href="/view/screens/details/">Read the details</a></p>' +
+      '<dl class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">Saved variant</dt><dd class="mbk-reset">Default</dd></div></dl>' +
+      '<p class="mbk-reset">Changes to these files may affect this screen:</p><ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">styles/a.css</li></ul></section>',
+  );
+});
+
+test("the outcome line of each compared frame is a list named Compared frames, directly after the heading", () => {
+  render(
+    <ComparisonEvidence
+      base=""
+      mark="data-workspace-evidence"
+      outcomes={[
+        "Desktop · Light · Screen changed",
+        "Mobile · Dark · No changes to this screen · Light only",
+      ]}
+      previousPath="old/place"
+      reasons={[{ key: "material/0", text: "Rendered content changed." }]}
+    />,
+  );
+  const list = screen.getByRole("list", { name: "Compared frames" });
+  assert.deepEqual(
+    [...list.children].map((item) => item.textContent),
+    [
+      "Desktop · Light · Screen changed",
+      "Mobile · Dark · No changes to this screen · Light only",
+    ],
+  );
+  assert.equal(list.previousElementSibling?.textContent, "Comparison details");
+  assert.equal(
+    list.nextElementSibling?.textContent,
+    "The previous version is at old/place, where it was before the move.",
+  );
+});
+
+test("evidence without outcome lines draws no Compared frames list", () => {
+  render(
+    <ComparisonEvidence
+      base="main"
+      mark="data-workspace-evidence"
+      outcomes={[]}
+    />,
+  );
+  assert.deepEqual(
+    screen
+      .queryAllByRole("list", { name: "Compared frames" })
+      .map((list) => list.outerHTML),
+    [],
+  );
+});

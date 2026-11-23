@@ -1,8 +1,9 @@
 /**
  * The compare on the canvas of a screen's or a component's workspace. While a
  * compare mode shows, each compared frame of the canvas draws its versions in
- * the shown mode, and while the comparison or its documents load, or after
- * the request failed, the canvas holds that state in place of its section.
+ * the shown mode, or its own row's failure. While the comparison or its
+ * documents load, or after every drawn row failed, the canvas holds that
+ * state in place of its section.
  * With `shown` false the canvas shows its live frames, while the mode, the
  * loaded comparison and its presentations stay, so a later `shown` shows the
  * mode again without a new request. This container reads the comparison
@@ -137,8 +138,8 @@ export function ComparisonCanvas({
     comparedRowDocuments(drawn),
   );
   const state = canvasCompareState({
-    failure: comparison.failure,
     frames: drawn,
+    generations: comparison.generations,
     mode,
     rows,
   });
@@ -201,7 +202,8 @@ export function ComparisonCanvas({
       frames: (live) => comparisonSectionFrames(input, live),
     };
   }, [active, input]);
-  const retry = focusThen(stage, comparison.retry);
+  // Every drawn row failed, so Try again requests every row again.
+  const retry = focusThen(stage, comparison.refresh);
   const stateNode = !active ? undefined : state.status === "loading" ? (
     "Loading comparison…"
   ) : state.status === "failed" ? (

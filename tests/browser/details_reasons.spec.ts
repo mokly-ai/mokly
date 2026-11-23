@@ -23,6 +23,7 @@ import {
   chooseFilter,
   comparisonIndex,
   modeButton,
+  outcomeLines,
   showMode,
 } from "./comparison_ui.js";
 
@@ -82,8 +83,14 @@ test("Current, a loaded comparison and Changes show the same facts once", async 
   await expect.poll(() => facts(evidence)).toEqual(expected);
   expect(requests.count).toBe(0);
 
-  await showMode(page, "Side by side", 4);
-  await expect(page.locator(".mbk-diff-view").first()).toBeVisible();
+  // Side by side compares one frame, whose two versions stand side by side.
+  await showMode(page, "Side by side", 2);
+  await expect(outcomeLines(page)).toHaveText([
+    "Desktop · Light · Screen changed",
+    "Mobile · Light · Screen changed",
+    "Desktop · Dark · Screen changed",
+    "Mobile · Dark · Screen changed",
+  ]);
   expect(requests.count).toBeGreaterThan(0);
   await expect.poll(() => facts(evidence)).toEqual(expected);
   for (const once of [MATERIAL, OUTSIDE_LEAD, "Comparison details"])
@@ -123,9 +130,15 @@ test("classification evidence arrives first and survives the comparison", async 
       candidate.status() === 200 &&
       SNAPSHOT.test(new URL(candidate.url()).pathname),
   );
-  await showMode(page, "Side by side", 4);
+  await showMode(page, "Side by side", 2);
   await response;
-  await expect(page.locator(".mbk-diff-view").first()).toBeVisible();
+  // Only the Mobile views use the changed style.
+  await expect(outcomeLines(page)).toHaveText([
+    "Desktop · Light · No changes to this screen",
+    "Mobile · Light · Styles this screen uses changed",
+    "Desktop · Dark · No changes to this screen",
+    "Mobile · Dark · Styles this screen uses changed",
+  ]);
   await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
   await expect(
     evidence.getByText("Comparison details", { exact: true }),

@@ -13,8 +13,8 @@ import type { CanvasFramePlan } from "./canvas_frames.js";
 import type { StandaloneComparisonHead } from "./comparison_canvas.js";
 import {
   comparedFrameKey,
-  useComparedFrameChoice,
   type CanvasComparisonController,
+  type ComparedFrameChoice,
 } from "./comparison_compared_frame.js";
 import { comparedFrameOutcome } from "./comparison_outcome.js";
 import {
@@ -24,6 +24,7 @@ import {
   type ComparisonFramePlan,
 } from "./comparison_rows.js";
 import { comparedFrames, type ComparedFrame } from "./comparison_selection.js";
+import { useShellStore } from "./store_context.js";
 import type { ComparisonController } from "./use_comparison.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
@@ -45,6 +46,7 @@ export interface WorkspaceComparison {
 }
 
 export function useWorkspaceComparison({
+  choice,
   comparison,
   data,
   frames,
@@ -53,6 +55,8 @@ export function useWorkspaceComparison({
   usingChanged,
   variant,
 }: {
+  /** The reader's choice of the frame that Side by side compares. */
+  choice: ComparedFrameChoice;
   comparison: ComparisonController;
   data: WorkspaceData;
   /** The workspace's frames on the canvas, from which the shown ones compare. */
@@ -63,18 +67,19 @@ export function useWorkspaceComparison({
   usingChanged: ReadonlySet<string> | undefined;
   variant: WorkspaceVariant | undefined;
 }): WorkspaceComparison {
-  const choice = useComparedFrameChoice();
+  const shown = useShellStore().state.frames;
   const entry = variant?.value ?? data.entry;
   const routed = entry.path;
   // A removed component or variant has no live frames: its compare draws
-  // the frames of its own views alone.
+  // the frames of its own views alone, of the schemes that the Frames
+  // filter shows.
   const removed = data.removed || variant?.removed === true;
   const plans = useMemo(
     () =>
       removed
-        ? removedComparisonPlans(data.compared, entry)
+        ? removedComparisonPlans(data.compared, entry, shown)
         : comparisonFramePlans(frames),
-    [data.compared, entry, frames, removed],
+    [data.compared, entry, frames, removed, shown],
   );
   const byKey = useMemo(
     () => new Map(plans.map((plan) => [plan.key, plan])),

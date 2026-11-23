@@ -28,9 +28,11 @@ export function comparisonEligibilityKnown(
 /**
  * Apply the route's comparison intent once per route installation. When the
  * routed view's eligibility is first known, `select` opens Side by side for
- * an eligible view, and the store settles the intent either way, so neither
- * an update nor a later eligibility change applies it again. The live address
- * is never read.
+ * an eligible view, and the right panel selects Changes, because only Changes
+ * shows a compare mode on the canvas. The store settles the intent either
+ * way, so neither an update nor a later eligibility change applies it again,
+ * and an intent for an ineligible view leaves the selected tab as it is. The
+ * live address is never read.
  */
 export function useComparisonIntent(
   eligible: boolean,
@@ -45,7 +47,10 @@ export function useComparisonIntent(
   latest.current = { eligible, select, store };
   useEffect(() => {
     if (intent === undefined || !eligibilityKnown) return;
-    latest.current.store.settleComparisonIntent(intent);
-    if (latest.current.eligible) latest.current.select();
+    const current = latest.current;
+    current.store.settleComparisonIntent(intent);
+    if (!current.eligible) return;
+    current.select();
+    current.store.setPanelTab("changes");
   }, [eligibilityKnown, intent]);
 }

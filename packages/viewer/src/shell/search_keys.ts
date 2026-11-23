@@ -47,7 +47,7 @@ const NON_TEXT_INPUTS = new Set([
 ]);
 
 /** Whether keys typed at a target enter text, so they stay the field's own. */
-function inTextField(target: EventTarget | null): boolean {
+export function inTextField(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
   if (target instanceof HTMLInputElement)

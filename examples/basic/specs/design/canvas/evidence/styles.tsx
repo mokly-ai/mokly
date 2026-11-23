@@ -9,6 +9,7 @@ import {
   type CompareFrame,
 } from "../parts/changes_sketches.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
+import { useOpeningFrame } from "../parts/opening_frame.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
@@ -66,9 +67,9 @@ const STATES = {
  * Welcome, which a changed stylesheet keeps in Changes, on its Changes tab:
  * in Side by side with the catalogue in the Changes filter, where Welcome is
  * the one change, or in Current with the catalogue in All. Side by side
- * compares Desktop · Light on a desktop and Mobile · Light on a phone. A
- * comparison cannot be highlighted; Current can. On a phone, the Changes
- * sheet is open at the comparison details.
+ * compares Desktop · Light on a desktop and, on a phone, the frame that the
+ * phone opens on. A comparison cannot be highlighted; Current can. On a
+ * phone, the Changes sheet is open at the comparison details.
  */
 function Styles({
   state,
@@ -80,8 +81,9 @@ function Styles({
   const { design, facts, mode } = STATES[state];
   const entry = CANVAS_ENTRIES.welcome;
   const side = mode === "side-by-side";
+  const opening = useOpeningFrame(styledWelcomeFrames());
   const frame: CompareFrame =
-    viewport === "desktop" ? "desktop-light" : "mobile-light";
+    viewport === "desktop" ? "desktop-light" : opening;
   const zoom = side ? FITS.sideBySide : FITS.welcome;
   return (
     <CanvasShell

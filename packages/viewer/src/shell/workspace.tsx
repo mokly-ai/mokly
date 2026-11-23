@@ -16,11 +16,12 @@ import { usePreviousVersionLabel } from "./canvas_removed_section.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { ComparisonCanvas } from "./comparison_canvas.js";
+import { useComparedFrameChoice } from "./comparison_compared_frame.js";
+import { comparisonFrames } from "./comparison_eligible_frames.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { controlTarget } from "./control_values.js";
-import { ComparisonBand } from "./diffs.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import { targetHead } from "./head.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
@@ -67,18 +68,6 @@ export function ComponentWorkspace({
     variantPath,
   );
   const savedViews = resolvedView.views;
-  const comparison = useComparison({
-    effectiveColorScheme: resolvedView.colorScheme,
-    eligible: Boolean(data.comparisons && presentation.comparisonEligible),
-    eligibilityKnown: comparisonEligibilityKnown(
-      catalogue.publicModel.changesStatus,
-      workspace.detailDelivery,
-    ),
-    historical: data.removed || variant?.removed === true,
-    entryId: variantPath ?? entry.path,
-    ...(data.component ? { owner: data.component.path } : {}),
-  });
-  const comparing = comparison.mode !== "current";
   const set = entry.kind === "component";
   const changes =
     store.context.changedEntries?.includes(entry.path) === true ||
@@ -89,6 +78,35 @@ export function ComponentWorkspace({
     entry,
     selecting: tab === "inspect" && !data.removed,
   });
+  const choice = useComparedFrameChoice();
+  const historical = data.removed || variant?.removed === true;
+  const comparison = useComparison({
+    ...(choice.chosen === undefined ? {} : { comparedFrame: choice.chosen }),
+    effectiveColorScheme: resolvedView.colorScheme,
+    eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    eligibilityKnown: comparisonEligibilityKnown(
+      catalogue.publicModel.changesStatus,
+      workspace.detailDelivery,
+    ),
+    // Each shown row that compares gets its own generation. A removed entry
+    // has no live frames, so its own row compares alone.
+    ...(historical
+      ? {}
+      : {
+          frames: comparisonFrames(
+            data,
+            catalogue.publicModel.details,
+            canvas.frames,
+          ),
+        }),
+    historical,
+    entryId: variantPath ?? entry.path,
+    ...(data.component ? { owner: data.component.path } : {}),
+  });
+  // The canvas shows the chosen compare mode only while Changes is the
+  // selected tab, so Inspect, its highlight and its Props see the current
+  // frames, and the mode and the loaded comparison stay for Changes.
+  const comparing = tab === "changes" && comparison.mode !== "current";
   const picked = picks.state;
   // Props on a variant set edit the variant of the selected frame.
   const editTarget = controlTarget(
@@ -145,6 +163,7 @@ export function ComponentWorkspace({
   const headStatus =
     data.component?.path === entry.path ? data.status : presentation.status;
   const compare = useWorkspaceComparison({
+    choice,
     comparison,
     data,
     frames,
@@ -197,21 +216,17 @@ export function ComponentWorkspace({
       panel={
         <WorkspacePanel
           input={{
-            band:
-              data.comparisons && !preview ? (
-                <ComparisonBand
-                  comparison={compare.controller}
-                  eligible={presentation.comparisonEligible}
-                  outcomes={compare.outcomes}
-                />
-              ) : null,
             catalogue,
             changedViews,
             changes,
+            compare,
             compared: comparison.loaded !== undefined,
             controls: controls.panel,
             data,
             delivery: workspace.detailDelivery,
+            eligible: Boolean(
+              data.comparisons && presentation.comparisonEligible,
+            ),
             frames: {
               changed: changedViews,
               choice: store.state.frames,
@@ -232,6 +247,7 @@ export function ComponentWorkspace({
             onFrames: views.toggleFrames,
             previousPath,
             propsFocus: propsRecovery,
+            removedScreen: preview !== undefined,
             reveal: picked.reveal,
             routed: entry,
             selection: views.details,
@@ -254,7 +270,9 @@ export function ComponentWorkspace({
           {preview ? (
             <RemovedPreviewStage data={preview} onShown={previous.onShown} />
           ) : data.comparisons ? (
-            <ComparisonCanvas {...compare.canvas}>{stage}</ComparisonCanvas>
+            <ComparisonCanvas {...compare.canvas} shown={tab === "changes"}>
+              {stage}
+            </ComparisonCanvas>
           ) : (
             stage
           )}

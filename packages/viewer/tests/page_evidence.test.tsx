@@ -129,12 +129,15 @@ test("a removed document keeps its Removed badge and no comparison details", () 
   assert.equal(section(markup), undefined);
 });
 
-test("the standalone shell renders the page evidence of the held detail", () => {
+test("the standalone shell renders the page evidence of the held detail in the Changes tab, without the branch-point sentence", () => {
   const html = standaloneMarkup({
     index: publishedIndex(CHANGED_PAGE),
     details: publishedDetails(CHANGED, CHANGED_REASONS),
     path: "/view/guide/",
   });
   assert.deepEqual(status(html), ["Changed", "Changed", "Changed"]);
-  assert.equal(html.split(CHANGED_SECTION).length, 2);
+  // The Changes filter lists the page, so its Changes tab holds the
+  // evidence, and the Compared rail names the branch point in its place.
+  const sentence = `<p class="mbk-reset">Compared with the branch point on ${BASE}.</p>`;
+  assert.equal(html.split(CHANGED_SECTION.replace(sentence, "")).length, 2);
 });

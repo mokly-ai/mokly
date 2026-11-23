@@ -20,6 +20,7 @@ import {
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
+  offeredModeTiles,
   withDarkViews,
 } from "./presentation_v7_helpers.js";
 
@@ -188,7 +189,13 @@ test("the embedded viewer resolves light fallback evidence across status, marks 
   // light-only screen, so the changed desktop view decides the status and
   // offers the comparison, and no toggle hides a changed view.
   assert.match(html, /data-workspace-status="">Changed</);
-  assert.match(html, /class="mbk-diff-toolbar mbk-reset">/);
+  assert.deepEqual(offeredModeTiles(html), [
+    "current",
+    "side",
+    "overlay",
+    "difference",
+    "swipe",
+  ]);
   assert.match(html, /data-frames-toggle="dark" disabled=""/);
   assert.doesNotMatch(html, /data-view-changed="(?:scheme|viewport)">/);
 });
@@ -242,5 +249,6 @@ test("the embedded viewer preserves comparison ineligibility while view evidence
   });
 
   assert.match(html, /data-workspace-status="">Changed</);
-  assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
+  assert.match(html, /aria-label="Compared"/);
+  assert.deepEqual(offeredModeTiles(html), []);
 });

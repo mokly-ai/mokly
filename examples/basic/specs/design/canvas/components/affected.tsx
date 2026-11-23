@@ -23,7 +23,7 @@ import {
   DIRECT_CHANGES,
   actionBranchAll,
 } from "./parts/branch.js";
-import { AffectedChanges, affectedFrame } from "./parts/changes.js";
+import { AffectedChanges, useAffectedFrame } from "./parts/changes.js";
 import { EXPLORER_PAGES as E } from "./parts/destinations.js";
 import { DirectChanges, directFrames } from "./parts/direct.js";
 import { explorerChangesMetadata, explorerState } from "./parts/metadata.js";
@@ -41,9 +41,9 @@ const AFFECTED_PAGES = {
 
 /**
  * A screen on its Changes tab in Side by side, which compares the frame that
- * the artboard shows: Desktop · Light on a desktop, and Mobile · Light on a
- * phone, where the stage shows the compared frame's pair. A comparison
- * cannot be highlighted.
+ * the artboard shows: Desktop · Light on a desktop, and on a phone the frame
+ * that the phone opens on, where the stage shows the compared frame's pair.
+ * A comparison cannot be highlighted.
  */
 function SideBySideScreen({
   catalogue,
@@ -105,7 +105,7 @@ function Affected({
   viewport: ArtboardViewport;
 }) {
   const design = AFFECTED_PAGES[screen];
-  const frame = affectedFrame(viewport);
+  const frame = useAffectedFrame(viewport);
   return (
     <SideBySideScreen
       catalogue={actionBranchAll(screen)}
@@ -128,7 +128,7 @@ function Affected({
  * phone shows the Changes sheet open.
  */
 function DirectChange({ viewport }: { viewport: ArtboardViewport }) {
-  const frame = affectedFrame(viewport);
+  const frame = useAffectedFrame(viewport);
   return (
     <SideBySideScreen
       catalogue={DIRECT_CHANGES}
