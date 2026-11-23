@@ -1,10 +1,10 @@
 /**
  * One compare mode's tile: the mode's icon, its name, and its key in a badge
  * that assistive technology skips, so the tile's name is the mode's name. A
- * tile takes the item forms of the segmented control: with an address it is
- * a link, which names the shown mode as the current page; otherwise it is a
- * toggle button that reports its mode and names its key as its shortcut, or
- * inert text in a static depiction.
+ * tile takes one of three forms: with an address it is a link, which names
+ * the shown mode as the current page; otherwise it is a toggle button that
+ * reports its mode and names its key as its shortcut, or inert text in a
+ * static depiction.
  */
 
 import { CompareModeIcon } from "./compare-icons.js";

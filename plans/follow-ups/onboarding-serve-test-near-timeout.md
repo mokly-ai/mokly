@@ -3,7 +3,7 @@
 - **Severity:** Medium (estimate). **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-29, from [PR #79](https://github.com/mokly-ai/mokly-cloud/pull/79). Updated on 2026-10-30 with four CI failures on the closed re-land pull requests, and with the recurrences that two deleted plans recorded.
-- **Location:** `docs/mockups/src/_tests_/product-serve.spec.ts:87-162`, `apps/mockups/playwright.config.ts:33` and `apps/mockups/playwright.serve.config.ts:8-9`.
+- **Location:** `docs/mockups/src/_tests_/product-serve.spec.ts:103-181`, `apps/mockups/playwright.config.ts:33` and `apps/mockups/playwright.serve.config.ts:8-9`.
 - **Reason:** The test and its configuration were the same on `main` of the old cloud repository, so a separate branch fixes it.
 - **Checked:** 2026-10-31, at commit `f568853e`. Not verified. One test still visits all screens of a flow in both schemes under one 45-second timeout. No current CI duration or failure trace shows how close it runs to that guard.
 - **Category:** Test.
@@ -14,7 +14,7 @@
 - **Background:** The list below gives the facts.
   - The product flow test runs once for each of the onboarding, browse and invitation flows.
   - Each run visits every screen of its flow in both color schemes. The eight onboarding screens make 16 captures.
-  - Each capture needs two navigations: the Browse page and the screen's own fragment page. So the onboarding run makes 32 navigations.
+  - Each screen needs one load of its Browse page, which shows its Light and Dark Mobile frames at once. Each capture needs one load of the screen's own fragment page. So the onboarding run makes 24 page loads.
   - It checks that each owning mobile screen opens with no page error and no failed request.
   - All visits share one 45-second timeout. `apps/mockups/playwright.config.ts:33` sets it, and `apps/mockups/playwright.serve.config.ts` inherits it. Since the cloud moved into this repository on 2026-11-17, the `cloud-mockups` suite runs this test.
   - Three local runs took 16.1 to 19.3 seconds on the base of the PR #79 stack, and 17.1 to 20.5 seconds on PR #79. So PR #79 did not slow the test.
