@@ -20,6 +20,8 @@ export type ScreenSubject =
   | "profileSecurity";
 
 interface SubjectMetadata {
+  /** The address that a screen declares, which Inspect's Address row shows. */
+  address?: string;
   description: string;
   /** The path a moved entry had at the branch point. */
   previousPath?: string;
@@ -45,6 +47,7 @@ const removed = {
 /** Inspector context for each pictured screen, including the retired examples. */
 export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   welcome: {
+    address: "example.test/welcome",
     description: "A linked landing screen for the neutral fixture.",
     rationale:
       "The landing screen anchors the example catalogue, so every cross-screen link starts from a known state.",
@@ -55,6 +58,7 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     tour: true,
   },
   details: {
+    address: "example.test/details",
     description: "Additional context for the example catalogue.",
     rationale:
       "The Details screen completes the example tour and provides a return to Welcome.",
