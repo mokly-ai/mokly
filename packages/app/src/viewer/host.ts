@@ -40,7 +40,10 @@ export interface ViewerSelection {
   tags: readonly string[];
 }
 
-/** The cloud chrome the package's top bar renders; an absent slot draws nothing. */
+/**
+ * The cloud chrome the package renders: the controls of its top bar, and the
+ * Mokly check in its Changes tab. An absent slot draws nothing.
+ */
 export interface ViewerSlots {
   project?: ReactNode;
   publication?: ReactNode;
@@ -50,6 +53,12 @@ export interface ViewerSlots {
   account?: ReactNode;
   /** The compact composition of project, history, share and the account. */
   more?: ReactNode;
+  /**
+   * The Mokly check of a pull request's publication with a comparison, which
+   * the package's Changes tab shows after its change stepper. The cloud's own
+   * bar draws no Changes tab, so it never draws the check.
+   */
+  check?: ReactNode;
 }
 
 /** What the stage shows; only `ready` mounts a catalogue. */

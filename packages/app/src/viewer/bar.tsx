@@ -140,13 +140,19 @@ function PackageSlotEnd({ slots }: { slots: ViewerSlots }) {
   );
 }
 
-/** Compose the cloud actions into the package's three documented top-bar slots. */
+/**
+ * Compose the cloud actions into the package's three documented top-bar
+ * slots, and the Mokly check, when the publication has one, into the Changes
+ * tab's `changesStart`. Without a check the package gets no `changesStart`,
+ * so its slot takes no space.
+ */
 export function packageSlots(slots?: ViewerSlots): PackageSlots | undefined {
   if (!slots) return undefined;
   return {
     topBarStart: <PackageSlotStart slots={slots} />,
     topBarCenter: <PackageSlotCenter slots={slots} />,
     topBarEnd: <PackageSlotEnd slots={slots} />,
+    ...(slots.check === undefined ? {} : { changesStart: slots.check }),
   };
 }
 

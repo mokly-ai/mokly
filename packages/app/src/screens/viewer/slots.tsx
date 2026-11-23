@@ -6,6 +6,7 @@ import { StatusBadge } from "../../components/controls";
 import { AccountMenu } from "../../viewer/account-menu";
 import type { AccountActions, AccountReader } from "../../viewer/account-menu";
 import type { BarPlacement } from "../../viewer/bar";
+import { changesCheck } from "../../viewer/check-card";
 import {
   BarAction,
   ProjectTrigger,
@@ -176,7 +177,8 @@ function publicationSlot(input: SlotInput): ReactNode {
  * More menu that carries the ones the placement groups. Each trigger and each
  * More row opens exactly one overlay under its action's name, and the control
  * that carries that action when the overlay closes is where focus returns.
- * The avatar and More open menus, whose account rows hold Settings.
+ * The avatar and More open menus, whose account rows hold Settings. The shown
+ * publication's Mokly check, when it has one, goes to the Changes tab.
  */
 export function viewerSlots(input: SlotInput): ViewerSlots {
   const reader = accountLabel(input.session.user);
@@ -225,5 +227,6 @@ export function viewerSlots(input: SlotInput): ViewerSlots {
       />
     ),
     more: <MoreMenu input={input} reader={reader} />,
+    check: changesCheck(input.subject.publication),
   };
 }
