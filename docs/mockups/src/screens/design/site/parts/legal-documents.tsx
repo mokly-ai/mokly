@@ -29,9 +29,9 @@ export const TERMS: LegalDocument = {
     {
       body: (
         <p>
-          Mokly helps teams publish, browse, compare and share React-authored
-          mockups connected to Git repositories and pull requests. Your
-          repository remains the source of truth.
+          Mokly helps teams publish, browse, compare and share mockups connected
+          to Git repositories and pull requests. Your repository remains the
+          source of truth.
         </p>
       ),
       title: "1. What Mokly does",

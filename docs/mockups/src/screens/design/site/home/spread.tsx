@@ -61,6 +61,7 @@ const BOARDS: readonly SpreadBoard[] = [
   {
     device: "desktop",
     name: "pricing",
+    // status: "ahead" (agent sessions, Claude)
     overlay: (
       <SiteSelection
         className="site-home-spread-peer"
@@ -143,9 +144,11 @@ export function Spread({ viewport }: { viewport: "mobile" | "desktop" }) {
             <SpreadSets />
           </SiteSectionBox>
         ) : null}
+        {/* status: "ahead" (Claude) */}
         <SiteCursor className="site-home-spread-claude" person="claude" />
         {wide ? (
           <>
+            {/* status: "ahead" (Codex) */}
             <SiteCursor className="site-home-spread-codex" person="codex" />
             <SiteCursor className="site-home-spread-sam" person="sam" />
           </>

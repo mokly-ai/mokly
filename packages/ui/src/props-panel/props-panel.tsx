@@ -121,10 +121,15 @@ export interface PropsStatusWording {
   retry: string;
 }
 
-/** The Props tab while its data loads, or after the load failed, with Try again. */
+/**
+ * The Props tab while its data loads, or after the load failed, with Try
+ * again. A static depiction that runs no script gives Try again an address,
+ * which draws it as a link.
+ */
 export function PropsStatus({
   focusRef,
   onRetry,
+  retryHref,
   status,
   wording,
 }: {
@@ -132,6 +137,11 @@ export function PropsStatus({
   focusRef?: Ref<HTMLParagraphElement> | undefined;
   /** Receives each press of Try again. */
   onRetry?: (() => void) | undefined;
+  /**
+   * The address that Try again opens in a static depiction, such as the
+   * document that shows the data loading again.
+   */
+  retryHref?: string | undefined;
   status: "failed" | "loading";
   wording: PropsStatusWording;
 }) {
@@ -146,7 +156,9 @@ export function PropsStatus({
           <p className="mbk-reset" role="alert">
             {wording.failed}
           </p>
-          <TextButton onClick={onRetry}>{wording.retry}</TextButton>
+          <TextButton href={retryHref} onClick={onRetry}>
+            {wording.retry}
+          </TextButton>
         </>
       ) : (
         <p

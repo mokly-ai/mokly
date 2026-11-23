@@ -18,14 +18,16 @@ const glyphSize = 14;
 const publishedPrefix = "Published ";
 
 /**
- * What the pill says of a ready publication: the state word, then the time
- * that the fixture's published line names, such as `Ready · 15 Sep`.
+ * What the pill says of a ready publication: the state word, then the day
+ * that the fixture's published line names, such as `Ready · 15 Sep`. The
+ * pill names the day only, as the application does, so a line that also
+ * names the time of day keeps its day.
  */
 export function readyDetail(published: string): string {
   const when = published.startsWith(publishedPrefix)
     ? published.slice(publishedPrefix.length)
     : published;
-  return "Ready · " + when;
+  return "Ready · " + (when.split(",")[0] ?? when);
 }
 
 /**

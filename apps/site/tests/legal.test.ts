@@ -69,7 +69,7 @@ test("every checked-in legal document parses with an effective date", () => {
   for (const id of Object.keys(POLICIES) as PolicyId[]) {
     const parsed = legalSchema.parse(document(id).frontmatter);
     assert.equal(parsed.title.length > 0, true, id);
-    assert.equal(parsed.effective.toISOString(), "2026-09-22T00:00:00.000Z");
+    assert.equal(parsed.effective.toISOString(), "2026-11-22T00:00:00.000Z");
   }
 });
 

@@ -16,26 +16,25 @@ pages show the shared heading and the branch-point sentence of the
 [presentation contract](./mokly-css-evidence-presentation.md#details-copy),
 also while the selected entry's detail loads.
 
-The approved design is the stylesheet-evidence group of the design catalogue,
+The approved design is the Comparison evidence folder of the Canvas family,
 recorded in the
-[shell design inventory](./mokly-shell-design.md#design-mockups) as
-`design/changes/impact/styles/page`, `design/changes/impact/styles/matched-excluded/matched`,
-`design/changes/impact/styles/matched-excluded/excluded`, `design/changes/impact/styles/matched-excluded/excluded-only`,
-`design/changes/impact/styles/unresolved-unnamed/unresolved` and `design/changes/impact/styles/unresolved-unnamed/unnamed`, and the
-component explorer's Stylesheet evidence gallery, recorded in the
-[component design inventory](./mokly-component-design.md#owning-catalogue) as
-`design/components/states/shared-impact/style-changed`, `design/components/states/shared-impact/style-outside`,
-`design/components/states/shared-impact/affected-screen`, and
-`design/components/states/shared-impact/shared-impact`. These screens follow these presentation
-rules:
+[loading, search and evidence inventory](./mokly-shell-canvas-inventory-states.md):
+`design/canvas/evidence/styles` with its `excluded`, `unresolved` and
+`unnamed` variants, `design/canvas/evidence/unchanged` with its `action`
+variant, `design/canvas/evidence/page` with its `inspect` variant, and
+`design/canvas/evidence/ignored`. The affected screen of the component
+explorer, `design/canvas/components/affected`, recorded in the
+[component design inventory](./mokly-component-design-inventory.md),
+completes it. These designs draw the comparison details and the Inspect
+evidence that these presentation rules fix:
 
 - The files lead names each retained file once, as one list item. That item
   holds the file's outcome sentences, each followed by its selector list, so
   no list mixes two stylesheets. A file without analysed outcomes, such as a
   font or image, is its path alone. Excluded stylesheets keep their separate
   "Examined and excluded" list after the files list. The shell renders the
-  approved card's structure: one files list whose items hold the path text,
-  then each sentence paragraph and its list of selector code chips.
+  structure of the approved designs: one files list whose items hold the path
+  text, then each sentence paragraph and its list of selector code chips.
 - A screen whose page selectors come from rules that also changed a component
   reads "These changed styles also apply outside the changed components on
   this screen:" under that stylesheet, and its comparison details link those
@@ -60,27 +59,25 @@ rules:
   with the terminal status line "No changes to this screen." A component
   variant's terminal line reads "No changes to this variant." The wording
   follows the entry kind.
-- Linked Excluded and Matched screens show the same changed Welcome in All
-  and Changes. They use one shared Details card with the retained file, its
-  matched selectors and the excluded file. They add no explanatory sentence
-  that the viewer does not show. `design/changes/impact/styles/matched-excluded/excluded-only` depicts
-  the excluded-only state for Details in the same branch: it opens from All,
-  including from the Excluded screen's Details row. The gallery is split into
-  linked child pages of at most five screens, each with mobile and desktop
-  components; its parent shows the canonical `design/changes/impact/styles/page`.
-- The evidence container and the approved mockup card both render eight
-  pixels above each paragraph or list and fourteen pixels between a list and
-  the paragraph that follows it, including the sentences and lists nested in a
-  file's item. The mockup card must render that spacing as authored, whatever
-  other inspector stylesheets the design page loads. The shell keeps its
-  separator treatment rather than the mockup's bordered card.
+- The linked Excluded and Matched styles,
+  `design/canvas/evidence/styles/excluded` and `design/canvas/evidence/styles`,
+  show the same changed Welcome in All and in Changes. They show the same
+  comparison details: the retained file with its matched selectors, then the
+  excluded file. They add no explanatory sentence that the viewer does not
+  show. `design/canvas/evidence/unchanged` depicts the excluded-only state for
+  Details in the same branch: the Details row of the catalogue in the Excluded
+  styles opens it, and its evidence stays in Inspect after the head.
+- The evidence container and the approved designs both render eight pixels
+  above each paragraph or list and fourteen pixels between a list and the
+  paragraph that follows it, including the sentences and lists nested in a
+  file's item. The designs render that spacing as authored, in the Changes
+  tab and in Inspect, whatever other stylesheets the design page loads.
 - A screen or component that only changed components affect stays
   Unmodified with no Changes row, and its compare modes stay available. Its
   comparison details keep the full matched styles of each file, link each
   changed component, and end with the shared-component sentence in place of
   the terminal line: “Changed components that this screen uses affect its
-  preview.” for a screen, as
-  `design/components/states/shared-impact/affected-screen` depicts, and
+  preview.” for a screen, as `design/canvas/components/affected` depicts, and
   “Changed components that this variant uses affect its preview.” for a
   component. In a loaded comparison, each of its affected views reads the
   view heading "Components this screen uses changed", or "Components this
@@ -96,9 +93,6 @@ rules:
   so it stays reachable and the document stays visible. On narrow screens
   every title row wraps its chips below the title before the title itself
   wraps.
-- No design screen without a comparison toolbar renders a comparison stage
-  heading. A screen depicted in Current mode, whether unchanged, excluded-only,
-  or ignored-only, shows the plain preview with no heading.
 - Selector text, status names, and analysis vocabulary never appear in a
   heading or in the catalogue tree; they appear only inside the secondary
   details list, and only where the detail has review value.

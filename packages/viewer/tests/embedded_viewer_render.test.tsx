@@ -23,6 +23,7 @@ test("the embedded viewer renders the public fixture, default state and every ho
   const html = embeddedMarkup({
     slots: {
       topBarStart: <button>Start</button>,
+      topBarCenter: <button>Centre</button>,
       topBarEnd: <button>End</button>,
       railStart: <p>Above</p>,
       railEnd: <p>Below</p>,
@@ -33,6 +34,7 @@ test("the embedded viewer renders the public fixture, default state and every ho
   });
   for (const text of [
     "Start",
+    "Centre",
     "End",
     "Above",
     "Below",
@@ -44,6 +46,20 @@ test("the embedded viewer renders the public fixture, default state and every ho
   assert.match(html, /width:320px/);
   assert.match(html, /pointer-events:none/);
   assert.doesNotMatch(html, /<script|Pick components/);
+  // The bar starts with the mark and the host's start, centres the host's
+  // centre, and ends with the search and the host's end.
+  const order = [
+    'aria-label="Mokly"',
+    "<button>Start</button>",
+    "<button>Centre</button>",
+    "data-mokly-search",
+    "<button>End</button>",
+  ].map((text) => [text, html.indexOf(text)] as const);
+  for (const [text, position] of order) assert.ok(position >= 0, text);
+  assert.deepEqual(
+    order.map(([text]) => text),
+    [...order].sort((a, b) => a[1] - b[1]).map(([text]) => text),
+  );
 });
 
 for (const screenPath of [

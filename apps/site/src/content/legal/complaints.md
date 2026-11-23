@@ -1,6 +1,6 @@
 ---
 title: Complaints
-effective: 2026-09-22
+effective: 2026-11-22
 ---
 
 This page explains how to make a complaint about Mokly.

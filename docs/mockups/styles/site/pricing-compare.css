@@ -25,10 +25,14 @@
   width: 100%;
 }
 
+/* A cell breaks a word that is wider than its column, such as Unlimited at
+   200% text on a 320px window, rather than spilling under the next cell */
+
 .site-pricing-props th,
 .site-pricing-props td {
   border-bottom: 1px solid var(--mk-color-border);
   font-weight: var(--mk-font-regular);
+  overflow-wrap: anywhere;
   padding: 15px 22px;
   text-align: left;
   vertical-align: top;
@@ -137,6 +141,12 @@
 
 .site-pricing-dash {
   color: var(--mk-color-text-muted);
+}
+
+/* A token chip wraps inside its cell */
+
+.site-pricing-props .site-chip {
+  white-space: normal;
 }
 
 .site-pricing-line {

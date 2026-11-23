@@ -1,11 +1,14 @@
 /* The reset class, mbk-reset. Each package component puts it on every element
    that it renders, apart from the host slots, whose content stays the host's.
    The class gives its element border-box sizing and the reader's reduced
-   motion, and resets links and text blocks. Element filters sit in :where(),
-   so each reset rule weighs one class: it beats a host page's element rules,
-   and every component rule, which follows it in styles.css, beats it. An SVG
-   drawing carries the class on its <svg> element, and its shapes take the
-   same sizing and motion. */
+   motion, resets links and text blocks, and gives a focusable element the
+   focus glow in place of the browser's outline. Element filters sit in
+   :where(), so each reset rule weighs one class: it beats a host page's
+   element rules, and every component rule, which follows it in styles.css,
+   beats it. The focus rules weigh one pseudo-class, so a component's own
+   focus rule beats them wherever its stylesheet loads. An SVG drawing
+   carries the class on its <svg> element, and its shapes take the same
+   sizing and motion. */
 .mbk-reset,
 .mbk-reset::before,
 .mbk-reset::after,
@@ -21,6 +24,64 @@
 
 .mbk-reset:where(h1, h2, h3, p) {
   margin-top: 0;
+}
+
+/* The focus glow of the @firna/ui controls: a 4px halo without blur, in the
+   shell accent at 75%, which keeps 3:1 against each surface that it draws on
+   in both appearances. A host tunes its colour through --mokly-accent. A
+   control draws the outset glow outside its box. A row of a list and a part
+   of a panel that clips or scrolls draw the inset glow inside their box. */
+.mbk-reset {
+  --mbk-focus-glow: 0 0 0 4px
+    color-mix(
+      in srgb,
+      var(--mokly-accent, var(--_mokly-private-accent-default)) 75%,
+      transparent
+    );
+  --mbk-focus-glow-inset: inset 0 0 0 4px
+    color-mix(
+      in srgb,
+      var(--mokly-accent, var(--_mokly-private-accent-default)) 75%,
+      transparent
+    );
+}
+
+/* Keyboard focus draws the glow in place of the browser's outline on each
+   focusable element of the package. The rule weighs one pseudo-class, so a
+   component's own focus rule wins, and a component that draws a shadow of its
+   own repeats the glow over that shadow. A search input leaves its focus to
+   the search field around it. */
+:where(
+  .mbk-reset:is(
+    a,
+    button,
+    input:not([type="search"]),
+    select,
+    summary,
+    textarea,
+    [tabindex]:not([tabindex="-1"])
+  )
+):focus-visible {
+  outline: none;
+  box-shadow: var(--mbk-focus-glow);
+}
+
+/* Forced colours drop every shadow, so there focus takes a 2px system
+   outline. */
+@media (forced-colors: active) {
+  :where(
+    .mbk-reset:is(
+      a,
+      button,
+      input:not([type="search"]),
+      select,
+      summary,
+      textarea,
+      [tabindex]:not([tabindex="-1"])
+    )
+  ):focus-visible {
+    outline: 2px solid Highlight;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

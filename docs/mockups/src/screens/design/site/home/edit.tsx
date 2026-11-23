@@ -6,6 +6,7 @@
  * the right, and on a phone it follows the artboard. The copy is the page's
  * own text; the rest of the window is a depiction.
  */
+// status: "ahead" (agent sessions, Claude)
 
 import { MoklyMark } from "../parts/brand.js";
 import { SiteIcon } from "../parts/icons.js";
@@ -46,6 +47,7 @@ function EditBar({ viewport }: { viewport: "mobile" | "desktop" }) {
         <span className="site-home-edit-tool">
           <SiteIcon name="move" />
         </span>
+        {/* status: "ahead" (comments) */}
         <span className="site-home-edit-tool">
           <SiteIcon name="comment" />
         </span>
@@ -55,6 +57,7 @@ function EditBar({ viewport }: { viewport: "mobile" | "desktop" }) {
       </span>
       {wide ? (
         <>
+          {/* status: "ahead" (presence, Claude) */}
           <SitePresence
             className="site-home-viewer-people"
             people={["sam", "claude"]}
@@ -101,6 +104,7 @@ export function EditModule({ viewport }: { viewport: "mobile" | "desktop" }) {
                 >
                   <AcmePricingPhone />
                 </Artboard>
+                {/* status: "ahead" (presence, Claude) */}
                 <SiteCursor className="site-home-edit-claude" person="claude" />
               </div>
             </div>

@@ -15,38 +15,54 @@ implementation and the tests must keep. Runtime behaviour stays in
 
 ## Design Mockups
 
-The design screens are authored in `examples/basic/specs/design/`. The
-[Canvas design inventory](./mokly-shell-canvas-inventory.md) lists the
-`design/canvas` screens. They depict the canvas stage, the floating panels,
-Inspect, Changes and the compact layout. The
-[shell design inventory](./mokly-shell-design-inventory.md) lists every Browse
-and Changes design screen with its folder and depicted state, describes the
-fixture catalogue they browse, and owns the dual-scheme and owning-group rules;
-the [component design inventory](./mokly-component-design.md#owning-catalogue)
-lists the component explorer screens.
+The design screens are authored in `examples/basic/specs/design/`. Decision:
+one Canvas family of Browse designs (decision 11, option D), not a second
+family that draws the one-frame stage with the inspector below it, because the
+canvas stage and the right panel replace that layout.
 
-A state that the Canvas screens do not draw keeps the requirements of its own
-contract and the content that its Browse, Changes or component explorer screen
-depicts. These states include a use-case flow, a removed or moved entry,
-loading and recovery, the tag picker and most component explorer pages.
+The [Canvas design inventory](./mokly-shell-canvas-inventory.md), with the
+pages that it links, lists the `design/canvas` screens, and it owns their
+family rules. They depict the canvas stage, the floating panels, Inspect,
+Changes and the compact layout. They also depict a use case, loading and
+recovery, the tag search, the added and moved outcomes, a removed entry's
+previous version, the comparison evidence, the component explorer pages and
+the Props states. The
+[component design inventory](./mokly-component-design-inventory.md) lists the
+component explorer and Props screens. The
+[shell design inventory](./mokly-shell-design-inventory.md) lists the Browse
+and Changes screens outside the Canvas family and owns the dual-scheme and
+owning-group rules. The
+[depicted design catalogue](./mokly-shell-design-catalogue.md) describes the
+fixture catalogue that the design screens browse.
 
 ## Consumer-Tunable Custom Properties
 
-Consumers may set exactly these CSS custom properties to tune the shell accent.
-Every other shell style is package-owned and not a compatibility surface.
+Consumers may set exactly these CSS custom properties: three tune the shell
+accent, and two keep the top bar clear of a host's own window controls. Every
+other shell style is package-owned and not a compatibility surface.
 
-| Property                  | Used for                                       |
-| ------------------------- | ---------------------------------------------- |
-| `--mokly-accent`          | Selected marks, pressed pills, links and focus |
-| `--mokly-accent-contrast` | Text and glyphs on the accent                  |
-| `--mokly-accent-soft`     | Selected rows, hover and highlight surfaces    |
+| Property                      | Used for                                       |
+| ----------------------------- | ---------------------------------------------- |
+| `--mokly-accent`              | Selected marks, pressed pills, links and focus |
+| `--mokly-accent-contrast`     | Text and glyphs on the accent                  |
+| `--mokly-accent-soft`         | Selected rows, hover and highlight surfaces    |
+| `--mokly-top-bar-inset-start` | The room before the top bar's content          |
+| `--mokly-top-bar-inset-end`   | The room after the top bar's content           |
 
-An unset property takes its default from the Canvas palette in the current
-appearance. The [viewer palette](./mokly-viewer-palette.md) gives each
+An unset accent property takes its default from the Canvas palette in the
+current appearance. The [viewer palette](./mokly-viewer-palette.md) gives each
 default. A consumer accent pair must keep at least WCAG AA contrast between
 `--mokly-accent` and `--mokly-accent-contrast`; the shell does not
 recompute contrast at runtime. The [Mokly shell brand](./mokly-shell-brand.md)
 is package-owned identity and ignores these consumer accent overrides.
+
+Each top-bar inset is a length, `0` by default. The bar's start padding is the
+larger of its own padding and the start inset, and its end padding the larger
+of its own padding and the end inset, so a host that sets neither sees no
+change. A host sets them only to clear its own window controls, such as the
+buttons of a desktop window at the start of the bar. Decision: the insets, not
+padding on the host's start slot, because the Mokly mark starts the bar,
+before every host slot.
 
 ## Package-Owned Tokens
 
@@ -70,54 +86,55 @@ Geist wordmark. The catalogue's indent guides use the faint guide tint of the
 palette. No consumer-specific color, name, or route family may appear in shell
 styles or copy.
 
+## Focus
+
+The [focus design](./mokly-shell-design-focus.md) fixes how the shell shows
+keyboard focus.
+
 ## Layout
 
 The shell fills the viewport (`100vh`, document scrolling disabled); every
 scrollable region scrolls internally. Below the top bar, a full-bleed dot-grid
 canvas fills the window, and the panels float over it. The
 [canvas stage](./mokly-shell-canvas-stage.md) fixes the canvas, the floating
-panels, the selected entry's section, pan, zoom and Fit.
-[Device chrome](./mokly-shell-device-chrome.md) fixes each frame, the preview
-scheme and the compact layout.
+panels, the selected entry's section, pan, zoom and Fit. The
+[canvas frames contract](./mokly-shell-device-chrome.md) fixes each frame, the
+preview scheme and the compact layout.
 
-- **Top bar** — 48px, surface background, hairline bottom border: the
-  [Mokly mark and wordmark](./mokly-shell-brand.md), then a centred search
-  field (max-width 440px, led by a 15px stroked magnifier icon that holds its
-  size while the field flexes) that flexes down to whatever room the bar
-  leaves it. Below the breakpoint a menu button opens the catalogue sheet, and
-  closes an open sheet. Search uses `Search catalogue` as its accessible name
-  and `Search catalogue…` as its placeholder in both viewport sizes, covering
-  screens, pages, and flows. `⌘K` and Ctrl+K move focus to the search field
-  from anywhere in the shell. `/` does the same while focus is not in a text
-  field. The bar carries no preview mode switch; the Auto/Light/Dark
-  Appearance control is the one setting that belongs here. Decision: the
-  standalone shell keeps Appearance in its top bar, not in an account menu,
-  because it has no account menu. Matching uses the single
+- **Top bar** — one 48px row, surface background, hairline bottom border, in
+  three columns. The outer two share the room that the middle one leaves, so
+  the middle column sits in the centre of the bar. The start column holds the
+  menu button, below the breakpoint, then the
+  [Mokly mark](./mokly-shell-brand.md), then an embedded host's start slot,
+  which fills the rest of the column. The middle column holds an embedded
+  host's centre slot. The end column holds the search field, then the end
+  control, then an embedded host's end slot. The end control is the
+  Auto/Light/Dark Appearance control in the standalone shell. An embedded root
+  has no end control. An empty slot takes no room. A centre slot beside an empty
+  start slot takes the free room after the mark instead, as the
+  [viewer contract](./mokly-viewer.md#rendered-features-and-slots) says.
+  Decision: the Canvas order, the mark first and a compact search at the end,
+  not a wide search field after the brand, so that a host's centre slot can
+  hold the middle of the bar. The standalone bar draws the mark with the
+  wordmark, and an embedded bar draws the mark alone, because the host's start
+  slot follows it. The menu button opens the catalogue sheet, and closes an
+  open sheet. The search field is compact: about 180px on the muted field
+  surface, led by a 15px stroked magnifier icon and ended by the tag picker
+  control. It gives way when its column runs short. In the standalone bar it
+  keeps at least 150px down to a 320px window, and an embedded root switches to
+  its [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
+  Search uses `Search catalogue` as its accessible name and `Search` as its
+  placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
+  and Ctrl+K move focus to the search field from anywhere in the shell. `/`
+  does the same while focus is not in a text field. The standalone bar carries
+  no preview mode switch; Appearance is the one setting that belongs there.
+  Decision: the standalone shell keeps Appearance in its top bar, not in an
+  account menu, because it has no account menu. Matching uses the single
   [search rule](./mokly-folders.md#titles). Filtering hides empty groups and
   opens retained groups, and composes with the All/Changes filter.
-- **Tag picker** — a tag-icon control at the trailing edge of the search
-  field, muted like the leading search icon and filling to a soft rounded square
-  on hover. It opens a panel anchored under the field and aligned to its width
-  (max-width 440px): a `--chrome-surface` card with a hairline border, 10px
-  radius, and `--chrome-shadow` elevation, holding an uppercase 11px muted
-  `Tags` head above a wrapping row of the Details Tags row's chips. The
-  panel lists every tag the catalogue declares, in alphabetical order, and
-  scrolls internally once that set outgrows it. Selecting a chip enters
-  `tag:<tag>` in the search field, replacing any tag term already entered, and
-  closes the panel; selecting the chip whose tag is the entered term clears that
-  term. The chip matching the entered query carries the accent active state with
-  contrast text and glyph. A tag chip is a button on both surfaces: it reports
-  whether its tag is entered through `aria-pressed`, fills with the soft accent
-  on hover, and moves down 1px with an inset shadow while pressed. Opening the
-  panel moves focus to the chip for the entered tag, or to the first chip when
-  no tag is entered; the chip row then keeps a single tab stop that ArrowLeft
-  and ArrowRight rove and wrap at both ends, Home and End send to its ends, and
-  Enter or Space activates. The row is a labelled toolbar with one tab stop.
-  Details chips keep independent tab stops. Escape closes the panel and
-  returns focus to the control without changing the query. An outside click
-  closes it and returns focus only if the panel held focus. Selecting a Details
-  tag closes an open picker and focuses its toggle. A catalogue that declares
-  no tags renders neither the control nor the panel.
+- **Tag picker** — the tag-icon control at the trailing edge of the search
+  field and the panel of tag chips that it opens, under the
+  [tag picker design](./mokly-shell-design-tag-picker.md).
 - **Catalogue** — the floating catalogue panel with its All/Changes filter and
   its tree, under the
   [navigation design](./mokly-shell-design-navigation.md).
@@ -154,7 +171,10 @@ Details have no rendered-file or route row: every file derives from the entry's
 path, and the address bar already shows the shell URL. A moved entry's Details
 add a `Moved from` row holding its previous path, the `Moved` label its Changes
 row carries, and its comparison details name that path as the earlier side. A
-document's Details show its description, path, tags, and Markdown source file.
+removed entry's Details add a `Location` row before Tags. It names the
+folders that held the entry at the branch point, as text with `›` separators.
+A document's Details show its description, path, tags, and Markdown source
+file.
 
 Shared home guidance asks visitors to choose an item from the navigation.
 With nothing selected, the canvas holds the guidance and no right panel shows.
@@ -169,12 +189,11 @@ catalogue home. Kind-specific wording is reserved for a known screen, page,
 document, or flow; shared controls and missing-route messages cover the whole
 catalogue.
 
-## Device Chrome And Color Scheme
+## Canvas Frames And Color Scheme
 
-[Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
-defines the canvas frames, the device frames of the states that the Canvas
-screens do not draw, the use-case flow layout, and the preview scheme with its
-containment and light-only rules.
+[Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
+defines the canvas frames, a use case's step frames included, and the preview
+scheme with its light-only rules.
 
 ## Responsive Behavior
 
@@ -205,8 +224,14 @@ The canonical Canvas states are `design/canvas/changes/current`,
 `design/canvas/changes/difference` and `design/canvas/changes/swipe`, each with
 path-derived `index.<viewport>.html` documents and mobile and desktop
 artboards. `design/canvas/outcomes/added/changes` depicts an added entry, which
-offers Current alone. The `design/changes/**` screens depict the comparison
-states that the Canvas screens do not draw. See [Changes](./mokly-changes.md),
+offers Current alone. `design/canvas/outcomes/moved` depicts a moved entry,
+which compares with the version at its previous path. The
+`design/canvas/components` screens depict a component's comparison on its
+variant set, and the `design/canvas/evidence` screens the comparison evidence.
+`design/canvas/outcomes/removed`, `design/canvas/outcomes/removed-document`
+and `design/canvas/outcomes/removed-variant` depict the previous versions of a
+removed screen, document and screen variant. None of them offers a compare
+mode. See [Changes](./mokly-changes.md),
 [component designs](./mokly-component-design.md), and
 [CSS evidence](./mokly-css-evidence-shell.md).
 
@@ -215,5 +240,7 @@ states that the Canvas screens do not draw. See [Changes](./mokly-changes.md),
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Package and authoring contract](./mokly-package.md)
 - [Shell canvas stage](./mokly-shell-canvas-stage.md)
-- [Shell device chrome and preview scheme](./mokly-shell-device-chrome.md)
+- [Shell canvas frames, preview scheme and compact layout](./mokly-shell-device-chrome.md)
+- [Shell focus design](./mokly-shell-design-focus.md)
+- [Shell tag picker design](./mokly-shell-design-tag-picker.md)
 - [Canvas design inventory](./mokly-shell-canvas-inventory.md)

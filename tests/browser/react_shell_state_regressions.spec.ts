@@ -3,12 +3,12 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { canvasFrame } from "./workspace_actions.js";
 
-const component = "design/library/inspector/inspector";
-const variant = `${component}/props`;
+const component = "example/components/action";
+const variant = `${component}/disabled`;
 const componentPath = `/view/${component}/`;
 const variantPath = `/view/${variant}/`;
 const variantRow =
-  'a[data-nav-row][data-route="design/library/inspector/inspector/props/index.html"]';
+  'a[data-nav-row][data-route="example/components/action/disabled/index.html"]';
 const fragment = "react-native-stylesheet";
 
 test("sequential search editing preserves spaces and typed tag terms", async ({
@@ -52,11 +52,11 @@ test("variant entry navigation scrolls the active row back into view", async ({
 
   await page
     .getByRole("navigation", { name: "Saved variants" })
-    .getByRole("link", { name: "Props", exact: true })
+    .getByRole("link", { name: "Disabled", exact: true })
     .click();
 
   await expect(page).toHaveURL(
-    /\/view\/design\/library\/inspector\/inspector\/props\/$/,
+    /\/view\/example\/components\/action\/disabled\/$/,
   );
   await expect.poll(() => rowIsInsidePane(pane, row)).toBe(true);
 });
@@ -65,23 +65,23 @@ async function expectInitialVariantEntry(page: Page): Promise<void> {
   await expect(
     page
       .getByRole("navigation", { name: "Saved variants" })
-      .getByRole("link", { name: "Props", exact: true }),
+      .getByRole("link", { name: "Disabled", exact: true }),
   ).toHaveAttribute("aria-current", "page");
-  // The variant's row of the set, light only, opens at the fragment, and
-  // the parent's own row, another entry, does not.
+  // The variant's own row of the set opens at the fragment, and the parent's
+  // row, another entry, does not.
   await expect(
     page.locator(
       `${canvasFrame("desktop")}[data-workspace-variant="${variant}"]`,
     ),
   ).toHaveAttribute(
     "src",
-    new RegExp(`inspector/props/index\\.desktop\\.html#${fragment}$`),
+    new RegExp(`action/disabled/index\\.desktop\\.html#${fragment}$`),
   );
   await expect(
     page.locator(
       `${canvasFrame("desktop")}[data-workspace-variant="${component}"]`,
     ),
-  ).toHaveAttribute("src", /inspector\/index\.desktop\.html$/);
+  ).toHaveAttribute("src", /components\/action\/index\.desktop\.html$/);
 }
 
 /** Align the fixture edges so integer scroll offsets can meet exact containment. */

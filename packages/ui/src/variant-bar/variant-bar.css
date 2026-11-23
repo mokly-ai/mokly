@@ -35,11 +35,6 @@
   background: var(--chrome-bg);
 }
 
-.mbk-selection-bar a:focus-visible {
-  outline: 2px solid var(--mokly-accent, var(--_mokly-private-accent-default));
-  outline-offset: 2px;
-}
-
 .mbk-selection-bar a[aria-current="page"],
 .mbk-selection-bar > .mbk-variant-option[aria-current="page"] {
   background: var(

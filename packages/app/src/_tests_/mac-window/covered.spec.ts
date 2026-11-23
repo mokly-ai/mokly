@@ -28,14 +28,22 @@ const smallestWindow = { width: 640, height: 480 };
  */
 const zoomedNarrowWindow = { width: 533, height: 700 };
 
-/** Expect the same of the cloud's two slots in the viewer's top bar. */
+/**
+ * Expect the same of the cloud's slots in the viewer's top bar: the start, the
+ * centre and the end slot of the full bar, or the centre and the end slot of
+ * the compact bar, which leaves its start slot empty.
+ */
 async function expectSlots(
   page: Page,
   expectation: PartExpectation,
   when: string,
+  bar: "full" | "compact" = "full",
 ) {
   for (const [label, slot] of [
-    ["the start slot", page.locator(".fo-package-slot-start")],
+    ...(bar === "full"
+      ? ([["the start slot", page.locator(".fo-package-slot-start")]] as const)
+      : []),
+    ["the centre slot", page.locator(".fo-package-slot-center")],
     ["the end slot", page.locator(".fo-package-slot-end")],
   ] as const) {
     await expectation(slot, `${label}, ${when},`);
@@ -73,18 +81,28 @@ test("in the Mac window, the open compact search turns off the bar slots of a na
   await page.setViewportSize(zoomedNarrowWindow);
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
-  await expectSlots(page, expectMovesWindow, "at rest");
+  await expectSlots(page, expectMovesWindow, "at rest", "compact");
 
   const toggle = page.getByRole("button", { name: "Search catalogue" });
   await toggle.click();
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toBeFocused();
-  await expectSlots(page, expectStopsMovingWindow, "under the open search");
+  await expectSlots(
+    page,
+    expectStopsMovingWindow,
+    "under the open search",
+    "compact",
+  );
 
   await page.keyboard.press("Escape");
   await expect(toggle).toBeFocused();
-  await expectSlots(page, expectMovesWindow, "after the search closes");
+  await expectSlots(
+    page,
+    expectMovesWindow,
+    "after the search closes",
+    "compact",
+  );
 });
 
 test("in the Mac window, the focused skip link turns off the account header under it until it scrolls away or loses focus", async ({

@@ -14,7 +14,7 @@ import { sample } from "../../../fixtures/product";
 import { Icon } from "../icons";
 
 import { ReaderAvatar } from "./account-trigger";
-import { HistoryGlyph, ShareGlyph } from "./glyphs";
+import { ShareGlyph } from "./glyphs";
 
 /**
  * The open account menu and the open More menu. The live menus portal from
@@ -150,7 +150,7 @@ function MoreRows({ marked }: { marked: boolean }) {
           sample.workspace + " / " + sample.project,
           <Icon name="project" />,
         ),
-        row("history", "History", <HistoryGlyph />),
+        row("history", "History", <Icon name="history" />),
         row("share", "Share", <ShareGlyph />),
       ]}
     />

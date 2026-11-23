@@ -164,6 +164,7 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [CSS Evidence Presentation](./mokly-css-evidence-presentation.md)
 - [Embeddable Mokly Viewer](./mokly-viewer.md)
 - [Embeddable Viewer API](./mokly-viewer-api.md)
+- [Frame Content Box](./mokly-frame-content-box.md)
 - [Frame Link Navigation](./mokly-frame-link-navigation.md)
 - [Frame Package](./mokly-frame-package.md)
 - [Frame Probe](./mokly-frame-probe.md)
@@ -174,8 +175,8 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [Navigation Disclosure Persistence](./mokly-disclosure-persistence.md)
 - [Same-Origin Frame Documents](./mokly-frame-adapter-same-origin.md)
 - [Shared UI Package](./mokly-ui-package.md)
+- [Shell Canvas Frames, Preview Scheme And Compact Layout](./mokly-shell-device-chrome.md)
 - [Shell Destination Queries](./mokly-shell-destinations.md)
-- [Shell Device Chrome And Preview Scheme](./mokly-shell-device-chrome.md)
 - [Standalone Appearance Control](./mokly-viewer-appearance-standalone.md)
 - [Viewer Appearance](./mokly-viewer-appearance.md)
 - [Viewer Frame Adapter](./mokly-frame-adapter.md)
@@ -189,6 +190,7 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 The design catalogue that depicts the shell, its inventories, and the shared design components.
 
 - [Canvas Design Inventory](./mokly-shell-canvas-inventory.md)
+- [Canvas Loading, Search And Evidence Inventory](./mokly-shell-canvas-inventory-states.md)
 - [Canvas Viewer Parts Of The Design Library](./mokly-design-component-library-canvas.md)
 - [Comparison Pane Design References](./mokly-comparison-pane-designs.md)
 - [Component Controls Design](./mokly-component-controls-design.md)
@@ -206,6 +208,7 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 - [Shell Canvas Stage](./mokly-shell-canvas-stage.md)
 - [Shell Design Inventory](./mokly-shell-design-inventory.md)
 - [Shell Navigation Design](./mokly-shell-design-navigation.md)
+- [Shell Tag Picker Design](./mokly-shell-design-tag-picker.md)
 - [Viewer Appearance Mockups](./mokly-viewer-appearance-mockups.md)
 
 ## CI, Verification, And Release

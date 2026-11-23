@@ -1,13 +1,22 @@
 import { expect, type Page } from "@playwright/test";
 
-import { shellRoot } from "./browse_assertions.js";
+import {
+  accentFill,
+  computedStyle,
+  desktopFrame,
+  mobileFrame,
+  overlayStyle,
+  shellRoot,
+} from "./browse_assertions.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { awaitRoutedDetail, modeButton, showMode } from "./comparison_ui.js";
 import {
   canvasFrame,
+  chooseScheme,
   chooseVariant,
   chooseViewport,
   expectFrameSource,
+  NARROW_WINDOW,
 } from "./workspace_actions.js";
 
 const SCHEME_DOT = '[data-view-changed="scheme"]';
@@ -20,6 +29,7 @@ function dotStyle(page: Page, selector: string) {
     const style = getComputedStyle(mark);
     return {
       display: style.display,
+      fill: style.backgroundColor,
       radius: style.borderTopLeftRadius,
       shadow: style.boxShadow,
       width: style.width,
@@ -86,6 +96,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   await expectShownStatus(page, comparisonPaths.darkOnly, "Unmodified", false);
   expect(await dotStyle(page, SCHEME_DOT)).toEqual({
     display: "block",
+    fill: accentFill,
     radius: "50%",
     shadow: "rgb(255, 255, 255) 0px 0px 0px 1.5px",
     width: "6px",
@@ -137,17 +148,65 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
     "dark",
   );
   // The light-only screen stands on the canvas as its Light frames alone.
-  await expectFrameSource(
-    page.locator(canvasFrame("mobile")),
-    /screens\/stable\/index\.mobile\.html$/,
-  );
-  await expect(page.locator(canvasFrame("mobile", "dark"))).toHaveCount(0);
+  for (const viewport of ["mobile", "desktop"] as const)
+    await expectFrameSource(
+      page.locator(canvasFrame(viewport)),
+      new RegExp(`screens/stable/index\\.${viewport}\\.html$`),
+    );
+  await expect(
+    page.locator('iframe[data-workspace-color-scheme="dark"]'),
+  ).toHaveCount(0);
   await expectShownStatus(page, comparisonPaths.unchanged, "Unmodified", false);
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   expect(diffs).toEqual([]);
+});
+
+test("a light-only screen keeps light frames and says so", async ({ page }) => {
+  // Below the layout breakpoint the one-frame stage keeps the light frames
+  // and names the fallback in their labels. The test above checks the canvas.
+  await page.setViewportSize(NARROW_WINDOW);
+  await page.goto(`/view/${comparisonPaths.consumer}/`);
+  await chooseScheme(page, "dark");
+  await page.fill("[data-mokly-search]", "stable");
+  await page.click(
+    `a[data-nav-row][data-route="${comparisonPaths.unchanged}/index.html"]`,
+  );
+  await expect(page.locator("#mb-main h2")).toHaveText("Stable screen");
+
+  await expectFrameSource(
+    page.locator(mobileFrame),
+    /screens\/stable\/index\.mobile\.html$/,
+  );
+  await expectFrameSource(
+    page.locator(desktopFrame),
+    /screens\/stable\/index\.desktop\.html$/,
+  );
+  await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
+    "data-color-scheme-fallback",
+    "",
+  );
+  const note = page.locator(".mbk-frame-mobile .mbk-frame-scheme-note");
+  await expect(note).toBeVisible();
+  await expect(note).toHaveText("— Light only");
+  expect(
+    await computedStyle(
+      page,
+      ".mbk-frame-mobile .mbk-frame-label",
+      "textTransform",
+    ),
+  ).toBe("uppercase");
+  await expect(
+    page.locator(".mbk-frame-desktop .mbk-frame-scheme-note"),
+  ).toBeVisible();
+  expect(
+    await overlayStyle(page, ".mbk-frame-mobile .phone-screen", "boxShadow"),
+  ).toBe("none");
+
+  await chooseScheme(page, "light");
+  await expect(note).toBeHidden();
 });
 
 test("component comparisons follow changed variants while added variants stay current", async ({

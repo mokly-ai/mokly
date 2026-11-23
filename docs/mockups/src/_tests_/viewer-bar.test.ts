@@ -1,10 +1,12 @@
 /**
  * The Canvas bar of the viewer drawings and its open account menu. The full
  * bar holds the project switcher, the publication pill, History, Share and
- * the account's avatar, and the compact bar the pill and More. The pill's
- * trigger keeps the reference as its own label, with the state and the SHA
- * outside it; the avatar's control keeps the reader's whole name, with the
- * initials outside it. Share is filled only where it is the screen's one
+ * the account's avatar, and the compact bar the pill and More. The project
+ * switcher is one control that leads with the workspace and keeps the whole
+ * name; the pill's trigger keeps the reference as its own label, with the
+ * state and the SHA outside it; the avatar's control keeps the reader's whole
+ * name, with the initials outside it; History's clock and More's chevron are
+ * their controls' own. Share is filled only where it is the screen's one
  * primary action. `product/viewer/standalone/account-menu` draws the account
  * menu and More. The waits of the bar are in `viewer-waits.test.ts` and
  * `viewer-reference-wait.test.ts`.
@@ -83,8 +85,23 @@ const menuPath = "product/viewer/standalone/account-menu";
 
 test("the full pill keeps the reference as its trigger's label and the state beside it", () => {
   const drawn = page("product/viewer/standalone");
-  const [full, compact] = byClass(drawn, "fo-canvas-pill");
-  assert.ok(full && compact);
+  // Both bars draw their pill in the centre slot, and the compact bar leaves
+  // its start slot empty, so its pill comes right after the package's mark.
+  const compactness = (slot: Element) =>
+    (attribute(slot, "class") ?? "")
+      .split(/\s+/)
+      .includes("fo-package-slot-compact");
+  const centres = byClass(drawn, "fo-package-slot-center");
+  const [fullCentre] = centres.filter((slot) => !compactness(slot));
+  const [compactCentre] = centres.filter(compactness);
+  assert.equal(centres.length, 2);
+  assert.ok(fullCentre && compactCentre);
+  assert.equal(
+    byClass(drawn, "fo-package-slot-start").filter(compactness).length,
+    0,
+  );
+  const full = one(fullCentre, "fo-canvas-pill");
+  const compact = one(compactCentre, "fo-canvas-pill");
   assert.deepEqual(buttonsIn(full).map(label), [publication.branch]);
   const state = one(full, "fo-top-state");
   assert.equal(
@@ -117,6 +134,39 @@ test("the avatar's control keeps the reader's whole name, and its initials stay 
   }
 });
 
+test("the project switcher is one control that leads with the workspace, and History and More draw their glyphs inside their controls", () => {
+  const svg = (node: Element) => node.tagName === "svg";
+  for (const id of [
+    "product/viewer/standalone",
+    "product/viewer/standalone/empty",
+  ]) {
+    const drawn = page(id);
+    // The one control reads as the whole name, is named by it and holds it
+    // as its wrapper's tooltip, with the switcher's chevron inside it.
+    const project = one(drawn, "fo-top-project");
+    const [control, ...more] = buttonsIn(project);
+    assert.ok(control, id);
+    assert.equal(more.length, 0, id);
+    assert.equal(label(control), named, id);
+    assert.equal(attribute(control, "aria-label"), named, id);
+    assert.equal(
+      attribute(one(project, "fo-top-variable-control"), "title"),
+      named,
+      id,
+    );
+    assert.equal(elements(control, svg).length, 1, id);
+    // History's clock and More's chevron are the registered Button's own.
+    for (const name of ["History", "More"]) {
+      const [button, ...others] = buttonsIn(drawn).filter(
+        (candidate) => label(candidate) === name,
+      );
+      assert.ok(button, id + " " + name);
+      assert.equal(others.length, 0, id + " " + name);
+      assert.equal(elements(button, svg).length, 1, id + " " + name);
+    }
+  }
+});
+
 test("Share is filled only where it is the screen's one primary action", () => {
   const share = (id: string) =>
     elements(
@@ -137,12 +187,25 @@ test("Share is filled only where it is the screen's one primary action", () => {
 
 test("the cloud's bar leads each control to its screen and draws no Settings", () => {
   const bar = one(page("product/viewer/standalone/empty"), "fo-top-bar");
+  // The project's control is named by the whole name it shows.
+  const [project] = linksIn(bar);
+  assert.ok(project);
+  assert.equal(attribute(project, "aria-label"), named);
+  // History draws its label, or its glyph alone named by it, each a link,
+  // and the glyph's holder around the link gives the name as its tooltip.
+  const glyph = linksIn(bar).find((link) => label(link) === "");
+  assert.ok(glyph && glyph.parentNode && "tagName" in glyph.parentNode);
+  assert.equal(attribute(glyph.parentNode, "title"), "History");
   assert.deepEqual(
-    linksIn(bar).map((link) => [label(link), destination(link)]),
+    linksIn(bar).map((link) => [
+      label(link) || attribute(link, "aria-label"),
+      destination(link),
+    ]),
     [
       [named, "product/viewer/projects"],
       [publication.branch, "product/viewer/switcher"],
       ["sydney-v1", "product/viewer/switcher"],
+      ["History", "product/viewer/history"],
       ["History", "product/viewer/history"],
       ["Share", "product/viewer/share"],
       [sample.viewer.name, menuPath],

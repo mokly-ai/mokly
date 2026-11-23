@@ -68,6 +68,7 @@ interface MountedFrame {
   ): Promise<void>;
   scrollTo(key: string): Promise<void>;
   boxModel?(key: string): Promise<InstanceBoxModel | null>;
+  contentBox?(): Promise<Box | null>;
   subscribe(listener: (event: FrameEvent) => void): () => void;
   dispose(): void;
 }
@@ -211,6 +212,12 @@ of inspection stays available. Decision: the adapter reports these bounded
 numbers, not computed styles or elements, because consumer content never
 leaves the frame and the host validates every value it receives.
 
+## Content Box
+
+`contentBox()` measures the rendered content of the mount's document, so
+that the viewer can size a component's frame to it. The
+[frame content box contract](./mokly-frame-content-box.md) defines it.
+
 ## Same-Origin Documents
 
 `sameOriginAdapter` mounts documents on the viewer's origin. The
@@ -229,6 +236,7 @@ that the static build injects.
 ## Related Docs
 
 - [Frame package](./mokly-frame-package.md)
+- [Frame content box](./mokly-frame-content-box.md)
 - [Same-origin frame documents](./mokly-frame-adapter-same-origin.md)
 - [Frame probe handshake and wire protocol](./mokly-frame-probe-wire.md)
 - [Frame probe](./mokly-frame-probe.md)

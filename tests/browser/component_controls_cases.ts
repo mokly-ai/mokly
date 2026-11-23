@@ -1,9 +1,26 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
-import { componentDesignFixture } from "./component_design_fixture.js";
+import { designDocumentFixture } from "./component_design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+
+/** The Props section of a Canvas artboard's Inspect panel. */
+function propsSection(page: Page) {
+  return page.locator('[data-cv-section="props"]');
+}
+
+/** The Action that one frame of the Action's variant set draws. */
+function frameAction(page: Page, frame: string) {
+  return page.locator(`.cv-frame[data-cv-frame="${frame}"] .mbk-shot-action`);
+}
+
+/** The link to a saved variant in Inspect's Variants section. */
+function variantLink(page: Page, name: string) {
+  return page
+    .getByRole("region", { name: "Variants", exact: true })
+    .getByRole("link", { name, exact: true });
+}
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerComponentControls(
@@ -13,37 +30,12 @@ export function registerComponentControls(
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const { componentDesignUrl } = componentDesignFixture(
+  const { designDocumentUrl } = designDocumentFixture(
     test,
     mode === "static" ? copiedDesignFileUrl : undefined,
   );
 
   for (const viewport of ["desktop", "mobile"] as const) {
-    test(`${viewport}: controls keep the saved component canvas width`, async ({
-      page,
-    }) => {
-      await page.setViewportSize(
-        viewport === "desktop"
-          ? { width: 1440, height: 1000 }
-          : { width: 390, height: 844 },
-      );
-      await page.goto(
-        componentDesignUrl("design/components/overview", viewport),
-      );
-      const saved = await page
-        .locator(".mbk-component-canvas:visible")
-        .boundingBox();
-      // The desktop canvas keeps the shell's fixed 1024px layout width.
-      if (viewport === "desktop") expect(saved?.width).toBe(1024);
-      await page.goto(
-        componentDesignUrl("design/components/controls/controls", viewport),
-      );
-      const editable = await page
-        .locator(".mbk-component-canvas:visible")
-        .boundingBox();
-      expect(editable?.width).toBe(saved?.width);
-    });
-
     test(`${viewport}: component controls show saved, edited, reset, and error states`, async ({
       page,
     }) => {
@@ -52,125 +44,94 @@ export function registerComponentControls(
           ? { width: 1440, height: 1000 }
           : { width: 390, height: 844 },
       );
+      const props = propsSection(page);
+      const label = props.getByRole("textbox", { name: "Label", exact: true });
+      const disabled = props.getByRole("checkbox", {
+        name: "Disabled",
+        exact: true,
+      });
       await page.goto(
-        componentDesignUrl("design/components/pages/variants", viewport),
-      );
-      // The variant page edits the Disabled variant's props in place.
-      await expect(
-        page
-          .getByRole("region", { name: "Props", exact: true })
-          .getByRole("checkbox", { name: "disabled", exact: true }),
-      ).toBeChecked();
-      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
-        1,
-      );
-      await expect(
-        page.locator(".mbk-component-canvas:visible .ce-action"),
-      ).toBeDisabled();
-      await page.goto(
-        componentDesignUrl(
-          "design/components/controls/controls/default",
+        designDocumentUrl(
+          "design/canvas/stage/component-set/disabled",
           viewport,
         ),
       );
-      const controls = page.getByRole("region", { name: "Props", exact: true });
+      // The chosen variant edits the Disabled variant's props in place.
+      await expect(disabled).toBeChecked();
+      await expect(frameAction(page, "disabled-light")).toHaveClass(
+        /mbk-shot-action--disabled/u,
+      );
+      await page.goto(
+        designDocumentUrl("design/canvas/props/editing", viewport),
+      );
+      await expect(label).toHaveValue("Continue");
       await expect(
-        controls.getByRole("textbox", { name: "label", exact: true }),
-      ).toHaveValue("Continue");
-      await expect(
-        controls.getByRole("spinbutton", { name: "cornerRadius", exact: true }),
+        props.getByRole("spinbutton", { name: "Corner radius", exact: true }),
       ).toHaveValue("8");
       await expect(
-        controls.getByRole("combobox", { name: "emphasis", exact: true }),
-      ).toHaveValue("strong");
+        props.getByRole("combobox", { name: "Emphasis", exact: true }),
+      ).toHaveValue("primary");
+      await expect(disabled).not.toBeChecked();
       await expect(
-        controls.getByRole("checkbox", { name: "disabled", exact: true }),
-      ).not.toBeChecked();
-      await expect(
-        controls.getByRole("checkbox", { name: "Set hint", exact: true }),
+        props.getByRole("checkbox", { name: "Set Hint", exact: true }),
       ).toBeChecked();
-      await controls
-        .getByRole("textbox", { name: "label", exact: true })
-        .fill("Next");
-      await expect(
-        controls.getByRole("textbox", { name: "label", exact: true }),
-      ).toHaveValue("Next");
+      await label.fill("Next");
+      await expect(label).toHaveValue("Next");
       await page.goto(
-        componentDesignUrl(
-          "design/components/controls/editing/edited",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/props/editing/edited", viewport),
       );
-      await expect(
-        page.locator(".mbk-component-canvas:visible .ce-action"),
-      ).toHaveText("Get started");
-      await expect(
-        controls.getByRole("textbox", { name: "label", exact: true }),
-      ).toHaveValue("Get started");
-      await controls
+      await expect(frameAction(page, "default-light")).toHaveText(
+        "Get started",
+      );
+      await expect(label).toHaveValue("Get started");
+      await props
         .getByRole("link", { name: "Reset to Default", exact: true })
         .click();
       await expect(page).toHaveURL(
-        componentDesignUrl(
-          "design/components/controls/editing/reset",
+        designDocumentUrl("design/canvas/props/editing/reset", viewport),
+      );
+      await expect(frameAction(page, "default-light")).toHaveText("Continue");
+      await expect(label).toHaveValue("Continue");
+      await variantLink(page, "Disabled").click();
+      await expect(page).toHaveURL(
+        designDocumentUrl(
+          "design/canvas/stage/component-set/disabled",
           viewport,
         ),
       );
-      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
-        1,
+      await expect(frameAction(page, "disabled-light")).toHaveClass(
+        /mbk-shot-action--disabled/u,
       );
-      await expect(
-        page.locator(".mbk-component-canvas:visible .ce-action"),
-      ).toHaveText("Continue");
-      await expect(
-        controls.getByRole("textbox", { name: "label", exact: true }),
-      ).toHaveValue("Continue");
-      await page
-        .getByRole("navigation", { name: "Saved variants" })
-        .getByRole("link", { name: "Disabled", exact: true })
-        .click();
-      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
-        1,
-      );
-      await expect(
-        page.locator(".mbk-component-canvas:visible .ce-action"),
-      ).toBeDisabled();
-      await expect(
-        controls.getByRole("checkbox", { name: "disabled", exact: true }),
-      ).toBeChecked();
+      await expect(disabled).toBeChecked();
       await page.goto(
-        componentDesignUrl(
-          "design/components/controls/states/invalid",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/props/states/invalid", viewport),
       );
-      const radius = controls.getByRole("spinbutton", {
-        name: "cornerRadius",
+      const radius = props.getByRole("spinbutton", {
+        name: "Corner radius",
         exact: true,
       });
       await expect(radius).toHaveAttribute("aria-invalid", "true");
       await expect(radius).toHaveAccessibleDescription(
-        "Enter a number from 0 to 24.",
+        "Enter a number from 0 to 32.",
       );
-      await expect(
-        page.locator(".mbk-component-canvas:visible .ce-action"),
-      ).toHaveCSS("border-radius", "8px");
+      // The frames keep the last valid preview.
+      await expect(frameAction(page, "default-light")).toHaveCSS(
+        "border-radius",
+        "8px",
+      );
       await page.goto(
-        componentDesignUrl("design/components/controls/states/error", viewport),
+        designDocumentUrl("design/canvas/props/states/error", viewport),
       );
       await expect(page.getByRole("alert")).toContainText(
         "The preview could not be updated",
       );
-      await page.getByRole("link", { name: "Try again", exact: true }).click();
+      await props.getByRole("link", { name: "Try again", exact: true }).click();
       await expect(page).toHaveURL(
-        componentDesignUrl(
-          "design/components/controls/states/pending",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/props/states", viewport),
       );
       await expect(
         page
-          .locator(`[data-preview-viewport="${viewport}"]`)
+          .locator('.cv-frame[data-cv-frame="default-light"]')
           .getByRole("status"),
       ).toContainText("Updating preview");
     });
@@ -183,101 +144,57 @@ export function registerComponentControls(
           ? { width: 1440, height: 1000 }
           : { width: 390, height: 844 },
       );
+      const props = propsSection(page);
+      // The optional Hint's field: its Set switch, its input, and Not set.
+      const hint = props
+        .locator(".mbk-control-field")
+        .filter({ hasText: "Set Hint" });
+      const set = hint.getByRole("checkbox", { name: "Set Hint", exact: true });
+      const input = hint.getByRole("textbox", { name: "Hint", exact: true });
+      const notSet = hint.getByText("Not set", { exact: true });
       await page.goto(
-        componentDesignUrl(
-          "design/components/controls/editing/unset",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/props/editing/unset", viewport),
       );
-      const props = page.getByRole("region", { name: "Props", exact: true });
-      const notSet = props.getByText("Not set", { exact: true });
-      await expect(
-        page.getByRole("checkbox", { name: "Set hint", exact: true }),
-      ).not.toBeChecked();
-      await expect(
-        page.getByRole("textbox", { name: "hint", exact: true }),
-      ).toBeHidden();
+      await expect(set).not.toBeChecked();
+      await expect(input).toBeHidden();
       await expect(notSet).toBeVisible();
-      await page
-        .getByRole("checkbox", { name: "Set hint", exact: true })
-        .check();
-      await expect(
-        page.getByRole("textbox", { name: "hint", exact: true }),
-      ).toBeVisible();
+      await set.check();
+      await expect(input).toBeVisible();
       await expect(notSet).toBeHidden();
       // A field that starts supplied says Not set once the reader clears Set.
       await page.goto(
-        componentDesignUrl(
-          "design/components/controls/controls/default",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/props/editing", viewport),
       );
       await expect(notSet).toBeHidden();
-      await props
-        .getByRole("checkbox", { name: "Set hint", exact: true })
-        .uncheck();
-      await expect(
-        props.getByRole("textbox", { name: "hint", exact: true }),
-      ).toBeHidden();
+      await set.uncheck();
+      await expect(input).toBeHidden();
       await expect(notSet).toBeVisible();
       await page.goto(
-        componentDesignUrl(
-          "design/components/controls/states/comparison",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/components/compare/props", viewport),
       );
-      await expect(
-        page.getByRole("region", { name: "Props", exact: true }),
-      ).toContainText("Comparisons show the saved props.");
-      await expect(
-        page
-          .getByRole("region", { name: "Props", exact: true })
-          .locator("input, select"),
-      ).toHaveCount(0);
-      await page
+      await expect(props).toContainText("Comparisons show the saved props.");
+      await expect(props.locator("input, select")).toHaveCount(0);
+      await props
         .getByRole("link", { name: "Switch to Current", exact: true })
         .click();
       await expect(page).toHaveURL(
-        componentDesignUrl(
-          "design/components/controls/controls/default",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/components/usage", viewport),
       );
       await page.goto(
-        componentDesignUrl(
-          "design/components/controls/published/readonly",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/props/read-only", viewport),
       );
-      await expect(
-        page.getByRole("region", { name: "Props", exact: true }),
-      ).toContainText("Open this catalogue locally to edit props.");
-      await expect(
-        page
-          .getByRole("region", { name: "Props", exact: true })
-          .locator("input, select"),
-      ).toHaveCount(0);
-      await page
-        .getByRole("navigation", { name: "Saved variants" })
-        .getByRole("link", { name: "Disabled", exact: true })
-        .click();
+      await expect(props).toContainText(
+        "Open this catalogue locally to edit props.",
+      );
+      await expect(props.locator("input, select")).toHaveCount(0);
+      await variantLink(page, "Disabled").click();
       await expect(page).toHaveURL(
-        componentDesignUrl(
-          "design/components/controls/published/readonly-variant",
-          viewport,
-        ),
+        designDocumentUrl("design/canvas/props/read-only/disabled", viewport),
       );
-      await expect(page.locator(".mbk-component-canvas:visible")).toHaveCount(
-        1,
+      await expect(props.locator("input, select")).toHaveCount(0);
+      await expect(frameAction(page, "disabled-light")).toHaveClass(
+        /mbk-shot-action--disabled/u,
       );
-      await expect(
-        page
-          .getByRole("region", { name: "Props", exact: true })
-          .locator("input, select"),
-      ).toHaveCount(0);
-      await expect(
-        page.locator(".mbk-component-canvas:visible .ce-action"),
-      ).toBeDisabled();
     });
   }
 }

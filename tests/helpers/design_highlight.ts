@@ -7,6 +7,8 @@ interface HighlightSwitch {
   disabled: boolean;
   /** The tooltip of the switch, which names the reason that disables it. */
   title: string | undefined;
+  /** The description of a disabled switch, which names the same reason. */
+  description?: string | undefined;
 }
 
 const AVAILABLE: HighlightSwitch = {
@@ -15,12 +17,13 @@ const AVAILABLE: HighlightSwitch = {
 };
 
 function unavailable(title: string): HighlightSwitch {
-  return { disabled: true, title };
+  return { disabled: true, title, description: title };
 }
 
 const COMPARISON = unavailable(
   "A comparison is selected. Highlighting is available in Current.",
 );
+const REMOVED = unavailable("This preview is unavailable.");
 const LOADING = unavailable("Waiting for the component preview.");
 const EMPTY = unavailable("No registered components are used in this view.");
 
@@ -50,24 +53,14 @@ function expectedSwitches(
 const SHELL_STATES: Readonly<
   Record<string, HighlightSwitch | ViewportSwitches>
 > = {
-  // A selected screen whose preview is ready: in Browse, in Changes' Current
-  // mode, and in the appearance scaffold.
-  "design/browse/views/screen": AVAILABLE,
-  "design/changes/diff-controls/current": AVAILABLE,
-  "design/browse/appearance/overview": AVAILABLE,
-  // A diff mode, a removed screen, and a preview that loads or failed.
-  "design/changes/diff-controls/overlay": COMPARISON,
-  "design/changes/outcomes/removed": unavailable(
-    "This preview is unavailable.",
-  ),
-  "design/browse/loading/preview-loading": LOADING,
-  "design/browse/appearance/status/error": unavailable(
-    "This preview could not be loaded.",
-  ),
-  // Profile and Security render no registered component, in Browse and in
-  // Changes.
-  "design/browse/index-entries/screen": EMPTY,
-  "design/browse/index-entries/member-changes": EMPTY,
+  // A removed screen has no current preview to inspect: Farewell's Inspect,
+  // on a desktop and in a phone's panel sheet, and Timeline's, whose phone
+  // draws no switch while its panel sheet is closed.
+  "design/canvas/outcomes/removed/inspect": REMOVED,
+  "design/canvas/outcomes/removed/no-view": {
+    desktop: REMOVED,
+    mobile: undefined,
+  },
   // The Canvas viewer's Frames filter holds the switch. Profile renders no
   // registered component, on a desktop and in a phone's panel sheet.
   "design/canvas/inspect/unchanged": EMPTY,
@@ -84,11 +77,22 @@ const SHELL_STATES: Readonly<
     desktop: AVAILABLE,
     mobile: undefined,
   },
-  // Component pages. Only Toolbar's example renders a registered component.
-  "design/components/pages/toolbar": AVAILABLE,
-  "design/components/overview": EMPTY,
-  "design/components/pages/comparison": COMPARISON,
-  "design/components/states/loading/usage-loading": LOADING,
+  // Details without inspection metadata, on a desktop and in a phone's open
+  // panel sheet: the reason differs from an empty view's.
+  "design/canvas/components/inspection/unavailable": unavailable(
+    "Component inspection is unavailable for this view.",
+  ),
+  // A comparison of the Action, whose read-only props a desktop and a
+  // phone's open panel sheet show.
+  "design/canvas/components/compare/props": COMPARISON,
+  // An entry whose detail loads, and one whose detail failed, which mounts
+  // no frame, so the shell keeps waiting for the preview. A phone whose
+  // panel sheet is closed draws no switch.
+  "design/canvas/loading/entry": { desktop: LOADING, mobile: undefined },
+  "design/canvas/loading/entry/failed": { desktop: LOADING, mobile: undefined },
+  // The Action's Usage while its detail loads, on a desktop and in a phone's
+  // open panel sheet.
+  "design/canvas/components/usage/loading": LOADING,
 };
 
 /**
@@ -102,16 +106,25 @@ export function highlightViolations(catalogue: ServedCatalogue): string[] {
     if (!views.length) violations.push(`${path}: no view`);
     for (const view of views) {
       const switches = [...withAncestors(view.document)].flatMap(
-        ([element, ancestors]) =>
-          element.tagName === "input" &&
-          attribute(element, "data-workspace-highlight") !== undefined
-            ? [
-                {
-                  disabled: attribute(element, "disabled") !== undefined,
-                  title: ancestors[0] && attribute(ancestors[0], "title"),
-                },
-              ]
-            : [],
+        ([element, ancestors]) => {
+          if (
+            element.tagName !== "input" ||
+            attribute(element, "data-workspace-highlight") === undefined
+          )
+            return [];
+          const disabled = attribute(element, "disabled") !== undefined;
+          return [
+            {
+              disabled,
+              title: ancestors[0] && attribute(ancestors[0], "title"),
+              // A disabled switch also gives its reason to assistive
+              // technology.
+              ...(disabled
+                ? { description: attribute(element, "aria-description") }
+                : {}),
+            },
+          ];
+        },
       );
       if (
         JSON.stringify(switches) !==

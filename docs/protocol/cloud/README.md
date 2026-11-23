@@ -176,10 +176,11 @@ Change a doc only when a requirement or a decision changes.
   `@mokly/viewer` host boundary and the version failure.
 - [Viewer catalogue](./viewer-catalogue.md) — index and entry detail fetch,
   version gate, the package-owned read model and snapshot selection.
-- [Viewer chrome](./viewer-chrome.md) — slots, the bar's actions, the check
-  slot, overlays, publication context and mockups;
+- [Viewer chrome](./viewer-chrome.md) — slots, the bar's actions, overlays,
+  publication context and mockups;
   [account menu](./viewer-chrome-account.md) owns the avatar trigger, the
-  account menu with Theme, Settings and Sign out, and More's account rows.
+  account menu with Theme, Settings and Sign out, and More's account rows, and
+  [check slot](./viewer-chrome-check.md) owns the check in the Changes tab.
 - [Viewer address state](./viewer-address-state.md) — controlled selection,
   query grammar, alias round trips, panels and browser history.
 - [Viewer read model](./viewer-read-model.md) — visibility, branch/PR/history reads,

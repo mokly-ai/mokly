@@ -1,8 +1,7 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { mockLink } from "@mokly/mokly";
 
-import { ComparisonEvidence } from "../../../../../packages/ui/src/comparison-evidence/comparison-evidence.js";
 import { DetailsBody as DetailsBodyView } from "../../../../../packages/ui/src/details-panel/details-panel.js";
 import {
   EntryChip,
@@ -10,10 +9,10 @@ import {
   MetadataCode,
   MetadataLink,
 } from "../../../../../packages/ui/src/metadata-row/metadata-row.js";
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
 import { useDesignInstance } from "../library/composition.js";
 import { inspector } from "../library/inspector/inspector.js";
 
-import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { MetaRow } from "./metadata_row.js";
 import { SUBJECTS, type ScreenSubject } from "./subjects.js";
 import { TagChips } from "./tag_filter.js";
@@ -74,7 +73,7 @@ function DetailsBody({
         <MetaRow name="used-by" label="Used by">
           <MetadataChips>
             <EntryChip
-              href={mockLink(DESTINATIONS.tour)}
+              href={mockLink(CANVAS_PAGES.useCase)}
               kind="use-case"
               title="Example tour"
             />
@@ -85,87 +84,35 @@ function DetailsBody({
   );
 }
 
-/**
- * The comparison facts of a depicted entry, which the shipped evidence draws
- * after the heading and the branch point inside the approved card.
- */
-export type CardEvidence = Omit<
-  ComponentProps<typeof ComparisonEvidence>,
-  "base" | "hidden" | "mark"
->;
-
-type DetailsPanelProps = {
-  destination?: DesignDestination | undefined;
+interface DetailsPanelProps {
+  subject: ScreenSubject;
   /** Tag drawn as the selected chip because it is the current search term. */
   activeTag?: string | undefined;
   /** Views whose render changed, listed when the change misses the shown one. */
   changedViews?: ReactNode;
   open?: boolean;
-  comparisonEvidence?: CardEvidence | undefined;
-} & (
-  | { subject: ScreenSubject; children?: never }
-  | { subject?: never; children: ReactNode }
-);
+}
 
-/**
- * Existing screen metadata, or an authored metadata body such as a document
- * page's, in the shared icon inspector. The shipped comparison evidence
- * follows either, in the approved bordered card.
- */
+/** Existing screen metadata in the shared icon inspector. */
 export function DetailsPanel({
-  destination,
   activeTag,
   changedViews,
-  children,
-  comparisonEvidence,
   open,
   subject,
 }: DetailsPanelProps) {
-  const body =
-    subject === undefined ? (
-      children
-    ) : (
-      <DetailsBody
-        activeTag={activeTag}
-        changedViews={changedViews}
-        subject={subject}
-      />
-    );
-  const info =
-    comparisonEvidence === undefined ? (
-      body
-    ) : (
-      <>
-        {body}
-        <section
-          className="mbk-comparison-details"
-          aria-label="Comparison details"
-        >
-          <ComparisonEvidence
-            base="origin/main"
-            mark={
-              subject === undefined
-                ? "data-page-evidence"
-                : "data-workspace-evidence"
-            }
-            {...comparisonEvidence}
-          />
-        </section>
-      </>
-    );
   return (
     <inspector.Component
       moklyInstance={useDesignInstance("inspector")}
-      tabs={[
-        {
-          id: "info",
-          label: "Details",
-          ...(destination ? { destination } : {}),
-        },
-      ]}
+      tabs={[{ id: "info", label: "Details" }]}
       initial={open ? "info" : "closed"}
       sheetSize="compact"
-      info={info}
+      info={
+        <DetailsBody
+          activeTag={activeTag}
+          changedViews={changedViews}
+          subject={subject}
+        />
+      }
     />
   );
 }

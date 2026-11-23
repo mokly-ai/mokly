@@ -48,6 +48,14 @@ a.site-pager-item {
     var(--mk-shadow-medium);
 }
 
+/* Focus: the glow over the frame's strong ring, after the hover rule */
+
+.site-pager-item:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    0 0 0 1px var(--mk-color-border-strong);
+}
+
 .site-pager-item--next {
   grid-column: 1;
   text-align: left;

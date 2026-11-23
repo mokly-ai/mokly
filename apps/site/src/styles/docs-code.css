@@ -14,16 +14,20 @@
 
 /* Shiki's inline style makes each block a scroll box, which the panel never
    needs: its lines wrap with a hanging indent. Only an important declaration
-   overrides an inline one. */
+   overrides an inline one. The block's 6px radius draws nothing at rest and
+   rounds its focus glow. */
 
 .site-code .site-code-body {
+  border-radius: 6px;
   overflow: visible !important;
 }
 
-/* Shiki keeps each block in the tab order. The panel clips an outer ring, so
-   the block's focus ring draws inside the block, as Copy's does. */
+/* Shiki keeps each block in the tab order. The panel clips an outer halo, so
+   the block's focus glow draws inside the block, as Copy's does. */
 
 .site-code .site-code-body:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal) 75%, transparent);
   outline-offset: -2px;
 }
 

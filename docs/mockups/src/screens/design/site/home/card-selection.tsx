@@ -38,6 +38,7 @@ export function CardSelection({
           value={padding}
         />
       )}
+      {/* status: "ahead" (agent sessions, Claude) */}
       {claude ? (
         <SiteSelection
           className="site-home-card-claude"
@@ -46,6 +47,7 @@ export function CardSelection({
           tag="Claude is editing"
         />
       ) : null}
+      {/* status: "ahead" (comments) */}
       {pin ? <span className="site-pin">M</span> : null}
     </span>
   );

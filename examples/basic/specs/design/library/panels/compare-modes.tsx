@@ -9,6 +9,7 @@ import {
   destination,
   enumOptions,
   flag,
+  text,
   type LibraryProps,
 } from "../schemas.js";
 
@@ -17,8 +18,20 @@ import { CompareModesView } from "./compare-modes.view.js";
 const mode = {
   enum: ["current", "side-by-side", "overlay", "difference", "swipe"],
 } as const;
-const frame = {
-  enum: ["desktop-light", "mobile-light", "desktop-dark", "mobile-dark"],
+/**
+ * A frame that Side by side can compare, as its chip names it: a screen's
+ * frame by its viewport and scheme, or a variant set's frame by its saved
+ * variant and scheme, with the glyph of its kind.
+ */
+const frameChip = {
+  type: "object",
+  additionalProperties: false,
+  required: ["id", "label", "kind"],
+  properties: {
+    id: text,
+    label: text,
+    kind: { enum: ["desktop", "mobile", "component"] },
+  },
 } as const;
 const propSchema = {
   type: "object",
@@ -39,7 +52,8 @@ const propSchema = {
         swipe: destination,
       },
     },
-    frame,
+    frame: text,
+    frames: { type: "array", items: frameChip },
     frameDestination: destination,
   },
 } as const;

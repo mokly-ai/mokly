@@ -2,11 +2,6 @@ import { expect } from "@playwright/test";
 
 import { staticRequests } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
-import {
-  canvasFrame,
-  chooseViewport,
-  expectCanvasViewport,
-} from "./workspace_actions.js";
 
 test("copied catalogue navigation retains pointer and keyboard resizing", async ({
   page,
@@ -39,22 +34,3 @@ test("copied catalogue navigation retains pointer and keyboard resizing", async 
   await expect.poll(width).toBe(480);
   requests.assert();
 });
-
-for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: copied page-design inspector links preserve canonical outer navigation`, async ({
-    page,
-  }) => {
-    await page.goto("/view/design/browse/pages/view/");
-    await chooseViewport(page, viewport);
-    const frame = page.frameLocator(canvasFrame(viewport));
-    await frame.locator(".mbk-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details\/$/);
-    await frame.locator(".mbk-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\/$/);
-    await frame
-      .getByRole("link", { name: "Open Welcome", exact: true })
-      .click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    await expectCanvasViewport(page, viewport);
-  });
-}

@@ -6,6 +6,7 @@ import {
   auditPalettes,
   boundaryContrast,
   designPalette,
+  PREVIEW_SHEET,
 } from "./helpers/design_palette.js";
 import {
   boundaryOf,
@@ -17,7 +18,7 @@ import {
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
 
 /**
  * `@mokly/ui` stylesheets that style a control through a base class whose
@@ -39,7 +40,6 @@ const HAIRLINE_TOKENS = new Set([
  */
 const DECORATIVE_BOUNDARIES = new Map([
   [".mbk-control-alert", "a label naming its own state in 5.97:1 ink"],
-  [".ce-action:disabled", "WCAG exempts a disabled control"],
   [
     ":where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
     "the user kept the shipped border on 2026-10-31",
@@ -63,10 +63,6 @@ const EXEMPT_SURFACES = new Map<string, string>();
  */
 const EXEMPT_CONTROL_SURFACES = new Map([
   [
-    "packages/ui/src/segmented-control/segmented-control.css .mbk-seg",
-    "the user kept the shipped border on 2026-10-30",
-  ],
-  [
     'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
     "the user kept the shipped border on 2026-10-30",
   ],
@@ -87,12 +83,8 @@ const EXEMPT_CONTROL_SURFACES = new Map([
  * sheet imports.
  */
 const AUDITED_BOUNDARIES = [
-  "design-component-controls.css .ce-action--quiet",
-  'design-component-inspection.css .ce-button[aria-pressed="true"]',
-  "design-components.css .ce-action:disabled",
   "design-components.css .ce-badge",
   "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
-  "design-canvas.css .cv :is(a, select, summary):focus-visible",
   "design-canvas-inspect.css .cv-variant[aria-current] > .cv-variant-mark",
   "design-library/inspector/frames-filter.css .cv-ff:has(> input:checked)",
   "design-library/inspector/frames-filter.css .cv-ff:has(> input:focus-visible)",
@@ -102,22 +94,14 @@ const AUDITED_BOUNDARIES = [
   "design-library/panels/compare-modes.css .cv-mode-switch > input:checked + .cv-mode-switch-track",
   "design-library/panels/compare-modes.css .cv-mode-switch > input:focus-visible + .cv-mode-switch-track",
   "design-library/panels/compare-modes.css .cv-mode[aria-current]",
-  "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
+  // The package controls draw keyboard focus as a glow, a shadow rather than a
+  // boundary; packages/ui/tests/palette.test.ts holds the glow at 3:1.
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
   "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
-  "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
-  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
-  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
   "packages/ui/src/controls-panel/controls-panel.css .mbk-control-alert",
-  "packages/ui/src/icon-control/icon-control.css .mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-icon-button:has(> input:focus-visible)",
   'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
-  "packages/ui/src/inspector/inspector.css .mbk-sheet-grab:has(> input:focus-visible)",
   'packages/ui/src/instance-tree/instance-tree.css .mbk-instance-select[aria-pressed="true"], .mbk-instance-tree a.mbk-instance-select[aria-current="true"]',
-  "packages/ui/src/prop-field/prop-field.css .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible",
   "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
-  "packages/ui/src/text-button/text-button.css .mbk-text-button:focus-visible",
-  "packages/ui/src/variant-bar/variant-bar.css .mbk-selection-bar a:focus-visible",
-  'packages/ui/src/variant-bar/variant-bar.css .mbk-selection-bar a[aria-current="page"], .mbk-selection-bar > .mbk-variant-option[aria-current="page"]',
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
@@ -230,13 +214,11 @@ test("every control boundary is a readable control edge", async () => {
 /**
  * Sheets that define a palette, where a literal is the definition itself:
  * the interface palette, the preview palette with its fixed device hardware,
- * the component explorer's scoped palette for depicted content, and the
- * shipped theme that the package components draw in.
+ * and the shipped theme that the package components draw in.
  */
 const PALETTE_SOURCES = new Set([
   "design.css",
-  "design-stage.css",
-  "design-component-view.css",
+  PREVIEW_SHEET,
   "packages/ui/src/theme/theme.css",
 ]);
 

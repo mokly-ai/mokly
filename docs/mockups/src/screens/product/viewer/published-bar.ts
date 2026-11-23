@@ -7,8 +7,8 @@ export interface SlotBar {
 
 /**
  * The compositions a viewer drawing uses. A phone draws the compact bar
- * only. A desktop drawing draws both, and the switch in `viewer.css` shows the
- * one that the bar's own width holds, as the App's bar chooses.
+ * only. A desktop drawing draws both, and the switch in `viewer-bar.css`
+ * shows the one that the bar's own width holds, as the App's bar chooses.
  */
 export function slotBars(viewport: "mobile" | "desktop"): readonly SlotBar[] {
   if (viewport === "mobile") return [{ compact: true }];
@@ -20,7 +20,8 @@ export function slotBars(viewport: "mobile" | "desktop"): readonly SlotBar[] {
 
 /** The class of one published slot in one composition. */
 export function slotClass(
-  side: "fo-package-slot-start" | "fo-package-slot-end",
+  side:
+    "fo-package-slot-start" | "fo-package-slot-center" | "fo-package-slot-end",
   bar: SlotBar,
 ): string {
   return [

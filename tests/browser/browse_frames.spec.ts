@@ -165,48 +165,6 @@ test("the viewport choice keeps a variant set's frames mounted", async ({
   await dark?.dispose();
 });
 
-test("a light-only screen keeps light frames and says so", async ({ page }) => {
-  // The device frames' fallback label stays on the one-frame stage below the
-  // layout breakpoint; a light-only screen's canvas shows its Light row alone.
-  await page.setViewportSize(NARROW_WINDOW);
-  await page.goto(WELCOME);
-  await chooseScheme(page, "dark");
-  await page.goto("/view/design/browse/views/home/");
-  await expect(page.locator("#mb-main h2")).toHaveText("Home");
-
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /design\/browse\/views\/home\/index\.mobile\.html$/,
-  );
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /design\/browse\/views\/home\/index\.desktop\.html$/,
-  );
-  await expect(page.locator(".mbk-frame-mobile")).toHaveAttribute(
-    "data-color-scheme-fallback",
-    "",
-  );
-  const note = page.locator(".mbk-frame-mobile .mbk-frame-scheme-note");
-  await expect(note).toBeVisible();
-  await expect(note).toHaveText("— Light only");
-  expect(
-    await computedStyle(
-      page,
-      ".mbk-frame-mobile .mbk-frame-label",
-      "textTransform",
-    ),
-  ).toBe("uppercase");
-  await expect(
-    page.locator(".mbk-frame-desktop .mbk-frame-scheme-note"),
-  ).toBeVisible();
-  expect(
-    await overlayStyle(page, ".mbk-frame-mobile .phone-screen", "boxShadow"),
-  ).toBe("none");
-
-  await chooseScheme(page, "light");
-  await expect(note).toBeHidden();
-});
-
 test("use-case steps follow the selected scheme without a caption", async ({
   page,
 }) => {

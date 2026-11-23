@@ -1,9 +1,10 @@
-/* The cloud-owned viewer root and the compact composition of the top bar that
+/* The cloud-owned viewer root and the two compositions of the top bar that
    spans it. The root is the bar's container, so the bar's own width chooses
-   the full bar or the compact bar with More, at the one switch width in
-   `viewer.css`. Every rule here belongs to the compact bar, which a bar
-   narrower than that width draws. `viewer.css` imports this file, so these
-   rules come before its own. */
+   the full bar or the compact bar with More, at the one switch width at the
+   end of this sheet. The rules before the switch draw the compact bar, which
+   a narrower bar keeps. `viewer.css` imports this sheet before
+   `viewer-controls.css`, so a rule here that must outweigh a control's look
+   names the viewer root. */
 .fo-viewer-screen {
   container: fo-viewer-bar / inline-size;
   display: flex;
@@ -13,6 +14,10 @@
   height: 100dvh;
   min-height: 0;
   position: relative;
+  /* The package bar keeps clear of the window's buttons: its padding at each
+     side is at least the window's inset there, so its mark comes after them. */
+  --mokly-top-bar-inset-start: var(--fo-window-inset, 0px);
+  --mokly-top-bar-inset-end: var(--fo-window-inset-end, 0px);
 }
 /* The compact bar hides the publication's state and each part that only the
    full bar draws. A desktop drawing draws both compositions in one bar, and
@@ -37,4 +42,228 @@
   height: 0;
   visibility: hidden;
   pointer-events: none;
+}
+/* The cloud's controls in the package top bar's three host slots: the start
+   slot after the package's mark, the centre slot in the middle of the full bar
+   and right after the mark on the compact bar, whose start slot is empty, and
+   the end slot after its search. The package bar draws the surface, the
+   hairline and the padding that clears the window's buttons, so a slot draws
+   none, and the bar's columns give each slot its room: the start and centre
+   slots give way, so their labels truncate, and the end slot keeps its width. */
+.fo-package-slot {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--mk-space-1);
+  min-width: 0;
+}
+/* Each outer slot keeps its content at its own side of the bar. The start
+   slot fills the free room of its column, and the compact bar's centre slot
+   the room after the pill, so the space between the cloud's controls is
+   theirs and moves the Mac window. */
+.fo-package-slot-start,
+.fo-package-slot-center.fo-package-slot-compact {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+}
+.fo-package-slot-end {
+  justify-content: flex-end;
+}
+.fo-package-publication {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  gap: var(--mk-space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+/* The centre's cap. The bar's two outer columns are equal, so the centre
+   leaves each of them the end column's room: in the package bar the search
+   with its whole placeholder and the end slot's controls, and in the cloud's
+   own bar the controls of its last group. The room holds History's glyph
+   alone, and its label where the label rule at the end of this sheet draws
+   it. The App, whose end slot holds more, sets its own rooms
+   (`bar-width.tsx`). The rest is the bar's padding, which clears the window's
+   buttons, and its two column gaps. Inside the cap the state gives way first.
+   The reference then truncates, down to the room of a short name, and the
+   controls beside the pill keep their width, so they never cover it. */
+.fo-package-slot-center:not(.fo-package-slot-compact) {
+  --fo-centre-room: var(--fo-viewer-end-room-glyphs, 16.5625rem);
+  max-width: calc(
+    100cqw - 2 * var(--fo-centre-room) -
+      max(12px, var(--fo-window-inset, 0px)) -
+      max(12px, var(--fo-window-inset-end, 0px)) - 24px
+  );
+}
+.fo-package-slot-center:not(.fo-package-slot-compact) .fo-top-reference {
+  min-width: 3rem;
+}
+.fo-viewer-screen
+  .fo-package-slot-center:not(.fo-package-slot-compact)
+  .fo-canvas-pill {
+  min-width: 4.625rem;
+}
+.fo-viewer-screen .fo-package-slot-center .fo-canvas-pill .fo-top-state {
+  flex-shrink: 1000;
+}
+/* As the full bar narrows, it gives up labels in the prototype's order: first
+   the pill's short SHA, then the labels of History and Settings, whose rule
+   is at the end of this sheet, then the state's phrase and its rule. The
+   state's dot stays. Each width holds the reference of the drawings whole
+   beside the App's Settings, also with the Mac window's buttons. */
+@container fo-viewer-bar (width < 83.5rem) {
+  .fo-viewer-screen .fo-canvas-pill .mono-value {
+    display: none;
+  }
+}
+@container fo-viewer-bar (width < 64.25rem) {
+  .fo-viewer-screen
+    .fo-canvas-pill
+    :is(.fo-canvas-pill-rule, .fo-top-state-detail) {
+    display: none;
+  }
+}
+/* The cloud's own bar, before the package mounts: the package bar's order
+   with no search, in three groups. The compact bar holds the mark, the
+   publication, which takes the room, and More; the full bar holds the mark
+   and the project, the publication in the middle of the bar, and the actions.
+   Its own padding clears the window's buttons. */
+.fo-top-bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--mk-space-3);
+  flex-shrink: 0;
+  min-height: var(--mk-layout-topbar);
+  padding-block: 0;
+  padding-inline: max(var(--mk-space-3), var(--fo-window-inset, 0px))
+    max(var(--mk-space-3), var(--fo-window-inset-end, 0px));
+  border-bottom: 1px solid var(--mk-color-border);
+  background: var(--mk-color-surface);
+}
+.fo-top-slot {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--mk-space-1) var(--mk-space-2);
+  min-width: 0;
+}
+.fo-top-project {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.fo-top-reference {
+  display: flex;
+  flex: 0 1 9rem;
+  min-width: 0;
+  overflow: hidden;
+}
+.fo-top-variable-control {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+.fo-top-fixed {
+  display: flex;
+  flex: 0 0 auto;
+}
+.fo-top-grow {
+  min-width: 0;
+  overflow: hidden;
+}
+.fo-top-trail {
+  justify-content: flex-end;
+  gap: var(--mk-space-1);
+}
+.fo-top-state {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: var(--mk-space-1) var(--mk-space-2);
+  min-width: 0;
+  overflow: hidden;
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+.fo-top-state-detail {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fo-top-state .mono-value {
+  flex: 0 0 auto;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+.fo-top-badge {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+/* The one switch width: the narrowest bar that keeps each control of the full
+   composition whole beside the package's mark, search and end control, with
+   the Mac window's buttons at one side. The widest centre is a pull
+   request's pill beside its Changes badge, GitHub and View latest. It is in
+   rem, like the bar's type and spacing, so it grows with the reader's text
+   size. A narrower bar keeps the compact composition that the rules before
+   this one draw. */
+@container fo-viewer-bar (min-width: 63.875rem) {
+  .fo-viewer-screen .fo-full-bar-only,
+  .fo-viewer-screen .fo-full-bar-state .fo-top-state {
+    display: flex;
+  }
+  .fo-viewer-screen .fo-compact-bar-only {
+    display: none;
+  }
+  .fo-viewer-screen .fo-top-bar {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+  .fo-viewer-screen .fo-top-grow {
+    --fo-centre-room: var(--fo-viewer-trail-room-glyphs, 8.5625rem);
+    justify-content: center;
+    max-width: calc(
+      100cqw - 2 * var(--fo-centre-room) -
+        max(12px, var(--fo-window-inset, 0px)) -
+        max(12px, var(--fo-window-inset-end, 0px)) - 24px
+    );
+  }
+  .fo-viewer-screen .fo-top-grow .fo-top-reference {
+    min-width: 3rem;
+  }
+  .fo-viewer-screen .fo-top-grow .fo-canvas-pill {
+    min-width: 4.625rem;
+  }
+  .fo-viewer-screen .fo-top-grow .fo-canvas-pill .fo-top-state {
+    flex-shrink: 1000;
+  }
+}
+/* The label rule: History and the App's Settings draw their labels on a full
+   bar wide enough for them, and else their glyphs alone, each keeping its
+   name and tooltip. A drawing draws both forms of each control. The App draws
+   one control that changes its drawing in place, as its probe of this rule
+   says. The rule comes after the switch, so it outweighs the switch's display
+   of the full bar's parts, and the centre's room follows it. */
+.fo-viewer-screen .fo-bar-label-only {
+  display: none;
+}
+@container fo-viewer-bar (min-width: 79.875rem) {
+  .fo-viewer-screen .fo-bar-label-only {
+    display: flex;
+  }
+  .fo-viewer-screen .fo-bar-glyph-only {
+    display: none;
+  }
+  .fo-package-slot-center:not(.fo-package-slot-compact) {
+    --fo-centre-room: var(--fo-viewer-end-room, 20.25rem);
+  }
+  .fo-viewer-screen .fo-top-grow {
+    --fo-centre-room: var(--fo-viewer-trail-room, 12.25rem);
+  }
 }

@@ -40,7 +40,10 @@ function PricingHero({ viewport }: { viewport: Viewport }) {
       <div className="site-pricing-heading">
         <h1 className="site-pricing-title" id="pricing-title">
           Free for open source. <br />
-          <span>Team for private&nbsp;projects.</span>
+          <span>
+            Team for{" "}
+            <span className="site-pricing-title-keep">private projects.</span>
+          </span>
         </h1>
         <SiteRedline
           className="site-pricing-redline"

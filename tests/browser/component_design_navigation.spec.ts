@@ -3,72 +3,81 @@ import { expect } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { canvasFrame, expectFrameLoaded } from "./workspace_actions.js";
 
-for (const delayedStyles of [false, true]) {
-  test(`the served catalogue reaches component designs and follows their variant links${delayedStyles ? " with delayed styles" : ""}`, async ({
-    page,
-  }) => {
-    await page.goto("/view/design/components/overview/");
-    await expect(
-      page.locator(
-        'a[data-nav-row][data-route="design/components/overview/index.html"]',
-      ),
-    ).toHaveAttribute("aria-current", "page");
-    // The design screen's Desktop · Light frame on the canvas.
-    const iframe = page.locator(canvasFrame("desktop"));
-    const desktop = iframe.contentFrame();
-    await expectFrameLoaded(
-      iframe,
-      /\/static\/mokly-generated\/design\/components\/overview\/index\.desktop\.html$/,
+/** The served document of a Canvas design route in the desktop frame. */
+function desktopDocument(route: string): RegExp {
+  const escaped = route.replaceAll("/", "\\/");
+  return new RegExp(
+    `\\/static\\/mokly-generated\\/${escaped}\\/index\\.desktop\\.html$`,
+    "u",
+  );
+}
+
+// A frame link must still open its destination while that document's
+// stylesheets are delayed: the regression of pull request 57.
+test("the served catalogue follows a component design's variant link with delayed styles", async ({
+  page,
+}) => {
+  // The viewer's desktop frame lays the artboard out at the frame's own
+  // width. Below 900px a Canvas root takes its compact form, which closes the
+  // panel that holds the Variants links, so the page gives it the full layout.
+  await page.setViewportSize({ width: 1920, height: 1000 });
+  await page.goto("/view/design/canvas/stage/component-set/");
+  await expect(
+    page.locator(
+      'a[data-nav-row][data-route="design/canvas/stage/component-set/index.html"]',
+    ),
+  ).toHaveAttribute("aria-current", "page");
+  // The design screen's Desktop · Light frame on the canvas.
+  const iframe = page.locator(canvasFrame("desktop"));
+  const desktop = iframe.contentFrame();
+  await expectFrameLoaded(
+    iframe,
+    desktopDocument("design/canvas/stage/component-set"),
+  );
+  await expect(
+    desktop.locator('.cv-frame[data-cv-frame="disabled-light"]'),
+  ).toBeVisible();
+  let delayedRequests = 0;
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/*.css", async (route) => {
+    delayedRequests++;
+    await released;
+    await route.continue();
+  });
+  try {
+    await desktop
+      .getByRole("region", { name: "Variants", exact: true })
+      .getByRole("link", { name: "Disabled", exact: true })
+      .click();
+    await expect(page).toHaveURL(
+      /\/view\/design\/canvas\/stage\/component-set\/disabled\/$/u,
     );
     await expect(
-      desktop.locator(".mbk-component-canvas:visible"),
-    ).toBeVisible();
-    let delayedRequests = 0;
-    let release!: () => void;
-    const released = new Promise<void>((resolve) => {
-      release = resolve;
-    });
-    if (delayedStyles) {
-      await page.route("**/*.css", async (route) => {
-        delayedRequests++;
-        await released;
-        await route.continue();
-      });
-    }
-    try {
-      await desktop
-        .getByRole("navigation", { name: "Saved variants" })
-        .getByRole("link", { name: "Disabled", exact: true })
-        .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/components\/pages\/variants\/$/,
-      );
-      await expect(
-        page.locator(
-          'a[data-nav-row][data-route="design/components/pages/variants/index.html"]',
-        ),
-      ).toHaveAttribute("aria-current", "page");
-      if (delayedStyles) {
-        await expect.poll(() => delayedRequests).toBeGreaterThan(0);
-        release();
-      }
-      await expectFrameLoaded(
-        iframe,
-        /\/static\/mokly-generated\/design\/components\/pages\/variants\/index\.desktop\.html$/,
-      );
-      await expect(
-        desktop.locator(".mbk-component-canvas:visible button"),
-      ).toBeDisabled();
-      await expect(
-        desktop.locator(".mbk-component-canvas:visible"),
-      ).toHaveCount(1);
-      await expect(
-        desktop.locator(".mbk-component-canvas.mbk-frame-desktop"),
-      ).toBeVisible();
-      if (delayedStyles) expect(delayedRequests).toBeGreaterThan(0);
-    } finally {
-      release();
-      await page.unrouteAll({ behavior: "ignoreErrors" });
-    }
-  });
-}
+      page.locator(
+        'a[data-nav-row][data-route="design/canvas/stage/component-set/disabled/index.html"]',
+      ),
+    ).toHaveAttribute("aria-current", "page");
+    await expect.poll(() => delayedRequests).toBeGreaterThan(0);
+    release();
+    await expectFrameLoaded(
+      iframe,
+      desktopDocument("design/canvas/stage/component-set/disabled"),
+    );
+    // The variant's own artboard: its frame is chosen, and Props edits it.
+    await expect(
+      desktop.locator('.cv-frame[data-cv-frame="disabled-light"]'),
+    ).toHaveAttribute("data-cv-selected", "");
+    await expect(
+      desktop
+        .locator('[data-cv-section="props"]')
+        .getByRole("checkbox", { name: "Disabled", exact: true }),
+    ).toBeChecked();
+    expect(delayedRequests).toBeGreaterThan(0);
+  } finally {
+    release();
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+  }
+});

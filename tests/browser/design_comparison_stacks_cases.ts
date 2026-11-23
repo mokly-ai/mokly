@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
@@ -22,14 +22,26 @@ export function registerDesignComparisonStacks(
   type Scheme = "dark" | "light";
   type Viewport = "desktop" | "mobile";
 
-  /** Design routes whose comparisons stack both versions in one chrome. */
+  /**
+   * Canvas designs whose frames stack both versions in the shipped viewport:
+   * Welcome on the Changes tab, the moved Invoice, and the Action's variant
+   * set, each in its stacked compare mode.
+   */
   const STACKED = [
-    ["design/changes/diff-controls/overlay", "overlay"],
-    ["design/changes/diff-controls/overlay-long", "overlay"],
-    ["design/changes/diff-controls/overlay-panel", "overlay"],
-    ["design/changes/outcomes/difference", "difference"],
-    ["design/browse/appearance/workspaces/difference", "difference"],
+    ["design/canvas/changes/overlay", "overlay"],
+    ["design/canvas/changes/difference", "difference"],
+    ["design/canvas/outcomes/moved", "overlay"],
+    ["design/canvas/components/compare", "overlay"],
+    ["design/canvas/components/compare/difference", "difference"],
   ] as const;
+
+  /** Welcome on the Changes tab in each compare mode that draws versions. */
+  const COMPARED = [
+    "design/canvas/changes/side-by-side",
+    "design/canvas/changes/overlay",
+    "design/canvas/changes/difference",
+    "design/canvas/changes/swipe",
+  ];
 
   /** The opaque screen background each depicted scheme paints under a blend. */
   const SCREEN_BACKGROUND: Record<Scheme, string> = {
@@ -42,7 +54,7 @@ export function registerDesignComparisonStacks(
     route: string,
     viewport: Viewport,
     scheme: Scheme,
-  ): Promise<Locator> {
+  ): Promise<string> {
     await page.setViewportSize(
       viewport === "mobile"
         ? { width: 390, height: 844 }
@@ -54,88 +66,110 @@ export function registerDesignComparisonStacks(
         path.join(repositoryRoot, "examples/basic/mokly-generated", file),
       ).href,
     );
-    const scroller = page.locator(
-      `.ce-preview-view[data-preview-viewport="${viewport}"] .mb-viewport`,
-    );
-    await expect(scroller, file).toHaveCount(1);
-    await expect(scroller, file).toBeVisible();
-    return scroller;
+    await expect(page.locator(".cv-root"), file).toHaveCount(1);
+    return file;
   }
 
   for (const viewport of ["desktop", "mobile"] as const) {
     for (const scheme of ["light", "dark"] as const) {
-      test(`${viewport} ${scheme}: stacked comparisons share one chrome and one offset`, async ({
+      test(`${viewport} ${scheme}: stacked comparisons share each frame and one offset`, async ({
         page,
       }, testInfo) => {
         for (const [route, mode] of STACKED) {
-          const scroller = await open(page, route, viewport, scheme);
-          const facts = await scroller.evaluate((node) => {
-            const box = (element: Element) => {
-              const rect = element.getBoundingClientRect();
-              return [rect.left, rect.top, rect.width, rect.height];
-            };
-            const stack = node.querySelector(".mb-viewport-box")!;
-            const before = node.querySelector(".mb-pane--before")!;
-            const after = node.querySelector(".mb-pane--after")!;
-            const surface = (layer: Element) =>
-              layer.querySelector(":scope > .mb-pane-doc")!;
-            const chrome = node.closest(".browser-frame, .phone-frame")!;
-            const blended: string[] = [];
-            for (
-              let ancestor: Element | null = chrome;
-              ancestor && !ancestor.classList.contains("ce-preview-view");
-              ancestor = ancestor.parentElement
-            ) {
-              const style = getComputedStyle(ancestor);
-              if (style.mixBlendMode !== "normal" || style.opacity !== "1")
-                blended.push(ancestor.className);
-            }
-            return {
-              after: box(after),
-              afterBackground: getComputedStyle(surface(after)).backgroundColor,
-              afterBlend: getComputedStyle(after).mixBlendMode,
-              afterOpacity: getComputedStyle(after).opacity,
-              before: box(before),
-              beforeBackground: getComputedStyle(surface(before))
-                .backgroundColor,
-              beforeBlend: getComputedStyle(before).mixBlendMode,
-              beforeOpacity: getComputedStyle(before).opacity,
-              blended,
-              documentHeights: [
-                ...node.querySelectorAll(".mbk-stack-document"),
-              ].map((document) => document.getBoundingClientRect().height),
-              isolation: getComputedStyle(stack).isolation,
-              // The shipped viewport scrolls in the shell; a static artboard
-              // draws its position, so it has no range to scroll.
-              range: node.scrollHeight - node.clientHeight,
-              scrollerHeight: node.getBoundingClientRect().height,
-              scrolls: node.scrollTop,
-            };
-          });
-          const where = `${route} ${viewport} ${scheme}`;
-          expect(facts.after, `${where}: layers coincide`).toEqual(
-            facts.before,
+          const file = await open(page, route, viewport, scheme);
+          // Each frame on the stage that the artboard shows; a phone shows
+          // one frame of a screen and hides the others.
+          const frames = await page.evaluate(() =>
+            [...document.querySelectorAll(".cv-frame[data-cv-frame]")]
+              .filter((frame) => frame.getClientRects().length > 0)
+              .map((frame) => {
+                const box = (element: Element) => {
+                  const rect = element.getBoundingClientRect();
+                  return [rect.left, rect.top, rect.width, rect.height];
+                };
+                const node = frame.querySelector(".mb-viewport")!;
+                const stack = node.querySelector(".mb-viewport-box")!;
+                const before = node.querySelector(".mb-pane--before")!;
+                const after = node.querySelector(".mb-pane--after")!;
+                const surface = (layer: Element) =>
+                  layer.querySelector(":scope > .mb-pane-doc")!;
+                const blended: string[] = [];
+                for (
+                  let ancestor: Element | null = node;
+                  ancestor && !ancestor.classList.contains("cv-canvas");
+                  ancestor = ancestor.parentElement
+                ) {
+                  const style = getComputedStyle(ancestor);
+                  if (style.mixBlendMode !== "normal" || style.opacity !== "1")
+                    blended.push(ancestor.className);
+                }
+                const declared = getComputedStyle(frame);
+                return {
+                  after: box(after),
+                  afterBackground: getComputedStyle(surface(after))
+                    .backgroundColor,
+                  afterBlend: getComputedStyle(after).mixBlendMode,
+                  afterOpacity: getComputedStyle(after).opacity,
+                  before: box(before),
+                  beforeBackground: getComputedStyle(surface(before))
+                    .backgroundColor,
+                  beforeBlend: getComputedStyle(before).mixBlendMode,
+                  beforeOpacity: getComputedStyle(before).opacity,
+                  blended,
+                  documentHeights: [
+                    ...node.querySelectorAll(".mb-pane-doc"),
+                  ].map((document) => document.getBoundingClientRect().height),
+                  frame: frame.getAttribute("data-cv-frame"),
+                  isolation: getComputedStyle(stack).isolation,
+                  // The frame's own size, before the stage's zoom.
+                  nominal: ["--cv-frame-w", "--cv-frame-h"].map((property) =>
+                    Number(declared.getPropertyValue(property)),
+                  ),
+                  // The shipped viewport scrolls in the shell; a static
+                  // artboard draws its position, so it has no range to scroll.
+                  range: node.scrollHeight - node.clientHeight,
+                  scheme: frame.getAttribute("data-cv-scheme") as
+                    "dark" | "light",
+                  scrollerHeight: node.getBoundingClientRect().height,
+                  scrolls: node.scrollTop,
+                  size: [node.clientWidth, node.clientHeight],
+                };
+              }),
           );
-          expect(facts.documentHeights, where).toHaveLength(2);
-          for (const height of facts.documentHeights)
-            expect(height, where).toBeGreaterThanOrEqual(
-              facts.scrollerHeight - 1,
+          expect(frames.length, `${file}: a stacked frame`).toBeGreaterThan(0);
+          for (const facts of frames) {
+            const where = `${file} ${facts.frame}`;
+            expect(facts.after, `${where}: layers coincide`).toEqual(
+              facts.before,
             );
-          expect(facts.range, where).toBe(0);
-          expect(facts.scrolls, where).toBe(0);
-          expect(facts.isolation, where).toBe("isolate");
-          expect(facts.beforeBackground, where).toBe(SCREEN_BACKGROUND[scheme]);
-          expect(facts.afterBackground, where).toBe(SCREEN_BACKGROUND[scheme]);
-          expect([facts.beforeBlend, facts.beforeOpacity], where).toEqual([
-            "normal",
-            "1",
-          ]);
-          expect([facts.afterBlend, facts.afterOpacity], where).toEqual(
-            mode === "overlay" ? ["normal", "0.5"] : ["difference", "1"],
-          );
-          expect(facts.blended, `${where}: the chrome never blends`).toEqual(
-            [],
-          );
+            expect(facts.documentHeights, where).toHaveLength(2);
+            for (const height of facts.documentHeights)
+              expect(height, where).toBeGreaterThanOrEqual(
+                facts.scrollerHeight - 1,
+              );
+            expect(facts.size, `${where}: the frame's own size`).toEqual(
+              facts.nominal,
+            );
+            expect(facts.range, where).toBe(0);
+            expect(facts.scrolls, where).toBe(0);
+            expect(facts.isolation, where).toBe("isolate");
+            expect(facts.beforeBackground, where).toBe(
+              SCREEN_BACKGROUND[facts.scheme],
+            );
+            expect(facts.afterBackground, where).toBe(
+              SCREEN_BACKGROUND[facts.scheme],
+            );
+            expect([facts.beforeBlend, facts.beforeOpacity], where).toEqual([
+              "normal",
+              "1",
+            ]);
+            expect([facts.afterBlend, facts.afterOpacity], where).toEqual(
+              mode === "overlay" ? ["normal", "0.5"] : ["difference", "1"],
+            );
+            expect(facts.blended, `${where}: the frame never blends`).toEqual(
+              [],
+            );
+          }
           await page.screenshot({
             path: testInfo.outputPath(
               `${route.replaceAll("/", "-")}.${viewport}.${scheme}.png`,
@@ -143,92 +177,27 @@ export function registerDesignComparisonStacks(
           });
         }
       });
+
+      test(`${viewport} ${scheme}: depicted screens keep their own ink inside a comparison`, async ({
+        page,
+      }) => {
+        for (const route of COMPARED) {
+          const file = await open(page, route, viewport, scheme);
+          const headings = await page.evaluate(() =>
+            [
+              ...document.querySelectorAll(
+                ".cv-frame .mbk-shot :is(h1, h2, h3)",
+              ),
+            ].map((heading) => [
+              getComputedStyle(heading).color,
+              getComputedStyle(heading.closest(".mbk-shot")!).color,
+            ]),
+          );
+          expect(headings.length, file).toBeGreaterThan(0);
+          for (const [heading, screen] of headings)
+            expect(heading, `${file}: the screen's ink`).toBe(screen);
+        }
+      });
     }
   }
-
-  test("the long overlay depicts both versions part-way down one viewport", async ({
-    page,
-  }) => {
-    for (const viewport of ["desktop", "mobile"] as const) {
-      for (const scheme of ["light", "dark"] as const) {
-        const where = `${viewport} ${scheme}`;
-        const scroller = await open(
-          page,
-          "design/changes/diff-controls/overlay-long",
-          viewport,
-          scheme,
-        );
-        const facts = await scroller.evaluate((node) => {
-          const top = node.getBoundingClientRect().top;
-          const headings = (side: string) =>
-            [
-              ...node.querySelectorAll(
-                `.mb-pane--${side} .mbk-shot-sections h3`,
-              ),
-            ].map((heading) => ({
-              text: heading.textContent,
-              top: heading.getBoundingClientRect().top - top,
-            }));
-          const stack = node
-            .querySelector(".mb-pane--before .mbk-stack-document")!
-            .getBoundingClientRect();
-          const track = node
-            .querySelector(".mbk-stack-scrollbar")!
-            .getBoundingClientRect();
-          const thumb = node
-            .querySelector(".mbk-stack-thumb")!
-            .getBoundingClientRect();
-          const viewport = node.getBoundingClientRect();
-          return {
-            after: headings("after"),
-            before: headings("before"),
-            offset: top - stack.top,
-            stackHeight: stack.height,
-            thumbSize: thumb.height / track.height,
-            thumbStart: (thumb.top - track.top) / track.height,
-            thumbWithinTrack:
-              thumb.top >= track.top && thumb.bottom <= track.bottom,
-            trackRight: track.right,
-            viewportHeight: viewport.height,
-            viewportRight: viewport.right,
-          };
-        });
-        expect(facts.stackHeight, where).toBeGreaterThan(
-          facts.viewportHeight * 1.5,
-        );
-        expect(facts.offset, `${where}: scrolled`).toBeGreaterThan(0);
-        expect(facts.offset, `${where}: not at the end`).toBeLessThan(
-          facts.stackHeight - facts.viewportHeight,
-        );
-        expect(
-          facts.after.map((heading) => heading.top),
-          `${where}: every section shares one offset`,
-        ).toEqual(facts.before.map((heading) => heading.top));
-        expect(
-          facts.before.some(
-            (heading) => heading.top > 0 && heading.top < facts.viewportHeight,
-          ),
-          where,
-        ).toBe(true);
-        const reworded = facts.before.flatMap((heading, index) =>
-          heading.text === facts.after[index]?.text ? [] : [heading.top],
-        );
-        expect(reworded, `${where}: one reworded section`).toHaveLength(1);
-        expect(reworded[0], `${where}: the change is in view`).toBeGreaterThan(
-          0,
-        );
-        expect(reworded[0]!, where).toBeLessThan(facts.viewportHeight);
-        expect(facts.thumbWithinTrack, where).toBe(true);
-        expect(facts.trackRight, where).toBeCloseTo(facts.viewportRight, 0);
-        expect(
-          Math.abs(facts.thumbStart - facts.offset / facts.stackHeight),
-          `${where}: thumb position matches the offset`,
-        ).toBeLessThan(0.08);
-        expect(
-          Math.abs(facts.thumbSize - facts.viewportHeight / facts.stackHeight),
-          `${where}: thumb size matches the visible share`,
-        ).toBeLessThan(0.08);
-      }
-    }
-  });
 }

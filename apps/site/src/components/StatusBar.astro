@@ -24,6 +24,7 @@ const { route } = Astro.props;
     <Icon name="frame" size={14} />
     mokly.ai — {pageName(route)}
   </span>
+  {/* status: "ahead" (Claude, Codex) */}
   <span class="site-statusbar-item">
     <Presence small />
     {PEOPLE.length} in this file

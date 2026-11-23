@@ -4,10 +4,7 @@ import path from "node:path";
 import { CANVAS_SAMPLES } from "../../examples/basic/specs/design/library/metadata.js";
 import { libraryStyleFiles } from "../../examples/basic/specs/design/library/style_files.js";
 import { canvasProperties } from "../../examples/basic/specs/design/parts/canvas_palette.js";
-import {
-  palettes,
-  type PaletteColors,
-} from "../../packages/ui/dist/palette/palette.js";
+import { palettes } from "../../packages/ui/dist/palette/palette.js";
 
 import { designStyleRules, type ColorReference } from "./design_styles.js";
 import { repositoryRoot } from "./fixture.js";
@@ -167,16 +164,22 @@ export async function auditPalettes(): Promise<
 const PREVIEW_BLOCK = /:root\s*\{([^}]*)\}/;
 
 /**
- * The preview tokens of the stage stylesheet: the screen, device, and traffic
- * light colours, which stay independent of the interface appearance.
+ * The sheet of the preview tokens: the Canvas route links it, and the stage
+ * sheet of the other design routes imports it.
+ */
+export const PREVIEW_SHEET = "design-preview.css";
+
+/**
+ * The preview tokens of the preview stylesheet: the screen, device, and
+ * traffic light colours, which stay independent of the interface appearance.
  */
 export async function designPreviewTokens(): Promise<Map<string, string>> {
   const source = await fs.readFile(
-    path.join(repositoryRoot, "examples/basic/design-stage.css"),
+    path.join(repositoryRoot, "examples/basic", PREVIEW_SHEET),
     "utf8",
   );
   const block = PREVIEW_BLOCK.exec(source)?.[1];
-  if (!block) throw new Error("design-stage.css is missing its preview tokens");
+  if (!block) throw new Error(`${PREVIEW_SHEET} is missing its preview tokens`);
   return readTokens(block);
 }
 
@@ -186,13 +189,17 @@ export const SHIPPED_THEME = "packages/ui/src/theme/theme.css";
 /**
  * The tokens that the shipped theme declares on the viewer root class, which
  * every artboard's and sample's root carries, when a design stylesheet
- * imports the theme: its Light half, which the Dark half redeclares.
+ * imports the theme: its Light half, which the Dark half redeclares. The
+ * focus glows that the reset class declares on every package element join.
  */
 export async function designThemeTokens(): Promise<Map<string, string>> {
   const tokens = new Map<string, string>();
-  for (const rule of await designStyleRules())
-    if (rule.file === SHIPPED_THEME && rule.selector === ".mbk, .mbk-document")
-      for (const [, name, value] of rule.body.matchAll(
+  for (const { body, file, selector } of await designStyleRules())
+    if (
+      (file === SHIPPED_THEME && selector === ".mbk, .mbk-document") ||
+      (file === "packages/ui/src/reset/reset.css" && selector === ".mbk-reset")
+    )
+      for (const [, name, value] of body.matchAll(
         /(--[\w-]+)\s*:\s*([^;]+);/gu,
       ))
         tokens.set(name!, value!.replace(/\s+/gu, " ").trim());
@@ -283,15 +290,9 @@ function cssColor(color: string): string {
   return `rgb(${channels.join(", ")})`;
 }
 
-/** A colour role of the Canvas palette, other than the people's colours. */
-export type CanvasRole = Exclude<keyof PaletteColors, "people">;
-
-/**
- * One colour role of the Canvas palette in one appearance, as the CSS `rgb()`
- * value a computed style reports. The shipped theme takes each shell token
- * from a Canvas role, and a design screen's shell root takes that theme, so
- * a package component inside it paints this value.
- */
-export function canvasColor(appearance: Appearance, role: CanvasRole): string {
-  return cssColor(palettes.canvas[appearance][role]);
+/** One Canvas role on a Canvas root as the `rgb()` value a style reports. */
+export async function canvasColor(appearance: Appearance, role: string) {
+  const value = await canvasRoleColor(role, appearance);
+  if (!value) throw new Error(`Canvas has no opaque ${role} in ${appearance}`);
+  return cssColor(value);
 }

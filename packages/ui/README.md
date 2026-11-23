@@ -52,10 +52,11 @@ root states its appearance in `data-mokly-theme`; Auto follows the reader's
 system. Each component puts the reset class `mbk-reset`
 on every element that it renders, apart from the host slots, whose content
 stays the host's. The class gives the element border-box sizing and the
-reader's reduced motion, and resets links and text blocks. No rule reaches the
-host page or host slot content. A host that renders a component outside a
-viewer root puts it inside an element with the viewer root class, or declares
-the tokens itself, as the design catalogue's `examples/basic/design.css` does.
+reader's reduced motion, resets links and text blocks, and gives a focusable
+element the focus glow. No rule reaches the host page or host slot content. A
+host that renders a component outside a viewer root puts it inside an element
+with the viewer root class, or declares the tokens itself, as the design
+catalogue's `examples/basic/design.css` does.
 
 `@mokly/ui/palette` exports `palettes`, each named palette by its name, with
 its types. A palette gives the `PaletteColors` of its `light` and `dark`
@@ -144,8 +145,11 @@ variants and members of an entry's list, each with its keys, label, depth,
 address, and open, hidden, and changed states. Each disclosure choice reaches
 `onDisclosure` with its key and its new open state, and the resize separator
 reports widths through `onWidth` and `onWidthCommit`. `TopBar` takes the tag
-picker and the end control as slots, and `ScreenHeader` takes the view's
-status and controls as slots.
+picker and the end control as slots. An embedded root also gives it `host`,
+the `TopBarHost` containers of its three top-bar slots: the bar places the
+start slot after the brand, the centre slot in its middle column, and the end
+slot after the end control, and a bar with host slots draws the mark alone.
+`ScreenHeader` takes the view's status and controls as slots.
 
 `TagPicker` draws the tag button of the search field and the picker that it
 opens. The host holds the open state and the focused chip. It receives the
@@ -259,7 +263,9 @@ A state that a host focuses after Try again takes a ref: `focusRef` on
 and its preview scheme: the skip link, the top bar, and the body with the
 navigation and the `MainRegion`, and the `RouteStatus` that announces each
 navigation. `EmbeddedLayout` draws an embedded root with
-the same parts between its host's slots. It places each slot's content
+the same parts and its host's slots. Its `topBar` function receives the
+containers of the three top-bar slots, which the bar places in its columns.
+It places each slot's content
 without reading it, keeps the host's stage overlay over the shown preview,
 and takes the host's `MarkerLayer` and label layer. `WorkspaceLayout` lays out
 a workspace's header, variant bar, preview, and inspector. `RootState` takes
@@ -301,7 +307,9 @@ error. An optional field draws both its control and its Not set line under
 the Set check box. `TextButton` with an `href` is a link with the button's
 look, and the controls panels take `resetHref`, `retryHref`, `startHref`, and
 `currentHref`, which draw Reset while the props differ, the alert's action, a
-failed start's action, and Switch to Current as links. `InstanceTree` draws an
+failed start's action, and Switch to Current as links. `PropsStatus` and
+`UsageStatus` take `retryHref`, which draws Try again of a failed load as a
+link. `InstanceTree` draws an
 instance with an `href` as a link with the button's look, whose selected one is
 the current page, and starts with the nested lists that `initiallyExpanded`
 names open.
@@ -378,13 +386,29 @@ the same class name. Give each new element the reset class, last in its class
 list, and give no rule a selector of the page or of a bare element; the
 viewer's styles test holds both stylesheets to that.
 
+Keyboard focus draws the focus glow that the
+[shell design](../../docs/protocol/mokly-shell-design.md#focus) requires. The
+reset class declares its two shadows: `--mbk-focus-glow` outside the box and
+`--mbk-focus-glow-inset` inside it, both in the shell accent at 75%. Its
+baseline rule gives each focusable element the outer glow in place of the
+browser's outline, and a 2px `Highlight` outline in forced colours. The rule
+weighs one pseudo-class, so a component's own focus rule wins. Write such a
+rule for a control that draws a shadow of its own, and repeat that shadow
+after the glow, as the shown segment of a segmented control does. Write one
+for a control in a container that clips or scrolls, which draws the inset
+glow, as a catalogue row does on its pill. Write one for a drawn control
+under a transparent native control, which shows the glow with `:has()` and
+adds its own forced-colours outline. A focus rule sets only the shadow, so
+the baseline keeps the forced-colours outline. `palette.test.ts` holds the
+glow at 3:1 on each surface in both appearances.
+
 Shell widths use `px` or `em`, not `rem`, unless a protocol contract requires
 `rem`. A `rem` length follows the root font size of the page. A host page that
 embeds the viewer sets that size, so a `rem` width can change from host to
 host. An `em` width follows the element's own font size instead. The
 navigation drawer's `max-width: 20rem` is the one `rem` width. The
 [compact layout](../../docs/protocol/mokly-shell-device-chrome.md#compact-layout)
-of the device chrome contract replaces that drawer with sheets.
+of the canvas frames contract replaces that drawer with sheets.
 
 `src/styles.css` sets the order of `styles.css`. It lists the component
 stylesheets with one `@import` each, in cascade order: the theme and the reset
@@ -414,7 +438,8 @@ override the desktop layout rules.
   of each generated role, with the fixed values of the roles without a Canvas
   source, and the sRGB mixes, tints, and shadows that the sources compute
 - [`src/reset/reset.css`](./src/reset/reset.css) — the reset class: border-box
-  sizing, the reader's reduced motion, and the link and text block resets
+  sizing, the reader's reduced motion, the link and text block resets, and
+  the focus glow with its baseline focus rule and forced-colours outline
 - [`src/palette/palette.ts`](./src/palette/palette.ts) — `palettes`, the named
   palettes, with the `PaletteColors`, `PaletteFonts`, and `Palette` types;
   `canvas` is the only palette and the source of the generated stylesheets
@@ -435,9 +460,10 @@ override the desktop layout rules.
   — `SegmentedControl`, the named group of segments that the viewport and
   scheme switches and the comparison modes render, as buttons or as the links
   and inert text of a static depiction
-- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`: the
-  drawer menu, the brand, and the catalogue search with its compact form and
-  its focus return
+- [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar` and
+  `TopBarHost`: the three columns with the drawer menu, the brand, the
+  catalogue search with its compact form and its focus return, and an
+  embedded root's top-bar slots
 - [`src/top-bar/top-bar-links.tsx`](./src/top-bar/top-bar-links.tsx) — the
   menu and the brand, as controls, links, or pictures of a static depiction
 - [`src/top-bar/brand-icon.tsx`](./src/top-bar/brand-icon.tsx) — `BrandIcon`,
@@ -493,10 +519,11 @@ override the desktop layout rules.
   `EditStatus`, the status of a render of edited props over the preview
 - [`src/props-panel/props-panel.tsx`](./src/props-panel/props-panel.tsx) —
   `PropsPanel`, `PropValues`, `PropSlots`, `PropsMessage`, and `PropsStatus`:
-  the supplied props and slots, the line of an empty tab, and its loading
+  the supplied props and slots, the line of an empty tab, and its loading and
+  failed states
 - [`src/usage-list/usage-list.tsx`](./src/usage-list/usage-list.tsx) —
   `UsageList` and `UsageStatus`: the Used by and affected consumers, and the
-  tab's loading and unchecked states
+  tab's loading, failed, and unchecked states
 - [`src/instance-tree/instance-tree.tsx`](./src/instance-tree/instance-tree.tsx)
   — `InstanceTree`: the viewport choice and the instances, whose nested lists
   keep their open state
@@ -578,8 +605,9 @@ override the desktop layout rules.
   `useMergedRef`, the internal ref of an element that a component and its
   host both need
 - [`src/embedded-layout/embedded-layout.tsx`](./src/embedded-layout/embedded-layout.tsx)
-  — `EmbeddedLayout`, an embedded root with the host slots and the stage
-  overlay of `host-slot.tsx`, and `MarkerLayer`, the host's markers
+  — `EmbeddedLayout`, an embedded root with the host slots, whose top-bar
+  containers it hands to the top bar, and the stage overlay of
+  `host-slot.tsx`, and `MarkerLayer`, the host's markers
 - [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
   — `WorkspaceLayout`: the header, the variant bar, and the preview beside the
   inspector
@@ -615,7 +643,7 @@ override the desktop layout rules.
   palette and the theme that the package draws in
 - [Shell design](../../docs/protocol/mokly-shell-design.md),
   [Shell canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md) and
-  [Shell device chrome](../../docs/protocol/mokly-shell-device-chrome.md), the
+  [Shell canvas frames](../../docs/protocol/mokly-shell-device-chrome.md), the
   Canvas stage, its frames, pan, zoom and Fit, and the compact layout
 - [Component inspector design](../../docs/protocol/mokly-component-inspector-design.md),
   the right panel with Inspect and Changes,

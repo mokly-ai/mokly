@@ -161,6 +161,10 @@
     display: none;
   }
 
+  .cv-work:has(option[value="action-light"]:checked)
+    .cv-frame[data-cv-frame="action-light"],
+  .cv-work:has(option[value="action-dark"]:checked)
+    .cv-frame[data-cv-frame="action-dark"],
   .cv-work:has(option[value="default-light"]:checked)
     .cv-frame[data-cv-frame="default-light"],
   .cv-work:has(option[value="default-dark"]:checked)

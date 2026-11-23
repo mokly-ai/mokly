@@ -4,7 +4,7 @@
  * reset, as modern-normalize ships, and a reset in a cascade layer that the
  * host declares after the viewer's rules, as Tailwind's preflight does. The
  * band keeps its padding, the Scroll together track and knob keep the borders
- * that draw them, and Refresh keeps its glyph size.
+ * that draw them, and Refresh keeps the drawn size of its glyph.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -31,7 +31,9 @@ function band(page: Page) {
         style.getPropertyValue(`border-${side}-width`),
       );
     const track = toolbar.querySelector(".mbk-diff-sync-track")!;
-    const refresh = toolbar.querySelector(".mbk-diff-refresh")!;
+    const glyph = toolbar
+      .querySelector(".mbk-diff-refresh svg")!
+      .getBoundingClientRect();
     const style = getComputedStyle(toolbar);
     return {
       padding: [
@@ -48,7 +50,7 @@ function band(page: Page) {
         style: getComputedStyle(track, "::after").borderTopStyle,
         widths: edges(getComputedStyle(track, "::after")),
       },
-      refresh: getComputedStyle(refresh).fontSize,
+      refresh: `${glyph.width}x${glyph.height}`,
       text: style.fontSize,
     };
   });
@@ -82,7 +84,7 @@ test.describe("embedded viewer", () => {
         expect(part.style).toBe("solid");
         expect(part.widths).not.toContain("0px");
       }
-      expect(drawn.refresh).not.toBe(drawn.text);
+      expect(drawn.refresh).not.toBe("0x0");
 
       await page.addStyleTag({ content: reset });
       expect(await band(page)).toEqual(drawn);

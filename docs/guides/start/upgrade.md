@@ -142,10 +142,11 @@ must reset them. The upload exchange is unchanged.
 
 ## Upgrade to frame wire version 4
 
-The frame probe can now measure the box model of one instance, so its wire
-version changes from 3 to 4. Version 4 adds the `measure` request and the
-`box-model` reply. Pages that an earlier release built and the viewer of this
-release reject one another.
+The frame probe can now measure the box model of one instance and the content
+box of a document, so its wire version changes from 3 to 4. Version 4 adds the
+`measure` and `measure-content` requests and the `box-model` and `content-box`
+replies. Pages that an earlier release built and the viewer of this release
+reject one another.
 
 - Rebuild and republish every hosted catalogue with this release. Upgrade
   `@mokly/viewer` in each embedding application to the same release at the

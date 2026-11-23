@@ -4,7 +4,7 @@
  * shell still offers Dark, while the current Payment terms document has a
  * light page only. Under Dark the reading frame's label names that fallback
  * on the canvas, and a quiet band above the pane names it in the narrow
- * layout, as `design/browse/appearance/states/light-only-current` depicts.
+ * layout.
  */
 
 import {

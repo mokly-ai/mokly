@@ -73,3 +73,8 @@
   box-shadow: var(--chrome-shadow-press);
   transform: translateY(1px);
 }
+
+/* A chip pressed from the keyboard keeps its focus glow over the press. */
+.mbk-chip.tag:is(a, button):active:focus-visible {
+  box-shadow: var(--mbk-focus-glow), var(--chrome-shadow-press);
+}

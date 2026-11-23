@@ -3,14 +3,12 @@ import { mockLink } from "@mokly/mokly";
 import { EmptyState } from "../../../../../../packages/ui/src/empty-state/empty-state.js";
 
 import type { EmptyStateProps } from "./empty-state.js";
-import { useRootPlacement } from "./root_placement.js";
 
 /**
  * The shipped quiet state of a stage. A loading state is busy and announces
  * its body as a status. The action links to the artboard of its outcome. A
  * static artboard runs no script, so an action without a destination is a
- * picture of itself. Where `RootPlacementScope` places it, the state takes the
- * place of the viewer root, as the shell's startup states do.
+ * picture of itself.
  */
 export function EmptyStateView({
   actionLabel,
@@ -20,7 +18,6 @@ export function EmptyStateView({
   destination,
   title,
 }: EmptyStateProps) {
-  const root = useRootPlacement();
   return (
     <EmptyState
       action={
@@ -34,7 +31,6 @@ export function EmptyStateView({
       busy={busy ?? false}
       code={code || undefined}
       interactive={false}
-      root={root}
       title={title || undefined}
     />
   );

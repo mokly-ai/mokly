@@ -49,6 +49,28 @@
   }
 }
 
+/* The view's document is a Tab stop, so assistive technology can enter it.
+   A focused frame holds the focus in its own document, so it matches
+   neither :focus nor :focus-visible, and its screen matches :focus-within.
+   While it has focus, the screen draws the focus glow outside its box,
+   before the screen's ring and shadow, as a control does. The glow is the
+   screen's own, so the transform that scales the view does not shrink it.
+   Forced colours drop the glow, so there the screen takes a system
+   outline. */
+
+.site-docs-sample-screen:focus-within {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+}
+
+@media (forced-colors: active) {
+  .site-docs-sample-screen:focus-within {
+    outline: 2px solid Highlight;
+  }
+}
+
 .site-docs-sample-status {
   align-items: center;
   display: flex;

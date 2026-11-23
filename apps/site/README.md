@@ -39,7 +39,12 @@ rewritten.
 Every page draws on the dot-grid canvas under one sticky tool bar: the brand,
 the depicted file title and people, the navigation and Get started. Below
 768px the bar holds the brand, Get started and a Menu control, which opens the
-site's destinations in a modal sheet that drops in below the bar.
+site's destinations in a modal sheet that drops in below the bar. Where that
+one row cannot hold the wordmark at the reader's text size, the brand keeps
+the mark alone and its name "Mokly home". A container query in `chrome.css`,
+which the mockups' `chrome.css` repeats, decides it. At 200% text in a 320px
+window no page scrolls sideways: labels, buttons and footer links wrap or
+break a long word, and parts that sit side by side stack.
 
 Each documentation page is a page of the design file. The Layers panel holds
 the docs search and the section tree, the page is a frame on the canvas
@@ -225,19 +230,56 @@ repository Markdown link test, `tests/markdown_links.test.ts`, fails the link
 when the site has no route there. It checks the fragment against the
 headings of the Markdown that the route renders.
 
-The home page's demo app, `acme/storefront`, is fictional. Every claim about
-Mokly stays real, and the source rule of
-[Public site](../../docs/protocol/cloud/site.md) lets the site depict a
-feature that ships before go-live. Before go-live, check each depicted
-feature against the product, and remove each one that did not ship. The
-Pricing page states only the plan facts of
+The home page's demo app, `acme/storefront`, and the people of the design
+file, Maya and Sam, are fiction, and they stay after go-live. Every claim
+about Mokly stays real. The source rule of
+[Public site](../../docs/protocol/cloud/site.md#boundary) lets the site depict
+comments, approvals, agent sessions and presence until go-live. Presence
+inside a depicted Mokly screen, such as the Browse viewer, the comment thread
+or the Edit window, counts as such a feature, and so does each named agent,
+Claude and Codex.
+
+Each drawing of such a feature carries a source comment that holds
+`status: "ahead"` and the names of its features, so the search for the ahead
+pages finds it too. The site mockups under
+`docs/mockups/src/screens/design/site/` draw the same features, and each
+mockup drawing carries the same mark as its site drawing. A template or JSX
+block takes `{/* status: "ahead" (presence) */}` on the line above it. A
+component that only draws the features, such as `AgentChat.astro`, takes
+`// status: "ahead" (agent sessions, Claude)` in its frontmatter. Its mockup
+module, such as `home/agent.tsx`, takes that line under its doc comment, and
+a data entry takes that line above it. The names are `comments`,
+`approvals`, `agent sessions`, `presence`, `Claude` and `Codex`. A person's
+cursor outside a depicted Mokly screen, such as Maya's on the hero heading,
+and the pricing questions are fiction of the design file, so they carry no
+mark.
+
+Before go-live, run the alignment pass of the ahead pages and the marks:
+
+1. From the repository root, run
+   `grep -rn 'status: "ahead"' apps/site/src docs/mockups/src/screens/design/site`.
+2. Check each named feature against the deployed product. A named agent
+   stays only when agent sessions support it.
+3. Remove each drawing of a feature that did not ship, and the copy that
+   names the feature, from the site mockups first, because they are the
+   visual source of truth. Then remove them from the page and from
+   [Site home copy](../../docs/protocol/cloud/site-copy.md). Removing an
+   agent from `src/components/people.ts`, or from the mockups'
+   `parts/people.tsx`, makes the type check fail at each `person` that still
+   names it.
+4. Remove the mark of each drawing whose features all shipped, in the
+   mockups and on the site.
+
+The Pricing page states only the plan facts of
 [Billing](../../docs/protocol/cloud/billing.md) and
 [Billing plan gates](../../docs/protocol/cloud/billing-plan-gates.md).
 
 Terms, Privacy, Complaints and Security are Markdown documents under
 `src/content/legal/`. Their effective dates, provider details, retention
 statements and security claims stay aligned with the cloud protocols and
-production runbooks. `src/legal.ts` owns their shared route and navigation
+production runbooks. A change to what the site or the app keeps in the
+browser also changes section 9 of `privacy.md`, and all four effective dates
+move together. `src/legal.ts` owns their shared route and navigation
 model; every policy route renders the same document layout: a page frame on
 the canvas, labelled with its Markdown source such as `legal/terms.md`,
 whose sheet holds the Legal kicker, the title, the effective date, the
@@ -276,21 +318,22 @@ Pages project and attach the domain are in the
 - `src/docs/frontmatter.ts` — the frontmatter schema and `readFrontmatter`.
 - `src/docs/reference-allowlist.ts` and `src/docs/reference.ts` — the published protocol documents and `rewriteHref`, which rewrites a published document's relative links to site routes or to GitHub at the installed tag.
 - `src/docs/guides.ts` — validates a guide's `/docs/reference/<slug>/` links against the allowlist without rewriting them.
-- `src/docs/sample-fence.ts`, `sample-render.ts`, `sample-lines.ts`, `sample-band.ts`, `sample-stage.ts` and `sample-path.ts` — the HTML sample fence: the Shiki transformer and the Markdown plugin, the isolated build of each guide sample, the line map, the band markup and the `sample=` path rules. `sample-band.ts` draws the head, the numbered code panel, whose lines hold their newlines through the line helper of `code-panel.ts`, and the Viewport and Saved state controls in the band's own form; `sample-stage.ts` draws one frame for each view, labelled with its viewport, whose screen holds the status band or the browser bar over the view's `srcdoc` frame, with the lit element's mark and a selection with the view's full size, and the wire. Only the first view shows without script.
+- `src/docs/sample-fence.ts`, `sample-render.ts`, `sample-lines.ts`, `sample-band.ts`, `sample-stage.ts` and `sample-path.ts` — the HTML sample fence: the Shiki transformer and the Markdown plugin, the isolated build of each guide sample, the line map, the band markup and the `sample=` path rules. `sample-band.ts` draws the head, the numbered code panel, whose lines hold their newlines through the line helper of `code-panel.ts` and whose open tab holds the file's name in a part of its own that ends in an ellipsis where the bar cannot hold it, and the Viewport and Saved state controls in the band's own form; `sample-stage.ts` draws one frame for each view, labelled with its viewport, whose screen holds the status band or the browser bar over the view's `srcdoc` frame, with the lit element's mark and a selection with the view's full size, and the wire. Only the first view shows without script.
 - `src/components/docs/sample-island.ts`, `sample-views.ts` and `sample-marks.ts` — the sample island, which `Docs.astro` loads with a `<script src>`, without hydration: it marks each band ready, which shows the controls, switches the frame and the dimmed lines to the chosen view, and lights a line and its element on pointing or tapping, with the element's mark and, while the band sets the frame beside the code, the wire. It reads a view's document once that frame has loaded; the view takes no pointer, so the island finds the element under the pointer with `elementFromPoint`. `sample-views.ts` reads the frames and the radios, and `sample-marks.ts` places the mark and the wire.
-- `src/styles/docs-sample.css` and `docs-sample-frames.css` — the band, its head, code, controls, stage and wire, and the frames. Each view's document keeps its viewport width, 390px under the 44px status band or 1280px under the 40px bar, and a transform scales it to the frame: 60% for Mobile, and the frame's width over 1280px for Desktop, which `tan(atan2())` divides. The band stacks while the page frame is narrower than 846px.
-- `src/docs/code-panel.ts`, `src/components/docs/Install.astro`, `src/components/docs/CodeCopy.tsx` and `src/styles/docs-code.css` — the docs code panels, in the markup of the shared code panel: the Markdown plugin, and the Shiki transformer that `Install.astro` passes to Astro's `Code` for the install snippet. The open tab shows the `terminal` icon for a `bash`, `console`, `sh` or `shell` block and the `file` icon otherwise, and names the language. A `bash`, `sh` or `shell` block takes `site-code--prompt`, and each `site-code-line` holds its own newline, so the `pre`'s text is the block's source. The island mounts Copy, with the `copy` icon, into each panel head after its copy slot, and copies that text. The module exports its hast helpers, the line helper and the tab icon, which the sample band shares. `docs-code.css` holds only what a Shiki block adds to `code.css` and `code-tokens.css`: the dark theme's token colours in both schemes, no scroll box, an inset focus ring and the hidden slot.
+- `src/styles/docs-sample.css` and `docs-sample-frames.css` — the band, its head, code, controls, stage and wire, and the frames. Each view's document keeps its viewport width, 390px under the 44px status band or 1280px under the 40px bar, and a transform scales it to the frame: 60% for Mobile, and the frame's width over 1280px for Desktop, which `tan(atan2())` divides. The band stacks while the page frame is narrower than 846px. The view's frame stays a Tab stop; a focused frame matches neither `:focus` nor `:focus-visible`, so its screen draws the focus glow on `:focus-within`.
+- `src/docs/code-panel.ts`, `src/components/docs/Install.astro`, `src/components/docs/CodeCopy.tsx` and `src/styles/docs-code.css` — the docs code panels, in the markup of the shared code panel: the Markdown plugin, and the Shiki transformer that `Install.astro` passes to Astro's `Code` for the install snippet. The open tab shows the `terminal` icon for a `bash`, `console`, `sh` or `shell` block and the `file` icon otherwise, and names the language. A `bash`, `sh` or `shell` block takes `site-code--prompt`, and each `site-code-line` holds its own newline, so the `pre`'s text is the block's source. The island mounts Copy, with the `copy` icon, into each panel head after its copy slot, and copies that text. The module exports its hast helpers, the line helper and the tab icon, which the sample band shares. `docs-code.css` holds only what a Shiki block adds to `code.css` and `code-tokens.css`: the dark theme's token colours in both schemes, no scroll box, the inset focus glow and the hidden slot.
 - `src/docs/headings.ts` — stable heading ids, the duplicate-heading check and the on-this-page list.
 - `src/layouts/Docs.astro` — every documentation page: the workspace with the Layers panel, the page frame and the Inspect panel, the sub-bar and the tree sheet below 1024px, the one search island, the docs scroll spy and the sample island.
 - `src/components/docs/Layers.astro`, `TreeSections.astro`, `TreeFoot.astro`, `VersionRow.astro` and `SearchControl.astro` — the Layers panel, a `Panel` whose tree rows are `PanelRow` parts, and the version row, sections and Changelog row that the tree sheet shares.
-- `src/components/docs/Subbar.astro`, `TreeSheet.astro` and `tree-sheet.ts` — the sub-bar below 1024px and the modal tree sheet that its Layers control opens.
+- `src/components/docs/Subbar.astro`, `TreeSheet.astro` and `tree-sheet.ts` — the sub-bar below 1024px and the modal tree sheet that its Layers control opens, with `closeOnBackdrop` where the browser lacks `closedby`.
 - `src/components/docs/Inspect.astro`, `Facts.astro`, `OnThisPage.astro`, `Outline.astro` and `scroll-spy.ts` — the Inspect panel, a `Panel` named by the page's file, the On this page disclosure below 1280px, and the scroll spy that marks the heading in view and moves the reading progress.
 - `src/components/docs/page-source.ts` — each page's tracked source, which the frame label names and Edit on GitHub opens, and the page facts.
 - `src/components/docs/Pager.astro`, `pager-entries.ts` and `Trail.astro` — previous and next with each neighbour's section and description, and the location trail.
-- `src/components/docs/Search.tsx`, `search-keys.ts`, `CanvasIcon.tsx` and `scripts/index-search.mjs` — the search dialog island, which binds the page's search controls, owns ⌘K, Ctrl K and `/` and names the key hint, the island's drawing of an `icons.ts` icon, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
+- `src/components/docs/Search.tsx`, `search-keys.ts`, `CanvasIcon.tsx` and `scripts/index-search.mjs` — the search dialog island, which binds the page's search controls, owns ⌘K, Ctrl K and `/`, names the key hint and closes on a press on the dimmed page, with `closeOnBackdrop` where the browser lacks `closedby`, the island's drawing of an `icons.ts` icon, and the post-build indexing of `docs/**/*.html` that waits until the written index is readable.
 - `src/components/docs/tree-scroll.ts` and `tree-reveal.ts` — the Layers panel's tab-scoped tree scroll memory from 1024px, and the current-page reveal that the tree sheet shares.
 - `src/components/Header.astro` and `src/components/page-name.ts` — the tool bar of every page, and the page name of each route, which its file title shows after `mokly.ai —`.
-- `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens.
+- `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens, with `closeOnBackdrop` where the browser lacks `closedby`.
+- `src/components/dialog-backdrop.ts` — `closeOnBackdrop`, which the menu, the tree sheet and docs search share. Each dialog has `closedby="any"`, and where the browser lacks it, `closeOnBackdrop` closes the dialog on a press that starts and ends outside the dialog's box. `tests/browser/menu.spec.ts` checks it in a page without `closedby`.
 - `src/components/Footer.astro`, `SchemeControl.astro` and `StatusBar.astro` — the footer frame of every page, the Light and Dark control in its brand column, and the depicted status bar under the frame.
 - `src/components/scheme-island.js` — the scheme island, a checked classic script that `src/layouts/Site.astro` emits first in every page head: it applies `?scheme=` or the choice kept under `mokly.site.scheme` in `localStorage` before the first paint, and it runs the scheme control. `tests/scheme_island.test.ts` runs this file in `node:vm` against the stub page of `tests/helpers/scheme-island.ts`.
 - The shared Canvas parts, each documented in its own comment: `Icon.astro` with the `icons.ts` drawings, `Mark.astro`, `Brand.astro`, `Button.astro`, `Chip.astro`, `Kicker.astro`, `SectionBox.astro`, `FrameLabel.astro`, `Selection.astro`, `SizeTag.astro`, `Redline.astro`, `PageFrame.astro`, which frames a document with a `FrameLabel` and a `Selection` and, given `measure`, a size tag of the sheet, and `Avatar.astro`, `Presence.astro` and `Cursor.astro` with the people of `people.ts`, all under `src/components/`. A `Selection`, `SizeTag` or `Redline` that measures a part renders `Measurements.astro`, which loads the measurements island: `measurements-island.ts` calls `startMeasurements` of `measurements.ts`, and `tests/measurements.test.ts` runs it against a stub page.
@@ -310,18 +353,18 @@ Pages project and attach the domain are in the
 - `scripts/externalize-inline-scripts.ts` and `scripts/script-elements.ts` — move every executable inline script into a content-hashed asset under `/_astro/` after the Astro build.
 - `scripts/check-links.mjs` and `scripts/links/` — the built-output link, anchor, asset, frame and search-index check. It accepts the paths of `APP_PATHS` without a site file, and no other path.
 - `scripts/preview.mjs`, `scripts/chromium-path.mjs`, `scripts/lighthouse.mjs` and `src/lighthouse.ts` — the foreground preview server for Playwright, the Chromium path CI reads, and the report-only Lighthouse runner with its audited pages, viewports, thresholds and one retry.
-- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets. `src/layouts/Site.astro` loads the shared sheets on every page: `base.css` with the dot-grid canvas, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `canvas-tags.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css`, `footer.css` and `scheme.css`) and `layout.css`, which holds the document type that the legal pages, the docs and the changelog share and the location trail above a page title. A page, a layout or a part loads its own sheet, such as `page-frame.css` for `PageFrame.astro`. The built page puts such a sheet before the shared sheets, so a rule in it that overrides a shared rule needs a more specific selector. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares.
+- `src/styles/token-styles.ts` and `src/styles/` — `SITE_TOKEN_CSS`, the `responsiveTokenCss` output scoped per color scheme, and the stylesheets. `src/layouts/Site.astro` loads the shared sheets on every page: `base.css` with the dot-grid canvas and the focus glow of every control, the shared parts (`controls.css`, `buttons.css`, `canvas.css`, `canvas-tags.css`, `labels.css` and `people.css`), the chrome (`chrome.css`, `menu.css`, `footer.css` and `scheme.css`) and `layout.css`, which holds the document type that the legal pages, the docs and the changelog share and the location trail above a page title. A page, a layout or a part loads its own sheet, such as `page-frame.css` for `PageFrame.astro`. The built page puts such a sheet before the shared sheets, so a rule in it that overrides a shared rule needs a more specific selector. Their class names and rules match the site mockups' sheets under `docs/mockups/styles/site/`, which `docs/mockups/src/_tests_/design-site-parity.test.ts` compares, and `design-site-containers.test.ts` compares their container queries.
 - `tests/docs_samples.test.ts` — the HTML sample fence: the rendered views, the line map, the built band with lines that hold their newlines, the frame labels, the size tags and the controls, and the build errors.
 - `tests/browser/docs-sample.spec.ts` and `tests/browser/sample.ts` — the sample band in a browser: one row for each line, the controls that switch the view and the dimmed lines, the wire beside the code and none stacked, pointing and tapping that light a line and its element, each view inside the band and the sheet at 320px, 390px and 1440px, and the band without script.
-- `tests/docs_code_panel.test.ts` and `tests/browser/docs-code.spec.ts` — the built code panel markup of a guide and of the docs landing, with the icon of each tab kind; the copy of a multi-line block; the dark fill in both schemes; and Copy beside the sample's language at the end of its bar.
-- `tests/docs_page_source.test.ts`, `tests/docs_pager_entries.test.ts` and `tests/docs_search_body.test.ts`, with `tests/browser/docs-layout.spec.ts`, `docs-search.spec.ts` and `docs-sheet.spec.ts` — each page kind's tracked source, Edit on GitHub target and facts, the pager's neighbours, the indexed body, and in a browser the layout steps, the scroll spy, the search controls and keys, and the tree sheet.
+- `tests/docs_code_panel.test.ts` and `tests/browser/docs-code.spec.ts` — the built code panel markup of a guide and of the docs landing, with the icon of each tab kind; the copy of a multi-line block; the dark fill in both schemes; Copy beside the sample's language at the end of its bar; the sample tab's file name, which ends in an ellipsis at 320px; and the line numbers at 200% text.
+- `tests/docs_page_source.test.ts`, `tests/docs_pager_entries.test.ts` and `tests/docs_search_body.test.ts`, with `tests/browser/docs-layout.spec.ts`, `docs-search.spec.ts` and `docs-sheet.spec.ts` — each page kind's tracked source, Edit on GitHub target and facts, the pager's neighbours, the indexed body, and in a browser the layout steps, the scroll spy, the search controls, keys and dimmed page, and the tree sheet.
 - `tests/docs_package.test.ts`, `tests/docs_guides.test.ts` and `tests/docs.test.ts` — the expected guide inventory of the workspace package, the fence languages and guide labels that must render, and the `status: ahead` pages with their source citations.
 - `tests/helpers/published-protocols.ts`, `tests/docs_reference.test.ts`, `tests/docs_mockup_reference.test.ts` and `tests/published_protocols.test.ts` — the shared package-table parser, Reference membership and order in the site and mockup, and malformed-row coverage.
 - `tests/legal.test.ts` and `tests/copy.test.ts` — the legal documents' section inventory and the banned-words rule read from the built pages.
-- `tests/changelog.test.ts`, `tests/changelog_notes.test.ts`, `tests/browser/changelog.spec.ts` and `changelog-layout.spec.ts` — the releases, notes, upgrade notes, anchors, links and feed that the changelog model reads, and in a browser the frames, the filter, the release in view, a link into a closed disclosure, Version history under the tool bar, the widths without sideways scroll and the page without script.
-- `tests/pricing.test.ts` and `tests/browser/pricing.spec.ts` — the pricing page's seat prices, trial length and currency against the verified plan catalogue in `crates/mkc-domain/src/billing.rs`, and the page's targets, table roles, hidden depictions, target sizes and sticky plan heads.
+- `tests/changelog.test.ts`, `tests/changelog_notes.test.ts`, `tests/browser/changelog.spec.ts` and `changelog-layout.spec.ts` — the releases, notes, upgrade notes, anchors, links and feed that the changelog model reads, and in a browser the frames, the filter, the release in view, a link into a closed disclosure, Version history under the tool bar, the widths without sideways scroll, 200% text in a 320px window, the words of each filter option inside the option and the bar at 320px with 100% and 200% text, the checked filter option in forced colours and the page without script.
+- `tests/pricing.test.ts` and `tests/browser/pricing.spec.ts` — the pricing page's seat prices, trial length and currency against the verified plan catalogue in `crates/mkc-domain/src/billing.rs`, and the page's targets, table roles, hidden depictions, target sizes, sticky plan heads, the phone sizes of the group heads and the Mokly CLI box, and 200% text in a 320px window.
 - `tests/lighthouse.test.ts`, `tests/site_workflows.test.ts` and `tests/site_cleanup.test.ts` — the budget against the delivery contract, the site workflow policy, and the Pages cleanup script.
-- `tests/browser/` — the Playwright suite over every built route.
+- `tests/browser/` — the Playwright suite over every built route. `large-text.ts` opens a route in a 320px window at 200% text, where the chrome, footer, home, changelog, pricing, tree sheet and sample specs check their parts.
 
 ### Related Docs
 

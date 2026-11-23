@@ -1,5 +1,6 @@
 /** The comparison band: its modes, Scroll together and Refresh. */
 
+import { IconSvg } from "../icons/icons.js";
 import {
   SegmentedControl,
   type Segment,
@@ -14,6 +15,16 @@ const modes: readonly Segment<ComparisonMode>[] = [
   ["overlay", "Overlay"],
   ["difference", "Difference"],
 ];
+
+/** The refresh glyph: an open circle with its arrow at the top. */
+function RefreshGlyph() {
+  return (
+    <IconSvg size={15}>
+      <path d="M19.5 12a7.5 7.5 0 1 1-2.25-5.4" />
+      <path d="M17.7 2.85v4.2h-4.2" />
+    </IconSvg>
+  );
+}
 
 /** Refresh, or its picture in a band that is not interactive. */
 function Refresh({
@@ -35,9 +46,7 @@ function Refresh({
         role="img"
         title="Refresh comparison"
       >
-        <span aria-hidden="true" className="mbk-reset">
-          ↻
-        </span>
+        <RefreshGlyph />
       </span>
     );
   return (
@@ -50,9 +59,7 @@ function Refresh({
       title="Refresh comparison"
       type="button"
     >
-      <span aria-hidden="true" className="mbk-reset">
-        ↻
-      </span>
+      <RefreshGlyph />
     </button>
   );
 }

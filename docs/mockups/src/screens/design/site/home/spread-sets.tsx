@@ -38,6 +38,7 @@ export function SpreadSets() {
               <AcmeSet name={set.name} />
             </div>
           </div>
+          {/* status: "ahead" (Codex) */}
           {set.name === "button" ? (
             <SiteSelection
               className="site-home-set-peer"

@@ -71,10 +71,7 @@ When a ready classification marks only some of a screen's views changed, the
 view controls say so rather than leaving the reviewer to find the difference.
 On the canvas, a toggle of the
 [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) that hides a
-changed view is marked. Outside the canvas, the theme control is marked when a
-changed view uses the other scheme, and the viewport control when a changed
-view uses the other viewport; selecting both viewports shows every viewport at
-once, so that control is never marked. Inspect's head lists the same views as
+changed view is marked. Inspect's head lists the same views as
 `Changed views`. When the current selection is not itself a changed entry,
 activating a changed row while the
 Changes filter is selected opens that destination's first changed view instead
@@ -127,7 +124,10 @@ empty, and an empty slot takes no space.
 Compared names the two versions on a rail. Before reads `Branch point on` and
 the base, such as `origin/main`, and Current reads `This branch`. An entry
 that the branch added has no version before, so its rail holds Current alone
-with the line `Added on this branch, so there is no base to compare.`
+with the line `Added on this branch, so there is no base to compare.` An entry
+that the branch removed has no current version, so its rail holds the version
+before alone with the line
+`Removed on this branch, so there is no current version to compare.`
 
 The compare modes are tiles in the order of their keys: Current (1), Side by
 side (2), Overlay (3), Difference (4) and Swipe (5). Each tile shows its icon,

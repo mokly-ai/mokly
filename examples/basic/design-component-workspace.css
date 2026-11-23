@@ -1,14 +1,11 @@
 /* The shipped shell layout and workspace, from their @mokly/ui stylesheets,
    which follow the component sheets as in the package's styles.css. The
-   workspace holds the header, the variant bar, and the preview pane beside
-   the inspector. A static artboard runs no script, so the mockup rules below
-   size the preview pane with a native sizer, scroll it independently, and
-   dock the inspector. The Canvas viewer's shell and its compact form follow
-   the component sheets too, from their own sheets. */
+   workspace holds the header and the preview pane beside the inspector. A
+   static artboard runs no script, so the mockup rules below size the preview
+   pane with a native sizer, scroll it independently, and dock the
+   inspector. */
 @import "../../packages/ui/src/shell-layout/shell-layout.css";
 @import "../../packages/ui/src/workspace-layout/workspace-layout.css";
-@import "./design-canvas-shell.css";
-@import "./design-canvas-compact.css";
 
 /* A document view scrolls in the main region; a workspace scrolls its panes. */
 .ce-design .mbk-main {
@@ -36,9 +33,6 @@
 .mbk-shell--mobile .mbk-workspace .mbk-screen-head {
   gap: 8px;
   padding: 12px;
-}
-.mbk-shell--mobile .mbk-workspace .mbk-previous {
-  padding: 8px 12px;
 }
 /* A desktop render keeps its dock in the panes' flow at every width, so the
    closed inspector's strip needs no reserve below the breakpoint. */
@@ -85,13 +79,6 @@
   display: block;
   min-height: 100%;
   overflow: visible;
-}
-/* The preview pane lays out the shipped previous version and comparison
-   stage as the shell's preview pane does: a column whose stage fills it and
-   scrolls, below the previous version's band. */
-.ce-preview-pane:has(> :is(.mbk-preview, .mbk-diff-screen)) {
-  display: flex;
-  flex-direction: column;
 }
 /* The dock places and sizes the shipped inspector, which fills it, so the
    inspector neither places itself nor stacks above the preview's sizer. */
@@ -143,11 +130,6 @@
 .ce-design:has([data-workspace-viewport] option[value="both"]:checked)
   .ce-preview-view {
   display: block;
-}
-.ce-design:has([data-workspace-viewport] option[value="both"]:checked)
-  .ce-preview-set[data-viewport]
-  .mbk-preview-switch {
-  display: none;
 }
 .ce-preview-view .mbk-component-canvas.mbk-frame-mobile {
   margin-inline: auto;

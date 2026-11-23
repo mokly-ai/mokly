@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Pending } from "../../components/page-parts";
 import { StatePlaceholder } from "../../components/placeholders";
 import { useDocumentTitle } from "../../layout/document-title";
+import { AccountTrigger } from "../../viewer/account-trigger";
 import { SlotBar } from "../../viewer/bar";
 import { CompactBarProvider, useViewerBarWidth } from "../../viewer/bar-width";
 import { BarAction } from "../../viewer/chrome";
@@ -51,17 +52,16 @@ function waitingSlots(
   return {
     project: <ProjectTriggerWait />,
     publication: <PublicationSlotWait />,
-    history: <BarAction label="History" slot="history" waiting />,
+    history: (
+      <BarAction label="History" icon="history" slot="history" waiting />
+    ),
     share: <BarAction label="Share" tone="secondary" slot="share" waiting />,
-    settings: <BarAction label="Settings" slot="settings" waiting />,
+    settings: (
+      <BarAction label="Settings" icon="settings" slot="settings" waiting />
+    ),
     account:
       identity.kind === "signed-in" ? (
-        <BarAction
-          {...accountLabel(identity.user, compact)}
-          chevron
-          slot="account"
-          waiting
-        />
+        <AccountTrigger {...accountLabel(identity.user, compact)} waiting />
       ) : (
         <AccountTriggerWait />
       ),
@@ -97,7 +97,7 @@ export function ViewerFrameWait({
       data-mkc-screen="viewer"
     >
       {bar.probe}
-      <CompactBarProvider compact={bar.compact}>
+      <CompactBarProvider compact={bar.compact} labels={bar.labels}>
         <ViewerMain beneath={false}>
           <Pending label={wait} labelMode="screen-reader-only">
             {(name) => (

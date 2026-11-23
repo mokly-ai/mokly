@@ -1,5 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
+import { canvasColor } from "../helpers/design_palette.js";
+
 import { test } from "./browser_test.js";
 import {
   canvasFrame,
@@ -7,23 +9,18 @@ import {
   chooseViewport,
 } from "./workspace_actions.js";
 
-/** The catalogue background each appearance mockup paints for its scheme. */
-const BACKGROUNDS = {
-  dark: "rgb(17, 17, 19)",
-  light: "rgb(241, 242, 238)",
-} as const;
-
 const SCHEMES = ["light", "dark"] as const;
 
 const paths = [
-  ["design/browse/appearance/overview", "a selected screen"],
-  ["design/browse/appearance/workspaces/side-by-side", "a comparison"],
-  ["design/browse/appearance/states/light-only", "a light-only screen"],
+  ["design/canvas/overview", "a selected screen"],
+  ["design/canvas/changes/side-by-side", "a comparison"],
+  ["design/canvas/inspect/unchanged", "a light-only screen"],
 ] as const;
 
 type Viewport = "mobile" | "desktop";
 type Scheme = (typeof SCHEMES)[number];
 
+/** The scheme that the frame's Canvas root draws, and its canvas. */
 async function artboard(
   page: Page,
   viewport: Viewport,
@@ -31,12 +28,9 @@ async function artboard(
 ): Promise<{ appearance: string | null; background: string }> {
   return await page
     .frameLocator(canvasFrame(viewport, scheme))
-    .locator("[data-mbk-appearance] .mbk[data-mokly-shell]")
+    .locator(".cv-root[data-mbk-appearance]")
     .evaluate((node) => ({
-      appearance:
-        node
-          .closest("[data-mbk-appearance]")
-          ?.getAttribute("data-mbk-appearance") ?? null,
+      appearance: node.getAttribute("data-mbk-appearance"),
       background: getComputedStyle(node).backgroundColor,
     }));
 }
@@ -83,7 +77,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
             .poll(() => artboard(page, viewport, scheme))
             .toEqual({
               appearance: scheme,
-              background: BACKGROUNDS[scheme],
+              background: await canvasColor(scheme, "--cv-background"),
             });
         }
       }
@@ -93,37 +87,37 @@ for (const viewport of ["mobile", "desktop"] as const) {
     });
   }
 
-  test(`${viewport}: a light-only inner screen keeps light frames and names its fallback in the Dark frame`, async ({
+  test(`${viewport}: a light-only inner screen keeps light frames and each canvas frame's Frames filter names the fallback`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/design/browse/appearance/states/light-only/");
+    await page.goto("/view/design/canvas/inspect/unchanged/");
     await chooseViewport(page, viewport);
     for (const choice of ["dark", "light", "dark"] as const) {
       await chooseScheme(page, choice);
       for (const scheme of SCHEMES) {
         const frame = page.frameLocator(canvasFrame(viewport, scheme));
+        const dark = frame
+          .getByRole("group", { name: "Frames", exact: true })
+          .getByRole("checkbox", { name: /^Dark/u });
+        const background = await canvasColor(scheme, "--cv-background");
         await expect
           .poll(async () => (await artboard(page, viewport, scheme)).background)
-          .toBe(BACKGROUNDS[scheme]);
+          .toBe(background);
         await expect(
           frame.locator('[data-preview-color-scheme="dark"]'),
         ).toHaveCount(0);
-        if (scheme === "dark")
-          await expect(
-            frame.locator(".mbk-frame-scheme-note").first(),
-          ).toContainText(/light only/iu);
-        else
-          await expect(frame.locator(".mbk-frame-scheme-note")).toHaveCount(0);
+        await expect(dark).toBeDisabled();
+        await expect(dark).toHaveAccessibleName(/light only/iu);
       }
     }
   });
 
-  test(`${viewport}: an appearance artboard draws one scheme control and previews that follow its frame's scheme`, async ({
+  test(`${viewport}: an appearance artboard draws one scheme control that follows its canvas frame's scheme`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/design/browse/appearance/overview/");
+    await page.goto("/view/design/canvas/overview/");
     await chooseViewport(page, viewport);
     for (const choice of ["dark", "light", "dark"] as const) {
       await chooseScheme(page, choice);
@@ -135,13 +129,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
         const selector = frame.locator(".mbk-appearance");
         await expect(selector).toHaveCount(1);
         await expect(selector).toHaveAttribute("data-appearance-value", scheme);
-        await expect(frame.locator(".ce-theme-control")).toHaveCount(0);
-        await expect(frame.locator(".ce-theme-toggle")).toHaveCount(0);
-        await expect
-          .poll(() =>
-            frame.locator('[data-preview-color-scheme="dark"]').count(),
-          )
-          .toBe(scheme === "dark" ? 2 : 0);
       }
     }
   });

@@ -47,18 +47,24 @@
   margin-top: 44px;
 }
 
-/* A compact frame. On mobile it stacks its head, its chips, its link and a
-   full-width Show notes control. On desktop the version, the date, the
-   count chips and the release link share one row, with Show notes at the
-   end of the row over its disclosure. */
+/* A compact frame. On mobile it flows as a wrapping row: the date sits
+   beside the version while the row holds both, and moves under it at a
+   large text size; the chips, the link and a full-width Show notes control
+   each take a row of their own. On desktop the version, the date, the
+   count chips and the release link share one row of a grid, with Show
+   notes at the end of the row over its disclosure. */
 
 .site-release--compact {
   align-items: center;
   column-gap: 18px;
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px 14px;
-  grid-template-columns: auto minmax(0, 1fr);
   padding: 14px 16px;
+}
+
+.site-release--compact .site-release-date {
+  flex: 1 1 auto;
 }
 
 .site-release--compact .site-release-meta {
@@ -91,11 +97,12 @@
 
 .site-release--compact .site-release-counts,
 .site-release--compact .site-release-links {
-  grid-column: 1 / -1;
+  flex-basis: 100%;
   margin-right: 0;
 }
 
 .site-release-more {
+  flex-basis: 100%;
   grid-column: 1 / -1;
   min-width: 0;
 }
@@ -149,17 +156,13 @@
   }
 
   .site-release--compact {
+    display: grid;
     gap: normal 18px;
     grid-template-columns: 84px 158px minmax(0, 1fr) auto;
     padding: 4px 14px 4px 20px;
   }
 
-  .site-release--compact .site-release-counts {
-    grid-column: auto;
-  }
-
   .site-release--compact .site-release-links {
-    grid-column: auto;
     margin-right: 160px;
   }
 

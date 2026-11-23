@@ -73,7 +73,7 @@ function layout(main: ReactNode, slots?: EmbeddedSlots) {
       slots={slots}
       statusId="status"
       theme="auto"
-      topBar={null}
+      topBar={() => null}
     />
   );
 }

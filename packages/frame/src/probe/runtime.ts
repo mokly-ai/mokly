@@ -4,6 +4,7 @@ import type {
   InstanceBoundary,
 } from "../frame_adapter.js";
 
+import { contentBox } from "./content_box.js";
 import { inspection, inspectionError } from "./inspection.js";
 import type { ProbeMetadata } from "./metadata.js";
 import type {
@@ -195,6 +196,7 @@ export const probeRuntime = (
       }),
     __scroll: (key: string) => run(() => reader.__scroll(key)),
     __boxModel: reader.__boxModel,
+    __contentBox: () => contentBox(doc),
     __subscribe: (subscribed: readonly ProbeSubscription[]) => {
       events = subscribed;
     },

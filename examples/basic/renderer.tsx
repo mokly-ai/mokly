@@ -11,7 +11,7 @@
 
 import { domBackendCss } from "@firna/ui";
 import { createSharedUiTheme, SharedUiThemeProvider } from "@firna/ui/theme";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import type { RenderInput } from "@mokly/mokly";
 
@@ -24,7 +24,24 @@ const themes = {
   light: createSharedUiTheme(tokens),
 };
 
+/**
+ * A component's document takes the size of its content, so that the canvas
+ * can size the component's frame to the component. The wrapper shrinks to the
+ * content's width. As a new block formatting context, it also holds the
+ * vertical margins of the component's root, which otherwise collapse through
+ * it. A screen keeps the viewport's width, in which its layout centres, and a
+ * design library sample fills the window on purpose. No HTML screen of this
+ * example uses a React component, so every component render here is a
+ * component's own document.
+ */
+const contentSize: CSSProperties = {
+  display: "flow-root",
+  width: "fit-content",
+};
+
 export default function render(input: RenderInput): ReactNode {
+  const component = input.entry.kind === "component";
+  const sample = component && input.entry.path.startsWith("design/library/");
   return (
     <DesignRenderedScheme scheme={input.colorScheme}>
       <style>{domBackendCss}</style>
@@ -33,9 +50,9 @@ export default function render(input: RenderInput): ReactNode {
           data-color-scheme={input.colorScheme}
           data-example-renderer={input.viewport}
           lang="en"
+          style={component && !sample ? contentSize : undefined}
         >
-          {input.entry.kind === "component" &&
-          input.entry.path.startsWith("design/library/") ? (
+          {sample ? (
             <LibraryHost input={input}>{input.node}</LibraryHost>
           ) : (
             input.node

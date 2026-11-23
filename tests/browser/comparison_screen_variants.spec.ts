@@ -81,10 +81,8 @@ test("the changed mark draws one trailing dot on screen variants", async ({
     "aria-current",
     "page",
   );
-  expect(await changedDot(page, comparisonPaths.screenVariant)).toEqual({
-    ...dot,
-    color: "rgb(255, 255, 255)",
-  });
+  // The current row keeps the accent dot on its soft accent fill.
+  expect(await changedDot(page, comparisonPaths.screenVariant)).toEqual(dot);
 
   await chooseFilter(page, "all");
   await expect(navRow(page, comparisonPaths.screenSibling)).toBeVisible();

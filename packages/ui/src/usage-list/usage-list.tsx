@@ -100,17 +100,24 @@ export function UsageList({
 
 /**
  * The Usage tab while its data loads, after the load failed, with Try again,
- * or while the catalogue has not been checked.
+ * or while the catalogue has not been checked. A static depiction that runs
+ * no script gives Try again an address, which draws it as a link.
  */
 export function UsageStatus({
   focusRef,
   onRetry,
+  retryHref,
   status,
 }: {
   /** Receives the loading status, which the host focuses after Try again. */
   focusRef?: Ref<HTMLParagraphElement> | undefined;
   /** Receives each press of Try again. */
   onRetry?: (() => void) | undefined;
+  /**
+   * The address that Try again opens in a static depiction, such as the
+   * document that shows the data loading again.
+   */
+  retryHref?: string | undefined;
   status: "failed" | "loading" | "unchecked";
 }) {
   if (status === "unchecked")
@@ -130,7 +137,9 @@ export function UsageStatus({
           <p className="mbk-reset" role="alert">
             Usage couldn’t be loaded.
           </p>
-          <TextButton onClick={onRetry}>Try again</TextButton>
+          <TextButton href={retryHref} onClick={onRetry}>
+            Try again
+          </TextButton>
         </>
       ) : (
         <p

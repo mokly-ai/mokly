@@ -54,8 +54,8 @@ commands and the path of the built script.
   It wraps direct core calls with ordered requests, replies, and wire errors.
 - [`runtime.ts`](./runtime.ts) holds `probeRuntime`, which owns the
   observers and input handling of one document. Its direct methods list,
-  highlight, scroll, measure an instance box model, subscribe, and dispose
-  without wire messages.
+  highlight, scroll, measure instance box models and the document's content
+  box, subscribe, and dispose without wire messages.
 - [`runtime_types.ts`](./runtime_types.ts) defines the core's event callback,
   link classifier, and observer and timer environment. The caller supplies
   the callback realm separately from the measured window.
@@ -69,6 +69,8 @@ commands and the path of the built script.
 - [`inspection.ts`](./inspection.ts) and [`geometry.ts`](./geometry.ts) list
   the instance boundaries, measure their clipped boxes and an instance's
   unclipped box model, and scroll to an instance.
+- [`content_box.ts`](./content_box.ts) measures the document's content box
+  from the body children and the document origin.
 - [`clipping.ts`](./clipping.ts) holds the clipping rules that the same-origin
   and cross-origin adapters share through the core. The shell also uses these
   rules to clip the frame to its host ancestors.

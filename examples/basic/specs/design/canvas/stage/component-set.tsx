@@ -4,9 +4,12 @@ import { defineScreen } from "@mokly/mokly";
 
 import { artboardStates, type ArtboardVariant } from "../../parts/artboards.js";
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
+import { MiniAction } from "../../parts/mini_action.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
+import { COMPONENT_IDENTITIES } from "../parts/component_identity.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
+import { componentFrames } from "../parts/frames.js";
 import { ActionInspect, ToolbarInspect } from "../parts/inspect_sets.js";
 import {
   TOOLBAR_INSTANCES,
@@ -14,6 +17,7 @@ import {
 } from "../parts/instance_records.js";
 import { canvasDesignMetadata } from "../parts/metadata.js";
 import {
+  ACTION_DOCUMENT,
   TOOLBAR_VIEW,
   actionFrames,
   frameOf,
@@ -23,10 +27,40 @@ import { VariantSetArtboard } from "../parts/set_stage.js";
 import { FITS } from "../parts/sketches.js";
 
 /**
- * The Action component opened as its variant set: Default, Disabled, and
- * Secondary, each in Light and Dark, with Inspect for a component. Once
- * Disabled is chosen, its Light frame is selected and Props edits it; on a
- * phone, the frame picker shows that frame, under the open Inspect sheet.
+ * The zoom in percent that fits the Action's set: its own example's row and
+ * the rows of its three saved variants, the largest zoom that keeps the set
+ * at least 10px inside the stage.
+ */
+const ACTION_SET_FIT = 94;
+
+/**
+ * The Action's variant set: a row for its own example first, with the
+ * component's own props and named by its title, as the shipped variant bar
+ * names the parent's own entry, then one row for each saved variant, in
+ * their order.
+ */
+function actionSetFrames() {
+  return [
+    ...componentFrames(
+      [
+        {
+          slug: CANVAS_ENTRIES.action.slug,
+          title: COMPONENT_IDENTITIES.action.title,
+          render: () => <MiniAction variant="own" />,
+        },
+      ],
+      ACTION_DOCUMENT,
+    ),
+    ...actionFrames(),
+  ];
+}
+
+/**
+ * The Action component opened as its variant set: its own example, then
+ * Default, Disabled, and Secondary, each in Light and Dark, with Inspect for
+ * a component. Once Disabled is chosen, its Light frame is selected and
+ * Props edits it; on a phone, the frame picker shows that frame, under the
+ * open Inspect sheet.
  */
 function ActionSet({
   chosen,
@@ -35,7 +69,7 @@ function ActionSet({
   chosen: boolean;
   viewport: ArtboardViewport;
 }) {
-  const frames = actionFrames();
+  const frames = actionSetFrames();
   const disabled = chosen ? frameOf(frames, "disabled-light") : undefined;
   const design = chosen
     ? CANVAS_PAGES.componentSetDisabled
@@ -50,7 +84,7 @@ function ActionSet({
       selection={disabled === undefined ? undefined : { frame: disabled }}
       sheet={chosen ? "panel" : undefined}
       viewport={viewport}
-      zoom={FITS.action}
+      zoom={ACTION_SET_FIT}
     />
   );
 }
@@ -106,7 +140,7 @@ function setState(
 export const canvasComponentSetScreen = defineScreen({
   ...canvasDesignMetadata,
   description:
-    "A component opens as its variant set: one row per saved variant, Light beside Dark, inside a dashed outline. Inspect names the component, its variants, and its frames, and Props asks for a variant while no frame is selected.",
+    "A component opens as its variant set: a row for its own example, then one row per saved variant, Light beside Dark, inside a dashed outline. Inspect names the component, its own example and its variants, and its frames, and Props asks for a variant while no frame is selected.",
   ...artboardStates(
     {
       state: "action",

@@ -96,10 +96,13 @@ mockups declare no token and keep no copied palette. The site's look is in
 The site describes the product direction (browse, review, edit, open
 foundation) and documents cloud behavior from this repository's protocol docs
 before the cloud ships. [Site](./site.md#ahead-of-release-pages) owns the
-`status: ahead` convention and the alignment that happens before the apex
-domain goes live. Until then the [source rule](./site.md#boundary) lets the
-site draw a fictional demo app and depict features that the product does not
-have yet.
+`status: ahead` convention and the alignment pass that runs before the apex
+domain goes live. The [source rule](./site.md#boundary) lets the site draw a
+fictional demo app and the people of the design file, also after go-live.
+Until go-live it also lets the site depict features that the product does not
+have yet. The site source and the site mockups mark each such drawing. The
+alignment pass checks every marked drawing, and it changes the mockups before
+the site.
 
 ## Mockups
 

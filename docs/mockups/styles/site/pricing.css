@@ -38,15 +38,27 @@
   position: relative;
 }
 
+/* A heading word that is wider than the column, such as projects. at 200%
+   text on a 320px window, breaks rather than passing the window */
+
 .site-pricing-heading .site-pricing-title {
   font-size: 4.75rem;
   letter-spacing: -0.054em;
   line-height: 0.98;
+  overflow-wrap: anywhere;
 }
 
 .site-pricing-title span,
 .site-pricing-section-title span {
   color: var(--mk-color-text-muted);
+}
+
+/* The last two words of the second line move to the next line together, so
+   the line never ends on one word; where the column cannot hold both, they
+   wrap inside their own box */
+
+.site-pricing-title-keep {
+  display: inline-block;
 }
 
 .site-pricing-redline {
@@ -74,6 +86,7 @@
   font-size: 3.5rem;
   letter-spacing: -0.046em;
   line-height: 1.02;
+  overflow-wrap: anywhere;
 }
 
 /* The questions: the heading stays beside the threads, which run in two

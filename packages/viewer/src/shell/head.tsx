@@ -48,9 +48,9 @@ export function ViewportSwitch() {
 /**
  * Preview color scheme selection for catalogues that render dark fragments. It
  * chooses what a device screen shows, not the appearance of the interface
- * around it, which an embedding host supplies. The shell
- * renders one instance in the top bar and one in the screen head band; the
- * stylesheet reveals whichever fits the current width.
+ * around it, which an embedding host supplies. An embedded root renders it in
+ * the screen head band of a view that shows one scheme; the top bar holds no
+ * scheme switch.
  */
 export function SchemeSwitch() {
   const store = useShellStore();

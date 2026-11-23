@@ -9,7 +9,8 @@
  * - `language`: the code's language. Without `files`, the one tab names
  *   it, with the terminal icon for a shell and the file icon otherwise.
  * - `files`: the tabs, the first one open with its icon; the language then
- *   sits at the bar's end.
+ *   sits at the bar's end. A file's name may shrink and end in an ellipsis,
+ *   and its text keeps the whole name.
  * - `meta`: a path or a note in the bar, such as `src/mockups`.
  * - `icon`: the open tab's icon, in place of the default.
  * - `lines`: the code, each line its tokens, typed by `code-lines.ts`.
@@ -98,7 +99,7 @@ const rows = lines.map((tokens, index) => ({
           class:list={["site-code-tab", index === 0 && "site-code-tab--open"]}
         >
           {index === 0 && <Icon name={tabIcon} size={13} />}
-          {file}
+          <span class="site-code-tab-name">{file}</span>
         </span>
       ))
     )}

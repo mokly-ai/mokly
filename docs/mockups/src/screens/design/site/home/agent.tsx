@@ -4,6 +4,7 @@
  * of `pricing.mockup.tsx` with its diff hunk and its answer, the composer,
  * and Publish with Replay. A depiction, so its controls are text.
  */
+// status: "ahead" (agent sessions, Claude)
 
 import type { ReactNode } from "react";
 

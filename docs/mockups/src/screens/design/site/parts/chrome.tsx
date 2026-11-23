@@ -54,6 +54,7 @@ function SiteHeader({ active, menu }: { active: SiteScreen; menu: boolean }) {
       </div>
       <FileTitle active={active} />
       <div className="site-header-end">
+        {/* status: "ahead" (Claude, Codex) */}
         <SitePresence className="site-header-presence" />
         <nav aria-label="Main" className="site-nav">
           {SITE_NAV_SCREENS.map(([screen, label]) => (

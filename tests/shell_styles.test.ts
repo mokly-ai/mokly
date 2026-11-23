@@ -110,11 +110,26 @@ test("both split dividers share one grip shape and pointer look, and rest in the
         `{ box-shadow: inset 0 2px 0 ${ACCENT}; }`,
     ),
   );
-  for (const styles of [STANDALONE_CSS, EMBEDDED_CSS])
+  // Outside forced colours the separator shows focus by its grip and its
+  // inset line, never by an outline. Forced colours drop both, so there it
+  // takes the system outline inside its box.
+  for (const styles of [STANDALONE_CSS, EMBEDDED_CSS]) {
+    const flat = flatCss(styles);
+    const unforced = flat.replace(
+      /@media \(forced-colors: active\) \{(?: [^{}]+ \{[^{}]*\})+ \}/gu,
+      "",
+    );
     assert.equal(
-      flatCss(styles).includes(".mbk-inspector-resize:focus-visible { outline"),
+      unforced.includes(".mbk-inspector-resize:focus-visible { outline"),
       false,
     );
+    const forced =
+      /@media \(forced-colors: active\) \{ \.mbk-inspector-resize:focus-visible \{([^}]*)\}/u.exec(
+        flat,
+      )?.[1] ?? "";
+    assert.match(forced, /outline: 2px solid highlight;/iu);
+    assert.match(forced, /outline-offset: -2px;/u);
+  }
   for (const axis of ["col", "row"]) {
     const scope = axis === "col" ? "nav" : "inspector";
     assert.ok(
@@ -196,20 +211,31 @@ test("the tag picker drops from the field and sheets under the bar", () => {
     STANDALONE_CSS,
     /\.mbk-tag-picker \{[^}]*position: absolute;[^}]*top: calc\(100% \+ 7px\);[^}]*border-radius: 10px;[^}]*background: var\(--chrome-surface\);[^}]*box-shadow: var\(--chrome-shadow\);/,
   );
+  // The picker keeps the field's end edge and its width, between 280px and
+  // 440px, so a picker wider than the field grows toward the bar's start.
+  assert.ok(
+    css.includes(
+      "right: -1px; left: auto; width: calc(100% + 2px); " +
+        "min-width: 280px; max-width: 440px;",
+    ),
+  );
   assert.match(
     STANDALONE_CSS,
     /\.mbk-tag-picker-head \{[^}]*font-size: 11px;[^}]*text-transform: uppercase;/,
   );
+  // The chip row scrolls, and its padding holds the focus glow of an edge
+  // chip, while its margin keeps the chips in place.
   assert.ok(
     css.includes(
-      ".mbk-tag-picker .mbk-chips { max-height: 210px; " +
-        "overflow-y: auto; }",
+      ".mbk-tag-picker .mbk-chips { max-height: 218px; margin: -4px; " +
+        "padding: 4px; scroll-padding: 4px; overflow-y: auto; }",
     ),
   );
   assert.ok(css.includes(".mbk-search { position: static; }"));
   assert.ok(
     css.includes(
       ".mbk-tag-picker { top: calc(100% + 1px); right: 0; left: 0; " +
+        "width: auto; min-width: 0; max-width: none; " +
         "border-top: 0; border-radius: 0 0 12px 12px; }",
     ),
   );

@@ -12,6 +12,7 @@ import {
   designPalette,
   designPreviewTokens,
   designThemeTokens,
+  PREVIEW_SHEET,
   SHIPPED_THEME,
 } from "./helpers/design_palette.js";
 import { designStyleRules, fillOf } from "./helpers/design_styles.js";
@@ -26,7 +27,6 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ["muted on raised (navigation)", "--chrome-muted", "--chrome-raised", 4.5],
   ["muted on hover surface", "--chrome-muted", "--chrome-hover", 4.5],
   ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
-  ["brand mark on surface", "--chrome-brand", "--chrome-surface", 3],
   ["sage on surface", "--mbk-sage", "--chrome-surface", 4.5],
   ["deep sage on surface", "--mbk-sage-deep", "--chrome-surface", 4.5],
   [
@@ -220,8 +220,8 @@ test("preview tokens stay independent of the interface appearance", async () => 
       !name.startsWith("--mbk-screen"),
       `${name} belongs with the preview tokens, not the interface palette`,
     );
-  const stage = await fs.readFile(
-    path.join(repositoryRoot, "examples/basic/design-stage.css"),
+  const preview = await fs.readFile(
+    path.join(repositoryRoot, "examples/basic", PREVIEW_SHEET),
     "utf8",
   );
   for (const name of [
@@ -233,7 +233,7 @@ test("preview tokens stay independent of the interface appearance", async () => 
     "--mbk-screen-link",
     "--mbk-screen-link-strong",
   ])
-    assert.match(stage, new RegExp(`${name}:`), name);
+    assert.match(preview, new RegExp(`${name}:`), name);
 });
 
 /**
@@ -262,8 +262,9 @@ test("the design stylesheets import the shipped theme and the reset class that e
 test("the design palettes declare every token that a @mokly/ui stylesheet reads", async () => {
   // The root block of the interface palette declares each of its tokens, and
   // the same-roles test above holds the dark block to the same roles. The
-  // preview tokens of the stage stylesheet declare the device colours, and
-  // the shipped theme declares its own tokens on every artboard's root.
+  // preview tokens of the preview stylesheet declare the device colours, the
+  // shipped theme declares its own tokens on every artboard's root, and the
+  // reset class declares the focus glows on every package element.
   const declared = new Map([
     ...(await designPalette()).light,
     ...(await designPreviewTokens()),

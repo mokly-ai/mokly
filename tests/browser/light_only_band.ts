@@ -1,9 +1,8 @@
 /**
  * The note that names a current light-only document's light page under
  * Dark: the reading frame's label on the canvas, and in the narrow layout the
- * quiet band above the document pane, as
- * `design/browse/appearance/states/light-only-current` depicts. Any host
- * whose shell still offers Dark can check it.
+ * quiet band above the document pane. Any host whose shell still offers Dark
+ * can check it.
  */
 
 import { expect, type Page } from "@playwright/test";

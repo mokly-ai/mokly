@@ -1,9 +1,10 @@
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
 import { topBar } from "../library/chrome/top-bar.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 
-import { useRenderedAppearance, type AppearanceChoice } from "./appearance.js";
+import { useRenderedAppearance } from "./appearance.js";
 import { useDesignNavigation } from "./design_navigation.js";
-import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+import type { DesignDestination } from "./destinations.js";
 import { tagPickerTarget } from "./navigation_states.js";
 import type { ArtboardViewport } from "./shell.js";
 import { designTagRecords } from "./tag_filter.js";
@@ -20,10 +21,12 @@ export interface TopBarLinks {
 
 interface TopBarProps {
   activeTag?: string | undefined;
-  /** Overrides the depicted setting; defaults to the rendered scheme. */
-  appearanceChoice?: AppearanceChoice | undefined;
   appearanceChanged?: boolean | undefined;
-  /** The family's own brand and menu destinations; Browse's when absent. */
+  /**
+   * The family's own brand and menu destinations. Without them, the brand
+   * opens the Canvas home, and the menu the Canvas catalogue, or the home
+   * while the drawer is open.
+   */
   links?: TopBarLinks | undefined;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
@@ -34,7 +37,6 @@ interface TopBarProps {
 /** Map this screen's navigation and query into recorded top-bar inputs. */
 export function TopBar({
   activeTag,
-  appearanceChoice,
   appearanceChanged,
   drawerOpen,
   links,
@@ -43,12 +45,12 @@ export function TopBar({
   viewport,
 }: TopBarProps) {
   const navigation = useDesignNavigation();
-  const rendered = useRenderedAppearance();
+  const appearance = useRenderedAppearance();
   const open = navigation.drawer?.open ?? drawerOpen;
   const menuDestination =
     links === undefined
       ? (navigation.drawer?.to ??
-        (open ? DESTINATIONS.home : DESTINATIONS.navigation))
+        (open ? CANVAS_PAGES.home : CANVAS_PAGES.catalogue))
       : links.menu;
   return (
     <topBar.Component
@@ -57,9 +59,9 @@ export function TopBar({
       menu={open ? "close" : "open"}
       tags={designTagRecords(navigation.tags)}
       pickerOpen={tagPickerOpen ?? false}
-      appearance={appearanceChoice ?? rendered}
+      appearance={appearance}
       {...optional("appearanceChanged", appearanceChanged)}
-      brandDestination={links?.brand ?? DESTINATIONS.home}
+      brandDestination={links?.brand ?? CANVAS_PAGES.home}
       {...optional("menuDestination", menuDestination)}
       {...optional("query", searchValue)}
       {...optional("activeTag", activeTag)}

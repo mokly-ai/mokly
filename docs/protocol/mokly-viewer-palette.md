@@ -199,7 +199,7 @@ information and is held to the decorative hairline standard. The badges draw
 `--chrome-border`, and the alert draws `--mbk-danger-edge`.
 
 Eight controls keep a hairline boundary. The segmented control group, such as
-the viewport switch, and the compare-mode tiles of the Changes tab draw
+the All/Changes filter, and the compare-mode tiles of the Changes tab draw
 `--chrome-border`, and the resting resize grip on the floating catalogue's
 edge draws `--chrome-border-strong`. A pressed icon control, such as the
 pressed Highlight components toggle, draws `--chrome-border`, and so do a

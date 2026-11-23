@@ -110,6 +110,16 @@ a.site-panel-row--current:hover {
   color: var(--mk-color-signal-deep);
 }
 
+/* A row draws the focus glow inside its box, so the glow stays whole in a
+   panel that scrolls, and no fill of a neighbouring row covers it. The
+   forced-colors outline draws inside too. */
+
+.site-panel-row:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline-offset: -2px;
+}
+
 /* The page frame: the document's white sheet, its file label and its
    selection. The area sets the frame's width and the sheet's padding. */
 

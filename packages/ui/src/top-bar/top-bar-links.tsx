@@ -1,7 +1,7 @@
 /**
- * The top bar's menu and brand. Each is a control of the shell, a link to an
- * address that a static depiction gives, or a picture of itself in a
- * depiction that runs no script.
+ * The top bar's menu and brand, which start the bar. Each is a control of the
+ * shell, a link to an address that a static depiction gives, or a picture of
+ * itself in a depiction that runs no script.
  */
 
 import { IconSvg } from "../icons/icons.js";
@@ -75,18 +75,27 @@ export function Menu({
 }
 
 /**
- * The brand: the mark and the wordmark `mokly.`, whose period is its own
- * element so that it takes the brand colour, as a link or a picture.
+ * The brand, as a link or a picture: the mark, and the wordmark `mokly.`
+ * unless the bar draws the mark alone. The wordmark's period is its own
+ * element so that it takes the brand colour.
  */
-export function Brand({ href }: { href: string | undefined }) {
+export function Brand({
+  href,
+  wordmark,
+}: {
+  href: string | undefined;
+  wordmark: boolean;
+}) {
   const content = (
     <>
       <span aria-hidden="true" className="mbk-mark mbk-reset">
         <BrandIcon />
       </span>
-      <span className="mbk-name mbk-reset">
-        mokly<span className="mbk-name-dot mbk-reset">.</span>
-      </span>
+      {wordmark ? (
+        <span className="mbk-name mbk-reset">
+          mokly<span className="mbk-name-dot mbk-reset">.</span>
+        </span>
+      ) : null}
     </>
   );
   if (href === undefined)

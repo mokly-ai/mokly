@@ -1,6 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
-import { DESTINATIONS } from "../../parts/destinations.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { libraryMetadata } from "../metadata.js";
 import {
   destination,
@@ -24,13 +24,27 @@ const propSchema = {
   },
 } as const;
 export type TagPickerProps = LibraryProps<typeof propSchema>;
+
+/**
+ * The catalogue's tags while no tag is entered: a chip enters its tag and
+ * closes the picker, so it opens the Canvas artboard of its filter.
+ */
 export const libraryTags = [
-  { id: "forms", label: "forms", destination: DESTINATIONS.forms },
+  { id: "forms", label: "forms", destination: CANVAS_PAGES.tagForms },
   {
     id: "onboarding",
     label: "onboarding",
-    destination: DESTINATIONS.onboarding,
+    destination: CANVAS_PAGES.tagOnboarding,
   },
+] as const;
+
+/**
+ * The same tags with forms entered: the entered tag's chip clears the query,
+ * so it opens the overview.
+ */
+export const formsEnteredTags = [
+  { id: "forms", label: "forms", destination: CANVAS_PAGES.overview },
+  libraryTags[1],
 ] as const;
 export const tagPicker = defineComponent({
   ...libraryMetadata(
@@ -52,7 +66,7 @@ export const tagPicker = defineComponent({
     {
       slug: "selected",
       title: "Selected tag",
-      props: { tags: libraryTags, activeTag: "forms", open: true },
+      props: { tags: formsEnteredTags, activeTag: "forms", open: true },
     },
     {
       slug: "empty",
