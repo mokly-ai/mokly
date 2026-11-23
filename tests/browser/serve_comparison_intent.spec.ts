@@ -1,11 +1,14 @@
 /**
  * An Affected screens link's comparison intent belongs to the one navigation
- * that carried it. The consumer opens in Side by side; after the reader
- * selects Current, a watched update keeps Current and requests no comparison.
+ * that carried it. Honouring the intent opens the consumer in Side by side
+ * and selects the right panel's Changes tab. After the reader selects Current
+ * and returns to Inspect, a watched update applies the intent no more: it
+ * keeps Current and Inspect and requests no comparison.
  */
 
 import { expect } from "@playwright/test";
 
+import { comparisonSection } from "./comparison_sections.js";
 import {
   chooseMode,
   compareState,
@@ -29,6 +32,8 @@ test("a watched update keeps Current after an Affected link opened Side by side"
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   const requests = selectedRequests(page);
+  const changesTab = page.getByRole("tab", { name: "Changes", exact: true });
+  const inspectTab = page.getByRole("tab", { name: "Inspect", exact: true });
   await page.goto(`/view/${changes.paths.component}/`);
   const link = (await openInspectFold(page, "usage"))
     .locator('[data-usage-section="affected"]')
@@ -36,14 +41,21 @@ test("a watched update keeps Current after an Affected link opened Side by side"
   await expect(link).toHaveAttribute("href", /[?&]comparison=side(?:&|$)/u);
   await awaitSelectedComparison(page, () => link.click());
   await expect(page).toHaveURL(/[?&]comparison=side(?:&|$)/u);
-  await openPanelTab(page, "Changes");
+  // Honouring the intent selects the Changes tab, and the canvas shows Side
+  // by side: the pair of the first shown frame, Desktop · Light.
+  await expect(changesTab).toHaveAttribute("aria-selected", "true");
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
+  await expect(
+    comparisonSection(page, "desktop").locator('[data-compare-mode="side"]'),
+  ).toHaveCount(2);
+  await expect(comparisonFrames(page)).toHaveCount(2);
   expect(requests).toHaveLength(1);
 
   await chooseMode(page, "Current");
+  await openPanelTab(page, "Inspect");
 
   await changes.edit(
     STABLE_SOURCE,
@@ -55,11 +67,15 @@ test("a watched update keeps Current after an Affected link opened Side by side"
   await expect(navRow(page, changes.paths.unchanged)).toContainText(
     "Stable renamed",
   );
-  // The address still holds the intent; the update must not apply it again.
+  // The address still holds the intent; the update must not apply it again,
+  // so Inspect stays selected and the canvas shows no comparison.
   await expect(page).toHaveURL(/[?&]comparison=side(?:&|$)/u);
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
+  await expect(inspectTab).toHaveAttribute("aria-selected", "true");
+  await expect(compareState(page)).toBeHidden();
+  await expect(comparisonFrames(page)).toHaveCount(0);
   await openPanelTab(page, "Changes");
   await expect(
     page.getByRole("group", { name: "Comparison mode" }),
@@ -68,8 +84,5 @@ test("a watched update keeps Current after an Affected link opened Side by side"
     "aria-pressed",
     "true",
   );
-  // The canvas shows no comparison: neither its load nor its versions.
-  await expect(compareState(page)).toBeHidden();
-  await expect(comparisonFrames(page)).toHaveCount(0);
   expect(requests).toHaveLength(1);
 });
