@@ -22,7 +22,7 @@ import {
   DETAILS_INSTANCES,
   WELCOME_INSTANCES,
 } from "../../parts/instance_records.js";
-import { actionFrames, frameOf } from "../../parts/set_sketches.js";
+import { actionSetFrames, frameOf } from "../../parts/set_sketches.js";
 
 import { CHANGED_DEFAULT } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
@@ -73,8 +73,8 @@ export const PENDING_DETAILS = {
 /**
  * Inspect for the Action's saved variant Default on the Action branch, with
  * its Light frame selected: the Action's head with Default's path and its
- * Changed status, Default checked among the variants, the six frames, and
- * the selected frame. Props edits Default in Current; while a compare mode
+ * Changed status, the Action itself and its saved variants with Default
+ * checked, the eight frames, and the selected frame. Props edits Default in Current; while a compare mode
  * is on, Props shows its saved props read-only, and Highlight components
  * waits for Current. Usage holds the Action's own lists, Used by and the
  * affected screens, from the parent's detail. A current variant waits for
@@ -105,13 +105,14 @@ export function DefaultInspect({
       />
       <InspectVariants
         variants={[
+          { label: COMPONENT_IDENTITIES.action.title },
           { label: "Default", current: true, to: design },
           { label: "Disabled" },
           { label: "Secondary" },
         ]}
       />
       <InspectFrames
-        count={6}
+        count={8}
         filter={{
           ...SET_FILTER,
           unavailable: comparing
@@ -122,7 +123,7 @@ export function DefaultInspect({
         }}
       />
       <InspectFrameSelected
-        frame={frameOf(actionFrames(), "default-light")}
+        frame={frameOf(actionSetFrames(), "default-light")}
         variant="Default"
       />
       <InspectFold

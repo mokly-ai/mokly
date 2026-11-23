@@ -30,9 +30,11 @@ side by side, at one zoom.
   name: `welcome · Mobile · Light`. The label of the frame that holds the selection,
   a selected instance or the frame itself, reads in the signal colour.
 - **Size tag** — above the frame's right edge: the nominal width and height in
-  CSS pixels, such as `1280 × 800`. The size tag stays muted when the label
-  takes the signal colour. A frame too narrow on the canvas for its label and
-  its size tag keeps the label and drops the size tag.
+  CSS pixels, such as `1280 × 800`. The size tag reads whole CSS pixels,
+  rounded, so a component's document of 147.73 × 86 reads `148 × 86`. The
+  size tag stays muted when the label takes the signal colour. A frame too
+  narrow on the canvas for its label and its size tag keeps the label and
+  drops the size tag.
 - **Reading frame** — the one frame of a page or a Markdown document, current
   or removed. It shows a document in the shell's Markdown typography, and a
   page as its one document. Its document reflows to the frame's width, so it

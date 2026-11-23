@@ -167,12 +167,14 @@ draws each version's document on the shipped opaque surface.
 
 The `canvas` group, the `panels` group, and the inspector's Frames filter
 and box model draw the Canvas viewer that the `design/canvas/**` family
-depicts: `canvas/canvas-frame`, a bare frame with its mono label and size tag
-that holds a screen at its nominal size scaled by the zoom, in the frame's
-own scheme, and an unclipped overlay, such as a selection, that its caller
-places at the frame's scale; a component's frame names its saved variant,
-or the component's title for its own example, such as `Action · Light`, and
-the frame that holds the selection lights its label; in a comparison the frame
+depicts: `canvas/canvas-frame`, a bare frame with its mono label and its
+size tag in whole CSS pixels that holds a screen at its nominal size scaled
+by the zoom, in the frame's own scheme, and an unclipped overlay, such as a
+selection, that its caller places at the frame's scale; a component's frame
+takes its document's measured size, names its saved variant, or the
+component's title for its own example, such as `Action · Light`, and keeps
+its whole label also where the frame is narrower; the frame that holds the
+selection lights its label; in a comparison the frame
 holds both versions in the shipped stacked layers, or names its version in a
 tag in Side by side; a use case's step frame leads its label with the step
 number, links its title to the step's screen, and reads its description below
@@ -194,8 +196,8 @@ Fit while the canvas holds a section; `panels/change-stepper`, the entry's
 place among the branch's changes
 with Previous change and Next change; `panels/compare-modes`, the compare
 modes as tiles with their keys, the compared frame's chips in Side by side,
-which name a screen's four frames or a variant set's frames by saved variant
-and scheme, and Scroll together and Refresh; `inspector/frames-filter`, the
+which name a screen's four frames or a variant set's frames as their labels
+do, and Scroll together and Refresh; `inspector/frames-filter`, the
 viewport and scheme toggles of Inspect with the Highlight components switch,
 which a use case draws as two pairs of radio buttons, one viewport and one
 scheme; and

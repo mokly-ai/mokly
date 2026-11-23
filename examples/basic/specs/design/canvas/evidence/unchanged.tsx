@@ -5,10 +5,10 @@ import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import { DETAILS_VIEW, detailsFrames } from "../parts/changes_sketches.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
-import { actionFrames } from "../parts/set_sketches.js";
+import { actionSetFrames } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
-import { FITS } from "../parts/sketches.js";
+import { FITS, SET_FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
 
 import { EVIDENCE_ENTRIES, quietAll, stylesAll } from "./parts/branches.js";
@@ -49,10 +49,10 @@ function ExcludedOnly({ viewport }: { viewport: ArtboardViewport }) {
 }
 
 /**
- * The unmodified Action as its variant set, on the branch that changed its
- * own stylesheet, opened from All: its Inspect keeps the examined
- * stylesheet's evidence after the head. On a phone, the whole set shows
- * under the open Inspect sheet.
+ * The unmodified Action as its variant set, its own example and its saved
+ * variants, on the branch that changed its own stylesheet, opened from All:
+ * its Inspect keeps the examined stylesheet's evidence after the head. On a
+ * phone, the whole set shows under the open Inspect sheet.
  */
 function ActionExcluded({ viewport }: { viewport: ArtboardViewport }) {
   return (
@@ -61,11 +61,11 @@ function ActionExcluded({ viewport }: { viewport: ArtboardViewport }) {
       design={E.evidenceUnchangedAction}
       entry={CANVAS_ENTRIES.action}
       expanded
-      frames={actionFrames()}
+      fit={SET_FITS.action}
+      frames={actionSetFrames()}
       panel={<ActionExcludedInspect />}
       sheet="panel"
       viewport={viewport}
-      zoom={FITS.action}
     />
   );
 }

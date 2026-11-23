@@ -1,5 +1,6 @@
 import { defineComponent } from "@mokly/mokly";
 
+import { COMPONENT_DOCUMENTS } from "../../canvas/parts/set_sketches.js";
 import { MiniAction } from "../../parts/mini_action.js";
 import { MiniWelcome } from "../../parts/mini_screens.js";
 import { libraryMetadata } from "../metadata.js";
@@ -13,7 +14,11 @@ import {
 
 import { CanvasFrameView } from "./canvas-frame.view.js";
 
-const length = { type: "integer", minimum: 1, maximum: 4000 } as const;
+/**
+ * A frame's nominal width or height in CSS pixels: a component's frame takes
+ * its document's measured size, which can hold fractions of a pixel.
+ */
+const length = { type: "number", minimum: 1, maximum: 4000 } as const;
 const propSchema = {
   type: "object",
   additionalProperties: false,
@@ -103,8 +108,7 @@ export const canvasFrame = defineComponent({
         kind: "component",
         scheme: "light",
         label: "Default · Light",
-        width: 320,
-        height: 132,
+        ...COMPONENT_DOCUMENTS.actionDefault,
         zoom: 1,
       },
       slots: { children: <MiniAction variant="default" /> },

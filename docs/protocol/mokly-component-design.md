@@ -53,11 +53,12 @@ A component compares on its variant set: every frame of the set compares its
 own view in the chosen mode of the
 [comparison panes](./mokly-comparison-panes.md). Side by side shows one
 frame's two versions next to each other, each in its own frame with a Before
-or Current tag. A chip names each frame of the set by its variant and scheme.
+or Current tag. A chip names each frame of the set as the frame's label does.
 Overlay and Difference hold both versions in each frame: Current sits on top
 at half opacity, or blends by difference over the opaque Before layer. Both
 versions of a frame share one size: the larger width and the larger height of
-the two. On the depicted branches, both versions have the same size.
+the two. On the depicted Action branch, no version before is larger than its
+current version, so each frame keeps the size of its current version.
 
 Inspect holds the sections of the
 [inspector design](./mokly-component-inspector-design.md#inspect). Selection

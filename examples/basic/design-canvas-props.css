@@ -9,15 +9,15 @@
 
 /* While a render of edits is in flight, each frame of the edited variant
    keeps its last valid preview, and the status stands at the frame's top
-   right as a pill, in both layouts, clear of the start of the document. The
-   pill carries the panel's surface, so it reads over a frame of either
-   scheme. */
+   right as a pill, in both layouts, above the component, which its
+   document draws 24px from the top. The pill carries the panel's surface,
+   so it reads over a frame of either scheme. */
 .cv-frame > .mbk-edit-status {
   bottom: auto;
   left: auto;
   margin: 0;
-  right: 8px;
-  top: 8px;
+  right: 4px;
+  top: 4px;
   width: max-content;
   z-index: 3;
 }
@@ -29,7 +29,7 @@
     0 0 0 1px var(--cv-border),
     var(--cv-shadow-2);
   color: var(--cv-text-secondary);
-  padding: 3px 9px;
+  padding: 2px 8px;
 }
 
 /* The Props status while the route's details load, or after their load

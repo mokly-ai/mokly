@@ -1,11 +1,21 @@
+import { ACTION_BUTTON } from "../../parts/mini_action.js";
+import {
+  TOOLBAR_ACTION_BOXES,
+  TOOLBAR_ACTIONS_TOP,
+} from "../../parts/mini_toolbar.js";
+
 import { COMPONENT_IDENTITIES } from "./component_identity.js";
-import { CANVAS_PAGES } from "./destinations.js";
+import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
+import { CANVAS_ENTRIES } from "./entries.js";
+import { SCHEMES } from "./frames.js";
 import {
   ACTION_PADDING,
+  DOCUMENT_ACTION_PADDING,
   MOBILE_LIGHT,
   SKETCH_BORDER,
   TOOLBAR_PADDING,
   actionProps,
+  documentToolbarAction,
   toolbarAction,
   type InstanceRecords,
   type SelectionFrame,
@@ -15,10 +25,11 @@ import {
  * The instance records of each depicted entry, in the order of its records.
  * Each box is the instance's box in the sketch of the frame where the reader
  * selects it: a screen's phone sketch, which `design-shots.css` lays out in
- * fixed rows, or the Toolbar's component document. The Action keeps a fixed
- * width, the Toolbar spans the content, and the Toolbar's Actions, stacked
- * in a phone and side by side in a component document, take the width of
- * their labels in Geist.
+ * fixed rows, or the Toolbar's component document. In a phone, the Action
+ * keeps a fixed width, the Toolbar spans the content, and the Toolbar's
+ * stacked Actions take the width of their labels in Geist. In the Toolbar's
+ * component document, its Actions stand side by side at the boxes that the
+ * built document measures.
  */
 
 /** The two components that the depicted entries render. */
@@ -124,28 +135,44 @@ export const DETAILS_INSTANCES: InstanceRecords<DetailsInstanceId> = {
   ),
 };
 
-/** The Toolbar's frame of its saved variant Default in Light. */
+/**
+ * The Toolbar's frame of its own example in Light, the first frame of its
+ * set, where its nested components select its Actions.
+ */
 const TOOLBAR_FRAME: SelectionFrame = {
-  id: "default-light",
-  label: "Default · Light",
+  id: `${CANVAS_ENTRIES.toolbar.slug}-light`,
+  label: `${TOOLBAR.title} · ${SCHEMES.light}`,
 };
 
 /** The registered instances that the Toolbar renders itself. */
 export type ToolbarInstanceId = "primary" | "secondary";
 
 /**
- * The Toolbar's two Actions on its Default · Light frame, side by side, as
+ * One of the Toolbar's two Actions on the own example's frame, at the box
+ * that the built document measures, with the real button's 1px border and
+ * its padding.
+ */
+function ownToolbarAction(id: ToolbarInstanceId, page: CanvasDestination) {
+  return documentToolbarAction(
+    id,
+    {
+      box: {
+        ...TOOLBAR_ACTION_BOXES[id],
+        y: TOOLBAR_ACTIONS_TOP.own,
+        height: ACTION_BUTTON.height,
+      },
+      border: SKETCH_BORDER,
+      padding: DOCUMENT_ACTION_PADDING,
+    },
+    { frame: TOOLBAR_FRAME, page },
+  );
+}
+
+/**
+ * The Toolbar's two Actions on its Toolbar · Light frame, side by side, as
  * its nested components list them.
  */
 export const TOOLBAR_INSTANCES: InstanceRecords<ToolbarInstanceId> = {
-  primary: toolbarAction(
-    "primary",
-    { x: 37, y: 81.75 },
-    { frame: TOOLBAR_FRAME, page: CANVAS_PAGES.componentSetPrimary },
-  ),
-  secondary: toolbarAction(
-    "secondary",
-    { x: 150.03, y: 81.75 },
-    { frame: TOOLBAR_FRAME, page: CANVAS_PAGES.componentSetSecondary },
-  ),
+  primary: ownToolbarAction("primary", CANVAS_PAGES.componentSetPrimary),
+  secondary: ownToolbarAction("secondary", CANVAS_PAGES.componentSetSecondary),
 };
