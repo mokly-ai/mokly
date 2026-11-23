@@ -35,8 +35,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
       .getByRole("link", { name: "View details", exact: true });
     await next.focus();
     await page.keyboard.press("Enter");
+    // The destination's address names the kept viewport.
     await expect(page).toHaveURL(
-      /\/view\/example\/screens\/details\/\?fragment=details$/,
+      new RegExp(
+        `/view/example/screens/details/\\?fragment=details&viewport=${viewport}$`,
+      ),
     );
     await expect(page.locator(detailsRow)).toHaveAttribute(
       "aria-current",

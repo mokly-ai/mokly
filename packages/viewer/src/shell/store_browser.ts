@@ -9,13 +9,19 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { useShellRoot } from "./root_context.js";
-import { routeDocumentKey, routeFromUrl, routeHref } from "./routes.js";
+import { routeDocumentKey, routeFromUrl } from "./routes.js";
 import {
   shellBrowserActions,
   type ShellBrowserActions,
 } from "./store_browser_actions.js";
 import { sameShellRoute } from "./store_browser_routes.js";
-import { canonicalRouteUrl, viewportUrl } from "./store_browser_urls.js";
+import {
+  canonicalRouteUrl,
+  destinationUrl,
+  destinationViewport,
+  routeWithViewport,
+  viewportUrl,
+} from "./store_browser_urls.js";
 import { withRoute } from "./store_filters.js";
 import type { ShellState } from "./store_state.js";
 import { viewTitle } from "./view_title.js";
@@ -77,38 +83,36 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     ) => {
       if (!latest.current.interactive) return;
       const win = window;
-      const sameDocument =
-        installedDocumentKey.current === routeDocumentKey(requested);
       const requestedRoute = routeFromUrl(latest.current.catalogue, requested);
-      let canonical = canonicalRouteUrl(requested, requestedRoute);
-      if (requestedRoute.view.kind === "target") {
-        canonical = new URL(
-          routeHref(
-            requestedRoute.view.target.entry.path,
-            requestedRoute.fragment,
-            requestedRoute,
-          ),
-          requested,
-        );
-        canonical.hash = requested.hash;
-      }
+      // A navigation's address names the kept viewport, and a history
+      // step's address names its own.
+      const viewport = destinationViewport(
+        (activated ?? requestedRoute).viewport,
+        stateRef.current.selection.viewport,
+        push,
+      );
+      const destination = viewportUrl(requested, viewport);
+      const sameDocument =
+        installedDocumentKey.current === routeDocumentKey(destination);
+      const canonical = destinationUrl(requested, requestedRoute, viewport);
+      const shown = activated && routeWithViewport(activated, viewport);
       const controller = new AbortController();
       sequence.current?.abort();
       sequence.current = controller;
       if (sameDocument) {
-        if (activated) {
+        if (shown) {
           install(
             canonical,
             push && win.location.href !== canonical.href,
             true,
-            activated,
+            shown,
           );
-        } else if (push && win.location.href !== requested.href)
-          win.location.assign(requested.href);
+        } else if (push && win.location.href !== destination.href)
+          win.location.assign(destination.href);
         if (sequence.current === controller) sequence.current = undefined;
         return;
       }
-      install(canonical, push, true, activated);
+      install(canonical, push, true, shown);
       if (sequence.current === controller) sequence.current = undefined;
     },
     [install],
@@ -154,8 +158,8 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
 
   // A viewport that the reader chooses on the shown entry, through the Frames
   // filter or the compact layout's frame picker, replaces the address's
-  // `viewport` query, so the address names the shown viewport. A route
-  // installation brings its own address.
+  // `viewport` query, which Both takes out, so the address names the shown
+  // viewport. A route installation brings its own address.
   const placed = useRef<
     { installation: number; viewport: ViewerSelection["viewport"] } | undefined
   >(undefined);

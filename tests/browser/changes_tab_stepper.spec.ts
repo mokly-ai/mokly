@@ -53,8 +53,11 @@ test("Previous change and Next change open the listed change before and after on
   await openPanelTab(page, "Changes");
   await expect(changeCount(page)).toHaveText("Change 2 of 5");
 
+  // Each destination's address names the kept Desktop viewport.
   await changeStep(page, "Previous change").click();
-  await expect(page).toHaveURL(`/view/${changesTabPaths.added}/`);
+  await expect(page).toHaveURL(
+    `/view/${changesTabPaths.added}/?viewport=desktop`,
+  );
   await expectChangesSelected(page);
   await expect(changeCount(page)).toHaveText("Change 1 of 5");
   await expectDesktopDarkAlone(page);
@@ -62,7 +65,9 @@ test("Previous change and Next change open the listed change before and after on
   await expect(changeStep(page, "Previous change")).toBeDisabled();
 
   await changeStep(page, "Next change").click();
-  await expect(page).toHaveURL(`/view/${changesTabPaths.details}/`);
+  await expect(page).toHaveURL(
+    `/view/${changesTabPaths.details}/?viewport=desktop`,
+  );
   await expectChangesSelected(page);
   await expect(changeCount(page)).toHaveText("Change 2 of 5");
   await expectDesktopDarkAlone(page);

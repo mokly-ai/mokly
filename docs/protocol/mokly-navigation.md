@@ -178,13 +178,13 @@ With the shell mounted, an unmodified primary or keyboard activation of a
 default/`_self` marked link asks the outer shell to navigate through its
 latest-wins route transition. The shell resolves the destination in the index
 and renders it; it does not fetch a shell document. The resulting history
-entry has the canonical `/view/<path>/[?fragment=...]` URL; the title,
-breadcrumbs, heading, inspector, frames, focus, and status
-announcement all describe the destination. Back and Forward return through
-those outer route entries and restore their route-owned scroll. Once React
-owns a same-origin frame session, that ownership is continuous: a valid marked
-activation during a viewport, scheme, variant, fragment, or route handoff
-navigates the parent exactly once. The
+entry has the canonical `/view/<path>/[?fragment=...]` URL, which in a
+standalone shell also names a kept viewport other than Both; the title,
+breadcrumbs, heading, inspector, frames, focus, and status announcement all
+describe the destination. Back and Forward return through those outer route
+entries. Once React owns a same-origin frame session, that ownership is
+continuous: a valid marked activation during a viewport, scheme, variant,
+fragment, or route handoff navigates the parent exactly once. The
 [same-origin document rules](./mokly-frame-adapter.md#same-origin-documents)
 decide which document keeps host-owned navigation during a handoff. Readiness
 gates inspection, not logical navigation. Disposing or unsubscribing the
@@ -196,9 +196,8 @@ fragment focus and scrolling. Document identity includes origin, pathname and
 query but excludes the hash. A history event within the displayed document
 must not change the rendered route, reinstall its workspace, or move focus
 away from the native target. It invalidates any pending route transition so an
-obsolete result cannot replace the retained view. Saved scroll positions may
-be restored without a reload. A changed route or query still uses in-shell
-navigation and its normal history restoration.
+obsolete result cannot replace the retained view. A changed route or query
+still uses in-shell navigation and its normal history restoration.
 
 In every delivery the shell resolves that trusted path through the index to
 the exact `/view/<path>/` URL before rendering or opening any context; there

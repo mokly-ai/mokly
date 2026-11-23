@@ -91,8 +91,8 @@ of the sticky selection, unless the URL names a viewport or scheme. Once a
 changed entry is selected, later row activations keep the sticky axes while an
 unmodified container row still redirects to its first visible changed variant
 or member under [variant navigation](./mokly-variant-navigation.md#changes-rows). A direct
-URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
-selection.
+URL, an All-filter activation, Back, Forward, and a reload open no first
+changed view.
 These marks and the `Changed views` row apply in a static build with Changes as
 well as in Serve.
 

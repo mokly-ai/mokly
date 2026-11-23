@@ -32,8 +32,12 @@ test("an unmodified index row stays an undotted container and opens its first ch
 
   await index.click();
 
+  // The landing's address names the first changed view's Mobile viewport.
   await expect(page).toHaveURL(
-    new RegExp(`/view/${comparisonPaths.folderChanged}/$`, "u"),
+    new RegExp(
+      `/view/${comparisonPaths.folderChanged}/\\?viewport=mobile$`,
+      "u",
+    ),
   );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Security");
   await expect(navRow(page, comparisonPaths.folderChanged)).toHaveAttribute(

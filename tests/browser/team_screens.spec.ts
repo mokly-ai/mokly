@@ -13,6 +13,9 @@ for (const viewport of ["mobile", "desktop"] as const)
     test(`${viewport}/${scheme}: native team screens compose slots and follow the invitation variant`, async ({
       page,
     }) => {
+      // Each destination's address names the kept viewport.
+      const at = (path: string) =>
+        new RegExp(`/view/example/team/${path}/\\?viewport=${viewport}$`, "u");
       await page.goto("/view/example/team/members/");
       await chooseViewport(page, viewport);
       await chooseScheme(page, scheme);
@@ -49,7 +52,7 @@ for (const viewport of ["mobile", "desktop"] as const)
       await expect(invite).toHaveCount(1);
       await expect(frame.locator(".panel-body .panel-actions")).toHaveCount(0);
       await invite.click();
-      await expect(page).toHaveURL(/\/view\/example\/team\/invite\/$/u);
+      await expect(page).toHaveURL(at("invite"));
       await expect(
         frame.getByRole("heading", { name: "Invite a teammate", exact: true }),
       ).toBeVisible();
@@ -80,9 +83,7 @@ for (const viewport of ["mobile", "desktop"] as const)
         .getByRole("link", { name: "Send invitation", exact: true });
       await expect(send).toHaveAttribute("data-mokly-link-control", "button");
       await send.click();
-      await expect(page).toHaveURL(
-        /\/view\/example\/team\/members\/invited\/$/u,
-      );
+      await expect(page).toHaveURL(at("members/invited"));
       await expect(frame.getByRole("status")).toHaveText(
         "Invitation sent to sam@fernhill.example.",
       );

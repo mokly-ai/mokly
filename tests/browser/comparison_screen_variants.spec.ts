@@ -47,8 +47,12 @@ test("Changes opens the first changed variant of an unmodified screen parent", a
 
   await parent.click();
 
+  // The landing's address names the first changed view's Mobile viewport.
   await expect(page).toHaveURL(
-    new RegExp(`/view/${comparisonPaths.screenVariant}/$`, "u"),
+    new RegExp(
+      `/view/${comparisonPaths.screenVariant}/\\?viewport=mobile$`,
+      "u",
+    ),
   );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Save failed");
   await expect(navRow(page, comparisonPaths.screenVariant)).toHaveAttribute(

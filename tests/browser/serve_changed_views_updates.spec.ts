@@ -170,7 +170,9 @@ test("Changes lands on the first changed view and every other arrival stays stic
   await expect(navRow(page, dusk)).toBeVisible();
   await navRow(page, dusk).click();
 
-  await expect(page).toHaveURL(new RegExp(`/view/${dusk}/$`, "u"));
+  // The landing's address names its Mobile viewport.
+  const landed = new RegExp(`/view/${dusk}/\\?viewport=mobile$`, "u");
+  await expect(page).toHaveURL(landed);
   await expect(scheme).toHaveAttribute("data-mokly-color-scheme", "dark");
   await expect(picker).toHaveValue("mobile-dark");
   // The canvas shows the changed view's frame, Mobile · Dark, alone.
@@ -195,7 +197,7 @@ test("Changes lands on the first changed view and every other arrival stays stic
   await expectShownStatus(page, stable, "Unmodified", false);
 
   await page.goForward();
-  await expect(page).toHaveURL(new RegExp(`/view/${dusk}/$`, "u"));
+  await expect(page).toHaveURL(landed);
   await page.reload();
   await expect(scheme).toHaveAttribute("data-mokly-color-scheme", "light");
   await expect(picker).toHaveValue("mobile-light");

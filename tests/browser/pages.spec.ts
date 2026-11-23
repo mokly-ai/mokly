@@ -108,8 +108,12 @@ for (const width of [390, 1280]) {
       .frameLocator(screenFrame)
       .getByRole("link", { name: "Read the handbook" })
       .click();
+    // The destination's address names the Mobile viewport that was kept.
+    const kept = width < 700 ? "&viewport=mobile" : "";
     await expect(page).toHaveURL(
-      /\/view\/example\/getting-started\/\?fragment=next-steps$/,
+      new RegExp(
+        `/view/example/getting-started/\\?fragment=next-steps${kept}$`,
+      ),
     );
     await page.goBack();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");

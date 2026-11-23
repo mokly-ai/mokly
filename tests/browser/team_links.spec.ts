@@ -93,6 +93,12 @@ for (const viewport of ["mobile", "desktop"] as const)
         .contentFrame()
         .getByRole("link", { name: "Read about roles", exact: true })
         .click();
-      await expect(page).toHaveURL(/\/view\/example\/team\/member-roles\/$/u);
+      // The destination's address names the kept viewport.
+      await expect(page).toHaveURL(
+        new RegExp(
+          `/view/example/team/member-roles/\\?viewport=${viewport}$`,
+          "u",
+        ),
+      );
       await expectFrameSource(page.locator(DOCUMENT_FRAME), roles);
     });

@@ -11,9 +11,15 @@ import type { ViewerSelection } from "@mokly/viewer";
 
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
+import { detailsRow } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import type {} from "./viewer_harness.js";
-import { canvasFrame, NARROW_WINDOW, setFrames } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  expectFrameSource,
+  NARROW_WINDOW,
+  setFrames,
+} from "./workspace_actions.js";
 
 const WELCOME = "/view/example/screens/welcome/";
 
@@ -38,6 +44,25 @@ test("turning Mobile off names Desktop in the address, which opens on the Deskto
   await expect(toggle(page, "desktop")).toBeChecked();
   await expect(toggle(page, "mobile")).not.toBeChecked();
   await expect(page.locator(canvasFrame("desktop"))).toBeVisible();
+  await expect(page.locator(canvasFrame("mobile"))).toBeHidden();
+});
+
+test("a navigation keeps the chosen viewport, which the destination's address names", async ({
+  page,
+}) => {
+  await page.goto(WELCOME);
+  await expect(page.locator(canvasFrame("mobile"))).toBeVisible();
+  await setFrames(page, { mobile: false });
+  await expect(page).toHaveURL(/\?viewport=desktop$/);
+  await page.locator(detailsRow).click();
+  await expect(page).toHaveURL(
+    /\/view\/example\/screens\/details\/\?viewport=desktop$/,
+  );
+  await expectFrameSource(
+    page.locator(canvasFrame("desktop")),
+    /example\/screens\/details\/index\.desktop\.html$/,
+  );
+  await expect(toggle(page, "mobile")).not.toBeChecked();
   await expect(page.locator(canvasFrame("mobile"))).toBeHidden();
 });
 

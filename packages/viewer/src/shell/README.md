@@ -145,9 +145,13 @@ and the rule that marks a toggle while it hides a changed view. Its viewport
 toggles show the selection's viewport: `framesChoice` reads them from it, and
 the store's `toggleFrame` turns a toggle change into the next viewport through
 `toggledFilter`, as one selection change that a controlled host hears as a
-proposal. Its scheme toggles are one choice of the shell, the state's
-`frames`, which in-shell navigation keeps and a full page load turns both on.
-A use case keeps its own choice in `use_case_choice.ts`.
+proposal. A link that names one viewport, such as a Used by link, an
+Affected link or the Changes landing, therefore turns the other viewport
+toggle off, and the wide canvas shows that viewport's column alone; turning
+the other toggle on brings the second column back. Its scheme toggles are one
+choice of the shell, the state's `frames`, which in-shell navigation keeps
+and a full page load turns both on. A use case keeps its own choice in
+`use_case_choice.ts`.
 `workspace_views.ts` resolves the views that the filter shows on the wide
 canvas, or the compact layout's picked frame, to the views actually shown,
 including Dark-to-Light fallback, and carries the matching status,
@@ -346,13 +350,17 @@ shell. Picker
 chips keep the focus return of `@mokly/ui/tag-picker`.
 
 `store.tsx` and the focused `store_*` modules own the shared route,
-selection, disclosure, sheet, right panel tab, Frames choice and scroll
-state. Every container
+selection, disclosure, sheet, right panel tab and Frames choice state. Every
+container
 renders under `ShellStoreProvider` and reads that state through
 `useShellStore`, also in tests. `store_browser.ts`
-owns standalone history. It also writes a viewport that the reader chooses on
-the shown entry to the `viewport` query of the current history entry, while
-a route installation brings its own address. `store_host.ts` owns host
+owns standalone history, whose addresses name the selection's viewport while
+it is not Both. Each navigation's destination address names the kept
+viewport, the Changes landing's included, and a viewport that the reader
+chooses on the shown entry replaces the `viewport` query of the current
+history entry. An address without `viewport` shows Both, so Back, Forward
+and a page load show the viewport that their address names.
+`store_browser_urls.ts` holds these address rules. `store_host.ts` owns host
 selection commits.
 `store_routes.ts` installs each route's display for both roots.
 `store_interactions.ts` binds both roots to clicks and Escape. It dismisses

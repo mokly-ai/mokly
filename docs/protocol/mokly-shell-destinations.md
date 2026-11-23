@@ -7,7 +7,9 @@ Shell destinations may explicitly request `viewport=mobile|desktop|both` and
 axis only when exactly one supported value is present. A valid value applies in
 the same atomic route or controlled-selection update while an omitted, invalid,
 or repeated axis retains its sticky selection. This also applies when only an
-axis changes on the current destination. In Changes, at least one valid
+axis changes on the current destination. In a standalone shell, Back, Forward
+and a page load show the viewport that their address names, under the
+[selection contract](./mokly-viewer-selection.md#shell-tree-and-state). In Changes, at least one valid
 explicit axis suppresses first-changed-view landing; invalid or repeated values
 do not. Embedded and standalone shells apply the same axis rules. Controlled
 hosts receive the complete proposal and commit nothing until they supply it

@@ -52,8 +52,9 @@ test("Changes opens the first changed variant of an unmodified parent", async ({
 
   await tag.click();
 
+  // The landing's address names the first changed view's Mobile viewport.
   await expect(page).toHaveURL(
-    new RegExp(`/view/${comparisonPaths.quietVariant}/$`),
+    new RegExp(`/view/${comparisonPaths.quietVariant}/\\?viewport=mobile$`),
   );
   await expect(navRow(page, comparisonPaths.quietVariant)).toHaveAttribute(
     "aria-current",

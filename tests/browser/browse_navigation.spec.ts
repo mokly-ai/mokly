@@ -60,8 +60,9 @@ test("MockLink navigation reveals the destination and preserves shell state", as
     .locator("#mock-link")
     .click();
 
+  // The destination's address names the kept Mobile viewport.
   await expect(page).toHaveURL(
-    /\/view\/fixture\/nested\/details\/\?fragment=section$/,
+    /\/view\/fixture\/nested\/details\/\?fragment=section&viewport=mobile$/,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expect(page.locator("[data-inspect-path] code")).toHaveText(
