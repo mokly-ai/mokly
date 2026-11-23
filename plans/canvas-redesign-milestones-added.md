@@ -219,12 +219,15 @@ Depends on: 18
 Cal, 2026-11-22: start work early. The mockup parts of Milestones 12 and 13
 run now, beside Milestone 11, because they touch only mockup files.
 
-- [ ] Draw the Example tour as a listed change in the depicted branch:
+- [x] Draw the Example tour as a listed change in the depicted branch:
       Changes counts 11, a Changed status, and a Changes tab with the stepper
       and the comparison details but no compare modes. Remove the status line
-      of `mokly-shell-design-catalogue.md` that records the gap.
-- [ ] Add the own-example row and the measured frame sizes to the Canvas
-      variant sets, as the two Milestone 12 TODOs above name them.
-- [ ] Add Docs and Changelog rows to the cloud account menu mockup and to
+      of `mokly-shell-design-catalogue.md` that records the gap. Branch:
+      `calummoore/canvas-redesign-m24-mockups-for-708g`.
+- [x] Add the own-example row and the measured frame sizes to the Canvas
+      variant sets, as the two Milestone 12 TODOs above name them. Branch:
+      `calummoore/canvas-redesign-m24-mockups-for-708g`.
+- [x] Add Docs and Changelog rows to the cloud account menu mockup and to
       More on phones (decision 22, option B), and bring
-      `marketing-site.md` and the menu docs in line.
+      `marketing-site.md` and the menu docs in line. Branch:
+      `calummoore/canvas-redesign-m24-mockups-for-708g`.

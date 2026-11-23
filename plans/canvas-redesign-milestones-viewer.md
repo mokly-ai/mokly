@@ -67,14 +67,16 @@ Depends on: 10, 11
 - [ ] Give `ComparisonEvidence` the changed-step lines of a listed use case
       ("Changed step: Welcome"), each a link to that screen on its Changes
       tab, as Milestone 24 draws them.
-- [ ] Milestone 24: add the own-example row to the other Canvas artboards that draw a
+- [x] Milestone 24: add the own-example row to the other Canvas artboards that draw a
       variant set: the Toolbar's `component-set/toolbar*` variants and the
       Action's sets on `canvas/props/**`, `canvas/components/**` and
-      `canvas/evidence/unchanged`.
-- [ ] Milestone 24: draw each component frame of the Canvas variant sets at its measured
+      `canvas/evidence/unchanged`. Branch:
+      `calummoore/canvas-redesign-m24-mockups-for-708g`.
+- [x] Milestone 24: draw each component frame of the Canvas variant sets at its measured
       document size, as the canvas frames contract says (Milestone 18,
       item 9): for example the Action's own example at 148 × 86 and the
-      Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`.
+      Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`. Branch:
+      `calummoore/canvas-redesign-m24-mockups-for-708g`.
 - [ ] Comparison panes measure each version with
       `measureContentBox(doc)` from `@mokly/frame/internal` (Milestone 23),
       for decision 23 below.
