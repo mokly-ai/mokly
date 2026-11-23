@@ -36,6 +36,12 @@ const EXCLUDED_SHEET: EvidenceExclusions = {
   sentence: SCREEN_STYLE_COPY.excluded,
 };
 
+/**
+ * The content of Welcome that the example excludes from comparisons, its
+ * navigation. The comparison details of a Welcome that differs name it.
+ */
+const WELCOME_EXCLUDED_CONTENT = ["example-nav"];
+
 /** The changed files of a screen: the configured stylesheet and its outcomes. */
 function screenFiles(outcomes: readonly EvidenceOutcome[]): EvidenceFiles {
   return {
@@ -47,25 +53,32 @@ function screenFiles(outcomes: readonly EvidenceOutcome[]): EvidenceFiles {
 /**
  * The styles branch, as Welcome's comparison details read it in Changes and
  * in All alike: the changed stylesheet with the changed styles that apply to
- * Welcome, then the other changed stylesheet, examined and excluded.
+ * Welcome, then the other changed stylesheet, examined and excluded, then
+ * Welcome's excluded content.
  */
 export const MATCHED_STYLES: EvidenceFacts = {
   files: screenFiles([
     { lead: SCREEN_STYLE_COPY.matched, selectors: [".example-head", "main a"] },
   ]),
   excluded: EXCLUDED_SHEET,
+  ignored: WELCOME_EXCLUDED_CONTENT,
 };
 
-/** A changed style that can apply anywhere on Welcome, with its style name. */
+/**
+ * A changed style that can apply anywhere on Welcome, with its style name,
+ * then Welcome's excluded content.
+ */
 export const UNRESOLVED_STYLES: EvidenceFacts = {
   files: screenFiles([
     { lead: SCREEN_STYLE_COPY.unresolved, selectors: [":root"] },
   ]),
+  ignored: WELCOME_EXCLUDED_CONTENT,
 };
 
 /** The same reach without a style name to list. */
 export const UNNAMED_STYLES: EvidenceFacts = {
   files: screenFiles([{ lead: SCREEN_STYLE_COPY.unnamed, selectors: [] }]),
+  ignored: WELCOME_EXCLUDED_CONTENT,
 };
 
 /**
@@ -118,6 +131,6 @@ export const PAGE_FILES: EvidenceFiles = {
  * left out, Welcome's navigation, then the line of a screen without changes.
  */
 export const IGNORED_CONTENT: EvidenceFacts = {
-  ignored: ["example-nav"],
+  ignored: WELCOME_EXCLUDED_CONTENT,
   noChanges: SCREEN_STYLE_COPY.noChanges,
 };

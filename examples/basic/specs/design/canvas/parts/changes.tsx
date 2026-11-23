@@ -74,13 +74,14 @@ export function ChangesCompared({
  * The comparison details of today's inspector: the shipped evidence with one
  * sentence for each reason, after the previous path of a moved entry, which
  * the evidence names as the earlier side, then each changed file with its
- * outcomes and the stylesheets that were examined and excluded. The rail
- * above names the base, so the evidence leaves out its branch-point
- * sentence.
+ * outcomes, the stylesheets that were examined and excluded, and the content
+ * that the comparison leaves out. The rail above names the base, so the
+ * evidence leaves out its branch-point sentence.
  */
 export function ChangesEvidence({
   excluded,
   files,
+  ignored,
   initial,
   mark = "data-workspace-evidence",
   previousPath,
@@ -90,6 +91,8 @@ export function ChangesEvidence({
   excluded?: EvidenceExclusions | undefined;
   /** The changed files, each named once with its outcomes. */
   files?: EvidenceFiles | undefined;
+  /** The ids of the content that the comparison leaves out. */
+  ignored?: readonly string[] | undefined;
   /** The panel opens scrolled to the comparison details. */
   initial?: boolean | undefined;
   /** The mark of the evidence: a whole-document page has its own. */
@@ -108,6 +111,7 @@ export function ChangesEvidence({
         base=""
         excluded={excluded}
         files={files}
+        ignored={ignored}
         mark={mark}
         previousPath={previousPath}
         reasons={reasonEvidence(reasons)}
