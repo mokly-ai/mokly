@@ -674,16 +674,16 @@ Standalone route installation passes scheme pins to the React appearance
 owner through a callback. It never changes preview selection separately.
 A reader's choice wins over later pins through navigation and browser history.
 Each preview wrapper records its actual
-file's scheme for iframe media queries, native controls, device colors and
+file's scheme for iframe media queries, native controls, preview surfaces and
 comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
 in a catalogue with a dark axis. A current document's reading frame then
 names the fallback in its label, in both layouts. A removed document's
 section head, and in the compact layout its entry bar, read `Showing previous
 version — Light only` instead while the preview scheme is Dark. The
-stylesheets of `@mokly/ui/preview-frame`, `@mokly/ui/device-frame`, and
-`@mokly/ui/comparison-pane` set every preview surface background and iframe
-color scheme from the wrapper's scheme.
+stylesheets of `@mokly/ui/canvas-frame`, `@mokly/ui/preview-frame`,
+`@mokly/ui/comparison-pane`, and `@mokly/ui/canvas-comparison` set every
+preview surface background and iframe color scheme from the wrapper's scheme.
 Transparent content therefore keeps its selected Light or Dark base in screen,
 page, component, historical and comparison frames, independently of interface
 appearance.

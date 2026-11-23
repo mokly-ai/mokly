@@ -2,7 +2,8 @@
  * The grabber of a sheet: the accessible size toggle at the sheet's top. A
  * press switches the sheet between its compact and its expanded height. A
  * drag moves the sheet's top edge with the pointer, and the sheet then snaps
- * to the nearer of its two heights.
+ * to the nearer of its two heights. A static depiction draws a picture of
+ * the grabber instead.
  */
 
 import { useRef } from "react";
@@ -27,6 +28,36 @@ interface Drag {
 /** The sheet whose grabber received a pointer event. */
 function sheetOf(event: PointerEvent<HTMLButtonElement>): HTMLElement | null {
   return event.currentTarget.parentElement;
+}
+
+/** The size toggle's name, which says what a press would do. */
+function grabLabel(expanded: boolean, noun: string): string {
+  return expanded ? `Make ${noun} compact` : `Expand ${noun}`;
+}
+
+/**
+ * The grabber of a static depiction that runs no script: a picture of
+ * itself, named by what a press would do, with no tab stop and no pointer.
+ */
+export function SheetGrabPicture({
+  expanded,
+  noun,
+}: {
+  expanded: boolean;
+  noun: string;
+}) {
+  const label = grabLabel(expanded, noun);
+  return (
+    <span
+      aria-label={label}
+      className="mbk-float-grab mbk-reset"
+      data-sheet-grab=""
+      role="img"
+      title={label}
+    >
+      <span className="mbk-float-grip mbk-reset" />
+    </span>
+  );
 }
 
 export function SheetGrab({
@@ -58,7 +89,7 @@ export function SheetGrab({
   return (
     <button
       aria-expanded={expanded}
-      aria-label={expanded ? `Make ${noun} compact` : `Expand ${noun}`}
+      aria-label={grabLabel(expanded, noun)}
       className="mbk-float-grab mbk-reset"
       data-sheet-grab=""
       onClick={() => {

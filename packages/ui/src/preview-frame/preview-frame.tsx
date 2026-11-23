@@ -151,45 +151,6 @@ export function PreviewFrame({
 }
 
 /**
- * The frame of a whole document, such as a page or a Markdown document,
- * which fills the stage and keeps its scroll position as `embed`.
- */
-export function DocumentFrame({
-  children,
-  error = false,
-  ref,
-  retry,
-  scheme,
-}: {
-  /** The document's frame. Without it, the preview is unavailable. */
-  children?: ReactNode;
-  /** Whether the frame's document failed to load. */
-  error?: boolean;
-  /**
-   * Receives the document's stage, against which the host measures its
-   * frame, and whose scroll position it keeps.
-   */
-  ref?: Ref<HTMLDivElement> | undefined;
-  /** Try again on the line of a document that failed to load. */
-  retry?: FrameRetry | undefined;
-  /** The scheme of the shown render. */
-  scheme: FrameScheme;
-}) {
-  return (
-    <div
-      className="mbk-stage-embed mbk-reset"
-      data-mokly-scroll="embed"
-      data-preview-color-scheme={scheme}
-      ref={ref}
-    >
-      <FrameContent error={error} retry={retry}>
-        {children}
-      </FrameContent>
-    </div>
-  );
-}
-
-/**
  * The `<iframe>` element of a preview, sandboxed without scripts. The host
  * passes its document as `src` or `srcDoc` and the attributes through which
  * it finds and drives the frame, and it reads the document through `ref`.
