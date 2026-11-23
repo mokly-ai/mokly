@@ -1,0 +1,33 @@
+# No token holds the Canvas depth
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-23, from `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`. The primary orchestrator chose on 2026-11-23 to record the three depth tokens as this item rather than add them in that branch.
+- **Location:** The token package: `packages/tokens/src/tokens.ts:188-210` (the `radius` and `shadow` tables) and `packages/tokens/src/token-css.ts:57`, `:63`, `:89` and `:95` (where `tokenCss` and `responsiveTokenCss` emit them). The sheet that declares the depth today: `docs/mockups/styles/product/viewer-canvas-depth.css`. Its readers: `docs/mockups/styles/product/viewer-canvas-stage.css`, `viewer-canvas-panels.css`, `viewer-canvas-settings.css` and `viewer-canvas-check.css`, `packages/app/src/viewer/panel.tsx` and `packages/app/src/settings/surface.tsx`. The requirement: `docs/protocol/cloud/design-tokens.md`, sections "Ownership And Application" and "Radius, Elevation, And Focus", and the status line of that page. The check: `packages/app/src/_tests_/viewer/canvas-depth.spec.ts`.
+- **Reason:** The branch that drew the cloud's stage, panels and settings dialog in the Canvas depth kept its scope to the look, and the token package is read by the catalogue, the application and the site.
+
+- **Terms:**
+  - **Canvas depth:** the 12px radius and the two shadows of a surface that floats over the viewer's canvas: `shadow.float` for a card on the canvas, such as the stage's State card and build card, and `shadow.deep` for a panel or the settings dialog over it.
+  - **Shade:** the colour that the depth shadows mix: the `text` colour in light and the `background` colour in dark, because a light ink would glow around a dark card.
+  - **Token package:** the `@mokly-cloud/tokens` npm workspace under `packages/tokens`. `token-css.ts` turns its tables into the `--mk-*` custom properties of every catalogue document and of the application's document root.
+- **Background:**
+  - `docs/protocol/cloud/design-tokens.md` says that the token package owns the radii and the shadows, and that a stylesheet never duplicates a value and never declares a token.
+  - Its radius table lists `float` as 12px, for cards, panels and dialogs over the canvas.
+  - Its shadow table lists `float` as `0 1px 1px` at 4%, `0 4px 10px -2px` at 6% and `0 18px 36px -14px` at 14% in light, and as `0 6px 14px -4px` at 50% and `0 22px 44px -16px` at 60% in dark.
+  - It lists `deep` as `0 1px 1px` at 5%, `0 10px 20px -6px` at 8% and `0 40px 80px -28px` at 26% in light, and as `0 14px 28px -8px` at 55% and `0 48px 96px -32px` at 70% in dark.
+  - Each layer of `float` and `deep` mixes the shade with `color-mix()` toward transparent at the given share.
+  - `packages/tokens/src/tokens.ts` has no `float` radius and only the `none`, `small`, `medium` and `large` shadows, so no `--mk-radius-float`, `--mk-shadow-float` or `--mk-shadow-deep` exists.
+  - `viewer-canvas-depth.css` declares the same values itself, as `--fo-canvas-radius`, `--fo-canvas-shadow-float` and `--fo-canvas-shadow-deep` on the element that carries `data-color-scheme`. The four Canvas sheets read them, and the application passes `var(--fo-canvas-radius)` and `var(--fo-canvas-shadow-deep)` to the package modal's public `surfaceStyle` for the panels and the settings dialog.
+  - The same sheet also declares the shade and the scrim, `--fo-canvas-shade` and `--fo-canvas-scrim`, which no token table lists. `plans/follow-ups/modal-backdrop-misses-canvas-scrim.md` covers the scrim.
+- **Problem:** The Canvas depth lives in a stylesheet rather than in the token package, so the stylesheet declares three values that the token tables own.
+- **Impact if no action:** A change to the depth must change the sheet and the token tables by hand, and the site and any new surface cannot read the depth as a token. Each new reader of `--fo-canvas-*` adds a name to move later.
+- **Root question:** Where do the catalogue and the application read the Canvas depth from?
+- **Options:**
+  - **A.** Add `radius.float` and, for each scheme, `shadow.float` and `shadow.deep` to `packages/tokens/src/tokens.ts`, with each layer mixing the scheme's shade as the table gives, so `token-css.ts` emits `--mk-radius-float`, `--mk-shadow-float` and `--mk-shadow-deep`. Then make `viewer-canvas-depth.css` stop declaring the three values, point the four Canvas sheets and the application's two `surfaceStyle` values at the token properties, and keep only the shade and the scrim in the sheet. Effort: Small.
+  - **B.** Keep the values in the sheet, and change `docs/protocol/cloud/design-tokens.md` to name `viewer-canvas-depth.css` as their owner and to drop `float` and `deep` from its tables. Effort: Small.
+- **Left out:** A copy of the values in both places, because the token rule exists to stop that drift.
+- **Wider fix:** None, because the rule that a stylesheet never declares a token is already in force, and only this sheet breaks it.
+- **Previous examples:** None found.
+- **Recommendation:** A. It applies the ownership that `docs/protocol/cloud/design-tokens.md` already states, and `canvas-depth.spec.ts` keeps checking the computed radius and shadows of the stage card, a panel and the settings dialog.
+- **Action:** fix after merge, apply A, because the primary orchestrator chose on 2026-11-23 to keep the token change out of the branch that restyled the surfaces.
+- **Done when:** `viewer-canvas-depth.css` declares no radius and no shadow, the catalogue and the application read the three depth tokens, and the status line of `docs/protocol/cloud/design-tokens.md` no longer names this item.
