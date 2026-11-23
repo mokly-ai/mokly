@@ -117,7 +117,7 @@ export async function chooseFilter(
 /** The comparison mode buttons by their visible names. */
 export function modeButton(
   page: Page,
-  name: "Current" | "Side by side" | "Overlay" | "Difference",
+  name: "Current" | "Side by side" | "Overlay" | "Difference" | "Swipe",
 ): Locator {
   return page
     .getByRole("group", { name: "Comparison mode" })
@@ -128,9 +128,19 @@ const MODES = {
   "Side by side": "side",
   Overlay: "overlay",
   Difference: "difference",
+  Swipe: "swipe",
 } as const;
 
-/** Select a diff mode and wait for its panes to hold the loaded versions. */
+/** Every version's frame that the canvas compares on its frames. */
+export function comparisonFrames(page: Page): Locator {
+  return page.locator("[data-mokly-stage] iframe[data-mokly-comparison-frame]");
+}
+
+/**
+ * Select a diff mode and wait for its frames to hold the loaded versions:
+ * `frames` documents in all, two for each compared frame of a stacked mode,
+ * and two for the compared frame of Side by side.
+ */
 export async function showMode(
   page: Page,
   name: keyof typeof MODES,
@@ -141,11 +151,9 @@ export async function showMode(
   await modeButton(page, name).click();
   await expect(modeButton(page, name)).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.locator(`[data-diff-stage] [data-compare-mode="${MODES[name]}"]`),
+    page.locator(`[data-mokly-stage] [data-compare-mode="${MODES[name]}"]`),
   ).not.toHaveCount(0);
-  await expect(
-    page.locator("[data-diff-stage] iframe[data-mokly-comparison-frame]"),
-  ).toHaveCount(frames);
+  await expect(comparisonFrames(page)).toHaveCount(frames);
 }
 
 /**

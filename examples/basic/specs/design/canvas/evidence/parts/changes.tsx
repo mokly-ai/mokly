@@ -66,6 +66,7 @@ export function StylesChanges({
       <ChangesEvidence
         excluded={facts.excluded}
         files={facts.files}
+        ignored={facts.ignored}
         initial
         reasons={["dependency"]}
       />

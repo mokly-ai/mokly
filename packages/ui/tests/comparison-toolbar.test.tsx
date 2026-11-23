@@ -42,7 +42,7 @@ const SWITCH =
   /<label class="mbk-diff-sync mbk-reset"( hidden="")?><input class="mbk-reset" data-diff-scroll-together="" role="switch" type="checkbox"( checked="")?\/><span aria-hidden="true" class="mbk-diff-sync-track mbk-reset"><\/span>Scroll together<\/label>/;
 
 test("Scroll together sits between the modes and Refresh in every diff mode", () => {
-  for (const mode of ["side", "overlay", "difference"] as const) {
+  for (const mode of ["side", "overlay", "difference", "swipe"] as const) {
     const markup = band(mode);
     const match = SWITCH.exec(markup);
     assert.ok(match, mode);
@@ -79,17 +79,18 @@ test("the mode group presses the shown mode and reports each chosen mode", () =>
   const buttons = within(group).getAllByRole("button");
   assert.deepEqual(
     buttons.map((button) => button.textContent),
-    ["Current", "Side by side", "Overlay", "Difference"],
+    ["Current", "Side by side", "Overlay", "Difference", "Swipe"],
   );
   assert.deepEqual(
     buttons.map((button) => button.getAttribute("aria-pressed")),
-    ["false", "true", "false", "false"],
+    ["false", "true", "false", "false", "false"],
   );
-  for (const name of ["Overlay", "Difference", "Current"])
+  for (const name of ["Overlay", "Difference", "Swipe", "Current"])
     fireEvent.click(within(group).getByRole("button", { name }));
   assert.deepEqual(calls, [
     ["mode", "overlay"],
     ["mode", "difference"],
+    ["mode", "swipe"],
     ["mode", "current"],
   ]);
 });

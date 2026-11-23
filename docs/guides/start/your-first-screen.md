@@ -50,8 +50,9 @@ npx mokly serve
 ```
 
 Open the listening URL printed in the terminal. Select Welcome in the tree.
-Switch between its viewports and its First visit variant. Save an edit to
-the HTML file to refresh the visible view.
+The canvas shows its Desktop frame beside its Mobile frame. Open its First
+visit variant from the tree or from Variants in Inspect. Save an edit to the
+HTML file to refresh the frames.
 
 Read [Screens](/docs/authoring/screens/) for metadata and body rules.
 Read [Components](/docs/authoring/components/) to reuse shared markup.

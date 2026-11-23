@@ -62,13 +62,14 @@ a step names the variant.
 
 ## How a flow behaves
 
-The flow page shows its steps in order, each framing the document that screen
-already publishes; the flow writes no document of its own. A link whose
-destination is a use case opens the flow page. When a screen changes, Changes
-carries that through to the flows it appears in, and moving a screen to a new
-path means updating the steps and memberships that name it, because a step
-that names a path with no screen fails the build. The error names the
-missing path; it does not detect where a screen moved.
+The flow opens on the canvas as one row of step frames, in step order. Each
+frame shows the document that its screen already publishes; the flow writes no
+document of its own. A link whose destination is a use case opens the flow.
+When a screen changes, Changes carries that through to the flows it appears
+in, and moving a screen to a new path means updating the steps and
+memberships that name it, because a step that names a path with no screen
+fails the build. The error names the missing path; it does not detect where a
+screen moved.
 
 ## Exported types
 

@@ -77,7 +77,6 @@ test("stored preferences restore disclosures, Details and a clamped width", () =
           "section:specs": false,
           "folder:specs:product": "yes",
         }),
-        "mokly:details-disclosure": "open",
         "mokly:navigation-width:v1": "9999",
       }),
     },
@@ -86,7 +85,6 @@ test("stored preferences restore disclosures, Details and a clamped width", () =
   assert.deepEqual(preferences, {
     colorScheme: "dark",
     disclosures: { "section:specs": false },
-    detailsOpen: true,
     navigationMaximum: 480,
     navigationWidth: 480,
   });
@@ -121,7 +119,6 @@ test("a blocked or invalid store is a missing preference", () => {
         innerWidth: 900,
         localStorage: storage({
           "mokly:nav-disclosure:v4": "not json",
-          "mokly:details-disclosure": "maybe",
           "mokly:navigation-width:v1": "wide",
         }),
       },

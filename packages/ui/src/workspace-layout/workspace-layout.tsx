@@ -1,8 +1,8 @@
 /**
  * The workspace of a screen or a component. In the Canvas layout the preview
  * fills the canvas, the entry bar of the compact layout stands over its top,
- * and the right panel, which the host gives with the header, the variant bar
- * and the inspector in it, floats over its right edge. Without the panel the
+ * and the right panel, which the host gives with its tabs, Inspect and
+ * Changes, floats over its right edge. Without the panel the
  * header and the variant bar stand above the panes, where the preview fills
  * the space beside the inspector, as a static depiction of the earlier
  * layout draws them. The preview is busy while a render of it is pending.
@@ -36,7 +36,7 @@ export function WorkspaceLayout({
   overlay?: ReactNode;
   /**
    * The right panel that floats over the canvas, such as a `FloatingPanel`
-   * with the header, the variant bar and the inspector in it. With it, the
+   * with the right panel's tabs as its head. With it, the
    * layout leaves `header`, `variantBar` and `inspector` out.
    */
   panel?: ReactNode;

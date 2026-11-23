@@ -36,7 +36,7 @@ function others(shown: ComparisonMode) {
 test("without an address or interactive, the band keeps its buttons exactly", () => {
   assert.equal(
     renderToStaticMarkup(<ComparisonToolbar {...props("side")} />),
-    '<div class="mbk-diff-toolbar mbk-reset"><span aria-label="Comparison mode" class="mbk-seg mbk-reset" role="group"><button aria-pressed="false" data-diff-mode="current" class="mbk-reset" type="button">Current</button><button aria-pressed="true" data-diff-mode="side" class="mbk-reset" type="button">Side by side</button><button aria-pressed="false" data-diff-mode="overlay" class="mbk-reset" type="button">Overlay</button><button aria-pressed="false" data-diff-mode="difference" class="mbk-reset" type="button">Difference</button></span><label class="mbk-diff-sync mbk-reset"><input class="mbk-reset" data-diff-scroll-together="" role="switch" type="checkbox" checked=""/><span aria-hidden="true" class="mbk-diff-sync-track mbk-reset"></span>Scroll together</label><button aria-label="Refresh comparison" class="mbk-diff-refresh mbk-reset" data-diff-refresh="" title="Refresh comparison" type="button"><svg aria-hidden="true" class="mbk-reset" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15"><path d="M19.5 12a7.5 7.5 0 1 1-2.25-5.4"></path><path d="M17.7 2.85v4.2h-4.2"></path></svg></button></div>',
+    '<div class="mbk-diff-toolbar mbk-reset"><span aria-label="Comparison mode" class="mbk-seg mbk-reset" role="group"><button aria-pressed="false" data-diff-mode="current" class="mbk-reset" type="button">Current</button><button aria-pressed="true" data-diff-mode="side" class="mbk-reset" type="button">Side by side</button><button aria-pressed="false" data-diff-mode="overlay" class="mbk-reset" type="button">Overlay</button><button aria-pressed="false" data-diff-mode="difference" class="mbk-reset" type="button">Difference</button><button aria-pressed="false" data-diff-mode="swipe" class="mbk-reset" type="button">Swipe</button></span><label class="mbk-diff-sync mbk-reset"><input class="mbk-reset" data-diff-scroll-together="" role="switch" type="checkbox" checked=""/><span aria-hidden="true" class="mbk-diff-sync-track mbk-reset"></span>Scroll together</label><button aria-label="Refresh comparison" class="mbk-diff-refresh mbk-reset" data-diff-refresh="" title="Refresh comparison" type="button"><svg aria-hidden="true" class="mbk-reset" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15"><path d="M19.5 12a7.5 7.5 0 1 1-2.25-5.4"></path><path d="M17.7 2.85v4.2h-4.2"></path></svg></button></div>',
   );
 });
 
@@ -62,6 +62,7 @@ test("a mode with an address is a link, and the shown mode's link is the current
       ["Side by side", "#side", null, "side"],
       ["Overlay", "#overlay", "page", "overlay"],
       ["Difference", "#difference", null, "difference"],
+      ["Swipe", "#swipe", null, "swipe"],
     ],
   );
   assertSameList(within(group).queryAllByRole("button"), []);
@@ -83,6 +84,7 @@ test("a mode without an address stays a button that reports the choice beside th
       ["Current", "../current/index.html"],
       ["Overlay", "../overlay/index.html"],
       ["Difference", "../difference/index.html"],
+      ["Swipe", "../swipe/index.html"],
     ],
   );
   const shown = within(group).getByRole("button", { name: "Side by side" });
@@ -102,7 +104,7 @@ test("a band that is not interactive draws its other modes and Refresh as inert 
   );
   assertSameList(screen.queryAllByRole("button"), []);
   const group = screen.getByRole("group", { name: "Comparison mode" });
-  assert.equal(within(group).getAllByRole("link").length, 3);
+  assert.equal(within(group).getAllByRole("link").length, 4);
   const shown = group.querySelector('[data-diff-mode="difference"]')!;
   assert.equal(shown.tagName, "SPAN");
   assert.equal(shown.textContent, "Difference");
@@ -131,6 +133,7 @@ test("with no address at all, an inert band marks only the shown mode", () => {
       ["SPAN", "Side by side", null],
       ["SPAN", "Overlay", null],
       ["SPAN", "Difference", null],
+      ["SPAN", "Swipe", null],
     ],
   );
   assertSameElement(screen.queryByRole("switch"), null);

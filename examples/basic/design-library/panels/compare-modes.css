@@ -73,6 +73,17 @@ a.cv-mode:hover {
   background: var(--cv-surface);
 }
 
+/* The shown mode's tile draws its own signal edge as a shadow, so its focus
+   repeats the glow over that edge, as a package control does. */
+.cv-mode[aria-current]:focus-visible {
+  box-shadow:
+    var(
+      --mbk-focus-glow,
+      0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+    ),
+    inset 0 0 0 0.5px var(--cv-signal-deep);
+}
+
 /* Side by side compares one frame, which its chip names. */
 .cv-mode-frames {
   display: flex;
@@ -172,9 +183,22 @@ a.cv-mode:hover {
   transform: translateX(14px);
 }
 
+/* The track draws the focus glow of the transparent switch over it: the
+   package's --mbk-focus-glow, or the same mix of the Canvas signal where no
+   package element passes that property down. Forced colours drop the glow,
+   so there the track takes the system outline. */
 .cv-mode-switch > input:focus-visible + .cv-mode-switch-track {
-  outline: 2px solid var(--cv-signal-deep);
-  outline-offset: 2px;
+  box-shadow: var(
+    --mbk-focus-glow,
+    0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+  );
+}
+
+@media (forced-colors: active) {
+  .cv-mode-switch > input:focus-visible + .cv-mode-switch-track {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 .cv-mode-refresh {

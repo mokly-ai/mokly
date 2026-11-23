@@ -80,22 +80,19 @@ const EXEMPT_CONTROL_SURFACES = new Map([
  * Every rule the audit collects, so a failure names the rule that appeared or
  * vanished instead of only reporting that the total moved. A component that
  * `@mokly/ui` provides is audited in the package stylesheet that its library
- * sheet imports.
+ * sheet imports. Keyboard focus draws as a glow, a shadow rather than a
+ * boundary, in the package controls and in the design sheets alike, so no
+ * focus rule is listed; packages/ui/tests/palette.test.ts holds the glow at
+ * 3:1.
  */
 const AUDITED_BOUNDARIES = [
   "design-components.css .ce-badge",
-  "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "design-canvas-inspect.css .cv-variant[aria-current] > .cv-variant-mark",
   "design-library/inspector/frames-filter.css .cv-ff:has(> input:checked)",
-  "design-library/inspector/frames-filter.css .cv-ff:has(> input:focus-visible)",
   "design-library/inspector/frames-filter.css .cv-switch > input:checked + .cv-switch-track",
-  "design-library/inspector/frames-filter.css .cv-switch > input:focus-visible + .cv-switch-track",
   "design-library/panels/compare-modes.css .cv-mode-frame[aria-current]",
   "design-library/panels/compare-modes.css .cv-mode-switch > input:checked + .cv-mode-switch-track",
-  "design-library/panels/compare-modes.css .cv-mode-switch > input:focus-visible + .cv-mode-switch-track",
   "design-library/panels/compare-modes.css .cv-mode[aria-current]",
-  // The package controls draw keyboard focus as a glow, a shadow rather than a
-  // boundary; packages/ui/tests/palette.test.ts holds the glow at 3:1.
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
   "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
   "packages/ui/src/controls-panel/controls-panel.css .mbk-control-alert",

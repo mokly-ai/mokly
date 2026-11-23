@@ -4,7 +4,10 @@ import { changeStepper } from "../../../library/panels/change-stepper.js";
 import { compareModes } from "../../../library/panels/compare-modes.js";
 import { MiniToolbarCard } from "../../../parts/mini_views.js";
 import { reasonEvidence } from "../../../parts/reason_sentences.js";
-import { ChangesCompared } from "../../parts/changes.js";
+import {
+  ChangesCompared,
+  WELCOME_EXCLUDED_CONTENT,
+} from "../../parts/changes.js";
 import type { CompareFrame } from "../../parts/changes_sketches.js";
 import { sideBySideFrames, type CanvasFrameSpec } from "../../parts/frames.js";
 import { InspectSection } from "../../parts/inspect.js";
@@ -144,9 +147,10 @@ export function directFrames(): CanvasFrameSpec[] {
  * five changes: the stepper, Compared, the compare modes in Side by side
  * with the compared frame, and the comparison details, where the panel
  * opens. They read Welcome's two reasons, pair the props of its own Action
- * in each view, and link the changed Action. No artboard shows the Action's
- * own changes on this branch, or Welcome in another mode or frame, so Next
- * change, the other tiles, and the other chips are pictures.
+ * in each view, link the changed Action, and name Welcome's excluded
+ * content. No artboard shows the Action's own changes on this branch, or
+ * Welcome in another mode or frame, so Next change, the other tiles, and the
+ * other chips are pictures.
  */
 export function DirectChanges({ frame }: { frame: CompareFrame }) {
   return (
@@ -170,6 +174,7 @@ export function DirectChanges({ frame }: { frame: CompareFrame }) {
       </InspectSection>
       <ChangesDetails
         changedComponents={changedAction()}
+        ignored={WELCOME_EXCLUDED_CONTENT}
         initial
         inputChanges={inputChanges()}
         reasons={reasonEvidence(["inputs", "material"])}

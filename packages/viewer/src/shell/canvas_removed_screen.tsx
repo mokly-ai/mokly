@@ -21,6 +21,7 @@ import {
   MOBILE_FRAME_SIZE,
   type CanvasFrameSize,
 } from "./canvas_frame_size.js";
+import type { CanvasScheme } from "./canvas_frames.js";
 import { useCanvasLayout } from "./canvas_layout.js";
 import {
   removedScreenFrames,
@@ -87,16 +88,21 @@ export function RemovedScreenSection({
   data,
   presentations,
   retry,
+  schemes,
   viewport,
   views,
 }: RemovedSectionProps & {
+  /** The schemes whose rows the Frames filter shows. */
+  schemes?: readonly CanvasScheme[] | undefined;
   viewport: ViewerSelection["viewport"];
   views: readonly ScreenView[];
 }) {
   const compact = !useCanvasLayout();
-  const shown = removedScreenFrames(views, { compact, viewport }).filter(
-    (frame) => !frame.hidden,
-  );
+  const shown = removedScreenFrames(views, {
+    compact,
+    schemes: compact ? undefined : schemes,
+    viewport,
+  }).filter((frame) => !frame.hidden);
   // The compact layout shows the frame of the selection's viewport and
   // scheme alone, which the entry bar's picker picks, named as a current
   // screen's one frame is.
@@ -121,7 +127,7 @@ export function RemovedScreenSection({
     <RemovedSection
       colorScheme={colorScheme}
       data={data}
-      fitKey={`removed:${data.path}:${viewport}${picked ? `:${picked}` : ""}`}
+      fitKey={`removed:${data.path}:${viewport}:${schemes?.join(",") ?? ""}${picked ? `:${picked}` : ""}`}
       frames={frames.map((plan) => {
         const size =
           plan.viewport === "desktop" ? DESKTOP_FRAME_SIZE : MOBILE_FRAME_SIZE;

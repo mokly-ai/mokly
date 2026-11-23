@@ -7,10 +7,10 @@ import type { GeneratedComponentView } from "../src/components/views.js";
 import {
   compactFrames,
   pickedScreenFrame,
-  pickedSetFrame,
 } from "../src/shell/canvas_compact.js";
 import {
   canvasEditContexts,
+  EVERY_FRAME,
   withEditPreviews,
   workspaceFrames,
 } from "../src/shell/canvas_frames.js";
@@ -36,7 +36,7 @@ function rendered(view: GeneratedComponentView): GeneratedComponentView {
 
 test("a live edit of a row renders the row's desktop views in both schemes", () => {
   const data = workspace("components/action/default", true);
-  const frames = workspaceFrames(data, "both");
+  const frames = workspaceFrames(data, EVERY_FRAME);
   const stage = data.views.slice(0, 1);
   assert.deepEqual(
     axes(
@@ -64,13 +64,13 @@ test("a live edit of a row renders the row's desktop views in both schemes", () 
   );
 });
 
-test("on the wide canvas a screen's edit renders every frame of the viewport choice", () => {
+test("on the wide canvas a screen's edit renders every frame that the Frames filter shows", () => {
   const data = workspace("product/browse/home", true);
   assert.deepEqual(
     axes(
       canvasEditContexts(
         data.views,
-        workspaceFrames(data, "both"),
+        workspaceFrames(data, EVERY_FRAME),
         undefined,
         [],
       ),
@@ -87,7 +87,10 @@ test("on the wide canvas a screen's edit renders every frame of the viewport cho
     axes(
       canvasEditContexts(
         data.views,
-        workspaceFrames(data, "desktop"),
+        workspaceFrames(data, {
+          schemes: ["light", "dark"],
+          viewports: ["desktop"],
+        }),
         undefined,
         [],
       ),
@@ -101,7 +104,7 @@ test("on the wide canvas a screen's edit renders every frame of the viewport cho
 
 test("in the compact layout an edit renders the picked frame alone, and a set's own route its whole row", () => {
   const screen = workspace("product/browse/home", true);
-  const frames = workspaceFrames(screen, "both");
+  const frames = workspaceFrames(screen, EVERY_FRAME);
   const dark = compactFrames(
     frames,
     pickedScreenFrame(frames, { colorScheme: "dark", viewport: "desktop" }),
@@ -111,11 +114,8 @@ test("in the compact layout an edit renders the picked frame alone, and a set's 
     [[undefined, "desktop", "dark"]],
   );
   const variant = workspace("components/action/default", true);
-  const set = workspaceFrames(variant, "both");
-  const picked = compactFrames(
-    set,
-    pickedSetFrame(set, "components/action/default", "light"),
-  );
+  const set = workspaceFrames(variant, EVERY_FRAME);
+  const picked = compactFrames(set, "components/action/default:light");
   assert.deepEqual(
     axes(
       canvasEditContexts(
@@ -127,12 +127,10 @@ test("in the compact layout an edit renders the picked frame alone, and a set's 
     ),
     [["components/action/default", "desktop", "light"]],
   );
-  // The set's own route picks no frame, so its row's frames both show.
+  // Without a selected frame no frame is picked, so the row's frames both
+  // show.
   const own = workspace("components/action", true);
-  const whole = compactFrames(
-    workspaceFrames(own, "both"),
-    pickedSetFrame(workspaceFrames(own, "both"), undefined, "light"),
-  );
+  const whole = compactFrames(workspaceFrames(own, EVERY_FRAME), undefined);
   assert.deepEqual(
     axes(canvasEditContexts(own.views, whole, "components/action", [])),
     [
@@ -151,7 +149,7 @@ test("a screen's frame shows its view's temporary render, and else its saved doc
     view === darkDesktop ? rendered(view) : view,
   );
   assert.deepEqual(
-    withEditPreviews(workspaceFrames(data, "both"), edited).map((frame) => [
+    withEditPreviews(workspaceFrames(data, EVERY_FRAME), edited).map((frame) => [
       frame.key,
       frame.preview?.path,
     ]),

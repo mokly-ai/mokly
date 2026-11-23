@@ -31,8 +31,7 @@ import {
   type ControlDraftField,
   type ControlTarget,
 } from "./control_values.js";
-import type { WorkspaceData } from "./workspace_data.js";
-import { propValues, WorkspaceProps } from "./workspace_props.js";
+import { propValues, UncontrolledProps } from "./workspace_props.js";
 
 export type { ControlsFocus } from "@mokly/ui/controls-panel";
 
@@ -68,7 +67,6 @@ function controlsAlert(
 
 /** Render the fields with their state, or the saved props with the reason. */
 export function ComponentControlsPanel({
-  data,
   focus,
   mode,
   onChange,
@@ -79,7 +77,6 @@ export function ComponentControlsPanel({
   state,
   target,
 }: {
-  data: WorkspaceData;
   /** Name an element that a recovery action can focus. */
   focus?: (name: ControlsFocus) => RefCallback<HTMLElement>;
   mode: ControlsMode;
@@ -131,12 +128,9 @@ export function ComponentControlsPanel({
       dirty={state.dirty}
       extra={
         Object.keys(uncontrolled).length || target.suppliedSlots.length ? (
-          <WorkspaceProps
-            data={data}
-            selection={{
-              props: encodeProps(uncontrolled),
-              slots: target.suppliedSlots,
-            }}
+          <UncontrolledProps
+            props={encodeProps(uncontrolled)}
+            slots={target.suppliedSlots}
           />
         ) : null
       }

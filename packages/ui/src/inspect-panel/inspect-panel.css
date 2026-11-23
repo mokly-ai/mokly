@@ -1,0 +1,230 @@
+/* The Inspect tab of the right panel: its sections, each under a hairline,
+   the head with the entry's title, kind and status, the Details rows in
+   Inspect's type, the variant list, and the folded sections, whose heads
+   are native disclosures. */
+.mbk-inspect {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--cv-text);
+  font-family: var(--cv-sans);
+}
+
+.mbk-inspect-section {
+  padding: 14px;
+  border-bottom: 1px solid var(--cv-border);
+  scroll-margin-top: 4px;
+}
+
+.mbk-inspect-section:last-child {
+  border-bottom: 0;
+}
+
+.mbk-inspect-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 18px;
+  margin: 0 0 10px;
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mbk-inspect-count {
+  color: var(--cv-text-muted);
+  font: 400 11.5px/1 var(--cv-mono);
+}
+
+/* The head: the title with its kind and status, the description, and the
+   Details rows. */
+.mbk-inspect-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mbk-inspect-title > h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+.mbk-inspect-title .mbk-entry-status {
+  padding: 3px 6px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.mbk-inspect-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cv-text-secondary);
+  font: 500 11px/1 var(--cv-mono);
+}
+
+.mbk-inspect-description {
+  margin: 6px 0 0;
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.mbk-inspect-rows {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.mbk-inspect-rows:empty {
+  display: none;
+}
+
+/* The metadata rows read as Inspect's property rows: the label in the
+   panel's quiet text, then the value. A path wraps between its folders. */
+.mbk-inspect .mbk-meta-row {
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 24px;
+}
+
+.mbk-inspect .mbk-meta-k {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mbk-inspect .mbk-meta-v {
+  color: var(--cv-text);
+  font-size: 12px;
+}
+
+.mbk-inspect .mbk-code {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.mbk-inspect-rationale,
+.mbk-inspect-hint {
+  margin: 0;
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mbk-inspect-hint {
+  color: var(--cv-text-muted);
+}
+
+/* The variants: a radio list whose shown or chosen variant is checked. */
+.mbk-inspect-variants {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mbk-inspect-variant {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--cv-text-secondary);
+  font: 400 13px/1 var(--cv-sans);
+  text-align: left;
+  text-decoration: none;
+}
+
+.mbk-inspect-variant:is(a, button) {
+  cursor: pointer;
+}
+
+.mbk-inspect-variant:is(a, button):hover {
+  background: var(--chrome-hover);
+  color: var(--cv-text);
+}
+
+.mbk-inspect-variant-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--cv-border-strong);
+  border-radius: 50%;
+}
+
+.mbk-inspect-variant[data-checked] {
+  color: var(--cv-text);
+  font-weight: 560;
+}
+
+.mbk-inspect-variant[data-checked] > .mbk-inspect-variant-mark {
+  border: 4.5px solid var(--cv-signal-deep);
+}
+
+/* A folded section: its head is the native disclosure's summary. */
+.mbk-inspect-fold > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.mbk-inspect-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mbk-inspect-fold:not([open]) > summary {
+  margin-bottom: 0;
+}
+
+.mbk-inspect-fold-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mbk-inspect-fold > summary > svg {
+  flex: none;
+  color: var(--cv-text-muted);
+  transition: transform 120ms ease;
+}
+
+.mbk-inspect-fold[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.mbk-inspect-fold-body {
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+}
+
+/* The folded sections set the shipped panels that they hold in Inspect's
+   type: the usage list's headings, the instance tree's rows, and the props
+   form in the panel's width. */
+.mbk-inspect-fold-body [data-usage-section] > h3 {
+  margin: 0 0 4px;
+  color: var(--cv-text);
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.mbk-inspect-fold-body .mbk-instance-select {
+  padding: 5px 8px;
+  font-size: 12.5px;
+}
+
+.mbk-inspect-fold-body .mbk-control-field {
+  grid-template-columns: 112px minmax(0, 1fr);
+}
