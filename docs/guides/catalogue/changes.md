@@ -24,7 +24,7 @@ with or without registered components. A source move that keeps the entry path f
 entry path appears as Moved. A folder title change changes no entry.
 Review-ignore can omit changes inside a marked region. Changed styles that
 reach nothing on a view are examined and excluded. Evidence remains available
-in Details even when no Changes row exists.
+in the right panel even when no Changes row exists.
 
 ## How stylesheet changes are listed
 
@@ -55,8 +55,8 @@ opens that screen's comparison in Side by side when the linked view has a base
 side, also when Changes lists the screen for another reason, such as a move.
 An Added consumer opens Current because its view has no base side. A saved
 variant that uses the changed component has its own link. An embedded viewer
-opens the screen in Current, where the comparison band offers the same
-comparison when the destination view is eligible.
+opens the screen in Current, where its Changes tab offers the same comparison
+when the destination view is eligible.
 
 For example, a configured button rule can change the button component and
 leave a screen affected-only. A component's declared stylesheet can instead
@@ -87,7 +87,7 @@ visible there.
 Because an entry's path is its identity, moving a file to another directory
 or renaming it gives the entry a new path. Changes pairs the entry at the new
 path with the baseline entry it came from instead of reporting a removal and
-an addition, and labels the row Moved; the details show the previous path. A
+an addition, and labels the row Moved; Inspect shows the previous path. A
 pure move stays in Changes so that you can see it, without counting as an
 output change, and a move with edits offers the usual comparison against the
 version at the old path.
@@ -129,33 +129,50 @@ the screen at its new place, labelled Removed.
 
 ## Compare a screen
 
-A shown view with Changed status offers Current, Side by side, Overlay and
-Difference beneath its heading, from All as well as from Changes, and starts in
-Current. A shown view known to be unchanged reads Unmodified with no comparison,
-unless it uses a changed component: then it reads Unmodified but still offers
-the comparison, whether or not Changes lists the screen or component, and it
-reads "Components this screen uses changed". A screen that only changed
-components affect stays out of Changes.
+A changed screen or component has a Changes tab in the right panel, from All
+as well as from Changes. The tab holds Change N of M with Previous change and
+Next change, then Compared, which names the versions: the branch point on your
+base, such as `origin/main`, and This branch. The compare modes and the
+comparison details follow. The modes are Current (1), Side by side (2),
+Overlay (3), Difference (4) and Swipe (5), and while the tab is selected a
+mode's number key chooses it. A shown view with Changed status offers every
+mode and starts in Current. A shown view known to be unchanged reads
+Unmodified with no comparison, unless it uses a changed component: then it
+reads Unmodified but still offers the comparison, whether or not Changes lists
+the screen or component, and it reads "Components this screen uses changed".
+A screen that only changed components affect stays out of Changes, so its tab
+has no Change N of M. A flow or a page has no compare mode; compare a flow's
+steps on their screens.
 
-Comparison snapshots are generated when you select one of those options, not
-while you browse, and they capture the selected screen and its resources
-rather than rebuilding the catalogue. Changing the viewport, the scheme or the
-comparison mode renews the snapshots before using them, and an expired
-comparison is reacquired for you.
+The canvas shows the chosen mode only while the Changes tab is selected;
+Inspect shows the current frames, and a return to Changes shows the mode again
+without a new load. Comparison snapshots are generated when you choose a mode
+other than Current, not while you browse, and they capture the selected screen
+and its resources rather than rebuilding the catalogue. Changing the shown
+frames, the compared frame or the mode renews the snapshots before using them,
+and an expired comparison is reacquired for you.
 
-Overlay and Difference show both versions inside one frame, and Side by side
-shows one frame per version. Pages and scrolling panels move together by
-default. Each version keeps the size of the device, so full-height sections,
-fixed bars, and sticky headers look just as they do in Current. The wheel,
-touch, scroll keys, and anchors use the panel you are working in before moving
-the whole page.
+Every mode compares each shown frame with its own view. Overlay, Difference
+and Swipe show both versions inside each frame: Overlay shows the current
+version at half opacity, Difference blends the two, and Swipe splits every
+frame at one divider, with the version before on its left. Drag the grip of
+the divider on any frame, or focus the grip and use the arrow keys, Home and
+End, and the divider moves on every frame. Side by side shows one frame's two
+versions next to each other, tagged Before and Current, and a chip for each
+frame in the Changes tab chooses the frame. Pages and scrolling panels move
+together by default. Each version keeps the size of its frame, so full-height
+sections, fixed bars, and sticky headers look just as they do in Current; a
+component's frame takes the larger width and height of its two versions. The
+wheel, touch, scroll keys, and anchors use the panel you are working in before
+moving the whole page.
 
-Use **Scroll together** after the comparison modes to unlink or relink the
-versions. Turning it off leaves every page and panel where it is. In Side by
-side, each version then scrolls independently. Overlay and Difference still
-have one page scrollbar because their versions share one frame, but their
-panels can move apart. Turning it on again aligns the other version with the
-one you scrolled last.
+Every mode other than Current adds **Scroll together** and Refresh to the
+Changes tab. Refresh loads the comparison again, and Scroll together unlinks
+or relinks the versions. Turning it off leaves every page and panel where it
+is. In Side by side, each version then scrolls independently. Overlay,
+Difference and Swipe still have one page scrollbar in each frame because their
+versions share it, but their panels can move apart. Turning it on again aligns
+the other version with the one you scrolled last.
 
 Mokly pairs the same panel across versions automatically. If an edit moves the
 panel or changes most of its wording, keep the same `id` on it in both versions
@@ -163,8 +180,9 @@ or give it the same `data-mokly-scroll` name. When one version's page or panel
 is shorter, it stops at its own end while the other can continue; Mokly never
 stretches or moves content inside the screen to hide that difference.
 
-Links and forms inside a comparison do nothing. An anchor reveals its target in
-that pane, and the other version follows while Scroll together is on. Compare a
+Links and forms inside a comparison do nothing, and a click on a frame selects
+nothing while the Changes tab is selected. An anchor reveals its target in that
+pane, and the other version follows while Scroll together is on. Compare a
 linked screen through the catalogue, where it has its own comparison.
 
 ## Variants and views
@@ -174,35 +192,38 @@ When only a variant changed, the parent still shows a changed mark on its row
 so the group stays visible, and opening the parent from Changes takes you to
 the first changed variant. A deleted variant keeps a Removed row under the
 parent it belonged to, shown in Changes and hidden in All; if the parent went
-too, the row joins the others at the top level. A change confined to one
-viewport or scheme, such as a dark-only edit, puts a dot on the control that
-would take you to it: the theme control when the change is in the other theme,
-the viewport control when it is in the other viewport. Details names those
-views under Changed views, and opening the entry from Changes takes you
-straight to the first of them. Opening it from All, following a link with a
-viewport or scheme in it, or reloading keeps the view you were on.
-The status and comparison options describe the view in front of you; with Both
-selected, Changed wins over Added, then Removed, then Unmodified, while control
-dots and Changed views point to changes elsewhere.
+too, the row joins the others at the top level.
+
+A change confined to one viewport or scheme, such as a dark-only edit, shows
+on that view's frame. When a toggle under Frames in Inspect hides a frame
+whose view changed, that toggle carries a dot. Inspect names those views under
+Changed views. On a narrow screen, where one frame shows at a time, opening
+the entry from Changes takes you straight to the first of them. Opening it
+from All, following a link with a viewport or scheme in it, or reloading
+keeps the view you were on. The status and the compare modes describe the
+frames that are shown: Changed wins over Added, then Removed, then Unmodified,
+while the toggle dots and Changed views point to changes in hidden frames.
 
 ## Added and removed
 
-An added entry shows its current preview and an Added status, with no
-comparison controls, because there is no earlier version.
+An added entry shows its current frames and an Added status. Its Changes tab
+offers Current alone, because there is no earlier version, and Compared names
+This branch alone.
 
 A removed entry appears only in Changes. All shows the catalogue as it is now,
 so it lists no Removed row.
 
 A removed page, document or screen keeps its Removed status and opens the
 version from the branch point instead, labelled "Showing previous version". A
-page or document opens in its document pane and a screen in its mobile and
-desktop frames, with the themes it was captured in. A viewport that was never
-captured says so on the stage and names the one that still opens. That version
-is read only: you can scroll it, select text and follow anchors inside it, but
+screen opens as the frames of the views it had, Desktop beside Mobile and
+Light above Dark, and a page or document as one reading frame. A viewport that
+was never captured shows a note where its frame would stand. That version is
+read only: you can scroll it, select text and follow anchors inside it, but
 its links and forms do nothing, so an old link can never take you to current
-content. While it is being retrieved the stage says so, and if it cannot be
-shown you get "Previous version unavailable" with a Retry, while the rest of
-the catalogue stays usable. An entry that Changes paired as moved is never
+content. It offers no compare mode, and Inspect keeps its record from the
+branch point. While it is being retrieved the canvas says so, and if it cannot
+be shown you get "Previous version unavailable" with a Retry, while the rest
+of the catalogue stays usable. An entry that Changes paired as moved is never
 shown as removed.
 
 A removed component variant keeps its earlier version, so it can still be
