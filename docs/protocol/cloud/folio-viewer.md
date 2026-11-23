@@ -45,8 +45,9 @@ package controls, they fill the package's 48px row in three columns: the
 package's mark, then `topBarStart` with the workspace/project switcher;
 `topBarCenter` with the publication pill in the middle of the bar, and the
 publication's Changes badge, its pull request's GitHub link and View latest
-beside it when each applies; then the package's compact search, whose field ends
-with the `⌘K` hint, its end control, and `topBarEnd` with History, Share and the
+beside it when each applies; then the package's compact search, whose field
+draws the shortcut hint before its tag picker, as `⌘K`, or as `Ctrl K` off Apple
+platforms, its end control, and `topBarEnd` with History, Share and the
 account's avatar. The two outer columns are equal, so the pill stays in the
 middle. The project switcher gives up its width first; inside the centre's room
 the state's phrase gives way, then the reference, down to the room of a short

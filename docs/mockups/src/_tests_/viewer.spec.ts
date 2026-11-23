@@ -80,14 +80,12 @@ for (const viewport of ["desktop", "mobile"] as const)
               .getByTestId("firna-button-primary")
               .count();
             expect(primaries, screen + " " + state).toBeLessThanOrEqual(1);
-            // Every published desktop fixture spends the accent on its
-            // selected catalogue row, including the pull request in Changes.
-            const packageSelection =
-              published && viewport === "desktop" ? 1 : 0;
+            // The selected catalogue row draws the soft accent, not the
+            // solid one, so only a filled button spends the solid accent.
             expect(
               await page.evaluate(accentFills, fill),
               screen + " " + state,
-            ).toBe(primaries + packageSelection);
+            ).toBe(primaries);
           }
       },
     );
