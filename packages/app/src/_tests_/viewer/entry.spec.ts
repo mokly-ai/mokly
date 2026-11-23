@@ -13,9 +13,11 @@ import { createToken, publish } from "../publish";
 
 import { pullRequest } from "./fixtures";
 import {
+  canvasFrame,
   expectParentUsage,
   publicationReference,
   publishedViewerReady,
+  savedVariant,
 } from "./support";
 
 /** A signed-in reader with a project whose publications this test writes. */
@@ -154,14 +156,17 @@ test("a reference alias carries the whole selection to the publication", async (
     "&search=notice&tag=review&screen=corrupt";
   const branchAlias = await branchPathFor(page, projectId, "main");
   const pullAlias = await pullRequestPathFor(page, projectId, 11);
+  const chosen = savedVariant(page, "Draft");
   for (const [alias, resolved] of [
     [`${branchAlias}&${selection}`, branch.id],
     [`${pullAlias}?${selection}`, pull.id],
   ] as const) {
     await open(page, alias);
     await expect(page).toHaveURL(new RegExp(`publications/${resolved}`));
-    const stage = page.locator("[data-mokly-stage]");
-    await expect(stage).toHaveAttribute("data-viewport", "both");
+    // The canvas holds the component's variant set. Its frames have no
+    // viewport, so the address is where the reader sees the Both it carried.
+    await expect(canvasFrame(page, "Draft")).toBeVisible();
+    await expect(page).toHaveURL(/viewport=both/);
     await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
       "data-mokly-color-scheme",
       "dark",
@@ -169,9 +174,7 @@ test("a reference alias carries the whole selection to the publication", async (
     await expect(
       page.getByRole("heading", { level: 2, name: "Notice" }),
     ).toBeVisible();
-    await expect(
-      page.locator('[data-workspace-variant="notice/draft"]'),
-    ).toHaveAttribute("aria-current", "page");
+    await expect(chosen).toHaveAttribute("aria-current", "page");
     await expectParentUsage(page);
     await expect(page).toHaveURL(/catalogueScreen=notice%2Fdraft/);
     await expect(page).toHaveURL(/viewport=both/);

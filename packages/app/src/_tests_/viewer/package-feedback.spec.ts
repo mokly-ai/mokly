@@ -1,6 +1,11 @@
 import { expect, open, test } from "../harness";
 
-import { openSettingsFromAccount, publishedProject } from "./support";
+import {
+  canvasFrame,
+  openSettingsFromAccount,
+  publishedProject,
+  savedVariant,
+} from "./support";
 
 test("a listed screen response cannot erase a selected component variant", async ({
   page,
@@ -14,10 +19,13 @@ test("a listed screen response cannot erase a selected component variant", async
   const query =
     "catalogueScreen=notice%2Fdraft&viewport=both&scheme=dark&search=notice";
   await open(page, `${path}?${query}`);
-  const chosen = page.locator('a[data-workspace-variant="notice/draft"]');
+  const chosen = savedVariant(page, "Draft");
+  // The canvas holds the component's variant set. Its frames have no
+  // viewport, so the address is where the reader sees the Both it keeps.
+  const draftFrame = canvasFrame(page, "Draft");
 
-  const viewport = page.locator("select[data-workspace-viewport]");
-  await expect(viewport).toHaveValue("both");
+  await expect(draftFrame).toBeVisible();
+  await expect(page).toHaveURL(/viewport=both/);
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
@@ -75,7 +83,7 @@ test("a listed screen response cannot erase a selected component variant", async
   await expect(page).toHaveURL(/viewport=both/);
   await expect(page).toHaveURL(/scheme=dark/);
   await expect(page).toHaveURL(/search=notice/);
-  await expect(viewport).toHaveValue("both");
+  await expect(draftFrame).toBeVisible();
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
@@ -90,7 +98,7 @@ test("a listed screen response cannot erase a selected component variant", async
   await expect(
     page.getByRole("heading", { level: 2, name: "Notice" }),
   ).toBeVisible();
-  await expect(viewport).toHaveValue("both");
+  await expect(draftFrame).toBeVisible();
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",

@@ -3,7 +3,9 @@ import { expect, open, test } from "../harness";
 import { apiOrigin, appOrigin } from "../origins";
 
 import {
+  canvasFrame,
   expectSharePreparing,
+  expectShownViewport,
   holdViewerRead,
   makePublic,
   publishedViewerReady,
@@ -51,25 +53,26 @@ test("Share copies the canonical link and says who can open it", async ({
     new RegExp(`${path}\\?catalogueScreen=start$`),
   );
 
-  // Its recipient opens the screen on Both, in its Mobile and Desktop frames.
-  // The package's viewport select shows the selection, also beneath a panel.
+  // Its recipient opens the screen on Both, in its Mobile and Desktop frames,
+  // and the address names no viewport.
   await open(page, await link.inputValue());
-  const viewport = page.locator("select[data-workspace-viewport]");
-  await expect(viewport).toHaveValue("both");
   await expect(
     page.getByRole("heading", { level: 2, name: "Start" }),
   ).toBeVisible();
   for (const frame of ["Start — mobile", "Start — desktop"])
     await expect(
-      page
-        .frameLocator(`iframe[title^="${frame} — "]`)
+      canvasFrame(page, frame)
+        .contentFrame()
         .getByRole("heading", { level: 1, name: "Publish the draft" }),
       frame,
     ).toBeVisible();
+  await expect(page).not.toHaveURL(/viewport=/);
 
   // One viewport is the reader's own choice, so the address and the link both
   // name it, and the link's recipient opens on that viewport.
-  await viewport.selectOption("desktop");
+  await page
+    .getByRole("combobox", { name: "Viewport" })
+    .selectOption("desktop");
   await expect(page).toHaveURL(/viewport=desktop/);
   await page.getByTestId("viewer-share").click();
   await expect(
@@ -84,20 +87,19 @@ test("Share copies the canonical link and says who can open it", async ({
   await expect
     .poll(() => page.evaluate(() => globalThis.navigator.clipboard.readText()))
     .toBe(desktopLink);
-  // Preparing and copying the link does not reduce the controlled sender.
+  // Preparing and copying the link does not reduce the controlled sender: the
+  // canvas beneath the panel still shows the Desktop frame alone.
   await expect(page).toHaveURL(/viewport=desktop/);
-  await expect(viewport).toHaveValue("desktop");
+  await expectShownViewport(page, "Start", "desktop");
 
   const recipient = await page.context().newPage();
   await open(recipient, desktopLink);
   await expect(recipient).toHaveURL(/catalogueScreen=start/);
   await expect(recipient).toHaveURL(/viewport=desktop/);
+  await expectShownViewport(recipient, "Start", "desktop");
   await expect(
-    recipient.locator("select[data-workspace-viewport]"),
-  ).toHaveValue("desktop");
-  await expect(
-    recipient
-      .frameLocator('iframe[title^="Start — desktop — "]')
+    canvasFrame(recipient, "Start — desktop")
+      .contentFrame()
       .getByRole("heading", { level: 1, name: "Publish the draft" }),
   ).toBeVisible();
   await recipient.close();
@@ -158,9 +160,7 @@ test("a publication with nothing to compare still shares itself", async ({
   await expect(
     page.getByRole("heading", { level: 2, name: "Start" }),
   ).toBeVisible();
-  await expect(page.locator("select[data-workspace-viewport]")).toHaveValue(
-    "both",
-  );
+  await expectShownViewport(page, "Start", "both");
   await page.getByTestId("viewer-share").click();
   const panel = page.getByTestId("viewer-panel-share");
   await expect(panel).toBeVisible();

@@ -2,6 +2,7 @@ import { expect, open, test } from "../harness";
 
 import {
   corrected,
+  expectShownViewport,
   openSettingsFromAccount,
   publishedViewerReady,
   publishedProject,
@@ -33,9 +34,7 @@ test("invalid cloud values are corrected while package routes stay authoritative
   // An address that names no viewport opens on Both, the default.
   await open(page, `${path}?catalogueScreen=start`);
   await expect(page).toHaveURL(/catalogueScreen=start/);
-  await expect(page.locator("select[data-workspace-viewport]")).toHaveValue(
-    "both",
-  );
+  await expectShownViewport(page, "Start", "both");
 });
 
 test("back and forward restore the panel the reader opened", async ({
