@@ -84,8 +84,8 @@ Independent requests prefer an idle worker in the same source root, then an
 unspawned slot, then the oldest idle slot. Among the idle workers of one root,
 a call that names a generation prefers a worker that holds its current epoch
 and each input that the call needs, then another worker with that epoch.
-A head bundle prefers the idle head worker that compiled last, then older
-compilers, under the
+A `bundle` or `transformViteCss` call on the head root prefers the idle head
+worker that compiled last, then older compilers, under the
 [head bundle rank](../../docs/protocol/mokly-sidecar-root-scheduling.md#head-bundle-affinity).
 A successful head bundle counts as a compile unless its `cache` field is
 `memory` or `hit`. A new process starts without a compile. Ties and other
@@ -425,9 +425,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   a call affine to a retired slot.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes. Its pure rank orders the idle slots of one root by the
-  generation state that a call needs. For a `bundle` call, it then prefers the
-  newest `Slot::last_compilation`, the epoch that `Pool::execute` records
-  after a head compile. Growth reuses a free slot before it adds a new one.
+  generation state that a call needs. For a `bundle` or `transformViteCss`
+  call, it then prefers the newest `Slot::last_compilation`, the epoch that
+  `Pool::execute` records after a head compile. Growth reuses a free slot
+  before it adds a new one.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
   warm head worker, the candidates of the return pass, the
   `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
@@ -559,6 +560,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `ViteRecipe` in `CompiledGeneration::vite`: the Vite version, the entry URL,
   and one `ViteModuleFetch` for each module fetch. Each `ViteFetchResult` is
   transformed code or an external module with its `ViteExternalType`.
+- [`src/vite_css.rs`](./src/vite_css.rs) defines `TransformViteCss`, the
+  params of a `transformViteCss` call: the side's `Bundle` settings without
+  entries, the logical stylesheet path, and the selected physical file. Its
+  result is `results::ViteCss`: the CSS, the class map of a CSS Module, and
+  the digests of the inputs. The generated types name them
+  `TransformViteCssParams` and `ViteCssResult`.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the
   inventory that `describe` returns.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the fail-closed error

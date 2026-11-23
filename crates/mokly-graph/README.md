@@ -48,8 +48,10 @@ Preparation renders no document. Each plan carries a route and the document
 node's input hash, which is the public `documentKey` of the
 [rendering contract](../../docs/protocol/mokly-rendering.md). Stylesheet
 dependency edits recompute their bundles. Equal emitted CSS and asset digests
-preserve document keys. `dyn RenderGeneration` supports on-demand rendering, a
-full build pass, resource reads, and closure queries. `render_props` validates
+preserve document keys, except under the Vite adapter. There, the input key of
+each linked stylesheet also enters the document key. `dyn RenderGeneration`
+supports on-demand rendering, a full build pass, resource reads, and closure
+queries. `render_props` validates
 a complete transient props map with the parent's prepared validator from
 `PreparedCatalogue::prop_validators`, and uses the same composition and
 closure path.
@@ -182,6 +184,8 @@ retention disabled.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
   `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation
   and the stores that related generations share.
+  [`src/styles.rs`](./src/styles.rs) provides `local_roots`, the roots of the
+  local stylesheets that the configuration and component declarations name.
 - [`src/key.rs`](./src/key.rs) provides `key` and `NodeKind`, the
   content-addressed node keys.
 - [`src/cache.rs`](./src/cache.rs) defines `RenderCache`, `MemoryCache`,

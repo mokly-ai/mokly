@@ -20,8 +20,7 @@ catalogue decisions, caching, invalidation, comparison, and output.
   under the [memory admission rules](./mokly-sidecar-memory.md#default-admission).
   `--sidecars <n>` and `MOKLY_SIDECARS` accept any positive integer and set an
   exact size without memory admission. The option takes precedence over the
-  variable. A catalogue that needs no JavaScript starts none, unless the
-  [Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript) transforms its stylesheets.
+  variable.
 - The first request is `hello`; the sidecar's first frame is its matching hello
   response with the package version. Reject a mismatch with `sidecar-version`
   before other traffic.
@@ -70,6 +69,7 @@ both sides were rejected, because the copies drift and increase the code size.
 | `renderStory`       | generation, story id, props, viewport, colour scheme                                                                                                       | render result                                                             |
 | `renderPage`        | generation, handle                                                                                                                                         | `{ html, resources }`                                                     |
 | `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                                                             | `{ text, dependencies, readEvidence }`                                    |
+| `transformViteCss`  | `bundle` settings without entry or stories files, logical stylesheet path, selected physical file                                                          | `{ text, classMap, sourceDigest, dependencies, metadataInputs }`          |
 | `bindings`          | generation, handle-to-path-and-title table                                                                                                                 | nothing                                                                   |
 | `disposeContext`    | PostCSS context                                                                                                                                            | nothing                                                                   |
 | `cssModules`        | generation, class maps by stylesheet path                                                                                                                  | nothing                                                                   |
@@ -234,7 +234,7 @@ define deadlines, process replacement, and shutdown grace.
 | `render-timeout`      | a deadline passed twice                                                                         | `build-invalid` with the entry and the deadline                                |
 
 There is no fallback render and no partial output. Commands that need neither
-JavaScript, PostCSS, nor a Vite stylesheet transform never start a sidecar or fail for these reasons.
+JavaScript, PostCSS, nor a [Vite stylesheet transform](./mokly-vite-adapter-styles.md#catalogues-without-javascript) never start a sidecar or fail for these reasons.
 
 ## Security
 

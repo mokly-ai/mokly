@@ -12,6 +12,7 @@ calls the matching and attribution functions for Changes.
 - Prune renderer-owned imports before consumer processing.
 - Scope local CSS Module names with repository-path hashes.
 - Bundle on `lightningcss` without minification or target lowering.
+- Deliver Vite-transformed CSS without a second import walk or scoping.
 - Rewrite local URLs and retain opaque asset identities and digests.
 - Return parsed source bytes, opaque input metadata, and importing-source attribution.
 - Collect unoptimized rules and diff occurrences without losing declaration order.
@@ -40,6 +41,14 @@ ancestors. This keeps package CSS and JavaScript on the same copy.
 The same contract owns the `styles/` and `assets/` delivery routes. URLs keep
 query and fragment suffixes. Public resources never read private CSS inputs by
 their authored paths.
+
+`vite::bundle` delivers the stylesheets of one root that the
+[Vite adapter](../../docs/protocol/mokly-vite-adapter-styles.md) transformed.
+A `dyn vite::Transform` from `mokly-render` gives it each `vite::Stylesheet`:
+the CSS, the class map of a CSS Module, and the digests of its inputs. It runs
+no import walk and no CSS Modules scoping. It rejects a stylesheet that changed
+during the transform and a local `@import` that remains. It rewrites and
+delivers each local `url()` as `Compiler` does.
 
 `modules::scope` returns CSS and sorted class exports from the one naming rule
 of the [CSS Modules contract](../../docs/protocol/mokly-imported-styles-modules.md).
@@ -165,6 +174,9 @@ also fails when that exception no longer differs.
 
 - [`src/compiler.rs`](./src/compiler.rs) defines `Compiler`, the
   `StylesheetBundler` that reads, transforms, scopes, and bundles one root.
+- [`src/vite.rs`](./src/vite.rs) defines `Transform`, the boundary that
+  supplies Vite's result for one stylesheet, and `bundle`, which validates and
+  delivers the transformed stylesheets of one root.
 - [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
@@ -193,6 +205,7 @@ also fails when that exception no longer differs.
 - [CSS Modules](../../docs/protocol/mokly-imported-styles-modules.md).
 - [CSS assets](../../docs/protocol/mokly-imported-styles-assets.md).
 - [PostCSS boundary](../../docs/protocol/mokly-imported-styles-postcss.md).
+- [Vite adapter stylesheets](../../docs/protocol/mokly-vite-adapter-styles.md).
 - [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 - [CSS attribution rules](../../docs/protocol/mokly-css-attribution-rules.md).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

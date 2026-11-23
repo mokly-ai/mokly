@@ -23,8 +23,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`session.ts`](./session.ts) dispatches each request. `Session` strips `capture`
   and `plan` from bundle settings before reuse, compilation, identity, and
   restore. It gives a `CaptureDurability` only to a `full` esbuild request. It
-  sends `vite` bundles to `ViteCompiler` and awaits `evaluateVite` before
-  describing or rendering a Vite generation.
+  sends `vite` bundles and `transformViteCss` requests to `ViteCompiler`, and
+  awaits `evaluateVite` before describing or rendering a Vite generation.
 - [`transport.ts`](./transport.ts) splits and decodes the binary's typed requests
   and limits each response size.
 - [`../generated/sidecar`](../generated/sidecar) holds the request and result
@@ -195,8 +195,11 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 ### Vite Compilation and Replay
 
 - [`vite-compiler.ts`](./vite-compiler.ts) compiles `vite` requests into a
-  `ViteRecipe` with empty, incomplete reuse evidence. It keeps one Vite server
-  and replaces it when roots, peers, the setup stamp, or metadata change.
+  `ViteRecipe` with empty, incomplete reuse evidence.
+  [`vite-context.ts`](./vite-context.ts) defines `ViteContext`, which keeps one
+  Vite server for the JavaScript and stylesheet requests of a side. It replaces
+  the server when roots, peers, the setup stamp, or metadata change. A change
+  to a file that a stylesheet transform reported also replaces it.
   [`vite-setup.ts`](./vite-setup.ts) loads `vite.config.*` and starts Vite without
   HTTP, file watching, hot reload, or dependency pre-bundling. `setupStamp`
   digests the config, its imports, env files, and the configuration file list.
@@ -213,8 +216,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   and `import()` from their own module. [`vite-config-errors.ts`](./vite-config-errors.ts)
   names a failing config file or import from the esbuild location or source map.
 - [`vite-resolution.ts`](./vite-resolution.ts) owns the shared `ViteLookup`.
-  Setup loads, the Mokly plugin, runner fetches, React peers, and external imports
-  use it on both sides. It applies aliases, then tries each importer from
+  Setup loads, the Mokly plugin, runner fetches, stylesheet imports, React
+  peers, and external imports use it on both sides. It applies aliases, then
+  tries each importer from
   [`vite-lookup-paths.ts`](./vite-lookup-paths.ts): the original path, its mapped
   installation path, then `node_modules` at each package root. It records package
   root candidates. `nodeEntry` asks Vite's server environment for the file that
@@ -258,6 +262,23 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   [`vite-errors.ts`](./vite-errors.ts) reports `bundle-failed` with the logical
   module, plugin, and, once loaded, the installed and tested Vite versions. It
   rewrites absolute paths to logical names and virtual names to “entry module”.
+  `viteStylesheetFailure` uses the requested stylesheet path instead.
+
+### Vite Stylesheets
+
+- `ViteCompiler.stylesheet` in [`vite-compiler.ts`](./vite-compiler.ts) answers
+  `transformViteCss`. It requests one stylesheet through the setup as an inline
+  module. [`vite-css-transform.ts`](./vite-css-transform.ts) defines
+  `ViteCssTransform`, which runs that request. It returns the CSS, the class
+  map of a CSS Module, and the digests of the inputs of the transform.
+- [`vite-css-hooks.ts`](./vite-css-hooks.ts) holds the hooks that `viteSetup`
+  installs. They set Mokly's scoped names on both CSS transformers. They route
+  Vite's stylesheet resolver through `ViteLookup.stylesheet` during a transform.
+  They wrap `vite:css` and `vite:css-post`, so one native transform gives the
+  class map and the inline CSS. A late `@import` that Vite drops is a failure.
+- [`vite-css-paths.ts`](./vite-css-paths.ts) decides which files are Vite
+  stylesheets and CSS Modules. Its `ViteCssUrls` keeps each authored relative
+  `url()` and rebases the URL of an inlined file onto the requested stylesheet.
 
 ### Shared Rendering and Styles
 
