@@ -16,6 +16,11 @@ const canvasEvents = [
   { type: "canvas-blur" },
 ] as const satisfies readonly MessageBody[];
 const canvasNames = canvasEvents.map(({ type }) => type);
+/** The keys of the shell, which a document forwards as canvas keys too. */
+const shellKeys = [
+  { type: "canvas-key", key: "escape" },
+  { type: "canvas-key", key: "search" },
+] as const satisfies readonly MessageBody[];
 
 test("a postMessage mount without canvas opt-in keeps its subscription and ignores canvas messages", async (t) => {
   const fake = await mounted();
@@ -57,7 +62,8 @@ test("a listening canvas mount delivers only authenticated events with their exa
   t.after(fake.mounted.dispose);
   const events: FrameEvent[] = [];
   fake.mounted.subscribe((event) => events.push(event));
-  for (const event of canvasEvents) {
+  const sent = [...canvasEvents, ...shellKeys];
+  for (const event of sent) {
     const json = encodeMessage(fake.sessionNonce, event);
     const first = fake.sessionNonce[0] === "a" ? "b" : "a";
     fake.raw(json, "https://frames.test", {});
@@ -65,8 +71,8 @@ test("a listening canvas mount delivers only authenticated events with their exa
     fake.send(event, first + fake.sessionNonce.slice(1));
   }
   assert.deepEqual(events, []);
-  for (const event of canvasEvents) fake.send(event, fake.sessionNonce);
-  assert.deepEqual(events, canvasEvents);
+  for (const event of sent) fake.send(event, fake.sessionNonce);
+  assert.deepEqual(events, sent);
 });
 
 test("a canvas mount ignores invalid event values without settling pending requests", async (t) => {

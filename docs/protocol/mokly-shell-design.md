@@ -122,20 +122,20 @@ preview scheme and the compact layout.
   field is compact: about 180px on the muted field surface, led by a 15px
   stroked magnifier icon and ended by the tag picker control. It gives way when
   its column runs short. In the standalone bar it keeps at least 150px down to
-  a 320px window, and an embedded root switches to its
-  [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
-  Search uses `Search catalogue` as its accessible name and `Search` as its
-  placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
-  and Ctrl+K move focus to the search field from anywhere in the shell. `/`
-  does the same while focus is not in a text field. At or above 900px, a key
-  hint before the tag picker names `⌘K` on Apple's platforms and `Ctrl K`
-  elsewhere. Assistive technology skips the hint, and the field names its keys
-  to it. The standalone bar carries no preview mode switch; Appearance is the
-  one setting that belongs there.
-  Decision: the standalone shell keeps Appearance in its top bar, not in an
-  account menu, because it has no account menu. Matching uses the single
-  [search rule](./mokly-folders.md#titles). Filtering hides empty groups and
-  opens retained groups, and composes with the All/Changes filter.
+  a 320px window, and an embedded root switches to its [compact
+  search](./mokly-viewer.md#rendered-features-and-slots) instead. Search uses
+  `Search catalogue` as its accessible name and `Search` as its placeholder in
+  both viewport sizes, covering screens, pages, and flows. `⌘K` and Ctrl+K move
+  focus to the search field from anywhere in the shell, and from a canvas frame
+  [outside its editable elements](./mokly-frame-canvas-input.md#keys). `/` does
+  the same while focus is not in a text field. At or above 900px, a key hint
+  before the tag picker names `⌘K` on Apple's platforms and `Ctrl K` elsewhere.
+  Assistive technology skips the hint, and the field names its keys to it. The
+  standalone bar carries no preview mode switch; Appearance is the one setting
+  that belongs there. Decision: the standalone shell keeps Appearance in its top
+  bar, not in an account menu, because it has no account menu. Matching uses the
+  single [search rule](./mokly-folders.md#titles). Filtering hides empty groups
+  and opens retained groups, and composes with the All/Changes filter.
 - **Tag picker** — the tag-icon control at the trailing edge of the search
   field and the panel of tag chips that it opens, under the
   [tag picker design](./mokly-shell-design-tag-picker.md).

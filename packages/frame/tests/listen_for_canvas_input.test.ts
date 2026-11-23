@@ -27,12 +27,16 @@ test("standalone canvas input reports only canvas events without usage", (t) => 
     true,
   );
   assert.equal(fixture.key({ key: "+" }), false);
+  assert.equal(fixture.key({ key: "Escape" }), false);
+  assert.equal(fixture.key({ key: "/" }), true);
   fixture.point("pointermove");
   fixture.point("click");
   fixture.doc.dispatchEvent(new fixture.win.Event("scroll"));
   fixture.flush();
   assert.deepEqual(events, [
     { type: "canvas-key", key: "zoom-in" },
+    { type: "canvas-key", key: "escape" },
+    { type: "canvas-key", key: "search" },
     { type: "canvas-wheel", deltaY: -45, deltaMode: 0, x: 23, y: 12 },
     { type: "canvas-focus", visible: true },
   ]);
