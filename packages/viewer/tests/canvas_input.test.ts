@@ -5,7 +5,6 @@ import { wheelZoom, type CanvasStageHandle } from "@mokly/ui/canvas-stage";
 
 import {
   framePagePoint,
-  hoveredFrame,
   isCanvasInput,
   routeFrameInput,
   type CanvasGestureEvent,
@@ -40,11 +39,8 @@ function frame(border = 0): HTMLIFrameElement {
   } as unknown as HTMLIFrameElement;
 }
 
-/**
- * A canvas 600px tall at a zoom of 0.5, whose handle records each call. The
- * canvas reports `hovered` as the frame under the pointer.
- */
-function target(hovered: HTMLIFrameElement | null = null) {
+/** A canvas 600px tall at a zoom of 0.5, whose handle records each call. */
+function target() {
   const calls: unknown[][] = [];
   const handle: CanvasStageHandle = {
     fit: () => calls.push(["fit"]),
@@ -54,13 +50,8 @@ function target(hovered: HTMLIFrameElement | null = null) {
     zoomOut: () => calls.push(["zoomOut"]),
     zoomTo: (zoom) => calls.push(["zoomTo", zoom]),
   };
-  const canvas = {
-    clientHeight: 600,
-    querySelector: (selector: string) =>
-      selector === "iframe:hover" ? hovered : null,
-  } as unknown as HTMLElement;
   const control: CanvasInputTarget = {
-    canvas: { current: canvas },
+    canvas: { current: { clientHeight: 600 } },
     handle: { current: handle },
     zoom: { current: 0.5 },
   };
@@ -117,24 +108,6 @@ test("a forwarded pinch zooms by its scale about its point, and a key runs its c
     ["run", "actual-size"],
     ["run", "fit"],
   ]);
-});
-
-test("without a frame element, a wheel or pinch zooms about its point in the frame under the pointer", () => {
-  const pinch = {
-    type: "canvas-pinch",
-    scale: 2,
-    x: 200,
-    y: 100,
-  } as const;
-  const hovered = target(frame());
-  const under = hovered.control.canvas.current;
-  routeFrameInput(hovered.control, pinch, hoveredFrame(under));
-  assert.deepEqual(hovered.calls, [["zoomAt", 2, 200, 100]]);
-  // Without a frame under the pointer, it zooms about the stage's centre.
-  const elsewhere = target();
-  const none = elsewhere.control.canvas.current;
-  routeFrameInput(elsewhere.control, pinch, hoveredFrame(none));
-  assert.deepEqual(elsewhere.calls, [["zoomTo", 1]]);
 });
 
 /**

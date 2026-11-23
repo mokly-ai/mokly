@@ -79,19 +79,6 @@ export function framePagePoint(
 }
 
 /**
- * The frame under the pointer on a canvas, for input whose frame the route
- * does not know: a wheel or a pinch over a frame keeps the pointer over it.
- */
-export function hoveredFrame(
-  canvas: Pick<HTMLElement, "clientHeight"> | null,
-): HTMLIFrameElement | null {
-  if (!canvas || !("querySelector" in canvas)) return null;
-  return (canvas as HTMLElement).querySelector<HTMLIFrameElement>(
-    "iframe:hover",
-  );
-}
-
-/**
  * Move the canvas for one forwarded input of a frame. A key runs its
  * command. A wheel, whose lines and pages count as the canvas's own wheel
  * counts them, and a pinch zoom by their factor about their point in

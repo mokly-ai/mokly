@@ -702,12 +702,13 @@ screen. A viewport without a historical view holds the note of
 shows only while no frame of the other viewport shows. A removed page or
 document opens as one reading frame, named by its source file. A previous
 version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
-input of each document that it presents with `listenForCanvasInput`, and
-the `useCanvasFrameInput` hook of `canvas_frame_input.tsx`, which the live
-frames share, routes it through the `CanvasControlContext` of
-`canvas_stage.tsx`: a canvas key runs its command, a zoom wheel or a pinch
-zooms the canvas about its point in the frame under the pointer, and the
-document's keyboard focus draws the frame's focus glow. The React
+input of each document that it presents with `listenForCanvasInput`, with
+the frame element, and the `useCanvasFrameInput` hook of
+`canvas_frame_input.tsx`, which the live frames share, routes it through the
+`CanvasControlContext` of `canvas_stage.tsx`: a canvas key runs its command,
+a zoom wheel or a pinch, a two-finger pinch included, zooms the canvas about
+its point in the frame, and the document's keyboard focus draws the frame's
+focus glow. The React
 request lifecycle reads preview
 data directly from props. It advertises a packaged address only when the accepted
 public catalogue publishes one, so a delivery without that descriptor stays
