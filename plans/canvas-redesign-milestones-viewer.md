@@ -3,7 +3,7 @@
 This file holds Milestones 10 to 13 of the
 [Canvas redesign plan](./canvas-redesign.md). It is a part of that plan, and
 the pull request that deletes the plan deletes it too. The plan holds the
-status, the summary and the other milestones. The added Milestones 15 to 24
+status, the summary and the other milestones. The added Milestones 15 to 25
 are in [the added milestones file](./canvas-redesign-milestones-added.md).
 
 ## Milestone 10: Frame probe box model

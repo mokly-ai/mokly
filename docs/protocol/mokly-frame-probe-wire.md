@@ -120,24 +120,30 @@ the highlight mask and the package labels and to refresh host marker placement.
 
 ## Wire Protocol v4
 
-Version 4 keeps every rule of [version 3](#wire-protocol-v3). It adds requests
-for the box model of an instance and the content box of a document. Its
-envelope carries `version: 4`. Each peer accepts only its own version. A
-version 3 probe and a version 4 viewer reject each other's handshake.
+Version 4 keeps every rule of [version 3](#wire-protocol-v3), and its
+`subscribe` request accepts five more event names. It adds requests for the
+box model of an instance and the content box of a document. Its envelope
+carries `version: 4`. Each peer accepts only its own version. A version 3 probe
+and a version 4 viewer reject each other's handshake.
 
-| Type              | Direction | Additional fields                                 |
-| ----------------- | --------- | ------------------------------------------------- |
-| `measure`         | H → F     | `requestId`, `key`                                |
-| `box-model`       | F → H     | `requestId`, `boxModel: InstanceBoxModel \| null` |
-| `measure-content` | H → F     | `requestId`                                       |
-| `content-box`     | F → H     | `requestId`, `contentBox: Box \| null`            |
+| Type              | Direction | Additional fields                                                    |
+| ----------------- | --------- | -------------------------------------------------------------------- |
+| `measure`         | H → F     | `requestId`, `key`                                                   |
+| `box-model`       | F → H     | `requestId`, `boxModel: InstanceBoxModel \| null`                    |
+| `measure-content` | H → F     | `requestId`                                                          |
+| `content-box`     | F → H     | `requestId`, `contentBox: Box \| null`                               |
+| `canvas-wheel`    | F → H     | `deltaY: number`, `deltaMode: 0 \| 1 \| 2`, `x: number`, `y: number` |
+| `canvas-pinch`    | F → H     | `scale: number`, `x: number`, `y: number`                            |
+| `canvas-key`      | F → H     | `key: "zoom-in" \| "zoom-out" \| "zoom-100" \| "fit"`                |
+| `canvas-focus`    | F → H     | `visible: boolean`                                                   |
+| `canvas-blur`     | F → H     | none                                                                 |
 
 `measure` returns `box-model` or `error`. `InstanceBoxModel` has exactly the
 fields `box`, `border` and `padding`. `border` and `padding` each have exactly
 the fields `top`, `right`, `bottom` and `left`. `box` follows the box bounds of
 version 3, and each side is a finite number from 0 to 1,000,000. A null
 `boxModel` means that the instance has no box model. The
-[box model rules](./mokly-frame-adapter.md#box-model) define every value. A key
+[box model rules](./mokly-frame-box-model.md) define every value. A key
 outside the mount's validated usage gets `error` with `missing-instance`, and a
 measurement outside the bounds gets `error` with `limit`. The reply carries
 numbers only. The host measures again after a `geometry` event, as it lists
@@ -148,6 +154,22 @@ one box within the version 3 bounds. The
 [content box rules](./mokly-frame-content-box.md) define the measurement. The
 probe answers even if its published map is missing or reports an error. An
 out-of-bounds measurement returns `error` with `limit`.
+
+`subscribe.events` also accepts `canvas-wheel`, `canvas-pinch`, `canvas-key`,
+`canvas-focus` and `canvas-blur`. The list holds at most ten unique names.
+Until the subscription names `canvas-wheel` or `canvas-pinch`, the probe holds
+no wheel or gesture listener. The probe uses the
+[canvas input rules](./mokly-frame-canvas-input.md) to report input and focus.
+
+`deltaY`, `x` and `y` are finite numbers in `[-1000000, 1000000]`. `scale` is
+a finite number greater than 0 and at most 1,000,000. `deltaMode`, `key` and
+`visible` accept only the values in the table. The host ignores a canvas event
+with an invalid value or an extra field, as it ignores other malformed event
+messages.
+
+The probe sends at most one wheel, one pinch, and one focus or blur message per
+animation frame. It sends at most 60 wheel messages, 60 pinch messages, and
+60 focus or blur messages combined per second. It sends key events immediately.
 
 ## Frame Probe Script
 

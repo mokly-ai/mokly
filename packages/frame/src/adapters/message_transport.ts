@@ -6,7 +6,11 @@ import {
   type Message,
   type MessageBody,
 } from "../probe/schema.js";
-import { boundedJson, BYTE_LIMIT } from "../probe/values.js";
+import {
+  boundedJson,
+  BYTE_LIMIT,
+  type ProbeEventType,
+} from "../probe/values.js";
 
 import { FrameError } from "./frame_error.js";
 
@@ -26,9 +30,7 @@ type Request =
   | { type: "scroll-to" | "measure"; key: string }
   | {
       type: "subscribe";
-      events: readonly (
-        "hover" | "click" | "navigation" | "pick-end" | "geometry"
-      )[];
+      events: readonly ProbeEventType[];
     };
 
 /** Bounded request/reply state, independent of the DOM and probe implementation. */

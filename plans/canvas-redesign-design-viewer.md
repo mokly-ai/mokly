@@ -64,3 +64,8 @@ the plan deletes it too.
   The bar's readability test helper measured the search placeholder wrongly
   and passed a cut placeholder; it now measures the input's overflow. Narrow
   desktop drawings may centre the compact pill, which the app never does.
+
+- Call on Milestone 25, 2026-11-23: the frame probe budget rises from 10,240
+  to 11,264 bytes for the forwarded canvas input and the frame focus events.
+  The probe is one cached script file. A touch pinch over a frame on Android
+  is a follow-up item, because it needs a non-passive touch listener.

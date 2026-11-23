@@ -42,7 +42,8 @@ split that state.
 ## Built-In Adapters
 
 Both built-in adapters run one event runtime, so the same rules decide their
-hover, click, pick-end, navigation, and geometry events, including the hover
+hover, click, pick-end, navigation, geometry, and
+[canvas input](./mokly-frame-canvas-input.md) events, including the hover
 rule of the
 [selection contract](./mokly-viewer-selection.md#selection-events-and-imperative-use).
 Decision: one shared runtime, not two runtimes kept in step, because one

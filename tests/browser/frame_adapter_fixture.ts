@@ -53,10 +53,11 @@ export async function mountCrossFrame(
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
   path = "/static/mokly-generated/home/index.mobile.html",
   usage: CatalogueUsage = fixture.usage,
+  canvasInput = false,
 ) {
   await page.goto(fixture.host.url);
   await page.evaluate(
-    async ({ origin, usageJson, path }) => {
+    async ({ origin, usageJson, path, canvasInput }) => {
       const usage = JSON.parse(usageJson) as CatalogueUsage;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
@@ -76,6 +77,7 @@ export async function mountCrossFrame(
         {
           url: new URL(path, origin),
           usage,
+          canvasInput,
         },
       );
       state.unsubscribe = state.mounted.subscribe((event) =>
@@ -88,6 +90,7 @@ export async function mountCrossFrame(
       origin: fixture.frames.url,
       usageJson: JSON.stringify(usage),
       path,
+      canvasInput,
     },
   );
 }

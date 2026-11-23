@@ -52,6 +52,11 @@ const messages: MessageBody[] = [
   },
   { type: "pick-end", reason: "escape" },
   { type: "geometry" },
+  { type: "canvas-wheel", deltaY: -24, deltaMode: 1, x: -2, y: 5 },
+  { type: "canvas-pinch", scale: 1.5, x: 14, y: 22 },
+  { type: "canvas-key", key: "fit" },
+  { type: "canvas-focus", visible: false },
+  { type: "canvas-blur" },
   { type: "error", requestId: null, code: "limit" },
   { type: "dispose" },
 ];
@@ -100,6 +105,27 @@ test("probe rejects malformed envelopes before parsing and counts UTF-8 bytes", 
   ])
     assert.equal(boundedJson(value), undefined);
   assert.equal(boundedJson(`"${"é".repeat(131071)}"`), "é".repeat(131071));
+});
+
+test("probe subscribe accepts ten unique names and rejects unknown and duplicate names", () => {
+  const events = [
+    "hover",
+    "click",
+    "navigation",
+    "pick-end",
+    "geometry",
+    "canvas-wheel",
+    "canvas-pinch",
+    "canvas-key",
+    "canvas-focus",
+    "canvas-blur",
+  ];
+  const subscribe = (names: string[]) =>
+    validMessage(wire({ type: "subscribe", requestId: 1, events: names }));
+  assert.equal(subscribe(events), true);
+  assert.equal(subscribe([...events, "canvas-key"]), false);
+  assert.equal(subscribe(["canvas-key", "canvas-key"]), false);
+  assert.equal(subscribe(["canvas-key", "other"]), false);
 });
 
 test("box-model rejects unknown fields, missing sides and invalid numeric bounds", () => {
