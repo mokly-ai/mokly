@@ -1,26 +1,22 @@
 /**
- * Live React frame chrome over the transport adapters. This container mounts
- * the frame and derives its sources; `@mokly/ui/preview-frame` draws the
- * frame, its label, and its error, and `@mokly/ui/device-frame` the phone.
+ * The mount of a view's frame over the transport adapters: its source, its
+ * identity in the shell's registry, and the documents of its view in each
+ * scheme. A canvas frame of `canvas_live_frame.tsx` and a use case's step
+ * frame of `canvas_use_case_frame.tsx` mount through it.
  */
 
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import type { RefObject } from "react";
 
 import { temporaryPreviewAdapter } from "@mokly/frame/internal";
 import { VIEWER_DIRECTORY } from "@mokly/model";
-import { PhoneFrame } from "@mokly/ui/device-frame";
-import { PreviewFrame, PreviewIframe } from "@mokly/ui/preview-frame";
 
 import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { entryRoute } from "../navigation/routes.js";
 
-import { DisplaySelection } from "./display_context.js";
-import { FrameStageContext } from "./frame_layout_context.js";
 import {
   useMountedShellFrame,
   type FrameReadyListener,
@@ -30,14 +26,11 @@ import {
   type ShellFrameIdentity,
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
-import { BrowserFrame } from "./frames.js";
-import { focusThen, useRetryContent } from "./retry_focus.js";
-import { schemeValue } from "./scheme_fallback.js";
+import { useRetryContent } from "./retry_focus.js";
 import {
   frameSource,
   generatedFrameSource,
   generatedUsage,
-  generatedView,
   shellFrameUsage,
   stageDocumentKey,
 } from "./stage_sources.js";
@@ -124,124 +117,6 @@ export function useViewFrame(input: ViewFrameInput) {
   return { ...mounted, generation, initialSource, source };
 }
 
-/** A selected, adapter-owned screen or component preview. */
-export function StageFrame({
-  entry,
-  flow = false,
-  fragment,
-  hasDarkFragments,
-  previewViews,
-  stepIndex,
-  variantPath,
-  views,
-  viewport,
-}: {
-  entry: ViewEntry;
-  flow?: boolean;
-  fragment?: string;
-  hasDarkFragments: boolean;
-  previewViews?: readonly GeneratedComponentView[];
-  stepIndex?: number;
-  variantPath?: string;
-  views: readonly ShellCatalogueView[];
-  viewport: "desktop" | "mobile";
-}) {
-  const stage = useContext(FrameStageContext);
-  const selection = useContext(DisplaySelection);
-  const store = useShellStore();
-  const light = views.find(
-    (view) => view.viewport === viewport && view.colorScheme === "light",
-  );
-  const dark = views.find(
-    (view) => view.viewport === viewport && view.colorScheme === "dark",
-  );
-  const previewLight = generatedView(
-    previewViews,
-    variantPath,
-    viewport,
-    "light",
-  );
-  const previewDark = generatedView(
-    previewViews,
-    variantPath,
-    viewport,
-    "dark",
-  );
-  const selected = schemeValue(selection.colorScheme, light, dark);
-  const preview = schemeValue(selection.colorScheme, previewLight, previewDark);
-  const frameKey = frameIdentityKey({
-    entryPath: entry.path,
-    viewport,
-    ...(stepIndex === undefined ? {} : { stepIndex }),
-    ...(variantPath ? { variantPath } : {}),
-  });
-  const mounted = useViewFrame({
-    entry,
-    expanded: store.state.expandedFrame === frameKey,
-    fragment,
-    preview,
-    sources: hasDarkFragments
-      ? viewSources(
-          entry,
-          light,
-          dark,
-          previewLight,
-          previewDark,
-          fragment,
-          stepIndex,
-        )
-      : [],
-    stage,
-    stepIndex,
-    variantPath,
-    view: selected,
-    viewport,
-  });
-  const component = entry.kind === "component";
-  const fallback = hasDarkFragments && !previewDark && !dark;
-  const frame = mounted.source ? (
-    <PreviewIframe
-      busy={mounted.status === "loading"}
-      data={{
-        "data-mokly-fragment-frame": !flow || stepIndex === 0 ? "" : undefined,
-        "data-mokly-frame-state": mounted.status,
-        "data-workspace-frame": flow ? undefined : viewport,
-      }}
-      key={mounted.generation}
-      ref={mounted.frameRef}
-      src={mounted.initialSource}
-      title={`${entry.title} — ${viewport}`}
-    />
-  ) : null;
-  const framed = component ? (
-    frame
-  ) : viewport === "mobile" ? (
-    <PhoneFrame>{frame}</PhoneFrame>
-  ) : (
-    <BrowserFrame
-      address={entry.address ?? entryRoute(entry.path)}
-      frameKey={frameKey}
-    >
-      {frame}
-    </BrowserFrame>
-  );
-  return (
-    <PreviewFrame
-      error={mounted.status === "error"}
-      fallback={fallback}
-      placement={
-        flow
-          ? { kind: "flow" }
-          : { kind: component ? "canvas" : "frame", viewport }
-      }
-      retry={{ onClick: focusThen(mounted.frameRef, mounted.retry) }}
-      scheme={preview?.colorScheme ?? selected?.colorScheme ?? "light"}
-    >
-      {framed}
-    </PreviewFrame>
-  );
-}
-
 /**
  * The documents of one viewport's view in each scheme: a live edit's render
  * where one exists, else the saved view.
@@ -263,13 +138,4 @@ export function viewSources(
       ? generatedFrameSource(previewDark, fragment, stepIndex)
       : frameSource(entry, dark, fragment, stepIndex),
   ].filter((value): value is string => value !== undefined);
-}
-
-function frameIdentityKey(identity: ShellFrameIdentity): string {
-  return JSON.stringify([
-    identity.entryPath,
-    identity.variantPath,
-    identity.stepIndex,
-    identity.viewport,
-  ]);
 }

@@ -47,6 +47,15 @@
   line-height: 1;
 }
 
+/* The quiet label, such as "Showing previous version", takes the canvas
+   section's look, and it gives way first when the bar runs out of room. */
+.mbk-entry-bar-quiet {
+  flex-shrink: 4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* With a picker and a status, the kind tag keeps its glyph alone, so the
    status stays clear of the picker; its words stay for assistive
    technology. */

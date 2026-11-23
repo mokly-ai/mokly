@@ -6,6 +6,9 @@ import type { CatalogueReadModel } from "@mokly/model";
 import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
 import {
   compactFrames,
+  frameChoices,
+  pickedAlone,
+  pickedFrameKey,
   pickedScreenFrame,
   pickedSetFrame,
   pickerFrames,
@@ -68,11 +71,71 @@ test("a screen shows the frame of the selection's viewport and scheme, Both read
   assert.equal(pick("both", "light"), "mobile-light");
   assert.equal(pick("both", "dark"), "mobile-dark");
   assert.equal(pick("desktop", "dark"), "desktop-dark");
-  // A screen without a dark view opens on its first shown frame.
+  // A screen without a dark view keeps the viewport's Light frame.
   const light = frames("product/browse/home", false);
   assert.equal(
     pickedScreenFrame(light, { colorScheme: "dark", viewport: "both" }),
     "mobile-light",
+  );
+  assert.equal(
+    pickedScreenFrame(light, { colorScheme: "dark", viewport: "desktop" }),
+    "desktop-light",
+  );
+});
+
+test("frames keyed by viewport and scheme, as a removed screen's, pick the same way, or fall back to the first", () => {
+  const removed = [
+    { key: "desktop-light" },
+    { key: "mobile-light" },
+    { key: "desktop-dark" },
+  ];
+  assert.equal(
+    pickedFrameKey(removed, { colorScheme: "dark", viewport: "desktop" }),
+    "desktop-dark",
+  );
+  assert.equal(
+    pickedFrameKey(removed, { colorScheme: "dark", viewport: "both" }),
+    "mobile-light",
+  );
+  assert.equal(
+    pickedFrameKey([{ key: "desktop-light" }], {
+      colorScheme: "light",
+      viewport: "mobile",
+    }),
+    "desktop-light",
+  );
+  assert.equal(
+    pickedFrameKey([], { colorScheme: "light", viewport: "both" }),
+    undefined,
+  );
+});
+
+test("a picker lists frames in their order, and a pick stands alone in the first cell", () => {
+  const steps: {
+    column: number;
+    hidden?: boolean;
+    key: string;
+    kind: "mobile";
+    label: string;
+    row: number;
+  }[] = [
+    { column: 0, key: "step-0", kind: "mobile", label: "1 · Home", row: 0 },
+    { column: 1, key: "step-1", kind: "mobile", label: "2 · Save", row: 0 },
+  ];
+  assert.deepEqual(frameChoices(steps), [
+    { kind: "mobile", label: "1 · Home", value: "step-0" },
+    { kind: "mobile", label: "2 · Save", value: "step-1" },
+  ]);
+  assert.deepEqual(
+    pickedAlone(steps, "step-1").map(({ column, hidden, key }) => [
+      key,
+      column,
+      hidden,
+    ]),
+    [
+      ["step-0", 0, true],
+      ["step-1", 0, false],
+    ],
   );
 });
 

@@ -1,8 +1,8 @@
 /**
  * The entry bar of the compact layout, over the top of the canvas. It names
  * the selected entry with its title in a dark tag, a `Component` kind tag for
- * a component, and its change status, and it holds the frame picker at its
- * end: a native select named `Frame` that lists the entry's shown frames,
+ * a component, its change status, and a quiet label, such as `Showing
+ * previous version`, and it holds the frame picker at its end: a native select named `Frame` that lists the entry's shown frames,
  * led by the glyph of the picked frame's kind. The bar shows below the
  * layout breakpoint only, where the section's head, which names the entry
  * on a wide canvas, is absent.
@@ -65,6 +65,7 @@ function FramePicker({ frames, onChange, value }: EntryBarPicker) {
 export function EntryBar({
   component = false,
   picker,
+  quietLabel,
   status,
   title,
 }: {
@@ -72,6 +73,11 @@ export function EntryBar({
   component?: boolean;
   /** The frame picker; without it, as for a reading frame, the bar has none. */
   picker?: EntryBarPicker | undefined;
+  /**
+   * A quiet label after the status, which says what the canvas shows, such
+   * as `Showing previous version` for a removed entry.
+   */
+  quietLabel?: string | undefined;
   /** The entry's change status, such as a `ChangeStatus`. */
   status?: ReactNode;
   /** The entry's title. */
@@ -88,6 +94,11 @@ export function EntryBar({
           </span>
         ) : null}
         {status}
+        {quietLabel ? (
+          <span className="mbk-canvas-quiet-label mbk-entry-bar-quiet mbk-reset">
+            {quietLabel}
+          </span>
+        ) : null}
       </span>
       {picker === undefined ? null : <FramePicker {...picker} />}
     </div>

@@ -2,9 +2,10 @@
  * The compact layout's frames: one frame at a time on the canvas, and the
  * frame picker of the entry bar, which lists the shown frames of the canvas
  * frames model. A screen shows the frame that the selection's viewport and
- * scheme name, where `both` reads as Mobile. A variant set shows its whole
- * set until a selection picks a frame: the routed saved variant's frame in
- * the selection's scheme.
+ * scheme name, where `both` reads as Mobile, as does a removed screen's
+ * previous version. A variant set shows its whole set until a selection
+ * picks a frame: the routed saved variant's frame in the selection's scheme.
+ * A use case shows one step frame, which `canvas_use_case_pick.ts` picks.
  */
 
 import type { EntryBarFrame } from "@mokly/ui/entry-bar";
@@ -28,19 +29,11 @@ function screenRank(frame: CanvasFramePlan): number {
   );
 }
 
-/**
- * The frames that the picker lists: the shown frames, each by its name. A
- * screen's frames list Mobile before Desktop and Light before Dark; other
- * frames keep the model's order.
- */
-export function pickerFrames(
-  frames: readonly CanvasFramePlan[],
+/** The frames that a picker lists, in their order, each by its name. */
+export function frameChoices(
+  frames: readonly Pick<CanvasFramePlan, "key" | "kind" | "label">[],
 ): EntryBarFrame[] {
-  const shown = frames.filter((frame) => !frame.hidden);
-  const ordered = shown.every(screenFrame)
-    ? [...shown].sort((first, second) => screenRank(first) - screenRank(second))
-    : shown;
-  return ordered.map((frame) => ({
+  return frames.map((frame) => ({
     kind: frame.kind,
     label: frame.label,
     value: frame.key,
@@ -48,23 +41,51 @@ export function pickerFrames(
 }
 
 /**
- * The frame that the compact layout shows of a screen: the frame of the
- * selection's viewport and scheme, with `both` read as Mobile, or the
- * picker's first frame while the screen has no such frame.
+ * The frames that the picker lists of a screen or a variant set: the shown
+ * frames. A screen's frames list Mobile before Desktop and Light before
+ * Dark; a variant set's keep the model's order.
+ */
+export function pickerFrames(
+  frames: readonly CanvasFramePlan[],
+): EntryBarFrame[] {
+  const shown = frames.filter((frame) => !frame.hidden);
+  return frameChoices(
+    shown.every(screenFrame)
+      ? [...shown].sort(
+          (first, second) => screenRank(first) - screenRank(second),
+        )
+      : shown,
+  );
+}
+
+/**
+ * The key of the frame that the compact layout shows of a screen's frames,
+ * which their viewport and scheme name, such as `mobile-light`: the frame of
+ * the selection's viewport and scheme, with `both` read as Mobile; else that
+ * viewport's Light frame, as a screen without a dark view keeps; else the
+ * first frame.
+ */
+export function pickedFrameKey(
+  frames: readonly { key: string }[],
+  selection: Pick<ViewerSelection, "colorScheme" | "viewport">,
+): string | undefined {
+  const viewport =
+    selection.viewport === "both" ? "mobile" : selection.viewport;
+  const named = (scheme: CanvasScheme) =>
+    frames.find((frame) => frame.key === `${viewport}-${scheme}`);
+  return (named(selection.colorScheme) ?? named("light") ?? frames[0])?.key;
+}
+
+/**
+ * The frame that the compact layout shows of a screen: the frame that
+ * `pickedFrameKey` names among its shown frames, or the picker's first frame.
  */
 export function pickedScreenFrame(
   frames: readonly CanvasFramePlan[],
   selection: Pick<ViewerSelection, "colorScheme" | "viewport">,
 ): string | undefined {
-  const viewport =
-    selection.viewport === "both" ? "mobile" : selection.viewport;
-  const named = frames.find(
-    (frame) =>
-      !frame.hidden &&
-      frame.viewport === viewport &&
-      frame.scheme === selection.colorScheme,
-  );
-  return named?.key ?? pickerFrames(frames)[0]?.value;
+  const order = pickerFrames(frames).map(({ value }) => ({ key: value }));
+  return pickedFrameKey(order, selection);
 }
 
 /**
@@ -85,33 +106,42 @@ export function pickedSetFrame(
   )?.key;
 }
 
-/** The entry's slug: the last segment of its path. */
-function slug(path: string): string {
-  return path.split("/").at(-1) ?? path;
+/**
+ * The frames with the picked frame alone in the section's first cell; the
+ * others stay mounted out of the section.
+ */
+export function pickedAlone<
+  Frame extends { column: number; hidden?: boolean; key: string; row: number },
+>(frames: readonly Frame[], picked: string): Frame[] {
+  return frames.map((frame) =>
+    frame.key === picked
+      ? { ...frame, column: 0, hidden: false, row: 0 }
+      : { ...frame, hidden: true },
+  );
 }
 
 /**
- * The frames on the compact canvas: the picked frame alone, in the
- * section's first cell, and the others mounted out of the section. One
- * screen frame then stands for the entry, so the entry's slug leads its
- * name, such as `welcome · Mobile · Light`. Without a picked frame every
- * frame shows.
+ * The name of the one screen frame that stands for an entry in the compact
+ * layout: the entry's slug, the last segment of its path, leads it, such as
+ * `welcome · Mobile · Light`.
+ */
+export function compactFrameLabel(path: string, label: string): string {
+  return `${path.split("/").at(-1) ?? path} · ${label}`;
+}
+
+/**
+ * The frames on the compact canvas: the picked frame alone, and the others
+ * mounted out of the section. A picked screen frame's name leads with the
+ * entry's slug. Without a picked frame every frame shows.
  */
 export function compactFrames(
   frames: readonly CanvasFramePlan[],
   picked: string | undefined,
 ): readonly CanvasFramePlan[] {
   if (picked === undefined) return frames;
-  return frames.map((frame) => {
-    if (frame.key !== picked) return { ...frame, hidden: true };
-    const { hidden: _hidden, ...shown } = frame;
-    return {
-      ...shown,
-      column: 0,
-      label: screenFrame(frame)
-        ? `${slug(frame.entry.path)} · ${frame.label}`
-        : frame.label,
-      row: 0,
-    };
-  });
+  return pickedAlone(frames, picked).map((frame) =>
+    frame.key === picked && screenFrame(frame)
+      ? { ...frame, label: compactFrameLabel(frame.entry.path, frame.label) }
+      : frame,
+  );
 }

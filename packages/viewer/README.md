@@ -301,12 +301,11 @@ and Review regressions against `mokly serve` of the example catalogue.
   targets, drafts, and validation shared by the controls and their fields
 - [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
   [`src/shell/document_stage_frame.tsx`](./src/shell/document_stage_frame.tsx),
-  [`src/shell/public_stage.tsx`](./src/shell/public_stage.tsx), and
-  [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the containers of the
-  preview frames, the stages, a user flow's steps, and a removed entry's
-  previous version: they mount each frame, derive its sources, and pass its
-  `ref` and attributes to the package's `<iframe>`; `frames.tsx` holds the
-  expanded browser frame in the store
+  and [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the mounts of the
+  canvas frames and the container of a removed entry's previous version: they
+  mount each frame, derive its sources, and pass its `ref` and attributes to
+  the package's `<iframe>`; `frames.tsx` holds the expanded browser frame in
+  the store
 - [`src/shell/views.tsx`](./src/shell/views.tsx),
   [`src/shell/workspace.tsx`](./src/shell/workspace.tsx),
   [`src/shell/embedded_viewer.tsx`](./src/shell/embedded_viewer.tsx), and

@@ -3,7 +3,8 @@
  * historical view, from `canvas_removed_frames.ts`, each holding its
  * historical document in a read-only `srcdoc` frame, which forwards its
  * canvas input through `canvas_removed_input.ts`, and the note of a viewport
- * never captured in its frames' places.
+ * never captured in its frames' places. The compact layout shows one of
+ * them, the frame of the selection's viewport and scheme.
  */
 
 import { CanvasFrame } from "@mokly/ui/canvas-frame";
@@ -13,6 +14,7 @@ import type { ViewerSelection } from "../host/types.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { PreviewContent } from "../previews/request.js";
 
+import { compactFrameLabel, pickedFrameKey } from "./canvas_compact.js";
 import {
   DESKTOP_FRAME_SIZE,
   MOBILE_FRAME_SIZE,
@@ -92,9 +94,26 @@ export function RemovedScreenSection({
   views: readonly ScreenView[];
 }) {
   const compact = !useCanvasLayout();
-  const frames = removedScreenFrames(views, { compact, viewport }).filter(
+  const shown = removedScreenFrames(views, { compact, viewport }).filter(
     (frame) => !frame.hidden,
   );
+  // The compact layout shows the frame of the selection's viewport and
+  // scheme alone, which the entry bar's picker picks, named as a current
+  // screen's one frame is.
+  const picked = compact
+    ? pickedFrameKey(shown, { colorScheme, viewport })
+    : undefined;
+  const frames =
+    picked === undefined
+      ? shown
+      : shown
+          .filter((frame) => frame.key === picked)
+          .map((frame) => ({
+            ...frame,
+            column: 0,
+            label: compactFrameLabel(data.path, frame.label),
+            row: 0,
+          }));
   // The preview reports ready once the document of every shown frame arrived.
   if (frames.some((frame) => frame.view && !presentations.has(frame.view.url)))
     return <RemovedUnavailable retry={retry} />;
@@ -102,7 +121,7 @@ export function RemovedScreenSection({
     <RemovedSection
       colorScheme={colorScheme}
       data={data}
-      fitKey={`removed:${data.path}:${viewport}`}
+      fitKey={`removed:${data.path}:${viewport}${picked ? `:${picked}` : ""}`}
       frames={frames.map((plan) => {
         const size =
           plan.viewport === "desktop" ? DESKTOP_FRAME_SIZE : MOBILE_FRAME_SIZE;

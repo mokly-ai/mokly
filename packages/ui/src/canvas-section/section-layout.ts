@@ -90,7 +90,9 @@ export const COMPACT_PADDING = {
  * keeps the room of its taller label and of its description above it.
  */
 export function compactPadding(kind: CanvasSectionKind): CanvasPadding {
-  return kind === "use-case" ? { ...COMPACT_PADDING, top: 52 } : COMPACT_PADDING;
+  return kind === "use-case"
+    ? { ...COMPACT_PADDING, top: 52 }
+    : COMPACT_PADDING;
 }
 
 /** The gaps of a section in the compact layout, such as a whole variant set. */

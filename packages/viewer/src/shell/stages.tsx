@@ -23,6 +23,8 @@ export function TargetStage(props: {
   catalogue: Catalogue;
   fragment?: string;
   target: RouteTarget;
+  /** The step frame that the compact layout shows of a use case. */
+  useCaseStep?: string | undefined;
 }) {
   const delivery = useRouteDelivery();
   const focus = useRetryFocus();
@@ -45,6 +47,7 @@ export function TargetStage(props: {
           entry={current}
           fragment={props.fragment}
           key={current.path}
+          picked={props.useCaseStep}
         />
       ) : props.canvas &&
         (current.kind === "screen" || current.kind === "component") ? (

@@ -144,10 +144,21 @@ test("the stage overlay covers the shown preview inside the stage host", () => {
   );
 });
 
-test("the overlay finds a flow or an embedded document when no workspace shows", () => {
-  boxes.set(".mbk-flow", { left: 7, top: 9, width: 11, height: 13 });
+/** A use case's section: its step frames in one row. */
+const USE_CASE: CanvasStageSection = {
+  frames: [
+    { key: "step-0", column: 0, row: 0, width: 390, height: 844, node: <i /> },
+    { key: "step-1", column: 1, row: 0, width: 390, height: 844, node: <i /> },
+  ],
+  kind: "use-case",
+  path: "example/tour",
+  title: "Example tour",
+};
+
+test("the overlay finds the routed canvas of a use case's steps when no workspace shows", () => {
+  boxes.set(".mbk-canvas", { left: 7, top: 9, width: 11, height: 13 });
   const { container } = render(
-    layout(<div className="mbk-flow">Steps</div>, { stageOverlay: NOTE }),
+    layout(<CanvasStage routed section={USE_CASE} />, { stageOverlay: NOTE }),
   );
   assert.equal(overlay(container).hidden, false);
   assert.equal(overlay(container).style.width, "11px");

@@ -5,6 +5,8 @@
 // `canvas_removed.tsx` the canvas that holds the section of the historical
 // views, or the loading or unavailable state in place of the section.
 
+import { useEffect } from "react";
+
 import { CanvasPreviousVersion } from "@mokly/ui/canvas-previous-version";
 
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
@@ -85,7 +87,15 @@ export function removedPreviewData(
  * version. A shell that cannot request it shows that the previous version is
  * unavailable.
  */
-export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
+export function RemovedPreviewStage(props: {
+  data: RemovedPreviewData;
+  /**
+   * Hears the path of the entry while its previous version shows, and
+   * nothing while it loads or is unavailable, so the compact layout's entry
+   * bar names what the canvas shows only then.
+   */
+  onShown?: ((path: string | undefined) => void) | undefined;
+}) {
   const store = useShellStore();
   const { colorScheme, viewport } = store.state.selection;
   const preview = useRemovedPreview({
@@ -94,6 +104,11 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
     interactive: store.interactive,
     viewport,
   });
+  const shown = preview.state.status === "ready" ? props.data.path : undefined;
+  const onShown = props.onShown;
+  useEffect(() => {
+    onShown?.(shown);
+  }, [onShown, shown]);
   return (
     <CanvasPreviousVersion descriptor="">
       <CanvasRemovedStage

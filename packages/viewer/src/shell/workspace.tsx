@@ -13,6 +13,7 @@ import type { InspectorHandle } from "@mokly/ui/inspector";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
 import { canvasEditContexts, framesViews } from "./canvas_frames.js";
+import { usePreviousVersionLabel } from "./canvas_removed_section.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
@@ -143,6 +144,7 @@ export function ComponentWorkspace({
   const preview = data.removed
     ? removedPreviewData(catalogue, context, entry)
     : undefined;
+  const previous = usePreviousVersionLabel(preview, colorScheme);
   const stage = (
     <WorkspaceStage
       canvas={{
@@ -171,6 +173,7 @@ export function ComponentWorkspace({
         <EntryBar
           component={entry.kind === "component"}
           picker={canvas.picker}
+          quietLabel={previous.label}
           status={<ChangeStatus status={headStatus} />}
           title={head.title}
         />
@@ -237,7 +240,7 @@ export function ComponentWorkspace({
       preview={
         <FrameStageContext value={previewRef}>
           {preview ? (
-            <RemovedPreviewStage data={preview} />
+            <RemovedPreviewStage data={preview} onShown={previous.onShown} />
           ) : data.comparisons ? (
             <ControlledDiffScreen
               compared={data.compared}

@@ -25,6 +25,22 @@ test("the bar names the entry: its title tag, a component's kind tag and its sta
   assert.equal(bar.textContent, "ActionComponent");
 });
 
+test("a quiet label follows the status, such as a removed entry's previous version", () => {
+  const { container } = render(
+    <EntryBar
+      quietLabel="Showing previous version"
+      status={<span data-status="">Removed</span>}
+      title="Timeline"
+    />,
+  );
+  const title = container.querySelector(".mbk-entry-bar-title");
+  assert.equal(title?.textContent, "TimelineRemovedShowing previous version");
+  assert.equal(
+    title?.lastElementChild?.className,
+    "mbk-canvas-quiet-label mbk-entry-bar-quiet mbk-reset",
+  );
+});
+
 test("the frame picker is a native select named Frame that lists the frames and reports a pick", () => {
   const picks: string[] = [];
   const { container } = render(

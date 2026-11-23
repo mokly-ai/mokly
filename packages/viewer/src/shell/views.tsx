@@ -13,6 +13,8 @@ import {
 import { EntryBar } from "@mokly/ui/entry-bar";
 import { MainRegion } from "@mokly/ui/shell-layout";
 
+import { usePreviousVersionLabel } from "./canvas_removed_section.js";
+import { useUseCasePick } from "./canvas_use_case_pick.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { DetailsPanel } from "./details.js";
@@ -27,10 +29,12 @@ import { useShellIdentifier } from "./identifier_context.js";
 import { PageEvidence } from "./page_evidence.js";
 import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
+import { publicEntryStatus } from "./public_workspace.js";
 import { useRetryContent } from "./retry_focus.js";
 import { useShellRoot } from "./root_context.js";
 import { RightPanel } from "./sheets.js";
 import { TargetStage } from "./stages.js";
+import { useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
 import { workspaceKey } from "./workspace_entry.js";
@@ -85,8 +89,22 @@ function TargetView(props: {
       ? pageComparisonEvidence(props.catalogue, target.entry.path)
       : undefined;
   const status = removed ? "Removed" : page?.status;
+  const colorScheme = useShellStore().state.selection.colorScheme;
+  // The compact layout shows one step of a use case, which the entry bar's
+  // picker picks, and names a removed entry's previous version while it shows.
+  const useCase = useUseCasePick(
+    props.catalogue,
+    removed ? undefined : target.entry,
+  );
+  const previous = usePreviousVersionLabel(preview, colorScheme);
+  // The entry bar stands for the canvas section's head, which names a use
+  // case's status too.
+  const barStatus =
+    target.entry.kind === "use-case" && !removed
+      ? publicEntryStatus(target.entry)
+      : status;
   const stage = preview ? (
-    <RemovedPreviewStage data={preview} />
+    <RemovedPreviewStage data={preview} onShown={previous.onShown} />
   ) : removed ? (
     <RemovedState kind="flow" />
   ) : (
@@ -94,12 +112,15 @@ function TargetView(props: {
       catalogue={props.catalogue}
       {...(props.fragment ? { fragment: props.fragment } : {})}
       target={props.target}
+      useCaseStep={useCase?.picked}
     />
   );
   return (
     <>
       <EntryBar
-        status={status ? <ChangeStatus status={status} /> : undefined}
+        picker={useCase?.picker}
+        quietLabel={previous.label}
+        status={barStatus ? <ChangeStatus status={barStatus} /> : undefined}
         title={head.title}
       />
       {stage}

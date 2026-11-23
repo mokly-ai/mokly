@@ -230,9 +230,10 @@ scroll its content. `CanvasDock` draws the compact layout's dock, a group
 named `Canvas controls` with Catalogue, the right panel's current tab, and
 Fit, each from its callback, and gives Catalogue and the tab to the host's
 refs. `EntryBar` draws the compact layout's entry bar: the title tag, the
-`Component` kind tag, the status slot, and the frame picker, a native select
-named `Frame` of the `picker`'s frames. The dock and the entry bar show below
-the layout breakpoint only.
+`Component` kind tag, the status slot, an optional `quietLabel`, such as
+"Showing previous version", and the frame picker, a native select named
+`Frame` of the `picker`'s frames. The dock and the entry bar show below the
+layout breakpoint only.
 
 `CanvasSection` draws the section: the box of a screen, a document or a use
 case, or the dashed outline of a component's variant set, its head with the
@@ -328,8 +329,8 @@ containers of the three top-bar slots, which the bar places in its columns.
 It places each slot's content
 without reading it, keeps the host's stage overlay over the shown preview,
 and takes the host's `MarkerLayer` and label layer. The shown preview is a
-workspace's preview, a document's stage, or the routed canvas that holds a
-use case's section or a document's reading frame. `WorkspaceLayout` lays out
+workspace's preview, or the routed canvas that holds a use case's section or
+a document's reading frame. `WorkspaceLayout` lays out
 a workspace's preview with its `entryBar` and the right `panel` that holds
 the header, the variant bar, and the inspector, or, without a panel, the
 header and the variant bar above the preview beside the inspector.

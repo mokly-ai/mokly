@@ -217,9 +217,8 @@ render with `@mokly/ui/edit-status`. The controls' wording of
 `component_controls_copy.ts` reaches them as props. The preview's containers
 render `@mokly/ui/canvas-stage`, `@mokly/ui/canvas-frame`,
 `@mokly/ui/canvas-missing-view`, `@mokly/ui/canvas-state`,
-`@mokly/ui/canvas-previous-version`, `@mokly/ui/stage`,
-`@mokly/ui/preview-frame`, `@mokly/ui/device-frame`,
-`@mokly/ui/preview-state`, `@mokly/ui/scheme-fallback`,
+`@mokly/ui/canvas-previous-version`, `@mokly/ui/preview-frame`,
+`@mokly/ui/device-frame`, `@mokly/ui/preview-state`,
 `@mokly/ui/comparison-stage`, `@mokly/ui/comparison-pane`,
 `@mokly/ui/empty-state`, and `@mokly/ui/variant-bar`. Each `<iframe>` element
 is `PreviewIframe` of `@mokly/ui/preview-frame`: a container passes its `ref`,
@@ -361,7 +360,12 @@ view of that viewport keeps its Light view under Dark, and its label says so.
 `stage_frame.tsx` under the step's own frame identity, so instance events and
 markers carry the step's index, and only the first step's frame opens at the
 route's fragment. The step's link, which opens its screen, has the accessible
-name `{step title}, {screen title} screen`.
+name `{step title}, {screen title} screen`. In the compact layout the canvas
+shows one step frame at a time: `canvas_use_case_pick.ts` keeps the pick of
+the target view, the first step's frame when a use case opens, and the entry
+bar's picker lists the step frames and names the use case's status. The other
+step frames stay mounted out of the section.
+
 `layout_breakpoint.ts` holds the layout breakpoint of the
 [canvas frames contract](../../../../docs/protocol/mokly-shell-device-chrome.md#responsive-behavior)
 as one media query, narrower than 900px, which every shell and viewer rule and script
@@ -718,7 +722,14 @@ frame for each historical view, Desktop beside Mobile and the Light row above
 the Dark row, with a viewport choice that keeps one column, as for a current
 screen. A viewport without a historical view holds the note of
 `@mokly/ui/canvas-missing-view` in its frames' places; its second sentence
-shows only while no frame of the other viewport shows. A removed page or
+shows only while no frame of the other viewport shows. In the compact layout
+the section shows the frame of the selection's viewport and scheme alone,
+which the entry bar's picker picks as for a current screen, and the entry
+bar names the previous version beside the Removed status while it shows:
+`RemovedPreviewStage` reports it through `onShown` to the
+`usePreviousVersionLabel` of `canvas_removed_section.tsx`. The
+dock's Fit hides while the canvas holds a state, because only a section
+registers the canvas. A removed page or
 document opens as one reading frame, named by its source file. A previous
 version's frame has no frame adapter, so `SnapshotFrame` forwards the canvas
 input of each document that it presents with `listenForCanvasInput`, and

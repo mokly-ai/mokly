@@ -105,27 +105,13 @@
   --mbk-canvas-inset-end: 328px;
 }
 
-/* A stage without a canvas, such as a loading or a removed entry's state, a
-   use case's steps or a previous version, stands in the canvas's stage
-   between the floating panels. */
+/* A state without a canvas, such as the loading state or a removed entry's
+   state, stands in the canvas's stage between the floating panels. */
 .mbk[data-canvas-layout]
   :is(.mbk-main, .mbk-preview-busy, .mbk-current-screen)
-  > :is(.mbk-empty, .mbk-flow, .mbk-preview, .mbk-previous) {
+  > .mbk-empty {
   margin: var(--mbk-canvas-inset-top, 0px) var(--mbk-canvas-inset-end, 0px)
     var(--mbk-canvas-inset-bottom, 0px) var(--mbk-canvas-inset-start, 0px);
-}
-
-.mbk[data-canvas-layout]
-  :is(.mbk-main, .mbk-preview-busy, .mbk-current-screen)
-  > .mbk-previous
-  + .mbk-preview {
-  margin-top: 0;
-}
-
-.mbk[data-canvas-layout]
-  :is(.mbk-main, .mbk-preview-busy, .mbk-current-screen)
-  > .mbk-previous:has(+ .mbk-preview) {
-  margin-bottom: 0;
 }
 
 @media (width < 73.75rem) {

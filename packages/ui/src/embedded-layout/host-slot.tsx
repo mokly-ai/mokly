@@ -48,14 +48,13 @@ export interface StageOverlayContent {
 }
 
 /**
- * The preview surfaces that an overlay covers: a workspace's preview, a use
- * case's flow, a document's stage below the layout breakpoint, and the routed
- * canvas, which holds a document's reading frame from the breakpoint up. The
- * search takes the first surface in the tree's order, so a workspace's
- * preview, which holds its own canvas, keeps the overlay.
+ * The preview surfaces that an overlay covers: a workspace's preview, and the
+ * routed canvas, which holds a use case's section or a document's reading
+ * frame. The search takes the first surface in the tree's order, so a
+ * workspace's preview, which holds its own canvas, keeps the overlay.
  */
 const STAGE_SELECTOR =
-  "[data-workspace-preview], .mbk-flow, .mbk-stage-embed, .mbk-canvas[data-mokly-stage]";
+  "[data-workspace-preview], .mbk-canvas[data-mokly-stage]";
 
 /**
  * The stage overlay slot. It covers the shown preview surface of its stage
