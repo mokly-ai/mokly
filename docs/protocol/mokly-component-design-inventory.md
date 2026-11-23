@@ -67,7 +67,7 @@ path under the [artifact path contract](./mokly-artifact-paths.md): its
 standalone views are `<path>/index.mobile.html` and
 `<path>/index.desktop.html`, and gallery
 membership is the entry's folder. All fifty-four component
-screens and their two variants opt into light documents, as the shell mockups do. Their
+screens and their three variants opt into light documents, as the shell mockups do. Their
 depicted preview captions name the viewport only, as the shell's do. The
 toolbar has no scheme switch: the catalogue's one Appearance control, drawn in
 their top bar like every other artboard's, sets the scheme. Links use

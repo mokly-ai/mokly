@@ -17,9 +17,12 @@ import {
 } from "./fixtures.js";
 
 /**
- * The alert of each state that shows one: what failed, and its action. A body
- * names the props that the preview shows. No edit has rendered in the failed
- * state, so its preview and its body give the saved props.
+ * The alert of each state that shows one: what failed, and its action. The
+ * body of a failed render and the invalid notice name the props that the
+ * preview shows. No edit has rendered in the failed and invalid states, so
+ * their previews and their sentences give the saved props. When a later edit
+ * fails, an earlier edit has rendered, so the preview and the body give the
+ * last valid props.
  */
 const ALERTS: Partial<Record<ControlsState, ControlsAlert>> = {
   error: {
@@ -27,7 +30,12 @@ const ALERTS: Partial<Record<ControlsState, ControlsAlert>> = {
     body: CONTROLS_COPY.expiredBody,
     title: CONTROLS_COPY.failedTitle,
   },
-  invalid: { text: CONTROLS_COPY.invalid },
+  "error-later-edit": {
+    action: CONTROLS_COPY.retry,
+    body: CONTROLS_COPY.failedBody,
+    title: CONTROLS_COPY.failedTitle,
+  },
+  invalid: { text: CONTROLS_COPY.invalidSavedPreview },
   "invalid-together": { text: CONTROLS_COPY.invalidTogether },
   expired: {
     action: CONTROLS_COPY.expiredAction,

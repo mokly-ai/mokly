@@ -100,6 +100,7 @@ design/library/chrome/top-bar -> design/components/controls/published/readonly
 design/library/chrome/top-bar -> design/components/controls/published/readonly-variant
 design/library/chrome/top-bar -> design/components/controls/states/comparison
 design/library/chrome/top-bar -> design/components/controls/states/error
+design/library/chrome/top-bar -> design/components/controls/states/error/later-edit
 design/library/chrome/top-bar -> design/components/controls/states/invalid
 design/library/chrome/top-bar -> design/components/controls/states/pending
 design/library/chrome/top-bar -> design/components/controls/states/preparing

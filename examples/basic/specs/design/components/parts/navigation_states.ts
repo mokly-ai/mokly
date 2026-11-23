@@ -29,6 +29,7 @@ export const COMPONENT_NAVIGATION_STATES = {
   [CONTROLS_PAGES["preparing-failed"]]: {},
   [CONTROLS_PAGES["invalid"]]: {},
   [CONTROLS_PAGES["error"]]: {},
+  [CONTROLS_PAGES["error-later-edit"]]: {},
   [CONTROLS_PAGES["comparison"]]: {},
   [CONTROLS_PAGES["readonly"]]: {},
   [CONTROLS_PAGES["readonly-variant"]]: {},

@@ -34,6 +34,12 @@ export function ErrorControlsDesktop() {
 export function ErrorControlsMobile() {
   return <ControlsPage state="error" viewport="mobile" />;
 }
+export function ErrorLaterEditControlsDesktop() {
+  return <ControlsPage state="error-later-edit" viewport="desktop" />;
+}
+export function ErrorLaterEditControlsMobile() {
+  return <ControlsPage state="error-later-edit" viewport="mobile" />;
+}
 export function ComparisonControlsDesktop() {
   return <ControlsPage state="comparison" viewport="desktop" />;
 }
@@ -84,7 +90,7 @@ export const invalidScreen = defineScreen({
   slug: "invalid",
   title: "Invalid prop value",
   description:
-    "An inline number error keeps the last valid preview and preserves the entered value.",
+    "An inline number error keeps the saved preview and preserves the entered value.",
   colorSchemes: ["light"],
   ...artboards({
     desktop: <InvalidControlsDesktop />,
@@ -96,12 +102,26 @@ export const errorScreen = defineScreen({
   slug: "error",
   title: "Render failed",
   description:
-    "A failed render keeps edits and the last working preview, with retry and reset available.",
+    "A failed render keeps edits and the saved preview, with retry and reset available.",
   colorSchemes: ["light"],
-  ...artboards({
-    desktop: <ErrorControlsDesktop />,
-    mobile: <ErrorControlsMobile />,
-  }),
+  ...artboardStates(
+    {
+      state: "error",
+      title: "Render failed",
+      desktop: <ErrorControlsDesktop />,
+      mobile: <ErrorControlsMobile />,
+    },
+    [
+      {
+        slug: "later-edit",
+        title: "Later edit failed",
+        description:
+          "A later edit fails after an earlier one rendered: the preview keeps the earlier edit, and the fields keep the later one.",
+        desktop: <ErrorLaterEditControlsDesktop />,
+        mobile: <ErrorLaterEditControlsMobile />,
+      },
+    ],
+  ),
 });
 export const comparisonScreen = defineScreen({
   ...controlsDesignMetadata,

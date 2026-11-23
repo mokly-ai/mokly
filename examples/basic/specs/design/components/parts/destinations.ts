@@ -62,6 +62,7 @@ export const CONTROLS_PAGES = {
   "preparing-failed": "design/components/controls/states/preparing/failed",
   invalid: "design/components/controls/states/invalid",
   error: "design/components/controls/states/error",
+  "error-later-edit": "design/components/controls/states/error/later-edit",
   comparison: "design/components/controls/states/comparison",
   readonly: "design/components/controls/published/readonly",
   "readonly-variant": "design/components/controls/published/readonly-variant",

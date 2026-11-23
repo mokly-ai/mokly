@@ -25,11 +25,16 @@ function characters(count: number): string {
  * The settled copy of the Props tab's controls; the viewer follows it, and a
  * tooling test compares the two. The mockups draw the entries of the states
  * they show. The field functions also give the forms that no mockup draws:
- * one-sided bounds, steps, whole numbers, and text lengths. The Read-only
- * and recovery gallery draws the removed entry, read-only props, an entry
- * without props, merged props that fail without one field to highlight, and
- * an expired preview. The component Loading and recovery gallery draws the
- * tab while the entry's detail loads and after its load failed.
+ * one-sided bounds, steps, whole numbers, and text lengths. After a failed or
+ * invalid edit, the sentence names the props that the preview shows.
+ * `expiredBody` and `invalidSavedPreview` name the saved props. `failedBody`
+ * and `invalid` name the last valid props of an earlier edit. No mockup draws
+ * `invalid`, and the viewer does not show `invalidSavedPreview` yet. The
+ * Read-only and recovery gallery draws the removed entry, read-only props, an
+ * entry without props, merged props that fail without one field to
+ * highlight, and an expired preview. The component Loading and recovery
+ * gallery draws the tab while the entry's detail loads and after its load
+ * failed.
  */
 export const CONTROLS_COPY = {
   tab: "Props",
@@ -52,6 +57,8 @@ export const CONTROLS_COPY = {
   retry: "Try again",
   invalid:
     "Check the highlighted values. The preview shows the last valid props.",
+  invalidSavedPreview:
+    "Check the highlighted values. The preview shows the saved props.",
   removed: "Removed entries show their saved props.",
   readonlyProps: "These props are read-only.",
   noProps: "This entry renders without props.",

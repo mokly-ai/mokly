@@ -36,7 +36,7 @@ pub(crate) fn check() {
         .filter(|entry| entry.metadata.path.starts_with("design/components/"))
         .map(|entry| entry.metadata.path.clone())
         .collect();
-    assert_eq!(paths.len(), 56);
+    assert_eq!(paths.len(), 57);
     let mut seen = BTreeSet::new();
     for path in paths {
         for artifact in fixture.views(&path) {

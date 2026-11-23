@@ -789,6 +789,13 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     mockup, which shows the saved preview, uses the saved-props sentence of
     design call 29. Reason: the three rows describe where the story comes
     from, and a mockup shows only what the reader sees.
+32. Made on 2026-11-23 by the orchestrator. The controls mockups draw both
+    sentences of design call 29. The "Invalid prop value" mockup uses a new
+    sentence, "Check the highlighted values. The preview shows the saved
+    props.", which both copy files of the controls hold. A second state of the
+    "Render failed" mockup, "Later edit failed", shows a failure after an
+    earlier edit rendered. Reason: each sentence of design call 29 then has a
+    mockup whose preview matches it.
 
 ## Tracks
 
@@ -849,9 +856,13 @@ Storybook.
 - [x] Draw the Story row of design call 30, and the saved-props sentence of
       design call 29 in the "Render failed" controls mockup. Branch:
       `conductor/storybook-support-a-mockups`.
-- [ ] Draw the sentence of design call 29 in the "Invalid prop value" controls
+- [x] Draw the sentence of design call 29 in the "Invalid prop value" controls
       mockup. It needs a new sentence in the copy of the controls. Branch:
       `conductor/storybook-support-a-mockups`.
+- [x] Add the "Later edit failed" state to the "Render failed" controls
+      mockup, as design call 32 says, and add it to the frozen design lists
+      and to the route table of `docs/protocol/mokly-component-controls-design.md`.
+      Branch: `conductor/storybook-support-a-mockups`.
 - [ ] Update the mockups for the answer to decision 27. Branch:
       `conductor/storybook-support-a-mockups`.
 - [x] Commit, push, review against this branch, give the findings to the
@@ -1223,7 +1234,8 @@ invalid edit, as design call 29 says.
       from the preview that the frame shows. Until an edit renders, use "The
       preview shows the saved props."
 - [ ] Keep the viewer's copy equal to the copy of the controls mockups, which
-      `tests/viewer_controls_copy.test.ts` compares.
+      `tests/viewer_controls_copy.test.ts` compares. The viewer's copy
+      already holds the new sentence of design call 32.
 - [ ] Test both sentences under `packages/viewer/tests`, for a preview that
       shows the saved props and for one that shows an edit.
 
