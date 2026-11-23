@@ -5,7 +5,8 @@
  * example, then a row for each saved variant, each with its Light frame
  * beside its Dark frame, and each frame shows the row's desktop view. A
  * page or a Markdown document shows one reading frame, named by its source
- * file.
+ * file. A use case's step frames, from `canvas_use_case_frames.ts`, carry
+ * the step that each shows.
  */
 
 import type {

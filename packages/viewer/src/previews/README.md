@@ -91,12 +91,16 @@ cargo xtask check --suite viewer
   document as soon as it commits.
 - [`descriptor.ts`](./descriptor.ts) holds `previewKey`, the identity of one
   route-owned preview request. The shell passes preview data through props.
-- [`copy.ts`](./copy.ts) holds `PREVIEW_UNAVAILABLE`, the unavailable copy and
-  the Retry control of the shell.
+- [`copy.ts`](./copy.ts) holds `PREVIOUS_VERSION`, the loading copy and the
+  quiet label of the section's head, and `PREVIEW_UNAVAILABLE`, the
+  unavailable copy and the Retry control of the shell.
 - [`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the
   route-owned controller that requests, renews, and discards a preview.
-- [`../shell/previews.tsx`](../shell/previews.tsx) renders the loading,
-  unavailable, and loaded stages with the device chrome of current screens.
+- [`../shell/previews.tsx`](../shell/previews.tsx) renders the host of a
+  previous version, and
+  [`../shell/canvas_removed.tsx`](../shell/canvas_removed.tsx) the canvas that
+  holds its loading or unavailable state, or the section of its historical
+  views in canvas frames.
 
 Related boundaries: [the frame adapters](../../../frame/README.md#frames-without-an-adapter), the
 [shared shell](../shell/README.md), the

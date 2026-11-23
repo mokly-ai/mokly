@@ -207,14 +207,16 @@ pill's room. The canvas measures an invisible box of that size, so a change
 of an inset refits like a resize. The canvas takes the drags, wheels, and
 pinches around the frames; a frame's document keeps its own.
 
-`CanvasSection` draws the section: the box of a screen or a document, or the
-dashed outline of a component's variant set, its head with the title tag, the
-`Component` kind tag, the path chip that reports `onCopyPath`, and the status
-slot, and its frames in a grid. Each frame takes its cell from its `column`
+`CanvasSection` draws the section: the box of a screen, a document or a use
+case, or the dashed outline of a component's variant set, its head with the
+title tag, the `Component` kind tag, the path chip that reports `onCopyPath`,
+the status slot and an optional `quietLabel`, such as "Showing previous
+version", and its frames in a grid. Each frame takes its cell from its `column`
 and `row`. A `hidden` frame stays mounted, with its document, but takes no
 room in the grid or in Fit. `section-layout.ts` holds the padding, the gaps,
 and the reading size, which the section draws and Fit reads, so the two
-agree. `CanvasFrame`
+agree. A use case's section leaves more room at its top, for each step's
+description. `CanvasFrame`
 draws one bare frame at its nominal `width` and `height` times the canvas's
 zoom, `--mbk-canvas-zoom`, with its label and size tag, and holds its
 document at the nominal size, scaled. A nominal size can hold a fraction of a
@@ -222,8 +224,23 @@ pixel, as a component's measured document does: the size tag reads whole
 pixels, rounded, and the document's box rounds the size up, so the document
 fits without a scrollbar and the frame clips the fraction. A frame too narrow
 for its label and its size tag drops the tag. A reading frame has no tag and takes the reading size
-that its section gives. `CanvasZoomPill` draws the pill, a group named Zoom,
-from the zoom and three callbacks, and `CanvasIcon` the canvas glyphs on the
+that its section gives. A use case's step frame takes the step's number as
+`step`, which leads the label in a dark tag that reads `Step 1`, a `link`,
+which makes its name a link with a chevron and an accessible name of the
+host's, and a `description`, which reads muted below the label. Its label
+keeps room around the link for the focus glow. `lightOnly` adds `Light only`
+after the name. `place` replaces the document with what stands in the frame's
+place: the place keeps the frame's size and label, draws a dashed outline and
+no surface, ring, shadow or size tag, and holds its content unscaled.
+`CanvasMissingView` puts the note of `PreviewNotCaptured` there for a view
+that was never captured, and hides its second sentence while the host says
+that a frame of the other viewport shows. `CanvasState` draws the canvas
+without a section, so without the pill, and holds a state, such as an
+`EmptyState`, in a card in the middle of the stage. `CanvasPreviousVersion`
+is the host of a removed entry's previous version, which carries
+`data-mokly-preview` and announces each state. `CanvasZoomPill` draws the
+pill, a group named Zoom, from the zoom and three callbacks, and
+`CanvasIcon` the canvas glyphs on the
 Canvas design's 16-unit grid. The canvas parts mix their rings, fills, and
 shadows from the Canvas roles through `light-dark()`, so they follow the
 colour scheme that the shell root states for its appearance.
@@ -244,10 +261,12 @@ reads the frame's document; no component reads it. `PhoneFrame` and
 for a moment, and the toggle asks for the expanded state through
 `onExpandedChange`, because the host owns which window is expanded.
 
-`FlowStage` and `FlowStep` draw a user flow's steps, `PreviousVersion` a
-removed entry's band and stage host, and `StageLoading`, `StageFailure`,
-`PreviewLoading`, `PreviewUnavailable`, and `PreviewNotCaptured` the states
-of a preview that has not arrived. `EmptyState` draws the quiet state of a
+`FlowStage` and `FlowStep` draw a user flow's column of steps and
+`PreviousVersion` a removed entry's band and stage host, which the design
+catalogue still draws; the viewer shows both on the canvas. `StageLoading`,
+`StageFailure`, `PreviewLoading`, `PreviewUnavailable`, and
+`PreviewNotCaptured` draw the states of a preview that has not arrived.
+`EmptyState` draws the quiet state of a
 stage, and `HomeState`, `MissingRouteState`, `RemovedState`, and
 `RemovedVariantState` the shell's own. `ComparisonStage` draws the comparison
 of an entry around the band that the host renders, with its sections, panes
@@ -271,8 +290,8 @@ containers of the three top-bar slots, which the bar places in its columns.
 It places each slot's content
 without reading it, keeps the host's stage overlay over the shown preview,
 and takes the host's `MarkerLayer` and label layer. The shown preview is a
-workspace's preview, a use case's flow, a document's stage, or the routed
-canvas that holds a document's reading frame. `WorkspaceLayout` lays out
+workspace's preview, a document's stage, or the routed canvas that holds a
+use case's section or a document's reading frame. `WorkspaceLayout` lays out
 a workspace's header, variant bar, preview, and inspector. `RootState` takes
 a root's place while its catalogue loads, cannot be loaded, or needs a
 compatible viewer, or when the requested view is unavailable, as the
@@ -555,14 +574,26 @@ override the desktop layout rules.
   `canvasKeyCommand`: the keys of the canvas and the rules of a text field and
   the modifiers
 - [`src/canvas-section/canvas-section.tsx`](./src/canvas-section/canvas-section.tsx)
-  — `CanvasSection`: the section box or the variant set's outline, its head,
-  and its grid of frames
+  — `CanvasSection`: the section box or the variant set's outline, its head
+  with its quiet label, and its grid of frames
 - [`src/canvas-section/section-layout.ts`](./src/canvas-section/section-layout.ts)
-  — the section's padding and gaps, the reading size, and `sectionExtent`, the
-  lengths that Fit reads
+  — the section's padding and gaps by kind, the reading size, and
+  `sectionExtent`, the lengths that Fit reads
 - [`src/canvas-frame/canvas-frame.tsx`](./src/canvas-frame/canvas-frame.tsx) —
-  `CanvasFrame`: a bare frame, its label and size tag, and its scaled
-  document
+  `CanvasFrame`: a bare frame, its label and size tag, a step's description,
+  and its scaled document or the place that holds a note
+- [`src/canvas-frame/frame-label.tsx`](./src/canvas-frame/frame-label.tsx) —
+  the frame's label: its glyph, a step's number, its name or the link that it
+  is, `Light only`, and its size tag
+- [`src/canvas-missing-view/canvas-missing-view.tsx`](./src/canvas-missing-view/canvas-missing-view.tsx)
+  — `CanvasMissingView`: the note of a view never captured, in its frame's
+  place
+- [`src/canvas-state/canvas-state.tsx`](./src/canvas-state/canvas-state.tsx)
+  — `CanvasState`: the canvas that holds a state in place of a section, in a
+  card
+- [`src/canvas-previous-version/canvas-previous-version.tsx`](./src/canvas-previous-version/canvas-previous-version.tsx)
+  — `CanvasPreviousVersion`: the host of a removed entry's previous version on
+  the canvas
 - [`src/canvas-zoom-pill/canvas-zoom-pill.tsx`](./src/canvas-zoom-pill/canvas-zoom-pill.tsx)
   — `CanvasZoomPill`: Zoom out, the zoom, Zoom in, and Fit
 - [`src/icons/canvas-icons.tsx`](./src/icons/canvas-icons.tsx) — `CanvasIcon`,
