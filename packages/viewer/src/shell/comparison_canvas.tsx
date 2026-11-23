@@ -86,12 +86,17 @@ function frameState(
     const address = frame.documents[side];
     const presentation = address ? presentations?.get(address) : undefined;
     const name = side === "before" ? "Before" : "Current";
+    // A Light view that stands in for a missing Dark view names its Dark
+    // frame, so no two frames' panes share one title.
+    const scheme = frame.lightOnly
+      ? "dark · Light only"
+      : frame.view.colorScheme;
     return presentation
       ? {
           [side]: {
             presentation,
             side,
-            title: `${name} — ${frame.view.viewport} — ${frame.view.colorScheme}`,
+            title: `${name} — ${frame.view.viewport} — ${scheme}`,
           },
         }
       : {};
