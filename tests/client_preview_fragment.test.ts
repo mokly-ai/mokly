@@ -4,7 +4,11 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { workspaceFrames } from "../packages/viewer/dist/shell/canvas_frames.js";
+import {
+  EVERY_FRAME,
+  workspaceFrames,
+} from "../packages/viewer/dist/shell/canvas_frames.js";
+import { openingUseCaseChoice } from "../packages/viewer/dist/shell/canvas_use_case_frames.js";
 import type { WorkspaceCanvas } from "../packages/viewer/dist/shell/canvas_workspace.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { DisplaySelection } from "../packages/viewer/dist/shell/display_context.js";
@@ -141,8 +145,9 @@ function renderRoute(
 }
 
 /**
- * The canvas of a routed screen or component, as its workspace gives it:
- * every frame of the entry, both viewports in each of its schemes.
+ * The canvas of a routed screen or component, as its workspace gives it at
+ * a full page load: every frame of the entry, both viewports in each of its
+ * schemes.
  */
 function workspaceCanvas(
   catalogue: ReturnType<typeof createCatalogue>,
@@ -153,7 +158,7 @@ function workspaceCanvas(
   const entry = route.view.target.entry;
   if (entry.kind !== "screen" && entry.kind !== "component") return undefined;
   const data = publicWorkspace(catalogue, model, entry);
-  return { fitKey: entry.path, frames: workspaceFrames(data, "both") };
+  return { fitKey: entry.path, frames: workspaceFrames(data, EVERY_FRAME) };
 }
 
 function renderTarget(
@@ -172,6 +177,8 @@ function renderTarget(
         children: createElement(TargetStage, {
           catalogue,
           target: route.view.target,
+          // A use case opens on its wide canvas's choice.
+          useCaseChoice: openingUseCaseChoice(true),
           ...(canvas ? { canvas } : {}),
           ...(route.fragment ? { fragment: route.fragment } : {}),
         }),

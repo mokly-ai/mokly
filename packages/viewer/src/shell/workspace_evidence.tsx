@@ -105,11 +105,7 @@ export function WorkspaceEvidence({
         title: component.title,
       }))}
       hidden={false}
-      ignored={
-        evidence.comparison
-          ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
-          : []
-      }
+      ignored={evidence.ignoredIds}
       inputChanges={data.inputChanges
         .filter((item) => item.variantPath === variantPath)
         .map((change) => ({

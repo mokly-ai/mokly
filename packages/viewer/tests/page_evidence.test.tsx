@@ -30,12 +30,12 @@ const CHANGED_PAGE = {
   changes: { status: "ready", kind: "changed", included: true },
 } as const;
 
-test("a changed document shows its status and each stylesheet once in Details", () => {
+test("a changed document shows its status and each stylesheet once in the right panel", () => {
   const markup = renderPage(createCatalogue(published(CHANGED_PAGE, CHANGED)));
-  // The entry bar, the section on the canvas and the head band in the right
+  // The entry bar, the section on the canvas and Inspect's head in the right
   // panel each name the page.
   assert.deepEqual(status(markup), ["Changed", "Changed", "Changed"]);
-  assert.ok(markup.includes(`${CHANGED_SECTION}</details>`), markup);
+  assert.equal(markup.split(CHANGED_SECTION).length, 2, markup);
   assert.doesNotMatch(
     markup,
     /Changed component|Shared component changes|this screen|saved view|this variant|1{64}/,
@@ -136,5 +136,5 @@ test("the standalone shell renders the page evidence of the held detail", () => 
     path: "/view/guide/",
   });
   assert.deepEqual(status(html), ["Changed", "Changed", "Changed"]);
-  assert.ok(html.includes(`${CHANGED_SECTION}</details>`));
+  assert.equal(html.split(CHANGED_SECTION).length, 2);
 });

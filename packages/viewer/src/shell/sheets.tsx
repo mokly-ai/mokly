@@ -3,16 +3,12 @@
  * is open, one at a time, and whether it is expanded. The dock opens a sheet
  * and hides while one is open; a sheet's close control then returns focus to
  * the dock's control that opens it. `@mokly/ui/floating-panel` draws each
- * sheet and `@mokly/ui/canvas-dock` the dock.
+ * sheet and `@mokly/ui/canvas-dock` the dock, which names the right panel's
+ * selected tab.
  */
 
-import type { ReactNode } from "react";
-
 import { CanvasDock } from "@mokly/ui/canvas-dock";
-import {
-  FloatingPanel,
-  type FloatingPanelSheet,
-} from "@mokly/ui/floating-panel";
+import type { FloatingPanelSheet } from "@mokly/ui/floating-panel";
 
 import { useNavigationWidth } from "./nav_resize.js";
 import { useShellRoot, useShownCanvas } from "./root_context.js";
@@ -56,6 +52,11 @@ function useSheet(sheet: ShellSheet): FloatingPanelSheet {
   };
 }
 
+/** The state of the right panel's sheet, and its actions on the store. */
+export function usePanelSheet(): FloatingPanelSheet {
+  return useSheet("panel");
+}
+
 /**
  * The dock: Catalogue, the right panel's current tab while an entry is
  * selected, and Fit while the canvas holds a section, also during a compare.
@@ -73,27 +74,8 @@ function ShellDock() {
       onCatalogue={() => store.setSheet("catalogue")}
       onFit={canvas ? () => canvas.fit() : undefined}
       onTab={() => store.setSheet("panel")}
-      tab={selected ? "inspect" : undefined}
+      tab={selected ? store.state.panelTab : undefined}
       tabRef={elements?.dock.ref("tab")}
     />
-  );
-}
-
-/**
- * The right panel of the selected entry: it floats over the canvas's right
- * edge, or opens as the panel's sheet in the compact layout, and it scrolls
- * its content.
- */
-export function RightPanel({ children }: { children: ReactNode }) {
-  return (
-    <FloatingPanel
-      label="Panel"
-      noun="panel"
-      scroll
-      sheet={useSheet("panel")}
-      side="right"
-    >
-      {children}
-    </FloatingPanel>
   );
 }

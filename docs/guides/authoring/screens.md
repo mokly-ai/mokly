@@ -106,7 +106,7 @@ The helper returns one definition that carries the saved states.
 | ------------------------------------- | --------------------------------------------------- |
 | `title`, `description`, `relatedDocs` | Explain the screen.                                 |
 | `tags`                                | Classify it with unique lowercase kebab-case names. |
-| `address`                             | Set the address-bar label in the preview.           |
+| `address`                             | Show an address in the Address row of Inspect.      |
 | `rationale`                           | Explain a design choice.                            |
 | `useCasePaths`                        | Name flows that include this screen.                |
 | `colorSchemes`                        | Restrict the enabled schemes; include `light`.      |
@@ -186,7 +186,7 @@ matter can also contain these fields:
 | `movedFrom`                       | The complete path before a move                         |
 | `rationale`                       | The reason for the design                               |
 | `relatedDocs`                     | Related document paths or labels                        |
-| `address`                         | The address shown in the device frame                   |
+| `address`                         | The address shown in the Address row of Inspect         |
 | `useCasePaths`                    | Flows whose steps use this screen                       |
 | `colorSchemes`                    | A subset of the catalogue schemes that includes `light` |
 | `props`, `propSchema`, `variants` | Data, validation, and saved states                      |

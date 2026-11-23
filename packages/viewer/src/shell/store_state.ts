@@ -1,15 +1,16 @@
 /** Value state owned by one mounted shell. */
 
 import type { ChangesStatus } from "@mokly/model";
+import type { PanelTab } from "@mokly/ui/panel-tabs";
 
 import type { ViewerSelection } from "../host/types.js";
 
+import type { FramesChoice } from "./frames_filter.js";
 import type { ShellRoute } from "./routes.js";
 
 /** Stored browser preferences the standalone bundle reads before its first render. */
 export interface ShellInitialState {
   colorScheme?: ViewerSelection["colorScheme"];
-  detailsOpen?: boolean;
   disclosures?: Readonly<Record<string, boolean>>;
   navigationMaximum?: number;
   navigationWidth?: number;
@@ -25,10 +26,13 @@ export type ShellSheet = "catalogue" | "panel";
 export interface ShellState {
   announcement: string;
   changesStatus: Exclude<ChangesStatus, "disabled"> | undefined;
-  detailsOpen: boolean;
   disclosures: Readonly<Record<string, boolean>>;
   filterBaseline: Readonly<Record<string, boolean>> | undefined;
-  inspectorTab: string | undefined;
+  /**
+   * The screens' Frames filter: the viewports and schemes that the canvas
+   * shows. It stays the same across in-shell navigation.
+   */
+  frames: FramesChoice;
   navigationMaximum: number;
   navScroll: number;
   /**
@@ -36,6 +40,11 @@ export interface ShellState {
    * catalogue takes its starting width.
    */
   navigationWidth: number | undefined;
+  /**
+   * The right panel's selected tab, which survives in-shell navigation to an
+   * entry that has it.
+   */
+  panelTab: PanelTab;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
   /**

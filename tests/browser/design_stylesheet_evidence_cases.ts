@@ -62,7 +62,7 @@ export function registerDesignStylesheetEvidence(
         }
       });
 
-      test("the shared Excluded and Matched card spaces its excluded file with the card spacing", async ({
+      test("the shared Excluded and Matched card spaces its excluded file and excluded content with the card spacing", async ({
         page,
       }) => {
         for (const route of [
@@ -80,7 +80,14 @@ export function registerDesignStylesheetEvidence(
                   `${element.tagName.toLowerCase()} ${getComputedStyle(element).marginTop}`,
               ),
             );
-          expect(spacing, route).toEqual(["p 14px", "p 8px", "ul 8px"]);
+          // The excluded sentence, its lead and its list, then Welcome's
+          // excluded content, each list followed by fourteen pixels.
+          expect(spacing, route).toEqual([
+            "p 14px",
+            "p 8px",
+            "ul 8px",
+            "p 14px",
+          ]);
         }
       });
 

@@ -50,6 +50,7 @@ repository. [Build](/docs/start/build/) the catalogue when you need it as files.
 
 Every entry has the address `/view/<path>/`, so the screen at
 `specs/account/account-home.mockup.tsx` opens at
-`/view/account/account-home/`. Browse the catalogue by folder, search it,
-switch viewport and color scheme, open the details of a screen and compare a
-changed screen with its base. The Catalogue section describes each of those.
+`/view/account/account-home/`. Browse the catalogue by folder, search it, see
+every frame of a screen at once on a canvas that pans and zooms, inspect an
+entry and the components on its frames, and compare a changed screen with its
+base. The Catalogue section describes each of those.

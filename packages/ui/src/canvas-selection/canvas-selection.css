@@ -1,0 +1,171 @@
+/* The selection on a canvas frame: a 1.5px signal outline with square
+   handles, the name tag above the top-left corner, the size tag below the
+   middle, and the padding redline with its value outside the box. A frame's
+   selection covers the frame; an instance's stands at its box, which the
+   frame's scale places. The marks keep their size at every zoom, and the
+   redline starts after the border and runs the padding's length, both at
+   the frame's scale. A handle takes the surface of the document under it. */
+.mbk-canvas-selection {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-shadow: 0 0 0 1.5px var(--cv-signal);
+  pointer-events: none;
+}
+
+.mbk-canvas-selection[data-selection-box] {
+  inset: auto;
+  top: calc(var(--mbk-selection-y) * var(--mbk-canvas-frame-scale, 1) * 1px);
+  left: calc(var(--mbk-selection-x) * var(--mbk-canvas-frame-scale, 1) * 1px);
+  width: calc(
+    var(--mbk-selection-width) * var(--mbk-canvas-frame-scale, 1) * 1px
+  );
+  height: calc(
+    var(--mbk-selection-height) * var(--mbk-canvas-frame-scale, 1) * 1px
+  );
+}
+
+.mbk-canvas-selection-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 1.5px;
+  background: var(--mbk-screen-bg);
+  box-shadow:
+    inset 0 0 0 1.5px var(--cv-signal),
+    0 1px 2px color-mix(in srgb, var(--cv-text) 18%, transparent);
+}
+
+.mbk-canvas-frame[data-preview-color-scheme="dark"]
+  .mbk-canvas-selection-handle {
+  background: var(--mbk-dark-screen-bg);
+}
+
+.mbk-canvas-selection-handle[data-at="nw"] {
+  top: 0;
+  left: 0;
+}
+
+.mbk-canvas-selection-handle[data-at="n"] {
+  top: 0;
+  left: 50%;
+}
+
+.mbk-canvas-selection-handle[data-at="ne"] {
+  top: 0;
+  left: 100%;
+}
+
+.mbk-canvas-selection-handle[data-at="e"] {
+  top: 50%;
+  left: 100%;
+}
+
+.mbk-canvas-selection-handle[data-at="se"] {
+  top: 100%;
+  left: 100%;
+}
+
+.mbk-canvas-selection-handle[data-at="s"] {
+  top: 100%;
+  left: 50%;
+}
+
+.mbk-canvas-selection-handle[data-at="sw"] {
+  top: 100%;
+  left: 0;
+}
+
+.mbk-canvas-selection-handle[data-at="w"] {
+  top: 50%;
+  left: 0;
+}
+
+/* The name and size tags: signal fills with their text on the signal. */
+.mbk-canvas-selection-name,
+.mbk-canvas-selection-size {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--cv-signal);
+  color: var(--cv-on-signal);
+  font: 500 11px/1 var(--cv-mono);
+  white-space: nowrap;
+}
+
+.mbk-canvas-selection-name {
+  bottom: calc(100% + 6px);
+  left: -1px;
+  gap: 4px;
+}
+
+.mbk-canvas-selection-size {
+  top: calc(100% + 8px);
+  left: 50%;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+}
+
+/* The padding redline: a measure from inside the left border to the
+   content, with ticks at both ends and its value in a tag outside the box.
+   It scales to nothing while the padding spans less than 6px on screen,
+   too narrow to read. */
+.mbk-canvas-selection-pad {
+  position: absolute;
+  top: min(22%, 46px);
+  left: calc(
+    var(--mbk-selection-border) * var(--mbk-canvas-frame-scale, 1) * 1px
+  );
+  width: calc(
+    var(--mbk-selection-padding) * var(--mbk-canvas-frame-scale, 1) * 1px
+  );
+  height: 1px;
+  background: var(--cv-signal);
+  scale: clamp(
+    0,
+    (var(--mbk-selection-padding) * var(--mbk-canvas-frame-scale, 1) - 6) * 1000,
+    1
+  );
+}
+
+.mbk-canvas-selection-pad::before,
+.mbk-canvas-selection-pad::after {
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background: var(--cv-signal);
+  content: "";
+}
+
+.mbk-canvas-selection-pad::before {
+  left: 0;
+}
+
+.mbk-canvas-selection-pad::after {
+  right: 0;
+}
+
+.mbk-canvas-selection-pad > b {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 5px);
+  padding: 3px 4px;
+  border-radius: 3px;
+  background: var(--cv-signal);
+  color: var(--cv-on-signal);
+  font: 600 10px/1 var(--cv-mono);
+  transform: translateY(-50%);
+}
+
+/* The canvas's one rule for the fixed-size tags on a frame: while the canvas
+   draws its frames at less than 60% of their size, a tag would cover more of
+   the frame than it names, so the tags hide. The outline and the handles
+   stay, and the panel names the selection. */
+.mbk-canvas[data-canvas-tags="hidden"] .mbk-canvas-tag {
+  display: none;
+}

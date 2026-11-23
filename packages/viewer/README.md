@@ -277,26 +277,47 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/shell/top_bar.tsx`](./src/shell/top_bar.tsx),
   [`src/shell/nav.tsx`](./src/shell/nav.tsx), and
   [`src/shell/head.tsx`](./src/shell/head.tsx) — the containers of the top
-  bar, the catalogue navigation, and the screen header; `nav_rows.ts` and
-  `nav_leaf_rows.ts` build the navigation's records from the shell state
-- [`src/shell/tags.tsx`](./src/shell/tags.tsx) and
-  [`src/shell/workspace_controls.tsx`](./src/shell/workspace_controls.tsx) —
-  the containers of the tag picker, the tag chips of the details, and the
-  view controls; `tag_selection.ts` returns focus to the picker's button
-  after a tag of the details, and `view_marks.ts` decides the change marks
-- [`src/shell/inspector.tsx`](./src/shell/inspector.tsx) and
-  [`src/shell/details.tsx`](./src/shell/details.tsx) — the containers of the
-  inspector and the Details: the tabs, Escape anywhere in the shell root, and
-  the metadata rows, whose catalogue lookups live in `details_rows.tsx`;
-  `sheets.tsx` holds the right panel, its sheet, and the dock
+  bar and the catalogue navigation, and the title and the folder crumbs of a
+  view; `nav_rows.ts` and `nav_leaf_rows.ts` build the navigation's records
+  from the shell state
+- [`src/shell/tags.tsx`](./src/shell/tags.tsx) — the container of the tag
+  picker and the tag chips of Inspect's Details rows; `tag_selection.ts`
+  returns focus to the picker's button after a tag of the rows, and
+  `view_marks.ts` names the ids and the wording of the change marks
+- [`src/shell/right_panel.tsx`](./src/shell/right_panel.tsx) — the right
+  panel: the strip of its tabs, Inspect and Changes, the tab that the store
+  holds, and the bodies of the tabs; `sheets.tsx` holds the panel's sheet and
+  the dock
+- [`src/shell/workspace_panel.tsx`](./src/shell/workspace_panel.tsx) and
+  [`src/shell/workspace_inspect.tsx`](./src/shell/workspace_inspect.tsx) — the
+  right panel of a screen or a component, and its Inspect in the order of the
+  sections; `target_panel.tsx` holds the right panel of a page, a document, a
+  use case, or a removed page
+- [`src/shell/inspect_head.tsx`](./src/shell/inspect_head.tsx) — Inspect's
+  head and its Details rows, whose catalogue lookups live in
+  `details_rows.tsx`; `inspect_variants.ts` builds the rows of Variants
+- [`src/shell/inspect_frames.tsx`](./src/shell/inspect_frames.tsx) and
+  [`src/shell/frames_filter.ts`](./src/shell/frames_filter.ts) — the Frames
+  section, and the one Frames choice of the screens, which decides the shown
+  frames, the status, and the change marks; `use_case_choice.ts` holds the
+  own choice of a use case
+- [`src/shell/use_canvas_selection.ts`](./src/shell/use_canvas_selection.ts)
+  and [`src/shell/canvas_selection.ts`](./src/shell/canvas_selection.ts) —
+  the canvas selection: the clicks, Escape, the selection that a route names,
+  and the reducer that follows the session of each frame;
+  `canvas_selection_frames.ts` reads the sessions, `workspace_picks.ts` joins
+  the selection to the canvas, and `workspace_selection_view.tsx`,
+  `selection_details.ts`, and `selection_overlay.tsx` show the selection on
+  its frame, in Inspect, and in the compact layout's pill
 - [`src/shell/component_controls_panel.tsx`](./src/shell/component_controls_panel.tsx),
   [`src/shell/workspace_props.tsx`](./src/shell/workspace_props.tsx),
   [`src/shell/workspace_usage.tsx`](./src/shell/workspace_usage.tsx),
   [`src/shell/workspace_instances.tsx`](./src/shell/workspace_instances.tsx),
   and [`src/shell/workspace_evidence.tsx`](./src/shell/workspace_evidence.tsx)
-  — the containers of the inspector's panels, which turn the controls state,
-  the usage links, the instance records, and the comparison evidence into the
-  records and the wording of the package components
+  — the containers of Inspect's Props, Usage, and Components and of the
+  comparison details, which turn the controls state, the usage links, the
+  instance records, and the comparison evidence into the records and the
+  wording of the package components
 - [`src/shell/control_values.ts`](./src/shell/control_values.ts) — the control
   targets, drafts, and validation shared by the controls and their fields
 - [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
@@ -387,14 +408,15 @@ and Review regressions against `mokly serve` of the example catalogue.
   generation root of a comparison: the pinned root a static catalogue names,
   or the root that Serve's selection redirects to and its renewal
 - [`src/shell/public_compared.ts`](./src/shell/public_compared.ts) — the
-  routed entry's comparison facts that the panes and Details read from the
-  detail's view states, ignore ids, and base side
+  routed entry's comparison facts that the panes and the comparison details
+  read from the detail's view states, ignore ids, and base side
 - [`src/catalogue/detail_reader.ts`](./src/catalogue/detail_reader.ts) — the
   entry detail reader; its typed copy keeps the detail's `reasons` in the
   review v8 order of the core's
   [`review_order.rs`](../../crates/mokly-model/src/review_order.rs)
 - [`src/shell/public_reasons.ts`](./src/shell/public_reasons.ts) — the
-  detail reasons that Details shows, for a record that Changes lists
+  detail reasons that the comparison details show, for a record that
+  Changes lists
 - [`tests`](./tests) — package-level conformance tests
 
 ### Related Docs

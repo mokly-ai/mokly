@@ -1,0 +1,177 @@
+/* The Frames filter of Inspect: a grid of frame toggles and the Highlight
+   components switch. A shown frame's toggle draws its solid edge on the
+   muted surface; a hidden frame's toggle draws a dashed edge over struck
+   text. Each native checkbox or radio button lies transparent over its
+   tile, which draws the control's focus glow. */
+.mbk-frames {
+  display: grid;
+  gap: 10px;
+}
+
+.mbk-frames-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+/* A toggle's cell holds the toggle and, at its top-right corner, the change
+   mark of a toggle that hides a changed view. */
+.mbk-frames-cell {
+  position: relative;
+  display: grid;
+}
+
+.mbk-frames-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 7px;
+  row-gap: 3px;
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 1px dashed var(--cv-border-strong);
+  border-radius: 8px;
+  color: var(--cv-text-muted);
+  font-size: 12.5px;
+  font-weight: 540;
+}
+
+.mbk-frames-toggle > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mbk-frames-name {
+  text-decoration: line-through;
+}
+
+.mbk-frames-note {
+  grid-column: 2;
+  color: var(--cv-text-muted);
+  font: 400 11px/1 var(--cv-mono);
+}
+
+.mbk-frames-toggle:has(> input:checked) {
+  border-style: solid;
+  background: var(--cv-surface-muted);
+  color: var(--cv-text);
+}
+
+.mbk-frames-toggle:has(> input:checked) > svg {
+  color: var(--cv-signal-deep);
+}
+
+.mbk-frames-toggle:has(> input:checked) > .mbk-frames-name {
+  text-decoration: none;
+}
+
+/* A toggle without frames to show, such as Dark for a light-only screen,
+   names why in its note instead of striking its name. */
+.mbk-frames-toggle > input:disabled {
+  cursor: default;
+}
+
+.mbk-frames-toggle:has(> input:disabled) > .mbk-frames-name {
+  text-decoration: none;
+}
+
+.mbk-frames-toggle:has(> input:focus-visible) {
+  box-shadow: var(--mbk-focus-glow);
+}
+
+/* The Highlight components switch: its name, then a drawn track and knob
+   under a transparent native switch. */
+.mbk-frames-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+}
+
+.mbk-frames-switch-name {
+  flex: 1;
+}
+
+.mbk-frames-switch > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mbk-frames-track {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 18px;
+  border: 1px solid var(--cv-border-strong);
+  border-radius: 999px;
+  background: var(--cv-surface);
+}
+
+.mbk-frames-track::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cv-border-strong);
+  content: "";
+}
+
+.mbk-frames-switch > input:checked + .mbk-frames-track {
+  border-color: var(--cv-signal-deep);
+  background: var(--cv-signal-deep);
+}
+
+.mbk-frames-switch > input:checked + .mbk-frames-track::after {
+  background: var(--cv-surface);
+  transform: translateX(14px);
+}
+
+.mbk-frames-switch > input:focus-visible + .mbk-frames-track {
+  box-shadow: var(--mbk-focus-glow);
+}
+
+.mbk-frames-switch:has(> input:disabled) {
+  color: var(--cv-text-muted);
+}
+
+.mbk-frames-switch > input:disabled {
+  cursor: default;
+}
+
+.mbk-frames-switch > input:disabled + .mbk-frames-track {
+  opacity: 0.55;
+}
+
+/* The switch's description is for assistive technology alone. */
+.mbk-frames-description {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .mbk-frames-toggle:has(> input:focus-visible),
+  .mbk-frames-switch > input:focus-visible + .mbk-frames-track {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
