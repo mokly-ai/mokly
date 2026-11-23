@@ -4,7 +4,8 @@
  * wide layout a screen's viewport choice keeps one column. In the compact
  * layout the canvas shows the picked frame alone, and the picker sets the
  * selection's viewport and scheme, or opens the saved variant of the picked
- * row of a variant set.
+ * row of a variant set. The frames carry no edit's views: the shown frames
+ * name the edit's contexts, and the workspace adds their renders.
  */
 
 import { useMemo } from "react";
@@ -12,7 +13,6 @@ import { useMemo } from "react";
 import type { EntryBarPicker } from "@mokly/ui/entry-bar";
 
 import { isComponentVariant } from "../catalogue/variants.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import { viewHref } from "../navigation/routes.js";
 
 import {
@@ -56,17 +56,16 @@ function pick(
     store.navigateFrame(viewHref(frame.variantPath));
 }
 
-export function useWorkspaceCanvas(
-  data: WorkspaceData,
-  previewViews: readonly GeneratedComponentView[],
-): WorkspaceCanvasFrames {
+export function useWorkspaceCanvas(data: WorkspaceData): WorkspaceCanvasFrames {
   const store = useShellStore();
   const wide = useCanvasLayout();
   const { colorScheme, viewport } = store.state.selection;
   const entry = data.entry;
+  // The workspace merges each new detail into its data in place, so the
+  // frames follow the entry and the set's rows, whose views carry the usage.
   const all = useMemo(
-    () => workspaceFrames(data, wide ? viewport : "both", previewViews),
-    [data, previewViews, viewport, wide],
+    () => workspaceFrames(data, wide ? viewport : "both"),
+    [data, data.entry, data.variants, viewport, wide],
   );
   const picked = wide
     ? undefined

@@ -12,7 +12,11 @@ import { EntryBar } from "@mokly/ui/entry-bar";
 import type { InspectorHandle } from "@mokly/ui/inspector";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
-import { canvasEditContexts, framesViews } from "./canvas_frames.js";
+import {
+  canvasEditContexts,
+  framesViews,
+  withEditPreviews,
+} from "./canvas_frames.js";
 import { usePreviousVersionLabel } from "./canvas_removed_section.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
@@ -90,15 +94,13 @@ export function ComponentWorkspace({
     data.removed,
     data.controlOrder,
   );
-  // The canvas shows a component's row as its desktop frames, so an edit of
-  // the row renders both of its frames.
-  const editRow = editTarget?.kind === "component" ? editTarget.path : "";
+  const canvas = useWorkspaceCanvas(data);
+  // An edit renders each shown frame of the edited screen or row.
+  const editRow =
+    editTarget?.kind === "component" ? editTarget.path : undefined;
   const contexts = useMemo(
-    () =>
-      editRow
-        ? canvasEditContexts(data.views, editRow, savedViews)
-        : savedViews,
-    [data.views, editRow, savedViews],
+    () => canvasEditContexts(data.views, canvas.frames, editRow, savedViews),
+    [canvas.frames, data.views, editRow, savedViews],
   );
   const propsRecovery = useRetryFocus();
   const controls = useComponentControls({
@@ -120,11 +122,14 @@ export function ComponentWorkspace({
       ),
     [colorScheme, controls.previewViews, data, variantPath, viewport],
   );
-  const canvas = useWorkspaceCanvas(data, controls.previewViews);
+  const frames = useMemo(
+    () => withEditPreviews(canvas.frames, controls.previewViews),
+    [canvas.frames, controls.previewViews],
+  );
   // Inspection draws on every frame that the canvas shows.
   const shownViews = useMemo(
-    () => framesViews(controls.previewViews, canvas.frames),
-    [canvas.frames, controls.previewViews],
+    () => framesViews(controls.previewViews, frames),
+    [controls.previewViews, frames],
   );
   const instances = useWorkspaceInstanceSelection(data, views, inspectorRef);
   const inspection = useWorkspaceInspection({
@@ -149,7 +154,7 @@ export function ComponentWorkspace({
     <WorkspaceStage
       canvas={{
         fitKey: canvas.fitKey,
-        frames: canvas.frames,
+        frames,
         status: headStatus,
       }}
       catalogue={catalogue}

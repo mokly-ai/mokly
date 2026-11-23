@@ -94,12 +94,19 @@ export function resolvedFrameSource(
   return source && baseUrl ? new URL(source, baseUrl).href : source;
 }
 
+/** Whether a view is a live edit's temporary render. */
+export function temporaryView(
+  view: GeneratedComponentView | undefined,
+): boolean {
+  return (
+    view?.path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`) ?? false
+  );
+}
+
 /** Saved workspace views retain their index key; temporary documents own their URL. */
 export function stageDocumentKey(
   view: ShellCatalogueView | undefined,
   preview: GeneratedComponentView | undefined,
 ): string | undefined {
-  return preview?.path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
-    ? undefined
-    : view?.documentKey;
+  return temporaryView(preview) ? undefined : view?.documentKey;
 }

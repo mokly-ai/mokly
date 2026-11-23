@@ -411,10 +411,14 @@ The entry bar's frame picker lists the shown frames of the model, a screen's
 Mobile frames first, and a pick sets the selection's viewport and scheme or
 opens the picked row's entry. The other frames stay mounted out of the
 section, and the picked screen frame's label leads with the entry's slug. A
-live edit of a component's row renders
-the row's desktop views in both schemes (`canvasEditContexts`), so both of
-its frames show the edit. It passes the frames with the stage, and its
-highlights draw on every shown frame. `canvas_workspace.tsx` mounts each frame
+live edit renders the view of each shown frame of the edited screen or
+row (`canvasEditContexts`), one context for each viewport and scheme: every
+frame of the viewport choice on the wide canvas, and the picked frame in the
+compact layout, so a pick of another frame changes the contexts and cancels
+the old render. A component's own route in the compact layout shows its
+whole set, so an edit of its row renders both of its frames.
+`withEditPreviews` gives the frames the edit's renders. The workspace passes
+the frames with the stage, and its highlights draw on every shown frame. `canvas_workspace.tsx` mounts each frame
 with `canvas_live_frame.tsx`, which shares the mount hook of `stage_frame.tsx`
 and names its frame `{title} — {viewport} — {scheme}`, with
 `data-workspace-frame`, `data-workspace-color-scheme` and, on a component

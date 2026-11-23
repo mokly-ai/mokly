@@ -6,7 +6,8 @@
  * beside its Dark frame, and each frame shows the row's desktop view. A
  * page or a Markdown document shows one reading frame, named by its source
  * file. A use case's step frames, from `canvas_use_case_frames.ts`, carry
- * the step that each shows.
+ * the step that each shows. A live edit renders the view of each shown frame
+ * of the edited screen or row, and those frames show its renders.
  */
 
 import type {
@@ -18,7 +19,7 @@ import { isComponentVariant } from "../catalogue/variants.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import type { ViewerSelection } from "../host/types.js";
 
-import { generatedView } from "./stage_sources.js";
+import { generatedView, temporaryView } from "./stage_sources.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
 /** A frame's own colour scheme, whatever the interface appearance. */
@@ -129,71 +130,92 @@ export function screenFrames(
  * A component's variant set: one row for each current row of its variant
  * bar, in order, with its Light frame beside its Dark frame. The saved
  * variant that `selectedPath` names holds the selection on its Light frame.
- * A row's live edit shows in both of its frames.
  */
 export function variantSetFrames(
   rows: readonly WorkspaceVariant[],
   selectedPath: string | undefined,
-  previewViews: readonly GeneratedComponentView[] | undefined,
 ): CanvasFramePlan[] {
   return rows
     .filter((row) => !row.removed)
     .flatMap(({ value: entry }, row) =>
-      schemes(entry.views).map((scheme, column) => {
-        const preview = generatedView(
-          previewViews,
-          entry.path,
-          "desktop",
-          scheme,
-        );
-        return {
-          column,
-          entry,
-          key: `${entry.path}:${scheme}`,
-          kind: "component" as const,
-          label: `${entry.title} · ${SCHEMES[scheme]}`,
-          ...(preview ? { preview } : {}),
-          row,
-          scheme,
-          selected: scheme === "light" && entry.path === selectedPath,
-          variantPath: entry.path,
-          view: viewOf(entry, "desktop", scheme),
-          viewport: "desktop" as const,
-        };
-      }),
+      schemes(entry.views).map((scheme, column) => ({
+        column,
+        entry,
+        key: `${entry.path}:${scheme}`,
+        kind: "component" as const,
+        label: `${entry.title} · ${SCHEMES[scheme]}`,
+        row,
+        scheme,
+        selected: scheme === "light" && entry.path === selectedPath,
+        variantPath: entry.path,
+        view: viewOf(entry, "desktop", scheme),
+        viewport: "desktop" as const,
+      })),
     );
 }
 
-/** The frames of a workspace's entry: a screen's frames or a variant set. */
+/**
+ * The frames of a workspace's entry: a screen's frames or a variant set,
+ * with the views of `previewViews` when it is given.
+ */
 export function workspaceFrames(
   data: WorkspaceData,
   viewport: ViewerSelection["viewport"],
-  previewViews: readonly GeneratedComponentView[],
+  previewViews?: readonly GeneratedComponentView[],
 ): CanvasFramePlan[] {
   const entry = data.entry;
-  if (entry.kind === "screen") return screenFrames(entry, viewport);
-  return variantSetFrames(
-    data.variants,
-    isComponentVariant(entry) ? entry.path : undefined,
-    previewViews,
-  );
+  const frames =
+    entry.kind === "screen"
+      ? screenFrames(entry, viewport)
+      : variantSetFrames(
+          data.variants,
+          isComponentVariant(entry) ? entry.path : undefined,
+        );
+  return previewViews ? withEditPreviews(frames, previewViews) : frames;
 }
 
 /**
- * The saved views that a live edit of a component's row renders on the
- * canvas: the row's desktop views in both schemes, so the edit shows in both
- * of its frames. Without a desktop view the edit keeps `views`, the views
- * that the one-frame stage renders.
+ * The frames with the views of a live edit: a variant set's frame shows its
+ * row's view of `previewViews`, saved or edited, so a row's edit shows in
+ * both of its frames. A screen's frame shows its view's temporary render
+ * while the edit holds one, and else its saved document.
+ */
+export function withEditPreviews(
+  frames: readonly CanvasFramePlan[],
+  previewViews: readonly GeneratedComponentView[],
+): CanvasFramePlan[] {
+  return frames.map((frame) => {
+    const view = generatedView(
+      previewViews,
+      frame.variantPath,
+      frame.viewport,
+      frame.scheme,
+    );
+    const preview =
+      frame.kind === "component" || temporaryView(view) ? view : undefined;
+    return preview ? { ...frame, preview } : frame;
+  });
+}
+
+/**
+ * The saved views that a live edit renders: the view of each shown frame of
+ * the edited entry, one context for each viewport and scheme. `rowPath`
+ * names a variant set's edited row; a screen's frames name no row. The wide
+ * canvas shows every frame of the viewport choice, and the compact layout
+ * its picked frame, or a variant set's whole set. Without a shown frame of
+ * a saved view the edit keeps `views`, the selection's views.
  */
 export function canvasEditContexts(
   saved: readonly GeneratedComponentView[],
-  rowPath: string,
+  frames: readonly CanvasFramePlan[],
+  rowPath: string | undefined,
   views: readonly GeneratedComponentView[],
 ): readonly GeneratedComponentView[] {
-  const row = saved.filter(
-    (view) => view.variantPath === rowPath && view.viewport === "desktop",
+  const shown = framesViews(
+    saved,
+    frames.filter((frame) => frame.variantPath === rowPath),
   );
-  return row.length ? row : views;
+  return shown.length ? shown : views;
 }
 
 /**

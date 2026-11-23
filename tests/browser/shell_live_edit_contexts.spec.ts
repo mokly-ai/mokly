@@ -1,9 +1,10 @@
 /**
  * Live prop edits across their contexts in Serve, under the component
  * controls contract and its design: on the canvas and in the compact layout
- * both schemes of an edited row through a viewport and scheme switch; below
- * the layout breakpoint a scheme change while the first render is pending;
- * and an expired temporary preview.
+ * both schemes of an edited row through a viewport and scheme switch; on the
+ * canvas every shown frame of an edited screen; below the layout breakpoint
+ * a scheme change while the first render is pending; and an expired
+ * temporary preview.
  */
 
 import { expect, type Page, type Route } from "@playwright/test";
@@ -12,6 +13,7 @@ import { test } from "./browser_test.js";
 import { frameDocument, frameText, openProps, renders } from "./live_props.js";
 import {
   closeServe,
+  editableScreenFile,
   renderBody,
   serveLiveCatalogue,
 } from "./live_shell_fixture.js";
@@ -22,12 +24,22 @@ import {
   NARROW_WINDOW,
 } from "./workspace_actions.js";
 
-/** The temporary preview of one view of the card. */
-const preview = (viewport: "desktop" | "mobile", scheme: string) =>
+/** The temporary preview of one view of the card, or of the entry `path`. */
+const preview = (
+  viewport: "desktop" | "mobile",
+  scheme: string,
+  path = "card",
+) =>
   new RegExp(
-    `/mokly-viewer/components/renders/[^/]+/static/mokly-generated/card/index\\.${viewport}${scheme}\\.html$`,
+    `/mokly-viewer/components/renders/[^/]+/static/mokly-generated/${path}/index\\.${viewport}${scheme}\\.html$`,
     "u",
   );
+
+/** The fixture with the editable screen `home`, in both schemes. */
+const EDITABLE_HOME = {
+  config: { colorSchemes: ["light", "dark"] },
+  files: { "specs/home.screen.html": editableScreenFile("Home") },
+};
 
 /**
  * Edit the card's label, then expect the edit in the Light and Dark frames
@@ -92,6 +104,43 @@ test("below the layout breakpoint, a viewport switch keeps the edit and shows it
   await expectRowEdit(page, "Switched", "?viewport=desktop");
 });
 
+test("on the canvas, a screen's edit renders each shown frame, and its Desktop · Dark frame shows the edit", async ({
+  page,
+}) => {
+  const server = await serveLiveCatalogue(EDITABLE_HOME);
+  try {
+    const props = await openProps(page, server.url, { path: "home" });
+    const sent = renders(page);
+    await props.getByRole("textbox", { name: "label" }).fill("Every frame");
+    const shown = (viewport: "desktop" | "mobile", scheme: "dark" | "light") =>
+      expect
+        .poll(() => frameDocument(page, viewport, scheme))
+        .toEqual({
+          url: expect.stringMatching(
+            preview(viewport, scheme === "dark" ? "\\.dark" : "", "home"),
+          ),
+          text: expect.stringContaining("Every frame 1"),
+        });
+    await shown("desktop", "dark");
+    for (const [viewport, scheme] of [
+      ["desktop", "light"],
+      ["mobile", "light"],
+      ["mobile", "dark"],
+    ] as const)
+      await shown(viewport, scheme);
+    // One render for each shown frame: both viewports in both schemes.
+    await passRenderingUpdates(page);
+    expect(
+      sent
+        .map((request) => request.postDataJSON())
+        .map((body) => `${body.viewport}/${body.colorScheme}`)
+        .sort(),
+    ).toEqual(["desktop/dark", "desktop/light", "mobile/dark", "mobile/light"]);
+  } finally {
+    await closeServe(page, server);
+  }
+});
+
 test("an expired preview keeps the edit and shows the saved props, and Update preview renders it again", async ({
   page,
   allowBrowserError,
@@ -154,14 +203,14 @@ test("an expired preview keeps the edit and shows the saved props, and Update pr
 test("below the layout breakpoint, a scheme change while the first render is pending shows only the new scheme's preview", async ({
   page,
 }) => {
-  // The one-frame stage renders the chosen scheme alone; the canvas renders
-  // both schemes of an edited row at once.
+  // The compact layout shows a screen's picked frame alone, and an edit
+  // renders that frame. A scheme change picks the frame of the other scheme,
+  // which changes the edit's context.
   await page.setViewportSize(NARROW_WINDOW);
-  const server = await serveLiveCatalogue({
-    config: { colorSchemes: ["light", "dark"] },
-  });
+  const server = await serveLiveCatalogue(EDITABLE_HOME);
   try {
     const props = await openProps(page, server.url, {
+      path: "home",
       query: "?viewport=desktop",
     });
     const held: Route[] = [];
@@ -176,10 +225,12 @@ test("below the layout breakpoint, a scheme change while the first render is pen
 
     await chooseScheme(page, "dark");
     const dark = {
-      url: expect.stringMatching(preview("desktop", "\\.dark")),
+      url: expect.stringMatching(preview("desktop", "\\.dark", "home")),
       text: expect.stringContaining("Context edit 1"),
     };
-    await expect.poll(() => frameDocument(page, "desktop")).toEqual(dark);
+    await expect
+      .poll(() => frameDocument(page, "desktop", "dark"))
+      .toEqual(dark);
     // Release the light render, wait until the browser ends it, then let the
     // shell handle it.
     await Promise.all(
@@ -192,7 +243,7 @@ test("below the layout breakpoint, a scheme change while the first render is pen
     for (const route of held)
       expect(route.request().failure()?.errorText).toBe("net::ERR_ABORTED");
     await passRenderingUpdates(page);
-    expect(await frameDocument(page, "desktop")).toEqual(dark);
+    expect(await frameDocument(page, "desktop", "dark")).toEqual(dark);
   } finally {
     await closeServe(page, server);
   }

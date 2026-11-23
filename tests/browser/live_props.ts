@@ -53,15 +53,20 @@ export async function showProps(page: Page) {
 }
 
 /**
- * Open the card's Props panel; `editable` waits for the live descriptor, and
- * `query` selects the route's views, for example `?viewport=desktop`.
+ * Open the Props panel of the card, or of the entry that `path` names;
+ * `editable` waits for the live descriptor, and `query` selects the route's
+ * views, for example `?viewport=desktop`.
  */
 export async function openProps(
   page: Page,
   url: string,
-  { editable = true, query = "" }: { editable?: boolean; query?: string } = {},
+  {
+    editable = true,
+    path = "card",
+    query = "",
+  }: { editable?: boolean; path?: string; query?: string } = {},
 ) {
-  await page.goto(`${url}/view/card/${query}`);
+  await page.goto(`${url}/view/${path}/${query}`);
   const props = await showProps(page);
   if (editable)
     await expect(props.getByRole("textbox", { name: "label" })).toBeEditable();
