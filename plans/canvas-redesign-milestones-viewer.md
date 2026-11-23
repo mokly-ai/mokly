@@ -64,6 +64,9 @@ Depends on: 10, 11
       `mokly-changes.md` requires: Changes counts 11, and the tour gets a
       Changed status and a Changes tab with the stepper and the comparison
       details but no compare modes. Milestone 24 draws the artboards.
+- [ ] Give `ComparisonEvidence` the changed-step lines of a listed use case
+      ("Changed step: Welcome"), each a link to that screen on its Changes
+      tab, as Milestone 24 draws them.
 - [ ] Milestone 24: add the own-example row to the other Canvas artboards that draw a
       variant set: the Toolbar's `component-set/toolbar*` variants and the
       Action's sets on `canvas/props/**`, `canvas/components/**` and
