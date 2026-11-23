@@ -165,9 +165,6 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
 });
 
 test("a light-only screen keeps light frames and says so", async ({ page }) => {
-  // Below the layout breakpoint the one-frame stage keeps the light frames
-  // and names the fallback in their labels. The test above checks the canvas.
-  await page.setViewportSize(NARROW_WINDOW);
   await page.goto(`/view/${comparisonPaths.consumer}/`);
   await chooseScheme(page, "dark");
   await page.fill("[data-mokly-search]", "stable");
@@ -175,7 +172,9 @@ test("a light-only screen keeps light frames and says so", async ({ page }) => {
     `a[data-nav-row][data-route="${comparisonPaths.unchanged}/index.html"]`,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Stable screen");
-
+  // Below the layout breakpoint the one-frame stage keeps the light frames
+  // and names the fallback in their labels. The test above checks the canvas.
+  await page.setViewportSize(NARROW_WINDOW);
   await expectFrameSource(
     page.locator(mobileFrame),
     /screens\/stable\/index\.mobile\.html$/,
