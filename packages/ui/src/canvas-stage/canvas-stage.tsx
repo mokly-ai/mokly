@@ -72,6 +72,7 @@ export function CanvasStage({
   ref,
   routed = false,
   section,
+  stageRef,
 }: {
   /** Receives the canvas, which clips the frames and their highlights. */
   canvasRef?: Ref<HTMLDivElement> | undefined;
@@ -88,6 +89,11 @@ export function CanvasStage({
   routed?: boolean;
   /** The section on the canvas. Without one, the canvas shows no zoom pill. */
   section?: CanvasStageSection | undefined;
+  /**
+   * Receives the stage's invisible box: the canvas between the floating
+   * panels and above the zoom pill, to which a host clips its markers.
+   */
+  stageRef?: Ref<HTMLDivElement> | undefined;
 }) {
   const canvas = useRef<HTMLDivElement>(null);
   const stageBox = useRef<HTMLDivElement>(null);
@@ -134,6 +140,7 @@ export function CanvasStage({
     [reading, section],
   );
   const canvasElement = useMergedRef(canvas, canvasRef);
+  const stageElement = useMergedRef(stageBox, stageRef);
   const drawn = drawnPosition(view);
   return (
     <div
@@ -148,7 +155,7 @@ export function CanvasStage({
       <div
         aria-hidden="true"
         className="mbk-canvas-stage mbk-reset"
-        ref={stageBox}
+        ref={stageElement}
       />
       {holds ? (
         <>

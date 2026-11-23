@@ -465,8 +465,11 @@ gives the section the head band's title, path chip copy and status, binds the
 canvas's keys on the whole document of a standalone shell and only on an
 embedded root while the canvas shows, and asks the registry's geometry for one
 refresh per animation frame after each pan or zoom, which fire no scroll or
-resize event. The canvas is the frames' stage, which clips their highlights
-and markers. A compare mode other than Current hides the canvas behind the
+resize event. The canvas clips the frames and their highlights. The frames'
+stage is the canvas stage's invisible box, the canvas between the floating
+panels and above the zoom pill, from `stageRef`, so a marker under a panel is
+cut at the panel's edge, and one fully under it is hidden. A compare mode
+other than Current hides the canvas behind the
 comparison stage, which stops its keys.
 
 Static route parsing accepts the canonical slash, extensionless, and

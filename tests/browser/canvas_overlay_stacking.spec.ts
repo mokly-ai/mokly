@@ -1,8 +1,9 @@
 /**
  * The canvas's overlays under its floating panels, under the canvas stage,
  * component explorer and viewer markers contracts: panning can move a frame
- * under a panel, and the panel then covers the frame's highlight labels and
- * an embedded root's markers as it covers the frame, while they stay drawn.
+ * under a panel, and the panel then covers the frame's highlight labels as
+ * it covers the frame, while they stay drawn. An embedded root's markers
+ * clip to the stage, so a marker under the panel hides.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -123,7 +124,7 @@ test("in the standalone root, the right panel covers the highlight labels of a f
   await expectPanelOver(page, await pointsOverPanel(root, labels));
 });
 
-test("in an embedded root, the right panel covers the markers and highlight labels of a frame panned under it", async ({
+test("in an embedded root, the right panel covers the highlight labels of a frame panned under it, and its marker hides", async ({
   page,
 }) => {
   await openMarkerViewer(page, fixture, false);
@@ -132,15 +133,16 @@ test("in an embedded root, the right panel covers the markers and highlight labe
     { id: "primary", instance: screenInstance(fixture, "mobile", "action") },
   ]);
   await expectMarkerState(page, "primary", "visible");
-  const marker = page.locator('[data-marker-content="primary"]');
   await root
     .getByRole("button", { name: "Highlight components", exact: true })
     .click();
   const labels = root.locator(".mbk-highlight-label");
   await expect(labels.first()).toBeVisible();
-  await panUnder(page, root, marker);
-  // The marker stays drawn on its instance, under the panel.
-  await expectMarkerState(page, "primary", "visible");
-  await expectPanelOver(page, await pointsOverPanel(root, marker));
+  // The Mobile frames' instances start at the same left edge, so the
+  // marked instance moves under the panel with the rightmost label.
+  await panUnder(page, root, await rightmost(labels));
+  // The marker clips to the stage, which ends before the panel.
+  await expectMarkerState(page, "primary", "hidden");
+  await expect(page.locator('[data-marker-content="primary"]')).toBeHidden();
   await expectPanelOver(page, await pointsOverPanel(root, labels));
 });

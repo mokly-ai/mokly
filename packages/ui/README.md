@@ -365,7 +365,8 @@ scrolls through a ref. `WorkspaceLayout` gives its preview pane and its panes
 to `previewRef` and `panesRef`. `BrowserFrame`, `FlowStage`, `DocumentFrame`,
 `Stage`, and `MainRegion` give their element to `ref`, and `Inspector` its
 panels' region to `contentRef`. `CanvasStage` gives its canvas, which clips
-its frames, to `canvasRef`. `TagPicker` gives its button and its picker to
+its frames, to `canvasRef`, and its stage's invisible box, the canvas between
+the floating panels and above the zoom pill, to `stageRef`. `TagPicker` gives its button and its picker to
 `toggleRef` and `pickerRef`, and `ViewControls` its Highlight components
 button to `highlightRef`. `CatalogueNavigation` gives the current page's row
 to `currentRowRef`, and each section and folder summary, by its disclosure
