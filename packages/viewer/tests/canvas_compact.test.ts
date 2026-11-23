@@ -96,6 +96,15 @@ test("frames keyed by viewport and scheme, as a removed screen's, pick the same 
     pickedFrameKey(removed, { colorScheme: "dark", viewport: "both" }),
     "mobile-light",
   );
+  // While the filter hides the selection's scheme, the viewport's other
+  // frame shows, so the viewport toggles keep naming the picked frame.
+  assert.equal(
+    pickedFrameKey([{ key: "mobile-dark" }, { key: "desktop-dark" }], {
+      colorScheme: "light",
+      viewport: "desktop",
+    }),
+    "desktop-dark",
+  );
   assert.equal(
     pickedFrameKey([{ key: "desktop-light" }], {
       colorScheme: "light",

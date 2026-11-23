@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 
+import type { ViewerSelection } from "../host/types.js";
+
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
@@ -13,7 +15,7 @@ import {
   type ShellBrowserActions,
 } from "./store_browser_actions.js";
 import { sameShellRoute } from "./store_browser_routes.js";
-import { canonicalRouteUrl } from "./store_browser_urls.js";
+import { canonicalRouteUrl, viewportUrl } from "./store_browser_urls.js";
 import { withRoute } from "./store_filters.js";
 import type { ShellState } from "./store_state.js";
 import { viewTitle } from "./view_title.js";
@@ -149,6 +151,28 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       sequence.current?.abort();
     };
   }, [input.interactive, install, navigateHistory]);
+
+  // A viewport that the reader chooses on the shown entry, through the Frames
+  // filter or the compact layout's frame picker, replaces the address's
+  // `viewport` query, so the address names the shown viewport. A route
+  // installation brings its own address.
+  const placed = useRef<
+    { installation: number; viewport: ViewerSelection["viewport"] } | undefined
+  >(undefined);
+  const installation = input.state.routeInstallation;
+  const viewport = input.state.selection.viewport;
+  useEffect(() => {
+    if (!input.interactive) return;
+    const before = placed.current;
+    placed.current = { installation, viewport };
+    if (before?.installation !== installation || before.viewport === viewport)
+      return;
+    const win = window;
+    const url = viewportUrl(new URL(win.location.href), viewport);
+    if (url.href === win.location.href) return;
+    win.history.replaceState(win.history.state, "", url);
+    installedDocumentKey.current = routeDocumentKey(url);
+  }, [input.interactive, installation, viewport]);
 
   useLayoutEffect(() => {
     if (!input.interactive) return;

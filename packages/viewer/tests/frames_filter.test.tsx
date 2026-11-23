@@ -4,29 +4,72 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
-  ALL_FRAMES,
+  BOTH_SCHEMES,
+  canvasShownAxes,
   chosenUseCase,
+  framesChoice,
   hidesChangedView,
   shownSchemes,
   shownViewports,
   toggledFrames,
   workspaceShownAxes,
+  type FramesChoice,
 } from "../src/shell/frames_filter.js";
 import { ShellIdentifierProvider } from "../src/shell/identifier_context.js";
 import { InspectFrames } from "../src/shell/inspect_frames.js";
 
+/** Every toggle on. */
+const EVERY: FramesChoice = {
+  dark: true,
+  desktop: true,
+  light: true,
+  mobile: true,
+};
+
 test("a toggle turns its frames off, but an axis keeps one toggle on", () => {
-  const noDark = toggledFrames(ALL_FRAMES, "dark", false);
-  assert.deepEqual(noDark, { ...ALL_FRAMES, dark: false });
+  const noDark = toggledFrames(EVERY, "dark", false);
+  assert.deepEqual(noDark, { ...EVERY, dark: false });
   assert.equal(toggledFrames(noDark, "light", false), noDark);
   assert.deepEqual(shownSchemes(noDark, true), ["light"]);
-  const mobile = toggledFrames(ALL_FRAMES, "desktop", false);
+  const mobile = toggledFrames(EVERY, "desktop", false);
   assert.equal(toggledFrames(mobile, "mobile", false), mobile);
   assert.deepEqual(shownViewports(mobile), ["mobile"]);
   // An entry without a dark view shows its Light frames whatever Dark says.
+  assert.deepEqual(shownSchemes(toggledFrames(EVERY, "light", false), false), [
+    "light",
+  ]);
+});
+
+test("the viewport toggles show the selection's viewport, Both as both on", () => {
+  assert.deepEqual(framesChoice(BOTH_SCHEMES, "both"), EVERY);
+  assert.deepEqual(framesChoice({ dark: false, light: true }, "desktop"), {
+    dark: false,
+    desktop: true,
+    light: true,
+    mobile: false,
+  });
+  assert.deepEqual(framesChoice(BOTH_SCHEMES, "mobile"), {
+    ...EVERY,
+    desktop: false,
+  });
+});
+
+test("the wide canvas lists the toggled viewports, and the compact layout both, of the shown schemes", () => {
+  const desktopLight = { ...EVERY, dark: false, mobile: false };
+  const entry = { hasDark: true, set: false };
+  assert.deepEqual(canvasShownAxes(desktopLight, { ...entry, wide: true }), {
+    schemes: ["light"],
+    viewports: ["desktop"],
+  });
+  // The selection's viewport picks the compact layout's frame among them.
+  assert.deepEqual(canvasShownAxes(desktopLight, { ...entry, wide: false }), {
+    schemes: ["light"],
+    viewports: ["desktop", "mobile"],
+  });
+  // A variant set's frames show the desktop view.
   assert.deepEqual(
-    shownSchemes(toggledFrames(ALL_FRAMES, "light", false), false),
-    ["light"],
+    canvasShownAxes(EVERY, { hasDark: true, set: true, wide: false }),
+    { schemes: ["light", "dark"], viewports: ["desktop"] },
   );
 });
 
@@ -39,24 +82,35 @@ test("a toggle that is off hides the changed views of its viewport or its scheme
   assert.equal(hidesChangedView("light", false, []), false);
 });
 
-test("the compact layout describes its picked frame, the first shown one while the filter hides the selection's", () => {
+test("a workspace describes the selection's viewport, and the compact layout its picked frame in a shown scheme", () => {
   const selection = { colorScheme: "dark", viewport: "both" } as const;
+  const desktop = { ...selection, viewport: "desktop" } as const;
   assert.deepEqual(
-    workspaceShownAxes(false, ALL_FRAMES, true, true, selection),
+    workspaceShownAxes(false, BOTH_SCHEMES, true, true, selection),
     { schemes: ["dark", "light"], viewport: "both" },
   );
   assert.deepEqual(
-    workspaceShownAxes(false, ALL_FRAMES, true, false, selection),
+    workspaceShownAxes(false, BOTH_SCHEMES, true, true, desktop),
+    { schemes: ["dark", "light"], viewport: "desktop" },
+  );
+  assert.deepEqual(
+    workspaceShownAxes(false, BOTH_SCHEMES, true, false, selection),
     { schemes: ["dark"], viewport: "mobile" },
   );
-  const desktopLight = { ...ALL_FRAMES, mobile: false, dark: false };
+  // The picked frame takes a scheme that the filter shows.
   assert.deepEqual(
-    workspaceShownAxes(false, desktopLight, true, false, selection),
+    workspaceShownAxes(
+      false,
+      { dark: false, light: true },
+      true,
+      false,
+      desktop,
+    ),
     { schemes: ["light"], viewport: "desktop" },
   );
   // A variant set shows its rows' desktop views.
   assert.deepEqual(
-    workspaceShownAxes(true, ALL_FRAMES, true, true, selection).viewport,
+    workspaceShownAxes(true, BOTH_SCHEMES, true, true, selection).viewport,
     "desktop",
   );
 });
@@ -80,7 +134,7 @@ test("the Frames section marks the toggle that hides a changed view and names it
         highlight={{}}
         model={{
           changed: [{ viewport: "mobile", colorScheme: "dark" }],
-          choice: { ...ALL_FRAMES, dark: false },
+          choice: { ...EVERY, dark: false },
           count: 2,
           hasDark: true,
           viewports: true,
@@ -107,7 +161,7 @@ test("the Frames section marks the toggle that hides a changed view and names it
       highlight={{}}
       model={{
         changed: [],
-        choice: ALL_FRAMES,
+        choice: EVERY,
         count: 2,
         hasDark: false,
         viewports: true,

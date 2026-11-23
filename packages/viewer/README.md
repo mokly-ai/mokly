@@ -299,8 +299,9 @@ and Review regressions against `mokly serve` of the example catalogue.
 - [`src/shell/inspect_frames.tsx`](./src/shell/inspect_frames.tsx) and
   [`src/shell/frames_filter.ts`](./src/shell/frames_filter.ts) — the Frames
   section, and the one Frames choice of the screens, which decides the shown
-  frames, the status, and the change marks; `use_case_choice.ts` holds the
-  own choice of a use case
+  frames, the status, and the change marks: its viewport toggles show and set
+  the selection's viewport, and the shell keeps its scheme toggles;
+  `use_case_choice.ts` holds the own choice of a use case
 - [`src/shell/use_canvas_selection.ts`](./src/shell/use_canvas_selection.ts)
   and [`src/shell/canvas_selection.ts`](./src/shell/canvas_selection.ts) —
   the canvas selection: the clicks, Escape, the selection that a route names,

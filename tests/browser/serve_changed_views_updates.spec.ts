@@ -144,8 +144,8 @@ test("Changes lands on the first changed view and every other arrival stays stic
 }) => {
   const dusk = changes.paths.darkOnly;
   const stable = changes.paths.unchanged;
-  // The wide canvas shows every frame, so the arrival's view shows in the
-  // compact layout, whose one frame is the selection's view.
+  // The compact layout shows the arrival's view alone: its one frame is the
+  // selection's view.
   await page.setViewportSize(NARROW_WINDOW);
   const scheme = page.locator(shellRoot);
   const picker = page.getByRole("combobox", { name: "Frame", exact: true });
@@ -177,10 +177,14 @@ test("Changes lands on the first changed view and every other arrival stays stic
   await expect(darkMobileFrame).toBeVisible();
   await expect(page.locator(canvasFrame("desktop", "dark"))).toBeHidden();
   await expectFrameSource(darkMobileFrame, /dusk\/index\.mobile\.dark\.html/u);
-  // The Frames filter keeps every toggle on, so no toggle hides a changed
-  // view and none is marked; Inspect's head names the changed views.
+  // The scheme toggles stay on, so no scheme toggle is marked. The viewport
+  // toggles show the landing's Mobile viewport, so the Desktop toggle hides
+  // Desktop · Dark and is marked; Inspect's head names the changed views.
   await expect(await shownMarks(page, "scheme")).toHaveCount(0);
-  await expect(await shownMarks(page, "viewport")).toHaveCount(0);
+  await expect(await shownMarks(page, "viewport")).toHaveCount(1);
+  await expect(
+    page.locator('[data-frames-toggle="desktop"]'),
+  ).toHaveAccessibleDescription("Other viewport changed");
   await expect(page.locator("[data-workspace-changed-views]")).toHaveText(
     DARK_VIEWS,
   );

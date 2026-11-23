@@ -1,13 +1,15 @@
 /**
  * The canvas of a screen's or a component's workspace: its frames, the name
- * that fits the canvas again, and the compact layout's frame picker. The
- * Frames filter chooses a screen's shown viewports and schemes, and a
- * variant set's shown schemes. In the compact layout the canvas shows the
- * picked frame alone, and the picker lists the shown frames: a screen's
- * pick sets the selection's viewport and scheme, and a variant set's pick
- * selects its frame and opens its row's entry in its scheme, as one
- * selection change. The frames carry no edit's views: the shown frames name
- * the edit's contexts, and the workspace adds their renders.
+ * that fits the canvas again, the toggles of the Frames filter, and the
+ * compact layout's frame picker. The Frames filter chooses a screen's shown
+ * viewports, which its viewport toggles take from the selection's viewport,
+ * and its shown schemes, and a variant set's shown schemes. In the compact
+ * layout the canvas shows the picked frame alone, and the picker lists the
+ * frames of both viewports in the shown schemes: a screen's pick sets the
+ * selection's viewport and scheme, and a variant set's pick selects its
+ * frame and opens its row's entry in its scheme, as one selection change.
+ * The frames carry no edit's views: the shown frames name the edit's
+ * contexts, and the workspace adds their renders.
  */
 
 import { useMemo } from "react";
@@ -27,12 +29,18 @@ import {
 } from "./canvas_frames.js";
 import { useCanvasLayout } from "./canvas_layout.js";
 import type { CanvasSelected } from "./canvas_selection.js";
-import { shownSchemes, shownViewports } from "./frames_filter.js";
+import {
+  canvasShownAxes,
+  framesChoice,
+  type FramesChoice,
+} from "./frames_filter.js";
 import { useShellStore, type ShellStore } from "./store_context.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 /** What the workspace's canvas shows. */
 export interface WorkspaceCanvasFrames {
+  /** The toggles of the Frames filter. */
+  choice: FramesChoice;
   /** Names the shown frames; a new name fits the canvas again. */
   fitKey: string;
   frames: readonly CanvasFramePlan[];
@@ -65,24 +73,26 @@ export function pickFrame(
 }
 
 /**
- * The frames of an entry that the Frames filter shows, and whether the
- * entry has a dark view at all.
+ * The toggles of the Frames filter, the frames of an entry that they show,
+ * and whether the entry has a dark view at all.
  */
 function canvasShown(
   data: WorkspaceData,
   store: ShellStore,
-): { hasDark: boolean; shown: CanvasShown } {
-  const choice = store.state.frames;
+  wide: boolean,
+): { choice: FramesChoice; hasDark: boolean; shown: CanvasShown } {
+  const choice = framesChoice(
+    store.state.frames,
+    store.state.selection.viewport,
+  );
   const set = data.entry.kind === "component";
   const hasDark = hasDarkView(
     set ? data.variants.map(({ value }) => value) : [data.entry],
   );
   return {
+    choice,
     hasDark,
-    shown: {
-      schemes: shownSchemes(choice, hasDark),
-      viewports: set ? ["desktop"] : shownViewports(choice),
-    },
+    shown: canvasShownAxes(choice, { hasDark, set, wide }),
   };
 }
 
@@ -96,7 +106,7 @@ export function useWorkspaceCanvas(
   const { colorScheme, viewport } = store.state.selection;
   const entry = data.entry;
   const set = entry.kind === "component";
-  const { hasDark, shown } = canvasShown(data, store);
+  const { choice, hasDark, shown } = canvasShown(data, store, wide);
   const shownKey = `${shown.viewports.join(",")}/${shown.schemes.join(",")}`;
   // The workspace merges each new detail into its data in place, so the
   // frames follow the entry and the set's rows, whose views carry the usage.
@@ -118,6 +128,7 @@ export function useWorkspaceCanvas(
     entry.kind === "screen" ? entry.path : (data.component?.path ?? entry.path);
   if (wide)
     return {
+      choice,
       fitKey: `${owner}:${shownKey}`,
       frames,
       hasDark,
@@ -125,6 +136,7 @@ export function useWorkspaceCanvas(
       shownCount,
     };
   return {
+    choice,
     fitKey: `${owner}:${picked ?? "set"}`,
     frames,
     hasDark,

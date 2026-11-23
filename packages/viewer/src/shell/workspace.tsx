@@ -235,7 +235,7 @@ export function ComponentWorkspace({
             eligible: offered,
             frames: {
               changed: changedViews,
-              choice: store.state.frames,
+              choice: canvas.choice,
               count: canvas.shownCount,
               hasDark: canvas.hasDark,
               viewports: !set,
