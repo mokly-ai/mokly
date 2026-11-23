@@ -107,7 +107,11 @@ test("account entry keeps keyboard focus and reaches sign in", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(screenUrl("product/account/sign-up"));
-  const frame = page.frameLocator("iframe").nth(1);
+  const frame = canvasFrame(page, "Desktop · Light");
+  await expect(frame.locator(wrapper)).toHaveAttribute(
+    "data-viewport",
+    "desktop",
+  );
   await frame.getByLabel("Email", { exact: true }).fill("reviewer@example.com");
   await frame.getByLabel("Email", { exact: true }).press("Tab");
   await expect(
