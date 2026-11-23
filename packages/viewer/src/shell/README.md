@@ -374,9 +374,14 @@ with `canvas_live_frame.tsx`, which shares the mount hook of `stage_frame.tsx`
 and names its frame `{title} — {viewport} — {scheme}`, with
 `data-workspace-frame`, `data-workspace-color-scheme` and, on a component
 frame, `data-workspace-variant`. A route's fragment opens the routed entry's
-frames at it, and not the other rows of a variant set. A component frame asks
-`componentFrameSize` of `canvas_frame_size.ts` for its size once its document
-loads; without a measured content box, the frame takes the desktop size.
+frames at it, and not the other rows of a variant set. Once each document of
+a component frame is ready, the mount hook's `onReady` hears of it, and the
+frame asks the mounted frame's `contentBox` once; `componentFrameSize` of
+`canvas_frame_size.ts` turns the box into the frame's size. An adapter
+without the measurement, a failed measurement, and a document without
+content keep the desktop size, and a measurement that ends after the frame
+loads another document is dropped. A fitted canvas refits to the measured
+frames.
 `canvas_reading.tsx` shows a page or a Markdown document as one reading frame,
 named by its source file, through the mount hook of `document_stage_frame.tsx`.
 A Markdown document without a dark render keeps its light document under

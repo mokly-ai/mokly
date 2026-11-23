@@ -1,10 +1,12 @@
 /**
  * The nominal size of a component's frame on the canvas. A component frame
- * holds its document at the size that its content needs; until a frame
- * adapter measures the content, it holds the size of a desktop frame.
+ * holds its document at the size that its content needs, which the frame's
+ * adapter measures once after each load of the document. Until then, and
+ * when the adapter cannot measure the content, it holds the size of a
+ * desktop frame.
  */
 
-import type { Box } from "@mokly/frame";
+import type { Box, MountedFrame } from "@mokly/frame";
 
 /** A frame's nominal width and height in CSS pixels. */
 export interface CanvasFrameSize {
@@ -37,4 +39,19 @@ export function componentFrameSize(box?: Box | null): CanvasFrameSize {
     height: Math.max(1, Math.ceil(box.y * 2 + box.height)),
     width: Math.max(1, Math.ceil(box.x * 2 + box.width)),
   };
+}
+
+/**
+ * The size of a component frame from one measurement of its mounted
+ * document's content. An adapter without the measurement, a failed
+ * measurement, and a document without content give the desktop size.
+ */
+export async function measuredFrameSize(
+  mounted: Pick<MountedFrame, "contentBox">,
+): Promise<CanvasFrameSize> {
+  try {
+    return componentFrameSize(await mounted.contentBox?.());
+  } catch {
+    return componentFrameSize();
+  }
 }

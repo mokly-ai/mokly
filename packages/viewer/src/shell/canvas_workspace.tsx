@@ -2,7 +2,8 @@
  * A screen's or a component's canvas in the wide layout: the frames that
  * the workspace chose, each mounted by `canvas_live_frame.tsx`, in the
  * section that names the routed entry. A component frame takes the size
- * that it asks for once its document loads.
+ * that its document's content needs, measured after each load; a fitted
+ * canvas refits to the measured frames.
  */
 
 import { useCallback, useState } from "react";

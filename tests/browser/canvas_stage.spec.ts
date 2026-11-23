@@ -213,3 +213,58 @@ test("the highlight masks follow the frames when the canvas pans", async ({
     .toBe(60);
   near((await box(layer)).y, before.y);
 });
+
+test("a variant set opens fitted to its components' measured frames at a readable zoom", async ({
+  page,
+}) => {
+  // The inspector still stands below the canvas, so the window gives the
+  // stage the height that four rows need beside their fixed labels and gaps.
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto("/view/example/components/action/");
+  // Four rows, the action's own example and its three saved variants, each
+  // Light beside Dark.
+  const frames = canvas(page).locator(
+    '.mbk-canvas-frame[data-canvas-frame="component"]',
+  );
+  await expect(frames).toHaveCount(8);
+  await expect(
+    frames.locator('iframe[data-mokly-frame-state="ready"]'),
+  ).toHaveCount(8);
+  // Each frame takes the size that the action's content needs, far below a
+  // desktop frame's 1280 × 800.
+  const nominal = () =>
+    frames.evaluateAll((elements) =>
+      elements.map((element) => {
+        const style = (element as HTMLElement).style;
+        return {
+          height: Number(style.getPropertyValue("--mbk-canvas-frame-height")),
+          width: Number(style.getPropertyValue("--mbk-canvas-frame-width")),
+        };
+      }),
+    );
+  await expect
+    .poll(async () =>
+      (await nominal()).every(
+        ({ height, width }) =>
+          width > 0 && width < 400 && height > 0 && height < 200,
+      ),
+    )
+    .toBe(true);
+  // The canvas refits to the measured frames: the zoom that the pill names
+  // shows them readably, and Fit keeps it.
+  const pill = page.getByRole("group", { name: "Zoom" });
+  const { width } = (await nominal())[0]!;
+  const zoom = () => zoomOf(frames.first().locator("iframe"), width);
+  await expect.poll(zoom).toBeGreaterThanOrEqual(0.5);
+  const fitted = await zoom();
+  await expect(pill).toContainText(`${Math.round(fitted * 100)}%`);
+  await pill.getByRole("button", { name: "Fit" }).click();
+  expect(await zoom()).toBeCloseTo(fitted, 3);
+  // The fitted section stands on the stage, clear of the pill's room.
+  const stage = await box(canvas(page));
+  const placed = await box(section(page));
+  expect(placed.y).toBeGreaterThanOrEqual(stage.y);
+  expect(placed.y + placed.height).toBeLessThanOrEqual(
+    stage.y + stage.height - PILL_ROOM,
+  );
+});

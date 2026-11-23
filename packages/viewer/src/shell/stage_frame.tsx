@@ -21,7 +21,10 @@ import { entryRoute } from "../navigation/routes.js";
 
 import { DisplaySelection } from "./display_context.js";
 import { FrameStageContext } from "./frame_layout_context.js";
-import { useMountedShellFrame } from "./frame_mount_hook.js";
+import {
+  useMountedShellFrame,
+  type FrameReadyListener,
+} from "./frame_mount_hook.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameIdentity,
@@ -52,6 +55,8 @@ export interface ViewFrameInput {
   /** Whether the frame's browser window covers the page. */
   expanded: boolean;
   fragment?: string | undefined;
+  /** Hears once for each document that the frame mounts, when it is ready. */
+  onReady?: FrameReadyListener | undefined;
   /** A live edit's render, which the frame shows in place of the view. */
   preview: GeneratedComponentView | undefined;
   /** The documents of the frame's view in each scheme, for its adapter. */
@@ -103,6 +108,7 @@ export function useViewFrame(input: ViewFrameInput) {
     generation,
     identity,
     layout: { stage: input.stage, expanded: input.expanded },
+    onReady: input.onReady,
     sources: input.sources,
     source,
     usage: preview ? generatedUsage(preview) : shellFrameUsage(view?.usage),
