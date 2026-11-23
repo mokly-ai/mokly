@@ -87,6 +87,7 @@ pub fn pool(root: &Path, counts: Arc<Counts>) -> Pool {
 /// Compile the fixture through the public sidecar request API.
 pub fn bundle(pool: &Pool, root: &Path) -> results::Bundle {
     pool.request(Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: Bundle {
             evaluation: None,

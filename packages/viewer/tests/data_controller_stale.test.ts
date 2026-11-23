@@ -94,7 +94,7 @@ test("a 409 refreshes the index once and adopts the newer state without the even
   const newer = liveIndex(2);
   await publish(fixture, newer);
   assert.equal(fixture.commits.length, 1);
-  assert.equal(fixture.controller.snapshot.index, newer);
+  assert.deepStrictEqual(fixture.controller.snapshot.index, newer);
   assert.equal(fixture.controller.refreshFailed, undefined);
 });
 

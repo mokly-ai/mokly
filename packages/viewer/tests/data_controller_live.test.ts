@@ -113,7 +113,7 @@ test("a newer revision refreshes the index and the route's details in one commit
   fixture.source.detail(HOME).resolve(revised(HOME, 2));
   await flush();
   assert.equal(fixture.commits.length, 1);
-  assert.equal(fixture.controller.snapshot.index, newer);
+  assert.deepStrictEqual(fixture.controller.snapshot.index, newer);
   assert.equal(fixture.controller.snapshot.details.size, 1);
   assert.equal(fixture.source.deploymentChanges, 0);
   assert.equal(fixture.controller.refreshFailed, undefined);

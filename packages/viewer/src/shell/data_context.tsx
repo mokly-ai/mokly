@@ -35,14 +35,18 @@ export interface ViewerCapabilities {
 export type LiveEditingStart =
   { status: "preparing" } | { status: "failed"; retry(): void };
 
-interface ShellDataContextValue {
+interface RenderContextValue {
   capabilities?: ViewerCapabilities;
   editingStart?: LiveEditingStart;
+}
+
+interface RouteDeliveryContextValue {
   routeDelivery?: DetailDelivery;
   reloadDetail?: (request: DetailRequest) => void;
 }
 
-const ShellDataContext = createContext<ShellDataContextValue>({});
+const RenderContext = createContext<RenderContextValue>({});
+const RouteDeliveryContext = createContext<RouteDeliveryContextValue>({});
 
 /** Provide one shell root's detail delivery and live capability. */
 export function ShellDataBoundary({
@@ -78,16 +82,25 @@ export function ShellDataBoundary({
           : { status: "preparing" },
     [capabilities, editing, retry],
   );
-  const value = useMemo(
+  const renderValue = useMemo(
     () => ({
       ...(capabilities ? { capabilities } : {}),
       ...(editingStart ? { editingStart } : {}),
+    }),
+    [capabilities, editingStart],
+  );
+  const routeValue = useMemo(
+    () => ({
       ...(store.routeDelivery ? { routeDelivery: store.routeDelivery } : {}),
       reloadDetail: store.reloadDetail,
     }),
-    [capabilities, editingStart, store.routeDelivery, store.reloadDetail],
+    [store.routeDelivery, store.reloadDetail],
   );
-  return <ShellDataContext value={value}>{children}</ShellDataContext>;
+  return (
+    <RenderContext value={renderValue}>
+      <RouteDeliveryContext value={routeValue}>{children}</RouteDeliveryContext>
+    </RenderContext>
+  );
 }
 
 /**
@@ -95,7 +108,7 @@ export function ShellDataBoundary({
  * in a static build and in an embedded React host.
  */
 export function useViewerCapabilities(): ViewerCapabilities | undefined {
-  return useContext(ShellDataContext).capabilities;
+  return useContext(RenderContext).capabilities;
 }
 
 /**
@@ -103,15 +116,15 @@ export function useViewerCapabilities(): ViewerCapabilities | undefined {
  * Serve; `undefined` once the capability installs and outside Serve.
  */
 export function useLiveEditingStart(): LiveEditingStart | undefined {
-  return useContext(ShellDataContext).editingStart;
+  return useContext(RenderContext).editingStart;
 }
 
 /** The delivery of the route's details; absent on home and missing routes. */
 export function useRouteDelivery(): DetailDelivery | undefined {
-  return useContext(ShellDataContext).routeDelivery;
+  return useContext(RouteDeliveryContext).routeDelivery;
 }
 
 /** Reload a held route detail through the shell's data owner. */
-export function useReloadDetail(): ShellDataContextValue["reloadDetail"] {
-  return useContext(ShellDataContext).reloadDetail;
+export function useReloadDetail(): RouteDeliveryContextValue["reloadDetail"] {
+  return useContext(RouteDeliveryContext).reloadDetail;
 }

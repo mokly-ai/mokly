@@ -34,15 +34,14 @@ const context: ShellContext = {
 
 function source(view: "all" | "changes"): NavRowsSource {
   return {
+    activeId: undefined,
     context,
     identifier: (value) => value,
-    store: {
-      context,
-      state: {
-        disclosures: {},
-        selection: { search: "", tags: [], view },
-      },
-    } as unknown as NavRowsSource["store"],
+    state: {
+      disclosures: {},
+      filterBaseline: undefined,
+      selection: { search: "", tags: [], view },
+    },
   };
 }
 

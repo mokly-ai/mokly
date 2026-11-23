@@ -4,6 +4,7 @@ import type * as Storybook from "@storybook/react";
 import type * as Csf from "storybook/internal/csf";
 
 import type { BundleExports, Generation } from "./bundle.js";
+import type { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
 
 export type PortableStory = ReturnType<typeof Storybook.composeStory>;
@@ -34,6 +35,7 @@ export function readStories(
   exports: BundleExports,
   file: string,
   module: Record<string, unknown>,
+  cache: ExportNameCache,
 ): ReadStories {
   const storybook = generation.require("@storybook/react") as typeof Storybook;
   const require = createRequire(generation.require.resolve("@storybook/react"));
@@ -79,6 +81,7 @@ export function readStories(
     generation.sources.get(file) ?? "",
     composed,
     file,
+    cache,
   )
     .filter(([exportName]) => {
       const tags = composed[exportName]!.tags;

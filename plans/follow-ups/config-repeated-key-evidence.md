@@ -1,0 +1,34 @@
+# Repeated configuration keys may disagree with esbuild
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Low. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-20, from the new problems of the fresh Opus options check of 2026-11-20, on branch `calummoore/mokly-plan-reuse-editor-files-2-4oor`.
+- **Location:** `packages/mokly/src/sidecar/metadata-inputs.ts:32`, `readConfig` at `packages/mokly/src/sidecar/config-inputs.ts:131`, and `parseJson` at `packages/mokly/src/sidecar/config-json.ts:6`.
+- **Reason:** Nobody has proven how esbuild 0.28.2 reads a repeated key of a TypeScript configuration, and the fix would change the shared capture outside the branch that found it.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Reuse evidence:** the record of each file, directory listing, absent path, and link that can change how an import of a compiled bundle resolves. Each reuse check compares it with the filesystem.
+  - **Configuration:** a `tsconfig.json` or `jsconfig.json` file, with its `extends` chain.
+  - **Repeated key:** the same property name written more than once in one JSON object.
+- **Background:**
+  - The sidecar reads each configuration with `parseJson` in `packages/mokly/src/sidecar/config-json.ts`. It accepts comments and trailing commas, and it ends with `JSON.parse`, so a repeated key keeps its last value.
+  - `MetadataInputs` calls it at `packages/mokly/src/sidecar/metadata-inputs.ts:32`. `readConfig` at `packages/mokly/src/sidecar/config-inputs.ts:131` reads the settings of each configuration in a chain.
+  - Package manifests use another reader. Main commit `a9859a574` (#413) of 2026-11-20 added `parsePackageJson`, which keeps each repeated key in order, because esbuild 0.28.2 uses the first repeated key of a package manifest. The "first repeated" cases of `tests/sidecar_package_folder_evidence.test.ts` test that rule.
+  - On 2026-11-20 the plan-only candidate reader moved to `parsePackageJson`, after a probe showed a stale plan for a repeated `main` field.
+  - Nobody has checked whether esbuild reads the first or the last repeated key of a TypeScript configuration.
+  - If esbuild uses the first value, a repeated `compilerOptions`, `baseUrl`, or `paths` key gives the capture another mapping than esbuild. The mapped-path evidence and the plan candidate names from `PlanCandidates.request` could then miss a target that esbuild reads. That would affect the shared compiled and disk reuse, not only plans.
+- **Problem:** The configuration reader keeps the last repeated key, and esbuild may keep the first. Nobody has proven the esbuild side.
+- **Impact if no action:** If esbuild uses the first repeated key, a configuration with a repeated mapping key could let reuse keep a module that a fresh compile does not select. Nobody has shown such a case.
+- **Root question:** How does the capture read a repeated key of a TypeScript configuration in the same way as esbuild?
+- **Options:**
+  - **A.** Prove the esbuild semantics first. Read the configuration parser of esbuild 0.28.2, and run a native probe with a repeated `compilerOptions.paths` key. Compare the selected module with the recorded mapping. Keep the current behaviour until a defect is proved. Effort: Small.
+  - **B.** Read configurations with an ordered reader that keeps each repeated key, as `parsePackageJson` does, and use the value that esbuild uses. Effort: Medium.
+  - **C.** Mark the evidence incomplete for a configuration with a repeated relevant key. This loses reuse for that form. Effort: Small.
+- **Left out:** A change to the plan names alone cannot repair compiled or stored evidence. A build error for a repeated key adds a user-visible rejection, which needs the user.
+- **Shared assumptions:** Exact output, the current bounds, and the disk rules stay. Source: `docs/protocol/mokly-sidecar-recipes.md` and `docs/protocol/mokly-base-cache.md`.
+- **Wider fix:** B. One ordered reader for each metadata file that esbuild reads removes this class of mismatch. It needs the proof of A first.
+- **Previous examples:** Main commit `a9859a574` (#413) moved package manifests to `parsePackageJson`. The plan-only candidate reader followed on 2026-11-20 on branch `calummoore/mokly-plan-reuse-editor-files-2-4oor`.
+- **Recommendation:** A. The esbuild semantics decide whether a defect exists, and no stale result is proven.
+- **Action:** fix after merge, apply A, because the esbuild semantics are unproven and the fix reaches the shared capture outside the branch that found it.

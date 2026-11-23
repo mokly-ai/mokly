@@ -7,6 +7,7 @@ use std::sync::Arc;
 
 use mokly_cli::cancellation::Cancellation;
 use mokly_cli::cancelled_work::CancellableWorkers;
+use mokly_cli::capture_workers::{CaptureWorkers, PoolCaptureCapacity};
 use mokly_cli::grammar::{Common, SidecarSource};
 use mokly_cli::version::VERSION;
 use mokly_compare::cache_types::Reporter;
@@ -115,15 +116,15 @@ impl Services {
             SidecarSource::Default => pool.with_memory_admission(memory()),
             SidecarSource::Explicit => pool,
         });
-        let runtime = runtime(
-            tree,
-            pool.clone(),
-            Arc::new(ThreadWorkers::new(
-                std::thread::available_parallelism().map_or(1, usize::from),
-            )?),
-            cancellation,
-            cache,
-        );
+        let workers: Arc<dyn RenderWorkers> = Arc::new(ThreadWorkers::new(
+            std::thread::available_parallelism().map_or(1, usize::from),
+        )?);
+        let workers: Arc<dyn RenderWorkers> = Arc::new(CaptureWorkers {
+            inner: workers.clone(),
+            capture: workers,
+            capacity: Arc::new(PoolCaptureCapacity { pool: pool.clone() }),
+        });
+        let runtime = runtime(tree, pool.clone(), workers, cancellation, cache);
         Ok(Self {
             runtime,
             pool,

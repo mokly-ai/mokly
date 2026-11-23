@@ -34,6 +34,7 @@ pub(super) fn store(
     reporting: Reporting,
     diagnostics: Arc<dyn Diagnostics>,
 ) -> Arc<dyn BundleStore> {
+    let directory = reporting.directory.clone();
     let inner: Arc<dyn BundleStore> = match SystemLocations.repository(repository) {
         Ok(root) => {
             let cancellation: Arc<dyn control::Cancellation> =
@@ -57,6 +58,7 @@ pub(super) fn store(
         Err(_) => Arc::new(Unavailable(AtomicBool::new(false))),
     };
     Arc::new(Reported {
+        directory,
         inner,
         diagnostics,
         mode: reporting.mode,
@@ -96,25 +98,30 @@ impl BundleStore for Unavailable {
     }
 }
 
-struct Reported {
-    inner: Arc<dyn BundleStore>,
-    diagnostics: Arc<dyn Diagnostics>,
-    mode: Mode,
+pub(super) struct Reported {
+    pub(super) directory: Arc<dyn Reporter>,
+    pub(super) inner: Arc<dyn BundleStore>,
+    pub(super) diagnostics: Arc<dyn Diagnostics>,
+    pub(super) mode: Mode,
 }
 impl Reported {
-    fn report(&self, effects: Effects) {
+    fn report(&self, root: &Path, effects: Effects) {
+        let diagnostics = self
+            .diagnostics
+            .for_source_root(root)
+            .unwrap_or_else(|| self.diagnostics.clone());
         let prefix = if self.mode == Mode::Plain {
             "[mokly/warning]"
         } else {
             "  !"
         };
         if effects.warnings.entry {
-            self.diagnostics.emit(&format!(
+            diagnostics.emit(&format!(
                 "{prefix} A cached JavaScript bundle could not be reused. Bundling it again."
             ));
         }
         if effects.warnings.directory {
-            self.diagnostics.emit(&format!(
+            diagnostics.emit(&format!(
                 "{prefix} The JavaScript bundle cache is unavailable. Bundling without it."
             ));
         }
@@ -122,18 +129,26 @@ impl Reported {
 }
 impl BundleStore for Reported {
     fn load(&self, params: &Bundle) -> ReadOutcome {
+        let _scope = self.directory.scope(Path::new(&params.source_root));
         let result = self.inner.load(params);
-        self.report(result.effects());
+        self.report(Path::new(&params.source_root), result.effects());
         result
     }
     fn save(&self, recipe: &DurableRecipe) -> WriteOutcome {
+        let _scope = self
+            .directory
+            .scope(Path::new(&recipe.params().source_root));
         let result = self.inner.save(recipe);
-        self.report(result.effects());
+        self.report(Path::new(&recipe.params().source_root), result.effects());
         result
     }
     fn invalidate(&self, params: &Bundle, token: &RecordToken) -> WriteOutcome {
+        let _scope = self.directory.scope(Path::new(&params.source_root));
         let result = self.inner.invalidate(params, token);
-        self.report(result.with_entry_fault(EntryFault::Damaged).effects());
+        self.report(
+            Path::new(&params.source_root),
+            result.with_entry_fault(EntryFault::Damaged).effects(),
+        );
         result
     }
 }

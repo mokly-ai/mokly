@@ -1,9 +1,9 @@
-//! Real capture retention and fallback consume the shared batched fake producer.
+//! Real capture retention and fallback consume the shared ordered fake producer.
 
 use std::sync::{Arc, Mutex};
 
-use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
-use unimock::{MockFn, Unimock, matching};
+use mokly_graph::types::RenderGeneration;
+use unimock::Unimock;
 
 use super::comparison_capture_tests::source_calls;
 use super::{CaptureSide, capture_with_bound};
@@ -13,14 +13,9 @@ struct Probe {
     reads: Arc<Mutex<Vec<String>>>,
 }
 
-fn captured(count: usize, parallelism: usize, bound: usize) -> Probe {
+fn captured(count: usize, _parallelism: usize, bound: usize) -> Probe {
     let reads = Arc::new(Mutex::new(Vec::new()));
-    let source = Arc::new(Unimock::new((
-        source_calls("base", count, reads.clone()),
-        RenderGenerationMock::comparison_parallelism
-            .each_call(matching!())
-            .returns(parallelism),
-    )));
+    let source = Arc::new(Unimock::new(source_calls("base", count, reads.clone())));
     Probe {
         generation: capture_with_bound(source, bound, CaptureSide::Base).unwrap(),
         reads,

@@ -6,10 +6,12 @@
   bundle disk cache change on branch `calummoore/lisbon-h906`. The check put
   this in-process exposure outside the new functionality of that call and
   asked for a follow-up item.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:114`,
-  `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 143,
-  `packages/mokly/src/sidecar/physical-inputs.ts:166`, and
-  `crates/mokly-render/src/bundle.rs:63`.
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:118`, function
+  `reuse`, `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line
+  149, method `ResolutionEvidence.candidate`,
+  `packages/mokly/src/sidecar/physical-inputs.ts:157` to line 179, method
+  `PhysicalInputs.directory`, and `crates/mokly-render/src/bundle.rs:66`,
+  function `describe`.
 - **Reason:** The exposure predates the bundle disk cache change, which keeps
   it out of the disk cache, except in the documented limit of the durable
   check when every witness returns unchanged. Its fix that keeps all reuse is
@@ -44,13 +46,13 @@
     `packages/mokly/src/sidecar/physical-inputs.ts` owns every read. After
     the last attempt, `finish()` reads the whole evidence again. A
     difference makes the evidence incomplete.
-  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:114` accepts an
+  - `reuse()` at `packages/mokly/src/sidecar/compiled.ts:118` accepts an
     earlier compilation while its toolchain, settings, dependency roots,
     consumed file digests, consumed directory lists, and complete reuse
     evidence still match. The core's bundle fast path checks the same
-    evidence at `crates/mokly-render/src/bundle.rs:63`.
-  - The section "Compiled Recipes And Release" of
-    `docs/protocol/mokly-sidecar-modules.md` states the rules. A compilation
+    evidence in `describe` at `crates/mokly-render/src/bundle.rs:66`.
+  - The section "Reuse And Identity" of
+    `docs/protocol/mokly-sidecar-recipes.md` states the rules. A compilation
     is reused only while its inputs stay unchanged. An incomplete
     compilation is never reused and never stored, and it gets a fresh
     identity at each compile.
@@ -81,11 +83,12 @@
       before `finish()`. esbuild compiles the lower candidate, but the
       evidence and the filesystem both list the higher one.
     - Cached-listing window: esbuild reads and caches a directory listing at
-      its first lookup there, for the whole build. An exact-file lookup at
-      `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 143
+      its first lookup there, for the whole build. An exact-file lookup in
+      `ResolutionEvidence.candidate`, at
+      `packages/mokly/src/sidecar/resolution-evidence.ts:135` to line 149,
       records the file path and no listing. A later open lookup in the same
-      directory records the listing through
-      `packages/mokly/src/sidecar/physical-inputs.ts:166`. A candidate that
+      directory records the listing through `PhysicalInputs.directory`, at
+      `packages/mokly/src/sidecar/physical-inputs.ts:157`. A candidate that
       appears between the two reads enters the evidence, but not the
       selection of esbuild.
   - Two real esbuild regressions in `tests/sidecar_capture_mutations.test.ts`
@@ -107,8 +110,8 @@
       durable check, both tests passed in 10 of 10 runs.
   - The second test shows the esbuild listing cache: esbuild selects
     `values/value.js` although `values/value.ts` exists when it resolves
-    `./values/value`. Nobody read the Go source of esbuild, so no other
-    esbuild version or platform is checked.
+    `./values/value`. Those regressions did not inspect the Go source of
+    esbuild. They check no other esbuild version or platform.
   - On 2026-11-20 the design investigation of marked folder coherence, on
     the branch `calummoore/mokly-folder-export-evidence-7rox`, found a
     folder variant of the cached-listing window. It comes from code reading,
@@ -273,7 +276,7 @@
     Its tests are "a preview edit during compilation cannot replace its
     consumed digest" and "an imported manifest restored during compilation
     keeps its consumed digest", in the same file.
-- **Related:** `plans/follow-ups/serve-plan-editor-invalidation.md` considers
+- **Related:** `plans/follow-ups/serve-editor-files-disk-cache.md` considers
   narrower directory evidence. Its choice must still detect the two
   stale-selection windows in this item.
   `plans/follow-ups/sequential-evidence-capture-cost.md` measures
@@ -287,6 +290,11 @@
   marked side of the same class. Its option B extends option D of this item
   to folder obligations, and it closes the folder variant above. Each item
   can merge alone.
+  `plans/follow-ups/pnp-ancestor-manifest-evidence.md`,
+  `plans/follow-ups/case-collision-unlisted-directory.md`, and
+  `plans/follow-ups/link-target-kind-evidence.md` change the same capture
+  code. They own changes after a completed capture, and this item owns
+  changes during a compile.
 - **Recommendation:** D. It closes both windows in process and on disk
   without stamps, keeps the reuse of each coherent compilation, and writes
   no file. E copies no rule, but it adds a dependency and an esbuild run to

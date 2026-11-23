@@ -1,11 +1,11 @@
 //! Canonical JSON payloads share their bytes while the publication supplies revision.
 
-use axum::body::{Body, Bytes};
-use axum::http::{HeaderValue, StatusCode};
+use axum::body::Bytes;
+#[cfg(test)]
 use axum::response::Response;
 
 use crate::assets::File;
-use crate::response;
+use crate::json_delivery::JsonBody;
 
 /// Immutable slices around an encoded Serve record's top-level revision number.
 #[derive(Clone)]
@@ -25,25 +25,18 @@ impl RevisionFile {
         }
     }
 
+    /// Pair the immutable payload slices with the current publication's revision.
+    pub(crate) fn body(&self, revision: u64) -> JsonBody {
+        JsonBody::Revision([
+            self.before.clone(),
+            Bytes::from(revision.to_string()),
+            self.after.clone(),
+        ])
+    }
+
+    #[cfg(test)]
     pub(crate) fn response(&self, revision: u64) -> Response {
-        let before = self.before.clone();
-        let after = self.after.clone();
-        let revision = Bytes::from(revision.to_string());
-        let length = before.len() + revision.len() + after.len();
-        let mut response = response::bytes(
-            StatusCode::OK,
-            "application/json; charset=utf-8",
-            Bytes::new(),
-        );
-        if let Ok(value) = HeaderValue::from_str(&length.to_string()) {
-            response.headers_mut().insert("content-length", value);
-        }
-        *response.body_mut() = Body::from_stream(async_stream::stream! {
-            yield Ok::<_, std::convert::Infallible>(before);
-            yield Ok(revision);
-            yield Ok(after);
-        });
-        response
+        self.body(revision).response(None)
     }
 }
 

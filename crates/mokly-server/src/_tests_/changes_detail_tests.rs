@@ -59,7 +59,7 @@ async fn withdrawing_the_classification_removes_reasons_from_delivered_bytes() {
         included: true,
     };
     snapshot.changes = Some(comparison);
-    changes_detail::apply(&mut snapshot).unwrap();
+    changes_detail::apply(&mut snapshot, &EncodedDetails).unwrap();
     let ready = delivered(&snapshot).await;
     assert_eq!(ready["reasons"], json!([{ "kind": "material" }]));
     assert_eq!(ready["before"]["path"], json!("screen-0"));
@@ -68,7 +68,7 @@ async fn withdrawing_the_classification_removes_reasons_from_delivered_bytes() {
     replacement.changes = None;
     replacement.index.changes_status = ChangesStatus::Pending;
     replacement.index.screens[0].entry.changes = CatalogueChanges::Pending;
-    changes_detail::apply(&mut replacement).unwrap();
+    changes_detail::apply(&mut replacement, &EncodedDetails).unwrap();
     let withdrawn = delivered(&replacement).await;
     assert!(withdrawn.get("reasons").is_none());
     assert!(withdrawn.get("before").is_none());

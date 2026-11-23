@@ -14,6 +14,20 @@ use super::fixture::Fixture;
 
 impl Fixture {
     pub(super) fn generation(&self, head: bool) -> Arc<dyn RenderGeneration> {
+        let generation: Arc<dyn RenderGeneration> = Arc::new(self.mock(head));
+        if let Some(route) = generation.plans().keys().next() {
+            let _ = generation.comparison_document_proof(route);
+        }
+        generation
+    }
+
+    /// The same boundaries for a test that publishes without the captures, which alone render
+    /// every mocked document, so the mock does not check its unused clauses.
+    pub(super) fn published_generation(&self, head: bool) -> Arc<dyn RenderGeneration> {
+        Arc::new(self.mock(head).no_verify_in_drop())
+    }
+
+    fn mock(&self, head: bool) -> Unimock {
         let plans: BTreeMap<_, _> = self
             .entries
             .iter()
@@ -149,15 +163,11 @@ impl Fixture {
             .each_call(matching!())
             .answers(&|_| Ok(RenderSummary::default()))
             .at_least_times(0);
-        let generation: Arc<dyn RenderGeneration> = Arc::new(if head {
+        if head {
             Unimock::new((common, validation, identity))
         } else {
             Unimock::new(common)
-        });
-        if let Some(route) = generation.plans().keys().next() {
-            let _ = generation.comparison_document_proof(route);
         }
-        generation
     }
 }
 fn path(route: &str) -> &str {

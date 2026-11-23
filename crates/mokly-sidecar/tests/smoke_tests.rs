@@ -72,6 +72,7 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
         .unwrap();
     let bundled = pool
         .request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: Bundle {
                 evaluation: None,

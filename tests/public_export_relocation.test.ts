@@ -172,3 +172,46 @@ test("a root release component audits its named public workspace package", async
   await writeNotes(fixture.root, "Removed `removed`.\n");
   assert.deepEqual(publicPackageExportAudit(fixture.root).findings, []);
 });
+
+test("a component that releases a private workspace exports nothing to audit", async (t) => {
+  const fixture = await createPublicExportFixture();
+  t.after(() => fs.rm(fixture.root, { recursive: true, force: true }));
+  const manifest = JSON.parse(
+    await fs.readFile(path.join(fixture.root, "package.json"), "utf8"),
+  );
+  await writeSource(
+    fixture.root,
+    "package.json",
+    JSON.stringify({ ...manifest, workspaces: ["tools/shell"] }),
+  );
+  await writeSource(
+    fixture.root,
+    "tools/shell/package.json",
+    JSON.stringify({ name: "@fixture/shell", private: true, version: "0.1.0" }),
+  );
+  const config = JSON.parse(
+    await fs.readFile(
+      path.join(fixture.root, "release-please-config.json"),
+      "utf8",
+    ),
+  );
+  config.packages.tools = {
+    "release-type": "node",
+    component: "shell",
+    "package-name": "@fixture/shell",
+    "include-component-in-tag": true,
+    "include-v-in-tag": true,
+  };
+  await writeSource(
+    fixture.root,
+    "release-please-config.json",
+    JSON.stringify(config),
+  );
+  await writeSource(
+    fixture.root,
+    ".release-please-manifest.json",
+    JSON.stringify({ ".": "1.0.0", tools: "0.1.0" }),
+  );
+  commitFixture(fixture.root, "test: release a private workspace");
+  assert.deepEqual(publicPackageExportAudit(fixture.root).findings, []);
+});

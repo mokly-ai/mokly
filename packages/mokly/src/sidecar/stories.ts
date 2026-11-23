@@ -3,6 +3,7 @@ import type { Story } from "../generated/sidecar/Story.js";
 
 import type { BundleExports, Generation } from "./bundle.js";
 import { dataProps } from "./definition-fields.js";
+import type { ExportNameCache } from "./export-name-cache.js";
 import { storyHints } from "./story-hints.js";
 import { readStories, type StoredStory } from "./story-reader.js";
 
@@ -10,10 +11,11 @@ export async function describeStories(
   generation: Generation,
   exports: BundleExports,
   result: Definitions,
+  cache: ExportNameCache,
 ): Promise<void> {
   if (!Object.keys(exports.stories).length) return;
   for (const [file, module] of Object.entries(exports.stories)) {
-    const read = readStories(generation, exports, file, module);
+    const read = readStories(generation, exports, file, module, cache);
     const stories = read.stories.map((entry) => {
       const excludedProps: string[] = [];
       const props = storyProps(

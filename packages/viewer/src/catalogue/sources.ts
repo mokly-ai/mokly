@@ -8,8 +8,11 @@ import type {
 
 import { DEPLOYMENT_PATH } from "./delivery_paths.js";
 import { readDeploymentFile } from "./deployment_reader.js";
-import { readEntryDetail } from "./detail_reader.js";
-import { readCatalogueIndex } from "./index_reader.js";
+import { adoptFetchedEntryDetail, readEntryDetail } from "./detail_reader.js";
+import {
+  adoptFetchedCatalogueIndex,
+  readCatalogueIndex,
+} from "./index_reader.js";
 
 /** The catalogue index v9 as an object, or its absolute HTTP(S) URL. */
 export type IndexSource = CatalogueReadModel | string | URL;
@@ -45,6 +48,11 @@ export function sourceUrl(value: string | URL): URL {
 /** The fetch function a source uses, injectable for tests. */
 export type JsonFetch = (input: URL, init: RequestInit) => Promise<Response>;
 
+declare const fetchedJson: unique symbol;
+
+/** An unvalidated body parsed by this transport. */
+export type FetchedJson = { readonly [fetchedJson]: never };
+
 /** One static deployment check. False means another deployment answered. */
 export type DeploymentCheck = (signal: AbortSignal) => Promise<boolean>;
 
@@ -64,7 +72,7 @@ export async function fetchJson(
   url: URL,
   signal: AbortSignal,
   fetchImpl: JsonFetch = (input, init) => fetch(input, init),
-): Promise<{ value: unknown; url: URL }> {
+): Promise<{ value: FetchedJson; url: URL }> {
   const response = await fetchImpl(url, { credentials: "omit", signal });
   const final = new URL(response.url || url.href);
   const type = response.headers.get("content-type") ?? "";
@@ -74,7 +82,7 @@ export async function fetchJson(
     !/^application\/json(?:\s*;|$)/i.test(type.trim())
   )
     throw new DeliveryFetchError();
-  const value: unknown = await response.json();
+  const value: FetchedJson = await response.json();
   signal.throwIfAborted();
   return { value, url: final };
 }
@@ -133,7 +141,7 @@ export async function loadIndexSource(
       "Only a catalogue object accepts a base address.",
     );
   const { value, url } = await fetchJson(sourceUrl(source), signal, fetchImpl);
-  return { index: readCatalogueIndex(value), root: new URL("/", url) };
+  return { index: adoptFetchedCatalogueIndex(value), root: new URL("/", url) };
 }
 
 /** Resolve one detail result, fetching a URL only on the artifact origin. */
@@ -148,7 +156,7 @@ export async function loadDetailResult(
   const url = sourceUrl(new URL(result, root));
   if (url.origin !== root.origin) throw new DeliveryFetchError();
   const { value } = await fetchJson(url, signal, fetchImpl);
-  return readEntryDetail(value);
+  return adoptFetchedEntryDetail(value);
 }
 
 /** An index object can validate synchronously before a React effect starts. */

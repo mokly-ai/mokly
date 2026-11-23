@@ -95,7 +95,8 @@ serves it. So its `cache` field names the outcome of the request, and the
 - `no-record`: neither the pool nor the bundle cache kept a compilation of
   the request's settings.
 - `stamp-mismatch`: the reuse check rejected the compilation that the pool or
-  the bundle cache kept.
+  the bundle cache kept, or the pool ruled out its released recipe before the
+  request.
 - `version-mismatch`: the bundle cache entry has another format or Mokly
   version.
 - `damaged`: the bundle cache entry is damaged or unreadable, or holds other

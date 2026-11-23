@@ -16,7 +16,10 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::postcss::PostCss;
 use crate::side::SideInputs;
+use crate::sources::SideTree;
 use crate::stylesheet_capture::{Capture, RecordingTree};
+use crate::stylesheet_class_maps::ClassMapCompiler;
+use crate::stylesheet_usage::BufferedUsage;
 use crate::stylesheet_watch;
 
 pub(crate) struct Compilation {
@@ -24,7 +27,15 @@ pub(crate) struct Compilation {
     pub(crate) capture: Capture,
 }
 
-#[cfg_attr(test, unimock::unimock(api = [CompileRoot, WatchFiles]))]
+/// A raw compiler fork and its usage buffer remain owned until ordered delivery.
+pub(crate) struct DeferredCompiler {
+    /// A plain-CSS compiler whose reads affect only this root's usage buffer.
+    pub(crate) compiler: Arc<dyn RootCompiler>,
+    /// Captured usage also survives a raw compiler failure or unwind.
+    pub(crate) usage: Arc<BufferedUsage>,
+}
+
+#[cfg_attr(test, unimock::unimock(api = [CompileRoot, WatchFiles, DeferRoot]))]
 pub(crate) trait RootCompiler: Send + Sync {
     fn compile(&self, root: &StylesheetRoot) -> Result<Compilation>;
     fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
@@ -33,6 +44,18 @@ pub(crate) trait RootCompiler: Send + Sync {
             ..WatchInputs::default()
         })
     }
+    /// Only a plain-CSS compiler with a replaceable usage collector can fork.
+    fn deferred(&self) -> Option<DeferredCompiler> {
+        None
+    }
+}
+
+/// Attempt-local stylesheet reuse also identifies useful PostCSS preparation.
+pub(crate) trait StylesheetPreparation: ClassMapCompiler {
+    /// A retained PostCSS root whose current evidence rejects reuse.
+    fn stale_postcss(&self) -> bool;
+    /// Every compiled or reused root remains in this attempt's bounded store.
+    fn kept_every_record(&self) -> bool;
 }
 
 pub(crate) struct CapturingCompiler {
@@ -42,9 +65,32 @@ pub(crate) struct CapturingCompiler {
     pub(crate) postcss: Option<Arc<PostCss>>,
     pub(crate) watch_sources: Option<Arc<dyn SourceTree>>,
     pub(crate) side: SideInputs,
+    /// Plain-CSS forks replace this side tree's usage without changing its snapshots.
+    pub(crate) deferred_sources: Option<Arc<SideTree>>,
 }
 
 impl RootCompiler for CapturingCompiler {
+    fn deferred(&self) -> Option<DeferredCompiler> {
+        if self.postcss.is_some() {
+            return None;
+        }
+        let mut sources = self.deferred_sources.as_deref()?.clone();
+        let usage = Arc::new(BufferedUsage::new(sources.usage.clone()));
+        sources.usage = usage.clone();
+        Some(DeferredCompiler {
+            compiler: Arc::new(Self {
+                tree: Arc::new(sources),
+                root: self.root.clone(),
+                resolution: self.resolution.clone(),
+                postcss: None,
+                watch_sources: self.watch_sources.clone(),
+                side: self.side.clone(),
+                deferred_sources: None,
+            }),
+            usage,
+        })
+    }
+
     fn compile(&self, root: &StylesheetRoot) -> Result<Compilation> {
         let tree = Arc::new(RecordingTree::new(self.tree.clone(), self.root.clone()));
         let resolver: Arc<dyn ImportResolver> = Arc::new(SourceResolver {
@@ -92,3 +138,7 @@ impl RootCompiler for CapturingCompiler {
 #[cfg(test)]
 #[path = "_tests_/stylesheet_watch_tests.rs"]
 mod stylesheet_watch_tests;
+
+#[cfg(test)]
+#[path = "_tests_/stylesheet_deferred_tests.rs"]
+mod stylesheet_deferred_tests;
