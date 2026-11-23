@@ -16,13 +16,21 @@ import type {
 export const BYTE_LIMIT = 262144;
 const KEY = /^[a-f\d]{64}$/;
 const RANGE = /^r-\d+$/;
-export const EVENTS = [
+export const DEFAULT_EVENTS = [
   "hover",
   "click",
   "navigation",
   "pick-end",
   "geometry",
 ] as const;
+export const CANVAS_EVENTS = [
+  "canvas-wheel",
+  "canvas-pinch",
+  "canvas-key",
+  "canvas-focus",
+  "canvas-blur",
+] as const;
+export const EVENTS = [...DEFAULT_EVENTS, ...CANVAS_EVENTS] as const;
 export type ProbeEventType = (typeof EVENTS)[number];
 export type JsonObject = Record<string, unknown>;
 export const object = (value: unknown): value is JsonObject =>
@@ -49,9 +57,9 @@ export const array = (value: unknown, max: number): value is unknown[] =>
   Array.isArray(value) && value.length <= max;
 export const unique = (value: readonly unknown[]): boolean =>
   new Set(value).size === value.length;
+export const coordinate = (value: unknown, minimum: number): value is number =>
+  typeof value === "number" && value >= minimum && value <= 1000000;
 export const boxes = (value: unknown): value is Box[] => {
-  const coordinate = (number: unknown, minimum: number) =>
-    typeof number === "number" && number >= minimum && number <= 1000000;
   return (
     array(value, 64) &&
     value.every(
