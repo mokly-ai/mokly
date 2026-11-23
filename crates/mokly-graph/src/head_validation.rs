@@ -89,8 +89,8 @@ pub enum ClosureProof {
 /// Attempt-owned reads and optional facts used before global validation finishes.
 pub trait HeadValidation: Send + Sync {
     /// Prove a view from kept facts and adopt its checks before any document read.
-    fn kept(&self, _route: &str, _builder: &dyn ClosureBuilder) -> HeadProof {
-        HeadProof::Read(ClosureProof::Unknown)
+    fn kept(&self, _route: &str, _builder: &dyn ClosureBuilder) -> Result<HeadProof> {
+        Ok(HeadProof::Read(ClosureProof::Unknown))
     }
     /// Read the current document through all generation wrapper checks.
     fn document(&self, route: &str) -> Result<Arc<Artifact>>;

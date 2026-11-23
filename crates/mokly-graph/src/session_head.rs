@@ -25,7 +25,7 @@ impl DocumentWorker for Worker<'_> {
         self.session.check_cancelled()?;
         let pass = self.session.state.walks.take(route);
         let walker = self.session.walker();
-        let proof = match self.validation.kept(route, &walker) {
+        let proof = match self.validation.kept(route, &walker)? {
             HeadProof::Kept(view) => return Ok(view),
             HeadProof::Read(proof) => proof,
         };
@@ -37,7 +37,12 @@ impl DocumentWorker for Worker<'_> {
         let closure = match self
             .validation
             .closure(route, document, &walker, proof, pass)
-        {
+            .and_then(|closure| {
+                for path in &closure.replay {
+                    self.session.observe(route, path)?;
+                }
+                Ok(closure)
+            }) {
             Ok(closure) => closure,
             Err(source) => {
                 return Err(GraphError::Attempt {
@@ -46,9 +51,6 @@ impl DocumentWorker for Worker<'_> {
                 });
             }
         };
-        for path in &closure.replay {
-            self.session.observe(route, path);
-        }
         let view = ValidatedView {
             route: route.into(),
             anchors: references::anchors(&document.tree),

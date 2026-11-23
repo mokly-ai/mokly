@@ -31,7 +31,9 @@ the roots of a plan need. Serve uses it to decide whether a candidate with
 changed roots must prepare again. `observes` reports whether one directory is
 registered, so Serve checks the modification times of exact files only where
 no event could arrive. Exact inputs extend registrations without repeating
-the root walk.
+the root walk. `resource` attaches one lexical resource's confined ancestors
+synchronously. It reuses registered directories without building a new target
+set or scanning roots.
 
 `dyn WatchFactory` and `dyn DirectoryWatch` own native handle creation and
 batched updates. Existing paths remain attached. Linux and Windows renew

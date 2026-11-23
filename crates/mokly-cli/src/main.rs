@@ -91,6 +91,7 @@ mod serve_watch;
 mod serve_watch_events;
 mod serve_watch_files;
 mod serve_watch_plan;
+mod serve_watch_resources;
 mod static_runtime;
 mod static_setup;
 mod terminal;

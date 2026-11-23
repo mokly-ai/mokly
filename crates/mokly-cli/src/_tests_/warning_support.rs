@@ -1,7 +1,7 @@
 //! Scripted catalogue passes and pure warning fixtures for Serve orchestration tests.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use mokly_catalogue::config::ConfigLoaderMock;
 use mokly_catalogue::config_types::{Config, ResolvedConfig};
@@ -17,11 +17,31 @@ use mokly_graph::types::{
     GraphFactoryMock, RenderGeneration, RenderGenerationMock, RenderGraph, RenderGraphMock,
 };
 use mokly_model::catalogue::CatalogueModel;
+use mokly_watch::observer::Observer;
 use mokly_watch::plan::Plan;
+use tokio::sync::Notify;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_warnings::{ServeWarnings, WarningScopes};
+use crate::serve_watch::CandidateWatch;
 use crate::serve_watch_plan::{PlanInputs, PlanRecord};
+use crate::serve_watch_resources::Resources;
+
+/// A candidate whose subscriber is owned by its scripted watch boundary.
+pub(crate) fn candidate(observer: Arc<dyn Observer>, recheck: bool) -> CandidateWatch {
+    let record = record();
+    CandidateWatch {
+        resources: Arc::new(Resources::new(
+            observer.clone(),
+            record.plan.repository.clone(),
+            Weak::new(),
+            Arc::new(Notify::new()),
+        )),
+        observer,
+        recheck,
+        record,
+    }
+}
 
 /// One normalized record with a stable subject.
 pub(crate) fn warning(message: &str) -> Warning {

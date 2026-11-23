@@ -10,8 +10,8 @@ use crate::serve_watch::{State, failure};
 
 type Accepted = Vec<(Event, Action)>;
 pub(super) fn drain(state: Arc<Mutex<State>>) -> (Accepted, Vec<ServerError>, bool) {
+    let mut state = state.lock().unwrap_or_else(|e| e.into_inner());
     let (plan, observer, failed, resources) = {
-        let mut state = state.lock().unwrap_or_else(|e| e.into_inner());
         let pending = std::mem::take(&mut state.pending);
         let refresh = std::mem::take(&mut state.refresh);
         state.plan.resources(&pending);
@@ -53,12 +53,11 @@ pub(super) fn drain(state: Arc<Mutex<State>>) -> (Accepted, Vec<ServerError>, bo
     } else {
         Ok(())
     };
-    if let Err(error) = update {
-        let mut state = state.lock().unwrap_or_else(|e| e.into_inner());
-        if !state.attach_reported {
-            errors.push(failure(error));
-            state.attach_reported = true;
-        }
+    if let Err(error) = update
+        && !state.attach_reported
+    {
+        errors.push(failure(error));
+        state.attach_reported = true;
     }
     (accepted, errors, rescan)
 }

@@ -12,6 +12,7 @@ use crate::backend::{DirectoryWatch, NotifyFactory, WatchFactory};
 use crate::error::Result;
 use crate::event::{Event, Kind};
 use crate::native_events::Receiver;
+use crate::native_resource;
 use crate::observer::{Inbox, Observer};
 use crate::plan::Plan;
 use crate::{native_attachment, native_scan};
@@ -19,19 +20,20 @@ use crate::{native_attachment, native_scan};
 /// Composition root for the platform observer and injected source reader.
 pub struct NativeObserver {
     closed: AtomicBool,
+    repository: PathBuf,
     tree: Arc<dyn SourceTree>,
     factory: Arc<dyn WatchFactory>,
     inbox: Arc<Inbox>,
     state: Mutex<Option<State>>,
 }
 
-struct State {
-    watcher: Box<dyn DirectoryWatch>,
+pub(super) struct State {
+    pub(super) watcher: Box<dyn DirectoryWatch>,
     roots: BTreeSet<PathBuf>,
-    root_directories: BTreeSet<PathBuf>,
-    parents: BTreeMap<PathBuf, BTreeSet<PathBuf>>,
+    pub(super) root_directories: BTreeSet<PathBuf>,
+    pub(super) parents: BTreeMap<PathBuf, BTreeSet<PathBuf>>,
     dependency_roots: BTreeMap<PathBuf, PathBuf>,
-    directories: BTreeSet<PathBuf>,
+    pub(super) directories: BTreeSet<PathBuf>,
     replaced: BTreeSet<PathBuf>,
 }
 
@@ -49,6 +51,7 @@ impl NativeObserver {
     ) -> Result<Self> {
         let observer = Self {
             closed: AtomicBool::new(false),
+            repository: plan.repository.clone(),
             tree,
             factory,
             inbox: Arc::new(Inbox::default()),
@@ -169,6 +172,16 @@ impl NativeObserver {
 
 #[async_trait]
 impl Observer for NativeObserver {
+    fn resource(&self, path: &Path) -> Result<()> {
+        let mut state = self.state.lock().unwrap_or_else(|error| error.into_inner());
+        if self.closed.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+        if let Some(state) = state.as_mut() {
+            native_resource::attach(self.tree.as_ref(), state, &self.repository, path)?;
+        }
+        Ok(())
+    }
     fn replace(&self, plan: &Plan) -> Result<()> {
         self.update(plan, false)
     }
@@ -261,3 +274,7 @@ mod native_coverage_tests;
 #[cfg(test)]
 #[path = "_tests_/native_dependency_tests.rs"]
 mod native_dependency_tests;
+
+#[cfg(test)]
+#[path = "_tests_/native_resource_tests.rs"]
+mod native_resource_tests;

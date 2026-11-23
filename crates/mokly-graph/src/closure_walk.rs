@@ -62,7 +62,7 @@ pub(crate) fn collect(
         {
             recorder.observe(path);
             if let Some(observer) = &walker.observer {
-                observer.observe(route, path);
+                observer.observe(route, path)?;
             }
         }
         if target.starts_with(&namespace::generated("")) {

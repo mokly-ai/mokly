@@ -129,7 +129,7 @@ fn lexical_observer_runs_before_proof_or_validation_reads_a_static_target() {
             .returns(()),
         ClosureObserverMock::observe
             .next_call(matching!("home/index.html", "icon.png"))
-            .returns(()),
+            .returns(Ok(())),
         ValidationRecorderMock::observe
             .some_call(matching!("icon.png"))
             .returns(()),

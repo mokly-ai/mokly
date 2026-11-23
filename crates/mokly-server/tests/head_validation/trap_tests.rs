@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use mokly_compare::comparison_reuse::MemoryComparisons;
 use mokly_compare::comparison_types::Comparison;
+use mokly_graph::error::Result;
 use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_model::material::digest;
 
@@ -76,8 +77,9 @@ fn ignored_unavailable_target_appearance_revalidates_its_warning_and_membership(
 struct Watcher(Mutex<Vec<String>>);
 
 impl ResourceObserver for Watcher {
-    fn observe(&self, _generation: &str, path: &str) {
+    fn observe(&self, _generation: &str, path: &str) -> Result<()> {
         self.0.lock().unwrap().push(path.into());
+        Ok(())
     }
 }
 

@@ -27,6 +27,9 @@ fn generation() -> Unimock {
 /// A generation of `catalogue` that one candidate reads.
 fn generation_of(catalogue: PreparedCatalogue) -> Unimock {
     Unimock::new((
+        RenderGenerationMock::observe_resources
+            .some_call(matching!(_))
+            .returns(()),
         RenderGenerationMock::catalogue
             .next_call(matching!())
             .returns(catalogue),
@@ -178,13 +181,11 @@ fn the_adoption_after_a_second_preparation_installs_its_plan() {
 #[tokio::test]
 async fn equal_plan_inputs_reuse_the_active_observer_and_a_queued_edit_still_rebuilds() {
     let adopted = adopted(
+        adoptable(),
         (
-            adoptable(),
-            RenderGenerationMock::generation_key
-                .each_call(matching!())
-                .returns("first"),
-        ),
-        (
+            ObserverMock::resource
+                .some_call(matching!(_))
+                .returns(Ok(())),
             ObserverMock::take.next_call(matching!()).returns(vec![]),
             ObserverMock::take
                 .next_call(matching!())
@@ -195,7 +196,8 @@ async fn equal_plan_inputs_reuse_the_active_observer_and_a_queued_edit_still_reb
         ),
     );
     let watch = &adopted.watch;
-    watch.observe("first", "assets/stale.svg");
+    let resources = watch.state.lock().unwrap().resources.clone().unwrap();
+    resources.observe("first", "assets/stale.svg").unwrap();
     assert!(
         !watch
             .drain(&mut Batch::default(), Arc::new(Unimock::new(())))

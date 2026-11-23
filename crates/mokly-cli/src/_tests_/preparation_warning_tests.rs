@@ -8,8 +8,8 @@ use mokly_server::error::ServerError;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_preparation;
-use crate::serve_watch::{CandidateWatch, WatchInputsMock};
-use crate::warning_support::{Scripted, catalogue, invalid, record, scopes, warning};
+use crate::serve_watch::WatchInputsMock;
+use crate::warning_support::{Scripted, candidate, catalogue, invalid, scopes, warning};
 
 #[tokio::test]
 async fn startup_recheck_discards_first_pass_warnings_only_on_success() {
@@ -26,11 +26,7 @@ async fn startup_recheck_discards_first_pass_warnings_only_on_success() {
         let observer = Unimock::new(());
         let candidate = WatchInputsMock::candidate
             .next_call(matching!(_))
-            .returns(Ok(CandidateWatch {
-                observer: Arc::new(observer.clone()),
-                recheck: true,
-                record: record(),
-            }));
+            .returns(Ok(candidate(Arc::new(observer.clone()), true)));
         let begin = || WatchInputsMock::begin.each_call(matching!()).returns(());
         let watch = match outcome {
             "preparation failure" => Unimock::new((begin(), candidate)),

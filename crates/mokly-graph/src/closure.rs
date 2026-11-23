@@ -52,7 +52,10 @@ pub struct Closure {
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ClosureBuilderMock))]
 pub trait ClosureBuilder: Send + Sync {
     /// Replay one lexical observer call before proving that target's reads.
-    fn observe(&self, _route: &str, _path: &str) {}
+    /// An attachment failure stops the proof before its target reads.
+    fn observe(&self, _route: &str, _path: &str) -> Result<()> {
+        Ok(())
+    }
     /// Follow one composed document and its renderer-declared seeds.
     fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure>;
     /// Record every input at its read boundary, or decline retention.
@@ -83,10 +86,11 @@ pub struct Walker {
 }
 
 impl ClosureBuilder for Walker {
-    fn observe(&self, route: &str, path: &str) {
+    fn observe(&self, route: &str, path: &str) -> Result<()> {
         if let Some(observer) = &self.observer {
-            observer.observe(route, path);
+            observer.observe(route, path)?;
         }
+        Ok(())
     }
     fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure> {
         self.collect_recorded(route, tree, seeds, &Unrecorded)
@@ -106,8 +110,10 @@ impl ClosureBuilder for Walker {
 /// A document-scoped record of lexical resources reached during closure validation.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ClosureObserverMock))]
 pub trait ClosureObserver: Send + Sync {
+    /// Complete lexical attachment before a prefetch can read resource bytes.
+    fn before_read(&self, path: &str) -> Result<()>;
     /// Record before validation so missing and dangling targets can be repaired.
-    fn observe(&self, route: &str, path: &str);
+    fn observe(&self, route: &str, path: &str) -> Result<()>;
 }
 
 #[cfg(test)]

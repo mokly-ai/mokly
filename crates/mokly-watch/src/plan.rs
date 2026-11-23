@@ -161,13 +161,6 @@ impl Plan {
         }
     }
 
-    /// Newly rendered closures become observable before the background pass completes.
-    pub fn resources(&mut self, paths: &BTreeSet<String>) {
-        for path in paths {
-            self.required(self.repository.join(path), Action::Reload);
-        }
-    }
-
     /// Keep the active generation's required paths attached until candidate adoption.
     pub fn extend_required(&mut self, previous: &Self) {
         for (path, action) in &previous.exact {
@@ -180,7 +173,8 @@ impl Plan {
         }
     }
 
-    fn required(&mut self, path: PathBuf, action: Action) {
+    /// Keep an exact input and the strongest action of each required ancestor.
+    pub(super) fn required(&mut self, path: PathBuf, action: Action) {
         for ancestor in path.ancestors().skip(1) {
             self.ancestors
                 .entry(ancestor.to_owned())

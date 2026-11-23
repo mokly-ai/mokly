@@ -1,7 +1,6 @@
 //! Candidate ownership, repair events, adoption subscriptions, and queued resources.
 
 use std::collections::BTreeSet;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 
@@ -9,7 +8,6 @@ use mokly_catalogue::config_types::{Config, ResolvedConfig, ResolvedRoot, RootCo
 use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_cli::build::{BuildChanges, BuildSummary};
 use mokly_cli::serve::PreparedServe;
-use mokly_graph::resource_inputs::ResourceObserver;
 use mokly_graph::types::RenderGenerationMock;
 use mokly_model::catalogue::CatalogueModel;
 use mokly_server::error::ServerError;
@@ -20,9 +18,8 @@ use tokio::sync::Notify;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::serve_rebuild::RebuildReporterMock;
-use crate::warning_support::record;
 
-use super::{CandidateWatch, State, WatchInputs, WatchedInputs};
+use super::{State, WatchInputs, WatchedInputs};
 use crate::serve_watch_files::ObserversMock;
 
 fn config(dir: &str) -> ResolvedConfig {
@@ -84,7 +81,7 @@ pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<Watche
         ready: Arc::new(Notify::new()),
         state: Arc::new(Mutex::new(State {
             plan: plan("specs"),
-            generation: None,
+            resources: None,
             observer,
             pending: BTreeSet::new(),
             refresh: false,
@@ -96,7 +93,7 @@ pub(super) fn watch(observer: Arc<dyn Observer>, factory: Unimock) -> Arc<Watche
         })),
     })
 }
-fn event(path: &str, kind: Kind) -> Event {
+pub(super) fn event(path: &str, kind: Kind) -> Event {
     Event {
         path: format!("/repo/{path}").into(),
         kind,
@@ -111,6 +108,9 @@ fn exact_additions_extend_the_active_observer_without_a_second_preparation() {
     )));
     let watch = watch(observer.clone(), Unimock::new(()));
     let generation = Unimock::new((
+        RenderGenerationMock::observe_resources
+            .some_call(matching!(_))
+            .returns(()),
         RenderGenerationMock::catalogue
             .next_call(matching!())
             .returns(catalogue()),
@@ -156,81 +156,6 @@ fn failed_root_attachment_retains_the_active_observer_and_plan() {
     assert!(watch.candidate(&prepared("next", generation)).is_err());
     assert!(Arc::ptr_eq(&old, &watch.state.lock().unwrap().observer));
     assert_eq!(watch.plan().roots, plan("specs").roots);
-}
-
-#[tokio::test]
-async fn adoption_replays_events_and_subscribes_before_copying_resources() {
-    let old = Unimock::new((
-        ObserverMock::take
-            .next_call(matching!())
-            .returns(vec![Ok(event("specs/queued.screen.html", Kind::File))]),
-        ObserverMock::close.next_call(matching!()).returns(()),
-    ));
-    let next = Unimock::new((
-        ObserverMock::replay.next_call(matching!((events) if events.len() == 1 && events[0].as_ref().unwrap().path.ends_with("queued.screen.html"))).returns(()),
-        ObserverMock::take.next_call(matching!()).returns(vec![]),
-        ObserverMock::replace.next_call(matching!((plan) if plan.exact.contains_key(std::path::Path::new("/repo/assets/during.svg")) && plan.exact.contains_key(std::path::Path::new("/repo/assets/later.svg")))).returns(Ok(())),
-        ObserverMock::close.next_call(matching!()).returns(()),
-    ));
-    let watch = watch(Arc::new(old.clone()), Unimock::new(()));
-    let subscribed = Arc::new(AtomicBool::new(false));
-    let generation = Unimock::new((
-        RenderGenerationMock::observe_resources
-            .next_call(matching!(_))
-            .answers_arc(Arc::new({
-                let subscribed = subscribed.clone();
-                move |_, observer| {
-                    assert!(observer.upgrade().is_some());
-                    subscribed.store(true, Ordering::SeqCst);
-                }
-            })),
-        RenderGenerationMock::watch_files
-            .next_call(matching!())
-            .answers_arc(Arc::new(move |_| {
-                assert!(subscribed.load(Ordering::SeqCst));
-                BTreeSet::from(["assets/during.svg".into()])
-            })),
-        RenderGenerationMock::generation_key
-            .each_call(matching!())
-            .returns("new"),
-    ));
-    let prepared = prepared("next", generation);
-    watch.clone().adopt(
-        CandidateWatch {
-            observer: Arc::new(next.clone()),
-            recheck: true,
-            record: record(),
-        },
-        &prepared,
-    );
-    watch.observe("old", "assets/ignored.svg");
-    watch.observe("new", "assets/later.svg");
-    assert!(
-        !watch
-            .plan()
-            .exact
-            .contains_key(std::path::Path::new("/repo/assets/later.svg"))
-    );
-    assert!(
-        !watch
-            .drain(&mut Batch::default(), Arc::new(Unimock::new(())))
-            .await
-    );
-    assert!(
-        watch
-            .plan()
-            .exact
-            .contains_key(std::path::Path::new("/repo/assets/later.svg"))
-    );
-    assert!(
-        !watch
-            .plan()
-            .exact
-            .contains_key(std::path::Path::new("/repo/assets/ignored.svg"))
-    );
-    watch.stop().await.unwrap();
-    watch.observe("new", "assets/after-close.svg");
-    assert!(watch.state.lock().unwrap().pending.is_empty());
 }
 
 #[tokio::test]

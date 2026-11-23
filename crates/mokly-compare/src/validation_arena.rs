@@ -6,6 +6,7 @@ use std::sync::atomic::Ordering;
 
 use mokly_graph::closure::ClosureBuilder;
 use mokly_graph::comparison_proof::ContentIdentity;
+use mokly_graph::error::Result;
 use mokly_graph::head_validation::{ClosureFacts, DocumentChecks};
 use mokly_graph::types::RenderGeneration;
 
@@ -42,17 +43,25 @@ impl Replay<'_> {
     }
 
     /// Replay the walk order and stop at the first read whose identity changed.
-    pub(crate) fn closure(&self, fact: &Fact, route: &str, observer: &dyn ClosureBuilder) -> bool {
-        fact.steps.iter().all(|step| {
+    pub(crate) fn closure(
+        &self,
+        fact: &Fact,
+        route: &str,
+        observer: &dyn ClosureBuilder,
+    ) -> Result<bool> {
+        for step in &fact.steps {
             let read = match step {
                 Step::Read(index) => &fact.reads[*index],
                 Step::Observe(index) => {
-                    observer.observe(route, &fact.closure.replay[*index]);
-                    return true;
+                    observer.observe(route, &fact.closure.replay[*index])?;
+                    continue;
                 }
             };
-            self.identity(read, Some(read)) == Some(read.identity)
-        })
+            if self.identity(read, Some(read)) != Some(read.identity) {
+                return Ok(false);
+            }
+        }
+        Ok(true)
     }
 }
 
@@ -78,22 +87,24 @@ impl Arena {
         key: ContentIdentity,
         observer: &dyn ClosureBuilder,
         checks: Option<&DocumentChecks>,
-    ) -> Option<ClosureFacts> {
-        let fact = self.fact(route, key)?;
+    ) -> Result<Option<ClosureFacts>> {
+        let Some(fact) = self.fact(route, key) else {
+            return Ok(None);
+        };
         if fact.checks.is_some() && fact.checks.as_ref() != checks {
-            return None;
+            return Ok(None);
         }
-        if !replay.closure(&fact, route, observer) {
-            return None;
+        if !replay.closure(&fact, route, observer)? {
+            return Ok(None);
         }
         if let Some(current) = replay.current {
             current.keep(route, &fact);
         }
-        Some(ClosureFacts {
+        Ok(Some(ClosureFacts {
             files: fact.closure.files.clone(),
             warnings: fact.closure.warnings.clone(),
             replay: Vec::new(),
-        })
+        }))
     }
 
     pub(crate) fn keep(&self, route: &str, fact: &Arc<Fact>) {

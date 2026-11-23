@@ -6,10 +6,12 @@ pub mod event;
 pub mod native;
 mod native_attachment;
 mod native_events;
+mod native_resource;
 mod native_scan;
 pub mod observer;
 mod pattern;
 pub mod plan;
+mod plan_resources;
 mod stylesheet_inputs;
 
 #[cfg(test)]

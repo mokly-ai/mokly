@@ -39,6 +39,8 @@ libmimalloc-sys = { version = "0.1.49", features = ["extended"] }
 
 [dev-dependencies]
 mokly-test-support = { workspace = true }
+mokly-css = { workspace = true, features = ["mock"] }
+mokly-html = { workspace = true, features = ["mock"] }
 mokly-render = { workspace = true, features = ["mock"] }
 mokly-git = { workspace = true, features = ["mock"] }
 mokly-platform = { workspace = true, features = ["mock"] }

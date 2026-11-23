@@ -36,7 +36,7 @@ pub(crate) struct Head {
 }
 
 impl HeadValidation for Head {
-    fn kept(&self, route: &str, builder: &dyn ClosureBuilder) -> HeadProof {
+    fn kept(&self, route: &str, builder: &dyn ClosureBuilder) -> Result<HeadProof> {
         self.kept_view(route, builder)
     }
 
@@ -75,13 +75,16 @@ impl HeadValidation for Head {
                         resident: &self.resident,
                         generation: self.generation.as_ref(),
                     };
-                    arenas[0]?.reuse(&replay, route, key, builder, checks.as_ref())
-                });
+                    let Some(previous) = arenas[0] else {
+                        return Ok(None);
+                    };
+                    previous.reuse(&replay, route, key, builder, checks.as_ref())
+                })?;
         }
         if saved.is_none()
             && let Some(pass) = pass
         {
-            saved = self.replay_pass(route, key, pass, builder, checks.clone());
+            saved = self.replay_pass(route, key, pass, builder, checks.clone())?;
         }
         if let Some(saved) = saved {
             self.reused.fetch_add(1, Ordering::Relaxed);
