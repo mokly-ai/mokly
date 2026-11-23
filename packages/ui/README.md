@@ -107,15 +107,6 @@ the select is uncontrolled, so `value` is only its first choice. A host that
 keeps the appearance in its state sets `controlled`, and the select then
 shows `value` at every render.
 
-`ComparisonToolbar` renders its modes as toggle buttons that report through
-`onMode`. A host that runs no script, such as a static mockup, passes
-`modeHref` to draw each mode that has an address as a link, and
-`interactive={false}` to draw the other modes as inert text and Refresh as a
-picture of itself. The link or the text of the shown mode is marked as the
-current page. Scroll together stays a native switch in every band. The mode
-group renders the package's segmented control, and the package stylesheet
-gives a link and inert text the line box and centring of a button.
-
 `ChangesPanel` draws the body of the right panel's Changes tab, with its parts
 in a fixed order: the `ChangeStepper` row, which reads `Change N of M` with
 Previous change and Next change, disabled at the ends of the list; the host's
@@ -137,8 +128,8 @@ of itself. On `CompareModes`, `interactive={false}` draws a tile or a chip
 without an address as inert text and Refresh as a picture, and Scroll together
 stays a native switch.
 
-`TopBar`, `CatalogueNavigation`, and `ScreenHeader` draw controls that act
-through a script. A static mockup gives `TopBar` a `brandHref`, which draws
+`TopBar` and `CatalogueNavigation` draw controls that act through a script.
+A static mockup gives `TopBar` a `brandHref`, which draws
 the brand as a link, and sets `interactive={false}`, which draws a brand
 without an address as a picture of itself and leaves out the compact search.
 The bar draws no menu, also in a static mockup, because the dock opens the
@@ -148,8 +139,7 @@ stay for earlier hosts and change nothing. It gives `CatalogueNavigation` a
 `operable={false}`, which draws Collapse all and the other filters as text and
 the separator as a picture of its grip. The link or the text of the shown
 filter is marked as the current page. A tree row without an address is a
-picture of the row. On `ScreenHeader`, `interactive={false}` draws the path
-chip as a picture of itself and a folder crumb as text.
+picture of the row.
 
 A static mockup gives `TagChip` an `href`, which draws the chip as a link, and
 sets `interactive={false}`, which draws a chip without an address as a
@@ -158,9 +148,7 @@ which draw the button and the chips as links, and sets `operable={false}`,
 which draws the button and each chip without an address as pictures. Behind a
 link or a picture nothing can open a closed picker, so the picker leaves its
 closed panel out. `renderChip` draws each chip through the host's own
-component, so that the design catalogue records each chip. On `ViewControls`,
-`interactive={false}` draws each toggle as `IconSwitch`, a native switch with
-the button's look, which acts in place as the native viewport select does.
+component, so that the design catalogue records each chip.
 
 `CatalogueNavigation` renders the column around `CatalogueTree`, which draws
 plain records that the host builds: sections, folders, entries, and the
@@ -180,38 +168,22 @@ that `searchShortcut` names: `⌘K` by default, or `Ctrl K` for `control`. The
 hint hides below the layout breakpoint. The field of an interactive bar names
 the search keys, `⌘K`, Ctrl+K, and `/`, to assistive technology through
 `aria-keyshortcuts`, and its host binds them.
-`ScreenHeader` takes the view's status and controls as slots.
 
 `TagPicker` draws the tag button of the search field and the picker that it
 opens. The host holds the open state and the focused chip. It receives the
 open state, each step of the focus, and each chosen tag through callbacks,
 and the picker keeps the roving focus of its chips, Escape, and the focus
 return to its button. `TagChip` is the toggle chip of one tag, which an
-entry's details also draw. `ViewControls` takes the viewport, the preview
-scheme, the highlight state, and the change marks of its controls as props,
-and draws them with the 34px `IconButton` and `IconSelect`. `ChangeStatus`
-shows an entry's change status beside its title.
+entry's details also draw. `IconButton` draws the 34px icon control, such as
+a toggle. `ChangeStatus` shows an entry's change status beside its title.
 
-`Inspector` draws the workspace inspector: its tabs, the open tab's title and
-panel, and Close. The host holds the open state and the open tab, and it
-receives each choice through `onOpenChange`. The inspector keeps the arrow
-keys, Home, and End of its tabs, and Close returns focus to the tab that the
-reader pressed last. The `InspectorHandle` that `ref` receives closes the
-inspector in the same way, such as on Escape anywhere in the host's shell,
-moves focus to a tab through `focusTab`, and names its element. The host holds
-the inspector's size: `height`, `minimumHeight`, and `maximumHeight` give the
-height on a desktop and the separator's value, `expanded` the state of the
-narrow sheet, and `sheetHeight` the sheet's height during a drag. The host
-attaches its drag and its keys to the separator and the sheet grab through
-`resizeRef` and `grabRef`. `DetailsPanel` draws
-the collapsible Details below a page's stage, and `DetailsBody` the body that
-it and the Details tab show. `MetadataRow` draws one labelled value, as a row
-of the metadata column or, in its `props` presentation, as a `dt` and `dd`
-pair, and `MetadataCode`, `MetadataLink`, `MetadataChips`, and `EntryChip`
-draw the values of a row. `PropField` draws one field of the Props tab with
-the native control of its kind; its help and its error take the ids
-`{id}-help` and `{id}-error`. `ControlsPanel` and `SavedPropsPanel` draw the
-edit form and the saved props, and `EditStatus` draws the status of a render
+`MetadataRow` draws one labelled value, as a row of the metadata column or,
+in its `props` presentation, as a `dt` and `dd` pair, and `MetadataCode`,
+`MetadataLink`, `MetadataChips`, and `EntryChip` draw the values of a row.
+`PropField` draws one field of Inspect's Props with the native control of its
+kind; its help and its error take the ids `{id}-help` and `{id}-error`.
+`ControlsPanel` and `SavedPropsPanel` draw the edit form and the saved props,
+and `EditStatus` draws the status of a render
 of edited props over the preview. `PropsPanel`, `UsageList`, and
 `InstanceTree` draw the content of Props, Usage, and Components from plain
 records,
@@ -345,37 +317,29 @@ Canvas design's 16-unit grid. The canvas parts mix their rings, fills, and
 shadows from the Canvas roles through `light-dark()`, so they follow the
 colour scheme that the shell root states for its appearance.
 
-`Stage` draws the dotted stage of a preview, which the static depictions of
-the earlier stage keep.
-`PreviewFrame` draws one frame on
-it: the wrapper that records the scheme of the shown render, the viewport's
-label with the `LightOnlyNote` of `scheme-fallback`, and the lines of a
-preview that is unavailable or that failed to load. The failed line shows Try
-again when the host passes `retry`: a callback, or an address in a static
-depiction. `PreviewIframe` is the `<iframe>` element itself, always
-sandboxed without scripts. The host passes the frame's `ref`, its `src` or
-`srcDoc`, its `key`, and its data attributes in their order, and it loads and
-reads the frame's document; no component reads it. `PhoneFrame` and
-`BrowserFrame` draw the device chrome, and the window draws its bar with
-`BrowserBar`. A press on the address reaches `onCopy` and shows "URL copied"
-for a moment, and the toggle asks for the expanded state through
-`onExpandedChange`, because the host owns which window is expanded.
+`FrameUnavailable` and `FrameFailure` draw the lines of a preview that is
+unavailable or that failed to load, which `CanvasFrame` holds in its note.
+The failed line shows Try again when the host passes `retry`: a callback, or
+an address in a static depiction. `PreviewIframe` is the `<iframe>` element
+itself, always sandboxed without scripts. The host passes the frame's `ref`,
+its `src` or `srcDoc`, its `key`, and its data attributes in their order, and
+it loads and reads the frame's document; no component reads it.
 
 `StageLoading`, `StageFailure`, and `PreviewNotCaptured` draw the states of a
 preview that has not arrived. `EmptyState` draws the quiet state of a
 stage, and `HomeState`, `MissingRouteState`, `RemovedState`, and
-`RemovedVariantState` the shell's own. `ComparisonStage` draws the comparison
-of an entry around the band that the host renders, with its sections, panes
-grid, and failure. `ComparisonPane` and `ComparisonLayer` draw one version,
-and `ComparisonViewport` and `ComparisonSurface` pass their elements to the
-host's scroll controller through refs. The host supplies the wording of its
-copy modules, such as the unavailable previous version and the comparison's
-state labels.
+`RemovedVariantState` the shell's own. `ComparisonPanes` draws the grid of a
+comparison's panes, and `ComparisonFailure` the failure of a comparison that
+could not load, with Try again and its details. `ComparisonPane` and
+`ComparisonLayer` draw one version, and `ComparisonViewport` and
+`ComparisonSurface` pass their elements to the host's scroll controller
+through refs. The host supplies the wording of its copy modules, such as the
+unavailable previous version and the comparison's state labels.
 
 A state that a host focuses after Try again takes a ref: `focusRef` on
 `StageLoading`, `PropsStatus`, `UsageStatus`, `UsageList`, and the loading
-`RootState`, and `stageRef` on `ComparisonStage`. Each element then takes
-`tabindex="-1"`, so that a script can focus it and Tab skips it.
+`RootState`. Each element then takes `tabindex="-1"`, so that a script can
+focus it and Tab skips it.
 
 `ShellLayout` draws the standalone shell's root, which states its appearance
 and its preview scheme: the skip link, the top bar, and the body with the
@@ -397,9 +361,8 @@ without reading it, keeps the host's stage overlay over the shown preview,
 and takes the host's `MarkerLayer` and label layer. The shown preview is a
 workspace's preview, or the routed canvas that holds a use case's section or
 a document's reading frame. `WorkspaceLayout` lays out
-a workspace's preview with its `entryBar` and the right `panel` that holds
-its tabs, Inspect and Changes, or, without a panel, the header and the
-variant bar above the preview beside the inspector.
+a workspace's preview on the canvas with its `entryBar` and the right `panel`
+that holds its tabs, Inspect and Changes.
 `RootState` takes a root's place while its catalogue loads, cannot be loaded, or needs a
 compatible viewer, or when the requested view is unavailable, as the
 `EmptyState` of the standalone root or of an embedded root, with the root class
@@ -418,14 +381,12 @@ drag's cursor.
 
 The package gives a host each element that the host measures, focuses, or
 scrolls through a ref. `WorkspaceLayout` gives its preview pane and its panes
-to `previewRef` and `panesRef`. `BrowserFrame`, `Stage`, and `MainRegion`
-give their element to `ref`, and `Inspector` its
-panels' region to `contentRef`. `CanvasStage` gives its canvas, which clips
-its frames, to `canvasRef`, and its stage's invisible box, the canvas between
-the floating panels and above the zoom pill, to `stageRef`. `TagPicker` gives its button and its picker to
-`toggleRef` and `pickerRef`, `ViewControls` its Highlight components
-button to `highlightRef`, and `FramesFilter` its Highlight components switch
-to `highlightRef`. `InspectSelection` gives its section to `sectionRef`, which
+to `previewRef` and `panesRef`. `MainRegion` gives its element to `ref`.
+`CanvasStage` gives its canvas, which clips its frames, to `canvasRef`, and
+its stage's invisible box, the canvas between the floating panels and above
+the zoom pill, to `stageRef`. `TagPicker` gives its button and its picker to
+`toggleRef` and `pickerRef`, and `FramesFilter` its Highlight components
+switch to `highlightRef`. `InspectSelection` gives its section to `sectionRef`, which
 the host scrolls into view. `CatalogueNavigation` gives the current page's row
 to `currentRowRef`, and each section and folder summary, by its disclosure
 key, to `summaryRef`. `EmbeddedLayout` names each host slot's container
@@ -433,15 +394,9 @@ through `slotRef`. `TopBar` gives its `TopBarHandle` to `ref`: `focusSearch()`
 moves focus to the search field, and where the compact search hides the
 field, it opens the compact search first, whose field then takes focus.
 
-A static mockup sets `disclosures` on `Inspector`, which draws each tab as a
-native disclosure of one group, named by `contentId`: a tab opens its panel
-and closes it again without a script, one tab at a time, and Close is part of
-the open tab. A tab with an `href` is a link, which is its one keyboard stop.
-The resize separator is then a picture of its grip, and the sheet's grab is a
-native switch that `expanded` starts checked, which a host stylesheet reads to
-size the sheet. `PropFieldFrame` frames a native control that the mockup draws
-itself in the field's label column, Set check box, Not set line, help, and
-error. An optional field draws both its control and its Not set line under
+In a static mockup, `PropFieldFrame` frames a native control that the mockup
+draws itself in the field's label column, Set check box, Not set line, help,
+and error. An optional field draws both its control and its Not set line under
 `data-native-supply`, and the package stylesheet shows the one that matches
 the Set check box. `TextButton` with an `href` is a link with the button's
 look, and the controls panels take `resetHref`, `retryHref`, `startHref`, and
@@ -453,11 +408,8 @@ instance with an `href` as a link with the button's look, whose selected one is
 the current page, and starts with the nested lists that `initiallyExpanded`
 names open.
 
-A static mockup sets `interactive={false}` on `BrowserFrame` or `BrowserBar`,
-which draws the bar as a picture of itself: the address copies nothing, the
-toggle is a picture named by what it would do, and neither takes the pointer
-or the hover look. On `EmptyState`, `interactive={false}` draws an action
-without an `href` as a picture of itself.
+A static mockup sets `interactive={false}` on `EmptyState`, which draws an
+action without an `href` as a picture of itself.
 
 A static mockup cannot measure its preview, so it gives `HighlightMask` its
 width, its height, and its boxes as SVG lengths, such as `100%` or
@@ -530,7 +482,7 @@ competes with them by specificity and order; a test holds the rule.
 
 A component's own rules name its `mbk-` classes, so they match only its
 elements. A rule whose selector names only generic class names, such as
-`.address` or `.browser-frame`, adds `:where(.mbk-reset)` to its subject: the
+`.mb-pane` or `.mb-viewport`, adds `:where(.mbk-reset)` to its subject: the
 rule then weighs the same and still never matches a host element that carries
 the same class name. Give each new element the reset class, last in its class
 list, and give no rule a selector of the page or of a bare element; the
@@ -544,7 +496,7 @@ baseline rule gives each focusable element the outer glow in place of the
 browser's outline, and a 2px `Highlight` outline in forced colours. The rule
 weighs one pseudo-class, so a component's own focus rule wins. Write such a
 rule for a control that draws a shadow of its own, and repeat that shadow
-after the glow, as the shown segment of a segmented control does. Write one
+after the glow, as the shown option of the All/Changes filter does. Write one
 for a control in a container that clips or scrolls, which draws the inset
 glow, as a catalogue row does on its pill. Write one for a drawn control
 under a transparent native control, which shows the glow with `:has()` and
@@ -609,14 +561,6 @@ override the desktop layout rules.
 - [`src/appearance-selector/appearance-selector.tsx`](./src/appearance-selector/appearance-selector.tsx)
   — `AppearanceSelector`, the Auto, Light, and Dark control of the standalone
   shell
-- [`src/comparison-toolbar/comparison-toolbar.tsx`](./src/comparison-toolbar/comparison-toolbar.tsx)
-  — `ComparisonToolbar` and its `ComparisonMode`: the mode group of the five
-  modes, the Scroll together switch, Refresh, and the outcome line of each
-  compared frame, as buttons or as the links and inert text of a static band
-- [`src/segmented-control/segmented-control.tsx`](./src/segmented-control/segmented-control.tsx)
-  — `SegmentedControl`, the named group of segments that the viewport and
-  scheme switches and the comparison modes render, as buttons or as the links
-  and inert text of a static depiction
 - [`src/top-bar/top-bar.tsx`](./src/top-bar/top-bar.tsx) — `TopBar`,
   `TopBarHost`, and `TopBarHandle`: the three columns with the brand, the
   catalogue search with its compact form, its focus return, and the handle
@@ -635,8 +579,6 @@ override the desktop layout rules.
 - [`src/catalogue-tree/catalogue-tree.tsx`](./src/catalogue-tree/catalogue-tree.tsx)
   — `CatalogueTree`: the sections, folders, entry rows with their changed
   mark, and entry lists, drawn from the records of `tree-records.ts`
-- [`src/screen-header/screen-header.tsx`](./src/screen-header/screen-header.tsx)
-  — `ScreenHeader`: the breadcrumb trail, the title, and the path chip
 - [`src/tag-picker/tag-picker.tsx`](./src/tag-picker/tag-picker.tsx) —
   `TagPicker`: the tag button of the search field and its picker, with the
   roving focus of the chips, Escape, and the focus return
@@ -645,27 +587,10 @@ override the desktop layout rules.
   depiction
 - [`src/tag-chip/tag-chip.tsx`](./src/tag-chip/tag-chip.tsx) — `TagChip`, the
   toggle chip of one tag; its stylesheet holds the rules of every chip
-- [`src/view-controls/view-controls.tsx`](./src/view-controls/view-controls.tsx)
-  — `ViewControls`: the viewport select, the Dark preview toggle, and the
-  Highlight components toggle, with their change marks
 - [`src/icon-control/icon-control.tsx`](./src/icon-control/icon-control.tsx) —
-  `IconButton` and `IconSelect`, the workspace's 34px icon controls, whose
-  look the inspector tabs share, and `IconSwitch`, the native switch of a
-  static depiction
+  `IconButton`, the 34px icon control
 - [`src/change-status/change-status.tsx`](./src/change-status/change-status.tsx)
   — `ChangeStatus`: the change status beside an entry's title
-- [`src/inspector/inspector.tsx`](./src/inspector/inspector.tsx) —
-  `Inspector` and `InspectorHandle`: the tabs, whose keys `tab-keys.ts`
-  handles, the panels, and Close with its focus return
-- [`src/inspector/inspector-sizer.tsx`](./src/inspector/inspector-sizer.tsx)
-  — the resize separator and the sheet grab, and `InspectorSizing`, the
-  height, the bounds, the sheet state, and the refs through which the host
-  sizes the inspector
-- [`src/inspector/inspector-disclosures.tsx`](./src/inspector/inspector-disclosures.tsx)
-  — the inspector of a static depiction, whose tabs are native disclosures
-- [`src/details-panel/details-panel.tsx`](./src/details-panel/details-panel.tsx)
-  — `DetailsPanel` and `DetailsBody`: the collapsible Details and the body
-  with the description, the rationale, and the metadata column
 - [`src/metadata-row/metadata-row.tsx`](./src/metadata-row/metadata-row.tsx)
   — `MetadataRow` in its metadata and props presentations, and the code
   chips, paths, links, chip groups, and entry chips of a value
@@ -711,6 +636,9 @@ override the desktop layout rules.
 - [`src/count/count.ts`](./src/count/count.ts) — `count`, the internal count
   wording of the usage list and the instance tree, such as "1 instance" and
   "3 instances"
+- [`src/data-attribute/data-attribute.ts`](./src/data-attribute/data-attribute.ts)
+  — `DataAttribute`, the internal type of the data attribute through which a
+  component marks an element
 - [`src/comparison-evidence/comparison-evidence.tsx`](./src/comparison-evidence/comparison-evidence.tsx)
   — `ComparisonEvidence`: the comparison facts of Details in the designs'
   order, with the outcome lines of the compared frames, a use case's changed
@@ -730,7 +658,7 @@ override the desktop layout rules.
   tiles of `mode-tile.tsx`, the frame chips of `frame-chips.tsx`, Scroll
   together, and Refresh, with the private glyphs of `compare-icons.tsx`
 - [`src/text-button/text-button.tsx`](./src/text-button/text-button.tsx) —
-  `TextButton`, the text button of the inspector's panels
+  `TextButton`, the text button of the right panel's sections
 - [`src/canvas-stage/canvas-stage.tsx`](./src/canvas-stage/canvas-stage.tsx)
   — `CanvasStage` and `CanvasStageHandle`: the dot-grid canvas with its
   section and its zoom pill, the handle with Fit and the zoom steps, the
@@ -788,29 +716,17 @@ override the desktop layout rules.
 - [`src/icons/canvas-icons.tsx`](./src/icons/canvas-icons.tsx) — `CanvasIcon`,
   the glyphs of the frames' kinds, the zoom pill, the dock, the sheet, and
   the frame picker
-- [`src/stage/stage.tsx`](./src/stage/stage.tsx) — `Stage`, the dotted
-  surface of live frames, of a component's canvases, or of a state
 - [`src/preview-frame/preview-frame.tsx`](./src/preview-frame/preview-frame.tsx)
-  — `PreviewFrame` and `PreviewIframe`: a frame's wrapper, label, and lines,
-  and the `<iframe>` element
-- [`src/device-frame/device-frame.tsx`](./src/device-frame/device-frame.tsx)
-  — `PhoneFrame` with the status band of `phone-status.tsx`, and
-  `BrowserFrame`, whose expanded window covers the page, or whose bar is a
-  picture in a static depiction
-- [`src/browser-bar/browser-bar.tsx`](./src/browser-bar/browser-bar.tsx) —
-  `BrowserBar`: the traffic lights, the address with its "URL copied"
-  message, and the expand toggle of a browser window, as controls or as
-  pictures of a static depiction
+  — `FrameUnavailable`, `FrameFailure`, and `PreviewIframe`: the lines of an
+  unavailable or a failed preview, and the `<iframe>` element
 - [`src/preview-state/preview-state.tsx`](./src/preview-state/preview-state.tsx)
   — the loading, failed, and missing states of a preview
-- [`src/scheme-fallback/scheme-fallback.tsx`](./src/scheme-fallback/scheme-fallback.tsx)
-  — `LightOnlyNote`, which only a Dark shell shows
 - [`src/empty-state/empty-state.tsx`](./src/empty-state/empty-state.tsx) —
   `EmptyState` with its action, as a link, a button, or the picture of a
   static depiction, and the home, missing route, and removed states
 - [`src/comparison-stage/comparison-stage.tsx`](./src/comparison-stage/comparison-stage.tsx)
-  — `ComparisonStage`, `ComparisonSection`, `ComparisonPanes`, and
-  `ComparisonFailure`: Current, the comparison stage, and its sections
+  — `ComparisonPanes` and `ComparisonFailure`: the grid of a comparison's
+  panes, and the failure of a comparison that could not load
 - [`src/comparison-pane/comparison-pane.tsx`](./src/comparison-pane/comparison-pane.tsx)
   — `ComparisonPane`, `ComparisonLayer`, `ComparisonViewport`,
   `ComparisonSurface`, and `ComponentFrame`: one version and its viewport
@@ -840,8 +756,7 @@ override the desktop layout rules.
   `changesStart` included
 - [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
   — `WorkspaceLayout`: the preview on the canvas with the entry bar and the
-  right panel's tabs, or the header, the variant bar, and the preview beside
-  the inspector
+  right panel's tabs
 - [`src/highlight-label/highlight-label.tsx`](./src/highlight-label/highlight-label.tsx)
   — `LabelLayer` and `HighlightLabel`: the layer and the labels of
   highlighted instances, as buttons or as the links and pictures of a static

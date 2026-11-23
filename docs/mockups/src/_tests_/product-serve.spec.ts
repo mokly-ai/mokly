@@ -18,6 +18,15 @@ const screenshots = resolve(
 /** The renderer's wrapper, which carries a document's scheme and viewport. */
 const wrapper = "[data-color-scheme][data-viewport]";
 
+/** Each scheme, with the name that Browse's frames and Frames filter give it. */
+const schemes = [
+  ["light", "Light"],
+  ["dark", "Dark"],
+] as const;
+
+/** A step's link to its screen, named `{step title}, {screen title} screen`. */
+const screenLink = { name: /, .+ screen$/u };
+
 /** The screen paths of one product flow's steps, in step order. */
 function flowScreens(path: string): string[] {
   const flow = catalogueIndex().useCases.find((entry) => entry.path === path);
@@ -45,17 +54,24 @@ for (const journey of ["onboarding", "browse", "invitation"]) {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(origin + viewHref(flow));
       await expect(page.locator("iframe")).toHaveCount(screens.length);
-      const links = page.locator("main").getByRole("link", {
-        name: /^This screen in the catalogue:/,
-      });
+      // Each step stands in step order in a frame that its label names by
+      // its step, `Step {number} {title}`, with a link to its screen.
+      const steps = page.getByRole("figure", { name: /^Step \d+ /u });
+      const links = steps.getByRole("link", screenLink);
       await expect(links).toHaveCount(screens.length);
       mkdirSync(screenshots, { recursive: true });
-      for (const scheme of ["light", "dark"]) {
+      // A flow shows one scheme at a time, which its Frames filter chooses.
+      for (const [scheme, name] of schemes) {
         await page
-          .getByRole("combobox", { name: "Appearance" })
-          .selectOption(scheme);
+          .getByRole("group", { name: "Frames", exact: true })
+          .getByRole("radio", { name, exact: true })
+          .check();
         for (const [index, screen] of screens.entries()) {
-          const frame = page.frameLocator("iframe").nth(index);
+          const step = steps.nth(index);
+          const frame = step.locator("iframe").contentFrame();
+          await expect(step).toHaveAccessibleName(
+            new RegExp("^Step " + (index + 1) + " ", "u"),
+          );
           await expect(links.nth(index)).toHaveAttribute(
             "href",
             viewHref(screen),
@@ -96,21 +112,24 @@ for (const journey of ["onboarding", "browse", "invitation"]) {
       const directory = resolve(screenshots, journey);
       mkdirSync(directory, { recursive: true });
       // Mobile journey evidence is captured from the served fragment in its
-      // own 390px page, because a capture through the Browse iframe locator
-      // clips content below the iframe viewport; the PNG bounds are checked.
+      // own 390px page, because a capture through Browse's canvas frame
+      // scales it and clips content below the frame; the PNG bounds are
+      // checked.
       const capture = await page.context().newPage();
       capture.on("pageerror", (error) => errors.push(error.message));
       capture.on("requestfailed", (request) =>
         recordRequestFailure(errors, request),
       );
       await capture.setViewportSize({ width: 390, height: 844 });
-      for (const scheme of ["light", "dark"]) {
-        for (const [index, screen] of screens.entries()) {
-          await page.goto(origin + viewHref(screen));
-          const frame = page.frameLocator("iframe").first();
-          await page
-            .getByRole("combobox", { name: "Appearance" })
-            .selectOption(scheme);
+      for (const [index, screen] of screens.entries()) {
+        await page.goto(origin + viewHref(screen));
+        // The canvas shows the screen's Mobile frame in Light and in Dark at
+        // once, each labelled by its viewport and scheme.
+        for (const [scheme, name] of schemes) {
+          const frame = page
+            .getByRole("figure", { name: "Mobile · " + name })
+            .locator("iframe")
+            .contentFrame();
           await expect(frame.locator(wrapper)).toHaveAttribute(
             "data-color-scheme",
             scheme,

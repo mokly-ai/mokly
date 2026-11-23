@@ -74,8 +74,7 @@ and shows its previous path in details, like every paired entry; a pure move
 keeps the row even though the variant is unmodified. Under All, a paired row
 of any kind carries the changed mark, and counts toward its parent's aggregate
 mark, only when its entry changed beyond the move, so a pure move shows no
-mark. The variant bar reads the same decision: a paired variant whose only
-edit is its metadata reads Changed, and a pure move reads Unmodified.
+mark.
 
 A removed variant keeps the `variantOf`, `parentTitle`, and folder titles it
 had at the base commit. Resolve its parent with the

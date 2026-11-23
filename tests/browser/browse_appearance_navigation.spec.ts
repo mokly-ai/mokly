@@ -93,8 +93,6 @@ test("Appearance stays reachable at both widths", async ({ page }) => {
 test("the catalogue home carries Appearance when narrow", async ({ page }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto("/");
-  // Home has no screen head band, so the one control has to be in the top bar.
-  await expect(page.locator(".mbk-screen-head")).toHaveCount(0);
+  // Home has no right panel, so its one control stands in the top bar.
   await expect(page.locator(appearance)).toBeVisible();
-  await expect(page.locator("[data-mokly-schemeswitch]")).toHaveCount(0);
 });

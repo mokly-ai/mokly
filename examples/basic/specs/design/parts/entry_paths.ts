@@ -1,5 +1,3 @@
-import type { Crumb } from "./shell.js";
-
 /**
  * Paths of the depicted catalogue's current entries: the identity the path
  * chip and Details show. The depicted spec root has no prefix, so each path is
@@ -26,10 +24,3 @@ export const PREVIOUS_PATHS = {
   invoiceOverdue: "billing/invoice/overdue",
   paymentTerms: "billing/payment-terms",
 } as const;
-
-/**
- * Crumbs of a current screen in Example › Screens, viewed from All. The
- * Example folder's README is the folder's own page, which no artboard shows,
- * so its crumb is text.
- */
-export const SCREEN_CRUMBS: readonly Crumb[] = ["Example", "Screens"];

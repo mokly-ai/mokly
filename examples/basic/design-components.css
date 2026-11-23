@@ -2,14 +2,13 @@
 
 /* Prose links take the deep sage. The links that @mokly/ui components draw
    keep the look of their package stylesheets, as the shipped shell draws
-   them: the brand, the catalogue rows, the crumbs, the instance tree,
-   Reset, the text buttons, an empty state's action, and a highlight label. */
+   them: the brand, the catalogue rows, the instance tree, Reset, the text
+   buttons, an empty state's action, and a highlight label. */
 .ce-design
   a:where(
     :not(
       .mbk-brand,
       .mbk-nav-row,
-      .mbk-crumb-link,
       .mbk-instance-select,
       .mbk-controls-reset,
       .mbk-text-button,
@@ -25,7 +24,6 @@
     :not(
       .mbk-brand,
       .mbk-nav-row,
-      .mbk-crumb-link,
       .mbk-instance-select,
       .mbk-controls-reset,
       .mbk-text-button,
@@ -75,12 +73,4 @@
 }
 :where(.ce-design summary) {
   font: inherit;
-}
-.ce-badge {
-  background: var(--mbk-accent-surface);
-  border: 1px solid var(--mbk-sage-deep);
-  border-radius: 999px;
-  color: var(--mbk-sage-deep);
-  font-size: 12px;
-  padding: 4px 12px;
 }

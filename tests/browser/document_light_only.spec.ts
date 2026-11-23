@@ -39,7 +39,9 @@ for (const width of [390, 1280])
     await appearance.selectOption("light");
     await expect(heading).toBeVisible();
     await expect(label).toHaveText("Showing previous version");
-    await expect(page.locator(".mbk-scheme-fallback")).toHaveCount(0);
+    await expect(
+      page.locator("[data-mokly-stage]").getByText("Light only"),
+    ).toHaveCount(0);
 
     await appearance.selectOption("dark");
     await expect(label).toHaveText("Showing previous version — Light only");

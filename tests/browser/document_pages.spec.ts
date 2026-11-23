@@ -25,7 +25,7 @@ for (const width of [390, 1280])
     // compact layout opens as a sheet.
     await revealInPanel(page, head);
     const frame = page.locator(DOCUMENT_FRAME);
-    const fallback = page.locator(".mbk-scheme-fallback");
+    const fallback = page.locator("[data-mokly-stage]").getByText("Light only");
     for (const scheme of ["light", "dark"] as const) {
       await page.getByLabel("Appearance", { exact: true }).selectOption(scheme);
       await expect(head.locator("h2")).toHaveText("Workspace guide");

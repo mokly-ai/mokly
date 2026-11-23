@@ -1,7 +1,9 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import { screenFrames } from "../parts/frames.js";
 import type { PanelTab } from "../parts/panel.js";
 import { FITS } from "../parts/sketches.js";

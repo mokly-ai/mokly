@@ -2,7 +2,11 @@ import { expect } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
 import { ownExampleServerUrl } from "./example_servers.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { setFrames } from "./workspace_actions.js";
+
+/** The Canvas tag search's own page, not one of its saved states. */
+const TAG_SEARCH = /\/view\/design\/canvas\/search\/tags\/(?:\?|$)/;
+const TAG_CHIP = /\/view\/design\/library\/controls\/tag-chip\//;
 
 export function registerDesignLibraryRuntime(
   test = baseTest,
@@ -22,12 +26,17 @@ export function registerDesignLibraryRuntime(
           ? { width: 390, height: 844 }
           : { width: 1280, height: 900 },
       );
-      await page.goto(
-        `${running.url}/view/design/browse/views/screen/tag-picker/`,
-      );
-      // In the compact layout the Frames filter opens the panel's sheet,
-      // which holds Inspect, and its grabber expands it.
-      await chooseViewport(page, viewport);
+      // The Canvas tag search opens Welcome with the tag picker open, so its
+      // top bar holds Top bar → Tag picker → Tag chip.
+      await page.goto(`${running.url}/view/design/canvas/search/tags/`);
+      // The Frames filter shows the viewport's Light frame alone. In the
+      // compact layout it opens the panel's sheet, which holds Inspect, and
+      // its grabber expands it.
+      await setFrames(page, {
+        desktop: viewport === "desktop",
+        mobile: viewport === "mobile",
+        dark: false,
+      });
       if (viewport === "mobile")
         await page
           .getByRole("button", { name: "Expand panel", exact: true })
@@ -55,38 +64,27 @@ export function registerDesignLibraryRuntime(
         await summary.click();
         await expect(components).toHaveAttribute("open", "");
       }
-      // A choice in the component tree selects the instance, and Inspect's
-      // Selection names its props and opens its component.
+      // A choice in the component tree selects the tag picker's nested chip,
+      // and Inspect's Selection names its props and opens its component.
       await panel
-        .locator(".mbk-instance-select")
-        .filter({ hasText: "Tag chip" })
-        .first()
+        .getByRole("button", { name: "Tag chip · forms", exact: true })
         .click();
       const selection = page.locator('[data-inspect-section="selection"]');
       await expect(selection).toContainText("forms");
       await selection
         .getByRole("link", { name: "Tag chip", exact: true })
         .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/library\/controls\/tag-chip\//,
-      );
+      await expect(page).toHaveURL(TAG_CHIP);
       const usage = page.locator('[data-inspect-section="usage"]');
       await usage.locator(":scope > summary").click();
       await usage
-        .getByRole("link", { name: "Tag picker", exact: true })
-        .first()
+        .getByRole("link", { name: "Tag search", exact: true })
         .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/views\/screen\/tag-picker\//,
-      );
+      await expect(page).toHaveURL(TAG_SEARCH);
       await page.goBack();
-      await expect(page).toHaveURL(
-        /\/view\/design\/library\/controls\/tag-chip\//,
-      );
+      await expect(page).toHaveURL(TAG_CHIP);
       await page.goForward();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/views\/screen\/tag-picker\//,
-      );
+      await expect(page).toHaveURL(TAG_SEARCH);
     });
   }
 }

@@ -30,9 +30,9 @@ export function useRenderedAppearance(): DesignAppearance {
 }
 
 /**
- * Every artboard states the appearance it draws on its own root, taken from the
- * scheme Mokly requested, so Browse's existing Light/Dark preview control swaps
- * to the matching generated file.
+ * A standalone library sample states the appearance it draws on its own root,
+ * taken from the scheme Mokly requested, so Browse's existing Light/Dark
+ * preview control swaps to the matching generated file.
  */
 export function DesignAppearanceScope({ children }: { children: ReactNode }) {
   return (

@@ -18,13 +18,10 @@ Shared helpers and saved fixtures are metadata or rendered-output inputs, not
 independent comparison evidence.
 
 Rendered components link their declared files in first-render order.
-The shared preview layout reserves intrinsic mobile widths so full-size phones
-cannot overlap desktop frames when Both is selected.
-The phone notch and home pill are decorative and ignore pointer events, so
-they cannot intercept interactions with the caller-owned screen below them.
 The configuration orders shared base styles first, the `$componentStylesheets`
-marker next, then context/layout overrides. Keep this explicit order: equal-specificity
-mobile rules must not override bounded workspace scrolling.
+marker next, then context/layout overrides. Keep this explicit order: a layout
+sheet that restyles a package part follows that part's component sheet, so it
+wins at equal specificity.
 The Rust core writes each document head. It links the declared files at the
 marker of the first matching rule, or after that rule's shared entries when
 the rule has no marker. A closed picker draws no chip, so it does not link chip
@@ -36,11 +33,12 @@ The shared design CSS also imports the package stylesheets of the parts that
 the artboard scaffolds render. `design.css`, which every design route links,
 imports the theme and the reset class first and then Geist from
 `design-fonts/`. `design-preview.css` holds the preview tokens that a depicted
-document reads and imports the highlight's labels and mask: the Canvas route
-links it, and `design-stage.css` imports it for the library route and for the
-`design/**` route of the kept tag picker screen. On those two routes,
-`design-component-workspace.css` imports the shell and workspace layouts
-after the component sheets, as the package's `styles.css` orders them.
+document reads and imports the highlight's labels and mask, and
+`design-shots.css` holds the mini screen sketches that a frame holds: the
+Canvas route and the library route link both. On the library route,
+`design-library.css` imports the shell layout after the component sheets, as
+the package's `styles.css` orders it, so a sample's root draws the surface of
+its theme.
 
 The `design/canvas/**` route links the Canvas viewer's shared sheets in this
 order: `design.css`, `design-preview.css`, `design-shots.css` with the mini
@@ -60,8 +58,7 @@ for the states of each Canvas folder follows: `design-canvas-outcomes.css`,
 reading frame. After the `$componentStylesheets` marker,
 `design-canvas-shell.css` imports the shipped shell layout and holds the
 shell's layout and the package parts that it restyles, and
-`design-canvas-compact.css` holds its compact form. The Canvas route links no
-sheet that only the kept older screen needs.
+`design-canvas-compact.css` holds its compact form.
 
 The Canvas part sheets under `canvas/`, `panels/`, `inspector/frames-filter.css`,
 and `inspector/box-model.css` read the `--cv-*` roles, and a frame's document

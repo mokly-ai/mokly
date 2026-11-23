@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
+import type { ArtboardViewport } from "../../../parts/artboards.js";
 import { DesignNavigation } from "../../../parts/design_navigation.js";
-import type { ArtboardViewport } from "../../../parts/shell.js";
 import type { CanvasDestination } from "../../parts/destinations.js";
 import { CanvasRoot } from "../../parts/shell.js";
 

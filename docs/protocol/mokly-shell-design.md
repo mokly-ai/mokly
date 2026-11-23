@@ -29,9 +29,9 @@ previous version, the comparison evidence, the component explorer pages and
 the Props states. The
 [component design inventory](./mokly-component-design-inventory.md) lists the
 component explorer and Props screens. The
-[shell design inventory](./mokly-shell-design-inventory.md) lists the Browse
-and Changes screens outside the Canvas family and owns the dual-scheme and
-owning-group rules. The
+[shell design inventory](./mokly-shell-design-inventory.md) indexes those
+inventories and owns the scheme, view and retry rules that every design screen
+follows. The
 [depicted design catalogue](./mokly-shell-design-catalogue.md) describes the
 fixture catalogue that the design screens browse.
 

@@ -1,7 +1,6 @@
 import type { PropSchema, SchemaProps, SlotProps } from "@mokly/mokly";
 
 import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
-import { DESTINATIONS } from "../parts/destinations.js";
 
 /** The data and slot props that a library component's view receives. */
 export type LibraryProps<
@@ -18,19 +17,9 @@ export function enumOptions<const V extends string>(schema: {
 
 export const text = { type: "string" } as const;
 export const flag = { type: "boolean" } as const;
-export const destination = {
-  enum: [
-    ...new Set([
-      ...Object.values(DESTINATIONS),
-      ...Object.values(CANVAS_PAGES),
-    ]),
-  ],
-} as const;
+export const destination = { enum: Object.values(CANVAS_PAGES) } as const;
 export const changeStatus = {
   enum: ["unmodified", "added", "changed", "removed"],
-} as const;
-export const previewViewport = {
-  enum: ["mobile", "desktop", "both"],
 } as const;
 export const tagRecords = {
   type: "array",

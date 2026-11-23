@@ -7,7 +7,7 @@ import type { FramesFilterProps } from "./frames-filter.js";
  * The shell's own sentence for each reason that disables Highlight
  * components, word for word, so a depicted switch reads as the shell's does.
  */
-export const HIGHLIGHT_REASONS = {
+const HIGHLIGHT_REASONS = {
   empty: "No registered components are used in this view.",
   unavailable: "Component inspection is unavailable for this view.",
   loading: "Waiting for the component preview.",

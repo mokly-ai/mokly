@@ -1,4 +1,4 @@
-import type { ArtboardViewport } from "../../../parts/shell.js";
+import type { ArtboardViewport } from "../../../parts/artboards.js";
 import type { CatalogueTag } from "../../../parts/tags.js";
 import { CANVAS_ENTRIES } from "../../parts/entries.js";
 import { WelcomeInspect } from "../../parts/inspect_welcome.js";

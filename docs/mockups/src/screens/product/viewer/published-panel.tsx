@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ComparisonToolbar } from "@mokly/ui/comparison-toolbar";
+import { CompareModes } from "@mokly/ui/compare-modes";
 import { FloatingPanel } from "@mokly/ui/floating-panel";
 import type { FloatingPanelSheet } from "@mokly/ui/floating-panel";
 import { PanelTabBody, PanelTabs } from "@mokly/ui/panel-tabs";
@@ -29,32 +29,31 @@ const closedSheet: FloatingPanelSheet = {
 
 /**
  * The Changes tab's body: what the cloud draws first, such as its Mokly
- * check, then the comparison band at Current, whose modes are inert text.
- * The publication's comparison evidence is not part of the fixture, so the
- * drawing draws none.
+ * check, then the compare modes at Current, whose tiles are inert text, as
+ * the viewer offers them: every mode for shown views that changed, and none
+ * otherwise. The publication's comparison evidence is not part of the
+ * fixture, so the drawing draws none, and no comparison loaded.
  */
 export function PublishedChanges({
   eligible,
   start,
 }: {
-  /** Whether the shown views changed, which shows the band. */
+  /** Whether the shown views changed, which offers the compare modes. */
   eligible: boolean;
   start?: ReactNode;
 }) {
   return (
     <>
       {start}
-      <ComparisonToolbar
-        current
-        eligible={eligible}
-        interactive={false}
-        loaded={false}
-        mode="current"
-        onMode={staticNoop}
-        onRefresh={staticNoop}
-        onTogether={staticNoop}
-        together={false}
-      />
+      {eligible ? (
+        <CompareModes
+          comparable
+          interactive={false}
+          loaded={false}
+          mode="current"
+          together={false}
+        />
+      ) : null}
     </>
   );
 }

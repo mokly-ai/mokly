@@ -11,7 +11,7 @@
 import type { ReactNode, Ref } from "react";
 
 import type { Appearance } from "../appearance-selector/appearance-selector.js";
-import type { DataAttribute } from "../segmented-control/segmented-control.js";
+import type { DataAttribute } from "../data-attribute/data-attribute.js";
 
 /**
  * The viewer root that a state takes the place of, the standalone shell's

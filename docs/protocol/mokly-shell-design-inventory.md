@@ -10,36 +10,15 @@ keeps one Canvas family of Browse designs, under the
 [Canvas design inventory](./mokly-shell-canvas-inventory.md), the
 [loading, search and evidence inventory](./mokly-shell-canvas-inventory-states.md)
 and the [component design inventory](./mokly-component-design-inventory.md)
-list that family. The table below lists the one older Browse screen that the
-catalogue keeps. Together the pages define the complete set of Mokly shell
-design screens and match the example's catalogue index.
-
-The Entry column names each screen by its complete path under the
-[path contract](./mokly-paths.md). The Folder column is the resolved titles
-of its folders below the `Design` folder. A destination without a standalone
-screen stays in its feature contract.
-
-| Entry                                   | Folder                                  | State                                               |
-| --------------------------------------- | --------------------------------------- | --------------------------------------------------- |
-| `design/browse/views/screen/tag-picker` | Browse shell › Catalogue views › Screen | Welcome with an empty query and the tag picker open |
-
-## Kept Screen
-
-The kept screen draws the one-frame stage with the inspector below it, not the
-Canvas viewer. It draws the shipped tag picker over Welcome, and its Canvas
-form is `design/canvas/search/tags`. The design library's runtime test opens
-it until the viewer's race on a third nested disclosure is fixed. It is the
-one screen that renders the device frame, the screen header, the view controls
-and the inspector of the
-[design library](./mokly-design-component-library.md#components-and-saved-examples).
-Its folders hold no other screen and have no page of their own.
+list that family. Together the pages define the complete set of Mokly shell
+design screens and match the example's catalogue index. A destination
+without a standalone screen stays in its feature contract.
 
 ## Schemes And Views
 
 Every Canvas screen renders in both schemes, under the Canvas
-[family rules](./mokly-shell-canvas-inventory.md#family-rules). The kept
-screen renders light-only documents. The outer viewer shows both renders of
-an entry under the
+[family rules](./mokly-shell-canvas-inventory.md#family-rules). The outer
+viewer shows both renders of an entry under the
 [preview scheme rules](./mokly-shell-device-chrome.md#color-scheme).
 
 Every artboard that draws a top bar draws exactly one scheme control in it,

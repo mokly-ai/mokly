@@ -15,7 +15,7 @@ import type { RemovedPreviewData } from "../shell/previews.js";
 
 import { pageContent, screenContent } from "./content.js";
 
-/** One historical screen view rendered in its own device frame. */
+/** One historical screen view rendered in its own canvas frame. */
 export interface PreviewScreenView {
   colorScheme: ColorScheme;
   url: string;

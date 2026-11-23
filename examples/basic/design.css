@@ -1,19 +1,18 @@
 /* Mokly shell design language for the design mockups: the semantic interface
-   palette, the base rules, and the artboard shell's render flags. The
-   @mokly/ui theme and reset class come first, as in the package's
-   styles.css: an artboard's root carries the theme's root class, so the
-   package components draw in the shipped palette, and each of their elements
-   carries the reset class. The shell root, its body, and its main region are
-   the shipped ones, from the shell layout stylesheet that
-   design-canvas-shell.css and design-component-workspace.css import after
-   the component sheets. The shell's own parts, such as the top bar, the
-   catalogue navigation, and the screen header, come from the @mokly/ui
-   stylesheets that their component sheets import. The design catalogue keeps
-   its own palette below for the artboards' own parts. Every interface role
-   has a Light and a Dark value, so an artboard changes appearance by
-   selecting a palette rather than by adding an override sheet. Device-screen
-   colors are preview tokens and live in design-preview.css, independent of
-   the interface appearance. */
+   palette and the base rules. The @mokly/ui theme and reset class come
+   first, as in the package's styles.css: an artboard's root carries the
+   theme's root class, so the package components draw in the shipped palette,
+   and each of their elements carries the reset class. The shell root, its
+   body, and its main region are the shipped ones, from the shell layout
+   stylesheet that design-canvas-shell.css and design-library.css import
+   after the component sheets. The shell's own parts, such as the top bar and
+   the catalogue navigation, come from the @mokly/ui stylesheets that their
+   component sheets import. The design catalogue keeps its own palette below
+   for the artboards' own parts. Every interface role has a Light and a Dark
+   value, so an artboard changes appearance by selecting a palette rather
+   than by adding an override sheet. The colors of a depicted document are
+   preview tokens and live in design-preview.css, independent of the
+   interface appearance. */
 @import "../../packages/ui/src/theme/theme.css";
 @import "../../packages/ui/src/reset/reset.css";
 /* Geist and Geist Mono, the faces that the shipped theme and the sans and
@@ -45,7 +44,7 @@
   --mbk-sage-deep: #2f5945;
   --mbk-accent-contrast: #ffffff;
   /* The public accent of the @mokly/ui parts, at the shipped theme's Canvas
-     defaults, so a sample and an older screen draw the shipped accent. */
+     defaults, so a sample draws the shipped accent. */
   --mokly-accent: #067a45;
   --mokly-accent-contrast: #ffffff;
   --mokly-accent-soft: #e3f6ec;
@@ -74,7 +73,6 @@
   --mbk-status-removed-bg: #fcefee;
   --mbk-status-removed-edge: #ecc5c1;
   --mbk-status-removed-ink: #9b433c;
-  --mbk-browser-bar: #ecede9;
   --sans:
     "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --serif: Georgia, "Times New Roman", serif;
@@ -135,7 +133,6 @@
   --mbk-status-removed-bg: #331f1d;
   --mbk-status-removed-edge: #5e3b37;
   --mbk-status-removed-ink: #f1a99c;
-  --mbk-browser-bar: #1d1d20;
   color-scheme: dark;
 }
 
@@ -151,24 +148,4 @@ body {
   font-family: var(--sans);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-}
-
-/* ---- Render flags ----------------------------------------------------- */
-
-/* The frame that carries an artboard's render flag keeps the shell root in
-   the page. The root clips its content, as the shell's page does. */
-.mbk-shell-frame {
-  display: contents;
-}
-
-.mbk-shell-frame > .mbk {
-  overflow: hidden;
-}
-
-/* A mobile render draws the shell in a phone-wide column at every width. */
-.mbk-shell--mobile > .mbk {
-  border-left: 1px solid var(--chrome-border);
-  border-right: 1px solid var(--chrome-border);
-  margin: 0 auto;
-  max-width: 392px;
 }

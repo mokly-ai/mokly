@@ -24,15 +24,13 @@ the standalone control and has no authored transitions. The depicted top bar
 component owns it, so every artboard drawing a top bar shows it rather than
 opting in. Every artboard's selector reads the name of the scheme it was
 rendered for. Only the top bar's `auto-appearance` sample reads Auto in both
-renders. The depicted screen header of the kept tag picker screen carries the
-viewport control only, with no preview theme icon.
+renders.
 
-Each screen has its own mobile and desktop component and reuses the
-registered shared components, without duplicate screen markup. Apart from the
-Frames filter of the Canvas family below, no design entry depicts a separate
-preview-scheme control, `controls/view-controls` carries no scheme control,
-and the design catalogue authors no scheme link pairs. Keep notes outside the
-screens.
+Each screen has its own mobile and desktop component and reuses the registered
+shared components, without duplicate screen markup. Apart from the Frames filter
+of the Canvas family below, no design entry depicts a separate preview-scheme
+control, and the design catalogue authors no scheme link pairs. Keep notes
+outside the screens.
 
 ## Canvas Family
 

@@ -83,8 +83,6 @@ export function canvasProperties(
     "--mbk-guide": colors.border,
     // The dots of the shipped stage grid: the canvas dots.
     "--mbk-dot": colors.dot,
-    // The bar of a depicted window: a muted surface.
-    "--mbk-browser-bar": colors.surfaceMuted,
     // The accent's text, edges, and focus rings: signal text.
     "--mbk-accent-deep": colors.signalDeep,
     // Selected and added surfaces: the soft signal fill.

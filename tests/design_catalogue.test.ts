@@ -82,12 +82,8 @@ test(
       instances.filter(
         (instance) => instance.componentId === `design/library/${id}`,
       );
-    // The open tag picker of the Canvas search, and of the older tag picker
-    // that stays as the runtime test's subject.
-    for (const instances of [
-      "design/canvas/search/tags",
-      "design/browse/views/screen/tag-picker",
-    ].flatMap(usage)) {
+    // The open tag picker of the Canvas search.
+    for (const instances of usage("design/canvas/search/tags")) {
       const byKey = new Map(
         instances.map((instance) => [instance.key, instance]),
       );

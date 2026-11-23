@@ -1,7 +1,10 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates, type ArtboardVariant } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardVariant,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { WelcomeInspect } from "../parts/inspect_welcome.js";
 import {

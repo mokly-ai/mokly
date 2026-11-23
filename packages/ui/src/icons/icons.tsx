@@ -1,14 +1,13 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the down chevron of a
 // select, the closed / open folder icons for collapsible folders, the screen /
 // page / use-case leaf icons, the top bar's search and tag controls, the
-// device chrome's copy and expand / collapse controls, and the workspace
-// controls' icons. Icons are stroke-based on a 24-unit viewBox and inherit
-// `currentColor`. The brand mark, the Mokly logo on its own 32-unit grid,
-// lives with the top bar that draws and colours it, and the canvas glyphs, on
-// the 16-unit grid of the Canvas design, live in `canvas-icons.tsx`; this
-// module, the package's icons entry, exports both. Authored folder groups swap
-// closed and open folder icons; top-level catalogue sections and the details
-// inspector use the disclosure chevron.
+// copy and expand / collapse glyphs, and the workspace controls' icons. Icons
+// are stroke-based on a 24-unit viewBox and inherit `currentColor`. The brand
+// mark, the Mokly logo on its own 32-unit grid, lives with the top bar that
+// draws and colours it, and the canvas glyphs, on the 16-unit grid of the
+// Canvas design, live in `canvas-icons.tsx`; this module, the package's icons
+// entry, exports both. Authored folder groups swap closed and open folder
+// icons; top-level catalogue sections use the disclosure chevron.
 
 import type { ReactNode } from "react";
 
@@ -126,7 +125,7 @@ export function SearchIcon(props: { size?: number }) {
   );
 }
 
-/** The copy affordance at the trailing edge of a browser bar's address pill. */
+/** The copy glyph: a sheet over the corner of another. */
 export function CopyIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
@@ -136,7 +135,7 @@ export function CopyIcon(props: { size?: number }) {
   );
 }
 
-/** Outward arrows on the browser bar's toggle while the frame is inline. */
+/** Outward arrows to two corners, the glyph of an expand toggle. */
 export function ExpandIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
@@ -148,7 +147,7 @@ export function ExpandIcon(props: { size?: number }) {
   );
 }
 
-/** Inward arrows on the browser bar's toggle while the frame is expanded. */
+/** Inward arrows from two corners, the glyph of a collapse toggle. */
 export function CollapseIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
