@@ -45,8 +45,20 @@ Unmodified views that use no changed component retain their current preview
 without compare modes; removed screens show their
 [previous version](./mokly-removed-previews.md) without them. Affected
 consumers can compare actual rendered differences while their views stay
-Unmodified, and an affected-only consumer stays outside Changes. Current is
-selected initially, including after navigation and reload.
+Unmodified, and an affected-only consumer stays outside Changes. On a
+component's [variant set](./mokly-shell-canvas-stage.md#section), each shown
+row is its own entry and decides its own comparison under the rules above, from
+its own shown views and its own entry detail. The set offers its Changes tab
+and the five compare modes while any shown row compares, whatever the routed
+entry's own status. A row that does not compare keeps Current, its current
+frames, while a mode shows. A screen, and a removed component or variant, which
+has no current frames, offer the compare modes from their own shown views
+alone. Decision: the shown rows of a set decide its Changes tab and its compare
+modes, not the routed entry alone, because the canvas shows every row and each
+row compares on its own; the routed entry alone would hide a changed variant's
+comparison on the route of its unmodified parent or of an Added sibling.
+Current is selected initially, including after navigation to another section
+and after reload.
 Selecting Changes, opening a current screen, changing its viewport or color
 scheme in Current, and receiving a watched update do not generate comparison
 snapshots in development; opening a removed entry is the one selection that
@@ -85,13 +97,15 @@ These marks and the `Changed views` row apply in a static build with Changes as
 well as in Serve.
 
 Diffs render in the frames of the canvas, with the catalogue and the right
-panel retained, and every shown frame compares its own view. Snapshot frames
+panel retained. Each shown frame of a compared row compares its own view, and
+a row that does not compare keeps its current frames. Snapshot frames
 follow the [pane](./mokly-comparison-panes.md) and
 [scrolling](./mokly-comparison-scrolling.md) contracts: script-disabled,
 frame-sized documents with inert links and aligned regions. Overlay,
-Difference and Swipe show both versions inside each frame; Side by side shows
-the two versions of one frame next to each other. Missing panes stay explicit,
-dimensions match, and only Current offers pixel measurements.
+Difference and Swipe show both versions inside each compared frame;
+Side by side shows the two versions of one chosen frame next to each other.
+Missing panes stay explicit, dimensions match, and only Current offers pixel
+measurements.
 
 Loading, unavailable, and failed comparison states use plain product copy.
 Failure offers a retry. All and Changes share the same comparison eligibility.
@@ -136,9 +150,9 @@ Changes is the selected tab, each key selects an offered mode unless focus is
 in a text field. The frames of the canvas show the chosen mode only while
 Changes is the selected tab; Inspect shows their current versions, and the
 chosen mode and its loaded comparison stay, so a return to Changes shows that
-mode without a new load. Side by side adds a chip for each frame, such as
-Desktop · Light, and the chosen chip names the compared frame. Every mode
-other than Current adds the Scroll together switch and Refresh. The
+mode without a new load. Side by side adds a chip for each frame of a compared
+row, such as Desktop · Light, and the chosen chip names the compared frame.
+Every mode other than Current adds the Scroll together switch and Refresh. The
 [comparison panes](./mokly-comparison-panes.md#layout) define what each mode
 shows.
 

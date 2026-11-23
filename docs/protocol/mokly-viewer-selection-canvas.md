@@ -24,9 +24,10 @@ selects nothing. On a variant set, a click on a frame's label selects that
 frame, and choosing a variant in Inspect selects the variant's Light frame.
 Selecting an instance in the component tree selects it as a click does, on the
 frame whose instances the tree lists. A click on the empty canvas, or Escape,
-clears the selection. While Highlight components is on or a host pick is
-active, Escape ends that first and keeps the selection. At most one instance
-or one frame is selected at a time.
+clears the selection. An Escape that a canvas frame forwards under the
+[canvas input rules](./mokly-frame-canvas-input.md#keys) clears it too. While
+Highlight components is on or a host pick is active, Escape ends that first and
+keeps the selection. At most one instance or one frame is selected at a time.
 
 In Changes, a click on a frame selects nothing, and the canvas draws no
 selection. The frames keep the compare mode, and a drag on the Swipe divider

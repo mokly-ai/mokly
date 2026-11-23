@@ -4,7 +4,7 @@ import { useRenderedAppearance } from "../../../parts/appearance.js";
 import { EmptyState, LoadingState } from "../../../parts/stage_content.js";
 import type { CanvasEntry, CanvasEntryKind } from "../../parts/entries.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
-import { openingFrame } from "../../parts/opening_frame.js";
+import { openingFrame, pickerFrames } from "../../parts/picked_frames.js";
 import { EntryStatus, FramePicker, KindTag } from "../../parts/stage.js";
 
 import type { PendingDetails } from "./details.js";
@@ -26,9 +26,9 @@ interface StageEntry {
 /**
  * The compact entry bar of an entry whose stage holds no section: its title
  * tag, a component's kind tag and its change status, as the stage draws
- * them, and the stage's frame picker, which lists the entry's frames and
- * opens on the picked frame. The catalogue index names the entry's views, so
- * the picker lists them before the entry's detail arrives.
+ * them, and the stage's frame picker, which lists the entry's frames in the
+ * shell's order and opens on the picked frame. The catalogue index names the
+ * entry's views, so the picker lists them before the entry's detail arrives.
  */
 function EntryBar({ entry, frames, picked }: StageEntry) {
   const scheme = useRenderedAppearance();
@@ -40,7 +40,7 @@ function EntryBar({ entry, frames, picked }: StageEntry) {
         <EntryStatus entry={entry} name="entry-status" />
       </span>
       <FramePicker
-        frames={frames}
+        frames={pickerFrames(frames)}
         kind={entry.kind}
         picked={picked ?? openingFrame(frames, scheme)}
       />

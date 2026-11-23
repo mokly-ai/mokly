@@ -5,7 +5,8 @@ import {
   type ArtboardViewport,
 } from "../../parts/artboards.js";
 import { DetailsStage } from "../loading/parts/stage_state.js";
-import { actionSetFrames, frameOf } from "../parts/set_sketches.js";
+import { useChosenFrame } from "../parts/picked_frames.js";
+import { actionSetFrames } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
 import { SET_FITS } from "../parts/sketches.js";
@@ -35,9 +36,10 @@ const USAGE_PAGES = {
 
 /**
  * The Action's saved variant Default chosen on the Action branch, in
- * Current: its Light frame is selected, Props edits Default, and Usage lists
- * the Action's consumers and the screens that its change affects. A current
- * variant waits for its own detail and its parent's, which holds the usage:
+ * Current: its Light frame is selected, and on a phone its frame of the
+ * appearance's scheme, Props edits Default, and Usage lists the Action's
+ * consumers and the screens that its change affects. A current variant
+ * waits for its own detail and its parent's, which holds the usage:
  * while the parent's detail loads, or after that load failed, the stage
  * holds the shipped state in place of the frames, with no zoom controls,
  * because the canvas holds no section, and Props and Usage wait or say that
@@ -53,10 +55,10 @@ function DefaultUsage({
   viewport: ArtboardViewport;
 }) {
   const frames = actionSetFrames();
-  const frame = frameOf(frames, "default-light");
+  const frame = useChosenFrame(frames, "default", viewport);
   const design = USAGE_PAGES[state];
   const catalogue = actionBranchChanges(EXPLORER_KEYS.default);
-  const panel = <DefaultInspect design={design} state={state} />;
+  const panel = <DefaultInspect design={design} frame={frame} state={state} />;
   return state === "usage" ? (
     <VariantSetArtboard
       catalogue={catalogue}

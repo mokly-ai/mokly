@@ -46,8 +46,10 @@ side by side, at one zoom.
   accessible name names that screen. The step's description reads muted below
   the label, and a description too long for the frame ends in an ellipsis. No
   slug leads a step frame's name, also in the compact layout.
-- **Comparison** — in a comparison, a frame holds both versions as its compare
-  mode draws them. In Side by side, each of the compared frame's two versions
+- **Comparison** — in a comparison, each frame of a
+  [compared row](./mokly-selected-comparisons.md) holds both versions as its
+  compare mode draws them, and a frame whose row does not compare keeps its
+  current version. In Side by side, each of the compared frame's two versions
   stands in its own frame, whose label starts with a `Before` or a `Current`
   tag. The [comparison panes](./mokly-comparison-panes.md) fix each mode. A
   screen's frame keeps its nominal size. A component's frame takes the larger

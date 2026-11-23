@@ -9,7 +9,7 @@ import {
 } from "./changes_sketches.js";
 import { CANVAS_PAGES, WELCOME_MODES } from "./destinations.js";
 import { CANVAS_ENTRIES } from "./entries.js";
-import { useOpeningFrame } from "./opening_frame.js";
+import { useOpeningFrame } from "./picked_frames.js";
 import { CanvasShell } from "./shell.js";
 import { FITS, WELCOME_VIEW, welcomeFrames } from "./sketches.js";
 import { CanvasStage } from "./stage.js";

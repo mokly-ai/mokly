@@ -4,7 +4,7 @@ import {
   type ActionValues,
 } from "../../parts/component_props.js";
 import { CANVAS_PAGES } from "../../parts/destinations.js";
-import { frameOf } from "../../parts/set_sketches.js";
+import { useChosenFrame } from "../../parts/picked_frames.js";
 
 import type { PropsDestination } from "./destinations.js";
 import { DefaultEditForm, type EditState } from "./forms.js";
@@ -48,7 +48,7 @@ export function DefaultStateArtboard({
   viewport: ArtboardViewport;
 }) {
   const frames = defaultFrames(state.preview, state.pending);
-  const frame = frameOf(frames, "default-light");
+  const frame = useChosenFrame(frames, "default", viewport);
   const starting =
     state.form === "preparing" || state.form === "preparing-failed";
   return (

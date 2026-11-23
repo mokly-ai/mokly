@@ -63,10 +63,18 @@ test("canvas scale and wheel units use their exact ranges", () => {
 });
 
 test("canvas key and focus wire values reject names and booleans of the wrong type", () => {
-  for (const key of ["zoom-in", "zoom-out", "zoom-100", "fit"])
-    assert.equal(valid({ type: "canvas-key", key }), true);
-  for (const key of ["+", "other", null, 1])
-    assert.equal(valid({ type: "canvas-key", key }), false);
+  for (const key of [
+    "zoom-in",
+    "zoom-out",
+    "zoom-100",
+    "fit",
+    "escape",
+    "search",
+  ])
+    assert.equal(valid({ type: "canvas-key", key }), true, key);
+  // A DOM key name is not a wire value.
+  for (const key of ["+", "Escape", "other", null, 1])
+    assert.equal(valid({ type: "canvas-key", key }), false, String(key));
   for (const visible of [true, false])
     assert.equal(valid({ type: "canvas-focus", visible }), true);
   for (const visible of [1, "true", null])

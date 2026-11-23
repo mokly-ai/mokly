@@ -5,7 +5,8 @@ import {
   type ArtboardViewport,
 } from "../../parts/artboards.js";
 import { PendingProps, type PendingDetails } from "../loading/parts/details.js";
-import { actionSetFrames, frameOf } from "../parts/set_sketches.js";
+import { useChosenFrame } from "../parts/picked_frames.js";
+import { actionSetFrames } from "../parts/set_sketches.js";
 
 import { PROPS_PAGES as P } from "./parts/destinations.js";
 import { ChosenVariantInspect } from "./parts/inspect.js";
@@ -36,7 +37,7 @@ function Loading({
   viewport: ArtboardViewport;
 }) {
   const frames = actionSetFrames();
-  const frame = frameOf(frames, "default-light");
+  const frame = useChosenFrame(frames, "default", viewport);
   const design =
     details.status === "failed" ? P.propsLoadingFailed : P.propsLoading;
   return (

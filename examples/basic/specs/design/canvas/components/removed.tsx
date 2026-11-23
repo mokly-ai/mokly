@@ -4,7 +4,7 @@ import {
   artboardStates,
   type ArtboardViewport,
 } from "../../parts/artboards.js";
-import { frameOf } from "../parts/set_sketches.js";
+import { useChosenFrame } from "../parts/picked_frames.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
 import { CanvasStage } from "../parts/stage.js";
@@ -31,11 +31,12 @@ import {
  * The removed Compact on the removal branch, opened from the Changes filter
  * on Inspect: its parent's variant set, its own example and its current
  * variants, with the Compact row after them, whose frames hold the missing
- * current version, and its Light frame selected; on a phone, that frame
- * alone.
+ * current version, and its Light frame selected; on a phone, its frame of
+ * the appearance's scheme alone.
  */
 function RemovedOnInspect({ viewport }: { viewport: ArtboardViewport }) {
   const frames = removedSetFrames();
+  const frame = useChosenFrame(frames, "compact", viewport);
   return (
     <VariantSetArtboard
       catalogue={removalChanges(EXPLORER_KEYS.compact, "inspect")}
@@ -43,8 +44,8 @@ function RemovedOnInspect({ viewport }: { viewport: ArtboardViewport }) {
       entry={REMOVED_COMPACT}
       fit={REMOVED_FIT}
       frames={frames}
-      panel={<RemovedInspect />}
-      selection={{ frame: frameOf(frames, "compact-light") }}
+      panel={<RemovedInspect frame={frame} />}
+      selection={{ frame }}
       viewport={viewport}
     />
   );

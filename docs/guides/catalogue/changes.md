@@ -135,31 +135,52 @@ Next change, then Compared, which names the versions: the branch point on your
 base, such as `origin/main`, and This branch. The compare modes and the
 comparison details follow. The modes are Current (1), Side by side (2),
 Overlay (3), Difference (4) and Swipe (5), and while the tab is selected a
-mode's number key chooses it. A shown view with Changed status offers every
-mode and starts in Current. A shown view known to be unchanged reads
-Unmodified with no comparison, unless it uses a changed component: then it
-reads Unmodified but still offers the comparison, whether or not Changes lists
-the screen or component, and it reads "Components this screen uses changed".
-A screen that only changed components affect stays out of Changes, so its tab
-has no Change N of M. A flow or a page has no compare mode; compare a flow's
+mode's number key chooses it.
+
+A screen offers all five modes when a shown view can compare. You can compare
+a Changed view. An unchanged view reads Unmodified. You can compare it when
+it uses a changed component named in its entry's details. A screen's
+comparison then reads "Components this screen uses changed".
+
+You can compare that view from All, even for an entry outside Changes. A
+screen that only changed components affect stays out of Changes, so its tab
+has no Change N of M. A flow or a page has no compare mode. Compare a flow's
 steps on their screens.
 
-The canvas shows the chosen mode only while the Changes tab is selected;
-Inspect shows the current frames, and a return to Changes shows the mode again
-without a new load. Comparison snapshots are generated when you choose a mode
-other than Current, not while you browse, and they capture the selected screen
-and its resources rather than rebuilding the catalogue. Changing the shown
-frames, the compared frame or the mode renews the snapshots before using them,
-and an expired comparison is reacquired for you.
+A component's variant set shows a row for its own example and one for each
+saved variant. Each row is its own entry. Its shown views and entry details
+decide whether it can compare. The set offers the Changes tab and all five
+modes when any shown row can compare, whichever entry you open. A row that
+cannot compare keeps its current frames in the chosen mode. A removed
+component or component variant compares its own shown frames alone.
 
-Every mode compares each shown frame with its own view. Overlay, Difference
-and Swipe show both versions inside each frame: Overlay shows the current
-version at half opacity, Difference blends the two, and Swipe splits every
-frame at one divider, with the version before on its left. Drag the grip of
-the divider on any frame, or focus the grip and use the arrow keys, Home and
-End, and the divider moves on every frame. Side by side shows one frame's two
-versions next to each other, tagged Before and Current, and a chip for each
-frame in the Changes tab chooses the frame. Pages and scrolling panels move
+The canvas shows the chosen mode only while the Changes tab is selected.
+Inspect shows the current frames. Return to Changes to see the chosen mode
+again without a new load. Current is the default mode. When you move between
+entries in one variant set, you keep the chosen mode and every row's
+comparison. When you open another screen or component, you return to Current.
+
+In Serve, you get comparison snapshots on demand when you choose a mode
+other than Current. Each compared row gets snapshots of its own views and
+resources. When you change the shown frames, the compared frame or the mode,
+Mokly renews each row's snapshots as needed before using them. Mokly reloads
+an expired comparison for you. In a static build, each compared row uses the
+snapshots that the build includes.
+
+If a row's comparison fails, its frames show the error while the other rows
+still compare. Choose Try again on that row to load its comparison again.
+
+Each shown frame of a compared row compares its own view. Overlay, Difference
+and Swipe show both versions inside each compared frame. Overlay shows the
+current version at half opacity. Difference blends the two versions. Swipe
+shows the version before on the left and the current version on the right.
+Its divider stays at the same position in every compared frame. Drag any
+grip to move every divider. You can also focus a grip and use the arrow keys,
+Home and End.
+
+In Side by side, the Changes tab has a chip for each shown frame of a compared
+row. Choose a chip to see that frame's two versions next to each other, tagged
+Before and Current. Pages and scrolling panels move
 together by default. Each version keeps the size of its frame, so full-height
 sections, fixed bars, and sticky headers look just as they do in Current; a
 component's frame takes the larger width and height of its two versions. The
@@ -200,15 +221,18 @@ whose view changed, that toggle carries a dot. Inspect names those views under
 Changed views. On a narrow screen, where one frame shows at a time, opening
 the entry from Changes takes you straight to the first of them. Opening it
 from All, following a link with a viewport or scheme in it, or reloading
-keeps the view you were on. The status and the compare modes describe the
-frames that are shown: Changed wins over Added, then Removed, then Unmodified,
+keeps the view you were on. The status beside the title describes the shown
+frames of the entry you opened. If their statuses differ, Changed wins over
+Added, then Removed, then Unmodified,
 while the toggle dots and Changed views point to changes in hidden frames.
 
 ## Added and removed
 
-An added entry shows its current frames and an Added status. Its Changes tab
-offers Current alone, because there is no earlier version, and Compared names
-This branch alone.
+An added entry shows its current frames and an Added status. If no other
+shown row can compare, its Changes tab offers Current alone because the entry
+has no earlier version. In this case, Compared names This branch alone.
+You can choose all five modes on an added variant while another shown row in
+its set can compare.
 
 A removed entry appears only in Changes. All shows the catalogue as it is now,
 so it lists no Removed row.

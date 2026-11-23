@@ -1,10 +1,10 @@
 /**
  * The canvas selection under the selection canvas contract: in Inspect a
  * click selects the innermost instance, which the canvas outlines with its
- * handles and tags; Escape and the empty canvas clear it; the tags on a
- * frame hide while the canvas draws its frames at less than 60% of their
- * size; a variant set's frame label selects its frame; and the compact
- * layout's pill names the selection.
+ * handles and tags; Escape, also from inside a frame, and the empty canvas
+ * clear it; the tags on a frame hide while the canvas draws its frames at
+ * less than 60% of their size; a variant set's frame label selects its
+ * frame; and the compact layout's pill names the selection.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -97,6 +97,21 @@ test("a click in Inspect selects the innermost instance, and Escape or the empty
   const point = await emptyCanvasPoint(page);
   await page.mouse.click(point.x, point.y);
   await expect(page.getByRole("img", { name: /selected, / })).toHaveCount(0);
+});
+
+test("Escape pressed inside a frame clears the selection that a click in it made", async ({
+  page,
+}) => {
+  await openWelcome(page);
+  await clickToolbar(page);
+  await expect(toolbar(page)).toBeVisible();
+  // The click gave the frame's document focus, so the frame hears Escape.
+  await expect(page.locator(canvasFrame("mobile"))).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("img", { name: /selected, / })).toHaveCount(0);
+  await expect(selection(page)).toContainText(
+    "Click an element on a frame to see its props.",
+  );
 });
 
 test("a click that follows a link selects nothing", async ({ page }) => {

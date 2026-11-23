@@ -122,20 +122,20 @@ preview scheme and the compact layout.
   field is compact: about 180px on the muted field surface, led by a 15px
   stroked magnifier icon and ended by the tag picker control. It gives way when
   its column runs short. In the standalone bar it keeps at least 150px down to
-  a 320px window, and an embedded root switches to its
-  [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
-  Search uses `Search catalogue` as its accessible name and `Search` as its
-  placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
-  and Ctrl+K move focus to the search field from anywhere in the shell. `/`
-  does the same while focus is not in a text field. At or above 900px, a key
-  hint before the tag picker names `⌘K` on Apple's platforms and `Ctrl K`
-  elsewhere. Assistive technology skips the hint, and the field names its keys
-  to it. The standalone bar carries no preview mode switch; Appearance is the
-  one setting that belongs there.
-  Decision: the standalone shell keeps Appearance in its top bar, not in an
-  account menu, because it has no account menu. Matching uses the single
-  [search rule](./mokly-folders.md#titles). Filtering hides empty groups and
-  opens retained groups, and composes with the All/Changes filter.
+  a 320px window, and an embedded root switches to its [compact
+  search](./mokly-viewer.md#rendered-features-and-slots) instead. Search uses
+  `Search catalogue` as its accessible name and `Search` as its placeholder in
+  both viewport sizes, covering screens, pages, and flows. `⌘K` and Ctrl+K move
+  focus to the search field from anywhere in the shell, and from a canvas frame
+  [outside its editable elements](./mokly-frame-canvas-input.md#keys). `/` does
+  the same while focus is not in a text field. At or above 900px, a key hint
+  before the tag picker names `⌘K` on Apple's platforms and `Ctrl K` elsewhere.
+  Assistive technology skips the hint, and the field names its keys to it. The
+  standalone bar carries no preview mode switch; Appearance is the one setting
+  that belongs there. Decision: the standalone shell keeps Appearance in its top
+  bar, not in an account menu, because it has no account menu. Matching uses the
+  single [search rule](./mokly-folders.md#titles). Filtering hides empty groups
+  and opens retained groups, and composes with the All/Changes filter.
 - **Tag picker** — the tag-icon control at the trailing edge of the search
   field and the panel of tag chips that it opens, under the
   [tag picker design](./mokly-shell-design-tag-picker.md).
@@ -146,8 +146,8 @@ preview scheme and the compact layout.
   with the zoom pill at the bottom centre, under the
   [canvas stage](./mokly-shell-canvas-stage.md).
 - **Right panel** — while an entry is selected, a panel floats at the right
-  edge of the canvas, with the Inspect tab and, where the entry has a
-  comparison, the Changes tab. The
+  edge of the canvas, with the Inspect tab and, where the Changes filter lists
+  the entry or the canvas offers the compare modes, the Changes tab. The
   [component inspector design](./mokly-component-inspector-design.md) fixes
   the panel, its tabs and its sections.
 - **Breadcrumbs** — the breadcrumb trail names the selected entry's folders,
@@ -205,15 +205,15 @@ See [responsive shell behavior](./mokly-shell-device-chrome.md#responsive-behavi
 
 ## In-place Comparisons
 
-The catalogue is the only shell. The right panel's Changes tab holds the
-compare modes, which apply to every frame on the canvas: Current, Side by side,
-Overlay, Difference and Swipe, with the keys 1 to 5. Current starts selected.
-Overlay and Difference hold both versions in each frame, Swipe splits each
-frame at one divider, and Side by side shows one frame's two versions next to
-each other. Diffs load on demand on the same canvas while navigation, Inspect,
+The catalogue is the only shell. The right panel's Changes tab holds the compare
+modes, which apply to every frame of a compared row: Current, Side by side,
+Overlay, Difference and Swipe, with the keys 1 to 5. Current starts selected. A
+row that does not compare keeps its current frames. Overlay, Difference and
+Swipe show both versions in each compared frame; Side by side shows one chosen
+frame's pair. Diffs load on demand on the same canvas while navigation, Inspect,
 Refresh, and Retry stay available. Static catalogues without comparison data
-have no Changes tab. Decision: compare on every frame, not on one chosen view,
-because the canvas shows every viewport and scheme at once.
+have no Changes tab. Decision: compare on every frame of the compared rows, not
+on one chosen view, because the canvas shows every viewport and scheme at once.
 
 Loading, failure, evidence, and ignored details stay secondary and never report
 a count or a percentage of changed pixels. The

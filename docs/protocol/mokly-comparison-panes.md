@@ -4,10 +4,12 @@ Status: Compare on every frame of the canvas, Swipe, and Side by side on one cho
 
 ## Behavior
 
-Compare works on every frame of the
-[canvas stage](./mokly-shell-canvas-stage.md): each shown frame compares its
-own view. Overlay, Difference and Swipe show both versions inside each frame;
-Side by side shows the two versions of one frame next to each other. With
+Compare works on the frames of the
+[canvas stage](./mokly-shell-canvas-stage.md): each shown frame of a
+[compared row](./mokly-selected-comparisons.md) compares its own view, and a
+row that does not compare keeps its current frames. Overlay, Difference and
+Swipe show both versions inside each compared frame; Side by side shows the
+two versions of one chosen frame next to each other. With
 Scroll together on, page scrolling and paired inner panels move together under
 the [scrolling contract](./mokly-comparison-scrolling.md), so versions cannot
 drift where both have range. Each version renders at its frame's viewport
@@ -22,12 +24,12 @@ is ever shown.
 ## Presentation
 
 Serve, the static build, and embedded viewers with either adapter use one
-presentation path for every pane document. Once the comparison's generation
-is established, the viewer fetches every document that the shown frames need,
-before reporting ready.
+presentation path for every pane document. Once a compared row's generation
+is established, the viewer fetches every document that the row's shown frames
+need, before reporting ready.
 Each address must be on the configured source origin beneath
 `snapshots/before/` or `snapshots/after/` of that immutable generation: the
-root that the live selection redirected to, or the pinned `comparisonUrl`.
+root that the row's live selection redirected to, or the pinned `comparisonUrl`.
 The GET carries the comparison's abort signal and uses the comparison
 credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery. The standalone shell sends
@@ -92,8 +94,8 @@ later measurement changes its size.
 
 ## Layout
 
-Every frame of the canvas compares its own view, at its own size and in its
-own scheme, with its own viewport and page offset. A stacked comparison,
+Each shown frame of a compared row compares its own view, at its own size and
+in its own scheme, with its own viewport and page offset. A stacked comparison,
 Overlay, Difference or Swipe, shows both versions inside the frame: one shared
 viewport fills the frame, and the Before layer and the Current layer are
 stacked at full size in it. Both layers paint an opaque screen background in
@@ -104,29 +106,29 @@ touch input over the stack reaches the document that shows on top at that
 point. A movable inner region handles it there; otherwise the non-scrollable
 frame lets the browser chain it to the shared page viewport.
 
-Swipe splits every frame at one vertical divider: the version before shows to
-its left, and the current version to its right. The divider has a round grip
-in the middle of its line, and a tag at the top on each side names its
-version, Before and Current. Every frame draws the divider at the same place,
-so a drag on any grip moves it on every frame. Swipe opens with the divider in
-the middle. A focused grip moves with the arrow keys, and Home and End send it
-to its ends. The grip and the tags keep their size at every zoom. Decision:
-Swipe is a fifth mode and Overlay keeps its half-opacity view, rather than
-Overlay becoming a divider, so that both ways to compare in one frame stay
-available.
+Swipe splits each compared frame at one vertical divider: the version before
+shows to its left, and the current version to its right. The divider has a
+round grip in the middle of its line, and a tag at the top on each side names
+its version, Before and Current. Every compared frame draws the divider at the
+same place, so a drag on any grip moves it on every compared frame. Swipe opens
+with the divider in the middle. A focused grip moves with the arrow keys, and
+Home and End send it to its ends. The grip and the tags keep their size at
+every zoom. Decision: Swipe is a fifth mode and Overlay keeps its half-opacity
+view, rather than Overlay becoming a divider, so that both ways to compare in
+one frame stay available.
 
 Side by side compares one frame at a time: the version before beside the
 current version, each in its own frame, whose tag, Before or Current, comes
 before its label. The frame chips of the
 [Changes tab](./mokly-changes-controls.md#changes-tab) choose the compared
-frame. It starts on the first shown frame, or on the picked frame in the
-compact layout, whose frame picker picks another frame's pair. The canvas
-shows the pair at the largest zoom that fits both versions. Decision: Side by
-side shows one frame's pair, not every pair at once, because eight frames do
-not fit a readable zoom. Both versions share the pair maximum range of the
-[scrolling contract](./mokly-comparison-scrolling.md#page-scroller), so their
-ranges always match. With Scroll together on, their page offsets and paired
-inner regions mirror in both directions. With it off, each pane scrolls
+frame. It starts on the first shown frame of a compared row, or on the picked
+frame in the compact layout, whose frame picker picks another frame's pair. The
+canvas shows the pair at the largest zoom that fits both versions. Decision:
+Side by side shows one frame's pair, not every pair at once, because eight
+frames do not fit a readable zoom. Both versions share the pair maximum range
+of the [scrolling contract](./mokly-comparison-scrolling.md#page-scroller), so
+their ranges always match. With Scroll together on, their page offsets and
+paired inner regions mirror in both directions. With it off, each pane scrolls
 independently.
 
 A pane whose document is missing keeps an explicit message under its Before
@@ -166,18 +168,24 @@ then the canvas shows “Loading comparison…” and is busy. A failed comparis
 request, or a fetch, validation, read, parse, or presentation failure, renders
 “The comparison could not be loaded.” with Try again. Its details show “The
 comparison is unavailable.” for each of these failures. An embedded host also
-receives the comparison error. Refresh and Try again fetch the comparison
-again and present its documents anew.
+receives the comparison error. A failed row shows that failure, with its own
+Try again, on its own frames while the other rows compare, and the canvas holds
+the failure only when every shown row failed. A row's Try again fetches that
+row again, and Refresh and the canvas's Try again fetch every compared row
+again; the viewer presents the fetched documents anew.
 
-Presentations are cached per address for one loaded comparison. Mode, compared
-frame, viewport and scheme switches keep that comparison and its cache, after
-live delivery renews the generation as
+Presentations are cached per address for each compared row's loaded comparison.
+Mode, compared frame, viewport and scheme switches keep each row's comparison
+and its cache, after live delivery renews the row's generation as
 [selected comparisons](./mokly-selected-comparisons.md) require, and present
-only documents not yet accepted. Current, route
-replacement, evidence or source replacement, unmount, and a newly loaded
-comparison, from Refresh, Try again or a renewal that found a new generation,
-cancel pending work and discard the cache, so a late response can never present
-a document in another screen's stack and presentations are never shared across
+only documents not yet accepted. A move between the entries of one variant set
+keeps the mode and every compared row's comparison, its pending work and its
+cache, because the canvas keeps the same rows. Current, navigation to another
+section, evidence or source replacement, and unmount cancel every row's pending
+work and discard every row's cache. A newly loaded comparison of a row, from
+Refresh, Try again or a renewal that found a new generation, cancels that row's
+pending work and discards its cache. A late response therefore never presents a
+document in another row's stack, and presentations are never shared across
 generations.
 
 ## Embedded Fetch Set

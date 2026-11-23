@@ -29,7 +29,7 @@ compact height unless the column says expanded.
 | `design/canvas/overview`                              | Canvas viewer             | Welcome as four frames, Inspect open, nothing selected    | None              |
 | `design/canvas/stage/zoomed`                          | Canvas stage              | Welcome at 100%, panned onto Desktop · Light              | None              |
 | `design/canvas/stage/component-set`                   | Canvas stage              | The Action opened as its variant set                      | None              |
-| `design/canvas/stage/component-set/disabled`          | Canvas stage (variant)    | Disabled chosen: its Light frame selected for Props       | Inspect           |
+| `design/canvas/stage/component-set/disabled`          | Canvas stage (variant)    | Disabled chosen: its frame selected for Props             | Inspect           |
 | `design/canvas/stage/component-set/toolbar`           | Canvas stage (variant)    | The Toolbar's variant set with its nested components      | None              |
 | `design/canvas/stage/component-set/toolbar-primary`   | Canvas stage (variant)    | The Toolbar's first Action selected on Toolbar · Light    | None              |
 | `design/canvas/stage/component-set/toolbar-secondary` | Canvas stage (variant)    | The Toolbar's second Action selected on Toolbar · Light   | None              |

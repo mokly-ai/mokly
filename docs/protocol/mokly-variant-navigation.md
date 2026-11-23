@@ -35,11 +35,14 @@ entry.
 On the component page, Inspect's
 [Variants list](./mokly-component-inspector-design.md#inspect) chooses among
 sibling variant entries. There is no variant query parameter. If a comparison
-mode is selected, navigation to a sibling keeps that mode and applies it to the
-sibling's eligible views. The workspace reads this single comparison-mode
-state: Props stay read-only and highlighting stays unavailable until the mode
-returns to Current. Late results for an earlier sibling cannot replace the
-selected entry.
+mode is selected, a move between the entries of one variant set keeps that mode
+and, for every [compared row](./mokly-selected-comparisons.md), its comparison,
+its pending work and its presented documents, because the canvas keeps the same
+rows. The workspace reads this single comparison-mode state: Props stay
+read-only and highlighting stays unavailable until the mode returns to Current.
+Navigation to another section cancels every row's pending work and discards its
+comparison, and a late result for a row of the earlier section cannot replace
+the new section.
 
 ## Changes Rows
 

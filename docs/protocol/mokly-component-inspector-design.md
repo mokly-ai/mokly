@@ -9,12 +9,14 @@ canvas while an entry is selected. The
 [canvas stage](./mokly-shell-canvas-stage.md#canvas) owns its placement and
 its size, and the [compact layout](./mokly-shell-device-chrome.md#compact-layout)
 owns its bottom sheet. Its head is a strip of text tabs: Inspect, and Changes.
-Changes shows when the Changes filter lists the entry, or when the entry's
-comparison is eligible under the
-[Changes screen controls](./mokly-changes-controls.md#screen-controls).
-Decision: an eligible entry that the Changes filter does not list, such as a
-screen that only a changed component affects, also has Changes, because its
-comparison lives in that tab.
+Changes shows when the Changes filter lists the entry, or when the canvas
+offers the compare modes under the
+[Changes screen controls](./mokly-changes-controls.md#screen-controls), as a
+variant set does while any shown row compares. Decision: an entry whose canvas
+offers the compare modes but that the Changes filter does not list, such as a
+screen that only a changed component affects or an unmodified parent whose
+saved variant changed, also has Changes, because its comparison lives in that
+tab.
 
 The selected tab is ink at weight 600 over a 2px signal rule on the head's
 hairline. Every label keeps the width of its bold form, so a change of tab

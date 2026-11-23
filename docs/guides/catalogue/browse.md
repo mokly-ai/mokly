@@ -108,7 +108,8 @@ light document, labelled Light only. A page keeps its one light document.
 
 Below 900px wide, the canvas shows one frame at a time. The bar at the top
 names the entry, and its Frame picker chooses the frame. A screen opens on its
-Mobile · Light frame, and a pinch zooms. The dock at the bottom holds
+Mobile frame in the appearance's scheme, such as Mobile · Dark in a Dark
+appearance, and a pinch zooms. The dock at the bottom holds
 Catalogue, the right panel's current tab, Inspect or Changes, and Fit.
 Catalogue and the tab each open their panel as a sheet from the bottom of the
 screen, and the sheet's grabber expands it. While you have an element
@@ -116,8 +117,9 @@ selected, a pill above the dock names it and opens the panel.
 
 ## Inspect and Changes
 
-The right panel holds the Inspect tab and, when Changes lists the entry or the
-entry can be compared, the Changes tab. Inspect describes the entry and the
+The right panel holds the Inspect tab. The Changes tab appears when Changes
+lists the entry or a shown view can compare. In a component's variant set,
+that view can be in any shown row. Inspect describes the entry and the
 element you select on a frame, as [Details](/docs/catalogue/details/)
 explains. Changes holds the entry's comparison with your base, as
 [Changes](/docs/catalogue/changes/) explains. The selected tab also sets what

@@ -20,6 +20,7 @@ import {
 } from "react";
 
 import type { CanvasFramePlan } from "./canvas_frames.js";
+import { listenForShellKeys } from "./canvas_input.js";
 import {
   canvasSelectionReducer,
   NO_SELECTION,
@@ -98,8 +99,11 @@ export function useCanvasSelection({
     savedVariant: boolean;
     scheme: "dark" | "light";
   };
-  /** Whether a click on a frame selects, as it does in Inspect. */
-  selecting: boolean;
+  /**
+   * Whether a click on a frame selects, as it does in Inspect, asked when the
+   * click or the Escape key arrives.
+   */
+  selecting: () => boolean;
   /** Whether the canvas holds a variant set. */
   set: boolean;
   state: CanvasSelectionState;
@@ -164,7 +168,7 @@ export function useCanvasSelection({
       clicked = false;
       const frame = sessionFrame(current.sessions, session);
       const pick = registry.inspection.getSnapshot().active?.kind === "pick";
-      if (!frame || !current.selecting || pick) return;
+      if (!frame || !current.selecting() || pick) return;
       click = { before: current.state, session };
       clicked = true;
       dispatch({
@@ -179,29 +183,43 @@ export function useCanvasSelection({
   // Escape clears the selection, unless a text field or another part of
   // the shell took it: Highlight components and a host pick end first. It
   // acts on the whole document of a standalone shell and only on an
-  // embedded root, so the host page keeps its own keys.
+  // embedded root, so the host page keeps its own keys. A frame's document
+  // forwards an Escape that neither its own listeners nor its text fields
+  // took, and that Escape clears under the same rule.
   const root = useShellRoot()?.elements.root;
   const embedded = store.context.embedded ?? false;
   useEffect(() => {
     const element = root?.current;
     if (!element) return;
     const target: EventTarget = embedded ? element : element.ownerDocument;
-    const escape = (event: Event) => {
+    const clear = () => {
       const active = registry?.inspection.getSnapshot().active?.kind;
       if (
-        (event as KeyboardEvent).key !== "Escape" ||
-        event.defaultPrevented ||
         active === "workspace" ||
         active === "pick" ||
-        inTextField(event.target) ||
-        !latest.current.selecting ||
+        !latest.current.selecting() ||
         !latest.current.state.selected
       )
         return;
       dispatch({ type: "clear" });
     };
+    const escape = (event: Event) => {
+      if (
+        (event as KeyboardEvent).key !== "Escape" ||
+        event.defaultPrevented ||
+        inTextField(event.target)
+      )
+        return;
+      clear();
+    };
     target.addEventListener("keydown", escape);
-    return () => target.removeEventListener("keydown", escape);
+    const stop = listenForShellKeys(target, (key) => {
+      if (key === "escape") clear();
+    });
+    return () => {
+      target.removeEventListener("keydown", escape);
+      stop();
+    };
   }, [embedded, registry, root]);
 
   return useMemo(
