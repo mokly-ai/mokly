@@ -29,8 +29,8 @@
     picture form gets it too unless a rule limits the feedback to links and
     buttons.
   - The class has been fixed one picture at a time. Commit `e4c6d2c8` and
-    commit `14c6f9ec` gave five pictures, such as `span.mbk-menu` and
-    `span.mbk-pathchip`, the default cursor. On 2026-10-30 the branch
+    commit `14c6f9ec` gave five pictures, such as `span.mbk-pathchip`, the
+    default cursor. The bar's menu picture left with the menu in Milestone 11. On 2026-10-30 the branch
     `calummoore/mokly-ui-controls` limited the tag chip's and the tag
     button's pointer and hover fill to `:is(a, button)`.
   - Chrome confirms two pictures that still act like controls:

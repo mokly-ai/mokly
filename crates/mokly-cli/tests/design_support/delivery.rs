@@ -70,17 +70,10 @@ pub fn seed(root: &Path) {
 }
 
 pub fn run(root: &Path, session: &Session) {
-    let own: Vec<_> = [
-        "",
-        "/auto-appearance",
-        "/default",
-        "/drawer-open",
-        "/search",
-        "/tag-picker",
-    ]
-    .iter()
-    .map(|suffix| format!("{TOP}{suffix}"))
-    .collect();
+    let own: Vec<_> = ["", "/auto-appearance", "/default", "/search", "/tag-picker"]
+        .iter()
+        .map(|suffix| format!("{TOP}{suffix}"))
+        .collect();
     let edits: Vec<_> = CASES
         .iter()
         .map(|(_, path, selector)| {
