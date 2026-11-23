@@ -7,9 +7,10 @@
 
 import { expect } from "@playwright/test";
 
-import { awaitRoutedDetail } from "./comparison_ui.js";
+import { awaitRoutedDetail, expectNoCompareModes } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import { selectedRequests } from "./serve_comparison_ui.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 test("a light-only screen deep link keeps effective Light evidence through a background update", async ({
   page,
@@ -18,7 +19,8 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
   const stable = changes.paths.unchanged;
   const requests = selectedRequests(page);
   await page.goto(`/view/${stable}/?scheme=dark&comparison=side`);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
+  const head = page.locator('[data-inspect-section="details"]');
+  await expect(head.locator("h2")).toHaveText("Stable screen");
 
   await changes.edit(
     `specs/${stable}.screen.html`,
@@ -37,17 +39,14 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
     },
   );
 
-  const details = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await details.getAttribute("aria-selected")) !== "true")
-    await details.click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Details", exact: true }),
-  ).toContainText("The stable screen after review");
+  // Inspect's head shows the entry's description.
+  await openPanelTab(page, "Inspect");
+  await expect(head).toContainText("The stable screen after review");
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
   await awaitRoutedDetail(page, stable);
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+  await expectNoCompareModes(page);
   // The hidden band keeps Current as its only selection.
   await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
     "aria-pressed",
