@@ -1,6 +1,6 @@
 # Component Inspector Design
 
-Status: The Inspect and Changes tabs of the right panel, with Inspect's sections and its box model, are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
+Status: The Inspect tab of the right panel, with its sections and its box model, is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
 
 ## Right Panel
 

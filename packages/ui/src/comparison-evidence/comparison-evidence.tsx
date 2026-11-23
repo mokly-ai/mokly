@@ -1,6 +1,7 @@
 /**
  * The comparison facts in an entry's Details, in the designs' order: the
- * heading and the branch point, the path of a moved entry's earlier side, one
+ * heading and the branch point, the outcome line of each compared frame, the
+ * path of a moved entry's earlier side, one
  * sentence for each reason, a use case's changed steps, the saved variant and
  * whether its saved props stayed the same, the changed and excluded
  * stylesheets, the paired prop values, the changed components that the entry
@@ -67,6 +68,7 @@ export function ComparisonEvidence({
   inputChanges = [],
   mark,
   noChanges,
+  outcomes = [],
   previousPath,
   reasons = [],
   savedProps,
@@ -94,6 +96,11 @@ export function ComparisonEvidence({
   mark: DataAttribute;
   /** The line of an entry without changes. */
   noChanges?: string | undefined;
+  /**
+   * The outcome line of each compared frame of a loaded comparison, such as
+   * `Desktop · Light · Screen changed`, in a list named Compared frames.
+   */
+  outcomes?: readonly string[] | undefined;
   /** The path of a moved entry's earlier side. */
   previousPath?: string | undefined;
   reasons?: readonly EvidenceReason[] | undefined;
@@ -116,6 +123,18 @@ export function ComparisonEvidence({
       {!hidden ? (
         <>
           <ComparisonHeading base={base} />
+          {outcomes.length ? (
+            <ul
+              aria-label="Compared frames"
+              className="mbk-comparison-outcomes mbk-reset"
+            >
+              {outcomes.map((outcome) => (
+                <li className="mbk-reset" key={outcome}>
+                  {outcome}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {/* String expressions keep the text nodes that Prettier would join. */}
           {previousPath ? (
             <p className="mbk-reset">

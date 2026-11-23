@@ -125,10 +125,11 @@ version and the line of an added or a removed entry; Compare, the
 `CompareModes` tiles with their icons, names and keys, the frame chips of Side
 by side, Scroll together and Refresh; and the comparison details, whose
 evidence brings its own heading. An absent part draws nothing. The slot's
-container carries no reset class, because its content stays the host's: the
-panel draws no container for an absent slot, hides a container that the
-host's component leaves empty, and gives the container to `slotRef`. The host
-holds the mode, the compared frame and the switch, and binds the mode keys.
+container is the `changesStart` container of `HostSlot`, which carries no
+reset class, because its content stays the host's: the panel draws no
+container for an absent slot, hides a container that the host's component
+leaves empty, and gives the container to `slotRef`. The host holds the mode,
+the compared frame and the switch, and binds the mode keys.
 
 A static mockup draws each part of the Changes tab without a script: a step, a
 tile or a chip with an address is a link, and a step without one is a picture
@@ -215,7 +216,8 @@ of edited props over the preview. `PropsPanel`, `UsageList`, and
 `InstanceTree` draw the content of Props, Usage, and Components from plain
 records,
 and `ComparisonEvidence` draws the comparison facts of an entry's Details in
-the designs' order. The host supplies each text that it derives from the
+the designs' order, with the outcome line of each compared frame in a list
+named Compared frames directly after the heading. The host supplies each text that it derives from the
 catalogue, and the controls' wording, which the design catalogue shares.
 `TextButton` is the text button of these panels.
 
@@ -705,8 +707,9 @@ override the desktop layout rules.
   "3 instances"
 - [`src/comparison-evidence/comparison-evidence.tsx`](./src/comparison-evidence/comparison-evidence.tsx)
   — `ComparisonEvidence`: the comparison facts of Details in the designs'
-  order, with a use case's changed steps, the saved variant's rows, the
-  heading, and the files of `evidence-files.tsx`
+  order, with the outcome lines of the compared frames, a use case's changed
+  steps, the saved variant's rows, the heading, and the files of
+  `evidence-files.tsx`
 - [`src/changes-panel/changes-panel.tsx`](./src/changes-panel/changes-panel.tsx)
   — `ChangesPanel`: the Changes tab's parts in their order, the `changesStart`
   host slot, and the sections of Compared, Compare, and the comparison details
@@ -831,7 +834,9 @@ override the desktop layout rules.
 - [`src/embedded-layout/embedded-layout.tsx`](./src/embedded-layout/embedded-layout.tsx)
   — `EmbeddedLayout`, an embedded root with the host slots, whose top-bar
   containers it hands to the top bar, and the stage overlay of
-  `host-slot.tsx`, and `MarkerLayer`, the host's markers
+  `host-slot.tsx`, and `MarkerLayer`, the host's markers. `HostSlot` of
+  `host-slot.tsx` names each slot's container, the Changes tab's
+  `changesStart` included
 - [`src/workspace-layout/workspace-layout.tsx`](./src/workspace-layout/workspace-layout.tsx)
   — `WorkspaceLayout`: the preview on the canvas with the entry bar and the
   right panel's tabs, or the header, the variant bar, and the preview beside

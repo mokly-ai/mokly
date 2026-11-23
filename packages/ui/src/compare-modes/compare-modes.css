@@ -207,6 +207,9 @@ button.mbk-compare-chip {
   background: var(--cv-surface);
 }
 
+/* The knob is a 12px disc drawn by its 6px border, which forced colours
+   keep, so its place still shows whether the switch is on without opting out
+   of the reader's colours. */
 .mbk-compare-switch-track::after {
   content: "";
   position: absolute;
@@ -214,8 +217,8 @@ button.mbk-compare-chip {
   left: 2px;
   width: 12px;
   height: 12px;
+  border: 6px solid var(--cv-border-strong);
   border-radius: 50%;
-  background: var(--cv-border-strong);
 }
 
 .mbk-compare-switch > input:checked + .mbk-compare-switch-track {
@@ -224,7 +227,7 @@ button.mbk-compare-chip {
 }
 
 .mbk-compare-switch > input:checked + .mbk-compare-switch-track::after {
-  background: var(--cv-surface);
+  border-color: var(--cv-surface);
   transform: translateX(14px);
 }
 
@@ -233,19 +236,12 @@ button.mbk-compare-chip {
   box-shadow: var(--mbk-focus-glow);
 }
 
-/* Forced colours drop the glow and every fill, so there the track takes the
-   system outline, and the knob keeps the system text colour, so its place
-   still shows whether the switch is on. */
+/* Forced colours drop the glow, so there the track takes the system
+   outline. */
 @media (forced-colors: active) {
   .mbk-compare-switch > input:focus-visible + .mbk-compare-switch-track {
     outline: 2px solid Highlight;
     outline-offset: 2px;
-  }
-
-  .mbk-compare-switch-track::after,
-  .mbk-compare-switch > input:checked + .mbk-compare-switch-track::after {
-    forced-color-adjust: none;
-    background: CanvasText;
   }
 }
 

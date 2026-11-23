@@ -240,3 +240,47 @@ test("a use case's changed steps follow the reason sentences, each a link with i
       '<p class="mbk-reset">Changes to these files may affect this screen:</p><ul class="mbk-evidence-files mbk-reset"><li class="mbk-reset">styles/a.css</li></ul></section>',
   );
 });
+
+test("the outcome line of each compared frame is a list named Compared frames, directly after the heading", () => {
+  render(
+    <ComparisonEvidence
+      base=""
+      mark="data-workspace-evidence"
+      outcomes={[
+        "Desktop · Light · Screen changed",
+        "Mobile · Dark · No changes to this screen · Light only",
+      ]}
+      previousPath="old/place"
+      reasons={[{ key: "material/0", text: "Rendered content changed." }]}
+    />,
+  );
+  const list = screen.getByRole("list", { name: "Compared frames" });
+  assert.deepEqual(
+    [...list.children].map((item) => item.textContent),
+    [
+      "Desktop · Light · Screen changed",
+      "Mobile · Dark · No changes to this screen · Light only",
+    ],
+  );
+  assert.equal(list.previousElementSibling?.textContent, "Comparison details");
+  assert.equal(
+    list.nextElementSibling?.textContent,
+    "The previous version is at old/place, where it was before the move.",
+  );
+});
+
+test("evidence without outcome lines draws no Compared frames list", () => {
+  render(
+    <ComparisonEvidence
+      base="main"
+      mark="data-workspace-evidence"
+      outcomes={[]}
+    />,
+  );
+  assert.deepEqual(
+    screen
+      .queryAllByRole("list", { name: "Compared frames" })
+      .map((list) => list.outerHTML),
+    [],
+  );
+});

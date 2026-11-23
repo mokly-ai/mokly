@@ -38,11 +38,15 @@
    heading in the section's head type and each sentence in the secondary
    text, 8px above each paragraph and list, the sentences and lists of a
    file's item included, and 14px between a list and the paragraph after
-   it. */
-.mbk-changes-details > .mbk-comparison-evidence {
+   it. The section's own padding and hairline frame the evidence, so the
+   evidence draws neither: this rule weighs four classes, which beats the
+   right panel's rule that pads the evidence of Inspect and rules it off. */
+.mbk-changes
+  > .mbk-changes-section.mbk-changes-details
+  > .mbk-comparison-evidence {
   margin: 0;
   padding: 0;
-  border-top: 0;
+  border: 0;
 }
 
 .mbk-changes-details > .mbk-comparison-evidence > h3 {
@@ -53,6 +57,13 @@
 }
 
 .mbk-changes-details > .mbk-comparison-evidence p {
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* The outcome line of each compared frame reads as the sentences do. */
+.mbk-changes-details > .mbk-comparison-evidence .mbk-comparison-outcomes {
   color: var(--cv-text-secondary);
   font-size: 12px;
   line-height: 1.5;

@@ -1,7 +1,5 @@
 # Changes Screen Controls
 
-Status: The Changes tab of the right panel, with its stepper, its host slot and its five mode tiles, and the diffs in the frames of the canvas are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 Continuation of [Changes serving](./mokly-changes-serving.md).
 
 ## Screen controls
@@ -133,7 +131,10 @@ The compare modes are tiles in the order of their keys: Current (1), Side by
 side (2), Overlay (3), Difference (4) and Swipe (5). Each tile shows its icon,
 its name and its key, and the tile of the shown mode is marked current. While
 Changes is the selected tab, each key selects an offered mode unless focus is
-in a text field. Side by side adds a chip for each frame, such as
+in a text field. The frames of the canvas show the chosen mode only while
+Changes is the selected tab; Inspect shows their current versions, and the
+chosen mode and its loaded comparison stay, so a return to Changes shows that
+mode without a new load. Side by side adds a chip for each frame, such as
 Desktop · Light, and the chosen chip names the compared frame. Every mode
 other than Current adds the Scroll together switch and Refresh. The
 [comparison panes](./mokly-comparison-panes.md#layout) define what each mode

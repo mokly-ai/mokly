@@ -33,6 +33,13 @@ Decision: a click in Changes selects nothing, not an instance as in Inspect,
 because the selected tab sets what a click does and Changes compares. Its
 comparison documents have no inspection either.
 
+The canvas shows the chosen compare mode only while Changes is the selected
+tab. In Inspect the frames show their current versions, and the chosen mode
+and its loaded comparison stay, so a return to Changes shows that mode
+without a new load. Decision: Inspect shows the current frames, not the
+chosen compare mode, because a click in Inspect selects an instance of a
+current frame, and comparison documents have no inspection.
+
 While a host pick is active, a click answers the pick under the
 [selection contract](./mokly-viewer-selection.md#selection-events-and-imperative-use)
 in either tab, and the canvas selection stays as it is.

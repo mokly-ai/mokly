@@ -9,6 +9,8 @@
 
 import type { ReactNode, Ref } from "react";
 
+import { HostSlot } from "../embedded-layout/host-slot.js";
+
 /** Whether a part draws something: React renders nothing for the others. */
 function present(part: ReactNode): boolean {
   return (
@@ -36,10 +38,10 @@ function PanelSection({
 }
 
 /**
- * The host slot's container carries no reset class, because its content
- * stays the host's. The panel draws no container for an absent slot, and
- * its stylesheet hides a container that the host's own component leaves
- * empty.
+ * The host slot is the `changesStart` container of `HostSlot`, which carries
+ * no reset class, because its content stays the host's. The panel draws no
+ * container for an absent slot, and its stylesheet hides a container that
+ * the host's own component leaves empty.
  */
 export function ChangesPanel({
   compared,
@@ -66,9 +68,9 @@ export function ChangesPanel({
     <div className="mbk-changes mbk-reset">
       {present(stepper) ? stepper : null}
       {present(slot) ? (
-        <div data-mokly-slot="changesStart" ref={slotRef}>
+        <HostSlot name="changesStart" ref={slotRef}>
           {slot}
-        </div>
+        </HostSlot>
       ) : null}
       {present(compared) ? (
         <PanelSection title="Compared">{compared}</PanelSection>

@@ -1,7 +1,5 @@
 # CSS Evidence Presentation
 
-Status: The Compared rail of the Changes tab in place of the branch-point sentence is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
-
 ## Shell Derivation
 
 The entry detail of the [shell delivery contract](./mokly-shell-delivery.md)
@@ -48,10 +46,13 @@ excluded files, so no view merge applies. The grouping is
 the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
 
-Each compared view of a loaded comparison has one view heading: “Mobile” or
-“Desktop”, then “ · ” and the view's label, for example “Desktop · Screen
-changed”. A Light view that stands in for a Dark selection adds “ · Light
-only”.
+Each compared frame of a loaded comparison has one view heading, a line of
+the comparison details in the Changes tab: the frame's viewport, or its
+variant in a variant set, then “ · ” and its scheme, then “ · ” and its view's
+label, for example “Desktop · Light · Screen changed”. A Light view that
+stands in for the frame's Dark view adds “ · Light only”. Decision: the
+heading names the frame's scheme, not its viewport alone, because the canvas
+shows both schemes at once.
 
 `ReviewState` has no resource-only variant. A view says “Styles this screen uses
 changed” when its state is `changed`, its review entry has a reason, every

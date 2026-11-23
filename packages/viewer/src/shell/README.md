@@ -237,7 +237,10 @@ mount hooks, the sources, the read-only guard, and the scroll controllers.
 region of `@mokly/ui/shell-layout`, `workspace.tsx` lays out the workspace
 with `@mokly/ui/workspace-layout`, and `embedded_viewer.tsx` lays out an
 embedded root and its host slots with `@mokly/ui/embedded-layout`, which
-places each slot's content and never reads it. `right_panel.tsx` renders
+places each slot's content and never reads it. `embedded_viewer.tsx` gives
+the `changesStart` content to the right panel through the provider of
+`changes_start.tsx`, and the Changes tab places it; the standalone shell has
+no slots. `right_panel.tsx` renders
 the right panel with `@mokly/ui/floating-panel`, and `sheets.tsx` the compact
 layout's dock with `@mokly/ui/canvas-dock`, and the catalogue's sheet state
 that both roots pass to their layout, and the views render the compact layout's entry bar
@@ -407,9 +410,9 @@ it. The catalogue's width is the reader's choice or the starting width of
 `canvas_layout.ts`, 252px or 224px below the panel step, and a double click
 on the separator forgets the choice. `nav.tsx` passes the index's `base` to
 the catalogue's foot. A target view puts its tabs in the right panel of
-`right_panel.tsx`: Inspect, and Changes where the entry has it, which holds
-a workspace's comparison band and the comparison details; `diffs.tsx` gives
-the band to the panel, and `comparison_canvas.tsx` draws the compare on the
+`right_panel.tsx`: Inspect, and Changes where the entry has it.
+`workspace_panel.tsx` and `target_panel.tsx` give an entry's Changes tab to
+`changes_tab.tsx`, and `comparison_canvas.tsx` draws the compare on the
 canvas. The dock's Fit refits the canvas that `canvas_stage.tsx` registers in
 `root_context.tsx` while it shows, also during a compare, and it hides while
 the state of a comparison covers the canvas.
@@ -534,8 +537,8 @@ the component.
 `evidence_details.ts` builds the files and exclusions records, so
 `workspace_evidence.tsx` and `page_evidence.tsx` pass the same facts to
 `@mokly/ui/comparison-evidence`, which draws the shared heading and block.
-`workspace_evidence.tsx` words each reason and decides which facts show, and
-the package follows the designs' order: the reason
+`reason_sentences.ts` words each reason, `workspace_evidence.tsx` decides
+which facts show, and the package follows the designs' order: the reason
 sentences right after the heading and a moved entry's earlier side, then the
 files and exclusions, the paired prop values, and the changed components. The
 ignored content, the shared-component sentence, the saved props block, which no
@@ -552,7 +555,9 @@ when its usage holds a changed component that the detail names:
 the branch point only when its name is known; an empty or blank name leaves the
 heading alone. An index without a
 `base` has no name, because `shellContext` supplies an empty one, so its
-comparison details keep the rest of the evidence without that sentence. `workspace_data.ts`
+comparison details keep the rest of the evidence without that sentence. The
+comparison details of a Changes tab leave the sentence out, because the
+Compared rail names the branch point. `workspace_data.ts`
 passes the shell's known name to `publicWorkspace`, so a workspace keeps the
 sentence while its entry detail loads. The workspace projects the selected
 views' `resourceEvidence` from the held entry detail through
@@ -562,7 +567,12 @@ from the index record and its evidence record from the page's entry detail,
 and `page_evidence.tsx` passes them with the page wording to
 `@mokly/ui/comparison-evidence` in the page's Changes tab, or in its Inspect
 while the Changes filter does not list the page. `views.tsx`
-shows that status beside the page title.
+shows that status beside the page title. In the Changes tab of a use case, a
+Markdown document, or a removed page or document, `target_evidence.tsx`
+gives the sentences of the reasons of the entry's held detail, which
+`public_reasons.ts` keeps for a record that Changes lists, and a use case's
+`Changed step:` lines from `changed_steps.ts`: one for each step whose
+screen a `screen` reason names, by the step's title or else its screen's.
 
 An entry detail that is not held carries `omitted` usage, and no list is
 derived from it. `use_workspace_data.ts` exposes loading until every detail
@@ -695,13 +705,34 @@ must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
 
-`diffs.tsx` owns the comparison band, which `@mokly/ui/comparison-toolbar`
-draws: the mode group with Swipe as the fifth mode, the Scroll together switch
-(a native checkbox with `role="switch"`, shown in every diff mode including
-loading and failure), Refresh, and the outcome line of each compared frame,
-such as `Desktop · Light · Screen changed` (`comparison_outcome.ts`), from
-props and callbacks alone. `comparison_canvas.tsx` draws the compare on the
-canvas, under the
+`changes_tab.tsx` draws the Changes tab of any entry with
+`@mokly/ui/changes-panel`, under the
+[Changes tab contract](../../../../docs/protocol/mokly-changes-controls.md#changes-tab):
+the change stepper of `@mokly/ui/change-stepper`, whose place, count and
+neighbours `change_position.ts` finds among the entries that the Changes
+filter lists, in its order, and whose steps open those entries at their
+catalogue rows' addresses, which name no viewport and no scheme; the
+`changesStart` slot of `changes_start.tsx`, whose container the shell
+registers as a host slot; the Compared rail of `@mokly/ui/compared-rail`,
+with the index's base and the one version of an added or a removed entry;
+then the modes and the details that the caller gives. An entry that the
+Changes filter does not list has no stepper. `compare_modes.tsx` gives a
+screen's or a component's modes to the tab: the offer rule of the
+[screen controls](../../../../docs/protocol/mokly-changes-controls.md#screen-controls),
+every mode for an eligible view, Current alone for a shown status of Added,
+and none otherwise or for a removed screen; the tiles of
+`@mokly/ui/compare-modes` with a chip for each frame that the canvas shows;
+Scroll together of `use_scroll_together.ts`; and Refresh once a comparison
+loaded. While Changes is the selected tab, `compare_mode_keys.ts` binds the
+keys 1 to 5 to the offered modes. The tab's comparison details list the
+outcome line of each compared frame, such as
+`Desktop · Light · Screen changed` (`comparison_outcome.ts`). The canvas
+shows the chosen mode only while Changes is the selected tab: the workspace
+gates the compare with `shown`, and the inspection, the edit previews and
+the frames' selection read that a compare shows only then, so Inspect sees
+the current frames. `comparison_mode.tsx` gives host markers and the host's
+pick the same shown mode, Current while Inspect is selected.
+`comparison_canvas.tsx` draws the compare on the canvas, under the
 [pane layout](../../../../docs/protocol/mokly-comparison-panes.md#layout):
 `workspace_comparison.ts` gives it the frames that compare, from the canvas's
 shown frames (`comparison_rows.ts`; a removed component or variant, which has
@@ -846,8 +877,8 @@ without native navigation, and restores the accepted presentation after any
 later frame navigation. The copy and Retry contract comes from
 [`previews/copy.ts`](../previews/copy.ts).
 `views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
-both drop the comparison band there, while removed component variants keep
-theirs.
+neither offers a compare mode there, while a removed component or variant
+offers every mode.
 `@mokly/ui/empty-state` draws the loading and unavailable states, and the
 note of a missing view keeps the `mbk-preview-note` and `mbk-preview-switch`
 classes of `@mokly/ui/preview-state`, which the design catalogue's
