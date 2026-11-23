@@ -28,7 +28,7 @@ export async function expectReadableBar(viewer: Locator) {
     .or(tag)
     .or(
       viewer.getByTestId(
-        /^viewer-(project|publication|history|share|settings|account|more)$/,
+        /^viewer-(project|publication|history|share|account|more)$/,
       ),
     )
     .filter({ visible: true });
