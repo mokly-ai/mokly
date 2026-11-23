@@ -6,7 +6,9 @@
   the head preload of branch `calummoore/mokly-generation-prefetch` as a
   record and to open no product pull request for it. Updated 2026-11-21 with
   the official result of experiment D and its rejection by the user, from the
-  prototype on branch `calummoore/mokly-edit-critical-path-o9ma`.
+  prototype on branch `calummoore/mokly-edit-critical-path-o9ma`. Updated
+  2026-11-22 with the frame measurement of the viewer live-update work, from
+  the branch `calummoore/mokly-viewer-live-update-lpaj`.
 - **Location:** `crates/mokly-sidecar/src/pool_preparation.rs`
   (`Pool::prepare` and `Pool::restore`), `crates/mokly-sidecar/src/pool_return.rs`
   (`Pool::maintain_return`), `crates/mokly-sidecar/src/pool_head.rs`
@@ -107,6 +109,14 @@
   - Experiment D is not option D of this record. The letter D names the
     experiment there. Option D below is a different approach, and nobody
     measured it.
+  - The frame measurement of 2026-11-22 tested no preload. It measured the
+    frame update of an open view page, on `main` and on the branch of the
+    viewer live-update work. With two head sidecar processes, the one that did
+    not bundle ran `describe` at its first render, in 60 to 101 ms. That
+    render took 130 to 230 ms, and a first render on a warm process took
+    35 to 70 ms. None of the three attempts measured the frame update. The
+    last section of this record, "Frame measurement, 2026-11-22", holds its
+    fixture, results, and outcome.
 - **Problem:** The processes that did not bundle a new head generation still
   prepare it on the critical path of `serve.background`. The two attempts of
   2026-11-19 to prepare it earlier cost as much CPU in the core window, or as
@@ -116,7 +126,9 @@
 - **Impact if no action:** Each edit on mokly-cloud keeps 110 ms to 250 ms of
   preparation on each process that did not bundle, inside `serve.background`.
   That range comes from the 4-sidecar timeline of 2026-11-18. This record
-  holds no isolated measurement of it with two sidecars.
+  holds no isolated measurement of it with two sidecars. The preparation also
+  delays the frame update of an open view page: on 2026-11-22, 6 to 11 of 28
+  frames waited 50 ms or more.
 - **Root question:** How can Serve take the preparation of a new head
   generation off the critical path of `serve.background`, without a slower
   core window, a slower later bundle, or more peak memory?
@@ -177,6 +189,10 @@
     and [serve-watch-candidate-plan-cost.md](./serve-watch-candidate-plan-cost.md)
     record experiments H and C of the same day. Both stopped without a
     candidate. Experiment C is not option C of this record.
+  - [serve-pass-requested-views-first.md](./serve-pass-requested-views-first.md)
+    keeps the requested-views-first order of the background pass, which needs
+    the second visible frame document on a warm process. A preload of this
+    record is one way to give it one.
 - **Recommendation:** A. The first recommendation was B, measured once.
   Experiment D measured a bounded form of B on 2026-11-21. It missed its speed
   and memory bars, and the user rejected it. Its result rejects the assumption
@@ -185,7 +201,9 @@
 - **Action:** No action. The rejection of experiment D on 2026-11-21 is
   settled, and no current decision waits for the user. A later proposal that
   differs materially from these three attempts needs new evidence and its own
-  scope approval.
+  scope approval. The frame measurement of 2026-11-22 is new evidence, but the
+  performance orchestrator kept option A on 2026-11-22, and only the user can
+  reopen the preload.
 
 The code of both attempts is on the branch
 [`calummoore/mokly-generation-prefetch`](https://github.com/mokly-ai/mokly/tree/1e01658c0a6c5420e340364f09f8aff87fae1c41),
@@ -370,3 +388,84 @@ These partial checks do not establish full product correctness or CI acceptance.
 - The prototype branch `calummoore/mokly-edit-critical-path-o9ma` at
   `fd3b3b12679a791679640053bb341b58956c0912` stays as evidence only. Nothing
   on it is in force, and it is not for merging.
+
+## Frame measurement, 2026-11-22
+
+On 2026-11-22, the viewer live-update work measured how soon the frames of an
+open view page show an edit. It tested no preload. Its two arms were `main` at
+`3362e250d` and the branch `calummoore/mokly-viewer-live-update-lpaj`, with
+the core of commit `529039532`. That commit compresses the JSON answers of
+Serve, adds validators to resources, and starts requested views first in the
+background pass. A later commit of the branch removed the requested-views-first
+order again.
+
+### Fixture and probe
+
+- The catalogue is the `mokly-ai/mokly-cloud` repository at commit
+  `194fdb78`, on 4 vCPU. Serve runs with `--base HEAD`.
+- The edit is the official edit of experiment D: the `title` text on line 35
+  of `docs/mockups/src/screens/product/settings/slug-editor.tsx`. Each edit
+  renders 44 changed documents in `serve.background`.
+- Two head sidecar processes serve the renders. The second process is the
+  head process that did not bundle. After the rebuild, it is cold: it does not
+  hold the new head generation yet. A warm process holds it already.
+- The browser probe opens `/view/product/settings/project/slug/`, the view
+  page of the first changed entry in catalogue order. A view page shows the
+  views of one entry in frames. This page shows two frames, mobile and
+  desktop. Each frame loads one frame document.
+- An update event is the message of the Serve event stream for one
+  publication.
+
+### Timed pair
+
+- One session for each arm ran with `--debug-timings`. These times come from
+  warm edits 2 to 4 of each session.
+- In every edit of both arms, the bundling process ran `describe` during the
+  rebuild, in 45 to 54 ms. The second process ran `describe` at its first
+  render after the rebuild, in 60 to 101 ms.
+- The timings have no span for `restoreGeneration` or `cssModules`. So this
+  measurement gives no separate time for them.
+- The `render.document` span of the first render on the second process after
+  the rebuild took 130 to 230 ms. The first renders on a warm process took
+  35 to 70 ms.
+- The view page requested its two frame documents about 30 to 115 ms after
+  the first update event of the edit. A frame document whose render still
+  runs waits for that render.
+
+### Untimed series
+
+The untimed series ran without `--debug-timings`, with the arms interleaved.
+Each arm had 4 warm sessions of 4 edits and 2 cold sessions of 2 edits. The
+wait of a frame document is the time from its sent request to its response
+headers.
+
+| Measure                                              | `main`  | Branch   |
+| ---------------------------------------------------- | ------- | -------- |
+| Frame documents that waited 50 ms or more            | 6 of 28 | 11 of 28 |
+| First frame paint after the first update event, mean | 184 ms  | 196 ms   |
+| Last frame paint after the first update event, mean  | 275 ms  | 296 ms   |
+
+- The 28 frame documents of each arm come from 14 edits: edits 2 to 4 of the
+  warm sessions and edit 2 of the cold sessions. The longest wait was 185 ms.
+- The paint times use the Chrome clock. Their means cover the 12 edits 2 to 4
+  of the warm sessions.
+- So the last frame paint came about 90 to 100 ms after the first frame paint,
+  on average.
+
+### Outcome for this record
+
+- None of the three attempts of this record measured the frame update of an
+  open view page. They measured `serve.background`, `watch.action`, the
+  bundle, memory, and the time from an edit to Changes ready.
+- The branch also starts requested views first in the background pass. In
+  this probe, that rule does not avoid the cold second process. The entry that
+  the probe opens is already the first changed entry in catalogue order. So
+  the pass starts the four documents of the entry first on both arms. One of
+  the first renders always reaches the cold second process.
+- On 2026-11-22, the performance orchestrator decided that a load of the new
+  generation into idle head processes after each head bundle is the head
+  preload of this record. The three attempts of that preload missed their
+  bars, and the user rejected the third. Only the user can reopen it.
+- The orchestrator called this measurement new evidence, because the three
+  attempts measured published Changes, not the frame. Option A stays the
+  outcome for now.

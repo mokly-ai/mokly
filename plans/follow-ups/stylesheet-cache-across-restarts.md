@@ -108,6 +108,11 @@
     copy too.
   - [postcss-request-order-varies.md](./postcss-request-order-varies.md):
     the cumulative read evidence of a record depends on request order.
+  - [rebuild-rehashes-unchanged-resources.md](./rebuild-rehashes-unchanged-resources.md):
+    its fix makes the versioned stylesheet artifact of the graph the common
+    source of the stylesheet bytes and digest for Serve, build, and comparison
+    reads, and it can reach `crates/mokly-render/src/stylesheet_store.rs`.
+    That is the store of this item, so design the two changes together.
 - **Recommendation:** B, before any store code. Only a proven boundary can
   admit a PostCSS record, and the study is the smallest step that shows
   whether one exists.
