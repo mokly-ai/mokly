@@ -19,23 +19,27 @@ export type StylesMode = Extract<CompareMode, "current" | "side-by-side">;
  * The Changes tab of Welcome on a styles branch, where it is the one
  * change: the stepper, whose steps are both disabled; Compared; the compare
  * modes in the shown mode, with the compared frame of Side by side; and the
- * comparison details. Welcome's only reason is the changed stylesheet,
- * which reads only through the files, so no reason sentence leads them. No
- * artboard shows Welcome in another mode with the same catalogue filter, so
- * the other tiles and frame chips are pictures. The panel opens scrolled to
- * the comparison details.
+ * comparison details, which list each compared frame's outcome in a loaded
+ * comparison. Welcome's only reason is the changed stylesheet, which reads
+ * only through the files, so no reason sentence leads them. No artboard
+ * shows Welcome in another mode with the same catalogue filter, so the other
+ * tiles and frame chips are pictures. The panel opens scrolled to the
+ * comparison details.
  */
 export function StylesChanges({
   design,
   facts,
   frame,
   mode,
+  outcomes,
 }: {
   /** The artboard that renders the tab. */
   design: CanvasDestination;
   facts: EvidenceFacts;
   frame?: CompareFrame | undefined;
   mode: StylesMode;
+  /** The outcome line of each compared frame, in a mode other than Current. */
+  outcomes?: readonly string[] | undefined;
 }) {
   return (
     <>
@@ -68,6 +72,7 @@ export function StylesChanges({
         files={facts.files}
         ignored={facts.ignored}
         initial
+        outcomes={outcomes}
         reasons={["dependency"]}
       />
     </>

@@ -207,7 +207,10 @@ line, usage row, and tree row reads that record.
 The Changes tab draws the stepper, then Compared, the version before and
 the current version on a rail, then the compare modes, and the shipped
 comparison evidence of today's inspector, whose base sentence the rail
-replaces. The compare modes apply to the frames: Overlay and Difference
+replaces. In a mode other than Current, the evidence starts with the outcome
+line of each compared frame, such as `Desktop · Light · Screen changed`,
+which `../canvas/parts/frame_outcomes.ts` words from the frames of the
+stage. The compare modes apply to the frames: Overlay and Difference
 stack both versions in each frame in the shipped layers, Swipe splits each
 frame at one divider, and Side by side shows the compared frame's two
 versions next to each other, while the stage holds every frame's pair, so

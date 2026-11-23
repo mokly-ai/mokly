@@ -7,7 +7,9 @@ import {
 import { REMOVED_SCREENS } from "../../parts/nav_data.js";
 import { COMPARISON_VIEW } from "../parts/changes_sketches.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
 import { canvasChangesMetadata } from "../parts/metadata.js";
+import { useOpeningFrame } from "../parts/picked_frames.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
@@ -31,9 +33,11 @@ type MovedState = "changes" | "inspect";
  * `Invoice · Moved` selected. On the Changes tab, Overlay compares every
  * frame with the version at its previous path, and the rows of Welcome and
  * Details keep the tab. Inspect keeps the filter, and the rows of the
- * Example tour and Farewell keep the Inspect tab. On a phone, the Changes
- * tab shows the one frame with the overlay, and Inspect opens the panel
- * sheet.
+ * Example tour and Farewell keep the Inspect tab. Overlay's comparison
+ * details list the outcome of each compared frame: both Light frames on a
+ * desktop, and on a phone the one frame that it shows. On a phone, the
+ * Changes tab shows the one frame with the overlay, and Inspect opens the
+ * panel sheet.
  */
 function Moved({
   state,
@@ -43,6 +47,11 @@ function Moved({
   viewport: ArtboardViewport;
 }) {
   const changes = state === "changes";
+  const picked = useOpeningFrame(invoiceFrames());
+  const outcomes = frameOutcomes(invoiceFrames(), VIEW_OUTCOMES.screenChanged, {
+    picked,
+    viewport,
+  });
   return (
     <CanvasShell
       catalogue={{
@@ -61,7 +70,9 @@ function Moved({
       compactZoom={FITS.phone}
       design={changes ? OUTCOME_PAGES.moved : OUTCOME_PAGES.movedInspect}
       entry={INVOICE}
-      panel={changes ? <InvoiceChanges /> : <InvoiceInspect />}
+      panel={
+        changes ? <InvoiceChanges outcomes={outcomes} /> : <InvoiceInspect />
+      }
       sheet={changes ? undefined : "panel"}
       tab={state}
       viewport={viewport}

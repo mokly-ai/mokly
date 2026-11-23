@@ -9,6 +9,7 @@ import {
 } from "./changes_sketches.js";
 import { CANVAS_PAGES, WELCOME_MODES } from "./destinations.js";
 import { CANVAS_ENTRIES } from "./entries.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "./frame_outcomes.js";
 import { useOpeningFrame } from "./picked_frames.js";
 import { CanvasShell } from "./shell.js";
 import { FITS, WELCOME_VIEW, welcomeFrames } from "./sketches.js";
@@ -20,9 +21,11 @@ import { CanvasStage } from "./stage.js";
  * Changes body. The catalogue's rows keep the Changes tab: Details opens
  * its Changes. Side by side compares Desktop · Light on a desktop and, on a
  * phone, the frame that the phone opens on, as two frames at a smaller
- * zoom. A comparison cannot be highlighted; Current can, as in Inspect. On a
- * phone, Current shows the Changes sheet open, and every other mode its one
- * frame.
+ * zoom. A comparison cannot be highlighted; Current can, as in Inspect. Every
+ * mode other than Current loads the comparison, whose details list the
+ * outcome of each compared frame: all four frames on a desktop, and on a
+ * phone the one frame that it shows. On a phone, Current shows the Changes
+ * sheet open, and every other mode its one frame.
  */
 export function WelcomeChangesArtboard({
   mode,
@@ -38,6 +41,13 @@ export function WelcomeChangesArtboard({
   const frame: CompareFrame =
     side && viewport === "desktop" ? "desktop-light" : opening;
   const zoom = side ? FITS.sideBySide : FITS.welcome;
+  const outcomes =
+    mode === "current"
+      ? undefined
+      : frameOutcomes(welcomeFrames(), VIEW_OUTCOMES.screenChanged, {
+          picked: frame,
+          viewport,
+        });
   return (
     <CanvasShell
       catalogue={{
@@ -48,7 +58,13 @@ export function WelcomeChangesArtboard({
       compactZoom={side ? FITS.phoneSide : FITS.phone}
       design={design}
       entry={entry}
-      panel={<WelcomeChanges frame={side ? frame : undefined} mode={mode} />}
+      panel={
+        <WelcomeChanges
+          frame={side ? frame : undefined}
+          mode={mode}
+          outcomes={outcomes}
+        />
+      }
       sheet={mode === "current" ? "panel" : undefined}
       tab="changes"
       viewport={viewport}

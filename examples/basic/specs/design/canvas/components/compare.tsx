@@ -4,6 +4,7 @@ import {
   artboardStates,
   type ArtboardViewport,
 } from "../../parts/artboards.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
 import { useChosenFrame } from "../parts/picked_frames.js";
 import { actionSetFrames } from "../parts/set_sketches.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
@@ -35,9 +36,10 @@ import {
  * The Action's saved variant Default on the Changes tab of the Action
  * branch: the Action's variant set, its own example and its saved variants,
  * in the shown mode, which Overlay and Difference apply to every frame, and
- * the catalogue in the Changes filter with Default selected. In Changes the
- * canvas draws no selection. On a phone, Current shows the Changes sheet
- * open, and a comparison the whole set.
+ * the catalogue in the Changes filter with Default selected. Every row of
+ * the set changed, so a comparison's details list the outcome of every
+ * frame. In Changes the canvas draws no selection. On a phone, Current shows
+ * the Changes sheet open, and a comparison the whole set.
  */
 function DefaultCompare({
   mode,
@@ -46,6 +48,12 @@ function DefaultCompare({
   mode: Exclude<DefaultMode, "side-by-side">;
   viewport: ArtboardViewport;
 }) {
+  const outcomes =
+    mode === "current"
+      ? undefined
+      : frameOutcomes(actionSetFrames(), VIEW_OUTCOMES.variantChanged, {
+          viewport,
+        });
   return (
     <VariantSetArtboard
       catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
@@ -56,7 +64,7 @@ function DefaultCompare({
       frames={
         mode === "current" ? actionSetFrames() : actionCompareFrames(mode)
       }
-      panel={<DefaultChanges mode={mode} />}
+      panel={<DefaultChanges mode={mode} outcomes={outcomes} />}
       sheet={mode === "current" ? "panel" : undefined}
       tab="changes"
       viewport={viewport}
@@ -68,17 +76,24 @@ function DefaultCompare({
  * Default's Changes tab in Side by side: its Light frame's version before
  * beside its current version, at the set's fitted zoom, where the pair fits
  * at full size. The stage holds every frame's pair, and the compact frame
- * picker picks another pair in place. In Changes the canvas draws no
+ * picker picks another pair in place. Every frame of the set compares, so
+ * the comparison details list the outcome of each on a desktop, and of the
+ * compared pair's frame on a phone. In Changes the canvas draws no
  * selection. On a phone, the compared pair.
  */
 function DefaultSideBySide({ viewport }: { viewport: ArtboardViewport }) {
+  const outcomes = frameOutcomes(
+    actionSetFrames(),
+    VIEW_OUTCOMES.variantChanged,
+    { picked: DEFAULT_FRAME, viewport },
+  );
   return (
     <CanvasShell
       catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
       compactZoom={PAIR_FITS.default.phone}
       design={E.explorerCompareSide}
       entry={CHANGED_DEFAULT}
-      panel={<DefaultChanges mode="side-by-side" />}
+      panel={<DefaultChanges mode="side-by-side" outcomes={outcomes} />}
       tab="changes"
       viewport={viewport}
       zoom={PAIR_FITS.default.zoom}

@@ -77,12 +77,13 @@ export function ChangesCompared({
 }
 
 /**
- * The comparison details of today's inspector: the shipped evidence with one
- * sentence for each reason, after the previous path of a moved entry, which
- * the evidence names as the earlier side, then each changed file with its
- * outcomes, the stylesheets that were examined and excluded, and the content
- * that the comparison leaves out. The rail above names the base, so the
- * evidence leaves out its branch-point sentence.
+ * The comparison details of today's inspector: the shipped evidence with the
+ * outcome line of each frame that a loaded comparison compares, then the
+ * previous path of a moved entry, which the evidence names as the earlier
+ * side, one sentence for each reason, each changed file with its outcomes,
+ * the stylesheets that were examined and excluded, and the content that the
+ * comparison leaves out. The rail above names the base, so the evidence
+ * leaves out its branch-point sentence.
  */
 export function ChangesEvidence({
   excluded,
@@ -90,6 +91,7 @@ export function ChangesEvidence({
   ignored,
   initial,
   mark = "data-workspace-evidence",
+  outcomes,
   previousPath,
   reasons,
 }: {
@@ -103,6 +105,11 @@ export function ChangesEvidence({
   initial?: boolean | undefined;
   /** The mark of the evidence: a whole-document page has its own. */
   mark?: "data-page-evidence" | "data-workspace-evidence";
+  /**
+   * The outcome line of each frame that a loaded comparison compares; none
+   * in Current, which loads no comparison.
+   */
+  outcomes?: readonly string[] | undefined;
   /** The path that a moved entry had at the branch point. */
   previousPath?: string | undefined;
   reasons: readonly ChangeReasonKind[];
@@ -119,6 +126,7 @@ export function ChangesEvidence({
         files={files}
         ignored={ignored}
         mark={mark}
+        outcomes={outcomes}
         previousPath={previousPath}
         reasons={reasonEvidence(reasons)}
       />
@@ -130,16 +138,20 @@ export function ChangesEvidence({
  * The Changes tab of Welcome, the first of the branch's changes: the
  * stepper, whose Next change opens Details in Changes; Compared; the compare
  * modes in the shown mode, with the compared frame of Side by side; and the
- * comparison details, which end with Welcome's excluded content. The cloud's
- * check stands between the stepper and Compared; the open-source panel
- * leaves that place empty.
+ * comparison details, which list each compared frame's outcome in a loaded
+ * comparison and end with Welcome's excluded content. The cloud's check
+ * stands between the stepper and Compared; the open-source panel leaves that
+ * place empty.
  */
 export function WelcomeChanges({
   frame,
   mode,
+  outcomes,
 }: {
   frame?: CompareFrame | undefined;
   mode: CompareMode;
+  /** The outcome line of each compared frame, in a mode other than Current. */
+  outcomes?: readonly string[] | undefined;
 }) {
   return (
     <>
@@ -166,6 +178,7 @@ export function WelcomeChanges({
       </InspectSection>
       <ChangesEvidence
         ignored={WELCOME_EXCLUDED_CONTENT}
+        outcomes={outcomes}
         reasons={["material"]}
       />
     </>

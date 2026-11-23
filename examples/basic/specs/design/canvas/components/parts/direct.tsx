@@ -146,13 +146,20 @@ export function directFrames(): CanvasFrameSpec[] {
  * The Changes tab of Welcome on the direct-change branch, the first of its
  * five changes: the stepper, Compared, the compare modes in Side by side
  * with the compared frame, and the comparison details, where the panel
- * opens. They read Welcome's two reasons, pair the props of its own Action
- * in each view, link the changed Action, and name Welcome's excluded
- * content. No artboard shows the Action's own changes on this branch, or
- * Welcome in another mode or frame, so Next change, the other tiles, and the
- * other chips are pictures.
+ * opens. They list each compared frame's outcome, read Welcome's two
+ * reasons, pair the props of its own Action in each view, link the changed
+ * Action, and name Welcome's excluded content. No artboard shows the
+ * Action's own changes on this branch, or Welcome in another mode or frame,
+ * so Next change, the other tiles, and the other chips are pictures.
  */
-export function DirectChanges({ frame }: { frame: CompareFrame }) {
+export function DirectChanges({
+  frame,
+  outcomes,
+}: {
+  frame: CompareFrame;
+  /** The outcome line of each compared frame. */
+  outcomes: readonly string[];
+}) {
   return (
     <>
       <changeStepper.Component
@@ -177,6 +184,7 @@ export function DirectChanges({ frame }: { frame: CompareFrame }) {
         ignored={WELCOME_EXCLUDED_CONTENT}
         initial
         inputChanges={inputChanges()}
+        outcomes={outcomes}
         reasons={reasonEvidence(["inputs", "material"])}
       />
     </>

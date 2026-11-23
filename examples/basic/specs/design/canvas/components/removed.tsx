@@ -4,6 +4,7 @@ import {
   artboardStates,
   type ArtboardViewport,
 } from "../../parts/artboards.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
 import { useChosenFrame } from "../parts/picked_frames.js";
 import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
@@ -57,16 +58,23 @@ function RemovedOnInspect({ viewport }: { viewport: ArtboardViewport }) {
  * version before beside the explicit message of its missing current
  * version, at full size. Only Compact's frames compare, so the stage holds
  * their pairs, and the compact frame picker picks the other pair in place.
+ * A removed variant compares the frames of its own views, which the compact
+ * pick does not narrow, so the comparison details list the outcome of both.
  * In Changes the canvas draws no selection. On a phone, the compared pair.
  */
 function RemovedComparison({ viewport }: { viewport: ArtboardViewport }) {
+  const outcomes = frameOutcomes(
+    compactFrames(),
+    VIEW_OUTCOMES.variantRemoved,
+    { viewport },
+  );
   return (
     <CanvasShell
       catalogue={removalChanges(EXPLORER_KEYS.compact, "changes")}
       compactZoom={PAIR_FITS.compact.phone}
       design={E.explorerRemovedChanges}
       entry={REMOVED_COMPACT}
-      panel={<RemovedChanges />}
+      panel={<RemovedChanges outcomes={outcomes} />}
       tab="changes"
       viewport={viewport}
       zoom={PAIR_FITS.compact.zoom}

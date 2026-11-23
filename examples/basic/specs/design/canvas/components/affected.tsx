@@ -13,6 +13,7 @@ import {
 } from "../parts/changes_sketches.js";
 import type { CanvasDestination } from "../parts/destinations.js";
 import { CANVAS_ENTRIES, type CanvasEntry } from "../parts/entries.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
 import type { CanvasFrameSpec } from "../parts/frames.js";
 import { CanvasShell, type CanvasSheet } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
@@ -95,7 +96,9 @@ function SideBySideScreen({
  * A screen that the changed Action affects, opened from the Action's Usage:
  * unmodified and outside Changes, so the catalogue in All selects it, yet
  * its Changes tab compares it in Side by side, where only its Actions
- * differ. On a phone, the compared frame's pair.
+ * differ. Each compared frame renders the Action, so its outcome reads that
+ * the components that the screen uses changed. On a phone, the compared
+ * frame's pair.
  */
 function Affected({
   screen,
@@ -106,6 +109,11 @@ function Affected({
 }) {
   const design = AFFECTED_PAGES[screen];
   const frame = useAffectedFrame(viewport);
+  const outcomes = frameOutcomes(
+    screenFramePicks(),
+    VIEW_OUTCOMES.screenComponents,
+    { picked: frame, viewport },
+  );
   return (
     <SideBySideScreen
       catalogue={actionBranchAll(screen)}
@@ -113,7 +121,9 @@ function Affected({
       entry={AFFECTED_ENTRIES[screen]}
       frame={frame}
       frames={affectedFrames(screen)}
-      panel={<AffectedChanges design={design} frame={frame} />}
+      panel={
+        <AffectedChanges design={design} frame={frame} outcomes={outcomes} />
+      }
       viewport={viewport}
     />
   );
@@ -129,6 +139,11 @@ function Affected({
  */
 function DirectChange({ viewport }: { viewport: ArtboardViewport }) {
   const frame = useAffectedFrame(viewport);
+  const outcomes = frameOutcomes(
+    screenFramePicks(),
+    VIEW_OUTCOMES.screenChanged,
+    { picked: frame, viewport },
+  );
   return (
     <SideBySideScreen
       catalogue={DIRECT_CHANGES}
@@ -136,7 +151,7 @@ function DirectChange({ viewport }: { viewport: ArtboardViewport }) {
       entry={CANVAS_ENTRIES.welcome}
       frame={frame}
       frames={directFrames()}
-      panel={<DirectChanges frame={frame} />}
+      panel={<DirectChanges frame={frame} outcomes={outcomes} />}
       sheet="panel"
       viewport={viewport}
     />
