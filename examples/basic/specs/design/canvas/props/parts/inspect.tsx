@@ -51,7 +51,7 @@ export function ChosenVariantInspect({
   chosen: ChosenVariant;
   /** The route's details while they load or failed; they arrived by default. */
   details?: PendingDetails | undefined;
-  /** The chosen variant's Light frame, which the reader selected. */
+  /** The chosen variant's frame, which choosing the variant selected. */
   frame: CanvasFrameSpec;
   props: PropsSection;
   /** The artboard that shows each variant chosen, from this state. */

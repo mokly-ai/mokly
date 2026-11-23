@@ -83,16 +83,17 @@ export function ComponentHead({
  * its own example's row, then its saved variants', eight frames in all. The
  * Variants list names the own example first, as the set does; no artboard
  * shows it chosen, so it is a picture. With no frame selected, Props asks
- * for a variant, and a variant in the Variants list selects its Light frame:
- * Default opens it chosen, where Props edits it, and Disabled likewise. With
- * Disabled's frame selected, the list checks Disabled, Selection names the
- * frame, and Props edits Disabled. A leaf renders no registered component,
- * so it has no component tree, and Highlight components is unavailable.
+ * for a variant, and a variant in the Variants list selects its Light frame,
+ * and on a phone its frame of the appearance's scheme: Default opens it
+ * chosen, where Props edits it, and Disabled likewise. With Disabled's frame
+ * selected, the list checks Disabled, Selection names the frame, and Props
+ * edits Disabled. A leaf renders no registered component, so it has no
+ * component tree, and Highlight components is unavailable.
  */
 export function ActionInspect({
   disabled,
 }: {
-  /** The Disabled · Light frame, where the reader selected it. */
+  /** Disabled's frame, which choosing Disabled selected. */
   disabled?: CanvasFrameSpec | undefined;
 }) {
   const chosen = disabled !== undefined;
