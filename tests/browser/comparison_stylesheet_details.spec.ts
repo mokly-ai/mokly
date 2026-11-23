@@ -203,7 +203,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
-      const evidence = await openEvidence(page);
+      // Its set's removed variant compares, so the set offers its Changes
+      // tab, which holds the details.
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(VARIANT_EXCLUDED_LEAD, { exact: true }),
       ).toBeVisible();

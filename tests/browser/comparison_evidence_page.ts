@@ -77,18 +77,20 @@ export type DetailsTab = "Changes" | "Inspect";
 /**
  * Expect the Changes tab to name the branch point in its Compared rail, in
  * place of the branch-point sentence that `evidence`, its comparison
- * details, leave out.
+ * details, leave out. An index without a base names no base: pass `false`,
+ * and the rail's version before reads `Branch point` alone.
  */
 export async function expectRailBase(
   page: Page,
   evidence: Locator,
+  named = true,
 ): Promise<void> {
   await expect(evidence).not.toContainText(BRANCH_POINT);
   await expect(
     comparedRail(page)
       .getByRole("listitem")
       .filter({ hasText: "Branch point" }),
-  ).toHaveText(RAIL_BASE);
+  ).toHaveText(named ? RAIL_BASE : "Before Branch point");
 }
 
 /**
@@ -112,7 +114,7 @@ async function showDetails(
   await expect(
     evidence.getByRole("heading", { name: "Comparison details", exact: true }),
   ).toHaveCount(1);
-  if (tab === "Changes") await expectRailBase(page, evidence);
+  if (tab === "Changes") await expectRailBase(page, evidence, base !== null);
   else if (base === null)
     await expect(evidence).not.toContainText(BRANCH_POINT);
   else await expect(evidence.locator("p").first()).toHaveText(base);
@@ -133,13 +135,17 @@ export function openEvidence(
 
 /**
  * Show the comparison details of a screen or a component in its Changes tab
- * and return them; the tab's Compared rail names the branch point. An entry
- * that the Changes filter does not list gains its Changes tab only once its
- * detail makes its comparison eligible, so wait for `awaitRoutedDetail`
- * before showing such an entry's details.
+ * and return them; the tab's Compared rail names the branch point, and for
+ * an index without a base, `null`, the branch point alone. An entry that the
+ * Changes filter does not list gains its Changes tab only once its detail
+ * makes its comparison eligible, so wait for `awaitRoutedDetail` before
+ * showing such an entry's details.
  */
-export function openChangesEvidence(page: Page): Promise<Locator> {
-  return showDetails(page, "data-workspace-evidence", "Changes", BASE);
+export function openChangesEvidence(
+  page: Page,
+  base: string | null = BASE,
+): Promise<Locator> {
+  return showDetails(page, "data-workspace-evidence", "Changes", base);
 }
 
 /**
