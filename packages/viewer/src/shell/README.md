@@ -214,7 +214,8 @@ The inspector's panels render `@mokly/ui/prop-field`,
 that their containers build, and the preview shows the status of an edit's
 render with `@mokly/ui/edit-status`. The controls' wording of
 `component_controls_copy.ts` reaches them as props. The preview's containers
-render `@mokly/ui/stage`, `@mokly/ui/preview-frame`, `@mokly/ui/device-frame`,
+render `@mokly/ui/canvas-stage`, `@mokly/ui/canvas-frame`,
+`@mokly/ui/stage`, `@mokly/ui/preview-frame`, `@mokly/ui/device-frame`,
 `@mokly/ui/flow-step`, `@mokly/ui/previous-version`,
 `@mokly/ui/preview-state`, `@mokly/ui/scheme-fallback`,
 `@mokly/ui/comparison-stage`, `@mokly/ui/comparison-pane`,
@@ -305,7 +306,10 @@ index, the entry details whose fences accepted them, the publications of the
 event stream, and the live descriptor. Static sources also check the deployment
 file during navigation. `data_requests.ts` lists the details a route renders
 from. A current component variant requests its own detail and its parent's
-detail. A use case also requests each step screen's detail. The module loads
+detail. A component's route, the parent's or a variant's, also requests the
+detail of each current saved variant of the set, whose rows the canvas shows
+with their usage. A use case also requests each step screen's detail. The
+module loads
 each detail under the fences of the
 [shell delivery contract](../../../../docs/protocol/mokly-shell-delivery.md#fetch-and-fences),
 and loads a publication refresh; `data_refresh.ts` runs one such refresh at a
@@ -348,6 +352,40 @@ switch at the same width. It also holds the contract's device breakpoint, at
 most 760px wide, which `narrow_layout.ts` watches. The `@mokly/ui`
 stylesheets cannot import either query, so they repeat them, and the viewer's
 [styles test](../../tests/styles.test.ts) holds them to both.
+
+At and above the layout breakpoint, `stages.tsx` shows the routed entry on the
+canvas of `@mokly/ui/canvas-stage`, under the
+[canvas stage contract](../../../../docs/protocol/mokly-shell-canvas-stage.md);
+below it, the one-frame stage of `public_stage.tsx` stays. `canvas_layout.ts`
+watches the breakpoint, and a render without a window is wide. `workspace.tsx`
+asks `canvas_frames.ts` for its entry's frames: a screen's frames, Desktop
+beside Mobile and Light above Dark, or a component's variant set, a row for
+its own example and then one for each current saved variant, Light beside
+Dark, each with the row's desktop view. A viewport choice keeps one column of
+a screen's frames on the canvas; the other column's frames stay mounted with
+their documents but take no room. A live edit of a component's row renders
+the row's desktop views in both schemes (`canvasEditContexts`), so both of
+its frames show the edit. It passes the frames with the stage, and its
+highlights draw on every shown frame. `canvas_workspace.tsx` mounts each frame
+with `canvas_live_frame.tsx`, which shares the mount hook of `stage_frame.tsx`
+and names its frame `{title} — {viewport} — {scheme}`, with
+`data-workspace-frame`, `data-workspace-color-scheme` and, on a component
+frame, `data-workspace-variant`. A route's fragment opens the routed entry's
+frames at it, and not the other rows of a variant set. A component frame asks
+`componentFrameSize` of `canvas_frame_size.ts` for its size once its document
+loads; without a measured content box, the frame takes the desktop size.
+`canvas_reading.tsx` shows a page or a Markdown document as one reading frame,
+named by its source file, through the mount hook of `document_stage_frame.tsx`.
+A Markdown document without a dark render keeps its light document under
+Dark, and while the catalogue has a dark axis its reading frame's label adds
+`Light only` after the file name, in place of the band. `canvas_stage.tsx`
+gives the section the head band's title, path chip copy and status, binds the
+canvas's keys on the whole document of a standalone shell and only on an
+embedded root while the canvas shows, and asks the registry's geometry for one
+refresh per animation frame after each pan or zoom, which fire no scroll or
+resize event. The canvas is the frames' stage, which clips their highlights
+and markers. A compare mode other than Current hides the canvas behind the
+comparison stage, which stops its keys.
 
 Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each selection through
@@ -531,10 +569,12 @@ Each preview wrapper records its actual
 file's scheme for iframe media queries, native controls, device colors and
 comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
-in a catalogue with a dark axis. A current document then gets a band above its
-pane, and a removed one a suffix on `Showing previous version`; both carry the
-`Light only` note of `@mokly/ui/scheme-fallback`, which the stylesheet shows
-only under Dark. The stylesheets of `@mokly/ui/preview-frame`,
+in a catalogue with a dark axis. Below the layout breakpoint a current
+document then gets a band above its pane, and on the canvas its reading
+frame's label names the fallback; a removed one gets a suffix on
+`Showing previous version`. The band and the suffix carry the `Light only`
+note of `@mokly/ui/scheme-fallback`, which the stylesheet shows only under
+Dark. The stylesheets of `@mokly/ui/preview-frame`,
 `@mokly/ui/device-frame`, and `@mokly/ui/comparison-pane` set every preview
 surface background and iframe color scheme from the wrapper's scheme.
 Transparent content therefore keeps its selected Light or Dark base in screen,
@@ -649,7 +689,9 @@ See [the package README](../../README.md), the
 [viewer contract](../../../../docs/protocol/mokly-viewer.md), and the
 [shell design](../../../../docs/protocol/mokly-shell-design.md).
 
-Markdown documents use `DocumentStageFrame` with scheme-specific routes.
+Markdown documents use `DocumentStageFrame` below the layout breakpoint and the
+reading frame of `canvas_reading.tsx` above it, both with scheme-specific
+routes.
 `previews.tsx` and `use_removed_preview.ts` select the historical document's
 scheme through the same page preview lifecycle. Documents have no viewport or
 usage axis; logical links in a document reach the parent shell through the
