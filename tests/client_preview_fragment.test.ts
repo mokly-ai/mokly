@@ -4,8 +4,11 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { workspaceFrames } from "../packages/viewer/dist/shell/canvas_frames.js";
+import type { WorkspaceCanvas } from "../packages/viewer/dist/shell/canvas_workspace.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { DisplaySelection } from "../packages/viewer/dist/shell/display_context.js";
+import { publicWorkspace } from "../packages/viewer/dist/shell/public_workspace.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/shell/selection.js";
 import { TargetStage } from "../packages/viewer/dist/shell/stages.js";
@@ -42,36 +45,30 @@ test("preview fragment routes update every applicable frame source", () => {
     model,
   );
 
+  // Each frame of the canvas opens at the fragment: the Light row's Desktop
+  // and Mobile frames, and the Dark row's Mobile frame, the screen's one dark
+  // view. Each frame shows its own scheme, so a scheme choice keeps every
+  // frame's document and fragment.
   const expected = [
-    `/static/mokly-generated/product/browse/home/index.mobile.html#${ENCODED_FRAGMENT}`,
     `/static/mokly-generated/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/product/browse/home/index.mobile.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
   ];
   assert.deepEqual(attributeValues(markup, "src"), expected);
-  const lightMarkup = renderRoute(
-    `https://example.test/view/product/browse/home/?fragment=${ENCODED_FRAGMENT}`,
-    FRAGMENT,
-    model,
-    "light",
-  );
-  assert.deepEqual(attributeValues(lightMarkup, "src"), expected);
-  const darkMarkup = renderRoute(
-    `https://example.test/view/product/browse/home/?fragment=${ENCODED_FRAGMENT}`,
-    FRAGMENT,
-    model,
-    "dark",
-  );
-  assert.deepEqual(
-    attributeValues(darkMarkup, "src").filter((source) =>
-      source.includes(".dark.html"),
-    ),
-    [
-      `/static/mokly-generated/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
-    ],
-  );
-  assert.deepEqual(attributeValues(darkMarkup, "src"), [
-    `/static/mokly-generated/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
-    `/static/mokly-generated/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
-  ]);
+  for (const colorScheme of ["light", "dark"] as const)
+    assert.deepEqual(
+      attributeValues(
+        renderRoute(
+          `https://example.test/view/product/browse/home/?fragment=${ENCODED_FRAGMENT}`,
+          FRAGMENT,
+          model,
+          colorScheme,
+        ),
+        "src",
+      ),
+      expected,
+      colorScheme,
+    );
 });
 
 test("only the first flow step receives a preview fragment", () => {
@@ -126,8 +123,8 @@ test("a valid absent anchor retains its encoded hash without a DOM lookup", () =
     "absent",
   );
   assert.deepEqual(attributeValues(markup, "src"), [
-    "/static/mokly-generated/product/browse/home/index.mobile.html#absent",
     "/static/mokly-generated/product/browse/home/index.desktop.html#absent",
+    "/static/mokly-generated/product/browse/home/index.mobile.html#absent",
   ]);
 });
 
@@ -140,16 +137,34 @@ function renderRoute(
   const catalogue = createCatalogue(model);
   const route = routeFromUrl(catalogue, new URL(href));
   assert.equal(route.fragment, expectedFragment);
-  return renderTarget(catalogue, route, colorScheme);
+  return renderTarget(catalogue, route, colorScheme, model);
+}
+
+/**
+ * The canvas of a routed screen or component, as its workspace gives it:
+ * every frame of the entry, both viewports in each of its schemes.
+ */
+function workspaceCanvas(
+  catalogue: ReturnType<typeof createCatalogue>,
+  model: ReturnType<typeof catalogueModel>,
+  route: ReturnType<typeof routeFromUrl>,
+): WorkspaceCanvas | undefined {
+  if (route.view.kind !== "target") return undefined;
+  const entry = route.view.target.entry;
+  if (entry.kind !== "screen" && entry.kind !== "component") return undefined;
+  const data = publicWorkspace(catalogue, model, entry);
+  return { fitKey: entry.path, frames: workspaceFrames(data, "both") };
 }
 
 function renderTarget(
   catalogue: ReturnType<typeof createCatalogue>,
   route: ReturnType<typeof routeFromUrl>,
   colorScheme: "dark" | "light" = "light",
+  model = catalogueModel(),
 ): string {
   assert.equal(route.view.kind, "target");
   if (route.view.kind !== "target") throw new Error("Expected target route.");
+  const canvas = workspaceCanvas(catalogue, model, route);
   return renderToStaticMarkup(
     inShellStore(
       createElement(DisplaySelection.Provider, {
@@ -157,6 +172,7 @@ function renderTarget(
         children: createElement(TargetStage, {
           catalogue,
           target: route.view.target,
+          ...(canvas ? { canvas } : {}),
           ...(route.fragment ? { fragment: route.fragment } : {}),
         }),
       }),
