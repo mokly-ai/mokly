@@ -69,11 +69,16 @@ test("each route requests the details its frames and lists read", () => {
   for (const path of [
     "product/browse/home",
     "product/browse/home/empty",
-    "components/action",
     "guide",
     "product",
   ])
     assert.deepEqual(requests(`/view/${path}/`), [{ path }]);
+  // A component's variant set shows each current saved variant's row, so the
+  // parent's route and a variant's route read every row's detail.
+  assert.deepEqual(requests("/view/components/action/"), [
+    { path: "components/action" },
+    { path: "components/action/default" },
+  ]);
   assert.deepEqual(requests("/view/components/action/default/"), [
     { path: "components/action/default" },
     { path: "components/action" },
