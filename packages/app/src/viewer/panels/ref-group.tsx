@@ -1,19 +1,19 @@
-import { ContentList } from "../../components/controls";
-import type { ContentRow, WaitingContentRow } from "../../components/controls";
 import { TextBar } from "../../components/placeholders";
+
+import { PanelList } from "./panel-rows";
+import type { PanelRow, WaitingPanelRow } from "./panel-rows";
 
 /**
  * A reference while the switcher's read runs: its state, its name, its time
  * and its head are the read's, and its way on keeps its label as text.
  */
-const waitingRef: WaitingContentRow = {
+const waitingRef: WaitingPanelRow = {
   id: "waiting",
   waiting: true,
   title: "",
   detail: "",
   status: true,
-  meta: true,
-  mono: true,
+  sha: true,
   action: "Open",
 };
 
@@ -24,7 +24,7 @@ const waitingRef: WaitingContentRow = {
  * label is a bar, and one placeholder row stands for the references.
  */
 export function RefGroup(
-  props: { label: string } & ({ rows: ContentRow[] } | { waiting: string }),
+  props: { label: string } & ({ rows: PanelRow[] } | { waiting: string }),
 ) {
   const waits = "waiting" in props;
   if (!waits && props.rows.length === 0) return null;
@@ -37,10 +37,7 @@ export function RefGroup(
       ) : (
         <span className="fo-group-label">{props.label}</span>
       )}
-      <ContentList
-        label={props.label}
-        rows={waits ? [waitingRef] : props.rows}
-      />
+      <PanelList label={props.label} rows={waits ? [waitingRef] : props.rows} />
     </section>
   );
 }

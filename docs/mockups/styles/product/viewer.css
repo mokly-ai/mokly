@@ -1,8 +1,15 @@
 /* The viewer: the stage placeholder beneath the top bar, and the panel a slot
    opens over it. The bar's two compositions and its cloud controls are in the
-   two sheets this one imports. */
+   first two sheets this one imports. The Canvas look of the cloud's stage, of
+   the panels the slots open and of the settings dialog and its layer is in
+   the other three. The application links this sheet and every product drawing
+   links it through `inventory.css`, so both draw these surfaces from the same
+   rules. */
 @import "viewer-bar.css";
 @import "viewer-controls.css";
+@import "viewer-canvas-stage.css";
+@import "viewer-canvas-panels.css";
+@import "viewer-canvas-settings.css";
 .fo-viewer-main {
   display: flex;
   flex-direction: column;

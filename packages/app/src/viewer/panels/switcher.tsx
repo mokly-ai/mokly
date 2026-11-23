@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import { Action } from "../../components/action";
-import type { ContentRow } from "../../components/controls";
 import { Field } from "../../components/field";
 import { Pending, StateMessage } from "../../components/page-parts";
 import { PaneResource } from "../../components/resource-state";
@@ -12,6 +11,7 @@ import { publicationTones, publishedDay, shortSha } from "../resolution";
 import { rowTarget } from "../switcher-row";
 import type { RefRow } from "../switcher-row";
 
+import type { PanelRow } from "./panel-rows";
 import { RefGroup } from "./ref-group";
 
 /** Everything the switcher shows, read so that no row states another's facts. */
@@ -70,31 +70,33 @@ function detailFor(row: ReferenceRowState): string {
 /**
  * One reference's row. Its state comes from the newer of its newest
  * publication and newest build, and its short SHA from whichever that was.
- * Opening it resolves the reference, so a ready publication still wins over a
- * newer build. Details on a reference with nothing ready opens its failed
- * attempt's own address — a failed build's address or a failed publication's
- * details — whatever card the reference's stage shows.
+ * A branch reads in mono, as a reference does, and a pull request keeps its
+ * number and title in sans. Opening it resolves the reference, so a ready
+ * publication still wins over a newer build. Details on a reference with
+ * nothing ready opens its failed attempt's own address — a failed build's
+ * address or a failed publication's details — whatever card the reference's
+ * stage shows.
  */
 function rowFor(
   row: RefRow,
   workspaceSlug: string,
   projectSlug: string,
-): ContentRow {
+): PanelRow {
   const { state, href, details } = rowTarget(row, workspaceSlug, projectSlug);
   const detail = detailFor(state);
   return {
     id: row.ref.kind + ":" + row.title,
     title: row.title,
+    form: row.ref.kind === "branch" ? "reference" : "pullRequest",
     detail: row.author ? row.author + " · " + detail : detail,
     status: publicationTones[state.state],
-    meta: shortSha(state.headSha),
-    mono: true,
+    sha: shortSha(state.headSha),
     href,
     action: details ? "Details" : "Open",
   };
 }
 
-function matching(rows: readonly ContentRow[], search: string): ContentRow[] {
+function matching(rows: readonly PanelRow[], search: string): PanelRow[] {
   const needle = search.trim().toLowerCase();
   if (needle.length === 0) return [...rows];
   return rows.filter((row) => row.title.toLowerCase().includes(needle));

@@ -1,7 +1,5 @@
 import type { Screen } from "../../api/types";
 import { Action } from "../../components/action";
-import { ContentList } from "../../components/controls";
-import type { WaitingContentRow } from "../../components/controls";
 import { Pending, StateMessage } from "../../components/page-parts";
 import { PaneResource } from "../../components/resource-state";
 import { getShareLink, listScreens } from "../../data/publications";
@@ -14,14 +12,19 @@ import type { SelectionDefaults } from "../selection";
 import { sharedViewerUrl } from "../share-selection";
 import { shareLinkState } from "../share-state";
 
+import { PanelList } from "./panel-rows";
+import type { WaitingPanelRow } from "./panel-rows";
 import { Link, LinkWait } from "./share-link";
+
+/** The row the link points at, which says so in place of its choice. */
+const chosen = { current: true, mark: "Selected" } as const;
 
 /**
  * The screens while they are read: the whole catalogue keeps its known name,
  * one placeholder row stands for the screens, and which row is selected is
  * the read's, so each row's choice is a placeholder.
  */
-const waitingScreens: WaitingContentRow[] = [
+const waitingScreens: WaitingPanelRow[] = [
   {
     id: "whole-catalogue",
     waiting: true,
@@ -52,7 +55,7 @@ function ScreenChoice({
         resource={resource}
         waiting={
           <Pending label="Loading screens" labelMode="screen-reader-only">
-            <ContentList
+            <PanelList
               label="Screens in this publication"
               rows={waitingScreens}
             />
@@ -65,17 +68,18 @@ function ScreenChoice({
           // A link pins the screen and the way it is drawn together, so the
           // list holds the screens this publication draws in the reader's
           // view, with those the viewer shows through its light fallback under
-          // Dark. The selected screen comes from the same rule.
+          // Dark. The selected screen comes from the same rule, and its row
+          // takes the signal-soft fill and says Selected in place of a choice.
           const items = shareableScreens(all.items, selection);
           return (
-            <ContentList
+            <PanelList
               label="Screens in this publication"
               rows={[
                 {
                   id: "whole-catalogue",
                   title: "Whole catalogue",
                   ...(selected === undefined
-                    ? { meta: "Selected" }
+                    ? chosen
                     : {
                         action: "Select",
                         onChoose: () => onSelect(undefined),
@@ -85,7 +89,7 @@ function ScreenChoice({
                   id: screen.path,
                   title: screen.title,
                   ...(selected === screen.path
-                    ? { meta: "Selected" }
+                    ? chosen
                     : {
                         action: "Select",
                         onChoose: () => onSelect(screen.path),
