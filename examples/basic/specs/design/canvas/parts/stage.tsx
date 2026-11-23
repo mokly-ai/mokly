@@ -5,6 +5,7 @@ import { CanvasGlyph } from "../../library/canvas/glyphs.js";
 import { optional, useDesignInstance } from "../../library/composition.js";
 import { changeStatusBadge } from "../../library/controls/change-status.js";
 import type { CompareModesProps } from "../../library/panels/compare-modes.js";
+import { useRenderedAppearance } from "../../parts/appearance.js";
 import {
   DepictedViewScope,
   type DepictedView,
@@ -12,6 +13,7 @@ import {
 
 import type { CanvasEntry } from "./entries.js";
 import { stageTags, type CanvasFrameSpec } from "./frames.js";
+import { openingFrame } from "./opening_frame.js";
 
 /** A compare mode of the Changes tab. */
 type CompareMode = CompareModesProps["mode"];
@@ -106,9 +108,10 @@ interface CanvasStageProps {
    */
   pan?: "end" | "start" | undefined;
   /**
-   * The frame that the compact form picks: a screen's phone frame by default,
-   * and a variant set's selected frame, which it then shows alone with the
-   * frame picker; a variant set without one shows the whole set.
+   * The frame that the compact form picks: by default, the frame that holds
+   * the selection, else the frame that a screen opens on, its Mobile frame
+   * in the scheme that the artboard renders in. A variant set shows its
+   * picked frame alone with the frame picker, and the whole set without one.
    */
   picked?: string | undefined;
   /**
@@ -157,7 +160,11 @@ export function CanvasStage({
   view,
   zoom,
 }: CanvasStageProps) {
-  const picked = pick ?? (entry.kind === "screen" ? "mobile-light" : undefined);
+  const scheme = useRenderedAppearance();
+  const picked =
+    pick ??
+    selected ??
+    (entry.kind === "screen" ? openingFrame(pickable, scheme) : undefined);
   const label =
     previous === undefined ? null : (
       <span className="cv-previous-label">{previous}</span>
