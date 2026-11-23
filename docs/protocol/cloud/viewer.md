@@ -1,6 +1,6 @@
 # Publication Viewer
 
-Status: The account menu with Theme, Settings, Docs and Changelog, and the Mokly check in the Changes tab, are not built yet. [Milestone 12](../../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds the Changes tab's check slot, and [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the account menu and the check in that slot.
+Status: The account menu with Theme, Settings, Docs and Changelog, and the Mokly check in the Changes tab, are not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds them.
 
 The viewer is the application: once signed in with a project, the user is
 always inside it, and one viewer serves standalone browsing and pull request
