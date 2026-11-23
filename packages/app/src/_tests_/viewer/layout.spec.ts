@@ -50,7 +50,7 @@ test("a public viewer fills the desktop window in All and Changes", async ({
   await expectNoDocumentScroll(page);
 });
 
-test("the phone catalogue drawer uses the full remaining window height", async ({
+test("the phone catalogue sheet's tree reaches the bottom of the sheet", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -61,25 +61,32 @@ test("the phone catalogue drawer uses the full remaining window height", async (
 
   const viewer = page.locator("[data-mokly-shell]");
   await viewer
-    .getByRole("button", { name: "Open catalogue navigation" })
+    .getByRole("group", { name: "Canvas controls" })
+    .getByRole("button", { name: "Catalogue", exact: true })
     .click();
-  const drawer = viewer.getByRole("navigation", { name: "Catalogue" });
-  await expect(drawer).toBeVisible();
+  const catalogue = viewer.getByRole("navigation", { name: "Catalogue" });
+  await expect(catalogue).toBeVisible();
 
-  // The tree's scroll area has no accessible name. Its bottom must follow
-  // the drawer, so a tall frame cannot hide a short, unusable tree.
-  for (const area of [drawer, drawer.locator("[data-mokly-nav-scroll]")]) {
+  // The sheet and the tree's scroll area have no accessible name. The sheet
+  // opens at the window bottom, and the scroll area's bottom must follow the
+  // sheet's, so a tall frame cannot hide a short, unusable tree.
+  const sheet = viewer.locator("[data-floating-panel]", {
+    has: page.getByRole("navigation", { name: "Catalogue" }),
+  });
+  for (const area of [sheet, catalogue.locator("[data-mokly-nav-scroll]")]) {
     await expect
       .poll(async () => {
         const box = await area.boundingBox();
         return box === null ? null : Math.round(box.y + box.height);
-      }, "the catalogue drawer and its scroll area reach the window bottom")
+      }, "the catalogue sheet and its tree's scroll area reach the window bottom")
       .toBe(844);
   }
 
-  await drawer.getByRole("link", { name: /^Start( Changed)?$/ }).click();
+  await catalogue.getByRole("link", { name: /^Start( Changed)?$/ }).click();
+  // The compact layout names the opened entry in its entry bar. The closed
+  // panel sheet keeps its heading mounted and hidden.
   await expect(
-    viewer.getByRole("heading", { level: 2, name: "Start" }),
+    viewer.locator("[data-entry-bar]").getByText("Start", { exact: true }),
   ).toBeVisible();
   await expectWindowHeight(viewer, 844);
   await expectNoDocumentScroll(page);
