@@ -3,7 +3,8 @@
  * Highlight components switch draws the depicted view's highlight once a
  * reader checks it, without a script, inside Browse's sandboxed frames: the
  * shipped mask, in the shipped scrim, with a cutout over each instance that
- * the real screen owns, and the shell's label of each, on every frame.
+ * the real screen owns, on every frame. These stages stand at 38%, below the
+ * zoom at which the frames draw the shell's labels.
  */
 
 import { expect } from "@playwright/test";
@@ -30,11 +31,8 @@ test.beforeEach(({ allowBrowserError, baseURL }) => {
   documentFavicon(allowBrowserError, baseURL!);
 });
 
-for (const [path, labels] of [
-  ["design/canvas/overview", ["Action · details", "Toolbar · toolbar"]],
-  ["design/canvas/outcomes/added", ["Action · welcome", "Toolbar · toolbar"]],
-] as const)
-  test(`${path}: the checked Highlight components switch shows the mask and the labels of the screen's instances`, async ({
+for (const path of ["design/canvas/overview", "design/canvas/outcomes/added"])
+  test(`${path}: the checked Highlight components switch shows the mask of the screen's instances without labels below 60%`, async ({
     page,
   }) => {
     await page.setViewportSize(WIDE_PAGE);
@@ -52,9 +50,7 @@ for (const [path, labels] of [
     await toggle.check();
     await expect(views.locator(".mbk-highlight-mask:visible")).toHaveCount(4);
     for (const view of await views.all()) {
-      await expect(view.locator(".mbk-highlight-label")).toHaveText([
-        ...labels,
-      ]);
+      await expect(view.locator(".mbk-highlight-label:visible")).toHaveCount(0);
       const geometry = await view.evaluate((node, selectors) => {
         const cutouts = [
           ...node.querySelectorAll<SVGGraphicsElement>(".mbk-highlight-cutout"),

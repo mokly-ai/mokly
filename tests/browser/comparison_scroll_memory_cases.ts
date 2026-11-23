@@ -8,8 +8,9 @@ import { expect } from "@playwright/test";
 import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 import { test as baseTest } from "./browser_test.js";
-import { openComparison, scrollTogether } from "./comparison_scroll.js";
-import { modeButton } from "./comparison_ui.js";
+import { scrollTogether } from "./comparison_scroll.js";
+import { openComparison } from "./comparison_sections.js";
+import { chooseMode } from "./comparison_ui.js";
 
 /** The storage key of the Scroll together contract. */
 const SCROLL_TOGETHER_KEY = "mokly:comparison-scroll-together";
@@ -35,7 +36,7 @@ export function registerScrollTogetherMemory(test = baseTest): void {
     await expect(scrollTogether(page)).not.toBeChecked();
 
     await page.reload();
-    await modeButton(page, "Side by side").click();
+    await chooseMode(page, "Side by side");
     await expect(scrollTogether(page)).not.toBeChecked();
     await scrollTogether(page).click();
     await expect(scrollTogether(page)).toBeChecked();
@@ -51,7 +52,7 @@ export function registerScrollTogetherMemory(test = baseTest): void {
       SCROLL_TOGETHER_KEY,
     );
     await page.reload();
-    await modeButton(page, "Overlay").click();
+    await chooseMode(page, "Overlay");
     await expect(scrollTogether(page)).toBeChecked();
   });
 }

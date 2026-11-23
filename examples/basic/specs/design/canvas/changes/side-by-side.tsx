@@ -7,7 +7,7 @@ import { canvasChangesMetadata } from "../parts/metadata.js";
 export const canvasChangesSideBySideScreen = defineScreen({
   ...canvasChangesMetadata,
   description:
-    "Side by side compares one frame, which the frame chips choose: the version before beside the current version of Desktop · Light. On a phone, the two versions of Mobile · Light stand side by side, and the frame picker shows another frame's pair.",
+    "Side by side compares one frame, which the frame chips choose: the version before beside the current version of Desktop · Light. On a phone, the two versions of Mobile · Light, or of Mobile · Dark in a Dark appearance, stand side by side, and the frame picker shows another frame's pair.",
   ...artboards({
     desktop: <WelcomeChangesArtboard mode="side-by-side" viewport="desktop" />,
     mobile: <WelcomeChangesArtboard mode="side-by-side" viewport="mobile" />,

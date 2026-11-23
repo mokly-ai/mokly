@@ -27,6 +27,7 @@ import {
   comparisonViewerHost,
   type ComparisonViewerHost,
 } from "./comparison_viewer_host.js";
+import { inspectTitle } from "./inspect_head.js";
 import { openCatalogueSheet } from "./workspace_actions.js";
 
 let host: ComparisonViewerHost;
@@ -90,7 +91,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await embeddedDetails(page, comparisonPaths.quietParent);
       if (name === "mobile") await openCatalogueSheet(page);
       await navRow(page, comparisonPaths.unchanged).click();
-      await expect(page.locator("#viewer .mbk-screen-head h2")).toHaveText(
+      await expect(inspectTitle(page.locator("#viewer"))).toHaveText(
         "Stable screen",
       );
       await expectScreenDetails(await openEvidence(page, null));

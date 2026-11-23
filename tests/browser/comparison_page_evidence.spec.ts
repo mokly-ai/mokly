@@ -20,6 +20,7 @@ import {
 } from "../helpers/comparison_evidence_groups.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import {
   BASE,
   EXAMINED_LEAD,
@@ -41,13 +42,19 @@ import {
   awaitRoutedDetail,
   changesPaths,
   chooseFilter,
+  compareStage,
   comparisonIndex,
   navRow,
 } from "./comparison_ui.js";
 import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { ownExampleServerUrl } from "./example_servers.js";
-import { DOCUMENT_FRAME, revealInPanel } from "./workspace_actions.js";
+import { inspectHead, inspectStatus, inspectTitle } from "./inspect_head.js";
+import {
+  DOCUMENT_FRAME,
+  openInspectFold,
+  openPanelTab,
+} from "./workspace_actions.js";
 
 const HANDBOOK = comparisonPaths.changedPage;
 const NOTES = comparisonPaths.unchangedPage;
@@ -79,11 +86,6 @@ function documentDesignUrl(viewport: string): string {
   ).href;
 }
 
-/** The status beside the routed title. */
-function headStatus(page: Page): Locator {
-  return page.locator(".mbk-screen-head .mbk-entry-status");
-}
-
 /** Open the handbook and wait until its Details show every file. */
 async function openHandbook(page: Page): Promise<Locator> {
   await page.goto(`/view/${HANDBOOK}/`);
@@ -92,17 +94,19 @@ async function openHandbook(page: Page): Promise<Locator> {
   return evidence;
 }
 
-/** How many lines the head title takes; its chips wrap before the title does. */
-function titleLines(page: Page): Promise<number> {
-  return page
-    .locator(".mbk-screen-head .mbk-title-row h2")
-    .evaluate((title) => {
-      const range = document.createRange();
-      range.selectNodeContents(title);
-      return new Set(
-        [...range.getClientRects()].map((rect) => Math.round(rect.top)),
-      ).size;
-    });
+/**
+ * How many lines Inspect's title takes; its status wraps before the title
+ * does. Inspect shows first, because a hidden title has no lines.
+ */
+async function titleLines(page: Page): Promise<number> {
+  await openPanelTab(page, "Inspect");
+  return inspectTitle(page).evaluate((title) => {
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    return new Set(
+      [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+    ).size;
+  });
 }
 
 for (const [name, size] of INSPECTOR_VIEWPORTS) {
@@ -113,13 +117,12 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       const evidence = await openHandbook(page);
-      await expect(headStatus(page)).toHaveText("Changed");
+      await expect(inspectStatus(page)).toHaveText("Changed");
       await awaitRoutedDetail(page, HANDBOOK);
-      await expect(
-        page.locator(
-          "#mb-main [data-diff-screen], #mb-main [data-viewport-option], .mbk-diff-toolbar",
-        ),
-      ).toHaveCount(0);
+      // A page has no compare, no comparison band and no Frames filter.
+      await expect(compareStage(page)).toHaveCount(0);
+      await expect(page.locator("[data-frames-toggle]")).toHaveCount(0);
+      await expectNoComparison(page);
       await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
       await expect(
         evidence.getByText(PAGE_FILES_LEAD, { exact: true }),
@@ -132,7 +135,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(evidence).not.toContainText(
         /Changed component|Shared component changes|this screen|saved view|this variant|[0-9a-f]{64}/u,
       );
-      await expect(page.locator(".mbk-screen-head")).not.toContainText(
+      await expect(inspectHead(page)).not.toContainText(
         /\.action|article h2|:root|\.css/u,
       );
     });
@@ -142,9 +145,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       const evidence = await openHandbook(page);
       const spacing = await evidenceSpacing(evidence);
-      await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
-        "Getting started",
-      );
+      await expect(inspectTitle(page)).toHaveText("Getting started");
       expect(await titleLines(page)).toBe(1);
       await page.goto(documentDesignUrl(name));
       const card = page.locator(".cv-evidence [data-page-evidence]");
@@ -175,7 +176,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${NOTES}/`);
-      await expect(headStatus(page)).toHaveText("Unmodified");
+      await expect(inspectStatus(page)).toHaveText("Unmodified");
       const evidence = await openPageEvidence(page);
       await expect(evidence.locator("p")).toHaveText([
         BASE,
@@ -191,7 +192,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${CATALOG}/`);
-      await expect(headStatus(page)).toHaveText("Unmodified");
+      await expect(inspectStatus(page)).toHaveText("Unmodified");
       const evidence = await openPageEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
@@ -206,12 +207,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(evidence).not.toContainText(/Changed component/u);
       await expect(evidence).not.toContainText(SHARED);
       // Card's Usage lists its consumers, and a page is none of them. In the
-      // compact layout the inspector stands in the panel's sheet.
+      // compact layout Inspect stands in the panel's sheet.
       await page.goto(`/view/${comparisonPaths.component}/`);
-      const usageTab = page.getByRole("tab", { name: "Usage", exact: true });
-      await revealInPanel(page, usageTab);
-      await usageTab.click();
-      const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+      const usage = await openInspectFold(page, "usage");
       await expect(
         usage.locator('[data-usage-section="used-by"]').getByRole("link"),
       ).toHaveText(["Toolbar", "Changed screen", "Consumer screen"]);
@@ -229,7 +227,8 @@ test.describe("whole-page evidence on a short screen", () => {
     const evidence = await openHandbook(page);
     const last = evidence.locator("code").last();
     await expect(last).toHaveText(":root");
-    await page.locator("[data-mokly-details]").hover();
+    // The panel's sheet scrolls the comparison details under the pointer.
+    await evidence.hover();
     await page.mouse.wheel(0, 2000);
     await expect(last).toBeInViewport();
     // The panel's sheet leaves the top of the reading frame in view above it.
@@ -263,14 +262,10 @@ test.describe("whole-page evidence across navigation", () => {
       HANDBOOK_FILES,
     );
     await navRow(page, comparisonPaths.pageComponent).click();
-    await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
-      "Action",
-    );
+    await expect(inspectTitle(page)).toHaveText("Action");
     await navRow(page, HANDBOOK).click();
-    await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
-      "Getting started",
-    );
-    await expect(headStatus(page)).toHaveText("Changed");
+    await expect(inspectTitle(page)).toHaveText("Getting started");
+    await expect(inspectStatus(page)).toHaveText("Changed");
     const evidence = await openPageEvidence(page);
     await expect.poll(() => evidenceFiles(evidence)).toEqual(HANDBOOK_FILES);
   });

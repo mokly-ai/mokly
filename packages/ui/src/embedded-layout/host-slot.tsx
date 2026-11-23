@@ -8,8 +8,12 @@ import type { CSSProperties, ReactNode, Ref } from "react";
 
 import { useMergedRef } from "../merged-ref/merged-ref.js";
 
-/** The slots of an embedded root that hold host content in the layout. */
+/**
+ * The slots of an embedded root that hold host content: the layout's, and
+ * the Changes tab's `changesStart`, which the right panel places.
+ */
 export type HostSlotName =
+  | "changesStart"
   | "emptyState"
   | "railEnd"
   | "railStart"

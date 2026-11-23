@@ -35,6 +35,12 @@ export interface DesignInventory {
 export interface LinkExpectation {
   source: string;
   viewports?: ("mobile" | "desktop")[];
+  /**
+   * The schemes of the views that hold the link, where a view's link differs
+   * by scheme, such as the frame that a phone opens on; every scheme by
+   * default.
+   */
+  colorSchemes?: ("light" | "dark")[];
   /** A class that a matching link sits inside, such as the stage's pane. */
   within?: string;
   /** The link's accessible name: its `aria-label`, or else its text. */

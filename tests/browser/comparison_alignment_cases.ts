@@ -13,21 +13,24 @@ import {
   expectPaneFrameAttributes,
   generationAddress,
 } from "./comparison_frames.js";
+import { regionOffset, wheelOverRegion } from "./comparison_region_offsets.js";
 import {
-  comparisonSection,
   documentExtent,
   documentOffset,
   expectCoincidentLayers,
   expectStackAt,
   layerOffsets,
-  openComparison,
-  paneFrame,
-  regionOffset,
-  sharedViewports,
   viewportOffset,
   wheelOver,
-  wheelOverRegion,
 } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  frameLabels,
+  frameModes,
+  openComparison,
+  paneFrame,
+  sharedViewports,
+} from "./comparison_sections.js";
 import { modeButton } from "./comparison_ui.js";
 
 /** Register the alignment cases on the host that `test` supplies as its base URL. */
@@ -52,8 +55,12 @@ export function registerComparisonAlignment(test = baseTest): void {
     await wheelOver(page, paneFrame(desktop, "after"), 400);
     await expectStackAt(desktop, 400);
     await expectCoincidentLayers(desktop);
-    await expect(desktop.locator(".browser-frame")).toHaveCount(1);
-    await expect(desktop.locator(".browser-expand")).toHaveCount(0);
+    // One bare canvas frame at its nominal size holds the stack, with no
+    // control of its own, so one version cannot be expanded alone.
+    await expect(frameLabels(desktop)).toHaveText([
+      /^Desktop · Light\s*1280 × 800$/u,
+    ]);
+    await expect(desktop.getByRole("button")).toHaveCount(0);
     await expectPaneFrameAttributes(
       desktop,
       generationAddress(new URL(accepted.url()).origin, accepted.url()),
@@ -62,7 +69,7 @@ export function registerComparisonAlignment(test = baseTest): void {
     );
 
     await modeButton(page, "Difference").click();
-    await expect(desktop.locator(".mb-panes")).toHaveAttribute(
+    await expect(frameModes(desktop)).toHaveAttribute(
       "data-compare-mode",
       "difference",
     );
@@ -74,39 +81,49 @@ export function registerComparisonAlignment(test = baseTest): void {
       "mix-blend-mode",
       "difference",
     );
-    await expect(desktop.locator(".browser-frame")).toHaveCSS(
-      "mix-blend-mode",
-      "normal",
-    );
+    // The frame itself is never blended.
+    await expect(desktop).toHaveCSS("mix-blend-mode", "normal");
   });
 
-  test("a mobile stack scrolls inside the phone screen", async ({ page }) => {
+  test("a mobile stack scrolls inside its mobile frame", async ({ page }) => {
     await openComparison(page, changed, "mobile", "Overlay");
     const mobile = comparisonSection(page, "mobile");
     await wheelOver(page, paneFrame(mobile, "after"), 300);
     await expectStackAt(mobile, 300);
     await expectCoincidentLayers(mobile);
-    await expect(mobile.locator(".phone-frame")).toHaveCount(1);
-    const band = await mobile.locator(".phone-status").boundingBox();
-    const viewport = await sharedViewports(mobile).boundingBox();
-    expect(viewport!.y).toBeGreaterThanOrEqual(band!.y + band!.height);
+    await expect(frameLabels(mobile)).toHaveText([
+      /^Mobile · Light\s*390 × 844$/u,
+    ]);
+    // Each version lays out at the frame's nominal size, whatever the zoom.
+    for (const side of ["before", "after"] as const)
+      expect(
+        await paneFrame(mobile, side).evaluate((frame: HTMLIFrameElement) => [
+          frame.contentWindow!.innerWidth,
+          frame.contentWindow!.innerHeight,
+        ]),
+        side,
+      ).toEqual([390, 844]);
   });
 
-  test("both viewports keep one stack each", async ({ page }) => {
+  test("each frame keeps its own stack", async ({ page }) => {
     await openComparison(page, changed, "both", "Overlay");
     const desktop = comparisonSection(page, "desktop");
     const mobile = comparisonSection(page, "mobile");
+    const darkDesktop = comparisonSection(page, "desktop", "dark");
+    const darkMobile = comparisonSection(page, "mobile", "dark");
     await wheelOver(page, paneFrame(desktop, "after"), 400);
     await expectStackAt(desktop, 400);
     await expectStackAt(mobile, 0);
+    await expectStackAt(darkDesktop, 0);
     await wheelOver(page, paneFrame(mobile, "after"), 200);
     await expectStackAt(mobile, 200);
     await expectStackAt(desktop, 400);
+    await expectStackAt(darkMobile, 0);
     await expectCoincidentLayers(mobile);
     await expectCoincidentLayers(desktop);
   });
 
-  test("a component comparison scrolls inside its bordered frame", async ({
+  test("a component comparison stacks both versions in one frame that fits them", async ({
     page,
   }) => {
     await openComparison(
@@ -115,11 +132,20 @@ export function registerComparisonAlignment(test = baseTest): void {
       "desktop",
       "Overlay",
     );
-    const desktop = comparisonSection(page, "desktop");
-    await expect(desktop.locator(".mb-component-frame")).toHaveCount(1);
-    await wheelOver(page, paneFrame(desktop, "after"), 200);
-    await expectStackAt(desktop, 200);
-    await expectCoincidentLayers(desktop);
+    const component = comparisonSection(page, "component");
+    await expect(frameLabels(component)).toHaveText([/^Bold · Light/u]);
+    // The frame takes the larger size of its two versions, so neither
+    // version has a page range, and the wheel leaves the stack at its start.
+    for (const side of ["before", "after"] as const)
+      await expect
+        .poll(
+          async () => (await documentExtent(paneFrame(component, side))).range,
+          side,
+        )
+        .toBe(0);
+    await wheelOver(page, paneFrame(component, "after"), 200);
+    await expectStackAt(component, 0);
+    await expectCoincidentLayers(component);
   });
 
   test("a shorter document stays aligned past its own end", async ({
@@ -131,14 +157,18 @@ export function registerComparisonAlignment(test = baseTest): void {
     const after = await documentExtent(paneFrame(desktop, "after"));
     // The fixture's Before page is the shorter one.
     expect(before.range).toBeLessThan(after.range);
-    /** An element's top edge in page coordinates, in one version. */
+    /**
+     * An element's top edge on the page, in one version: its frame's drawn
+     * top plus its top in the document, which the canvas zoom scales.
+     */
     const pageTop = (side: "after" | "before", css: string) =>
       paneFrame(desktop, side).evaluate(
-        (frame: HTMLIFrameElement, selector) =>
-          frame.getBoundingClientRect().top +
-          frame
-            .contentDocument!.querySelector(selector)!
-            .getBoundingClientRect().top,
+        (frame: HTMLIFrameElement, selector) => {
+          const box = frame.getBoundingClientRect();
+          const zoom = box.height / frame.offsetHeight;
+          const node = frame.contentDocument!.querySelector(selector)!;
+          return box.top + node.getBoundingClientRect().top * zoom;
+        },
         css,
       );
     const expectAligned = async (offset: number) => {
@@ -149,10 +179,12 @@ export function registerComparisonAlignment(test = baseTest): void {
         })
         .toEqual([Math.min(offset, before.range), offset]);
       expect((await viewportOffset(sharedViewports(desktop))).y).toBe(offset);
-      // Content that both versions hold keeps one position on the page.
+      // Content that both versions hold keeps one position on the page. The
+      // zoom's scale leaves a rounding error far below a millionth of a pixel.
       for (const css of ["h1", "#panel"])
-        expect(await pageTop("after", css), css).toBe(
+        expect(await pageTop("after", css), css).toBeCloseTo(
           await pageTop("before", css),
+          6,
         );
     };
     await wheelOver(page, paneFrame(desktop, "after"), 500);

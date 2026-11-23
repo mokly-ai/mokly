@@ -19,11 +19,12 @@ import type {
 import type { CanvasDestination } from "../../parts/destinations.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { InspectSection } from "../../parts/inspect.js";
+import { useOpeningFrame } from "../../parts/opening_frame.js";
 import { actionSetFrames } from "../../parts/set_sketches.js";
 
 import { BRANCH_CHANGES } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
-import { compactFrames } from "./sketches.js";
+import { compactFrames, screenFramePicks } from "./sketches.js";
 
 /** The modes that the changed Default variant's artboards show. */
 export type DefaultMode = Extract<
@@ -214,7 +215,12 @@ export function RemovedChanges() {
   );
 }
 
-/** The frame that an affected screen's Side by side compares in a viewport. */
-export function affectedFrame(viewport: "desktop" | "mobile"): CompareFrame {
-  return viewport === "desktop" ? "desktop-light" : "mobile-light";
+/**
+ * The frame that an affected screen's Side by side compares in a viewport:
+ * Desktop · Light on a desktop, and on a phone the frame that the phone
+ * opens the screen on.
+ */
+export function useAffectedFrame(viewport: "desktop" | "mobile"): CompareFrame {
+  const opening = useOpeningFrame(screenFramePicks());
+  return viewport === "desktop" ? "desktop-light" : opening;
 }

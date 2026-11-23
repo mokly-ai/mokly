@@ -32,12 +32,21 @@ const TOOLBAR: Highlighted = {
 };
 
 /**
- * A phone draws the switch only in an open panel sheet: Welcome's phone keeps
- * the highlight on its picked frame, and the Toolbar's draws no switch.
+ * Each artboard with whether its frames show the labels: a stage below 60%
+ * draws the cutouts without the labels, as Welcome's desktop stage at 42%
+ * does. A phone draws the switch only in an open panel sheet: Welcome's
+ * phone keeps the highlight on its picked frame, at 72%, and the Toolbar's
+ * draws no switch.
  */
-const HIGHLIGHTED: Record<Viewport, readonly Highlighted[]> = {
-  desktop: [WELCOME, TOOLBAR],
-  mobile: [WELCOME],
+const HIGHLIGHTED: Record<
+  Viewport,
+  readonly (readonly [Highlighted, boolean])[]
+> = {
+  desktop: [
+    [WELCOME, false],
+    [TOOLBAR, true],
+  ],
+  mobile: [[WELCOME, true]],
 };
 
 /**
@@ -102,7 +111,7 @@ export function registerComponentDesignInspection(
       test("mask cutouts match real component bounds without dimming their ancestors", async ({
         page,
       }) => {
-        for (const { route, check, instances, labels } of HIGHLIGHTED[
+        for (const [{ route, check, instances, labels }, shown] of HIGHLIGHTED[
           viewport
         ]) {
           await page.goto(designDocumentUrl(route, viewport));
@@ -114,11 +123,11 @@ export function registerComponentDesignInspection(
           await expect(frames, route).not.toHaveCount(0);
           for (const frame of await frames.all()) {
             // The shipped mask cuts out one box for each region, and the
-            // shell labels each region.
+            // shell labels each region where the zoom shows the labels.
             await expect(
               frame.locator(".mbk-highlight-label:visible"),
               route,
-            ).toHaveText([...labels]);
+            ).toHaveText(shown ? [...labels] : []);
             const geometry = await highlightGeometry(frame, instances);
             expect(geometry.cutouts, route).toHaveLength(labels.length);
             expect(geometry.instances, route).toHaveLength(labels.length);

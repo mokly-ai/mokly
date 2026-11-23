@@ -28,13 +28,16 @@ import {
   changesPaths,
   chooseFilter,
   comparisonIndex,
-  modeButton,
+  expectNoCompareModes,
   navRow,
+  outcomeLines,
+  showMode,
 } from "./comparison_ui.js";
+import { inspectHead, inspectTitle } from "./inspect_head.js";
 import {
-  chooseScheme,
   chooseViewport,
   openCatalogueSheet,
+  setFrames,
 } from "./workspace_actions.js";
 
 /** Status literals of the evidence format never reach the reader. */
@@ -52,7 +55,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${comparisonPaths.darkOnly}/`);
-      await chooseScheme(page, "dark");
+      // The Frames filter shows the Dark views alone, which changed.
+      await setFrames(page, { dark: true, light: false });
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -73,19 +77,20 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         evidence.getByText(EXAMINED_LEAD, { exact: true }),
       ).toBeVisible();
       await expectNoStatusWords(evidence);
-      await expect(page.locator("#mb-main h2").first()).toHaveText(
-        "Dusk screen",
-      );
-      await expect(page.locator(".mbk-screen-head")).not.toContainText(".dusk");
+      await expect(inspectTitle(page)).toHaveText("Dusk screen");
+      await expect(inspectHead(page)).not.toContainText(".dusk");
       for (const preview of ["mobile", "desktop"] as const) {
         await chooseViewport(page, preview);
         await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       }
-      // Details merge every compared view, so Light keeps the same facts.
-      await chooseScheme(page, "light");
+      // Details merge every compared view, so the Light views alone, which
+      // stay unmodified, keep the same facts.
+      await setFrames(page, { light: true, dark: false });
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
+      // The Frames filter stands in Inspect; the details show in Changes.
+      await openEvidence(page);
       await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       await expect(
         evidence.getByText(EXCLUDED_LEAD, { exact: true }),
@@ -127,9 +132,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         evidence.getByRole("link", { name: "Card", exact: true }),
       ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
       await expect(evidence).not.toContainText(SCREEN_TERMINAL);
-      await expect(page.locator(".mbk-screen-head")).not.toContainText(
-        ".accent",
-      );
+      await expect(inspectHead(page)).not.toContainText(".accent");
     });
 
     test("an excluded screen stays out of Changes and explains why", async ({
@@ -140,7 +143,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         "Unmodified",
       );
       await awaitRoutedDetail(page, comparisonPaths.unchanged);
-      await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+      await expectNoCompareModes(page);
       const evidence = await openEvidence(page);
       // The paragraphs come from the entry detail; then the list stays empty.
       await expect(evidence.locator("p")).toHaveText([
@@ -167,6 +170,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
+      // Its detail makes the comparison eligible, which adds the Changes tab
+      // that then holds the comparison details.
+      await awaitRoutedDetail(page, comparisonPaths.consumer);
       const evidence = await openEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
@@ -210,18 +216,23 @@ test("the comparison heading leads with the style outcome", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  const heading = (viewport: string) =>
-    page.locator(`[data-diff-viewport="${viewport}"] h3`);
+  // Each compared frame's outcome line names the frame, then the outcome of
+  // its view: the Dark view of the dark-only change changed only its styles.
   await page.goto(`/view/${comparisonPaths.darkOnly}/`);
-  await chooseScheme(page, "dark");
   await chooseViewport(page, "desktop");
-  await modeButton(page, "Overlay").click();
-  await expect(heading("desktop")).toHaveText(
-    "Desktop · Styles this screen uses changed",
-  );
+  await showMode(page, "Overlay", 4);
+  await expect(outcomeLines(page)).toHaveText([
+    "Desktop · Light · No changes to this screen",
+    "Desktop · Dark · Styles this screen uses changed",
+  ]);
   await page.goto(`/view/${comparisonPaths.changed}/`);
-  await modeButton(page, "Overlay").click();
-  await expect(heading("desktop")).toHaveText("Desktop · Screen changed");
+  await showMode(page, "Overlay", 8);
+  await expect(outcomeLines(page)).toHaveText([
+    "Desktop · Light · Screen changed",
+    "Mobile · Light · Screen changed",
+    "Desktop · Dark · Screen changed",
+    "Mobile · Dark · Screen changed",
+  ]);
   await page.goto(`/view/${comparisonPaths.component}/`);
   const evidence = await openEvidence(page);
   await expect
@@ -239,8 +250,10 @@ test("the comparison heading leads with the style outcome", async ({
   await expect(
     evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
   ).toBeVisible();
-  await modeButton(page, "Overlay").click();
-  await expect(heading("desktop")).toHaveText(
-    "Desktop · Styles this variant uses changed",
-  );
+  // The parent's comparison holds its own example's frames, Light and Dark.
+  await showMode(page, "Overlay", 4);
+  await expect(outcomeLines(page)).toHaveText([
+    "Card · Light · Styles this variant uses changed",
+    "Card · Dark · Styles this variant uses changed",
+  ]);
 });

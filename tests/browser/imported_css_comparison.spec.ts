@@ -10,7 +10,9 @@ import {
 } from "../helpers/imported_css_sources.js";
 
 import { additionsCopyTest } from "./additions_copy_test.js";
+import { chooseMode } from "./comparison_ui.js";
 import { expectStyledPanes, importedImageSize } from "./imported_css_panes.js";
+import { chooseViewport } from "./workspace_actions.js";
 
 const test = additionsCopyTest("browser-imported-css", addImportedCssSources);
 
@@ -19,11 +21,9 @@ test("static export comparison panes retain CSS Modules and url assets", async (
 }) => {
   const imageSize = await importedImageSize();
   await page.goto(`/view/${importedCssPaths.screen}/`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
-  await page.getByRole("button", { name: "Overlay", exact: true }).click();
-  await expectStyledPanes(page, imageSize, "Overlay");
-  for (const mode of ["Difference", "Side by side"] as const) {
-    await page.getByRole("button", { name: mode, exact: true }).click();
+  await chooseViewport(page, "desktop");
+  for (const mode of ["Overlay", "Difference", "Side by side"] as const) {
+    await chooseMode(page, mode);
     await expectStyledPanes(page, imageSize, mode);
   }
 });

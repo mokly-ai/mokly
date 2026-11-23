@@ -76,6 +76,8 @@ export interface ViewerSlots {
   topBarEnd?: ReactNode;
   railStart?: ReactNode;
   railEnd?: ReactNode;
+  /** Host content in the Changes tab, after the change stepper. */
+  changesStart?: ReactNode;
   sidePanel?: { content: ReactNode; width: CSSProperties["width"] };
   stageOverlay?: { content: ReactNode; pointerEvents: "none" | "auto" };
   emptyState?: ReactNode;

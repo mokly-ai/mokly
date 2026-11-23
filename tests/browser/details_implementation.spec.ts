@@ -21,7 +21,13 @@ import {
   VARIANT_EXCLUDED_LEAD,
   openEvidence,
 } from "./comparison_evidence_page.js";
-import { awaitRoutedDetail, modeButton } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  expectNoCompareModes,
+  modeButton,
+  outcomeLines,
+} from "./comparison_ui.js";
+import { openInspectFold, openPanelTab } from "./workspace_actions.js";
 
 const test = additionsCopyTest(
   "browser-implementation",
@@ -44,12 +50,25 @@ function snapshotDocuments(page: Page): string[] {
   return seen;
 }
 
-/** Select one inspector tab by its accessible name. */
-async function inspectorTab(page: Page, name: string): Promise<void> {
-  const tab = page.getByRole("tab", { name, exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-}
+/** The outcome that each view of the consuming screen shows. */
+const COMPONENTS_CHANGED = "Components this screen uses changed";
+
+/**
+ * The consuming screen's outcome lines in Side by side, at each inspector
+ * size: on the wide canvas every shown frame compares, and the compact
+ * layout compares the Light frame of the viewport that the link names.
+ */
+const CONSUMER_OUTCOMES = {
+  desktop: [
+    `Desktop · Light · ${COMPONENTS_CHANGED}`,
+    `Mobile · Light · ${COMPONENTS_CHANGED}`,
+    `Desktop · Dark · ${COMPONENTS_CHANGED}`,
+    `Mobile · Dark · ${COMPONENTS_CHANGED}`,
+  ],
+  mobile: [
+    new RegExp(`^(?:Desktop|Mobile) · Light · ${COMPONENTS_CHANGED}$`, "u"),
+  ],
+} as const;
 
 /** The sentences of the comparison details, in order. */
 function sentences(evidence: Locator) {
@@ -70,7 +89,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
     // Its own saved views are unchanged, so it offers no comparison.
     await awaitRoutedDetail(page, paths.component);
-    await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+    await expectNoCompareModes(page);
     const evidence = await openEvidence(page);
     await expect
       .poll(() => sentences(evidence))
@@ -78,8 +97,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     await expect(evidence).not.toContainText("Rendered content changed.");
     expect(documents).toEqual([]);
 
-    await inspectorTab(page, "Usage");
-    const affected = page.locator("[data-usage-section='affected'] a");
+    const usage = await openInspectFold(page, "usage");
+    const affected = usage.locator("[data-usage-section='affected'] a");
     // The link opens the instance's own view of the consuming screen in its
     // comparison, which the screen offers while it stays Unmodified.
     await expect(affected.first()).toHaveAttribute(
@@ -91,13 +110,13 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     await expect(page.locator("[data-workspace-status]")).toHaveText(
       "Unmodified",
     );
+    // The band and its outcome lines stand in the Changes tab.
+    await openPanelTab(page, "Changes");
     await expect(modeButton(page, "Side by side")).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    await expect(page.locator("[data-diff-viewport] > h3")).toHaveText([
-      /· Components this screen uses changed$/u,
-    ]);
+    await expect(outcomeLines(page)).toHaveText([...CONSUMER_OUTCOMES[name]]);
     await openEvidence(page);
     await expect(
       evidence.getByRole("link", { name: "Chip", exact: true }),
