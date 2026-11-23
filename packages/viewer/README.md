@@ -288,7 +288,7 @@ and Review regressions against `mokly serve` of the example catalogue.
   [`src/shell/details.tsx`](./src/shell/details.tsx) — the containers of the
   inspector and the Details: the tabs, Escape anywhere in the shell root, and
   the metadata rows, whose catalogue lookups live in `details_rows.tsx`;
-  `inspector_resize.ts` sizes the inspector and its mobile sheet
+  `sheets.tsx` holds the right panel, its sheet, and the dock
 - [`src/shell/component_controls_panel.tsx`](./src/shell/component_controls_panel.tsx),
   [`src/shell/workspace_props.tsx`](./src/shell/workspace_props.tsx),
   [`src/shell/workspace_usage.tsx`](./src/shell/workspace_usage.tsx),

@@ -17,6 +17,7 @@ import { useShellFragment, useShellIdentifier } from "./identifier_context.js";
 import { CatalogueNav } from "./nav.js";
 import { useNavigationBounds } from "./nav_resize.js";
 import { useShellRoot } from "./root_context.js";
+import { useCanvasLayoutParts } from "./sheets.js";
 import { useShellStore } from "./store_context.js";
 import { useShellBindings } from "./store_interactions.js";
 import { normalizeTheme } from "./theme.js";
@@ -60,11 +61,12 @@ export function EmbeddedViewerShell({
   const statusId = useShellIdentifier("mb-status");
   useNavigationBounds(root);
   useShellBindings(root, store);
+  const canvas = useCanvasLayoutParts();
   return (
     <EmbeddedLayout
       announcement={store.state.announcement}
+      {...canvas}
       colorScheme={store.state.selection.colorScheme}
-      drawerOpen={store.state.drawerOpen}
       frameExpanded={Boolean(store.state.expandedFrame)}
       resizing={shellRoot?.resizing}
       slotRef={shellRoot?.elements.slots.ref}

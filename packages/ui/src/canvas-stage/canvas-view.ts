@@ -100,11 +100,22 @@ function centredStart(start: number, length: number, size: number): number {
 }
 
 /**
- * Fit: the largest zoom, up to 100%, at which the section fits the stage less
- * Fit's margins, with the section centred. A stage too small for the section
- * at 8% keeps 8%.
+ * Where Fit places the section along the block axis: centred on the stage,
+ * or at the stage's top, as the compact layout stands its frame below the
+ * entry bar.
  */
-export function fitView(extent: CanvasExtent, stage: CanvasRect): CanvasView {
+export type FitAlign = "centre" | "start";
+
+/**
+ * Fit: the largest zoom, up to 100%, at which the section fits the stage less
+ * Fit's margins, with the section centred, or centred across the stage and at
+ * its top. A stage too small for the section at 8% keeps 8%.
+ */
+export function fitView(
+  extent: CanvasExtent,
+  stage: CanvasRect,
+  align: FitAlign = "centre",
+): CanvasView {
   const zoom = clampZoom(
     Math.min(
       1,
@@ -115,7 +126,10 @@ export function fitView(extent: CanvasExtent, stage: CanvasRect): CanvasView {
   return {
     fitted: true,
     x: centredStart(stage.left, stage.width, axisLength(extent.columns, zoom)),
-    y: centredStart(stage.top, stage.height, axisLength(extent.rows, zoom)),
+    y:
+      align === "start"
+        ? stage.top + FIT_MARGIN
+        : centredStart(stage.top, stage.height, axisLength(extent.rows, zoom)),
     zoom,
   };
 }

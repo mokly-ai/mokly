@@ -65,6 +65,36 @@ test("Fit stops at 100%, and a reading frame fills the stage's height up to a 76
   assert.equal(small.zoom, 1);
 });
 
+test("the compact layout fits one frame with only its label's room, at the stage's top", () => {
+  // A phone's stage: 390 wide, 668 tall below the entry bar and above the dock.
+  const stage = { left: 0, top: 52, width: 390, height: 668 };
+  const mobile = sectionExtent(
+    "screen",
+    [{ column: 0, row: 0, width: 390, height: 844 }],
+    { width: 0, height: 0 },
+    true,
+  );
+  const view = fitView(mobile, stage, "start");
+  // Rows: 22 + 844z fit 668 less two 16px margins.
+  near(view.zoom, 614 / 844, "zoom");
+  near(view.x, (390 - (390 * 614) / 844) / 2, "x");
+  near(view.y, 52 + 16, "y");
+  // A frame that needs less room keeps 100% and still stands at the top.
+  const small = fitView(
+    sectionExtent(
+      "component",
+      [{ column: 0, row: 0, width: 148, height: 86 }],
+      { width: 0, height: 0 },
+      true,
+    ),
+    stage,
+    "start",
+  );
+  assert.deepEqual(small, { fitted: true, x: 121, y: 68, zoom: 1 });
+  // A compact reading frame takes the stage's width less Fit's margins.
+  assert.deepEqual(readingSize(stage, true), { width: 358, height: 614 });
+});
+
 test("Fit keeps 8% on a stage too small for the section and shows its top left", () => {
   const view = fitView(SCREEN, { left: 10, top: 20, width: 200, height: 200 });
   assert.deepEqual(view, { fitted: true, x: 26, y: 36, zoom: 0.08 });

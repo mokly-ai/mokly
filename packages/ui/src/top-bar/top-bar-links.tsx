@@ -1,7 +1,9 @@
 /**
- * The top bar's menu and brand, which start the bar. Each is a control of the
- * shell, a link to an address that a static depiction gives, or a picture of
- * itself in a depiction that runs no script.
+ * The top bar's menu and brand, which start the bar. The brand is a control
+ * of the shell, a link to an address that a static depiction gives, or a
+ * picture of itself in a depiction that runs no script. The menu is only a
+ * link or a picture of a static depiction: in the shell, the dock's
+ * Catalogue opens the catalogue's sheet, so the bar has no menu button.
  */
 
 import { IconSvg } from "../icons/icons.js";
@@ -17,22 +19,19 @@ function MenuIcon() {
 }
 
 /**
- * The menu that opens the catalogue drawer. The button reports the drawer
- * state that it asks for. A link or a picture has no expanded state, so its
- * name says whether it opens or closes the drawer.
+ * The menu of a static depiction, which opens or closes the catalogue in
+ * another document. A link or a picture has no expanded state, so its name
+ * says whether it opens or closes the catalogue. A bar that runs its script
+ * draws no menu.
  */
 export function Menu({
   drawerOpen,
   href,
   interactive,
-  navigationId,
-  onDrawer,
 }: {
   drawerOpen: boolean;
   href: string | undefined;
   interactive: boolean;
-  navigationId: string;
-  onDrawer: ((open: boolean) => void) | undefined;
 }) {
   const name = drawerOpen
     ? "Close catalogue navigation"
@@ -59,19 +58,7 @@ export function Menu({
         <MenuIcon />
       </span>
     );
-  return (
-    <button
-      aria-controls={navigationId}
-      aria-expanded={drawerOpen}
-      aria-label="Open catalogue navigation"
-      className="mbk-menu mbk-reset"
-      data-mokly-menu=""
-      onClick={() => onDrawer?.(!drawerOpen)}
-      type="button"
-    >
-      <MenuIcon />
-    </button>
-  );
+  return null;
 }
 
 /**

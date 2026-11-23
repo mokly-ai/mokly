@@ -1,9 +1,11 @@
 /**
- * The canvas of the routed entry in the wide layout. This container gives
+ * The canvas of the routed entry. This container gives
  * `@mokly/ui/canvas-stage` the entry's section and the path chip's copy,
- * binds the canvas's keys, and measures the frames again after each pan and
- * zoom, which fire no scroll or resize event. The canvas is the stage that
- * clips each frame's highlights and markers.
+ * binds the canvas's keys, registers the canvas for the dock's Fit while it
+ * shows, and measures the frames again after each pan and zoom, which fire
+ * no scroll or resize event. The canvas is the stage that clips each frame's
+ * highlights and markers. In the compact layout the section takes its
+ * compact form.
  */
 
 import { useCallback, useEffect, useRef } from "react";
@@ -17,12 +19,13 @@ import {
 } from "@mokly/ui/canvas-stage";
 import { ChangeStatus, type ChangeStatusValue } from "@mokly/ui/change-status";
 
+import { useCanvasLayout } from "./canvas_layout.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameRegistry,
 } from "./frame_registry.js";
-import { useShellRoot } from "./root_context.js";
+import { useShellRoot, useShownCanvas } from "./root_context.js";
 import { useShellStore } from "./store_context.js";
 
 /** Whether the canvas shows, which a comparison in its place hides. */
@@ -108,6 +111,12 @@ export function CanvasEntryStage({
   const handle = useRef<CanvasStageHandle>(null);
   useCanvasKeys(canvas, handle, store.context.embedded ?? false);
   const refresh = useGeometryRefresh(useOptionalShellFrameRegistry());
+  const show = useShownCanvas()?.show;
+  useEffect(() => {
+    const shown = handle.current;
+    return shown && show ? show(shown) : undefined;
+  }, [show]);
+  const compact = !useCanvasLayout();
   return (
     <FrameStageContext value={canvas}>
       <CanvasStage
@@ -117,6 +126,7 @@ export function CanvasEntryStage({
         ref={handle}
         routed
         section={{
+          compact,
           frames,
           kind,
           onCopyPath: (value) => store.copy(value, `Copied path ${value}`),

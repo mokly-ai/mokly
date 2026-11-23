@@ -1,43 +1,42 @@
-/** One bounded component/screen workspace with saved previews and an inspector. */
+/**
+ * One bounded component/screen workspace: the canvas with its frames, and
+ * the right panel with the head, the comparison band, the variant bar and
+ * the inspector. The compact layout's entry bar names the entry over the
+ * canvas and picks its one frame.
+ */
 
 import { useMemo, useRef } from "react";
 
 import { ChangeStatus } from "@mokly/ui/change-status";
+import { EntryBar } from "@mokly/ui/entry-bar";
 import type { InspectorHandle } from "@mokly/ui/inspector";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
-import {
-  canvasEditContexts,
-  framesViews,
-  workspaceFrames,
-} from "./canvas_frames.js";
-import { useCanvasLayout } from "./canvas_layout.js";
+import { canvasEditContexts, framesViews } from "./canvas_frames.js";
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
 import { comparisonEligibilityKnown } from "./comparison_intent.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { controlTarget } from "./control_values.js";
-import { ControlledDiffScreen } from "./diffs.js";
+import { ComparisonBand, ControlledDiffScreen } from "./diffs.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import { ScreenHead, targetHead } from "./head.js";
-import { Inspector } from "./inspector.js";
-import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useRetryFocus } from "./retry_focus.js";
+import { RightPanel } from "./sheets.js";
 import { useShellStore } from "./store_context.js";
 import { useComparison } from "./use_comparison.js";
+import { useWorkspaceCanvas } from "./workspace_canvas.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceEvidenceEntry } from "./workspace_entry.js";
-import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
+import { WorkspaceInspector } from "./workspace_inspector.js";
 import { useWorkspaceInstanceSelection } from "./workspace_instance_selection.js";
-import { WorkspaceInstances } from "./workspace_instances.js";
 import { WorkspacePropsTab } from "./workspace_props.js";
 import { WorkspaceStage } from "./workspace_stage.js";
-import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
 import { visibleWorkspaceViews } from "./workspace_views.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
@@ -54,7 +53,6 @@ export function ComponentWorkspace({
 }) {
   const store = useShellStore();
   const workspaceRef = useRef<HTMLElement>(null);
-  const panesRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<InspectorHandle>(null);
   const highlightRef = useRef<HTMLButtonElement>(null);
@@ -91,17 +89,15 @@ export function ComponentWorkspace({
     data.removed,
     data.controlOrder,
   );
-  // In the wide layout the canvas shows every chosen frame, and the
-  // highlights draw on each of them. A component's edit renders both frames
-  // of its row.
-  const wide = useCanvasLayout();
+  // The canvas shows a component's row as its desktop frames, so an edit of
+  // the row renders both of its frames.
   const editRow = editTarget?.kind === "component" ? editTarget.path : "";
   const contexts = useMemo(
     () =>
-      wide && editRow
+      editRow
         ? canvasEditContexts(data.views, editRow, savedViews)
         : savedViews,
-    [data.views, editRow, savedViews, wide],
+    [data.views, editRow, savedViews],
   );
   const propsRecovery = useRetryFocus();
   const controls = useComponentControls({
@@ -123,33 +119,21 @@ export function ComponentWorkspace({
       ),
     [colorScheme, controls.previewViews, data, variantPath, viewport],
   );
-  const canvasFrames = useMemo(
-    () =>
-      wide ? workspaceFrames(data, viewport, controls.previewViews) : undefined,
-    [controls.previewViews, data, viewport, wide],
-  );
+  const canvas = useWorkspaceCanvas(data, controls.previewViews);
+  // Inspection draws on every frame that the canvas shows.
   const shownViews = useMemo(
-    () =>
-      canvasFrames ? framesViews(controls.previewViews, canvasFrames) : views,
-    [canvasFrames, controls.previewViews, views],
+    () => framesViews(controls.previewViews, canvas.frames),
+    [canvas.frames, controls.previewViews],
   );
-  const sizing = useInspectorResize(inspectorRef, panesRef, store.interactive);
-  const {
-    selectedInstance,
-    selectedKey,
-    resolvedViewport,
-    activeView,
-    setActiveViewport,
-    selectInstance,
-  } = useWorkspaceInstanceSelection(data, views, inspectorRef);
+  const instances = useWorkspaceInstanceSelection(data, views, inspectorRef);
   const inspection = useWorkspaceInspection({
     workspaceRef,
     highlightRef,
     comparisonActive: comparing,
     data,
     invalidSelection: Boolean(data.removed || variant?.removed),
-    onSelect: selectInstance,
-    ...(selectedKey ? { selectedKey } : {}),
+    onSelect: instances.selectInstance,
+    ...(instances.selectedKey ? { selectedKey: instances.selectedKey } : {}),
     views: shownViews,
   });
   const target = { kind: "entry" as const, entry };
@@ -161,39 +145,16 @@ export function ComponentWorkspace({
     : undefined;
   const stage = (
     <WorkspaceStage
-      canvas={
-        canvasFrames
-          ? {
-              fitKey:
-                entry.kind === "screen"
-                  ? `${entry.path}:${viewport}`
-                  : (data.component?.path ?? entry.path),
-              frames: canvasFrames,
-              status: headStatus,
-            }
-          : undefined
-      }
+      canvas={{
+        fitKey: canvas.fitKey,
+        frames: canvas.frames,
+        status: headStatus,
+      }}
       catalogue={catalogue}
       context={context}
       data={data}
-      previewViews={controls.previewViews}
       target={target}
       variantRemoved={variant?.removed ?? false}
-      {...(variantPath ? { variantPath } : {})}
-    />
-  );
-  const showComponents =
-    entry.kind === "screen" ||
-    views.some((view) => view.usage?.instances.length);
-  const propsPanel = (
-    <WorkspacePropsTab
-      controls={controls.panel}
-      data={data}
-      delivery={workspace.detailDelivery}
-      focus={propsRecovery}
-      instance={selectedInstance}
-      target={editTarget}
-      usage={activeView?.usage}
     />
   );
   const highlight = {
@@ -206,66 +167,72 @@ export function ComponentWorkspace({
   return (
     <WorkspaceLayout
       busy={controls.pending}
-      header={
-        <ScreenHead
-          action={
-            <WorkspaceControls
-              changedViews={changedViews}
-              dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
-              effectiveColorScheme={resolvedView.colorScheme}
-              highlight={highlight}
-              highlightRef={highlightRef}
-            />
-          }
-          crumbs={head.crumbs}
-          heading={head.title}
-          path={head.path}
-          status={
-            <ChangeStatus mark="data-workspace-status" status={headStatus} />
-          }
-        />
-      }
-      inspector={
-        <Inspector
-          catalogue={catalogue}
-          data={data}
-          inspectorRef={inspectorRef}
-          sizing={sizing}
-          panels={{
-            ...(showComponents
-              ? {
-                  components: (
-                    <WorkspaceInstances
-                      activeViewport={resolvedViewport}
-                      data={data}
-                      onFocus={(key, nextViewport) =>
-                        inspection.select(key, nextViewport, false)
-                      }
-                      onSelect={inspection.select}
-                      onViewport={setActiveViewport}
-                      {...(selectedKey ? { selectedKey } : {})}
-                      views={views}
-                    />
-                  ),
-                }
-              : {}),
-            details: (
-              <WorkspaceEvidence
-                compared={comparison.loaded !== undefined}
-                data={data}
-                {...(previousPath ? { previousPath } : {})}
-                {...(variantPath ? { variantPath } : {})}
-              />
-            ),
-            props: propsPanel,
-            usage: (
-              <WorkspaceUsage data={data} delivery={workspace.detailDelivery} />
-            ),
-          }}
+      entryBar={
+        <EntryBar
+          component={entry.kind === "component"}
+          picker={canvas.picker}
+          status={<ChangeStatus status={headStatus} />}
+          title={head.title}
         />
       }
       overlay={inspection.overlay}
-      panesRef={panesRef}
+      panel={
+        <RightPanel>
+          <ScreenHead
+            action={
+              <WorkspaceControls
+                changedViews={changedViews}
+                dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
+                effectiveColorScheme={resolvedView.colorScheme}
+                highlight={highlight}
+                highlightRef={highlightRef}
+              />
+            }
+            crumbs={head.crumbs}
+            heading={head.title}
+            path={head.path}
+            status={
+              <ChangeStatus mark="data-workspace-status" status={headStatus} />
+            }
+          />
+          {data.comparisons && !preview ? (
+            <ComparisonBand
+              comparison={comparison}
+              eligible={presentation.comparisonEligible}
+            />
+          ) : null}
+          <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
+          <WorkspaceInspector
+            catalogue={catalogue}
+            compared={comparison.loaded !== undefined}
+            data={data}
+            delivery={workspace.detailDelivery}
+            inspectorRef={inspectorRef}
+            instances={{
+              activeViewport: instances.resolvedViewport,
+              focus: (key, nextViewport) =>
+                inspection.select(key, nextViewport, false),
+              select: inspection.select,
+              selectedKey: instances.selectedKey,
+              setViewport: instances.setActiveViewport,
+            }}
+            previousPath={previousPath}
+            props={
+              <WorkspacePropsTab
+                controls={controls.panel}
+                data={data}
+                delivery={workspace.detailDelivery}
+                focus={propsRecovery}
+                instance={instances.selectedInstance}
+                target={editTarget}
+                usage={instances.activeView?.usage}
+              />
+            }
+            variantPath={variantPath}
+            views={views}
+          />
+        </RightPanel>
+      }
       previewRef={previewRef}
       preview={
         <FrameStageContext value={previewRef}>
@@ -277,7 +244,6 @@ export function ComponentWorkspace({
               comparison={comparison}
               entryId={variantPath ?? entry.path}
               entryKind={entry.kind}
-              eligible={presentation.comparisonEligible}
               usingChanged={presentation.usingChanged}
             >
               {stage}
@@ -289,9 +255,6 @@ export function ComponentWorkspace({
       }
       previewStatus={controls.previewStatus}
       ref={workspaceRef}
-      variantBar={
-        <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
-      }
     />
   );
 }

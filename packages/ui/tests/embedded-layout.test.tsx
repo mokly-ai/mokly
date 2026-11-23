@@ -196,3 +196,46 @@ test("the marker layer places each host marker and lets the pointer through", ()
   const { container } = render(<MarkerLayer markers={[]} ref={layer} />);
   assertSameElement(layer.current, container.firstElementChild);
 });
+
+test("with the catalogue's sheet, the rail host floats with its slots, and the dock stands over the stage", () => {
+  const closed: string[] = [];
+  const { container } = render(
+    layout({
+      catalogueSheet: {
+        expanded: false,
+        onClose: () => closed.push("catalogue"),
+        onExpandedChange: () => undefined,
+        open: true,
+      },
+      dock: <div data-dock="" />,
+      navigationWidth: 260,
+      slots: { railStart: "Above", sidePanel: { content: "Side", width: 200 } },
+    }),
+  );
+  const root = container.firstElementChild as HTMLElement;
+  assert.equal(root.getAttribute("data-canvas-layout"), "");
+  assert.equal(root.style.getPropertyValue("--mbk-nav-width"), "260px");
+  const rail = container.querySelector(".mokly-rail-host");
+  assertSameElement(
+    rail?.parentElement?.parentElement,
+    container.querySelector('[data-floating-panel="left"]'),
+  );
+  // The railStart slot's container holds the text, inside the rail host.
+  assertSameElement(screen.getByText("Above").parentElement, rail);
+  // The side panel stays a column of the body after the stage host.
+  assert.deepEqual(
+    [...(container.querySelector(".mbk-body")?.children ?? [])].map(
+      (child) =>
+        child.getAttribute("data-floating-panel") ??
+        child.getAttribute("data-mokly-slot") ??
+        child.className.split(" ")[0],
+    ),
+    ["left", "mokly-stage-host", "sidePanel"],
+  );
+  assertSameElement(
+    container.querySelector("[data-dock]")?.parentElement,
+    container.querySelector(".mokly-stage-host"),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Close catalogue" }));
+  assert.deepEqual(closed, ["catalogue"]);
+});

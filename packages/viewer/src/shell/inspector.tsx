@@ -1,8 +1,9 @@
 /**
- * The shared tabbed inspector, kept outside the scrolling preview. This
- * container reads the store and the identifier scope, and it closes the
- * inspector on Escape anywhere in its shell root. `@mokly/ui/inspector`
- * renders the tabs and the panels, with the tab keys and the focus return.
+ * The shared tabbed inspector in the right panel. This container reads the
+ * store and the identifier scope, and it closes the inspector on Escape
+ * anywhere in its shell root. `@mokly/ui/inspector` renders the tabs and the
+ * panels, with the tab keys and the focus return. The right panel scrolls
+ * the inspector, so it takes no height of its own.
  */
 
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
@@ -10,7 +11,6 @@ import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import {
   Inspector as InspectorView,
   type InspectorHandle,
-  type InspectorSizing,
   type InspectorTab,
   type InspectorTabId,
 } from "@mokly/ui/inspector";
@@ -43,13 +43,11 @@ export function Inspector({
   data,
   panels,
   inspectorRef,
-  sizing,
 }: {
   catalogue: Catalogue;
   data: WorkspaceData;
   panels: InspectorPanels;
   inspectorRef?: RefObject<InspectorHandle | null>;
-  sizing?: InspectorSizing;
 }) {
   const store = useShellStore();
   const contentId = useShellIdentifier("mb-inspector-content");
@@ -120,7 +118,6 @@ export function Inspector({
       active={store.state.inspectorTab}
       contentId={contentId}
       contentRef={elements?.scrolls.ref("inspector")}
-      {...sizing}
       interactive={interactive}
       onOpenChange={(next, id) => store.setDetails(next, id)}
       open={open}

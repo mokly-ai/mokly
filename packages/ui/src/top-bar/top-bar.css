@@ -1,5 +1,6 @@
-/* The 48px top bar, in three columns: the start column holds the drawer menu,
-   the brand and a host's start slot, the centre column a host's centre slot,
+/* The 48px top bar, in three columns: the start column holds the brand and a
+   host's start slot, after the menu that a static depiction draws, the
+   centre column a host's centre slot,
    and the end column the catalogue search, the end control and a host's end
    slot. The two outer columns share the room that the centre column leaves,
    so the centre column sits in the middle. An embedded root gives that room
@@ -177,8 +178,8 @@ span.mbk-menu {
   color: var(--chrome-muted);
 }
 
-/* Below the breakpoint the menu opens the drawer, the brand keeps only its
-   mark, and the scheme switch moves to the screen header. The start column
+/* Below the breakpoint a static depiction's menu shows, the brand keeps only
+   its mark, and the scheme switch moves to the screen header. The start column
    keeps the width of its content and the end column takes the rest, so the
    search keeps its room down to a 320px window. */
 @media (width < 56.25rem) {

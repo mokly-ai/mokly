@@ -1,22 +1,39 @@
 // The glyphs of the canvas, on the 16-unit grid of the Canvas design: the
-// kinds of frame that a frame's label starts with, and the zoom pill's
-// controls. They stroke at 1.5 units in `currentColor`, as the Canvas design
-// library draws them, and the icons entry exports them.
+// kinds of frame that a frame's label starts with, the zoom pill's controls,
+// and the controls of the compact layout: the dock, a sheet's close control,
+// the frame picker's chevron, and the catalogue foot's branch. They stroke at
+// 1.5 units in `currentColor`, as the Canvas design library draws them, and
+// the icons entry exports them.
 
 import type { ReactNode } from "react";
 
-/** The canvas glyphs: a frame's kind, and the zoom pill's controls. */
+/** The canvas glyphs: a frame's kind, and the canvas's controls. */
 export type CanvasIconName =
+  | "branch"
+  | "chevron"
+  | "close"
   | "component"
   | "desktop"
   | "document"
   | "fit"
+  | "inspect"
+  | "layers"
   | "mobile"
   | "zoom-in"
   | "zoom-out";
 
 /** The strokes of each glyph on its 16-unit grid. */
 const STROKES: Record<CanvasIconName, () => ReactNode> = {
+  branch: () => (
+    <>
+      <circle cx={4.5} cy={3.6} r={1.6} />
+      <circle cx={4.5} cy={12.4} r={1.6} />
+      <circle cx={11.5} cy={5.4} r={1.6} />
+      <path d="M4.5 5.2v5.6M11.5 7c0 2.6-2.4 3.3-5.6 4" />
+    </>
+  ),
+  chevron: () => <path d="m4.5 6.3 3.5 3.5 3.5-3.5" />,
+  close: () => <path d="m4 4 8 8M12 4l-8 8" />,
   component: () => (
     <path d="M8 1.6 10.1 3.7 8 5.8 5.9 3.7zM8 10.2l2.1 2.1L8 14.4l-2.1-2.1zM3.7 5.9 5.8 8l-2.1 2.1L1.6 8zM12.3 5.9 14.4 8l-2.1 2.1L10.2 8z" />
   ),
@@ -36,6 +53,13 @@ const STROKES: Record<CanvasIconName, () => ReactNode> = {
     <>
       <path d="M2.4 5.6V3.4c0-.6.4-1 1-1h2.2M10.4 2.4h2.2c.6 0 1 .4 1 1v2.2M13.6 10.4v2.2c0 .6-.4 1-1 1h-2.2M5.6 13.6H3.4c-.6 0-1-.4-1-1v-2.2" />
       <rect height={5.2} rx={1} width={5.2} x={5.4} y={5.4} />
+    </>
+  ),
+  inspect: () => <path d="M3.2 2.4 13 7.3l-4.3 1.3-1.9 4.3z" />,
+  layers: () => (
+    <>
+      <path d="M8 2 14 5.2 8 8.4 2 5.2z" />
+      <path d="m2 8.2 6 3.2 6-3.2M2 11 8 14.2 14 11" />
     </>
   ),
   mobile: () => (

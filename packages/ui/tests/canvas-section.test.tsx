@@ -118,3 +118,22 @@ test("a variant set names its kind, and a reading frame takes the reading size",
     "620",
   );
 });
+
+test("the compact layout's section has no head and leaves only the room of its frames' labels", () => {
+  const { container } = render(
+    <CanvasSection
+      compact
+      frames={[{ key: "set", column: 0, row: 0, node: <i>frame</i> }]}
+      kind="component"
+      path="example/components/action"
+      title="Action"
+    />,
+  );
+  const section = container.querySelector<HTMLElement>("section");
+  assert.equal(section?.getAttribute("data-canvas-compact"), "");
+  assert.equal(section?.querySelector(".mbk-canvas-section-head"), null);
+  assert.equal(section?.style.padding, "22px 0px 0px");
+  const frames = section?.querySelector<HTMLElement>(".mbk-canvas-frames");
+  assert.equal(frames?.style.rowGap, "34px");
+  assert.equal(frames?.style.columnGap, "16px");
+});

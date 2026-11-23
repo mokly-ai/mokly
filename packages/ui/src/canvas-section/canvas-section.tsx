@@ -12,8 +12,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { CanvasIcon } from "../icons/icons.js";
 
 import {
-  SECTION_GAPS,
-  SECTION_PADDING,
+  sectionSpacing,
   type CanvasCell,
   type CanvasSectionKind,
   type CanvasSize,
@@ -84,6 +83,7 @@ function PathChip({
 }
 
 export function CanvasSection({
+  compact = false,
   frames,
   interactive = true,
   kind,
@@ -93,6 +93,12 @@ export function CanvasSection({
   status,
   title,
 }: {
+  /**
+   * Whether the section takes the compact layout's form: no box, no
+   * outline and no head, because the entry bar names the entry, and only
+   * the room of the frames' labels around its frames.
+   */
+  compact?: boolean;
   frames: readonly CanvasSectionFrame[];
   /**
    * Whether the path chip is a button, as it is by default. A static
@@ -113,30 +119,33 @@ export function CanvasSection({
   status?: ReactNode;
   title: string;
 }) {
-  const gaps = SECTION_GAPS[kind];
+  const { gaps, padding } = sectionSpacing(kind, compact);
   return (
     <section
       className="mbk-canvas-section mbk-reset"
       data-canvas-section={kind}
+      data-canvas-compact={compact ? "" : undefined}
       style={{
-        padding: `${SECTION_PADDING.top}px ${SECTION_PADDING.right}px ${SECTION_PADDING.bottom}px ${SECTION_PADDING.left}px`,
+        padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
       }}
     >
-      <div className="mbk-canvas-section-head mbk-reset">
-        <span className="mbk-canvas-title-tag mbk-reset">{title}</span>
-        {kind === "component" ? (
-          <span className="mbk-canvas-kind-tag mbk-reset">
-            <CanvasIcon name="component" size={13} />
-            Component
-          </span>
-        ) : null}
-        <PathChip
-          interactive={interactive}
-          onCopyPath={onCopyPath}
-          path={path}
-        />
-        {status}
-      </div>
+      {compact ? null : (
+        <div className="mbk-canvas-section-head mbk-reset">
+          <span className="mbk-canvas-title-tag mbk-reset">{title}</span>
+          {kind === "component" ? (
+            <span className="mbk-canvas-kind-tag mbk-reset">
+              <CanvasIcon name="component" size={13} />
+              Component
+            </span>
+          ) : null}
+          <PathChip
+            interactive={interactive}
+            onCopyPath={onCopyPath}
+            path={path}
+          />
+          {status}
+        </div>
+      )}
       <div
         className="mbk-canvas-frames mbk-reset"
         style={{ columnGap: gaps.column, rowGap: gaps.row }}

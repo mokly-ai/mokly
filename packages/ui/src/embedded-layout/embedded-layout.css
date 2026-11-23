@@ -56,6 +56,13 @@
   min-height: 0;
 }
 
+/* In the Canvas layout the rail host fills the floating catalogue, with the
+   host's rail slots above and below the navigation. */
+.mokly-viewer .mbk-float > .mbk-float-body > .mokly-rail-host {
+  flex: 1;
+  min-width: 0;
+}
+
 .mokly-viewer .mokly-stage-host {
   position: relative;
   flex: 1;
@@ -72,9 +79,10 @@
   display: none;
 }
 
+/* The stage overlay lies over the canvas and under the floating panels. */
 .mokly-viewer [data-mokly-slot="stageOverlay"] {
   position: absolute;
-  z-index: 10;
+  z-index: 9;
   overflow: hidden;
 }
 
@@ -144,7 +152,7 @@
 }
 
 @media (width < 56.25rem) {
-  .mokly-viewer .mokly-rail-host {
+  .mokly-viewer:not([data-canvas-layout]) .mokly-rail-host {
     width: 0;
   }
 }

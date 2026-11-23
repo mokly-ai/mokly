@@ -64,3 +64,162 @@
     padding: 8px 12px;
   }
 }
+
+/* In the Canvas layout the preview fills the canvas under the floating
+   panels, and a compare mode's stage stands in the stage area between them,
+   on the canvas's dot grid. */
+.mbk-workspace[data-workspace-canvas] .mbk-diff-stage {
+  margin: var(--mbk-canvas-inset-top, 0px) var(--mbk-canvas-inset-end, 0px)
+    var(--mbk-canvas-inset-bottom, 0px) var(--mbk-canvas-inset-start, 0px);
+  background: none;
+}
+
+/* The status of a render stands at the top of the stage, clear of the zoom
+   pill and the dock at the bottom. */
+.mbk-workspace[data-workspace-canvas] .mbk-edit-status {
+  top: calc(var(--mbk-canvas-inset-top, 0px) + 12px);
+  right: var(--mbk-canvas-inset-end, 0px);
+  bottom: auto;
+  left: var(--mbk-canvas-inset-start, 0px);
+}
+
+@media (width < 56.25rem) {
+  .mbk-workspace[data-workspace-canvas] .mbk-workspace-panes {
+    padding-bottom: 0;
+  }
+
+  .mbk-workspace[data-workspace-canvas] .mbk-edit-status {
+    left: 0;
+    right: 0;
+  }
+}
+
+/* The right panel holds a view's head, the comparison band, the variant bar
+   and the inspector, or a page's Details, one below the other in the panel's
+   width; the panel scrolls them together. */
+.mbk-float[data-floating-panel="right"] .mbk-screen-head {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: transparent;
+}
+
+.mbk-float[data-floating-panel="right"] .mbk-screen-head > .mbk-seg,
+.mbk-float[data-floating-panel="right"] .mbk-screen-head > :last-child {
+  margin-left: 0;
+}
+
+.mbk-float[data-floating-panel="right"] .mbk-title-row {
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.mbk-float[data-floating-panel="right"]
+  :is(.mbk-diff-toolbar, .mbk-selection-bar) {
+  padding: 8px 16px;
+  background: transparent;
+}
+
+/* The compare modes share the panel's width, each on one line. */
+.mbk-float[data-floating-panel="right"] .mbk-diff-toolbar .mbk-seg {
+  width: 100%;
+}
+
+.mbk-float[data-floating-panel="right"]
+  .mbk-diff-toolbar
+  .mbk-seg
+  :is(button, a, span) {
+  flex: 1;
+  padding: 6px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.mbk-float[data-floating-panel="right"] .mbk-details {
+  border-top: 0;
+  background: transparent;
+}
+
+.mbk-float[data-floating-panel="right"] details.mbk-details[open] {
+  max-height: none;
+  overflow: visible;
+}
+
+.mbk-float[data-floating-panel="right"]
+  details.mbk-details[open]
+  > summary.mbk-details-bar {
+  position: static;
+  background: transparent;
+}
+
+.mbk-float[data-floating-panel="right"] .mbk-details-bar {
+  padding: 11px 16px;
+}
+
+.mbk-float[data-floating-panel="right"] .mbk-details-hint {
+  display: none;
+}
+
+.mbk-float[data-floating-panel="right"] .mbk-details-body {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.mbk-float[data-floating-panel="right"] .mbk-details > .mbk-details-body {
+  padding: 6px 16px 20px;
+}
+
+.mbk-float[data-floating-panel="right"]
+  .mbk-details
+  > .mbk-comparison-evidence {
+  margin: 0 16px;
+}
+
+/* The inspector takes the height of its content below the panel's other
+   parts, and the panel scrolls them together. The height separator and the
+   inspector's sheet grab have no role there: the panel's own sheet has the
+   grabber. */
+.mbk-float .mbk-inspector,
+.mbk-float .mbk-inspector[data-open="true"] {
+  position: static;
+  z-index: auto;
+  flex: none;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  padding-bottom: 0;
+  border: 0;
+  border-top: 1px solid var(--chrome-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.mbk-float .mbk-inspector .mbk-inspector-content {
+  flex: none;
+  overflow: visible;
+}
+
+.mbk-float .mbk-inspector .mbk-inspector-content > section {
+  padding: 10px 16px 20px;
+}
+
+.mbk-float .mbk-inspector .mbk-inspector-tabs {
+  padding: 5px 12px;
+}
+
+.mbk-float .mbk-inspector .mbk-inspector-resize,
+.mbk-float .mbk-inspector .mbk-sheet-grab {
+  display: none;
+}
+
+/* The sheet's close control stands at the top end of the panel's first
+   part. */
+@media (width < 56.25rem) {
+  .mbk-float[data-floating-panel="right"]
+    > .mbk-float-body
+    > :first-child:where(.mbk-reset) {
+    padding-right: 56px;
+  }
+}

@@ -1,30 +1,26 @@
 /**
- * The frame of a whole-document page or Markdown document. This container
- * mounts the frame and derives its sources; `@mokly/ui/preview-frame` draws
- * the frame and `@mokly/ui/scheme-fallback` the Light-only band.
+ * The frame of a whole-document page or Markdown document: its scheme and
+ * its mount. This module mounts the frame and derives its sources; the
+ * canvas's reading frame of `canvas_reading.tsx` shows it.
  */
 
-import { useContext, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import type { RefObject } from "react";
 
 import { currentDocumentPath } from "@mokly/model";
-import { DocumentFrame, PreviewIframe } from "@mokly/ui/preview-frame";
-import { LightOnlyBand } from "@mokly/ui/scheme-fallback";
 
 import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { ViewerSelection } from "../host/types.js";
 import { documentRoute } from "../navigation/routes.js";
 
-import { DisplaySelection } from "./display_context.js";
 import { useMountedShellFrame } from "./frame_mount_hook.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameIdentity,
 } from "./frame_registry.js";
 import { useFrameGeneration, useFrameSource } from "./frame_source_hook.js";
-import { focusThen, useRetryContent } from "./retry_focus.js";
-import { useShellRoot } from "./root_context.js";
-import { documentLightOnly, schemeValue } from "./scheme_fallback.js";
+import { useRetryContent } from "./retry_focus.js";
+import { schemeValue } from "./scheme_fallback.js";
 import { framePath, unavailableUsage } from "./stage_sources.js";
 import { useShellStore } from "./store_context.js";
 
@@ -98,49 +94,6 @@ export function useDocumentFrame(
   );
   useRetryContent(mounted.frameRef);
   return { ...mounted, generation, initialSource, source };
-}
-
-/** A whole-document page with the same adapter-owned logical navigation. */
-export function DocumentStageFrame({
-  entry,
-  fragment,
-  hasDarkFragments,
-}: {
-  entry: DocumentEntry;
-  fragment?: string;
-  hasDarkFragments: boolean;
-}) {
-  const elements = useShellRoot()?.elements;
-  const localStage = useRef<HTMLDivElement>(null);
-  const stage = elements?.scrolls.ref("embed") ?? localStage;
-  const selection = useContext(DisplaySelection);
-  const scheme = documentScheme(entry, selection.colorScheme);
-  const mounted = useDocumentFrame(entry, scheme, fragment, stage);
-  return (
-    <>
-      {documentLightOnly(entry, hasDarkFragments) ? <LightOnlyBand /> : null}
-      <DocumentFrame
-        error={mounted.status === "error"}
-        ref={stage}
-        retry={{ onClick: focusThen(mounted.frameRef, mounted.retry) }}
-        scheme={scheme}
-      >
-        {mounted.source ? (
-          <PreviewIframe
-            busy={mounted.status === "loading"}
-            data={{
-              "data-mokly-fragment-frame": "",
-              "data-mokly-frame-state": mounted.status,
-            }}
-            key={mounted.generation}
-            ref={mounted.frameRef}
-            src={mounted.initialSource}
-            title={entry.title}
-          />
-        ) : null}
-      </DocumentFrame>
-    </>
-  );
 }
 
 /** The document key of a page, or of one scheme's render of a document. */

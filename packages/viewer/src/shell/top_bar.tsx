@@ -6,7 +6,8 @@
  * because the canvas shows both preview schemes at once. A view that shows
  * one scheme keeps its own preview scheme control in its head band or its
  * view controls. An embedded root passes the containers of its host's top-bar
- * slots, which the bar places in its columns.
+ * slots, which the bar places in its columns. The bar has no menu: the dock
+ * of the compact layout opens the catalogue's sheet.
  */
 
 import { TopBar as TopBarView, type TopBarHost } from "@mokly/ui/top-bar";
@@ -24,11 +25,9 @@ export function TopBar(props: {
   host?: TopBarHost;
 }) {
   const store = useShellStore();
-  const navigationId = useShellIdentifier("mb-nav");
   const searchId = useShellIdentifier("mb-search");
   return (
     <TopBarView
-      drawerOpen={store.state.drawerOpen}
       end={
         store.context.embedded ? null : (
           <AppearanceSelect
@@ -39,8 +38,6 @@ export function TopBar(props: {
         )
       }
       host={props.host}
-      navigationId={navigationId}
-      onDrawer={(open) => store.setDrawer(open)}
       onSearch={(query) => store.setSearch(query)}
       query={store.state.query}
       searchId={searchId}

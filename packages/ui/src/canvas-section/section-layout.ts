@@ -54,6 +54,39 @@ export const SECTION_GAPS: Readonly<
   screen: { column: 44, row: 48 },
 };
 
+/**
+ * The padding of a section in the compact layout, which draws no box and no
+ * head: only the room of the frames' labels above them.
+ */
+export const COMPACT_PADDING = {
+  bottom: 0,
+  left: 0,
+  right: 0,
+  top: 22,
+} as const;
+
+/** The gaps of a section in the compact layout, such as a whole variant set. */
+export const COMPACT_GAPS: Readonly<
+  Record<CanvasSectionKind, { column: number; row: number }>
+> = {
+  component: { column: 16, row: 34 },
+  document: { column: 0, row: 0 },
+  screen: { column: 16, row: 34 },
+};
+
+/** The padding and the gaps of a section, in its layout's form. */
+export function sectionSpacing(
+  kind: CanvasSectionKind,
+  compact: boolean,
+): {
+  gaps: { column: number; row: number };
+  padding: { bottom: number; left: number; right: number; top: number };
+} {
+  return compact
+    ? { gaps: COMPACT_GAPS[kind], padding: COMPACT_PADDING }
+    : { gaps: SECTION_GAPS[kind], padding: SECTION_PADDING };
+}
+
 /** The widest reading frame, a comfortable measure for a document. */
 export const READING_MAX_WIDTH = 760;
 
@@ -63,16 +96,13 @@ const READING_MIN = { height: 160, width: 240 } as const;
 /**
  * The nominal size of a reading frame on a stage: the stage's room less
  * Fit's margins and the section's padding, up to the widest reading frame,
- * so a fitted reading frame shows its document at 100%.
+ * so a fitted reading frame shows its document at 100%. In the compact
+ * layout the frame takes the canvas's width.
  */
-export function readingSize(stage: CanvasSize): CanvasSize {
-  const width =
-    stage.width - 2 * FIT_MARGIN - SECTION_PADDING.left - SECTION_PADDING.right;
-  const height =
-    stage.height -
-    2 * FIT_MARGIN -
-    SECTION_PADDING.top -
-    SECTION_PADDING.bottom;
+export function readingSize(stage: CanvasSize, compact = false): CanvasSize {
+  const { padding } = sectionSpacing("document", compact);
+  const width = stage.width - 2 * FIT_MARGIN - padding.left - padding.right;
+  const height = stage.height - 2 * FIT_MARGIN - padding.top - padding.bottom;
   return {
     height: Math.max(READING_MIN.height, Math.floor(height)),
     width: Math.min(
@@ -117,6 +147,7 @@ export function sectionExtent(
   kind: CanvasSectionKind,
   cells: readonly CanvasCell[],
   reading: CanvasSize,
+  compact = false,
 ): CanvasExtent {
   const sized = cells
     .filter((cell) => !cell.hidden)
@@ -126,23 +157,23 @@ export function sectionExtent(
       row: cell.row,
       width: kind === "document" ? reading.width : (cell.width ?? 0),
     }));
-  const gaps = SECTION_GAPS[kind];
+  const { gaps, padding } = sectionSpacing(kind, compact);
   return {
     columns: axis(
-      SECTION_PADDING.left,
+      padding.left,
       trackSizes(
         sized.map(({ column, width }) => ({ index: column, size: width })),
       ),
       gaps.column,
-      SECTION_PADDING.right,
+      padding.right,
     ),
     rows: axis(
-      SECTION_PADDING.top,
+      padding.top,
       trackSizes(
         sized.map(({ height, row }) => ({ index: row, size: height })),
       ),
       gaps.row,
-      SECTION_PADDING.bottom,
+      padding.bottom,
     ),
   };
 }

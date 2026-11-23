@@ -1,8 +1,33 @@
 /**
  * The marks of a viewer root's state, which the stylesheets select on the
- * root: a separator that the reader drags, and a browser window that is
- * expanded over the shell. The standalone and the embedded root share them.
+ * root: a separator that the reader drags, a browser window that is
+ * expanded over the shell, and the Canvas layout with the catalogue's width.
+ * The standalone and the embedded root share them.
  */
+
+import type { CSSProperties } from "react";
+
+/**
+ * The attributes of a root in the Canvas layout: `data-canvas-layout`, and
+ * the catalogue's chosen width as `--mbk-nav-width`, which the floating
+ * catalogue and the canvas's start inset read.
+ */
+export function canvasLayoutMarks(
+  canvas: boolean,
+  navigationWidth: number | undefined,
+): { "data-canvas-layout"?: string; style?: CSSProperties } {
+  if (!canvas) return {};
+  return {
+    "data-canvas-layout": "",
+    ...(navigationWidth === undefined
+      ? {}
+      : {
+          style: {
+            "--mbk-nav-width": `${Math.round(navigationWidth)}px`,
+          } as CSSProperties,
+        }),
+  };
+}
 
 /** The separator that the reader drags: the inspector's or the navigation's. */
 export type ShellResizing = "inspector" | "navigation";

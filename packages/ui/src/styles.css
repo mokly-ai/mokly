@@ -33,6 +33,8 @@
 @import "./canvas-frame/canvas-frame.css";
 @import "./canvas-section/canvas-section.css";
 @import "./canvas-stage/canvas-stage.css";
+@import "./canvas-dock/canvas-dock.css";
+@import "./entry-bar/entry-bar.css";
 @import "./browser-bar/browser-bar.css";
 @import "./device-frame/device-frame.css";
 @import "./flow-step/flow-step.css";
@@ -43,6 +45,7 @@
 @import "./previous-version/previous-version.css";
 @import "./highlight-label/highlight-label.css";
 @import "./highlight-mask/highlight-mask.css";
+@import "./floating-panel/floating-panel.css";
 @import "./shell-layout/shell-layout.css";
 @import "./workspace-layout/workspace-layout.css";
 @import "./embedded-layout/embedded-layout.css";

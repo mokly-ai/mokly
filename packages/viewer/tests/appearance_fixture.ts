@@ -30,9 +30,9 @@ export async function environment(
     pending?: boolean;
     path?: string;
     /**
-     * A window narrower than the layout breakpoint, whose one-frame stage
-     * shows each screen view in the preview scheme. A wider window shows
-     * the canvas, whose frames keep their own schemes.
+     * A window narrower than the layout breakpoint, whose compact layout
+     * shows one frame of a screen: the frame of the preview scheme. A wider
+     * window shows every frame, each in its own scheme.
      */
     narrow?: boolean;
   } = {},
@@ -189,7 +189,11 @@ export async function environment(
       mount
         .querySelector("[data-mokly-color-scheme]")
         ?.getAttribute("data-mokly-color-scheme"),
-    frames: () => [...mount.querySelectorAll<HTMLIFrameElement>("iframe")],
+    /** The shown frames: the compact layout keeps its other frames hidden. */
+    frames: () =>
+      [...mount.querySelectorAll<HTMLIFrameElement>("iframe")].filter(
+        (frame) => !frame.closest("[hidden]"),
+      ),
     system: async (dark: boolean) => {
       media.matches = dark;
       await act(async () => {

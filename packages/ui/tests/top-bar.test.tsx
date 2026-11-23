@@ -32,13 +32,6 @@ test("the bar names its controls as the shell specs query them", () => {
   assert.equal(bar.getAttribute("data-compact-search"), "closed");
   assert.equal(bar.getAttribute("data-search"), "");
 
-  const menu = screen.getByRole("button", {
-    name: "Open catalogue navigation",
-  });
-  assert.equal(menu.getAttribute("aria-controls"), "root-mb-nav");
-  assert.equal(menu.getAttribute("aria-expanded"), "false");
-  assert.equal(menu.getAttribute("data-mokly-menu"), "");
-
   const brand = screen.getByRole("link", { name: "Mokly" });
   assert.equal(brand.getAttribute("href"), "/");
   assert.equal(brand.textContent, "mokly.");
@@ -53,25 +46,26 @@ test("the bar names its controls as the shell specs query them", () => {
   assert.ok(screen.getByRole("button", { name: "Close search" }));
 });
 
-test("the menu reports the drawer state that it asks for", () => {
+test("the bar of the shell has no menu button, whatever drawer state it is given", () => {
+  // The dock of the compact layout opens the catalogue's sheet, so the bar
+  // draws no menu, and the menu's props of an earlier host change nothing.
   const drawers: boolean[] = [];
-  const { rerender } = render(
-    <TopBar
-      {...IDS}
-      drawerOpen={false}
-      onDrawer={(open) => drawers.push(open)}
-    />,
-  );
-  const menu = screen.getByRole("button", {
-    name: "Open catalogue navigation",
-  });
-  fireEvent.click(menu);
-  rerender(
-    <TopBar {...IDS} drawerOpen onDrawer={(open) => drawers.push(open)} />,
-  );
-  assert.equal(menu.getAttribute("aria-expanded"), "true");
-  fireEvent.click(menu);
-  assert.deepEqual(drawers, [true, false]);
+  for (const drawerOpen of [false, true]) {
+    const { container, unmount } = render(
+      <TopBar
+        {...IDS}
+        drawerOpen={drawerOpen}
+        onDrawer={(open) => drawers.push(open)}
+      />,
+    );
+    assert.equal(container.querySelector("[data-mokly-menu]"), null);
+    assert.equal(
+      screen.queryByRole("button", { name: /catalogue navigation/u }),
+      null,
+    );
+    unmount();
+  }
+  assert.deepEqual(drawers, []);
 });
 
 test("each typed search text reaches the callback in order", () => {
@@ -135,12 +129,12 @@ function columns(container: HTMLElement): string[][] {
   );
 }
 
-test("the bar starts with the menu and the brand and ends with the search and the end control", () => {
+test("the bar starts with the brand and ends with the search and the end control", () => {
   const { container } = render(
     <TopBar {...IDS} drawerOpen={false} end={<span data-part="end" />} />,
   );
   assert.deepEqual(columns(container), [
-    ["mbk-menu", "mbk-brand"],
+    ["mbk-brand"],
     ["mbk-search-group", "end"],
   ]);
   assert.deepEqual(
@@ -165,7 +159,7 @@ test("the host's slots follow the brand, fill the centre column, and follow the 
     />,
   );
   assert.deepEqual(columns(container), [
-    ["mbk-menu", "mbk-brand", "host start"],
+    ["mbk-brand", "host start"],
     ["host centre"],
     ["mbk-search-group", "end", "host end"],
   ]);

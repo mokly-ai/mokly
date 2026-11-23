@@ -65,3 +65,16 @@
   z-index: 1;
   transform: translateX(-50%);
 }
+
+/* The compact layout has no zoom pill: a pinch zooms the canvas, and the
+   dock's Fit refits it. The stage then takes the canvas less its insets
+   alone. */
+@media (width < 56.25rem) {
+  .mbk-canvas-stage {
+    bottom: var(--mbk-canvas-inset-bottom, 0px);
+  }
+
+  .mbk-canvas-pill {
+    display: none;
+  }
+}
