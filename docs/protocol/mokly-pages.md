@@ -159,11 +159,11 @@ status and the inspector adds the comparison details under the
 [evidence contract](./mokly-css-evidence-presentation.md#status-lines).
 
 The shell shows a page in the same frame as a Markdown document, inside the
-responsive shell and the script-free sandbox. It adds no device chrome around
-chrome the document authors itself. It hides the controls that imply viewport
-variants, colour-scheme variants, or page comparisons, and it remembers the
-user's screen choices for the next screen. The catalogue shows the same
-path-derived folders in every layout.
+responsive shell and the script-free sandbox. That frame adds no chrome around
+the chrome that the document authors itself. The shell hides the controls that
+imply viewport variants, colour-scheme variants, or page comparisons, and it
+remembers the user's screen choices for the next screen. The catalogue shows
+the same path-derived folders in every layout.
 
 `/view/<path>/` opens the page, and `/static/mokly-generated/<path>/index.html`
 answers its document with the same GET and HEAD behaviour as every document.

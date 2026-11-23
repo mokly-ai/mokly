@@ -138,8 +138,9 @@ static build, the source path of a current document; a removed entry keeps
 plain labels.
 
 `view_marks.ts` is the shared vocabulary for per-view change evidence: the two
-axes that name a view, their reader labels, and the ids and the wording of
-the change marks. `frames_filter.ts` holds the Frames choice of the screens,
+axes that name a view, their reader labels, the wording of the change marks,
+and the id of the Appearance's mark; each toggle of the Frames filter names
+its own wording's id. `frames_filter.ts` holds the Frames choice of the screens,
 one choice of the shell that in-shell navigation keeps and a full page load
 resets to every frame, and the rule that marks a toggle while it hides a
 changed view. A use case keeps its own choice in `use_case_choice.ts`.
@@ -258,7 +259,7 @@ rejects every intrinsic JSX element in `packages/viewer/src`, so a container
 renders only package components, fragments, providers, and portals. Text
 that the shell derives from catalogue data stays here and reaches the
 components as props, such as the sentences of `entry_wording.ts` and the
-change-mark ids and wording of `view_marks.ts`. The design library and the
+change-mark wording of `view_marks.ts`. The design library and the
 artboards under `examples/basic/specs/design` render the same package
 sources, so a change to a package component also changes its design mockups.
 
@@ -613,12 +614,17 @@ selection under the
 [selection contract](../../../../docs/protocol/mokly-viewer-selection-canvas.md):
 in Inspect, a click on a frame selects the innermost instance under the
 pointer, a click that follows a link selects nothing, a host pick takes the
-click in either tab, and the empty canvas and Escape anywhere in the shell
-root clear the selection. A frame's session tells the selection when its
-document is replaced or the instance leaves its ready usage. A request to
-show the selection is an event: each explicit choice and each route's
-instance counts once, and Inspect scrolls to its Selection section at each
-count, so a usage revision never opens or scrolls it. `root_context.tsx` shares the root ref, drag
+click in either tab, and the empty canvas and Escape clear the selection.
+Escape acts on the whole document of a standalone shell and only on an
+embedded root, and Highlight components and a host pick take it first. A
+frame's session tells the selection when its document is replaced or the
+instance leaves its ready usage. A request to show the selection is an
+event: each explicit choice and each route's instance counts once, and
+Inspect scrolls to its Selection section at each count, so a usage revision
+never opens or scrolls it. `workspace_picks.ts` joins the selection to the
+canvas: in the compact layout a variant set's selected frame is the picked
+frame, which follows the selection's scheme, and a pick of another row
+opens that row's entry. `root_context.tsx` shares the root ref, drag
 state, focus targets, host slots, the dock's controls, named scroll regions,
 and the shown canvas. Containers use package refs for focus
 and measurement. `focus_after.ts` moves focus after a recovery action of the
@@ -674,16 +680,16 @@ Standalone route installation passes scheme pins to the React appearance
 owner through a callback. It never changes preview selection separately.
 A reader's choice wins over later pins through navigation and browser history.
 Each preview wrapper records its actual
-file's scheme for iframe media queries, native controls, device colors and
+file's scheme for iframe media queries, native controls, preview surfaces and
 comparison backgrounds, including globally light-only catalogues.
 `scheme_fallback.ts` decides when a document keeps its light file under Dark
 in a catalogue with a dark axis. A current document's reading frame then
 names the fallback in its label, in both layouts. A removed document's
 section head, and in the compact layout its entry bar, read `Showing previous
 version — Light only` instead while the preview scheme is Dark. The
-stylesheets of `@mokly/ui/preview-frame`, `@mokly/ui/device-frame`, and
-`@mokly/ui/comparison-pane` set every preview surface background and iframe
-color scheme from the wrapper's scheme.
+stylesheets of `@mokly/ui/canvas-frame`, `@mokly/ui/preview-frame`,
+`@mokly/ui/comparison-pane`, and `@mokly/ui/canvas-comparison` set every
+preview surface background and iframe color scheme from the wrapper's scheme.
 Transparent content therefore keeps its selected Light or Dark base in screen,
 page, component, historical and comparison frames, independently of interface
 appearance.

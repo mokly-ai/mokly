@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { readEntryDetail } from "../../packages/viewer/src/catalogue/detail_reader.js";
 
+import { comparisonSection, paneFrame } from "./comparison_sections.js";
 import { showMode } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import { expectCardPane } from "./serve_comparison_ui.js";
@@ -19,7 +20,8 @@ test("Serve opens Overlay for the Card variant with parent-owned stylesheet evid
         response.url().endsWith("/") &&
         response.request().method() === "GET",
     ),
-    showMode(page, "Overlay", 2),
+    // Overlay stacks both versions in the variant's Light and Dark frames.
+    showMode(page, "Overlay", 4),
   ]);
   expect(selected.status()).toBe(204);
   // The variant's detail carries the comparison facts that the panes show.
@@ -46,10 +48,9 @@ test("Serve opens Overlay for the Card variant with parent-owned stylesheet evid
     ["before", "Before"],
     ["after", "Current"],
   ] as const)
-    await expect(page.locator(`.mb-pane--${pane} iframe`)).toHaveAttribute(
-      "title",
-      `${title} — desktop — light`,
-    );
+    await expect(
+      paneFrame(comparisonSection(page, "component"), pane),
+    ).toHaveAttribute("title", `${title} — desktop — light`);
   await expectCardPane(page, "before", "Featured Before");
   await expectCardPane(page, "after", "Featured After");
   await expect(page.locator("[data-comparison-failure]")).toHaveCount(0);

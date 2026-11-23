@@ -323,15 +323,14 @@ Canvas design's 16-unit grid. The canvas parts mix their rings, fills, and
 shadows from the Canvas roles through `light-dark()`, so they follow the
 colour scheme that the shell root states for its appearance.
 
-`Stage` draws the dotted stage of a preview, which a removed entry's previous
-version and the static depictions of the earlier stage keep.
+`Stage` draws the dotted stage of a preview, which the static depictions of
+the earlier stage keep.
 `PreviewFrame` draws one frame on
 it: the wrapper that records the scheme of the shown render, the viewport's
 label with the `LightOnlyNote` of `scheme-fallback`, and the lines of a
 preview that is unavailable or that failed to load. The failed line shows Try
 again when the host passes `retry`: a callback, or an address in a static
-depiction. `DocumentFrame` hosts a
-whole document, and `PreviewIframe` is the `<iframe>` element itself, always
+depiction. `PreviewIframe` is the `<iframe>` element itself, always
 sandboxed without scripts. The host passes the frame's `ref`, its `src` or
 `srcDoc`, its `key`, and its data attributes in their order, and it loads and
 reads the frame's document; no component reads it. `PhoneFrame` and
@@ -340,20 +339,16 @@ reads the frame's document; no component reads it. `PhoneFrame` and
 for a moment, and the toggle asks for the expanded state through
 `onExpandedChange`, because the host owns which window is expanded.
 
-`FlowStage` and `FlowStep` draw a user flow's column of steps and
-`PreviousVersion` a removed entry's band and stage host, which the design
-catalogue still draws; the viewer shows both on the canvas. `StageLoading`,
-`StageFailure`, `PreviewLoading`, `PreviewUnavailable`, and
-`PreviewNotCaptured` draw the states of a preview that has not arrived.
-`EmptyState` draws the quiet state of a
+`StageLoading`, `StageFailure`, and `PreviewNotCaptured` draw the states of a
+preview that has not arrived. `EmptyState` draws the quiet state of a
 stage, and `HomeState`, `MissingRouteState`, `RemovedState`, and
 `RemovedVariantState` the shell's own. `ComparisonStage` draws the comparison
 of an entry around the band that the host renders, with its sections, panes
 grid, and failure. `ComparisonPane` and `ComparisonLayer` draw one version,
 and `ComparisonViewport` and `ComparisonSurface` pass their elements to the
-host's scroll controller through refs. `VariantBar` draws a component's saved
-variants. The host supplies the wording of its copy modules, such as the
-unavailable previous version and the comparison's state labels.
+host's scroll controller through refs. The host supplies the wording of its
+copy modules, such as the unavailable previous version and the comparison's
+state labels.
 
 A state that a host focuses after Try again takes a ref: `focusRef` on
 `StageLoading`, `PropsStatus`, `UsageStatus`, `UsageList`, and the loading
@@ -401,8 +396,8 @@ drag's cursor.
 
 The package gives a host each element that the host measures, focuses, or
 scrolls through a ref. `WorkspaceLayout` gives its preview pane and its panes
-to `previewRef` and `panesRef`. `BrowserFrame`, `FlowStage`, `DocumentFrame`,
-`Stage`, and `MainRegion` give their element to `ref`, and `Inspector` its
+to `previewRef` and `panesRef`. `BrowserFrame`, `Stage`, and `MainRegion`
+give their element to `ref`, and `Inspector` its
 panels' region to `contentRef`. `CanvasStage` gives its canvas, which clips
 its frames, to `canvasRef`, and its stage's invisible box, the canvas between
 the floating panels and above the zoom pill, to `stageRef`. `TagPicker` gives its button and its picker to
@@ -440,9 +435,7 @@ A static mockup sets `interactive={false}` on `BrowserFrame` or `BrowserBar`,
 which draws the bar as a picture of itself: the address copies nothing, the
 toggle is a picture named by what it would do, and neither takes the pointer
 or the hover look. On `EmptyState`, `interactive={false}` draws an action
-without an `href` as a picture of itself. A `VariantBar` variant without an
-`href` is a picture of its link that keeps the link's look and its current
-mark.
+without an `href` as a picture of itself.
 
 A static mockup cannot measure its preview, so it gives `HighlightMask` its
 width, its height, and its boxes as SVG lengths, such as `100%` or
@@ -451,6 +444,19 @@ width, its height, and its boxes as SVG lengths, such as `100%` or
 link with the label's look, which `current` marks as the current page, and
 `interactive={false}` draws a label without an address as a picture of itself
 that keeps the arrow.
+
+A static mockup cannot measure its canvas either, so it gives `CanvasStage`
+its `view`: the zoom and the canvas position of the section's top left, which
+the canvas draws in place of its own view. `fitView` gives the view that Fit
+shows for a section's lengths, which `sectionExtent` gives, on a stage that
+the mockup knows. On `CanvasStage` and `CanvasZoomPill`,
+`interactive={false}` draws Zoom out, Zoom in, and Fit as pictures of
+themselves. On `CanvasDock` it draws Catalogue, the tab, and Fit as pictures,
+and on `FloatingPanel` the sheet's grabber and close control. Each picture is
+named by what it would do and takes neither the pointer nor the hover look.
+On `PanelTabs`, `interactive={false}` draws a group named `Panel` whose tabs
+are pictures of themselves. The selected tab's picture is marked as the
+current one and keeps the tab's id, so the body that it shows keeps its name.
 
 ## Development
 
@@ -643,7 +649,7 @@ override the desktop layout rules.
   chips, paths, links, chip groups, and entry chips of a value
 - [`src/panel-tabs/panel-tabs.tsx`](./src/panel-tabs/panel-tabs.tsx) —
   `PanelTabs` and `PanelTabBody`: the right panel's tab list with its keys,
-  and the body of one tab
+  or the pictures of its tabs in a static depiction, and the body of one tab
 - [`src/inspect-panel/inspect-panel.tsx`](./src/inspect-panel/inspect-panel.tsx)
   — `InspectPanel`, `InspectSection`, and `InspectFold`: Inspect's sections
   and its folded sections with their counts
@@ -692,7 +698,8 @@ override the desktop layout rules.
 - [`src/canvas-stage/canvas-stage.tsx`](./src/canvas-stage/canvas-stage.tsx)
   — `CanvasStage` and `CanvasStageHandle`: the dot-grid canvas with its
   section and its zoom pill, the handle with Fit and the zoom steps, the
-  click on the empty canvas, and the zoom rule of the fixed-size tags
+  click on the empty canvas, the zoom rule of the fixed-size tags, and the
+  view that a static depiction gives
 - [`src/canvas-stage/use-canvas-view.ts`](./src/canvas-stage/use-canvas-view.ts)
   — the measured stage, the fitted view, and the handle's commands
 - [`src/canvas-stage/canvas-view.ts`](./src/canvas-stage/canvas-view.ts) —
@@ -731,24 +738,25 @@ override the desktop layout rules.
   — `CanvasPreviousVersion`: the host of a removed entry's previous version on
   the canvas
 - [`src/canvas-zoom-pill/canvas-zoom-pill.tsx`](./src/canvas-zoom-pill/canvas-zoom-pill.tsx)
-  — `CanvasZoomPill`: Zoom out, the zoom, Zoom in, and Fit
+  — `CanvasZoomPill`: Zoom out, the zoom, Zoom in, and Fit, as buttons or as
+  the pictures of a static depiction
 - [`src/canvas-dock/canvas-dock.tsx`](./src/canvas-dock/canvas-dock.tsx) —
   `CanvasDock`: the compact layout's group of Catalogue, the current tab, and
-  Fit
+  Fit, as buttons or as the pictures of a static depiction
 - [`src/entry-bar/entry-bar.tsx`](./src/entry-bar/entry-bar.tsx) —
   `EntryBar`: the compact layout's entry name, status, and frame picker
 - [`src/floating-panel/floating-panel.tsx`](./src/floating-panel/floating-panel.tsx)
   — `FloatingPanel` and `FloatingPanelSheet`: the panel over the canvas with
   its head, and its bottom sheet, with the grabber of `sheet-grab.tsx` and
-  the close control
+  the close control, or their pictures in a static depiction
 - [`src/icons/canvas-icons.tsx`](./src/icons/canvas-icons.tsx) — `CanvasIcon`,
   the glyphs of the frames' kinds, the zoom pill, the dock, the sheet, and
   the frame picker
 - [`src/stage/stage.tsx`](./src/stage/stage.tsx) — `Stage`, the dotted
   surface of live frames, of a component's canvases, or of a state
 - [`src/preview-frame/preview-frame.tsx`](./src/preview-frame/preview-frame.tsx)
-  — `PreviewFrame`, `DocumentFrame`, and `PreviewIframe`: a frame's wrapper,
-  label, and lines, a whole document's frame, and the `<iframe>` element
+  — `PreviewFrame` and `PreviewIframe`: a frame's wrapper, label, and lines,
+  and the `<iframe>` element
 - [`src/device-frame/device-frame.tsx`](./src/device-frame/device-frame.tsx)
   — `PhoneFrame` with the status band of `phone-status.tsx`, and
   `BrowserFrame`, whose expanded window covers the page, or whose bar is a
@@ -757,14 +765,10 @@ override the desktop layout rules.
   `BrowserBar`: the traffic lights, the address with its "URL copied"
   message, and the expand toggle of a browser window, as controls or as
   pictures of a static depiction
-- [`src/flow-step/flow-step.tsx`](./src/flow-step/flow-step.tsx) —
-  `FlowStage` and `FlowStep`: a user flow's column of numbered steps
-- [`src/previous-version/previous-version.tsx`](./src/previous-version/previous-version.tsx)
-  — `PreviousVersion`: the band and the stage host of a removed entry
 - [`src/preview-state/preview-state.tsx`](./src/preview-state/preview-state.tsx)
-  — the loading, failed, unavailable, and missing states of a preview
+  — the loading, failed, and missing states of a preview
 - [`src/scheme-fallback/scheme-fallback.tsx`](./src/scheme-fallback/scheme-fallback.tsx)
-  — `LightOnlyNote` and `LightOnlyBand`, which only a Dark shell shows
+  — `LightOnlyNote`, which only a Dark shell shows
 - [`src/empty-state/empty-state.tsx`](./src/empty-state/empty-state.tsx) —
   `EmptyState` with its action, as a link, a button, or the picture of a
   static depiction, and the home, missing route, and removed states
@@ -782,9 +786,6 @@ override the desktop layout rules.
 - [`src/swipe-divider/swipe-divider.tsx`](./src/swipe-divider/swipe-divider.tsx)
   — `SwipeDivider`: Swipe's line, grip and Before and Current tags over a
   frame, which a drag, the arrow keys, Home and End move
-- [`src/variant-bar/variant-bar.tsx`](./src/variant-bar/variant-bar.tsx) —
-  `VariantBar`: the links of a component's saved variants, or the pictures
-  of a static depiction, and the status
 - [`src/shell-layout/shell-layout.tsx`](./src/shell-layout/shell-layout.tsx)
   — `ShellLayout`, the standalone root; `SkipLink`, `ShellBody`,
   `MainRegion`, `RouteStatus`, and `FloatingCatalogue`, which both roots

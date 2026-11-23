@@ -26,8 +26,9 @@ namespace. A component parent has its own view, rendered from its own props,
 under the [entry props contract](./mokly-entry-props.md). A link to a
 component parent resolves to that view in the effective viewport and colour
 scheme, and a link to a variant resolves to that variant's own view; Browse
-opens the parent's page or the variant's page, and the variant bar marks the
-shown entry. The [explorer contract](./mokly-component-explorer.md) owns usage
+opens the parent's page or the variant's page, and on the variant's page
+Inspect's [Variants list](./mokly-component-inspector-design.md#inspect) checks
+the variant. The [explorer contract](./mokly-component-explorer.md) owns usage
 queries and selecting an actual consumer instance; variant rows follow the
 [variant contract](./mokly-variants.md). View and theme swaps replace iframe
 history; outer Back/Forward continues between catalogue entries. Only

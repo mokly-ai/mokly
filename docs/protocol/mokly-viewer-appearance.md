@@ -128,13 +128,12 @@ Provide Light and Dark values for these responsibilities:
   muted and disabled text; decorative and interactive borders; focus indicators.
 - Accent fills, contrast text, tint and text links; Added, Changed, Removed and
   Ignored status text/background pairs; validation and unavailable states.
-- Navigation guides, canvas dots, browser toolbar/address controls, tooltips,
-  backdrops, shadows, panel tabs, native fields and scrollbars.
+- Navigation guides, canvas dots, tooltips, backdrops, shadows, panel tabs,
+  native fields and scrollbars.
 
 Theme-dependent colours in the components and stylesheets of the shared UI
 package use semantic roles, not a dark-mode override sheet. A
-theme-dependent colour literal appears only in a palette definition, including
-the roles of fixed device artwork.
+theme-dependent colour literal appears only in a palette definition.
 
 Keep the public overrides `--mokly-accent`, `--mokly-accent-contrast` and
 `--mokly-accent-soft`. Unset overrides receive the current theme's defaults;
@@ -172,11 +171,9 @@ The interface and a preview often differ: the canvas shows Light and Dark
 frames under either appearance, an embedded host may pair any `theme` with
 any `selection.colorScheme`, and a light-only screen keeps its light frames
 under a dark interface. The floating catalogue and right panel, the frame
-labels and size tags, and the browser toolbar follow appearance. Phone status
-and home indicators, phone-screen surfaces and preview loading surfaces follow
-their frame's scheme. Use independent preview tokens rather than deriving a
-light phone's text from dark shell ink. Fixed phone hardware and
-traffic-light artwork keep their intended colours.
+labels and the size tags follow appearance. Preview surfaces and loading
+surfaces follow their frame's scheme. Use independent preview tokens rather
+than deriving a light preview's text from dark shell ink.
 
 One preview stylesheet owns iframe colour schemes and the opaque backgrounds
 behind transparent preview content. Screen, page, component, flow, historical
@@ -189,8 +186,8 @@ Set each managed iframe's CSS `color-scheme` to its frame's scheme before
 loading it, including page, document, component, flow and comparison frames;
 a page has no scheme axis and keeps the Light context. Frame wrappers record
 the selected document's scheme independently of the outer document and of
-fallback captions; iframe context, device-screen styling and comparison bases
-read that per-frame value. CSS colour scheme can otherwise affect an embedded
+fallback captions; iframe context, preview surfaces and comparison bases read
+that per-frame value. CSS colour scheme can otherwise affect an embedded
 document's media queries, even across origins; see
 [MDN embedded color schemes](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme#embedded_elements).
 

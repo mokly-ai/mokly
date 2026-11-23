@@ -1,7 +1,8 @@
 /**
  * The rendered UI each branch-point case shows on Serve, in the branch copy,
  * and in the embedded viewer: affected destinations, saved props, removed
- * rows, kept comparison mode, Changes activation, and crumbs.
+ * rows, kept comparison mode, Changes activation, and the breadcrumbs of
+ * Inspect's Path row.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -16,132 +17,31 @@ import {
   movedConsumers,
 } from "./branch_point_affected.js";
 import {
+  activation,
+  expectFamilyProps,
+  removedSibling,
+} from "./branch_point_siblings.js";
+import {
   activateRow,
   type BranchPointHost,
   compareSideBySide,
   expectHead,
   expectRouted,
-  expectSavedProps,
   openChanges,
   openEntry,
   search,
   variantBar,
 } from "./branch_point_ui.js";
-import { revealInPanel } from "./workspace_actions.js";
-
-const PROPS = ['{"label": "Continue"}', '{"label": "Submit"}'] as const;
-
-/**
- * Select one saved variant from the bar, keeping the workspace mounted. In
- * the compact layout the bar stands in the panel's sheet.
- */
-async function selectVariant(page: Page, path: string): Promise<void> {
-  const link = page.locator(
-    `nav[aria-label='Saved variants'] a[data-workspace-variant="${path}"]`,
-  );
-  await revealInPanel(page, link);
-  await link.click();
-}
-
-/** A removed sibling listed once, inside its resolved parent's list. */
-async function expectRemovedRow(
-  page: Page,
-  parent: string,
-  removed: string,
-): Promise<void> {
-  const nav = await openChanges(page);
-  await expect(
-    nav.locator(
-      `[data-nav-disclosure="variants:${parent}"] a[data-entry-id="${removed}"]`,
-    ),
-  ).toHaveCount(1);
-  await expect(nav.locator(`a[data-entry-id="${removed}"]`)).toHaveCount(1);
-}
-
-/** The parent's own entry, then its variants; removed ones come last. */
-function bar(
-  title: string,
-  parent: string,
-  primary: string,
-  removed: string,
-  current: "primary" | "removed",
-): string[] {
-  return [
-    `${title} -> ${parent}`,
-    `primary -> ${primary}${current === "primary" ? " (current)" : ""}`,
-    `secondary · Removed -> ${removed}${current === "removed" ? " (current)" : ""}`,
-  ];
-}
-
-/** A parent, its primary variant, and its removed sibling. */
-interface Family {
-  title: string;
-  parent: string;
-  primary: string;
-  removed: string;
-}
-
-/**
- * A removed sibling opens inside the comparison mode its siblings use, with
- * the base folder titles as text crumbs and its parent's heading.
- */
-async function removedSibling(
-  page: Page,
-  host: BranchPointHost,
-  family: Family,
-  removedCrumbs: readonly string[],
-): Promise<void> {
-  const { title, parent, primary, removed } = family;
-  await expect
-    .poll(() => variantBar(page))
-    .toEqual(bar(title, parent, primary, removed, "primary"));
-  await compareSideBySide(page, host);
-  await expectSavedProps(page, ...PROPS);
-  await selectVariant(page, removed);
-  await expectRouted(page, host, removed);
-  await expect(page.locator("[data-diff-mode=side]")).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expectHead(page, title, removedCrumbs);
-  await expect
-    .poll(() => variantBar(page))
-    .toEqual(bar(title, parent, primary, removed, "removed"));
-  await expectRemovedRow(page, parent, removed);
-}
-
-/**
- * A parent that keeps its own Changes row opens itself from the unfiltered
- * list, and also while a search shows only its removed sibling; the search
- * keeps the removed sibling's row in its list, and that row opens the
- * sibling with its text crumbs. The helper clears any earlier search first.
- */
-async function activation(
-  page: Page,
-  host: BranchPointHost,
-  family: Family,
-  removedCrumbs: readonly string[],
-): Promise<void> {
-  const { title, parent, removed } = family;
-  await search(page, host, "");
-  await activateRow(page, parent);
-  await expectRouted(page, host, parent);
-  await search(page, host, "secondary");
-  await activateRow(page, removed);
-  await expectRouted(page, host, removed);
-  await expectHead(page, title, removedCrumbs);
-  // Each activation starts on another route, so each one must navigate.
-  await activateRow(page, parent);
-  await expectRouted(page, host, parent);
-}
 
 async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
   await openEntry(page, host, paths.movedChild);
   // The folder above the moved parent has its own page, so its crumb links.
   await expectHead(page, "Action", [
-    "Branch [button]",
-    "Parent -> /view/branch/parent/",
-    "Archive [button]",
+    "branch [button]",
+    "parent -> /view/branch/parent/",
+    "archive [button]",
+    "action [text]",
+    "primary [text]",
   ]);
   const family = {
     title: "Action",
@@ -149,8 +49,16 @@ async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
     primary: paths.movedChild,
     removed: paths.removedChild,
   };
-  const removedCrumbs = ["Branch [text]", "Parent [text]"];
-  await removedSibling(page, host, family, removedCrumbs);
+  const head = {
+    crumbs: [
+      "branch [text]",
+      "parent [text]",
+      "action [text]",
+      "secondary [text]",
+    ],
+    folders: "Branch › Parent",
+  };
+  await removedSibling(page, host, family, head);
   // The folder's unchanged own page is a container row: it opens the first
   // changed entry it lists, and under a search the removed sibling.
   await activateRow(page, paths.parentFolder);
@@ -158,13 +66,18 @@ async function movedParent(page: Page, host: BranchPointHost): Promise<void> {
   await search(page, host, "secondary");
   await activateRow(page, paths.parentFolder);
   await expectRouted(page, host, paths.removedChild);
-  await expectHead(page, "Action", removedCrumbs);
-  await activation(page, host, family, removedCrumbs);
+  await expectHead(page, "Action", head.crumbs, head.folders);
+  await activation(page, host, family, head);
 }
 
 async function movedVariant(page: Page, host: BranchPointHost): Promise<void> {
   await openEntry(page, host, "branch/variant/donor/spare");
-  await expectHead(page, "Donor", ["Branch [button]", "Variant [button]"]);
+  await expectHead(page, "Donor", [
+    "branch [button]",
+    "variant [button]",
+    "donor [text]",
+    "spare [text]",
+  ]);
   await expect
     .poll(() => variantBar(page))
     .toEqual([
@@ -174,7 +87,12 @@ async function movedVariant(page: Page, host: BranchPointHost): Promise<void> {
   // The unmodified receiver opens its first changed variant from Changes.
   await activateRow(page, "branch/variant/receiver");
   await expectRouted(page, host, paths.movedVariant);
-  await expectHead(page, "Receiver", ["Branch [button]", "Variant [button]"]);
+  await expectHead(page, "Receiver", [
+    "branch [button]",
+    "variant [button]",
+    "receiver [text]",
+    "primary [text]",
+  ]);
   await expect
     .poll(() => variantBar(page))
     .toEqual([
@@ -183,7 +101,7 @@ async function movedVariant(page: Page, host: BranchPointHost): Promise<void> {
       `primary -> ${paths.movedVariant} (current)`,
     ]);
   await compareSideBySide(page, host);
-  await expectSavedProps(page, ...PROPS);
+  await expectFamilyProps(page);
   const nav = await openChanges(page);
   await expect(
     nav.locator(
@@ -194,26 +112,45 @@ async function movedVariant(page: Page, host: BranchPointHost): Promise<void> {
 
 async function caseRenames(page: Page, host: BranchPointHost): Promise<void> {
   await openEntry(page, host, paths.caseVariant);
-  await expectHead(page, "Case action", ["Branch [button]", "Case [button]"]);
+  await expectHead(page, "Case action", [
+    "branch [button]",
+    "case [button]",
+    "action [text]",
+    "primary [text]",
+  ]);
   const family = {
     title: "Case action",
     parent: paths.caseParent,
     primary: paths.caseVariant,
     removed: paths.caseRemoved,
   };
-  const removedCrumbs = ["Branch [text]", "Case [text]"];
-  await removedSibling(page, host, family, removedCrumbs);
-  await activation(page, host, family, removedCrumbs);
+  const head = {
+    crumbs: [
+      "branch [text]",
+      "case [text]",
+      "Action [text]",
+      "secondary [text]",
+    ],
+    folders: "Branch › Case",
+  };
+  await removedSibling(page, host, family, head);
+  await activation(page, host, family, head);
 }
 
 async function reusedParent(page: Page, host: BranchPointHost): Promise<void> {
   const removed = paths.reusedRemoved;
   await openEntry(page, host, removed);
-  await expectHead(page, "default", [
-    "Branch [text]",
-    "Reused [text]",
-    "Former action [text]",
-  ]);
+  await expectHead(
+    page,
+    "default",
+    ["branch [text]", "reused [text]", "action [text]", "default [text]"],
+    "Branch › Reused",
+  );
+  // No eligible parent remains, so the head names the stored parent title
+  // as plain text, under the branch-point lookup.
+  await expect(page.locator('[data-inspect-section="details"]')).toContainText(
+    "Former action",
+  );
   const nav = await openChanges(page);
   await expect(nav.locator(`a[data-entry-id="${removed}"]`)).toHaveCount(1);
   await expect(

@@ -1,6 +1,6 @@
 // Per-view change evidence: the two axes that name a generated view, their
-// labels, and the ids and the wording of the marks that the Frames filter's
-// toggles carry while they hide a changed view.
+// labels, the wording of the marks that the Frames filter's toggles carry
+// while they hide a changed view, and the id of the Appearance's mark.
 
 import type { ColorScheme, Viewport } from "@mokly/model";
 
@@ -11,10 +11,12 @@ export interface ChangedView {
   viewport: Viewport;
 }
 
-/** Element ids a marked control names through `aria-describedby`. */
+/**
+ * The id of the standalone Appearance's mark wording, which the marked
+ * control names through `aria-describedby`.
+ */
 export const VIEW_CHANGED_IDS = {
   scheme: "mb-view-changed-scheme",
-  viewport: "mb-view-changed-viewport",
 } as const;
 
 /** What a screen reader announces as a marked control's description. */

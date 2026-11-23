@@ -6,7 +6,13 @@
 
 import { expect } from "@playwright/test";
 
-import { modeButton, navRow } from "./comparison_ui.js";
+import { comparisonSection, paneFrame } from "./comparison_sections.js";
+import {
+  chooseMode,
+  compareState,
+  modeButton,
+  navRow,
+} from "./comparison_ui.js";
 import {
   consumerSource,
   consumerTitled,
@@ -19,6 +25,7 @@ import {
   SELECTED_ENDPOINT,
 } from "./serve_comparison_ui.js";
 import { responseFailure } from "./shell_error_allowances.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 test("a watched update resets failed diffs to Current without generating", async ({
   page,
@@ -44,7 +51,7 @@ test("a watched update resets failed diffs to Current without generating", async
   );
   const requests = selectedRequests(page);
   await page.goto(`/view/${changed}/?viewport=desktop`);
-  await modeButton(page, "Overlay").click();
+  await chooseMode(page, "Overlay");
   await expect(
     page.getByRole("button", { name: "Try again", exact: true }),
   ).toBeVisible();
@@ -62,12 +69,16 @@ test("a watched update resets failed diffs to Current without generating", async
     "aria-pressed",
     "true",
   );
-  await expect(page.locator("[data-diff-stage]")).toBeHidden();
+  // The failure left the canvas, which shows the live frames again.
+  await expect(compareState(page)).toBeHidden();
+  await expect(page.locator(canvasFrame("desktop"))).toBeVisible();
   expect(requests).toHaveLength(1);
 
   await loadComparison(page, "Overlay");
   await expect(
-    page.frameLocator(".mb-pane--after iframe").locator("h1"),
+    paneFrame(comparisonSection(page, "desktop"), "after")
+      .contentFrame()
+      .locator("h1"),
   ).toHaveText("After screen");
   expect(requests).toHaveLength(2);
 });

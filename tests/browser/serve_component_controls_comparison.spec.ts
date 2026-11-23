@@ -7,13 +7,17 @@
 
 import { expect, type Route } from "@playwright/test";
 
-import { modeButton } from "./comparison_ui.js";
+import { chooseMode } from "./comparison_ui.js";
 import { showProps } from "./live_props.js";
 import { isRender, renderBody } from "./live_shell_fixture.js";
 import { test } from "./serve_comparison_test.js";
 import { expectCardPane, loadComparison } from "./serve_comparison_ui.js";
 import { responseFailure } from "./shell_error_allowances.js";
-import { canvasFrame, chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseViewport,
+  openPanelTab,
+} from "./workspace_actions.js";
 
 test("failed and superseded edits keep the last valid preview; comparisons restore saved props", async ({
   page,
@@ -72,6 +76,8 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
   await expect(preview.locator("h2")).toHaveText("Newest");
 
   await loadComparison(page, "Overlay");
+  // The mode stands in the Changes tab; Props stands in Inspect.
+  await openPanelTab(page, "Inspect");
   await expect(
     props.getByText("Comparisons show the saved props.", { exact: true }),
   ).toBeVisible();
@@ -81,7 +87,8 @@ test("failed and superseded edits keep the last valid preview; comparisons resto
   await expect(props.getByRole("textbox")).toHaveCount(0);
   await expectCardPane(page, "after", "Card content");
 
-  await modeButton(page, "Current").click();
+  await chooseMode(page, "Current");
+  await openPanelTab(page, "Inspect");
   await expect(label).toBeEditable();
   await expect(label).toHaveValue("Card content");
   await expect(preview.locator("h2")).toHaveText("Card content");

@@ -40,6 +40,8 @@ viewer's root, that an entry offers no mode: it opens the Changes tab of an
 entry that has one first, also from the compact layout's closed panel sheet.
 `compareStage` is the compare, busy while it loads, and `compareState` is its
 loading or failure state, which exists only then and never holds a pane.
+`comparison_outcomes.ts` builds the expected outcome lines of a screen's
+shown frames, the Light row first, or of one row of a variant set.
 `comparison_static_frames.ts` names which frames a mode compares on the copy:
 every shown frame in Overlay, Difference, and Swipe, the first shown frame in
 Side by side, and the compact layout's one frame. Its `expectSectionMode`
@@ -150,7 +152,13 @@ through both frame adapters, and `serve_branch_point_comparison_ui.spec.ts`
 on one Serve per worker over the shared Serve comparison fixture. Each passes
 a `MovedHost`. The checks read its `BranchPointHost` part, which keeps the
 `EntryHost` path check and says when comparisons are captured.
-`branch_viewer_test.ts` serves the embedded viewer to both embedded specs.
+`branch_point_ui.ts` reads Inspect's head: its title, the breadcrumbs of its
+Path row, the Location row of a removed entry, and the Variants list.
+`branch_point_siblings.ts` holds the journey of a family's removed sibling,
+and `branch_point_destinations.ts` the shown status and the outcome lines of
+each of Tally's Affected destinations on the wide canvas and in the compact
+layout. `branch_viewer_test.ts` serves the embedded viewer to both embedded
+specs.
 
 ## Small comparison copies
 

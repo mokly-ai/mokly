@@ -19,7 +19,7 @@ import type { CanvasSelected } from "./canvas_selection.js";
 import type { InstanceBoxReading } from "./instance_box_model.js";
 
 /** The part of a box that stands on a frame of a size, if any. */
-export function boxOnFrame(
+function boxOnFrame(
   box: CanvasSelectionBox,
   size: CanvasFrameSize,
 ): CanvasSelectionBox | undefined {

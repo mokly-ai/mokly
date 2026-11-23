@@ -1,12 +1,13 @@
 /* The static depiction of the published viewer, which only the catalogue
-   draws: the sample screen inside the package's device frames, and the
+   draws: the sample screen inside the package's canvas frames, and the
    comparison message over the preview pane. In the app the package's own
    stage overlay covers that pane after a browser measurement; a static
    document runs no script, so the cloud's copy of the message covers the
-   pane instead. These rules style cloud elements only, never a package
-   part. The drawing's module imports this stylesheet, so Mokly bundles it
-   into the entries that render the drawing, and the application, which
-   links `viewer.css`, never loads it.
+   pane instead, over the canvas and the entry bar and under the right panel
+   and the dock, as the package's overlay lies. These rules style cloud
+   elements only, never a package part. The drawing's module imports this
+   stylesheet, so Mokly bundles it into the entries that render the drawing,
+   and the application, which links `viewer.css`, never loads it.
 
    The sample paints the palette of the view that its frame shows, which can
    be light in a dark document. `sample-screen.tsx` sets the `--fo-sample-*`
@@ -15,28 +16,26 @@
 .fo-stage-overlay-static {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: 9;
   display: flex;
 }
+/* The sample fills the frame's document box, which holds the frame's
+   nominal size, so it lays out as the page at that size would and the frame
+   scales it with the canvas's zoom. */
 .fo-sample-screen {
+  box-sizing: border-box;
   display: flex;
-  flex: 1;
   flex-direction: column;
   gap: var(--mk-space-6);
+  width: 100%;
   height: 100%;
-  min-height: 0;
   overflow: hidden;
   padding: var(--mk-space-5) var(--mk-space-8);
   background: var(--fo-sample-surface);
   color: var(--fo-sample-ink);
   font-family: var(--mk-font-sans);
 }
-/* The phone sizes itself from its content on a narrow stage. The frame the
-   sample stands in for is an iframe, whose default width is 300px, so the
-   sample takes that width and the phone keeps the size it has in the app. */
 .fo-sample-mobile {
-  width: 300px;
-  max-width: 100%;
   gap: var(--mk-space-5);
   padding: var(--mk-space-4) var(--mk-space-5);
 }

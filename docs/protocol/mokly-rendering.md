@@ -147,7 +147,7 @@ a `definePage` module that imports CSS still has a bundled stylesheet route,
 which the page's author may link with a relative URL. A configured file that a declaration also
 names is linked once, at the configured position. A pending bundled route is
 a valid link and resource target during validation, before anything is
-written. Shell and device-frame CSS is package-owned and self-contained;
+written. Shell and canvas-frame CSS is package-owned and self-contained;
 product CSS is never copied into the npm package.
 
 ## Document Assembly
