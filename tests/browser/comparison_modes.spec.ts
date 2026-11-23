@@ -12,6 +12,7 @@ import {
   chooseFilter,
   comparisonFrames,
   comparisonIndex,
+  expectCurrentAlone,
   expectNoCompareModes,
   modeButton,
   navRow,
@@ -147,7 +148,7 @@ test("added and removed screens stay current without comparison controls", async
   await expect(navRow(page, comparisonPaths.added)).toBeVisible();
   await expect(page.locator("[data-workspace-status]")).toHaveText("Added");
   await awaitRoutedDetail(page, comparisonPaths.added);
-  await expectNoCompareModes(page);
+  await expectCurrentAlone(page);
   await expect(
     page
       .frameLocator(canvasFrame("desktop"))

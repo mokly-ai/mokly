@@ -3,8 +3,9 @@
  * host page adds each reset after the viewer stylesheet: an unlayered element
  * reset, as modern-normalize ships, and a reset in a cascade layer that the
  * host declares after the viewer's rules, as Tailwind's preflight does. The
- * band keeps its padding, the Scroll together track and knob keep the borders
- * that draw them, and Refresh keeps the drawn size of its glyph.
+ * band's mode tiles keep their padding and type, the Scroll together track
+ * and knob keep the borders that draw them, and Refresh keeps the drawn size
+ * of its glyph.
  */
 
 import { expect, type Page } from "@playwright/test";
@@ -25,14 +26,18 @@ const RESETS = {
 
 /**
  * The values of the band that a host reset clears when it wins, read through
- * its hooks: the band holds the `Comparison mode` group, the label of the
- * `Scroll together` switch, which draws its track, and Refresh.
+ * its hooks: the band holds the `Comparison mode` group, whose tiles are
+ * buttons, the label of the `Scroll together` switch, which draws its track,
+ * and Refresh. The tile of the shown mode stands for every tile.
  */
 function band(page: Page) {
   return page
     .getByRole("group", { name: "Comparison mode" })
     .evaluate((modes) => {
       const toolbar = modes.parentElement!;
+      const tile = getComputedStyle(
+        modes.querySelector('[aria-pressed="true"]')!,
+      );
       const edges = (style: CSSStyleDeclaration) =>
         ["top", "right", "bottom", "left"].map((side) =>
           style.getPropertyValue(`border-${side}-width`),
@@ -44,13 +49,12 @@ function band(page: Page) {
       const glyph = toolbar
         .querySelector("[data-diff-refresh] svg")!
         .getBoundingClientRect();
-      const style = getComputedStyle(toolbar);
       return {
         padding: [
-          style.paddingTop,
-          style.paddingRight,
-          style.paddingBottom,
-          style.paddingLeft,
+          tile.paddingTop,
+          tile.paddingRight,
+          tile.paddingBottom,
+          tile.paddingLeft,
         ],
         track: {
           style: getComputedStyle(track).borderTopStyle,
@@ -61,7 +65,7 @@ function band(page: Page) {
           widths: edges(getComputedStyle(track, "::after")),
         },
         refresh: `${glyph.width}x${glyph.height}`,
-        text: style.fontSize,
+        text: tile.fontSize,
       };
     });
 }

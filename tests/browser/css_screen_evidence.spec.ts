@@ -20,7 +20,7 @@ import {
   UNRESOLVED_LEAD,
   evidenceFiles,
   evidenceSpacing,
-  openEvidence,
+  openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { chooseMode, outcomeLines } from "./comparison_ui.js";
@@ -56,7 +56,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -82,7 +82,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(MATCHED_LEAD, { exact: true }),
       ).toBeVisible();

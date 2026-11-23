@@ -19,6 +19,7 @@ import {
   VARIANT_EXCLUDED_LEAD,
   VARIANT_TERMINAL,
   evidenceFiles,
+  openChangesEvidence,
   openEvidence,
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
@@ -60,7 +61,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
@@ -90,7 +91,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         "Unmodified",
       );
       // The Frames filter stands in Inspect; the details show in Changes.
-      await openEvidence(page);
+      await openChangesEvidence(page);
       await expect.poll(() => evidenceFiles(evidence)).toEqual(files);
       await expect(
         evidence.getByText(EXCLUDED_LEAD, { exact: true }),
@@ -104,7 +105,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -118,7 +119,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${comparisonPaths.changed}/`);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
@@ -173,7 +174,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       // Its detail makes the comparison eligible, which adds the Changes tab
       // that then holds the comparison details.
       await awaitRoutedDetail(page, comparisonPaths.consumer);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([[sheets.theme, [[MATCHED_LEAD, [".accent"]]]]]);
@@ -234,7 +235,7 @@ test("the comparison heading leads with the style outcome", async ({
     "Mobile · Dark · Screen changed",
   ]);
   await page.goto(`/view/${comparisonPaths.component}/`);
-  const evidence = await openEvidence(page);
+  const evidence = await openChangesEvidence(page);
   await expect
     .poll(() => evidenceFiles(evidence))
     .toEqual([

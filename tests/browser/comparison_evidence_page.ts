@@ -6,11 +6,20 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import { revealInPanel } from "./workspace_actions.js";
+import { comparedRail } from "./changes_tab_ui.js";
+import { openPanelTab } from "./workspace_actions.js";
 
-/** The branch-point sentence starts so, and the copies name `fixture-base`. */
+/** The base that the copies name. */
+const BASE_NAME = "fixture-base";
+/** The branch-point sentence starts so. */
 const BRANCH_POINT = "Compared with the branch point";
-export const BASE = `${BRANCH_POINT} on fixture-base.`;
+/** The details' branch-point sentence, which Inspect shows. */
+export const BASE = `${BRANCH_POINT} on ${BASE_NAME}.`;
+/**
+ * The Compared rail's version before, which names the branch point in the
+ * Changes tab in place of the details' sentence.
+ */
+export const RAIL_BASE = `Before Branch point on ${BASE_NAME}`;
 export const FILES_LEAD = "Changes to these files may affect this screen:";
 export const MATCHED_LEAD = "Changed styles that apply to this screen:";
 export const OUTSIDE_LEAD =
@@ -59,50 +68,89 @@ export const INSPECTOR_VIEWPORTS = [
 ] as const;
 
 /**
- * The one Comparison details heading, then the branch-point sentence `base`.
- * An index without a base has no branch-point sentence: pass `null`.
+ * The tab of the right panel that holds an entry's comparison details: its
+ * Changes tab where the entry has one, and Inspect, after its head,
+ * otherwise.
  */
-async function expectComparisonDetails(
+export type DetailsTab = "Changes" | "Inspect";
+
+/**
+ * Expect the Changes tab to name the branch point in its Compared rail, in
+ * place of the branch-point sentence that `evidence`, its comparison
+ * details, leave out.
+ */
+export async function expectRailBase(
+  page: Page,
   evidence: Locator,
-  base: string | null,
 ): Promise<void> {
-  await expect(evidence).toBeVisible();
+  await expect(evidence).not.toContainText(BRANCH_POINT);
+  await expect(
+    comparedRail(page)
+      .getByRole("listitem")
+      .filter({ hasText: "Branch point" }),
+  ).toHaveText(RAIL_BASE);
+}
+
+/**
+ * Show the comparison details that the data attribute `mark` names in `tab`,
+ * opening the compact layout's panel sheet, and return them. They hold one
+ * Comparison details heading. In Inspect they start with the branch-point
+ * sentence `base`, and an index without a base has none: pass `null`. In
+ * Changes the Compared rail names the branch point in place of the sentence.
+ */
+async function showDetails(
+  page: Page,
+  mark: string,
+  tab: DetailsTab,
+  base: string | null,
+): Promise<Locator> {
+  await openPanelTab(page, tab);
+  const evidence = page.locator(`[${mark}]`);
+  await expect(
+    page.getByRole("tabpanel", { name: tab, exact: true }).locator(`[${mark}]`),
+  ).toBeVisible();
   await expect(
     evidence.getByRole("heading", { name: "Comparison details", exact: true }),
   ).toHaveCount(1);
-  if (base === null) await expect(evidence).not.toContainText(BRANCH_POINT);
+  if (tab === "Changes") await expectRailBase(page, evidence);
+  else if (base === null)
+    await expect(evidence).not.toContainText(BRANCH_POINT);
   else await expect(evidence.locator("p").first()).toHaveText(base);
+  return evidence;
 }
 
 /**
- * Show a screen's or a component's comparison details and return them, which
- * start with the branch-point sentence `base`. The right panel's Changes tab
- * holds them when the entry has that tab, and Inspect holds them after its
- * head otherwise; in the compact layout the panel is a sheet. An entry that
- * the Changes filter does not list gains its Changes tab only once its
- * detail makes its comparison eligible, so wait for `awaitRoutedDetail`
- * before showing such an entry's details.
+ * Show the comparison details of a screen or a component without a Changes
+ * tab, which Inspect holds after its head, and return them. They start with
+ * the branch-point sentence `base`; pass `null` for an index without a base.
  */
-export async function openEvidence(
+export function openEvidence(
   page: Page,
   base: string | null = BASE,
 ): Promise<Locator> {
-  const evidence = page.locator("[data-workspace-evidence]");
-  await revealInPanel(page, evidence);
-  await expectComparisonDetails(evidence, base);
-  return evidence;
+  return showDetails(page, "data-workspace-evidence", "Inspect", base);
 }
 
 /**
- * Show a whole page's comparison details and return them: the Changes tab
- * holds them for a page that the Changes filter lists, and Inspect after its
- * head for any other page.
+ * Show the comparison details of a screen or a component in its Changes tab
+ * and return them; the tab's Compared rail names the branch point. An entry
+ * that the Changes filter does not list gains its Changes tab only once its
+ * detail makes its comparison eligible, so wait for `awaitRoutedDetail`
+ * before showing such an entry's details.
  */
-export async function openPageEvidence(page: Page): Promise<Locator> {
-  const evidence = page.locator("[data-page-evidence]");
-  await revealInPanel(page, evidence);
-  await expectComparisonDetails(evidence, BASE);
-  return evidence;
+export function openChangesEvidence(page: Page): Promise<Locator> {
+  return showDetails(page, "data-workspace-evidence", "Changes", BASE);
+}
+
+/**
+ * Show a whole page's comparison details in `tab` and return them: Changes
+ * for a page that the Changes filter lists, and Inspect for any other page.
+ */
+export function openPageEvidence(
+  page: Page,
+  tab: DetailsTab,
+): Promise<Locator> {
+  return showDetails(page, "data-page-evidence", tab, BASE);
 }
 
 /**

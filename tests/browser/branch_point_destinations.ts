@@ -1,7 +1,7 @@
 /**
  * Tally's Affected destinations in the branch-point cases, and what each one
- * shows once its link opens it: the shown status, whether the Changes tab's
- * band offers the compare modes, and the outcome line of each compared frame.
+ * shows once its link opens it: the shown status, the compare modes that the
+ * Changes tab's band offers, and the outcome line of each compared frame.
  * The wide canvas compares every shown frame of the routed entry's row; the
  * compact layout compares its one shown frame, which the link names.
  */
@@ -13,7 +13,7 @@ import { branchPointPaths as paths } from "../helpers/branch_point_sources.js";
 import type { BranchPointHost } from "./branch_point_ui.js";
 import { rowOutcomes, screenOutcomes } from "./comparison_outcomes.js";
 import {
-  expectNoCompareModes,
+  expectCurrentAlone,
   modeButton,
   outcomeLines,
 } from "./comparison_ui.js";
@@ -126,7 +126,7 @@ export const TALLY_AFFECTED: readonly Destination[] = [
 /**
  * Unmodified destinations offer the band for the linked view. Serve and the
  * copy open Side by side, which lists the outcome of each compared frame; a
- * React host opens Current. Added destinations keep Current without a band.
+ * React host opens Current. Added destinations offer Current alone.
  */
 export async function expectAffectedBand(
   page: Page,
@@ -139,9 +139,9 @@ export async function expectAffectedBand(
   const { lines, status } = destination.shows(layout, viewport);
   await expect(page.locator("[data-workspace-status]")).toHaveText(status);
   // Show the panel, which the compact layout holds in a sheet, so a check
-  // that its band is absent reads the panel's tabs.
+  // of its band reads the panel's tabs.
   await openPanelTab(page, "Inspect");
-  if (destination.comparison === null) return expectNoCompareModes(page);
+  if (destination.comparison === null) return expectCurrentAlone(page);
   await openPanelTab(page, "Changes");
   await expect(
     page.getByRole("group", { name: "Comparison mode" }),

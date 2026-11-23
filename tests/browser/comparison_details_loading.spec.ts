@@ -1,17 +1,19 @@
 /**
  * Details while a destination's entry detail loads, on the copied comparison
  * output, under the shell delivery and CSS evidence contracts: the heading
- * and the review-base sentence come from the index, so they show at once and
- * stay; the changed component that affects the screen comes from the detail,
- * so it shows only after the detail arrives.
+ * and the review base come from the index, so they show at once and stay; in
+ * the Changes tab the Compared rail names the branch point in place of the
+ * details' sentence. The changed component that affects the screen comes
+ * from the detail, so it shows only after the detail arrives.
  */
 
 import { expect, type Page, type Route } from "@playwright/test";
 
 import {
-  BASE,
   INSPECTOR_VIEWPORTS,
-  openEvidence,
+  RAIL_BASE,
+  expectRailBase,
+  openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
@@ -22,18 +24,20 @@ const LOADED = "Changed component: Card";
 const DESTINATION = `/view/${comparisonPaths.changed}/`;
 
 /**
- * Record the first Details paragraph after every DOM change on the
- * destination route, so a sentence that leaves and returns is seen.
+ * Record the Compared rail's first version while the Details show, after
+ * every DOM change on the destination route, so a branch point that leaves
+ * and returns is seen.
  */
-async function recordFirstParagraphs(page: Page): Promise<void> {
+async function recordRailBases(page: Page): Promise<void> {
   await page.evaluate((destination) => {
     const seen: (string | null)[] = [];
-    Object.assign(window, { firstParagraphs: seen });
+    Object.assign(window, { railBases: seen });
     new MutationObserver(() => {
       if (location.pathname !== destination) return;
       const evidence = document.querySelector("[data-workspace-evidence]");
       if (!evidence || evidence.hasAttribute("hidden")) return;
-      seen.push(evidence.querySelector("p")?.textContent ?? null);
+      const rail = document.querySelector('section[aria-label="Compared"]');
+      seen.push(rail?.querySelector("li")?.textContent ?? null);
     }).observe(document, {
       attributes: true,
       characterData: true,
@@ -43,11 +47,9 @@ async function recordFirstParagraphs(page: Page): Promise<void> {
   }, DESTINATION);
 }
 
-function firstParagraphs(page: Page): Promise<(string | null)[]> {
+function railBases(page: Page): Promise<(string | null)[]> {
   return page.evaluate(
-    () =>
-      (window as unknown as { firstParagraphs: (string | null)[] })
-        .firstParagraphs,
+    () => (window as unknown as { railBases: (string | null)[] }).railBases,
   );
 }
 
@@ -70,23 +72,23 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       );
       await page.goto(`/view/${comparisonPaths.component}/`);
       // The heading and the branch point show on the origin.
-      await openEvidence(page);
-      await recordFirstParagraphs(page);
+      await openChangesEvidence(page);
+      await recordRailBases(page);
 
       if (name === "mobile") await openCatalogueSheet(page);
       await navRow(page, comparisonPaths.changed).click();
       await expect(page).toHaveURL(new RegExp(`${DESTINATION}$`, "u"));
       await expect.poll(() => held.length).toBe(1);
       // They show again at once while the destination's detail is held.
-      const temporary = await openEvidence(page);
+      const temporary = await openChangesEvidence(page);
       await expect(temporary).not.toContainText(LOADED);
 
       await held[0]!.continue();
       await expect(temporary.getByText(LOADED, { exact: true })).toBeVisible();
-      await expect(temporary.locator("p").first()).toHaveText(BASE);
+      await expectRailBase(page, temporary);
       expect(reads).toBe(1);
-      const recorded = await firstParagraphs(page);
+      const recorded = await railBases(page);
       expect(recorded.length).toBeGreaterThan(0);
-      expect([...new Set(recorded)]).toEqual([BASE]);
+      expect([...new Set(recorded)]).toEqual([RAIL_BASE]);
     });
   });

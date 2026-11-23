@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import { accentFill, shellRoot } from "./browse_assertions.js";
+import { expectNoComparison } from "./comparison_absence.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -84,12 +85,10 @@ test("a dark-only change marks the views it hides and opens on one", async ({
     "data-mokly-color-scheme",
     "light",
   );
-  // The deep link asked for Side by side, but the shown view is unmodified.
+  // The deep link asked for Side by side, but the shown view is unmodified,
+  // so it offers no mode and keeps its current frame: no frame compares.
   await expectShownStatus(page, comparisonPaths.darkOnly, "Unmodified", false);
-  await expect(page.locator('[data-diff-mode="current"]')).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expectNoComparison(page);
   expect(diffs).toEqual([]);
 
   // The wide canvas shows every frame, so no toggle hides a changed view.

@@ -32,6 +32,7 @@ import {
   VARIANT_TERMINAL,
   evidenceFiles,
   evidenceSpacing,
+  openChangesEvidence,
   openEvidence,
   type EvidenceFile,
 } from "./comparison_evidence_page.js";
@@ -91,7 +92,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       // Its detail makes the comparison eligible, which adds the Changes tab
       // that then holds the comparison details.
       await awaitRoutedDetail(page, comparisonPaths.consumingComponent);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
       ).toBeVisible();
@@ -120,7 +121,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         comparisonPaths.component,
       ]) {
         await page.goto(`/view/${route}/`);
-        const evidence = await openEvidence(page);
+        const evidence = await openChangesEvidence(page);
         await expect(
           evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
         ).toBeVisible();
@@ -133,7 +134,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${comparisonPaths.changed}/`);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([

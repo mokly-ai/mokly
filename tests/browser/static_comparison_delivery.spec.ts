@@ -48,7 +48,9 @@ for (const width of [390, 1280]) {
     /**
      * Expect the shown frames of `scheme` to compare in `mode`: each frame
      * that the mode compares holds both versions, and each version's
-     * document was read `reads` times.
+     * document was read `reads` times. The canvas shows the mode only while
+     * Changes is the selected tab, and the Frames filter stands in Inspect,
+     * so Changes is selected first.
      */
     const expectSelection = async (
       viewport: "mobile" | "desktop" | "both",
@@ -56,6 +58,7 @@ for (const width of [390, 1280]) {
       mode: CompareMode,
       reads = 1,
     ) => {
+      await openPanelTab(page, "Changes");
       const views = comparedViewports(width, viewport, mode);
       await expect(comparisonFrames(page)).toHaveCount(views.length * 2);
       await expect(page.locator(`[data-diff-mode="${mode}"]`)).toHaveAttribute(

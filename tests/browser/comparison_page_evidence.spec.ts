@@ -86,10 +86,13 @@ function documentDesignUrl(viewport: string): string {
   ).href;
 }
 
-/** Open the handbook and wait until its Details show every file. */
+/**
+ * Open the handbook, which Changes lists, and wait until the Details of its
+ * Changes tab show every file.
+ */
 async function openHandbook(page: Page): Promise<Locator> {
   await page.goto(`/view/${HANDBOOK}/`);
-  const evidence = await openPageEvidence(page);
+  const evidence = await openPageEvidence(page, "Changes");
   await expect.poll(() => evidenceFiles(evidence)).toEqual(HANDBOOK_FILES);
   return evidence;
 }
@@ -177,7 +180,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       await page.goto(`/view/${NOTES}/`);
       await expect(inspectStatus(page)).toHaveText("Unmodified");
-      const evidence = await openPageEvidence(page);
+      const evidence = await openPageEvidence(page, "Inspect");
       await expect(evidence.locator("p")).toHaveText([
         BASE,
         PAGE_EXCLUDED_LEAD,
@@ -193,7 +196,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       await page.goto(`/view/${CATALOG}/`);
       await expect(inspectStatus(page)).toHaveText("Unmodified");
-      const evidence = await openPageEvidence(page);
+      const evidence = await openPageEvidence(page, "Inspect");
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([
@@ -266,7 +269,7 @@ test.describe("whole-page evidence across navigation", () => {
     await navRow(page, HANDBOOK).click();
     await expect(inspectTitle(page)).toHaveText("Getting started");
     await expect(inspectStatus(page)).toHaveText("Changed");
-    const evidence = await openPageEvidence(page);
+    const evidence = await openPageEvidence(page, "Changes");
     await expect.poll(() => evidenceFiles(evidence)).toEqual(HANDBOOK_FILES);
   });
 });

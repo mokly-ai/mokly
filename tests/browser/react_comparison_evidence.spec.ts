@@ -24,7 +24,7 @@ import {
   SHARED,
   VARIANT_TERMINAL,
   evidenceFiles,
-  openEvidence,
+  openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import { chooseFilter, navRow } from "./comparison_ui.js";
 import { openInspectFold, zoomToTags } from "./workspace_actions.js";
@@ -59,7 +59,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${paths.checkout}/`);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([[sheets.bundle, [[MATCHED_LEAD, [".heading"]]]]]);
@@ -72,7 +72,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       for (const route of [paths.badgeVariant, paths.badge]) {
         await page.goto(`/view/${route}/`);
-        const evidence = await openEvidence(page);
+        const evidence = await openChangesEvidence(page);
         await expect(
           evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
         ).toBeVisible();
