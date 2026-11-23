@@ -1,14 +1,18 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { showProps } from "./live_props.js";
 import { expectDestination } from "./navigation_destination.js";
-import { nestedScriptNotice } from "./navigation_error_allowances.js";
+import {
+  nestedScriptNotice,
+  renderedNestedDocument,
+} from "./navigation_error_allowances.js";
 import {
   routeNavigationNestedFrame,
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
-import { NARROW_WINDOW } from "./workspace_actions.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
 
@@ -30,12 +34,14 @@ test.beforeEach(async ({ page, allowBrowserError }) => {
 
 test("an unowned frame document stays frame-owned during shell replacement", async ({
   page,
+  allowBrowserError,
 }) => {
-  // The appearance replaces a frame's document on the one-frame stage, below
-  // the layout breakpoint; a canvas frame keeps its own scheme.
-  await page.setViewportSize(NARROW_WINDOW);
+  allowBrowserError(renderedNestedDocument);
+  // A Props edit replaces each shown frame's document with the edit's
+  // render; a canvas frame keeps its own scheme through an appearance change.
   await page.goto(`${navigation.url}/view/fixture/nested/home/`);
-  const frame = page.frameLocator(".mbk-frame-mobile iframe");
+  const element = page.locator(canvasFrame("mobile"));
+  const frame = page.frameLocator(canvasFrame("mobile"));
   await frame.locator("#unowned-details-link").click();
   await expect(frame.locator("#extra-link")).toBeVisible();
 
@@ -47,9 +53,14 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
+  // The render of the Mobile · Light frame waits until the test releases it.
   await page.route(
-    "**/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
+    (url) =>
+      /^\/mokly-viewer\/components\/renders\/[^/]+\/static\/mokly-generated\/fixture\/nested\/home\/index\.mobile\.html$/u.test(
+        url.pathname,
+      ),
     async (route) => {
+      if (route.request().method() !== "GET") return route.continue();
       reportRequest();
       await requestReleased;
       await route.continue();
@@ -57,45 +68,42 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
   );
 
   try {
-    await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
+    const props = await showProps(page);
+    const note = props.getByRole("textbox", { name: "note" });
+    await expect(note).toBeEditable();
+    await note.fill("Edited");
     await requestStarted;
-    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-      "data-mokly-frame-state",
-      "loading",
-    );
+    await expect(element).toHaveAttribute("data-mokly-frame-state", "loading");
 
-    const defaultPrevented = await page.evaluate(() => {
-      const frame = document.querySelector<HTMLIFrameElement>(
-        ".mbk-frame-mobile iframe",
-      )!;
-      const doc = frame.contentDocument!;
-      const element = doc.querySelector("#extra-link")!;
-      let prevented: boolean | undefined;
-      doc.addEventListener(
-        "click",
-        (event) => {
-          prevented = event.defaultPrevented;
-          event.preventDefault();
-        },
-        { once: true },
-      );
-      element.dispatchEvent(
-        new MouseEvent("click", {
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      return prevented;
-    });
+    const defaultPrevented = await element.evaluate(
+      (iframe: HTMLIFrameElement) => {
+        const doc = iframe.contentDocument!;
+        const link = doc.querySelector("#extra-link")!;
+        let prevented: boolean | undefined;
+        doc.addEventListener(
+          "click",
+          (event) => {
+            prevented = event.defaultPrevented;
+            event.preventDefault();
+          },
+          { once: true },
+        );
+        link.dispatchEvent(
+          new MouseEvent("click", {
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+        return prevented;
+      },
+    );
     expect(defaultPrevented).toBe(false);
     await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
 
     releaseRequest();
-    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-      "data-mokly-frame-state",
-      "ready",
-    );
+    await expect(element).toHaveAttribute("data-mokly-frame-state", "ready");
+    await expect(frame.locator("#note")).toHaveText("Edited");
     await frame.locator("#mock-link").click();
     await expectDestination(page);
   } finally {
