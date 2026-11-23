@@ -5,7 +5,8 @@ pull request yet. The pull request that completes the work deletes this plan
 and its parts: the [design record](./canvas-redesign-design.md), the
 [site design calls](./canvas-redesign-design-site.md), the
 [viewer design calls](./canvas-redesign-design-viewer.md), the
-[viewer milestones](./canvas-redesign-milestones-viewer.md),
+[viewer milestones](./canvas-redesign-milestones-viewer.md), the
+[added milestones](./canvas-redesign-milestones-added.md),
 [decisions 1 to 5](./canvas-redesign-decisions.md),
 [decisions 6 to 12](./canvas-redesign-decisions-viewer.md) and
 [decisions 20 to 26](./canvas-redesign-decisions-docs.md) and
@@ -269,8 +270,10 @@ Depends on: 4
 
 ## Milestones 10 to 13 and 15 to 24
 
-The viewer milestones and the added Milestones 15 to 24 are in
-[the viewer milestones file](./canvas-redesign-milestones-viewer.md).
+Milestones 10 to 13 are in
+[the viewer milestones file](./canvas-redesign-milestones-viewer.md), and the
+added Milestones 15 to 24 are in
+[the added milestones file](./canvas-redesign-milestones-added.md).
 
 ## Milestone 14: Verification, commit, review and pull request
 
