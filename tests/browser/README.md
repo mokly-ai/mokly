@@ -224,7 +224,8 @@ in `comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and
 `serve_comparison_alignment_input.spec.ts`, and
 `serve_comparison_scroll_memory.spec.ts`. Checks that each host reaches
 through its own setup are helpers instead. `light_only_band.ts` checks the
-Light only band. `imported_css_panes.ts` checks the panes of the screen that
+Light only note in the label of a document's reading frame.
+`imported_css_panes.ts` checks the panes of the screen that
 `tests/helpers/imported_css_sources.ts` adds. `serve_light_only_band.spec.ts`
 drops Dark through a watched configuration edit.
 

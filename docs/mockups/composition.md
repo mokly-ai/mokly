@@ -9,8 +9,8 @@ mockup-only. The account, recovery and settings families draw in Folio. The
 viewer family draws its cloud parts in Canvas, around the `@mokly/ui` parts,
 which keep the package's own look.
 [`src/screens/product/viewer/published-viewer.tsx`](./src/screens/product/viewer/published-viewer.tsx)
-and its `published-*` modules own the published package stage with cloud slots
-filled. Their doc comments describe how the stage is drawn. Its rows and sample
+and its `published-*` modules own the published package viewer with cloud slots
+filled. Their doc comments describe how its canvas is drawn. Its rows and sample
 screen come from `src/fixtures/viewer-catalogue.ts`.
 `src/screens/product/shell.tsx` owns the cloud fallback and the blank stage
 behind settings. The rest of `src/screens/product/viewer/` owns the chrome,

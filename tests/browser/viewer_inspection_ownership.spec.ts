@@ -9,8 +9,11 @@ import {
 import { startViewerPick } from "./viewer_pick.js";
 import { canvasFrame } from "./workspace_actions.js";
 
-/** The frames of one viewport on the canvas: its Light and Dark frames. */
-const SHOWN_FRAMES = 2;
+/**
+ * The frames on the canvas: the Frames filter shows both viewports in both
+ * schemes, whatever viewport the selection names.
+ */
+const SHOWN_FRAMES = 4;
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -116,8 +119,7 @@ for (const cross of [false, true]) {
             else host.ref.current.cancelPick();
           }, replacement);
           await startViewerPick(page);
-          // The pick labels the instance in each shown frame: on the canvas,
-          // the chosen viewport's Light and Dark frames.
+          // The pick labels the instance in each shown frame.
           const labels = page.locator("[data-mokly-label-layer] button");
           await expect(labels).toHaveCount(SHOWN_FRAMES);
           const label = await labels.first().elementHandle();

@@ -61,8 +61,10 @@ test("the variant disclosure opens, navigates, and returns through history", asy
     "page",
   );
   await expect(page.locator(LIST)).toBeVisible();
-  const crumbLink = page.getByLabel("Catalogue location").locator("a");
-  await expect(crumbLink).toHaveText("Home");
+  // The Path row links the variant's parent segment to the parent's page.
+  const crumbLink = page
+    .locator("[data-inspect-path]")
+    .getByRole("link", { name: "home", exact: true });
   await expect(crumbLink).toHaveAttribute("href", "/view/fixture/nested/home/");
 
   await page.goBack();

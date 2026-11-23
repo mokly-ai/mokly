@@ -26,7 +26,11 @@ function entryHref(
   return `${viewHref(entry.path)}${snapshot ? `?snapshot=${snapshot}` : ""}`;
 }
 
-/** A screen's rows: the screen that its variants belong to, then each variant. */
+/**
+ * A screen's rows: the screen that its variants belong to, then each current
+ * variant, then each removed variant that the branch-point lookup attaches
+ * to it, as a variant set lists its removed rows.
+ */
 export function screenVariants(
   catalogue: Catalogue,
   entry: ShellCatalogueRoutedEntry,
@@ -37,9 +41,13 @@ export function screenVariants(
   const removed = catalogue.removedEntries.some(
     ({ entry: candidate }) => candidate.path === owner.path,
   );
-  const variants = removed
-    ? lookup.removedVariants(owner).map(({ entry: variant }) => variant)
+  const current = removed
+    ? []
     : (catalogue.hierarchy.variantsByPath.get(owner.path) ?? []);
+  const variants = [
+    ...current,
+    ...lookup.removedVariants(owner).map(({ entry: variant }) => variant),
+  ];
   return [owner, ...variants].map((row) => ({
     current: row.path === entry.path,
     href: entryHref(catalogue, row),

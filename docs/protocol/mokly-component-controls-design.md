@@ -13,8 +13,8 @@ render draws the right panel beside the canvas, and a mobile render opens the
 panel sheet at Props over the chosen frame. The controls fill Inspect's Props
 section under the
 [inspector design](./mokly-component-inspector-design.md#inspect), and the
-[workspace design](./mokly-component-workspace-design.md) gives the view
-controls.
+[workspace design](./mokly-component-workspace-design.md#frames-filter-and-highlighting)
+gives the Frames filter and highlighting.
 
 The Action fixture demonstrates text (label), boolean (disabled), numeric
 (corner radius), select (emphasis), and optional text (hint). Its typed saved

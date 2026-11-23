@@ -89,16 +89,18 @@ test("the Frames section marks the toggle that hides a changed view and names it
       />
     </ShellIdentifierProvider>,
   );
+  // Each toggle names its own wording, apart from the Appearance's.
   assert.match(
     html,
-    /aria-describedby="root-mb-view-changed-scheme"[^>]*data-frames-toggle="dark"/,
+    /aria-describedby="root-mb-frames-changed-dark"[^>]*data-frames-toggle="dark"/,
   );
   assert.match(
     html,
-    /data-view-changed-text="scheme" id="root-mb-view-changed-scheme">Other theme changed</,
+    /data-view-changed-text="scheme" id="root-mb-frames-changed-dark">Other theme changed</,
   );
+  assert.doesNotMatch(html, /mb-view-changed-/);
   // The shown toggles carry no mark.
-  assert.doesNotMatch(html, /mb-view-changed-viewport/);
+  assert.equal(html.match(/data-view-changed-text=/g)?.length, 1);
   // A light-only screen's Dark toggle reads Light only and carries no mark.
   const lightOnly = renderToStaticMarkup(
     <InspectFrames

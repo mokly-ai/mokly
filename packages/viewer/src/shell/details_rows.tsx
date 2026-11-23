@@ -142,17 +142,25 @@ export function UsedByChips(props: {
   );
 }
 
-/** The parent a variant belongs to, resolved for current and removed entries. */
+/**
+ * The parent a variant belongs to, resolved for current and removed entries.
+ * A removed variant's former parent without an eligible destination is its
+ * stored title, as plain text.
+ */
 export function VariantOfChip(props: {
   catalogue: Catalogue;
   entry: ShellCatalogueRoutedEntry;
 }) {
   const parent = branchPoints(props.catalogue).parentOf(props.entry);
-  if (parent === undefined || parent.source === "title") {
-    return null;
-  }
+  if (parent === undefined) return null;
+  if (parent.source === "title")
+    return (
+      <MetadataRow label="Variant of" mark="data-inspect-variant-of">
+        {parent.title}
+      </MetadataRow>
+    );
   return (
-    <MetadataRow label="Variant of">
+    <MetadataRow label="Variant of" mark="data-inspect-variant-of">
       <MetadataChips>
         <EntryChip
           href={entryHref(props.catalogue, parent.entry)}

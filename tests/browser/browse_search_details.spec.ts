@@ -21,29 +21,6 @@ test("search matches authored entry paths", async ({ page }) => {
   await expect(page.locator(tourRow)).toBeHidden();
 });
 
-test("details starts collapsed and remembers disclosure", async ({ page }) => {
-  const details = page.locator("[data-workspace-inspector]");
-  await page.goto("/view/example/screens/welcome/");
-  await expect(details).not.toHaveAttribute("data-open", "true");
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
-  await expect(details).toHaveAttribute("data-open", "true");
-
-  await page.click(detailsRow);
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  await expect(details).toHaveAttribute("data-open", "true");
-
-  await page.reload();
-  await expect(details).toHaveAttribute("data-open", "true");
-  await page.evaluate(() => {
-    document
-      .querySelector<HTMLElement>('[data-inspector-tab="details"]')
-      ?.click();
-    window.location.assign("/view/example/screens/welcome/");
-  });
-  await page.waitForURL(/\/view\/example\/screens\/welcome\/$/);
-  await expect(details).not.toHaveAttribute("data-open", "true");
-});
-
 test("searching opens groups and clearing restores their disclosure", async ({
   page,
 }) => {
@@ -73,14 +50,14 @@ test("searching opens groups and clearing restores their disclosure", async ({
     .toBe(false);
 });
 
-test("details tag chips enter, keep, and clear their term", async ({
+test("the tag chips of Inspect's Details rows enter, keep, and clear their term", async ({
   page,
 }) => {
   await page.goto("/view/example/screens/welcome/");
   await expect(page.locator(tourRow)).toBeVisible();
   await markPage(page);
 
-  await page.locator('[data-inspector-tab="details"]').click();
+  // Inspect's head shows the Details rows, the tags among them.
   await page.click(formsChip);
   await expect(page.locator("[data-mokly-search]")).toHaveValue("tag:forms");
   await expect(page.locator(formsChip)).toHaveClass(/active/);
@@ -102,34 +79,6 @@ test("details tag chips enter, keep, and clear their term", async ({
   await expect(page.locator(tourRow)).toBeVisible();
   expect(await hasMarker(page)).toBe(true);
 });
-
-for (const failure of ["refuses writes", "getter throws"]) {
-  test(`Details stays usable when preference storage ${failure}`, async ({
-    page,
-  }) => {
-    await page.addInitScript((failure) => {
-      const refused = () => {
-        throw new Error("fixture storage refused");
-      };
-      if (failure === "getter throws")
-        Object.defineProperty(window, "localStorage", { get: refused });
-      else Storage.prototype.setItem = refused;
-    }, failure);
-    await page.goto("/view/example/screens/welcome/");
-    const tab = page.getByRole("tab", { name: "Details", exact: true });
-    await tab.click();
-    await expect(tab).toHaveAttribute("aria-selected", "true");
-    await tab.click();
-    await expect(tab).toHaveAttribute("aria-selected", "false");
-    await tab.click();
-    await expect(tab).toHaveAttribute("aria-selected", "true");
-    await page
-      .locator('a[data-nav-row][data-entry-id="example/screens/details"]')
-      .click();
-    await expect(page.locator("#mb-main h2")).toHaveText("Details");
-    await expect(tab).toHaveAttribute("aria-selected", "true");
-  });
-}
 
 test("direct entry loads disclose saved-closed active ancestry", async ({
   page,

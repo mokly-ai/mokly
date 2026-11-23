@@ -67,8 +67,8 @@ current-only state or trigger a hidden comparison request. It honors the query
 once for each navigation, when that eligibility is first known; a watched
 update or a later eligibility change never applies it again.
 
-When a ready classification marks only some of a screen's views changed, the
-view controls say so rather than leaving the reviewer to find the difference.
+When a ready classification marks only some of a screen's views changed,
+Inspect says so rather than leaving the reviewer to find the difference.
 On the canvas, a toggle of the
 [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) that hides a
 changed view is marked. Inspect's head lists the same views as

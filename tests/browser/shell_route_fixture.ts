@@ -24,11 +24,11 @@ export async function titles(request: APIRequestContext) {
 }
 
 /**
- * The routed entry's title in the right panel's head. The panel follows the
- * canvas, so a failure card's own heading on the canvas comes first.
+ * The routed entry's title in Inspect's head. The panel follows the canvas,
+ * so a failure card's own heading on the canvas comes first.
  */
 export const heading = (page: Page) =>
-  page.locator("#mb-main .mbk-screen-head h2");
+  page.locator('#mb-main [data-inspect-section="details"] h2');
 export const navLink = (page: Page, path: string) =>
   page.locator(`a[data-entry-id="${path}"][data-nav-row]`);
 export const route = (path: string) => `/view/${path}/`;

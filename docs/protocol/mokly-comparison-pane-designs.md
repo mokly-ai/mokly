@@ -11,7 +11,7 @@ choose. Links inside every depicted frame are inert.
 | Entry                                           | State                                                                          |
 | ----------------------------------------------- | ------------------------------------------------------------------------------ |
 | `design/canvas/changes/current`                 | Current, with the stepper, Compared, the modes and the comparison details      |
-| `design/canvas/changes/side-by-side`            | Side by side on the frame that the chips choose, two phone frames on phones    |
+| `design/canvas/changes/side-by-side`            | Side by side on the frame that the chips choose, two Mobile frames on phones   |
 | `design/canvas/changes/overlay`                 | Overlay on every frame                                                         |
 | `design/canvas/changes/difference`              | Difference on every frame                                                      |
 | `design/canvas/changes/swipe`                   | Swipe, with one divider at the same place on every frame                       |

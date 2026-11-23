@@ -16,7 +16,7 @@ Design links need no runtime capability of their own.
 
 Design links open catalogue entries that depict the requested destination. They
 do not operate the depicted shell as a second running application. The outer
-Browse shell preserves its viewport selection and handles history and active-row
+Browse shell preserves its Frames filter and handles history and active-row
 visibility normally. The destination artboard depicts its own canonical state;
 prior panel tab, query, sheet, zoom, and depicted frame state are not
 transported implicitly. Only the explicitly paired states that the [navigation
@@ -48,12 +48,12 @@ itself as the current page with `aria-current`, except the top bar's brand
 link. No design link sits inside another focus stop or holds one. A depicted
 control without a destination has no `href`, no mock-link marker, and no
 misleading keyboard stop. An inactive control never becomes a link. The
-selected state stays visibly identified. Native inspector tabs and viewport
-selections operate in place without navigation. Each depicted state is
-reachable from its owning screen or flow, or from catalogue navigation when no
-depicted control opens it, such as a state that only a runtime transition
-reaches or the one state of a branch of its own. Design documents carry no consumer
-scripts. The design mockups build without warnings.
+selected state stays visibly identified. A native control, such as the frame
+picker or a Frames filter toggle, operates in place without navigation. Each
+depicted state is reachable from its owning screen or flow, or from catalogue
+navigation when no depicted control opens it, such as a state that only a
+runtime transition reaches or the one state of a branch of its own. Design
+documents carry no consumer scripts. The design mockups build without warnings.
 
 ## Canonical Destination Inventory
 
@@ -75,14 +75,13 @@ list these states and their retries.
 
 ## Local Runtime Controls
 
-Viewport selection, browser expansion, path and ID copying, refresh/recompute,
-resize grips, and collapse-all are not catalogue destinations. Their
-depictions stay visual only, with no fake hrefs, clipboard-success copy, or
-scripts. Their non-interactive status is documented outside the rendered
-artboard. Native `details` disclosures may work locally. The frame picker, the
-Frames filter toggles, the Highlight components switch, and the Scroll
-together switch work in place and open no destination. The real outer shell
-provides the runtime controls.
+Path and ID copying, refresh/recompute, resize grips, and collapse-all are not
+catalogue destinations. Their depictions stay visual only, with no fake hrefs,
+clipboard-success copy, or scripts. Their non-interactive status is documented
+outside the rendered artboard. Native `details` disclosures may work locally.
+The frame picker, the Frames filter toggles, the Highlight components switch,
+and the Scroll together switch work in place and open no destination. The real
+outer shell provides the runtime controls.
 
 ## Basic Example And Portability
 

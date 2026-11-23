@@ -13,7 +13,8 @@ import { expect } from "@playwright/test";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test } from "./browser_test.js";
-import { canvasFrame, revealInPanel } from "./workspace_actions.js";
+import { showProps } from "./live_props.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 const SOURCE = path.join(
   repositoryRoot,
@@ -34,14 +35,12 @@ for (const viewport of ["desktop", "mobile"] as const)
     );
     const source = await fs.readFile(SOURCE, "utf8");
     await page.goto(`/view/${VARIANT}/?viewport=${viewport}`);
-    // In the compact layout the inspector stands in the panel's sheet, whose
+    // The routed saved variant's frame is selected, so Props edits its row.
+    // In the compact layout Inspect stands in the panel's sheet, whose
     // grabber expands it.
-    const tab = page.getByRole("tab", { name: "Props", exact: true });
-    await revealInPanel(page, tab);
-    await tab.click();
+    const props = await showProps(page);
     if (viewport === "mobile")
       await page.getByRole("button", { name: "Expand panel" }).click();
-    const props = page.getByRole("tabpanel", { name: "Props", exact: true });
     // The edited variant's row shows the edit in its Light and Dark frames;
     // the compact layout shows the routed variant's Light frame.
     const frameOf = (scheme: "dark" | "light") =>

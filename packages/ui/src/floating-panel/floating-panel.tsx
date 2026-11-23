@@ -10,13 +10,15 @@
  * the panel's body. An optional head, such as the right panel's tabs, stands
  * above the body and stays in place while the body scrolls. The sheet is not
  * modal, and a closed sheet stays mounted, so its content keeps its state.
+ * In a static depiction that runs no script, the grabber and the close
+ * control are pictures of themselves.
  */
 
 import { useState, type CSSProperties, type ReactNode, type Ref } from "react";
 
 import { CanvasIcon } from "../icons/canvas-icons.js";
 
-import { SheetGrab } from "./sheet-grab.js";
+import { SheetGrab, SheetGrabPicture } from "./sheet-grab.js";
 
 /** The state of the sheet that the panel is below the layout breakpoint. */
 export interface FloatingPanelSheet {
@@ -33,9 +35,48 @@ export interface FloatingPanelSheet {
 /** The edge of the canvas at which a panel floats. */
 export type FloatingPanelSide = "left" | "right";
 
+/** The close control of the sheet, or a picture of it. */
+function SheetClose({
+  interactive,
+  noun,
+  onClose,
+}: {
+  interactive: boolean;
+  noun: string;
+  onClose(): void;
+}) {
+  const label = `Close ${noun}`;
+  const glyph = <CanvasIcon name="close" size={18} />;
+  if (!interactive)
+    return (
+      <span
+        aria-label={label}
+        className="mbk-float-close mbk-reset"
+        data-sheet-close=""
+        role="img"
+        title={label}
+      >
+        {glyph}
+      </span>
+    );
+  return (
+    <button
+      aria-label={label}
+      className="mbk-float-close mbk-reset"
+      data-sheet-close=""
+      onClick={onClose}
+      title={label}
+      type="button"
+    >
+      {glyph}
+    </button>
+  );
+}
+
 export function FloatingPanel({
   children,
   head,
+  interactive = true,
   label,
   noun,
   ref,
@@ -50,6 +91,12 @@ export function FloatingPanel({
    * place while the body scrolls.
    */
   head?: ReactNode;
+  /**
+   * Whether the sheet's grabber and close control are buttons, as they are
+   * by default. A static depiction that runs no script sets `false`, which
+   * draws each as a picture of itself, named by what it would do.
+   */
+  interactive?: boolean;
   /**
    * The panel's accessible name, which makes it a region. A panel whose
    * content names itself, such as the catalogue's navigation, leaves it out.
@@ -85,22 +132,21 @@ export function FloatingPanel({
       ref={ref}
       style={style}
     >
-      <SheetGrab
-        expanded={sheet.expanded}
+      {interactive ? (
+        <SheetGrab
+          expanded={sheet.expanded}
+          noun={noun}
+          onDrag={setDragHeight}
+          onExpandedChange={sheet.onExpandedChange}
+        />
+      ) : (
+        <SheetGrabPicture expanded={sheet.expanded} noun={noun} />
+      )}
+      <SheetClose
+        interactive={interactive}
         noun={noun}
-        onDrag={setDragHeight}
-        onExpandedChange={sheet.onExpandedChange}
+        onClose={sheet.onClose}
       />
-      <button
-        aria-label={`Close ${noun}`}
-        className="mbk-float-close mbk-reset"
-        data-sheet-close=""
-        onClick={sheet.onClose}
-        title={`Close ${noun}`}
-        type="button"
-      >
-        <CanvasIcon name="close" size={18} />
-      </button>
       {head === undefined ? null : (
         <div className="mbk-float-head mbk-reset">{head}</div>
       )}

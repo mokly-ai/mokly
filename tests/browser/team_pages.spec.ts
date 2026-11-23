@@ -18,7 +18,8 @@ for (const width of [390, 1280]) {
     const element = page.locator(DOCUMENT_FRAME);
     const frame = element.contentFrame();
     await expect(element).toHaveCount(1);
-    await expect(page.getByLabel("Viewport", { exact: true })).toHaveCount(0);
+    // A page has no Frames filter: its one reading frame takes the canvas.
+    await expect(page.locator("[data-frames-toggle]")).toHaveCount(0);
     for (const scheme of ["light", "dark"] as const) {
       await chooseScheme(page, scheme);
       await expect(page.locator(shellRoot)).toHaveAttribute(
