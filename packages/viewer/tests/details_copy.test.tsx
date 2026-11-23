@@ -56,6 +56,31 @@ test("a screen's declared address follows its source in a code chip, and a scree
   );
 });
 
+test("a removed variant without an eligible parent names its former parent in Variant of, as text", () => {
+  const retired = "components/gone/retired";
+  const markup = details(retired, (index) => {
+    const variant = index.components.find(
+      (entry) => entry.path === "components/action/default",
+    )!;
+    index.removedEntries = [
+      ...index.removedEntries,
+      {
+        entry: {
+          ...structuredClone(variant),
+          path: retired,
+          title: "Retired",
+          variantOf: "components/gone",
+          changes: { status: "ready", kind: "removed", included: true },
+        },
+        folderTitles: ["Components"],
+        parentTitle: "Gone parent",
+        snapshotId: "e".repeat(64),
+      },
+    ];
+  });
+  assert.equal(row("Variant of").exec(markup)?.[1], "Gone parent");
+});
+
 test("a removed entry names its folders, and a top-level one has no empty Location row", () => {
   const removed = "product/removed-page";
   const nested = details(removed, (index) => {

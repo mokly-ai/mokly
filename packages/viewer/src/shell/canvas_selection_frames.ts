@@ -1,11 +1,12 @@
 /**
  * The frames that the canvas selection follows: the mounted session of each
  * frame of a workspace's canvas, the state that the selection reads of each
- * frame, and the selection that a route names.
+ * frame, the selection that a route names, and the frame that a variant
+ * set's selected frame moves to in the compact layout.
  */
 
 import type { CanvasFramePlan } from "./canvas_frames.js";
-import type { CanvasFrameState, CanvasSelected } from "./canvas_selection.js";
+import type { CanvasFrameState } from "./canvas_selection.js";
 import { validFrameUsage } from "./frame_instances.js";
 import type { ShellFrameSession } from "./frame_registry.js";
 import type { ShellRoute } from "./routes.js";
@@ -124,12 +125,19 @@ function routedFrame(
  * The selection that a route names: the instance of a Used by link on the
  * frame of the link's viewport and scheme, or the frame of a variant set's
  * routed saved variant in `routed.scheme`: Light on the wide canvas, and the
- * selection's scheme in the compact layout, which picks that frame.
+ * selection's scheme in the compact layout, which picks that frame. The
+ * compact layout shows the frame of the selection's scheme alone, so a
+ * link's instance selects there on that frame.
  */
 export function routeSelection(
   route: ShellRoute,
   plans: readonly CanvasFramePlan[],
-  routed: { path: string; savedVariant: boolean; scheme: "dark" | "light" },
+  routed: {
+    compact: boolean;
+    path: string;
+    savedVariant: boolean;
+    scheme: "dark" | "light";
+  },
 ):
   { instance: { frame: string; key: string } } | { frame: string } | undefined {
   const viewport = route.viewport === "desktop" ? "desktop" : "mobile";
@@ -138,7 +146,7 @@ export function routeSelection(
       plans,
       routed.path,
       viewport,
-      route.colorScheme ?? "light",
+      routed.compact ? routed.scheme : (route.colorScheme ?? "light"),
     );
     return frame
       ? { instance: { frame: frame.key, key: route.instance } }
@@ -149,12 +157,23 @@ export function routeSelection(
   return frame?.kind === "component" ? { frame: frame.key } : undefined;
 }
 
-/** The selection's instance, if it is on the given frame. */
-export function instanceOn(
-  selected: CanvasSelected | undefined,
-  frame: string,
+/**
+ * The frame that a variant set's selected frame moves to in the compact
+ * layout, where the selection's scheme names the picked frame: the frame of
+ * its row in that scheme, while that is another frame. A row without a frame
+ * of the scheme keeps its frame.
+ */
+export function schemeFrame(
+  plans: readonly CanvasFramePlan[],
+  selected: string | undefined,
+  scheme: "dark" | "light",
 ): string | undefined {
-  return selected?.kind === "instance" && selected.frame === frame
-    ? selected.key
-    : undefined;
+  const frame = plans.find((plan) => plan.key === selected);
+  if (frame?.kind !== "component" || frame.scheme === scheme) return undefined;
+  return plans.find(
+    (plan) =>
+      plan.kind === "component" &&
+      plan.variantPath === frame.variantPath &&
+      plan.scheme === scheme,
+  )?.key;
 }

@@ -9,7 +9,10 @@ import {
   type CanvasSelectionAction,
   type CanvasSelectionState,
 } from "../src/shell/canvas_selection.js";
-import { routeSelection } from "../src/shell/canvas_selection_frames.js";
+import {
+  routeSelection,
+  schemeFrame,
+} from "../src/shell/canvas_selection_frames.js";
 
 import { workspace } from "./canvas_workspace_fixture.js";
 
@@ -92,10 +95,39 @@ test("a frame's replacement or an instance that leaves its ready usage clears it
   assert.equal(after(toolbar, { type: "clear" }).selected, undefined);
 });
 
+test("a frame that follows the selection's scheme moves only from the frame that it followed", () => {
+  const light = { kind: "frame", frame: "set/row:light" } as const;
+  const chosen: CanvasSelectionAction = {
+    type: "select",
+    generation: undefined,
+    selected: light,
+    reveal: false,
+  };
+  const follow: CanvasSelectionAction = {
+    type: "follow",
+    from: "set/row:light",
+    frame: "set/row:dark",
+  };
+  assert.deepEqual(after(chosen, follow).selected, {
+    kind: "frame",
+    frame: "set/row:dark",
+  });
+  // A route that selects another frame in the same render wins.
+  const routed: CanvasSelectionAction = {
+    type: "route",
+    frame: "set/other:dark",
+  };
+  assert.deepEqual(after(chosen, routed, follow).selected, {
+    kind: "frame",
+    frame: "set/other:dark",
+  });
+});
+
 test("a Used by link selects its instance on the frame of its viewport and scheme", () => {
   const light = workspace("product/browse/home", false);
   const plans = workspaceFrames(light, EVERY_FRAME);
   const routed = {
+    compact: false,
     path: light.entry.path,
     savedVariant: false,
     scheme: "light",
@@ -118,6 +150,17 @@ test("a Used by link selects its instance on the frame of its viewport and schem
     routeSelection({ view: { kind: "home" } }, plans, routed),
     undefined,
   );
+  // The compact layout shows the frame of the selection's scheme alone, so
+  // the link's instance selects there.
+  const dark = workspace("product/browse/home", true);
+  assert.deepEqual(
+    routeSelection(
+      { view: { kind: "home" }, colorScheme: "light", instance: "k" },
+      workspaceFrames(dark, EVERY_FRAME),
+      { ...routed, compact: true, scheme: "dark" },
+    ),
+    { instance: { frame: "mobile-dark", key: "k" } },
+  );
 });
 
 test("a routed saved variant selects its frame in the scheme that the layout names", () => {
@@ -126,20 +169,51 @@ test("a routed saved variant selects its frame in the scheme that the layout nam
   const route = { view: { kind: "home" } } as const;
   const path = "components/action/default";
   assert.deepEqual(
-    routeSelection(route, plans, { path, savedVariant: true, scheme: "light" }),
+    routeSelection(route, plans, {
+      compact: false,
+      path,
+      savedVariant: true,
+      scheme: "light",
+    }),
     { frame: "components/action/default:light" },
   );
   assert.deepEqual(
-    routeSelection(route, plans, { path, savedVariant: true, scheme: "dark" }),
+    routeSelection(route, plans, {
+      compact: true,
+      path,
+      savedVariant: true,
+      scheme: "dark",
+    }),
     { frame: "components/action/default:dark" },
   );
   // The set's own route selects no frame.
   assert.equal(
     routeSelection(route, plans, {
+      compact: false,
       path: "components/action",
       savedVariant: false,
       scheme: "light",
     }),
     undefined,
   );
+});
+
+test("in the compact layout a set's selected frame moves to its row's frame of the selection's scheme", () => {
+  const plans = workspaceFrames(
+    workspace("components/action/default", true),
+    EVERY_FRAME,
+  );
+  const light = "components/action/default:light";
+  assert.equal(
+    schemeFrame(plans, light, "dark"),
+    "components/action/default:dark",
+  );
+  assert.equal(schemeFrame(plans, light, "light"), undefined);
+  assert.equal(schemeFrame(plans, undefined, "dark"), undefined);
+  // A row without a dark frame keeps its Light frame.
+  const lightOnly = workspaceFrames(
+    workspace("components/action/default", false),
+    EVERY_FRAME,
+  );
+  assert.equal(schemeFrame(lightOnly, light, "dark"), undefined);
 });

@@ -20,14 +20,18 @@ export function viewerDocumentViolations(): string[] {
     for (const slot of ["topBarStart", "topBarEnd"])
       if (!published.querySelector('[data-mokly-slot="' + slot + '"]'))
         problems.push("published viewer slot required: " + slot);
-    // The stage's phone and browser frames each hold the sample screen.
-    for (const device of [".phone-frame", ".browser-frame"])
-      if (
-        published.querySelectorAll(
-          "[data-mokly-stage] " + device + " [data-mkc-sample-screen]",
-        ).length !== 1
-      )
-        problems.push("published viewer frames the sample screen: " + device);
+    // The canvas holds the screen's frames, and each frame holds the sample
+    // screen.
+    const frames = published.querySelectorAll(
+      "[data-mokly-stage] [data-canvas-frame]",
+    );
+    if (!frames.length) problems.push("published viewer canvas holds frames");
+    for (const frame of frames)
+      if (frame.querySelectorAll("[data-mkc-sample-screen]").length !== 1)
+        problems.push(
+          "published viewer frames the sample screen: " +
+            frame.getAttribute("data-canvas-frame"),
+        );
   } else if (!screen.querySelector(".review-brand")) {
     problems.push("the fallback chrome carries the mark");
   }

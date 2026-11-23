@@ -8,7 +8,6 @@ import { test } from "./browser_test.js";
 const layouts = [
   '<div class="phone-screen mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
   '<div class="browser-viewport mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
-  '<div class="mbk-stage-embed mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
   '<div class="mbk-component-canvas mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div>',
   '<div class="mb-pane-chrome mbk-reset" data-preview-color-scheme="light"><div class="browser-viewport mbk-reset"><div class="mb-viewport mbk-reset"><div class="mb-viewport-box mbk-reset"><div class="mb-pane mb-pane--before mbk-reset"><div class="mb-pane-doc mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div></div></div></div></div></div>',
   '<div class="mbk-diff-screen mbk-reset" data-diff-component><div class="mb-pane-chrome mbk-reset" data-preview-color-scheme="light"><div class="mb-component-frame mbk-reset"><div class="mb-viewport mbk-reset"><div class="mb-viewport-box mbk-reset"><div class="mb-pane-doc mbk-reset"><iframe class="mbk-frag mbk-reset"></iframe></div></div></div></div></div></div>',

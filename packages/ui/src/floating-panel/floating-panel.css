@@ -191,8 +191,15 @@
     cursor: pointer;
   }
 
-  .mbk-float-close:hover {
+  button.mbk-float-close:hover {
     background: var(--chrome-hover);
     color: var(--cv-text);
+  }
+
+  /* The pictures of the grabber and the close control in a static
+     depiction act on nothing, so they keep their resting look and the
+     default pointer. */
+  span:is(.mbk-float-grab, .mbk-float-close) {
+    cursor: default;
   }
 }

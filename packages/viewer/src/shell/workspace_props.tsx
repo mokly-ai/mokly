@@ -30,7 +30,7 @@ import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
 /** What a variant set's Props say while no frame is selected. */
-export const CHOOSE_VARIANT = "Choose a variant to edit its props.";
+const CHOOSE_VARIANT = "Choose a variant to edit its props.";
 
 /** Human-readable supplied values preserve negative zero and nested data. */
 export function propText(value: WirePropValue): string {
@@ -68,7 +68,7 @@ function ownProps(target: ControlTarget): boolean {
 }
 
 /** Whether Props shows the edit form or the saved props of `target`. */
-export function editsProps(target: ControlTarget | undefined): boolean {
+function editsProps(target: ControlTarget | undefined): boolean {
   return (
     target !== undefined && (target.kind === "component" || ownProps(target))
   );

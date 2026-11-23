@@ -9,7 +9,6 @@ import { createRef } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
-  DocumentFrame,
   PreviewFrame,
   PreviewIframe,
 } from "../src/preview-frame/preview-frame.js";
@@ -90,9 +89,14 @@ test("a frame without content is unavailable, and a failed load adds its status"
 test("a failed load offers Try again, as a button or as a depicted link", () => {
   let retries = 0;
   render(
-    <DocumentFrame error retry={{ onClick: () => retries++ }} scheme="light">
+    <PreviewFrame
+      error
+      placement={{ kind: "frame", viewport: "desktop" }}
+      retry={{ onClick: () => retries++ }}
+      scheme="light"
+    >
       <i>document</i>
-    </DocumentFrame>,
+    </PreviewFrame>,
   );
   const line = screen.getByRole("status");
   assert.equal(line.textContent, "This preview could not be loaded. Try again");
@@ -110,21 +114,6 @@ test("a failed load offers Try again, as a button or as a depicted link", () => 
       </PreviewFrame>,
     ),
     '<div class="mbk-flow-screen mbk-reset" data-preview-color-scheme="light"><i></i><p class="mbk-frame-error mbk-reset" role="status">This preview could not be loaded. <a class="mbk-empty-link mbk-reset" href="../loading/">Try again</a></p></div>',
-  );
-});
-
-test("a whole document fills the stage, which keeps its scroll as embed", () => {
-  assert.equal(
-    renderToStaticMarkup(
-      <DocumentFrame scheme="dark">
-        <i>document</i>
-      </DocumentFrame>,
-    ),
-    '<div class="mbk-stage-embed mbk-reset" data-mokly-scroll="embed" data-preview-color-scheme="dark"><i>document</i></div>',
-  );
-  assert.equal(
-    renderToStaticMarkup(<DocumentFrame error scheme="light" />),
-    `<div class="mbk-stage-embed mbk-reset" data-mokly-scroll="embed" data-preview-color-scheme="light">${UNAVAILABLE}${ERROR}</div>`,
   );
 });
 
