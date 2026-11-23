@@ -4,7 +4,7 @@ import { browserSources } from "../../packages/viewer/tests/browser_sources.js";
 
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
-import { openPanelSheet } from "./workspace_actions.js";
+import { openPanelSheet, setFrames, zoomToTags } from "./workspace_actions.js";
 let server: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
   server = await serveCatalogue({
@@ -18,18 +18,21 @@ test("screen inspection records real nested, repeated and hidden instances with 
   page,
 }) => {
   await page.goto(`${server.url}/view/home/`);
-  await page.getByRole("tab", { name: "Components", exact: true }).click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Components", exact: true }),
-  ).toContainText("5 instances");
-  const highlight = page.getByRole("button", {
+  const components = page.locator('[data-inspect-section="components"]');
+  await components.locator(":scope > summary").click();
+  await expect(components).toContainText("5 instances");
+  // The highlight labels show where the canvas draws its frames at 60% of
+  // their size or more; the Mobile · Light frame alone fits the stage there.
+  await setFrames(page, { desktop: false, mobile: true, dark: false });
+  await zoomToTags(page);
+  const highlight = page.getByRole("switch", {
     name: "Highlight components",
     exact: true,
   });
   await expect(highlight).toBeEnabled();
   await highlight.click();
   await expect(
-    page.locator('.mbk-highlight-layer[data-highlight-viewport="desktop"]'),
+    page.locator('.mbk-highlight-layer[data-highlight-viewport="mobile"]'),
   ).toBeVisible();
   await expect(
     page.locator(".mbk-highlight-label").filter({ hasText: "hidden" }),
@@ -39,35 +42,37 @@ test("screen inspection records real nested, repeated and hidden instances with 
     .filter({ hasText: "footer" })
     .first()
     .click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Props", exact: true }),
-  ).toContainText("Finish");
+  // A press on a label selects its instance, and Inspect's Selection names
+  // its props and opens its component.
+  const selection = page.locator('[data-inspect-section="selection"]');
+  await expect(selection).toContainText("Finish");
   await page.keyboard.press("Escape");
   await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
   await expect(highlight).toBeFocused();
-  await page.getByRole("link", { name: "Open component", exact: true }).click();
+  await selection.getByRole("link", { name: "Action", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
 });
 
-test("the right panel holds the inspector, and the compact layout's panel sheet expands and keeps the page bounded", async ({
+test("the right panel holds Inspect, and the compact layout's panel sheet expands and keeps the page bounded", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`${server.url}/view/pane/`);
-  // From the layout breakpoint up the right panel holds the inspector, which
-  // scrolls with the panel and has no divider of its own.
+  // From the layout breakpoint up the right panel holds its tabs and
+  // Inspect, which scrolls with the panel and has no divider of its own.
   const panel = page.getByRole("region", { name: "Panel", exact: true });
-  await expect(panel.locator("[data-workspace-inspector]")).toBeVisible();
+  const inspect = panel.getByRole("tabpanel", { name: "Inspect" });
+  await expect(inspect).toBeVisible();
   await expect(
     page.getByRole("separator", { name: "Resize inspector" }),
   ).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(panel).toBeHidden();
   await openPanelSheet(page);
-  await expect(panel.locator("[data-workspace-inspector]")).toBeVisible();
+  await expect(inspect).toBeVisible();
   const compact = (await panel.boundingBox())!.height;
   await page.getByRole("button", { name: "Expand panel", exact: true }).click();
   await expect

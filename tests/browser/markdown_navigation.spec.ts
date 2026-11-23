@@ -9,7 +9,7 @@ function row(page: Page, entry: string): Locator {
   return page.locator(`nav.mbk-nav a[data-nav-row][data-entry-id="${entry}"]`);
 }
 
-test("the Example README is its folder's Overview row, and a document's crumb opens it", async ({
+test("the Example README is its folder's Overview row, and a document's Path row opens it", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -28,16 +28,13 @@ test("the Example README is its folder's Overview row, and a document's crumb op
     row(page, "example/getting-started").locator(DOCUMENT_ICON),
   ).toHaveCount(0);
 
-  await page
-    .getByLabel("Catalogue location")
-    .getByRole("link", { name: "Example", exact: true })
-    .click();
+  // The Path row's folder segment links the folder's own page.
+  const path = page.locator("[data-inspect-path]");
+  await path.getByRole("link", { name: "example", exact: true }).click();
   await expect(page).toHaveURL(/\/view\/example\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Example");
   await expect(overview).toHaveAttribute("aria-current", "page");
-  await expect(
-    page.getByLabel("Catalogue location").getByRole("link"),
-  ).toHaveCount(0);
+  await expect(path.getByRole("link")).toHaveCount(0);
 });
 
 test("search finds documents by title, path segment, and tag with the document icon", async ({

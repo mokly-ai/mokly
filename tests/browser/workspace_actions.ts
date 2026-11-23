@@ -191,10 +191,9 @@ export async function zoomToTags(scope: Page | Locator): Promise<void> {
 
 /**
  * The selector of the routed page's or Markdown document's frame: the
- * canvas's reading frame from 900px wide, and the document pane's frame below.
+ * canvas's reading frame, in both layouts.
  */
-export const DOCUMENT_FRAME =
-  "[data-mokly-stage] iframe, .mbk-stage-embed iframe";
+export const DOCUMENT_FRAME = "[data-mokly-stage] iframe";
 
 /**
  * A window narrower than the 900px layout breakpoint, where the compact

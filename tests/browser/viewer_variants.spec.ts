@@ -24,6 +24,18 @@ async function expectSelectedVariant(page: Page, path: string) {
   );
 }
 
+/** The row of Inspect's Variants that the selection checks. */
+const CHECKED = '[data-inspect-section="variants"] [data-checked]';
+
+/** The selection and navigation events that root `one` reported. */
+function routeEvents(page: Page) {
+  return page.evaluate(() =>
+    window.viewerHarness
+      .get("one")
+      .events.filter((event) => ["selection", "navigate"].includes(event.name)),
+  );
+}
+
 test.beforeAll(async () => {
   fixture = await followupFixture();
 });
@@ -42,84 +54,74 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
       }),
     { cross, controlled },
   );
-  // The variant bar stands in the right panel, which the compact layout
-  // keeps in its closed sheet.
-  await expect(
-    page
-      .getByRole("navigation", { name: "Saved variants", includeHidden: true })
-      .getByRole("link", { name: "Default", exact: true, includeHidden: true }),
-  ).toHaveAttribute("aria-current", "page");
+  // The routed saved variant's frame is selected, so Inspect's Variants
+  // checks its row; the compact layout keeps Inspect in its closed sheet.
+  await expect(page.locator(CHECKED)).toHaveText("Default");
 }
 
 for (const cross of [false, true]) {
   const adapter = cross ? "postMessage" : "same-origin";
 
-  test(`${adapter} commits variants from the workspace and public handle`, async ({
+  test(`${adapter} selects a row of the workspace without a route, and the public handle commits a variant`, async ({
     page,
   }) => {
     await openViewer(page, cross);
-    const variants = page.getByRole("navigation", { name: "Saved variants" });
-    const first = variants.getByRole("link", { name: "Default", exact: true });
-    const second = variants.getByRole("link", { name: "Second", exact: true });
-    await second.click();
-    await expect(second).toHaveAttribute("aria-current", "page");
+    // A row of Inspect's Variants selects its Light frame on the canvas.
+    await page
+      .locator(
+        '[data-inspect-section="variants"] [data-inspect-variant="pane/second"]',
+      )
+      .click();
+    await expect(page.locator(CHECKED)).toHaveText("Second");
     await expectSelectedVariant(page, "pane/second");
     await expect(
       page.frameLocator(SELECTED).getByText("Second content"),
     ).toBeVisible();
+    expect(await routeEvents(page)).toEqual([]);
+    // The public handle commits a variant's route, whose frame it selects.
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .ref.current.select({ screenPath: "pane/second" }),
+    );
     await page.evaluate(() =>
       window.viewerHarness
         .get("one")
         .ref.current.select({ screenPath: "pane/default" }),
     );
-    await expect(first).toHaveAttribute("aria-current", "page");
+    await expect(page.locator(CHECKED)).toHaveText("Default");
     await expectSelectedVariant(page, "pane/default");
     await expect(
       page.frameLocator(SELECTED).getByText("First content"),
     ).toBeVisible();
-    const events = await page.evaluate(() =>
-      window.viewerHarness
-        .get("one")
-        .events.filter((event) =>
-          ["selection", "navigate"].includes(event.name),
-        ),
-    );
-    expect(events).toEqual([
-      {
-        name: "navigate",
-        value: { screenPath: "pane/second" },
-      },
+    expect(await routeEvents(page)).toEqual([
+      { name: "navigate", value: { screenPath: "pane/second" } },
       {
         name: "selection",
-        value: expect.objectContaining({
-          screenPath: "pane/second",
-        }),
+        value: expect.objectContaining({ screenPath: "pane/second" }),
       },
-      {
-        name: "navigate",
-        value: { screenPath: "pane/default" },
-      },
+      { name: "navigate", value: { screenPath: "pane/default" } },
       {
         name: "selection",
-        value: expect.objectContaining({
-          screenPath: "pane/default",
-        }),
+        value: expect.objectContaining({ screenPath: "pane/default" }),
       },
     ]);
   });
 
-  test(`${adapter} keeps a controlled variant proposal inert until committed`, async ({
+  test(`${adapter} keeps a controlled variant proposal of the compact frame picker inert until committed`, async ({
     page,
   }) => {
+    await page.setViewportSize(NARROW_WINDOW);
     await openViewer(page, cross, true);
-    const variants = page.getByRole("navigation", { name: "Saved variants" });
-    const first = variants.getByRole("link", { name: "Default", exact: true });
-    const second = variants.getByRole("link", { name: "Second", exact: true });
-    await second.click();
-    await expect(first).toHaveAttribute("aria-current", "page");
-    await expectSelectedVariant(page, "pane/default");
+    // The compact layout shows the selected frame alone; a pick of another
+    // row's frame proposes that row's entry.
+    const shown = ".mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame]";
+    await page
+      .getByRole("combobox", { name: "Frame", exact: true })
+      .selectOption("pane/second:light");
+    await expect(page.locator(CHECKED)).toHaveText("Default");
     await expect(
-      page.frameLocator(SELECTED).getByText("First content"),
+      page.frameLocator(shown).getByText("First content"),
     ).toBeVisible();
     const proposal = await page.evaluate(
       () =>
@@ -135,10 +137,9 @@ for (const cross of [false, true]) {
         .get("one")
         .setSelection(selection as ViewerSelection);
     }, proposal);
-    await expect(second).toHaveAttribute("aria-current", "page");
-    await expectSelectedVariant(page, "pane/second");
+    await expect(page.locator(CHECKED)).toHaveText("Second");
     await expect(
-      page.frameLocator(SELECTED).getByText("Second content"),
+      page.frameLocator(shown).getByText("Second content"),
     ).toBeVisible();
     expect(
       await page.evaluate(() =>

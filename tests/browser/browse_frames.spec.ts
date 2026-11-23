@@ -23,14 +23,18 @@ import {
 
 const WELCOME = "/view/example/screens/welcome/";
 
-test("the viewport choice keeps one column of canvas frames", async ({
+test("the Frames filter's viewport toggles keep one column of canvas frames", async ({
   page,
 }) => {
   await page.goto(WELCOME);
-  await expect(
-    page.locator(".mbk-screen-head [data-workspace-viewport]"),
-  ).toBeVisible();
-  await expect(page.locator(".mbk-viewbar")).toHaveCount(0);
+  // The Frames filter in Inspect holds the viewport toggles, each on at a
+  // full page load.
+  const filter = page.getByRole("group", { name: "Frames" });
+  await expect(filter).toBeVisible();
+  for (const name of ["mobile", "desktop"])
+    await expect(
+      filter.locator(`[data-frames-toggle="${name}"]`),
+    ).toBeChecked();
   const frames = (viewport: "desktop" | "mobile") => [
     page.locator(canvasFrame(viewport, "light")),
     page.locator(canvasFrame(viewport, "dark")),
