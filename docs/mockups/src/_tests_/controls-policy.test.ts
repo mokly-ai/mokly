@@ -61,6 +61,12 @@ test("CSS leaves Firna controls to the theme mapping", () => {
     controlCssViolations(".field-layout {width:100%} .actions {gap:1rem}"),
     [],
   );
+  assert.deepEqual(
+    controlCssViolations(
+      "/* a focused button keeps its glow */ .actions {gap:1rem}",
+    ),
+    [],
+  );
   for (const file of readdirSync(resolve(root, "styles"), {
     recursive: true,
     encoding: "utf8",
