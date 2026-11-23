@@ -25,7 +25,7 @@ test("a label layer takes its place inline only when the host names one", () => 
   );
   assert.equal(
     renderToString(<LabelLayer placement="viewport" />),
-    '<div class="mbk-reset" data-mokly-label-layer="" style="inset:0;overflow:hidden;pointer-events:none;position:fixed;z-index:952"></div>',
+    '<div class="mbk-reset" data-mokly-label-layer="" style="inset:0;overflow:hidden;pointer-events:none;position:fixed;z-index:5"></div>',
   );
 });
 

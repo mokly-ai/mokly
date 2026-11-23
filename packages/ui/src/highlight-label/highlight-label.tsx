@@ -14,7 +14,11 @@ import type { CSSProperties, ReactNode, Ref } from "react";
  */
 export type LabelLayerPlacement = "root" | "viewport";
 
-/** The inline place of each layer, in the order that the shell writes it. */
+/**
+ * The inline place of each layer, in the order that the shell writes it. The
+ * viewport layer lies over the canvas and its highlight masks, and under the
+ * canvas's floating chrome, which covers the labels as it covers the frames.
+ */
 const PLACEMENT: Readonly<Record<LabelLayerPlacement, CSSProperties>> = {
   root: { position: "absolute", inset: 0, pointerEvents: "none" },
   viewport: {
@@ -22,7 +26,7 @@ const PLACEMENT: Readonly<Record<LabelLayerPlacement, CSSProperties>> = {
     overflow: "hidden",
     pointerEvents: "none",
     position: "fixed",
-    zIndex: 952,
+    zIndex: 5,
   },
 };
 

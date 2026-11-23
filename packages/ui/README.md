@@ -341,6 +341,10 @@ and the root's appearance. `LabelLayer` and
 `HighlightLabel` draw the labels of highlighted instances. `HighlightMask`
 draws the dimmed layer with a cutout and an outline for each box, in the
 colours of the `--mbk-highlight-scrim` and `--mbk-highlight-edge` roles.
+The masks, the label layers and an embedded root's marker layer lie over the
+canvas and under its floating chrome: the zoom pill, the entry bar, the
+dock, the floating panels and the top bar cover them, as they cover the
+frames.
 
 Both roots mark the state that the stylesheets select on the root. `resizing`
 names the separator that the reader drags, so the whole shell keeps the

@@ -50,7 +50,8 @@
 }
 
 /* The zoom pill floats at the bottom centre of the stage, 12px above the
-   canvas's bottom edge, over the section. */
+   canvas's bottom edge, over the section, its highlight masks and its
+   labels and markers. */
 .mbk-canvas-pill {
   position: absolute;
   bottom: 12px;
@@ -62,7 +63,7 @@
       ) /
       2
   );
-  z-index: 1;
+  z-index: 7;
   transform: translateX(-50%);
 }
 

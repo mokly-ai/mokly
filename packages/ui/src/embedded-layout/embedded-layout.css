@@ -86,13 +86,17 @@
   overflow: hidden;
 }
 
+/* The marker and label layers lie over the canvas and its highlight masks,
+   and under the stage overlay and the canvas's floating chrome: the zoom
+   pill, the entry bar, the dock, the floating panels and the top bar cover
+   them, as they cover the frames. */
 .mokly-viewer [data-mokly-marker-layer],
 .mokly-viewer [data-mokly-label-layer] {
   display: block;
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 11;
+  z-index: 5;
 }
 
 .mokly-viewer [data-mokly-slot="markers"]:empty {
