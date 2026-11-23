@@ -97,11 +97,16 @@ function projectView(
   view: CatalogueView,
   heldViews: DetailViews | undefined,
 ): ShellCatalogueView {
-  const held = heldViews?.find(
-    (candidate) =>
-      candidate.viewport === view.viewport &&
-      candidate.colorScheme === view.colorScheme,
-  );
+  // `undefined` means no detail. A detail without its view list is malformed:
+  // the read throws, and the catalogue boundary shows the failure state.
+  const held =
+    heldViews === undefined
+      ? undefined
+      : heldViews.find(
+          (candidate) =>
+            candidate.viewport === view.viewport &&
+            candidate.colorScheme === view.colorScheme,
+        );
   if (!held) return { ...view, usage: OMITTED };
   return {
     ...view,

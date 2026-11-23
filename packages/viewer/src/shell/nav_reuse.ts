@@ -39,14 +39,24 @@ function sameEntry(
 ): boolean {
   return (
     held === next ||
-    (held.path === next.path &&
-      held.kind === next.kind &&
-      held.title === next.title &&
-      held.previousPath === next.previousPath &&
-      ("variantOf" in held ? held.variantOf : undefined) ===
-        ("variantOf" in next ? next.variantOf : undefined) &&
-      sameJsonValue(held.tags, next.tags))
+    sameJsonValue(navigationFields(held), navigationFields(next))
   );
+}
+
+/**
+ * Copy the entry fields that place and name rail rows into one record, so a
+ * change of any of them rebuilds the sections. The branch-point lookup still
+ * owns every mapping of `variantOf`.
+ */
+function navigationFields(entry: ShellCatalogueRoutedEntry) {
+  return {
+    path: entry.path,
+    kind: entry.kind,
+    title: entry.title,
+    previousPath: entry.previousPath,
+    tags: entry.tags,
+    ...("variantOf" in entry ? { variantOf: entry.variantOf } : {}),
+  };
 }
 
 /** Keep unchanged sections, folders, entries and variant lists. */
