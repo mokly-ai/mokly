@@ -251,6 +251,14 @@ const COMPONENT_PARAMETERS = new Map([
     "--mbk-comparison-canvas",
     "a comparison's host paints the canvas colour of each version",
   ],
+  [
+    "--mokly-top-bar-inset-start",
+    "a host insets the bar from its window buttons",
+  ],
+  [
+    "--mokly-top-bar-inset-end",
+    "a host insets the bar from its window buttons",
+  ],
 ]);
 
 test("the design stylesheets import the shipped theme and the reset class that every @mokly/ui component reads", async () => {
