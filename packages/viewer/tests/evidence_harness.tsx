@@ -100,6 +100,7 @@ export function startEvidenceHarness(
           .key,
       };
     });
+  let revision = 0;
   const probe: EvidenceRuntimeProbe = {
     frames: emptyFrames,
     instance: instances[0]!,
@@ -125,7 +126,8 @@ export function startEvidenceHarness(
       );
     },
     update(viewport, evidence = "ready") {
-      const usage = evidenceUsage(original, viewport, evidence);
+      revision += 1;
+      const usage = evidenceUsage(original, viewport, evidence, revision);
       probe.setUsage?.(viewport, usage);
     },
   };
@@ -182,15 +184,29 @@ export function startEvidenceHarness(
   return probe;
 }
 
+/**
+ * Build one evidence update. The frame hook ignores a usage of equal value,
+ * so a ready update is the next revision of the view's usage: the same
+ * instance keys and ranges, which keep the frame's targets, and a new prop
+ * value on the `action` instance. A status update must differ from the
+ * frame's current status.
+ */
 function evidenceUsage(
   views: readonly ShellCatalogueView[],
   viewport: EvidenceViewport,
   status: EvidenceStatus,
+  revision: number,
 ): CatalogueUsage {
-  if (status === "ready")
-    return structuredClone(
+  if (status === "ready") {
+    const usage = structuredClone(
       views.find((view) => view.viewport === viewport)!.usage,
     ) as CatalogueUsage;
+    if (usage.status !== "ready") throw new Error("Expected ready fixture");
+    const action = usage.instances.find(({ id }) => id === "action")!;
+    action.props = { ...action.props, revision: ["string", String(revision)] };
+    action.propsKey = `${action.propsKey}:${revision}`;
+    return usage;
+  }
   if (status === "empty")
     return { status: "ready", instances: [], slots: [], ranges: [] };
   return { status };

@@ -22,21 +22,21 @@ function navFolder(
   sectionId: NavSectionNode["id"],
   source: NavRowsSource,
 ): NavigationFolder {
-  const { store } = source;
+  const { context, state } = source;
   const key = folderDisclosureKey(sectionId, node.key);
-  const { selection } = store.state;
+  const { selection } = state;
   return {
     count: node.children.filter((child) =>
-      navNodeVisible(child, selection, store.context),
+      navNodeVisible(child, selection, context),
     ).length,
     depth,
     disclosure: key,
-    filterOpen: filterOpen(store, key),
-    hidden: !navNodeVisible(node, selection, store.context),
+    filterOpen: filterOpen(state, key),
+    hidden: !navNodeVisible(node, selection, context),
     key: node.key,
     kind: "folder",
     label: node.label,
-    open: Boolean(store.state.disclosures[key]),
+    open: Boolean(state.disclosures[key]),
     rows: navRows(node.children, depth + 1, sectionId, source),
   };
 }
@@ -71,16 +71,16 @@ export function navSection(
   section: NavSectionNode,
   source: NavRowsSource,
 ): NavigationSection {
-  const { store } = source;
+  const { context, state } = source;
   return {
     disclosure: section.key,
-    filterOpen: filterOpen(store, section.key),
+    filterOpen: filterOpen(state, section.key),
     hidden: !section.children.some((node) =>
-      navNodeVisible(node, store.state.selection, store.context),
+      navNodeVisible(node, state.selection, context),
     ),
     id: section.id,
     label: section.label,
-    open: Boolean(store.state.disclosures[section.key]),
+    open: Boolean(state.disclosures[section.key]),
     rows: navRows(section.children, 0, section.id, source),
   };
 }

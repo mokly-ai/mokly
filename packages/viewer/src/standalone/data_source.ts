@@ -7,7 +7,7 @@ import {
   INDEX_PATH,
   removedEntryDetailPath,
 } from "../catalogue/delivery_paths.js";
-import { readCatalogueIndex } from "../catalogue/index_reader.js";
+import { adoptFetchedCatalogueIndex } from "../catalogue/index_reader.js";
 import {
   DeliveryFetchError,
   loadDeploymentFile,
@@ -47,7 +47,7 @@ export async function fetchStandaloneIndex(
     signal,
     ownOriginFetch(win),
   );
-  return readCatalogueIndex(value);
+  return adoptFetchedCatalogueIndex(value);
 }
 
 /** Read the index, details and live routes of the stub's own origin. */

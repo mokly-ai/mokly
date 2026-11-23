@@ -1,0 +1,33 @@
+# Sidecar pool tests drop a mock while a clone lives
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from the branch `calummoore/mokly-viewer-refresh-identity-q13s`, CI run 45085457911, an unrelated flaky test in the Repository job.
+- **Location:** `crates/mokly-sidecar/src/_tests_/bundle_pool/origin_support.rs` (`exercise`), `crates/mokly-sidecar/src/_tests_/bundle_pool/origin_lifetime_tests.rs`, `crates/mokly-sidecar/src/pool_releases.rs` (`start_releases` and `synchronize_releases`).
+- **Reason:** The flake is in sidecar test code that the viewer change does not touch, so one fix in its own branch reaches every open branch.
+
+- **Terms:**
+  - **Unimock:** the mock library, version 0.6.8 in `Cargo.lock`. When the original instance of a mock drops, it verifies the calls, and it panics while a clone of that instance is still alive.
+  - **Release thread:** the thread `mokly-sidecar-release` that `start_releases` spawns. It holds a weak reference to the pool state, and it upgrades that reference while it cleans idle slots after a release.
+  - **`exercise`:** the helper of the bundle pool origin tests. It builds the transport, worker, and store mocks, runs one bundle request on a thread, releases a generation while the request waits, and returns an observation.
+- **Background:**
+  - The failed test: `pool_bundle_cache::bundle_pool_tests::origin_lifetime_tests::a_failed_bundle_drops_request_pins_before_return` in `mokly-sidecar`.
+  - The failure text, in CI run 45085457911 on 2026-11-22: the test panicked at `unimock-0.6.8/src/lib.rs:992:13` with "Unimock cannot verify calls, because the original instance got dropped while there are clones still alive." The library tests gave 239 passed and 1 failed.
+  - The rerun outcome: the Repository job of CI run 45089247445 on 2026-11-23 passed, with no change to `crates/mokly-sidecar` between the two runs.
+  - Locally, on 2026-11-23, 20 runs of `cargo test --locked -p mokly-sidecar --lib` gave 19 passes. Run 1 failed the sibling test `stopping_a_busy_bundle_drops_request_pins_before_return` with the same panic site and text.
+  - `exercise` gives the pool a clone of the worker mock and keeps the original as a local, which drops when `exercise` returns.
+  - The success path calls `pool.synchronize_releases()` before it returns. That barrier waits until the release thread has handled every earlier notice. The failure and stop paths return without it.
+  - Other pool test files also release generations while they hold Unimock mocks, and some call `synchronize_releases()` fewer times than they release. Examples are `pool_lease_tests.rs` and `bundle_pool/order_tests.rs`.
+- **Problem:** On the failure and stop paths of `exercise`, the release thread can still hold the upgraded pool state, with its clone of the worker mock, when the original drops. Unimock then panics in the drop. This is the suspected source: async ordering between the test thread and the release thread.
+- **Impact if no action:** The Repository job of any pull request can fail on this test without a cause in that pull request. Each failure costs a rerun and an investigation.
+- **Root question:** How do the sidecar pool tests drop their mocks only after the release thread has let go of the pool state?
+- **Options:**
+  - **A.** Call `pool.synchronize_releases()` on every path of `exercise` after the request thread joins, as the success path does. It is an explicit readiness signal, and it keeps every assertion. Effort: Small.
+  - **B.** A test-support guard that owns the pool in each pool test and calls `synchronize_releases()` in its drop. The test declares it after its mocks, so it drops first. It covers every pool test, not only `exercise`. Effort: Medium.
+  - **C.** Turn off the drop verification of the worker mock. It removes the panic, but it stops checking the worker calls, so it weakens the test and needs the user's approval. Effort: Small.
+- **Left out:** A retry, a sleep, a repeat, or a longer wait, because the testing rules forbid them for a flaky test.
+- **Wider fix:** B. It makes every pool test wait for the release thread before its mocks drop.
+- **Previous examples:** None found on `main`.
+- **Related:** `plans/follow-ups/serve-trace-dispatcher-lock-poison.md` of pull request #484. It has the same Unimock panic site, `unimock-0.6.8/src/lib.rs:992:13`, but another crate (`mokly-cli`), another test (`serve_trace::extraction_trace_tests::a_built_cache_entry_records_extract`), and another text ("Original Unimock instance destroyed on a different thread than the one it was created on"). A fix of one item does not fix the other.
+- **Recommendation:** B. It removes the race for every pool test at Medium cost. A alone fixes the observed tests at Small cost.
+- **Action:** fix after merge, apply B, because the flake is in sidecar test code outside this change, and one fix in its own branch reaches every open branch.

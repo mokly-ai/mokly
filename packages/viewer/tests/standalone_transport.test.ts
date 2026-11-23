@@ -36,7 +36,7 @@ function fakeWindow(routes: Record<string, unknown>) {
         status: body === undefined ? 404 : 200,
         url: url.href,
         headers: new Headers({ "content-type": "application/json" }),
-        json: async () => body,
+        json: async () => structuredClone(body),
       } as Response;
     },
   };
