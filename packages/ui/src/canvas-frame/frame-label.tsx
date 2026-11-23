@@ -3,7 +3,9 @@
  * kind and its name, and the size tag at the right edge. A use case's step
  * frame leads the name with the step's number in a dark tag, which reads as
  * `Step 1`, and its name is a link with a chevron. A frame that keeps its
- * light view while Dark is chosen adds `Light only` after the name.
+ * light view while Dark is chosen adds `Light only` after the name. A frame
+ * of Side by side leads the name with its version's tag: `Before` in the
+ * dark tag, or `Current` in the signal tag.
  */
 
 import {
@@ -21,6 +23,15 @@ export interface CanvasFrameLink {
   /** The link's accessible name, which names what the link opens. */
   label: string;
 }
+
+/** The version that a frame of Side by side shows. */
+export type CanvasFrameSide = "after" | "before";
+
+/** The tag of each version, as the comparison names it. */
+const SIDES: Readonly<Record<CanvasFrameSide, string>> = {
+  after: "Current",
+  before: "Before",
+};
 
 /** The glyph that each kind of frame shows in its label. */
 const GLYPHS: Readonly<Record<CanvasFrameKind, CanvasIconName>> = {
@@ -57,6 +68,7 @@ export function FrameLabel({
   label,
   lightOnly,
   link,
+  side,
   size,
   step,
 }: {
@@ -64,6 +76,7 @@ export function FrameLabel({
   label: string;
   lightOnly: boolean;
   link: CanvasFrameLink | undefined;
+  side: CanvasFrameSide | undefined;
   /** The size tag, such as `1280 × 800`; none for a reading frame. */
   size: string | undefined;
   step: number | undefined;
@@ -74,6 +87,13 @@ export function FrameLabel({
     <figcaption className="mbk-canvas-frame-label mbk-reset">
       <span className="mbk-canvas-frame-title mbk-reset">
         <CanvasIcon name={GLYPHS[kind]} size={12} />
+        {side === undefined ? null : (
+          <>
+            <span className="mbk-canvas-frame-side mbk-reset" data-side={side}>
+              {SIDES[side]}
+            </span>{" "}
+          </>
+        )}
         {step === undefined ? null : (
           <>
             <span className="mbk-canvas-frame-step mbk-reset">

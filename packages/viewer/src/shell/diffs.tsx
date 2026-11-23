@@ -84,10 +84,11 @@ export function ControlledDiffScreen({
         : undefined,
     [compared, comparison.loaded, comparison.presentation, usingChanged],
   );
-  const documents = useComparisonDocuments(
-    comparison.presentation ? comparison.loaded : undefined,
-    selectedComparisonDocuments(views),
+  const rows = useComparisonDocuments(
+    comparison.presentation ? comparison.generations : undefined,
+    [{ addresses: selectedComparisonDocuments(views), entry: entryId }],
   );
+  const documents = rows.get(entryId) ?? { status: "idle" };
   const together = useScrollTogether();
   // The stage shows that the comparison loads and then its sections, so
   // Try again focuses the stage.

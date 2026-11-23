@@ -12,7 +12,9 @@
  * is the link that opens the step's screen, and the step's description reads
  * muted below the label. A frame whose view was never captured keeps its
  * place, its size and its label, and holds a note in its place in place of
- * a document.
+ * a document. In a comparison, a frame of Side by side leads its label with
+ * the tag of its version, and what lies over the document, such as Swipe's
+ * divider, keeps its size at every zoom.
  */
 
 import { useId, type CSSProperties, type ReactNode } from "react";
@@ -24,9 +26,13 @@ import {
   type FrameScheme,
 } from "../preview-frame/preview-frame.js";
 
-import { FrameLabel, type CanvasFrameLink } from "./frame-label.js";
+import {
+  FrameLabel,
+  type CanvasFrameLink,
+  type CanvasFrameSide,
+} from "./frame-label.js";
 
-export type { CanvasFrameLink } from "./frame-label.js";
+export type { CanvasFrameLink, CanvasFrameSide } from "./frame-label.js";
 
 /**
  * What a frame shows: a screen's `desktop` or `mobile` view, a `component`'s
@@ -62,20 +68,26 @@ function sizeStyle(
   } as CSSProperties;
 }
 
-/** The frame's box: its document, or the line of a missing or failed one. */
+/**
+ * The frame's box: its document, or the line of a missing or failed one, and
+ * what lies over the document at the frame's size.
+ */
 function FrameBox({
   children,
   error,
+  overlay,
   retry,
 }: {
   children: ReactNode;
   error: boolean;
+  overlay: ReactNode;
   retry: FrameRetry | undefined;
 }) {
   const unavailable = children === undefined || children === null;
   return (
     <div className="mbk-canvas-frame-clip mbk-reset">
       <div className="mbk-canvas-frame-document mbk-reset">{children}</div>
+      {overlay}
       {unavailable || error ? (
         <div className="mbk-canvas-frame-note mbk-reset">
           {unavailable ? <FrameUnavailable /> : null}
@@ -96,10 +108,12 @@ export function CanvasFrame({
   label,
   lightOnly = false,
   link,
+  overlay,
   place,
   retry,
   scheme,
   selected = false,
+  side,
   step,
   width,
 }: {
@@ -137,6 +151,12 @@ export function CanvasFrame({
    */
   link?: CanvasFrameLink | undefined;
   /**
+   * What lies over the frame's document inside its box, at the frame's size
+   * rather than the document's, so it keeps its size at every zoom, such as
+   * Swipe's divider.
+   */
+  overlay?: ReactNode;
+  /**
    * What stands in the frame's place in place of its document, such as the
    * note of a view that was never captured. The place keeps the frame's size
    * and label, but draws no surface, ring, shadow or size tag, and what it
@@ -149,6 +169,11 @@ export function CanvasFrame({
   scheme: FrameScheme;
   /** Whether the frame holds the selection, which lights its label. */
   selected?: boolean;
+  /**
+   * The version that a frame of Side by side shows, whose tag, Before or
+   * Current, leads the label.
+   */
+  side?: CanvasFrameSide | undefined;
   /** The number of a use case's step, which leads the label in a dark tag. */
   step?: number | undefined;
   /**
@@ -165,6 +190,7 @@ export function CanvasFrame({
       className="mbk-canvas-frame mbk-reset"
       data-canvas-frame={kind}
       data-canvas-place={placed ? "" : undefined}
+      data-canvas-side={side}
       data-focus-visible={focusVisible ? "" : undefined}
       data-preview-color-scheme={scheme}
       data-selected={selected ? "" : undefined}
@@ -175,6 +201,7 @@ export function CanvasFrame({
         label={label}
         lightOnly={lightOnly}
         link={link}
+        side={side}
         size={
           kind !== "document" &&
           !placed &&
@@ -196,7 +223,7 @@ export function CanvasFrame({
       {placed ? (
         <div className="mbk-canvas-frame-place mbk-reset">{place}</div>
       ) : (
-        <FrameBox error={error} retry={retry}>
+        <FrameBox error={error} overlay={overlay} retry={retry}>
           {children}
         </FrameBox>
       )}

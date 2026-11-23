@@ -6,14 +6,17 @@ import {
   type Segment,
 } from "../segmented-control/segmented-control.js";
 
-/** A comparison presentation: Current, or one of the three diff modes. */
-export type ComparisonMode = "current" | "side" | "overlay" | "difference";
+/** A comparison presentation: Current, or one of the four diff modes. */
+export type ComparisonMode =
+  "current" | "side" | "overlay" | "difference" | "swipe";
 
+/** The modes in the order of their keys, from 1 for Current to 5 for Swipe. */
 const modes: readonly Segment<ComparisonMode>[] = [
   ["current", "Current"],
   ["side", "Side by side"],
   ["overlay", "Overlay"],
   ["difference", "Difference"],
+  ["swipe", "Swipe"],
 ];
 
 /** The refresh glyph: an open circle with its arrow at the top. */
