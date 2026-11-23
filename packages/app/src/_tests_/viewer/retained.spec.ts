@@ -24,10 +24,10 @@ test("a removed entry opens its advertised snapshot in Changes", async ({
     await page.getByRole("link", { name: /^Retired form/ }).click();
     await expect(page).toHaveURL(/catalogueScreen=product%2Fretired/);
     await expect(page).toHaveURL(/catalogueSnapshot=[a-f0-9]{64}/);
-    // The canvas shows the removed screen's previous version in a frame for
-    // each of its views, Desktop beside Mobile.
+    // The link from Changes opens one viewport, and its frame shows the
+    // removed screen's previous version.
     await expect(
-      canvasFrame(page, "Retired form — desktop")
+      canvasFrame(page, "Retired form")
         .contentFrame()
         .getByRole("heading", { name: "Retired form" }),
     ).toBeVisible();

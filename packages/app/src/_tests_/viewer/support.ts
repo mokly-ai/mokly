@@ -140,6 +140,37 @@ export async function expectShownViewport(
 }
 
 /**
+ * A viewport toggle of the Frames filter in Inspect, by its name. Its
+ * accessible name also holds its frame size, such as `Mobile 390 × 844`.
+ */
+export function viewportToggle(
+  page: Page,
+  name: "Desktop" | "Mobile",
+): Locator {
+  return page
+    .getByRole("group", { name: "Frames", exact: true })
+    .getByRole("checkbox", { name: new RegExp(`^${name}\\b`) });
+}
+
+/**
+ * Expect the Frames filter to show a viewport choice: Both turns both
+ * viewport toggles on, and one viewport turns its own toggle on and the
+ * other's off.
+ */
+export async function expectViewportToggles(
+  page: Page,
+  viewport: ViewerViewport,
+): Promise<void> {
+  for (const [size, name] of [
+    ["mobile", "Mobile"],
+    ["desktop", "Desktop"],
+  ] as const)
+    await expect(viewportToggle(page, name), name).toBeChecked({
+      checked: viewport === "both" || viewport === size,
+    });
+}
+
+/**
  * A row of the shown component's variant set in the Variants list of Inspect,
  * by its title: the component's own example, then each saved variant. Each
  * row is a button that selects its frame, and the row whose frame holds the

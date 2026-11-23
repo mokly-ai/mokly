@@ -6,10 +6,12 @@ import {
   canvasFrame,
   expectSharePreparing,
   expectShownViewport,
+  expectViewportToggles,
   holdViewerRead,
   makePublic,
   publishedViewerReady,
   publishedProject,
+  viewportToggle,
 } from "./support";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
@@ -68,11 +70,10 @@ test("Share copies the canonical link and says who can open it", async ({
     ).toBeVisible();
   await expect(page).not.toHaveURL(/viewport=/);
 
-  // One viewport is the reader's own choice, so the address and the link both
-  // name it, and the link's recipient opens on that viewport.
-  await page
-    .getByRole("combobox", { name: "Viewport" })
-    .selectOption("desktop");
+  // One viewport is the reader's own choice: turning Mobile off in the Frames
+  // filter leaves Desktop. The address and the link both name it, and the
+  // link's recipient opens on that viewport, with the same toggles.
+  await viewportToggle(page, "Mobile").uncheck();
   await expect(page).toHaveURL(/viewport=desktop/);
   await page.getByTestId("viewer-share").click();
   await expect(
@@ -97,6 +98,7 @@ test("Share copies the canonical link and says who can open it", async ({
   await expect(recipient).toHaveURL(/catalogueScreen=start/);
   await expect(recipient).toHaveURL(/viewport=desktop/);
   await expectShownViewport(recipient, "Start", "desktop");
+  await expectViewportToggles(recipient, "desktop");
   await expect(
     canvasFrame(recipient, "Start — desktop")
       .contentFrame()
