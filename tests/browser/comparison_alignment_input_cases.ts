@@ -18,11 +18,18 @@ import {
 } from "./comparison_scroll.js";
 import {
   comparisonSection,
+  frameLabels,
   openComparison,
   paneFrame,
   sharedViewports,
 } from "./comparison_sections.js";
 import { modeButton } from "./comparison_ui.js";
+
+/**
+ * The labels of Side by side's pair of the Desktop · Light frame, each in its
+ * own canvas frame and led by its version's tag.
+ */
+const DESKTOP_PAIR = [/^Before Desktop · Light/u, /^Current Desktop · Light/u];
 
 /** Expect Side by side's two documents and viewports at one offset. */
 export async function expectMirrored(
@@ -50,7 +57,7 @@ export function registerComparisonAlignmentInput(test = baseTest): void {
   }) => {
     await openComparison(page, changed, "desktop", "Side by side");
     const desktop = comparisonSection(page, "desktop");
-    await expect(desktop.locator(".browser-frame")).toHaveCount(2);
+    await expect(frameLabels(desktop)).toHaveText(DESKTOP_PAIR);
     await wheelOver(page, paneFrame(desktop, "before"), 300);
     await expectMirrored(desktop, 300);
     await wheelOver(page, paneFrame(desktop, "after"), -100);
@@ -122,7 +129,7 @@ export function registerComparisonAlignmentInput(test = baseTest): void {
     );
 
     await modeButton(page, "Side by side").click();
-    await expect(desktop.locator(".browser-frame")).toHaveCount(2);
+    await expect(frameLabels(desktop)).toHaveText(DESKTOP_PAIR);
     const before = paneFrame(desktop, "before").contentFrame();
     await before.locator("h1").waitFor();
     await paneFrame(desktop, "before").evaluate((frame: HTMLIFrameElement) =>

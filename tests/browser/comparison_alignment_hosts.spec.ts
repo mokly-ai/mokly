@@ -30,7 +30,14 @@ import {
   sharedViewports,
 } from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { comparisonIndex, modeButton } from "./comparison_ui.js";
+import {
+  chooseMode,
+  compareStage,
+  compareState,
+  comparisonFrames,
+  comparisonIndex,
+  modeButton,
+} from "./comparison_ui.js";
 import {
   comparisonViewerHost,
   openEmbeddedComparison,
@@ -134,26 +141,29 @@ test("a pane document that cannot be presented fails and recovers with Try again
   );
   await page.goto(`/view/${changed}/`);
   await chooseViewport(page, "desktop");
-  await modeButton(page, "Overlay").click();
+  await chooseMode(page, "Overlay");
   await expectFailedThenPresented(page, () => {
     failing = false;
   });
 });
 
-/** The failure state, then Try again presents both versions. */
+/**
+ * The failure state, which shows no pane, then Try again presents both
+ * versions, and the failure and the busy state end.
+ */
 async function expectFailedThenPresented(page: Page, recover: () => void) {
-  const stage = page.locator("[data-diff-stage]");
-  await expect(stage).toContainText("The comparison could not be loaded.");
-  await expect(stage.locator("[data-comparison-failure] p")).toHaveText(
+  const state = compareState(page);
+  await expect(state).toContainText("The comparison could not be loaded.");
+  await expect(state.locator("[data-comparison-failure] p")).toHaveText(
     "The comparison is unavailable.",
   );
-  await expect(stage.locator("iframe")).toHaveCount(0);
+  await expect(comparisonFrames(page)).toHaveCount(0);
   await expect(modeButton(page, "Overlay")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   recover();
-  await stage.getByRole("button", { name: "Try again", exact: true }).click();
+  await state.getByRole("button", { name: "Try again", exact: true }).click();
   const desktop = comparisonSection(page, "desktop");
   await expect(
     paneFrame(desktop, "after").contentFrame().locator("h1"),
@@ -161,8 +171,9 @@ async function expectFailedThenPresented(page: Page, recover: () => void) {
   await expect(
     paneFrame(desktop, "before").contentFrame().locator("h1"),
   ).toHaveText("Before screen");
-  await expect(stage).not.toHaveAttribute("aria-busy", "true");
-  await expect(stage.locator("[data-comparison-failure]")).toHaveCount(0);
+  await expect(compareStage(page)).not.toHaveAttribute("aria-busy", "true");
+  await expect(state).toHaveCount(0);
+  await expect(page.locator("[data-comparison-failure]")).toHaveCount(0);
 }
 
 test.describe("embedded viewer", () => {
@@ -231,7 +242,7 @@ test.describe("embedded viewer", () => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto(`${host.url}/viewer.html?adapter=cross&entry=${changed}`);
     await chooseViewport(page, "desktop");
-    await modeButton(page, "Overlay").click();
+    await chooseMode(page, "Overlay");
     await expect
       .poll(() =>
         page.evaluate(

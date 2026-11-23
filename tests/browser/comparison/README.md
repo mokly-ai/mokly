@@ -47,6 +47,9 @@ take that section: each version's pane frame, the page viewports, the shown
 mode, and the frame labels. `comparison_scroll.ts` measures the page offsets
 and ranges in the documents' CSS pixels, which the canvas zoom does not
 change, and `comparison_region_offsets.ts` measures inner scroll regions.
+`comparison_band.ts` reads the band through its hooks, the `Comparison mode`
+group, the `Scroll together` switch and Refresh: its geometry, the order of
+its controls, and the drawn state of the switch.
 `comparison_evidence_page.ts` holds the Details copy and readers that the
 stylesheet Details specs share. Its readers require one Comparison details
 heading and exactly one changed-files list. `openEvidence` also requires the

@@ -8,6 +8,7 @@ import {
 import { expectStackAt } from "./comparison_scroll.js";
 import {
   comparisonSection,
+  frameModes,
   openComparison,
   paneFrame,
 } from "./comparison_sections.js";
@@ -28,7 +29,7 @@ test("Overlay and Difference move every version's panels together", async ({
   await expectStackAt(desktop, 0);
 
   await modeButton(page, "Difference").click();
-  await expect(desktop.locator(".mb-panes")).toHaveAttribute(
+  await expect(frameModes(desktop)).toHaveAttribute(
     "data-compare-mode",
     "difference",
   );
