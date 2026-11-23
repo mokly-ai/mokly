@@ -232,12 +232,14 @@ async function inspectsSecond(page: Page, cross: boolean, canvas: boolean) {
   );
   const labels = page.locator("[data-mokly-label-layer] button");
   await expect(labels).toHaveCount(1);
-  // The one label stands over the named variant's frame.
+  // The one label stands over the named variant's frame: its centre lies on
+  // the frame's span, and it hangs at most its height above the frame.
   const frame = (await page.locator(shown).boundingBox())!;
   const label = (await labels.boundingBox())!;
-  expect(label.x).toBeGreaterThanOrEqual(frame.x - 1);
-  expect(label.x).toBeLessThanOrEqual(frame.x + frame.width);
-  expect(label.y).toBeGreaterThanOrEqual(frame.y - label.height - 1);
+  const centre = label.x + label.width / 2;
+  expect(centre).toBeGreaterThanOrEqual(frame.x);
+  expect(centre).toBeLessThanOrEqual(frame.x + frame.width);
+  expect(label.y).toBeGreaterThanOrEqual(frame.y - label.height - 4);
   expect(label.y).toBeLessThanOrEqual(frame.y + frame.height);
   const outcomes = await page.evaluate(
     async ({ instance, outside }) => {

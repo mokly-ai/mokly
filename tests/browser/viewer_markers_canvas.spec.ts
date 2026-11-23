@@ -73,12 +73,14 @@ for (const cross of [false, true])
     await expectMarkerAligned(page, "primary", mobile, "Visible");
     const pill = page.getByRole("group", { name: "Zoom" });
 
-    // A fitted canvas refits to a smaller stage, and the marker shrinks.
+    // A fitted canvas refits to a smaller stage, and the marker shrinks. The
+    // root shrinks on both axes, so the axis that limits Fit shrinks too.
     await pill.getByRole("button", { name: "Fit" }).click();
     await expectMarkerAligned(page, "primary", mobile, "Visible");
     const fitted = await markerBox(page);
     await page.locator("#one").evaluate((element) => {
       element.style.width = "900px";
+      element.style.height = "640px";
     });
     await expect
       .poll(async () => (await markerBox(page)).width)

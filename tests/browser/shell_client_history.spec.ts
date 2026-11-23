@@ -94,7 +94,9 @@ test("saved-variant routes and fragment history keep separate entries", async ({
     new RegExp(`${route(`${ACTION}/disabled`)}#mb-main$`),
   );
   await expect(disabled).toHaveAttribute("aria-current", "page");
-  expect(reads).toEqual([`/mokly-viewer/entries/${ACTION}/disabled.json`]);
+  // The component's route read each saved variant's detail for its variant
+  // set, so the variant's route and its history read nothing more.
+  expect(reads).toEqual([]);
   expect(loads.count).toBe(0);
 });
 
