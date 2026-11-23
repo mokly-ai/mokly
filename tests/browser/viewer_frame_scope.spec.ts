@@ -11,7 +11,7 @@ import { test } from "./browser_test.js";
 import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
-import { canvasFrame, chooseVariant } from "./workspace_actions.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -117,7 +117,10 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await start(page, cross);
-    const link = page.getByRole("link", { name: "Tour", exact: true });
+    // The catalogue's row of the use case; Inspect's Used by names it too.
+    const link = page
+      .locator("nav.mbk-nav")
+      .getByRole("link", { name: "Tour", exact: true });
     await link.evaluate((link) => {
       (link as HTMLAnchorElement).href += "?fragment=example-anchor";
     });
@@ -191,7 +194,12 @@ for (const cross of [false, true]) {
     for (const variant of fixture.index.components.filter(
       (entry) => entry.variantOf === component.path,
     )) {
-      await chooseVariant(page, variant.title);
+      // The host opens each saved variant, which ends the last highlight.
+      await page.evaluate(
+        (screenPath) =>
+          window.viewerHarness.get("one").ref.current.select({ screenPath }),
+        variant.path,
+      );
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
         0,
       );

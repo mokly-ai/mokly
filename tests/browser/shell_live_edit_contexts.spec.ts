@@ -1,7 +1,8 @@
 /**
  * Live prop edits across their contexts in Serve, under the component
- * controls contract and its design: on the canvas and in the compact layout
- * both schemes of an edited row through a viewport and scheme switch; on the
+ * controls contract and its design: on the canvas both schemes of an edited
+ * row through a viewport and scheme switch, and in the compact layout the
+ * selected frame of the row and then its other scheme's frame; on the
  * canvas every shown frame of an edited screen; below the layout breakpoint
  * a scheme change while the first render is pending; and an expired
  * temporary preview.
@@ -95,13 +96,50 @@ test("on the canvas, an edit renders the Light and Dark frames of its row, and t
   await expectRowEdit(page, "Both schemes");
 });
 
-test("below the layout breakpoint, a viewport switch keeps the edit and shows it in each frame that it shows", async ({
+test("below the layout breakpoint, an edit renders the selected frame of its row, and a scheme change renders the row's other frame", async ({
   page,
 }) => {
-  // The compact layout shows the card's whole set as the canvas does: its
-  // desktop views, Light beside Dark, whatever the viewport choice.
+  // Props edits the row of the selected frame, which the compact layout
+  // shows alone; the selection's scheme names that frame.
   await page.setViewportSize(NARROW_WINDOW);
-  await expectRowEdit(page, "Switched", "?viewport=desktop");
+  const server = await serveLiveCatalogue({
+    config: { colorSchemes: ["light", "dark"] },
+  });
+  try {
+    const props = await openProps(page, server.url, {
+      query: "?viewport=desktop",
+    });
+    const sent = renders(page);
+    const label = props.getByRole("textbox", { name: "label" });
+    await label.fill("Switched");
+    const shown = (scheme: "dark" | "light") => ({
+      url: expect.stringMatching(
+        preview("desktop", scheme === "dark" ? "\\.dark" : ""),
+      ),
+      text: expect.stringContaining("Switched 1"),
+    });
+    await expect
+      .poll(() => frameDocument(page, "desktop", "light"))
+      .toEqual(shown("light"));
+    const contexts = () =>
+      sent
+        .map((request) => request.postDataJSON())
+        .map((body) => `${body.viewport}/${body.colorScheme}`)
+        .sort();
+    expect(contexts()).toEqual(["desktop/light"]);
+    // A viewport choice changes nothing on a variant set; Dark shows the
+    // row's Dark frame, which renders the edit.
+    await chooseViewport(page, "mobile");
+    await chooseScheme(page, "dark");
+    await expect
+      .poll(() => frameDocument(page, "desktop", "dark"))
+      .toEqual(shown("dark"));
+    await passRenderingUpdates(page);
+    expect(contexts()).toEqual(["desktop/dark", "desktop/light"]);
+    await expect(label).toHaveValue("Switched");
+  } finally {
+    await closeServe(page, server);
+  }
 });
 
 test("on the canvas, a screen's edit renders each shown frame, and its Desktop · Dark frame shows the edit", async ({
