@@ -74,6 +74,16 @@ export const buttonInput = componentInput({
     },
   },
   props: { label: "Get started", tone: "primary" },
+  /**
+   * `content`: parts the Button draws inside itself in place of its label,
+   * such as a reference in mono beside its state, through the package
+   * Button's own content. The label stays the Button's name, unless an
+   * `accessibilityLabel` gives one. It takes the place of the lead, the icon,
+   * the arrow and the chevron, which the parts draw when they need them; the
+   * icon-only form and a busy Button's working word take its place. It holds
+   * no interactive node.
+   */
+  slots: ["content"],
   controls: {
     label: { kind: "text", label: "Label" },
     tone: {
@@ -121,22 +131,26 @@ export const buttonInput = componentInput({
       accessibilityLabel,
       lead,
       iconOnly,
+      content,
     },
     { viewport },
   ) => {
     // The icon alone, named by the label, or by the caller's whole name.
     const glyph = iconOnly === true && icon !== undefined;
     const name = accessibilityLabel ?? label;
+    // The caller's parts, unless the icon alone or a working word is drawn.
+    const parts = glyph || busy || content == null ? undefined : content;
     const button = (
       <Button
         accessibilityLabel={
-          glyph
+          glyph || parts !== undefined
             ? name
             : (accessibilityLabel ??
               (lead === undefined ? undefined : lead + " / " + label))
         }
         content={
-          glyph || lead === undefined || busy ? undefined : (
+          parts ??
+          (glyph || lead === undefined || busy ? undefined : (
             <LeadLabel
               lead={lead}
               label={label}
@@ -144,7 +158,7 @@ export const buttonInput = componentInput({
               size={size}
               chevron={chevron === true}
             />
-          )
+          ))
         }
         tone={tone === "quiet" ? "plain" : tone}
         size={size}

@@ -5,7 +5,8 @@
    Each rule names the element that carries `data-color-scheme`, the document
    root in the application and the renderer's wrapper in a drawing, so a rule
    here outweighs a product rule for the same element. Every rule styles cloud
-   elements only, never a package part or a registered control. A rule that
+   elements only, never a package part or a registered control; the parts that
+   the pill's Button draws as its content are the cloud's own. A rule that
    sets the display of an element that can carry `fo-full-bar-only` or
    `fo-compact-bar-only` goes through `:where()`, so the switch in
    `viewer-bar.css` still outweighs it. */
@@ -19,18 +20,19 @@
   );
 }
 
-/* The publication pill: one rounded control on the muted surface with a
-   hairline. Its reference trigger is a quiet Button with no frame of its own,
-   so the pill is the frame the reader sees. A phone's trigger keeps its 44px
-   touch target, which reaches past the pill's 40px without a fill. */
-[data-color-scheme] .fo-canvas-pill {
+/* The publication pill: a rounded frame on the muted surface with a hairline,
+   around one quiet registered Button with no frame of its own. The Button
+   fills the frame and draws the pill's parts as its content, so the whole
+   pill is the control the reader sees and presses. A phone's Button keeps its
+   44px touch target, which reaches past the pill's 40px without a fill. */
+:where([data-color-scheme]) .fo-canvas-pill {
   display: flex;
+}
+[data-color-scheme] .fo-canvas-pill {
   align-items: center;
   flex: 0 1 auto;
-  gap: var(--mk-space-1);
   min-width: 0;
   min-height: 2rem;
-  padding: 0 var(--mk-space-2) 0 0.625rem;
   border: 1px solid var(--mk-color-border);
   border-radius: var(--mk-radius-chrome);
   background: var(--mk-color-surface-muted);
@@ -41,19 +43,62 @@
     height: 2.5rem;
   }
 }
+/* In the Mac app the whole pill takes the press, its hairline too, so no part
+   of it moves the window. A waiting pill holds no control, so it moves the
+   window as the bar around it does. */
+[data-color-scheme] .fo-canvas-pill:not(.fo-canvas-pill-waiting) {
+  -webkit-app-region: no-drag;
+}
+/* While a read decides the reference, the pill holds no control: the
+   reference's placeholder, which takes the muted surface itself, so the pill
+   takes the bar's surface, and the state beside it. */
 [data-color-scheme] .fo-canvas-pill-waiting {
+  gap: var(--mk-space-1);
+  padding: 0 var(--mk-space-2) 0 0.625rem;
   background: var(--mk-color-surface);
+}
+/* The parts that the pill's Button draws, in the pill's 13px interface type.
+   The Button's own padding keeps them from its edges. A button element sets
+   its own face, ink and alignment, so the parts name theirs. */
+[data-color-scheme] .fo-canvas-pill-content {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  gap: var(--mk-space-2);
+  min-width: 0;
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-ui-size);
+  font-weight: var(--mk-font-regular);
+  line-height: var(--mk-type-ui-line);
+  text-align: start;
+  white-space: nowrap;
 }
 [data-color-scheme] .fo-canvas-pill .fo-top-reference {
   flex: 0 1 auto;
 }
-/* The quiet trigger's own padding stands in for the pill's gaps beside the
-   reference, so its wrapper reaches over part of it. A placeholder has no
-   padding to spare. */
+/* A ready pill's reference holds its name alone, so it takes no floor of its
+   own and a short name keeps its own width. The pill's floor in
+   `viewer-bar.css` keeps the room of a short name where the bar squeezes it. */
 [data-color-scheme]
   .fo-canvas-pill:not(.fo-canvas-pill-waiting)
   .fo-top-reference {
-  margin-inline: calc(-1 * var(--mk-space-2));
+  min-width: 0;
+}
+/* The reference's name, on one line cut with an ellipsis: a branch reads in
+   regular mono, as a reference does, and a pull request keeps its number in
+   semibold before its title in sans. */
+[data-color-scheme] .fo-canvas-pill-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+[data-color-scheme] .fo-canvas-pill-branch {
+  font-family: var(--mk-font-mono);
+}
+[data-color-scheme] .fo-canvas-pill-number {
+  font-weight: var(--mk-font-semibold);
 }
 /* The state's phrase takes the pill's 13px interface size; the short SHA
    keeps its own smaller mono size. */
@@ -86,7 +131,7 @@
   color: var(--mk-color-text-secondary);
 }
 /* The chevron takes the muted ink, the faintest text role, 2px further from
-   the SHA than the pill's other gaps. */
+   the part before it than the pill's other gaps. */
 [data-color-scheme] .fo-canvas-pill-chevron {
   margin-inline-start: 2px;
   color: var(--mk-color-text-muted);

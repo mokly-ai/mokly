@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { MockLink } from "@mokly/mokly";
 
 import type { ButtonIcon } from "../../components/button";
@@ -22,6 +24,7 @@ export function Action({
   whole,
   lead,
   iconOnly,
+  content,
 }: {
   label: string;
   /**
@@ -32,6 +35,11 @@ export function Action({
   whole?: string;
   /** A muted lead the registered Button draws before the label. */
   lead?: string;
+  /**
+   * The parts the registered Button draws inside itself in place of the
+   * label, its `content` slot. The label stays the control's name.
+   */
+  content?: ReactNode;
   instance?: string;
   to?: string;
   tone?: "primary" | "secondary" | "quiet" | "danger";
@@ -62,6 +70,7 @@ export function Action({
     ...(block === undefined ? {} : { block }),
     ...(singleLine === undefined ? {} : { singleLine }),
     ...(lead === undefined ? {} : { lead }),
+    ...(content === undefined ? {} : { content }),
   };
   const control = (
     <Button

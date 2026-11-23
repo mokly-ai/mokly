@@ -2,6 +2,7 @@ import { branchPathFor, publicationPathFor } from "./addresses";
 import { releaseBuild, test } from "./fake-build-api";
 import { expect, freshEmail, open, signIn } from "./harness";
 import { createProject } from "./project-setup";
+import { publicationReference } from "./viewer/support";
 
 test("a real API build publishes this branch and opens its catalogue", async ({
   page,
@@ -28,9 +29,7 @@ test("a real API build publishes this branch and opens its catalogue", async ({
     .filter({ hasText: "Publish" });
   await expect(publishStep).toContainText("Running");
   await expect(page.getByTestId("build-cancel")).toBeVisible();
-  await expect(page.getByTestId("viewer-publication")).toHaveText(
-    "feature/catalogue",
-  );
+  await expect(publicationReference(page)).toHaveText("feature/catalogue");
 
   await releaseBuild(buildId ?? "");
   await expect(
@@ -60,7 +59,5 @@ test("a real API build publishes this branch and opens its catalogue", async ({
   await expect(
     page.getByRole("heading", { level: 2, name: "Start", exact: true }),
   ).toBeVisible();
-  await expect(page.getByTestId("viewer-publication")).toHaveText(
-    "feature/catalogue",
-  );
+  await expect(publicationReference(page)).toHaveText("feature/catalogue");
 });

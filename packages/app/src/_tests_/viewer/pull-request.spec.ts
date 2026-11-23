@@ -4,6 +4,8 @@ import { expect, freshEmail, open, signIn, test } from "../harness";
 import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
+import { publicationReference } from "./support";
+
 /**
  * A publication address names the pull request that produced it, whatever the
  * address said on the way in.
@@ -35,7 +37,7 @@ test("a publication address names its pull request and links to GitHub", async (
     page,
     `${await publicationPathFor(page, projectId, published.id)}?view=changes`,
   );
-  await expect(page.getByTestId("viewer-publication")).toHaveText(
+  await expect(publicationReference(page)).toHaveText(
     "#42 Name the pull request",
   );
   const state = page.locator(".fo-top-state");
@@ -69,7 +71,7 @@ test("a pull request without an observed author names no author", async ({
   });
 
   await open(page, await publicationPathFor(page, projectId, published.id));
-  await expect(page.getByTestId("viewer-publication")).toHaveText(
+  await expect(publicationReference(page)).toHaveText(
     "#8 Retain the author login",
   );
   const detail = page.locator(".fo-top-state-detail");

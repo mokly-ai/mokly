@@ -24,6 +24,26 @@ import {
  * the panels' rows in `viewer-panels.spec.ts`.
  */
 
+/**
+ * The publication pill's names: the whole reference, the state's phrase and
+ * the short SHA, which both compositions keep.
+ */
+const pullReference = pullRequest.number + " " + pullRequest.title;
+const readyBranch = [
+  publication.branch,
+  "Ready · " + publication.time.split(",")[0],
+  publication.sha,
+].join(", ");
+const readyPullRequest = [
+  pullReference,
+  pullRequest.author + " · Ready · 15 Sep",
+  pullRequest.sha,
+].join(", ");
+const unpublishedPullRequest = [
+  pullReference,
+  pullRequest.author + " · Not published",
+].join(", ");
+
 /** The six screens of the family and whether a panel is open over the stage. */
 const family = [
   ["standalone", false],
@@ -96,17 +116,9 @@ for (const viewport of ["desktop", "mobile"] as const)
         async ({ page }) => {
           await page.setViewportSize({ width: 320, height: 844 });
           for (const [screen, name, role] of [
-            ["standalone", publication.branch, "button"],
-            [
-              "pull-request",
-              pullRequest.number + " " + pullRequest.title,
-              "button",
-            ],
-            [
-              "pull-request/empty",
-              pullRequest.number + " " + pullRequest.title,
-              "link",
-            ],
+            ["standalone", readyBranch, "button"],
+            ["pull-request", readyPullRequest, "button"],
+            ["pull-request/empty", unpublishedPullRequest, "link"],
           ] as const) {
             await page.goto(url(screen));
             await page.addStyleTag({ content: "html { font-size: 200%; }" });
@@ -139,7 +151,7 @@ for (const viewport of ["desktop", "mobile"] as const)
       await page.goto(url("standalone"));
       const viewer = page.locator(".mokly-viewer");
       await expect(
-        viewer.getByRole("button", { name: publication.branch, exact: true }),
+        viewer.getByRole("button", { name: readyBranch, exact: true }),
       ).toBeVisible();
       // The full bar holds the project switcher, History, Share and the
       // account's avatar, named by the reader; Settings lives in the account
@@ -164,8 +176,8 @@ for (const viewport of ["desktop", "mobile"] as const)
       if (viewport === "desktop") {
         await page.setViewportSize({ width: 700, height: 900 });
         for (const [screen, name] of [
-          ["standalone", publication.branch],
-          ["pull-request", pullRequest.number + " " + pullRequest.title],
+          ["standalone", readyBranch],
+          ["pull-request", readyPullRequest],
         ] as const)
           await test.step("narrow desktop " + screen, async () => {
             await page.goto(url(screen));

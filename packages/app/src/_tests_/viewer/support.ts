@@ -53,6 +53,15 @@ export async function publishedViewerReady(page: Page): Promise<void> {
   }
 }
 
+/**
+ * The reference that the publication pill draws inside its one control: the
+ * branch, or the pull request's number and title, or the compact bar's short
+ * form of either. The control's whole text also holds the state and the SHA.
+ */
+export function publicationReference(scope: Page | Locator): Locator {
+  return scope.getByTestId("viewer-publication").locator(".fo-top-reference");
+}
+
 /** The Notice variant reads both consumer lists from its parent's detail. */
 export async function expectParentUsage(page: Page): Promise<void> {
   await page.getByRole("tab", { name: "Usage", exact: true }).click();

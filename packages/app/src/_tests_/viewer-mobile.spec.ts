@@ -10,7 +10,11 @@ import {
   openHeldViewer,
   openShareFromMore,
 } from "./viewer/compact-handoff";
-import { publishedViewerReady, publishedProject } from "./viewer/support";
+import {
+  publicationReference,
+  publishedViewerReady,
+  publishedProject,
+} from "./viewer/support";
 import { pressWrite } from "./writes";
 
 /** How far the document scrolls sideways; anything but zero is a defect. */
@@ -88,8 +92,8 @@ test("the bar fits a person who has not set a name, at 320px", async ({
 
 /**
  * A long pull request title must not make the compact viewer scroll sideways.
- * The publication trigger must retain its full accessible name at 390px and
- * 320px.
+ * The compact pill shows the pull request's number, and its one control keeps
+ * the whole name at 390px and 320px: the full reference, then its state.
  */
 test("a pull request publication does not scroll sideways", async ({
   page,
@@ -113,13 +117,10 @@ test("a pull request publication does not scroll sideways", async ({
     await page.setViewportSize({ width, height: 844 });
     await open(page, await publicationPathFor(page, projectId, published.id));
     await publishedViewerReady(page);
-    await expect(page.getByTestId("viewer-publication")).toContainText("#42");
-    await expect(
-      page.getByRole("button", {
-        name: "#42 Name the pull request on every publication address",
-        exact: true,
-      }),
-    ).toHaveCount(1);
+    await expect(publicationReference(page)).toHaveText("#42");
+    await expect(page.getByTestId("viewer-publication")).toHaveAccessibleName(
+      /^#42 Name the pull request on every publication address, octocat · Ready · /,
+    );
     expect(
       await sidewaysOverflow(page),
       `the viewer does not scroll sideways at ${width}px`,

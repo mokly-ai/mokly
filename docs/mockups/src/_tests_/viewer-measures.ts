@@ -45,10 +45,14 @@ export function overlappingChrome() {
   return overlaps;
 }
 
-/** The reference label's lines and the boundaries that can clip its chevron. */
+/**
+ * The reference label's lines and the boundaries that can clip its chevron,
+ * the last glyph that the trigger draws.
+ */
 export function referenceTriggerLayout(trigger: Element) {
   const label = trigger.querySelector("[dir=auto]");
-  const icon = trigger.querySelector("svg");
+  const icons = trigger.querySelectorAll("svg");
+  const icon = icons[icons.length - 1];
   const chevron = icon?.getBoundingClientRect();
   const bar = trigger.closest(".fo-top-bar, .mokly-top-host");
   const inside = (boundary: DOMRect | undefined) =>

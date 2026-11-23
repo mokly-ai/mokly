@@ -31,26 +31,46 @@ export function readyDetail(published: string): string {
 }
 
 /**
- * The publication pill: one rounded control on the muted surface with a
- * hairline, which holds the reference trigger and what the stage shows of
- * it. The trigger keeps the reference as its own label, so the glyph, the
- * state and the chevron around it stay outside its element and are
- * decorative. While a read decides the reference, the pill holds the
- * trigger's placeholder, which takes the muted surface itself, so the pill
- * takes the bar's surface.
+ * The pill's accessible name and tooltip: the whole reference, the state's
+ * phrase and the short SHA, in the order the full pill shows them. The
+ * compact pill and a narrower bar show fewer of them, so the name holds every
+ * word that the pill can show.
+ */
+export function pillName(
+  reference: string,
+  state: { detail: string; sha?: string },
+): string {
+  return [reference, state.detail, state.sha]
+    .filter((part) => part !== undefined && part !== "")
+    .join(", ");
+}
+
+/**
+ * The publication pill's frame: one rounded box on the muted surface with a
+ * hairline. A ready pill holds one quiet registered Button that fills it, so
+ * the pill is the control the reader presses, and the frame gives the
+ * Button's name as its tooltip. While a read decides the reference, the pill
+ * holds no control: the reference's placeholder, which takes the muted
+ * surface itself, so the pill takes the bar's surface. A desktop drawing
+ * draws one pill for each composition, which carries the composition's class.
  */
 export function Pill({
   waiting = false,
+  part,
+  title,
   children,
 }: {
   waiting?: boolean;
+  part?: SlotBar["part"];
+  title?: string;
   children: ReactNode;
 }) {
   return (
     <span
-      className={
-        waiting ? "fo-canvas-pill fo-canvas-pill-waiting" : "fo-canvas-pill"
-      }
+      className={["fo-canvas-pill", waiting && "fo-canvas-pill-waiting", part]
+        .filter(Boolean)
+        .join(" ")}
+      title={title}
     >
       {children}
     </span>
@@ -67,10 +87,48 @@ export function PillGlyph({ kind }: { kind: ReferenceKind }) {
 }
 
 /**
+ * The reference as the pill draws it, on one line cut with an ellipsis: a
+ * branch in regular mono, as a reference reads; a pull request's number in
+ * semibold, then its title in sans; and a name that stands in for a
+ * reference, such as This build, in sans.
+ */
+export function PillReference({
+  reference,
+  kind,
+}: {
+  reference: string;
+  kind?: ReferenceKind;
+}) {
+  // A pull request's name starts with its number, which never holds a space.
+  const space = reference.indexOf(" ");
+  const number = space > 0 ? reference.slice(0, space) : reference;
+  const branch = kind === "branch";
+  return (
+    <span className="fo-top-reference">
+      {kind === "pullRequest" ? (
+        <span className="fo-canvas-pill-name" dir="auto">
+          <span className="fo-canvas-pill-number">{number}</span>
+          {space > 0 && reference.slice(space)}
+        </span>
+      ) : (
+        <span
+          className={
+            "fo-canvas-pill-name" + (branch ? " fo-canvas-pill-branch" : "")
+          }
+          dir="auto"
+        >
+          {reference}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
  * The compact pill's status dot, which stands for the state that the compact
  * pill leaves out, or its placeholder while a read decides that state. A
- * desktop drawing draws both compositions, so there the dot carries the class
- * that shows it in the compact bar only.
+ * waiting pill in a desktop drawing serves both compositions, so there the
+ * dot carries the class that shows it in the compact bar only.
  */
 export function PillDot({
   state,
@@ -99,10 +157,10 @@ export function PillDot({
 }
 
 /**
- * What the full pill says after its trigger: a hairline, the decorative
+ * What the full pill says after its reference: a hairline, the decorative
  * status dot, the state's phrase, the short SHA in mono and the chevron at
- * the pill's end. The compact pill leaves it out, so there the trigger
- * carries the chevron.
+ * the pill's end. The compact pill leaves it out and draws its chevron after
+ * the reference.
  */
 export function PillState({
   state,
@@ -127,7 +185,7 @@ export function PillState({
   );
 }
 
-/** The chevron at the end of the full pill, the switcher's glyph. */
+/** The chevron at the end of the pill, the switcher's glyph. */
 export function PillChevron() {
   return (
     <span className="fo-canvas-pill-chevron">
