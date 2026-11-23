@@ -183,6 +183,12 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/flows/tour/changes",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/flows/tour"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/flows/tour/dark",
     "colorSchemes": ["light", "dark"],
     "variantOf": "design/canvas/flows/tour"

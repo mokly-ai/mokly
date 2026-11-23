@@ -15,8 +15,8 @@ import { TOUR_STEPS, type StepFrames } from "./steps.js";
  * scheme for every step, with Highlight components available, because both
  * step screens render registered components; and the Selection section, as a
  * click on a step frame selects there. A use case has no props, usage or
- * component tree of its own, and its comparisons stay on its steps' screens,
- * so Inspect is its one tab.
+ * component tree of its own. Its comparisons stay on its steps' screens, so
+ * its Changes tab offers no compare mode.
  */
 export function UseCaseInspect({
   chosen,

@@ -17,6 +17,7 @@ choose. Links inside every depicted frame are inert.
 | `design/canvas/changes/swipe`                   | Swipe, with one divider at the same place on every frame                       |
 | `design/canvas/outcomes/added/changes`          | An added screen, with Current alone on its rail and as its one mode            |
 | `design/canvas/outcomes/moved`                  | A moved screen in Overlay on its Light frames, against its previous path       |
+| `design/canvas/flows/tour/changes`              | A use case without compare modes, whose details link each changed step         |
 | `design/canvas/components/compare`              | A changed component in Overlay on every frame of its variant set               |
 | `design/canvas/components/compare/side-by-side` | Side by side on one frame of the variant set, with a chip for each frame       |
 | `design/canvas/components/compare/difference`   | Difference on every frame of the variant set                                   |

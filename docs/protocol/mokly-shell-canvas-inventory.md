@@ -72,12 +72,13 @@ compact height unless the column says expanded.
 | `design/canvas/outcomes/removed-variant`              | Change outcomes           | Welcome's removed Save failed as four frames              | Changes           |
 | `design/canvas/outcomes/removed-variant/inspect`      | Change outcomes (variant) | Save failed's Inspect, after Welcome's current variants   | Inspect           |
 | `design/canvas/flows/tour`                            | Use cases                 | The Example tour: one Desktop · Light frame for each step | None              |
+| `design/canvas/flows/tour/changes`                    | Use cases (variant)       | The tour's Changes tab: changed steps, no compare mode    | Changes           |
 | `design/canvas/flows/tour/mobile`                     | Use cases (variant)       | The Frames filter chooses Mobile                          | Inspect           |
 | `design/canvas/flows/tour/dark`                       | Use cases (variant)       | The Frames filter chooses Dark                            | None              |
 | `design/canvas/flows/tour/second-step`                | Use cases (variant)       | The phone's frame picker on step 2, Details               | None              |
 
 The entries marked as variants stay under their parent screen in authored
-order rather than becoming folder members. The family holds 41 screens and 66
+order rather than becoming folder members. The family holds 41 screens and 67
 saved variants. `design/canvas/overview` is the family's canonical screen,
 and each folder holds at most five screens.
 
@@ -127,9 +128,10 @@ and each folder holds at most five screens.
 
 - `design/canvas/flows/tour` depicts the Example tour of the canonical branch
   as one section of two step frames, Welcome and then Details, under the
-  [use case](./mokly-shell-canvas-stage.md#use-case) rules. Its saved
-  variants choose Mobile and Dark in the Frames filter, and pick the second
-  step in the phone's frame picker.
+  [use case](./mokly-shell-canvas-stage.md#use-case) rules. The branch
+  changed both step screens, so Changes lists the tour. Its saved variants
+  open its Changes tab from the Changes filter, choose Mobile and Dark in the
+  Frames filter, and pick the second step in the phone's frame picker.
 - The removed outcomes depict a removed entry's previous version under the
   [removed previews](./mokly-removed-previews.md#behavior) rules. Their
   `long`, `loading`, `unavailable` and `no-view` states show other removed
