@@ -251,10 +251,11 @@ test("a variant set opens fitted to its components' measured frames at a readabl
     )
     .toBe(true);
   // The canvas refits to the measured frames: the zoom that the pill names
-  // shows them readably, and Fit keeps it.
+  // shows them readably, and Fit keeps it. The frame's box, not its
+  // document's, which rounds the size up, gives the zoom.
   const pill = page.getByRole("group", { name: "Zoom" });
   const { width } = (await nominal())[0]!;
-  const zoom = () => zoomOf(frames.first().locator("iframe"), width);
+  const zoom = () => zoomOf(frames.first(), width);
   await expect.poll(zoom).toBeGreaterThanOrEqual(0.5);
   const fitted = await zoom();
   await expect(pill).toContainText(`${Math.round(fitted * 100)}%`);
