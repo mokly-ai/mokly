@@ -27,6 +27,7 @@ import {
   comparisonViewerHost,
   type ComparisonViewerHost,
 } from "./comparison_viewer_host.js";
+import { openCatalogueSheet } from "./workspace_actions.js";
 
 let host: ComparisonViewerHost;
 test.beforeAll(async () => {
@@ -87,10 +88,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       page,
     }) => {
       await embeddedDetails(page, comparisonPaths.quietParent);
-      if (name === "mobile")
-        await page
-          .getByRole("button", { name: "Open catalogue navigation" })
-          .click();
+      if (name === "mobile") await openCatalogueSheet(page);
       await navRow(page, comparisonPaths.unchanged).click();
       await expect(page.locator("#viewer .mbk-screen-head h2")).toHaveText(
         "Stable screen",

@@ -28,6 +28,19 @@ async function box(locator: Locator) {
   return bounds!;
 }
 
+/**
+ * The stage: the canvas between the floating panels and above the zoom pill,
+ * which the canvas's invisible stage box covers.
+ */
+function stageArea(page: Page) {
+  return canvas(page)
+    .locator(".mbk-canvas-stage")
+    .evaluate((element) => {
+      const { height, width, x, y } = element.getBoundingClientRect();
+      return { height, width, x, y };
+    });
+}
+
 /** The zoom that a frame of a nominal width shows: its width on screen. */
 async function zoomOf(locator: Locator, nominal: number): Promise<number> {
   return (await box(locator)).width / nominal;
@@ -49,9 +62,12 @@ test("an entry opens fitted: the section stands centred on the stage, below 100%
   page,
 }) => {
   const desktop = await openWelcome(page);
-  const stage = await box(canvas(page));
+  const area = await box(canvas(page));
+  // The stage keeps the zoom pill's room at the canvas's bottom edge.
+  const stage = await stageArea(page);
+  near(area.y + area.height - (stage.y + stage.height), PILL_ROOM);
   const placed = await box(section(page));
-  const room = { bottom: stage.y + stage.height - PILL_ROOM };
+  const room = { bottom: stage.y + stage.height };
   expect(placed.x).toBeGreaterThanOrEqual(stage.x);
   expect(placed.x + placed.width).toBeLessThanOrEqual(stage.x + stage.width);
   expect(placed.y).toBeGreaterThanOrEqual(stage.y);
@@ -114,7 +130,7 @@ test("the wheel pans the canvas around the frames and scrolls a frame's own docu
   await page.goto(GUIDE);
   const reading = page.locator("[data-mokly-stage] iframe");
   await expect(reading).toHaveAttribute("data-mokly-frame-state", "ready");
-  const stage = await box(canvas(page));
+  const stage = await stageArea(page);
   const start = await box(section(page));
   await page.mouse.move(stage.x + 8, stage.y + stage.height / 2);
   await page.mouse.wheel(0, 120);
@@ -174,18 +190,19 @@ test("a resize refits a fitted stage, and keeps the view after a pan", async ({
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect.poll(() => zoomOf(desktop, 1280)).toBeGreaterThan(fitted + 0.02);
   const grown = await zoomOf(desktop, 1280);
-  const stage = await box(canvas(page));
+  const area = await box(canvas(page));
+  const stage = await stageArea(page);
   const start = await box(section(page));
   await page.mouse.move(stage.x + 8, stage.y + 8);
   await page.mouse.wheel(-40, 0);
   await expect
     .poll(async () => Math.round((await box(section(page))).x - start.x))
     .toBe(40);
-  const offset = (await box(section(page))).x - stage.x;
+  const offset = (await box(section(page))).x - area.x;
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect
     .poll(async () => (await box(canvas(page))).height)
-    .toBeLessThan(stage.height);
+    .toBeLessThan(area.height);
   expect(await zoomOf(desktop, 1280)).toBeCloseTo(grown, 3);
   near((await box(section(page))).x - (await box(canvas(page))).x, offset);
 });
@@ -205,7 +222,7 @@ test("the highlight masks follow the frames when the canvas pans", async ({
   const layer = page.locator(".mbk-highlight-layer").first();
   await expect(layer).toBeVisible();
   const before = await box(layer);
-  const stage = await box(canvas(page));
+  const stage = await stageArea(page);
   await page.mouse.move(stage.x + 8, stage.y + 8);
   await page.mouse.wheel(-60, 0);
   await expect

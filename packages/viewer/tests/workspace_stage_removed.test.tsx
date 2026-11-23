@@ -13,10 +13,10 @@ import { storeMarkup } from "./shell_markup.js";
 function removedHeading(entry: Record<string, unknown>): string | undefined {
   const markup = storeMarkup(
     <WorkspaceStage
+      canvas={{ fitKey: "removed", frames: [] }}
       catalogue={{} as Catalogue}
       context={{} as ShellContext}
       data={{ entry, removed: true } as unknown as WorkspaceData}
-      previewViews={[]}
       target={{} as RouteTarget}
       variantRemoved={false}
     />,

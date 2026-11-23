@@ -93,8 +93,8 @@ kind, and a folder row has none.
 The top bar, the catalogue navigation and the screen header are the shipped
 `@mokly/ui` components. A static artboard runs no script, so their links open
 the artboards that show each state, and each control without a destination is
-a picture of itself: the menu, Collapse all, a filter, the separator and the
-path chip. Their stylesheets follow the shell's breakpoint. A frame around the
+a picture of itself: Collapse all, a filter, the separator and the path chip.
+The top bar draws no menu, as the shell's bar does. Their stylesheets follow the shell's breakpoint. A frame around the
 top bar carries a compact flag that draws the narrow bar of a mobile render at
 every width, and a frame around the navigation carries a drawer flag that
 draws the open drawer of the drawer presentation and of every mobile render.

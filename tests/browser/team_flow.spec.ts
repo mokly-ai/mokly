@@ -131,8 +131,5 @@ test("a step frame is a bare canvas frame at every width, with no window to expa
     await expect(
       page.locator("[data-mokly-stage] :is(.browser-frame, .phone-frame)"),
     ).toHaveCount(0);
-    await expect(page.locator(shellRoot)).not.toHaveClass(
-      /(?:^|\s)frame-expanded(?:\s|$)/u,
-    );
   }
 });

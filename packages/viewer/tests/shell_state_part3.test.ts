@@ -52,12 +52,3 @@ test("standalone store actions preserve every sequential search byte", () => {
   assert.equal(state().selection.search, "welcome");
   assert.deepEqual(state().selection.tags, ["forms"]);
 });
-
-test("a released frame collapses only while it is still the expanded frame", () => {
-  const { state, store } = standaloneStore();
-  store.setExpandedFrame("first");
-  store.releaseExpandedFrame("second");
-  assert.equal(state().expandedFrame, "first");
-  store.releaseExpandedFrame("first");
-  assert.equal(state().expandedFrame, undefined);
-});

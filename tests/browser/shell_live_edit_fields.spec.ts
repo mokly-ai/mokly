@@ -15,6 +15,7 @@ import {
   isRender,
   serveLiveCatalogue,
 } from "./live_shell_fixture.js";
+import { revealInPanel } from "./workspace_actions.js";
 
 /** The card with a whole count from 0 to 24. */
 const BOUNDED = cardFile().replace(
@@ -177,8 +178,10 @@ test("each prop field is a row with its name in a label column", async ({
     expect(Math.abs(count.name.y - label.name.y)).toBeGreaterThanOrEqual(
       label.name.height,
     );
-    // Below 900px the inspector is a sheet, and the label column is 100px.
+    // Below 900px the inspector stands in the panel's sheet, and the label
+    // column is 100px.
     await page.setViewportSize({ width: 390, height: 844 });
+    await revealInPanel(page, props);
     await expect.poll(async () => (await row("label")).name.width).toBe(100);
   } finally {
     await closeServe(page, server);

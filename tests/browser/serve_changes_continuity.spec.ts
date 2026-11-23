@@ -15,7 +15,11 @@ import {
   navigationState,
 } from "./serve_changes_emulation.js";
 import { test } from "./serve_comparison_test.js";
-import { canvasFrame } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  openCatalogueSheet,
+  viewportFrame,
+} from "./workspace_actions.js";
 
 for (const mobile of [false, true]) {
   test(`background evidence preserves All without replacing documents (${mobile ? "mobile" : "desktop"})`, async ({
@@ -35,14 +39,19 @@ for (const mobile of [false, true]) {
       mobile ? { width: 390, height: 500 } : { width: 1280, height: 500 },
     );
     await page.goto(`/view/${changes.paths.changed}/`);
+    // The compact layout shows one frame, Mobile · Light, and names the
+    // entry's status in its entry bar; the canvas names it in the panel's head.
     const frame = page.frameLocator(
-      mobile ? ".mbk-frame-mobile iframe" : canvasFrame("mobile"),
+      mobile ? viewportFrame("mobile") : canvasFrame("mobile"),
+    );
+    const status = page.locator(
+      mobile ? "[data-entry-bar] .mbk-entry-status" : "[data-workspace-status]",
     );
     await expect(frame.locator("h1")).toHaveText("After screen");
     await frame
       .locator("body")
       .evaluate((body) => body.setAttribute("data-test-retained", "true"));
-    if (mobile) await page.locator("[data-mokly-menu]").click();
+    if (mobile) await openCatalogueSheet(page);
     // Open two nested folders and close the current entry's own folder: an
     // update must neither reveal the route nor restore a default disclosure.
     for (const folder of [
@@ -105,16 +114,15 @@ for (const mobile of [false, true]) {
     await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
     expect(await navigationState(page)).toEqual(searched);
     await expect(page.locator("[data-mokly-search]")).toBeFocused();
-    await expect(page.locator("[data-workspace-status]")).toHaveText(
-      "Unmodified",
-    );
+    await expect(status).toHaveText("Unmodified");
+    await expect(status).toBeVisible();
     emulation.set("unavailable");
     await publish("Consumer renamed");
     await expect(page.locator("[data-changes-status]")).toHaveAttribute(
       "data-changes-status",
       "unavailable",
     );
-    await expect(page.locator("[data-workspace-status]")).toBeHidden();
+    await expect(status).toBeHidden();
     expect(await navigationState(page)).toEqual(searched);
   });
 }

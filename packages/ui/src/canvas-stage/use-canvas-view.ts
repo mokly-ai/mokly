@@ -32,6 +32,7 @@ import {
   type CanvasExtent,
   type CanvasRect,
   type CanvasView,
+  type FitAlign,
 } from "./canvas-view.js";
 
 /** What the host can ask of the canvas, such as from its keys or a dock. */
@@ -127,15 +128,20 @@ function pointZoom(
   };
 }
 
-/** The handle's commands over one change function, less its point zoom. */
+/**
+ * The handle's commands over one change function, with Fit's placement of
+ * the shown section, less its point zoom.
+ */
 function commands(
   change: (next: CanvasViewChange) => void,
+  align: () => FitAlign,
 ): Omit<CanvasStageHandle, "zoomAt"> {
   const zoomTo = (zoom: number) =>
     change((view, extent, stage) =>
       zoomAbout(view, extent, zoom, stageCentre(stage)),
     );
-  const fit = () => change((_view, extent, stage) => fitView(extent, stage));
+  const fit = () =>
+    change((_view, extent, stage) => fitView(extent, stage, align()));
   const zoomIn = () =>
     change((view, extent, stage) => stepZoom(view, extent, stage, "in"));
   const zoomOut = () =>
@@ -158,7 +164,12 @@ function commands(
 export function useCanvasView(
   box: RefObject<HTMLDivElement | null>,
   section:
-    { frames: readonly CanvasCell[]; kind: CanvasSectionKind } | undefined,
+    | {
+        compact?: boolean | undefined;
+        frames: readonly CanvasCell[];
+        kind: CanvasSectionKind;
+      }
+    | undefined,
   fitKey: string,
 ): {
   change(next: CanvasViewChange): void;
@@ -168,12 +179,13 @@ export function useCanvasView(
 } {
   const stage = useStage(box);
   const [view, setView] = useState(UNMEASURED);
+  const compact = section?.compact ?? false;
   const reading = useMemo(
-    () => readingSize(stage ?? { height: 0, width: 0 }),
-    [stage],
+    () => readingSize(stage ?? { height: 0, width: 0 }, compact),
+    [compact, stage],
   );
   const computed = section
-    ? sectionExtent(section.kind, section.frames, reading)
+    ? sectionExtent(section.kind, section.frames, reading, compact)
     : undefined;
   // The extent keeps its identity while its value stays the same, so a
   // host's render that changes no length refits nothing.
@@ -185,15 +197,20 @@ export function useCanvasView(
     ...(stage ? { stage } : {}),
   };
 
+  // The compact layout stands its section at the stage's top.
+  const align: FitAlign = compact ? "start" : "centre";
+  const alignment = useRef(align);
+  alignment.current = align;
+
   const fittedKey = useRef<string | null>(null);
   useLayoutEffect(() => {
     if (!extent || !measured(stage)) return;
     const opened = fittedKey.current !== fitKey;
     fittedKey.current = fitKey;
     setView((current) =>
-      opened || current.fitted ? fitView(extent, stage) : current,
+      opened || current.fitted ? fitView(extent, stage, align) : current,
     );
-  }, [extent, fitKey, stage]);
+  }, [align, extent, fitKey, stage]);
 
   const change = useCallback((next: CanvasViewChange) => {
     const { extent: shown, stage: room } = latest.current;
@@ -201,7 +218,10 @@ export function useCanvasView(
     setView((current) => next(current, shown, room));
   }, []);
   const handle = useMemo(
-    () => ({ ...commands(change), ...pointZoom(change, box) }),
+    () => ({
+      ...commands(change, () => alignment.current),
+      ...pointZoom(change, box),
+    }),
     [box, change],
   );
   return { change, handle, reading, view };

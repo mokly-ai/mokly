@@ -22,18 +22,24 @@ export function installShellRoute(
     route.view.kind !== "target" && delivery === "embedded"
       ? "Mokly"
       : viewTitle(catalogue, route.view);
+  // A navigation closes the catalogue's sheet, so the reader sees the
+  // destination. The right panel's sheet stays open while an entry shows.
+  const sheet =
+    state.sheet === "panel" && route.view.kind === "target"
+      ? state.sheet
+      : undefined;
   return {
     ...state,
     announcement: `Loaded ${title}`,
     comparisonIntent: route.comparison === "side",
     disclosures: openDisclosures(state.disclosures, path),
-    drawerOpen: false,
-    expandedFrame: undefined,
     filterBaseline: state.filterBaseline
       ? openDisclosures(state.filterBaseline, path)
       : undefined,
     route,
     routeInstallation: state.routeInstallation + 1,
+    sheet,
+    sheetExpanded: sheet === undefined ? false : state.sheetExpanded,
     tagPickerOpen: false,
   };
 }

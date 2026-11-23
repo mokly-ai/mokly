@@ -9,35 +9,33 @@ import { CanvasReadingStage } from "../src/shell/canvas_reading.js";
 import { CanvasRemovedStage } from "../src/shell/canvas_removed.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { DisplaySelection } from "../src/shell/display_context.js";
-import { DocumentStageFrame } from "../src/shell/document_stage_frame.js";
 import { removedPreviewData } from "../src/shell/previews.js";
 import { defaultSelection } from "../src/shell/selection.js";
 
 import { indexFixture } from "./catalogue_v9_fixture.js";
 import { storeMarkup } from "./shell_markup.js";
 
-const BAND =
-  '<p class="mbk-previous mbk-scheme-fallback mbk-reset" data-color-scheme-fallback=""><span class="mbk-frame-scheme-note mbk-reset">Light only</span></p>';
-
-function fixtureDocument(colorSchemes: ColorScheme[]) {
-  const document = indexFixture().documents[0];
-  assert.ok(document);
-  return { ...document, colorSchemes };
-}
-
-test("a current document with no dark render names its fallback above its pane", () => {
-  const stage = (colorSchemes: ColorScheme[], hasDarkFragments: boolean) =>
-    storeMarkup(
-      <DocumentStageFrame
-        entry={fixtureDocument(colorSchemes)}
-        hasDarkFragments={hasDarkFragments}
-      />,
+test("a current document with no dark render keeps its light document under Dark, in every layout's reading frame", () => {
+  const frameScheme = (colorSchemes: ColorScheme[]) => {
+    const index = indexFixture((raw) => {
+      for (const document of raw.documents)
+        document.colorSchemes = colorSchemes;
+    });
+    const catalogue = createCatalogue(shellCatalogueModel(index, new Map()));
+    const entry = catalogue.byPath.get("product");
+    assert.ok(entry?.kind === "document");
+    const html = storeMarkup(
+      <DisplaySelection value={{ ...defaultSelection, colorScheme: "dark" }}>
+        <CanvasReadingStage catalogue={catalogue} entry={entry} />
+      </DisplaySelection>,
+      { index },
     );
-  const lightOnly = stage(["light"], true);
-  assert.ok(lightOnly.startsWith(BAND), lightOnly.slice(0, 200));
-  assert.match(lightOnly, /data-preview-color-scheme="light"/u);
-  assert.doesNotMatch(stage(["light", "dark"], true), /mbk-scheme-fallback/u);
-  assert.doesNotMatch(stage(["light"], false), /mbk-scheme-fallback/u);
+    return /<figure [^>]*data-preview-color-scheme="(dark|light)"/u.exec(
+      html,
+    )?.[1];
+  };
+  assert.equal(frameScheme(["light"]), "light");
+  assert.equal(frameScheme(["light", "dark"]), "dark");
 });
 
 test("on the canvas, a document with no dark render names its fallback in its label under Dark", () => {

@@ -127,3 +127,11 @@ span.mbk-canvas-path-chip {
 .mbk-canvas-cell[hidden] {
   display: none;
 }
+
+/* The compact layout's section draws no box and no outline: its frames
+   stand alone on the canvas, under the entry bar that names the entry. */
+.mbk-canvas-section[data-canvas-compact] {
+  background: transparent;
+  box-shadow: none;
+  outline: 0;
+}

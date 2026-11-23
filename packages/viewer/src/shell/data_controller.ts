@@ -142,9 +142,11 @@ export class ShellDataController {
   reload(requests: readonly DetailRequest[]): void {
     if (this.#replaced || this.#failure || !this.#source) return;
     const wanted = new Set(
-      routeDetailRequests(this.#snapshot.index, this.#host.route()).map(
-        detailKey,
-      ),
+      routeDetailRequests(
+        this.#snapshot.index,
+        this.#host.route(),
+        this.#snapshot.catalogue,
+      ).map(detailKey),
     );
     const keys = requests.map(detailKey).filter((key) => wanted.has(key));
     if (!keys.length) return;

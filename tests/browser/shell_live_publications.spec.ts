@@ -123,10 +123,14 @@ test("a publication replaces only the frames whose document changed", async ({
     await expect
       .poll(async () => (await frameReport(page))[1]?.text)
       .toContain("Other v2");
+    // Each step frame on the canvas names its viewport and its scheme.
     const [home, other] = await frameReport(page);
-    expect(home).toMatchObject({ tag: "0", title: "Home — desktop" });
+    expect(home).toMatchObject({ tag: "0", title: "Home — desktop — light" });
     expect(home?.text).toContain("Home v1");
-    expect(other).toMatchObject({ tag: null, title: "Other — desktop" });
+    expect(other).toMatchObject({
+      tag: null,
+      title: "Other — desktop — light",
+    });
   } finally {
     await closeServe(page, server);
   }

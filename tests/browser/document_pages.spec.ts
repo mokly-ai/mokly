@@ -1,7 +1,11 @@
 import { expect, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { DOCUMENT_FRAME, expectFrameSource } from "./workspace_actions.js";
+import {
+  DOCUMENT_FRAME,
+  expectFrameSource,
+  revealInPanel,
+} from "./workspace_actions.js";
 
 /** One labelled metadata row in the open Details panel. */
 function metaRow(page: Page, label: string) {
@@ -17,6 +21,9 @@ for (const width of [390, 1280])
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/workspace-guide/");
     const head = page.locator("#mb-main .mbk-screen-head");
+    // The head band and the Details stand in the right panel, which the
+    // compact layout opens as a sheet.
+    await revealInPanel(page, head);
     const frame = page.locator(DOCUMENT_FRAME);
     const fallback = page.locator(".mbk-scheme-fallback");
     for (const scheme of ["light", "dark"] as const) {

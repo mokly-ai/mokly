@@ -1,13 +1,14 @@
 /**
- * The shell's 48px top bar, in three columns. The start column holds the menu
- * that opens the catalogue drawer, the brand, and a host's start slot; the
- * centre column holds a host's centre slot; the end column holds the catalogue
- * search, the end control, and a host's end slot. Search stays available at
- * every width. Where the bar is too narrow for the field, the search toggle
- * opens a compact search over the bar; the field then takes focus, and Escape
- * or Close search returns focus to the toggle. A host moves focus to the
- * field through the bar's handle, which opens the compact search first where
- * the field is hidden. The field's key hint names the host's shortcut.
+ * The shell's 48px top bar, in three columns. The start column holds the
+ * brand and a host's start slot; the centre column holds a host's centre
+ * slot; the end column holds the catalogue search, the end control, and a
+ * host's end slot. Search stays available at every width. Where the bar is
+ * too narrow for the field, the search toggle opens a compact search over the
+ * bar; the field then takes focus, and Escape or Close search returns focus
+ * to the toggle. A host moves focus to the field through the bar's handle,
+ * which opens the compact search first where the field is hidden. The
+ * field's key hint names the host's shortcut. The bar has no menu, also in a
+ * static depiction: the dock's Catalogue opens the catalogue's sheet.
  */
 
 import {
@@ -22,7 +23,7 @@ import {
 import { IconSvg, SearchIcon } from "../icons/icons.js";
 
 import { SearchHint, type SearchShortcut } from "./search-hint.js";
-import { Brand, Menu } from "./top-bar-links.js";
+import { Brand } from "./top-bar-links.js";
 
 export type { SearchShortcut } from "./search-hint.js";
 
@@ -54,13 +55,9 @@ export interface TopBarHost {
 
 export function TopBar({
   brandHref,
-  drawerOpen,
   end,
   host,
   interactive = true,
-  menuHref,
-  navigationId,
-  onDrawer,
   onSearch,
   query,
   ref,
@@ -73,8 +70,11 @@ export function TopBar({
    * interactive draws a brand without an address as a picture of itself.
    */
   brandHref?: string | undefined;
-  /** Whether the catalogue drawer is open, which the menu button reports. */
-  drawerOpen: boolean;
+  /**
+   * Not read: the bar has no menu, whose catalogue state this named. It
+   * stays so that a host that passes it still compiles.
+   */
+  drawerOpen?: boolean;
   /** The control at the end of the bar, such as the appearance selector. */
   end?: ReactNode;
   /**
@@ -83,21 +83,21 @@ export function TopBar({
    */
   host?: TopBarHost | undefined;
   /**
-   * Whether a menu without an address is a button and the compact search
-   * draws its toggle and Close search, as they do by default. A static
-   * depiction that runs no script sets `false`, which draws such a menu as a
-   * picture of itself and leaves out the compact search controls.
+   * Whether the compact search draws its toggle and Close search, as it does
+   * by default. A static depiction that runs no script sets `false`, which
+   * leaves out the compact search controls and draws a brand without an
+   * address as a picture of itself.
    */
   interactive?: boolean;
   /**
-   * The address that the menu opens, such as another document that shows the
-   * drawer opened or closed. A menu with an address is a link whose name says
-   * whether it opens or closes the drawer.
+   * Not read: the bar has no menu, whose catalogue this named. It stays so
+   * that a host that passes it still compiles.
    */
-  menuHref?: string | undefined;
-  /** The id of the catalogue navigation that the menu button opens. */
-  navigationId: string;
-  /** Receives the drawer state that the menu button asks for. */
+  navigationId?: string | undefined;
+  /**
+   * Not read: the bar has no menu, whose drawer state this received. It
+   * stays so that a host that passes it still compiles.
+   */
   onDrawer?: ((open: boolean) => void) | undefined;
   /** Receives each search text that the reader types. */
   onSearch?: ((query: string) => void) | undefined;
@@ -145,13 +145,6 @@ export function TopBar({
       data-search=""
     >
       <div className="mbk-topbar-start mbk-reset">
-        <Menu
-          drawerOpen={drawerOpen}
-          href={menuHref}
-          interactive={interactive}
-          navigationId={navigationId}
-          onDrawer={onDrawer}
-        />
         <Brand
           href={brandHref ?? (interactive ? "/" : undefined)}
           wordmark={host === undefined}

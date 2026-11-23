@@ -17,6 +17,7 @@ import {
   chooseFilter,
   navRow,
 } from "./comparison_ui.js";
+import { previousVersionLabel } from "./previous_version.js";
 
 const LIST = `[data-nav-disclosure="variants:${comparisonPaths.screenParent}"]`;
 
@@ -121,7 +122,7 @@ test("a removed screen variant keeps a Removed row under its surviving parent", 
     "Workspace deleted",
   );
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(

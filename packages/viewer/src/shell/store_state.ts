@@ -15,19 +15,27 @@ export interface ShellInitialState {
   navigationWidth?: number;
 }
 
+/**
+ * A sheet of the compact layout: the catalogue's, or the right panel's. One
+ * sheet is open at a time.
+ */
+export type ShellSheet = "catalogue" | "panel";
+
 /** Complete interaction state for one standalone shell mount. */
 export interface ShellState {
   announcement: string;
   changesStatus: Exclude<ChangesStatus, "disabled"> | undefined;
   detailsOpen: boolean;
   disclosures: Readonly<Record<string, boolean>>;
-  drawerOpen: boolean;
-  expandedFrame: string | undefined;
   filterBaseline: Readonly<Record<string, boolean>> | undefined;
   inspectorTab: string | undefined;
   navigationMaximum: number;
   navScroll: number;
-  navigationWidth: number;
+  /**
+   * The catalogue's width that the reader chose, in pixels. Without it the
+   * catalogue takes its starting width.
+   */
+  navigationWidth: number | undefined;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
   /**
@@ -50,6 +58,10 @@ export interface ShellState {
    */
   comparisonIntent: boolean;
   selection: ViewerSelection;
+  /** The sheet that the compact layout shows open, if any. */
+  sheet: ShellSheet | undefined;
+  /** Whether the open sheet takes its expanded height. */
+  sheetExpanded: boolean;
   tagPickerIndex: number;
   tagPickerOpen: boolean;
 }

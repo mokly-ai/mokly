@@ -48,7 +48,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
         await page.goto(
           `/view/${entryPath}/?snapshot=${record.snapshotId}&viewport=${viewport}`,
         );
-        await expect(page.locator("#mb-main h2").first()).toHaveText(title);
+        // The head band, which the right panel holds after the stage, names
+        // the entry.
+        await expect(page.locator(".mbk-screen-head h2")).toHaveText(title);
         await chooseScheme(page, scheme);
         const comparison = kind === "component";
         if (comparison) {

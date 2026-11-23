@@ -129,9 +129,9 @@ itself:
   Archive in the order of the Changes filter. A control whose neighbour has no
   Changes artboard, such as Payment terms before Farewell or Timeline after
   Archive, is a picture.
-- The brand opens `design/canvas/stage/home`. The top bar's menu and the dock's
-  Catalogue open `design/canvas/stage/catalogue`, whose All filter returns to
-  `design/canvas/overview`. On the canonical branch, the All filter of a
+- The brand opens `design/canvas/stage/home`. The dock's Catalogue opens
+  `design/canvas/stage/catalogue`, whose All filter returns to
+  `design/canvas/overview`. The top bar draws no menu. On the canonical branch, the All filter of a
   removed screen's artboard opens `design/canvas/stage/home`, because the
   removed entry is not in All.
 - Welcome's Changes tab opens `design/canvas/changes/current`, each compare

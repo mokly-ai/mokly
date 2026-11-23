@@ -1,5 +1,7 @@
 import { expect } from "@playwright/test";
 
+import { entryRoute } from "../../packages/viewer/src/navigation/routes.js";
+
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -10,10 +12,12 @@ import {
   showMode,
   snapshotOf,
 } from "./comparison_ui.js";
+import { historicalFrame, previousVersionLabel } from "./previous_version.js";
 import {
   canvasFrame,
   chooseScheme,
   chooseViewport,
+  openCatalogueSheet,
 } from "./workspace_actions.js";
 
 const stage = "[data-diff-stage]";
@@ -140,12 +144,13 @@ test("added and removed screens stay current without comparison controls", async
   await awaitRoutedDetail(page, comparisonPaths.removedScreen);
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
   await expect(page.locator("[data-current-screen]")).toHaveCount(0);
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(
-    page
-      .frameLocator("[data-mokly-preview] .mbk-frame-desktop iframe")
+    historicalFrame(page, "desktop")
+      .locator("iframe")
+      .contentFrame()
       .getByRole("heading", { name: "Historical screen" }),
   ).toBeVisible();
 });
@@ -171,6 +176,42 @@ test("snapshot panes keep marked links inert", async ({ page }) => {
   ).toBe("about:srcdoc");
 });
 
+test("a desktop pane's address pill copies its address from its copy icon", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(text: string) {
+          (window as Window & { __copiedUrl?: string }).__copiedUrl = text;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+  await page.goto(`/view/${comparisonPaths.changed}/`);
+  await chooseViewport(page, "desktop");
+  await showMode(page, "Side by side");
+  const icon = page.locator(`${stage} .browser-bar .address-copy svg`).first();
+  await expect(icon).toBeVisible();
+  const box = await icon.boundingBox();
+  expect(box?.width).toBe(13);
+  expect(box?.height).toBe(13);
+
+  await icon.click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as Window & { __copiedUrl?: string }).__copiedUrl,
+      ),
+    )
+    .toBe(entryRoute(comparisonPaths.changed));
+  await expect(page.locator(".address-copied").first()).toHaveText(
+    "URL copied",
+  );
+});
+
 test("narrow diffs fit the shell and retain the catalogue drawer", async ({
   page,
 }) => {
@@ -181,7 +222,7 @@ test("narrow diffs fit the shell and retain the catalogue drawer", async ({
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
-  await page.getByRole("button", { name: "Open catalogue navigation" }).click();
+  await openCatalogueSheet(page);
   await expect(navRow(page, comparisonPaths.unchanged)).toBeVisible();
   await navRow(page, comparisonPaths.unchanged).click();
   await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");

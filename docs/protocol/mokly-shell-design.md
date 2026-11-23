@@ -104,7 +104,6 @@ preview scheme and the compact layout.
 - **Top bar** — one 48px row, surface background, hairline bottom border, in
   three columns. The outer two share the room that the middle one leaves, so
   the middle column sits in the centre of the bar. The start column holds the
-  menu button, below the breakpoint, then the
   [Mokly mark](./mokly-shell-brand.md), then an embedded host's start slot,
   which fills the rest of the column. The middle column holds an embedded
   host's centre slot. The end column holds the search field, then the end
@@ -117,12 +116,14 @@ preview scheme and the compact layout.
   not a wide search field after the brand, so that a host's centre slot can
   hold the middle of the bar. The standalone bar draws the mark with the
   wordmark, and an embedded bar draws the mark alone, because the host's start
-  slot follows it. The menu button opens the catalogue sheet, and closes an
-  open sheet. The search field is compact: about 180px on the muted field
-  surface, led by a 15px stroked magnifier icon and ended by the tag picker
-  control. It gives way when its column runs short. In the standalone bar it
-  keeps at least 150px down to a 320px window, and an embedded root switches to
-  its [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
+  slot follows it. Decision: the bar has no menu button, because the dock's
+  Catalogue opens the catalogue sheet within thumb reach in the
+  [compact layout](./mokly-shell-device-chrome.md#compact-layout). The search
+  field is compact: about 180px on the muted field surface, led by a 15px
+  stroked magnifier icon and ended by the tag picker control. It gives way when
+  its column runs short. In the standalone bar it keeps at least 150px down to
+  a 320px window, and an embedded root switches to its
+  [compact search](./mokly-viewer.md#rendered-features-and-slots) instead.
   Search uses `Search catalogue` as its accessible name and `Search` as its
   placeholder in both viewport sizes, covering screens, pages, and flows. `⌘K`
   and Ctrl+K move focus to the search field from anywhere in the shell. `/`

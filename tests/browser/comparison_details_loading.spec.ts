@@ -15,6 +15,7 @@ import {
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
+import { openCatalogueSheet } from "./workspace_actions.js";
 
 /** Only the destination's detail names the changed component. */
 const LOADED = "Changed component: Card";
@@ -72,10 +73,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await openEvidence(page);
       await recordFirstParagraphs(page);
 
-      if (name === "mobile")
-        await page
-          .getByRole("button", { name: "Open catalogue navigation" })
-          .click();
+      if (name === "mobile") await openCatalogueSheet(page);
       await navRow(page, comparisonPaths.changed).click();
       await expect(page).toHaveURL(new RegExp(`${DESTINATION}$`, "u"));
       await expect.poll(() => held.length).toBe(1);

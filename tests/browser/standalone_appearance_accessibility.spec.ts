@@ -102,17 +102,20 @@ test("on the canvas, a component's Light and Dark samples keep their schemes und
   }
 });
 
-test("below the layout breakpoint, a component sample follows the one Appearance control", async ({
+test("below the layout breakpoint, a saved variant's one frame follows the one Appearance control", async ({
   page,
 }) => {
   await page.setViewportSize(NARROW_WINDOW);
-  await page.goto("/view/example/components/action/");
-  const sample = page.locator('[data-workspace-frame="desktop"]');
+  // A saved variant picks its frame of the set, in the preview scheme.
+  await page.goto("/view/example/components/action/default/");
+  const sample = page.locator(
+    '.mbk-canvas-cell:not([hidden]) [data-workspace-frame="desktop"]',
+  );
   await expectFrameSource(
     sample,
-    /example\/components\/action\/index\.desktop\.html$/,
+    /example\/components\/action\/default\/index\.desktop\.html$/,
   );
-  // No separate preview control: the sample follows the interface appearance.
+  // No separate preview control: the frame follows the interface appearance.
   await expect(page.getByRole("button", { name: "Dark preview" })).toHaveCount(
     0,
   );
@@ -124,12 +127,12 @@ test("below the layout breakpoint, a component sample follows the one Appearance
   );
   await expectFrameSource(
     sample,
-    /example\/components\/action\/index\.desktop\.dark\.html$/,
+    /example\/components\/action\/default\/index\.desktop\.dark\.html$/,
   );
 
   await page.locator(select).selectOption("light");
   await expectFrameSource(
     sample,
-    /example\/components\/action\/index\.desktop\.html$/,
+    /example\/components\/action\/default\/index\.desktop\.html$/,
   );
 });

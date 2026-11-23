@@ -29,7 +29,7 @@ export function RegistryHarnessFrame({
   const source = frameSource(entry, view);
   const mounted = useMountedShellFrame({
     enabled: true,
-    layout: { expanded: false, stage },
+    layout: { stage },
     identity: {
       entryPath: entry.path,
       viewport: view.viewport,

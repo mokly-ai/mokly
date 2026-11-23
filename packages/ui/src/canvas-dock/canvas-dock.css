@@ -1,0 +1,86 @@
+/* The dock of the compact layout: a raised surface at the bottom centre of
+   the canvas, 14px above its bottom edge, holding Catalogue, the right
+   panel's current tab and Fit, each a 44px target, between hairline rules.
+   Its shadow is the Canvas design's third, which follows the colour scheme
+   that the shell root states for its appearance. From the layout
+   breakpoint up the zoom pill takes its place, so the dock hides. */
+.mbk-dock {
+  position: absolute;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 9;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - 16px);
+  padding: 5px;
+  border-radius: 16px;
+  background: var(--cv-surface);
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    0 1px 1px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 5%, transparent),
+        color-mix(in srgb, var(--cv-text) 5%, transparent)
+      ),
+    0 10px 20px -6px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 8%, transparent),
+        color-mix(in srgb, var(--cv-background) 55%, transparent)
+      ),
+    0 40px 80px -28px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 26%, transparent),
+        color-mix(in srgb, var(--cv-background) 70%, transparent)
+      );
+  color: var(--cv-text);
+  font-family: var(--cv-sans);
+  transform: translateX(-50%);
+}
+
+.mbk-dock-control {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px 0 13px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 560;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mbk-dock-control > svg {
+  flex: none;
+  color: var(--cv-text-secondary);
+}
+
+.mbk-dock-fit {
+  justify-content: center;
+  width: 44px;
+  padding: 0;
+}
+
+.mbk-dock-control:hover {
+  background: var(--chrome-hover);
+}
+
+.mbk-dock-rule {
+  flex: none;
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: var(--cv-border);
+}
+
+@media (width < 56.25rem) {
+  .mbk-dock {
+    display: inline-flex;
+  }
+}

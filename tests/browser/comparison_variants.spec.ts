@@ -121,7 +121,9 @@ test("a removed variant keeps a Removed row under its surviving parent", async (
   await expect(page).toHaveURL(
     new RegExp(`/view/${comparisonPaths.removedVariant}/`),
   );
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Card");
+  // The head band, which the right panel holds after the stage, names the
+  // surviving parent.
+  await expect(page.locator(".mbk-screen-head h2")).toHaveText("Card");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
   // The surviving parent keeps its own status, so the stage names the variant.
   await expect(

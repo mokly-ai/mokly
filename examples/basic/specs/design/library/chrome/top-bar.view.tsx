@@ -16,23 +16,21 @@ function address(to: DesignDestination | undefined): string | undefined {
 }
 
 /**
- * The shipped top bar. A static artboard runs no script, so its brand and
- * menu link to their artboards, a control without one is a picture, and the
- * compact search, which needs a script, is left out. The search field ends
- * with the registered tag picker. The bar's frame carries the flags that this
- * component's stylesheet draws: the compact bar of a mobile render at every
- * width, and a bar without a menu.
+ * The shipped top bar, which draws no menu, as the shell's bar does. A
+ * static artboard runs no script, so its brand links to its artboard, a
+ * control without one is a picture, and the compact search, which needs a
+ * script, is left out. The search field ends with the registered tag picker.
+ * The bar's frame carries the flag that this component's stylesheet draws:
+ * the compact bar of a mobile render at every width.
  */
 export function TopBarView({
   query,
-  menu,
   tags,
   activeTag,
   appearance,
   appearanceChanged,
   pickerOpen,
   brandDestination,
-  menuDestination,
   pickerDestination,
   viewport,
 }: TopBarProps & {
@@ -42,14 +40,9 @@ export function TopBarView({
   const id = useId();
   const compact = viewport === "mobile";
   return (
-    <div
-      className="mbk-topbar-frame"
-      data-compact={compact ? "" : undefined}
-      data-menu={menu === "none" ? "none" : undefined}
-    >
+    <div className="mbk-topbar-frame" data-compact={compact ? "" : undefined}>
       <TopBar
         brandHref={address(brandDestination)}
-        drawerOpen={menu === "close"}
         end={
           <appearanceSelector.Component
             value={appearance}
@@ -60,8 +53,6 @@ export function TopBarView({
           />
         }
         interactive={false}
-        menuHref={menu === "none" ? undefined : address(menuDestination)}
-        navigationId={`${id}navigation`}
         query={query}
         searchId={`${id}search`}
         tagPicker={

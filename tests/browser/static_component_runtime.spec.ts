@@ -12,26 +12,23 @@ import {
 } from "./workspace_actions.js";
 
 /**
- * The frame of a saved variant of Action: its row's frame of the scheme on
- * the canvas, which shows desktop views, or below the layout breakpoint the
- * one frame of the viewport, in the chosen scheme.
+ * The frame of a saved variant of Action: its row's frame of the scheme. The
+ * canvas and the compact layout show a component's desktop views, and the
+ * compact layout shows the routed variant's frame of the chosen scheme.
  */
 function variantFrame(
-  viewport: "desktop" | "mobile",
   variant: string,
   scheme: "dark" | "light" = "light",
 ): string {
-  return viewport === "desktop"
-    ? `${canvasFrame("desktop", scheme)}[data-workspace-variant="example/components/action/${variant}"]`
-    : `[data-workspace-frame="${viewport}"]`;
+  return `${canvasFrame("desktop", scheme)}[data-workspace-variant="example/components/action/${variant}"]`;
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: copied saved variants and instance inspection work with read-only props`, async ({
     page,
   }) => {
-    // The canvas shows a component's desktop views; its mobile views show
-    // on the one-frame stage below the layout breakpoint.
+    // A mobile viewport choice leaves a component's desktop views on the
+    // canvas, and below the layout breakpoint in the compact layout too.
     if (viewport === "mobile") await page.setViewportSize(NARROW_WINDOW);
     const requests = staticRequests(page);
     await page.goto("/view/example/components/action/disabled/");
@@ -45,20 +42,20 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "Open this catalogue locally to edit props.",
     );
     await expect(props.locator("input, textarea, select")).toHaveCount(0);
-    const frame = page.frameLocator(variantFrame(viewport, "disabled"));
+    const frame = page.frameLocator(variantFrame("disabled"));
     await expect(frame.getByRole("button").first()).toBeDisabled();
     await chooseScheme(page, "dark");
-    await expectFrameSource(
-      page.locator(variantFrame(viewport, "disabled", "dark")),
-      new RegExp(`/disabled/index\\.${viewport}\\.dark\\.html$`),
-    );
+    const dark = page.locator(variantFrame("disabled", "dark"));
+    await expect(dark).toBeVisible();
+    await expectFrameSource(dark, /\/disabled\/index\.desktop\.dark\.html$/);
     await chooseVariant(page, "Default");
     await expect(page).toHaveURL(
       /\/view\/example\/components\/action\/default\/$/,
     );
+    // Dark stays chosen, so the compact layout shows the Dark frame.
     await expect(
       page
-        .frameLocator(variantFrame(viewport, "default"))
+        .frameLocator(variantFrame("default", "dark"))
         .getByRole("button")
         .first(),
     ).toBeEnabled();

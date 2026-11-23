@@ -10,6 +10,8 @@ import {
   type Page,
 } from "@playwright/test";
 
+import { revealInPanel } from "./workspace_actions.js";
+
 /** The index fields the comparison UI specs compare with the shell. */
 export interface ComparisonIndexEntry {
   path: string;
@@ -134,6 +136,8 @@ export async function showMode(
   name: keyof typeof MODES,
   frames = 2,
 ): Promise<void> {
+  // In the compact layout the comparison band stands in the panel's sheet.
+  await revealInPanel(page, modeButton(page, name));
   await modeButton(page, name).click();
   await expect(modeButton(page, name)).toHaveAttribute("aria-pressed", "true");
   await expect(

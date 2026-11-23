@@ -42,7 +42,8 @@ async function startHost(page: Page, options: Record<string, unknown> = {}) {
 /**
  * Expect the mobile frames of a root: on the canvas each frame keeps its own
  * scheme, apart from the theme and the preview scheme alike; below the
- * layout breakpoint the one frame shows the preview scheme.
+ * layout breakpoint the compact layout's one shown frame is the frame of the
+ * preview scheme.
  */
 async function expectMobileFrames(
   page: Page,
@@ -55,7 +56,12 @@ async function expectMobileFrames(
         (scheme) =>
           [`#${id} ${canvasFrame("mobile", scheme)}`, scheme] as const,
       )
-    : ([[`#${id} iframe[data-workspace-frame="mobile"]`, preview]] as const);
+    : ([
+        [
+          `#${id} .mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame="mobile"]`,
+          preview,
+        ],
+      ] as const);
   for (const [selector, scheme] of frames) {
     const frame = page.locator(selector);
     await expect(frame).toHaveCSS("color-scheme", scheme);

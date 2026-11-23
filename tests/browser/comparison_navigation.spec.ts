@@ -9,7 +9,7 @@ import {
   navRow,
   showMode,
 } from "./comparison_ui.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseViewport, openCatalogueSheet } from "./workspace_actions.js";
 
 /** Visible catalogue rows, by entry path. */
 function visibleRows(page: Page): Promise<string[]> {
@@ -279,7 +279,7 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
     .poll(async () => (await nav.boundingBox())?.width)
     .toBeCloseTo(stepped, 0);
   await page.setViewportSize({ height: 844, width: 390 });
-  await page.getByRole("button", { name: "Open catalogue navigation" }).click();
+  await openCatalogueSheet(page);
   await expect(nav).toBeVisible();
   await expect(handle).toBeHidden();
 });

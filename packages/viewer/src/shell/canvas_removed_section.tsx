@@ -5,6 +5,7 @@
  * in place of the section, so it shows no zoom pill.
  */
 
+import { useState } from "react";
 import type { ReactNode } from "react";
 
 import type { CanvasSectionFrame } from "@mokly/ui/canvas-section";
@@ -14,6 +15,7 @@ import type { ViewerSelection } from "../host/types.js";
 import { PREVIOUS_VERSION } from "../previews/copy.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 
+import { useCanvasLayout } from "./canvas_layout.js";
 import { CanvasEntryStage } from "./canvas_stage.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
 import type { RemovedPreviewData } from "./previews.js";
@@ -24,6 +26,41 @@ export interface RemovedSectionProps {
   data: RemovedPreviewData;
   presentations: ReadonlyMap<string, SnapshotPresentation>;
   retry(): void;
+}
+
+/**
+ * The quiet label of a removed entry's previous version: `Showing previous
+ * version`, or its Light-only form for a document that keeps its light
+ * version while the preview scheme is Dark.
+ */
+function previousVersionLabel(
+  data: Pick<RemovedPreviewData, "lightOnly">,
+  colorScheme: ViewerSelection["colorScheme"],
+): string {
+  return data.lightOnly && colorScheme === "dark"
+    ? PREVIOUS_VERSION.lightOnlyLabel
+    : PREVIOUS_VERSION.label;
+}
+
+/**
+ * The compact entry bar's quiet label of a removed entry, which stands for
+ * the section head that the compact section lacks, and the listener that
+ * hears whose previous version shows. The bar names it only while the
+ * previous version shows; from the layout breakpoint up the head does.
+ */
+export function usePreviousVersionLabel(
+  data: RemovedPreviewData | undefined,
+  colorScheme: ViewerSelection["colorScheme"],
+): { label: string | undefined; onShown(path: string | undefined): void } {
+  const compact = !useCanvasLayout();
+  const [shown, setShown] = useState<string>();
+  return {
+    label:
+      compact && data && shown === data.path
+        ? previousVersionLabel(data, colorScheme)
+        : undefined,
+    onShown: setShown,
+  };
 }
 
 /** The canvas while it holds a state in place of the section. */
@@ -68,11 +105,7 @@ export function RemovedSection({
       frames={frames}
       kind={kind}
       path={data.path}
-      quietLabel={
-        data.lightOnly && colorScheme === "dark"
-          ? PREVIOUS_VERSION.lightOnlyLabel
-          : PREVIOUS_VERSION.label
-      }
+      quietLabel={previousVersionLabel(data, colorScheme)}
       status="Removed"
       title={data.title}
     />

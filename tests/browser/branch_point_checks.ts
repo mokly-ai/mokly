@@ -27,16 +27,20 @@ import {
   search,
   variantBar,
 } from "./branch_point_ui.js";
+import { revealInPanel } from "./workspace_actions.js";
 
 const PROPS = ['{"label": "Continue"}', '{"label": "Submit"}'] as const;
 
-/** Select one saved variant from the bar, keeping the workspace mounted. */
+/**
+ * Select one saved variant from the bar, keeping the workspace mounted. In
+ * the compact layout the bar stands in the panel's sheet.
+ */
 async function selectVariant(page: Page, path: string): Promise<void> {
-  await page
-    .locator(
-      `nav[aria-label='Saved variants'] a[data-workspace-variant="${path}"]`,
-    )
-    .click();
+  const link = page.locator(
+    `nav[aria-label='Saved variants'] a[data-workspace-variant="${path}"]`,
+  );
+  await revealInPanel(page, link);
+  await link.click();
 }
 
 /** A removed sibling listed once, inside its resolved parent's list. */

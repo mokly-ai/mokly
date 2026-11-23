@@ -5,6 +5,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { expectHostPath, type EntryHost } from "./entry_hosts.js";
 import type { MovedHost } from "./moved_rows.js";
 import { awaitSelectedComparison } from "./serve_comparison_ui.js";
+import { openCatalogueSheet, revealInPanel } from "./workspace_actions.js";
 
 /**
  * How one host runs the branch-point checks. The hosts of the moved cases
@@ -63,32 +64,44 @@ export async function variantBar(page: Page): Promise<string[]> {
     );
 }
 
-/** The workspace head: its heading and its crumbs, once they settle. */
+/**
+ * The workspace head: its heading and its crumbs, once they settle. In the
+ * compact layout the head stands in the panel's sheet, which the dock's
+ * Inspect opens first.
+ */
 export async function expectHead(
   page: Page,
   heading: string,
   expected: readonly string[],
 ): Promise<void> {
-  await expect(page.locator(".mbk-screen-head h2")).toHaveText(heading);
+  const title = page.locator(".mbk-screen-head h2");
+  await revealInPanel(page, title);
+  await expect(title).toHaveText(heading);
   await expect.poll(() => crumbs(page)).toEqual(expected);
 }
 
-/** Select one inspector tab by its accessible name. */
+/**
+ * Select one inspector tab by its accessible name. In the compact layout the
+ * inspector stands in the panel's sheet.
+ */
 export async function inspectorTab(page: Page, name: string): Promise<void> {
   const tab = page.getByRole("tab", { name, exact: true });
+  await revealInPanel(page, tab);
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
   await expect(tab).toHaveAttribute("aria-selected", "true");
 }
 
 /**
  * Switch the comparison band to Side by side. On Serve the click waits for
- * the comparison that it requests, through its redirect.
+ * the comparison that it requests, through its redirect. In the compact
+ * layout the band stands in the panel's sheet.
  */
 export async function compareSideBySide(
   page: Page,
   host: BranchPointHost,
 ): Promise<void> {
   const side = page.locator("[data-diff-mode=side]");
+  await revealInPanel(page, side);
   if (host.comparisons === "on demand")
     await awaitSelectedComparison(page, () => side.click());
   else await side.click();
@@ -121,8 +134,10 @@ export async function expectSavedProps(
  */
 export async function openChanges(page: Page): Promise<Locator> {
   const nav = page.locator("nav.mbk-nav");
-  const menu = page.locator("[data-mokly-menu]");
-  if (!(await nav.isVisible()) && (await menu.isVisible())) await menu.click();
+  // Below the layout breakpoint the dock's Catalogue opens the catalogue's
+  // sheet, once an open panel sheet has closed.
+  await expect(nav).toBeAttached();
+  if (!(await nav.isVisible())) await openCatalogueSheet(page);
   await expect(nav).toBeVisible();
   const filter = nav.locator("[data-filter=changed]");
   if ((await filter.getAttribute("aria-pressed")) !== "true")
@@ -195,6 +210,12 @@ export async function openEntry(
   entry: string,
 ): Promise<void> {
   await host.open(page, entry);
-  await expect(page.locator(".mbk-screen-head h2")).toBeVisible();
+  // The head names the entry, or in the compact layout, whose head stands in
+  // the panel's closed sheet, the entry bar does.
+  await expect(
+    page
+      .locator(".mbk-screen-head h2, [data-entry-bar] .mbk-canvas-title-tag")
+      .filter({ visible: true }),
+  ).toHaveCount(1);
   await expectSearchControl(page, host);
 }

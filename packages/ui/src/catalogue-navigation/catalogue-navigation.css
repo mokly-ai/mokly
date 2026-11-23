@@ -113,6 +113,30 @@ span.mbk-nav-filter-opt {
   padding: 4px 8px 12px;
 }
 
+/* The foot of the Changes filter names the comparison base in the mono
+   face, on the muted surface below the tree. */
+.mbk-nav-foot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--chrome-border);
+  background: var(--cv-surface-muted);
+  color: var(--cv-text-muted);
+  font-size: 12px;
+}
+
+.mbk-nav-foot > svg {
+  flex: none;
+}
+
+.mbk-nav-base {
+  color: var(--cv-text-secondary);
+  font-family: var(--cv-mono);
+  font-weight: 500;
+}
+
 /* Below the breakpoint the column is a drawer under the top bar, over a scrim
    that dims the rest of the shell. */
 @media (width < 56.25rem) {

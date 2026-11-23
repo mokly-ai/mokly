@@ -98,20 +98,7 @@
   display: inline-flex;
 }
 
-/* An expanded window covers the shell above a scrim. The shell marks its root
-   while a window is expanded. */
-.mbk.frame-expanded {
-  overflow: hidden;
-}
-
-.mbk.frame-expanded::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 900;
-  background: var(--chrome-scrim);
-}
-
+/* An expanded window covers the page. */
 .browser-frame.is-expanded:where(.mbk-reset) {
   position: fixed;
   inset: 2.5vh 2.5vw;

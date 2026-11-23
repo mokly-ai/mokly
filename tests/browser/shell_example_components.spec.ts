@@ -12,13 +12,18 @@ import {
   canvasFrame,
   chooseScheme,
   NARROW_WINDOW,
+  revealInPanel,
 } from "./workspace_actions.js";
 
 const ACTION = "/view/example/components/action/";
 
-/** Open an inspector panel; a click on the selected icon would close it. */
+/**
+ * Open an inspector panel; a click on the selected icon would close it. In
+ * the compact layout the inspector stands in the panel's sheet.
+ */
 async function openPanel(page: Page, name: string) {
   const tab = page.getByRole("tab", { name, exact: true });
+  await revealInPanel(page, tab);
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
   await expect(tab).toHaveAttribute("aria-selected", "true");
   return page.getByRole("tabpanel", { name, exact: true });
@@ -36,14 +41,12 @@ for (const viewport of ["desktop", "mobile"] as const)
     await page.goto(`${ACTION}?viewport=${viewport}`);
     const props = await openPanel(page, "Props");
     if (viewport === "mobile")
-      await page.getByRole("button", { name: "Expand inspector" }).click();
-    // On the canvas a row of the variant set shows the edit in its Light and
-    // Dark frames; the narrow layout's one frame swaps to the chosen scheme.
+      await page.getByRole("button", { name: "Expand panel" }).click();
+    // A row of the variant set shows the edit in its Light and Dark frames,
+    // on the canvas and in the compact layout, which shows the whole set.
     const rowFrame = (row: string, scheme: "dark" | "light" = "light") =>
       page.frameLocator(
-        viewport === "desktop"
-          ? `${canvasFrame("desktop", scheme)}[data-workspace-variant="${row}"]`
-          : `[data-workspace-frame="${viewport}"]`,
+        `${canvasFrame("desktop", scheme)}[data-workspace-variant="${row}"]`,
       );
     const frame = rowFrame("example/components/action");
     const label = props.getByLabel("Label", { exact: true });
@@ -88,39 +91,46 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(highlight).toHaveAttribute("aria-pressed", "true");
   });
 
-test("on the canvas, each frame of a component renders its desktop view in the frame's scheme", async ({
-  page,
-}) => {
+/**
+ * Expect each frame of the top bar component to render its desktop view in
+ * the frame's own scheme, whatever the Appearance: the canvas and the
+ * compact layout show a component's desktop views, Light beside Dark.
+ */
+async function expectComponentViews(page: Page): Promise<void> {
   await page.goto("/view/design/library/chrome/top-bar/?viewport=both");
   const own = '[data-workspace-variant="design/library/chrome/top-bar"]';
+  for (const scheme of ["light", "dark"] as const)
+    await expect(
+      page.locator(`${canvasFrame("desktop", scheme)}${own}`),
+    ).toBeVisible();
   const light = page.frameLocator(`${canvasFrame("desktop")}${own}`);
   const dark = page.frameLocator(`${canvasFrame("desktop", "dark")}${own}`);
   // The top bar reads the viewport and scheme from its render context.
   for (const frame of [light, dark]) {
     await expect(frame.locator(".mbk-name")).toHaveText("mokly.");
-    await expect(frame.locator(".mbk-menu")).toBeHidden();
+    // The bar draws no menu, as the shell's bar does.
+    await expect(frame.locator("[data-mokly-menu]")).toHaveCount(0);
   }
   await expect(dark.locator("html")).toHaveCSS("color-scheme", "dark");
   await expect(light.locator("html")).not.toHaveCSS("color-scheme", "dark");
   await chooseScheme(page, "dark");
   await expect(light.locator("html")).not.toHaveCSS("color-scheme", "dark");
-});
+  await expect(dark.locator("html")).toHaveCSS("color-scheme", "dark");
+}
 
-test("below the layout breakpoint, each view of a component renders in its actual viewport and scheme", async ({
+test("on the canvas, each frame of a component renders its desktop view in the frame's scheme", async ({
   page,
 }) => {
+  await expectComponentViews(page);
+});
+
+test("below the layout breakpoint, each frame of a component renders its desktop view in the frame's scheme", async ({
+  page,
+}) => {
+  // The compact layout shows the component's whole set until a frame is
+  // picked, so the component's own Light and Dark frames show.
   await page.setViewportSize(NARROW_WINDOW);
-  await page.goto("/view/design/library/chrome/top-bar/?viewport=both");
-  const mobile = page.frameLocator('[data-workspace-frame="mobile"]');
-  const desktop = page.frameLocator('[data-workspace-frame="desktop"]');
-  // The top bar reads the viewport and scheme from its render context.
-  await expect(mobile.locator(".mbk-menu")).toBeVisible();
-  await expect(mobile.locator(".mbk-name")).toBeHidden();
-  await expect(desktop.locator(".mbk-name")).toHaveText("mokly.");
-  await expect(desktop.locator(".mbk-menu")).toBeHidden();
-  await chooseScheme(page, "dark");
-  for (const frame of [mobile, desktop])
-    await expect(frame.locator("html")).toHaveCSS("color-scheme", "dark");
+  await expectComponentViews(page);
 });
 
 test("the inspector icons open, switch, and close panels, and only a composed component lists nested components", async ({

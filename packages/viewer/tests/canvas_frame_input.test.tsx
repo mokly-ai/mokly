@@ -5,6 +5,7 @@ import { act } from "@testing-library/react";
 
 import type { FrameEvent } from "@mokly/frame";
 import { wheelZoom, type CanvasStageHandle } from "@mokly/ui/canvas-stage";
+import { PreviewIframe } from "@mokly/ui/preview-frame";
 
 import { DESKTOP_FRAME_SIZE } from "../src/shell/canvas_frame_size.js";
 import type { CanvasFramePlan } from "../src/shell/canvas_frames.js";
@@ -16,7 +17,7 @@ import {
 } from "../src/shell/canvas_stage.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import {
-  DocumentStageFrame,
+  useDocumentFrame,
   type DocumentEntry,
 } from "../src/shell/document_stage_frame.js";
 
@@ -42,6 +43,22 @@ function documentEntry(path: string): DocumentEntry {
   const entry = createCatalogue(shellModelFixture()).byPath.get(path);
   assert.ok(entry?.kind === "page" || entry?.kind === "document", path);
   return entry;
+}
+
+/**
+ * A document's frame outside a canvas: the frame hook without a canvas
+ * input listener, as no canvas holds the frame.
+ */
+function PlainDocumentFrame({ entry }: { entry: DocumentEntry }) {
+  const frame = useDocumentFrame(entry, "light", undefined, undefined);
+  return frame.source ? (
+    <PreviewIframe
+      key={frame.generation}
+      ref={frame.frameRef}
+      src={frame.initialSource}
+      title={entry.title}
+    />
+  ) : null;
 }
 
 /** A canvas whose handle records what the frames ask of it. */
@@ -108,7 +125,7 @@ test("a reading frame asks for canvas input, and a frame outside the canvas does
   const catalogue = createCatalogue(shellModelFixture());
   for (const [node, canvasInput] of [
     [<CanvasReadingStage catalogue={catalogue} entry={entry} />, true],
-    [<DocumentStageFrame entry={entry} hasDarkFragments={false} />, undefined],
+    [<PlainDocumentFrame entry={entry} />, undefined],
   ] as const) {
     const { adapter, mounts } = fakeAdapter();
     const frame = renderInShell(adapter, entry.path, node);

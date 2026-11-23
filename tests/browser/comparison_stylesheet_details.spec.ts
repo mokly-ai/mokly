@@ -31,7 +31,11 @@ import {
   modeButton,
   navRow,
 } from "./comparison_ui.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseViewport,
+  openCatalogueSheet,
+} from "./workspace_actions.js";
 
 /** Status literals of the evidence format never reach the reader. */
 async function expectNoStatusWords(evidence: Locator): Promise<void> {
@@ -148,10 +152,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(evidence.locator(".mbk-evidence-files")).toHaveCount(0);
       await expect(evidence.locator("ul > li")).toHaveText([sheets.theme]);
       await expectNoStatusWords(evidence);
-      if (name === "mobile")
-        await page
-          .getByRole("button", { name: "Open catalogue navigation" })
-          .click();
+      if (name === "mobile") await openCatalogueSheet(page);
       await chooseFilter(page, "changed");
       await expect(navRow(page, comparisonPaths.unchanged)).toBeHidden();
     });
@@ -182,10 +183,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
       ).toHaveText(String(included.length));
-      if (name === "mobile")
-        await page
-          .getByRole("button", { name: "Open catalogue navigation" })
-          .click();
+      if (name === "mobile") await openCatalogueSheet(page);
       await chooseFilter(page, "changed");
       await expect(navRow(page, comparisonPaths.consumer)).toBeHidden();
       await expect(navRow(page, comparisonPaths.component)).toBeVisible();

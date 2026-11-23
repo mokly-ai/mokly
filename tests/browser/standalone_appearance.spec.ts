@@ -2,16 +2,14 @@ import { expect } from "@playwright/test";
 
 import {
   appearance,
-  desktopFrame,
   expectCanvasFrames,
-  mobileFrame,
   screen,
   select,
   store,
 } from "./appearance_assertions.js";
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import { expectFrameSource, viewportFrame } from "./workspace_actions.js";
 
 let lightOnlySite: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
@@ -52,25 +50,25 @@ for (const catalogue of ["mixed", "light-only"] as const) {
             theme,
             value: theme,
           });
-        // From 900px wide the canvas keeps each frame's own scheme; below it
-        // the one-frame stage follows the appearance.
-        if (viewport.width >= 900)
-          await expectCanvasFrames(page, entry, catalogue === "mixed");
-        else
-          for (const [frame, frameViewport] of [
-            [mobileFrame, "mobile"],
-            [desktopFrame, "desktop"],
-          ] as const) {
-            const dark =
-              scheme === "dark" && catalogue === "mixed" ? ".dark" : "";
-            await expectFrameSource(
-              page.locator(frame),
-              new RegExp(
-                `${entry}/index\\.${frameViewport}${dark}\\.html$`,
-                "u",
-              ),
-            );
-          }
+        // Each frame keeps its own scheme in both layouts. Below 900px the
+        // compact layout shows the one frame of the preview scheme, such as
+        // Mobile · Dark under Dark; a light-only catalogue has Light frames.
+        await expectCanvasFrames(page, entry, catalogue === "mixed");
+        if (viewport.width < 900) {
+          const dark = scheme === "dark" && catalogue === "mixed";
+          const shown = page.locator(viewportFrame("mobile"));
+          await expect(shown).toHaveAttribute(
+            "data-workspace-color-scheme",
+            dark ? "dark" : "light",
+          );
+          await expectFrameSource(
+            shown,
+            new RegExp(
+              `${entry}/index\\.mobile${dark ? "\\.dark" : ""}\\.html$`,
+              "u",
+            ),
+          );
+        }
       }
     });
   }
@@ -160,22 +158,11 @@ for (const width of [390, 1280])
           ),
         ).toBe(false);
       }
-      // The canvas draws no device chrome; below 900px the phone and the
-      // browser window keep the light context too.
-      if (width < 900) {
-        await expect(page.locator(".phone-screen")).toHaveCSS(
-          "background-color",
-          "rgb(255, 255, 255)",
-        );
-        await expect(page.locator(".phone-status")).toHaveCSS(
-          "color",
-          "rgb(26, 29, 28)",
-        );
-        await expect(page.locator(".browser-viewport")).toHaveCSS(
-          "background-color",
-          "rgb(255, 255, 255)",
-        );
-      }
+      // The canvas and the compact layout below 900px draw no device chrome
+      // whose colours could leave the light context.
+      await expect(
+        page.locator("#mb-main :is(.phone-screen, .browser-viewport)"),
+      ).toHaveCount(0);
       await expect(page.locator(".mbk-frame-scheme-note")).toHaveCount(0);
     }
   });

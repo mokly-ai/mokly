@@ -1,12 +1,6 @@
 {
   "sharedComponents": {
-    "chrome/top-bar": [
-      "default",
-      "search",
-      "tag-picker",
-      "drawer-open",
-      "auto-appearance"
-    ],
+    "chrome/top-bar": ["default", "search", "tag-picker", "auto-appearance"],
     "chrome/catalogue-navigation": [
       "all",
       "changes",
@@ -349,18 +343,6 @@
       "source": "design/canvas/overview",
       "name": "Catalogue",
       "target": "design/canvas/stage/catalogue"
-    },
-    {
-      "source": "design/canvas/overview",
-      "viewports": ["mobile"],
-      "name": "Open catalogue navigation",
-      "target": "design/canvas/stage/catalogue"
-    },
-    {
-      "source": "design/canvas/stage/catalogue",
-      "viewports": ["mobile"],
-      "name": "Close catalogue navigation",
-      "target": "design/canvas/overview"
     },
     {
       "source": "design/canvas/stage/catalogue",

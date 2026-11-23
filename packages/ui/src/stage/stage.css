@@ -41,9 +41,3 @@
   align-items: flex-start;
   overflow: auto;
 }
-
-/* With both viewports shown, a viewport that was not captured needs no
-   switch. */
-.mbk-live[data-viewport="both"] .mbk-preview-switch {
-  display: none;
-}

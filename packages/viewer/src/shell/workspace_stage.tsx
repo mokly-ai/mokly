@@ -6,7 +6,6 @@
 import { RemovedState, RemovedVariantState } from "@mokly/ui/empty-state";
 
 import { isComponentVariant } from "../catalogue/variants.js";
-import type { GeneratedComponentView } from "../components/views.js";
 
 import type { WorkspaceCanvas } from "./canvas_workspace.js";
 import type { Catalogue } from "./catalogue.js";
@@ -27,26 +26,22 @@ function removedSubject(
 /**
  * Render only an available current preview; comparisons stay independently
  * usable. A removed variant names itself, never its surviving parent, as the
- * component explorer contract requires. In the wide layout, the frames that
- * the workspace chose stand on the canvas.
+ * component explorer contract requires. The frames that the workspace chose
+ * stand on the canvas.
  */
 export function WorkspaceStage({
   canvas,
   catalogue,
   context,
-  previewViews,
   data,
   target,
-  variantPath,
   variantRemoved,
 }: {
-  canvas?: WorkspaceCanvas | undefined;
+  canvas: WorkspaceCanvas;
   catalogue: Catalogue;
   context: ShellContext;
-  previewViews: readonly GeneratedComponentView[];
   data: WorkspaceData;
   target: RouteTarget;
-  variantPath?: string;
   variantRemoved: boolean;
 }) {
   if (data.removed) return <RemovedState kind={removedSubject(data.entry)} />;
@@ -55,10 +50,8 @@ export function WorkspaceStage({
     <TargetStage
       canvas={canvas}
       catalogue={catalogue}
-      previewViews={previewViews}
       target={target}
       {...(context.fragment ? { fragment: context.fragment } : {})}
-      {...(variantPath ? { variantPath } : {})}
     />
   );
 }

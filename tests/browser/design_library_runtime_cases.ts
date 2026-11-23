@@ -25,11 +25,13 @@ export function registerDesignLibraryRuntime(
       await page.goto(
         `${running.url}/view/design/browse/views/screen/tag-picker/`,
       );
+      // In the compact layout the viewport choice opens the panel's sheet,
+      // which holds the inspector, and its grabber expands it.
       await chooseViewport(page, viewport);
       await page.getByRole("tab", { name: "Components", exact: true }).click();
       if (viewport === "mobile")
         await page
-          .getByRole("button", { name: "Expand inspector", exact: true })
+          .getByRole("button", { name: "Expand panel", exact: true })
           .click();
       const panel = page.getByRole("tabpanel", {
         name: "Components",

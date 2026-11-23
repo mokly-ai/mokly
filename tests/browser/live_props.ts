@@ -3,6 +3,7 @@
 import { expect, type Page, type Request } from "@playwright/test";
 
 import { isRender } from "./live_shell_fixture.js";
+import { revealInPanel } from "./workspace_actions.js";
 
 /** The text that every stage frame shows, read through the parent page. */
 export function frameTexts(page: Page): Promise<string[]> {
@@ -39,24 +40,33 @@ export async function frameText(
   return (await frameDocument(page, viewport)).text;
 }
 
-/** Show the Props panel; a click on the selected tab would close it. */
+/**
+ * Show the Props panel; a click on the selected tab would close it. In the
+ * compact layout the inspector stands in the panel's sheet.
+ */
 export async function showProps(page: Page) {
   const tab = page.getByRole("tab", { name: "Props" });
+  await revealInPanel(page, tab);
   await expect(tab).toBeVisible();
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
   return page.getByRole("tabpanel", { name: "Props" });
 }
 
 /**
- * Open the card's Props panel; `editable` waits for the live descriptor, and
- * `query` selects the route's views, for example `?viewport=desktop`.
+ * Open the Props panel of the card, or of the entry that `path` names;
+ * `editable` waits for the live descriptor, and `query` selects the route's
+ * views, for example `?viewport=desktop`.
  */
 export async function openProps(
   page: Page,
   url: string,
-  { editable = true, query = "" }: { editable?: boolean; query?: string } = {},
+  {
+    editable = true,
+    path = "card",
+    query = "",
+  }: { editable?: boolean; path?: string; query?: string } = {},
 ) {
-  await page.goto(`${url}/view/card/${query}`);
+  await page.goto(`${url}/view/${path}/${query}`);
   const props = await showProps(page);
   if (editable)
     await expect(props.getByRole("textbox", { name: "label" })).toBeEditable();

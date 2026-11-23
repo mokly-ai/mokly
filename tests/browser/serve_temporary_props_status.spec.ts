@@ -18,16 +18,13 @@ import { test } from "./serve_comparison_test.js";
 import { canvasFrame, chooseVariant } from "./workspace_actions.js";
 
 /**
- * The tag of a row of the variant set, in its Light frame on the canvas, or
- * the tag of the one frame of the narrow layout.
+ * The tag of a row of the variant set, in its Light frame: on the canvas, and
+ * in the compact layout, which shows the whole set or the routed variant's
+ * frame.
  */
-function tagOf(page: Page, viewport: "desktop" | "mobile", row: string) {
+function tagOf(page: Page, row: string) {
   return page
-    .frameLocator(
-      viewport === "desktop"
-        ? `${canvasFrame("desktop")}[data-workspace-variant="${row}"]`
-        : `[data-workspace-frame="${viewport}"]`,
-    )
+    .frameLocator(`${canvasFrame("desktop")}[data-workspace-variant="${row}"]`)
     .locator(".tag");
 }
 
@@ -57,10 +54,12 @@ for (const viewport of ["desktop", "mobile"] as const)
     const { revision } = await changes.index();
     const tree = await git(changes.root, "status", "--porcelain");
     const props = await showProps(page);
+    // In the compact layout the inspector stands in the panel's sheet, whose
+    // grabber expands it.
     if (viewport === "mobile")
-      await page.getByRole("button", { name: "Expand inspector" }).click();
+      await page.getByRole("button", { name: "Expand panel" }).click();
     const label = props.getByRole("textbox", { name: "label" });
-    const tag = tagOf(page, viewport, changes.paths.quietParent);
+    const tag = tagOf(page, changes.paths.quietParent);
     await expect(label).toBeEditable();
     await expect(tag).toHaveText("Tag content");
 
@@ -76,9 +75,9 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(status).toHaveText("Unmodified");
 
     await chooseVariant(page, "Plain");
-    await expect(
-      tagOf(page, viewport, `${changes.paths.quietParent}/plain`),
-    ).toHaveText("Plain tag");
+    await expect(tagOf(page, `${changes.paths.quietParent}/plain`)).toHaveText(
+      "Plain tag",
+    );
     await expect(status).toHaveText("Unmodified");
     await expect(count).toHaveText(changed);
     expect(await fs.readFile(source, "utf8")).toBe(saved);
@@ -106,7 +105,7 @@ test("a temporary prop edit stays out of local storage, and a reload shows the s
   const label = (await showProps(page)).getByRole("textbox", {
     name: "label",
   });
-  const tag = tagOf(page, "desktop", changes.paths.quietParent);
+  const tag = tagOf(page, changes.paths.quietParent);
   await expect(label).toBeEditable();
   const stored = await storedEntries(page);
 

@@ -47,6 +47,7 @@ import {
 import { designFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { ownExampleServerUrl } from "./example_servers.js";
+import { DOCUMENT_FRAME, revealInPanel } from "./workspace_actions.js";
 
 const HANDBOOK = comparisonPaths.changedPage;
 const NOTES = comparisonPaths.unchangedPage;
@@ -204,9 +205,12 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       ]);
       await expect(evidence).not.toContainText(/Changed component/u);
       await expect(evidence).not.toContainText(SHARED);
-      // Card's Usage lists its consumers, and a page is none of them.
+      // Card's Usage lists its consumers, and a page is none of them. In the
+      // compact layout the inspector stands in the panel's sheet.
       await page.goto(`/view/${comparisonPaths.component}/`);
-      await page.getByRole("tab", { name: "Usage", exact: true }).click();
+      const usageTab = page.getByRole("tab", { name: "Usage", exact: true });
+      await revealInPanel(page, usageTab);
+      await usageTab.click();
       const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
       await expect(
         usage.locator('[data-usage-section="used-by"]').getByRole("link"),
@@ -228,8 +232,13 @@ test.describe("whole-page evidence on a short screen", () => {
     await page.locator("[data-mokly-details]").hover();
     await page.mouse.wheel(0, 2000);
     await expect(last).toBeInViewport();
-    const stage = await page.locator(".mbk-stage-embed").boundingBox();
-    expect(stage?.height ?? 0).toBeGreaterThan(100);
+    // The panel's sheet leaves the top of the reading frame in view above it.
+    const document = await page.locator(DOCUMENT_FRAME).boundingBox();
+    const sheet = await page
+      .getByRole("region", { name: "Panel", exact: true })
+      .boundingBox();
+    expect(document && sheet).toBeTruthy();
+    expect(sheet!.y - Math.max(document!.y, 0)).toBeGreaterThan(100);
   });
 });
 

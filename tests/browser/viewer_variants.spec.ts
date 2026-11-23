@@ -42,10 +42,12 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
       }),
     { cross, controlled },
   );
+  // The variant bar stands in the right panel, which the compact layout
+  // keeps in its closed sheet.
   await expect(
     page
-      .getByRole("navigation", { name: "Saved variants" })
-      .getByRole("link", { name: "Default", exact: true }),
+      .getByRole("navigation", { name: "Saved variants", includeHidden: true })
+      .getByRole("link", { name: "Default", exact: true, includeHidden: true }),
   ).toHaveAttribute("aria-current", "page");
 }
 
@@ -189,7 +191,7 @@ for (const cross of [false, true]) {
  * Highlight an instance of the selected saved variant `pane/second`, then a
  * reference that the stage does not show: on the canvas, whose rows each show
  * their own variant, an entry outside the set; below the layout breakpoint,
- * the sibling variant that the one frame no longer shows.
+ * the sibling variant that the compact layout's one frame does not show.
  */
 async function inspectsSecond(page: Page, cross: boolean, canvas: boolean) {
   await openViewer(page, cross);
@@ -214,7 +216,9 @@ async function inspectsSecond(page: Page, cross: boolean, canvas: boolean) {
       .get("one")
       .ref.current.select({ screenPath: "pane/second" }),
   );
-  const shown = canvas ? SELECTED : 'iframe[data-workspace-frame="desktop"]';
+  const shown = canvas
+    ? SELECTED
+    : ".mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame]";
   await expect(page.locator(shown)).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",

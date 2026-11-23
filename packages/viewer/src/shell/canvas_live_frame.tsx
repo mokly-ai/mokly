@@ -82,7 +82,6 @@ export function CanvasLiveFrame({
   const { entry, scheme, viewport } = plan;
   const frame = useViewFrame({
     entry,
-    expanded: false,
     fragment,
     onCanvasInput: input.listener,
     // A screen's frames keep the size of their viewport.

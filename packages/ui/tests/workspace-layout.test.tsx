@@ -33,6 +33,23 @@ test("the workspace lays out its header, variants, preview, inspector, and overl
   );
 });
 
+test("in the Canvas layout the entry bar and the preview fill the canvas, and the right panel holds the rest", () => {
+  assert.equal(
+    renderToString(
+      <WorkspaceLayout
+        entryBar={<p>Entry bar</p>}
+        header={<h2>Header</h2>}
+        inspector={<aside>Inspector</aside>}
+        overlay={<b>Labels</b>}
+        panel={<section aria-label="Panel">Right panel</section>}
+        preview={<i>Stage</i>}
+        variantBar={<nav aria-label="Variants" />}
+      />,
+    ),
+    '<section class="mbk-workspace mbk-reset" data-workspace="" data-workspace-canvas=""><p>Entry bar</p><div class="mbk-workspace-panes mbk-reset"><div class="mbk-preview-pane mbk-reset" data-workspace-preview=""><div class="mbk-preview-busy mbk-reset"><i>Stage</i></div></div></div><section aria-label="Panel">Right panel</section><b>Labels</b></section>',
+  );
+});
+
 test("the preview is busy only while a render is pending", () => {
   const { container, rerender } = render(workspace(true));
   const busy = container.querySelector(".mbk-preview-busy");

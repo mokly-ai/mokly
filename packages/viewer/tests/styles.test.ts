@@ -4,7 +4,11 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { embeddedStyles, standaloneStyles } from "../scripts/styles.mjs";
-import { NARROW_LAYOUT, NARROW_SHELL } from "../src/shell/layout_breakpoint.js";
+import {
+  NARROW_LAYOUT,
+  NARROW_PANELS,
+  NARROW_SHELL,
+} from "../src/shell/layout_breakpoint.js";
 
 import {
   pageRuleFailures,
@@ -187,11 +191,13 @@ test("no shell stylesheet declares a cascade layer", () => {
 
 /**
  * The media queries of the package rules: the shell's layout breakpoint, its
- * device breakpoint, the reader's reduced motion, the system appearance of
- * Auto, and the forced colours that replace the focus glow with an outline.
+ * panel step, its device breakpoint, the reader's reduced motion, the system
+ * appearance of Auto, and the forced colours that replace the focus glow
+ * with an outline.
  */
 const PACKAGE_QUERIES = new Set<string>([
   NARROW_SHELL,
+  NARROW_PANELS,
   NARROW_LAYOUT,
   "(prefers-reduced-motion: reduce)",
   "(prefers-color-scheme: dark)",

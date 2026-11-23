@@ -23,7 +23,8 @@ test("desktop catalogue navigation resizes and remembers its width", async ({
   const grip = await handle.boundingBox();
   expect(start).not.toBeNull();
   expect(grip).not.toBeNull();
-  expect(start?.width).toBeCloseTo(248, 0);
+  // The floating catalogue starts 252px wide from the 1180px panel step up.
+  expect(start?.width).toBeCloseTo(252, 0);
   if (!start || !grip) throw new Error("navigation resize bounds unavailable");
   await page.mouse.move(grip.x + grip.width / 2, grip.y + 100);
   await page.mouse.down();
@@ -31,12 +32,12 @@ test("desktop catalogue navigation resizes and remembers its width", async ({
   await page.mouse.up();
   await expect
     .poll(async () => (await nav.boundingBox())?.width)
-    .toBeCloseTo(328, 0);
+    .toBeCloseTo(332, 0);
 
   await page.reload();
   await expect
     .poll(async () => (await nav.boundingBox())?.width)
-    .toBeCloseTo(328, 0);
+    .toBeCloseTo(332, 0);
 
   await handle.focus();
   await page.keyboard.press("Home");
@@ -79,16 +80,21 @@ test("the catalogue filter spans the column in two equal segments", async ({
   expect(Math.abs(all.width - changes.width)).toBeLessThanOrEqual(1);
 });
 
-test("narrow viewports collapse navigation into a drawer", async ({ page }) => {
+test("narrow viewports open the catalogue as a sheet from the dock", async ({
+  page,
+}) => {
   await page.setViewportSize({ height: 900, width: 420 });
   await page.goto("/");
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
   await expect(page.locator("[data-mokly-nav-resize]")).toBeHidden();
-  await page.click("[data-mokly-menu]");
+  await page
+    .getByRole("group", { name: "Canvas controls" })
+    .getByRole("button", { name: "Catalogue" })
+    .click();
   await expect(page.locator("[data-mokly-nav]")).toBeVisible();
-  await expect(page.locator("[data-mokly-menu]")).toHaveAttribute(
-    "aria-expanded",
-    "true",
+  await expect(page.locator(".mbk[data-drawer]")).toHaveAttribute(
+    "data-drawer",
+    "open",
   );
   expect(await computedStyle(page, ".mbk-topbar", "position")).toBe("relative");
   expect(await computedStyle(page, ".mbk-topbar", "zIndex")).toBe("11");
@@ -98,18 +104,20 @@ test("narrow viewports collapse navigation into a drawer", async ({ page }) => {
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
 });
 
-test("navigation stays a column at 900px and is a drawer below it", async ({
+test("the catalogue floats at 900px and is a sheet behind the dock below it", async ({
   page,
 }) => {
+  const dock = page.getByRole("group", { name: "Canvas controls" });
   await page.setViewportSize({ height: 900, width: 900 });
   await page.goto("/");
   await expect(page.locator("[data-mokly-nav]")).toBeVisible();
   await expect(page.locator("[data-mokly-nav-resize]")).toBeVisible();
-  await expect(page.locator("[data-mokly-menu]")).toBeHidden();
+  await expect(dock).toBeHidden();
   await page.setViewportSize({ height: 900, width: 899 });
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
   await expect(page.locator("[data-mokly-nav-resize]")).toBeHidden();
-  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
+  await expect(dock).toBeVisible();
+  await expect(page.locator("[data-mokly-menu]")).toHaveCount(0);
 });
 
 test("the narrow search bar drops the name and fits its controls", async ({
@@ -132,7 +140,8 @@ test("the narrow search bar drops the name and fits its controls", async ({
   );
   await expect(page.locator(".mbk-brand .mbk-name")).toBeHidden();
   await expect(page.getByRole("link", { name: "Mokly" })).toBeVisible();
-  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
+  // The dock opens the catalogue, so the bar has no menu button.
+  await expect(page.locator("[data-mokly-menu]")).toHaveCount(0);
   await expect(page.locator("[data-mokly-search]")).toBeVisible();
 
   const modes = await page.locator(".mbk-search").boundingBox();

@@ -117,22 +117,15 @@ export function CanvasShell(props: CanvasShellProps) {
 }
 
 /**
- * The package top bar. Its brand opens the Canvas home, and its menu opens
- * the catalogue sheet, as the dock's Catalogue does, or closes the open one.
+ * The package top bar, which draws no menu, as the shell's bar does: the
+ * dock's Catalogue opens the catalogue sheet, and the sheet's close control
+ * closes it. Its brand opens the Canvas home.
  */
-function CanvasTopBar({ design, search, sheet, viewport }: CanvasShellProps) {
-  const transitions = useDesignNavigation().canvas ?? {};
-  const open = viewport === "mobile" && sheet === "catalogue";
-  const menu = open
-    ? transitions.close
-    : design === CANVAS_PAGES.catalogue
-      ? undefined
-      : CANVAS_PAGES.catalogue;
+function CanvasTopBar({ search, viewport }: CanvasShellProps) {
   return (
     <TopBar
       activeTag={search?.activeTag}
-      drawerOpen={open}
-      links={{ brand: CANVAS_PAGES.home, menu }}
+      links={{ brand: CANVAS_PAGES.home }}
       searchValue={search?.value}
       tagPickerOpen={search?.pickerOpen}
       viewport={viewport}

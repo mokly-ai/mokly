@@ -1,12 +1,8 @@
 // The route stage renderer of the served Mokly shell: the routed entry's
-// stage, which waits for the entry's details. At and above the layout
-// breakpoint the entry stands on the canvas; below it, on the one-frame
-// stage. A use case stands on the canvas at every width. All embedded
-// consumer documents are sandboxed without script permission.
+// stage, which waits for the entry's detail. A screen, a component, a page,
+// a Markdown document and a use case stand on the canvas in both layouts.
+// All embedded consumer documents are sandboxed without script permission.
 
-import type { GeneratedComponentView } from "../components/views.js";
-
-import { useCanvasLayout } from "./canvas_layout.js";
 import { CanvasReadingStage } from "./canvas_reading.js";
 import { CanvasUseCaseStage } from "./canvas_use_case.js";
 import {
@@ -15,25 +11,23 @@ import {
 } from "./canvas_workspace.js";
 import type { Catalogue } from "./catalogue.js";
 import { useRouteDelivery } from "./data_context.js";
-import { PublicStage } from "./public_stage.js";
 import { RetryContent, useRetryFocus } from "./retry_focus.js";
 import { routedEntries } from "./selection.js";
 import { StageDelivery } from "./stage_delivery.js";
 import type { RouteTarget } from "./target.js";
 
-/** Render the route-specific preview below the shell-owned heading. */
+/** Render the route-specific preview of the routed entry. */
 export function TargetStage(props: {
-  /** A workspace's frames on the canvas, which it gives in the wide layout. */
+  /** A workspace's frames on the canvas. */
   canvas?: WorkspaceCanvas | undefined;
   catalogue: Catalogue;
   fragment?: string;
-  previewViews?: readonly GeneratedComponentView[];
   target: RouteTarget;
-  variantPath?: string | undefined;
+  /** The step frame that the compact layout shows of a use case. */
+  useCaseStep?: string | undefined;
 }) {
   const delivery = useRouteDelivery();
   const focus = useRetryFocus();
-  const wide = useCanvasLayout();
   const entry = props.target.entry;
   if (delivery && delivery.status !== "ready")
     return (
@@ -53,6 +47,7 @@ export function TargetStage(props: {
           entry={current}
           fragment={props.fragment}
           key={current.path}
+          picked={props.useCaseStep}
         />
       ) : props.canvas &&
         (current.kind === "screen" || current.kind === "component") ? (
@@ -62,22 +57,13 @@ export function TargetStage(props: {
           entry={current}
           fragment={props.fragment}
         />
-      ) : wide && (current.kind === "page" || current.kind === "document") ? (
+      ) : current.kind === "page" || current.kind === "document" ? (
         <CanvasReadingStage
           catalogue={props.catalogue}
           entry={current}
           fragment={props.fragment}
         />
-      ) : (
-        <PublicStage
-          catalogue={model}
-          entry={current}
-          hasDarkFragments={props.catalogue.hasDarkFragments}
-          {...(props.fragment ? { fragment: props.fragment } : {})}
-          {...(props.previewViews ? { previewViews: props.previewViews } : {})}
-          {...(props.variantPath ? { variantPath: props.variantPath } : {})}
-        />
-      )}
+      ) : null}
     </RetryContent>
   );
 }

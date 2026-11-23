@@ -1,10 +1,13 @@
 /**
- * The canvas of the routed entry in the wide layout. This container gives
+ * The canvas of the routed entry. This container gives
  * `@mokly/ui/canvas-stage` the entry's section and the path chip's copy,
- * binds the canvas's keys, and measures the frames again after each pan and
- * zoom, which fire no scroll or resize event. The canvas is the stage that
- * clips each frame's highlights and markers. A frame that forwards the canvas
- * input of its own document reaches the canvas through `CanvasControlContext`.
+ * binds the canvas's keys, registers the canvas for the dock's Fit while it
+ * shows, and measures the frames again after each pan and zoom, which fire
+ * no scroll or resize event. The canvas clips each frame and its highlights,
+ * and the stage, the canvas between the floating panels and above the zoom
+ * pill, clips its markers. A frame that forwards the canvas input of its own
+ * document reaches the canvas through `CanvasControlContext`. In the compact
+ * layout the section takes its compact form.
  */
 
 import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
@@ -22,12 +25,13 @@ import {
 } from "@mokly/ui/canvas-stage";
 import { ChangeStatus, type ChangeStatusValue } from "@mokly/ui/change-status";
 
+import { useCanvasLayout } from "./canvas_layout.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameRegistry,
 } from "./frame_registry.js";
-import { useShellRoot } from "./root_context.js";
+import { useShellRoot, useShownCanvas } from "./root_context.js";
 import { useShellStore } from "./store_context.js";
 
 /**
@@ -129,6 +133,9 @@ export function CanvasEntryStage({
 }) {
   const store = useShellStore();
   const canvas = useRef<HTMLDivElement>(null);
+  // The frames' stage: the canvas between the floating panels and above
+  // the zoom pill, to which the markers clip.
+  const stage = useRef<HTMLDivElement>(null);
   const handle = useRef<CanvasStageHandle>(null);
   const zoom = useRef(1);
   const control = useMemo(() => ({ canvas, handle, zoom }), []);
@@ -141,8 +148,14 @@ export function CanvasEntryStage({
     },
     [refresh],
   );
+  const show = useShownCanvas()?.show;
+  useEffect(() => {
+    const shown = handle.current;
+    return shown && show ? show(shown) : undefined;
+  }, [show]);
+  const compact = !useCanvasLayout();
   return (
-    <FrameStageContext value={canvas}>
+    <FrameStageContext value={stage}>
       <CanvasControlContext value={control}>
         <CanvasStage
           canvasRef={canvas}
@@ -150,7 +163,9 @@ export function CanvasEntryStage({
           onViewChange={viewChange}
           ref={handle}
           routed
+          stageRef={stage}
           section={{
+            compact,
             frames,
             kind,
             onCopyPath: (value) => store.copy(value, `Copied path ${value}`),

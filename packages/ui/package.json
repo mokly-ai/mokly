@@ -16,6 +16,10 @@
       "types": "./dist/browser-bar/browser-bar.d.ts",
       "import": "./dist/browser-bar/browser-bar.js"
     },
+    "./canvas-dock": {
+      "types": "./dist/canvas-dock/canvas-dock.d.ts",
+      "import": "./dist/canvas-dock/canvas-dock.js"
+    },
     "./canvas-frame": {
       "types": "./dist/canvas-frame/canvas-frame.d.ts",
       "import": "./dist/canvas-frame/canvas-frame.js"
@@ -99,6 +103,14 @@
     "./empty-state": {
       "types": "./dist/empty-state/empty-state.d.ts",
       "import": "./dist/empty-state/empty-state.js"
+    },
+    "./entry-bar": {
+      "types": "./dist/entry-bar/entry-bar.d.ts",
+      "import": "./dist/entry-bar/entry-bar.js"
+    },
+    "./floating-panel": {
+      "types": "./dist/floating-panel/floating-panel.d.ts",
+      "import": "./dist/floating-panel/floating-panel.js"
     },
     "./flow-step": {
       "types": "./dist/flow-step/flow-step.d.ts",

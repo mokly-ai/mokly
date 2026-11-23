@@ -27,10 +27,8 @@ export function PhoneFrame({ children }: { children?: ReactNode }) {
 
 /**
  * A desktop browser window whose viewport hosts a desktop preview. An
- * expanded window covers the shell, and the host marks the shell root
- * meanwhile through the root's `frameExpanded`, which shows the scrim below
- * the window. A static depiction that runs no script draws its bar as a
- * picture of itself.
+ * expanded window covers the page. A static depiction that runs no script
+ * draws its bar as a picture of itself.
  */
 export function BrowserFrame({
   address,

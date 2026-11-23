@@ -1,54 +1,49 @@
-import { expect } from "@playwright/test";
+/**
+ * The compact layout below the layout breakpoint stands its one frame at the
+ * stage's top, below the entry bar, so the frame stays reachable, and keeps
+ * it there when a taller window leaves room below it.
+ */
+
+import { expect, type Page } from "@playwright/test";
+
+import { FIT_MARGIN } from "../../packages/ui/src/canvas-stage/canvas-view.js";
 
 import { test } from "./browser_test.js";
 
-test("stacked frames on a narrow stage start at its top so the first frame stays reachable", async ({
+/** The section's and the shown frame label's offsets on the stage. */
+function geometry(page: Page) {
+  return page.locator("[data-mokly-stage]").evaluate((canvas) => {
+    const box = (selector: string) =>
+      canvas.querySelector(selector)!.getBoundingClientRect();
+    const stage = box(".mbk-canvas-stage");
+    const section = box(".mbk-canvas-section");
+    const label = box(".mbk-canvas-cell:not([hidden]) figcaption");
+    return {
+      label: label.top - stage.top,
+      section: section.top - stage.top,
+      spare: stage.bottom - section.bottom,
+    };
+  });
+}
+
+test("below the layout breakpoint, the compact frame starts at the stage's top so it stays reachable", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/view/example/screens/welcome/");
-  const stage = page.locator(".mbk-stage");
-  const label = stage.locator(".mbk-frame-mobile .mbk-frame-label");
-  await expect(label).toHaveText("Mobile");
-  await expect(stage).toHaveJSProperty("scrollTop", 0);
-  const [stageTop, labelTop] = await Promise.all([
-    stage.evaluate((element) => element.getBoundingClientRect().top),
-    label.evaluate((element) => element.getBoundingClientRect().top),
-  ]);
-  expect(labelTop).toBeGreaterThanOrEqual(stageTop);
+  const label = page.locator(
+    "[data-mokly-stage] .mbk-canvas-cell:not([hidden]) figcaption",
+  );
+  await expect(label).toContainText("welcome · Mobile · Light");
+  expect((await geometry(page)).label).toBeGreaterThanOrEqual(0);
 
-  // A fitting column distinguishes top alignment from safe centring.
+  // A window with room below the frame distinguishes the top alignment from
+  // centring: the section keeps Fit's margin from the stage's top.
   await page.setViewportSize({ width: 390, height: 1800 });
-  await expect(stage.locator(".mbk-frame-wrap:visible")).toHaveCount(2);
-  await expect(stage).toHaveCSS("flex-direction", "column");
-  const geometry = () =>
-    stage.evaluate((element) => {
-      const bounds = element.getBoundingClientRect();
-      const style = getComputedStyle(element);
-      const paddingTop = parseFloat(style.paddingTop);
-      const frames = [
-        ...element.querySelectorAll<HTMLElement>(".mbk-frame-wrap"),
-      ].filter((frame) => frame.offsetHeight > 0);
-      const first = frames[0]!.getBoundingClientRect();
-      const last = frames.at(-1)!.getBoundingClientRect();
-      return {
-        spareHeight:
-          element.clientHeight -
-          paddingTop -
-          parseFloat(style.paddingBottom) -
-          (last.bottom - first.top),
-        startOffset:
-          first.top +
-          element.scrollTop -
-          bounds.top -
-          parseFloat(style.borderTopWidth) -
-          paddingTop,
-      };
-    });
   await expect
-    .poll(async () => (await geometry()).spareHeight)
+    .poll(async () => (await geometry(page)).spare)
     .toBeGreaterThan(100);
   await expect
-    .poll(async () => (await geometry()).startOffset)
-    .toBeCloseTo(0, 0);
+    .poll(async () => (await geometry(page)).section)
+    .toBeCloseTo(FIT_MARGIN, 0);
 });

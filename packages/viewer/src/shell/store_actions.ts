@@ -3,6 +3,7 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import type { ViewerSelection } from "../host/types.js";
+import { viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
@@ -79,19 +80,26 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       if (announcement)
         input.setState((current) => ({ ...current, announcement }));
     },
+    openEntry(path, axes) {
+      // A host's selection names the entry and the axes in one proposal.
+      if (input.embedded) {
+        input.propose({ ...axes, screenPath: path });
+        return;
+      }
+      updateSelection(axes);
+      input.navigation.navigateFrame(viewHref(path));
+    },
     persistNavigationWidth(value = input.stateRef.current.navigationWidth) {
+      if (value === undefined || input.embedded) return;
       const current = input.stateRef.current;
       const width = Math.round(
         Math.max(192, Math.min(current.navigationMaximum, value)),
       );
-      if (!input.embedded) persist(widthStorageKey, String(width));
+      persist(widthStorageKey, String(width));
     },
-    releaseExpandedFrame(key) {
-      input.setState((current) =>
-        current.expandedFrame === key
-          ? { ...current, expandedFrame: undefined }
-          : current,
-      );
+    resetNavigationWidth() {
+      if (!input.embedded) forget(widthStorageKey);
+      input.setState((current) => ({ ...current, navigationWidth: undefined }));
     },
     revealFolder(section, path) {
       const reveal = folderRevealPath(input.sections, section, path);
@@ -104,7 +112,7 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         );
         if (proposal) input.propose(proposal.selection, proposal.rawQuery);
       }
-      const drawer = navigationDrawerShown();
+      const sheet = catalogueSheetShown();
       input.setState((current) => {
         const selection = input.embedded
           ? current.selection
@@ -121,8 +129,10 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         persistDisclosures(filtered.selection, disclosures, !input.embedded);
         return {
           ...filtered,
+          ...(sheet && filtered.sheet !== "catalogue"
+            ? { sheet: "catalogue" as const, sheetExpanded: false }
+            : {}),
           disclosures,
-          drawerOpen: filtered.drawerOpen || drawer,
           filterBaseline:
             filtered.filterBaseline &&
             openDisclosures(filtered.filterBaseline, reveal.keys),
@@ -157,17 +167,14 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         return { ...current, disclosures };
       });
     },
-    setDrawer(open) {
-      input.setState((current) => ({ ...current, drawerOpen: open }));
-    },
-    setExpandedFrame(key) {
-      input.setState((current) => ({ ...current, expandedFrame: key }));
-    },
     setNavigationMaximum(value) {
       input.setState((current) => ({
         ...current,
         navigationMaximum: value,
-        navigationWidth: Math.min(current.navigationWidth, value),
+        navigationWidth:
+          current.navigationWidth === undefined
+            ? undefined
+            : Math.min(current.navigationWidth, value),
       }));
     },
     setNavigationWidth(value) {
@@ -184,6 +191,16 @@ export function shellStore(input: StoreActionsInput): ShellStore {
     setSearch(value) {
       const query = parseSearchQuery(value);
       updateSelection({ search: query.freeText, tags: query.tags }, value);
+    },
+    setSheet(sheet) {
+      input.setState((current) =>
+        current.sheet === sheet
+          ? current
+          : { ...current, sheet, sheetExpanded: false },
+      );
+    },
+    setSheetExpanded(expanded) {
+      input.setState((current) => ({ ...current, sheetExpanded: expanded }));
     },
     setTagPicker(open, index = input.stateRef.current.tagPickerIndex) {
       input.setState((current) => ({
@@ -233,8 +250,8 @@ export function persistDisclosures(
   }
 }
 
-/** Whether the catalogue is a closed drawer at the current width. */
-function navigationDrawerShown(): boolean {
+/** Whether the catalogue is a sheet of the compact layout at the current width. */
+function catalogueSheetShown(): boolean {
   return (
     typeof window !== "undefined" && window.matchMedia(NARROW_SHELL).matches
   );
@@ -257,6 +274,14 @@ function copyText(text: string): void {
 function persist(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
+  } catch {
+    return;
+  }
+}
+
+function forget(key: string): void {
+  try {
+    localStorage.removeItem(key);
   } catch {
     return;
   }

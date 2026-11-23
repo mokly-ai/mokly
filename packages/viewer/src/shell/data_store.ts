@@ -92,9 +92,12 @@ export function useShellDataStore(input: {
   );
   if (controller.failure) throw controller.failure.error;
   const snapshot = controller.snapshot;
+  // Held details renew the catalogue, not its hierarchy, so a detail's
+  // arrival derives no new requests.
+  const { hierarchy } = snapshot.catalogue;
   const requests = useMemo(
-    () => routeDetailRequests(snapshot.index, input.state.route),
-    [snapshot.index, input.state.route],
+    () => routeDetailRequests(snapshot.index, input.state.route, { hierarchy }),
+    [hierarchy, snapshot.index, input.state.route],
   );
   const reloadDetail = useCallback(
     (request: DetailRequest) => controller.reload([request]),

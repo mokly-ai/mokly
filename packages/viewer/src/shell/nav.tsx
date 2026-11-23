@@ -34,6 +34,7 @@ export function CatalogueNav({ context }: { context: ShellContext }) {
   const scroll = useNavigationScroll(store, rows);
   return (
     <CatalogueNavigation
+      base={context.base}
       busy={
         store.state.selection.view === "changes" &&
         (changesStatus === "pending" || changesStatus === "preparing")
@@ -49,10 +50,12 @@ export function CatalogueNav({ context }: { context: ShellContext }) {
       onView={(view) => store.setView(view)}
       onWidth={resize.onWidth}
       onWidthCommit={resize.onWidthCommit}
+      onWidthReset={resize.onWidthReset}
       ref={resize.ref}
       resizable={resize.resizable}
       {...scroll}
       sections={rows}
+      startingWidth={resize.startingWidth}
       status={navStatus(context, store)}
       width={resize.width}
     />

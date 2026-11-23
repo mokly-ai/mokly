@@ -1,43 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { VIEWER_DIRECTORY, type CatalogueReadModel } from "@mokly/model";
+import { VIEWER_DIRECTORY } from "@mokly/model";
 
-import type { ShellCatalogueRoutedEntry } from "../src/catalogue/scoped_types.js";
 import { generatedViews } from "../src/components/views.js";
 import {
-  canvasEditContexts,
   framesViews,
   readingFrameLabel,
   workspaceFrames,
   type CanvasFramePlan,
 } from "../src/shell/canvas_frames.js";
-import { createCatalogue } from "../src/shell/catalogue.js";
-import { publicWorkspace } from "../src/shell/public_workspace.js";
 
-import { indexFixture, shellModelFixture } from "./catalogue_v9_fixture.js";
-
-/** Give each screen and component of the index a dark render of each view. */
-function withDarkViews(index: CatalogueReadModel): void {
-  for (const entry of [...index.screens, ...index.components]) {
-    entry.colorSchemes = ["light", "dark"];
-    entry.views = entry.views.flatMap((view) => [
-      view,
-      { ...view, colorScheme: "dark" as const },
-    ]);
-  }
-}
-
-/** The workspace of one routed path in a fixture catalogue. */
-function workspace(path: string, dark: boolean) {
-  const model = shellModelFixture(
-    indexFixture(dark ? withDarkViews : undefined),
-  );
-  const catalogue = createCatalogue(model);
-  const entry = catalogue.byPath.get(path) as ShellCatalogueRoutedEntry;
-  assert.ok(entry.kind === "screen" || entry.kind === "component", path);
-  return publicWorkspace(catalogue, model, entry);
-}
+import { workspace } from "./canvas_workspace_fixture.js";
 
 /** What a reader sees of each frame, and the view that it shows. */
 function shown(frames: readonly CanvasFramePlan[]) {
@@ -220,29 +194,6 @@ test("a saved variant's page opens the set with its Light frame selected, and a 
         `/${VIEWER_DIRECTORY}/components/renders/desktop-dark.html`,
       ],
     ],
-  );
-});
-
-test("a live edit of a row renders the row's desktop views in both schemes", () => {
-  const data = workspace("components/action/default", true);
-  const stage = data.views.slice(0, 1);
-  assert.deepEqual(
-    canvasEditContexts(data.views, "components/action/default", stage).map(
-      (view) => [view.variantPath, view.viewport, view.colorScheme],
-    ),
-    [
-      ["components/action/default", "desktop", "light"],
-      ["components/action/default", "desktop", "dark"],
-    ],
-  );
-  // A row without a desktop view keeps the views of the one-frame stage.
-  assert.equal(
-    canvasEditContexts(
-      data.views.filter((view) => view.viewport !== "desktop"),
-      "components/action/default",
-      stage,
-    ),
-    stage,
   );
 });
 

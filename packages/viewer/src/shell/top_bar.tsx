@@ -7,7 +7,8 @@
  * one scheme keeps its own preview scheme control in its head band or its
  * view controls. An embedded root passes the containers of its host's top-bar
  * slots, which the bar places in its columns. The search keys move focus to
- * the search field through the bar's handle.
+ * the search field through the bar's handle. The bar has no menu: the dock
+ * of the compact layout opens the catalogue's sheet.
  */
 
 import { useRef } from "react";
@@ -32,14 +33,12 @@ export function TopBar(props: {
   host?: TopBarHost;
 }) {
   const store = useShellStore();
-  const navigationId = useShellIdentifier("mb-nav");
   const searchId = useShellIdentifier("mb-search");
   const bar = useRef<TopBarHandle>(null);
   useSearchKeys(bar);
   const searchShortcut = useSearchShortcut();
   return (
     <TopBarView
-      drawerOpen={store.state.drawerOpen}
       end={
         store.context.embedded ? null : (
           <AppearanceSelect
@@ -50,8 +49,6 @@ export function TopBar(props: {
         )
       }
       host={props.host}
-      navigationId={navigationId}
-      onDrawer={(open) => store.setDrawer(open)}
       onSearch={(query) => store.setSearch(query)}
       query={store.state.query}
       ref={bar}

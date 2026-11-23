@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { awaitRoutedDetail } from "./comparison_ui.js";
 import { staticRequests } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
+import { openCatalogueSheet } from "./workspace_actions.js";
 
 for (const width of [390, 1440]) {
   test(`${width}px: current-only copies omit Changes and comparison controls despite saved or URL state`, async ({
@@ -21,10 +22,7 @@ for (const width of [390, 1440]) {
       await expect(
         page.getByRole("group", { name: "Comparison mode" }),
       ).toHaveCount(0);
-      if (width < 700)
-        await page
-          .getByRole("button", { name: "Open catalogue navigation" })
-          .click();
+      if (width < 700) await openCatalogueSheet(page);
       await expect(
         page.getByRole("navigation", { name: "Catalogue" }),
       ).toBeVisible();

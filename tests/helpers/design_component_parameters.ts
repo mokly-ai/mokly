@@ -6,6 +6,22 @@
 export const COMPONENT_PARAMETERS = new Map([
   ["--mbk-indent", "each catalogue row sets its own indent"],
   ["--mbk-nav-width", "a resizable catalogue column sets its own width"],
+  [
+    "--mbk-canvas-inset-top",
+    "the Canvas layout's root sets the room of its compact entry bar",
+  ],
+  [
+    "--mbk-canvas-inset-end",
+    "the Canvas layout's root sets the room of its right panel",
+  ],
+  [
+    "--mbk-canvas-inset-bottom",
+    "the Canvas layout's root sets the room of its compact dock",
+  ],
+  [
+    "--mbk-canvas-inset-start",
+    "the Canvas layout's root sets the room of its catalogue",
+  ],
   ["--inspector-height", "a resizable inspector sets its own height"],
   ["--inspector-tabs", "a static inspector sets the number of its tabs"],
   ["--inspector-tab", "each tab of a static inspector sets its own column"],

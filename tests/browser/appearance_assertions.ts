@@ -6,10 +6,6 @@ export const control = ".mbk-topbar [data-mokly-appearance-control]";
 
 export const select = "[data-mokly-appearance-select]";
 
-export const mobileFrame = ".mbk-frame-mobile iframe";
-
-export const desktopFrame = ".mbk-frame-desktop iframe";
-
 export const screen = "/view/example/screens/welcome/";
 
 /**

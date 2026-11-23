@@ -3,10 +3,7 @@ import { expect } from "@playwright/test";
 import {
   computedStyle,
   darkSurface,
-  desktopFrame,
   expectSchemeSelected,
-  mobileFrame,
-  overlayStyle,
   shellRoot,
   tourRow,
 } from "./browse_assertions.js";
@@ -96,26 +93,21 @@ test("each canvas frame keeps its own scheme and surface through the Appearance"
   await expectOwnSchemes();
 });
 
-test("dark device screens keep their surface and edge", async ({ page }) => {
-  // Device chrome stays on the one-frame stage below the layout breakpoint.
+test("the compact layout's dark frame keeps its surface and edge", async ({
+  page,
+}) => {
+  // Below the layout breakpoint one frame shows, in the preview scheme.
   await page.setViewportSize(NARROW_WINDOW);
   await page.goto(WELCOME);
-  const phoneScreen = ".mbk-frame-mobile .phone-screen";
-  expect(await overlayStyle(page, phoneScreen, "boxShadow")).toBe("none");
-
   await chooseScheme(page, "dark");
-  expect(await computedStyle(page, phoneScreen, "boxShadow")).toBe("none");
-  expect(await overlayStyle(page, phoneScreen, "position")).toBe("absolute");
-  expect(await overlayStyle(page, phoneScreen, "boxShadow")).toContain("inset");
-  expect(await computedStyle(page, mobileFrame, "backgroundColor")).toBe(
-    darkSurface,
+  const frame = page.locator(canvasFrame("mobile", "dark"));
+  await expect(frame).toBeVisible();
+  const clip = ".mbk-canvas-cell:not([hidden]) .mbk-canvas-frame-clip";
+  expect(await computedStyle(page, clip, "backgroundColor")).toBe(darkSurface);
+  // The ring and the lift keep the frame's edge on the canvas.
+  expect(await computedStyle(page, clip, "boxShadow")).toContain(
+    "0px 0px 0px 1px",
   );
-  expect(await computedStyle(page, desktopFrame, "backgroundColor")).toBe(
-    darkSurface,
-  );
-  expect(
-    await computedStyle(page, ".browser-viewport", "backgroundColor"),
-  ).toBe(darkSurface);
 });
 
 test("the viewport choice keeps the canvas frames mounted with their sources", async ({

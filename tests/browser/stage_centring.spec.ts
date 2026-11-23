@@ -1,61 +1,64 @@
-import { expect } from "@playwright/test";
+/**
+ * Below the layout breakpoint the compact layout fits a variant set's rows
+ * across the stage from its top, so its first and last frames stay on the
+ * stage, as the canvas fits and centres the set from 900px wide. A saved
+ * variant's route shows that row's frame alone, centred across the stage.
+ */
+
+import { expect, type Page } from "@playwright/test";
+
+import { FIT_MARGIN } from "../../packages/ui/src/canvas-stage/canvas-view.js";
 
 import { test } from "./browser_test.js";
 import { copiedStaticUrl } from "./static_test.js";
-import { chooseViewport, NARROW_WINDOW } from "./workspace_actions.js";
+import { NARROW_WINDOW } from "./workspace_actions.js";
 
-// The component stage below the layout breakpoint scrolls its rows; from
-// 900px wide the canvas fits and centres the variant set instead.
+/** The section's distance from each edge of the stage. */
+function insets(page: Page) {
+  return page.locator("[data-mokly-stage]").evaluate((canvas) => {
+    const box = (selector: string) =>
+      canvas.querySelector(selector)!.getBoundingClientRect();
+    const stage = box(".mbk-canvas-stage");
+    const section = box(".mbk-canvas-section");
+    return {
+      bottom: stage.bottom - section.bottom,
+      left: section.left - stage.left,
+      right: stage.right - section.right,
+      top: section.top - stage.top,
+    };
+  });
+}
+
+/** Whether the section stands on the stage, centred across it, at its top. */
+async function centredAtTop(page: Page): Promise<boolean> {
+  const { bottom, left, right, top } = await insets(page);
+  return (
+    Math.abs(left - right) <= 1 &&
+    Math.min(left, right, bottom) >= FIT_MARGIN - 1 &&
+    Math.abs(top - FIT_MARGIN) <= 1
+  );
+}
+
 for (const delivery of ["serve", "static"] as const) {
-  test(`${delivery}: below the layout breakpoint, overflowing component rows start at the stage edge and fitting rows stay centred`, async ({
+  test(`${delivery}: below the layout breakpoint, a variant set's rows fit across the stage from its top, and a saved variant's frame stays centred`, async ({
     page,
   }) => {
+    const origin = delivery === "static" ? copiedStaticUrl() : "";
     await page.setViewportSize(NARROW_WINDOW);
-    await page.goto(
-      `${delivery === "static" ? copiedStaticUrl() : ""}/view/example/components/action/`,
+    await page.goto(`${origin}/view/example/components/action/`);
+    const shown = page.locator(
+      "[data-mokly-stage] .mbk-canvas-cell:not([hidden]) iframe",
     );
-    await chooseViewport(page, "both");
-    const stage = page.locator(".mbk-component-stage");
-    const frames = stage.locator(".mbk-component-canvas:visible");
-    await expect(frames).toHaveCount(2);
-    const geometry = () =>
-      stage.evaluate((element) => {
-        const bounds = element.getBoundingClientRect();
-        const canvases = [
-          ...element.querySelectorAll<HTMLElement>(".mbk-component-canvas"),
-        ]
-          .filter((node) => node.offsetWidth > 0)
-          .map((node) => node.getBoundingClientRect());
-        return {
-          left: bounds.left,
-          right: bounds.right,
-          first: canvases[0]!.left,
-          last: canvases.at(-1)!.right,
-          width: element.clientWidth,
-          scrollWidth: element.scrollWidth,
-          scrollLeft: element.scrollLeft,
-          padding: parseFloat(getComputedStyle(element).paddingLeft),
-        };
-      });
-    const start = await geometry();
-    expect(start.scrollWidth).toBeGreaterThan(start.width);
-    expect(start.scrollLeft).toBe(0);
-    expect(start.first).toBeGreaterThanOrEqual(start.left);
-    expect(start.first - start.left).toBeCloseTo(start.padding, 0);
-    await stage.evaluate((element) => {
-      element.scrollLeft = element.scrollWidth;
-    });
-    const end = await geometry();
-    expect(end.scrollLeft).toBeGreaterThan(0);
-    expect(end.last).toBeLessThanOrEqual(end.right);
-    await chooseViewport(page, "mobile");
-    await expect(frames).toHaveCount(1);
-    await expect(stage).toHaveJSProperty("scrollLeft", 0);
-    const fitting = await geometry();
-    expect(fitting.scrollWidth).toBe(fitting.width);
-    expect(fitting.first - fitting.left).toBeCloseTo(
-      fitting.right - fitting.last,
-      0,
-    );
+    await expect(shown).toHaveCount(8);
+    await expect(
+      shown.and(page.locator('[data-mokly-frame-state="ready"]')),
+    ).toHaveCount(8);
+    // The frames take their measured sizes, and the canvas fits them again.
+    await expect.poll(() => centredAtTop(page)).toBe(true);
+
+    await page.goto(`${origin}/view/example/components/action/disabled/`);
+    await expect(shown).toHaveCount(1);
+    await expect(shown).toHaveAttribute("data-mokly-frame-state", "ready");
+    await expect.poll(() => centredAtTop(page)).toBe(true);
   });
 }

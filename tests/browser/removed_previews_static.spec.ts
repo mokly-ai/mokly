@@ -43,12 +43,16 @@ async function openRemoved(
   await page.goto(
     `/view/${entryPath}/?snapshot=${snapshotOf(index, entryPath)}`,
   );
-  // The section's head holds the Removed status and the quiet label.
+  // The section's head holds the Removed status and the quiet label, or in
+  // the compact layout, whose section has no head, the entry bar does.
   await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(
-    page.locator(STAGE).getByText("Removed", { exact: true }),
+    page
+      .locator(`${STAGE}, [data-entry-bar]`)
+      .getByText("Removed", { exact: true })
+      .filter({ visible: true }),
   ).toBeVisible();
   await expect(page.locator("#mb-main")).not.toContainText("was removed");
   await awaitRoutedDetail(page, entryPath);
@@ -82,10 +86,13 @@ for (const width of [390, 1280])
         ).toHaveText(heading);
       }
       // The base stylesheet still styles a previous version: the card that
-      // screens/former used keeps the Before colour, not the current one.
+      // screens/former used keeps the Before colour, not the current one. The
+      // compact layout shows the Mobile frame.
       await openRemoved(page, index, comparisonPaths.removedLightOnly);
       await expect(
-        screenFrame(page, "desktop").locator("article.accent"),
+        screenFrame(page, width < 900 ? "mobile" : "desktop").locator(
+          "article.accent",
+        ),
       ).toHaveCSS("color", accentColor.Before);
     });
 
@@ -103,8 +110,13 @@ for (const width of [390, 1280])
       await expect(
         page.locator(`${STAGE} :is(.phone-frame, .browser-frame)`),
       ).toHaveCount(0);
-      // Each frame shows its own viewport's previous document.
-      for (const viewport of ["desktop", "mobile"] as const) {
+      // Each frame shows its own viewport's previous document. The compact
+      // layout shows one frame at a time, which the entry bar's picker picks.
+      for (const viewport of ["mobile", "desktop"] as const) {
+        if (width < 900)
+          await page.getByRole("combobox", { name: "Frame" }).selectOption({
+            label: `${viewport === "desktop" ? "Desktop" : "Mobile"} · Light`,
+          });
         await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
           "Historical screen",
         );
@@ -151,7 +163,11 @@ for (const width of [390, 1280])
         page.frameLocator(`${STAGE} iframe`).locator("h1"),
       ).toHaveText("Historical page");
       await openRemoved(page, index, comparisonPaths.removedScreen);
-      for (const viewport of ["desktop", "mobile"] as const)
+      // The compact layout shows the Mobile frame alone; the preview still
+      // reads the document of each frame of the selected viewports.
+      const shown =
+        width < 900 ? (["mobile"] as const) : (["desktop", "mobile"] as const);
+      for (const viewport of shown)
         await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
           "Historical screen",
         );

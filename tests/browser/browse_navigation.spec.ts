@@ -15,7 +15,7 @@ import {
   expectFrameSource,
   chooseScheme,
   chooseViewport,
-  NARROW_WINDOW,
+  DOCUMENT_FRAME,
 } from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
@@ -159,8 +159,11 @@ test("logical activation stays host-owned during a frame source handoff", async 
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
+  // A screen's frames keep their own scheme; the appearance hands a Markdown
+  // document's reading frame the render of the chosen scheme in the same
+  // element. The example's workspace guide links the welcome screen.
   await page.route(
-    "**/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
+    "**/static/mokly-generated/example/workspace-guide/index.dark.html",
     async (route) => {
       reportRequest();
       await requestReleased;
@@ -169,30 +172,25 @@ test("logical activation stays host-owned during a frame source handoff", async 
   );
 
   try {
-    // The appearance swaps a frame's source on the one-frame stage, below the
-    // layout breakpoint; a canvas frame keeps its own scheme.
-    await page.setViewportSize(NARROW_WINDOW);
-    await page.goto(`${navigation.url}/view/fixture/nested/home/`);
-    await chooseViewport(page, "mobile");
+    await page.goto("/view/example/workspace-guide/");
+    const reading = page.locator(DOCUMENT_FRAME);
+    await expect(reading).toHaveAttribute("data-mokly-frame-state", "ready");
     await chooseScheme(page, "dark");
     await requestStarted;
-    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-      "data-mokly-frame-state",
-      "loading",
-    );
+    await expect(reading).toHaveAttribute("data-mokly-frame-state", "loading");
     await page
-      .frameLocator(".mbk-frame-mobile iframe")
-      .locator("#area-link")
+      .frameLocator(DOCUMENT_FRAME)
+      .getByRole("link", { name: "welcome screen", exact: true })
       .evaluate((element) =>
         element.dispatchEvent(
           new MouseEvent("click", { bubbles: true, cancelable: true }),
         ),
       );
 
-    await expectDestination(page);
+    await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
-    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+    await expect(page).toHaveURL(/\/view\/example\/workspace-guide\/$/);
+    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
   } finally {
     releaseRequest();
   }

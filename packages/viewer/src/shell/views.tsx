@@ -1,6 +1,8 @@
 // Route-owned main-region rendering for the persistent Mokly shell: the
-// home, missing-route, and target views, plus the title and
+// home, missing-route, and target views on the canvas, plus the title and
 // active-route helpers the document scaffold and progressive navigation use.
+// A target view's head and Details stand in the right panel, and the compact
+// layout's entry bar names its entry over the canvas.
 
 import { ChangeStatus } from "@mokly/ui/change-status";
 import {
@@ -8,8 +10,11 @@ import {
   MissingRouteState,
   RemovedState,
 } from "@mokly/ui/empty-state";
+import { EntryBar } from "@mokly/ui/entry-bar";
 import { MainRegion } from "@mokly/ui/shell-layout";
 
+import { usePreviousVersionLabel } from "./canvas_removed_section.js";
+import { useUseCasePick } from "./canvas_use_case_pick.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { DetailsPanel } from "./details.js";
@@ -24,9 +29,12 @@ import { useShellIdentifier } from "./identifier_context.js";
 import { PageEvidence } from "./page_evidence.js";
 import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
+import { publicEntryStatus } from "./public_workspace.js";
 import { useRetryContent } from "./retry_focus.js";
 import { useShellRoot } from "./root_context.js";
+import { RightPanel } from "./sheets.js";
 import { TargetStage } from "./stages.js";
+import { useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { ComponentWorkspace } from "./workspace.js";
 import { workspaceKey } from "./workspace_entry.js";
@@ -81,8 +89,22 @@ function TargetView(props: {
       ? pageComparisonEvidence(props.catalogue, target.entry.path)
       : undefined;
   const status = removed ? "Removed" : page?.status;
+  const colorScheme = useShellStore().state.selection.colorScheme;
+  // The compact layout shows one step of a use case, which the entry bar's
+  // picker picks, and names a removed entry's previous version while it shows.
+  const useCase = useUseCasePick(
+    props.catalogue,
+    removed ? undefined : target.entry,
+  );
+  const previous = usePreviousVersionLabel(preview, colorScheme);
+  // The entry bar stands for the canvas section's head, which names a use
+  // case's status too.
+  const barStatus =
+    target.entry.kind === "use-case" && !removed
+      ? publicEntryStatus(target.entry)
+      : status;
   const stage = preview ? (
-    <RemovedPreviewStage data={preview} />
+    <RemovedPreviewStage data={preview} onShown={previous.onShown} />
   ) : removed ? (
     <RemovedState kind="flow" />
   ) : (
@@ -90,29 +112,38 @@ function TargetView(props: {
       catalogue={props.catalogue}
       {...(props.fragment ? { fragment: props.fragment } : {})}
       target={props.target}
+      useCaseStep={useCase?.picked}
     />
   );
   return (
     <>
-      <ScreenHead
-        action={
-          <HeadActions
-            catalogue={props.catalogue}
-            embedded={props.context.embedded ?? false}
-            target={props.target}
-          />
-        }
-        crumbs={head.crumbs}
-        heading={head.title}
-        path={head.path}
-        status={status ? <ChangeStatus status={status} /> : undefined}
+      <EntryBar
+        picker={useCase?.picker}
+        quietLabel={previous.label}
+        status={barStatus ? <ChangeStatus status={barStatus} /> : undefined}
+        title={head.title}
       />
       {stage}
-      <DetailsPanel catalogue={props.catalogue} target={props.target}>
-        {page ? (
-          <PageEvidence base={props.context.base} evidence={page} />
-        ) : null}
-      </DetailsPanel>
+      <RightPanel>
+        <ScreenHead
+          action={
+            <HeadActions
+              catalogue={props.catalogue}
+              embedded={props.context.embedded ?? false}
+              target={props.target}
+            />
+          }
+          crumbs={head.crumbs}
+          heading={head.title}
+          path={head.path}
+          status={status ? <ChangeStatus status={status} /> : undefined}
+        />
+        <DetailsPanel catalogue={props.catalogue} target={props.target}>
+          {page ? (
+            <PageEvidence base={props.context.base} evidence={page} />
+          ) : null}
+        </DetailsPanel>
+      </RightPanel>
     </>
   );
 }
@@ -130,10 +161,10 @@ export function ShellMain(props: {
   return (
     <MainRegion id={mainId} ref={elements?.main}>
       {props.view.kind === "home" ? (
-        <HomeState summary={homeSummary(props.catalogue.publicModel)} />
+        <HomeState canvas summary={homeSummary(props.catalogue.publicModel)} />
       ) : null}
       {props.view.kind === "missing" ? (
-        <MissingRouteState requested={props.view.requested} />
+        <MissingRouteState canvas requested={props.view.requested} />
       ) : null}
       {props.view.kind === "target" ? (
         props.view.target.kind === "entry" &&

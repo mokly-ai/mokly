@@ -25,7 +25,7 @@ setting, as the `auto-appearance` sample does.
 
 | Group / slug                  | Variant names                                                                                                                                 |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| chrome / top-bar              | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                                                           |
+| chrome / top-bar              | `default`, `search`, `tag-picker`, `auto-appearance`                                                                                          |
 | chrome / catalogue-navigation | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants`, `folder-screen`, `changed-member` |
 | chrome / screen-header        | `screen`, `component`, `changed`, `removed`                                                                                                   |
 | chrome / appearance-selector  | `auto`, `light`, `dark`, `compact`                                                                                                            |
@@ -65,11 +65,11 @@ paths from the [design-link contract](./mokly-design-links.md), never raw URLs
 or guessed labels. The catalogue's resource and prop limits apply. Controls
 below use text, boolean, number and primitive enum selections only.
 
-1. **Top bar:** an optional query string; menu state `none/open/close`;
-   available tag records, optional active tag and picker-open flag; explicit
-   navigation destinations; and an `auto/light/dark` interface appearance that
-   falls back to the render context's scheme. Controls: query,
-   picker-open, menu state and appearance. The appearance setting is the
+1. **Top bar:** an optional query string; available tag records, optional
+   active tag and picker-open flag; explicit navigation destinations; and an
+   `auto/light/dark` interface appearance that falls back to the render
+   context's scheme. It draws no menu, as the shell's bar does. Controls:
+   query, picker-open and appearance. The appearance setting is the
    catalogue's own and is the design catalogue's only appearance control. This
    component owns it, so every artboard with a top bar draws it; screens do not
    opt in. The value defaults to the scheme the file was rendered for and is

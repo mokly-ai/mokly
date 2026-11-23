@@ -119,6 +119,41 @@ test("a variant set names its kind, and a reading frame takes the reading size",
   );
 });
 
+test("the compact layout's section has no head and leaves only the room of its frames' labels", () => {
+  const { container } = render(
+    <CanvasSection
+      compact
+      frames={[{ key: "set", column: 0, row: 0, node: <i>frame</i> }]}
+      kind="component"
+      path="example/components/action"
+      quietLabel="Showing previous version"
+      title="Action"
+    />,
+  );
+  const section = container.querySelector<HTMLElement>("section");
+  assert.equal(section?.getAttribute("data-canvas-compact"), "");
+  assert.equal(section?.querySelector(".mbk-canvas-section-head"), null);
+  assert.equal(section?.textContent, "frame");
+  assert.equal(section?.style.padding, "22px 0px 0px");
+  const frames = section?.querySelector<HTMLElement>(".mbk-canvas-frames");
+  assert.equal(frames?.style.rowGap, "34px");
+  assert.equal(frames?.style.columnGap, "16px");
+});
+
+test("the compact layout's use case section keeps the room of a step's label and description", () => {
+  const { container } = render(
+    <CanvasSection
+      compact
+      frames={[{ key: "step-0", column: 0, row: 0, node: <i>Welcome</i> }]}
+      kind="use-case"
+      path="example/tour"
+      title="Example tour"
+    />,
+  );
+  const section = container.querySelector<HTMLElement>("section");
+  assert.equal(section?.style.padding, "52px 0px 0px");
+});
+
 test("a use case's section has no kind tag and leaves room above its row for each step's description", () => {
   const { container } = render(
     <CanvasSection

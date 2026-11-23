@@ -1,8 +1,8 @@
 /**
  * On-demand React comparison controls inside the catalogue. This container
  * reads the comparison controller and its documents;
- * `@mokly/ui/comparison-stage` draws the comparison and
- * `@mokly/ui/comparison-toolbar` its band.
+ * `@mokly/ui/comparison-stage` draws the comparison on the canvas, and
+ * `@mokly/ui/comparison-toolbar` its band in the right panel.
  */
 
 import { useMemo, useRef } from "react";
@@ -24,14 +24,43 @@ import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
 import { useScrollTogether } from "./use_scroll_together.js";
 
-/** Render comparison chrome around a controller owned by the workspace. */
+/**
+ * The comparison band of a controller owned by the workspace: the compare
+ * modes, Scroll together and Refresh, which the right panel holds.
+ */
+export function ComparisonBand({
+  comparison,
+  eligible = true,
+}: {
+  comparison: ComparisonController;
+  eligible?: boolean;
+}) {
+  const together = useScrollTogether();
+  return (
+    <ComparisonToolbar
+      current={comparison.mode === "current"}
+      eligible={eligible}
+      loaded={comparison.loaded !== undefined}
+      mode={comparison.mode}
+      onMode={comparison.selectMode}
+      onRefresh={comparison.refresh}
+      onTogether={together.set}
+      together={together.on}
+    />
+  );
+}
+
+/**
+ * Render the comparison stage around a controller owned by the workspace:
+ * Current shows the canvas, and a compare mode its stage in the canvas's
+ * place.
+ */
 export function ControlledDiffScreen({
   children,
   compared,
   comparison,
   entryId,
   entryKind,
-  eligible = true,
   usingChanged,
 }: {
   children: ReactNode;
@@ -40,7 +69,6 @@ export function ControlledDiffScreen({
   comparison: ComparisonController;
   entryId: string;
   entryKind: ViewRouteKind;
-  eligible?: boolean;
   /** The axes keys of the routed views that use a changed component. */
   usingChanged?: ReadonlySet<string>;
 }) {
@@ -92,18 +120,6 @@ export function ControlledDiffScreen({
         ) : undefined
       }
       stageRef={stage}
-      toolbar={
-        <ComparisonToolbar
-          current={current}
-          eligible={eligible}
-          loaded={comparison.loaded !== undefined}
-          mode={comparison.mode}
-          onMode={comparison.selectMode}
-          onRefresh={comparison.refresh}
-          onTogether={together.set}
-          together={together.on}
-        />
-      }
     >
       {children}
     </ComparisonStage>

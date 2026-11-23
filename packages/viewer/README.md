@@ -288,7 +288,7 @@ and Review regressions against `mokly serve` of the example catalogue.
   [`src/shell/details.tsx`](./src/shell/details.tsx) — the containers of the
   inspector and the Details: the tabs, Escape anywhere in the shell root, and
   the metadata rows, whose catalogue lookups live in `details_rows.tsx`;
-  `inspector_resize.ts` sizes the inspector and its mobile sheet
+  `sheets.tsx` holds the right panel, its sheet, and the dock
 - [`src/shell/component_controls_panel.tsx`](./src/shell/component_controls_panel.tsx),
   [`src/shell/workspace_props.tsx`](./src/shell/workspace_props.tsx),
   [`src/shell/workspace_usage.tsx`](./src/shell/workspace_usage.tsx),
@@ -301,19 +301,18 @@ and Review regressions against `mokly serve` of the example catalogue.
   targets, drafts, and validation shared by the controls and their fields
 - [`src/shell/stage_frame.tsx`](./src/shell/stage_frame.tsx),
   [`src/shell/document_stage_frame.tsx`](./src/shell/document_stage_frame.tsx),
-  [`src/shell/public_stage.tsx`](./src/shell/public_stage.tsx), and
-  [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the containers of the
-  preview frames, the stages, a user flow's steps, and a removed entry's
-  previous version: they mount each frame, derive its sources, and pass its
-  `ref` and attributes to the package's `<iframe>`; `frames.tsx` holds the
-  expanded browser frame in the store
+  and [`src/shell/previews.tsx`](./src/shell/previews.tsx) — the mounts of the
+  canvas frames and the container of a removed entry's previous version: they
+  mount each frame, derive its sources, and pass its `ref` and attributes to
+  the package's `<iframe>`; `frames.tsx` draws the browser window of a
+  comparison's desktop pane, whose address the store copies
 - [`src/shell/views.tsx`](./src/shell/views.tsx),
   [`src/shell/workspace.tsx`](./src/shell/workspace.tsx),
   [`src/shell/embedded_viewer.tsx`](./src/shell/embedded_viewer.tsx), and
   [`src/standalone/shell.tsx`](./src/standalone/shell.tsx) — the containers of
   the shell layout: the main region, the workspace, an embedded root with its
-  host slots, and the standalone root, which carries the appearance, the
-  preview scheme, and the expanded window's mark; `src/viewer/component.tsx`
+  host slots, and the standalone root, which carries the appearance and the
+  preview scheme; `src/viewer/component.tsx`
   shows an
   embedded root's loading and failure states, and
   `src/shell/marker_layer.tsx` and `src/viewer/inspection_layer.tsx` place

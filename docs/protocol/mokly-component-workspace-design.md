@@ -12,8 +12,8 @@ and the scheme of each frame and its label. Highlighting has no separate
 horizontal band. Icons have accessible names, hover tooltips, selected states,
 and visible keyboard focus.
 
-The menu icon sits centered in its box, independent of text baselines. Icon
-boxes do not shrink; all glyphs are centered within their pointer targets.
+Icons sit centered in their boxes, independent of text baselines. Icon boxes
+do not shrink; all glyphs are centered within their pointer targets.
 
 The [canvas frames](./mokly-shell-device-chrome.md#canvas-frames) give each
 frame's size, its scale and its scrolling. A change of the Frames filter keeps

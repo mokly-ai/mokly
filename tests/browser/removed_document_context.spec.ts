@@ -13,7 +13,11 @@ import { expect } from "@playwright/test";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { chooseFilter, comparisonIndex, snapshotOf } from "./comparison_ui.js";
 import { documentFaces, loadedViewerFaces } from "./document_faces.js";
-import { DOCUMENT_FRAME } from "./workspace_actions.js";
+import {
+  DOCUMENT_FRAME,
+  openCatalogueSheet,
+  revealInPanel,
+} from "./workspace_actions.js";
 
 const CONTROLS = "[data-diff-stage], [data-diff-mode], [data-viewport-option]";
 
@@ -56,17 +60,16 @@ for (const width of [390, 1280])
         );
       await expect(page.locator("[data-mokly-preview-retry]")).toHaveCount(0);
       await expect(page.locator(CONTROLS)).toHaveCount(0);
-      // Details name the base-side folder too.
+      // Details name the base-side folder too; in the compact layout they
+      // stand in the panel's sheet.
+      await revealInPanel(page, page.locator("[data-mokly-details]"));
       await page.locator("[data-mokly-details] summary").click();
       const location = page.locator(".mbk-meta-row", {
         has: page.locator(".mbk-meta-k", { hasText: "Location" }),
       });
       await expect(location).toHaveText("LocationNotes");
 
-      if (width < 700)
-        await page
-          .getByRole("button", { name: "Open catalogue navigation" })
-          .click();
+      if (width < 700) await openCatalogueSheet(page);
       const removed = page.locator(
         `nav.mbk-nav [data-entry-id="${removedPath}"]`,
       );

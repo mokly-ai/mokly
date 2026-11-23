@@ -1,5 +1,6 @@
-/* The 48px top bar, in three columns: the start column holds the drawer menu,
-   the brand and a host's start slot, the centre column a host's centre slot,
+/* The 48px top bar, in three columns: the start column holds the brand and a
+   host's start slot, after the menu that a static depiction draws, the
+   centre column a host's centre slot,
    and the end column the catalogue search, the end control and a host's end
    slot. The two outer columns share the room that the centre column leaves,
    so the centre column sits in the middle. An embedded root gives that room
@@ -53,27 +54,6 @@
    embedded root opens the group over the whole bar. */
 .mbk-search-group {
   display: contents;
-}
-
-.mbk-menu {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  padding: 0;
-  border: 1px solid var(--chrome-border);
-  border-radius: 8px;
-  background: var(--chrome-surface);
-  color: var(--chrome-ink-2);
-  font-size: 14px;
-  cursor: pointer;
-}
-
-/* The picture of the menu in a static depiction acts on nothing. */
-span.mbk-menu {
-  cursor: default;
 }
 
 .mbk-search-toggle,
@@ -215,17 +195,13 @@ span.mbk-menu {
   margin-inline-start: -1px;
 }
 
-/* Below the breakpoint the menu opens the drawer, and the brand keeps only
-   its mark. The start column keeps the width of its content and the end
-   column takes the rest, so the search keeps its room down to a 320px
-   window. The key hint hides, which leaves that room to the query. */
+/* Below the breakpoint the brand keeps only its mark. The start column keeps
+   the width of its content and the end column takes the rest, so the search
+   keeps its room down to a 320px window. The key hint hides, which leaves
+   that room to the query. */
 @media (width < 56.25rem) {
   .mbk-topbar {
     grid-template-columns: auto auto minmax(0, 1fr);
-  }
-
-  .mbk-menu {
-    display: inline-flex;
   }
 
   .mbk-topbar[data-search] .mbk-name {

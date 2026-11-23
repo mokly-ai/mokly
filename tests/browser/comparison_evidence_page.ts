@@ -6,6 +6,8 @@
 
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { revealInPanel } from "./workspace_actions.js";
+
 /** The branch-point sentence starts so, and the copies name `fixture-base`. */
 const BRANCH_POINT = "Compared with the branch point";
 export const BASE = `${BRANCH_POINT} on fixture-base.`;
@@ -81,6 +83,8 @@ export async function openEvidence(
   base: string | null = BASE,
 ): Promise<Locator> {
   const tab = page.getByRole("tab", { name: "Details", exact: true });
+  // In the compact layout the inspector stands in the panel's sheet.
+  await revealInPanel(page, tab);
   if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
   await expect(tab).toHaveAttribute("aria-selected", "true");
   const evidence = page.locator("[data-workspace-evidence]");
@@ -94,6 +98,8 @@ export async function openEvidence(
  */
 export async function openPageEvidence(page: Page): Promise<Locator> {
   const details = page.locator("[data-mokly-details]");
+  // In the compact layout a page's Details stand in the panel's sheet.
+  await revealInPanel(page, details);
   await expect(details).toBeVisible();
   if (!(await details.evaluate((element) => element.hasAttribute("open"))))
     await details.locator("summary").click();

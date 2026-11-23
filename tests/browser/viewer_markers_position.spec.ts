@@ -17,7 +17,11 @@ import {
   setViewerMarkers,
   variantInstance,
 } from "./viewer_marker_test_helpers.js";
-import { canvasFrame, NARROW_WINDOW } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  NARROW_WINDOW,
+  viewportFrame,
+} from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -30,23 +34,21 @@ test.afterAll(async () => fixture?.close());
 for (const cross of [false, true]) {
   const adapter = cross ? "postMessage" : "same-origin";
 
-  // The one-frame stage below the layout breakpoint scrolls, scales its
-  // frames to the root and expands a frame; `viewer_markers_canvas.spec.ts`
-  // covers the canvas's pan, zoom and refit.
-  test(`${adapter} below the layout breakpoint, marker tracks outer scroll, resize and frame expansion without remounting`, async ({
+  // The compact layout below the layout breakpoint shows one frame, pans
+  // its canvas, shows the frame that the entry bar's picker names, and fits
+  // that frame to the root; `viewer_markers_canvas.spec.ts` covers the
+  // canvas's pan, zoom and refit from 900px wide.
+  test(`${adapter} below the layout breakpoint, marker tracks the canvas's pan, a picked frame and a resize without remounting`, async ({
     page,
   }) => {
     await page.setViewportSize(NARROW_WINDOW);
     await openMarkerViewer(page, fixture, cross);
-    await page.locator(".mbk-stage").evaluate((stage) => {
-      stage.style.height = "600px";
-      stage.style.flex = "none";
-    });
+    const shown = viewportFrame("mobile");
     const mobile = screenInstance(fixture, "mobile", "action");
     await setViewerMarkers(page, [{ id: "primary", instance: mobile }]);
     await expectMarkerState(page, "primary", "visible");
     await expect(page.locator("[data-mokly-marker]")).toHaveCount(1);
-    await expectMarkerAligned(page, "primary", 0, "Visible");
+    await expectMarkerAligned(page, "primary", shown, "Visible");
     expect(
       await page.evaluate(() =>
         window.viewerHarness
@@ -92,60 +94,65 @@ for (const cross of [false, true]) {
       window.viewerHarness.get("one").ref.current.cancelPick(),
     );
 
-    const firstTop = (await page
-      .locator('[data-mokly-marker="primary"]')
-      .boundingBox())!.y;
-    await page.locator(".mbk-stage").evaluate((stage) => {
-      stage.scrollTop = 40;
+    // A wheel over the canvas beside the frame pans it, and the marker with it.
+    const marker = (id: string) =>
+      page.locator(`[data-mokly-marker="${id}"]`).boundingBox();
+    const firstTop = (await marker("primary"))!.y;
+    const stage = await page
+      .locator("#one [data-mokly-stage] .mbk-canvas-stage")
+      .evaluate((element) => {
+        const { x, y } = element.getBoundingClientRect();
+        return { x, y };
+      });
+    await page.mouse.move(stage.x + 8, stage.y + 8);
+    await page.mouse.wheel(0, 40);
+    await expect
+      .poll(async () => Math.round((await marker("primary"))!.y - firstTop))
+      .toBe(-40);
+    await expectMarkerAligned(page, "primary", shown, "Visible");
+
+    // The picker shows the mounted Desktop frame, whose element stays.
+    const desktop = screenInstance(fixture, "desktop", "action");
+    await page
+      .locator(canvasFrame("desktop"))
+      .evaluate((frame: HTMLIFrameElement) => {
+        frame.dataset["markerIdentity"] = "retained";
+      });
+    await setViewerMarkers(page, [{ id: "desktop", instance: desktop }]);
+    await page
+      .locator("#one")
+      .getByLabel("Frame", { exact: true })
+      .selectOption({ label: "Desktop · Light" });
+    await expectMarkerState(page, "desktop", "visible");
+    await expectMarkerAligned(
+      page,
+      "desktop",
+      viewportFrame("desktop"),
+      "Visible",
+    );
+    await expect(
+      page.locator(
+        `${viewportFrame("desktop")}[data-marker-identity="retained"]`,
+      ),
+    ).toHaveCount(1);
+
+    // A smaller root fits the frame again at a smaller zoom.
+    const initialWidth = (await marker("desktop"))!.width;
+    await page.locator("#one").evaluate((element) => {
+      element.style.width = "600px";
     });
     await expect
-      .poll(
-        async () =>
-          (await page.locator('[data-mokly-marker="primary"]').boundingBox())
-            ?.y,
-      )
-      .toBeLessThan(firstTop - 10);
-
-    const desktop = screenInstance(fixture, "desktop", "action");
-    await page.evaluate((desktop) => {
-      const frame = document.querySelectorAll<HTMLIFrameElement>(
-        "iframe[data-mokly-fragment-frame]",
-      )[1]!;
-      frame.dataset["markerIdentity"] = "retained";
-      window.viewerHarness
-        .get("one")
-        .setMarkers([{ id: "desktop", instance: desktop }]);
-    }, desktop);
-    await expectMarkerState(page, "desktop", "visible");
+      .poll(async () => (await marker("desktop"))?.width)
+      .toBeLessThan(initialWidth * 0.9);
+    await expectMarkerAligned(
+      page,
+      "desktop",
+      viewportFrame("desktop"),
+      "Visible",
+    );
     await expect(
       page.locator('iframe[data-marker-identity="retained"]'),
     ).toHaveCount(1);
-    const initialWidth = (await page
-      .locator('[data-mokly-marker="desktop"]')
-      .boundingBox())!.width;
-    await page.locator("#one").evaluate((element) => {
-      element.style.width = "900px";
-    });
-    await expect
-      .poll(
-        async () =>
-          (await page.locator('[data-mokly-marker="desktop"]').boundingBox())
-            ?.width,
-      )
-      .toBeLessThan(initialWidth - 20);
-
-    await page.locator(".browser-expand").click();
-    await expect(page.locator(".mokly-viewer")).toHaveClass(/frame-expanded/);
-    await expect(page.locator("[data-mokly-marker-layer]")).toHaveCSS(
-      "z-index",
-      "952",
-    );
-    await expectMarkerState(page, "desktop", "visible");
-    await expectMarkerAligned(page, "desktop", 1, "Visible");
-    await page.locator(".browser-expand").click();
-    await expect(page.locator(".mokly-viewer")).not.toHaveClass(
-      /frame-expanded/,
-    );
   });
 
   test(`${adapter} markers distinguish in-frame visibility and nested scrolling`, async ({
@@ -227,10 +234,14 @@ for (const cross of [false, true]) {
     await expectMarkerState(page, "flow", "visible");
     await expectMarkerAligned(page, "flow", 1, "Visible");
     // A pan that moves the steps off the canvas hides the marker, and Fit
-    // shows it on its step again.
-    const stage = (await page
-      .locator("#one [data-mokly-stage]")
-      .boundingBox())!;
+    // shows it on its step again. The wheel turns over the stage, the canvas
+    // between the floating panels, whose box is invisible.
+    const stage = await page
+      .locator("#one [data-mokly-stage] .mbk-canvas-stage")
+      .evaluate((element) => {
+        const { height, x, y } = element.getBoundingClientRect();
+        return { height, x, y };
+      });
     await page.mouse.move(stage.x + 8, stage.y + 8);
     await page.mouse.wheel(0, stage.height * 4);
     await expectMarkerState(page, "flow", "hidden");

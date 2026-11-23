@@ -14,7 +14,7 @@ export const ZOOM_MIN = 0.08;
 export const ZOOM_MAX = 4;
 
 /** The factor of one Zoom in. Zoom out multiplies by its inverse, 0.8. */
-export const ZOOM_STEP = 1.25;
+const ZOOM_STEP = 1.25;
 
 /** The room that Fit leaves between the section and each edge of the stage. */
 export const FIT_MARGIN = 16;
@@ -57,7 +57,7 @@ export interface CanvasPoint {
 }
 
 /** Keep a zoom between 8% and 400%. */
-export function clampZoom(zoom: number): number {
+function clampZoom(zoom: number): number {
   if (Number.isNaN(zoom)) return ZOOM_MIN;
   return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom));
 }
@@ -76,10 +76,7 @@ function lengths(tracks: readonly CanvasTrack[]): {
 }
 
 /** The length of an axis at a zoom. */
-export function axisLength(
-  tracks: readonly CanvasTrack[],
-  zoom: number,
-): number {
+function axisLength(tracks: readonly CanvasTrack[], zoom: number): number {
   const { fixed, scaled } = lengths(tracks);
   return fixed + scaled * zoom;
 }
@@ -100,11 +97,22 @@ function centredStart(start: number, length: number, size: number): number {
 }
 
 /**
- * Fit: the largest zoom, up to 100%, at which the section fits the stage less
- * Fit's margins, with the section centred. A stage too small for the section
- * at 8% keeps 8%.
+ * Where Fit places the section along the block axis: centred on the stage,
+ * or at the stage's top, as the compact layout stands its frame below the
+ * entry bar.
  */
-export function fitView(extent: CanvasExtent, stage: CanvasRect): CanvasView {
+export type FitAlign = "centre" | "start";
+
+/**
+ * Fit: the largest zoom, up to 100%, at which the section fits the stage less
+ * Fit's margins, with the section centred, or centred across the stage and at
+ * its top. A stage too small for the section at 8% keeps 8%.
+ */
+export function fitView(
+  extent: CanvasExtent,
+  stage: CanvasRect,
+  align: FitAlign = "centre",
+): CanvasView {
   const zoom = clampZoom(
     Math.min(
       1,
@@ -115,7 +123,10 @@ export function fitView(extent: CanvasExtent, stage: CanvasRect): CanvasView {
   return {
     fitted: true,
     x: centredStart(stage.left, stage.width, axisLength(extent.columns, zoom)),
-    y: centredStart(stage.top, stage.height, axisLength(extent.rows, zoom)),
+    y:
+      align === "start"
+        ? stage.top + FIT_MARGIN
+        : centredStart(stage.top, stage.height, axisLength(extent.rows, zoom)),
     zoom,
   };
 }

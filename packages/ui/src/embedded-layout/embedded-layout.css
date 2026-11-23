@@ -56,6 +56,13 @@
   min-height: 0;
 }
 
+/* In the Canvas layout the rail host fills the floating catalogue, with the
+   host's rail slots above and below the navigation. */
+.mokly-viewer .mbk-float > .mbk-float-body > .mokly-rail-host {
+  flex: 1;
+  min-width: 0;
+}
+
 .mokly-viewer .mokly-stage-host {
   position: relative;
   flex: 1;
@@ -72,28 +79,28 @@
   display: none;
 }
 
+/* The stage overlay lies over the canvas and under the floating panels. */
 .mokly-viewer [data-mokly-slot="stageOverlay"] {
   position: absolute;
-  z-index: 10;
+  z-index: 9;
   overflow: hidden;
 }
 
+/* The marker and label layers lie over the canvas and its highlight masks,
+   and under the stage overlay and the canvas's floating chrome: the zoom
+   pill, the entry bar, the dock, the floating panels and the top bar cover
+   them, as they cover the frames. */
 .mokly-viewer [data-mokly-marker-layer],
 .mokly-viewer [data-mokly-label-layer] {
   display: block;
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 11;
+  z-index: 5;
 }
 
 .mokly-viewer [data-mokly-slot="markers"]:empty {
   display: block;
-}
-
-.mokly-viewer.frame-expanded
-  :is([data-mokly-marker-layer], [data-mokly-label-layer]) {
-  z-index: 952;
 }
 
 .mokly-viewer [data-mokly-slot="sidePanel"] {
@@ -144,7 +151,7 @@
 }
 
 @media (width < 56.25rem) {
-  .mokly-viewer .mokly-rail-host {
+  .mokly-viewer:not([data-canvas-layout]) .mokly-rail-host {
     width: 0;
   }
 }

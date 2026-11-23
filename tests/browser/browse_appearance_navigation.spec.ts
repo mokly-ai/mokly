@@ -7,7 +7,6 @@ import {
   detailsRow,
   expectSchemeSelected,
   face,
-  mobileFrame,
 } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import {
@@ -58,7 +57,7 @@ test("Appearance stays reachable at both widths", async ({ page }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await page.goto("/view/example/screens/welcome/");
   // Narrow, the control keeps its glyph and drops only its label, so search
-  // and the menu keep their room.
+  // keeps its room; the dock below holds Catalogue.
   await expect(page.locator(appearance)).toBeVisible();
   // The control renders every face and reveals the current one, so the word is
   // measured on the face the document is actually in.
@@ -66,11 +65,17 @@ test("Appearance stays reachable at both widths", async ({ page }) => {
     await computedStyle(page, `${appearance} ${face("auto")}`, "position"),
   ).toBe("absolute");
   await expect(page.locator(".mbk-search")).toBeVisible();
-  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
+  await expect(
+    page
+      .getByRole("group", { name: "Canvas controls" })
+      .getByRole("button", { name: "Catalogue" }),
+  ).toBeVisible();
 
+  // The compact layout's one frame follows the preview scheme.
   await chooseScheme(page, "dark");
+  await expect(page.locator(canvasFrame("mobile", "dark"))).toBeVisible();
   await expectFrameSource(
-    page.locator(mobileFrame),
+    page.locator(canvasFrame("mobile", "dark")),
     /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
   );
 

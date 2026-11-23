@@ -13,7 +13,6 @@ export default defineConfig({
     "component_design_selection",
     "component_evidence",
     "component_fragments",
-    "component_surfaces",
     "component_workspace",
     "design_comparison_stacks",
     "design_component_stacks",

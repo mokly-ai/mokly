@@ -42,7 +42,7 @@ export interface CanvasCell {
  * The section's padding: the head stands in the top padding, and each
  * frame's label in the padding or the gap above the frame.
  */
-export const SECTION_PADDING = {
+const SECTION_PADDING = {
   bottom: 22,
   left: 22,
   right: 22,
@@ -65,7 +65,7 @@ export function sectionPadding(kind: CanvasSectionKind): CanvasPadding {
 }
 
 /** The gaps between the columns and the rows of each kind of section. */
-export const SECTION_GAPS: Readonly<
+const SECTION_GAPS: Readonly<
   Record<CanvasSectionKind, { column: number; row: number }>
 > = {
   component: { column: 40, row: 64 },
@@ -73,6 +73,50 @@ export const SECTION_GAPS: Readonly<
   screen: { column: 44, row: 48 },
   "use-case": { column: 44, row: 48 },
 };
+
+/**
+ * The padding of a section in the compact layout, which draws no box and no
+ * head: only the room of the frames' labels above them.
+ */
+const COMPACT_PADDING = {
+  bottom: 0,
+  left: 0,
+  right: 0,
+  top: 22,
+} as const;
+
+/**
+ * The compact padding of each kind of section. A use case's step frame
+ * keeps the room of its taller label and of its description above it.
+ */
+function compactPadding(kind: CanvasSectionKind): CanvasPadding {
+  return kind === "use-case"
+    ? { ...COMPACT_PADDING, top: 52 }
+    : COMPACT_PADDING;
+}
+
+/** The gaps of a section in the compact layout, such as a whole variant set. */
+const COMPACT_GAPS: Readonly<
+  Record<CanvasSectionKind, { column: number; row: number }>
+> = {
+  component: { column: 16, row: 34 },
+  document: { column: 0, row: 0 },
+  screen: { column: 16, row: 34 },
+  "use-case": { column: 16, row: 34 },
+};
+
+/** The padding and the gaps of a section, in its layout's form. */
+export function sectionSpacing(
+  kind: CanvasSectionKind,
+  compact: boolean,
+): {
+  gaps: { column: number; row: number };
+  padding: CanvasPadding;
+} {
+  return compact
+    ? { gaps: COMPACT_GAPS[kind], padding: compactPadding(kind) }
+    : { gaps: SECTION_GAPS[kind], padding: sectionPadding(kind) };
+}
 
 /** The widest reading frame, a comfortable measure for a document. */
 export const READING_MAX_WIDTH = 760;
@@ -83,16 +127,13 @@ const READING_MIN = { height: 160, width: 240 } as const;
 /**
  * The nominal size of a reading frame on a stage: the stage's room less
  * Fit's margins and the section's padding, up to the widest reading frame,
- * so a fitted reading frame shows its document at 100%.
+ * so a fitted reading frame shows its document at 100%. In the compact
+ * layout the frame takes the canvas's width.
  */
-export function readingSize(stage: CanvasSize): CanvasSize {
-  const width =
-    stage.width - 2 * FIT_MARGIN - SECTION_PADDING.left - SECTION_PADDING.right;
-  const height =
-    stage.height -
-    2 * FIT_MARGIN -
-    SECTION_PADDING.top -
-    SECTION_PADDING.bottom;
+export function readingSize(stage: CanvasSize, compact = false): CanvasSize {
+  const { padding } = sectionSpacing("document", compact);
+  const width = stage.width - 2 * FIT_MARGIN - padding.left - padding.right;
+  const height = stage.height - 2 * FIT_MARGIN - padding.top - padding.bottom;
   return {
     height: Math.max(READING_MIN.height, Math.floor(height)),
     width: Math.min(
@@ -137,6 +178,7 @@ export function sectionExtent(
   kind: CanvasSectionKind,
   cells: readonly CanvasCell[],
   reading: CanvasSize,
+  compact = false,
 ): CanvasExtent {
   const sized = cells
     .filter((cell) => !cell.hidden)
@@ -146,8 +188,7 @@ export function sectionExtent(
       row: cell.row,
       width: kind === "document" ? reading.width : (cell.width ?? 0),
     }));
-  const gaps = SECTION_GAPS[kind];
-  const padding = sectionPadding(kind);
+  const { gaps, padding } = sectionSpacing(kind, compact);
   return {
     columns: axis(
       padding.left,
