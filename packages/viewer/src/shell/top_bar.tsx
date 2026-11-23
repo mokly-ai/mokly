@@ -6,14 +6,22 @@
  * because the canvas shows both preview schemes at once. A view that shows
  * one scheme keeps its own preview scheme control in its head band or its
  * view controls. An embedded root passes the containers of its host's top-bar
- * slots, which the bar places in its columns.
+ * slots, which the bar places in its columns. The search keys move focus to
+ * the search field through the bar's handle.
  */
 
-import { TopBar as TopBarView, type TopBarHost } from "@mokly/ui/top-bar";
+import { useRef } from "react";
+
+import {
+  TopBar as TopBarView,
+  type TopBarHandle,
+  type TopBarHost,
+} from "@mokly/ui/top-bar";
 
 import { AppearanceSelect, type AppearanceState } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
 import { useShellIdentifier } from "./identifier_context.js";
+import { useSearchKeys } from "./search_keys.js";
 import { useShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
 
@@ -26,6 +34,8 @@ export function TopBar(props: {
   const store = useShellStore();
   const navigationId = useShellIdentifier("mb-nav");
   const searchId = useShellIdentifier("mb-search");
+  const bar = useRef<TopBarHandle>(null);
+  useSearchKeys(bar);
   return (
     <TopBarView
       drawerOpen={store.state.drawerOpen}
@@ -43,6 +53,7 @@ export function TopBar(props: {
       onDrawer={(open) => store.setDrawer(open)}
       onSearch={(query) => store.setSearch(query)}
       query={store.state.query}
+      ref={bar}
       searchId={searchId}
       tagPicker={<SearchTagPicker tags={props.catalogue.tags} />}
     />
