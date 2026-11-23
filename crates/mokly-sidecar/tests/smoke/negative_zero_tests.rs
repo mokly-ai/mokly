@@ -22,6 +22,7 @@ fn negative_zero_survives_definitions_and_render_requests() {
         .unwrap();
     let MethodResult::Bundle(bundled) = pool
         .request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: Bundle {
                 vite: false,

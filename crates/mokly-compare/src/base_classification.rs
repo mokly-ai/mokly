@@ -102,11 +102,14 @@ impl Changes {
 
     fn prepare_attempt(&self, request: &BaseRetentionRequest<'_>) -> Result<Attempt> {
         let commit = &request.selected.commit;
-        let sources = self.sources.create(
-            request.selected.repository.clone(),
-            commit.clone(),
-            &request.working_config.repo_root,
-        )?;
+        let sources = match self.provider.historical_sources(request)? {
+            Some(sources) => sources,
+            None => self.sources.create(
+                request.selected.repository.clone(),
+                commit.clone(),
+                &request.working_config.repo_root,
+            )?,
+        };
         let failures = sources.failures.clone();
         let prepared = self.provider.prepare(&BaseRequest {
             head: request.head,
@@ -133,7 +136,10 @@ impl Changes {
                 return Err(base_error(&commit.to_string(), scripts_off, *error.source));
             }
         };
-        let captured = self.comparison.capture_base(prepared.generation);
+        let captured = {
+            let _prefetch = prepared.prefetch;
+            self.comparison.capture_base(prepared.generation)
+        };
         if let Some(source) = failures.failure() {
             return Err(base_error(
                 &commit.to_string(),

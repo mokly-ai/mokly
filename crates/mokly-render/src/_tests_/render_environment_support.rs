@@ -118,7 +118,7 @@ pub(super) fn result(dependency_root: &str, react: &str) -> results::Bundle {
             metadata_directories: BTreeMap::new(),
         }),
         generation: "generation".into(),
-        modules: Vec::new(),
+        modules: Default::default(),
     }
 }
 

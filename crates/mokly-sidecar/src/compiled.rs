@@ -222,7 +222,7 @@ pub struct RestoreGeneration {
     /// Original side and resolution settings.
     pub params: Bundle,
     /// Module graph, stored once outside the compiled program.
-    pub modules: Vec<Module>,
+    pub modules: Arc<Vec<Module>>,
     /// Immutable compilation.
     pub compiled: Arc<CompiledGeneration>,
 }

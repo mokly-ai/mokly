@@ -2,14 +2,12 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::resolution::Resolution;
-use mokly_css::types::{StylesheetBundler, StylesheetRoot};
+use mokly_css::types::StylesheetRoot;
 use mokly_css::vite;
 
-use crate::error::{RenderError, Result};
 use crate::leases::ContextLease;
 use crate::postcss::PostCss;
 use crate::postcss_turns::Turns;
@@ -17,14 +15,36 @@ use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
 use crate::stylesheet_cache::CachedStylesheets;
-use crate::stylesheet_compiler::{CapturingCompiler, RootCompiler, ViteRootCompiler};
+use crate::stylesheet_compiler::{
+    CapturingCompiler, RootCompiler, StylesheetPreparation, ViteRootCompiler,
+};
 use crate::vite_stylesheets::ViteStylesheets;
 
-pub(crate) fn compiler(
+/// Stylesheet services and context ownership for one attempt.
+pub(crate) struct StylesheetAttempt {
+    /// Compilation and its retained preparation probe.
+    pub(crate) compiler: Arc<dyn StylesheetPreparation>,
+    /// Optional PostCSS context shared with the compiler.
+    pub(crate) context: Option<Arc<ContextLease>>,
+}
+
+impl StylesheetAttempt {
+    /// Retire a used context after successful Serve head preparation when every root remains.
+    pub(crate) fn retire_used(&self) {
+        if let Some(context) = &self.context
+            && context.used_live()
+            && self.compiler.kept_every_record()
+        {
+            context.retire();
+        }
+    }
+}
+
+pub(crate) fn attempt(
     runtime: &Runtime,
     config: &ResolvedConfig,
     side: &SideInputs,
-) -> Arc<dyn StylesheetBundler> {
+) -> StylesheetAttempt {
     let tree = sources::reader(runtime, config, side);
     let module_resolution = &side.module_resolution;
     let resolution = Resolution {
@@ -38,33 +58,6 @@ pub(crate) fn compiler(
             .collect(),
         extensions: module_resolution.resolve_extensions.clone(),
     };
-    let postcss = config.postcss().filter(|_| !config.vite()).map(|module| {
-        Arc::new(PostCss {
-            usage: runtime.dependency_usage.clone(),
-            lease: Arc::new(ContextLease {
-                id: side.context.clone(),
-                pool: runtime.pool.clone(),
-                released: {
-                    let mut cache = runtime
-                        .css
-                        .lock()
-                        .unwrap_or_else(|error| error.into_inner());
-                    cache.purge();
-                    cache.releases.clone()
-                },
-                used: AtomicBool::new(false),
-            }),
-            pool: runtime.pool.clone(),
-            tree: tree.clone(),
-            inventory_tree: runtime.inventory_tree.clone(),
-            root: config.repo_root.clone(),
-            side: side.clone(),
-            module,
-            cache: runtime.css.clone(),
-            turns: Turns::default(),
-            module_digests: Default::default(),
-        })
-    });
     let mut settings = format!(
         "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
         config.input,
@@ -78,6 +71,37 @@ pub(crate) fn compiler(
         settings.push_str(":vite:");
         settings.push_str(&side.source_root.to_string_lossy());
     }
+    let postcss = config.postcss().filter(|_| !config.vite()).map(|module| {
+        let released = {
+            let mut cache = runtime
+                .css
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            cache.purge();
+            cache.releases.clone()
+        };
+        let lease = Arc::new(ContextLease::new(
+            side.context.clone(),
+            settings.clone(),
+            runtime.pool.clone(),
+            released,
+        ));
+        runtime.track_head_context(&lease);
+        Arc::new(PostCss {
+            usage: runtime.dependency_usage.clone(),
+            lease,
+            pool: runtime.pool.clone(),
+            tree: tree.clone(),
+            inventory_tree: runtime.inventory_tree.clone(),
+            root: config.repo_root.clone(),
+            side: side.clone(),
+            module,
+            cache: runtime.css.clone(),
+            turns: Turns::default(),
+            module_digests: Default::default(),
+        })
+    });
+    let context = postcss.as_ref().map(|postcss| postcss.lease.clone());
     let base = CapturingCompiler {
         tree: tree.clone(),
         root: config.repo_root.clone(),
@@ -87,6 +111,7 @@ pub(crate) fn compiler(
             .watch_stylesheets
             .then(|| runtime.inventory_tree.clone()),
         side: side.clone(),
+        deferred_sources: Some(tree.clone()),
     };
     let compiler: Arc<dyn RootCompiler> = if config.vite() {
         Arc::new(ViteRootCompiler {
@@ -96,7 +121,7 @@ pub(crate) fn compiler(
     } else {
         Arc::new(base)
     };
-    Arc::new(
+    let compiler = Arc::new(
         CachedStylesheets::new(
             compiler,
             tree,
@@ -105,7 +130,8 @@ pub(crate) fn compiler(
             runtime.styles.clone(),
         )
         .with_head(runtime.head_styles.clone().unwrap_or_default()),
-    )
+    );
+    StylesheetAttempt { compiler, context }
 }
 
 #[tracing::instrument(name = "graph.prepare.stylesheet-roots", skip_all)]
@@ -118,35 +144,7 @@ pub(crate) fn roots(
     scan_roots(modules, renderer, entries, loaders, false)
 }
 
-pub(crate) fn prepare_roots(
-    modules: &BTreeMap<String, Vec<String>>,
-    renderer: Option<&str>,
-    entries: &[String],
-    loaders: &BTreeMap<String, String>,
-    vite: Option<&dyn StylesheetBundler>,
-) -> Result<Vec<StylesheetRoot>> {
-    let Some(compiler) = vite else {
-        return Ok(roots(modules, renderer, entries, loaders));
-    };
-    let mut roots = scan_roots(modules, renderer, entries, loaders, true);
-    if let Some(root) = roots
-        .first()
-        .filter(|root| Some(root.path.as_str()) == renderer)
-    {
-        let dependencies = match compiler.bundle(root) {
-            Ok(bundle) => bundle.dependency_digests,
-            Err(source) => return Err(RenderError::Css { source }),
-        };
-        for root in roots.iter_mut().skip(1) {
-            root.stylesheets
-                .retain(|path| !dependencies.contains_key(path));
-        }
-        roots.retain(|root| !root.stylesheets.is_empty());
-    }
-    Ok(roots)
-}
-
-fn scan_roots(
+pub(crate) fn scan_roots(
     modules: &BTreeMap<String, Vec<String>>,
     renderer: Option<&str>,
     entries: &[String],

@@ -28,6 +28,7 @@ impl Display for Call {
             }
             Self::TransformViteCss(value) => write!(formatter, "Vite for {}", value.stylesheet),
             Self::Bindings(value) => write!(formatter, "bindings {}", value.generation),
+            Self::PrepareContext(value) => write!(formatter, "prepareContext {}", value.context),
             Self::DisposeContext(value) => write!(formatter, "disposeContext {}", value.context),
             Self::CssModules(value) => write!(formatter, "cssModules {}", value.generation),
             Self::Dispose(value) => write!(formatter, "dispose {}", value.generation),

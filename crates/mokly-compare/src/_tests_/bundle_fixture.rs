@@ -25,7 +25,7 @@ pub(crate) fn restore() -> RestoreGeneration {
     RestoreGeneration {
         generation: "generation".into(),
         params: params(),
-        modules: vec![],
+        modules: Default::default(),
         compiled: Arc::new(CompiledGeneration {
             toolchain: "toolchain".into(),
             metadata_identity: None,

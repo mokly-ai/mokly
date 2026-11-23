@@ -13,6 +13,8 @@ import type { FrameAdapter, FrameErrorCode, FrameEvent } from "@mokly/frame";
 import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
+import { sameJsonValue } from "../catalogue/json_values.js";
+
 import { runCleanup } from "./cleanup.js";
 import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
@@ -189,10 +191,8 @@ export function useMountedShellFrame(input: MountedFrameInput): {
       if (layoutChanged)
         void registry?.geometry.refresh().catch(() => undefined);
     }
-    if (session.usage !== input.usage)
-      void (registry
-        ? adoptUsage(registry, session, input.usage, replace, setStatus)
-        : undefined);
+    if (registry && !sameJsonValue(session.usage, input.usage))
+      void adoptUsage(registry, session, input.usage, replace, setStatus);
   }, [input.identity, input.layout, input.sources, input.usage, registry]);
 
   return { frameRef, retry: replace, status };

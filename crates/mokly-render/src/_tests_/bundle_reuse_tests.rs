@@ -43,7 +43,7 @@ fn fresh() -> results::Bundle {
         epoch: 9,
         cache: None,
         compile_count: 1,
-        modules: vec![],
+        modules: Default::default(),
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),

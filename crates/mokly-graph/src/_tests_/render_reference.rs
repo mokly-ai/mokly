@@ -111,7 +111,11 @@ pub(super) fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> RenderKeys 
         );
         modules.insert(module.to_owned(), key);
     }
-    RenderKeys { modules, fallback }
+    RenderKeys {
+        modules,
+        fallback,
+        reuse: None,
+    }
 }
 
 /// Whether a name is the manifest of a runtime package other than React.

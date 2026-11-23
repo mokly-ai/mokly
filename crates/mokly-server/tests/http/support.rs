@@ -269,7 +269,11 @@ impl Harness {
 }
 
 pub fn headers(response: &reqwest::Response) {
-    assert_eq!(response.headers()["cache-control"], "no-store");
+    headers_with_cache(response, "no-store");
+}
+
+pub fn headers_with_cache(response: &reqwest::Response, expected: &str) {
+    assert_eq!(response.headers()["cache-control"], expected);
     assert_eq!(response.headers()["x-content-type-options"], "nosniff");
     assert!(
         response

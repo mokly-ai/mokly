@@ -1,5 +1,6 @@
 //! Launch directories stay fixed across head/base work and generation restoration.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -8,6 +9,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::methods::{Bundle, Call, Generation, ProcessCss, RenderPage};
 use crate::pool::{Pool, SidecarPool};
 use crate::pool_options::{Launch, PoolOptions};
+use crate::postcss_preparation::PrepareContext;
 use crate::wire::MethodResult;
 use crate::workers::{ControlMock, FactoryMock, Spawned, WorkerMock};
 
@@ -108,6 +110,78 @@ fn changing_source_roots_kills_the_old_process_before_spawning_in_the_new_root()
             Event::Kill("/base".into()),
             Event::Spawn("/head".into()),
             Event::Kill("/head".into()),
+        ]
+    );
+}
+
+#[test]
+fn a_public_prepare_context_spawns_in_its_root_and_its_stylesheet_reaches_that_process() {
+    let launches = Arc::new(Mutex::new(Vec::new()));
+    let calls = Arc::new(Mutex::new(Vec::new()));
+    let (observed, received) = (launches.clone(), calls.clone());
+    let factory = Unimock::new(
+        FactoryMock::spawn
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, launch| {
+                let process = {
+                    let mut launches = observed.lock().unwrap();
+                    launches.push(launch.repository.clone());
+                    launches.len()
+                };
+                let received = received.clone();
+                let worker = Unimock::new((
+                    WorkerMock::handshake
+                        .next_call(matching!(_))
+                        .returns(Ok(())),
+                    WorkerMock::request
+                        .each_call(matching!(_, _))
+                        .answers_arc(Arc::new(move |_, request, _| {
+                            received
+                                .lock()
+                                .unwrap()
+                                .push((process, request.call.to_string()));
+                            Ok(MethodResult::Empty)
+                        })),
+                    WorkerMock::resident_bytes
+                        .each_call(matching!())
+                        .answers(&|_| Ok(0)),
+                    ControlMock::kill.next_call(matching!()).returns(Ok(())),
+                ));
+                Ok(Spawned {
+                    worker: Box::new(worker.clone()),
+                    control: Arc::new(worker),
+                })
+            })),
+    );
+    let pool = pool(factory, 1);
+    pool.request(Call::PrepareContext(PrepareContext {
+        context: "/base".into(),
+        postcss: "postcss.mjs".into(),
+        source_root: "/base".into(),
+        repository_roots: vec![],
+        module_resolution: Default::default(),
+    }))
+    .unwrap();
+    {
+        let state = pool.lock();
+        let context = BTreeSet::from(["/base".to_owned()]);
+        assert_eq!(*launches.lock().unwrap(), [Path::new("/base")]);
+        assert_eq!(state.contexts, context);
+        assert_eq!(state.slots[0].as_ref().unwrap().contexts, context);
+        let affinity = &state.affinity["/base"];
+        assert_eq!(
+            (affinity.index, affinity.source_root.as_path()),
+            (0, Path::new("/base"))
+        );
+    }
+    pool.request(css("/base")).unwrap();
+    pool.abort().unwrap();
+    assert_eq!(*launches.lock().unwrap(), [Path::new("/base")]);
+    assert_eq!(
+        *calls.lock().unwrap(),
+        [
+            (1, "prepareContext /base".to_owned()),
+            (1, "postcss.mjs for style.css".to_owned())
         ]
     );
 }

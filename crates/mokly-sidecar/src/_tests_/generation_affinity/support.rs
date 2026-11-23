@@ -85,7 +85,7 @@ pub(super) fn pool(slots: &[(&str, Loaded)]) -> Pool {
         state.epochs.insert("g".into(), 7);
         state.bundles.insert("g".into(), bundle("/head"));
         state.compiled.insert("g".into(), Arc::new(compiled("g")));
-        state.modules.insert("g".into(), vec![]);
+        state.modules.insert("g".into(), Default::default());
         state.maps.insert("g".into(), maps());
         state.bindings.insert("g".into(), Arc::new(bindings()));
         for (index, (root, loaded)) in slots.iter().enumerate() {

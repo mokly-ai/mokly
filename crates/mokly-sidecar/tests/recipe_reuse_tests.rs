@@ -37,6 +37,7 @@ impl Diagnostics for Counts {
 fn bundle(pool: &Pool, params: &Bundle) -> results::Bundle {
     let MethodResult::Bundle(result) = pool
         .request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: params.clone(),
             capture: None,
@@ -115,6 +116,8 @@ fn a_released_recipe_skips_esbuild_after_a_revert_and_changed_inputs_compile() {
         "a released recipe must skip esbuild"
     );
     assert_eq!(reverted.generation, original.generation);
+    assert!(Arc::ptr_eq(&reverted.compiled, &original.compiled));
+    assert_eq!(reverted.modules.as_ptr(), original.modules.as_ptr());
     pool.release_generation(&reverted.generation, reverted.epoch);
     fs::write(&entry, "export const value = 'Z';").unwrap();
     let changed = bundle(&pool, &params);

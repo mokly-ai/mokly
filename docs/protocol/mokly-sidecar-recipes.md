@@ -6,7 +6,7 @@ These rules belong to the `bundle` and `restoreGeneration` requests of the
 
 ## Compiled Recipe
 
-Every private `bundle` result carries `compiled`: code, runtime import key,
+Every full `bundle` result carries `compiled`: code, runtime import key,
 captured entry text, resolved peers, physical input digests, logical metadata
 digests, reuse evidence, the toolchain identity, and the compilation identity.
 A compilation with complete reuse evidence also carries the optional
@@ -20,9 +20,9 @@ the toolchain identity, and only when the reuse evidence is also stable and the
 toolchain identity is known. Without them, the render store neither reads nor
 writes the documents that depend on that compilation.
 `restoreGeneration` installs that recipe with its original parameters, module
-graph, and evaluated generation id. The bundle result carries the graph once. It
-reads no current source file and invokes no compiler. Peer packages retain the
-selected physical installation. Failed peer resolutions remain explicit and
+graph, and evaluated generation id. It reads no current source file and invokes
+no compiler. A full bundle result carries the graph once. Peer packages retain
+the selected physical installation. Failed peer resolutions remain explicit and
 raise `MODULE_NOT_FOUND`; native fallback cannot bypass that failure. Equal
 compilations keep independent maps, bindings, and authoring registrations. A
 `restoreGeneration` envelope above the [frame limit](./mokly-sidecar.md) fails
@@ -121,11 +121,14 @@ marked or not, gets a fresh identity at each compile, also when the sidecar
 drops its evidence to fit the frame limit. The binary then never reuses the
 definitions of an earlier generation for it. A complete compilation keeps a
 deterministic identity.
-Decision: a reuse check compares recorded digests, directory entries, and link
-targets with the filesystem, so it copies no resolver rule. A second resolve
-with esbuild was rejected, because it runs an esbuild operation on each reuse.
-Package-manager install state files were rejected, because a manual link change
-keeps them.
+Decision: a reuse check of a compilation compares recorded digests, whole
+directory entries, and link targets with the filesystem, so it copies no
+resolver rule. A second resolve with esbuild was rejected, because it runs an
+esbuild operation on each reuse. Package-manager install state files were
+rejected, because a manual link change keeps them. The plan check of a Serve
+edit reuses no compilation. The
+[Serve edit plan rules](./mokly-sidecar-plans.md#candidate-names) define its
+own comparison.
 
 A marked compilation is reused only by a `serveEdit` request. Its reuse
 checks are the live checks alone: equal settings, equal resolved roots, an
@@ -174,39 +177,13 @@ The [package folder reuse rules](./mokly-sidecar-folder-reuse.md) add the live
 checks and the private folder files of each import that esbuild selects
 through a package folder mapping, and the fallback at the metadata bounds.
 
+## Restored Reuse
+
+See [Sidecar Restored Reuse](./mokly-sidecar-restored-reuse.md).
+
 ## Released Recipes
 
-Each `bundle` call starts an unevaluated lifetime, also when the content id
-matches an earlier evaluated lifetime. The core installs its maps,
-description, and bindings before rendering. Releasing a generation or a
-PostCSS context reaches every process that used it and starts no sidecar.
-
-After the final graph or request releases a captured compilation or a marked
-one, the pool keeps its recipe in memory for later `bundle` calls. The pool
-keeps at most one released recipe for each set of bundle settings: the last one
-released. The pool compares settings without the evaluation digest. A later
-`bundle` call can reuse that recipe. Equal settings, equal resolved roots, and
-the input rules above are the only reuse checks, for released, stored, and live
-compilations alike.
-
-The pool counts each released recipe at the size of its serialized
-`restoreGeneration` envelope. The released recipes of one pool use at most 64
-MiB in total, the value of the frame limit. A release of an unmarked incomplete
-recipe or of a recipe above that bound removes the older released recipe of
-equal settings and keeps nothing. When a new recipe takes the total above the
-bound, the pool removes the least recently used recipes until the total fits.
-The pool discards every released recipe when it stops: on shutdown,
-cancellation, and forced termination. A release after the stop keeps nothing.
-
-Decision: the pool keeps the last released recipe of each set of bundle
-settings, in practice one head and one base recipe. The bound equals the
-frame limit, so every recipe that a sidecar can restore fits. In a measured
-Serve session with two edits and two reverts, this served all 6 of 10
-bundles that repeated an earlier compile, with about 6.4 MiB of recipes.
-Stores of many recipes within 16, 32, or 64 MiB were rejected. A `bundle`
-call restores only one released recipe of its settings, so older recipes
-would hold memory and never serve a bundle. A 128 MiB bound was rejected,
-because it differs from 64 MiB only for a recipe above 32 MiB.
+The [release rules](./mokly-sidecar-release.md) define the released recipes.
 
 ## Bundle Cache Seeding
 

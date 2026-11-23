@@ -10,6 +10,7 @@ use ts_rs::TS;
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
 use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
+use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
 use crate::resolution_plan::ResolutionPlan;
 use crate::vite_css::TransformViteCss;
 
@@ -108,6 +109,10 @@ pub struct BundleRequest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub plan: Option<Arc<ResolutionPlan>>,
+    /// Fresh PostCSS context for this request's attempt, absent from bundle settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub preparation: Option<PostcssPreparation>,
 }
 
 /// Preview colour scheme.
@@ -270,6 +275,8 @@ pub enum Call {
     CssModules(CssModules),
     /// Release one bundle generation.
     Dispose(Generation),
+    /// Start a `bundle` request's PostCSS preparation without waiting for its child.
+    PrepareContext(PrepareContext),
     /// Release one stylesheet context.
     DisposeContext(DisposeContext),
     /// Drain in-flight work and exit.

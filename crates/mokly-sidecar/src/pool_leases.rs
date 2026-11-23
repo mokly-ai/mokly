@@ -20,13 +20,13 @@ impl Pool {
         claim: Option<u64>,
     ) -> Result<(usize, Option<Slot>, Option<StartLease>)> {
         let root = root.unwrap_or(&self.launch.repository);
+        if let Some(reserved) = claim.and_then(|claim| self.take_eager(call, root, claim)) {
+            return Ok(reserved);
+        }
         let mut state = self.lock();
         let ticket = state.ticket;
         state.ticket += 1;
-        let context = match call {
-            Call::ProcessCss(params) => Some(params.context.clone()),
-            _ => None,
-        };
+        let context = call.postcss_context().map(str::to_owned);
         state.waiting.insert(
             ticket,
             Waiting {

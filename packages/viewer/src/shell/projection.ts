@@ -8,7 +8,7 @@ import type { ShellContext } from "./context.js";
 
 export function shellContext(
   model: ShellCatalogueReadModel,
-  selection: ViewerSelection,
+  selection: Pick<ViewerSelection, "screenPath" | "snapshotId">,
 ): Omit<ShellContext, "embedded" | "theme"> {
   const resolved =
     typeof selection.screenPath === "string"
@@ -19,16 +19,6 @@ export function shellContext(
         )
       : undefined;
   const selected = resolved?.entry;
-  const ready = [
-    ...model.screens,
-    ...model.pages,
-    ...model.documents,
-    ...model.useCases,
-    ...model.components,
-    ...model.removedEntries.map(({ entry }) => entry),
-  ].flatMap(({ path, changes }) =>
-    changes.status === "ready" ? [{ path, ...changes }] : [],
-  );
   return {
     base: model.base ?? "",
     comparisons:
@@ -39,15 +29,27 @@ export function shellContext(
       : { changesStatus: model.changesStatus }),
     ...(selected ? { activeId: selected.path } : {}),
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
-    ...(model.changesStatus === "ready"
-      ? {
-          changedEntries: ready
-            .filter(({ included }) => included)
-            .map(({ path }) => path),
-          materialEntries: ready
-            .filter(({ kind }) => kind !== "unmodified")
-            .map(({ path }) => path),
-        }
-      : {}),
+    ...(model.changesStatus === "ready" ? changedEntryLists(model) : {}),
   };
+}
+
+function changedEntryLists(model: ShellCatalogueReadModel) {
+  const changedEntries: string[] = [];
+  const materialEntries: string[] = [];
+  const lists = [
+    model.screens,
+    model.pages,
+    model.documents,
+    model.useCases,
+    model.components,
+    model.removedEntries.map(({ entry }) => entry),
+  ];
+  for (const list of lists) {
+    for (const { path, changes } of list) {
+      if (changes.status !== "ready") continue;
+      if (changes.included) changedEntries.push(path);
+      if (changes.kind !== "unmodified") materialEntries.push(path);
+    }
+  }
+  return { changedEntries, materialEntries };
 }

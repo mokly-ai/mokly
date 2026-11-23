@@ -111,6 +111,12 @@ for (const [name, file, source, message] of [
     /^node_modules\/dep\/index\.cjs:1:34: module outside\.mjs is outside sourceRoot and selected dependency roots$/,
   ],
   [
+    "a require.resolve of a missing path",
+    "index.cjs",
+    'module.exports = require.resolve("./missing.mjs");',
+    /^node_modules\/dep\/index\.cjs:1:34: Could not resolve "\.\/missing\.mjs"$/,
+  ],
+  [
     "a handled require failure",
     "index.cjs",
     'let value = 1;\ntry { value = require("not-installed"); } catch {}\nmodule.exports = value;',
@@ -132,4 +138,11 @@ for (const [name, file, source, message] of [
       message: expected,
     });
     assert.equal(counted.counts.compilations, 2);
+    const edited = countedCompile();
+    await assert.rejects(
+      bundle(params, edited.compile, undefined, undefined, "serveEdit"),
+      { code: "bundle-failed", message: expected },
+    );
+    assert.equal(edited.counts.compilations, 2);
+    assert.equal(edited.consumerResolves(), 3);
   });

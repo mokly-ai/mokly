@@ -14,8 +14,12 @@
 
 - **Source:** Design.
 - **Category:** Performance.
-- **Related:** `plans/follow-ups/render-store-idle-work-owners.md` covers other
-  writer-activity owners. This fill uses the maintenance worker's existing lease.
+- **Related:**
+  - `plans/follow-ups/render-store-idle-work-owners.md` covers other
+    writer-activity owners. This fill uses the maintenance worker's existing lease.
+  - `docs/protocol/mokly-render-store.md` requires indexed reads to survive
+    index contention. Fewer such misses can leave more head slots without a
+    process before the first edit.
 - **Terms:**
   - **Sidecar:** A Node process that runs JavaScript renders for Mokly Serve.
   - **Head slot:** A place in the sidecar pool for a process that serves the

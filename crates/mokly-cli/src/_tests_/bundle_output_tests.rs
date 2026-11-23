@@ -41,6 +41,7 @@ fn foreign_and_damaged_entries_warn_and_preserve_both_retirement_faults() {
             retirement: WriteOutcome::StoreFault,
         };
         let store = Reported {
+            directory: Arc::new(Unimock::new(())),
             inner: Arc::new(Unimock::new(
                 BundleStoreMock::load
                     .some_call(matching!(_))
@@ -77,6 +78,7 @@ fn unusable_location_warns_once_and_normal_misses_stay_silent() {
     let messages = Arc::new(Mutex::new(vec![]));
     let emitted = messages.clone();
     let store = Reported {
+        directory: Arc::new(Unimock::new(())),
         inner: Arc::new(Unavailable(false.into())),
         diagnostics: Arc::new(Unimock::new(
             DiagnosticsMock::emit
@@ -106,6 +108,7 @@ fn unusable_location_warns_once_and_normal_misses_stay_silent() {
         ReadMiss::Disabled,
     ] {
         let silent = Reported {
+            directory: Arc::new(Unimock::new(())),
             inner: Arc::new(Unimock::new(
                 BundleStoreMock::load
                     .some_call(matching!(_))

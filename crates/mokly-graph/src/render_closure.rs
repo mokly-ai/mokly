@@ -92,6 +92,15 @@ pub(crate) struct Parts<'a> {
 }
 
 impl Parts<'_> {
+    pub(crate) fn empty() -> Self {
+        Self {
+            members: BTreeSet::new(),
+            modules: Vec::new(),
+            bindings: Vec::new(),
+            resolution: Vec::new(),
+        }
+    }
+
     /// Merge additional inputs in the original array order and canonical field order.
     /// The shared digest is lowercase hexadecimal, so its JSON string needs no escaping.
     pub(crate) fn key(&self, extra: &Self, shared: &str) -> NodeKey {

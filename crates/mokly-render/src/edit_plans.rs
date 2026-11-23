@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 
 use mokly_sidecar::compiled::ReuseEvidence;
-use mokly_sidecar::methods::Bundle;
+use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::resolution_plan::{RECORD_BYTES, ResolutionPlan, bounded_record_bytes};
 use serde::Serialize;
 
@@ -16,10 +16,30 @@ pub(crate) struct Record {
 
 #[derive(Serialize)]
 struct Entry {
-    settings: Bundle,
+    settings: ResolutionSettings,
     record: Arc<Record>,
     #[serde(skip)]
     bytes: usize,
+}
+
+#[derive(PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ResolutionSettings {
+    module_resolution: ModuleResolution,
+    source_root: String,
+    configuration_directory: String,
+    repository_roots: Vec<String>,
+}
+
+impl From<&Bundle> for ResolutionSettings {
+    fn from(params: &Bundle) -> Self {
+        Self {
+            module_resolution: params.module_resolution.clone(),
+            source_root: params.source_root.clone(),
+            configuration_directory: params.configuration_directory.clone(),
+            repository_roots: params.repository_roots.clone(),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -30,8 +50,7 @@ pub(crate) struct Records {
 
 impl Records {
     pub(crate) fn get(&self, params: &Bundle) -> Option<Arc<Record>> {
-        let mut settings = params.clone();
-        settings.evaluation = None;
+        let settings = ResolutionSettings::from(params);
         self.entries
             .iter()
             .find(|entry| entry.settings == settings)
@@ -47,10 +66,8 @@ impl Records {
         if !evidence.captured() || !evidence.durable {
             return;
         }
-        let mut settings = params.clone();
-        settings.evaluation = None;
         let mut entry = Entry {
-            settings,
+            settings: ResolutionSettings::from(params),
             record: Arc::new(Record { plan, evidence }),
             bytes: 0,
         };

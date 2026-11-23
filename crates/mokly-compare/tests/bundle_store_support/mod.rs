@@ -71,7 +71,7 @@ pub fn recipe(params: Bundle, code: &str) -> DurableRecipe {
         ReusableRecipe::new(
             code.into(),
             params,
-            vec![],
+            Default::default(),
             Arc::new(CompiledGeneration {
                 toolchain: "fixture".into(),
                 metadata_identity: None,

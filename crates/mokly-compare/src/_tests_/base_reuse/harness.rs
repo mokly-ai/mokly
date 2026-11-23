@@ -167,6 +167,7 @@ impl Harness {
                             }
                             request.steps.step(Step::Rendering);
                             Ok(PreparedBase {
+                                prefetch: None,
                                 generation: fresh.clone(),
                                 scripts_off: true,
                                 freshness: None,

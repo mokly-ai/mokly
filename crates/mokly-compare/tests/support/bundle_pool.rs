@@ -73,6 +73,7 @@ pub(super) fn pool(source: &Path, cache: &Path, counts: Arc<Counts>) -> Pool {
 pub(super) fn bundle(pool: &Pool, source: &Path) -> results::Bundle {
     let result = pool
         .request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan: None,
             params: Bundle {
                 vite: false,
@@ -105,6 +106,7 @@ pub(super) fn edit(
 ) -> results::Bundle {
     let result = pool
         .request(Call::Bundle(BundleRequest {
+            preparation: None,
             plan,
             capture: Some(BundleCapture::ServeEdit),
             params: Bundle {

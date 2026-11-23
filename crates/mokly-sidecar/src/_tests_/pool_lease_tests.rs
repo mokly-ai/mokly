@@ -15,6 +15,7 @@ use crate::workers::{FactoryMock, Spawned, WorkerMock};
 
 fn bundle() -> Call {
     Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: Bundle {
             vite: false,
@@ -48,7 +49,7 @@ fn a_late_old_epoch_release_preserves_the_same_ids_new_lifetime() {
                     compile_count: 1,
                     compiled: Arc::new(compiled("g")),
                     generation: "g".into(),
-                    modules: vec![],
+                    modules: Default::default(),
                 })))
             })
             .n_times(2),

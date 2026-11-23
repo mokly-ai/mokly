@@ -38,13 +38,18 @@ function fakeFetch(answer: (url: URL) => FakeAnswer) {
   const requests: { url: string; init: RequestInit }[] = [];
   const fetch: JsonFetch = async (url, init) => {
     requests.push({ url: url.href, init });
-    const { status = 200, type = "application/json", body } = answer(url);
+    const {
+      status = 200,
+      type = "application/json",
+      body,
+      url: final,
+    } = answer(url);
     return {
       ok: status >= 200 && status < 300,
       status,
-      url: answer(url).url ?? url.href,
+      url: final ?? url.href,
       headers: new Headers({ "content-type": type }),
-      json: async () => body,
+      json: async () => structuredClone(body),
     } as Response;
   };
   return { fetch, requests };

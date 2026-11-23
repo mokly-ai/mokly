@@ -62,11 +62,8 @@ pub(super) fn acquire(
     limit: usize,
     protected: Option<usize>,
 ) -> Option<usize> {
-    let context = match call {
-        Call::ProcessCss(params) => Some(params.context.as_str()),
-        _ => None,
-    };
-    let index = if let Some(index) = context
+    let index = if let Some(index) = call
+        .postcss_context()
         .and_then(|id| state.affinity.get(id))
         .map(|affinity| affinity.index)
     {
@@ -100,7 +97,15 @@ pub(super) fn acquire(
             state.available.remove(position)?
         }
     };
-    if let Some(context) = context {
+    bind_context(state, call, index, root);
+    Some(index)
+}
+
+/// Bind the PostCSS context of `call` to slot `index` when the slot is selected, on every
+/// admission path. A later request of the context then waits for this slot, also while the
+/// slot still starts.
+pub(super) fn bind_context(state: &mut State, call: &Call, index: usize, root: &Path) {
+    if let Some(context) = call.postcss_context() {
         state.affinity.insert(
             context.into(),
             Affinity {
@@ -109,7 +114,6 @@ pub(super) fn acquire(
             },
         );
     }
-    Some(index)
 }
 
 /// Select eligible work without reserving or changing a slot.
@@ -128,3 +132,7 @@ mod pool_root_selection_tests;
 #[cfg(test)]
 #[path = "_tests_/generation_affinity/mod.rs"]
 mod generation_affinity_tests;
+
+#[cfg(test)]
+#[path = "_tests_/pool_postcss_preparation_tests.rs"]
+mod pool_postcss_preparation_tests;

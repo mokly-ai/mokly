@@ -148,6 +148,7 @@ pub(super) fn css(root: &str, context: &str) -> Call {
 
 pub(super) fn bundle(root: &str, generation: &str) -> Call {
     Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: Bundle {
             source_root: root.into(),

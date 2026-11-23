@@ -21,9 +21,11 @@ use super::{CaptureSide, CapturedGeneration, capture};
 
 #[test]
 fn a_retained_capture_forwards_cancellation_to_its_source() {
+    let seeds = Arc::new(AtomicUsize::new(0));
+    let seeded = seeds.clone();
     let generation = CapturedGeneration {
         restorer: Box::new(LosslessRestorer),
-        source: Arc::new(Unimock::new(
+        source: Arc::new(Unimock::new((
             RenderGenerationMock::check_cancelled
                 .next_call(matching!())
                 .returns(Err(GraphError::Runtime {
@@ -32,7 +34,12 @@ fn a_retained_capture_forwards_cancellation_to_its_source() {
                         message: "source cancelled".into(),
                     },
                 })),
-        )),
+            RenderGenerationMock::prepare_render_reuse
+                .next_call(matching!())
+                .answers_arc(Arc::new(move |_| {
+                    seeded.fetch_add(1, Ordering::SeqCst);
+                })),
+        ))),
         views: BTreeMap::new(),
         summary: RenderSummary::default(),
         styles: BTreeMap::new(),
@@ -44,6 +51,8 @@ fn a_retained_capture_forwards_cancellation_to_its_source() {
     };
     assert_eq!(source.code, RuntimeCode::Cancelled);
     assert_eq!(source.message, "source cancelled");
+    generation.prepare_render_reuse();
+    assert_eq!(seeds.load(Ordering::SeqCst), 1);
 }
 
 #[test]

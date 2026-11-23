@@ -46,7 +46,23 @@ impl Drop for CallClaim {
             && let Some(state) = owner.state.upgrade()
         {
             let mut state = pool_cleanup::lock(&state);
+            if let Some(reserved) = state.eager.remove(&owner.id)
+                && !reserved.taken
+            {
+                if reserved.fresh {
+                    state.free.insert(reserved.index);
+                    if let Some(growth) = reserved
+                        .source_claim
+                        .and_then(|id| state.claims.get_mut(&id))
+                    {
+                        *growth += 1;
+                    }
+                } else {
+                    state.available.push_back(reserved.index);
+                }
+            }
             state.claims.remove(&owner.id);
+            state.head.notify();
             if let Some(ready) = owner.ready.upgrade() {
                 ready.notify_all();
             }

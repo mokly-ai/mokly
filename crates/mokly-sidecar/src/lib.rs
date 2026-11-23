@@ -4,6 +4,8 @@
 
 pub mod bindings;
 pub mod bundle_outcomes;
+pub mod bundle_reply;
+mod bundle_reply_decode;
 pub mod bundle_store;
 pub mod capture_hint;
 #[cfg(target_os = "linux")]
@@ -13,6 +15,7 @@ mod cgroup_level;
 #[cfg(target_os = "linux")]
 pub mod cgroup_memory;
 pub mod client;
+mod client_origins;
 pub mod codec;
 pub mod compiled;
 pub mod controls;
@@ -31,6 +34,7 @@ mod pool_affinity;
 mod pool_bundle_cache;
 pub mod pool_claim;
 mod pool_cleanup;
+mod pool_eager;
 mod pool_exchange;
 mod pool_head;
 mod pool_leases;
@@ -52,6 +56,7 @@ mod pool_warmup_state;
 pub mod postcss_evidence;
 pub mod postcss_failure;
 mod postcss_phase;
+pub mod postcss_preparation;
 mod presentation;
 pub mod process_clock;
 mod process_completion;
@@ -71,6 +76,7 @@ mod request_display;
 pub mod resolution_plan;
 pub mod results;
 pub mod reusable_recipe;
+pub mod source_digests;
 pub mod typescript;
 pub mod usage;
 pub mod vite_css;

@@ -17,7 +17,17 @@ impl Pool {
             Call::RestoreGeneration(params) => Some(params.params.source_root.clone()),
             Call::ProcessCss(params) => Some(params.source_root.clone()),
             Call::TransformViteCss(params) => Some(params.setup.source_root.clone()),
-            _ => generation(call).map(|id| state.bundles[id].source_root.clone()),
+            Call::PrepareContext(params) => Some(params.source_root.clone()),
+            Call::Describe(_)
+            | Call::Bindings(_)
+            | Call::RenderScreen(_)
+            | Call::RenderComponent(_)
+            | Call::RenderStory(_)
+            | Call::RenderPage(_)
+            | Call::CssModules(_) => {
+                generation(call).map(|id| state.bundles[id].source_root.clone())
+            }
+            Call::Hello(_) | Call::Dispose(_) | Call::DisposeContext(_) | Call::Shutdown(_) => None,
         };
         source.map(PathBuf::from)
     }

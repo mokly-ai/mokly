@@ -28,6 +28,7 @@ use mokly_source_interface::tree::{Child, FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::base_dependencies::BaseDependenciesMock;
+use crate::base_render_admission::ImmediateBaseRenders;
 use crate::changes_base::NativeBase;
 use crate::changes_freshness::PreparedDependencies;
 
@@ -121,7 +122,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     path: "specs/card.mockup.ts".into(),
                     imports: Vec::new(),
                     digest: Some("source".into()),
-                }],
+                }].into(),
             })))),
         PoolMock::request
             .next_call(matching!((call) if matches!(call, Call::CssModules(params) if params.generation == "base-bundle")))
@@ -144,7 +145,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
             .next_call(matching!("base-bundle", 0))
             .returns(()),
     ));
-    let provider: &dyn BaseProvider = &NativeBase {
+    let provider: &dyn BaseProvider = &NativeBase { validation: None, admission: Arc::new(ImmediateBaseRenders),
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),
             Arc::new(Unimock::new(())),
@@ -163,12 +164,13 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
         freshness: Some(Arc::new(Unimock::new(FreshnessMock::record
             .some_call(matching!((checkout, _, roots, _) if checkout.digest == "checkout" && roots.is_none()))
             .returns(Ok(None))))),
-        dependencies: Arc::new(Unimock::new(
+        dependencies: Arc::new(Unimock::new((
+            crate::dependency_source_support::sources(false),
             BaseDependenciesMock::prepare
                 .next_call(matching!((request, _, _, early)
-                    if !request.install_scripts && early.is_none()))
+                    if !request.install_scripts && early.sources.directory == Path::new("/base")))
                 .returns(Ok(PreparedDependencies { side, selection: Some(DependencySelection::default()) })),
-        )),
+        ))),
     };
     let config = ResolvedConfig {
         input: Config::default(),
