@@ -1,5 +1,5 @@
 /**
- * Frame 03 Edit: one tool window. Its title bar names the open screen and
+ * Frame 04 Edit: one tool window. Its title bar names the open screen and
  * the branch, with the agent tool active and the live session; its canvas
  * holds the section copy as a text layer beside the `pricing` artboard,
  * where Claude edits the selected PriceCard; the Claude chat is docked on
@@ -80,14 +80,14 @@ export function EditModule({ viewport }: { viewport: "mobile" | "desktop" }) {
       className="site-module site-module--edit"
       id="edit"
     >
-      <ModuleFrame name="03 Edit">
+      <ModuleFrame name="04 Edit">
         <div className="site-detail site-detail--split">
           <EditBar viewport={viewport} />
           <div className="site-home-edit-body">
             <div className="site-home-edit-canvas">
               <ModuleText
                 headingId="edit-title"
-                index="03"
+                index="04"
                 kicker="Edit"
                 title="Ask for the change beside the screen."
               >

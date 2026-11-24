@@ -1,6 +1,7 @@
-/* The home Browse frame: its copy beside the GitHub check card on the
-   desktop composition, the card itself, and the green prototype connector
-   from View changes to the viewer's Changes filter. */
+/* The home Changes frame, whose code name stays browse until the site
+   renames it: its copy beside the GitHub check card on the desktop
+   composition, the card itself, and the green prototype connector from
+   View changes to the viewer's Changes filter. */
 
 [data-site-viewport="desktop"] .site-module--browse {
   align-items: end;
@@ -159,7 +160,7 @@
   stroke-width: 1.75;
 }
 
-/* The connector that fits each width below 1440px, in the Browse frame: a
+/* The connector that fits each width below 1440px, in the Changes frame: a
    curve stretched between its two ends with its start dot and arrowhead at
    their own size. It ends on the Changes filter, 64px under the frame's
    top, between the crumb and the branch chip. */

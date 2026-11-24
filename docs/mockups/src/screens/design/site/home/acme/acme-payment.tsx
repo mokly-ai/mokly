@@ -1,6 +1,6 @@
 /**
  * The depicted acme `checkout/payment` screen on a desktop, in the two
- * versions that the home's Browse frame compares: the plain form on `main`,
+ * versions that the home's Changes frame compares: the plain form on `main`,
  * and the redesigned step with the stepper, the payment methods and the
  * order summary card on `feat/checkout-v2`.
  */

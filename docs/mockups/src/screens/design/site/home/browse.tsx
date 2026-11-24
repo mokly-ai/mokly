@@ -1,14 +1,18 @@
 /**
- * Frame 01 Browse: the copy beside the GitHub check card, then the depicted
+ * Frame 02 Changes: the copy beside the GitHub check card, then the depicted
  * viewer on the branch, and the prototype connector that runs from View
  * changes into the viewer's Changes filter. The connector's path follows
  * the rendered places of both ends on each composition; below 1440px the
  * desktop composition draws the connector that fits each width instead.
+ *
+ * The module keeps its `browse` names in the code and the stylesheets until
+ * the site renames them with it; the page shows it as 02 Changes.
  */
 
 import { CheckCard } from "./check-card.js";
 import { FitConnector } from "./fit-lines.js";
 import { ModuleFrame, ModuleText } from "./module.js";
+import { ViewerCompare } from "./viewer-compare.js";
 import { Viewer } from "./viewer.js";
 
 /** One end of the connector, in pixels from the module's top-left. */
@@ -26,8 +30,8 @@ const CONNECTOR: Record<
   "mobile" | "desktop",
   { end: Point; start: Point; turn: number }
 > = {
-  desktop: { end: { x: 175, y: 364 }, start: { x: 1003, y: 215 }, turn: 282 },
-  mobile: { end: { x: 255, y: 565 }, start: { x: 176, y: 441 }, turn: 483 },
+  desktop: { end: { x: 175, y: 338 }, start: { x: 1003, y: 189 }, turn: 256 },
+  mobile: { end: { x: 255, y: 514 }, start: { x: 176, y: 390 }, turn: 432 },
 };
 
 /** The connector from the check card into the viewer. */
@@ -53,27 +57,27 @@ function Connector({ viewport }: { viewport: "mobile" | "desktop" }) {
   );
 }
 
-/** The Browse module. */
+/** The Changes module. */
 export function BrowseModule({ viewport }: { viewport: "mobile" | "desktop" }) {
   return (
     <article
-      aria-labelledby="browse-title"
+      aria-labelledby="changes-title"
       className="site-module site-module--browse"
-      id="browse"
+      id="changes"
     >
       <ModuleText
-        headingId="browse-title"
-        index="01"
-        kicker="Browse"
+        headingId="changes-title"
+        index="02"
+        kicker="Changes"
         title="A visual diff for every branch."
       >
-        Each branch and pull request publishes a catalogue built from your real
-        components. Changes shows what moved, and the check on the pull request
-        counts it.
+        Changes shows what moved, and the check on the pull request counts it.
       </ModuleText>
       <CheckCard />
-      <ModuleFrame name="01 Browse">
-        <Viewer viewport={viewport} />
+      <ModuleFrame name="02 Changes">
+        <Viewer current="payment" viewport={viewport}>
+          <ViewerCompare />
+        </Viewer>
         {viewport === "desktop" ? (
           <>
             <FitConnector layout="wide" />

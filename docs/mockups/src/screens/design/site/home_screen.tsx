@@ -2,7 +2,7 @@
  * The home: the hero with its selected heading layer and the spread of the
  * depicted acme/storefront app, then the workspace, where the Specs panel
  * floats beside the frames on the desktop composition: the features intro,
- * the Browse, Review and Edit frames and the open foundation.
+ * the Browse, Changes, Review and Edit frames and the open foundation.
  */
 
 import { HomeHero } from "./home/hero.js";

@@ -1,9 +1,9 @@
 /**
  * The workspace under the hero. On the desktop composition the Specs panel
  * floats on the left and lists the page's sections; the frames take the
- * rest of the width: the features intro, the Browse, Review and Edit
- * frames, and the open foundation. On a phone the frames stack without the
- * panel.
+ * rest of the width: the features intro, the Browse, Changes, Review and
+ * Edit frames, and the open foundation. On a phone the frames stack without
+ * the panel.
  */
 
 import { SitePanel, SitePanelRow } from "../parts/panel.js";
@@ -11,6 +11,7 @@ import { SitePanel, SitePanelRow } from "../parts/panel.js";
 import { BrowseModule } from "./browse.js";
 import { EditModule } from "./edit.js";
 import { Foundation } from "./foundation.js";
+import { LinksModule } from "./links.js";
 import { ReviewModule } from "./review.js";
 
 /**
@@ -34,11 +35,14 @@ function SpecsPanel() {
       <SitePanelRow href="#browse" icon="frame">
         01 Browse
       </SitePanelRow>
+      <SitePanelRow href="#changes" icon="frame">
+        02 Changes
+      </SitePanelRow>
       <SitePanelRow href="#review" icon="frame">
-        02 Review
+        03 Review
       </SitePanelRow>
       <SitePanelRow href="#edit" icon="frame">
-        03 Edit
+        04 Edit
       </SitePanelRow>
       <SitePanelRow href="#foundation" icon="frame">
         Open foundation
@@ -70,6 +74,7 @@ export function HomeWorkspace({
             <p>Every branch becomes a catalogue your whole team can open.</p>
           </div>
           <div className="site-module-grid">
+            <LinksModule viewport={viewport} />
             <BrowseModule viewport={viewport} />
             <ReviewModule viewport={viewport} />
             <EditModule viewport={viewport} />

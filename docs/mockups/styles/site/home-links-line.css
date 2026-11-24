@@ -1,0 +1,85 @@
+/* The green link line of the home Browse frame, from the foot of Continue
+   on the source screen into the frame of the open screen in the viewer.
+   Each layout is a fitted connector in the module's frame: its curve
+   stretches between its two ends, and its start dot and arrowhead keep
+   their size. The line leaves Continue right of the screen's own link
+   under it, bends down to just above the viewer's bar, and drops onto the
+   top edge of the open screen's frame, right of the frame's label.
+
+   On the desktop composition the start keeps its place from the module's
+   left edge, as the source screen does, and the end keeps its place from
+   the canvas centre, where the viewer centres the open screen: 50% of the
+   frame plus half the catalogue column. The desktop layouts follow the
+   module's row gap, which closes up below 1100px. A phone centres both
+   screens, so both ends keep their place from the centre. */
+
+.site-module--links .site-home-fit-connector--links-wide,
+.site-module--links .site-home-fit-connector--links-phone {
+  display: block;
+}
+
+.site-home-fit-connector--links-wide .site-home-fit-connector-curve {
+  height: 232px;
+  left: 165px;
+  top: -94px;
+  width: 50%;
+}
+
+.site-home-fit-connector--links-wide .site-home-fit-connector-start {
+  left: 159px;
+  top: -100px;
+}
+
+.site-home-fit-connector--links-narrow .site-home-fit-connector-curve {
+  height: 196px;
+  left: 165px;
+  top: -58px;
+  width: 50%;
+}
+
+.site-home-fit-connector--links-narrow .site-home-fit-connector-start {
+  left: 159px;
+  top: -64px;
+}
+
+.site-module--links .site-home-fit-connector-head {
+  left: calc(50% + 159px);
+  top: 130px;
+}
+
+/* The phone: both screens at 42 percent and centred, the line landing
+   nineteen twentieths across the open screen's top, right of the branch
+   chip in the viewer's bar */
+
+.site-home-fit-connector--links-phone .site-home-fit-connector-curve {
+  height: 201px;
+  left: calc(50% + 56.7px);
+  top: -66px;
+  width: 17px;
+}
+
+.site-home-fit-connector--links-phone .site-home-fit-connector-start {
+  left: calc(50% + 50.7px);
+  top: -72px;
+}
+
+.site-module--links
+  .site-home-fit-connector--links-phone
+  .site-home-fit-connector-head {
+  left: calc(50% + 67.7px);
+  top: 127px;
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"]
+    .site-module--links
+    .site-home-fit-connector--links-wide {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"]
+    .site-module--links
+    .site-home-fit-connector--links-narrow {
+    display: block;
+  }
+}

@@ -1,5 +1,5 @@
 /**
- * Frame 02 Review: on the desktop composition the frame sits left and the
+ * Frame 03 Review: on the desktop composition the frame sits left and the
  * copy right. The frame holds the desktop pricing artboards, light and dark,
  * behind the mobile one, whose PriceCard is selected with its 16px padding
  * redline and Maya's pin; the comment thread spills out of the frame onto
@@ -23,7 +23,7 @@ export function ReviewModule({ viewport }: { viewport: "mobile" | "desktop" }) {
     >
       <ModuleText
         headingId="review-title"
-        index="02"
+        index="03"
         kicker="Review"
         title="Sticky comments."
       >
@@ -31,7 +31,7 @@ export function ReviewModule({ viewport }: { viewport: "mobile" | "desktop" }) {
         the layout changes. Approve when it is right, in step with the pull
         request review.
       </ModuleText>
-      <ModuleFrame name="02 Review">
+      <ModuleFrame name="03 Review">
         <div aria-hidden="true" className="site-detail">
           {viewport === "desktop" ? (
             <div className="site-home-review-desk">

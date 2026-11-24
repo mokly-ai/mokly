@@ -1,8 +1,9 @@
 /**
- * The open screen of the depicted Mokly viewer: the screen head with
- * `Payment`, its path and its Changed status, the compare toolbar with the
- * product's five modes and Swipe chosen, and the stage, where the Swipe
- * divider shows `main` on its left and `feat/checkout-v2` on its right.
+ * The open screen of the depicted Mokly viewer in the Changes frame: the
+ * screen head with `Payment`, its path and its Changed status, the compare
+ * toolbar with the product's five modes and Swipe chosen, and the stage,
+ * where the Swipe divider shows `main` on its left and `feat/checkout-v2` on
+ * its right.
  */
 
 import { SiteIcon } from "../parts/icons.js";

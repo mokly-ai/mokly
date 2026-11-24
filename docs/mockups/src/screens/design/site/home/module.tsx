@@ -1,7 +1,7 @@
 /**
- * The parts that the Browse, Review and Edit frames share: the copy of a
- * module, its kicker, heading and body, and the labelled frame that holds
- * its depiction on the canvas.
+ * The parts that the Browse, Changes, Review and Edit frames share: the
+ * copy of a module, its kicker, heading and body, and the labelled frame
+ * that holds its depiction on the canvas.
  */
 
 import type { ReactNode } from "react";

@@ -1,0 +1,119 @@
+/* The home Browse frame, whose code name is links until the site frees the
+   browse names. On the desktop composition the source screen sits left of
+   the copy and the viewer takes the row under both; on a phone the copy,
+   the source screen and the viewer stack, and the viewer draws its canvas
+   above its catalogue column. Then Sam's press on Continue, the viewer's
+   canvas with the open screen's section, and the link line from Continue
+   into that screen's frame. */
+
+[data-site-viewport="desktop"] .site-module--links {
+  align-items: start;
+  column-gap: 56px;
+  grid-template-areas:
+    "source text"
+    "frame frame";
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+[data-site-viewport="desktop"] .site-module--links > .site-module-text {
+  grid-area: text;
+}
+
+[data-site-viewport="desktop"] .site-module--links > .site-module-detail {
+  grid-area: frame;
+}
+
+/* The source screen keeps its foot on the row's foot, so Continue keeps
+   its place above the viewer whatever the copy's height. A phone centres
+   it over the viewer, as it centres the other modules' artboards. */
+
+.site-home-links-source {
+  justify-self: center;
+}
+
+[data-site-viewport="desktop"] .site-module--links > .site-home-links-source {
+  align-self: end;
+  grid-area: source;
+  justify-self: start;
+}
+
+/* The source screen and the open screen: phone frames at 50 percent on the
+   desktop composition and at 42 percent on a phone */
+
+.site-home-frames
+  .site-module--links
+  .site-home-board--phone
+  .site-home-board-frame {
+  height: 422px;
+  width: 195px;
+}
+
+.site-home-frames
+  .site-module--links
+  .site-home-board--phone
+  .site-home-board-screen {
+  transform: scale(0.5);
+}
+
+[data-site-viewport="mobile"]
+  .site-module--links
+  .site-home-board--phone
+  .site-home-board-frame {
+  height: 354.48px;
+  width: 163.8px;
+}
+
+[data-site-viewport="mobile"]
+  .site-module--links
+  .site-home-board--phone
+  .site-home-board-screen {
+  transform: scale(0.42);
+}
+
+/* Sam's press on Continue: a ring in Sam's colour under the cursor's tip,
+   right of the button's label, in percent of the screen, so one rule
+   serves both sizes. The cursor's name tag hangs to the left, clear of the
+   link line's start. */
+
+.site-home-links-press {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-people-blue-fill) 22%,
+    transparent
+  );
+  border-radius: var(--mk-radius-pill);
+  box-shadow: 0 0 0 1.5px var(--mk-color-people-blue-fill);
+  height: 20px;
+  left: 67.95%;
+  position: absolute;
+  top: 91.64%;
+  translate: -50% -50%;
+  width: 20px;
+  z-index: 5;
+}
+
+.site-home-links-sam {
+  left: calc(67.95% - 2.6px);
+  top: calc(91.64% - 2.2px);
+}
+
+/* The viewer's canvas: the open screen's section centred on the dot grid,
+   its frame under the section's head with room for the frame's label */
+
+.site-home-frames .site-module--links .site-stage {
+  padding: 20px;
+}
+
+.site-home-links-section .site-home-board {
+  margin-top: 28px;
+}
+
+/* A phone draws the canvas first and the catalogue column under it, with
+   room for the open screen's row above the column's fade */
+
+[data-site-viewport="mobile"] .site-module--links .site-tree {
+  border-bottom: 0;
+  border-top: 1px solid var(--mk-color-border);
+  max-height: 390px;
+  order: 1;
+}

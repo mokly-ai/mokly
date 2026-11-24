@@ -1,13 +1,18 @@
 /**
- * The Browse connector and the open-foundation wire as the desktop
- * composition draws them below 1440px, where the frames change width. The
- * 1440px drawings place both ends in pixels of the module; these keep each
- * end on the part it joins at every width:
+ * The connectors and the open-foundation wire as they fit each width. The
+ * 1440px drawings of the Changes connector and of the wire place both ends
+ * in pixels of the module; these keep each end on the part it joins at
+ * every width:
  *
- * - The connector lives in the Browse frame. Its curve stretches between
- *   the foot of View changes and the viewer's Changes filter, and its
- *   start dot and arrowhead keep their size. One layout puts the check card
+ * - A connector lives in its module's frame. Its curve stretches between
+ *   its two ends, and its start dot and arrowhead keep their size.
+ * - The Changes connector runs from the foot of View changes to the
+ *   viewer's Changes filter below 1440px. One layout puts the check card
  *   beside the copy, the other stacks it under the copy.
+ * - The Browse link line runs from the foot of Continue on the source
+ *   screen to the open screen's frame in the viewer, on every width. Its
+ *   layouts follow the module's row gap on the desktop composition, and
+ *   the phone draws its own.
  * - The wire hangs from the source frame's right edge, because the code
  *   and the artboard both keep their place from that edge. One drawing
  *   joins the 286px artboard, the other the 250px one.
@@ -15,21 +20,29 @@
  * The stylesheet shows the drawing that matches each width.
  */
 
-/** The curve of each connector layout, in a box 100 units wide. */
+/**
+ * The curve of each connector layout, in a box 100 units wide: the box's
+ * height, the depth of the turn, and the side of the box that the curve
+ * leaves from.
+ */
 const CONNECTOR_LAYOUTS = {
-  stacked: { height: 112, turn: 30 },
-  wide: { height: 148, turn: 66 },
+  "links-narrow": { from: "left", height: 196, turn: 40 },
+  "links-phone": { from: "left", height: 201, turn: 48 },
+  "links-wide": { from: "left", height: 232, turn: 76 },
+  stacked: { from: "right", height: 112, turn: 30 },
+  wide: { from: "right", height: 148, turn: 66 },
 } as const;
 
-/** The connector from View changes into the viewer, for one layout. */
+/** A connector between two parts of a module, for one layout. */
 export function FitConnector({
   layout,
 }: {
   layout: keyof typeof CONNECTOR_LAYOUTS;
 }) {
-  const { height, turn } = CONNECTOR_LAYOUTS[layout];
+  const { from, height, turn } = CONNECTOR_LAYOUTS[layout];
+  const [start, end] = from === "right" ? [100, 0] : [0, 100];
   const bend = turn / 2;
-  const path = `M100 0 C100 ${bend}, 0 ${bend}, 0 ${turn} L0 ${height}`;
+  const path = `M${start} 0 C${start} ${bend}, ${end} ${bend}, ${end} ${turn} L${end} ${height}`;
   return (
     <span
       aria-hidden="true"

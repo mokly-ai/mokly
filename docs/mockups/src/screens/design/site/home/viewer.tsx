@@ -1,18 +1,21 @@
 /**
- * The depicted Mokly viewer of the Browse frame, opened on acme/storefront's
- * branch `feat/checkout-v2`: the bar with the crumb, the branch, the pull
- * request, the commit, the people in the file, History and Share, then the
- * catalogue column and the open screen in its compare. On a phone the bar
- * keeps the mark, the branch and Share, and the catalogue column stacks
- * above the screen. The viewer is a depiction, so its controls are text.
+ * The depicted Mokly viewer of the Browse and Changes frames, opened on
+ * acme/storefront's branch `feat/checkout-v2`: the bar with the crumb, the
+ * branch, the pull request, the commit, the people in the file, History and
+ * Share, then the catalogue column with the open screen's row current, and
+ * the open screen as each frame draws it: on its canvas in Browse, in its
+ * compare in Changes. On a phone the bar keeps the mark, the branch and
+ * Share, and the catalogue column stacks with the screen. The viewer is a
+ * depiction, so its controls are text.
  */
+
+import type { ReactNode } from "react";
 
 import { MoklyMark } from "../parts/brand.js";
 import { SiteIcon } from "../parts/icons.js";
 import { SitePresence } from "../parts/people.js";
 
-import { ViewerCompare } from "./viewer-compare.js";
-import { ViewerTree } from "./viewer-tree.js";
+import { ViewerTree, type ViewerScreen } from "./viewer-tree.js";
 
 /** The parts of the bar that only the desktop composition has room for. */
 function BarDetails() {
@@ -55,8 +58,19 @@ function BranchChip() {
   );
 }
 
-/** The depicted viewer window. */
-export function Viewer({ viewport }: { viewport: "mobile" | "desktop" }) {
+/**
+ * The depicted viewer window, with `current` open: `children` draws the
+ * open screen beside the catalogue column.
+ */
+export function Viewer({
+  children,
+  current,
+  viewport,
+}: {
+  children: ReactNode;
+  current: ViewerScreen;
+  viewport: "mobile" | "desktop";
+}) {
   return (
     <div aria-hidden="true" className="site-frame">
       <div className="site-topbar">
@@ -69,8 +83,8 @@ export function Viewer({ viewport }: { viewport: "mobile" | "desktop" }) {
         </span>
       </div>
       <div className="site-shell-body">
-        <ViewerTree />
-        <ViewerCompare />
+        <ViewerTree current={current} />
+        {children}
       </div>
     </div>
   );

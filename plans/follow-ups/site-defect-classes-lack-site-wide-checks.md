@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-22, from `calummoore/canvas-redesign-m20-site-decisions-of-fqcp`: decision 12 of the Canvas redesign plan, option D, with the 200% text walk of decisions 24 and 31.
-- **Location:** `apps/site/tests/browser/pages.spec.ts`, `apps/site/tests/browser/accessibility.ts`, `apps/site/tests/browser/chrome.spec.ts`, `apps/site/tests/docs_page_source.test.ts`, `apps/site/tests/contrast.test.ts`, `docs/mockups/src/_tests_/design-site-home.test.ts:242`, `docs/mockups/src/_tests_/design-site-docs-variants.test.ts:204`, `scripts/verification/ratchets/internal-exports.mjs:12`
+- **Location:** `apps/site/tests/browser/pages.spec.ts`, `apps/site/tests/browser/accessibility.ts`, `apps/site/tests/browser/chrome.spec.ts`, `apps/site/tests/docs_page_source.test.ts`, `apps/site/tests/contrast.test.ts`, `docs/mockups/src/_tests_/design-site-home.test.ts:141`, `docs/mockups/src/_tests_/design-site-docs-variants.test.ts:204`, `scripts/verification/ratchets/internal-exports.mjs:12`
 - **Reason:** Each check is a new gate, and on 2026-11-22 Cal chose to add no new gate in the Canvas redesign.
 - **Source:** Review.
 - **Category:** Test.

@@ -1,7 +1,8 @@
-/* The stage of the depicted viewer's open screen: the dotted canvas where
-   the Swipe divider with its grip splits main on the left from
-   feat/checkout-v2 on the right. The compared acme payment screens draw at
-   49 percent; their own rules are in home-acme-checkout.css. */
+/* The stage of the depicted viewer's open screen: the dotted canvas. In
+   the Changes frame the Swipe divider with its grip splits main on the left
+   from feat/checkout-v2 on the right. The compared acme payment screens draw
+   at 49 percent; their own rules are in home-acme-checkout.css. The Browse
+   frame's canvas rules are in home-links.css. */
 
 .site-stage {
   background-color: var(--mk-color-background);

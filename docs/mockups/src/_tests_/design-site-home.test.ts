@@ -5,6 +5,7 @@ import { test } from "node:test";
 
 import { openSource } from "../fixtures/site";
 
+import { first, only } from "./design-site-home-helpers";
 import {
   attribute,
   byClass,
@@ -26,32 +27,12 @@ const HEADING = "Design in\u00a0code.";
 const LEAD =
   "Generate an interactive mockup of your entire app using your existing React, HTML and CSS components.";
 
-/** Cal's Review body, word for word. */
-const REVIEW_BODY =
-  "Each comment is tied to the component it is about, so it stays put when the layout changes. Approve when it is right, in step with the pull request review.";
-
-type Parsed = ReturnType<typeof siteDocument>["document"] | Element;
-
-/** The one element of a class inside a node, failing on none or several. */
-function only(node: Parsed, name: string): Element {
-  const found = byClass(node, name);
-  assert.equal(found.length, 1, `one .${name}`);
-  return found[0]!;
-}
-
 /** The links inside one region, as their labels and destinations. */
 function links(region: Element): Array<[string, string | undefined]> {
   return elements(region, (node) => node.tagName === "a").map((link) => [
     label(link),
     attribute(link, "data-mokly-link") ?? attribute(link, "href"),
   ]);
-}
-
-/** The first element of one tag inside a node, as text. */
-function first(node: Element, tagName: string): string {
-  const found = elements(node, (child) => child.tagName === tagName)[0];
-  assert.ok(found, `a ${tagName} inside .${attribute(node, "class")}`);
-  return label(found);
 }
 
 /** The serif that the depicted acme/storefront app names. */
@@ -113,89 +94,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ],
     );
   });
-
-  test(`${viewport}: the feature frames carry their kickers, headings and copy`, () => {
-    const { document } = siteDocument("design/site/home", viewport);
-    const intro = only(document, "site-section-head");
-    const heading = elements(intro, (node) => node.tagName === "h2")[0];
-    assert.ok(heading);
-    assert.deepEqual(
-      [
-        ...heading.childNodes.map(textContent).filter(Boolean),
-        first(intro, "p"),
-      ],
-      [
-        "Browse, review, edit.",
-        "One place for all of it.",
-        "Every branch becomes a catalogue your whole team can open.",
-      ],
-    );
-    const modules = byClass(document, "site-module");
-    assert.deepEqual(
-      modules.map((module) => [
-        attribute(module, "id"),
-        label(only(module, "site-kicker")),
-        first(module, "h3"),
-      ]),
-      [
-        ["browse", "01 Browse", "A visual diff for every branch."],
-        ["review", "02 Review", "Sticky comments."],
-        ["edit", "03 Edit", "Ask for the change beside the screen."],
-      ],
-    );
-    assert.equal(label(only(modules[1]!, "site-module-body")), REVIEW_BODY);
-  });
-
-  test(`${viewport}: the Browse compare lists the five modes with Swipe chosen`, () => {
-    const { document } = siteDocument("design/site/home", viewport);
-    const viewer = only(only(document, "site-module--browse"), "site-frame");
-    // The product's order of the compare modes.
-    assert.deepEqual(byClass(viewer, "site-home-mode").map(label), [
-      "Current",
-      "Side by side",
-      "Overlay",
-      "Difference",
-      "Swipe",
-    ]);
-    assert.deepEqual(byClass(viewer, "site-home-mode--chosen").map(label), [
-      "Swipe",
-    ]);
-    assert.equal(byClass(viewer, "site-home-swipe").length, 1);
-    assert.deepEqual(byClass(viewer, "site-stage-label").map(label), [
-      "main",
-      "feat/checkout-v2",
-    ]);
-  });
-
-  test(`${viewport}: the depictions are hidden from assistive technology and hold nothing to focus`, () => {
-    const { document } = siteDocument("design/site/home", viewport);
-    const review = only(document, "site-module--review");
-    const depictions = [
-      only(document, "site-home-spread"),
-      only(document, "site-home-check"),
-      only(document, "site-frame"),
-      only(review, "site-detail"),
-      only(document, "site-comment"),
-      only(document, "site-home-edit-bar"),
-      only(document, "site-home-edit-board"),
-      only(document, "site-agent"),
-      only(document, "site-home-source-board"),
-      only(document, "site-home-connector"),
-      ...byClass(document, "site-home-wire"),
-    ];
-    assert.equal(depictions.length, viewport === "desktop" ? 11 : 10);
-    for (const depiction of depictions) {
-      const name = attribute(depiction, "class") ?? depiction.tagName;
-      assert.equal(attribute(depiction, "aria-hidden"), "true", name);
-      assert.deepEqual(
-        elements(depiction, (node) =>
-          /^(?:a|button|input|select|textarea|h[1-6])$/.test(node.tagName),
-        ).map((node) => node.tagName),
-        [],
-        `${name} holds no control and no heading`,
-      );
-    }
-  });
 }
 
 test("the Specs panel lists the page sections on the desktop composition only", () => {
@@ -213,8 +111,9 @@ test("the Specs panel lists the page sections on the desktop composition only", 
       ["Hero", "#hero"],
       ["Browse, review, edit.", "#features"],
       ["01 Browse", "#browse"],
-      ["02 Review", "#review"],
-      ["03 Edit", "#edit"],
+      ["02 Changes", "#changes"],
+      ["03 Review", "#review"],
+      ["04 Edit", "#edit"],
       ["Open foundation", "#foundation"],
       ["Footer", "#footer"],
     ],

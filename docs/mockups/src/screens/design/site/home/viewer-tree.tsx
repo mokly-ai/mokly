@@ -1,16 +1,19 @@
 /**
  * The catalogue column of the depicted Mokly viewer: the All and Changes
  * filter with All chosen, then the Specs and Components sections of the
- * acme/storefront catalogue, with the open checkout/payment screen and a
- * dot on each changed or added entry.
+ * acme/storefront catalogue, with the open screen's row current and a dot
+ * on each changed or added entry. The Changes frame opens checkout/payment
+ * and the Browse frame opens pricing.
  */
 
 import { SiteIcon, type SiteIconName } from "../parts/icons.js";
 
+/** A screen that a depicted viewer opens. */
+export type ViewerScreen = "payment" | "pricing";
+
 /** One row of the depicted tree. */
 interface TreeRow {
   change?: "added" | "changed";
-  current?: boolean;
   /** 0 for a folder or a root entry, 1 inside a folder, 2 for a variant. */
   depth: 0 | 1 | 2;
   icon?: SiteIconName;
@@ -23,13 +26,7 @@ const SECTIONS: ReadonlyArray<{ rows: readonly TreeRow[]; title: string }> = [
   {
     rows: [
       { depth: 0, label: "checkout", open: true },
-      {
-        change: "changed",
-        current: true,
-        depth: 1,
-        icon: "screen",
-        label: "payment",
-      },
+      { change: "changed", depth: 1, icon: "screen", label: "payment" },
       { change: "added", depth: 1, icon: "screen", label: "review-order" },
       { depth: 0, label: "onboarding", open: true },
       { depth: 1, icon: "screen", label: "welcome" },
@@ -52,10 +49,10 @@ const SECTIONS: ReadonlyArray<{ rows: readonly TreeRow[]; title: string }> = [
   },
 ];
 
-function Row({ row }: { row: TreeRow }) {
+function Row({ current, row }: { current: boolean; row: TreeRow }) {
   const classes = ["site-row"];
   if (row.open) classes.push("site-row--group");
-  if (row.current) classes.push("site-row--current");
+  if (current) classes.push("site-row--current");
   return (
     <span className={classes.join(" ")} data-site-depth={row.depth}>
       {row.open ? (
@@ -76,8 +73,8 @@ function Row({ row }: { row: TreeRow }) {
   );
 }
 
-/** The viewer's catalogue column. */
-export function ViewerTree() {
+/** The viewer's catalogue column, with the row of `current` current. */
+export function ViewerTree({ current }: { current: ViewerScreen }) {
   return (
     <div className="site-tree">
       <span className="site-filter">
@@ -93,7 +90,11 @@ export function ViewerTree() {
           <div className="site-tree-section" key={section.title}>
             <p className="site-tree-section-head">{section.title}</p>
             {section.rows.map((row) => (
-              <Row key={`${section.title}-${row.label}`} row={row} />
+              <Row
+                current={row.label === current}
+                key={`${section.title}-${row.label}`}
+                row={row}
+              />
             ))}
           </div>
         ))}

@@ -1,7 +1,8 @@
-/* The depicted Mokly viewer of the Browse frame: its window, its bar with
-   the crumb, the branch, the pull request, the commit, the people, History
-   and Share, and the head of the open screen with the compare toolbar. The
-   Edit window's title bar reuses the bar's mark, crumb and branch chip. */
+/* The depicted Mokly viewer of the Browse and Changes frames: its window,
+   its bar with the crumb, the branch, the pull request, the commit, the
+   people, History and Share, and in the Changes frame the head of the open
+   screen with the compare toolbar. The Edit window's title bar reuses the
+   bar's mark, crumb and branch chip. */
 
 .site-frame {
   background: var(--mk-color-surface);

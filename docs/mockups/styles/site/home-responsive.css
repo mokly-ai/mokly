@@ -122,7 +122,7 @@
   font-size: 1rem;
 }
 
-/* Browse: the full-width card, and the viewer's catalogue over its screen */
+/* Changes: the full-width card, and the viewer's catalogue over its screen */
 
 [data-site-viewport="mobile"] .site-home-check {
   margin-top: -20px;

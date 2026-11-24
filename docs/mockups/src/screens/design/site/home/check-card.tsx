@@ -1,5 +1,5 @@
 /**
- * The GitHub check card of the Browse frame: acme/storefront's pull request
+ * The GitHub check card of the Changes frame: acme/storefront's pull request
  * #482 with the Mokly check, which counts the changed screens and offers
  * View changes. A depiction of another product, so View changes is text.
  */
