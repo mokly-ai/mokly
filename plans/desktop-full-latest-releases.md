@@ -1,6 +1,6 @@
 # Desktop releases become full latest releases
 
-Status: Active. On branch `calummoore/desktop-releases-become-latest-releases-clkn`, no pull request yet. The pull request waits for the owner's answer to the follow-up item `plans/follow-ups/desktop-promotion-can-move-latest-backward.md`. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/desktop-releases-become-latest-releases-clkn`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Every desktop release of `mokly-ai/mokly-desktop` is a GitHub pre-release
 today, and its installer names hold the version, such as
@@ -37,6 +37,22 @@ parent workspace "dedicated download page". The options check ran there.
 - **Decision 2 = B.** The download page shows no pre-release label. This
   affects only the later page.
 - **Order.** Cal approved this change and its merge first, then the page.
+- **Review item 1 = A (2026-11-24).** A late promotion must not move the
+  latest mark backward. Before publication, the promotion reads GitHub's
+  latest release. When its version is higher, the promotion does not publish,
+  and the job ends with a warning. A 404 counts as no latest release. The
+  warning, not a failure, is the recommendation that Cal accepted. Rejected:
+  B, publish the older draft without the latest mark; C, process promotions
+  in version order; D, move the latest mark back to the highest release
+  after each promotion.
+- **Review item 2 = B (2026-11-24).** A complete draft must not get stuck
+  after a late failure. Each platform attempt saves a record of its build,
+  with the names, sizes and SHA-256 hashes, before any upload. A rerun
+  accepts a complete set of its platform that is already on the draft only
+  when each GitHub `digest` matches an earlier record. A partial set still
+  fails. Rejected: D, the draft as the only record, because it drops the
+  size rule; E, a rerun that deletes and re-uploads draft assets, because it
+  reverses the never-delete rule; C, staging full installers as artifacts.
 - These decisions supersede the rule "every release is a pre-release until
   local mode lands" in the two desktop protocol docs.
 
@@ -196,7 +212,7 @@ and their tests implement the design.
 
 ## Milestone 3: Verification, commit, review, and pull request
 
-Depends on: 1, 2
+Depends on: 1, 2, 4
 
 - [x] Run the targeted tests, `npm run test --workspace @mokly-cloud/desktop`,
       `cargo xtask check --suite repository` and the gate suites that the
@@ -213,6 +229,31 @@ Depends on: 1, 2
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
 - [ ] Check the file names in the packaging artifacts of the pull request.
+
+## Milestone 4: Review answers of 2026-11-24
+
+Depends on: 2
+
+The promotion keeps the latest mark on the highest version, and a platform
+rerun can accept its complete set by hash.
+
+- [ ] Promotion: read the latest release before publication. Skip with a
+      warning when it has a higher version. Treat a 404 as no latest release.
+- [ ] Platform jobs: split the release step into a build step and a publish
+      step. Upload a per-attempt build record with names, sizes and SHA-256
+      hashes before any upload. Accept a complete existing set on a rerun
+      only when each GitHub `digest` matches an earlier record.
+- [ ] Keep the records and the manifests for 35 days, which covers the
+      30-day rerun window.
+- [ ] Tests for both answers, and the workflow test update.
+- [ ] Protocol, README and runbook text for both answers.
+- [ ] Delete the follow-up items that the answers close:
+      `desktop-promotion-can-move-latest-backward.md`,
+      `desktop-stranded-draft-needs-repair-path.md` and
+      `desktop-promotion-manifests-expire.md`.
+- [ ] Review the answers with the `implementation-review` skill. Its
+      `fix now` findings become `fix after merge`, because the two fix
+      rounds are used.
 
 ## Post-merge follow-up (non-blocking)
 
