@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-22, from `calummoore/canvas-redesign-m20-site-decisions-of-fqcp`: decision 12 of the Canvas redesign plan, option D, with the 200% text walk of decisions 24 and 31.
-- **Location:** `apps/site/tests/browser/pages.spec.ts`, `apps/site/tests/browser/accessibility.ts`, `apps/site/tests/browser/chrome.spec.ts`, `apps/site/tests/docs_page_source.test.ts`, `apps/site/tests/contrast.test.ts`, `docs/mockups/src/_tests_/design-site-home.test.ts:242`, `docs/mockups/src/_tests_/design-site-docs-variants.test.ts:204`, `scripts/verification/ratchets/internal-exports.mjs:12`
+- **Location:** `apps/site/tests/browser/pages.spec.ts`, `apps/site/tests/browser/accessibility.ts`, `apps/site/tests/browser/chrome.spec.ts`, `apps/site/tests/docs_page_source.test.ts`, `apps/site/tests/contrast.test.ts`, `docs/mockups/src/_tests_/design-site-home.test.ts:242`, `docs/mockups/src/_tests_/design-site-docs-variants.test.ts:204`, `scripts/verification/ratchets/internal-exports.mjs:12`, `apps/site/tests/browser/home-hero.spec.ts`
 - **Reason:** Each check is a new gate, and on 2026-11-22 Cal chose to add no new gate in the Canvas redesign.
 - **Source:** Review.
 - **Category:** Test.
@@ -24,7 +24,7 @@
   - On 2026-11-22, Cal also chose one 200% text pass over the chrome and every page. Before that pass, a one-time check with 200% text in a 320px window found sideways scroll on every page. The footer links reached 326px, the home 335px, pricing 596px and the changelog 363px.
   - `docs/protocol/cloud/site-design.md` requires self-hosted Geist, Geist Mono and Instrument Serif 400, and no font from another host. It requires 4.5:1 for normal text. It requires usable layouts at 320px width and 200% text, with no sideways scroll.
   - The report-only Lighthouse run audits accessibility, contrast included, on seven routes at 390px and 1440px. `apps/site/src/lighthouse.ts` lists them. No Lighthouse result can fail Required CI.
-  - Each of the seven checks below is a new gate. For each, the list gives what the repository tests today, the gap and the check.
+  - Each check in the list below is a new gate. For each, the list gives what the repository tests today, the gap and the check.
   - **Hosted first families.**
     - Today: the site hosts its three faces under `apps/site/src/fonts/`. The link check, `npm run site:links`, fails on a missing face file. The CSP in `apps/site/public/_headers` allows fonts from the site only, and `apps/site/tests/headers.test.ts` checks it. The mockup test "the site styles host the Instrument Serif face that the demo app names" checks that one family in the mockup sheets.
     - Gap: no test checks the first family of each site rule. A rule that names a family without a face draws in a fallback face, and no check fails.
@@ -50,24 +50,25 @@
     - Gap: no test walks every route at 200% text. A later part with one-line text on another route, such as a docs page, a legal page or the 404 page, can bring sideways scroll back at 200% text, and no check fails.
     - Check: repeat the 320px page walk with the root text at 200%, and fail when a page scrolls sideways.
   - **Overlapping parts of a home depiction.**
-    - Today: the test "no two component sets of the spread meet" in `apps/site/tests/browser/home-hero.spec.ts` checks the six component sets of the spread's Components box at 1920px. It counts each set's label, its box with the dashed outline and its selection. Branch `calummoore/non-overlapping-m1rs` added it on 2026-11-24, after the PriceCard set crossed the Avatar set and the Input set covered the Toast set.
+    - Today: the test "no two component sets of the spread meet" in `apps/site/tests/browser/home-hero.spec.ts` checks the six component sets of the spread's Components box at 1920px. It counts each set's label, its box grown by its computed outline and its selection, and it fails when fewer than six sets show. Branch `calummoore/non-overlapping-m1rs` added it on 2026-11-24, after the PriceCard set crossed the Avatar set and the Input set covered the Toast set.
     - Gap: the home draws other parts on canvases: the artboards of the spread, the cursors and the frames of the demos. No test checks that two of them do not meet, outside the Components box.
-    - Check: on the home at the desktop widths, measure every laid-out part of each depiction and fail when two meet. A marker excludes the parts that overlap on purpose, such as cursors and selections.
+    - Check: on the home at the desktop widths, measure what each part of each depiction paints, outlines and shadows included, and fail when two meet. A marker excludes the parts that overlap on purpose, such as cursors and selections.
 - **Problem:** Each class produced a real defect during the Canvas redesign, and no check fails on a new case of the class. The tests that exist cover the case that one milestone rebuilt.
 - **Impact if no action:** Later site work can bring each defect back: an unhosted face, an edit link to an ignored path, text below 4.5:1, a broken tool bar, dead mockup modules, sideways scroll at 200% text or overlapping parts of a home depiction.
 - **Root question:** How does later site work keep out the defect classes that the Canvas redesign found?
 - **Options:**
   - **A.** Add no check. Each later site change tests the part that it changes, as the Canvas redesign did. Effort: Small.
-  - **B.** Add the two Node checks: hosted first families and tracked Edit on GitHub targets. They read files only. The three browser classes and the dead modules stay unchecked. Effort: Small.
-  - **C.** Add all seven checks: B, the contrast walk, the tool bar walk, the ratchet over `docs/mockups/src/`, the 200% text walk and the overlap walk of the home. The four walks add run time to `npm run site:browser`. Effort: Medium.
-  - **D.** Remove the wrong case at its source for three classes. The palette module ships each font stack with its hosted faces, the guide build records the tracked source path for Edit on GitHub, and muted code text becomes a named colour with a checked contrast pair. Add the other three checks of C. It changes the palette and guide contracts. Effort: Large.
+  - **B.** Add the two Node checks: hosted first families and tracked Edit on GitHub targets. They read files only. The other classes of the list stay unchecked. Effort: Small.
+  - **C.** Add the check of every class in the list. The walks, each a browser check, add run time to `npm run site:browser`. Effort: Medium.
+  - **D.** Remove the wrong case at its source for three classes. The palette module ships each font stack with its hosted faces, the guide build records the tracked source path for Edit on GitHub, and muted code text becomes a named colour with a checked contrast pair. Add the checks of C for every other class of the list. It changes the palette and guide contracts. Effort: Large.
 - **Left out:** Making the report-only Lighthouse run required, because its performance score flakes, as `plans/follow-ups/flaky-site-lighthouse-performance.md` records, and it audits seven routes only. Checks of the mockups alone, because the parity test lets the site differ wherever it lists an intentional difference.
-- **Wider fix:** D for the faces, the edit targets and the dimmed text, because a structural source removes the wrong case. C for the widths, the 200% text, the dead modules and the overlapping parts, which have no structural fix.
+- **Wider fix:** D for the faces, the edit targets and the dimmed text, because a structural source removes the wrong case. C for the widths, the 200% text and the dead modules, which have no structural fix. For the overlapping parts, a layout that stacks each depiction's parts, as the component sets now stack in columns, removes the case where a depiction allows it; the walk catches the rest.
 - **Previous examples:** Commit `da8db8e1c`, which fixed the four mockup defects. The sideways scroll at 200% text above. The overlapping component sets of the home spread, fixed on branch `calummoore/non-overlapping-m1rs`. The weak edges and the wrapping compare toolbar in `plans/follow-ups/canvas-mockup-contrast-and-overlap.md`.
 - **Related:**
   - `plans/follow-ups/test-helper-unused-exports.md` and `plans/follow-ups/mokly-package-internal-export-audit.md` widen the same ratchet to other roots. The three changes edit the roots of one check.
   - `plans/follow-ups/flaky-site-lighthouse-performance.md` holds the report-only Lighthouse run, which audits contrast on seven routes.
   - `plans/follow-ups/canvas-mockup-contrast-and-overlap.md` names this work as its wider fix.
+  - `plans/follow-ups/home-overlap-measure-reads-paint-on-both-pages.md` shares one overlap measure between the site and the mockup home; the overlap walk can reuse it.
   - `plans/follow-ups/site-desktop-layouts-at-200-percent-text.md` holds the desktop layouts at 200% text. A desktop walk at 200% text would extend the tool bar walk and the 200% text walk of this item.
 - **Recommendation:** C. It checks every class that produced a defect in the redesign, on the built site, at Medium effort. D best protects the codebase, but it changes two contracts.
 - **Action:** ask the user, because each check is a new gate, which needs Cal's approval, and on 2026-11-22 he chose to add none in the Canvas redesign.

@@ -1,0 +1,31 @@
+# Home overlap measure reads paint on both pages
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from `calummoore/non-overlapping-m1rs`: review findings 2 (wider fix E) and 3 (option F).
+- **Location:** `apps/site/tests/browser/home-hero.spec.ts`, `docs/mockups/src/_tests_/`, `docs/mockups/src/screens/design/site/home/spread-sets.tsx`, `apps/site/src/styles/home-spread.css`, `docs/mockups/styles/site/home-spread.css`
+- **Reason:** The fix is Medium work across the site and mockup test suites, and the shipped site already has its own test.
+- **Source:** Review.
+- **Category:** Test.
+
+- **Terms:**
+  - **Component sets:** the six labelled groups (Button, PriceCard, Badge, Avatar, Input, Toast) in the Components box of the home page spread, the drawing of a demo app under the home heading.
+  - **Design mockup:** the catalogue page under `docs/mockups` that draws the site home from its own React markup. A parity test keeps its stylesheets equal to the site's, but no test compares its markup.
+- **Background:**
+  - The site test "no two component sets of the spread meet" opens the built site home at 1920px under reduced motion. It measures each set's label, its box grown by the computed outline, and its selection, and fails when two meet or when fewer than six sets show.
+  - The design mockup draws the same sets from its own markup. No test measures them there. Removing the column wrapper from the mockup markup makes four pairs of sets meet, and every check still passes.
+  - The Codex cursor sits at a fixed canvas spot over the sets. With today's 32px column gap it touches no label. With a 12px gap its tag lies 5px over the PriceCard label, and the site test still passes, because it does not measure cursors.
+  - The site test models the paint: the outline and the selection. A shadow or another painted part outside a set's box would escape it.
+- **Problem:** Only the site page is measured, only from a model of the paint, and without the cursor tags.
+- **Impact if no action:** The mockup, the spec of the site, can show the overlap again with every check green. A later paint change or a cursor move can bring the overlap back on the site too.
+- **Root question:** How do one measure and one copy of it keep the component sets of both pages apart as the reader sees them, cursor tags included?
+- **Options:**
+  - **A.** Copy the site measure into a mockup browser case on the built desktop home. Effort: Small. Two copies of the measure.
+  - **B.** Put the measure in one browser-test helper that the site spec and a mockup spec both call, and add the cursor tags over the Components box to the measured parts. Accept a page without cursors. Effort: Medium.
+  - **C.** As B, but measure painted pixels: capture the Components box with all sets hidden, then with one set shown at a time, and take each set's extent from the changed pixels. Needs a settled frame and a pixel threshold. Effort: Medium.
+- **Left out:** A Node check of the mockup markup, because it can pass while the rendered sets overlap.
+- **Wider fix:** The overlap walk of `plans/follow-ups/site-defect-classes-lack-site-wide-checks.md`, which waits for the user.
+- **Previous examples:** The overlap that branch `calummoore/non-overlapping-m1rs` fixed on both pages.
+- **Related:** `plans/follow-ups/site-defect-classes-lack-site-wide-checks.md` holds the class-wide overlap walk; this item's helper would serve it.
+- **Recommendation:** B. One copy of the measure checks both pages and the cursor tags at Medium effort and without pixel thresholds. C best protects against new kinds of paint.
+- **Action:** fix after merge, apply B.

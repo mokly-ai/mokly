@@ -18,7 +18,7 @@ export interface CanvasSpot {
 }
 
 /** The inline position of an element at one spot of a canvas. */
-export function spotStyle(at: CanvasSpot | undefined): CSSProperties {
+function spotStyle(at: CanvasSpot | undefined): CSSProperties {
   return at === undefined ? {} : { left: at.x, top: at.y };
 }
 

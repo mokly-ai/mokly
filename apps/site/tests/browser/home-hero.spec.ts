@@ -170,35 +170,59 @@ test.describe("under reduced motion", DESKTOP, () => {
     await page.setViewportSize({ height: 900, width: 1920 });
     await openHome(page);
     const meeting = await spread(page).evaluate((root) => {
-      // What the reader sees of a set: its label, its box with the dashed
-      // outline around it, and a selection over it.
-      const OUTLINE = 4;
-      const extents = [...root.querySelectorAll(".site-home-set")].map(
+      // What the reader sees of a part: its box grown by the outline that
+      // it paints around it, or nothing when it does not show.
+      const painted = (part: Element): DOMRect | null => {
+        const rect = part.getBoundingClientRect();
+        const shows =
+          rect.width > 0 &&
+          rect.height > 0 &&
+          part.checkVisibility({
+            opacityProperty: true,
+            visibilityProperty: true,
+          });
+        if (!shows) return null;
+        const style = getComputedStyle(part);
+        const outline =
+          style.outlineStyle === "none"
+            ? 0
+            : Math.max(
+                0,
+                parseFloat(style.outlineWidth) +
+                  parseFloat(style.outlineOffset),
+              );
+        return new DOMRect(
+          rect.x - outline,
+          rect.y - outline,
+          rect.width + 2 * outline,
+          rect.height + 2 * outline,
+        );
+      };
+      // A set shows when its label and its box show; it covers its label,
+      // its box and a selection over it.
+      const extents = [...root.querySelectorAll(".site-home-set")].flatMap(
         (set) => {
+          const label = set.querySelector(".site-home-set-label");
+          const box = set.querySelector(".site-home-set-box");
+          const head = label === null ? null : painted(label);
+          const body = box === null ? null : painted(box);
+          if (head === null || body === null) return [];
           const parts = [
-            ...set.querySelectorAll(
-              ".site-home-set-label, .site-home-set-peer",
+            head,
+            body,
+            ...[...set.querySelectorAll(".site-home-set-peer")].flatMap(
+              (peer) => painted(peer) ?? [],
             ),
-          ].map((part) => part.getBoundingClientRect());
-          const box = set
-            .querySelector(".site-home-set-box")
-            ?.getBoundingClientRect();
-          if (box !== undefined)
-            parts.push(
-              new DOMRect(
-                box.x - OUTLINE,
-                box.y - OUTLINE,
-                box.width + 2 * OUTLINE,
-                box.height + 2 * OUTLINE,
-              ),
-            );
-          return {
-            bottom: Math.max(...parts.map((part) => part.bottom)),
-            left: Math.min(...parts.map((part) => part.left)),
-            name: set.querySelector(".site-home-set-label")?.textContent,
-            right: Math.max(...parts.map((part) => part.right)),
-            top: Math.min(...parts.map((part) => part.top)),
-          };
+          ];
+          return [
+            {
+              bottom: Math.max(...parts.map((part) => part.bottom)),
+              left: Math.min(...parts.map((part) => part.left)),
+              name: label?.textContent,
+              right: Math.max(...parts.map((part) => part.right)),
+              top: Math.min(...parts.map((part) => part.top)),
+            },
+          ];
         },
       );
       const pairs = extents.flatMap((a, index) =>
