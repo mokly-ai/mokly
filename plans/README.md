@@ -8,6 +8,10 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
+- [Base prepare command](./base-prepare-command.md) — run a configured
+  command in a private copy of the comparison base before the base render, so
+  that a base whose packages export only built files renders. Decisions 1 to
+  9 wait for Cal.
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
