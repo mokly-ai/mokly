@@ -46,7 +46,7 @@ test("the updater checks at launch and every four hours", async () => {
   const updates = startUpdates(fixture.dependencies, "install");
   await settle();
   assert.equal(updates.available, true);
-  assert.equal(fixture.updater.allowPrerelease, true);
+  assert.equal(fixture.updater.allowPrerelease, false);
   assert.equal(fixture.updater.autoDownload, true);
   assert.equal(fixture.updater.autoInstallOnAppQuit, true);
   fixture.tick();

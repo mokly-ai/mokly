@@ -1,0 +1,33 @@
+# First desktop upload accepts an incomplete set
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from review finding 12 of the branch `calummoore/desktop-releases-become-latest-releases-clkn`.
+- **Location:** `packages/desktop/scripts/release-assets.mjs`, the function `publishRelease`, its first-upload path. `packages/desktop/scripts/package.mjs`, the function `platformInventory`. `packages/desktop/scripts/release-promote.mjs`, the names check of the promotion. `packages/desktop/README.md`, the recovery steps for a failed `promote` job.
+- **Reason:** The review ran after the two fix rounds of the branch, so its findings wait for a later branch. The previous latest release stays latest while the problem waits.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Draft:** A GitHub release of `mokly-ai/mokly-desktop` that only collaborators can see and that is never the latest release.
+  - **Fixed set:** The exact release file names of one platform. macOS: `Mokly-mac-arm64.dmg`, `Mokly-mac-x64.dmg`, `Mokly-mac-arm64.zip`, `Mokly-mac-x64.zip`, the four matching `.blockmap` files and `latest-mac.yml`. Linux: `Mokly-linux-x86_64.AppImage`, `Mokly-linux-amd64.deb` and `latest-linux.yml`.
+  - **Promotion:** The `promote` job. It checks both platform manifests and the draft, then makes the draft the latest full release.
+- **Background:**
+  - On 2026-11-24 the owner chose that a platform rerun reuses a complete upload only when each GitHub `digest` matches an earlier build record, and that a partial set still fails. No asset is ever replaced or deleted.
+  - The first upload of a platform checks that the built files match the build record of the attempt. It does not check that they are the fixed set.
+  - Review probes against the real `publishRelease` and `promoteRelease`: a Linux build without `latest-linux.yml`, a macOS build with one extra file, and a Linux build with versioned names each passed the first upload. The promotion then failed with "The linux manifest has the wrong asset names". A rerun with a complete build failed with "Assets already published without a complete linux inventory".
+  - The preview launch check already compares a build with the fixed set through `platformInventory`. That function accepts a duplicate name, so the promotion keeps its own count rule.
+  - Two related defects in the same path:
+    - `packages/desktop/README.md` says to rerun the failed jobs after a failed `promote` job. When the promotion fails on a manifest's names, the rerun fails again, because it does not rebuild the platform job that passed.
+    - A complete platform set next to a foreign file fails with "without a complete {platform} inventory", which names the wrong cause.
+- **Problem:** An incomplete or wrong platform build reaches the draft before any check of its names.
+- **Impact if no action:** One packaging fault blocks that version, and the release needs a new version with a new signing and notarization run.
+- **Root question:** How can a packaging error leave the same version eligible for a retry?
+- **Options:**
+  - **A.** Check the fixed names before the first upload, in the first-upload path only, with a second copy of the check. Effort: Small.
+  - **B.** Use one fixed-set check, which rejects missing and extra names, for preview, the first upload and the promotion. Run it on the first-upload path after the asset list read. Keep the count rule of the promotion. Add a case that omits `latest-linux.yml` and expects zero uploads. Fix the README rerun advice and the wrong-cause message. Effort: Small.
+  - **C.** Let the build step hand off only a complete set. A rerun whose new build is incomplete then fails, also when the draft holds a complete matching upload. This is a stricter validation, so it needs the owner. Effort: Medium.
+- **Left out:** Filling the gaps on a rerun mixes files of two builds, and the update file of a new build names a different hash. A check before the draft lookup has the stricter rerun rule of C.
+- **Wider fix:** B. One fixed-set check serves every consumer.
+- **Previous examples:** `plans/follow-ups/dev-preparation-partial-build.md` records a consumer that accepted incomplete build output before a later check failed.
+- **Recommendation:** B. It stops a wrong set before any upload with the check that preview already runs, and it keeps the rerun reuse that the owner chose.
+- **Action:** fix after merge, apply B, because the review ran after the two fix rounds and the severity is Medium.
