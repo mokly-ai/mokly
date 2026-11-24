@@ -34,7 +34,10 @@ export type ComponentPageState =
   | "props-failed"
   | "shared-impact"
   | "style-changed"
-  | "closed";
+  | "closed"
+  | "story-failed"
+  | "story-failed-changes"
+  | "storybook-link";
 
 /**
  * The Toolbar's nested components in the shipped tree: the one Action that its

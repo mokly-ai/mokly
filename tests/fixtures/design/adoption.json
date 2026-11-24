@@ -172,7 +172,9 @@
         "design/components/pages/stacked/overlay-tall",
         "design/components/states/removed",
         "design/components/states/shared-impact/style-changed",
-        "design/components/states/shared-impact/style-outside"
+        "design/components/states/shared-impact/style-outside",
+        "design/components/states/stories/story-failed",
+        "design/components/states/stories/story-failed-changes"
       ]
     },
     {
@@ -182,7 +184,8 @@
       "only": [
         "design/components/pages/comparison",
         "design/components/states/removed",
-        "design/components/states/shared-impact/style-changed"
+        "design/components/states/shared-impact/style-changed",
+        "design/components/states/stories/story-failed-changes"
       ]
     },
     {

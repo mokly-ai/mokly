@@ -51,6 +51,11 @@ const PARENTS: Record<ComponentId, SavedVariant> = {
     path: COMPONENT_ENTRIES.checklist.path,
     title: COMPONENTS.checklist.title,
   },
+  menu: {
+    path: COMPONENT_ENTRIES.menu.path,
+    title: COMPONENTS.menu.title,
+    to: COMPONENT_PAGES["storybook-link"],
+  },
 };
 
 /** Each depicted parent's saved variants in authored order, with their artboards. */
@@ -78,6 +83,13 @@ const SAVED_VARIANTS: Record<ComponentId, readonly SavedVariant[]> = {
       path: COMPONENT_ENTRIES.checklistDefault.path,
       title: "Default",
       to: COMPONENT_PAGES["overlay-tall"],
+    },
+  ],
+  menu: [
+    {
+      path: COMPONENT_ENTRIES.menuExpanded.path,
+      title: COMPONENT_ENTRIES.menuExpanded.title,
+      to: COMPONENT_PAGES["story-failed"],
     },
   ],
 };

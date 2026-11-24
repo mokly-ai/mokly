@@ -6,7 +6,7 @@ type NavigationRows = CatalogueNavigationProps["rows"];
 
 /** Components depicted in the example catalogue and component explorer. */
 export type ComponentNavigationIdentity =
-  "action" | "toolbar" | "help-hint" | "badge" | "checklist";
+  "action" | "toolbar" | "help-hint" | "badge" | "checklist" | "menu";
 
 interface ComponentVariantNavigationDefinition {
   id: string;
@@ -26,7 +26,9 @@ interface ComponentNavigationDefinition {
  * mockups depict. A variant row links to the artboard that shows that variant,
  * as the variant bar does. Badge's Default appears only in the Additions
  * story, a story of its own, so its row here is a depiction. The parent row
- * opens the parent's own page.
+ * opens the parent's own page. Menu is a synthetic Storybook stories entry
+ * that only the Storybook stories scenario depicts: its first story renders
+ * the parent's own page, and its Expanded story is its variant.
  */
 export const COMPONENT_NAVIGATION = {
   action: {
@@ -69,6 +71,17 @@ export const COMPONENT_NAVIGATION = {
         id: "checklist-default",
         title: "Default",
         to: COMPONENT_PAGES["overlay-tall"],
+      },
+    ],
+  },
+  menu: {
+    id: "example/components/Menu",
+    title: "Menu",
+    variants: [
+      {
+        id: "example/components/Menu/Expanded",
+        title: "Expanded",
+        to: COMPONENT_PAGES["story-failed"],
       },
     ],
   },

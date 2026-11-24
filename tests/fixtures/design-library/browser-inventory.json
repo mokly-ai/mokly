@@ -473,6 +473,12 @@
   },
   {
     "kind": "screen",
+    "path": "design/components/controls/states/error/later-edit",
+    "colorSchemes": ["light"],
+    "variantOf": "design/components/controls/states/error"
+  },
+  {
+    "kind": "screen",
     "path": "design/components/controls/states/invalid",
     "colorSchemes": ["light"]
   },
@@ -645,6 +651,21 @@
   {
     "kind": "screen",
     "path": "design/components/states/shared-impact/style-outside",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/stories/story-failed",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/stories/story-failed-changes",
+    "colorSchemes": ["light"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/components/states/stories/storybook-link",
     "colorSchemes": ["light"]
   },
   {
