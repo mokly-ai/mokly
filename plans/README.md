@@ -8,9 +8,6 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
-- [Workspace package sources in module resolution](./source-packages.md) —
-  load a workspace package's source files where its exports name built
-  files, so that a comparison base renders without built output.
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
