@@ -21,11 +21,14 @@ import { ModuleFrame, ModuleText } from "./module.js";
 import { ViewerCanvas } from "./viewer-canvas.js";
 import { Viewer } from "./viewer.js";
 
-/** Sam's press on Continue: the press ring under Sam's cursor. */
+/**
+ * Sam's press on Continue: the press ring under Sam's cursor. The cursor is
+ * on a demo screen outside the depicted viewer, so it is fiction of the
+ * design file and carries no ahead mark.
+ */
 function SamPress() {
   return (
     <>
-      {/* status: "ahead" (presence) */}
       <span className="site-home-links-press" />
       <SiteCursor className="site-home-links-sam" flip person="sam" />
     </>

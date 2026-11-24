@@ -168,8 +168,9 @@ Each item below is my design call of 2026-11-25, with its reason.
 - **Reuse.** The new viewer reuses the bar and the tree of the Changes
   viewer and the existing demo screens. It draws no compare.
 - **Ahead-of-release marks.** The link click is a released feature and gets
-  no mark. Sam's cursor gets `status: "ahead" (presence)`, as every named
-  cursor in the drawn viewer does.
+  no mark. Sam's cursor presses a screen outside the drawn viewer, so it is
+  fiction of the design file and carries no mark, as the
+  [site README](../apps/site/README.md) says.
 
 Contract owners:
 
