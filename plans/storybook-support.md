@@ -131,8 +131,6 @@ Apply each answer in the milestone that waits for it.
 The user also answered these follow-up items. Each file records its answer.
 A branch from this branch applies each answer and deletes the file.
 
-- [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): A.
-  Severity High.
 - [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
   D. Severity High.
 - [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): E.

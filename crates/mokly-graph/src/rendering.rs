@@ -116,7 +116,7 @@ fn validate(
         Ok(warnings) => document.warnings.extend(warnings),
         Err(source) => return Err(GraphError::Html { source }),
     }
-    asset_tokens::rewrite(&mut document.tree, &plan.route);
+    asset_tokens::rewrite(&mut document.tree, &plan.route)?;
     document.links = match links::rewrite(
         &mut document.tree,
         &catalogue.model.entries,

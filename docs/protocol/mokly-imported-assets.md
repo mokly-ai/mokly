@@ -137,6 +137,29 @@ Rejected: a replacement only for the delivered paths, because the key of each
 document would then hold the asset list, and one new import would render every
 view again.
 
+### Base URLs
+
+A composed document that holds an imported asset URL fails its render when its
+first `<base href>`, resolved against the document URL, has another origin or
+another directory than the document URL. The browser would resolve the asset
+URL against that base, not against the route of the document. The failure is
+`build-invalid`, with this reason, where `<route>` is the route of the
+document:
+
+```text
+<route>: <base href> redirects the imported asset URLs of this document; remove <base href>
+```
+
+Serve does not serve such a document, and `build` fails, as for other render
+failures. A base URL that keeps the directory of the document stays valid, and
+so does `<base target>`.
+
+Decision: this rule fails a document only when its base redirects an imported
+asset URL, because the asset URLs of such a document are broken. Rejected: a
+failure for every `<base href>`, because it also fails documents that work.
+Rejected: asset URLs written against the base, because the shared closure would
+then resolve authored references against the base too.
+
 ## Delivery
 
 Each imported asset of the [module graph](./mokly-sidecar.md#bundling) of a

@@ -3215,6 +3215,7 @@ dependencies = [
  "thiserror",
  "tracing",
  "unimock",
+ "url",
 ]
 
 [[package]]
