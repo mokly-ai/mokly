@@ -165,7 +165,8 @@
   width: 1px;
 }
 
-/* The status bar: the file, the people in it and the zoom; a depiction */
+/* The status bar: the file, the people in it and the zoom; a depiction.
+   footer-zoom.css draws the home's zoom pill, which is a control. */
 
 .site-statusbar {
   align-items: center;

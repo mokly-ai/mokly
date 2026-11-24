@@ -91,17 +91,21 @@ function SiteHeader({ active, menu }: { active: SiteScreen; menu: boolean }) {
  * the rendered screen: it marks the current page and names the page in the
  * file title and the status bar. `menu` draws the mobile menu open over the
  * page; the desktop composition has no menu, so it draws the page as is.
+ * `zoom` is the home's zoom, where 1 is 100%: the footer frame takes it,
+ * and the home's `main` takes it from the home screen.
  */
 export function SiteLayout({
   active,
   children,
   menu = false,
   viewport,
+  zoom = 1,
 }: {
   active: SiteScreen;
   children: ReactNode;
   menu?: boolean | undefined;
   viewport: "mobile" | "desktop";
+  zoom?: number | undefined;
 }) {
   const open = menu && viewport === "mobile";
   return (
@@ -114,7 +118,7 @@ export function SiteLayout({
       </div>
       {open ? <SiteMenu active={active} /> : null}
       {children}
-      <SiteFooter active={active} />
+      <SiteFooter active={active} zoom={zoom} />
     </div>
   );
 }

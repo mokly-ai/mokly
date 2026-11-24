@@ -3,6 +3,8 @@ import { defineScreen } from "@mokly/mokly";
 import {
   SiteHomeMenuScreen,
   SiteHomeScreen,
+  SiteHomeZoomedInScreen,
+  SiteHomeZoomedOutScreen,
 } from "../../../screens/design/site/home_screen";
 import { SITE_METADATA } from "../../../screens/design/site/parts/metadata";
 
@@ -10,17 +12,21 @@ import { SITE_METADATA } from "../../../screens/design/site/parts/metadata";
 const screens = {
   default: SiteHomeScreen,
   menu: SiteHomeMenuScreen,
+  "zoomed-out": SiteHomeZoomedOutScreen,
+  "zoomed-in": SiteHomeZoomedInScreen,
 };
 
 export default defineScreen({
   ...SITE_METADATA,
   description:
-    "The Canvas home: `Design in code.` as a selected text layer, the spread of the depicted acme/storefront app, the Specs panel of page sections, the Browse, Review and Edit frames and the open foundation. The demo app is drawn as static components (decision 2). Each demo draws its finished state, as reduced motion shows it on the site: the compare rests in Swipe at 50 percent, Review waits for Approve, and Edit shows Claude on the changed PriceCard with Publish ready. No frame is selected, because the hero is the section in view.",
+    "The Canvas home: `Design in code.` as a selected text layer, the spread of the depicted acme/storefront app, the Specs panel of page sections, the Browse, Review and Edit frames and the open foundation. The demo app is drawn as static components (decision 2). Each demo draws its finished state, as reduced motion shows it on the site: the compare rests in Swipe at 50 percent, Review waits for Approve, and Edit shows Claude on the changed PriceCard with Publish ready. No frame is selected, because the hero is the section in view. On the home the status bar's zoom pill is a control: a group named Zoom with Zoom out, the zoom and Zoom in. The rest of the status bar stays a depiction.",
   propSchema: {
     type: "object",
     additionalProperties: false,
     required: ["state"],
-    properties: { state: { enum: ["default", "menu"] } },
+    properties: {
+      state: { enum: ["default", "menu", "zoomed-out", "zoomed-in"] },
+    },
   } as const,
   props: { state: "default" },
   render: ({ state }, context) => {
@@ -37,6 +43,20 @@ export default defineScreen({
       description:
         "The mobile header's menu, open over the home. Every page's mobile header opens the same menu. The desktop header lists these destinations in its row, so the desktop view matches the home.",
       props: { state: "menu" },
+    },
+    {
+      slug: "zoomed-out",
+      title: "Home · Zoomed out",
+      description:
+        "The home at 41 percent, four presses of Zoom out from 100 percent. CSS zoom draws the main content and the footer frame smaller, and the tool bar and the status bar keep their size. The content lays out in the wider room that the zoom gives it, so the Specs panel stays at the window's start, as on a wide window. The pill shows 41%.",
+      props: { state: "zoomed-out" },
+    },
+    {
+      slug: "zoomed-in",
+      title: "Home · Zoomed in",
+      description:
+        "The home at 156 percent, two presses of Zoom in from 100 percent. CSS zoom draws the main content and the footer frame larger, in less room than the window, and the tool bar and the status bar keep their size. The canvas cuts off the parts that pass the window's sides, such as the end of the hero heading. The pill shows 156%.",
+      props: { state: "zoomed-in" },
     },
   ],
 });

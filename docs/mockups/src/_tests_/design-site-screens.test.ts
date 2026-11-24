@@ -32,7 +32,7 @@ test("every site screen owns its folder, viewports and schemes", () => {
   }
 });
 
-test("the Site folder holds the eight canonical screens, the open menu and their tour in order", () => {
+test("the Site folder holds the eight canonical screens, the home's states and their tour in order", () => {
   assert.deepEqual(
     catalogueEntries()
       .filter((entry) => entry.path.startsWith("design/site/"))
@@ -44,12 +44,20 @@ test("the Site folder holds the eight canonical screens, the open menu and their
       "design/site/docs/first-screen-desktop",
       "design/site/docs/layers",
       "design/site/home/menu",
+      "design/site/home/zoomed-in",
+      "design/site/home/zoomed-out",
       "design/site/tour",
     ].sort(),
   );
-  const menu = siteEntry("design/site/home/menu");
-  assert.equal(menu.kind, "screen");
-  if (menu.kind === "screen") assert.equal(menu.variantOf, "design/site/home");
+  for (const state of ["menu", "zoomed-out", "zoomed-in"]) {
+    const variant = siteEntry(`design/site/home/${state}`);
+    assert.equal(variant.kind, "screen", state);
+    assert.equal(
+      variant.kind === "screen" ? variant.variantOf : undefined,
+      "design/site/home",
+      state,
+    );
+  }
 
   const tour = siteEntry("design/site/tour");
   assert.equal(tour.kind, "use-case");

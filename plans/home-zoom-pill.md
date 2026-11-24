@@ -35,6 +35,82 @@ a reset or a Fit control, and it does not keep the zoom across visits.
 - The options check of the `implementation-review` skill did not run on
   these decisions, because Cal had already answered both before the plan
   existed.
+- **2026-11-24, decision 3, how Zoom in enlarges the home: open.** The
+  Milestone 1 mockups show a problem with decision 2. CSS `zoom` lays the
+  content out in the window's width divided by the zoom, but the window
+  still picks the composition. Above 100% the frames column then gets less
+  room than its composition expects, beside the Specs panel. On screen, at
+  125% the Edit module's copy is 16px wide on a 1280px window and 96px wide
+  on a 1366px window. At 156% on a 1440px window the Edit artboard covers
+  the Edit heading and copy, and the hero heading passes its selection and
+  the window. At 200% the open foundation's code panel is 8px wide, and the
+  page grows from 6,800px to 38,900px. On a 390px phone the room is 250px
+  at 156% and 195px at 200%, and the footer links break inside words.
+  - Root question: how does Zoom in enlarge the home, so that the page
+    stays whole and readable without sideways scrolling?
+  - **A.** Change nothing. Keep 8% to 200%, with the broken layout above
+    100%. This fails the goal, and the options check keeps it for the
+    record. Effort: Small.
+  - **B.** Zoom out only: the range becomes 8% to 100%. Zoom out gives the
+    page more room, and the mockups show that it holds at 8%, 26% and 41%.
+    Zoom in starts inactive, the reason that decision 2 rejected this
+    option. Effort: Small.
+  - **C.** Stop Zoom in at 125%, one press from 100%. Above 100% the Specs
+    panel leaves, and the hero heading's size follows the room that the
+    zoom leaves. With the panel gone, the mockups show that one press holds
+    on desktop windows from 800px to 1440px. Without the heading change,
+    the heading passes its selection on windows up to about 1470px and
+    passes the window of a 320px phone. Effort: Medium.
+  - **D.** Enlarge without a new layout: above 100% the content keeps its
+    width at 100%, and the canvas cuts off both sides equally. The layout
+    stays whole, but text at the sides goes out of reach: a tenth of the
+    width on each side at 125% and a quarter at 200%, with the Specs panel
+    and the hero actions. Links out of view still take focus, the harm for
+    which decision 1 rejected the floating pill. Effort: Medium.
+  - **E.** Let each home part follow the room that it gets, with container
+    queries, down to 160px, the room of a 320px phone at 200%. Decision 2
+    stays as it is, but every part of the home changes in the mockups and
+    in the site. The mockups and the site must first write the phone split
+    in one form, because `design-site-containers.test.ts` compares each
+    container query. Effort: Large.
+  - **F.** Added by the options check: the room picks the composition from
+    the compositions that exist. The zoomed `main` and the footer frame
+    become size containers, and each desktop step and `vw` size of the home
+    and the footer uses them. The phone and desktop split stays on the
+    window. Zoom in stops at 200%, or earlier at the narrowest room that
+    holds: 640px on desktop and 288px on phones. Windows from 1280px reach
+    200%, a 1024px window reaches 156%, phones from 360px get one press, and
+    320px phones get none. About 44 step queries and 47 `vw` sizes change in
+    the mockups and the site. Effort: Large.
+  - **G.** Added by the options check: C, with a zoom-in end that grows with
+    the window, read from measured bands of window widths. Only windows
+    wider than about 1650px go past 125%. A later change to a home part can
+    break a band, and each band needs a drawn state and a test. Effort:
+    Medium.
+  - Shared assumptions: the zoom uses CSS `zoom`, the design call below. Its
+    reason "no media query changes" causes this problem, but each option
+    that drops CSS `zoom` stays left out. The page never scrolls sideways, a
+    rule of site design that decision 2 keeps. The window picks the
+    composition, a rule of site design that C drops for the Specs panel and
+    the heading, and E and F drop for every part. One zoom-in end serves
+    every window, which F and G drop. Zoom out stays as the mockups draw
+    it.
+  - Left out: sideways scrolling, which decision 2 rejected, and a pan of
+    D's cut-off sides, which is sideways scrolling by other means. A scale
+    transform, because D gives the same picture and keeps the page height
+    right. A script that sets the steps from the room, and the phone
+    composition at every zoom above 100%, because F is better on every
+    point. Zoom in that enlarges only the text, which fails the goal.
+  - Recommendation: **C**, with the two changes in its text. One press then
+    holds at Medium effort, and Zoom in still works at page load. F best
+    protects the codebase and keeps 200% on windows from 1280px, at Large
+    effort.
+  - Wider fix: F. At each zoom it shows a composition that the site already
+    draws for that room, so a later change to a part holds at every zoom.
+  - Waits for the answer: the last Milestone 1 TODO, Milestone 2 and
+    Milestone 3.
+  - The options check ran on 2026-11-24. Its report is
+    `.context/home-zoom-pill/options-check-decision-3.md`.
 
 ## Design calls
 
@@ -78,6 +154,22 @@ Each call is my call, made on 2026-11-24.
   minimum and names.
 - **No new visible words.**
 
+The Milestone 1 mockups added these calls, also on 2026-11-24:
+
+- **The home's pill keeps the box of the depicted pill at every text
+  size.** Its padding and gaps give up what the buttons' padding adds, so
+  the island's swap moves nothing. Each button is drawn 22px by 28px at
+  the 16px base and reaches 44px through a transparent band. Hover fills a
+  button with the canvas and turns its glyph to ink. Focus draws the shared
+  glow, which a 5px gap keeps off the value.
+- **The buttons draw no boundary and no tooltip.** The glyph names each
+  button, as on the menu control, and a `title` adds visible words.
+- **The gap above the footer frame keeps its size.** The zoom applies to
+  the frame, and the gap is the footer's padding around it.
+- **At small zooms the Specs panel keeps its place at the window's
+  start.** Zoom out gives the content more room, as a window wider than
+  1440px does, where the panel already sits there.
+
 Contract owners:
 
 - [Site](../docs/protocol/cloud/site.md), its accessibility rules.
@@ -99,18 +191,23 @@ Depends on: none
 The site mockups draw the home's pill as buttons and add a home state at a
 small zoom, so that Cal can review the look first.
 
-- [ ] Draw the home's zoom pill as a group with two buttons in
+- [x] Draw the home's zoom pill as a group with two buttons in
       `docs/mockups/src/screens/design/site/parts/footer.tsx`. Put the new
       rules in a new sheet, because `docs/mockups/styles/site/footer.css`
       is near the length cap.
-- [ ] Add a home state that shows the page at a small zoom, and one at a
+- [x] Add a home state that shows the page at a small zoom, and one at a
       zoom above 100%.
-- [ ] Let `docs/mockups/src/_tests_/design-site-chrome.test.ts` allow the
+- [x] Let `docs/mockups/src/_tests_/design-site-chrome.test.ts` allow the
       buttons in the home's status bar only.
-- [ ] Run the mockup check in `docs/mockups/README.md`. Smoke-test the
+- [x] Run the mockup check in `docs/mockups/README.md`. Smoke-test the
       changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+- [ ] Draw the answer to decision 3: redraw the zoomed-in state for it,
+      and draw a zoom button at a range end, which takes `aria-disabled`.
+
+Evidence: `.context/home-zoom-pill/m1/`, with the captures,
+`smoke-report.json` and `zoom-measurements.txt`.
 
 ## Milestone 2: Documentation and protocol
 

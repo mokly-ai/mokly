@@ -5,10 +5,10 @@
    The site stylesheets are split by owner. The shared files come first in
    the site rule of mokly.config.json: this file, then the buttons, the
    Canvas parts, the labels, the people, the panels, the code panel, the
-   document typography, the chrome, the menu, the footer and the legal
-   pages. The area files follow, one group each for the home, the
-   documentation, the changelog and pricing, and each area file holds only
-   rules that its own area uses.
+   document typography, the chrome, the menu, the footer with the home's
+   zoom pill and the legal pages. The area files follow, one group each
+   for the home, the documentation, the changelog and pricing, and each
+   area file holds only rules that its own area uses.
 
    Site documents draw in the canvas palette, so the --mk-* roles hold the
    Canvas values and the sans and mono families are Geist and Geist Mono.

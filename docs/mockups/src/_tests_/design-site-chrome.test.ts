@@ -47,6 +47,7 @@ const hoverClasses = [
   "site-link",
   "site-footer-link",
   "site-scheme-option",
+  "site-statusbar-zoom-step",
 ];
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -188,24 +189,17 @@ for (const viewport of ["mobile", "desktop"] as const) {
       }
   });
 
-  test(`${viewport}: the status bar depicts the file, the people in it and the zoom`, () => {
+  // design-site-statusbar.test.ts checks that only the home's zoom pill acts.
+  test(`${viewport}: the status bar depicts the file and the people in it`, () => {
     for (const id of siteScreens) {
       const { document } = siteDocument(id, viewport);
       const bar = byClass(document, "site-statusbar")[0];
       assert.ok(bar, id);
-      assert.equal(attribute(bar, "aria-hidden"), "true");
       assert.deepEqual(byClass(bar, "site-statusbar-item").map(label), [
         `mokly.ai — ${pageNames[id]}`,
         "MS4 in this file",
       ]);
       assert.equal(byClass(bar, "site-avatar").length, 4);
-      assert.equal(label(byClass(bar, "site-statusbar-zoom")[0]!), "−100%+");
-      assert.deepEqual(
-        elements(bar, (node) =>
-          ["a", "button", "input"].includes(node.tagName),
-        ),
-        [],
-      );
     }
   });
 }

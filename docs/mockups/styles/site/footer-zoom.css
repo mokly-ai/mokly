@@ -1,0 +1,52 @@
+/* The home's zoom pill: on the home the status bar's pill is a control, a
+   group of Zoom out, the zoom and Zoom in, with the depicted pill's fill,
+   ring, face and colour. It fills the depicted pill's box at every text
+   size, so the page does not shift when the site swaps the buttons in:
+   the pill's padding and gaps give up what each button's padding adds.
+
+   Each button is drawn 22px wide and 28px tall at the 16px base and
+   reaches a 44px target through a transparent band around it. Hover
+   fills it with the canvas and turns its glyph to ink, and keyboard focus
+   draws the shared focus glow, which the 5px gap keeps off the zoom. The
+   buttons draw no boundary of their own, as the menu control does: the
+   glyph names each one. The zoom keeps the width of four figures, so the
+   buttons do not move between 8% and 200%. */
+
+.site-statusbar-zoom--control {
+  gap: 5px;
+  padding: 3px;
+}
+
+.site-statusbar-zoom-step {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  justify-content: center;
+  padding: 2px 7px;
+  position: relative;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-statusbar-zoom-step::before {
+  content: "";
+  inset: -8px -11px;
+  position: absolute;
+}
+
+.site-statusbar-zoom-step:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-statusbar-zoom-value {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  width: 4ch;
+}
