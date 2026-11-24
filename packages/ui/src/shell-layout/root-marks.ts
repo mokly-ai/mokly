@@ -28,8 +28,8 @@ export function canvasLayoutMarks(
   };
 }
 
-/** The separator that the reader drags: the inspector's or the navigation's. */
-export type ShellResizing = "inspector" | "navigation";
+/** The separator that the reader drags: the navigation's. */
+export type ShellResizing = "navigation";
 
 /** The state of a viewer root that its class list marks. */
 export interface RootMarks {
@@ -39,7 +39,6 @@ export interface RootMarks {
 
 /** The class of each drag, which the stylesheet of its separator selects. */
 const RESIZING_CLASS = {
-  inspector: "mbk-inspector-resizing",
   navigation: "mbk-nav-resizing",
 } as const satisfies Record<ShellResizing, string>;
 

@@ -76,10 +76,6 @@ test("the root marks a separator drag for the stylesheets", () => {
     rootClass({ resizing: "navigation" }),
     "mbk mbk-nav-resizing mbk-reset",
   );
-  assert.equal(
-    rootClass({ resizing: "inspector" }),
-    "mbk mbk-inspector-resizing mbk-reset",
-  );
 });
 
 test("the skip link goes to the main region, and the status announces each navigation", () => {

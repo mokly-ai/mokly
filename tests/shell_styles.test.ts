@@ -55,7 +55,7 @@ test("shell stylesheet stays aligned with the design contract", () => {
   assert.match(STANDALONE_CSS, /GeistMono-Variable\.woff2/);
 });
 
-test("the navigation divider keeps its grip shape and palette colour, and each drag mark keeps the drag's pointer look", () => {
+test("the navigation divider keeps its grip shape and palette colour, and its drag mark keeps the drag's pointer look", () => {
   const css = flatCss(STANDALONE_CSS);
   const grip =
     '.mbk-nav-resize::after { content: ""; position: absolute; ' +
@@ -71,23 +71,11 @@ test("the navigation divider keeps its grip shape and palette colour, and each d
       `box-shadow: 0 0 0 3px ${ACCENT_SOFT}; }`,
   ])
     assert.ok(css.includes(state), state);
-  for (const axis of ["col", "row"]) {
-    const scope = axis === "col" ? "nav" : "inspector";
-    assert.ok(
-      css.includes(
-        `.mbk.mbk-${scope}-resizing .mbk-reset ` +
-          `{ cursor: ${axis}-resize !important; }`,
-      ),
-      scope,
-    );
-    assert.ok(
-      css.includes(
-        `.mbk.mbk-${scope}-resizing iframe.mbk-reset ` +
-          "{ pointer-events: none; }",
-      ),
-      scope,
-    );
-  }
+  for (const rule of [
+    ".mbk.mbk-nav-resizing .mbk-reset { cursor: col-resize !important; }",
+    ".mbk.mbk-nav-resizing iframe.mbk-reset { pointer-events: none; }",
+  ])
+    assert.ok(css.includes(rule), rule);
 });
 
 test("tag chips select in the accent and the bar clears the scrim", () => {

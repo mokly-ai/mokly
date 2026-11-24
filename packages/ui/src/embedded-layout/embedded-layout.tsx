@@ -64,6 +64,7 @@ export function EmbeddedLayout({
   dock,
   drawerOpen,
   emptyStateShown,
+  interactive = true,
   labelLayer,
   main,
   mainHref,
@@ -99,6 +100,12 @@ export function EmbeddedLayout({
   drawerOpen: boolean;
   /** Whether the empty state slot shows its content. */
   emptyStateShown: boolean;
+  /**
+   * Whether the catalogue's sheet draws its grabber and close control as
+   * buttons, as it does by default. A static depiction that runs no script
+   * sets `false`, which draws each as a picture of itself.
+   */
+  interactive?: boolean;
   /** The label layer, such as a host inspection's. An empty one by default. */
   labelLayer?: ReactNode;
   /** The main region with the routed view. */
@@ -119,8 +126,8 @@ export function EmbeddedLayout({
   ref?: Ref<HTMLDivElement> | undefined;
   /**
    * The separator that the reader drags, which marks the root with
-   * `mbk-inspector-resizing` or `mbk-nav-resizing`: the whole shell keeps the
-   * drag's cursor, and no frame takes the pointer.
+   * `mbk-nav-resizing`: the whole shell keeps the drag's cursor, and no frame
+   * takes the pointer.
    */
   resizing?: ShellResizing | undefined;
   /**
@@ -189,7 +196,9 @@ export function EmbeddedLayout({
         {catalogueSheet === undefined ? (
           rail
         ) : (
-          <FloatingCatalogue sheet={catalogueSheet}>{rail}</FloatingCatalogue>
+          <FloatingCatalogue interactive={interactive} sheet={catalogueSheet}>
+            {rail}
+          </FloatingCatalogue>
         )}
         <div className="mokly-stage-host mbk-reset">
           {main}

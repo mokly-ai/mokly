@@ -355,8 +355,8 @@ embedded root's rail host with its slots, floats over it in a
 `navigationWidth` sets the catalogue's width that the canvas's start inset
 follows. The main region is the containing block of a view's right panel and
 entry bar, and a right panel in it sets the canvas's end inset. Without
-`catalogueSheet` the navigation stands in a column, as a static depiction of
-the earlier layout draws it. `HomeState` and `MissingRouteState` with
+`catalogueSheet` the navigation stands in a column. `HomeState` and
+`MissingRouteState` with
 `canvas` stand in a card on the canvas. Its `topBar` function receives the
 containers of the three top-bar slots, which the bar places in its columns.
 It places each slot's content
@@ -429,7 +429,9 @@ shows for a section's lengths, which `sectionExtent` gives, on a stage that
 the mockup knows. On `CanvasStage` and `CanvasZoomPill`,
 `interactive={false}` draws Zoom out, Zoom in, and Fit as pictures of
 themselves. On `CanvasDock` it draws Catalogue, the tab, and Fit as pictures,
-and on `FloatingPanel` the sheet's grabber and close control. Each picture is
+on `FloatingPanel` the sheet's grabber and close control, and on `ShellLayout`
+and `EmbeddedLayout` the grabber and the close control of the catalogue's
+sheet. Each picture is
 named by what it would do and takes neither the pointer nor the hover look.
 On `PanelTabs`, `interactive={false}` draws a group named `Panel` whose tabs
 are pictures of themselves. The selected tab's picture is marked as the

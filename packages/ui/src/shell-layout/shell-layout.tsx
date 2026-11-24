@@ -31,14 +31,26 @@ export type { ShellResizing } from "./root-marks.js";
  */
 export function FloatingCatalogue({
   children,
+  interactive = true,
   sheet,
 }: {
   /** The catalogue's navigation, with the host's rail content of an embedded root. */
   children?: ReactNode;
+  /**
+   * Whether the sheet's grabber and close control are buttons, as they are
+   * by default. A static depiction that runs no script sets `false`, which
+   * draws each as a picture of itself.
+   */
+  interactive?: boolean;
   sheet: FloatingPanelSheet;
 }) {
   return (
-    <FloatingPanel noun="catalogue" sheet={sheet} side="left">
+    <FloatingPanel
+      interactive={interactive}
+      noun="catalogue"
+      sheet={sheet}
+      side="left"
+    >
       {children}
     </FloatingPanel>
   );
@@ -114,10 +126,10 @@ export function MainRegion({
 /**
  * The root of the standalone shell. It carries the shell's root class, which
  * holds the theme, and states its appearance and its preview scheme. It marks
- * a drag of a separator for the stylesheets. With `catalogueSheet` it draws the Canvas layout: the catalogue floats over
- * the canvas, and the root marks `data-canvas-layout`. Without it, the
- * navigation stands in a column beside the main region, as a static
- * depiction of the earlier layout draws it.
+ * a drag of the navigation's separator for the stylesheets. With
+ * `catalogueSheet` it draws the Canvas layout: the catalogue floats over the
+ * canvas, and the root marks `data-canvas-layout`. Without it, the
+ * navigation stands in a column beside the main region.
  */
 export function ShellLayout({
   announcement,
@@ -125,6 +137,7 @@ export function ShellLayout({
   colorScheme,
   dock,
   drawerOpen,
+  interactive = true,
   main,
   mainHref,
   navigation,
@@ -152,6 +165,12 @@ export function ShellLayout({
    * `data-drawer`. In the Canvas layout it is the catalogue's sheet.
    */
   drawerOpen: boolean;
+  /**
+   * Whether the catalogue's sheet draws its grabber and close control as
+   * buttons, as it does by default. A static depiction that runs no script
+   * sets `false`, which draws each as a picture of itself.
+   */
+  interactive?: boolean;
   /** The main region with the routed view. */
   main: ReactNode;
   /** The address of the main region, for the skip link. */
@@ -168,8 +187,8 @@ export function ShellLayout({
   ref?: Ref<HTMLDivElement> | undefined;
   /**
    * The separator that the reader drags, which marks the root with
-   * `mbk-inspector-resizing` or `mbk-nav-resizing`: the whole shell keeps the
-   * drag's cursor, and no frame takes the pointer.
+   * `mbk-nav-resizing`: the whole shell keeps the drag's cursor, and no frame
+   * takes the pointer.
    */
   resizing?: ShellResizing | undefined;
   statusId: string;
@@ -193,7 +212,7 @@ export function ShellLayout({
         {catalogueSheet === undefined ? (
           navigation
         ) : (
-          <FloatingCatalogue sheet={catalogueSheet}>
+          <FloatingCatalogue interactive={interactive} sheet={catalogueSheet}>
             {navigation}
           </FloatingCatalogue>
         )}

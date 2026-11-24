@@ -52,7 +52,7 @@ test("no viewer rule matches the host page or host slot content", async ({
     // Every mark of the root at once, so a rule that applies only while one
     // holds also meets the host content.
     const shell = document.querySelector("#one .mbk[data-mokly-shell]")!;
-    shell.classList.add("mbk-nav-resizing", "mbk-inspector-resizing");
+    shell.classList.add("mbk-nav-resizing");
     shell.setAttribute("data-mokly-theme", "dark");
     shell.setAttribute("data-mokly-color-scheme", "dark");
     shell.setAttribute("data-drawer", "open");
