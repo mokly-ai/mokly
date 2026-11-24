@@ -70,9 +70,15 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Render Sidecar](./mokly-sidecar.md)
 - [Sidecar Definition Transport](./mokly-sidecar-definitions.md)
+- [Sidecar Head Bundle Affinity](./mokly-sidecar-head-bundle-affinity.md)
 - [Sidecar Module Sources](./mokly-sidecar-modules.md)
 - [Sidecar Render Records](./mokly-sidecar-render-records.md)
+- [Sidecar Restored Reuse](./mokly-sidecar-restored-reuse.md)
+- [Sidecar Security](./mokly-sidecar-security.md)
 - [Rendering And Document Assembly](./mokly-rendering.md)
+- [Vite Adapter](./mokly-vite-adapter.md)
+- [Vite Adapter Inputs](./mokly-vite-adapter-inputs.md)
+- [Vite Adapter Stylesheets](./mokly-vite-adapter-styles.md)
 
 ## Comparison And Changes
 
@@ -80,6 +86,7 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 
 - [Base Source And Dependency Preparation](./mokly-base-preparation.md)
 - [Base Dependency Installation](./mokly-base-dependencies.md)
+- [Base Installation And Bundle Settings](./mokly-base-installation-and-bundle-settings.md)
 - [Base Install Processes](./mokly-base-install-processes.md)
 - [Branch-Point Entry Lookup](./mokly-branch-point-lookup.md)
 - [Catalogue Change Metadata And Removed Pages](./mokly-catalogue-changes.md)

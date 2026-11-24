@@ -3,6 +3,15 @@
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 The [error catalogue](./mokly-imported-styles-errors.md) gives exact messages.
 
+Under the Vite adapter, a `.module.` stylesheet in any of Vite's
+[stylesheet languages](./mokly-vite-adapter-styles.md#stylesheet-transforms)
+is a CSS Module. The
+[Vite adapter stylesheet rules](./mokly-vite-adapter-styles.md#css-modules)
+replace the scoper. The scoping, composition, and export rules of this page
+do not apply under the adapter. The scoper's checks do not run. On Vite's
+default CSS transformer, the naming rule of this page still gives the scoped
+names.
+
 ## CSS Modules And Import Loaders
 
 A `*.module.css` import is a CSS Module. The core applies the rename-only
@@ -55,8 +64,9 @@ the catalogued diagnostic instead of shipping. That diagnostic points at the
 first authored token that the result would change, or at the end of the
 stylesheet when the result only adds tokens there. The `image-set()` string
 guard runs before scoping. `lightningcss` bundles the scoped text and is
-never a CSS Modules transform; browserslist targets are the consumer's
-PostCSS concern.
+never a CSS Modules transform. Browserslist targets are the consumer's
+PostCSS concern. Under the Vite adapter, they are the concern of the
+project's Vite setup.
 
 At every nesting level outside a descriptor block, the scoper reads each
 statement that the bundler keeps with the same start and kind. The one
@@ -105,7 +115,9 @@ map.
 
 `moduleResolution.loaders` reserves `.css` and `.module.css`; their only
 allowed consumer value is `empty`. `.css: "empty"` opts out of both plain and
-module CSS; `.module.css: "empty"` opts out of modules only. An opted-out
+module CSS; `.module.css: "empty"` opts out of modules only. Under the
+[Vite adapter](./mokly-vite-adapter.md#replaced-settings), each opt-out covers
+every stylesheet language. An opted-out
 module supplies an empty default map, no named bindings, and no delivered
 CSS; its file stays in the source inventory as a graph input. Any other CSS
 loader fails configuration validation. No extension may use the consumer

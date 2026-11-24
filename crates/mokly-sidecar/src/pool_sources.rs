@@ -16,6 +16,7 @@ impl Pool {
             Call::Bundle(request) => Some(request.params.source_root.clone()),
             Call::RestoreGeneration(params) => Some(params.params.source_root.clone()),
             Call::ProcessCss(params) => Some(params.source_root.clone()),
+            Call::TransformViteCss(params) => Some(params.setup.source_root.clone()),
             Call::PrepareContext(params) => Some(params.source_root.clone()),
             Call::Describe(_)
             | Call::Bindings(_)

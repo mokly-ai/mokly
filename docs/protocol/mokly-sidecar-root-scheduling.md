@@ -177,9 +177,10 @@ needs a record of capture completeness and leaves less head capacity.
 These rules rank the idle processes of the root of a request. They apply to
 each request that names a generation: `cssModules`, `describe`, `bindings`,
 and the four render methods. A request that names no generation, such as
-`processCss` or a base `bundle`, keeps the queue order. A head `bundle` uses
-the [head bundle rank](#head-bundle-affinity). The queue order puts the
-process that has been idle longest first. The PostCSS context rule of the
+`processCss` or a base `bundle`, keeps the queue order. A head `bundle` and a
+head `transformViteCss` call use the [head bundle rank](#head-bundle-affinity).
+The queue order puts the process that has been idle longest first.
+The PostCSS context rule of the
 [source root workers](./mokly-sidecar-modules.md#source-root-workers) still
 applies before every other rule.
 
@@ -235,16 +236,4 @@ would return to the head root before the next edit.
 
 ## Head Bundle Affinity
 
-For a head `bundle`, the pool ranks the idle processes of the head root by
-their last compile, newest first. Processes without a compile follow in the
-queue order. A successful `bundle` counts as a compile unless its
-[`cache` value](./mokly-timings.md#core-spans) is `memory` or `hit`. A compile
-belongs to its process, so a new process in the same slot has none. The
-bundle never waits for a busy process while another slot can run it.
-A PostCSS preparation does not change this rank. Its context belongs to the
-slot of the bundle from the start of the bundle.
-
-Decision: a head `bundle` prefers the process that compiled last, so fewer
-processes keep an idle compiler in memory. Rejected: the queue order, because
-bundles then rotate across processes. Rejected: one remembered process,
-because after a busy fallback it no longer prefers the older compiler.
+See [Sidecar Head Bundle Affinity](./mokly-sidecar-head-bundle-affinity.md).

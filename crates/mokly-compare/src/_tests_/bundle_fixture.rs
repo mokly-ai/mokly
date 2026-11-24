@@ -9,6 +9,7 @@ use mokly_sidecar::reusable_recipe::ReusableRecipe;
 
 pub(crate) fn params() -> Bundle {
     Bundle {
+        vite: false,
         evaluation: Some("evaluation".into()),
         entry_files: vec!["entry.ts".into()],
         renderer: None,
@@ -37,6 +38,7 @@ pub(crate) fn restore() -> RestoreGeneration {
             unmapped_dependency_directories: None,
             identity: "identity".into(),
             code: "quoted \"code\"\n Unicode é".into(),
+            vite: None,
             runtime_key: "runtime".into(),
             dependency_roots: vec![],
             css_modules: vec![],

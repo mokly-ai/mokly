@@ -74,9 +74,11 @@ that source root. Missing files and escaping symlinks fail closed. npm and
 pnpm links follow the same rule. A file outside source, repository mapping,
 and selected dependencies fails closed for JavaScript and CSS alike.
 
-The graph lists each module's imports in record order from the bundler's
-metafile. That order includes re-exports and dynamic imports. Stylesheets
-use their resolved logical names. The binary watches source files, hashes
+On the esbuild path, the graph lists each module's imports in record order
+from the bundler's metafile. That order includes re-exports and dynamic
+imports. The [module graph rules](./mokly-vite-adapter.md#module-graph) of
+the Vite adapter define the graph of a Vite compile. Stylesheets use their
+resolved logical names. The binary watches source files, hashes
 dependency inputs, and reads stylesheet order from these edges under the
 [imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
 
@@ -118,7 +120,11 @@ Bundle parsing ignores each module's package `type` and `tsconfig.json` parse
 settings. A source `@jsxImportSource` pragma can select that module's JSX import
 source; a tsconfig `jsxImportSource` setting does not. Use the source pragma
 when a JSX library requires its own runtime. This parsing policy does not
-disable the source-side tsconfig path resolution described above.
+disable the source-side tsconfig path resolution described above. Under the
+[Vite adapter](./mokly-vite-adapter.md#moklys-plugin), the project's Vite
+setup decides these parse settings instead. That setup also
+[resolves imports](./mokly-vite-adapter.md#replaced-settings), so the
+source-side tsconfig path resolution does not apply.
 
 Repository-owned imports of `@mokly/mokly` receive the attributed authoring
 facade. Installed dependencies receive the unattributed API. Their JSX
@@ -130,8 +136,11 @@ metadata under the
 source file names resolve from the configuration directory before conversion
 to repository-relative invocation paths.
 
-The core scopes each `*.module.css` stylesheet after PostCSS and supplies all
-class maps with `cssModules` before `describe` evaluates the bundle.
+On the esbuild path, the core scopes each `*.module.css` stylesheet after
+PostCSS. The
+[Vite adapter stylesheet rules](./mokly-vite-adapter-styles.md#css-modules)
+define the CSS Modules of a Vite compile. The core supplies all class maps
+with `cssModules` before `describe` evaluates the bundle.
 `cssModules` installs the maps without bundling or reading source files. A
 root import and a subpath import of a style library use the same package copy
 of its style registry. Wrappers keep the importer's CommonJS default-import interop:

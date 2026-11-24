@@ -11,6 +11,7 @@ use mokly_css::resolver::{ImportResolver, SourceResolver};
 use mokly_css::types::{
     Bundle, CssProcessor, IdentityProcessor, StylesheetBundler, StylesheetRoot,
 };
+use mokly_css::vite::{self, Transform};
 use mokly_css::watch_inputs::WatchInputs;
 use mokly_source_interface::tree::SourceTree;
 
@@ -92,6 +93,51 @@ impl RootCompiler for CapturingCompiler {
     }
 
     fn compile(&self, root: &StylesheetRoot) -> Result<Compilation> {
+        self.compile_with(root, None)
+    }
+
+    fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
+        match &self.watch_sources {
+            Some(sources) => {
+                stylesheet_watch::files(files, &self.root, &self.side, sources.as_ref())
+            }
+            None => Ok(WatchInputs::default()),
+        }
+    }
+}
+
+pub(crate) struct ViteRootCompiler {
+    pub(crate) base: CapturingCompiler,
+    pub(crate) transform: Arc<dyn Transform>,
+}
+
+impl RootCompiler for ViteRootCompiler {
+    fn compile(&self, root: &StylesheetRoot) -> Result<Compilation> {
+        self.base.compile_with(root, Some(self.transform.as_ref()))
+    }
+
+    fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
+        use crate::source_paths::INSTALLED_INPUT_PREFIX;
+
+        self.base.watch_files(
+            &files
+                .iter()
+                .map(|file| {
+                    file.strip_prefix(INSTALLED_INPUT_PREFIX)
+                        .unwrap_or(file)
+                        .to_owned()
+                })
+                .collect(),
+        )
+    }
+}
+
+impl CapturingCompiler {
+    fn compile_with(
+        &self,
+        root: &StylesheetRoot,
+        transform: Option<&dyn Transform>,
+    ) -> Result<Compilation> {
         let tree = Arc::new(RecordingTree::new(self.tree.clone(), self.root.clone()));
         let resolver: Arc<dyn ImportResolver> = Arc::new(SourceResolver {
             tree: tree.clone(),
@@ -102,36 +148,38 @@ impl RootCompiler for CapturingCompiler {
             Some(postcss) => postcss.for_root(tree.clone(), resolver.clone()),
             None => Arc::new(IdentityProcessor),
         };
-        let compiler: &dyn StylesheetBundler = &Compiler {
+        let compiler = Compiler {
             tree: tree.clone(),
             repo_root: self.root.clone(),
             resolver,
             processor,
         };
-        let mut bundle = compiler.bundle(root)?;
-        let capture = tree.take();
-        bundle.resolution_files = capture
-            .stamp
-            .files
-            .keys()
-            .chain(capture.stamp.unretained.keys())
-            .chain(capture.stamp.projections.keys())
-            .map(|path| {
-                path.strip_prefix(&self.root)
-                    .unwrap_or(path)
-                    .to_string_lossy()
-                    .replace('\\', "/")
-            })
-            .collect();
-        Ok(Compilation { bundle, capture })
-    }
-    fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
-        match &self.watch_sources {
-            Some(sources) => {
-                stylesheet_watch::files(files, &self.root, &self.side, sources.as_ref())
+        let mut bundle = match transform {
+            Some(transform) => {
+                let bundle = vite::bundle(&compiler, root, transform)?;
+                for path in &bundle.resolution_files {
+                    let _ = tree.digest(&self.root.join(path));
+                }
+                bundle
             }
-            None => Ok(WatchInputs::default()),
-        }
+            None => compiler.bundle(root)?,
+        };
+        let capture = tree.take();
+        bundle.resolution_files.extend(
+            capture
+                .stamp
+                .files
+                .keys()
+                .chain(capture.stamp.unretained.keys())
+                .chain(capture.stamp.projections.keys())
+                .map(|path| {
+                    path.strip_prefix(&self.root)
+                        .unwrap_or(path)
+                        .to_string_lossy()
+                        .replace('\\', "/")
+                }),
+        );
+        Ok(Compilation { bundle, capture })
     }
 }
 

@@ -51,6 +51,7 @@ fn fresh() -> results::Bundle {
             reuse_evidence: Arc::new(evidence("captured")),
             identity: "fresh".into(),
             code: String::new(),
+            vite: None,
             runtime_key: "fresh".into(),
             dependency_roots: vec![],
             css_modules: vec![],

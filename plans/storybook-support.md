@@ -2064,21 +2064,479 @@ Depends on: none
 Track D. The protocol states the compiler rules of decisions 16 and 17 for a
 catalogue with one Storybook folder or none.
 
-- [ ] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
+Design calls of track D. These calls are the track D orchestrator's, made on
+2026-11-18. They stay in this milestone so that the track changes only its
+own lines of this plan.
+
+- D1. `vite` is `true`, `false`, or an object. `true` or an object turns the
+  adapter on. The object's optional `config` names the optional file, and
+  without it Mokly uses no optional file. Reason: one switch for the common
+  case, and explicit paths as for `renderer` and `postcss`.
+- D2. Without a Storybook folder, Mokly loads the first Vite config file that
+  Vite's own lookup finds in the configuration directory, or Vite's defaults
+  without one. It loads it with the command `serve` and the mode
+  `development` on every command and on both sides. Reason: one render
+  behaviour everywhere, and the development JSX runtime gives invocation
+  source.
+- D3. Vite runs with no HTTP server, no hot module replacement, no watcher,
+  and no dependency pre-bundling, and Mokly's use of Vite writes no file.
+  Reason: the sidecar performs no file writes, and design call 18.
+- D4. Each module that Vite transforms is a module of the graph. A query
+  variant counts as its file. A plugin's virtual module is not a module, and
+  its file imports count for its importer. An externalized dependency is a
+  module with the digest of its resolved file and no imports. Reason: the
+  render key rules stay without a second compiler. Refined on 2026-11-19: a
+  module lists its static imports in source order, then its dynamic imports
+  in source order. Reason: a module evaluates every static import first, as
+  in the project's own Vite build.
+- D5. A Vite compile records no reuse evidence, so the bundle cache never
+  stores it, and only a `serveEdit` request reuses it. The toolchain
+  identity adds the Vite version and its real path. Reason: Vite's resolver
+  and plugins do not report the candidates that they probe.
+- D6. The Vite config file, its imports, and the env files that Vite reads,
+  present or absent, are compilation inputs. A change reloads the setup and
+  moves every render key. Reason: they change every transform.
+- D7. CI tests a Vite range that the optional peer dependency names. Mokly
+  adds no version check. A Vite failure gives `bundle-failed` with the
+  installed version and the tested range. Reason: as design call 13 for
+  Storybook.
+- D8. A Vite compile emits the operation event `vite`. Reason: the core keeps
+  exact compile counts on both paths.
+- D9. Under the adapter, the Vite setup takes the place of `postcss` and of
+  the `moduleResolution` aliases, conditions, main fields, extensions, and
+  loaders. The setup alone resolves imports, so Mokly's tsconfig `paths`
+  rule does not apply. The package roots still apply. The `"empty"`
+  opt-outs still apply and cover every stylesheet language: `.css` skips
+  every plain and module stylesheet, and `.module.css` skips every module
+  stylesheet. Reason: decision 16 removes Mokly's copies of the project's
+  setup.
+- D10. Under the adapter, Mokly scopes each `.module.` stylesheet with its
+  own names, and the setup's `css.modules` options do not apply. Reason:
+  both sides and both compile paths then give equal names.
+- D11. Under the adapter, Vite's stylesheet languages are stylesheets:
+  `.css`, `.scss`, `.sass`, `.less`, `.styl`, `.stylus`, `.pcss`,
+  `.postcss`, and `.sss`. Reason: decision 16 sends stylesheets through the
+  project's setup.
+- D12. Under the adapter, every local stylesheet goes through the setup, also
+  in a catalogue without JavaScript. A sidecar then starts, and the base side
+  extracts its sources and selects an installation, as for the `postcss`
+  module. Reason: decision 16 puts the setup in place of the `postcss`
+  module, and the CSS must not change when the first JavaScript file comes.
+- D13. Under the adapter, a configured or declared stylesheet whose path does
+  not end in `.css` delivers at its route plus `.css`, as a module root does.
+  Reason: a static host chooses the MIME type from the file extension.
+- D14. A stylesheet that the setup cannot transform fails with its own
+  catalogued message, which names the plugin, the stylesheet, and the detail.
+  Reason: the PostCSS message would name the wrong step.
+- D15. A file that a plugin of the setup writes is a watched change like any
+  other edit. Reason: the setup's plugins keep the consumer build's trust,
+  as PostCSS plugins do.
+- D16. Made on 2026-11-20. Every Vite message follows the module sources rule
+  for diagnostics: a failure names the logical module, a setup load failure
+  names the Vite config file or the config import that failed, and no Vite
+  diagnostic or `diagnostic` event shows an absolute path or a virtual
+  module. Reason: the module sources contract already keeps other checkouts
+  and implementation paths out of every diagnostic.
+- D17. Made on 2026-11-23. Under the adapter, the renderer stylesheets that
+  answer A of track D decision 1 removes are the files of the renderer's
+  closure. That closure holds the renderer's top-level stylesheets and each
+  file that their transform reports as a dependency. Reason: the options of
+  track D decision 1 call each file of the renderer's closure a renderer
+  stylesheet, such as the shared Sass partial of option B, and answer A
+  changes only where Mokly removes them.
+- D18. Made on 2026-11-23. `transformViteCss` has the 60-second deadline of
+  `processCss`. Reason: the setup's transform takes the place of the
+  `processCss` step, and it runs the same kind of work: preprocessors and
+  PostCSS.
+- D19. Made on 2026-11-23. A `transformViteCss` call on the head root prefers
+  the idle head worker that compiled last, as a head `bundle` does. Reason:
+  that worker already holds the Vite server of the side, which the transform
+  reuses.
+- D20. Made on 2026-11-23 by the orchestrator. Under the adapter, a local
+  stylesheet alone selects base extraction and an installation, as the
+  `postcss` module does. So the base side of a catalogue without JavaScript
+  transforms its stylesheets through the base commit's setup. Reason: design
+  call D12 requires it, and the orchestrator allowed the change in the CLI
+  behind the `vite` field.
+- D21. Made on 2026-11-23 by the orchestrator. The plugin that fails a
+  stylesheet transform can report a location. Then `{stylesheet}` of the Vite
+  setup row, which D14 adds, names the authored file of that location. It is
+  a repository-relative path with the one-based line and column of the
+  location, as in the PostCSS `CssSyntaxError` rule. That file can be a
+  partial that the stylesheet imports. Without a location, `{stylesheet}` is
+  the logical path of the stylesheet. Reason: it keeps the help that the
+  esbuild path gives.
+- D22. Made on 2026-11-23 by the orchestrator. Each file that the setup
+  reports for a stylesheet joins the source inventory as a protected input,
+  as without the adapter. A document that references such a file as a public
+  file fails with the protected-target diagnostic. Its reason is
+  `protected target {reference}: the Vite setup reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not "{relative-file}")`.
+  The PostCSS rows for a missing explicit dependency and for a malformed
+  dependency message do not apply under the adapter. Reason: both compile
+  paths then publish the same files.
+- D23. Made on 2026-11-23 by the orchestrator. Under the adapter, only
+  lowercase stylesheet suffixes count, as in the project's own Vite build. A
+  configured or declared stylesheet whose suffix is not lowercase, such as
+  `Action.CSS`, fails with the Vite setup row. The esbuild path keeps its
+  case-insensitive `.css` rule. Reason: the user's decision 16 follows the
+  project's Vite build.
+- D24. Made on 2026-11-23. Under the adapter, a file that only a `composes`
+  of a CSS Module reads is also a protected input. Reason: the source policy
+  keeps stylesheet sources private, and such a file is a stylesheet source.
+- D25. Made on 2026-11-23. The location that a failing plugin reports can be
+  in a virtual module, or in a file outside the source root. Such a location
+  counts as no location, so `{stylesheet}` is the logical path of the
+  stylesheet. Reason: design call D16 keeps absolute paths and virtual modules
+  out of every message, and a file outside the source root has no
+  repository-relative path that a message can show.
+- D26. Made on 2026-11-23. When no plugin reports a failure, `{plugin}` of the
+  Vite setup row is `vite`. Reason: the code already uses this fallback, and
+  the row then has one rule for each failure.
+- D27. Made on 2026-11-23. When a document references a file that only a
+  `composes` reads, the protected-target reason is the existing imported
+  stylesheet reason,
+  `protected target {reference}: imported by {stylesheet}; reference the delivered route under static/mokly-generated/ or keep a separate public copy`.
+  Its `{stylesheet}` is the CSS Module that composes from that file. Reason:
+  a `composes ... from` is an import of that file by the CSS Module, and its
+  CSS is delivered inside the module's stylesheet, so no new message is
+  needed.
+
+Decisions of track D. Decisions 1 and 5 have answers. Decisions 2, 3, and 4
+wait for the user.
+
+#### Track D decision 1: Renderer CSS inside nested imports under Vite
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-imported-styles.md:80-93`,
+  `docs/protocol/mokly-imported-styles-postcss.md:64-72`,
+  `docs/protocol/mokly-vite-adapter-styles.md:8-30`.
+- **Background:**
+  - Today the core walks the local `@import` chain of each stylesheet with
+    Mokly's own resolver. It removes every stylesheet of the renderer's
+    closure from an entry stylesheet at every depth. So renderer CSS, such
+    as design tokens, does not come back after a theme overrides it.
+  - Then the core runs PostCSS on each file of the chain.
+  - Under the adapter, the setup transforms each stylesheet in place of
+    PostCSS. Vite inlines the `@import`s of a stylesheet with the setup's
+    own resolver, which knows Vite aliases. Sass, Less, and Stylus resolve
+    their own imports.
+- **Problem:** Mokly's own walk cannot resolve an `@import` that only the
+  setup knows, such as one through a Vite alias. It cannot see the imports of
+  Sass, Less, or Stylus either. So the pruning rule and the Vite transform do
+  not fit together.
+- **Impact if no action:** Milestone 16 has no rule for the imports inside a
+  stylesheet.
+- **Root question:** Under the Vite adapter, what does an entry's stylesheet
+  deliver when its import chain reaches CSS that the renderer already
+  delivers?
+- **Options:**
+  - **A.** The setup resolves and inlines every import inside a stylesheet.
+    Mokly removes renderer stylesheets only from the stylesheets that
+    JavaScript imports. A renderer stylesheet that an entry stylesheet
+    imports comes back after the renderer's CSS, as in the project's own
+    Vite build. The nested-import diagnostic does not apply under the
+    adapter. This drops the assumption, from the esbuild path, that a
+    renderer file in an entry's chain repeats CSS: a shared Sass partial
+    that holds only variables and mixins emits no CSS. Effort: Medium.
+  - **B.** The setup resolves and inlines every import, as in A. When the
+    inlined chain of an entry stylesheet holds a renderer stylesheet, the
+    build fails with the nested-import diagnostic, at every depth. Vite
+    reports a shared Sass partial as a dependency, so a project whose
+    renderer and components share a partial fails. Effort: Medium.
+  - **C.** Mokly keeps its own walk of `.css` imports and removes renderer
+    files at every depth, as today. Then the setup transforms each file. An
+    `@import` that only the setup can resolve fails the build. Imports inside
+    Sass, Less, and Stylus files get no pruning. Effort: Medium.
+  - **D.** Mokly walks each `@import` with the setup's own resolver through
+    the sidecar, and removes renderer files at every depth, as today. Imports
+    inside Sass, Less, and Stylus files get no pruning. Effort: Large.
+  - **E.** Mokly removes renderer files from the `@import`s of each
+    stylesheet that it requests, and resolves them with the setup's
+    stylesheet resolver. A deeper renderer `.css` file that the setup inlines
+    fails with the nested-import diagnostic. Vite inlines every nested
+    `@import` from disk, so every deeper renderer file fails. Effort: Medium.
+  - **F.** Mokly's plugin adds a first alias with a custom resolver. When a
+    plain CSS file imports a renderer file, the resolver gives an empty
+    stylesheet. This removes renderer files at every depth with the setup's
+    own resolver, and Vite still inlines. Sass partials must stay out, and
+    Tailwind's own import handling must pass the alias. It needs a spike.
+    Effort: Large.
+- **Left out:**
+  - Keep Mokly's walk and leave the imports that it cannot resolve to Vite:
+    two resolvers can choose different files, so the pruning can remove the
+    wrong file.
+  - Remove the renderer's rules from the entry's output by matching text: a
+    transform of the whole chain rewrites the copy, so a match fails without
+    notice.
+  - Transform the renderer's and the entry's stylesheets as one stylesheet:
+    a document links the two bundles separately.
+  - B with a warning in place of the failure: a detail of B.
+- **Wider fix:** A. The first pass named D. D must know each import syntax,
+  and it must stop Vite's own inlining, which breaks transforms of a whole
+  chain such as Tailwind's.
+- **Previous examples:** The PostCSS rule: a plugin that inlines nested
+  imports bypasses the pruning, and the build fails when it inlines a
+  renderer file at depth two or more.
+- **Recommendation:** A. It matches Storybook and the project's own Vite
+  build, which decisions 16 and 17 chose, and it gives no false failure on a
+  shared Sass partial. D and F keep today's pruning, at Large effort.
+- **Action:** ask the user, because A changes the renderer pruning
+  requirement under the adapter, and no user decision covers that.
+- **Answer:** A, an orchestrator design call on 2026-11-23. The user's
+  decision 16 settles it: the setup transforms stylesheets, and Mokly keeps
+  no copy of Vite's CSS rules.
+
+#### Track D decision 2: Files that the setup reads outside the graph
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-vite-adapter-inputs.md`, "Inputs And
+  Serve", `crates/mokly-render/src/postcss_read_inventory.rs:182-193`.
+- **Background:** The inputs of a Vite compile are the Vite config file, the
+  optional file, the files that they import, the env files, the modules of
+  the graph, and the files that a transform reports as dependencies. Vite and
+  its plugins can read other files: the PostCSS config that Vite looks up,
+  or a browserslist or Babel config. On the esbuild path, the same limit
+  exists: a PostCSS plugin's read is an input only when the plugin reports it
+  or when it loads a module, and no page states that limit. Mokly keeps one
+  Vite server and invalidates only changed modules, so a cached transform
+  stays until the setup reloads or Serve restarts.
+- **Problem:** No rule says whether those other reads are inputs, or how a
+  project makes one an input.
+- **Impact if no action:** An edit to such a file does not rebuild in Serve
+  and moves no render key, so the output stays stale until Serve restarts.
+- **Root question:** How does Serve pick up an edit to a file that changes a
+  Vite compile, when the setup reads that file without a report?
+- **Options:**
+  - **A.** Make the PostCSS config candidates that Vite looks up into inputs,
+    present or absent. State a limit for every other file that a plugin reads
+    without a report: an edit to it takes effect when the setup reloads or
+    Serve restarts. Effort: Small.
+  - **B.** State the limit only. Effort: Small.
+  - **C.** Record every file read of the setup and its plugins as read
+    evidence, as the PostCSS context records its reads. Vite 8 reads some
+    files in native code, so this still misses some reads. Effort: Large.
+  - **D.** Do A, and give the limit a route: a `watch.rules` entry with the
+    `rebuild` action makes any other file an input, and under the adapter a
+    change to such a path reloads the setup. The project names each such
+    file. Effort: Small.
+- **Left out:**
+  - Make every file of the configuration directory an input: every edit
+    there would then rebuild everything, which breaks the watch rule that a
+    change recomputes only the outputs whose inputs changed.
+  - Reload the setup at every rebuild: an edit to the unreported file still
+    starts no rebuild.
+- **Wider fix:** C.
+- **Previous examples:** The PostCSS read inventory, which keeps only
+  reported dependencies and loaded modules.
+- **Recommendation:** D. The first pass recommended A. D keeps A's automatic
+  cover of the PostCSS config, and it gives every other unreported file a
+  route that the project controls, at the same effort.
+- **Action:** ask the user, because every option states a limit or an input
+  rule at the watch boundary, and no page states one today.
+
+#### Track D decision 3: Untracked env files on the base side
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-vite-adapter-inputs.md`, "The Base Side".
+- **Background:** Vite reads env files, such as `.env` and `.env.local`, into
+  `import.meta.env`. Design call D6 makes them inputs. The base side reads
+  its env files from the base commit. Projects often keep `.env.local` and
+  the other `.local` env files out of Git, so only the head side reads them.
+  Process variables, such as `VITE_*`, are equal on both sides, because both
+  sides inherit one process environment.
+- **Problem:** A value that an untracked env file sets exists on the head side
+  only.
+- **Impact if no action:** Changes reports a change in every view that reads
+  such a value, although the branch did not change it.
+- **Root question:** Where does each side get the env values that the setup
+  exposes, so that Changes shows each change of the branch and nothing else?
+- **Options:**
+  - **A.** Keep the rule, and state the difference in the guide. Effort:
+    Small.
+  - **B.** Both sides read only the env files that Git tracks. Serve then
+    ignores values that `vite dev` uses. Effort: Small.
+  - **C.** The base side reads the tracked env files from the base commit and
+    the untracked env files from the working tree. Effort: Medium.
+  - **D.** The base side reads from the working tree every input that neither
+    the base commit nor the working-tree index tracks: env files, files that
+    plugins read, and generated modules that Git ignores. This changes base
+    preparation on both compile paths, and a generated file then comes from
+    the head side, also when the branch changed its source. Effort: Large.
+- **Left out:**
+  - Both sides read every env file from the working tree: a branch edit of a
+    tracked env file would then not show.
+  - Read no env files on either side: stories that read env values would
+    then differ from Storybook and from `vite dev`.
+  - Warn when the head side reads an untracked env file: the false changes
+    stay.
+  - Skip only the `.local` env files on both sides: a project that keeps
+    `.env` itself out of Git keeps the false changes.
+- **Wider fix:** D. The first pass named C. D covers every input that Git
+  does not hold, and it fits a follow-up item, because it reaches base
+  preparation outside the adapter.
+- **Previous examples:** The HTML dependency policy and the package tiers
+  read working-tree packages on the base side.
+- **Recommendation:** C. It removes the false changes and keeps each branch
+  edit of a tracked env file visible.
+- **Action:** ask the user, because C reads working-tree files on the base
+  side, which no rule covers.
+
+#### Track D decision 4: Replaced settings stay silent under Vite
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-vite-adapter.md:205-219`.
+- **Background:** On the esbuild path, Mokly compiles with the `postcss`
+  module and the `moduleResolution` fields `aliases`, `conditions`,
+  `mainFields`, `resolveExtensions`, and `loaders`. These copy the project's
+  build setup. Under the adapter, the Vite setup replaces them, and Mokly's
+  tsconfig `paths` rule stops too, as design call D9 says. A configuration
+  can still set them.
+- **Problem:** No rule says whether Mokly tells the user that a set field has
+  no effect.
+- **Impact if no action:** A user keeps an alias or a PostCSS module that
+  Mokly ignores, and an import fails or a style differs with no explanation.
+- **Root question:** What does a Mokly setting that copies the project's
+  build setup do under the Vite adapter, so that it never misleads the user?
+- **Options:**
+  - **A.** Docs only: the adapter page and the guide name the replaced
+    fields. Effort: Small.
+  - **B.** A configuration warning for each replaced field that the
+    configuration sets. It names the field and the adapter. `--strict` then
+    fails until the user removes the field. It adds a row to
+    `docs/protocol/mokly-build-warnings.md`. Effort: Small.
+  - **C.** Reject such a configuration with `config-invalid`. Effort: Small.
+  - **D.** Apply `moduleResolution.aliases` under the adapter, after the
+    setup's own aliases, so that the setup wins on a conflict. The other
+    replaced fields get B's warning. This drops the assumption of design call
+    D9 that the replaced settings have no effect. Two alias sources then
+    exist. Effort: Medium.
+  - **E.** Name the replaced setting in the failure: when the setup cannot
+    resolve an import that a configured alias or Mokly's tsconfig `paths`
+    rule would resolve, the diagnostic names that setting. A `postcss` module
+    or a condition that changes the output without a failure stays silent.
+    Effort: Small.
+- **Left out:**
+  - Apply `postcss`, `conditions`, `mainFields`, `resolveExtensions`, or
+    loaders other than `"empty"` on top of the setup: PostCSS would run
+    twice, or the project's own imports would resolve differently.
+  - Move these fields under an object for esbuild only: C gives the same
+    result without a breaking change to every configuration.
+  - Report the field without failing `--strict`: the warnings contract
+    counts an ignored input as a warning.
+- **Wider fix:** None, because one rule covers every field.
+- **Previous examples:** The `stylesheet-extglob` configuration warning for a
+  matcher syntax that Mokly does not support.
+- **Recommendation:** B. The warning names each ignored field at once, it
+  matches the warnings contract's case of an ignored input, and the user
+  fixes it with a one-line change.
+- **Action:** ask the user, because B adds a warning that fails `--strict`.
+
+#### Track D decision 5: Vite CSS Modules options under the adapter
+
+- **Severity:** High. **Effort:** Large.
+- **Source:** Review, from the options check of track D decisions 1 to 4.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-vite-adapter-styles.md:17-26`,
+  `docs/protocol/mokly-imported-styles-modules.md:89-102`.
+- **Background:**
+  - Design call D10 makes Mokly scope each `.module.` stylesheet under the
+    adapter with Mokly's own names. The CSS Modules settings of the setup
+    do not apply: `css.modules`, or `css.lightningcss.cssModules` when the
+    setup uses the lightningcss transformer.
+  - Mokly's class map gives each authored class name as a key. Vite's
+    `css.modules.localsConvention` can also give converted keys, such as
+    `buttonPrimary` for `.button-primary`.
+  - Mokly's scoper fails a `composes` from another file, an `@value`, and an
+    ICSS `:export`. Vite's default transformer supports all three.
+  - Vite's default scoped names come from a hash of the stylesheet text and
+    a line number, so an edit renames every class of the file. Mokly's names
+    come from the stylesheet path.
+- **Problem:** A project that reads converted keys gets `undefined` for each
+  such class under the adapter, with no error. A project that composes from
+  another file, or uses `@value` or `:export`, fails the build.
+- **Impact if no action:** Components of such projects render without their
+  classes and look wrong, or the build fails, although the project's own
+  Vite build works.
+- **Root question:** Under the Vite adapter, how does each CSS Module that
+  the project's Vite build accepts get the same keys and scoping, with stable
+  scoped names?
+- **Options:**
+  - **A.** Keep D10. State in the guide that `localsConvention` does not
+    apply, and that a `composes` from another file, `@value`, and `:export`
+    fail. Effort: Small.
+  - **B.** Keep Mokly's scoper and names, and add the keys that the setup's
+    `localsConvention` gives to the class map. A `composes` from another
+    file, `@value`, and `:export` still fail, and `exportGlobals`,
+    `scopeBehaviour`, and `globalModulePaths` stay silently ignored. Effort:
+    Medium.
+  - **C.** Do A, and warn when the setup sets a CSS Modules option that
+    Mokly does not apply. `--strict` then fails until the project changes its
+    setup or uses the esbuild path. The warning also fires for harmless
+    options, such as `generateScopedName`, and it misses the lightningcss
+    defaults. Effort: Small.
+  - **D.** Give Mokly's naming rule to the setup as its scoped name function,
+    and take the class map and the scoped stylesheet from Vite's own CSS
+    Modules. Names stay Mokly's names. Every feature of Vite's CSS Modules
+    works on its default transformer. Mokly's scoper and its checks do not
+    run under the adapter. Effort: Large.
+  - **F.** Do D on both of Vite's CSS transformers. On the default
+    transformer, Mokly's naming rule is the name function. On the
+    lightningcss transformer, Mokly sets the name pattern
+    `mokly_[hash]_[local]`, whose hash is lightningcss's own path hash, so
+    those names differ from the esbuild path's names unless Mokly renames
+    them after the transform. Each file that a `composes` reads becomes an
+    input of its importer, because Vite reads it without a report. This drops
+    the assumption of D10 that the setup keeps its CSS Modules settings in
+    `css.modules`. Effort: Large.
+- **Left out:**
+  - Use the setup's own naming: Vite's default names hash the stylesheet
+    text, and a project's own pattern can hash the working directory, so an
+    edit or a second checkout renames classes. F gives the same features
+    with names that Mokly controls.
+  - A class map that warns when code reads a missing key: valid code reads
+    missing keys, such as `styles[variant]`, so `--strict` would fail.
+  - Converted forms of every key on both compile paths, without the setup:
+    this adds keys that the project's build does not have.
+  - Keep the setup's names and map them to stable names inside Changes:
+    every comparison and attribution step would need the maps.
+- **Wider fix:** F. The first pass named D, which prevents the class only on
+  the default transformer.
+- **Previous examples:** None found.
+- **Recommendation:** F. The first pass recommended B. F gives each CSS
+  Module that the project's Vite build accepts the same keys and scoping on
+  both transformers, with names that Mokly controls. B is the best smaller
+  first step, but it fixes `localsConvention` only and adds a copy of Vite's
+  key conversion, which decision 16 removes.
+- **Action:** ask the user, because every option either leaves wrong output
+  or adds a rule at the CSS Modules boundary, and F changes design call D10.
+- **Answer:** F, an orchestrator design call on 2026-11-23. The user's
+  decision 16 settles it: the setup transforms stylesheets, and Mokly keeps
+  no copy of Vite's CSS rules. It replaces design call D10.
+
+- [x] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
       for a catalogue without a Storybook folder, the optional file, the
       duties of Mokly's plugin, one React runtime, the base side,
       invalidation in Serve, and stylesheet transforms. Link it from
       `docs/protocol/README.md` and from the bundling section of
-      `docs/protocol/mokly-sidecar.md`. Add the status line.
-- [ ] Update `docs/protocol/mokly-configuration.md` with the `vite` field.
-- [ ] Update `docs/protocol/mokly-configuration-imported-styles.md`: under
+      `docs/protocol/mokly-sidecar.md`. Add the status line. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Update `docs/protocol/mokly-configuration.md` with the `vite` field.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Update `docs/protocol/mokly-configuration-imported-styles.md`: under
       the Vite adapter, Vite transforms each local stylesheet in place of the
-      PostCSS module.
-- [ ] Update `docs/architecture/rust-core.md` and
+      PostCSS module. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Update `docs/architecture/rust-core.md` and
       `docs/architecture/package-boundary.md` for the Vite adapter as a
-      second compile path.
-- [ ] Run `npm run format:check` and
-      `npm test -- tests/markdown_links.test.ts`.
+      second compile path. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`. Branch: `conductor/storybook-support-d-vite-adapter`.
 
 ## Milestone 14: Vite adapter core
 
@@ -2086,48 +2544,95 @@ Depends on: 13, and the answer to decision 22
 
 The project's Vite setup compiles JavaScript, as decision 16 says.
 
-- [ ] Add the `vite` field to the configuration and its schema, as design
-      call 17 says.
-- [ ] Resolve `vite` as design call 19 says, and apply the answer to
-      decision 22.
-- [ ] Run one Vite server for each sidecar process, as design call 18 says.
-- [ ] Add the Mokly Vite plugin: the entry module, the authoring facade, the
+- [x] Add the `vite` field to the configuration and its schema, as design
+      call 17 says. The optional `config` field waits for track H. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Resolve `vite` as design call 19 says, and apply the answer to
+      decision 22. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Run one Vite server for each sidecar process, as design call 18 says.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Add the Mokly Vite plugin: the entry module, the authoring facade, the
       runtime module, CSS Modules maps, the JSX development shim, confinement
-      and logical names, consumed bytes, and the module graph.
-- [ ] Evaluate the entry through Vite's module runner with one React
-      runtime. Keep Mokly's stylesheet pipeline in this milestone.
-- [ ] Load the app's `vite.config.*` when no root names a Storybook folder,
-      as decision 17 says.
-- [ ] Test a Vite fixture with an alias, `import.meta.env`, a `?raw` import,
-      and the SVGR plugin in `build`.
-- [ ] Add `docs/guides/authoring/vite.md`, and update the
-      `packages/mokly/README.md` key code.
+      and logical names, consumed bytes, and the module graph. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Evaluate the entry through Vite's module runner with one React
+      runtime. Keep Mokly's stylesheet pipeline in this milestone. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Load the app's `vite.config.*` when no root names a Storybook folder,
+      as decision 17 says. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Test a Vite fixture with an alias, `import.meta.env`, a `?raw` import,
+      and the SVGR plugin in `build`. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Add `docs/guides/authoring/vite.md`, and update the
+      `packages/mokly/README.md` key code. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Move the virtual module helpers that both compile paths need out of
+      `plugins.ts`, as a separate commit, with no behaviour change. The
+      primary orchestrator approved this on 2026-11-18. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Add the optional `vite` peer dependency, and update its check in
+      `scripts/release/manifest.mjs`, `docs/protocol/mokly-package.md`, and
+      `docs/protocol/npm-release.md`. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Add the rule of the answer to decision 22 to
+      `docs/protocol/mokly-vite-adapter.md`. Branch:
+      `conductor/storybook-support-d-vite-adapter`.
+- [ ] Apply the answer to track D decision 4 to the configuration check and
+      to `docs/protocol/mokly-vite-adapter.md`.
+- [x] Name the `vite` setting in the `bundle` row of
+      `docs/protocol/mokly-sidecar.md`, which is at its 250-line cap, and
+      scope the esbuild "metafile" sentence of
+      `docs/protocol/mokly-sidecar-modules.md` to the esbuild path. Branch: `conductor/storybook-support-d-vite-adapter`.
 
 ## Milestone 15: Vite adapter on the base side and in Serve
 
 Depends on: 14
 
-- [ ] Compile the base side with the base commit's Vite setup in its
-      extraction, with the selected installation.
-- [ ] Invalidate changed modules from Mokly's watcher in Serve.
-- [ ] Test Changes between two commits of a Vite fixture, and a Serve edit.
+- [x] Compile the base side with the base commit's Vite setup in its
+      extraction, with the selected installation. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Invalidate changed modules from Mokly's watcher in Serve. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Test Changes between two commits of a Vite fixture, and a Serve edit.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
+- [ ] Apply the answers to track D decisions 2 and 3.
+- [x] Add the Vite inputs to the table of `docs/protocol/mokly-watch.md`. The
+      early extraction lease of `docs/protocol/mokly-base-preparation.md`
+      needs no change: it covers only a renderer or a PostCSS module, and a
+      catalogue with JavaScript entries alone does not trigger it either.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
 
 ## Milestone 16: Stylesheets through Vite
 
 Depends on: 14
 
-- [ ] Transform each local stylesheet as design call 21 says, in place of
-      the configured PostCSS module.
-- [ ] Keep Mokly's order, bundling, delivery, and attribution on the result.
-- [ ] Test Sass, CSS Modules class names, and Tailwind's Vite plugin.
-- [ ] Update `docs/guides/authoring/vite.md` and
-      `docs/guides/authoring/styles.md`.
+- [x] Transform each local stylesheet as design call 21 says, in place of
+      the configured PostCSS module. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Under the adapter, send every local stylesheet of a catalogue without
+      JavaScript through the setup, as design call D12 says. A sidecar then
+      starts, and the base side extracts its sources and selects an
+      installation, as for the `postcss` module. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Keep Mokly's order, bundling, delivery, and attribution on the result. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Test Sass, CSS Modules class names, and Tailwind's Vite plugin. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Update `docs/guides/authoring/vite.md` and
+      `docs/guides/authoring/styles.md`. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Apply the answers to track D decisions 1 and 5. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Route Vite's stylesheet resolver through the Vite path's one lookup, so
+      that stylesheet imports also get the selected installation and the
+      package roots. Vite's stylesheet resolver does not call Mokly's plugin. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Keep each authored relative `url()` of a transformed stylesheet, so
+      that Mokly delivers its asset as on the esbuild path. Vite rewrites
+      such URLs, and Mokly rejects a root-absolute CSS URL. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Update the pages that name the PostCSS step or `.module.css` only:
+      `docs/protocol/mokly-imported-styles.md`,
+      `docs/protocol/mokly-imported-styles-modules.md`, and the position and
+      `processCss` rules of `docs/protocol/mokly-imported-styles-errors.md`.
+      Make the fix text of the "two roots at one route" error fit a `.scss`
+      and a `.scss.css` file at one route. Branch: `conductor/storybook-support-d-vite-adapter`.
+- [x] Name the Rust crates and files that this milestone changes in the
+      report. Keep each change behind the `vite` field, and do not refactor
+      track C's asset URL rewriting or generated file delivery. Branch: `conductor/storybook-support-d-vite-adapter`.
 
 ## Milestone 17: Vite adapter verification, review, and pull request
 
 Depends on: 13, 14, 15, 16
 
-- [ ] Remove each status line whose page this track completes.
+Merge justifications of the merge of the primary branch with `main`, on
+2026-11-20: `.context/storybook-support/merge-justifications.md`. The pull
+request description copies them.
+
+- [x] Remove each status line whose page this track completes. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
@@ -2592,3 +3097,8 @@ plan gives, and the milestones that build it.
 
 - [ ] Run the released package against a new `react-vite` Storybook project
       with and without the Vite adapter.
+- [x] Split `crates/mokly-graph/README.md`, which passes 300 lines, after
+      tracks C and D both merge into the primary branch,
+      `calummoore/mokly-storybook-integration`. Do not split it before.
+      Reason: both tracks change that README.
+      Branch: `conductor/storybook-support-d-vite-adapter`.

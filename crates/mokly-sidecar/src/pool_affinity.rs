@@ -45,7 +45,7 @@ fn matching(state: &State, call: &Call, root: &Path, outside_pass: bool) -> Opti
                 .filter(|slot| slot.source_root == root)
                 .map(|slot| {
                     let compilation = match call {
-                        Call::Bundle(_) => slot.last_compilation,
+                        Call::Bundle(_) | Call::TransformViteCss(_) => slot.last_compilation,
                         _ => None,
                     };
                     (position, loaded(state, slot, call), compilation)

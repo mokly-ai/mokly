@@ -8,16 +8,21 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { assetModule, assetType, consumerLoader } from "./asset-imports.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
-import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
 import { resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { plannedResult } from "./native-plan.js";
 import { importCallbackKey, nativeResolution } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
-import { inside, logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
 import { styleAdaptersPlugin } from "./style-adapters-plugin.js";
+import {
+  authoringModulePath,
+  authoringModuleSource,
+  cssModuleSource,
+  jsxDevelopmentModuleSource,
+  runtimeImportAllowed,
+} from "./virtual-modules.js";
 
 export interface BundleInputs {
   files: Map<string, Uint8Array>;
@@ -37,7 +42,6 @@ export function consumerPlugins(
   handledImports?: Set<string>,
 ): Plugin[] {
   const root = params.sourceRoot;
-  const ownPackage = path.resolve(import.meta.dirname, "../..");
   return [
     require.peerPlugin,
     styleAdaptersPlugin(params, inputs.virtualOrigins),
@@ -102,40 +106,27 @@ export function consumerPlugins(
         // so attribution needs no process-global state. Other importers share
         // the unattributed API.
         build.onResolve({ filter: /^@mokly\/mokly$/ }, async (args) => {
-          const importer =
-            args.importer &&
-            (await fs.realpath(args.importer).catch(() => args.importer));
-          const attributed =
-            importer &&
-            paths.repositoryOwned(importer) &&
-            !inside(ownPackage, importer);
           return {
-            path: JSON.stringify(attributed ? logical(root, importer) : null),
+            path: await authoringModulePath(root, args.importer, paths),
             namespace: "mokly-authoring",
           };
         });
         build.onLoad(
           { filter: /.*/, namespace: "mokly-authoring" },
           (args) => ({
-            contents: `const api = require("mokly:runtime").authoring(${args.path === "null" ? "undefined" : args.path});
-        export const {defineScreen,defineComponent,definePage,defineUseCase,defineFolder,
-          MockLink,mockLink,ReviewIgnore,ReviewIgnoreScope,reviewMaterialKey} = api;`,
+            contents: authoringModuleSource(args.path),
             loader: "js",
           }),
         );
         build.onResolve({ filter: /^mokly:runtime$/ }, (args) => {
-          if (
-            !["mokly-authoring", "mokly-css", "mokly-style"].includes(
-              args.namespace,
-            )
-          )
+          if (!runtimeImportAllowed(args.path, args.namespace))
             return {
               errors: [{ text: "Mokly's generation runtime is reserved" }],
             };
           return { path: runtimeKey, external: true };
         });
         build.onResolve({ filter: /^mokly:css-map:/ }, (args) => {
-          if (args.namespace !== "mokly-css")
+          if (!runtimeImportAllowed(args.path, args.namespace))
             return {
               errors: [{ text: "Mokly's generation runtime is reserved" }],
             };
@@ -149,14 +140,10 @@ export function consumerPlugins(
           namespace: "mokly-jsx",
         }));
         build.onLoad({ filter: /.*/, namespace: "mokly-jsx" }, () => ({
-          contents: `import { jsx, jsxs, Fragment } from "react/jsx-runtime";
-        import { resolve } from "node:path";
-        export { Fragment };
-        export function jsxDEV(type, props, key, staticChildren, source) {
-          if (type && type[Symbol.for("mokly.component")] && source)
-            props = {...props, __moklySource: {...source, fileName: resolve(${JSON.stringify(path.resolve(root, params.configurationDirectory))}, source.fileName)}};
-          return (staticChildren ? jsxs : jsx)(type, props, key);
-        }`,
+          contents: jsxDevelopmentModuleSource(
+            root,
+            params.configurationDirectory,
+          ),
           resolveDir: root,
           loader: "js",
         }));
@@ -264,7 +251,7 @@ export function consumerPlugins(
             return { contents: "export default {};", loader: "js" };
           inputs.cssModules.add(file);
           return {
-            contents: `export default require("mokly:runtime").css(${JSON.stringify(file)});\nexport * from ${JSON.stringify(cssModulePrefix + file)};`,
+            contents: cssModuleSource(file),
             loader: "js",
           };
         });

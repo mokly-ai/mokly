@@ -4,29 +4,27 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Weak};
-use std::thread;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::SourceFile;
 use mokly_catalogue::render_sources::JavaScriptGeneration;
-use mokly_css::types::StylesheetRoot;
 use mokly_model::material::digest;
 use mokly_sidecar::compiled::ReuseEvidence;
 use mokly_sidecar::definitions::Definitions;
-use mokly_sidecar::methods::{Bundle, BundleCapture, Call, CssModules, Generation};
+use mokly_sidecar::methods::{BundleCapture, Call, CssModules, Generation};
 use mokly_sidecar::postcss_preparation::PostcssPreparation;
 use mokly_sidecar::results;
 
 use crate::error::{RenderError, Result};
 use crate::input_stamp::InputStamp;
 use crate::leases::{BundleLease, ContextLease};
-use crate::render_environment::{ClassMaps, RenderEnvironment};
+use crate::render_environment::RenderEnvironment;
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
-use crate::stylesheet_class_maps::ClassMapCompiler;
 use crate::stylesheet_compiler::StylesheetPreparation;
 use crate::{
-    bundle_attempt, bundle_finish, bundle_inputs, persistent_identity, render_environment,
+    bundle_attempt, bundle_finish, bundle_inputs, bundle_styles, persistent_identity,
+    render_environment,
 };
 use crate::{physical_inputs, sources, stylesheets};
 
@@ -86,8 +84,8 @@ pub(crate) fn describe(
     let context = attempt.context;
     let mut prepared_maps = None;
     if let Some(previous) = candidates.first() {
-        let maps = class_maps(compiler.as_ref(), &previous.modules, &params)?;
-        let digest = maps_digest(&maps);
+        let maps = bundle_styles::prepare(compiler.as_ref(), &previous.modules, &params)?;
+        let digest = maps.fingerprint();
         if let Some(existing) = candidates
             .iter()
             .find(|state| state.class_maps_digest == digest)
@@ -99,7 +97,7 @@ pub(crate) fn describe(
     }
     let mut evaluation = cache_key.clone();
     if let Some(maps) = &prepared_maps {
-        evaluation.push_str(&maps_digest(maps));
+        evaluation.push_str(&maps.fingerprint());
     }
     params.evaluation = Some(digest(evaluation.as_bytes()));
     let preparation = attempt_preparation(runtime, config, compiler.as_ref(), context.as_ref());
@@ -108,9 +106,9 @@ pub(crate) fn describe(
     let mut modules = bundle_attempt::modules(&result);
     let maps = match prepared_maps {
         Some(maps) => maps,
-        None => class_maps(compiler.as_ref(), &modules, &params)?,
+        None => bundle_styles::prepare(compiler.as_ref(), &modules, &params)?,
     };
-    let class_maps_digest = maps_digest(&maps);
+    let class_maps_digest = maps.fingerprint();
     if bundle_attempt::existing(runtime, &result.generation)
         .is_some_and(|previous| previous.class_maps_digest != class_maps_digest)
     {
@@ -119,10 +117,10 @@ pub(crate) fn describe(
         record_usage(runtime, &side, &result);
         modules = bundle_attempt::modules(&result);
     }
-    let render = render_environment::derive(
+    let mut render = render_environment::derive(
         &params,
         &result,
-        &maps,
+        &maps.maps,
         runtime
             .base
             .as_ref()
@@ -132,6 +130,7 @@ pub(crate) fn describe(
             .as_ref()
             .and_then(|base| base.cache_namespace.as_deref()),
     );
+    render.resolution_digests.extend(maps.inputs);
     let stamp = bundle_attempt::stamp(&result, &config.repo_root);
     let module_digests = result
         .modules
@@ -165,7 +164,7 @@ pub(crate) fn describe(
     }
     match runtime.pool.request(Call::CssModules(CssModules {
         generation: lease.id.clone(),
-        class_maps: maps,
+        class_maps: maps.maps,
     })) {
         Ok(_) => {}
         Err(source) => return Err(RenderError::Sidecar { source }),
@@ -195,12 +194,6 @@ pub(crate) fn describe(
     bundle_finish::finish(runtime, side, compiler, context, state)
 }
 
-fn maps_digest(maps: &ClassMaps) -> String {
-    let bytes = serde_json::to_vec(maps)
-        .expect("CSS Modules maps contain only strings and string-keyed maps");
-    digest(&bytes)
-}
-
 /// The PostCSS preparation of an attempt under the prepared context rules. A Serve base attempt
 /// prepares its unused context. A head attempt checks its guards in this order, because the
 /// stale check records the probe key that a later lookup reads.
@@ -228,47 +221,6 @@ fn attempt_preparation(
     lease.and_then(|lease| config.postcss().and_then(|postcss| lease.prepare(postcss)))
 }
 
-fn class_maps(
-    compiler: &dyn ClassMapCompiler,
-    modules: &BTreeMap<String, Vec<String>>,
-    params: &Bundle,
-) -> Result<ClassMaps> {
-    let entries: Vec<_> = params
-        .entry_files
-        .iter()
-        .chain(&params.stories_files)
-        .cloned()
-        .collect();
-    let roots = stylesheets::roots(
-        modules,
-        params.renderer.as_deref(),
-        &entries,
-        &params.module_resolution.loaders,
-    );
-    let parallelism = thread::available_parallelism().map_or(1, usize::from);
-    let mut maps = match compiler.class_maps(&roots, parallelism) {
-        Ok(maps) => maps,
-        Err(source) => return Err(RenderError::Css { source }),
-    };
-    for path in modules.keys().filter(|path| path.ends_with(".module.css")) {
-        if !maps.contains_key(path)
-            && !stylesheets::ignored(path, &params.module_resolution.loaders)
-        {
-            let root = StylesheetRoot {
-                path: path.clone(),
-                stylesheets: vec![path.clone()],
-                excluded: Default::default(),
-                local_css: true,
-            };
-            match compiler.bundle(&root) {
-                Ok(bundle) => maps.extend(bundle.css_modules),
-                Err(source) => return Err(RenderError::Css { source }),
-            }
-        }
-    }
-    Ok(maps)
-}
-
 fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) {
     for directory in result.unmapped_dependency_directories.iter().flatten() {
         runtime.dependency_usage.unmapped(directory);
@@ -279,7 +231,3 @@ fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) 
             .record(&side.dependency_aliases, &module.path);
     }
 }
-
-#[cfg(test)]
-#[path = "_tests_/class_maps/uncovered_tests.rs"]
-mod uncovered_tests;

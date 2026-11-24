@@ -1,0 +1,5 @@
+{
+  "vite": true,
+  "roots": [{ "dir": "src" }],
+  "renderer": "src/renderer.jsx"
+}

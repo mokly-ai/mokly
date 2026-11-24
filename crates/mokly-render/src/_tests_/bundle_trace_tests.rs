@@ -18,6 +18,7 @@ use crate::runtime::Runtime;
 
 fn params() -> Bundle {
     Bundle {
+        vite: false,
         evaluation: None,
         entry_files: vec![],
         renderer: None,
@@ -49,6 +50,7 @@ fn result(cache: CacheOutcome) -> MethodResult {
             }),
             identity: "identity".into(),
             code: String::new(),
+            vite: None,
             runtime_key: "runtime".into(),
             unmapped_dependency_directories: None,
             dependency_roots: vec![],

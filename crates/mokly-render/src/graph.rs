@@ -6,6 +6,7 @@ use std::sync::{Arc, Weak};
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_css::types::StylesheetBundler;
 use mokly_graph::delivery_inputs::DeliveryInputs;
 use mokly_graph::document_store::Persistence;
 use mokly_graph::error::{GraphError, InternalError};
@@ -20,7 +21,6 @@ use mokly_model::material::digest;
 use mokly_sidecar::bindings::{Bindings, EntryBinding};
 use mokly_sidecar::methods::Call;
 
-use crate::declarations;
 use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
 use crate::imported_assets;
@@ -28,7 +28,7 @@ use crate::leases::FinishPreparation;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
 use crate::stylesheets::StylesheetAttempt;
-use crate::{definition_handle, sources, stylesheets};
+use crate::{bundle_styles, declarations, definition_handle, sources, stylesheets};
 
 pub(crate) struct JavaScriptGraph {
     pub(crate) runtime: Runtime,
@@ -52,7 +52,9 @@ impl RenderGraph for JavaScriptGraph {
                     .and_then(|prepared| prepared.context.clone())
             },
         ));
-        if (config.modules.postcss.is_some() || catalogue.javascript.generation.is_some())
+        if (config.vite()
+            || config.modules.postcss.is_some()
+            || catalogue.javascript.generation.is_some())
             && let Some(warning) = self.runtime.base_warning()
             && !catalogue.warnings.contains(&warning)
         {
@@ -126,6 +128,25 @@ impl JavaScriptGraph {
                     context: prepared.context.clone(),
                 });
             }
+            let vite_compiler: Option<&dyn StylesheetBundler> = if config.vite() {
+                let attempt = attempt
+                    .get_or_insert_with(|| stylesheets::attempt(&self.runtime, config, &side));
+                Some(attempt.compiler.as_ref())
+            } else {
+                None
+            };
+            let mut vite_generation;
+            let generation = if let Some(compiler) = vite_compiler
+                && let Some(digest) =
+                    bundle_styles::local_input_digest(compiler, config, &declarations)?
+            {
+                vite_generation = generation.clone();
+                vite_generation.environment.push(':');
+                vite_generation.environment.push_str(&digest);
+                &vite_generation
+            } else {
+                generation
+            };
             let bindings = Bindings {
                 generation: generation.id.clone(),
                 entries: catalogue
@@ -149,15 +170,17 @@ impl JavaScriptGraph {
             }
             let table = serde_json::to_vec(&bindings.entries)
                 .expect("entry bindings contain only strings and string-keyed maps");
-            let fingerprint = digest(
-                format!(
-                    "{}:{}:{}",
-                    generation.id,
-                    generation.class_maps_digest,
-                    digest(&table)
-                )
-                .as_bytes(),
+            let mut identity = format!(
+                "{}:{}:{}",
+                generation.id,
+                generation.class_maps_digest,
+                digest(&table)
             );
+            if config.vite() {
+                identity.push(':');
+                identity.push_str(&generation.environment);
+            }
+            let fingerprint = digest(identity.as_bytes());
             let renderer = config.renderer();
             let keys = with_catalogue_inputs(config, catalogue, generation, |inputs| {
                 self.runtime.render_keys(inputs, NodeKey(fingerprint))
@@ -191,12 +214,13 @@ impl JavaScriptGraph {
                 style_references: self.runtime.style_references.clone(),
                 dependency_aliases: side.dependency_aliases.clone(),
                 render_keys: Some(keys),
-                stylesheet_roots: stylesheets::roots(
+                stylesheet_roots: bundle_styles::prepare_roots(
                     &generation.modules,
                     renderer.as_deref(),
                     &modules,
                     &side.module_resolution.loaders,
-                ),
+                    vite_compiler,
+                )?,
                 component_stylesheets: declarations,
                 imported_assets: imported_assets::prepare(
                     assets.as_ref(),

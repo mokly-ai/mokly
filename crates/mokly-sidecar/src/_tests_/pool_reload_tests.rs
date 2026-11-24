@@ -85,6 +85,7 @@ fn worker(expected: &[&str], calls: usize) -> Unimock {
 
 fn bundle() -> Bundle {
     Bundle {
+        vite: false,
         evaluation: None,
         entry_files: vec!["entry".into()],
         renderer: None,

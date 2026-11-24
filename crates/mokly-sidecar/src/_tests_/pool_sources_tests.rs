@@ -199,6 +199,7 @@ fn reloaded_generations_select_the_original_base_root() {
             stories_files: vec![],
             module_resolution: Default::default(),
             repository_roots: vec![],
+            vite: false,
             evaluation: None,
         },
     );

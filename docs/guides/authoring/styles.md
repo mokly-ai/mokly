@@ -20,16 +20,21 @@ export function Button() {
 ```
 
 A stylesheet imported by the renderer comes before the entry's imported
-stylesheet. Renderer-owned CSS is removed from the entry's bundle.
+stylesheet.
 Configured shared and scheme-specific sheets come before these imported sheets.
 A page receives no automatic stylesheet links. Link its own CSS in the complete
 document.
 
+Without the Vite adapter, Mokly removes the renderer's stylesheets from
+the entry's JavaScript imports and its `@import` chain. With the
+[Vite adapter](/docs/authoring/vite/), you can also import stylesheets such as
+`.scss` files. Mokly removes the renderer's stylesheets only from JavaScript
+imports. A renderer stylesheet imported with `@import` appears again in the
+entry's imported CSS.
+
 ## CSS Modules
 
-A `*.module.css` import provides a class map. The core scopes class names,
-IDs, keyframes, and animation references with a stable hash of the stylesheet's
-repository-relative path. A CSS content edit does not change that path hash.
+A `*.module.css` import provides a class map.
 
 ```tsx
 import styles from "./card.module.css";
@@ -39,12 +44,20 @@ export function Card() {
 }
 ```
 
-Use `:global(...)` to keep a selector global. Same-file composition can name
-an earlier local class. Global composition is allowed. Cross-file composition,
-authored `:import`, `:export`, and `@value` are errors.
+Without the Vite adapter, Mokly scopes class names, IDs, keyframes, and
+animation references with a stable hash of the stylesheet's repository-relative
+path. A CSS content edit does not change that path hash.
 
-The class map is supplied before entry modules evaluate. It agrees with the
-scoped CSS that the core delivers. Add an ambient `*.module.css` declaration
+Without the adapter, use `:global(...)` to keep a selector global. Same-file
+composition can name an earlier local class. Global composition is allowed.
+Cross-file composition, authored `:import`, `:export`, and `@value` are errors.
+
+With the [Vite adapter](/docs/authoring/vite/), Vite builds the class map.
+A file such as `card.module.scss` is also a CSS Module. Use `composes` to
+include a class from another file.
+
+Mokly supplies the class map before it runs entry modules. The class names
+match the delivered CSS. Add an ambient `*.module.css` declaration
 in your application when its TypeScript setup needs one.
 
 ## Assets
@@ -63,8 +76,14 @@ Keep file and directory names URL-safe. Use `url(...)` around a local image
 inside `image-set()`. Root-absolute URLs are not portable.
 Remote HTTP(S), data, and fragment URLs keep their meanings.
 
+A document link fails if it points to a file that a stylesheet transform
+reports as a dependency. With Vite, a link also fails if it points to a file
+that `composes` reads. See [private stylesheet inputs](/docs/authoring/vite/#private-stylesheet-inputs)
+for fixes.
+
 ## Import images, fonts, and media
 
+This asset delivery applies when you do not use the Vite adapter.
 Import an image, font, or media file from your component.
 Use the imported value in `src`, `srcset`, `poster`, `href`, or a `style` `url()`.
 Mokly delivers the file.
@@ -100,8 +119,12 @@ Changes shows the views that reference the changed file.
 
 ## Consumer PostCSS
 
-Name a config-relative module in `mokly.config.json`. Mokly supplies PostCSS.
-Install the plugins in your repository.
+With the [Vite adapter](/docs/authoring/vite/), Mokly does not use the `postcss`
+field. For Vite's default CSS transformer, use the PostCSS config that Vite
+loads.
+
+Without the adapter, name a config-relative module in `mokly.config.json`.
+Mokly supplies PostCSS. Install the plugins in your repository.
 
 ```json
 {
@@ -137,8 +160,12 @@ Plugin file and directory dependency messages supply the watch inputs.
 
 For Tailwind, prefer `source(none)` with explicit `@source` paths. This keeps
 scans inside authored source trees. Use `@reference` when a CSS Module needs
-Tailwind context without another emitted copy. Import shared CSS from the
-renderer, or directly from an entry when it must be pruned there.
+Tailwind context without another emitted copy.
+
+With or without the Vite adapter, import shared CSS from the renderer.
+If Mokly must prune the file from an entry, use a JavaScript import in
+that entry. With the Vite adapter, an `@import` of the same file keeps a
+second copy in the entry's CSS.
 
 ## Runtime styles
 
@@ -150,6 +177,7 @@ with its React tree.
 
 ## Loader choices
 
+These asset loader choices apply without the Vite adapter.
 An asset import's default value is not a URL that code can fetch during a render.
 Use `binary` or `text` in `moduleResolution.loaders` to read the file's bytes or text.
 A configured loader overrides asset delivery for its extension.
@@ -166,6 +194,9 @@ A CSS import stays a stylesheet even with an import attribute.
 Only `empty` can override `.css` or `.module.css` handling.
 The `.css` override opts out of plain CSS and CSS Modules. The `.module.css`
 override opts out of CSS Modules alone.
+
+With the [Vite adapter](/docs/authoring/vite/), these stylesheet loader choices
+apply to JavaScript imports of every supported stylesheet language.
 
 ## Configure stylesheet rules
 
@@ -191,6 +222,14 @@ The first matching rule applies. Shared links come first. The scheme's links
 follow them. An HTTP or HTTPS URL stays external and is never fetched during
 a build. A page and a Markdown document receive no configured links. A page
 links its own CSS; a Markdown document uses Mokly's document styles.
+
+With the [Vite adapter](/docs/authoring/vite/), configured and component-declared
+local stylesheets must use a lowercase suffix that Vite supports. For example,
+use `Action.css`, not `Action.CSS`. Without the adapter, Mokly accepts `Action.CSS`.
+
+With the adapter, if the source path does not end in `.css`, Mokly adds `.css`
+to the output path. For example, `design/base.scss` becomes
+`styles/design/base.scss.css` in the generated output.
 
 ## Place component styles
 

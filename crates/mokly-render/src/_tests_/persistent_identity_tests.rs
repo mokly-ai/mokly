@@ -9,6 +9,7 @@ use super::compilation;
 #[test]
 fn persistent_compilation_identity_requires_stable_metadata_and_toolchain_only() {
     let mut input = CompiledGeneration {
+        vite: None,
         toolchain: "toolchain-A".into(),
         metadata_identity: Some("metadata-A".into()),
         reuse_evidence: Arc::new(ReuseEvidence {

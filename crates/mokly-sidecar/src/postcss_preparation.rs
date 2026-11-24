@@ -64,6 +64,7 @@ impl Call {
             | Self::RenderStory(_)
             | Self::RenderPage(_)
             | Self::CssModules(_)
+            | Self::TransformViteCss(_)
             | Self::Dispose(_)
             | Self::DisposeContext(_)
             | Self::Shutdown(_) => None,

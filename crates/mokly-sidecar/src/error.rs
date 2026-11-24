@@ -118,6 +118,7 @@ impl FailureKind {
             | Call::RestoreGeneration(_)
             | Call::Describe(_)
             | Call::ProcessCss(_)
+            | Call::TransformViteCss(_)
             | Call::CssModules(_)
             | Call::Bindings(_)
             | Call::Dispose(_)

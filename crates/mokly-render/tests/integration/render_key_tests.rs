@@ -1,59 +1,12 @@
 //! A JavaScript edit moves exactly the document keys whose render inputs changed.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::fs;
 
-use mokly_sidecar::methods::Call;
-
+pub(super) use self::fixture::{consumer, dependency, keys, moved, render_calls};
 use super::support::Consumer;
 
-/// The render keys fixture, with a dependency that only component C imports.
-///
-/// The test writes the root manifest, because a tracked package manifest would join
-/// the repository's dependency identity and give Changes a base installation.
-pub(super) fn consumer() -> Consumer {
-    let consumer = Consumer::fixture("render-keys");
-    consumer.write(
-        "package.json",
-        "{\n  \"name\": \"render-keys-fixture\",\n  \"private\": true\n}\n",
-    );
-    dependency(&consumer, "1.0.0", "dep-1");
-    consumer
-}
-
-pub(super) fn dependency(consumer: &Consumer, version: &str, value: &str) {
-    consumer.write(
-        "specs/node_modules/dep/package.json",
-        &format!(r#"{{ "name": "dep", "version": "{version}", "main": "index.js" }}"#),
-    );
-    consumer.write(
-        "specs/node_modules/dep/index.js",
-        &format!("exports.dep = \"{value}\";\n"),
-    );
-}
-
-/// Every document key of a fresh preparation, by entry path and view.
-pub(super) fn keys(consumer: &Consumer) -> BTreeMap<String, String> {
-    let generation = consumer.generation(consumer.prepare().unwrap());
-    generation
-        .plans()
-        .iter()
-        .map(|(route, plan)| (route.clone(), plan.key.0.clone()))
-        .collect()
-}
-
-/// The entries with a view whose key changed, appeared, or disappeared.
-pub(super) fn moved(
-    before: &BTreeMap<String, String>,
-    after: &BTreeMap<String, String>,
-) -> BTreeSet<String> {
-    let routes: BTreeSet<_> = before.keys().chain(after.keys()).collect();
-    routes
-        .into_iter()
-        .filter(|route| before.get(*route) != after.get(*route))
-        .map(|route| route.rsplit_once("/index.").unwrap().0.to_owned())
-        .collect()
-}
+mod fixture;
 
 #[test]
 fn equal_catalogues_in_two_checkout_folders_share_render_input_keys() {
@@ -72,28 +25,6 @@ fn entries(paths: &[&str]) -> BTreeSet<String> {
 fn append(consumer: &Consumer, path: &str, text: &str) {
     let original = std::fs::read_to_string(consumer.root().join(path)).unwrap();
     consumer.write(path, &format!("{original}{text}"));
-}
-
-pub(super) fn render_calls(consumer: &Consumer) -> Vec<(String, String)> {
-    consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
-        .iter()
-        .filter_map(|call| match call {
-            Call::RenderScreen(render) => {
-                Some((render.entry.path.clone(), render.viewport.clone()))
-            }
-            Call::RenderComponent(render) => Some((
-                render.render.entry.path.clone(),
-                render.render.viewport.clone(),
-            )),
-            Call::RenderStory(render) => Some((render.story_id.clone(), render.viewport.clone())),
-            Call::RenderPage(render) => Some((render.handle.clone(), String::new())),
-            _ => None,
-        })
-        .collect()
 }
 
 #[test]
@@ -185,6 +116,62 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
         assert_eq!(moved(&before, &after), entries(&expected), "{label}");
         before = after;
     }
+}
+
+#[test]
+fn a_vite_module_edit_moves_only_the_documents_that_import_it() {
+    let consumer = consumer();
+    consumer.replace(
+        "mokly.config.json",
+        "\"roots\":",
+        "\"vite\": true,\n  \"roots\":",
+    );
+    consumer.write(
+        "vite.config.ts",
+        "import react from '@vitejs/plugin-react'; export default { plugins: [react()] };\n",
+    );
+    let before = keys(&consumer);
+    append(&consumer, "specs/h.ts", "// edit\n");
+    assert_eq!(moved(&before, &keys(&consumer)), entries(&["s/s"]));
+}
+
+#[test]
+fn vite_sides_with_different_plugin_inputs_move_every_javascript_key() {
+    let head = consumer();
+    let base = consumer();
+    for side in [&head, &base] {
+        side.replace(
+            "mokly.config.json",
+            "\"roots\":",
+            "\"vite\": true,\n  \"roots\":",
+        );
+        side.replace(
+            "specs/t/t.mockup.tsx",
+            "<main>T</main>",
+            "<main>{\"__PLUGIN__\"}</main>",
+        );
+        side.write(
+            "vite.config.ts",
+            include_str!("../../../../tests/fixtures/vite_render_key_config.ts"),
+        );
+    }
+    let before = keys(&base);
+    assert_eq!(keys(&head), before);
+    head.replace("specs/h.ts", "Hello", "After");
+    assert_eq!(
+        moved(&before, &keys(&head)),
+        entries(&[
+            "c",
+            "c/filled",
+            "html",
+            "label",
+            "label/Secondary",
+            "p",
+            "s/s",
+            "t/t",
+            "u/u"
+        ])
+    );
 }
 
 #[test]

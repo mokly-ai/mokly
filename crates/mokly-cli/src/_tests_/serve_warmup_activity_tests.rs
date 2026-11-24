@@ -28,6 +28,7 @@ impl Drop for Lease {
 
 fn compiled() -> CompiledGeneration {
     CompiledGeneration {
+        vite: None,
         toolchain: "test".into(),
         metadata_identity: None,
         reuse_evidence: Arc::new(ReuseEvidence {
@@ -135,6 +136,7 @@ fn a_real_shared_warmup_call_retains_writer_activity_without_admitting_the_store
     head.request(Call::Bundle(BundleRequest {
         preparation: None,
         params: Bundle {
+            vite: false,
             source_root: "/head".into(),
             configuration_directory: ".".into(),
             entry_files: vec!["entry.tsx".into()],

@@ -89,7 +89,7 @@ mod session_lookup;
 mod session_proof;
 mod session_render;
 mod session_render_reuse;
-mod styles;
+pub mod styles;
 mod stylesheet_jobs;
 mod stylesheet_keys;
 mod validation;

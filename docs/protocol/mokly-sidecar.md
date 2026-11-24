@@ -18,7 +18,7 @@ owns catalogue decisions, caching, invalidation, comparison, and output.
   under the [memory admission rules](./mokly-sidecar-memory.md#default-admission).
   `--sidecars <n>` and `MOKLY_SIDECARS` accept any positive integer and set an
   exact size without memory admission. The option takes precedence over the
-  variable. A catalogue that needs no JavaScript starts none.
+  variable.
 - The first request is `hello`; the sidecar's first frame is its matching hello
   response with the package version. Reject a mismatch with `sidecar-version`
   before other traffic.
@@ -56,23 +56,24 @@ both sides were rejected, because the copies drift and increase the code size.
 
 ## Methods
 
-| Method              | Params                                                                                                                                                                                                      | Result                                                                                             |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `hello`             | optional `timings` boolean, default `false`, and optional `capture` hint                                                                                                                                    | `{ version }`                                                                                      |
-| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots, and optional `capture` and [`preparation`](./mokly-sidecar-postcss.md#prepared-contexts) | `{ generation, modules, compiled }` or a [short result](./mokly-sidecar-recipes.md#restored-reuse) |
-| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                                                                                                                 | nothing                                                                                            |
-| `describe`          | generation                                                                                                                                                                                                  | `{ screens, pages, useCases, folders, components, stories, diagnostics }`                          |
-| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                                                                                                                         | render result                                                                                      |
-| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope                                                                                                   | render result                                                                                      |
-| `renderStory`       | generation, story id, props, viewport, colour scheme                                                                                                                                                        | render result                                                                                      |
-| `renderPage`        | generation, handle                                                                                                                                                                                          | `{ html, resources }`                                                                              |
-| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                                                                                                              | `{ text, dependencies, readEvidence }`                                                             |
-| `bindings`          | generation, handle-to-path-and-title table                                                                                                                                                                  | nothing                                                                                            |
-| `disposeContext`    | PostCSS context                                                                                                                                                                                             | nothing                                                                                            |
-| `prepareContext`    | PostCSS context and module, source root, repository roots, and resolution settings                                                                                                                          | nothing                                                                                            |
-| `cssModules`        | generation, class maps by stylesheet path                                                                                                                                                                   | nothing                                                                                            |
-| `dispose`           | generation                                                                                                                                                                                                  | nothing                                                                                            |
-| `shutdown`          | none                                                                                                                                                                                                        | nothing                                                                                            |
+| Method              | Params                                                                                                                                                                                                                       | Result                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `hello`             | optional `timings` boolean, default `false`, and optional `capture` hint                                                                                                                                                     | `{ version }`                                                                                      |
+| `bundle`            | entry files, renderer, stories files, resolution settings, source root, configuration directory, repository roots, optional `vite` and `capture`, and optional [`preparation`](./mokly-sidecar-postcss.md#prepared-contexts) | `{ generation, modules, compiled }` or a [short result](./mokly-sidecar-recipes.md#restored-reuse) |
+| `restoreGeneration` | generation, original bundle params, module graph, immutable compiled recipe                                                                                                                                                  | nothing                                                                                            |
+| `describe`          | generation                                                                                                                                                                                                                   | `{ screens, pages, useCases, folders, components, stories, diagnostics }`                          |
+| `renderScreen`      | generation, handle, effective entry, props, viewport, colour scheme                                                                                                                                                          | render result                                                                                      |
+| `renderComponent`   | generation, handle, effective entry, props, tagged slots, viewport, colour scheme, enclosing ignore scope                                                                                                                    | render result                                                                                      |
+| `renderStory`       | generation, story id, props, viewport, colour scheme                                                                                                                                                                         | render result                                                                                      |
+| `renderPage`        | generation, handle                                                                                                                                                                                                           | `{ html, resources }`                                                                              |
+| `processCss`        | context, source root, repository roots, resolution settings, PostCSS module, source path, text                                                                                                                               | `{ text, dependencies, readEvidence }`                                                             |
+| `transformViteCss`  | `bundle` settings without entry or stories files, logical stylesheet path, selected physical file                                                                                                                            | `{ text, classMap, sourceDigest, dependencies, metadataInputs }`                                   |
+| `bindings`          | generation, handle-to-path-and-title table                                                                                                                                                                                   | nothing                                                                                            |
+| `disposeContext`    | PostCSS context                                                                                                                                                                                                              | nothing                                                                                            |
+| `prepareContext`    | PostCSS context and module, source root, repository roots, and resolution settings                                                                                                                                           | nothing                                                                                            |
+| `cssModules`        | generation, class maps by stylesheet path                                                                                                                                                                                    | nothing                                                                                            |
+| `dispose`           | generation                                                                                                                                                                                                                   | nothing                                                                                            |
+| `shutdown`          | none                                                                                                                                                                                                                         | nothing                                                                                            |
 
 The [render records contract](./mokly-sidecar-render-records.md) defines the
 render result, bindings, entry context, usage drafts, and slot inputs. Page results follow the [pages contract](./mokly-pages.md).
@@ -88,7 +89,7 @@ registers definitions or starts a render.
 
 ## Bundling
 
-`bundle` compiles an unevaluated in-memory generation and returns its id. A
+`bundle` compiles an unevaluated in-memory generation with esbuild or the [Vite adapter](./mokly-vite-adapter.md) and returns its id. A
 change to any input that can change the compiled code or its evaluation gives
 a new id. Equal head and base sources have separate generations, class maps, and
 bindings. Render input keys never contain a generation id. Render cache keys use
@@ -97,8 +98,7 @@ so equal head and base inputs share cache entries under the
 [runtime contract](./mokly-runtime.md#render-graph-and-cache), and a cache miss
 renders with its own side's generation. The whole-bundle key of the watch
 contract contains the generation id, so it never matches across sides. A selected dependency installation is
-part of the key, so a base with its own installation shares no JavaScript
-render.
+part of the key, so a base with its own installation shares no JavaScript render.
 Decision: equal inputs share entries across sides. A side marker in every key
 was rejected, because the base would render every unchanged view again.
 [Compiled recipes](./mokly-sidecar-recipes.md) define replay and release.
@@ -208,15 +208,11 @@ define deadlines, process replacement, and shutdown grace.
 | `render-timeout`      | a deadline passed twice                                                                         | `build-invalid` with the entry and the deadline                                |
 
 There is no fallback render and no partial output. Commands that need neither
-JavaScript nor PostCSS never start a sidecar or fail for these reasons.
+JavaScript, PostCSS, nor a [Vite stylesheet transform](./mokly-vite-adapter-styles.md#catalogues-without-javascript) never start a sidecar or fail for these reasons.
 
 ## Security
 
-The sidecar runs consumer code with the consumer build's trust.
-It inherits its environment except the names that the [source worker environment](./mokly-sidecar-modules.md#source-root-workers) omits, so sidecar code does not receive the publish token.
-The [token exposure rule](./mokly-upload.md#token-exposure) states the limit of this protection.
-Each PostCSS child puts selected dependency directories before inherited `NODE_PATH` entries. Base dependency installation
-disables lifecycle scripts by default and has a time limit. An explicit working-tree opt-in can run them inside the owned process tree.
+See [Sidecar Security](./mokly-sidecar-security.md).
 
 ## Related Docs
 

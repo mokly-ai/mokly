@@ -17,6 +17,7 @@ pub(crate) fn compiled(identity: &str) -> CompiledGeneration {
         }),
         identity: identity.into(),
         code: "module.exports={}".into(),
+        vite: None,
         runtime_key: "fixture-runtime".into(),
         dependency_roots: Vec::new(),
         css_modules: Vec::new(),

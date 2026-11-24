@@ -6,6 +6,7 @@ use std::sync::Arc;
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_css::resolution::Resolution;
 use mokly_css::types::StylesheetRoot;
+use mokly_css::vite;
 
 use crate::leases::ContextLease;
 use crate::postcss::PostCss;
@@ -14,7 +15,10 @@ use crate::runtime::Runtime;
 use crate::side::{SideInputs, dependency_roots};
 use crate::sources;
 use crate::stylesheet_cache::CachedStylesheets;
-use crate::stylesheet_compiler::{CapturingCompiler, StylesheetPreparation};
+use crate::stylesheet_compiler::{
+    CapturingCompiler, RootCompiler, StylesheetPreparation, ViteRootCompiler,
+};
+use crate::vite_stylesheets::ViteStylesheets;
 
 /// Stylesheet services and context ownership for one attempt.
 pub(crate) struct StylesheetAttempt {
@@ -54,7 +58,7 @@ pub(crate) fn attempt(
             .collect(),
         extensions: module_resolution.resolve_extensions.clone(),
     };
-    let settings = format!(
+    let mut settings = format!(
         "{:?}:{:?}:{:?}:{:?}:{resolution:?}:{:?}:{:?}",
         config.input,
         config.modules,
@@ -63,7 +67,11 @@ pub(crate) fn attempt(
         dependency_roots(side),
         side.repository_roots
     );
-    let postcss = config.postcss().map(|module| {
+    if config.vite() {
+        settings.push_str(":vite:");
+        settings.push_str(&side.source_root.to_string_lossy());
+    }
+    let postcss = config.postcss().filter(|_| !config.vite()).map(|module| {
         let released = {
             let mut cache = runtime
                 .css
@@ -94,19 +102,28 @@ pub(crate) fn attempt(
         })
     });
     let context = postcss.as_ref().map(|postcss| postcss.lease.clone());
+    let base = CapturingCompiler {
+        tree: tree.clone(),
+        root: config.repo_root.clone(),
+        resolution,
+        postcss,
+        watch_sources: runtime
+            .watch_stylesheets
+            .then(|| runtime.inventory_tree.clone()),
+        side: side.clone(),
+        deferred_sources: Some(tree.clone()),
+    };
+    let compiler: Arc<dyn RootCompiler> = if config.vite() {
+        Arc::new(ViteRootCompiler {
+            base,
+            transform: Arc::new(ViteStylesheets::new(runtime, config, side)),
+        })
+    } else {
+        Arc::new(base)
+    };
     let compiler = Arc::new(
         CachedStylesheets::new(
-            Arc::new(CapturingCompiler {
-                tree: tree.clone(),
-                root: config.repo_root.clone(),
-                resolution,
-                postcss,
-                watch_sources: runtime
-                    .watch_stylesheets
-                    .then(|| runtime.inventory_tree.clone()),
-                side: side.clone(),
-                deferred_sources: Some(tree.clone()),
-            }),
+            compiler,
             tree,
             config.repo_root.clone(),
             settings,
@@ -124,19 +141,36 @@ pub(crate) fn roots(
     entries: &[String],
     loaders: &BTreeMap<String, String>,
 ) -> Vec<StylesheetRoot> {
-    let ancestors = stylesheet_ancestors(modules);
+    scan_roots(modules, renderer, entries, loaders, false)
+}
+
+pub(crate) fn scan_roots(
+    modules: &BTreeMap<String, Vec<String>>,
+    renderer: Option<&str>,
+    entries: &[String],
+    loaders: &BTreeMap<String, String>,
+    adapter: bool,
+) -> Vec<StylesheetRoot> {
+    let stylesheet: fn(&str) -> bool = if adapter {
+        vite::stylesheet
+    } else {
+        |path| path.ends_with(".css")
+    };
+    let ancestors = stylesheet_ancestors_for(modules, stylesheet);
+    let files_for = |module: &str| {
+        let mut files = Vec::new();
+        let mut seen = BTreeSet::new();
+        visit_for(
+            module, modules, &ancestors, &mut seen, &mut files, stylesheet,
+        );
+        files
+    };
     let mut renderer_files = Vec::new();
     if let Some(renderer) = renderer {
-        visit(
-            renderer,
-            modules,
-            &ancestors,
-            &mut BTreeSet::new(),
-            &mut renderer_files,
-        );
+        renderer_files = files_for(renderer);
     }
     let excluded: BTreeSet<_> = renderer_files.iter().cloned().collect();
-    renderer_files.retain(|path| !ignored(path, loaders));
+    renderer_files.retain(|path| !ignored_for(path, loaders, adapter));
     let mut roots = Vec::new();
     if let Some(renderer) = renderer
         && !renderer_files.is_empty()
@@ -153,9 +187,8 @@ pub(crate) fn roots(
         if !seen_roots.insert(entry) {
             continue;
         }
-        let mut files = Vec::new();
-        visit(entry, modules, &ancestors, &mut BTreeSet::new(), &mut files);
-        files.retain(|file| !excluded.contains(file) && !ignored(file, loaders));
+        let mut files = files_for(entry);
+        files.retain(|file| !excluded.contains(file) && !ignored_for(file, loaders, adapter));
         if !files.is_empty() {
             roots.push(StylesheetRoot {
                 path: entry.clone(),
@@ -168,16 +201,24 @@ pub(crate) fn roots(
     roots
 }
 
+#[cfg(test)]
 fn stylesheet_ancestors(modules: &BTreeMap<String, Vec<String>>) -> BTreeSet<&str> {
+    stylesheet_ancestors_for(modules, |path| path.ends_with(".css"))
+}
+
+fn stylesheet_ancestors_for(
+    modules: &BTreeMap<String, Vec<String>>,
+    is_stylesheet: fn(&str) -> bool,
+) -> BTreeSet<&str> {
     let mut parents: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
     let mut pending = VecDeque::new();
     for (path, imports) in modules {
-        if path.ends_with(".css") {
+        if is_stylesheet(path) {
             pending.push_back(path.as_str());
         }
         for imported in imports {
             parents.entry(imported).or_default().push(path);
-            if imported.ends_with(".css") {
+            if is_stylesheet(imported) {
                 pending.push_back(imported.as_str());
             }
         }
@@ -191,6 +232,7 @@ fn stylesheet_ancestors(modules: &BTreeMap<String, Vec<String>>) -> BTreeSet<&st
     ancestors
 }
 
+#[cfg(test)]
 fn visit(
     path: &str,
     modules: &BTreeMap<String, Vec<String>>,
@@ -198,15 +240,28 @@ fn visit(
     seen: &mut BTreeSet<String>,
     files: &mut Vec<String>,
 ) {
+    visit_for(path, modules, ancestors, seen, files, |path| {
+        path.ends_with(".css")
+    });
+}
+
+fn visit_for(
+    path: &str,
+    modules: &BTreeMap<String, Vec<String>>,
+    ancestors: &BTreeSet<&str>,
+    seen: &mut BTreeSet<String>,
+    files: &mut Vec<String>,
+    is_stylesheet: fn(&str) -> bool,
+) {
     let mut pending = vec![path];
     while let Some(path) = pending.pop() {
-        if !path.ends_with(".css") && !ancestors.contains(path) {
+        if !is_stylesheet(path) && !ancestors.contains(path) {
             continue;
         }
         if !seen.insert(path.into()) {
             continue;
         }
-        if path.ends_with(".css") {
+        if is_stylesheet(path) {
             files.push(path.into());
         } else {
             pending.extend(
@@ -221,12 +276,15 @@ fn visit(
     }
 }
 
-pub(crate) fn ignored(path: &str, loaders: &BTreeMap<String, String>) -> bool {
+pub(crate) fn ignored_for(path: &str, loaders: &BTreeMap<String, String>, adapter: bool) -> bool {
     loaders.get(".css").is_some_and(|loader| loader == "empty")
-        || path.ends_with(".module.css")
-            && loaders
-                .get(".module.css")
-                .is_some_and(|loader| loader == "empty")
+        || (if adapter {
+            vite::css_module(path)
+        } else {
+            path.ends_with(".module.css")
+        }) && loaders
+            .get(".module.css")
+            .is_some_and(|loader| loader == "empty")
 }
 
 #[cfg(test)]

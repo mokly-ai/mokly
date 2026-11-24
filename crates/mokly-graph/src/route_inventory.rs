@@ -42,7 +42,7 @@ impl RouteInventory {
 fn collision(route: &str, first: &str) -> error::GraphError {
     let message = if route.starts_with("styles/") {
         format!(
-            "stylesheet route collision: {route}; give each root module a distinct repository path"
+            "stylesheet route collision: {route}; rename one of the files whose stylesheets share this route"
         )
     } else {
         format!("output route collision: {route} conflicts with {first}")

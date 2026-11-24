@@ -111,6 +111,8 @@ pub enum MethodResult {
     Page(results::Page),
     /// Consumer stylesheet transformation.
     Css(results::Css),
+    /// Vite inline stylesheet transformation.
+    ViteCss(results::ViteCss),
     /// No return value.
     Empty,
 }
@@ -157,6 +159,7 @@ impl Response {
             }
             Call::RenderPage(_) => Ok(MethodResult::Page(decode(&result)?)),
             Call::ProcessCss(_) => Ok(MethodResult::Css(decode(&result)?)),
+            Call::TransformViteCss(_) => Ok(MethodResult::ViteCss(decode(&result)?)),
             Call::CssModules(_)
             | Call::RestoreGeneration(_)
             | Call::Bindings(_)

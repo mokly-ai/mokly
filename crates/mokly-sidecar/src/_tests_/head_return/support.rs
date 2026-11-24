@@ -158,6 +158,7 @@ pub(super) fn bundle(root: &str, generation: &str) -> Call {
             stories_files: vec![],
             repository_roots: vec![],
             module_resolution: Default::default(),
+            vite: false,
             evaluation: None,
         },
         capture: None,

@@ -13,6 +13,7 @@ reference. Each input maps to the render graph node it feeds:
 | the configuration file                                                                                                                                             | config                            |
 | HTML screens, components, and pages, use case files, Markdown documents, and `_folder.json` records under a root                                                   | entry source                      |
 | entry modules, stories files, the renderer module, and every module the sidecar's `bundle` reports                                                                 | bundle generation, render inputs  |
+| the [inputs of a Vite compile](./mokly-vite-adapter-inputs.md#inputs-and-serve) under the Vite adapter                                                             | bundle generation, render inputs  |
 | the consumer PostCSS module and the file and directory dependencies `processCss` reports                                                                           | stylesheet bundle                 |
 | configured stylesheets, imported CSS, their nested imports, the assets they reference, and the files and candidates, present or absent, that resolve those imports | stylesheet bundle                 |
 | fonts, images, embedded documents, and other files in the public closure of a composed document                                                                    | the documents that reference them |
@@ -95,7 +96,9 @@ Every completed action publishes one revision under the
 [Serve update rules](./mokly-shell-delivery.md#updates-in-serve). Nothing is
 written: no output tree
 exists, so no watch event comes from Mokly's own writes, and a watched change
-cannot schedule a feedback loop.
+cannot schedule a feedback loop through those writes. Under the
+[Vite adapter](./mokly-vite-adapter-inputs.md#inputs-and-serve), a file that a plugin
+of the setup writes is a watched change like any other edit.
 
 ## Denial Rules
 

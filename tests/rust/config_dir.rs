@@ -90,6 +90,7 @@ pub fn bundle(pool: &Pool, root: &Path) -> results::Bundle {
         preparation: None,
         plan: None,
         params: Bundle {
+            vite: false,
             evaluation: None,
             entry_files: vec!["entry.ts".into()],
             stories_files: Vec::new(),

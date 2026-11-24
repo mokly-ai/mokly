@@ -109,6 +109,7 @@ fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
                         preparation: None,
                         plan: None,
                         params: Bundle {
+                            vite: false,
                             evaluation: None,
                             entry_files: vec!["entry.ts".into()],
                             renderer: None,

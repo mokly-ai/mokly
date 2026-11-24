@@ -14,6 +14,7 @@ import type { RenderPageParams } from "./RenderPageParams.js";
 import type { RenderParams } from "./RenderParams.js";
 import type { RenderStoryParams } from "./RenderStoryParams.js";
 import type { RestoreGeneration } from "./RestoreGeneration.js";
+import type { TransformViteCssParams } from "./TransformViteCssParams.js";
 
 // prettier-ignore
 export type Request = {
@@ -24,4 +25,4 @@ id: number,
 /**
  * The sidecar drops console and output writes until it replies; only warm-up calls set it.
  */
-quiet?: boolean, } & ({ "method": "hello", "params": HelloParams } | { "method": "bundle", "params": BundleRequest } | { "method": "restoreGeneration", "params": RestoreGeneration } | { "method": "describe", "params": GenerationParams } | { "method": "bindings", "params": BindingsParams } | { "method": "renderScreen", "params": RenderParams } | { "method": "renderComponent", "params": RenderComponentParams } | { "method": "renderStory", "params": RenderStoryParams } | { "method": "renderPage", "params": RenderPageParams } | { "method": "processCss", "params": ProcessCssParams } | { "method": "cssModules", "params": CssModulesParams } | { "method": "dispose", "params": GenerationParams } | { "method": "prepareContext", "params": PrepareContextParams } | { "method": "disposeContext", "params": DisposeContextParams } | { "method": "shutdown", "params": EmptyParams });
+quiet?: boolean, } & ({ "method": "hello", "params": HelloParams } | { "method": "bundle", "params": BundleRequest } | { "method": "restoreGeneration", "params": RestoreGeneration } | { "method": "describe", "params": GenerationParams } | { "method": "bindings", "params": BindingsParams } | { "method": "renderScreen", "params": RenderParams } | { "method": "renderComponent", "params": RenderComponentParams } | { "method": "renderStory", "params": RenderStoryParams } | { "method": "renderPage", "params": RenderPageParams } | { "method": "processCss", "params": ProcessCssParams } | { "method": "transformViteCss", "params": TransformViteCssParams } | { "method": "cssModules", "params": CssModulesParams } | { "method": "dispose", "params": GenerationParams } | { "method": "prepareContext", "params": PrepareContextParams } | { "method": "disposeContext", "params": DisposeContextParams } | { "method": "shutdown", "params": EmptyParams });

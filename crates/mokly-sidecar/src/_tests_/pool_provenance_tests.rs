@@ -48,6 +48,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
                         unmapped_dependency_directories: Some(vec![id]),
                         identity: "same".into(),
                         code: "code".into(),
+                        vite: None,
                         runtime_key: "key".into(),
                         dependency_roots: vec![],
                         css_modules: vec![],
@@ -96,6 +97,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
             preparation: None,
             plan: None,
             params: Bundle {
+                vite: false,
                 evaluation: Some(evaluation.into()),
                 entry_files: vec![],
                 renderer: None,

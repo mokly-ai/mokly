@@ -15,6 +15,7 @@ and synthetic tests.
 | HTML templating: substitution, slots, `mokly-if`, viewports | Product component library                        | Module resolution for the sidecar |
 | Sidecar bundling and React, page, and Storybook renders     | Theme, tokens, providers, and the renderer       | Renderer module and stylesheets   |
 | Stylesheet bundling and PostCSS orchestration               | Imported CSS, fonts, images, and PostCSS plugins | `postcss` module                  |
+| The Vite adapter and its `mokly` plugin                     | The Vite setup and its plugins                   | The `vite` field                  |
 | The render cache and the static output transaction          | Product CSS, fonts, and images                   | Watch inputs                      |
 | Safe paths and catalogue navigation                         | Product route semantics                          | Declared `path` and `movedFrom`   |
 | Git comparison and Review-ignore rules                      | Comparison policy                                | The comparison base               |
@@ -25,7 +26,9 @@ and synthetic tests.
 `@mokly/mokly` holds the Node shim that resolves the `mokly` binary, the
 sidecar, and the authoring API. It lists the five `@mokly/native-<target>`
 packages as exact optional dependencies and has React and React DOM peer
-dependencies for React authoring only. It does not depend on React Native,
+dependencies for React authoring only. It has an optional `vite` peer
+dependency for the [Vite adapter](../protocol/mokly-vite-adapter.md). It does
+not depend on React Native,
 React Native Web, consumer applications, or their workspace layouts. The
 sidecar resolves React from the side's configuration directory through its module resolution settings and bundles every
 JavaScript authoring input into one graph, so component trees use one React
@@ -37,7 +40,9 @@ render context. Those actions depend on app-owned packages and policy, so
 moving them into Mokly would make it app-specific. Module resolution is
 likewise consumer-owned: aliases, conditions, package fields, extensions, and
 package roots describe the consumer component tree, and Mokly applies them
-without application-specific defaults. The
+without application-specific defaults. Under the Vite adapter, the consumer's
+Vite setup and its plugins describe that tree in place of these settings,
+except the package roots. The
 [imported CSS contract](../protocol/mokly-imported-styles.md) reserves `.css`
 and `.module.css` import handling for Mokly; consumer files, PostCSS plugins,
 and their versions stay consumer-owned.
@@ -117,8 +122,9 @@ publication order of the packages.
 The [Rust core architecture](./rust-core.md) describes the backend: a Rust
 binary owns the process, the render graph, HTML parsing and rendering,
 comparison, the server, the static build, and publish. JavaScript runs only in
-the [render sidecar](../protocol/mokly-sidecar.md): esbuild bundling, React,
-page, and Storybook renders, and consumer PostCSS. Rendered HTML, collected
+the [render sidecar](../protocol/mokly-sidecar.md): esbuild bundling or the
+consumer's Vite setup, React, page, and Storybook renders, and consumer
+PostCSS. Rendered HTML, collected
 styles, definitions, and JSON frames cross that boundary. The Rust model crate
 owns every shared shape and generates the TypeScript types that the viewer and
 the sidecar consume.

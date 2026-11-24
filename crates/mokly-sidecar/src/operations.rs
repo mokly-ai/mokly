@@ -9,6 +9,8 @@ use ts_rs::TS;
 pub enum Operation {
     /// One esbuild invocation.
     Esbuild,
+    /// One project Vite compilation.
+    Vite,
     /// One consumer PostCSS worker starts.
     PostcssStart,
     /// One consumer PostCSS worker exits.
@@ -20,6 +22,7 @@ impl Operation {
     pub fn label(self) -> &'static str {
         match self {
             Self::Esbuild => "esbuild",
+            Self::Vite => "vite",
             Self::PostcssStart => "postcss-start",
             Self::PostcssStop => "postcss-stop",
         }

@@ -26,6 +26,7 @@ impl Display for Call {
             Self::ProcessCss(value) => {
                 write!(formatter, "{} for {}", value.postcss, value.source_path)
             }
+            Self::TransformViteCss(value) => write!(formatter, "Vite for {}", value.stylesheet),
             Self::Bindings(value) => write!(formatter, "bindings {}", value.generation),
             Self::PrepareContext(value) => write!(formatter, "prepareContext {}", value.context),
             Self::DisposeContext(value) => write!(formatter, "disposeContext {}", value.context),

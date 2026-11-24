@@ -21,6 +21,9 @@ import { PostcssWorkers } from "./postcss.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { renderSession } from "./render-session.js";
 import { render } from "./render.js";
+import { ViteCompiler } from "./vite-compiler.js";
+import { evaluateVite } from "./vite-evaluate.js";
+import { withViteNodePeers } from "./vite-node-peers.js";
 
 export class Session {
   private hello = false;
@@ -28,6 +31,7 @@ export class Session {
   private generations = new Map<string, Generation>();
   private restored = new WeakSet<Generation>();
   private workers: PostcssWorkers;
+  private vite: ViteCompiler;
 
   constructor(
     private readonly version: string,
@@ -42,11 +46,16 @@ export class Session {
   ) {
     this.workers =
       workers ?? new PostcssWorkers(diagnostic, operation, undefined, phase);
+    this.vite = new ViteCompiler(phase);
   }
 
   async call(request: Request): Promise<unknown> {
     try {
-      return await this.dispatch(request);
+      const generation =
+        "generation" in request.params
+          ? this.generations.get(request.params.generation)
+          : undefined;
+      return await withViteNodePeers(generation, () => this.dispatch(request));
     } catch (error) {
       if (error instanceof SidecarError) throw error;
       const rendering = request.method.startsWith("render");
@@ -91,6 +100,7 @@ export class Session {
             },
           );
           const evidence = previous?.compiled.reuseEvidence;
+          if (!previous && params.vite) this.operation("vite");
           const { generation, result } = previous
             ? {
                 generation: previous,
@@ -101,23 +111,25 @@ export class Session {
                   this.checkSize,
                 ),
               }
-            : await bundle(
-                params,
-                (options) => {
-                  this.operation("esbuild");
-                  return this.compile(options);
-                },
-                this.measurements,
-                capture === "full" && this.capture
-                  ? new CaptureDurability(this.capture)
-                  : undefined,
-                capture,
-                plan,
-                (options) => {
-                  this.operation("esbuild");
-                  return this.kept.compile(options);
-                },
-              );
+            : params.vite
+              ? await this.vite.bundle(params, this.compile, capture)
+              : await bundle(
+                  params,
+                  (options) => {
+                    this.operation("esbuild");
+                    return this.compile(options);
+                  },
+                  this.measurements,
+                  capture === "full" && this.capture
+                    ? new CaptureDurability(this.capture)
+                    : undefined,
+                  capture,
+                  plan,
+                  (options) => {
+                    this.operation("esbuild");
+                    return this.kept.compile(options);
+                  },
+                );
           this.generations.set(generation.id, generation);
           const reply: BundleReply =
             source &&
@@ -143,6 +155,7 @@ export class Session {
         return null;
       }
       case "describe":
+        await evaluateVite(this.generation(request.params.generation));
         return describe(this.generation(request.params.generation));
       case "cssModules": {
         const generation = this.generation(request.params.generation);
@@ -165,18 +178,21 @@ export class Session {
         return null;
       }
       case "renderScreen":
+        await evaluateVite(this.generation(request.params.generation));
         return render(
           this.generation(request.params.generation),
           "screen",
           request.params,
         );
       case "renderComponent":
+        await evaluateVite(this.generation(request.params.generation));
         return render(
           this.generation(request.params.generation),
           "component",
           request.params,
         );
       case "renderStory":
+        await evaluateVite(this.generation(request.params.generation));
         return render(
           this.generation(request.params.generation),
           "story",
@@ -184,6 +200,7 @@ export class Session {
         );
       case "renderPage": {
         const generation = this.generation(request.params.generation);
+        await evaluateVite(generation);
         const data = definitionData(
           generation.handles.get(request.params.handle),
         )!;
@@ -217,6 +234,8 @@ export class Session {
       }
       case "processCss":
         return this.workers.process(request.params);
+      case "transformViteCss":
+        return this.vite.stylesheet(request.params, this.compile);
       case "dispose":
         this.generations.delete(request.params.generation);
         return null;
@@ -227,6 +246,7 @@ export class Session {
         await this.workers.dispose(request.params.context);
         return null;
       case "shutdown":
+        await this.vite.dispose();
         await this.kept.dispose();
         await this.workers.dispose();
         this.generations.clear();
@@ -235,6 +255,7 @@ export class Session {
   }
 
   async dispose(): Promise<void> {
+    await this.vite.dispose();
     this.generations.clear();
     await this.kept.dispose();
     await this.workers.dispose();

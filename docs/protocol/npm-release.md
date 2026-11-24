@@ -27,6 +27,8 @@ at `config.schema.json`, and the file allowlist. It lists the five platform
 packages as exact
 optional dependencies at its own version and `@mokly/viewer` as an exact
 dependency; React and React DOM are peer dependencies for React authoring only.
+`vite` is an optional peer dependency, needed only for the
+[Vite adapter](./mokly-vite-adapter.md#loading-vite).
 The shim resolves the platform package for the host, rejects a version other
 than its own, and never falls back to a JavaScript implementation. The
 [Rust core architecture](../architecture/rust-core.md) owns the process

@@ -4,10 +4,12 @@ Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, `{directory}`, and
 `{importer}`, the importing stylesheet or module, are repository-relative POSIX
-paths; `{line}` and `{column}` refer to the CSS
-that the scoper or the bundler received, after PostCSS, never to a source-map
-origin. `{config-path}` is the `postcss` value as the configuration spells
-it. Only `{detail}` may carry raw tool text.
+paths. `{line}` and `{column}` refer to the CSS that the scoper or the bundler
+received, after PostCSS, never to a source-map origin. Under the
+[Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
+setup's transform takes the place of PostCSS in this rule. `{config-path}` is
+the `postcss` value as the configuration spells it. Only `{detail}` may carry
+raw tool text.
 
 ## Configuration (`config-invalid`)
 
@@ -34,10 +36,44 @@ For a PostCSS `CssSyntaxError`, `{stylesheet}` includes its one-based line
 and column, and `{detail}` is its reason. The diagnostic uses the logical
 stylesheet path, without PostCSS's physical-path or plugin framing.
 
+Under the [Vite adapter](./mokly-vite-adapter-styles.md#css-modules), Mokly's
+scoper does not run, so the CSS Modules rows do not apply. The setup's
+transform also takes the place of the `processCss` step. So the row for a
+PostCSS plugin that throws does not apply. Under the
+[import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets),
+the row for a nested renderer-owned import does not apply either. Under the
+[inventory rule of the adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms),
+the rows for a malformed plugin dependency message and for a missing explicit
+plugin dependency do not apply. The row for a missing plugin directory
+dependency does not apply either, because the setup reports only files.
+
+Under the adapter, a stylesheet that the setup cannot transform fails with the
+Vite setup row. This also holds for a CSS Module and for a syntax error. Under
+the [suffix rule of the adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms),
+a configured or declared stylesheet whose suffix is not lowercase, such as
+`Action.CSS`, also fails with the Vite setup row. When no plugin reports the
+failure, `{plugin}` of the Vite setup row is `vite`.
+
+The plugin that fails a transform can report a location. Then `{stylesheet}`
+of the Vite setup row names the authored file of that location, as a
+repository-relative path. It includes the one-based line and column of the
+location, as for a PostCSS `CssSyntaxError`. That file can be a partial that
+the stylesheet imports. Without a location, `{stylesheet}` is the logical path
+of the stylesheet. A location in a virtual module, or in a file outside the
+source root, counts as no location.
+
+Decision: the Vite setup row names the file and the position of the failure,
+as the PostCSS `CssSyntaxError` rule does on the esbuild path. Always naming
+the logical path of the stylesheet was rejected, because a failure in a
+partial then loses its file and its position. A location that no message can
+show counts as no location, because no message shows an absolute path or a
+virtual module. Keeping its line and column beside the stylesheet path was
+rejected, because they belong to another file.
+
 | Failure                                                      | Exact message                                                                                                                                                                                                             |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Root stylesheet route not portable                           | `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`                                                    |
-| Two roots at one route                                       | `stylesheet route collision: {route}; give each root module a distinct repository path`                                                                                                                                   |
+| Two roots at one route                                       | `stylesheet route collision: {route}; rename one of the files whose stylesheets share this route`                                                                                                                         |
 | Shared asset route has different bytes                       | `CSS asset bytes disagree at {route}; keep shared asset inputs stable during the build`                                                                                                                                   |
 | Plain CSS transform failure                                  | `could not transform CSS {stylesheet}: {detail}; fix the stylesheet and rebuild`                                                                                                                                          |
 | CSS Modules parse or scoping failure                         | `could not transform CSS {stylesheet}:{line}:{column}: {reason}; fix the stylesheet and rebuild`                                                                                                                          |
@@ -63,14 +99,16 @@ stylesheet path, without PostCSS's physical-path or plugin framing.
 | Missing or invalid local CSS `@import`                       | `could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot`                                                                                                                  |
 | `lightningcss` bundle failure                                | `could not bundle CSS {root}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                   |
 | PostCSS plugin throws                                        | `PostCSS plugin {plugin} failed for {stylesheet}: {detail}; fix the plugin configuration or stylesheet`                                                                                                                   |
+| The Vite setup cannot transform a stylesheet                 | `Vite plugin {plugin} failed for {stylesheet}: {detail}; fix the Vite setup or the stylesheet`                                                                                                                            |
 | Plugin reports a nested renderer-owned import                | `PostCSS plugin {plugin} reached renderer-owned CSS in {stylesheet}: {excluded} via {intermediate}; import it only from the renderer, import it directly so Mokly can prune it, or use Tailwind @reference`               |
 | Malformed plugin dependency message                          | `PostCSS plugin {plugin} reported an invalid dependency for {stylesheet}; report a file or directory path and optional glob`                                                                                              |
 | Missing or non-file explicit plugin dependency               | `PostCSS plugin {plugin} reported a missing dependency for {stylesheet}: {file}; make it a regular file or correct the plugin`                                                                                            |
 | Missing or non-directory plugin directory dependency         | `PostCSS plugin {plugin} reported a missing directory dependency for {stylesheet}: {directory}; create the directory or correct the plugin`                                                                               |
 | Document references a plugin-reported dependency             | `protected target {reference}: PostCSS plugin {plugin} reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not "{relative-file}" or source(none) with explicit @source)` |
+| Document references a file that the Vite setup reported      | `protected target {reference}: the Vite setup reported it as a dependency of {stylesheet}; exclude it from the plugin's sources (Tailwind: @source not "{relative-file}")`                                                |
 | Document references an imported stylesheet or asset          | `protected target {reference}: imported by {importer}; reference the delivered route under static/mokly-generated/ or keep a separate public copy`                                                                        |
 
-The two protected-target rows are `<reason>` texts of the document-link
+The three protected-target rows are `<reason>` texts of the document-link
 diagnostic below; the policy denial names the lister so the author can act
 on it. `{relative-file}` is the path from the offending stylesheet's
 directory to the referenced file, prefixed with `./` when neither `.` nor
@@ -79,6 +117,11 @@ a missing explicit file, and a directory error names the reported logical
 path. Reports outside the repository or physically under `node_modules` are
 ignored, never errors.
 
+Under the [Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms),
+the imported stylesheet row also applies when a document references a file
+that only a `composes` of a CSS Module reads. Then `{importer}` is that CSS
+Module.
+
 A link or a `url()` that names a bundled route absent from the current
 generation never reads a stale file. It fails with the document-link
 diagnostic of the [referenced closure](./mokly-public-closure.md):
@@ -86,5 +129,7 @@ diagnostic of the [referenced closure](./mokly-public-closure.md):
 
 A sidecar failure while `processCss` runs, that is a crash, a timeout, or a
 protocol error, uses the [fail-closed codes](./mokly-sidecar.md#fail-closed-rules)
-of the sidecar contract. The [build warning record](./mokly-build-warnings.md)
+of the sidecar contract. Under the Vite adapter, the same rule holds for a
+sidecar failure while the setup transforms a stylesheet. The
+[build warning record](./mokly-build-warnings.md)
 carries no stylesheet warning; every stylesheet problem is an error.

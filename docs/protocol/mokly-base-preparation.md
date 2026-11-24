@@ -14,7 +14,9 @@ files. Root ownership, globs, and source diagnostics follow the catalogue
 rules. Every base read returns checkout-converted bytes.
 
 HTML, Markdown, YAML and CSS need no extraction. A base that needs
-JavaScript, a renderer module, or consumer PostCSS extracts its sources. A
+JavaScript, a renderer module, consumer PostCSS, or the
+[Vite adapter](./mokly-vite-adapter-styles.md#catalogues-without-javascript)
+extracts its sources. A
 source archive copies checkout-converted regular files
 with the pinned commit's attributes, including line endings, smudge filters,
 and Git LFS downloads. Network access is allowed within the preparation
@@ -38,12 +40,13 @@ content manifest in the cache entry, because it changes the cache format. A
 complete cache entry is trusted when the process first leases it, as the
 sidecar trusts it. Before it loads the base
 configuration, a preparation leases an existing complete extraction when the
-working configuration names a renderer or a PostCSS module. That lookup never
-builds an extraction. Decision: lease only an existing extraction before the
-configuration loads. Rejected: a build at that point, because a base that
-needs no sidecar would then get an extraction. Rejected: a switch only after
-the dependency step, because configuration and discovery would keep their Git
-reads.
+working configuration names a renderer or a PostCSS module. Under the Vite
+adapter, a local stylesheet that the working configuration names also selects
+that lease. That lookup never builds an extraction. Decision: lease only an
+existing extraction before the configuration loads. Rejected: a build at that
+point, because a base that needs no sidecar would then get an extraction.
+Rejected: a switch only after the dependency step, because configuration and
+discovery would keep their Git reads.
 
 If a remaining tree, file, or command budget prevents comparison, Changes is
 unavailable. The diagnostic names the requested path or root and the limit.
@@ -62,7 +65,7 @@ The head and the base render with the current Mokly version. One cancellation
 stops both sides of a classification, including Git reads, extraction,
 installation, early renders, comparison, and public resource planning. A base
 that Serve keeps follows the [kept base cancellation rule](#cancellation)
-instead. HTML without a renderer or PostCSS follows the
+instead. HTML without a renderer, PostCSS, or the Vite adapter follows the
 [HTML dependency policy](./mokly-comparison.md#html-package-styles).
 
 Static commands verify their source evidence before early renders start.
@@ -240,9 +243,4 @@ defines clean identities, supported managers, and installation cache keys.
 
 ## Installation And Bundle Settings
 
-The [dependency contract](./mokly-base-dependencies.md#installation-and-bundle-settings)
-defines npm, pnpm, and Yarn installs, their registry access, configuration,
-and lifecycle scripts, version discovery, manager fallback reasons, and
-sidecar directory mappings. The
-[install process contract](./mokly-base-install-processes.md) defines the
-environment, the executables, the bounds, and the stops of each manager.
+See [Base Installation And Bundle Settings](./mokly-base-installation-and-bundle-settings.md).

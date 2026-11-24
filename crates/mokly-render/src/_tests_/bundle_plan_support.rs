@@ -17,6 +17,7 @@ use crate::runtime::Runtime;
 
 pub(super) fn params() -> Bundle {
     Bundle {
+        vite: false,
         evaluation: None,
         entry_files: vec!["entry.ts".into()],
         renderer: None,
@@ -69,6 +70,7 @@ pub(super) fn result(
             reuse_evidence: evidence,
             identity: "identity".into(),
             code: String::new(),
+            vite: None,
             runtime_key: "runtime".into(),
             dependency_roots: vec![],
             css_modules: vec![],

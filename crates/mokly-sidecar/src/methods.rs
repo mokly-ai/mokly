@@ -12,6 +12,7 @@ use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
 use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
 use crate::resolution_plan::ResolutionPlan;
+use crate::vite_css::TransformViteCss;
 
 /// A request with no method parameters.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
@@ -59,6 +60,10 @@ pub struct ModuleResolution {
 #[serde(rename_all = "camelCase")]
 #[ts(rename = "BundleParams")]
 pub struct Bundle {
+    /// Opt-in project Vite compilation; omission preserves esbuild settings bytes.
+    #[serde(default, skip_serializing_if = "disabled")]
+    #[ts(optional, as = "Option<bool>")]
+    pub vite: bool,
     /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -264,6 +269,8 @@ pub enum Call {
     RenderPage(RenderPage),
     /// Run consumer PostCSS.
     ProcessCss(ProcessCss),
+    /// Run the Vite setup on an inline stylesheet.
+    TransformViteCss(TransformViteCss),
     /// Install CSS Modules class maps.
     CssModules(CssModules),
     /// Release one bundle generation.
@@ -281,8 +288,12 @@ impl Call {
     pub fn timeout_ms(&self) -> u64 {
         match self {
             Self::Bundle(_) | Self::Describe(_) => 120_000,
-            Self::ProcessCss(_) => 60_000,
+            Self::ProcessCss(_) | Self::TransformViteCss(_) => 60_000,
             _ => 30_000,
         }
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/vite_methods_tests.rs"]
+mod vite_methods_tests;

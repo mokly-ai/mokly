@@ -18,6 +18,7 @@ fn bundle() -> Call {
         preparation: None,
         plan: None,
         params: Bundle {
+            vite: false,
             evaluation: None,
             entry_files: vec![],
             stories_files: vec![],

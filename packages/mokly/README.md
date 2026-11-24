@@ -26,7 +26,9 @@ npm install --save-dev @mokly/mokly
 The binary comes from an optional dependency, so keep optional dependencies
 enabled when you install. React and React DOM 19 or newer are optional peer
 dependencies. Install them only when screens or components are written in
-React. A catalogue of HTML files needs neither package.
+React. A catalogue of HTML files needs neither package. Vite 8 is also an
+optional peer dependency. Install it only for the
+[Vite adapter](../../docs/guides/authoring/vite.md).
 
 ## Configure
 
@@ -108,9 +110,10 @@ The Rust binary reads the configuration, composes HTML screens and Markdown
 documents, assembles every document, serves the catalogue, and writes the
 static site. JavaScript runs only in the render sidecar. The sidecar bundles
 your entry modules and your renderer module with your module resolution and
-your own React. It also runs your PostCSS module on local stylesheets. A
-catalogue of HTML files without a renderer or a PostCSS module starts no
-sidecar.
+your own React. It also runs your PostCSS module on local stylesheets. Under
+the Vite adapter, it transforms them through your Vite setup instead. A
+catalogue of HTML files without a renderer, a PostCSS module, or a local
+stylesheet under the Vite adapter starts no sidecar.
 
 The sidecar turns supported image, font, and media imports into closed
 `mokly-asset:[logical/path]` tokens. A `json`, `text`, or `bytes` import
@@ -181,8 +184,8 @@ the packed contents of the package.
 - [`config.schema.json`](./config.schema.json) is the configuration schema,
   which the binary embeds and enforces.
 - The [render sidecar README](./src/sidecar/README.md#key-code) names the key
-  code of the render sidecar, the Node process that bundles, describes, and
-  renders the catalogue modules.
+  code of the Node process that compiles catalogue modules with esbuild or
+  Vite, describes and renders them, and processes styles.
 - [`scripts/build.mjs`](./scripts/build.mjs) builds `dist/` and copies the
   guides, the protocol documents, and the root changelog into the package.
 

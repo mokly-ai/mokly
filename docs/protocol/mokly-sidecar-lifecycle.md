@@ -5,7 +5,7 @@ The [sidecar protocol](./mokly-sidecar.md) owns process and transport lifetimes.
 ## Cancellation And Timeouts
 
 Deadlines are 120 seconds for `bundle` and `describe`, 60 seconds for
-`processCss`, and 30 seconds for every other request.
+`processCss` and `transformViteCss`, and 30 seconds for every other request.
 `MOKLY_SIDECAR_TIMEOUT_MS` replaces every deadline. The CLI reads it once and validates a positive
 64-bit integer before command work. An invalid value fails `cli-invalid`
 with the accepted range. When a deadline passes, the binary kills that

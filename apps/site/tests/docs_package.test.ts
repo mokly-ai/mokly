@@ -33,6 +33,7 @@ const EXPECTED = [
   "authoring/styles",
   "authoring/props-and-variants",
   "authoring/storybook",
+  "authoring/vite",
   "catalogue/browse",
   "catalogue/search-and-filters",
   "catalogue/changes",
@@ -103,7 +104,7 @@ async function markdownLinks(source: string): Promise<readonly string[]> {
   return links;
 }
 
-test("the installed package supplies the exact 34-guide reading order", () => {
+test("the installed package supplies the exact 35-guide reading order", () => {
   assert.deepEqual(
     guides.map((guide) => guide.id),
     EXPECTED,

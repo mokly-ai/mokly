@@ -84,6 +84,11 @@
       "minLength": 1,
       "pattern": "\\S"
     },
+    "vite": {
+      "type": ["boolean", "object"],
+      "additionalProperties": false,
+      "properties": {}
+    },
     "moduleResolution": {
       "type": "object",
       "additionalProperties": false,

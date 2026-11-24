@@ -16,7 +16,7 @@ use mokly_source_interface::tree::SourceTree;
 
 use crate::cache::{Artifact, RenderCache};
 use crate::delivery_inputs::DeliveryInputs;
-use crate::error::{GraphError, Result};
+use crate::error::Result;
 use crate::key::{NodeKind, key};
 use crate::policy::{FilePolicy, PublicPolicy};
 use crate::route_inventory::RouteInventory;
@@ -130,9 +130,7 @@ impl Graph {
                     .iter()
                     .map(|(path, root)| (path.clone(), root.clone())),
             );
-            if let Err(source) = module_names.register(&bundle.css_modules) {
-                return Err(GraphError::Css { source });
-            }
+            styles::register_modules(&config, &mut module_names, &bundle)?;
             names.insert(&bundle.route, false)?;
             let stylesheet_key = stylesheet_keys::input(&config_key, &root, &bundle);
             let document_key = stylesheet_keys::output(&bundle);
@@ -179,13 +177,19 @@ impl Graph {
                     .inputs
                     .into_keys()
                     .chain(asset_inputs)
-                    .chain(bundle.dependency_digests.into_keys())
+                    .chain(bundle.dependency_digests.keys().cloned())
                     .filter(|path| {
-                        (!path.split('/').any(|part| part == "node_modules")
-                            || bundle.repository_aliases.contains(path)
-                            || bundle.plugin_inputs.contains_key(path))
+                        let reported = bundle.plugin_inputs.contains_key(path);
+                        let vite_dependency =
+                            config.vite() && bundle.dependency_digests.contains_key(path);
+                        let protected = reported || bundle.imported_by.contains_key(path);
+                        (!vite_dependency || protected)
+                            && (!path.split('/').any(|part| part == "node_modules")
+                                || bundle.repository_aliases.contains(path)
+                                || reported)
                             && (!markdown_assets.files.contains(path)
-                                || original_sources.contains(path))
+                                || original_sources.contains(path)
+                                || (vite_dependency && protected))
                     }),
             );
             imported_by.extend(bundle.imported_by);

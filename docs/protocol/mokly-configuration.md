@@ -1,5 +1,7 @@
 # Mokly Configuration Contract
 
+Status: The `vite.config` field is not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds it.
+
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
 resolves, and the validation that rejects an unsafe configuration.
@@ -32,6 +34,9 @@ following contract:
 - `postcss` and `moduleResolution`: the consumer's PostCSS module and the
   package roots, aliases, conditions, fields, extensions, and loaders that the
   [sidecar](./mokly-sidecar.md) bundles with;
+- `vite`: `true`, `false`, or an object with an optional `config` path, which
+  turns the [Vite adapter](./mokly-vite-adapter.md) on or off, defaulting to
+  off;
 - `review.base`: the Git ref whose merge base with `HEAD` is the comparison
   base, defaulting to `origin/main`;
 - `review.baseInstallScripts`: whether base dependency installs run lifecycle
@@ -60,8 +65,9 @@ The shipped [configuration schema](../../packages/mokly/config.schema.json)
 defines the normative shape: every field, its type, and its accepted values.
 The rules below define how Mokly resolves and applies the fields.
 
-Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`, module
-resolution package roots, and local stylesheet paths) are config-relative.
+Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`,
+`vite.config`, module resolution package roots, and local stylesheet paths)
+are config-relative.
 Each one names the path that it reaches from the configuration file's
 directory after `.` segments, `..` segments, and empty segments are removed,
 in the working tree and in the base tree of a comparison. A symbolic link
@@ -119,9 +125,9 @@ Configuration accepts only the declared fields. An undeclared field fails with
 has a warning or a migration. Validation also rejects, with `config-invalid`
 naming the setting and the path:
 
-- path traversal: a `dir`, `renderer`, `postcss`, package root, or local
-  stylesheet whose lexical path or real path is outside the real path of
-  `repoRoot`; `..` segments that resolve inside it are accepted;
+- path traversal: a `dir`, `renderer`, `postcss`, `vite.config`, package
+  root, or local stylesheet whose lexical path or real path is outside the
+  real path of `repoRoot`; `..` segments that resolve inside it are accepted;
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;
@@ -211,3 +217,5 @@ settings name the ancestor and explicit `node_modules` directories that the
 matching directory, including outside-configuration and nested workspace imports.
 Configuration ancestors and explicit package roots provide fallback lookup.
 An unmappable lookup or a used directory missing from the base installation produces a `base-dependencies` warning naming its directory.
+The [Vite adapter](./mokly-vite-adapter.md#replaced-settings) names the
+settings of this section that the project's Vite setup replaces.

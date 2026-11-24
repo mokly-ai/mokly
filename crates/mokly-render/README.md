@@ -223,9 +223,10 @@ resolver of the side uses: the configuration directory, aliases, dependency
 aliases, conditions, main fields, logical dependency roots, and extensions. A
 PostCSS record comes from a configuration with a PostCSS module. Its key also
 holds the physical source root of its side, so only a preparation on that
-root can reuse it. A plain CSS record comes from a configuration without a
-PostCSS module. Its key omits that root. Its stamp names each read, candidate
-probe, and absence that selected its inputs by logical path.
+root can reuse it. The key of a record under the Vite adapter also holds that
+root. A plain CSS record comes from a configuration without a PostCSS module
+or the Vite adapter. Its key omits that root. Its stamp names each read,
+candidate probe, and absence that selected its inputs by logical path.
 
 `Runtime::for_base` gives each base runtime its own stylesheet store and a
 weak read-only reference to the stylesheet store of the original head
@@ -451,6 +452,11 @@ view after the edit and counts real process starts and hello calls.
   PostCSS root. Both require an unused context and no older used head context
   with the same settings, as `Runtime::older_used_head_context` checks. The
   second request of an evaluation change carries none.
+- [`src/bundle_styles.rs`](./src/bundle_styles.rs) prepares the CSS Modules
+  class maps of a bundle before `describe`. Under the Vite adapter, it also
+  adds the reported inputs of the Vite transforms to the render keys.
+  `prepare_roots` removes the renderer's closure from the entry roots.
+  `local_input_digest` covers the configured and declared stylesheet roots.
 - [`src/bundle_attempt.rs`](./src/bundle_attempt.rs) sends each core `bundle`
   request with the `capture` mode of the runtime and its optional
   `PostcssPreparation` in its `catalogue.bundle` span, gives each result's
@@ -486,6 +492,8 @@ view after the edit and counts real process starts and hello calls.
   `StylesheetAttempt::retire_used` retires a used context when the compiler
   kept every record. `attempt` passes the head store reference of the runtime
   to `CachedStylesheets::with_head`. Only a base runtime has one.
+  Under the Vite adapter, `attempt` builds a `ViteRootCompiler` without
+  consumer PostCSS.
 - [`src/stylesheet_cache.rs`](./src/stylesheet_cache.rs) defines
   `CachedStylesheets`, which serves one attempt's stylesheet bundles from its
   attempt-local store, the shared store of its runtime, and, in a base
@@ -517,7 +525,12 @@ view after the edit and counts real process starts and hello calls.
   compiler, and returns a `Compilation`: the bundle and its `Capture`. With
   PostCSS, it uses `PostCss::for_root`, whose nested-import check reads
   through that root's tree and resolver. The root still shares the PostCSS
-  state of its attempt.
+  state of its attempt. `ViteRootCompiler` works the same way, but it bundles
+  the root through `mokly_css::vite::bundle` with its `Transform`.
+- [`src/vite_stylesheets.rs`](./src/vite_stylesheets.rs) defines
+  `ViteStylesheets`, the `mokly_css::vite::Transform` of one side. It sends a
+  `transformViteCss` request with the side's bundle settings and the selected
+  physical file. It caches each result by stylesheet path.
 - [`src/stylesheet_capture.rs`](./src/stylesheet_capture.rs) defines
   `RecordingTree`, the source tree of one compilation, which keeps each read
   digest and projection. It also defines `Capture`, the stamp entries and the

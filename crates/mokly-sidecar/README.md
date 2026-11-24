@@ -102,8 +102,8 @@ Independent requests prefer an idle worker in the same source root, then an
 unspawned slot, then the oldest idle slot. Among the idle workers of one root,
 a call that names a generation prefers a worker that holds its current epoch
 and each input that the call needs, then another worker with that epoch.
-A head bundle prefers the idle head worker that compiled last, then older
-compilers, under the
+A `bundle` or `transformViteCss` call on the head root prefers the idle head
+worker that compiled last, then older compilers, under the
 [head bundle rank](../../docs/protocol/mokly-sidecar-root-scheduling.md#head-bundle-affinity).
 A successful head bundle counts as a compile unless its `cache` field is
 `memory` or `hit`. A new process starts without a compile. Ties and other
@@ -463,10 +463,11 @@ spawn the built sidecar and render a component, screen, story, and page. The
   that slot in `Pool::eager_claim` and hands it over in `Pool::take_eager`.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
   request takes, and its `bind_context` binds the context of a call to the
-  selected slot for both `acquire` and `Pool::take_eager`. Its pure rank orders the idle slots of one root by the
-  generation state that a call needs. For a `bundle` call, it then prefers the
-  newest `Slot::last_compilation`, the epoch that `Pool::execute` records
-  after a head compile. Growth reuses a free slot before it adds a new one.
+  selected slot for both `acquire` and `Pool::take_eager`. Its pure rank
+  orders the idle slots of one root by the generation state that a call needs.
+  For a head `bundle` or `transformViteCss` call, it then prefers the newest
+  `Slot::last_compilation`, the epoch that `Pool::execute` records after a
+  head compile. Growth reuses a free slot before it adds a new one.
 - [`src/pool_head.rs`](./src/pool_head.rs) defines `Head`, which holds the
   warm head worker, the candidates of the return pass, the
   `return_disabled` flag, and the warm-ups, and `Pool::record_head`, which
@@ -576,6 +577,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,
   `Worker`, `Clock`, and `Diagnostics` traits. It also defines `SpawnFailure`,
   the factory error that says whether a child process started.
+  `Diagnostics::operation` receives each `Operation` of
+  [`src/operations.rs`](./src/operations.rs): a catalogue esbuild call, a Vite
+  compile, or a PostCSS worker start or stop.
   `Diagnostics::for_source_root` lets the caller route the diagnostic text of
   one source root. `NodeFactory` asks for it with the source root of each
   process that it starts. A routed reporter still forwards timing lines and
@@ -608,8 +612,10 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `bundle` request. `Call::postcss_context` gives the PostCSS context of a
   `processCss` call, a `prepareContext` call, or a prepared `bundle` call.
   The pool uses that context for its slot affinity and its release.
-  `results::Bundle` carries the optional `plan` beside `compiled`. Pool state, store calls, and restore requests take
-  only the `Bundle` settings. A successful `Response`
+  `results::Bundle` carries the optional `plan` beside `compiled`. Pool state,
+  store calls, and restore requests take only the `Bundle` settings.
+  `Bundle::vite` selects the Vite compile path. It is omitted when false, so
+  the settings of an esbuild compile keep their bytes. A successful `Response`
   keeps its result as owned raw JSON until `decode_result` decodes the type of
   the pending request. A `bundle` result decodes as a `BundleReply`, and the
   restore origins of the `Client` resolve a short reply. A failed
@@ -623,7 +629,19 @@ spawn the built sidecar and render a component, screen, story, and page. The
   replies share them instead of copying them.
   `ReuseEvidence` can carry the `UncapturedEvidence` marker of a deliberate
   Serve edit omission. Its `captured`, `serve_edit`, and `reusable` methods
-  decide which candidates a call admits.
+  decide which candidates a call admits. A Vite compilation keeps its
+  `ViteRecipe` in `CompiledGeneration::vite`: the Vite version, the entry URL,
+  and one `ViteModuleFetch` for each module fetch. Each `ViteFetchResult` is
+  transformed code or an external module with its `ViteExternalType`.
+- [`src/vite_css.rs`](./src/vite_css.rs) defines `TransformViteCss`, the
+  params of a `transformViteCss` call: the side's `Bundle` settings without
+  entries, the logical stylesheet path, and the selected physical file. Its
+  result is `results::ViteCss`: the CSS, the class map of a CSS Module, and
+  the digests of the inputs. The generated types name them
+  `TransformViteCssParams` and `ViteCssResult`. The `imported_by` field,
+  `ViteCssResult.importedBy` on the wire, maps each input that the stylesheet
+  resolver resolved without a plugin report to the logical path of its direct
+  importer.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the
   inventory that `describe` returns. It lists each included story, including
   the story that supplies the component parent.

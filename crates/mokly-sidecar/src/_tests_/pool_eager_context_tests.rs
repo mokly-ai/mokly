@@ -96,6 +96,7 @@ fn prepared_bundle(context: &str) -> Call {
             configuration_directory: ".".into(),
             repository_roots: vec![],
             module_resolution: Default::default(),
+            vite: false,
         },
         capture: None,
         plan: None,

@@ -75,6 +75,7 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
             preparation: None,
             plan: None,
             params: Bundle {
+                vite: false,
                 evaluation: None,
                 entry_files: vec![
                     "component.mockup.tsx".into(),

@@ -67,6 +67,7 @@ fn covered_modules_are_skipped_and_only_the_uncovered_module_gets_a_local_root()
         configuration_directory: ".".into(),
         repository_roots: vec![],
         module_resolution: Default::default(),
+        vite: false,
     };
     let modules = BTreeMap::from([
         ("entry.ts".into(), vec!["covered.module.css".into()]),
@@ -74,7 +75,7 @@ fn covered_modules_are_skipped_and_only_the_uncovered_module_gets_a_local_root()
         ("orphan.module.css".into(), vec![]),
     ]);
     assert_eq!(
-        super::class_maps(&compiler, &modules, &params).unwrap(),
+        super::prepare(&compiler, &modules, &params).unwrap().maps,
         expected
     );
 }

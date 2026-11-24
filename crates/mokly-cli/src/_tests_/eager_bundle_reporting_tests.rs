@@ -91,6 +91,7 @@ fn eager_base_first_bundle_cache_reports_only_after_adoption() {
         configuration_directory: ".".into(),
         repository_roots: Vec::new(),
         module_resolution: Default::default(),
+        vite: false,
     });
     let before = output.lock().unwrap().clone();
     let was_announced = announced.load(Ordering::Acquire);

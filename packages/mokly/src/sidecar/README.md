@@ -1,11 +1,17 @@
 # Render Sidecar
 
-The render sidecar is the Node process that the Mokly binary starts to bundle,
-describe, and render catalogue modules. The
-[package README](../../README.md#key-code) names the other key code of
-`@mokly/mokly`, and the
-[render sidecar contract](../../../../docs/protocol/mokly-sidecar.md) defines
-its requests and results. The paths below are relative to the package root.
+The render sidecar is the Node process that the Mokly binary starts to compile,
+describe, and render catalogue modules. It uses esbuild by default and can use
+Vite. The [render sidecar contract](../../../../docs/protocol/mokly-sidecar.md)
+defines its requests and results. The
+[package README](../../README.md#how-mokly-runs-your-code) explains how Mokly
+runs authored code.
+
+## Development
+
+The [package README](../../README.md#development) gives the build and test
+commands. The `tests/sidecar_*.test.ts` files at the repository root test the
+sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 
 ## Key Code
 
@@ -21,9 +27,9 @@ its requests and results. The paths below are relative to the package root.
   waiting for the child. It removes the request-only
   `capture`, `plan`, and `preparation` values of a `bundle` request before the
   reuse check, the compile, the identity, and the restore see the settings. A
-  `bundle` request starts no child. When the bundle fails, the session disposes
+  `bundle` request starts no PostCSS child. When the bundle fails, the session disposes
   the context of its `preparation` before it returns the error. It gives a
-  `CaptureDurability` only to a `full` request. It ignores a
+  `CaptureDurability` only to a `full` esbuild request. It ignores a
   `restoreGeneration` request for an id that it already holds. It adds each
   generation that a `restoreGeneration` request installs to a `WeakSet`. Both
   reply forms of `bundle` follow the same checks of `reuse` and the same size
@@ -39,6 +45,8 @@ its requests and results. The paths below are relative to the package root.
   It keeps one `KeptContext` for the guarded compiles of its `serveEdit`
   requests, emits an `esbuild` operation for each of its rebuilds, and
   disposes of it at `shutdown`.
+  It sends `vite` bundles and `transformViteCss` requests to `ViteCompiler`,
+  and awaits `evaluateVite` before describing or rendering a Vite generation.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
   the binary's typed requests and limits the size of each response. Its
   `encodeResponse` encodes each response with `jsonText` from
@@ -66,6 +74,9 @@ its requests and results. The paths below are relative to the package root.
   renders entries and the reader's portable stories to static markup. It
   awaits story setup and `load()`. It passes `undefined` for each story data
   arg that the request leaves out.
+
+### esbuild Compilation and Reuse
+
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
@@ -226,6 +237,9 @@ its requests and results. The paths below are relative to the package root.
   normal encoding, and no text stays with a retained generation. The reuse
   branch of `Session` calls `bundleResult` with no map. Its check counts
   `JSON.stringify` texts, and its response gets the normal encoding.
+
+### Resolution Evidence
+
 - [`src/sidecar/serve-edit-imports.ts`](./serve-edit-imports.ts) holds
   `ServeEditImports`, which only a `serveEdit` compile creates. Its plugin
   clears `reusable` for an authored absolute specifier whose configuration it
@@ -324,6 +338,8 @@ its requests and results. The paths below are relative to the package root.
 - [`src/sidecar/toolchain.ts`](./toolchain.ts) holds
   `toolchainIdentity`, which each sidecar process computes once from the
   package root, the Mokly, esbuild, and Node versions, and every `dist/` file.
+  [`vite-toolchain.ts`](./vite-toolchain.ts) adds the Vite version and real
+  package path to Vite compile and reuse checks.
 - [`src/sidecar/resolution-evidence.ts`](./resolution-evidence.ts)
   holds `ResolutionEvidence`, the esbuild plugin that records the candidate
   directories, manifests, and configurations of each import before esbuild
@@ -346,6 +362,9 @@ its requests and results. The paths below are relative to the package root.
   `${configDir}` prefix from the folder of the top-level configuration, as
   found. [`src/sidecar/config-json.ts`](./config-json.ts) parses JSON
   with comments and trailing commas.
+
+### Package Folder and PnP Evidence
+
 - [`src/sidecar/package-map.ts`](./package-map.ts) is the one package-map
   description that the full capture and the marked checks share.
   `packageMapTargets` gives the targets of the matching `exports` or `imports`
@@ -445,6 +464,9 @@ its requests and results. The paths below are relative to the package root.
   state that `.pnp.cjs` or `.pnp.js` embeds, without running their code.
   `pnpFiles` in [`src/sidecar/pnp-files.ts`](./pnp-files.ts) gives the PnP
   state files that native discovery checks, up to the first present one.
+
+### Reading and Verifying Evidence
+
 - [`src/sidecar/physical-inputs.ts`](./physical-inputs.ts) holds
   `PhysicalInputs`, the one owner of the evidence reads. It reads each
   metadata file within 1 MiB and queues each unique resolution request once.
@@ -490,6 +512,110 @@ its requests and results. The paths below are relative to the package root.
   `sameCaptureStat` compares a witness with its recheck.
   [`src/sidecar/capture-volumes.ts`](./capture-volumes.ts)
   classifies each volume by its Linux file system type or by the hint.
+
+### Vite Compilation and Replay
+
+- [`vite-compiler.ts`](./vite-compiler.ts) compiles `vite` requests into a
+  `ViteRecipe` with empty, incomplete reuse evidence.
+  [`vite-context.ts`](./vite-context.ts) defines `ViteContext`, which keeps one
+  Vite server for the JavaScript and stylesheet requests of a side. It replaces
+  the server when roots, peers, the setup stamp, or metadata change. A change
+  to a file that a stylesheet transform reported also replaces it.
+  [`vite-setup.ts`](./vite-setup.ts) loads `vite.config.*` and starts Vite without
+  HTTP, file watching, hot reload, or dependency pre-bundling. `setupStamp`
+  digests the config, its imports, env files, and the configuration file list.
+- [`vite-config.ts`](./vite-config.ts) loads the app's config in memory on both
+  sides with Vite's default loader semantics. A function export receives `serve`
+  and `development`. [`vite-config-bundle.ts`](./vite-config-bundle.ts) uses
+  esbuild for the config and local imports without writing a file. It runs the
+  result as ESM or CommonJS by config type. Installed packages stay external and
+  resolve through `ViteLookup`. [`vite-config-resolution.ts`](./vite-config-resolution.ts)
+  routes Node's bare imports through that lookup while the config loads.
+  [`vite-config-source.ts`](./vite-config-source.ts) sets each bundled module's
+  file values for `__dirname`, `__filename`, and `import.meta`.
+  [`vite-config-context.ts`](./vite-config-context.ts) resolves dynamic `require`
+  and `import()` from their own module. [`vite-config-errors.ts`](./vite-config-errors.ts)
+  names a failing config file or import from the esbuild location or source map.
+- [`vite-resolution.ts`](./vite-resolution.ts) owns the shared `ViteLookup`.
+  Setup loads, the Mokly plugin, runner fetches, stylesheet imports, React
+  peers, and external imports use it on both sides. It applies aliases, then
+  tries each importer from
+  [`vite-lookup-paths.ts`](./vite-lookup-paths.ts): the original path, its mapped
+  installation path, then `node_modules` at each package root. It records package
+  root candidates. `nodeEntry` asks Vite's server environment for the file that
+  Node will load, from an existing importer at or above each candidate. Config
+  imports, React peers, and external resolution use it, including when `resolve`
+  receives an external result without a file.
+- [`vite-peers.ts`](./vite-peers.ts) runs one esbuild peer lookup for Vite and
+  peers other than React, then loads Vite and finds its real package path.
+  [`vite-node-peers.ts`](./vite-node-peers.ts) scopes Node's resolve hook to each
+  request so dependencies of a Vite generation load one React runtime.
+  [`vite-react-peers.ts`](./vite-react-peers.ts) builds that table after setup and
+  puts its alias rule first, so React and the JSX development shim reach the
+  table before a setup alias can rewrite their imports.
+- [`vite-external.ts`](./vite-external.ts) uses `ViteLookup` to choose the package
+  file Node loads, also for setup aliases. It uses the extension or nearest
+  manifest `type` to choose ESM or CommonJS. [`vite-styles.ts`](./vite-styles.ts)
+  wraps `styled-components`, `react-native-web`, and `@emotion/react` from the
+  copy that resolves. It checks the external resolver first and keeps the
+  [CommonJS default import rules](../../../../docs/protocol/mokly-sidecar-modules.md#authoring-and-evaluation).
+- [`vite-graph.ts`](./vite-graph.ts) records every fetch from the virtual entry
+  before evaluation and builds the module graph. [`vite-fetch.ts`](./vite-fetch.ts)
+  confines files and records their bytes and imports at the fetch boundary.
+  [`vite-plugin.ts`](./vite-plugin.ts) handles virtual modules, React, style
+  wrappers, stylesheet stubs, and path confinement before the setup plugins.
+- [`vite-plugin-inputs.ts`](./vite-plugin-inputs.ts) pairs plugin `this.load` with
+  `this.addWatchFile` in load and transform hooks. It emits a diagnostic instead
+  of recording paths outside the source and dependency roots. After a fetch it
+  retains each watched path that is not a code import of that module, even if
+  another edge already names the file.
+- [`vite-inputs.ts`](./vite-inputs.ts) records consumed bytes, rejects inconsistent
+  reads, and verifies the files again after compilation. [`vite-metadata.ts`](./vite-metadata.ts)
+  builds digests for setup files, plugin inputs, React manifests, preview, package
+  and TypeScript config candidates, and consumed files outside the graph.
+  [`vite-invalidation.ts`](./vite-invalidation.ts) compares the last input snapshot
+  with the disk. It invalidates virtual, changed, and unsnapshotted modules, or
+  all modules when a directory list changes.
+- [`vite-evaluate.ts`](./vite-evaluate.ts) runs the generation once through Vite's
+  module runner. A restored recipe uses only its recorded fetches, without reads
+  or transforms. [`vite-urls.ts`](./vite-urls.ts) converts URLs, IDs, query
+  variants, and virtual names to files and logical names.
+  [`vite-errors.ts`](./vite-errors.ts) reports `bundle-failed` with the logical
+  module, plugin, and, once loaded, the installed and tested Vite versions. It
+  rewrites absolute paths to logical names and virtual names to “entry module”.
+  `viteStylesheetFailure` uses the requested stylesheet path instead. When the
+  failure has a line and a column in a file inside the side's source root, it
+  names that file with the line and the column. A location in a virtual module
+  or outside the source root gives only the requested stylesheet path.
+
+### Vite Stylesheets
+
+- `ViteCompiler.stylesheet` in [`vite-compiler.ts`](./vite-compiler.ts) answers
+  `transformViteCss`. It first checks the requested path with Vite's own
+  `isCSSRequest`. A path that Vite does not read as a stylesheet, such as
+  `Action.CSS`, fails with "Vite reads only a lowercase stylesheet suffix". It
+  requests one stylesheet through the setup as an inline module.
+  [`vite-css-transform.ts`](./vite-css-transform.ts) defines
+  `ViteCssTransform`, whose `run` method runs that request. It returns the CSS,
+  the class map of a CSS Module, and the digests of the inputs of the
+  transform. The `importedBy` field of the result maps each input that the
+  stylesheet resolver resolved without a plugin report to the logical path of
+  its direct importer.
+- [`vite-css-hooks.ts`](./vite-css-hooks.ts) holds the hooks that `viteSetup`
+  installs. They set Mokly's scoped names on both CSS transformers. They route
+  Vite's stylesheet resolver through `ViteLookup.stylesheet` during a transform.
+  For each file that this resolver resolves, they record the direct importer.
+  They wrap `vite:css` and `vite:css-post`, so one native transform gives the
+  class map and the inline CSS. A late `@import` that Vite drops is a failure.
+- [`vite-css-paths.ts`](./vite-css-paths.ts) decides which files are Vite
+  stylesheets and CSS Modules. Its `ViteCssUrls` keeps each authored relative
+  `url()` and rebases the URL of an inlined file onto the requested stylesheet.
+
+### Shared Rendering and Styles
+
+- [`virtual-modules.ts`](./virtual-modules.ts) builds the authoring facade, the
+  JSX development shim, and CSS Modules stubs for both compilers. It limits the
+  reserved runtime imports to Mokly's own virtual modules.
 - [`src/sidecar/styles.ts`](./styles.ts) holds `collectStyles`, which
   collects the styles of one render. It filters the React Native Web registry
   text with the `RegistryIndex` of the generation, from
@@ -527,5 +653,13 @@ its requests and results. The paths below are relative to the package root.
   result types that `cargo xtask generate-types` writes from the Rust types.
   `BundleReply`, the reply of `bundle`, is the full `BundleResult` or the short
   `RestoredBundle`.
+
+## Related Docs
+
+- [Sidecar module sources](../../../../docs/protocol/mokly-sidecar-modules.md)
+- [Compiled recipes and release](../../../../docs/protocol/mokly-sidecar-recipes.md)
+- [Vite adapter](../../../../docs/protocol/mokly-vite-adapter.md)
+- [PostCSS contract](../../../../docs/protocol/mokly-imported-styles-postcss.md)
+- [Package key code](../../README.md#key-code)
 - The [Rust sidecar pool](../../../../crates/mokly-sidecar/README.md) starts and
   stops the sidecar processes.

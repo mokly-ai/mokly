@@ -60,6 +60,7 @@ fn child_checks_environment() {
             preparation: None,
             plan: None,
             params: Bundle {
+                vite: false,
                 evaluation: None,
                 entry_files: vec!["component.mockup.tsx".into()],
                 renderer: Some("renderer.tsx".into()),

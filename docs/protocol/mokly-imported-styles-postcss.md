@@ -2,7 +2,9 @@
 
 This is the PostCSS and inventory companion to the
 [imported stylesheet contract](./mokly-imported-styles.md).
-[Exact diagnostics](./mokly-imported-styles-errors.md) apply throughout.
+[Exact diagnostics](./mokly-imported-styles-errors.md) apply throughout. Under
+the [Vite adapter](./mokly-vite-adapter-styles.md#stylesheet-transforms), the
+project's Vite setup takes the place of the `postcss` module.
 
 ## PostCSS Module
 
@@ -65,7 +67,10 @@ a plugin reports that excluded file as a `dependency`, the build fails with
 the nested-import diagnostic before the inventory checks; it never silently
 duplicates the file. The diagnostic names the intermediate file that imports
 the excluded file, which for a deeper chain is its direct importer. When no
-plugin reports it, the bundler prunes it at the nested file as usual.
+plugin reports it, the bundler prunes it at the nested file as usual. Under
+the Vite adapter, this check does not run, as the
+[import rule of the adapter](./mokly-vite-adapter-styles.md#imports-inside-stylesheets)
+says.
 
 ## Dependency Inventory
 

@@ -76,6 +76,7 @@ fn params() -> Bundle {
         configuration_directory: ".".into(),
         repository_roots: vec![],
         module_resolution: Default::default(),
+        vite: false,
     }
 }
 

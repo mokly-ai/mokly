@@ -189,6 +189,7 @@ pub(super) fn generation(call: &Call) -> Option<&str> {
         | Call::Bundle(_)
         | Call::RestoreGeneration(_)
         | Call::ProcessCss(_)
+        | Call::TransformViteCss(_)
         | Call::Dispose(_)
         | Call::PrepareContext(_)
         | Call::DisposeContext(_)
