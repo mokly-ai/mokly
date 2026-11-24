@@ -32,7 +32,7 @@
 - **Wider fix:** C. It does not depend on which build step moved a sheet inline.
 - **Previous examples:** The closed PR #431 inlined the stylesheets of the old home stage frame. It needed a marker attribute, so that `site:links` gave those `style` elements the rule of a `.css` file. #488 removed that frame.
 - **Related:**
-  - `plans/follow-ups/link-check-misses-some-css-urls.md` changes the reader of the same CSS URLs in `cssReferences`. Option D here needs a reader that gives each URL with the selector of its rule, and option B of that item gives one. Choose the reader of both items together.
+  - `plans/follow-ups/link-check-misses-some-css-urls.md` changes the reader of the same CSS URLs in `cssReferences`. Option D here needs a reader that gives each URL with the selector of its rule. Option B of that item, one walk of the parsed sheet from the Lightning CSS `StyleSheet` visitor callback, gives one. Choose the reader of both items together.
   - `plans/follow-ups/link-check-skips-svg-presentation-urls.md` records fragment references in SVG presentation attributes, which `site:links` does not read at all.
 - **Recommendation:** C. One rule for every stylesheet text, at Small effort, with the protocol stating it.
 - **Action:** ask the user, because C changes the verdict of the required `site:links` check for authored `style` elements, and a check change needs the user's approval.

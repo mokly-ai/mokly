@@ -4,29 +4,35 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-21, from the check of review finding 5 of the branch `ci-fix/site-lighthouse-run-lighthouse-budget` (PR #431, closed without a merge).
 - **Location:**
-  - `crates/mokly-css/src/syntax.rs:50`, where the token scanner sets the import flag of a scan frame at any block depth.
-  - `crates/mokly-css/src/compiler.rs:122-135`, where the compiler resolves each import and returns the resolver error.
-  - `crates/mokly-graph/src/resource_edges.rs:14` and `crates/mokly-graph/src/references.rs:188` and `:211`, where the public closure walk takes every reference of a stylesheet, a `style` attribute, or a `style` element as an edge.
-  - `crates/mokly-render/src/postcss_nested.rs:92-97`, where the PostCSS check resolves each import and returns the resolver error.
-  - `crates/mokly-css/src/token_sections.rs`, the shared statement reader of option C.
+  - `crates/mokly-css/src/syntax.rs:50-53`, where the token scanner sets the import flag on any `@import` keyword of a scan frame, `:68-71`, where it records the rule range of an import from `@import` to the next `;`, and `:82` and `:97`, where it marks a reference late after a `{}` block of the same frame.
+  - `crates/mokly-css/src/compiler.rs:122-139` and `:160-170`, where the compiler resolves each import, rejects a late one, and deletes the rule of an import that names an excluded stylesheet.
+  - `crates/mokly-graph/src/resource_edges.rs:14` and `crates/mokly-graph/src/references.rs:188` and `:211`, where the public closure walk takes every reference of a stylesheet, a `style` attribute, or a `style` element as an edge. `crates/mokly-graph/src/closure_target.rs:114` reports a missing edge.
+  - `crates/mokly-render/src/postcss_nested.rs:25-58` and `:92-97`, the PostCSS exclusion check.
+  - `crates/mokly-compare/src/resource_memo.rs:161-167`, `crates/mokly-compare/src/material_urls.rs:20`, and `crates/mokly-css/src/rule_walk.rs:188`, three more readers of the scanner result.
+  - `crates/mokly-css/src/token_sections.rs`, the shared statement reader of options B and C.
 - **Reason:** The fix changes the CSS scanner of a Mokly crate, which the site branch that found it did not touch, and the case needs a run first.
 
 - **Terms:**
   - **`@import` at-rule:** a CSS rule that loads another stylesheet. It is valid only at the top level of a stylesheet, before the other rules.
-- **Background:** Mokly bundles each configured stylesheet and inlines its local imports before delivery. Its token scanner, `syntax::references`, finds the imports and the assets of CSS text. It scans each nested block, such as a rule body or a custom property value, in a nested scan frame.
-- **Problem:** A read of the code shows each step of the failure. The scanner treats an `@import` keyword at any block depth as an import prelude. So in `.x { --caption: @import "./theme.css"; }`, the string becomes an import reference, although a browser reads that value as plain text. Three paths then act on it:
-  - The compiler resolves `theme.css` as an import, and returns the resolver error when the file is absent.
-  - The public closure walk takes `theme.css` as an edge of the stylesheet.
-  - The PostCSS check resolves it as an import, and returns the resolver error when the file is absent.
-  - The bundle step returns the first stylesheet failure in root order, and no later root starts, so the build stops. No test covers a nested `@import`, and nobody has run the case.
-- **Impact if no action:** A valid stylesheet with `@import` text in a custom property, a `style` attribute, or a nested rule stops the Mokly build. A stylesheet from a package is hard for its user to change.
-- **Root question:** How does Mokly treat only top-level `@import` rules as imports?
+- **Background:** Mokly bundles each configured stylesheet and inlines its local imports before delivery. Its token scanner, `syntax::references`, finds the imports and the assets of CSS text. It scans each nested block, such as a rule body or a custom property value, in a nested scan frame. Six readers use its result.
+- **Problem:** A read of the code shows each step. Nobody has run the case, and no test covers it.
+  - The scanner treats an `@import` keyword at any block depth as an import prelude. So in `.x { --caption: @import "./theme.css"; }`, the string becomes an import reference, although a browser reads that value as plain text. The same holds for an `@import` keyword inside the prelude of another at-rule, such as `@example @import "./theme.css";`, which Lightning CSS reads with no import.
+  - The compiler then resolves `theme.css` and returns the resolver error when the file is absent. When a style rule came earlier in the same block, it returns the late-import error even when the file exists. When the specifier names an excluded stylesheet, it deletes the text from `@import` to the next `;`. So `.x { --c: @import "./r.css"; color: red; }` is delivered without its `color` declaration.
+  - The public closure walk takes `theme.css` as an edge, and reports "missing target" when the file is absent.
+  - The PostCSS exclusion check follows imports only when a PostCSS plugin reports a file dependency on an excluded stylesheet. The compiler resolves the stylesheet's own references first, so this check can fail first only in a file below the stylesheet.
+  - Comparison takes the reference as an import edge, the material rewrite turns the string into a `url()`, and the rule walk lists it as a rule reference.
+  - The bundle step returns the first stylesheet failure in root order, so the build stops.
+- **Impact if no action:** A valid stylesheet with `@import` text in a custom property, a `style` attribute, a nested rule, or another at-rule's prelude can stop the Mokly build, or lose a declaration from the delivered CSS. A stylesheet from a package is hard for its user to change.
+- **Root question:** How does Mokly treat only top-level `@import` statements as imports?
 - **Options:**
-  - **A.** Run the case first: build a catalogue under `.context/` with the stylesheet of the problem, and copy the command and its diagnostic into this item. When Mokly accepts the stylesheet, close the item with the run as its record. Otherwise apply B. Effort: Small.
-  - **B.** Accept an import prelude only in the top-level scan frame of `syntax::references`. This one change covers the compiler, the closure walk, and the PostCSS check. Add scanner tests for a custom property, a `style` attribute, and a rule inside `@media`. Effort: Small.
-  - **C.** Read import statements only from the shared statement reader in `crates/mokly-css/src/token_sections.rs`, which reads the statements of each block level and names each at-rule, and drop the import flag from the token scanner. Add the same tests. Effort: Medium.
-- **Left out:** A filter at each of the three callers. Three callers read the reference, so one fix in the scanner is better on every point.
-- **Wider fix:** C. The import rules then live in the one reader that knows CSS statements, so a new nesting form cannot bring the case back.
+  - **A.** Run the case first: build a catalogue under `.context/` with a stylesheet of the problem, and copy the command and its diagnostic into this item. The run proves the compiler step. The scanner tests of the fix cover the other readers, because they share the scanner. When Mokly accepts the stylesheet, close the item with the run as its record. Effort: Small.
+  - **B.** Keep the scanner's import detection, specifier extraction, rule range, and late flag. When the scan finds an `@import` candidate, read the top-level statements with `token_sections::next`, and keep the candidate only when an `@import` statement starts at that keyword. This one change in `syntax::references` covers all six readers. Add scanner tests for a custom property, a `style` value read as `x{...}`, a rule inside `@media`, `@example @import "./theme.css";` with and without an earlier style rule, and a missing `;` after `@charset "utf-8"`. Also test that `<!-- @import "a.css";` and `@\69mport "a.css";` stay imports. Effort: Small.
+  - **C.** Let the shared statement reader decide every import alone, and drop the import flag from the token scanner. Every reader of the flag moves to the statement reader. Effort: Medium.
+  - **D.** Track statement starts as well as block depth in the scanner. It keeps a second implementation of CSS statement recognition, and it must copy each token that cssparser skips before a top-level statement, such as `<!--`. One missed real import stops a valid build, because the bundler resolves only the imports that the scanner found. Effort: Small.
+- **Left out:**
+  - A filter at each reader. Six readers use the scanner result, so one fix in the scanner is better on every point.
+  - Accepting an import only in the top-level scan frame. It still reads `@example @import "./theme.css";` and raw declaration text, which the rule walk scans, as imports, so it fails the goal.
+- **Wider fix:** B. The shared statement reader then decides every import, whatever the nesting or the prelude shape, and the tested extraction code stays.
 - **Previous examples:** The reader of the old home stage of the public site had the same pattern problem. The closed PR #431 replaced that pattern with a tokenizer that accepted an import only at block depth 0. #488 then removed the stage.
-- **Recommendation:** A, then B. The run confirms the trace in one step, and B fixes every caller with a small change.
+- **Recommendation:** A, then B. The run confirms the compiler step, and B fixes every reader with a small change in one function.
 - **Action:** fix after merge, apply A, because the case is outside the scope of the change that found it, and it changes a Mokly crate.
