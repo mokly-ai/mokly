@@ -1,11 +1,14 @@
 # Storybook Support
 
-Status: Active. On branch `calummoore/mokly-storybook-integration`, no pull
-request yet. Each track runs in its own Conductor workspace in the "mokly
-storybook" section and opens a pull request into this branch, as design
-calls 1 and 25 say. Pull requests from this branch into `main` land at slice
-boundaries. Each earlier one keeps this plan, and the last one deletes it, as
-the `plans` skill says.
+Status: Active, paused by the user on 2026-11-24. On branch
+`calummoore/mokly-storybook-integration`, with no pull request into `main`
+yet. Tracks A, B, C, D, and J are merged into this branch. Tracks E to I have
+not started. The section [Where the work stands](#where-the-work-stands)
+gives what is done, what waits for the user, and how to continue. Each track
+works on its own branch from this branch and opens a pull request into this
+branch, as design calls 1 and 25 say. Pull requests from this branch into
+`main` land at slice boundaries. Each earlier one keeps this plan, and the
+last one deletes it, as the `plans` skill says.
 
 Mokly reads each `*.stories.*` file that a root matches as one component
 entry. It composes the stories with `composeStories` from `@storybook/react`,
@@ -16,16 +19,20 @@ small projects found that many of them fail the build or render wrong:
 CSF Factories, a meta without complete args, `fn()` callbacks under
 `--strict`, CSS that the preview file imports, theme globals, a `.storybook`
 folder inside a package, loaders, `sb.mock()`, portals, and imported images.
-The test matrix and a rerun script are in `.context/storybook/`.
+Milestone 38 lists that test matrix, so that a new set of small projects can
+check each pattern again.
 
 This plan makes Mokly read and render the Storybook files that projects write
 today. It keeps one failing story from stopping a build. It compiles with the
 project's own Vite setup when the configuration asks for it. It connects
 story components to the screens that render them and to the published
-Storybook. The brainstorm ran from 2026-11-03 to 2026-11-06 in this
-workspace, and its notes are in `.context/storybook/` and
-`.context/bundler/`. Evidence goes under `.context/storybook-support/`, which
-also holds the report of the options check.
+Storybook. The brainstorm ran from 2026-11-03 to 2026-11-06. Its results are
+the decisions and design calls below. The `.context/` paths that this plan
+names were scratch files of the first workspaces, and this branch does not
+hold them. This plan, the protocol docs, and the follow-up items under
+`plans/follow-ups/` hold every fact that the remaining work needs. New
+evidence goes under `.context/storybook-support/` in the workspace that makes
+it.
 
 Out of scope, from the decisions below: browser capture of stories,
 decision 1; Storybook `staticDirs`, decision 6; composition with a framework
@@ -79,6 +86,88 @@ Replaced ways:
   loader error in `packages/mokly/src/sidecar/plugins.ts`, and its row in
   `docs/protocol/mokly-imported-styles-errors.md`. Moved in Milestone 10.
   Deleted in Milestone 10.
+
+## Where the work stands
+
+The user paused the work on 2026-11-24, after tracks A, B, C, and J merged
+into this branch. Track D's pull request is open. This section tells the next
+agent what is done, what waits for the user, and how to continue.
+
+| Track                    | Pull request | Done                         | Open                                                                                  |
+| ------------------------ | ------------ | ---------------------------- | ------------------------------------------------------------------------------------- |
+| A. Mockups               | #339, merged | Milestone 1, except one TODO | The mockup update for decision 27                                                     |
+| B. Story reading         | #492, merged | Milestones 3 to 6            | The B4 TODO of Milestone 2, Milestone 7, and Milestone 8                              |
+| C. Imported assets       | #453, merged | Milestones 9 to 12           | None                                                                                  |
+| D. Vite adapter          | #493, open   | Milestones 13 and 16         | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
+| J. Spike for decision 18 | #349, merged | Milestone 37                 | None                                                                                  |
+| E to I                   | None         | Nothing                      | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| All                      | None         | Nothing                      | Milestone 38, which ends with the pull request into `main`                            |
+
+### Decisions that wait for the user
+
+Each decision is in full in this plan, with its options and a recommended
+option. None has an answer yet, so no option applies.
+
+- [Decisions 18a to 18d](#18a-files-that-no-storybook-folder-owns): the
+  rules for catalogues with several Storybook folders. They block
+  Milestones 30 and 32.
+- [Decision 23](#23-a-new-story-has-no-published-storybook-page) and
+  [decision 27](#27-the-storybook-link-leaves-the-catalogue): where the
+  Storybook link shows and where it opens. They block Milestones 26 to 28 and
+  the last TODO of Milestone 1.
+- [Decision 26](#26-error-document-styles-in-dark-views): the styles of the
+  error document of a failed story. It blocks Milestone 23.
+- [B4](#b4-malformed-mokly-parameter-values): malformed `mokly` parameter
+  values. It blocks Milestone 7 and the last TODO of Milestone 2.
+- Track D decisions 2 and 3: the files that the Vite setup reads outside the
+  module graph, and untracked env files on the base side. They block one
+  TODO of Milestone 15.
+- Track D decision 4: settings that the Vite setup replaces. It blocks one
+  TODO of Milestone 14.
+
+### Follow-up items that wait for the user
+
+These items block no milestone. Each file holds the full item and its
+recommended option.
+
+- [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): a
+  base URL can redirect imported asset URLs. Severity High.
+- [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
+  which attributes count as resource references.
+- [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): one
+  content type rule for every delivery path. It also holds the question of a
+  host duty in the static delivery contract.
+- [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
+  two Vite setups can load one module twice.
+- [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): a
+  stylesheet asset name without an extension passes.
+- [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md):
+  the value of a `.css` import with `type: "css"`.
+- [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): the
+  `data:` URL error does not name its fix.
+- [design-external-link-check.md](follow-ups/design-external-link-check.md):
+  the design checks pass unmarked external links.
+
+The other follow-up items that this plan added need no decision. A later
+branch fixes each one as its file says.
+
+### How to continue
+
+1. Bring the decisions and the follow-up items above to the user, with their
+   recommended options. Ask for all of them in one message.
+2. Apply each answer in the milestone that waits for it, and record the
+   answer in this plan with its date.
+3. Run the reviews that did not run: the review TODO of Milestone 8 for
+   track B, and the review TODO of Milestone 17 for track D. Run each against
+   this branch with the `implementation-review` skill.
+4. Merge `main` into this branch before a track starts. Only this branch
+   merges `main`. Each track branch merges this branch.
+5. Start tracks E to I in the order of the [Tracks](#tracks) table. Each
+   track works on a branch from this branch and opens a pull request into
+   this branch.
+6. At a slice boundary, open the pull request from this branch into `main`,
+   as design call 1 says. Ask the user before it merges, because a push to
+   `main` deploys Mokly Cloud.
 
 ## Decisions
 
@@ -1122,11 +1211,13 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
 
 ## Tracks
 
-Each track runs in its own workspace, as design calls 1 and 25 say. A track
-starts when each milestone on the `Depends on:` lines of its first milestones
-has merged into this branch, and when the open decisions that block it have
-answers. The ledger of the workspaces is in
-`.context/storybook-support/workspaces.md`.
+Each track runs in its own workspace, on its own branch from this branch, as
+design calls 1 and 25 say. A track starts when each milestone on the
+`Depends on:` lines of its first milestones has merged into this branch, and
+when the open decisions that block it have answers. A merged track that still
+has open TODOs continues on a new branch from this branch. The section
+[Where the work stands](#where-the-work-stands) gives the state of each
+track.
 
 | Track                      | Milestones | Starts after                                    |
 | -------------------------- | ---------- | ----------------------------------------------- |
@@ -1645,15 +1736,17 @@ Depends on: 2, 3, 4, 5, 6, 7
 
 - [ ] Remove each status line whose page this track completes.
 - [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Rerun `.context/storybook/reproduce.sh` from the primary workspace and
-      save the result under `.context/storybook-support/`.
+- [ ] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
+      7 build, in new small projects, and save the result under
+      `.context/storybook-support/`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
-The justifications of the track B merges of the primary branch are in
-`.context/storybook-support/merge-2-justifications.md` and
-`.context/storybook-support/merge-3-justifications.md`. The pull request
-description copies them.
+Pull request #492 merged Milestones 2 to 6 into this branch on 2026-11-24,
+before Milestone 7, at the user's request. Its description holds the
+justifications of the track B merges of this branch. Its first review round
+ran, and the user paused the work before the fix round. The review TODO
+above runs the review again on the merged code.
 
 ## Milestone 9: Imported assets documentation
 
@@ -2085,6 +2178,9 @@ The CSS that a preview file imports reaches its stories, as decision 4 says.
       the renderer.
 - [ ] Test that a preview that imports global CSS styles its stories, and
       that Changes shows an edit of that CSS.
+- [ ] Decide whether a story's stylesheet chain drops the stylesheets that
+      its preview file already delivers, as an entry's chain drops the
+      renderer's stylesheets. Track D raised this question on 2026-11-23.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 22: Storybook folders verification, review, and pull request
@@ -2243,6 +2339,9 @@ the answer to decision 18, and the `sb.mock()` warning of decision 12.
 - [ ] Update `docs/protocol/mokly-build-warnings.md` with
       `storybook-mock-without-vite`, and with the warning of decision 18b
       when its answer adds one.
+- [ ] Decide whether the default `.storybook` folder in the source root turns
+      on Storybook's setup under the Vite adapter, or only a root's
+      `storybook` field does. Track D raised this question on 2026-11-23.
 - [ ] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
@@ -2314,6 +2413,9 @@ Depends on: 30
 - [ ] Record the startup time and the memory of two Storybook folders
       against one, with Storybook's preset loader, under
       `.context/storybook-support/`.
+- [ ] Make the `.env` files that Storybook's setup reads inputs of a Vite
+      compile, as the env files of the project's own Vite setup already are.
+      Track D raised this on 2026-11-23.
 - [ ] Update `docs/guides/authoring/vite.md` and
       `docs/guides/authoring/storybook.md`.
 
@@ -2427,6 +2529,9 @@ Depends on: every other milestone
 
 - [ ] Remove the last status lines that this plan owns.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Check every row of the test matrix below in new small projects with
+      Storybook 10.6.2, `@storybook/react` 10.6.2, and React 19, and save
+      the result under `.context/storybook-support/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -2438,6 +2543,26 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+The test matrix of 2026-11-03 found each gap below in Mokly at `f08d02df`.
+Each row gives a pattern of a small Storybook project, the result that this
+plan gives, and the milestones that build it.
+
+| Pattern                                                                        | Expected result                                                                      | Milestones          |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------- |
+| A CSF 3 `Button` stories file with `args: { onClick: fn() }`, under `--strict` | The build passes with no warning                                                     | 4                   |
+| `import "../src/global.css"` in `.storybook/preview.tsx`                       | Each story document links `global.css`                                               | 21                  |
+| A preview decorator that reads `globals.theme`                                 | A dark view gets the dark theme through the `mokly` parameter                        | 7                   |
+| `argTypes.size.options` on the meta                                            | Every story shows a select for `size`                                                | 4                   |
+| An export `LargeButton`, a story tagged `!dev`, and a docs description         | The title is "Large Button", the `!dev` story is left out, and the description shows | 4                   |
+| A meta without args and a required `user` prop                                 | The first story is the parent page, and the build passes                             | 6                   |
+| `loaders` whose result a story reads from `loaded`                             | The loader runs before the render                                                    | 5                   |
+| `createPortal(..., document.body)` in a story                                  | A warning and an error document in place of the story, and the build goes on         | 23 to 25            |
+| `excludeStories: /.*Data$/` and no title                                       | The exclusion works, and no title says "ComposedStory"                               | 3 and 4             |
+| `import logo from "./logo.png"`                                                | Mokly delivers the image, and the document links it                                  | 9 to 12             |
+| A CSF Factories file with `preview.meta` and `meta.story`                      | Every story and the parent page build                                                | 3                   |
+| A monorepo with `packages/ui/.storybook/preview.tsx`                           | That root's preview applies, and the title is right                                  | 18 to 22            |
+| `sb.mock(import("../src/lib/session.ts"))` with a `__mocks__` file             | The mock applies under the Vite adapter, and a warning names it without the adapter  | 32, and decision 12 |
 
 ## Post-merge follow-up (non-blocking)
 
