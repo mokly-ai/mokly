@@ -28,12 +28,12 @@
     },
     {
       "path": "mokly-viewer/client/shell.js",
-      "sha256": "1bee70efa910222aa21edfe2de32070f8bf5d7140a34c6c907e7b7ee9121f848",
-      "size": 563205
+      "sha256": "d0a84bfb63a224be6bad219d66a55c0919e62511c9514e3063d7de87cffdfccb",
+      "size": 563237
     },
     {
       "path": "mokly-viewer/deployment.json",
-      "sha256": "b3c0901df219e1598c6a4445056db52bd7d8c43c801916d5466fa179d2116230",
+      "sha256": "0a8afbd63cf783092373621724085ae925a40fdca6f12b3244b7e6b891fd79bb",
       "size": 111
     },
     {
@@ -228,13 +228,13 @@
     },
     {
       "path": "mokly-viewer/index.json",
-      "sha256": "cd9d7fb376bf1b8e9dc10f4122b524a0c5acf508ae11816a1d683df76e570b4d",
+      "sha256": "5bb224e74d86352fac2f63974898ef1acbe158c39f2c2c9184a5e901ae6fb529",
       "size": 11189
     },
     {
       "path": "mokly-viewer/shell.css",
-      "sha256": "d2e05ffc01f24b5520ef60e6c32109b1db255dfff5b3f394462e785ec0378340",
-      "size": 140836
+      "sha256": "c9ca48b78631e87088645cfb129d761a2243066ba1881120e6ea4032d0df832a",
+      "size": 140475
     },
     {
       "path": "static/mokly-generated/finish/index.desktop.html",
