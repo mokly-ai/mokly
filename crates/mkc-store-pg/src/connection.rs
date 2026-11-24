@@ -23,8 +23,8 @@ const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Composition-root factory for a shared store interface.
 pub trait StoreFactory {
-    /// Connect with a bounded pool that opens sessions on demand and a
-    /// five-second acquisition timeout.
+    /// Connect with a pool of up to eight sessions that keeps one idle session
+    /// ready, and a five-second acquisition timeout.
     fn connect(&self, database_url: &str) -> Result<Arc<dyn Store>>;
 }
 
