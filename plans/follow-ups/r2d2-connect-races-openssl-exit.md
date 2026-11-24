@@ -23,11 +23,11 @@
 - **Options:**
   - **A.** Call OpenSSL's init with `OPENSSL_INIT_NO_ATEXIT` at startup of each binary, so libcrypto registers no exit handler. The kernel frees the memory at exit anyway. It needs a small FFI call or an `openssl-sys` dependency, and it changes process-wide behaviour. Effort: Small.
   - **B.** Give each pool a worker that the product owns. Before exit, drop the pool, queue a marker job, and wait for it with a bound. Every exit path of the three binaries changes. Effort: Medium.
-  - **C.** Give the maintenance commands one connection that the command owns, with a bounded connect on the calling thread. This removes the race for the commands that exit every few minutes, not for the servers. It is option E of `plans/follow-ups/database-connection-budget.md`. Effort: Medium.
+  - **C.** Give the maintenance commands one connection that the command owns, with a bounded connect on the calling thread. This removes the race for the commands that exit every few minutes, not for the servers. It is the owned-connection form of option E of `plans/follow-ups/database-connection-budget.md`. A pool with a maximum of 1 does not remove the race, because r2d2 still opens its connection on a worker. Effort: Medium.
   - **D.** Replace r2d2 with a pool that can cancel or join connection attempts and applies one deadline to acquisition and validation. Effort: Large.
 - **Left out:** Shorter timeouts still leave workers running at exit. Reverting the store pool to the eager pool of `main` makes the race more common, not less.
 - **Wider fix:** D. It removes the race for every pool and every trigger. A removes it for every pool at the OpenSSL layer, with less change.
 - **Previous examples:** The CI failure of PR #495 at `abdc0a74a`/`9bafe4b6f` (run 45424134266), fixed in `54a1c4eea`.
-- **Related:** `plans/follow-ups/database-connection-budget.md`, option E: a one-connection store for maintenance commands also removes their part of this race.
+- **Related:** `plans/follow-ups/database-connection-budget.md`, option E: its owned-connection form also removes the maintenance commands' part of this race. Its one-slot pool form does not.
 - **Recommendation:** A. It is Small, covers both pools and every trigger, and needs no change to the exit paths.
 - **Action:** fix after merge, apply A, because the race is not reachable in stable environments and the fix reaches every binary.

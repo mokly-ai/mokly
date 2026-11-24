@@ -1,18 +1,20 @@
-//! Real Postgres session count of a store pool after serial calls.
+//! Store pool startup failure and real Postgres session count after serial calls.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use std::net::TcpListener;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::time::Duration;
 
 use diesel::sql_types::{BigInt, Text};
 use diesel::{Connection, PgConnection, RunQueryDsl};
+use mkc_store_interface::error::Error;
 use mkc_store_interface::store::{Callback, Store};
 use mkc_test_pg::scratch_schema::ScratchSchema;
 use scheduled_thread_pool::ScheduledThreadPool;
 
-use super::{PgStore, open_pool, pool_builder};
+use super::{PgStore, PgStoreFactory, StoreFactory, open_pool, pool_builder};
 use crate::runtime::SystemRuntime;
 
 #[derive(diesel::QueryableByName)]
@@ -53,4 +55,22 @@ fn serial_calls_reuse_one_session() {
     .get_result::<Sessions>(&mut observer)
     .unwrap();
     assert_eq!(sessions.count, 1);
+}
+
+/// `connect` fails when the database is unreachable, so a command fails at
+/// startup and not at its first query.
+#[test]
+fn connect_fails_when_the_database_is_unreachable() {
+    let closed_port = TcpListener::bind("127.0.0.1:0")
+        .unwrap()
+        .local_addr()
+        .unwrap()
+        .port();
+    let factory = PgStoreFactory {
+        runtime: Arc::new(SystemRuntime),
+    };
+    let result = factory.connect(&format!(
+        "postgres://postgres@127.0.0.1:{closed_port}/mkc?connect_timeout=1"
+    ));
+    assert!(matches!(result, Err(Error::Internal(_))));
 }

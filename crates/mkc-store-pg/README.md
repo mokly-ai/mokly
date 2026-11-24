@@ -16,7 +16,7 @@ transaction isolation and retry policy of the `Store` modes.
 
 `PgStoreFactory::connect` opens a bounded connection pool and returns the
 store. The pool opens a connection only when a call needs one, up to eight, and
-closes each connection 60 to 90 seconds after its last call. `connect` opens
+closes each connection at most 90 seconds after its last call. `connect` opens
 one connection, so an unreachable database fails at startup. `Store::transaction` runs the callback serializable and retries a
 serialization or uniqueness failure with exponential backoff and jitter;
 `Store::read` runs read-only at READ COMMITTED; `Store::autocommit` runs one

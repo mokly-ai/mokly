@@ -20,7 +20,8 @@ const DEFAULT_POOL_SIZE: u32 = 8;
 /// connection can still outlive its call when the call times out.
 const IDLE_POOL_SIZE: u32 = 0;
 /// Idle time after which the pool closes a session. The pool checks every 30
-/// seconds, so a session closes 60 to 90 seconds after its last call.
+/// seconds, so a session closes at most 90 seconds after its last call, or
+/// sooner when it reaches r2d2's default 30-minute lifetime.
 const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Composition-root factory for a shared store interface.
