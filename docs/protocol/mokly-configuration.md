@@ -213,5 +213,5 @@ An unmappable lookup or a used directory missing from the base installation prod
 
 Mokly applies the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
-automatically after module lookup. The rule uses the `resolveExtensions`
-order for JavaScript targets.
+automatically after module lookup. For JavaScript targets, the rule keeps
+the `resolveExtensions` order and tries only extensions with a script suffix.

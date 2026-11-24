@@ -41,7 +41,8 @@ The rule:
    `src` is the source folder.
 3. A file under the build folder maps to the same relative path under the
    source folder. A `.js`, `.mjs` or `.cjs` file tries the configured resolve
-   extensions in order. Any other file, such as `.css`, keeps its name.
+   extensions in order when they end in `.tsx`, `.ts`, `.jsx`, `.js`, `.mts`,
+   `.cts`, `.mjs`, or `.cjs`. Any other file, such as `.css`, keeps its name.
 4. When the side holds the source file, Mokly loads it. Otherwise Mokly
    resolves as before: the head loads its built file, and a base without it
    fails with `module {path} has no source in this side`.

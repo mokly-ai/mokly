@@ -4,6 +4,9 @@
     "packages/plain/src/button.tsx": "",
     "packages/plain/src/button.ts": "",
     "packages/plain/src/button.js": "",
+    "packages/plain/src/tokens.css": "",
+    "packages/plain/src/tokens.json": "{}",
+    "packages/plain/src/tokens.web.tsx": "",
     "packages/plain/src/parts/panel.ts": "",
     "packages/plain/src/feature.ts": "",
     "packages/plain/src/styles.css": "",
@@ -56,6 +59,12 @@
       "target": "packages/plain/dist/button.js",
       "extensions": [".jsx", ".js", ".ts"],
       "expected": "packages/plain/src/button.js"
+    },
+    {
+      "name": "JavaScript targets try only extensions with a script suffix",
+      "target": "packages/plain/dist/tokens.js",
+      "extensions": [".css", ".json", ".web.tsx"],
+      "expected": "packages/plain/src/tokens.web.tsx"
     },
     {
       "name": "lib keeps nested paths and maps mjs",

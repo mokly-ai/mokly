@@ -44,11 +44,21 @@ pub(crate) fn source(
         return regular_file(tree, repo_root, &candidate);
     }
     let stem = candidate.with_extension("").into_os_string();
-    settings.extension_order().find_map(|extension| {
-        let mut candidate = stem.clone();
-        candidate.push(extension);
-        regular_file(tree, repo_root, Path::new(&candidate))
-    })
+    settings
+        .extension_order()
+        .filter(|extension| {
+            extension.rsplit_once('.').is_some_and(|(_, suffix)| {
+                matches!(
+                    suffix,
+                    "tsx" | "ts" | "jsx" | "js" | "mts" | "cts" | "mjs" | "cjs"
+                )
+            })
+        })
+        .find_map(|extension| {
+            let mut candidate = stem.clone();
+            candidate.push(extension);
+            regular_file(tree, repo_root, Path::new(&candidate))
+        })
 }
 
 #[derive(Deserialize)]

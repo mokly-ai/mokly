@@ -72,9 +72,7 @@ test("an inactive unsupported non-folder target keeps ordinary marked reuse", as
     {
       "lib/package.json": "absent",
       "package.json": "file",
-      "src/value.css": "absent",
       "src/value.js": "absent",
-      "src/value.json": "absent",
       "src/value.jsx": "absent",
       "src/value.ts": "absent",
       "src/value.tsx": "absent",

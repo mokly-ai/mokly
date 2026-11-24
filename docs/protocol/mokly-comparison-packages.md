@@ -46,8 +46,9 @@ when a package import reaches it.
    directory and `src` as the source directory.
 3. For a target under the build directory, try the same relative path under
    the source directory. For a `.js`, `.mjs` or `.cjs` target, replace the
-   extension with each resolve extension in order. For other targets, keep
-   the file name.
+   extension with each resolve extension that ends in `.tsx`, `.ts`, `.jsx`,
+   `.js`, `.mts`, `.cts`, `.mjs`, or `.cjs`, in the configured order.
+   For other targets, keep the file name.
 4. Load the first matching regular source file on that side. If none exists,
    keep the original target. A missing repository-mapped JavaScript target
    fails with `module {path} has no source in this side`.

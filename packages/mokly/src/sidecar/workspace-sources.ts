@@ -24,7 +24,8 @@ interface PackageLayout {
 
 const buildFolders = new Set(["dist", "lib", "build", "out"]);
 const javascript = new Set([".js", ".mjs", ".cjs"]);
-const defaultExtensions = [".tsx", ".ts", ".jsx", ".js", ".css", ".json"];
+const scriptExtension = /\.(tsx|ts|jsx|js|mts|cts|mjs|cjs)$/;
+const defaultExtensions = [".tsx", ".ts", ".jsx", ".js"];
 
 /** Resolve built targets against the package layout on one source side. */
 export class WorkspaceSources {
@@ -69,6 +70,7 @@ export class WorkspaceSources {
       ? this.extensions
       : defaultExtensions;
     for (const extension of extensions) {
+      if (!scriptExtension.test(extension)) continue;
       const candidate = this.candidate(stem + extension);
       if (candidate !== undefined) return candidate;
     }
