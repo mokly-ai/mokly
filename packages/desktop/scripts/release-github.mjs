@@ -1,40 +1,46 @@
 import { createReadStream } from "node:fs";
 
-import { CancellationToken } from "electron-builder";
-import { GitHubPublisher } from "electron-publish";
-
-import { releaseFailure } from "./release-assets.mjs";
+import { isReleaseAsset, releaseFailure } from "./release-assets.mjs";
 
 /**
- * Keep the pinned publisher's release creation, tag and two-hour cutoff.
- * Override its upload hook so a 422 collision can never enter its delete/retry
- * path. The client has only GET and POST operations, even if a race occurs.
+ * @param {unknown} value
+ * @returns {value is number}
  */
-export class AppendOnlyPublisher extends GitHubPublisher {
-  constructor(info, version, github) {
-    delete process.env.EP_GH_IGNORE_TIME;
-    super(
-      { cancellationToken: new CancellationToken(), progress: null },
-      info,
-      version,
-      { publish: "always" },
-    );
-    this.github = github;
-    this.uploaded = new Set();
-  }
+export function isReleaseId(value) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
 
-  // HttpPublisher supplies the path as its fifth upload-hook argument.
-  async doUpload(name, _arch, size, _processRequest, file) {
-    const release = await this._release.value;
-    if (release === null)
-      throw releaseFailure(`The pinned publisher skipped ${name}`);
-    await this.github.upload(release.id, { name, size, file });
-    this.uploaded.add(name);
-  }
+/** @param {number} id */
+function releasePath(id) {
+  if (!isReleaseId(id)) throw new Error("Invalid GitHub release ID.");
+  return `/releases/${id}`;
 }
 
 /**
- * GitHub transport with no operation that can replace or delete an asset.
+ * @param {unknown} value
+ * @returns {value is {id: number} & Record<string, unknown>}
+ */
+function hasReleaseId(value) {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "id" in value &&
+    isReleaseId(value.id)
+  );
+}
+
+/** @param {Response} response @returns {Promise<unknown>} */
+async function readLookup(response) {
+  if (!response.ok)
+    throw new Error(`GitHub lookup returned HTTP ${response.status}.`);
+  return response.json().catch(() => {
+    throw new Error("GitHub lookup returned invalid JSON.");
+  });
+}
+
+/**
+ * Read releases and assets, append assets, and promote a draft with a fixed
+ * release update. Asset uploads use a single POST.
  * @param {{owner: string, repo: string}} info
  * @param {string} token
  * @param {typeof globalThis.fetch} request
@@ -52,38 +58,96 @@ export function githubClient(
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   };
-  const get = async (path) => {
-    const response = await request(
-      `https://api.github.com${repository}${path}`,
-      {
-        method: "GET",
-        headers,
-        redirect: "error",
-      },
-    );
-    if (!response.ok)
-      throw releaseFailure(
-        `GitHub asset lookup returned HTTP ${response.status}`,
-      );
-    return response.json();
-  };
+  /** @param {string} path */
+  const get = (path) =>
+    request(`https://api.github.com${repository}${path}`, {
+      method: "GET",
+      headers,
+      redirect: "error",
+    });
   return {
-    release: (tag) => get(`/releases/tags/${encodeURIComponent(tag)}`),
+    /** @param {number} id */
+    async release(id) {
+      const release = await readLookup(await get(releasePath(id)));
+      if (
+        !hasReleaseId(release) ||
+        typeof release.tag_name !== "string" ||
+        typeof release.draft !== "boolean" ||
+        typeof release.prerelease !== "boolean"
+      )
+        throw new Error("GitHub returned invalid release data.");
+      const { tag_name, draft, prerelease } = release;
+      return { id: release.id, tag_name, draft, prerelease };
+    },
+    async latest() {
+      const response = await get("/releases/latest");
+      if (response.status === 404) return null;
+      const release = await readLookup(response);
+      if (!hasReleaseId(release) || typeof release.tag_name !== "string")
+        throw new Error("GitHub returned invalid latest release data.");
+      return { id: release.id, tag_name: release.tag_name };
+    },
+    /** @param {number} id */
+    async promote(id) {
+      const response = await request(
+        `https://api.github.com${repository}${releasePath(id)}`,
+        {
+          method: "PATCH",
+          redirect: "error",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            draft: false,
+            prerelease: false,
+            make_latest: "true",
+          }),
+        },
+      ).catch(() => {
+        throw new Error("GitHub promotion request failed.");
+      });
+      if (!response.ok)
+        throw new Error(`GitHub promotion returned HTTP ${response.status}.`);
+      await response.arrayBuffer();
+    },
+    /**
+     * @param {number} id
+     * @returns {Promise<import("./release-assets.mjs").GitHubAsset[]>}
+     */
     async assets(id) {
       const assets = [];
       for (let page = 1; ; page++) {
-        const batch = await get(
-          `/releases/${id}/assets?per_page=100&page=${page}`,
+        const batch = await readLookup(
+          await get(`${releasePath(id)}/assets?per_page=100&page=${page}`),
         );
-        assets.push(...batch);
+        if (
+          !Array.isArray(batch) ||
+          !batch.every(
+            (asset) =>
+              isReleaseAsset(asset) &&
+              "state" in asset &&
+              typeof asset.state === "string",
+          )
+        )
+          throw new Error("GitHub returned invalid asset data.");
+        assets.push(
+          ...batch.map(({ name, size, state, digest }) => ({
+            name,
+            size,
+            state,
+            ...(typeof digest === "string" ? { digest } : {}),
+          })),
+        );
         if (batch.length < 100) return assets;
       }
     },
+    /**
+     * @param {number} id
+     * @param {import("./release-assets.mjs").ReleaseAsset & {file: string}} asset
+     */
     async upload(id, asset) {
       const body = open(asset.file);
       try {
         const response = await request(
-          `https://uploads.github.com${repository}/releases/${id}/assets?name=${encodeURIComponent(asset.name)}`,
+          `https://uploads.github.com${repository}${releasePath(id)}/assets?name=${encodeURIComponent(asset.name)}`,
           {
             method: "POST",
             redirect: "error",

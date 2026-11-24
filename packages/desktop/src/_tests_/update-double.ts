@@ -22,7 +22,7 @@ export function updateDouble(
   const updater: Updater = {
     autoDownload: false,
     autoInstallOnAppQuit: false,
-    allowPrerelease: false,
+    allowPrerelease: true,
     on: (name: string, handler: (input: never) => void) => {
       events.set(name, handler);
     },

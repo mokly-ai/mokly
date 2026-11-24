@@ -264,7 +264,8 @@ not re-run them. Steps 2 and 3 start new runs.
    [Wait failures](./foundation.md#wait-failures) gives the recovery.
 4. The next push to `main` must pass **Deploy Main Site**, **Deploy Main
    Preview** and the **Credential-gated infrastructure plan**. The first
-   merged desktop release pull request must pass **Release desktop**.
+   merged desktop release pull request must pass **Release desktop** and
+   **Promote desktop release**.
 5. Label a pull request here with `preview`, as
    [Review A Labelled PR](./preview.md#review-a-labelled-pr) shows. Check:
    **Preview required** passes, and the comment says **Checks passed**. This
