@@ -1,7 +1,8 @@
 /* The home spread: the whole acme/storefront app on the canvas, zoomed out
-   to 36 percent. Its canvas starts at the heading's left edge, the Specs and
-   Components boxes bleed off the right edge, and the spread clips them so
-   the page never scrolls sideways. Each artboard and component set sits at
+   to 36 percent. Its canvas starts at the heading's left edge, with the
+   Components box beside the Specs box, and the spread clips them so the
+   page never scrolls sideways. A narrower window drops parts of the spread
+   and then folds it, as the end of this sheet says. Each artboard and component set sits at
    its own spot, which the screen passes as its position. */
 
 .site-home-spread {
@@ -86,6 +87,12 @@
 
 /* The component sets at half size, on a light backing in both schemes */
 
+.site-home-sets {
+  inset: 0;
+  position: absolute;
+  transform-origin: 0 0;
+}
+
 .site-home-set {
   position: absolute;
 }
@@ -142,11 +149,74 @@
   top: 340px;
 }
 
-/* Below 1440px the canvas starts at the narrower gutter of the heading and
-   keeps bleeding off the right edge, clipped by the spread. */
+/* Below 1440px the canvas starts at the narrower gutter of the heading. */
 
 @media (max-width: 1439px) {
   [data-site-viewport="desktop"] .site-home-spread-canvas {
     left: clamp(20px, 5.4vw, 80px);
   }
+}
+
+/* Where the window cannot hold the whole spread, the spread gives up room
+   in two steps. Below 1860px the Specs box drops its right column, the
+   pricing desktop with Claude and the three phones under it, and the
+   Components box moves in beside it. Below 1152px the Components box also
+   folds under the Specs box. */
+
+@media (min-width: 768px) and (max-width: 1859px) {
+  .site-home-spread-canvas .site-home-spread-roomy {
+    display: none;
+  }
+
+  .site-home-spread-canvas .site-home-spread-specs {
+    width: 536px;
+  }
+
+  .site-home-spread-canvas .site-home-spread-components {
+    left: 538px;
+    top: 0;
+  }
+
+  .site-home-spread-canvas .site-home-spread-codex {
+    left: 626px;
+    top: 116px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1151px) {
+  .site-home-spread {
+    height: 1382px;
+  }
+
+  .site-home-spread-canvas .site-home-spread-components {
+    left: -30px;
+    top: 838px;
+  }
+
+  .site-home-spread-canvas .site-home-spread-codex {
+    left: 58px;
+    top: 954px;
+  }
+}
+
+/* A phone draws the Components box under the three phones, as wide as the
+   Specs line, with its sets shrunk to 70 percent, and Codex's cursor on the
+   Button set. */
+
+[data-site-viewport="mobile"]
+  .site-home-spread-canvas
+  .site-home-spread-components {
+  height: 364px;
+  left: -175px;
+  top: 438px;
+  width: 350px;
+}
+
+[data-site-viewport="mobile"] .site-home-spread .site-home-sets {
+  transform: scale(0.7);
+}
+
+[data-site-viewport="mobile"] .site-home-spread-canvas .site-home-spread-codex {
+  left: -150px;
+  top: 511px;
 }
