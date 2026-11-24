@@ -1,4 +1,4 @@
-import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
+import type { Plugin, ResolvedConfig } from "vite";
 
 import type { ViteCssResult } from "../generated/sidecar/ViteCssResult.js";
 
@@ -7,6 +7,8 @@ import { viteCssPath, ViteCssUrls } from "./vite-css-paths.js";
 import { recordViteInput } from "./vite-inputs.js";
 import { viteMetadata } from "./vite-metadata.js";
 import type { ViteInputs } from "./vite-plugin.js";
+import { excludeRebuildFiles } from "./vite-setup.js";
+import type { ViteSetup } from "./vite-setup.js";
 import { viteFile } from "./vite-urls.js";
 
 class InlineStylesheet {
@@ -67,12 +69,12 @@ export class ViteCssTransform {
   }
 
   async run(
-    server: ViteDevServer,
-    setupFiles: string[],
+    setup: ViteSetup,
     input: ViteInputs,
     stylesheet: string,
     physical: string,
   ): Promise<{ result: ViteCssResult; reports: Map<string, string | null> }> {
+    const { server } = setup;
     const file = await input.paths.resolve(physical);
     const active = new InlineStylesheet(file, server.config, input, stylesheet);
     this.active = active;
@@ -100,9 +102,13 @@ export class ViteCssTransform {
         reports.set(file, digest);
       }
       for (const name of reported) delete importedBy[name];
+      excludeRebuildFiles(
+        setup,
+        new Set([stylesheet, ...Object.keys(dependencies)]),
+      );
       const metadata = await viteMetadata(
         input,
-        setupFiles,
+        setup.state,
         new Set([file, ...inputs]),
       );
       const sourceDigest = await metadataDigest(

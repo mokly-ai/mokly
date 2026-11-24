@@ -94,7 +94,7 @@ pub mod styles;
 mod stylesheet_jobs;
 mod stylesheet_keys;
 mod validation;
-mod watch_rules;
+pub mod watch_rules;
 mod weight;
 
 #[cfg(test)]

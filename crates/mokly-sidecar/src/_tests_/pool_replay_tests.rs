@@ -74,6 +74,7 @@ fn seed(worker: Unimock, loaded: bool) -> Pool {
             "g".into(),
             Bundle {
                 vite: false,
+                vite_inputs: None,
                 evaluation: None,
                 entry_files: vec!["entry.ts".into()],
                 renderer: None,

@@ -20,6 +20,7 @@ fn fixture() -> (State, Slot) {
         "g".into(),
         Bundle {
             vite: false,
+            vite_inputs: None,
             evaluation: Some("evaluation".into()),
             entry_files: vec!["entry.ts".into()],
             renderer: None,

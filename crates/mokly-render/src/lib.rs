@@ -56,6 +56,7 @@ mod stylesheet_watch;
 mod stylesheet_weight;
 mod stylesheets;
 mod transport_values;
+mod vite_base_env;
 mod vite_stylesheets;
 mod watch_candidate;
 

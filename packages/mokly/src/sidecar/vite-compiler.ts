@@ -20,7 +20,7 @@ import { verifyViteInputs } from "./vite-inputs.js";
 import { snapshotViteInputs } from "./vite-invalidation.js";
 import { viteMetadata } from "./vite-metadata.js";
 import { loadVite, withVitePeers } from "./vite-peers.js";
-import { setupStamp } from "./vite-setup.js";
+import { excludeRebuildFiles, setupSnapshot } from "./vite-setup.js";
 import { viteToolchain } from "./vite-toolchain.js";
 import { viteEntry, viteUrl } from "./vite-urls.js";
 
@@ -74,15 +74,19 @@ export class ViteCompiler {
           input.files,
         );
         await verifyViteInputs(input);
-        if (setup.stamp !== (await setupStamp(setup.files, directory)))
+        if (
+          setup.state.stamp !==
+          (await setupSnapshot(setup.files, directory, paths)).stamp
+        )
           throw new Error("Vite setup changed during compilation");
+        excludeRebuildFiles(setup, new Set(physical.keys()));
         const graphFiles = new Set(physical.values());
-        const metadata = await viteMetadata(input, setup.files, graphFiles);
-        setup.snapshot = await snapshotViteInputs(input, metadata);
+        const metadata = await viteMetadata(input, setup.state, graphFiles);
+        setup.snapshot = await snapshotViteInputs(input, metadata, setup.state);
         const toolchain = await viteToolchain(version, vite.root);
         const compiled: CompiledGeneration = {
           code: "",
-          vite: recipe,
+          vite: { ...recipe, setupDigest: setup.state.digest },
           identity: createHash("sha256")
             .update(
               JSON.stringify([
@@ -150,13 +154,15 @@ export class ViteCompiler {
           paths,
         );
         const { result, reports } = await this.context.css.run(
-          setup.server,
-          setup.files,
+          setup,
           input,
           request.stylesheet,
           request.file,
         );
-        if (setup.stamp !== (await setupStamp(setup.files, directory)))
+        if (
+          setup.state.stamp !==
+          (await setupSnapshot(setup.files, directory, paths)).stamp
+        )
           throw new Error("Vite setup changed during compilation");
         setup.stylesheetReports.set(request.file, reports);
         return result;

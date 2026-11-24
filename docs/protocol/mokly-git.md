@@ -47,9 +47,11 @@ command. Missing objects without a promisor remote retain a typed fetch error.
 
 Mokly lists working-tree files with `git ls-files` for the
 [working dependency inputs](./mokly-base-dependencies.md#dependency-identity)
-and for the untracked [changed paths](#repository-and-history). Both listings
-run with `core.fsmonitor=false`, so Git starts no file system monitor hook or
-daemon for them. No other Git command changes the monitor setting.
+and for the untracked [changed paths](#repository-and-history). Under the
+[Vite adapter](./mokly-vite-adapter-inputs.md#the-base-side), Mokly also lists
+the env files that the index tracks, with `git ls-files --cached`. These
+listings run with `core.fsmonitor=false`, so Git starts no file system monitor
+hook or daemon for them. No other Git command changes the monitor setting.
 
 With the monitor disabled and without a promisor remote, a listing starts no
 helper and owns a plain group. With a promisor remote, a listing keeps the full
@@ -57,7 +59,7 @@ process tree. A listing can read the trees of a sparse index. Mokly disables
 lazy fetch for a listing. A Git build that ignores that setting can still fetch
 a missing tree.
 
-Decision: disable the monitor for these two listings only. Rejected: the full
+Decision: disable the monitor for these listings only. Rejected: the full
 process tree with the monitor, because its Unix setup forks the Mokly process,
 and the monitor saves these listings no work. Rejected: the override for every
 command, because a command that attaches the untracked cache, such as

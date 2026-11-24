@@ -68,6 +68,7 @@ fn covered_modules_are_skipped_and_only_the_uncovered_module_gets_a_local_root()
         repository_roots: vec![],
         module_resolution: Default::default(),
         vite: false,
+        vite_inputs: None,
     };
     let modules = BTreeMap::from([
         ("entry.ts".into(), vec!["covered.module.css".into()]),

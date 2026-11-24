@@ -131,6 +131,7 @@ pub mod base_render;
 pub mod base_retention;
 pub mod base_selection;
 pub mod base_sources;
+pub mod base_vite_env;
 pub mod comparison;
 pub mod install_inputs;
 

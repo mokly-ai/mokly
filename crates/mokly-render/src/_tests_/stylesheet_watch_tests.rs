@@ -23,6 +23,7 @@ fn side() -> SideInputs {
         configuration_directory: String::new(),
         context: "head".into(),
         dependency_aliases: BTreeMap::from([("node_modules".into(), "node_modules".into())]),
+        vite_inputs: None,
         dependency_roots: vec!["/repo/node_modules".into()],
     }
 }

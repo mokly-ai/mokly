@@ -156,6 +156,14 @@ pub struct CompiledGeneration {
 pub struct ViteRecipe {
     /// Installed Vite version for replay diagnostics.
     pub version: String,
+    /// Digest of all setup inputs shared by the side's render keys.
+    #[serde(
+        rename = "setupDigest",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub setup_digest: Option<String>,
     /// Virtual entry URL used by the module runner.
     pub entry: String,
     /// Each fetch indexed by the requested URL and importer.

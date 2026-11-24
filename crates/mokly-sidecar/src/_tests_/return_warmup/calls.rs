@@ -17,6 +17,7 @@ pub(super) fn bundle(generation: &str) -> Call {
         plan: None,
         params: Bundle {
             vite: false,
+            vite_inputs: None,
             source_root: "/head".into(),
             configuration_directory: ".".into(),
             entry_files: vec![generation.into()],

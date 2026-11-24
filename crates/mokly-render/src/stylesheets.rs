@@ -70,6 +70,7 @@ pub(crate) fn attempt(
     if config.vite() {
         settings.push_str(":vite:");
         settings.push_str(&side.source_root.to_string_lossy());
+        settings.push_str(&format!(":{:?}", side.vite_inputs));
     }
     let postcss = config.postcss().filter(|_| !config.vite()).map(|module| {
         let released = {

@@ -222,6 +222,9 @@ fn attempt_preparation(
 }
 
 fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) {
+    if let Some(env) = &runtime.vite_base_env {
+        env.record(&result.compiled.metadata_inputs);
+    }
     for directory in result.unmapped_dependency_directories.iter().flatten() {
         runtime.dependency_usage.unmapped(directory);
     }

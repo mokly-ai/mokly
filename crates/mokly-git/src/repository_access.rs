@@ -118,6 +118,10 @@ impl Repository for GitRepository {
         self.candidates()
     }
 
+    fn indexed_paths(&self, pathspecs: &[&str]) -> Result<Vec<RepoPath>> {
+        self.index_paths(pathspecs)
+    }
+
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>> {
         self.working_file(path, limit)
     }

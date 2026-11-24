@@ -18,6 +18,7 @@ use crate::dependency_usage::DependencyUsage;
 use crate::error::RenderError;
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
+use crate::vite_base_env::WorkingEnvInputs;
 
 pub(crate) struct ViteStylesheets {
     pool: Arc<dyn SidecarPool>,
@@ -26,6 +27,7 @@ pub(crate) struct ViteStylesheets {
     tree: Arc<dyn SourceTree>,
     side: SideInputs,
     setup: Bundle,
+    working_env: Option<Arc<WorkingEnvInputs>>,
     transformed: Mutex<BTreeMap<String, Arc<Stylesheet>>>,
 }
 
@@ -38,6 +40,7 @@ impl ViteStylesheets {
             tree: runtime.inventory_tree.clone(),
             side: side.clone(),
             setup: bundle_inputs::params(config, &[], side),
+            working_env: runtime.vite_base_env.clone(),
             transformed: Mutex::default(),
         }
     }
@@ -85,6 +88,9 @@ impl Transform for ViteStylesheets {
         };
         for path in result.dependencies.keys() {
             self.usage.record(&self.side.dependency_aliases, path);
+        }
+        if let Some(env) = &self.working_env {
+            env.record(&result.metadata_inputs);
         }
         let result = Arc::new(Stylesheet {
             text: result.text,

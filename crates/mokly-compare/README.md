@@ -508,6 +508,10 @@ development dependencies, and no test uses the internet.
   `FreshnessChecks`, `PreparationInputs`, `DependencySelection`,
   `FreshnessRequest`, and `InstallInputs`: the evidence of one preparation and
   the check that says whether a kept base is still current.
+- [`src/base_vite_env.rs`](./src/base_vite_env.rs) defines `ViteEnvInputs`,
+  the working-tree env files that a Vite base setup read and the env files
+  that the working tree's Git index tracks. The freshness check compares them
+  before Serve reuses a kept base.
 - [`src/install_inputs.rs`](./src/install_inputs.rs) defines
   `SystemInstallInputs`, the host reader that digests the install records and
   the package entries of one working `node_modules` root, without package

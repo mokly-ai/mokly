@@ -31,9 +31,12 @@ added later; an absent glob means `**/*`.
 A rule's action is `ignore`, `rebuild`, or `reload`: `ignore` removes the
 paths from the watch; `rebuild` makes them inputs of the config node, so a
 change recomputes the whole catalogue; `reload` treats them as referenced
-resources of every document. Package-owned classifications take precedence
-over rules: a rule cannot override the source, module, and stylesheet inputs
-above or the denied names below.
+resources of every document. Under the Vite adapter, the files that a
+`rebuild` rule matches are also
+[inputs of a Vite compile](./mokly-vite-adapter-inputs.md#inputs-and-serve).
+Package-owned classifications take precedence over rules: a rule cannot
+override the source, module, and stylesheet inputs above or the denied names
+below.
 
 ## Invalidation Through The Render Graph
 

@@ -87,6 +87,7 @@ fn warning_code(code: &str) -> Option<&'static str> {
         "props-not-data" => Some("props-not-data"),
         "duplicate-component-stylesheet" => Some("duplicate-component-stylesheet"),
         "stylesheet-extglob" => Some("stylesheet-extglob"),
+        "vite-replaced-setting" => Some("vite-replaced-setting"),
         _ => None,
     }
 }

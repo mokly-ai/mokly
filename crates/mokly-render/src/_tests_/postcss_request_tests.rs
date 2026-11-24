@@ -49,6 +49,7 @@ fn timeout_labels_use_the_logical_source_even_with_external_dependency_roots() {
             root: "/head".into(),
             side: SideInputs {
                 dependency_aliases: Default::default(),
+                vite_inputs: None,
                 source_root: "/base".into(),
                 repository_roots: vec!["/head".into()],
                 module_resolution: ModuleResolution::default(),

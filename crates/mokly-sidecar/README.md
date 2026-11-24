@@ -633,6 +633,11 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `ViteRecipe` in `CompiledGeneration::vite`: the Vite version, the entry URL,
   and one `ViteModuleFetch` for each module fetch. Each `ViteFetchResult` is
   transformed code or an external module with its `ViteExternalType`.
+- [`src/bundle_params.rs`](./src/bundle_params.rs) defines `Bundle`, the
+  settings of one bundle, which the generated types name `BundleParams`. Under
+  the Vite adapter, its `ViteSetupInputs` carry the files of `rebuild` watch
+  rules and, on the base side, `ViteBaseEnv`: the working-tree root and the env
+  files that the Git index tracks.
 - [`src/vite_css.rs`](./src/vite_css.rs) defines `TransformViteCss`, the
   params of a `transformViteCss` call: the side's `Bundle` settings without
   entries, the logical stylesheet path, and the selected physical file. Its

@@ -159,6 +159,7 @@ pub(super) fn bundle(root: &str, generation: &str) -> Call {
             repository_roots: vec![],
             module_resolution: Default::default(),
             vite: false,
+            vite_inputs: None,
             evaluation: None,
         },
         capture: None,

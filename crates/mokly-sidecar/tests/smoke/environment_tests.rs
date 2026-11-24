@@ -61,6 +61,7 @@ fn child_checks_environment() {
             plan: None,
             params: Bundle {
                 vite: false,
+                vite_inputs: None,
                 evaluation: None,
                 entry_files: vec!["component.mockup.tsx".into()],
                 renderer: Some("renderer.tsx".into()),

@@ -1,6 +1,7 @@
 //! Additional watch rules contribute content inputs without broadening public files.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 use globset::GlobBuilder;
 use mokly_catalogue::config_types::{ResolvedConfig, WatchAction};
@@ -18,6 +19,53 @@ pub(crate) fn inputs(
     tree: &dyn SourceTree,
     sources: &[String],
 ) -> Result<(String, String)> {
+    let mut rebuild = BTreeMap::new();
+    let mut reload = BTreeMap::new();
+    let configured = matches(config, tree, sources, false, |action, name, path| {
+        let target = match action {
+            WatchAction::Ignore => return,
+            WatchAction::Rebuild => &mut rebuild,
+            WatchAction::Reload => &mut reload,
+        };
+        let hash = tree.digest(path).ok().unwrap_or_default();
+        target.insert(name, hash);
+    })?;
+    if !configured {
+        return Ok((String::new(), String::new()));
+    }
+    Ok((
+        digest(format!("{rebuild:?}").as_bytes()),
+        digest(format!("{reload:?}").as_bytes()),
+    ))
+}
+
+/// Match additional setup inputs outside the known source inventory.
+pub fn rebuild_files(
+    config: &ResolvedConfig,
+    tree: &dyn SourceTree,
+    sources: &[String],
+) -> Vec<String> {
+    let mut files = Vec::new();
+    let result = matches(config, tree, sources, true, |action, name, _| {
+        if action == WatchAction::Rebuild {
+            files.push(name);
+        }
+    });
+    if result.is_err() {
+        // Generation preparation owns the watch rule diagnostics.
+        return Vec::new();
+    }
+    files.sort();
+    files
+}
+
+fn matches(
+    config: &ResolvedConfig,
+    tree: &dyn SourceTree,
+    sources: &[String],
+    rebuild_only: bool,
+    mut record: impl FnMut(WatchAction, String, &Path),
+) -> Result<bool> {
     let mut rules = Vec::new();
     for rule in config
         .input
@@ -37,10 +85,15 @@ pub(crate) fn inputs(
             rules.push((rule.action, glob));
         }
     }
-    if rules.is_empty() {
-        return Ok((String::new(), String::new()));
+    if rules.is_empty()
+        || rebuild_only
+            && !rules
+                .iter()
+                .any(|(action, _)| *action == WatchAction::Rebuild)
+    {
+        return Ok(false);
     }
-    let policy = match SourcePolicy::new(config, sources) {
+    let policy = match SourcePolicy::new(config, &[]) {
         Ok(policy) => policy,
         Err(source) => {
             return Err(InternalError::Provider {
@@ -50,8 +103,12 @@ pub(crate) fn inputs(
         }
     };
     let sources: BTreeSet<_> = sources.iter().map(String::as_str).collect();
-    let mut rebuild = BTreeMap::new();
-    let mut reload = BTreeMap::new();
+    let configured: BTreeSet<_> = config
+        .authored_inputs
+        .iter()
+        .chain([&config.file])
+        .map(|path| path.as_path())
+        .collect();
     let mut pending = vec![config.repo_root.clone()];
     while let Some(directory) = pending.pop() {
         let children = match tree.children(&directory) {
@@ -86,7 +143,8 @@ pub(crate) fn inputs(
                 continue;
             };
             let name = relative.to_string_lossy().replace('\\', "/");
-            if sources.contains(name.as_str())
+            if configured.contains(path.as_path())
+                || sources.contains(name.as_str())
                 || matches!(
                     policy.denial(&name, None),
                     Some(ProtectedBy::RootMatch { .. })
@@ -97,19 +155,10 @@ pub(crate) fn inputs(
             let Some((action, _)) = rules.iter().find(|(_, glob)| glob.is_match(relative)) else {
                 continue;
             };
-            let target = match action {
-                WatchAction::Ignore => continue,
-                WatchAction::Rebuild => &mut rebuild,
-                WatchAction::Reload => &mut reload,
-            };
-            let hash = tree.digest(&path).ok().unwrap_or_default();
-            target.insert(name, hash);
+            record(*action, name, &path);
         }
     }
-    Ok((
-        digest(format!("{rebuild:?}").as_bytes()),
-        digest(format!("{reload:?}").as_bytes()),
-    ))
+    Ok(true)
 }
 
 #[cfg(test)]

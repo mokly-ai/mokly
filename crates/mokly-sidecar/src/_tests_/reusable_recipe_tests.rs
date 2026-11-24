@@ -12,6 +12,7 @@ use crate::reusable_recipe::{ReusableRecipe, disk_seed_request};
 fn params() -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec!["entry.ts".into()],
         renderer: None,

@@ -5,11 +5,12 @@ import { previewCandidates } from "./bundle-entry.js";
 import { metadataDigest } from "./file-digests.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
+import type { SetupSnapshot } from "./vite-setup.js";
 
 /** Keep live reuse and core watch inputs alongside the Vite recipe. */
 export async function viteMetadata(
   input: ViteInputs,
-  setupFiles: string[],
+  setup: SetupSnapshot,
   graphFiles: ReadonlySet<string>,
 ) {
   const { params, paths, peers } = input;
@@ -24,7 +25,6 @@ export async function viteMetadata(
     if (!graphFiles.has(file))
       metadataInputs[paths.metadataName(file)] = inputs[file];
   }
-  for (const file of setupFiles) await record(await paths.metadata(file));
   for (const file of input.pluginInputs)
     await record(file, input.files.get(file));
   for (const file of params.storiesFiles.length ? previewCandidates : [])
@@ -35,9 +35,16 @@ export async function viteMetadata(
   }
   const directories = await resolutionInputs(
     paths,
-    [...input.files.keys(), ...setupFiles],
+    [
+      ...input.files.keys(),
+      ...setup.configuration.flatMap(({ file }) => (file ? [file] : [])),
+    ],
     inputs,
     metadataInputs,
   );
+  for (const { name, file, digest } of setup.inputs) {
+    metadataInputs[name] = digest;
+    if (file) inputs[file] = digest;
+  }
   return { inputs, metadataInputs, ...directories };
 }

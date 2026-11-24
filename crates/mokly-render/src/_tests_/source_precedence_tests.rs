@@ -159,6 +159,7 @@ fn postcss_source_paths_use_the_extracted_tracked_file() {
         configuration_directory: "app".into(),
         context: "base".into(),
         dependency_aliases: aliases(),
+        vite_inputs: None,
         dependency_roots: vec!["/deps/app/node_modules".into(), "/deps/node_modules".into()],
     };
     assert_eq!(

@@ -527,6 +527,9 @@ view after the edit and counts real process starts and hello calls.
   through that root's tree and resolver. The root still shares the PostCSS
   state of its attempt. `ViteRootCompiler` works the same way, but it bundles
   the root through `mokly_css::vite::bundle` with its `Transform`.
+- [`src/vite_base_env.rs`](./src/vite_base_env.rs) gives the base side's Vite
+  setup the working-tree env files that Git does not track, and keeps the
+  digests that the base setup read as freshness evidence.
 - [`src/vite_stylesheets.rs`](./src/vite_stylesheets.rs) defines
   `ViteStylesheets`, the `mokly_css::vite::Transform` of one side. It sends a
   `transformViteCss` request with the side's bundle settings and the selected

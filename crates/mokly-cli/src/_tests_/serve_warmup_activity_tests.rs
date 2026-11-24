@@ -137,6 +137,7 @@ fn a_real_shared_warmup_call_retains_writer_activity_without_admitting_the_store
         preparation: None,
         params: Bundle {
             vite: false,
+            vite_inputs: None,
             source_root: "/head".into(),
             configuration_directory: ".".into(),
             entry_files: vec!["entry.tsx".into()],

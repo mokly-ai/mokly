@@ -192,11 +192,6 @@ a marked Vite compile under the live checks. A Vite compile emits the
 [operation event](./mokly-sidecar-recipes.md#operation-events) `vite`, as an
 esbuild call emits `esbuild`.
 
-## Inputs And Serve
-
-The [Vite adapter input rules](./mokly-vite-adapter-inputs.md) define the
-inputs of a Vite compile, how Serve rebuilds, and the setup of the base side.
-
 ## Replaced Settings
 
 Under the adapter, the setup takes the place of the `postcss` module and of
@@ -213,8 +208,28 @@ Mokly's `"empty"` opt-outs for `.css` and `.module.css` still apply, and they
 cover every stylesheet language. `.css` skips every plain and module
 stylesheet. `.module.css` skips every module stylesheet.
 
-## Stylesheet Transforms
+Under the adapter, each replaced setting that the configuration holds gives
+one `vite-replaced-setting` configuration warning, also when its list or map
+is empty. `loaders` is the exception: it gives the warning only when it holds
+a key other than `.css` and `.module.css`. `{field}` names the setting, such
+as `postcss` or `moduleResolution.aliases`. `{keys}` lists the other keys in
+lexical order, each JSON-quoted, joined with `, `. The messages are:
 
+```text
+setting "{field}" has no effect under the Vite adapter, because the Vite setup replaces it. Remove it, or move it to the Vite setup.
+setting "moduleResolution.loaders" has no effect under the Vite adapter for keys {keys}, because the Vite setup replaces them. Remove those keys, or move them to the Vite setup.
+```
+
+The [strict rule](./mokly-build-warnings.md#strict-mode) counts the warning.
+Decision: a warning names each setting that has no effect, as the
+[warnings contract](./mokly-build-warnings.md#scope) does for an ignored
+input. Rejected: no warning, a `config-invalid` failure, and Mokly's aliases
+after the setup's own aliases, which would give two alias sources.
+
+## Inputs, Serve, And Stylesheets
+
+The [Vite adapter input rules](./mokly-vite-adapter-inputs.md) define the
+inputs of a Vite compile, how Serve rebuilds, and the setup of the base side.
 The [Vite adapter stylesheet rules](./mokly-vite-adapter-styles.md) define how
 the setup transforms each local stylesheet.
 

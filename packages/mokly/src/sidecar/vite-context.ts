@@ -18,14 +18,11 @@ import { moklyVitePlugin } from "./vite-plugin.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { captureReactPeers } from "./vite-react-peers.js";
 import { ViteLookup } from "./vite-resolution.js";
-import { setupStamp, viteSetup } from "./vite-setup.js";
+import { setupSnapshot, viteSetup } from "./vite-setup.js";
 import { ViteStyles } from "./vite-styles.js";
 
-interface Setup {
-  server: Awaited<ReturnType<typeof viteSetup>>["server"];
-  files: string[];
+interface Setup extends Awaited<ReturnType<typeof viteSetup>> {
   key: string;
-  stamp: string;
   snapshot?: ViteSnapshot;
   styles: ViteStyles;
   lookup: ViteLookup;
@@ -83,16 +80,31 @@ export class ViteContext {
       paths.dependencyRoots,
       paths.dependencyRoot,
       paths.repositoryRoots,
+      params.viteInputs?.baseEnv,
       Object.entries(require.snapshot()).sort(([left], [right]) =>
         left < right ? -1 : left > right ? 1 : 0,
       ),
     ]);
-    const changed = await changedViteInputs(this.setup?.snapshot);
+    const previous = this.setup?.key === key ? this.setup : undefined;
+    const requested = params.viteInputs?.rebuildFiles ?? [];
+    const requestedNames = new Set(requested);
+    const ownedRebuildFiles = previous?.ownedRebuildFiles ?? new Set<string>();
+    for (const name of ownedRebuildFiles)
+      if (!requestedNames.has(name)) ownedRebuildFiles.delete(name);
+    const rebuild = requested.filter((name) => !ownedRebuildFiles.has(name));
+    const changed = await changedViteInputs(previous?.snapshot);
     if (
       this.setup &&
-      (this.setup.key !== key ||
+      (!previous ||
         changed.metadata ||
-        this.setup.stamp !== (await setupStamp(this.setup.files, directory)) ||
+        previous.state.stamp !==
+          (
+            await setupSnapshot(
+              { ...previous.files, rebuild },
+              directory,
+              paths,
+            )
+          ).stamp ||
         (await changedStylesheets(this.setup.stylesheetReports)))
     )
       await this.dispose();
@@ -104,11 +116,13 @@ export class ViteContext {
         input.lookup,
         () => this.input!.peers,
         this.css,
+        { ...params.viteInputs, rebuildFiles: rebuild },
+        this.diagnostic,
       );
       this.setup = {
         ...setup,
         key,
-        stamp: await setupStamp(setup.files, directory),
+        ownedRebuildFiles,
         styles: input.styles,
         lookup: input.lookup,
         stylesheetReports: new Map(),

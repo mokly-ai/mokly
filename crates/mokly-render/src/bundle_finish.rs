@@ -12,6 +12,7 @@ use crate::leases::{ContextLease, PreparedLease};
 use crate::runtime::Runtime;
 use crate::side::SideInputs;
 use crate::stylesheet_compiler::StylesheetPreparation;
+use crate::vite_base_env::WORKING_ENV_PREFIX;
 
 pub(crate) fn finish(
     runtime: &Runtime,
@@ -48,9 +49,11 @@ pub(crate) fn finish(
                 .files
                 .keys()
                 .filter_map(|path| {
-                    path.strip_prefix(&bundle.repository)
-                        .ok()
-                        .map(|path| path.to_string_lossy().replace('\\', "/"))
+                    path.strip_prefix(&bundle.repository).ok().map(|path| {
+                        let name = path.to_string_lossy().replace('\\', "/");
+                        name.strip_prefix(WORKING_ENV_PREFIX)
+                            .map_or(name.clone(), str::to_owned)
+                    })
                 })
                 .collect(),
             resolution_directories: bundle

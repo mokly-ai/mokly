@@ -4,6 +4,7 @@
 
 pub mod bindings;
 pub mod bundle_outcomes;
+pub mod bundle_params;
 pub mod bundle_reply;
 mod bundle_reply_decode;
 pub mod bundle_store;

@@ -22,6 +22,7 @@ use crate::stylesheet_capture::{Capture, RecordingTree};
 use crate::stylesheet_class_maps::ClassMapCompiler;
 use crate::stylesheet_usage::BufferedUsage;
 use crate::stylesheet_watch;
+use crate::vite_base_env::WORKING_ENV_PREFIX;
 
 pub(crate) struct Compilation {
     pub(crate) bundle: Bundle,
@@ -124,6 +125,7 @@ impl RootCompiler for ViteRootCompiler {
                 .iter()
                 .map(|file| {
                     file.strip_prefix(INSTALLED_INPUT_PREFIX)
+                        .or_else(|| file.strip_prefix(WORKING_ENV_PREFIX))
                         .unwrap_or(file)
                         .to_owned()
                 })

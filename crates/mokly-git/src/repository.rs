@@ -64,6 +64,8 @@ pub trait Repository: Send + Sync {
     ) -> Result<String>;
     /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
+    /// List index entries matching trusted Git glob pathspecs, including paths absent on disk.
+    fn indexed_paths(&self, pathspecs: &[&str]) -> Result<Vec<RepoPath>>;
     /// Read regular working bytes and their Git-clean object identity.
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>>;
     /// Read confined regular working bytes without starting Git.

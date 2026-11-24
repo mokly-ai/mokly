@@ -4,7 +4,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { build } from "esbuild";
+import type { OnResolveArgs } from "esbuild";
 
+import { detail } from "./errors.js";
 import { bareSpecifier } from "./specifier.js";
 import { context } from "./vite-config-context.js";
 import { viteConfigError, viteConfigMap } from "./vite-config-errors.js";
@@ -27,6 +29,7 @@ export async function bundleViteConfig(
     {
       configFile: false,
       envDir: false,
+      css: { postcss: {} },
       root: directory,
       logLevel: "silent",
       cacheDir: directory,
@@ -55,6 +58,8 @@ export async function bundleViteConfig(
   try {
     compiled = await build({
       absWorkingDir: directory,
+      // Vite's diagnostic formatter maps absolute locations to logical names.
+      absPaths: ["log"],
       entryPoints: [file],
       outfile: "mokly-vite-config.js",
       bundle: true,
@@ -76,7 +81,7 @@ export async function bundleViteConfig(
               path: runtime,
               external: true,
             }));
-            builder.onResolve({ filter: /.*/ }, async (args) => {
+            const resolve = async (args: OnResolveArgs) => {
               if (args.kind === "entry-point" || args.pluginData === "resolved")
                 return;
               if (isBuiltin(args.path))
@@ -114,7 +119,12 @@ export async function bundleViteConfig(
               return lookup.paths.repositoryOwned(target)
                 ? { path: target }
                 : { path: pathToFileURL(target).href, external: true };
-            });
+            };
+            builder.onResolve({ filter: /.*/ }, (args) =>
+              resolve(args).catch((error: unknown) => ({
+                errors: [{ text: detail(error) }],
+              })),
+            );
             builder.onLoad({ filter: /.*/ }, (args) =>
               viteConfigSource(args.path),
             );

@@ -19,6 +19,7 @@ fn bundle() -> Call {
         plan: None,
         params: Bundle {
             vite: false,
+            vite_inputs: None,
             evaluation: None,
             entry_files: vec![],
             stories_files: vec![],

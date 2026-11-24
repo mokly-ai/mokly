@@ -527,8 +527,15 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   the server when roots, peers, the setup stamp, or metadata change. A change
   to a file that a stylesheet transform reported also replaces it.
   [`vite-setup.ts`](./vite-setup.ts) loads `vite.config.*` and starts Vite without
-  HTTP, file watching, hot reload, or dependency pre-bundling. `setupStamp`
-  digests the config, its imports, env files, and the configuration file list.
+  HTTP, file watching, hot reload, or dependency pre-bundling. `setupSnapshot`
+  digests the setup inputs: the config, its imports, the env files, the PostCSS
+  config candidates, the files of `rebuild` watch rules, and the configuration
+  file list. [`vite-setup-input.ts`](./vite-setup-input.ts) digests one
+  candidate, present or absent.
+  [`vite-postcss-lookup.ts`](./vite-postcss-lookup.ts) tracks the candidates of
+  Vite's PostCSS config lookup inside the side's roots.
+  [`vite-working-env.ts`](./vite-working-env.ts) routes the base side's reads of
+  untracked env files to the working tree while the setup loads.
 - [`vite-config.ts`](./vite-config.ts) loads the app's config in memory on both
   sides with Vite's default loader semantics. A function export receives `serve`
   and `development`. [`vite-config-bundle.ts`](./vite-config-bundle.ts) uses

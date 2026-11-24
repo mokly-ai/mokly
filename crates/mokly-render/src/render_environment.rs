@@ -114,8 +114,15 @@ pub(crate) fn derive(
             .expect("a CSS Modules class map contains only strings and string keys");
         class_map_digests.insert(path.clone(), digest(&bytes));
     }
-    let settings = serde_json::to_vec(&settings)
-        .expect("render environment settings contain only strings and string-keyed maps");
+    let setup_digest = compiled
+        .vite
+        .as_ref()
+        .and_then(|vite| vite.setup_digest.as_deref());
+    let settings = match setup_digest {
+        Some(digest) => serde_json::to_vec(&(&settings, digest)),
+        None => serde_json::to_vec(&settings),
+    }
+    .expect("render environment settings contain only strings and string-keyed maps");
     RenderEnvironment {
         environment: digest(&settings),
         resolution_digests,

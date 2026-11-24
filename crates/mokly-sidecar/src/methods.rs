@@ -8,6 +8,7 @@ use serde_json::Value;
 use ts_rs::TS;
 
 use crate::bindings::{Bindings, DisposeContext, EntryBinding, SlotInput};
+pub use crate::bundle_params::Bundle;
 use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
 use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
@@ -53,35 +54,6 @@ pub struct ModuleResolution {
     /// Ordered extension candidates.
     #[serde(default)]
     pub resolve_extensions: Vec<String>,
-}
-
-/// Inputs compiled into one unevaluated bundle.
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(rename = "BundleParams")]
-pub struct Bundle {
-    /// Opt-in project Vite compilation; omission preserves esbuild settings bytes.
-    #[serde(default, skip_serializing_if = "disabled")]
-    #[ts(optional, as = "Option<bool>")]
-    pub vite: bool,
-    /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
-    pub evaluation: Option<String>,
-    /// Entry module files.
-    pub entry_files: Vec<String>,
-    /// Optional consumer renderer module as a repository-relative path without `.` or `..` segments.
-    pub renderer: Option<String>,
-    /// Storybook files.
-    pub stories_files: Vec<String>,
-    /// Consumer resolution policy.
-    pub module_resolution: ModuleResolution,
-    /// Source checkout or extracted base root.
-    pub source_root: String,
-    /// Configuration directory relative to the side source root.
-    pub configuration_directory: String,
-    /// Physical repository roots whose local packages map into this side.
-    pub repository_roots: Vec<String>,
 }
 
 /// Request-local evidence capture policy, absent from persisted bundle settings.
@@ -241,7 +213,7 @@ pub struct Hello {
     pub timings: bool,
 }
 
-fn disabled(value: &bool) -> bool {
+pub(crate) fn disabled(value: &bool) -> bool {
     !value
 }
 

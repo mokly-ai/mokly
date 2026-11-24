@@ -1,10 +1,14 @@
 //! One bounded Git command in the validated checkout, without optional locks.
 
+use std::collections::BTreeSet;
 use std::ffi::OsString;
 
+use crate::changes::fields;
 use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request};
 use crate::error::Result;
+use crate::identity::RepoPath;
 use crate::repository::GitRepository;
+use crate::tree::candidate;
 
 impl GitRepository {
     pub(crate) fn command(&self, args: &[&str], stdin: Vec<u8>, limit: usize) -> Result<Vec<u8>> {
@@ -29,6 +33,26 @@ impl GitRepository {
         let mut args = vec!["-c", "core.fsmonitor=false", "ls-files"];
         args.extend_from_slice(flags);
         Ok(self.runner.run(&self.tree_request(&args))?.stdout)
+    }
+
+    pub(crate) fn index_paths(&self, pathspecs: &[&str]) -> Result<Vec<RepoPath>> {
+        let mut args = vec![
+            "-c",
+            "core.fsmonitor=false",
+            "ls-files",
+            "--cached",
+            "-z",
+            "--",
+        ];
+        args.extend_from_slice(pathspecs);
+        let mut request = self.tree_request(&args);
+        request.args.retain(|arg| arg != "--literal-pathspecs");
+        let output = self.runner.run(&request)?.stdout;
+        let paths = fields(&output)?
+            .filter_map(candidate)
+            .map(RepoPath::parse)
+            .collect::<Result<BTreeSet<_>>>()?;
+        Ok(paths.into_iter().collect())
     }
 
     /// Own lazy-fetch helpers whenever this repository has a promisor remote.

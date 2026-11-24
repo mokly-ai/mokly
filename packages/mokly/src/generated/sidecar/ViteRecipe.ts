@@ -9,6 +9,10 @@ export type ViteRecipe = {
  */
 version: string,
 /**
+ * Digest of all setup inputs shared by the side's render keys.
+ */
+setupDigest?: string,
+/**
  * Virtual entry URL used by the module runner.
  */
 entry: string,

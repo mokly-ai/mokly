@@ -26,6 +26,7 @@ fn negative_zero_survives_definitions_and_render_requests() {
             plan: None,
             params: Bundle {
                 vite: false,
+                vite_inputs: None,
                 evaluation: None,
                 entry_files: vec!["negative-zero.mockup.tsx".into()],
                 renderer: None,
