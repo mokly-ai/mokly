@@ -2203,7 +2203,8 @@ Depends on: every other milestone
 
 - [ ] Run the released package against a new `react-vite` Storybook project
       with and without the Vite adapter.
-- [ ] Split `crates/mokly-graph/README.md`, which passes 300 lines, after
+- [x] Split `crates/mokly-graph/README.md`, which passes 300 lines, after
       tracks C and D both merge into the primary branch,
       `calummoore/mokly-storybook-integration`. Do not split it before.
       Reason: both tracks change that README.
+      Branch: `conductor/storybook-support-d-vite-adapter`.
