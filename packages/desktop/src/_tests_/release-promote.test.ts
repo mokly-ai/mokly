@@ -4,6 +4,8 @@ import test from "node:test";
 import { promoteRelease } from "../../scripts/release-promote.mjs";
 
 const tag = "v1.2.3";
+const latestMarkAdvice =
+  "The release can already be a full release. Rerun the promote job to check the latest mark.";
 
 function fixture() {
   const identity = {
@@ -164,7 +166,10 @@ for (const [name, change, reason, calls] of rejections) {
       promoteRelease(data.manifests, data.github, tag),
       (error: Error) => {
         assert.match(error.message, reason);
-        assert.match(error.message, /A draft stays a draft and is not latest/);
+        assert.match(
+          error.message,
+          / The promotion did not change the release\.$/,
+        );
         return true;
       },
     );
@@ -175,10 +180,21 @@ for (const [name, change, reason, calls] of rejections) {
 test("promotion fails when GitHub reports a different latest release after the update", async () => {
   const { manifests, github, latest, calls } = fixture();
   latest.id = 8;
-  await assert.rejects(
-    promoteRelease(manifests, github, tag),
-    /v1\.2\.3 is not GitHub's latest release/,
-  );
+  await assert.rejects(promoteRelease(manifests, github, tag), {
+    message: `v1.2.3 is not GitHub's latest release. GitHub returned release 8 as latest, expected 7. ${latestMarkAdvice}`,
+  });
+  assert.deepEqual(calls, ["release 7", "assets 7", "promote 7", "latest"]);
+});
+
+test("a latest lookup network failure after the PATCH reports how to verify the full release", async () => {
+  const { manifests, github, calls } = fixture();
+  github.latest = async () => {
+    calls.push("latest");
+    throw new TypeError("fetch failed");
+  };
+  await assert.rejects(promoteRelease(manifests, github, tag), {
+    message: `fetch failed. Could not verify that v1.2.3 is GitHub's latest release. ${latestMarkAdvice}`,
+  });
   assert.deepEqual(calls, ["release 7", "assets 7", "promote 7", "latest"]);
 });
 

@@ -9,7 +9,7 @@ import { parse } from "yaml";
 import {
   publishRelease,
   releaseArtifacts,
-  releaseManifestFilename,
+  writeReleaseManifest,
 } from "./release-assets.mjs";
 import { githubClient } from "./release-github.mjs";
 import { AppendOnlyPublisher } from "./release-publisher.mjs";
@@ -106,19 +106,14 @@ if (import.meta.main) {
         tag,
       );
       const { id } = await publisher._release.value;
-      /** @type {import("./release-assets.mjs").ReleaseManifest} */
-      const manifest = {
+      await writeReleaseManifest(output, {
         owner: publish.owner,
         repo: publish.repo,
         tag,
         release: id,
         platform: process.platform === "darwin" ? "macos" : "linux",
         assets,
-      };
-      await writeFile(
-        join(output, releaseManifestFilename),
-        `${JSON.stringify(manifest, null, 2)}\n`,
-      );
+      });
     }
     return 0;
   };

@@ -1,10 +1,26 @@
-import { readdir, stat } from "node:fs/promises";
+import { readdir, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 /** @typedef {{name: string, size: number}} ReleaseAsset */
 /** @typedef {{owner: string, repo: string, tag: string, release: number, platform: "macos" | "linux", assets: ReleaseAsset[]}} ReleaseManifest */
 
 export const releaseManifestFilename = "desktop-release-manifest.json";
+
+/**
+ * Save the platform's verified inventory for the promotion job.
+ * @param {string} directory
+ * @param {ReleaseManifest} manifest
+ */
+export async function writeReleaseManifest(
+  directory,
+  { owner, repo, tag, release, platform, assets },
+) {
+  const manifest = { owner, repo, tag, release, platform, assets };
+  await writeFile(
+    join(directory, releaseManifestFilename),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+}
 
 /** Every failed publish keeps existing assets and gives the same recovery path. */
 export function releaseFailure(reason) {

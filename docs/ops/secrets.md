@@ -183,27 +183,20 @@ mock-provider tests cannot prove provider authentication.
 
 ### Desktop release secrets
 
-The desktop release job of
+The release job and the promotion job of the desktop release workflow use the
+`desktop-release` GitHub environment.
 [Desktop distribution](../protocol/cloud/desktop-distribution.md#release-secrets)
-reads six secrets of the `desktop-release` GitHub environment. The promotion
-job of the same workflow reads only `DESKTOP_RELEASES_TOKEN` there. The
-environment admits only the `main` branch and has no required reviewer,
-because the merge of the desktop release pull request approves the release.
-The jobs read none of the secrets from Secret Manager, none enters a workload
-or a Terraform job, and pull requests, branch dispatches and fork builds
-receive none of them.
+says which step receives each secret. The environment admits only the `main`
+branch and has no required reviewer, because the merge of the desktop release
+pull request approves the release. The jobs read none of the secrets from
+Secret Manager, and none enters a workload or a Terraform job.
 
 The workflow writes the certificate and the API key to mode-0600 temporary
-files for electron-builder and never places a value on a command line.
-Only the release job's publishing steps and the promotion job receive these
-values. The packaging script replaces `CSC_LINK` and `APPLE_API_KEY` with
-their temporary file paths in the builder environment and removes both files
-after success or failure. It passes `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`.
-The release helper reads it for the pinned publisher, the append-only uploads
-and the asset check of each platform. The release helper also reads it to
-check the complete draft and to make that checked draft the latest release.
-Contents write on `mokly-ai/mokly-desktop` covers that promotion, so the
-token keeps its scope.
+files for electron-builder and never places a value on a command line. The
+packaging script replaces `CSC_LINK` and `APPLE_API_KEY` with their temporary
+file paths in the builder environment and removes both files after success or
+failure. The Contents write scope of `DESKTOP_RELEASES_TOKEN` covers every
+request of both jobs, so the token needs no other scope.
 
 A repository administrator creates the environment once and limits it to
 `main`:

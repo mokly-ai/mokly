@@ -27,18 +27,20 @@ export const releaseInventory = {
 };
 
 const expectedManifests = "Expected one macOS manifest and one Linux manifest.";
+const latestMarkAdvice =
+  "The release can already be a full release. Rerun the promote job to check the latest mark.";
 
 /** @param {unknown} error */
 function message(error) {
-  return error instanceof Error
-    ? error.message
-    : "Desktop release check failed.";
+  const text = error instanceof Error ? error.message.trimEnd() : "";
+  if (!text) return "Desktop release check failed.";
+  return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
 /** @param {unknown} error */
-function draftFailure(error) {
+function beforePublicationFailure(error) {
   return new Error(
-    `${message(error)} A draft stays a draft and is not latest.`,
+    `${message(error)} The promotion did not change the release.`,
     { cause: error },
   );
 }
@@ -113,7 +115,7 @@ async function checkRelease(manifests, github, tag) {
 export async function promoteRelease(manifests, github, tag) {
   const { id, draft } = await checkRelease(manifests, github, tag).catch(
     (error) => {
-      throw draftFailure(error);
+      throw beforePublicationFailure(error);
     },
   );
   let latest;
@@ -122,13 +124,13 @@ export async function promoteRelease(manifests, github, tag) {
     latest = await github.latest();
   } catch (error) {
     throw new Error(
-      `${message(error)} Could not verify that ${tag} is GitHub's latest release.`,
+      `${message(error)} Could not verify that ${tag} is GitHub's latest release. ${latestMarkAdvice}`,
       { cause: error },
     );
   }
   if (latest.id !== id)
     throw new Error(
-      `${tag} is not GitHub's latest release. GitHub returned release ${latest.id} as latest, expected ${id}.`,
+      `${tag} is not GitHub's latest release. GitHub returned release ${latest.id} as latest, expected ${id}. ${latestMarkAdvice}`,
     );
 }
 
@@ -216,7 +218,7 @@ if (import.meta.main) {
       process.argv[2],
       process.env.GH_TOKEN,
     ).catch((error) => {
-      throw draftFailure(error);
+      throw beforePublicationFailure(error);
     });
     await promoteRelease(manifests, github, tag);
     console.log(`Desktop release ${tag} is latest.`);

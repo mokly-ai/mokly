@@ -31,9 +31,10 @@ release here is the npm release, which holds no desktop files.
 
 Every desktop release becomes a full GitHub release, and GitHub marks it as
 latest. A release becomes latest only after the check of the complete assets
-of both platforms. A failed or partial release stays a draft and never
-becomes latest. The latest download address of each asset therefore never
-breaks: `https://github.com/mokly-ai/mokly-desktop/releases/latest/download/{name}`.
+of both platforms. A release whose platform job or asset check fails stays a
+draft and never becomes latest, as [Drafts And Promotion](#drafts-and-promotion)
+says. The latest download address of each asset therefore never breaks:
+`https://github.com/mokly-ai/mokly-desktop/releases/latest/download/{name}`.
 
 These fixed addresses give download links a stable target. A version record
 in the site source was rejected, because a person must update it after each
@@ -123,33 +124,32 @@ A final promotion runs only after both platform jobs pass. It requires that
 the release has the tag `v<version>` of the shell's version. It requires
 exactly the assets that [Latest Release](#latest-release) lists. Each asset
 must have the size that its platform job recorded and the `uploaded` state.
-The promotion then makes the draft a full release that GitHub marks as
-latest. It then checks that GitHub's latest release is that release.
+One publication request then makes the draft a full release marked latest.
+The promotion then checks that GitHub's latest release is that release.
 
-A failed platform job skips the promotion, so the draft never becomes latest.
-A rerun of the failed jobs repairs a run whose failed platform uploaded
-nothing, and it also runs the skipped promotion. A rerun of the promotion does
-not change a release that is already full, but it checks the latest mark
-again. A partly uploaded release stays a draft and needs a new version from
-the next release pull request. A rerun never repairs uploaded assets.
+Only the publication request of the promotion makes a release public. A
+failure before that request, such as a failed platform job or asset check,
+keeps the release a draft. A failure of the request, or after it, can leave a
+full release. A rerun of the promotion does not change a full release, but it
+checks the latest mark again. A rerun of the failed jobs repairs a run whose
+failed platform uploaded nothing, and it also runs the skipped promotion. A
+partly uploaded release stays a draft and needs a new version from the next
+release pull request. A rerun never repairs uploaded assets.
 
 ### Release Secrets
 
-The release job reads `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`,
-`CSC_LINK`, `CSC_KEY_PASSWORD` and `DESKTOP_RELEASES_TOKEN` from the
+The platform jobs and the promotion read the desktop release secrets from the
 `desktop-release` GitHub environment, which admits only `main`.
 [Secrets](../../ops/secrets.md) records their owners and rotation. Repository
 secrets were rejected, because a workflow on any branch can read them, and the
-signing credentials decide which builds install as an update. Fork builds and
-pull requests receive none of them.
+signing credentials decide which builds install as an update. Pull requests,
+manual dispatches and fork builds receive none of them.
 
-Only the publishing steps and the promotion receive secrets. The promotion
-runs in the same environment, receives only `DESKTOP_RELEASES_TOKEN` and runs
-no third-party package code. The macOS packaging script writes the
-certificate and API key to private temporary files, passes their paths to
-electron-builder through its environment, and removes the files after success
-or failure. The publisher and the promotion read `DESKTOP_RELEASES_TOKEN` as
-`GH_TOKEN`.
+Only three steps receive these secrets. Each receives `DESKTOP_RELEASES_TOKEN`
+as `GH_TOKEN`. The macOS step that signs, notarizes and publishes also receives
+`CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_API_KEY`, `APPLE_API_KEY_ID` and
+`APPLE_API_ISSUER`. The Linux publishing step and the promotion step receive
+only that token. The promotion job runs no third-party package code.
 
 ### Updates In The App
 

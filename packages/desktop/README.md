@@ -208,18 +208,22 @@ artifact `desktop-release-macos` or `desktop-release-linux`. Uploaded assets
 are never replaced or deleted.
 
 The `promote` job needs both platform jobs. It runs in the `desktop-release`
-environment, receives only `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`, and installs
-no npm package. It reads both manifest artifacts. It then requires one
-release, the tag `v<version>` of `package.json`, exactly the fixed names of
-both platforms, each recorded size and the `uploaded` state. It makes the
-draft a full release marked latest, then checks that GitHub's latest release
-has the same id. When the release is already full, it changes nothing and
-checks the latest mark again.
+environment and installs no npm package. It reads both manifest artifacts. It
+then requires one release, the tag `v<version>` of `package.json`, exactly the
+fixed names of both platforms, each recorded size and the `uploaded` state. It
+makes the draft a full release marked latest, then checks that GitHub's latest
+release has the same id.
 
 Rerun the failed jobs when the failed platform uploaded nothing. The rerun also
 runs the skipped `promote` job. After a partial upload, the draft never becomes
 latest. Release a new version through the next release pull request. Do not
 delete assets or rerun an old release to repair it.
+
+When the `promote` job fails, rerun the failed jobs. The promotion changes
+nothing in a release that is already full, and it checks the latest mark
+again.
+[Drafts and promotion](../../docs/protocol/cloud/desktop-distribution.md#drafts-and-promotion)
+says which failures can leave a full release.
 
 Both modes derive origins from `MKC_DOMAIN` and `MKC_CATALOGUE_BASE_DOMAIN`
 repository variables through the deployment domain helpers. The release

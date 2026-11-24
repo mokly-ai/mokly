@@ -3,7 +3,7 @@
 - **Severity:** High. **Effort:** Small (estimate). **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-10-30, from release finding 11, which the open PR #58 (`calummoore/desktop-release-alpha1-plan`) recorded on 2026-10-26 in the deleted `plans/desktop-app-shell.md`.
-- **Location:** `docs/ops/secrets.md:226-227`, the `CSC_LINK` and `CSC_KEY_PASSWORD` rows of the desktop release secrets table.
+- **Location:** `docs/ops/secrets.md:219-220`, the `CSC_LINK` and `CSC_KEY_PASSWORD` rows of the desktop release secrets table.
 - **Reason:** The fix changes the rotation step on `main`, and the source waits for the user's approval.
 - **Checked:** 2026-10-31, at commit `f568853e`. The choice is still open. The `CSC_LINK` rotation still ends with "then revoke the old certificate", and Apple's current guidance confirms the effect.
 - **Category:** Docs or spec.
@@ -25,12 +25,12 @@
 - **Impact if no action:** An operator who follows the runbook at the next rotation, before 2027-11-25, stops every installed Mokly macOS app. The apps cannot launch, so their updater cannot deliver a fix.
 - **Root question:** How does a certificate rotation keep every shipped macOS app installable and running?
 - **Options:**
-  - **A.** Change the last step of the `CSC_LINK` rotation to "let the old certificate expire". It changes the rotation step in `docs/ops/secrets.md:226`. Effort: Small.
+  - **A.** Change the last step of the `CSC_LINK` rotation to "let the old certificate expire". It changes the rotation step in `docs/ops/secrets.md:219`. Effort: Small.
   - **B.** Do A. Also add a separate step for a compromised key: revoke the old certificate only then, and warn that revocation stops every app it signed. Effort: Small.
 - **Left out:** Keep the revoke step. It stops every shipped app at each rotation, which fails the goal.
 - **Wider fix:** None found. The other rows of the table revoke keys and tokens, not a certificate that signs shipped packages.
 - **Previous examples:** None found.
 - **Recommendation:** A. Apple's page confirms that apps signed with a valid certificate keep running after it expires, and that revocation stops them. B also covers a compromised key. The user has chosen neither.
-- **Action:** ask the user, because condition 1 holds: A changes the rotation step in force at `docs/ops/secrets.md:226`, and the source waits for the user's approval.
+- **Action:** ask the user, because condition 1 holds: A changes the rotation step in force at `docs/ops/secrets.md:219`, and the source waits for the user's approval.
 
 Source: [release finding 11](https://github.com/mokly-ai/mokly-cloud/blob/a8997fb22dab7ce22409b966008cd7f9eb075043/plans/desktop-app-shell.md?plain=1#L738-L743) on the branch of PR #58.

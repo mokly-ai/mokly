@@ -1,0 +1,33 @@
+# Late promotion can move latest backward
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from review finding 1 of the branch `calummoore/desktop-releases-become-latest-releases-clkn`.
+- **Location:** `packages/desktop/scripts/release-promote.mjs`, the function `promoteRelease`. `packages/desktop/scripts/release-github.mjs`, the `promote` and `latest` requests. The sections "Latest Release" and "Drafts And Promotion" of `docs/protocol/cloud/desktop-distribution.md`.
+- **Reason:** Every option adds a refusal or a release behaviour that no requirement covers, so the owner chooses.
+- **Category:** Product bug.
+
+- **Terms:**
+  - **Draft:** A GitHub release that only collaborators can see. It is never GitHub's latest release.
+  - **Promotion:** The `promote` job of `.github/workflows/desktop-release.yml`. It checks the complete assets of both platforms, then sends one `PATCH /releases/{id}` with `draft: false`, `prerelease: false` and `make_latest: "true"`, then checks that GitHub's latest release has the same id.
+  - **Latest release:** The release that GitHub serves at `https://github.com/mokly-ai/mokly-desktop/releases/latest/download/{name}`. New desktop builds set `allowPrerelease = false`, so their updater also follows it.
+- **Background:**
+  - On 2026-11-24 the owner chose full desktop releases: each release becomes the latest release only after the complete asset check of both platforms (Decision 1 = C). A later download page links the fixed latest addresses.
+  - GitHub lets a person rerun a failed workflow run for 30 days. The release workflow runs one release at a time, and reruns join the same queue.
+  - `make_latest: "true"` marks the release as latest with no version check, as GitHub's "Update a release" docs say.
+  - A review probe with a simulated GitHub made `v0.3.0` latest, then promoted a `v0.2.0` draft. The promotion made `v0.2.0` latest and reported success.
+  - electron-updater 6.8.11 never installs an older version, so installed apps stay on the newer version. But the fixed download addresses serve the older version, and apps below the newer version can miss it until the next release.
+  - GitHub returns 404 for `GET /releases/latest` until the first full release exists. Any version check must treat that 404 as "no latest release".
+- **Problem:** Suppose the promotion of `v0.2.0` fails before publication, and `v0.3.0` ships. A later rerun of the `v0.2.0` promotion makes `v0.2.0` the latest release.
+- **Impact if no action:** A late rerun of an old release run moves the download page and the updater back to the older version.
+- **Root question:** Which release should users receive when an earlier release finishes after a newer version shipped?
+- **Options:**
+  - **A.** Before the publication request, read GitHub's latest release. When its tag is a higher version than this release, do not publish. Name the newer release in the message. Treat a 404 as "no latest release". The owner chooses whether the job then fails or ends with a warning. Effort: Small.
+  - **B.** Publish the complete older draft with `make_latest: "false"`, so the newer release stays latest. Older apps that read the release feed, such as `0.1.0`, can still see the older release first. Effort: Medium.
+  - **C.** Process promotions in version order across reruns, with an explicit record when a version is abandoned. An unfinished draft can then delay the next release. Effort: Large.
+  - **D.** After each promotion, keep GitHub's latest release on the highest stable full release. Publish an older draft with `make_latest: "false"`, then mark the highest release as latest when it differs. This also undoes a mark that a person set on purpose. Effort: Medium.
+- **Left out:** A runbook check before each rerun depends on each operator. GitHub's `make_latest: "legacy"` uses the commit dates of the tags, and all tags of `mokly-ai/mokly-desktop` name the same commit, so its result is not clear.
+- **Wider fix:** A. The only request that moves the latest mark then depends on the version order, so every late path is covered.
+- **Previous examples:** None found.
+- **Recommendation:** A, with a warning, not a failure. A newer version holds every change of the older one, so a private older draft loses nothing for users. A warning follows the rule "warn and continue", because the latest release stays correct.
+- **Action:** ask the user, because A adds a refusal for a complete draft, and B and D add a release behaviour that no requirement covers.

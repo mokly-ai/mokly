@@ -136,11 +136,11 @@ test("lookup and promotion errors fail without leaking the response body", async
     "token-fixture",
     async () => new Response("sensitive fixture", { status: 403 }),
   );
-  const check = (error: Error) => {
-    assert.match(error.message, /HTTP 403.*new package version/s);
-    assert.doesNotMatch(error.message, /sensitive fixture/);
-    return true;
-  };
-  await assert.rejects(client.assets(7), check);
-  await assert.rejects(client.promote(7), check);
+  const lookupError = { message: "GitHub lookup returned HTTP 403." };
+  await assert.rejects(client.release(7), lookupError);
+  await assert.rejects(client.assets(7), lookupError);
+  await assert.rejects(client.latest(), lookupError);
+  await assert.rejects(client.promote(7), {
+    message: "GitHub promotion returned HTTP 403.",
+  });
 });

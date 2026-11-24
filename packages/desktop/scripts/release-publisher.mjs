@@ -14,6 +14,7 @@ export class AppendOnlyPublisher extends GitHubPublisher {
    * @param {Pick<ReturnType<typeof import("./release-github.mjs").githubClient>, "upload">} github
    */
   constructor(info, version, github) {
+    // Drafts return before the publisher's time check. The release rules forbid the bypass.
     delete process.env.EP_GH_IGNORE_TIME;
     delete process.env.EP_PRE_RELEASE;
     delete process.env.EP_PRELEASE;

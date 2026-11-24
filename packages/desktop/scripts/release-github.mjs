@@ -12,7 +12,7 @@ export function isReleaseId(value) {
 
 /** @param {number} id */
 function releasePath(id) {
-  if (!isReleaseId(id)) throw releaseFailure("Invalid GitHub release ID");
+  if (!isReleaseId(id)) throw new Error("Invalid GitHub release ID.");
   return `/releases/${id}`;
 }
 
@@ -60,9 +60,9 @@ export function githubClient(
       },
     );
     if (!response.ok)
-      throw releaseFailure(`GitHub lookup returned HTTP ${response.status}`);
+      throw new Error(`GitHub lookup returned HTTP ${response.status}.`);
     return response.json().catch(() => {
-      throw releaseFailure("GitHub lookup returned invalid JSON");
+      throw new Error("GitHub lookup returned invalid JSON.");
     });
   };
   return {
@@ -75,14 +75,14 @@ export function githubClient(
         typeof release.draft !== "boolean" ||
         typeof release.prerelease !== "boolean"
       )
-        throw releaseFailure("GitHub returned invalid release data");
+        throw new Error("GitHub returned invalid release data.");
       const { tag_name, draft, prerelease } = release;
       return { id: release.id, tag_name, draft, prerelease };
     },
     async latest() {
       const release = await get("/releases/latest");
       if (!hasReleaseId(release))
-        throw releaseFailure("GitHub returned an invalid latest release ID");
+        throw new Error("GitHub returned an invalid latest release ID.");
       return { id: release.id };
     },
     /** @param {number} id */
@@ -100,12 +100,10 @@ export function githubClient(
           }),
         },
       ).catch(() => {
-        throw releaseFailure("GitHub promotion request failed");
+        throw new Error("GitHub promotion request failed.");
       });
       if (!response.ok)
-        throw releaseFailure(
-          `GitHub promotion returned HTTP ${response.status}`,
-        );
+        throw new Error(`GitHub promotion returned HTTP ${response.status}.`);
       await response.arrayBuffer();
     },
     /**
@@ -127,7 +125,7 @@ export function githubClient(
               typeof asset.state === "string",
           )
         )
-          throw releaseFailure("GitHub returned invalid asset data");
+          throw new Error("GitHub returned invalid asset data.");
         assets.push(...batch);
         if (batch.length < 100) return assets;
       }
