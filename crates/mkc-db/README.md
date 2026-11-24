@@ -34,6 +34,10 @@ migrations; scripts and fixtures create data through the API after migrating.
 When you edit an unmerged migration that a local database has already
 applied, use a fresh disposable database.
 
+`mkc_live_notice(project, kind, id, sequence)` lets a trigger send a live
+notice in its write transaction. Postgres delivers the notice after commit.
+See [Live channel](../../docs/protocol/cloud/live-channel.md#notices).
+
 ## Quick Start
 
 ```rust
@@ -95,6 +99,7 @@ the existing rows are preserved.
 - [schema/mod.rs](./src/schema/mod.rs) — the generated Diesel schema and the column reference for every table; `scripts/cloud/db-schema.sh` regenerates it with `diesel print-schema` into the fifteen table groups of the root `diesel.toml`, each file below the line cap.
 - [desktop grant schema](./src/schema/desktop_grant.rs) — the independent `desktop_grants` group, generated with the separate `diesel print-schema` command above.
 - [migrations/202611061200_desktop_grants](./migrations/202611061200_desktop_grants/) — desktop sign-in digests, verifier challenges, destinations, inherited session deadlines and retained consumption times, with expiry and user indexes and a reversing table drop.
+- Creates and drops the shared `mkc_live_notice` function. [Live notice migration](./migrations/202611251200_live_notice/)
 - [build schema](./src/schema/build.rs) and [build output schema](./src/schema/build_output.rs) — `builds`, and the `build_upload_grants`, `build_log_chunks` and `build_checks` rows that cascade with their build.
 - [publication schema](./src/schema/publication.rs), [publication event schema](./src/schema/publication_events.rs) and [screen selection schema](./src/schema/publication_screens.rs) — `publications`, `publication_files`, `blobs`, `publication_events`, `catalogue_grants`, `publication_branch_aliases` and `publication_screen_views`; expiry keeps the publication row and `publication_events` and deletes the files, grants and screen views that reference the publication.
 - [slug schema](./src/schema/slug.rs) — the workspace and project slug claim registries.

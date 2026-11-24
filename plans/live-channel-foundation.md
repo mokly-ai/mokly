@@ -159,6 +159,11 @@ My calls, 2026-11-25, after a check of the code:
   shows each time its socket opens, the first open included. A change can
   commit between the first REST read and the first open, and its notice then
   reaches no socket. The cost is one more read for each page load.
+- **The smoke test runs locally before the merge.** A PR preview runs one
+  API replica, and the chart refuses builds in a PR preview. `main-preview`
+  has two replicas and builds, but it deploys only after the merge. So the
+  required smoke test runs two local API replicas on one Postgres, and the
+  `main-preview` smoke test is post-merge work, as the `plans` skill says.
 - **Docs that the change makes stale.** The
   [viewer builds](../docs/protocol/cloud/viewer-builds.md) doc states the
   card's 3-second poll, and the [viewer](../docs/protocol/cloud/viewer.md) doc
@@ -211,11 +216,11 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Add the migration with `mkc_live_notice` and its `down.sql`.
-- [ ] Create `mkc-live-pg` with the listen and send connections, both
+- [x] Add the migration with `mkc_live_notice` and its `down.sql`.
+- [x] Create `mkc-live-pg` with the listen and send connections, both
       channels, one transaction for each tick, the split and the listener
       reconnect with resync.
-- [ ] Test two hubs on the test Postgres: a trigger notice and a client event
+- [x] Test two hubs on the test Postgres: a trigger notice and a client event
       reach the sockets of the other hub.
 
 ## Milestone 5: Infrastructure
@@ -245,8 +250,10 @@ Depends on: 4
 
 Depends on: every other milestone
 
-- [ ] Smoke-test a build on a preview with two API replicas: its steps show
-      without the 3-second wait, and a stopped socket falls back to polling.
+- [ ] Smoke-test a build locally with two API replicas on one Postgres: the
+      build runs on one replica, the app's socket is on the other, its steps
+      show without the 3-second wait, and a stopped socket falls back to
+      polling.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
@@ -262,5 +269,8 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
+- [ ] Smoke-test a build on `main-preview`, which runs two API replicas and
+      builds: its steps show without the 3-second wait, and a stopped socket
+      falls back to polling.
 - [ ] Watch the Cloud SQL notice rate and the connection count in production
       for a week after the merge.

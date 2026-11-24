@@ -9,7 +9,6 @@ use mkc_billing::seats::worker::SeatReconciler;
 use mkc_billing::worker::worker::BillingDeliveryWorker;
 use mkc_config::settings::Settings;
 use mkc_domain::client_origins::AdmittedOrigins;
-use mkc_live::memory::MemoryRelay;
 use mkc_live_interface::relay::LiveRelay;
 use mkc_publications::build_reconciliation::BuildReconciler;
 use mkc_publications::build_worker::service::BuildWorker;
@@ -65,8 +64,8 @@ pub struct ConfiguredApplicationFactory {
     pub runtime: Arc<dyn Runtime>,
     /// Build provider factory; tests inject a runner without E2B access.
     pub builds: Arc<dyn BuildProviderFactory>,
-    /// Relay injected into the live hub when the application starts serving.
-    pub live_relay: Arc<dyn LiveRelay + Send + Sync>,
+    /// Override the Postgres relay when embedding the API.
+    pub live_relay: Option<Arc<dyn LiveRelay + Send + Sync>>,
     /// Monotonic clock for live socket deadlines.
     pub live_clock: Arc<dyn LiveClock>,
 }
@@ -99,7 +98,7 @@ impl Default for ConfiguredApplicationFactory {
             billing: Arc::new(SystemBillingProviderFactory),
             runtime: Arc::new(SystemRuntime),
             builds: Arc::new(SystemBuildProviderFactory),
-            live_relay: Arc::new(MemoryRelay::default()),
+            live_relay: None,
             live_clock: Arc::new(TokioLiveClock),
         }
     }

@@ -44,8 +44,9 @@ mkc-github-interface.workspace = true
 mkc-github.workspace = true
 mkc-email-interface.workspace = true
 mkc-email-postmark.workspace = true
-mkc-live = { workspace = true, features = ["test-support"] }
+mkc-live = { workspace = true }
 mkc-live-interface = { workspace = true, features = ["openapi"] }
+mkc-live-pg = { workspace = true }
 internal-error.workspace = true
 axum = { version = "0.8.9", features = ["ws"] }
 tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time"] }
@@ -73,6 +74,7 @@ tungstenite = { version = "0.29.0", default-features = false }
 workspace = true
 
 [dev-dependencies]
+mkc-live = { workspace = true, features = ["test-support"] }
 mkc-publications = { workspace = true, features = ["test-support"] }
 mkc-test-pg = { workspace = true }
 mkc-db = { workspace = true, features = ["unimock"] }

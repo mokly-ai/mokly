@@ -58,6 +58,7 @@ mkc-github-double = { path = "crates/mkc-github-double" }
 mkc-github-interface = { path = "crates/mkc-github-interface" }
 mkc-live = { path = "crates/mkc-live" }
 mkc-live-interface = { path = "crates/mkc-live-interface" }
+mkc-live-pg = { path = "crates/mkc-live-pg" }
 mkc-mokly-contract = { path = "crates/mkc-mokly-contract" }
 mkc-publications = { path = "crates/mkc-publications" }
 mkc-store-interface = { path = "crates/mkc-store-interface" }

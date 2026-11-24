@@ -21,7 +21,7 @@ use crate::router::{RouterBuilder, RouterFactory};
 impl Application for ApiApplication {
     fn serve(&self) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
         Box::pin(async {
-            let live = self.live.start()?;
+            let live = self.live.start(&self.settings.database_url).await?;
             let router = self.build_router(live.clone())?;
             let listener = TcpListener::bind(self.settings.bind)
                 .await
@@ -44,7 +44,7 @@ impl Application for ApiApplication {
         shutdown: Pin<Box<dyn Future<Output = ()> + Send>>,
     ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>> {
         Box::pin(async move {
-            let live = self.live.start()?;
+            let live = self.live.start(&self.settings.database_url).await?;
             let router = self.build_router(live.clone())?;
             self.serve_router(listener, router, live, shutdown).await
         })

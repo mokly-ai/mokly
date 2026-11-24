@@ -48,10 +48,13 @@ is the contract. Client failures (4xx) log at warn and internal or unavailable
 failures (5xx) at error, each correlated with the echoed `X-Request-ID`.
 
 `GET /v1/live/projects/{projectId}` opens a project WebSocket for an authorized
-member. The API starts one hub with an injected relay when it begins serving.
-The default relay connects sockets within the process. On SIGTERM or Ctrl-C
-the hub signals close code 1001, and the server waits for the upgraded sockets
-to finish during graceful shutdown. [Live channel](../../docs/protocol/cloud/live-channel.md)
+member. The API starts one hub with the Postgres relay when it begins serving.
+Each replica opens two dedicated relay connections on `MKC_DATABASE_URL`, one
+to listen and one to send. The replica also has eight query connections and
+one migration readiness connection. Tests can inject an in-memory relay.
+On SIGTERM or Ctrl-C, the hub signals close code 1001. The server waits for
+the upgraded sockets to finish during graceful shutdown.
+[Live channel](../../docs/protocol/cloud/live-channel.md)
 
 The platform service runs each command in one transaction and executes its
 recorded effects, such as the invitation mail, after the commit. Workspace
@@ -366,7 +369,7 @@ setting or test detection that selects the fake runner. The
 - [contract/metadata.rs](./src/contract/metadata.rs) — derives deferred operation markers from `Operation::implemented()` after the area merges.
 - [contract/builds.rs](./src/contract/builds.rs) — the five cloud build contracts, including member-only reads with anonymous `not-found` transport.
 - The project WebSocket operation and message components. [contract/live.rs](./src/contract/live.rs)
-- WebSocket admission, hub composition, and tracking of upgraded sockets. [live/handler.rs](./src/live/handler.rs)
+- WebSocket admission, hub and Postgres relay composition, and tracking of upgraded sockets. [live/handler.rs](./src/live/handler.rs)
 - Read-only session and project access checks. [live/access.rs](./src/live/access.rs)
 - Socket message delivery, keepalive, and close codes. [live/socket.rs](./src/live/socket.rs)
 - `src/contract/deferred/` — request and response types for comment and approval operations that return 503 until implemented.

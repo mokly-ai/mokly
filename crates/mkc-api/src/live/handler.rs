@@ -13,6 +13,7 @@ use mkc_domain::ids::ProjectId;
 use mkc_live::hub::{LiveHub, ReplicaHub};
 use mkc_live::limits::MAX_CLIENT_MESSAGE_BYTES;
 use mkc_live_interface::relay::{LiveRelay, ReplicaId};
+use mkc_live_pg::relay::PostgresRelay;
 use tokio_util::sync::CancellationToken;
 use tokio_util::task::TaskTracker;
 use uuid::Uuid;
@@ -38,14 +39,22 @@ pub(crate) trait LiveHandler: Send + Sync {
 pub(crate) struct LiveComposition {
     pub(crate) access: Arc<dyn SocketAccess>,
     pub(crate) clock: Arc<dyn LiveClock>,
-    pub(crate) relay: Arc<dyn LiveRelay + Send + Sync>,
+    pub(crate) relay: Option<Arc<dyn LiveRelay + Send + Sync>>,
 }
 
 impl LiveComposition {
-    pub(crate) fn start(&self) -> Result<Arc<LiveServer>> {
+    pub(crate) async fn start(&self, database_url: &str) -> Result<Arc<LiveServer>> {
         let capacity = NonZeroUsize::new(OUTBOUND_CAPACITY)
             .ok_or_else(|| ApiError::internal_message("live outbound queue capacity is zero"))?;
-        let hub = ReplicaHub::start(ReplicaId(Uuid::now_v7()), self.relay.clone(), &[], capacity)
+        let relay: Arc<dyn LiveRelay + Send + Sync> = match &self.relay {
+            Some(relay) => relay.clone(),
+            None => Arc::new(
+                PostgresRelay::connect(database_url)
+                    .await
+                    .context("connect live relay")?,
+            ),
+        };
+        let hub = ReplicaHub::start(ReplicaId(Uuid::now_v7()), relay, &[], capacity)
             .context("start live hub")?;
         Ok(Arc::new(LiveServer {
             access: self.access.clone(),

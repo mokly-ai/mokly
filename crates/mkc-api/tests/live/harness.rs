@@ -53,7 +53,7 @@ impl Harness {
         let clock = Arc::new(Clock::new());
         let app = ConfiguredApplicationFactory {
             runtime: clock.clone(),
-            live_relay: relay.clone(),
+            live_relay: Some(relay.clone()),
             live_clock: clock.clone(),
             ..Default::default()
         }
