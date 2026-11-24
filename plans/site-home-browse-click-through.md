@@ -142,17 +142,22 @@ Each item below is my design call of 2026-11-25, with its reason.
 - **Anchors.** `#browse` and `browse-title` move to the new module. The diff
   module takes `#changes` and `changes-title`. Only the Specs panel links to
   them.
-- **Names in the code.** The diff module's site files and mockup files are
-  renamed from `browse` to `changes`, for example `BrowseModule.astro` to
-  `ChangesModule.astro`, `home-browse*.css` to `home-changes*.css`, the
-  `browse` demo to `changes`, and `home-browse.spec.ts` to
-  `home-changes.spec.ts`. The new module takes the freed `browse` names, so
-  each name says what its module shows.
+- **Names in the code.** The final code names are `changes` for the diff
+  module and `browse` for the new module, so each name says what its module
+  shows. The site and mockup stylesheets are compared rule by rule
+  (`docs/mockups/src/_tests_/design-site-parity.test.ts`), so the mockups
+  cannot rename alone. In Milestone 1 the diff module keeps its `browse`
+  names and the new module uses `links`. Milestone 3 renames both sides
+  together: first the diff module from `browse` to `changes`, then the new
+  module from `links` to `browse`, each in a commit of its own so that Git
+  shows moved files as moves. Changed on 2026-11-25, after the mockups.
 - **What the new drawing shows.** The depicted viewer opens acme/storefront
   on `feat/checkout-v2` in the product's Browse look: the tree beside the
   open entry's frames on a dot grid, not the compare stage of the Changes
-  viewer. The frames are phone frames, because the screens of every option
-  of decision 3 exist on the phone. Sam's cursor presses the link of decision 3. A link line draws
+  viewer. The viewer shows one phone frame, `Mobile · Light`, because two
+  frames are too narrow at the viewer's height. Sam's cursor presses the
+  link of decision 3, and a press ring shows that it is a press, not a
+  hover. A link line draws
   from the pressed button to the destination, the destination opens, and
   the tree's current row moves to it. The built page draws the finished
   state: the destination open and current. The source screen sits outside
@@ -181,27 +186,30 @@ Tags: mockup
 
 Depends on: none
 
-The work starts when Cal answers decisions 2 and 3.
+The first drawing uses the recommended options of decisions 2 and 3, as a
+draft for Cal's review, which he asked for on 2026-11-25. The milestone
+completes when Cal answers decisions 2 and 3 and the drawing follows the
+answers.
 
 The `design/site/home` mockup gets the new 01 Browse module and renumbers the
 others, on the desktop and the phone composition, in both schemes.
 
-- [ ] Rename the diff module's mockup files and classes from `browse` to
-      `changes`, with the kicker `02 Changes` and the anchor `#changes`.
-- [ ] Add the new 01 Browse module with the copy of decision 2 and the
+- [x] Give the diff module the kicker `02 Changes` and the anchor
+      `#changes`.
+- [x] Add the new 01 Browse module with the copy of decision 2 and the
       drawing of the design.
-- [ ] Renumber Review to 03 and Edit to 04, and update the frame labels.
-- [ ] Update the Specs panel rows in `workspace.tsx`, the entry metadata in
+- [x] Renumber Review to 03 and Edit to 04, and update the frame labels.
+- [x] Update the Specs panel rows in `workspace.tsx`, the entry metadata in
       `docs/mockups/src/entries/design/site/home.mockup.tsx` and the comment
       of `docs/mockups/src/screens/design/site/home_screen.tsx`.
-- [ ] Update `docs/mockups/src/_tests_/design-site-home.test.ts`.
-- [ ] Commit the renames from `browse` to `changes` alone, before the new
-      module takes the freed names, so that Git and the review show moved
-      files as moves.
-- [ ] Run the mockup check that `docs/mockups/README.md` gives. Smoke-test
+- [x] Update `docs/mockups/src/_tests_/design-site-home.test.ts`.
+- [x] Run the mockup check that `docs/mockups/README.md` gives. Smoke-test
       the home on the desktop and the phone, in light and dark.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. The check output and the screenshots are in
+      `.context/site-home-browse-click-through/`.
+- [ ] Redraw the mockup for Cal's answers to decisions 2 and 3 and to his
+      review of the draft.
 
 ## Milestone 2: Documentation and protocol
 
@@ -229,9 +237,11 @@ Depends on: 2
 
 The site home draws the same four modules as the mockup.
 
-- [ ] Rename the diff module's site files, classes, demo and anchor from
-      `browse` to `changes`, with the kicker `02 Changes`. Commit the
-      renames alone, as in Milestone 1.
+- [ ] Rename the diff module's site and mockup files, classes and demo from
+      `browse` to `changes` in a rename-only commit, and give the site module
+      the kicker `02 Changes` and the anchor `#changes`.
+- [ ] Rename the new mockup module from `links` to `browse` in a
+      rename-only commit.
 - [ ] Add the new `BrowseModule.astro`, its sheets and its `browse` demo in
       `demos.ts`, with reduced motion and no-script showing the finished
       state.
