@@ -1,5 +1,5 @@
 /**
- * The public site's routes, root outputs, Get started paths and application
+ * The public site's routes, root outputs, Get started path and application
  * route. The header, menu, footer, sitemap, route generator, link check and
  * browser walk read this module.
  */

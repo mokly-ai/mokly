@@ -24,6 +24,10 @@
   - The guide `docs/guides/cli/build.md:33` links **Serve** to the CLI
     reference `/docs/cli/serve/`. The docs Layers tree on the same page uses
     the name **Serve** for the Getting started guide.
+  - A static scan of the local build on 2026-11-24 found the same on six
+    more docs pages: the cloud docs `review/pull-request-sync` and
+    `cloud/builds`, the guide `authoring/viewports-and-color-schemes`, and
+    three reference pages that republish Mokly package documents.
 - **Problem:** On each of these pages, links with one accessible name open
   different targets. A screen reader's links list shows names only.
 - **Impact if no action:** A reader who picks from the links list cannot
