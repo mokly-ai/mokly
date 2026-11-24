@@ -16,7 +16,9 @@ use crate::transaction::DatabaseAttempt;
 const DEFAULT_POOL_SIZE: u32 = 8;
 /// Sessions an idle pool keeps open, so idle pods leave slots for busy ones.
 const IDLE_POOL_SIZE: u32 = 1;
-/// Time after which a session above the idle size closes.
+/// Idle time after which the pool closes a session, the last one included.
+/// The pool checks every 30 seconds and opens a replacement in the background
+/// to keep `IDLE_POOL_SIZE` sessions ready.
 const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Composition-root factory for a shared store interface.
