@@ -1,7 +1,5 @@
 # Viewer Chrome
 
-Status: The Mokly check in the Changes tab is not built yet. [Milestone 13](../../../plans/canvas-redesign-milestones-viewer.md#milestone-13-cloud-viewer-chrome) builds the check, in the slot that [Milestone 12](../../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds.
-
 This is the slot and publication-chrome sub-contract of [Viewer](./viewer.md).
 The slots are those of the workspace `@mokly/viewer` of
 [Viewer host](./viewer-host.md). The account trigger, the account menu and its

@@ -163,7 +163,8 @@ Depends on: 12, only for the check slot
 - [x] Build the account menu with Theme, Settings and Sign out. Store the
       theme choice on the device.
       Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
-- [ ] Fill the Changes check slot with the Mokly check.
+- [x] Fill the Changes check slot with the Mokly check.
+      Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
 - [x] Restyle the panels, the switcher, Share, History and the settings
       dialog.
       Branch: `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`.
