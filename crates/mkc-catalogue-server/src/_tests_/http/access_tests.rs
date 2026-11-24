@@ -59,7 +59,7 @@ async fn grant_exchange_sets_only_a_short_lived_host_cookie() {
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
     assert_eq!(
         response.headers()["set-cookie"],
-        "__Host-mkc_catalogue=signed; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300"
+        "__Host-mkc_catalogue=signed; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300; Partitioned"
     );
     assert_eq!(response.headers()["cache-control"], "no-store");
     assert!(
@@ -177,7 +177,7 @@ async fn invalid_cookies_are_expired_on_success_redirects_and_denials() {
         assert_eq!(response.status().as_u16(), status);
         assert_eq!(
             response.headers()["set-cookie"],
-            "__Host-mkc_catalogue=; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=0"
+            "__Host-mkc_catalogue=; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=0; Partitioned"
         );
         assert_eq!(response.headers()["cache-control"], "no-store");
         assert_eq!(
@@ -224,11 +224,9 @@ async fn invalid_cookie_is_expired_when_async_storage_open_fails() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(
-        response.headers()["set-cookie"]
-            .to_str()
-            .unwrap()
-            .contains("Max-Age=0")
+    assert_eq!(
+        response.headers()["set-cookie"],
+        "__Host-mkc_catalogue=; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=0; Partitioned"
     );
     assert_eq!(response.headers()["cache-control"], "no-store");
 }

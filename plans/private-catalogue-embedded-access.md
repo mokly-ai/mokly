@@ -101,6 +101,12 @@ AI shares (October 2026) leaked such hostnames.
   oracle is a recorded decision, so a start page with status 401 discloses
   nothing new.
 
+### User approval, 2026-11-25
+
+The user approved the plan: "impl the plan, run tests/spike before impl". The
+user gave access to a test Mac mini over Tailscale for the WebKit and Safari
+proof. The message answered none of the open decisions, so they stay open.
+
 ### Open decisions
 
 The message of 2026-11-25 asks the user for these. The milestones that they
@@ -218,10 +224,10 @@ My calls, 2026-11-25, under the decision test:
 
 Depends on: none
 
-- [ ] Change the cookie rule of `catalogue-hosting.md` "Private Access": the
+- [x] Change the cookie rule of `catalogue-hosting.md` "Private Access": the
       cookie and its clearing cookie carry `Partitioned`. Record that browsers
       without partitioned cookies keep the final message until G lands.
-- [ ] Update `crates/mkc-catalogue-server/README.md` for the attribute.
+- [x] Update `crates/mkc-catalogue-server/README.md` for the attribute.
 
 ## Milestone 2: Partitioned cookie
 
@@ -229,13 +235,13 @@ Depends on: 1
 
 Option A ships alone, so it can merge first if the user asks.
 
-- [ ] Add `Partitioned` in `response.rs` `exchanged` and `clear_cookie`, with
+- [x] Add `Partitioned` in `response.rs` `exchanged` and `clear_cookie`, with
       unit tests of both headers.
-- [ ] Add an app browser spec in `packages/app/src/_tests_/viewer/` that runs
+- [x] Add an app browser spec in `packages/app/src/_tests_/viewer/` that runs
       with third-party cookies blocked in Chromium, without a block of the
       catalogue site's other storage. It proves that the app's
       reads and the screen frames both use the partitioned cookie.
-- [ ] Run `cargo test -p mkc-catalogue-server` and the new spec.
+- [x] Run `cargo test -p mkc-catalogue-server` and the new spec.
 
 ## Milestone 3: WebKit proof of the worker route
 
@@ -243,19 +249,24 @@ Depends on: none
 
 A throwaway proof, outside the product code. It decides between G and F.
 
-- [ ] Build a minimal two-site HTTPS setup: a top page on one site, a frame
+- [x] Build a minimal two-site HTTPS setup: a top page on one site, a frame
       on another site that needs a bearer header, a start page, and a worker.
       Linux WebKit may drop `Secure` cookies and refuse workers on plain HTTP
       loopback hosts.
-- [ ] In Playwright WebKit, prove: the worker registers in the cross-site
+- [x] In Playwright WebKit, prove: the worker registers in the cross-site
       frame, it intercepts the frame navigation and its images, styles,
       fonts, scripts, `fetch` and nested frames, it adds the header, and it
       keeps the token after a worker restart. Prove the same in Chromium and
       Firefox.
-- [ ] Save the proof and its output under
+- [x] Save the proof and its output under
       `.context/private-catalogue-embedded-access/webkit-proof/`.
-- [ ] If the proof fails, stop. Replace Milestones 4 to 8 with option F, and
+- [x] If the proof fails, stop. Replace Milestones 4 to 8 with option F, and
       ask the user before you build it.
+
+Result, 2026-11-25: the proof passed in real Safari 26.6.2 on the test Mac
+mini, and in Playwright WebKit, Chromium and Firefox on Linux. G stays the
+route, and F is not needed. Summary:
+`.context/private-catalogue-embedded-access/webkit-proof/RESULT.md`.
 
 ## Milestone 4: Documentation for the embedded route
 

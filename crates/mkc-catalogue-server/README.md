@@ -19,8 +19,13 @@ Missing paths serve `404.html` with status 404. Decoded `__mokly` roots are
 refused without ASCII case sensitivity, including immutable blob lookups.
 These refusals use the indexed `404.html` bytes and `no-store`; HEAD returns
 the same metadata without a body. Private files
-require a signed cookie exchanged from a one-use API grant. Stale cookies
-are cleared with a non-cacheable response; public access remains available.
+require a signed cookie exchanged from a one-use API grant. The cookie and its
+clearing cookie carry `Partitioned`, so a browser with partitioned cookies
+keeps the cookie for the app's top-level site, also where it blocks other
+third-party cookies.
+[Private access](../../docs/protocol/cloud/catalogue-hosting.md#private-access)
+gives every attribute. Stale cookies are cleared with a non-cacheable
+response; public access remains available.
 Path lookup joins through the publication file's project and hash, so equal
 bytes in different projects resolve to their separate incarnations and
 objects. Physical keys are hash/incarnation values.

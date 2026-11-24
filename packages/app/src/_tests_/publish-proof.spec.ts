@@ -162,6 +162,7 @@ test("the pinned fixture publishes private bytes with isolated access", async ({
     "HttpOnly",
     "SameSite=None",
     "Max-Age=300",
+    "Partitioned",
   ]) {
     expect(setCookie.toLowerCase().includes(attribute.toLowerCase())).toBe(
       true,

@@ -152,7 +152,17 @@ publication host with its own admitted Origin and credentials enabled. Limit thi
 to 1 KiB with a ten-second reception deadline. Atomically consume the grant once, checking audience, expiry and
 current user/project access. Return 204 and a host-only cookie:
 `__Host-mkc_catalogue=<signed capability>; Path=/; Secure; HttpOnly;
-SameSite=None; Max-Age=300`. No Domain attribute is allowed.
+SameSite=None; Max-Age=300; Partitioned`. No Domain attribute is allowed.
+
+A browser with partitioned cookies keeps the cookie in a partition for the
+app's top-level site, also where it blocks other third-party cookies. A
+browser that blocks third-party cookies but has no partitioned cookies refuses
+the cookie. A reader whose browser refuses the cookie gets the final message
+of [Viewer](./viewer.md#catalogue-isolation). There is no new-tab recovery and
+no query-token fallback. Decision: the cookie is partitioned, rather than
+replaced by a secret hostname for each grant. The cookie then works inside the
+app in current Chrome, Edge, Firefox and Safari 26.2 and later, and DNS, TLS
+and requests to other servers would leak a secret hostname.
 
 The HMAC-SHA-256 capability binds publication ID, user ID and expiry. Verify
 the MAC in constant time, then audience, time and current project membership
@@ -160,7 +170,8 @@ on every private request, including assets and blob URLs. Grant replay,
 wrong-host use and expired credentials grant no identity. Invalid, expired,
 wrong-audience or old-key cookies continue anonymously; visibility policy
 allows public catalogues and denies private ones. Responses clear invalid
-cookies with the same host-only attributes and `Max-Age=0`, even on denial.
+cookies with the same host-only attributes, `Partitioned` included, and
+`Max-Age=0`, even on denial.
 Cookie-clearing responses use `no-store`, including public blob URLs. Revoking membership or
 deleting the project takes effect on the next request; signing out alone
 leaves the capability usable for at most its five-minute lifetime. Rotate the
@@ -168,16 +179,15 @@ shared signing key to revoke all outstanding capabilities. Credentials and
 request bodies are never logged. An existing private catalogue returns 401
 without access while a nonexistent publication returns 404. Decision: that
 existence oracle is deliberate, because the viewer uses 401 to start the
-grant exchange. Cookie failure shows a
-final message. There is no new-tab recovery and no query-token
-fallback.
+grant exchange.
 
 Only the app's `POST /_access` sets the catalogue cookie. The app sends it on
 its own index and detail reads, and the browser sends it on current screen
 frames. The embedded viewer's comparison and removed-preview reads
 send no credentials, so they return 401 for a private catalogue.
 The standalone shell sends same-origin cookies and needs an existing
-catalogue cookie in its own browser store. A private-comparison error shows an
+catalogue cookie in its own browser store. A browser with partitioned cookies
+keeps the app's cookie out of that store. A private-comparison error shows an
 overlay without an action, and the app offers no new-tab link.
 This makes no file public. The
 [private artifact limit](./mokly-artifact-compatibility.md#private-artifact-limit)

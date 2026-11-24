@@ -180,7 +180,7 @@ fn insert_file_header(
 pub(crate) fn exchanged(cookie: &str) -> Result<Response> {
     let mut response = StatusCode::NO_CONTENT.into_response();
     let cookie = format!(
-        "__Host-mkc_catalogue={cookie}; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300"
+        "__Host-mkc_catalogue={cookie}; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300; Partitioned"
     );
     insert_file_header(&mut response, header::SET_COOKIE, &cookie)?;
     response
@@ -194,7 +194,7 @@ pub(crate) fn clear_cookie(response: &mut Response) {
     response.headers_mut().insert(
         header::SET_COOKIE,
         HeaderValue::from_static(
-            "__Host-mkc_catalogue=; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=0",
+            "__Host-mkc_catalogue=; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=0; Partitioned",
         ),
     );
     response

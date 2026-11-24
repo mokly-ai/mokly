@@ -119,6 +119,6 @@ async fn grant_exchange_status_survives_refused_identity_preferences() {
     assert_eq!(response.headers()["cache-control"], "no-store");
     assert_eq!(
         response.headers()["set-cookie"],
-        "__Host-mkc_catalogue=signed; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300"
+        "__Host-mkc_catalogue=signed; Path=/; Secure; HttpOnly; SameSite=None; Max-Age=300; Partitioned"
     );
 }
