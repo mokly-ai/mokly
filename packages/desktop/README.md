@@ -159,9 +159,11 @@ from the repository root. A logic test rejects a PNG that differs from its sourc
 
 Pull requests that change package inputs build for main-preview without release
 credentials or publishing. The macOS package uses an ad-hoc signature with
-hardened runtime and notarization disabled. Each runner extracts the arm64 ZIP
-or Linux AppImage and runs `scripts/packaged-smoke.mjs` with Playwright. It
-proves the asar bundle renders **Try again** when the API is unreachable.
+hardened runtime and notarization disabled. The launch check first requires
+that the platform built exactly the fixed release file names that the promotion
+checks, and it names each missing or extra file. Each runner then extracts the
+arm64 ZIP or Linux AppImage and runs `scripts/packaged-smoke.mjs` with
+Playwright. It proves the asar bundle renders **Try again** when the API is unreachable.
 It checks the window overlay and the app's inset on both platforms. On macOS
 it also attempts a native window screenshot that includes the buttons. The
 proof JSON records a capture failure without failing the smoke. The page

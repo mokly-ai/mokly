@@ -9,17 +9,45 @@ import { parse } from "yaml";
 import {
   publishRelease,
   releaseArtifacts,
+  releaseFileNames,
   writeReleaseManifest,
 } from "./release-assets.mjs";
 import { githubClient } from "./release-github.mjs";
+import { releaseInventory } from "./release-promote.mjs";
 import { AppendOnlyPublisher } from "./release-publisher.mjs";
 
 const desktop = resolve(import.meta.dirname, "..");
 
-/** Find the launch-smoke distributable among electron-builder's output files. */
+/**
+ * Check all the release files that the preview build produced for this platform.
+ * @param {string[]} names
+ * @param {NodeJS.Platform} platform
+ */
+export function platformInventory(names, platform) {
+  const expected = releaseInventory[platform === "darwin" ? "macos" : "linux"];
+  const files = releaseFileNames(names);
+  const missing = expected.filter((name) => !files.includes(name));
+  const extra = files.filter((name) => !expected.includes(name));
+  const problems = [];
+  if (missing.length > 0)
+    problems.push(`Missing release files are ${missing.sort().join(", ")}.`);
+  if (extra.length > 0)
+    problems.push(`Extra release files are ${extra.sort().join(", ")}.`);
+  if (problems.length > 0) throw new Error(problems.join(" "));
+  return files;
+}
+
+/**
+ * Find the fixed launch artifact in the verified preview output.
+ * @param {string[]} names
+ * @param {NodeJS.Platform} platform
+ */
 export function packageArtifact(names, platform) {
-  const suffix = platform === "darwin" ? "-mac-arm64.zip" : ".AppImage";
-  return names.find((name) => name.endsWith(suffix));
+  const launchName =
+    platform === "darwin"
+      ? "Mokly-mac-arm64.zip"
+      : "Mokly-linux-x86_64.AppImage";
+  return platformInventory(names, platform).find((name) => name === launchName);
 }
 
 /** Keep preview packaging credential-free while retaining a runnable arm64 app. */
@@ -98,22 +126,18 @@ if (import.meta.main) {
         version,
         github,
       );
-      const tag = `v${version}`;
-      const assets = await publishRelease(
+      const manifest = await publishRelease(
         await releaseArtifacts(directory),
         publisher,
         github,
-        tag,
+        {
+          owner: publish.owner,
+          repo: publish.repo,
+          tag: `v${version}`,
+          platform: process.platform === "darwin" ? "macos" : "linux",
+        },
       );
-      const { id } = await publisher._release.value;
-      await writeReleaseManifest(output, {
-        owner: publish.owner,
-        repo: publish.repo,
-        tag,
-        release: id,
-        platform: process.platform === "darwin" ? "macos" : "linux",
-        assets,
-      });
+      await writeReleaseManifest(output, manifest);
     }
     return 0;
   };

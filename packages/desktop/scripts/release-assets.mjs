@@ -46,15 +46,20 @@ export function isReleaseAsset(asset) {
   );
 }
 
+/** @param {string[]} names */
+export function releaseFileNames(names) {
+  return names.filter((name) =>
+    /\.(dmg|zip|AppImage|deb|blockmap)$|^latest(?:-.+)?\.yml$/.test(name),
+  );
+}
+
 /**
  * Inventory only this build's packages and updater files, excluding builder logs.
  * @param {string} directory
  * @param {{readdir: (directory: string) => Promise<string[]>, stat: (file: string) => Promise<{size: number, isFile: () => boolean}>}} io
  */
 export async function releaseArtifacts(directory, io = { readdir, stat }) {
-  const names = (await io.readdir(directory)).filter((name) =>
-    /\.(dmg|zip|AppImage|deb|blockmap)$|^latest(?:-.+)?\.yml$/.test(name),
-  );
+  const names = releaseFileNames(await io.readdir(directory));
   const artifacts = [];
   for (const name of names.sort()) {
     const file = join(directory, name);
@@ -67,15 +72,20 @@ export async function releaseArtifacts(directory, io = { readdir, stat }) {
 }
 
 /**
- * Check both the publisher's receipts and GitHub's final inventory. A publisher
- * that resolves without uploading must never turn a partial release green.
+ * Check the publisher's receipts and GitHub's final inventory. Record the
+ * verified draft and uploaded assets for this platform.
  * @param {(ReleaseAsset & {file: string})[]} artifacts
  * @param {{_release: {value: Promise<{id: number} | null>}, uploaded: Set<string>, upload: (task: {file: string, arch: null}) => Promise<unknown>}} publisher
  * @param {{release: (id: number) => Promise<{id: number, draft: boolean, tag_name: string}>, assets: (id: number) => Promise<(ReleaseAsset & {state: string})[]>}} github
- * @param {string} tag
- * @returns {Promise<ReleaseAsset[]>}
+ * @param {Omit<ReleaseManifest, "release" | "assets">} identity
+ * @returns {Promise<ReleaseManifest>}
  */
-export async function publishRelease(artifacts, publisher, github, tag) {
+export async function publishRelease(
+  artifacts,
+  publisher,
+  github,
+  { owner, repo, tag, platform },
+) {
   const release = await publisher._release.value;
   if (release === null)
     throw releaseFailure("The pinned publisher skipped the release");
@@ -115,5 +125,12 @@ export async function publishRelease(artifacts, publisher, github, tag) {
     throw releaseFailure(
       `Release upload incomplete: ${missing.map((file) => file.name).join(", ")}`,
     );
-  return artifacts.map(({ name, size }) => ({ name, size }));
+  return {
+    owner,
+    repo,
+    tag,
+    release: remote.id,
+    platform,
+    assets: artifacts.map(({ name, size }) => ({ name, size })),
+  };
 }

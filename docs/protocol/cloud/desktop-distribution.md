@@ -78,11 +78,9 @@ version, writes the changelog and starts the release.
   signing when the check fails. The workflow never moves a tag. A person
   moves it to the merge commit and reruns the failed jobs.
 - It checks that the tag equals `desktop-v` plus the package version. It then
-  builds on a macOS runner and a Linux runner and publishes with
-  electron-builder's GitHub publisher. The publisher creates `v<version>` in
-  the feed, which is also the release-page address the `deb` updater opens.
-  The two platform publishers run in sequence to create and fill one draft.
-  A final [promotion](#drafts-and-promotion) makes the draft the latest
+  builds on a macOS runner and a Linux runner and uploads to the draft release
+  `v<version>` of the feed. The `deb` updater opens the release page of that
+  tag. A final [promotion](#drafts-and-promotion) makes the draft the latest
   release.
 - Pull requests run the same packaging without release signing or
   publishing, so the build is proven before any secret is used.
@@ -108,17 +106,15 @@ use the `mokly` executable name in both modes.
 ### Drafts And Promotion
 
 Release packaging first builds with publishing disabled in a fresh output
-directory. The first platform publisher creates the draft `v<version>`. The
-second platform publisher adds its files to the same draft. A platform job
-fails when a release that is not a draft already has that tag.
+directory. One draft `v<version>` holds the files of both platforms. A
+platform job fails when a release that is not a draft already has that tag.
 
 The platform jobs only add assets. An uploaded asset is never replaced or
-deleted, and `EP_GH_IGNORE_TIME` is never enabled. An existing asset name or a
-racing upload collision fails the job. After uploading, each platform job
-reads the release with the release token and requires a draft with that tag.
-It checks every package, blockmap and update file that it built by name, size
-and `uploaded` state. A skipped upload or a partial inventory fails, even if
-the publisher returns success.
+deleted. An existing asset name or a racing upload collision fails the job.
+After uploading, each platform job reads the release with the release token
+and requires a draft with that tag. It checks every package, blockmap and
+update file that it built by name, size and `uploaded` state. A skipped upload
+or a partial inventory fails the job, even when no upload reports an error.
 
 A final promotion runs only after both platform jobs pass. It requires that
 the release has the tag `v<version>` of the shell's version. It requires
@@ -158,7 +154,7 @@ only that token. The promotion job runs no third-party package code.
   **Check for updates** item is disabled. Reason: a preview build with the
   updater on could install a production release over itself. The updater
   never runs in an unpackaged app.
-- The updater uses the GitHub provider for `mokly-ai/mokly-desktop`. It
+- The updater reads the public release feed of `mokly-ai/mokly-desktop`. It
   follows GitHub's latest release of that repository and never takes a
   pre-release or a draft. Reason: the app then installs the same release that
   the latest download addresses serve. It checks the feed at launch and every

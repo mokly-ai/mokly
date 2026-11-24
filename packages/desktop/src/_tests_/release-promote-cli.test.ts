@@ -8,7 +8,11 @@ import type { TestContext } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import desktop from "../../package.json" with { type: "json" };
-import { writeReleaseManifest } from "../../scripts/release-assets.mjs";
+import {
+  publishRelease,
+  writeReleaseManifest,
+} from "../../scripts/release-assets.mjs";
+import type { ReleaseAsset } from "../../scripts/release-assets.mjs";
 import { releaseInventory } from "../../scripts/release-promote.mjs";
 
 const expectedTag = `v${desktop.version}`;
@@ -17,42 +21,63 @@ const command = fileURLToPath(
 );
 const owner = "mokly-ai";
 const repo = "mokly-desktop";
-const release = 7;
+const releaseId = 7;
 const releasesUrl = `https://api.github.com/repos/${owner}/${repo}/releases`;
-const releaseUrl = `${releasesUrl}/${release}`;
+const releaseUrl = `${releasesUrl}/${releaseId}`;
 
 async function runPromotion(context: TestContext, tag: string) {
   const directory = await mkdtemp(join(tmpdir(), "mokly-release-promote-"));
   context.after(() => rm(directory, { recursive: true, force: true }));
 
-  const manifests = (["macos", "linux"] as const).map((platform) => ({
-    owner,
-    repo,
-    tag,
-    release,
-    platform,
-    assets: releaseInventory[platform].map((name, index) => ({
+  const draft = {
+    id: releaseId,
+    tag_name: tag,
+    draft: true,
+    prerelease: false,
+  };
+  const assets: (ReleaseAsset & { state: "uploaded" })[] = [];
+  const github = {
+    async release(id: number) {
+      assert.equal(id, releaseId);
+      return draft;
+    },
+    async assets(id: number) {
+      assert.equal(id, releaseId);
+      return assets.slice();
+    },
+  };
+  const releaseIds: number[] = [];
+  for (const platform of ["macos", "linux"] as const) {
+    const artifacts = releaseInventory[platform].map((name, index) => ({
       name,
+      file: join(directory, platform, name),
       size: index + 1,
-    })),
-  }));
-  for (const manifest of manifests) {
-    const platformDirectory = join(
-      directory,
-      `desktop-release-${manifest.platform}`,
-    );
+    }));
+    const publisher = {
+      _release: { value: Promise.resolve({ id: releaseId }) },
+      uploaded: new Set<string>(),
+      async upload({ file }: { file: string }) {
+        const asset = artifacts.find((artifact) => artifact.file === file);
+        assert.ok(asset, `Unexpected upload of ${file}`);
+        this.uploaded.add(asset.name);
+        assets.push({ name: asset.name, size: asset.size, state: "uploaded" });
+      },
+    };
+    const manifest = await publishRelease(artifacts, publisher, github, {
+      owner,
+      repo,
+      tag,
+      platform,
+    });
+    const platformDirectory = join(directory, `desktop-release-${platform}`);
     await mkdir(platformDirectory);
     await writeReleaseManifest(platformDirectory, manifest);
+    releaseIds.push(manifest.release);
   }
 
   const patchLog = join(directory, "patches.jsonl");
   const fetchDouble = join(directory, "github-fetch.mjs");
-  const remote = {
-    release: { id: release, tag_name: tag, draft: true, prerelease: false },
-    assets: manifests.flatMap(({ assets }) =>
-      assets.map((asset) => ({ ...asset, state: "uploaded" })),
-    ),
-  };
+  const remote = { release: draft, assets };
   await writeFile(patchLog, "");
   await writeFile(
     fetchDouble,
@@ -93,15 +118,16 @@ globalThis.fetch = async (url, { method, body }) => {
     .split("\n")
     .filter(Boolean)
     .map((line): unknown => JSON.parse(line));
-  return { ...result, patches };
+  return { ...result, patches, releaseIds };
 }
 
 test("the promotion command publishes the manifests from the platform artifact directories", async (context) => {
   const result = await runPromotion(context, expectedTag);
   assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(result.releaseIds, [releaseId, releaseId]);
   assert.deepEqual(result.patches, [
     {
-      url: releaseUrl,
+      url: `${releasesUrl}/${result.releaseIds[0]}`,
       body: { draft: false, prerelease: false, make_latest: "true" },
     },
   ]);
