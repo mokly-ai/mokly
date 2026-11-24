@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { importerDirectory } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
+import { importerDirectory } from "./package-directory.js";
 import type { PackageJson } from "./package-json.js";
 import type { PhysicalInputs } from "./physical-inputs.js";
 import { resolutionOptions } from "./resolution.js";
@@ -39,29 +39,21 @@ export function* packageDirectories(
   name: string,
   directory: string,
 ): Generator<string> {
-  const roots = new Set<string>();
   const identifier = packageName(name);
-  for (let start of new Set([
-    directory,
-    importerDirectory(paths, name, directory),
-  ])) {
-    for (;;) {
-      if (path.basename(start) !== "node_modules") {
-        const root = path.join(start, "node_modules");
-        if (!roots.has(root)) {
-          roots.add(root);
-          yield path.join(root, identifier);
-        }
-      }
-      const parent = path.dirname(start);
-      if (parent === start) break;
-      start = parent;
-    }
+  const roots = new Set([
+    ...ancestorNodeModules(directory),
+    ...ancestorNodeModules(importerDirectory(paths, name, directory)),
+    ...resolutionOptions(paths.sourceRoot, paths.settings).nodePaths,
+  ]);
+  for (const root of roots) yield path.join(root, identifier);
+}
+
+export function* ancestorNodeModules(directory: string): Generator<string> {
+  for (;;) {
+    if (path.basename(directory) !== "node_modules")
+      yield path.join(directory, "node_modules");
+    const parent = path.dirname(directory);
+    if (parent === directory) return;
+    directory = parent;
   }
-  for (const root of resolutionOptions(paths.sourceRoot, paths.settings)
-    .nodePaths)
-    if (!roots.has(root)) {
-      roots.add(root);
-      yield path.join(root, identifier);
-    }
 }

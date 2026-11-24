@@ -4,7 +4,7 @@ import test from "node:test";
 
 import type { CssResult } from "../packages/mokly/src/generated/sidecar/CssResult.js";
 
-import { nativeRoot, write } from "./helpers/native_resolution.js";
+import { link, nativeRoot, write } from "./helpers/native_resolution.js";
 import {
   bundleParams,
   contextParams,
@@ -44,5 +44,59 @@ test("a prepared PostCSS context runs the configured file in a workspace build f
   );
   const result = await sidecar.call<CssResult>("processCss", params);
   assert.match(result.text, /selected:\s*configured/);
+  await sidecar.call("shutdown");
+});
+
+test("PostCSS imports and requires workspace plugins without build files", async (context) => {
+  const root = await nativeRoot(context);
+  const pkg = path.join(root, "packages/local");
+  await write(
+    path.join(pkg, "package.json"),
+    JSON.stringify({
+      name: "workspace-local",
+      exports: {
+        "./static": "./dist/static.js",
+        "./dynamic": "./dist/dynamic.js",
+        "./plugin": "./dist/plugin.js",
+      },
+    }),
+  );
+  await write(
+    path.join(pkg, "src/static.ts"),
+    'export const label = "static";',
+  );
+  await write(
+    path.join(pkg, "src/dynamic.ts"),
+    'export const label = "dynamic";',
+  );
+  await write(
+    path.join(pkg, "src/plugin.ts"),
+    'export default ({label}) => ({postcssPlugin:"source", Once(root){root.append({prop:"selected",value:label})}});',
+  );
+  await link(pkg, path.join(root, "node_modules/workspace-local"));
+  await write(
+    path.join(root, "postcss.mjs"),
+    `
+    import {label} from "workspace-local/static";
+    const {label: dynamic} = require(["workspace-local", "dynamic"].join("/"));
+    export default {plugins: {"workspace-local/plugin": {label: label + "-" + dynamic}}};
+  `,
+  );
+
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({
+      sourceRoot: root,
+      postcss: "postcss.mjs",
+      moduleResolution: {
+        ...bundleParams().moduleResolution,
+        packageRoots: [root],
+      },
+      text: "a{}",
+    }),
+  );
+  assert.match(result.text, /selected:\s*static-dynamic/);
   await sidecar.call("shutdown");
 });

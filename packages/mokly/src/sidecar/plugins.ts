@@ -9,7 +9,7 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
 import { cssModulePrefix } from "./css-modules.js";
 import { detail } from "./errors.js";
-import { resolveImport } from "./importer-resolution.js";
+import { importPath, resolveImport } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
 import { plannedResult } from "./native-plan.js";
 import { importCallbackKey, nativeResolution } from "./native-resolution.js";
@@ -167,7 +167,7 @@ export function consumerPlugins(
           });
           if (resolved.errors.length) return { errors: resolved.errors };
           try {
-            const file = await paths.resolve(resolved.path, args.path);
+            const file = await importPath(paths, args.path, resolved);
             await paths.dependencyUsage.resolved(
               args.path,
               args.resolveDir,
@@ -218,13 +218,14 @@ export function consumerPlugins(
           )
             return resolved;
           try {
-            const file = await paths.resolve(resolved.path, args.path);
+            const file = await importPath(paths, args.path, resolved);
             await paths.dependencyUsage.resolved(
               args.path,
               args.resolveDir,
               file,
             );
-            return { ...resolved, path: file };
+            const { workspaceSource: _workspaceSource, ...result } = resolved;
+            return { ...result, path: file };
           } catch (error) {
             return { errors: [{ text: detail(error) }] };
           }

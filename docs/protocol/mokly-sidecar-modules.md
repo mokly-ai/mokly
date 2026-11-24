@@ -100,14 +100,13 @@ same importer mapping. Installation metadata outside the source root is read
 from the selected installation, even when a tracked source directory has the
 same logical name.
 
-After lookup of a bare package specifier and repository mapping, Mokly applies the
+For bare package specifiers, the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
-before it tests the original target. This includes CSS imports from
-JavaScript. Missing files and escaping symlinks fail closed. Reuse evidence
-includes the package manifests and TypeScript configurations used for build
-targets. Source candidate probes retain absent paths as watch inputs.
-Selected source contents enter through the module graph and stylesheet
-inputs.
+can supply a source file when a build target is present or missing. This
+includes CSS imports from JavaScript. Reuse evidence includes the package
+manifests and TypeScript configurations used for build targets. Build and
+source candidate probes retain absent paths as watch inputs. Selected source
+contents enter through the module graph and stylesheet inputs.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected

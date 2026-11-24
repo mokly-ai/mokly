@@ -167,7 +167,7 @@ export class ModulePaths {
     );
   }
 
-  private location(real: string): {
+  location(real: string): {
     file: string;
     mapped: boolean;
     name: string;

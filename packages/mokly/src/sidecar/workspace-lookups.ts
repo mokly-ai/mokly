@@ -86,11 +86,26 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   }
 
   candidate(file: string): string | undefined {
+    const result = this.observeCandidate(file);
+    if (result.kind === "file") return result.real;
+  }
+
+  buildTarget(file: string): boolean {
+    return this.observeCandidate(file).kind !== "unavailable";
+  }
+
+  /** Retain package search paths and links in private reuse evidence. */
+  packageLookup(file: string): void {
+    this.observed.add(file);
+    this.capture.file(file);
+  }
+
+  private observeCandidate(file: string): Probe {
     const result = this.observe(file);
-    if (result.kind === "unavailable") return;
-    this.paths.lookupDirectories.add(path.dirname(file));
+    if (result.kind !== "unavailable")
+      this.paths.lookupDirectories.add(path.dirname(file));
     if (result.kind === "absent") this.absences.add(file);
-    else return result.real;
+    return result;
   }
 
   private confined(directory: string): boolean {
