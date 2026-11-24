@@ -107,7 +107,9 @@ stored index names are immutable thereafter. Client time never orders
 history or aliases.
 
 The marker gives the SHA-256, byte length and path of every declared file.
-Every declared path is indexed with its own MIME type. Blob identity is
+Every declared path is indexed with its own MIME type, which comes from the
+extension of the path under the
+[Mokly content type rule](../mokly-imported-assets.md#content-types). Blob identity is
 `(authorized project, hash)`: publications in one project reuse its durable
 copy, while another project receives a separate copy of equal bytes. A
 declared size that differs from the project's existing copy of the same hash

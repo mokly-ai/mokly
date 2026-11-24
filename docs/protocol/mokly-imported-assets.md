@@ -1,14 +1,13 @@
 # JavaScript Asset Imports
 
-Status: Mokly Cloud does not send the asset content types of this page yet. The [content type rule item](../../plans/follow-ups/asset-content-type-rule.md) adds them.
-
 This page defines the files that JavaScript imports as assets, such as
 `import logo from "./logo.png"`. Such an import gives an asset token. Each
 composed document gets the URL of the delivered file in place of the token.
 The delivered file uses the routes and the delivery of
 [stylesheet assets](./mokly-imported-styles-assets.md). The page also gives
 the order in which an import attribute and the loaders choose the value of
-each JavaScript import.
+each JavaScript import, and the [content type](#content-types) of each file
+that Serve or Mokly Cloud delivers.
 
 Decision: Mokly delivers each imported asset as a file, and it gives each
 document its own URL to that file. This reuses the delivery of stylesheet
@@ -77,17 +76,35 @@ the file, and a failure only makes the project delete the entry.
 | `.vtt`                    | `text/vtt`                  |
 | `.webmanifest`            | `application/manifest+json` |
 
-Serve sends the content types of this table and of the stylesheet asset table.
-It sends `text/plain; charset=utf-8` for a `.txt` asset. A host of the static
-output sends the same types, under the
-[static delivery contract](./mokly-export-delivery.md#hosting-contract). A stylesheet `url()` keeps the extension list of the
-stylesheet asset table. The types of this table are assets only when
-JavaScript imports them.
+Serve and Mokly Cloud send the content types of this table under the
+[content type rule](#content-types). A stylesheet `url()` keeps the extension
+list of the stylesheet asset table. The types of this table are assets only
+when JavaScript imports them.
 
 Decision: the asset types are the types that Vite knows, without `.txt`.
 Vite and Storybook turn these imports into URLs, and a `.txt` import keeps its
 text. Rejected: the stylesheet asset list alone, because a media or PDF import
 that works in Storybook would then fail.
+
+## Content Types
+
+One rule by file extension gives the content type of each file that Serve or
+Mokly Cloud delivers. The first step that gives a type wins:
+
+1. The type of the [table of imported types](#imported-types) or of the
+   [stylesheet asset table](./mokly-imported-styles-assets.md#assets-links-and-delivery),
+   or `text/plain; charset=utf-8` for `.txt`.
+2. The common media type of the extension. A `text/*` type and
+   `application/json` get `; charset=utf-8`.
+3. `application/octet-stream`, when no type is known.
+
+The path of the file does not change the type. So a generated asset, an
+authored file, and a published file with the same extension get the same
+type. A host of the static output sends the types of the first step, under the
+[static delivery contract](./mokly-export-delivery.md#hosting-contract).
+
+Decision: the extension alone gives the type. Rejected: a lookup that knows the
+paths of generated assets, because a new path form could escape it.
 
 ## Asset Tokens
 

@@ -5,6 +5,7 @@
 pub mod axes;
 pub mod canonical;
 pub mod catalogue;
+pub mod content_types;
 pub mod controls;
 pub mod data;
 pub mod deployment;

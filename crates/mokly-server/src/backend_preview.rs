@@ -9,7 +9,7 @@ use mokly_graph::types::TemporaryDocument;
 use mokly_model::namespace::{GENERATED_DIRECTORY, generated};
 use mokly_model::usage::CatalogueUsage;
 
-use crate::assets::{File, generated_content_type};
+use crate::assets::{File, content_type};
 use crate::backend::{GraphDocuments, PreviewDocument};
 use crate::error::{Result, ServerError};
 use crate::preview::MAX_BYTES;
@@ -62,7 +62,7 @@ impl GraphDocuments {
                         generated(resource),
                         File {
                             bytes: bytes.into(),
-                            content_type: generated_content_type(resource),
+                            content_type: content_type(resource),
                         },
                     );
                 }

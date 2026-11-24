@@ -109,7 +109,8 @@ once; reject invalid UTF-8/escapes, decoded slash/backslash, dot segments,
 controls and absolute-path tricks. Residual percent sequences are literal
 filename characters; lookup never decodes again or touches filesystem paths. Do not strip HTML
 extensions, implement a SPA fallback or interpret `_headers`/`_redirects`.
-MIME comes from the indexed path, with octet-stream as the unknown default;
+The MIME type comes from the extension of the indexed path, under the
+[Mokly content type rule](../mokly-imported-assets.md#content-types);
 identical bytes at paths with different extensions keep distinct MIME types.
 Blob URLs also require publication access; hashes are never capabilities.
 

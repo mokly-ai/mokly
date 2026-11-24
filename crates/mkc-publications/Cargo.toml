@@ -15,11 +15,11 @@ mkc-mokly-contract = { workspace = true }
 mkc-github-interface = { workspace = true }
 mkc-auth = { workspace = true }
 mkc-build-interface = { workspace = true }
+mokly-model = { workspace = true }
 sandbox-interface = { workspace = true }
 internal-error = { workspace = true }
 thiserror = "2.0.20"
 unimock = "0.6.8"
-mime_guess = "2.0.5"
 hmac = "0.13.0"
 sha2 = "0.11.0"
 hex = "0.4.3"

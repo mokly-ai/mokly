@@ -133,7 +133,6 @@ A branch from this branch applies each answer and deletes the file.
 
 - [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
   D. Severity High.
-- [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): E.
 - [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
   B. Milestone 32 applies it, because the code with several setups does not
   exist yet.

@@ -185,7 +185,7 @@ fn preview_asset_capacity_is_checked_before_copying_any_payload() {
 }
 
 #[test]
-fn preview_pjp_asset_uses_the_generated_content_type() {
+fn preview_pjp_asset_uses_the_declared_content_type() {
     const PAYLOAD: &[u8] = b"image";
     let asset_route = generated("assets/logo.pjp");
     let mut rendered = TemporaryDocument {
