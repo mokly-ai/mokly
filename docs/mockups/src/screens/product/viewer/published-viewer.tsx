@@ -1,10 +1,13 @@
+import { CanvasDock } from "@mokly/ui/canvas-dock";
 import { CatalogueNavigation } from "@mokly/ui/catalogue-navigation";
 import { EmbeddedLayout, MarkerLayer } from "@mokly/ui/embedded-layout";
+import type { FloatingPanelSheet } from "@mokly/ui/floating-panel";
 import { MainRegion } from "@mokly/ui/shell-layout";
 import { TopBar } from "@mokly/ui/top-bar";
 import "@mokly/ui/styles.css";
 
 import "../../../../styles/product/viewer-depiction.css";
+import { staticNoop } from "../../../components/static-controls";
 import { sample } from "../../../fixtures/product";
 import { publication } from "../../../fixtures/publications";
 import { useMockupRenderContext } from "../../../render-context";
@@ -26,7 +29,19 @@ import {
   PublishedSlotStart,
 } from "./published-slots";
 import type { PublishedSubject } from "./published-slots";
-import { PublishedWorkspace } from "./published-workspace";
+import { PublishedWorkspace, shownTab } from "./published-workspace";
+
+/**
+ * The catalogue's sheet of the compact layout, which every drawing leaves
+ * closed: a phone shows the canvas with its dock, and a wide canvas shows the
+ * floating catalogue whatever its sheet's state is.
+ */
+const closedCatalogue: FloatingPanelSheet = {
+  expanded: false,
+  onClose: staticNoop,
+  onExpandedChange: staticNoop,
+  open: false,
+};
 
 const defaultSubject: PublishedSubject = {
   label: publication.branch,
@@ -47,8 +62,10 @@ const ids = {
  * The ready publication as a static depiction composed of `@mokly/ui` parts:
  * the embedded layout with the cloud controls in the package top bar's three
  * host slots, `topBarStart` after its mark, `topBarCenter` in its middle and
- * `topBarEnd` after its search, the catalogue navigation, and the workspace
- * with the sample screen in the phone and browser frames.
+ * `topBarEnd` after its search, the catalogue navigation, which floats over
+ * the canvas, the workspace with the sample screen in the phone and browser
+ * frames, and the compact layout's dock, which the layout draws over the
+ * canvas's bottom, as the app's layout does.
  * Every part draws its controls as pictures or native controls, so the
  * drawing runs no script, and the layout states the document's scheme as its
  * appearance. The top bar takes no end control, because the cloud's bar has
@@ -56,8 +73,9 @@ const ids = {
  * A phone's bar draws the search's toggle in place of the field.
  *
  * A pull request's drawing opens the right panel on Changes, whose tab holds
- * the cloud's Mokly check in the `changesStart` slot, as the app fills it. A
- * phone keeps the panel's sheet closed, as every drawing does.
+ * the cloud's Mokly check in the `changesStart` slot, as the app fills it,
+ * and its dock names Changes. A phone keeps the catalogue's and the panel's
+ * sheets closed, as every drawing does.
  *
  * A private comparison's message goes in the `stageOverlay` slot, as the app
  * places it. The package reveals that slot by a browser measurement, which a
@@ -86,13 +104,25 @@ export function PublishedViewer({
   layered?: boolean;
 }) {
   const { colorScheme } = useMockupRenderContext();
+  const tab = subject.check ? "changes" : "inspect";
   return (
     <div className="fo-published-viewer">
       <EmbeddedLayout
         announcement=""
+        catalogueSheet={closedCatalogue}
         colorScheme={colorScheme}
+        dock={
+          <CanvasDock
+            interactive={false}
+            onCatalogue={staticNoop}
+            onFit={staticNoop}
+            onTab={staticNoop}
+            tab={shownTab(tab)}
+          />
+        }
         drawerOpen={false}
         emptyStateShown={false}
+        interactive={false}
         main={
           <MainRegion id={ids.main}>
             <PublishedWorkspace
@@ -103,11 +133,9 @@ export function PublishedViewer({
                   <ComparisonOverlay instance="viewer-comparison-open-catalogue-preview" />
                 ) : undefined
               }
+              tab={tab}
               {...(subject.check
-                ? {
-                    tab: "changes",
-                    changesStart: <ChangesCheck pull={subject.check} />,
-                  }
+                ? { changesStart: <ChangesCheck pull={subject.check} /> }
                 : {})}
             />
           </MainRegion>

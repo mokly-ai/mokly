@@ -18,10 +18,10 @@ import { canvasFrameViolations } from "./viewer-measures";
 
 /**
  * The ready canvas of a branch's publication: the frames of the current
- * screen with the view that each shows, the right panel, the compact
- * layout's entry bar and dock, and the package's search in the bar, each
- * control a native control or a picture of itself. The chrome around every
- * viewer screen is checked in `viewer.spec.ts`.
+ * screen with the view that each shows, the floating catalogue, the right
+ * panel, the compact layout's entry bar and dock, and the package's search
+ * in the bar, each control a native control or a picture of itself. The
+ * chrome around every viewer screen is checked in `viewer.spec.ts`.
  */
 
 /**
@@ -101,12 +101,19 @@ for (const viewport of ["desktop", "mobile"] as const)
         await expect(
           viewer.getByText("Light only").filter({ visible: true }),
         ).toHaveCount(0);
-        // The workspace runs no script: every control that it draws is a
-        // native control or a picture of itself.
-        const workspace = viewer.locator("[data-workspace]");
-        await expect(
-          workspace.getByRole("button", { includeHidden: true }),
-        ).toHaveCount(0);
+        // The workspace, the dock and the catalogue's sheet run no script:
+        // every control that they draw is a native control or a picture of
+        // itself.
+        for (const part of ["[data-workspace]", "[data-canvas-dock]"])
+          await expect(
+            viewer.locator(part).getByRole("button", { includeHidden: true }),
+            part,
+          ).toHaveCount(0);
+        for (const name of ["Expand catalogue", "Close catalogue"])
+          await expect(
+            viewer.getByRole("img", { name, includeHidden: true }),
+            name,
+          ).toHaveCount(1);
         if (viewport === "desktop") {
           await expect(
             viewer.getByRole("group", { name: "Zoom" }).getByRole("img"),

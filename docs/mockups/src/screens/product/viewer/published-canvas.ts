@@ -9,8 +9,12 @@ import type { ScreenFrame } from "./published-frames";
 /** The top bar above the canvas. */
 const barHeight = 48;
 
-/** The catalogue column beside a desktop canvas, as `PublishedViewer` sizes it. */
-const catalogueWidth = 248;
+/**
+ * The room that the floating catalogue takes at a desktop canvas's start: its
+ * starting width of 252px, its 8px margin and an 8px gap, as the Canvas
+ * layout's start inset leaves it.
+ */
+const catalogueRoom = 268;
 
 /**
  * The room that the right panel takes at a desktop canvas's end: its 312px,
@@ -36,9 +40,9 @@ const dockRoom = 76;
  */
 const stages: Readonly<Record<Viewport, CanvasRect>> = {
   desktop: {
-    left: 0,
+    left: catalogueRoom,
     top: 0,
-    width: frameSizes.desktop.width - catalogueWidth - panelRoom,
+    width: frameSizes.desktop.width - catalogueRoom - panelRoom,
     height: frameSizes.desktop.height - barHeight - pillRoom,
   },
   mobile: {

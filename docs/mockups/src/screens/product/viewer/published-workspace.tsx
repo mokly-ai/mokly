@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 
 import type { ColorScheme, Viewport } from "@mokly/mokly";
-import { CanvasDock } from "@mokly/ui/canvas-dock";
 import { CanvasStage } from "@mokly/ui/canvas-stage";
 import { ChangeStatus } from "@mokly/ui/change-status";
 import { EntryBar } from "@mokly/ui/entry-bar";
+import type { PanelTab } from "@mokly/ui/panel-tabs";
 import { WorkspaceLayout } from "@mokly/ui/workspace-layout";
 
 import { staticNoop } from "../../../components/static-controls";
@@ -22,23 +22,32 @@ import { PublishedInspect } from "./published-inspect";
 import { PublishedChanges, PublishedPanel } from "./published-panel";
 
 /**
+ * The right panel's shown tab, which the drawing's dock names too: the tab
+ * that the drawing asks for, or Inspect for a screen that did not change,
+ * which has no Changes tab.
+ */
+export function shownTab(tab: PanelTab): PanelTab {
+  return currentScreen.changed ? tab : "inspect";
+}
+
+/**
  * The workspace of the screen the reader is on, as the viewer draws it on the
  * canvas, with every control a native control or a picture of itself, so the
  * drawing runs no script. A desktop drawing shows the screen's section with
  * Desktop beside Mobile and Light above Dark, the zoom pill, and the right
  * panel with Inspect and Changes. A phone drawing shows the compact layout:
- * the entry bar with the frame picker, the one frame of the document's scheme
- * and the dock, with the panel's sheet closed. Each frame holds the sample
- * screen in its own scheme. The status and the band describe the shown
- * frames. The canvas keeps the view of `canvasView`, because a static
- * document cannot measure its stage.
+ * the entry bar with the frame picker and the one frame of the document's
+ * scheme, with the panel's sheet closed. Each frame holds the sample screen
+ * in its own scheme. The status and the band describe the shown frames. The
+ * canvas keeps the view of `canvasView`, because a static document cannot
+ * measure its stage.
  *
  * `tab` selects the right panel's tab, and the Changes tab draws
- * `changesStart` before the comparison band. The embedded layout of the
- * drawing takes no dock, so the workspace draws the dock where the layout's
- * dock would stand, over the canvas's bottom. `overlay` covers the preview
- * pane, which the package's own stage overlay covers in the app, under the
- * right panel and the dock.
+ * `changesStart` before the comparison band. The drawing's embedded layout
+ * draws the dock over the canvas's bottom, as the app's does, so the
+ * workspace draws none. `overlay` covers the preview pane, which the
+ * package's own stage overlay covers in the app, under the right panel and
+ * the dock.
  */
 export function PublishedWorkspace({
   viewport,
@@ -51,7 +60,7 @@ export function PublishedWorkspace({
   /** The scheme that the reader asked for, the document's own. */
   colorScheme: ColorScheme;
   overlay?: ReactNode;
-  tab?: "inspect" | "changes";
+  tab?: PanelTab;
   /** What the Changes tab's body draws first, such as the cloud's check. */
   changesStart?: ReactNode;
 }) {
@@ -59,7 +68,6 @@ export function PublishedWorkspace({
   const picked = pickedFrame(colorScheme);
   const frames = compact ? [picked] : screenFrames;
   const status = shownStatus(frames);
-  const shownTab = currentScreen.changed ? tab : "inspect";
   return (
     <WorkspaceLayout
       entryBar={
@@ -77,15 +85,6 @@ export function PublishedWorkspace({
           title={currentScreen.title}
         />
       }
-      overlay={
-        <CanvasDock
-          interactive={false}
-          onCatalogue={staticNoop}
-          onFit={staticNoop}
-          onTab={staticNoop}
-          tab={shownTab}
-        />
-      }
       panel={
         <PublishedPanel
           changes={
@@ -97,7 +96,7 @@ export function PublishedWorkspace({
             ) : undefined
           }
           inspect={<PublishedInspect status={status} />}
-          tab={shownTab}
+          tab={shownTab(tab)}
         />
       }
       preview={

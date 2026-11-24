@@ -48,8 +48,9 @@ export function overlappingChrome() {
 /**
  * The frames of a drawn canvas that do not stand clear on it: each frame must
  * lie inside the canvas and clear of each floating part over it that shows,
- * the right panel, the zoom pill, the entry bar and the dock. A frame's label
- * stands above its box, so only the box is measured.
+ * the floating catalogue, the right panel, the zoom pill, the entry bar and
+ * the dock. A frame's label stands above its box, so only the box is
+ * measured.
  */
 export function canvasFrameViolations() {
   const canvas = document.querySelector("[data-mokly-stage]");
@@ -57,7 +58,7 @@ export function canvasFrameViolations() {
   const bounds = canvas.getBoundingClientRect();
   const covers = [
     ...document.querySelectorAll(
-      '[data-floating-panel="right"], .mbk-zoom-pill, [data-entry-bar], [data-canvas-dock]',
+      "[data-floating-panel], .mbk-zoom-pill, [data-entry-bar], [data-canvas-dock]",
     ),
   ].filter((node) => node.getClientRects().length > 0);
   const problems: string[] = [];
