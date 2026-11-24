@@ -81,11 +81,12 @@ A JavaScript `file` loader is invalid because it emits an undelivered file.
 
 ### Workspace packages
 
-For imports by workspace package name, Mokly looks for source files that
-match the build targets in the working tree and the Git base. If JavaScript
-package lookup fails, every declared target for the import must map to the
-same source file. TypeScript declaration files do not count. Configured
-files keep their exact paths.
+For bundled imports by workspace package name, Mokly looks for source
+files that match the build targets in the working tree and the Git base.
+If package lookup fails, every declared target for the import must map to
+the same source file. TypeScript declaration files do not count.
+Configured entry and stories files, the renderer, and the PostCSS module
+keep their exact paths.
 It reads `outDir` and `rootDir` from the package's `tsconfig.json` and
 relative `extends` files in the repository outside `node_modules`. Set both
 folders in the package's `tsconfig.json` when it extends an installed

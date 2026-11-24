@@ -1,5 +1,7 @@
 # Comparison Package Selection
 
+Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports.
+
 This page defines where the [comparison sides](./mokly-comparison.md#sides)
 resolve JavaScript and CSS packages. The [dependency contract](./mokly-base-dependencies.md)
 defines dependency identities, installs, and fallback reasons.
@@ -31,7 +33,8 @@ Third-party dependencies follow three tiers:
 After lookup of a bare package specifier and repository mapping, Mokly
 checks for a source file on the side being rendered. This rule applies to
 the head and the base. A configured file keeps its exact path, including
-when a package import reaches it.
+when a package import reaches it. This includes local stylesheets named in
+the configuration.
 
 1. The target must be a repository path outside `node_modules`. The nearest
    `package.json` above the target, within the repository, must have a
