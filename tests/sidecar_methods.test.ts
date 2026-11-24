@@ -149,6 +149,25 @@ test("definition links created during evaluation resolve in page attributes", as
   await sidecar.call("shutdown");
 });
 
+test("describe names only the stories file whose collection fails", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const file = "describe-failure.stories.tsx";
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: ["page.mockup.ts"],
+      renderer: null,
+      storiesFiles: ["button.stories.tsx", file],
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await assert.rejects(sidecar.call("describe", { generation }), {
+    code: "bundle-failed",
+    message: `${file}: fixture story args failed`,
+  });
+});
+
 test("stories left out by tags cannot render", async (context) => {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");

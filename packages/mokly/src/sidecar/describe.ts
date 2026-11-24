@@ -27,20 +27,26 @@ export async function describe(
   generation: Generation,
   cache: ExportNameCache = exportNameCache,
 ): Promise<Definitions> {
+  let currentModule: string | undefined;
   try {
-    return await collect(generation, cache);
+    return await collect(generation, cache, (module) => {
+      currentModule = module;
+    });
   } catch (error) {
     if (error instanceof SidecarError) throw error;
-    throw new SidecarError(
-      "bundle-failed",
-      `${generation.params.entryFiles.concat(generation.params.storiesFiles).join(", ")}: ${detail(error)}`,
-    );
+    const source =
+      currentModule ??
+      generation.params.entryFiles
+        .concat(generation.params.storiesFiles)
+        .join(", ");
+    throw new SidecarError("bundle-failed", `${source}: ${detail(error)}`);
   }
 }
 
 async function collect(
   generation: Generation,
   cache: ExportNameCache,
+  setModule: (module?: string) => void,
 ): Promise<Definitions> {
   if (generation.definitions) return generation.definitions;
   const exports = evaluate(generation);
@@ -63,6 +69,7 @@ async function collect(
   for (const [module, values] of Object.entries(exports.entries).sort(
     ([a], [b]) => (a < b ? -1 : 1),
   )) {
+    setModule(module);
     let count = 0;
     for (const [exportName, value] of orderedExports(
       generation.sources.get(module) ?? "",
@@ -128,7 +135,9 @@ async function collect(
         message: `${module} exports no Mokly definition`,
       });
   }
+  setModule();
   for (const { value, data, module, exportName } of collected) {
+    setModule(module);
     const diagnostics = validateFields(data, module, exportName);
     result.diagnostics.push(...diagnostics);
     if (
@@ -157,7 +166,9 @@ async function collect(
       });
     }
   }
+  setModule();
   for (const deferred of generation.runtime.links.values()) {
+    setModule(deferred.source);
     if (
       typeof deferred.target !== "object" ||
       !deferred.target ||
@@ -171,7 +182,17 @@ async function collect(
       message: `${deferred.source ?? "unknown module"}: referenced definition ${target?.input.title ?? "unknown"} from ${target?.source ?? "unknown module"} is not exported by an entry module`,
     });
   }
-  await describeStories(generation, exports, result, cache);
+  setModule();
+  for (const [module, values] of Object.entries(exports.stories)) {
+    setModule(module);
+    await describeStories(
+      generation,
+      { ...exports, stories: { [module]: values } },
+      result,
+      cache,
+    );
+  }
+  setModule();
   generation.sources.clear();
   return (generation.definitions = result);
 }

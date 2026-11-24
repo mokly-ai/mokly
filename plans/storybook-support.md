@@ -162,8 +162,6 @@ request #492 merged. Each one needs no decision, and a branch from this
 branch fixes it as its file says. Fix them before the pull request into
 `main`.
 
-- [describe-failure-names-every-file.md](follow-ups/describe-failure-names-every-file.md):
-  Severity Low.
 
 - [crate-topic-pages-skip-link-check.md](follow-ups/crate-topic-pages-skip-link-check.md):
   the Markdown link check does not read crate topic pages.
