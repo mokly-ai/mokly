@@ -3,15 +3,15 @@
    rules of docs/mockups/styles/site/changelog.css; changelog.css says how
    the site writes the compositions. */
 
-/* The panel sticks 72px below the window top, under the tool bar, as the
-   docs panels do, and keeps its foot inside the window: its list scrolls
-   inside it when the releases outgrow the window. Only the desktop from
-   1200px draws it. */
+/* The panel starts 56px below the tool bar and sticks 72px below the window
+   top, as the docs Layers panel does, and keeps its foot inside the window
+   at the Layers panel's height: its list scrolls inside it when the releases
+   outgrow the window. Only the desktop from 1200px draws it. */
 
 .site-release-index {
   display: none;
-  margin-top: 28px;
-  max-height: calc(100vh - 60px - var(--mk-space-8));
+  margin-top: 56px;
+  max-height: calc(100vh - 128px);
   position: sticky;
   top: 72px;
 }
