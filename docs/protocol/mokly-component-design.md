@@ -3,7 +3,7 @@
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
-all fifty-three component design entries (fifty-one screens and two variants)
+all fifty-seven component design entries (fifty-four screens and three variants)
 and their owning folders.
 
 ## Component Pages

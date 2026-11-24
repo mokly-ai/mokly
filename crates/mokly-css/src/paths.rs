@@ -9,7 +9,8 @@ pub fn portable(path: &str, asset: bool) -> bool {
         let Some((index, suffix)) = rest.split_once('/') else {
             return false;
         };
-        return !index.starts_with('0')
+        return !index.is_empty()
+            && !index.starts_with('0')
             && index.bytes().all(|byte| byte.is_ascii_digit())
             && portable_segments(&format!("node_modules/{suffix}"), asset);
     }
@@ -51,24 +52,4 @@ pub fn external(value: &str) -> bool {
         || lower.starts_with("data:")
         || value.starts_with("//")
         || value.starts_with('#')
-}
-
-/// Supported opaque asset content type, with case-sensitive extensions.
-pub fn content_type(path: &str) -> Option<&'static str> {
-    Some(match path.rsplit('.').next()? {
-        "avif" => "image/avif",
-        "bmp" => "image/bmp",
-        "gif" => "image/gif",
-        "ico" => "image/vnd.microsoft.icon",
-        "jpeg" | "jpg" => "image/jpeg",
-        "png" => "image/png",
-        "svg" => "image/svg+xml",
-        "webp" => "image/webp",
-        "eot" => "application/vnd.ms-fontobject",
-        "otf" => "font/otf",
-        "ttf" => "font/ttf",
-        "woff" => "font/woff",
-        "woff2" => "font/woff2",
-        _ => return None,
-    })
 }

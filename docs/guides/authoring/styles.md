@@ -81,6 +81,42 @@ reports as a dependency. With Vite, a link also fails if it points to a file
 that `composes` reads. See [private stylesheet inputs](/docs/authoring/vite/#private-stylesheet-inputs)
 for fixes.
 
+## Import images, fonts, and media
+
+This asset delivery applies when you do not use the Vite adapter.
+Import an image, font, or media file from your component.
+Use the imported value in `src`, `srcset`, `poster`, `href`, or a `style` `url()`.
+Mokly delivers the file.
+Mokly gives each document a working relative URL to the file.
+
+```tsx
+import logo from "./logo.png";
+
+export function Logo() {
+  return <img src={logo} alt="Company logo" />;
+}
+```
+
+Code can append a `?query` or a `#fragment` to the imported value.
+Use a `#fragment` to select an icon from an SVG sprite.
+
+These file extensions work as asset imports.
+Extension matching is case-sensitive.
+
+- Images: `.apng`, `.avif`, `.bmp`, `.cur`, `.gif`, `.ico`, `.jfif`, `.jpeg`,
+  `.jpg`, `.jxl`, `.pjp`, `.pjpeg`, `.png`, `.svg`, and `.webp`.
+- Fonts: `.eot`, `.otf`, `.ttf`, `.woff`, and `.woff2`.
+- Audio: `.aac`, `.flac`, `.m4a`, `.mp3`, `.ogg`, `.opus`, and `.wav`.
+- Video: `.mov`, `.mp4`, and `.webm`.
+- Other files: `.pdf`, `.vtt`, and `.webmanifest`.
+
+Keep file and directory names URL-safe.
+Use only letters, digits, dots, underscores, tildes, and hyphens in each path segment.
+A name with a space fails the build.
+
+In Serve, an edit to an imported file updates the views that use it.
+Changes shows the views that reference the changed file.
+
 ## Consumer PostCSS
 
 With the [Vite adapter](/docs/authoring/vite/), Mokly does not use the `postcss`
@@ -141,8 +177,20 @@ with its React tree.
 
 ## Loader choices
 
-Use a JavaScript-safe loader, such as `dataurl` or `binary`, for JavaScript
-asset imports. A `file` loader emits an undelivered file and fails.
+These asset loader choices apply without the Vite adapter.
+An asset import's default value is not a URL that code can fetch during a render.
+Use `binary` or `text` in `moduleResolution.loaders` to read the file's bytes or text.
+A configured loader overrides asset delivery for its extension.
+A `.txt` import gives its text by default.
+
+A `file` loader in `moduleResolution.loaders` gives your code a URL. Mokly
+delivers the file as it does for an image import. Use `file` for `.txt` or
+the [asset types listed in this guide](/docs/authoring/styles/#import-images-fonts-and-media).
+The build fails if Mokly applies `file` to any other type.
+
+An import attribute overrides a configured loader, including `file`.
+For example, `with { type: "text" }` gives your code the file's text.
+A CSS import stays a stylesheet even with an import attribute.
 Only `empty` can override `.css` or `.module.css` handling.
 The `.css` override opts out of plain CSS and CSS Modules. The `.module.css`
 override opts out of CSS Modules alone.

@@ -32,6 +32,7 @@ fn head(calls: Arc<Mutex<Vec<Call>>>) -> Runtime {
                             path: "renderer.ts".into(),
                             imports: vec![],
                             digest: None,
+                            imported_asset: None,
                         }]
                         .into();
                         MethodResult::Bundle(Box::new(reply))

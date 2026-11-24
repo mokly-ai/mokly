@@ -1,58 +1,12 @@
 //! A JavaScript edit moves exactly the document keys whose render inputs changed.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
+use std::fs;
 
-use mokly_sidecar::methods::Call;
-
+pub(super) use self::fixture::{consumer, dependency, keys, moved, render_calls};
 use super::support::Consumer;
 
-/// The render keys fixture, with a dependency that only component C imports.
-///
-/// The test writes the root manifest, because a tracked package manifest would join
-/// the repository's dependency identity and give Changes a base installation.
-pub(super) fn consumer() -> Consumer {
-    let consumer = Consumer::fixture("render-keys");
-    consumer.write(
-        "package.json",
-        "{\n  \"name\": \"render-keys-fixture\",\n  \"private\": true\n}\n",
-    );
-    dependency(&consumer, "1.0.0", "dep-1");
-    consumer
-}
-
-pub(super) fn dependency(consumer: &Consumer, version: &str, value: &str) {
-    consumer.write(
-        "specs/node_modules/dep/package.json",
-        &format!(r#"{{ "name": "dep", "version": "{version}", "main": "index.js" }}"#),
-    );
-    consumer.write(
-        "specs/node_modules/dep/index.js",
-        &format!("exports.dep = \"{value}\";\n"),
-    );
-}
-
-/// Every document key of a fresh preparation, by entry path and view.
-pub(super) fn keys(consumer: &Consumer) -> BTreeMap<String, String> {
-    let generation = consumer.generation(consumer.prepare().unwrap());
-    generation
-        .plans()
-        .iter()
-        .map(|(route, plan)| (route.clone(), plan.key.0.clone()))
-        .collect()
-}
-
-/// The entries with a view whose key changed, appeared, or disappeared.
-pub(super) fn moved(
-    before: &BTreeMap<String, String>,
-    after: &BTreeMap<String, String>,
-) -> BTreeSet<String> {
-    let routes: BTreeSet<_> = before.keys().chain(after.keys()).collect();
-    routes
-        .into_iter()
-        .filter(|route| before.get(*route) != after.get(*route))
-        .map(|route| route.rsplit_once("/index.").unwrap().0.to_owned())
-        .collect()
-}
+mod fixture;
 
 #[test]
 fn equal_catalogues_in_two_checkout_folders_share_render_input_keys() {
@@ -73,28 +27,6 @@ fn append(consumer: &Consumer, path: &str, text: &str) {
     consumer.write(path, &format!("{original}{text}"));
 }
 
-pub(super) fn render_calls(consumer: &Consumer) -> Vec<(String, String)> {
-    consumer
-        .pool
-        .calls
-        .lock()
-        .unwrap()
-        .iter()
-        .filter_map(|call| match call {
-            Call::RenderScreen(render) => {
-                Some((render.entry.path.clone(), render.viewport.clone()))
-            }
-            Call::RenderComponent(render) => Some((
-                render.render.entry.path.clone(),
-                render.render.viewport.clone(),
-            )),
-            Call::RenderStory(render) => Some((render.story_id.clone(), render.viewport.clone())),
-            Call::RenderPage(render) => Some((render.handle.clone(), String::new())),
-            _ => None,
-        })
-        .collect()
-}
-
 #[test]
 fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
     let consumer = consumer();
@@ -109,7 +41,7 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
         "t/t",
         "u/u",
     ];
-    let steps: [Step; 8] = [
+    let steps: [Step; 10] = [
         (
             "module edit",
             Box::new(|c| append(c, "specs/h.ts", "// edit\n")),
@@ -149,6 +81,32 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
             "renderer edit",
             Box::new(|c| c.replace("theme.ts", "\"plain\"", "\"dark\"")),
             vec!["c", "c/filled", "html", "p", "s/s", "t/t", "u/u"],
+        ),
+        (
+            "add imported PNG",
+            Box::new(|consumer| {
+                fs::write(
+                    consumer.root().join("specs/image.png"),
+                    b"\x89PNG\r\n\x1a\n\x01",
+                )
+                .unwrap();
+                consumer.write(
+                    "specs/h.ts",
+                    "import image from \"./image.png\";\nexport const greeting = image;\n",
+                );
+            }),
+            vec!["s/s"],
+        ),
+        (
+            "edit imported PNG bytes",
+            Box::new(|consumer| {
+                fs::write(
+                    consumer.root().join("specs/image.png"),
+                    b"\x89PNG\r\n\x1a\n\x02",
+                )
+                .unwrap();
+            }),
+            vec!["s/s"],
         ),
     ];
     let mut before = keys(&consumer);

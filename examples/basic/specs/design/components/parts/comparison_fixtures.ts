@@ -83,6 +83,18 @@ const checklistComparison = {
   savedPropsUnchanged: true,
 } as const satisfies ComparisonFixture;
 
+/**
+ * Menu's Expanded story rendered its list on the branch point. On the branch
+ * the error document takes the place of its views, and its args stay the
+ * same.
+ */
+const storyComparison = {
+  status: "changed",
+  reasons: ["material"],
+  variant: "Expanded",
+  savedPropsUnchanged: true,
+} as const satisfies ComparisonFixture;
+
 /** The one stylesheet all three stylesheet stories change. */
 const ACTION_STYLES = "styles/actions.css";
 
@@ -122,6 +134,8 @@ const componentComparisons: Partial<
     excludedStylesheets: [ACTION_STYLES],
   },
   "style-changed": actionStyleComparison,
+  "story-failed": storyComparison,
+  "story-failed-changes": storyComparison,
 };
 
 const screenComparisons: Partial<

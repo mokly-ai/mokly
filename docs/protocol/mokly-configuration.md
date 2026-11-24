@@ -197,7 +197,8 @@ the loader boundary; public files use the
 ## Module Resolution
 
 `moduleResolution` has no defaults beyond esbuild's platform behaviour in the
-[sidecar](./mokly-sidecar.md#bundling). Package roots must be in-repository
+[sidecar](./mokly-sidecar.md#bundling) and the default delivery of
+[JavaScript asset imports](./mokly-imported-assets.md#imported-types). Package roots must be in-repository
 directories containing `package.json`; their `node_modules` directories
 supplement consumer lookup. Alias keys and targets accept bare package
 specifiers only. JavaScript and CSS apply one longest-key alias substitution.

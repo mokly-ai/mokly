@@ -66,6 +66,7 @@ fn graph() -> Arc<Vec<Module>> {
         path: "entry.ts".into(),
         imports: vec!["shared.ts".into()],
         digest: Some("entry-digest".into()),
+        imported_asset: None,
     }])
 }
 

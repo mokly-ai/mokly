@@ -23,6 +23,7 @@ use mokly_sidecar::methods::Call;
 
 use crate::error::{RenderError, Result};
 use crate::fragments::Fragments;
+use crate::imported_assets;
 use crate::leases::FinishPreparation;
 use crate::runtime::Runtime;
 use crate::source_lease::LeasedTree;
@@ -96,6 +97,7 @@ impl JavaScriptGraph {
         catalogue: &mut PreparedCatalogue,
     ) -> Result<(Arc<dyn RenderGraph>, StylesheetAttempt)> {
         let mut side = self.runtime.side(config);
+        let assets = sources::reader(&self.runtime, config, &side);
         let mut inputs = DeliveryInputs {
             persistence: None,
             resources: self.runtime.resources.clone(),
@@ -104,6 +106,7 @@ impl JavaScriptGraph {
             dependency_aliases: side.dependency_aliases.clone(),
             render_keys: None,
             stylesheet_roots: Vec::new(),
+            imported_assets: Vec::new(),
             component_stylesheets: BTreeMap::new(),
             entry_modules: BTreeMap::new(),
         };
@@ -219,6 +222,11 @@ impl JavaScriptGraph {
                     vite_compiler,
                 )?,
                 component_stylesheets: declarations,
+                imported_assets: imported_assets::prepare(
+                    assets.as_ref(),
+                    &config.repo_root,
+                    generation,
+                )?,
                 entry_modules,
             };
         }
@@ -239,7 +247,7 @@ impl JavaScriptGraph {
             inputs,
             tree: Arc::new(LeasedTree {
                 tree: self.runtime.tree.clone(),
-                assets: sources::reader(&self.runtime, config, &side),
+                assets,
                 _base: self.runtime.base.clone(),
             }),
             composer: Arc::new(HtmlComposer { fragments }),

@@ -17,6 +17,7 @@ export type ControlsState =
   | "preparing-failed"
   | "invalid"
   | "error"
+  | "error-later-edit"
   | "comparison"
   | "readonly"
   | "readonly-variant"
@@ -38,6 +39,8 @@ const edited: ActionProps = {
   cornerRadius: 16,
   emphasis: "quiet",
 };
+/** A later edit whose render failed after `edited` rendered. */
+const later: ActionProps = { ...edited, label: "Get started now" };
 const unset = { ...saved };
 delete unset.hint;
 
@@ -79,6 +82,12 @@ export const controlsFixtures: Record<ControlsState, ControlsFixture> = {
     edited: true,
   },
   error: { variant: "default", draft: edited, preview: saved, edited: true },
+  "error-later-edit": {
+    variant: "default",
+    draft: later,
+    preview: edited,
+    edited: true,
+  },
   comparison: {
     variant: "default",
     draft: saved,

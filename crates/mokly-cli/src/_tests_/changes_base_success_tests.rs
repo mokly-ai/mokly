@@ -122,6 +122,7 @@ fn native_base_success_keeps_scripts_off_after_a_tier_two_install() {
                     path: "specs/card.mockup.ts".into(),
                     imports: Vec::new(),
                     digest: Some("source".into()),
+                    imported_asset: None,
                 }].into(),
             })))),
         PoolMock::request

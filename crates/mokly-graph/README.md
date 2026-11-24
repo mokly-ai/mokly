@@ -185,6 +185,18 @@ path. Serve must also apply the public policy's read-time confinement rules.
 Opaque CSS asset preparation retains source identities and digests. A shared
 asset path has one generated resource plan across stylesheet roots. Bundles,
 source snapshots, and render caches retain no opaque payload for preparation.
+Callers can also supply imported assets through `DeliveryInputs`. These
+assets join the same resource plans before document validation, including
+assets that no document references. They share routes with stylesheet assets
+at the same logical path. Each input supplies its confined source identity,
+digest, aliases, and importing module. Each comparison side uses its own inputs.
+Final document composition rewrites asset tokens whose paths are portable.
+It creates document-relative URLs beside logical links before URL and closure
+checks. Collected style text and attribution records receive the same URLs.
+Rule ownership stays unchanged. Replacement does not depend on asset membership.
+A reference to an undelivered asset fails the existing
+closure check as a missing target. Asset membership does not enter document
+keys, so equal render inputs share cached documents across generations and sides.
 `open_asset` supplies a `dyn AssetRead` stream. Its checked copy fails with
 `GraphError::InputsChanged` if the captured digest or opened length differs.
 Consumers keep copied bytes private until verification succeeds. Static output
@@ -238,9 +250,15 @@ retention disabled.
 - [`src/graph.rs`](./src/graph.rs) defines `Graph`, which prepares one
   immutable render generation from the injected services.
 - [`src/delivery_inputs.rs`](./src/delivery_inputs.rs) defines
-  `DeliveryInputs`, the sidecar-reported stylesheet metadata of a generation
-  and the stores that related generations share.
-  [`src/styles.rs`](./src/styles.rs) provides `local_roots`, the roots of the
+  `DeliveryInputs`, the supplied stylesheet and imported asset metadata of a
+  generation and the stores that related generations share. `ImportedAsset`
+  holds metadata for one opaque asset import.
+- [`src/imported_assets.rs`](./src/imported_assets.rs) checks imported route
+  portability and registers shared asset plans and protected source inputs.
+- [`src/asset_tokens.rs`](./src/asset_tokens.rs) rewrites portable asset
+  tokens for each document route with the shared stylesheet path rule. It
+  keeps rule text equal between collected CSS and its attribution records.
+- [`src/styles.rs`](./src/styles.rs) provides `local_roots`, the roots of the
   local stylesheets that the configuration and component declarations name.
 - [`src/key.rs`](./src/key.rs) provides `key` and `NodeKind`, the
   content-addressed node keys.

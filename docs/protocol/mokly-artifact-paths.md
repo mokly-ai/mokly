@@ -24,9 +24,10 @@ views like a variant. The logical entry route of every kind is
 identifier and not a document.
 
 Resources share the namespace: a root's bundled stylesheet at
-`styles/<repository-relative module path>.css` and a CSS asset at
-`assets/<repository-relative asset path>` under the
-[imported stylesheet contract](./mokly-imported-styles.md). A Markdown
+`styles/<repository-relative module path>.css` and a stylesheet or JavaScript
+asset at `assets/<repository-relative asset path>` under the
+[imported stylesheet contract](./mokly-imported-styles.md) and the
+[JavaScript asset contract](./mokly-imported-assets.md). A Markdown
 document's resource is a closure file at `static/<repository-relative path>`
 under the [documents contract](./mokly-documents.md); no copy is made under
 `static/mokly-generated/`. `styles` and `assets` are
@@ -179,7 +180,7 @@ provider-normalized extensionless URL identifies the same document through
 
 `view/`, `static/`, `mokly-viewer/`, `snapshots/`, `previews/`, and
 `mokly-generated/` are reserved artifact prefixes. `static/mokly-generated/`
-holds only rendered documents, bundled stylesheets, and CSS assets. `static/<repository-relative path>` holds the referenced
+holds only rendered documents, bundled stylesheets, and stylesheet and JavaScript assets. `static/<repository-relative path>` holds the referenced
 authored closure, whose paths cannot start with `mokly-generated/`. Each
 helper keeps its stated scope: namespace-relative, static-relative,
 generation-relative, or origin-relative; `viewHref` and

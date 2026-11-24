@@ -58,8 +58,10 @@ handling also covers Vite's other stylesheet languages, such as `.scss` and
 and module CSS, while `.module.css` skips only module CSS and its class map.
 Under the [Vite adapter](./mokly-vite-adapter.md#replaced-settings), these
 opt-outs cover every stylesheet language.
-Opted-out CSS stays inventoried as a watched source. A `file` loader on
-another JavaScript-imported asset fails `build`. A consumer `css` loader on any
+Opted-out CSS stays inventoried as a watched source. Without the adapter, the
+[JavaScript asset import rules](./mokly-imported-assets.md#imported-types) say
+when a `file` loader at another key delivers the file and when it fails the
+bundle. A consumer `css` loader on any
 extension is rejected at config validation because it would emit an
 undelivered sibling stylesheet; rename the input to `.css` or use a
 JavaScript-safe loader. Configured and component-declared local stylesheets and PostCSS inputs

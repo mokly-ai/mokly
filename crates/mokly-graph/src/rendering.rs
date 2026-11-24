@@ -15,7 +15,7 @@ use mokly_model::usage::CatalogueUsage;
 use crate::cache::Artifact;
 use crate::error::{GraphError, Result};
 use crate::types::DocumentPlan;
-use crate::{error, references, urls};
+use crate::{asset_tokens, error, references, urls};
 
 pub(crate) fn markdown(
     catalogue: &PreparedCatalogue,
@@ -110,6 +110,7 @@ fn validate(
         Ok(warnings) => document.warnings.extend(warnings),
         Err(source) => return Err(GraphError::Html { source }),
     }
+    asset_tokens::rewrite(&mut document.tree, &plan.route);
     document.links = match links::rewrite(
         &mut document.tree,
         &catalogue.model.entries,

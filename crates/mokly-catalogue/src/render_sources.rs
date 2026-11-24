@@ -31,6 +31,8 @@ pub struct JavaScriptGeneration {
     pub resolution_directories: BTreeMap<String, BTreeSet<String>>,
     /// Exact consumed-byte digests; a missing digest remains explicit for static validation.
     pub module_digests: BTreeMap<String, Option<String>>,
+    /// Logical module paths that used the asset-default loader.
+    pub imported_assets: BTreeSet<String>,
     /// Logical module paths and ordered imports, including dependencies.
     pub modules: BTreeMap<String, Vec<String>>,
     /// Digest of the bundle settings without the source root, the selected dependency

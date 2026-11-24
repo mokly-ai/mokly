@@ -46,6 +46,8 @@ export const CONTROLS_COPY = {
   retry: "Try again",
   invalid:
     "Check the highlighted values. The preview shows the last valid props.",
+  invalidSavedPreview:
+    "Check the highlighted values. The preview shows the saved props.",
   removed: "Removed entries show their saved props.",
   readonlyProps: "These props are read-only.",
   noProps: "This entry renders without props.",

@@ -115,6 +115,15 @@ the Vite adapter, it transforms them through your Vite setup instead. A
 catalogue of HTML files without a renderer, a PostCSS module, or a local
 stylesheet under the Vite adapter starts no sidecar.
 
+The sidecar turns supported image, font, and media imports into closed
+`mokly-asset:[logical/path]` tokens. A `json`, `text`, or `bytes` import
+attribute wins over other loaders. CSS imports stay on the stylesheet route.
+A consumer `file` loader also delivers the default asset types and `.txt`.
+Without a loader or import attribute, `.txt` imports give the file's text.
+The sidecar marks each asset load with `importedAsset` in its module record
+and uses the original bytes for its digest. The core delivers these files
+under the shared generated asset routes.
+
 The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
 [module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and
 the [PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md)

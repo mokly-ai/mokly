@@ -6,6 +6,7 @@ import type { Loader, OnResolveArgs, Plugin } from "esbuild";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
+import { assetModule, assetType, consumerLoader } from "./asset-imports.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
 import { detail } from "./errors.js";
 import { resolveImport } from "./importer-resolution.js";
@@ -13,7 +14,6 @@ import type { ModulePaths } from "./module-paths.js";
 import { plannedResult } from "./native-plan.js";
 import { importCallbackKey, nativeResolution } from "./native-resolution.js";
 import type { Resolution } from "./native-resolution.js";
-import { logical } from "./path-scope.js";
 import type { ConsumerRequire } from "./paths.js";
 import { styleAdaptersPlugin } from "./style-adapters-plugin.js";
 import {
@@ -49,19 +49,29 @@ export function consumerPlugins(
       name: "mokly-consumer",
       setup(build) {
         build.onLoad({ filter: /.*/, namespace: "file" }, async (args) => {
-          if (
-            params.moduleResolution.loaders[path.extname(args.path)] === "file"
-          )
-            throw new Error(
-              `consumer graph emitted an undelivered file: ${logical(root, args.path)}; use a dataurl or binary loader for JavaScript assets instead of file`,
-            );
+          const type = args.with.type ?? "";
+          const attribute = Object.hasOwn(attributeLoaders, type)
+            ? attributeLoaders[type]
+            : undefined;
           const extension = path.extname(args.path);
           const loader =
-            params.moduleResolution.loaders[extension] ??
+            attribute ??
+            consumerLoader(args.path, params.moduleResolution.loaders) ??
             sourceLoaders[extension] ??
-            attributeLoaders[args.with.type ?? ""] ??
-            (extension === ".txt" ? "text" : undefined);
+            (assetType(args.path)
+              ? "asset"
+              : extension === ".txt"
+                ? "text"
+                : undefined);
           if (!loader) return undefined;
+          if (loader === "file" && !assetType(args.path, loader))
+            return {
+              errors: [
+                {
+                  text: `file loader cannot deliver ${paths.name(args.path)}; use a binary or text loader for this type`,
+                },
+              ],
+            };
           let contents = reads.get(args.path);
           if (contents === undefined) {
             try {
@@ -83,6 +93,11 @@ export function consumerPlugins(
             reads.set(args.path, contents);
           }
           inputs.files.set(args.path, contents);
+          if (loader === "asset" || loader === "file")
+            return {
+              contents: assetModule(paths.name(args.path), inputs.files),
+              loader: "text",
+            };
           return { contents, loader: loader as Loader };
         });
         // A repository-owned importer of `@mokly/mokly` (real path in the

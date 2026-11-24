@@ -18,6 +18,7 @@ import { ChecklistExample } from "./checklist.js";
 import { toolbarPrompt } from "./fixtures.js";
 import { HighlightLayer } from "./highlight.js";
 import type { ComponentId } from "./metadata.js";
+import { MenuExample, StoryErrorDocument } from "./stories.js";
 
 /** The same synthetic Action is composed by component and consuming-screen designs. */
 export function ActionExample({
@@ -78,8 +79,15 @@ export function ComponentCanvas({
   );
 }
 
-/** The saved variants a comparison depicts; only the Checklist outgrows its frame. */
-export type ComparedComponent = Extract<ComponentId, "action" | "checklist">;
+/**
+ * The saved variants a comparison depicts; only the Checklist outgrows its
+ * frame, and the Menu's Expanded story rendered on the branch point but not
+ * on the branch.
+ */
+export type ComparedComponent = Extract<
+  ComponentId,
+  "action" | "checklist" | "menu"
+>;
 
 /** The recorded state of a compared variant, which its sections name. */
 export type ComparedState = "changed" | "removed" | "styles-changed";
@@ -101,6 +109,12 @@ function ComparedVersion({
   const version =
     subject === "checklist" ? (
       <ChecklistExample before={before} />
+    ) : subject === "menu" ? (
+      before ? (
+        <MenuExample expanded />
+      ) : (
+        <StoryErrorDocument />
+      )
     ) : (
       <ActionExample before={before} />
     );

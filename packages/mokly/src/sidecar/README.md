@@ -188,11 +188,12 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   request's `onDispose` hooks run after its rebuild, as after a fresh build.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
-  graph, the input digests, the reuse evidence, the toolchain identity, and
-  the compilation identity. A compile without a full capture owner, such as a
-  `serveEdit` compile, hashes no module source into its identity, because its
-  incomplete evidence adds the random runtime key. An incomplete recipe gets a
-  fresh identity, also when `checkRecipeSize` in
+  graph with `importedAsset` flags, the input digests, the reuse evidence, the
+  toolchain identity, and the compilation identity. A compile with a full
+  capture owner hashes the asset flags into its identity. Without that owner,
+  such as in a `serveEdit` compile, the compile hashes no module source into
+  its identity, because its incomplete evidence adds the random runtime key.
+  An incomplete recipe gets a fresh identity, also when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
   result before it drops the evidence. For a new compile, `bundleRecipe`
@@ -206,6 +207,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   identity gets no marker. A `serveEdit` compile also gets no marker when
   `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
   the `sidecar.bundle.mapped-lookups` timing phase, before `resolutionInputs`.
+- [`src/sidecar/asset-imports.ts`](./asset-imports.ts) holds the asset
+  extension list, the longest consumer-loader lookup, the closed tokens, and
+  the imported paths of each compile, keyed by its consumed-byte map.
 - [`src/sidecar/recipe-encoding.ts`](./recipe-encoding.ts) keeps the texts
   of a new compile from its size check until its response. As its last
   step, `bundleRecipe` stores its request-local map with
