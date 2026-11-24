@@ -86,7 +86,8 @@ focused link.
   keeps focus, and a press on it does nothing.
 - A press applies the zoom at once, and the zoom never animates. After a
   press the pill keeps its place in the window, so repeated presses land on
-  it. The zoom works at every window width.
+  it. A press above 100% keeps the content at the window's centre in place,
+  as far as the page's sides allow. The zoom works at every window width.
 - The zoom scales the home's `main`, except the Specs panel, and its footer
   frame. [Site design pages](./site-design-pages.md#home) defines the layout
   at each zoom.

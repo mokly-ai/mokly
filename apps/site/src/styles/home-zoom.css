@@ -22,9 +22,17 @@
 /* Each scaled part grows from its top centre. Each part sits at the centre
    of the page root, which is the window's width up to 100% and the zoom
    times wider above it, so the parts grow from the middle of the window
-   below 100% and from the page's start above it. */
+   below 100% and from the page's start above it.
+
+   Each part also keeps its own height in a grid or a flex row. The
+   workspace shares the stage's one cell with the Specs panel, which keeps
+   its size, so at the smallest zooms the panel is taller than the scaled
+   workspace. A stretched workspace would be taller than at 100%, the
+   island would scale that height, and the pill would leave its place
+   after a press. */
 
 [data-home-zoom-part] {
+  align-self: start;
   transform-origin: 50% 0;
 }
 
@@ -38,15 +46,21 @@ body,
   transition-property: none;
 }
 
-/* The site's page root is the body. While the root element keeps its
-   initial overflow, the body's sideways clip passes to the window, where
-   it acts as hidden: script could scroll the page sideways, but the reader
-   could not. Zoomed in, the root element takes a sideways overflow of its
-   own, so the window scrolls and the body clips at its own sides. The
+/* The window draws a vertical scrollbar at every zoom. A zoom out can make
+   the page fit the window's height, and a classic scrollbar that then left
+   would give its room to the page, so the layout of 100% would widen and
+   the bars and the pill would move. A stable scrollbar gutter was rejected:
+   headless Chromium reserves its room but leaves it in clientWidth.
+
+   The site's page root is the body. While the root element kept its
+   initial overflow, the body's sideways clip would pass to the window and
+   act as hidden, so the reader could not scroll the zoomed-in page
+   sideways. The vertical scroll gives the root element a sideways overflow
+   of auto, so the window scrolls and the body clips at its own sides. The
    mockups' root is not the body, so their sheet needs no such rule. */
 
-:root:has(> .site-root--zoomed-in) {
-  overflow-x: auto;
+:root {
+  overflow-y: scroll;
 }
 
 /* Above 100% the page root grows to the window's width times the zoom, and

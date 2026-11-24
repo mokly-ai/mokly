@@ -1,0 +1,37 @@
+# Site parity compares only the last desktop step
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from the branch `calummoore/homepage-functionality-vjxs`, review round 1, outside the scope, found by the check of finding 5.
+- **Location:** `docs/mockups/src/_tests_/design-site-parity.test.ts:153`
+- **Reason:** The problem is on `origin/main`, and its fix changes how the parity test reads every desktop rule of the site, outside the home zoom change.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Parity test:** `docs/mockups/src/_tests_/design-site-parity.test.ts`. It compares each CSS rule that the site sheets under `apps/site/src/styles/` and the site mockup sheets under `docs/mockups/styles/site/` both declare.
+  - **Composition:** a layout that the parity test compares. The narrow composition is the mobile layout below 768px. The wide composition is the desktop layout from 768px.
+  - **Desktop step:** a rule for part of the desktop widths. The site writes it as `@media (min-width: 768px) and (max-width: 1439px)` or a narrower range. The mockups write `@media (max-width: 1439px)` with a `data-site-viewport="desktop"` selector.
+- **Background:**
+  - `composition()` builds the wide composition from every rule whose query names `min-width: 768px`, or whose mockup selector pins `data-site-viewport="desktop"`. It applies the rules in source order, and each later declaration of a property replaces the earlier one.
+  - Each sheet puts its desktop steps after its `(min-width: 768px)` rules. So the wide composition keeps a step's value whenever a step sets the same property.
+  - Example: the site's `.site-home-workspace` takes `padding: 0 78px 0 16px` from 768px in `apps/site/src/styles/home.css:150`.
+  - From 768px to 1439px it takes `0 clamp(20px, 5.4vw, 80px) 0 16px` at `:195`, and from 768px to 1199px `0 clamp(20px, 5.4vw, 80px)` at `:224`.
+  - The mockups declare the same three values in `docs/mockups/styles/site/home.css:30`, `:197` and `:226`. The wide composition compares only the last value.
+  - On 2026-11-24 the site's 78px changed to 90px for one run, and the parity test still passed all three of its tests.
+  - The function has the same form on `origin/main`, at line 132.
+- **Problem:** For each property that a desktop step sets, the parity test compares only the value of the last step in the sheet. The value for 1440px and wider, and the value of each earlier step, are never compared.
+- **Impact if no action:** The site and its mockups can differ at 1440px and wider, where the site's desktop browser tests and the desktop mockups inspect the pages, and no test fails.
+- **Root question:** How does the parity test compare each desktop width range, not only the last step that the sheets declare?
+- **Options:**
+  - **A.** Add a third composition for 1440px and wider. It leaves out each site rule with a `max-width` condition and each mockup rule under a `max-width` query. The earlier steps stay hidden. Effort: Small.
+  - **B.** Resolve both sides at a list of window widths, such as 390, 768, 1024, 1280 and 1440px. Read each rule's `min-width` and `max-width` conditions, and compare the two sides at each width. Effort: Medium.
+  - **C.** Share the desktop rules between the site and the mockups through one stylesheet path for both builds, so that no copy can differ. Effort: Large.
+- **Left out:** A comparison of every value that a property takes, in source order, because the two sides can order their steps in other ways and still agree at each width.
+- **Wider fix:** B. It compares every width range that a step creates, also for steps that later changes add.
+- **Previous examples:** The zoomed footer rule `.site-root--zoomed-in .site-footer-inner`: its value for 1440px and wider is hidden by its 1439px step, so the test compares only the step's `10.8vw` widths.
+- **Related:**
+  - `plans/follow-ups/site-parity-exceptions-exempt-whole-rules.md` changes how the same test treats a recorded difference. Both changes edit the comparison of `design-site-parity.test.ts`.
+  - `plans/follow-ups/site-desktop-layouts-at-200-percent-text.md` notes that the test sorts the site's rules into a composition by the strings `min-width: 768px` and `max-width: 767px`. B replaces that sorting.
+- **Recommendation:** B. It compares each desktop range at Medium effort, and A still hides the earlier steps. C best protects the codebase, but it needs a stylesheet path that both builds share.
+- **Action:** fix after merge, apply B, because the problem is on `origin/main` and B changes how the parity test reads every desktop rule, outside the home zoom change.

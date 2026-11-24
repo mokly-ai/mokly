@@ -5,7 +5,9 @@
  * the responsive mechanism, which the mockups express as `data-site-viewport`
  * and the site as width queries. Differences that are structural, not drift,
  * are listed in `INTENTIONAL` with the reason they are allowed, and the test
- * fails when one of those is silently resolved or disappears.
+ * fails when one of those is silently resolved or disappears. A difference
+ * of one property is listed in `INTENTIONAL_PROPERTY`: the rule's other
+ * declarations must agree, and its two values of that property must differ.
  */
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
@@ -16,7 +18,11 @@ import test from "node:test";
 import { CHANGELOG_DIFFERENCES } from "./design-site-parity-changelog";
 import { CHROME_DIFFERENCES } from "./design-site-parity-chrome";
 import { DOCS_DIFFERENCES } from "./design-site-parity-docs";
-import { HOME_DIFFERENCES } from "./design-site-parity-home";
+import {
+  HOME_DIFFERENCES,
+  HOME_PROPERTY_DIFFERENCES,
+  type PropertyDifference,
+} from "./design-site-parity-home";
 import { PRICING_DIFFERENCES } from "./design-site-parity-pricing";
 import {
   repositoryRoot,
@@ -44,6 +50,16 @@ const INTENTIONAL: Readonly<Record<string, string>> = {
   ...CHANGELOG_DIFFERENCES,
   ...PRICING_DIFFERENCES,
 };
+
+/**
+ * Selectors both sides declare whose one named property is expected to
+ * differ, with the reason. The comparison leaves that property out, so the
+ * rule's other declarations must agree, and each entry is proved to still
+ * declare two different values of it.
+ */
+const INTENTIONAL_PROPERTY: ReadonlyMap<string, PropertyDifference> = new Map(
+  Object.entries(HOME_PROPERTY_DIFFERENCES),
+);
 
 interface Rule {
   readonly at: string | null;
@@ -184,7 +200,22 @@ async function sheets(): Promise<{ mockup: Rule[]; site: Rule[] }> {
   return { mockup: rules(mockup), site: rules(site) };
 }
 
-/** Selectors declared on both sides whose declarations disagree. */
+/** The declarations in one sorted line, without the property `allowed`. */
+function listed(
+  declarations: ReadonlyMap<string, string>,
+  allowed: string | undefined,
+): string {
+  return [...declarations]
+    .filter(([property]) => property !== allowed)
+    .sort()
+    .map(String)
+    .join(" | ");
+}
+
+/**
+ * Selectors declared on both sides whose declarations disagree, apart from
+ * the one property that a recorded property difference allows.
+ */
 function drifted(
   mockup: Map<string, Map<string, string>>,
   site: Map<string, Map<string, string>>,
@@ -193,9 +224,9 @@ function drifted(
   for (const [selector, declarations] of mockup) {
     const other = site.get(selector);
     if (!other) continue;
-    const left = [...declarations].sort().map(String).join(" | ");
-    const right = [...other].sort().map(String).join(" | ");
-    if (left !== right) different.push(selector);
+    const allowed = INTENTIONAL_PROPERTY.get(selector)?.property;
+    if (listed(declarations, allowed) !== listed(other, allowed))
+      different.push(selector);
   }
   return different;
 }
@@ -241,6 +272,16 @@ test(
             drifted(depicted, shipped).includes(selector),
         ),
         `${selector} no longer differs; remove it from the recorded list`,
+      );
+    }
+    for (const [selector, { property }] of INTENTIONAL_PROPERTY) {
+      assert.ok(
+        views.some(({ depicted, shipped }) => {
+          const drawn = depicted.get(selector)?.get(property);
+          const built = shipped.get(selector)?.get(property);
+          return drawn !== undefined && built !== undefined && drawn !== built;
+        }),
+        `${property} of ${selector} no longer differs; remove it from the recorded list`,
       );
     }
   },

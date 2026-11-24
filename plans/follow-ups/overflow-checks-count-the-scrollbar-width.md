@@ -1,0 +1,35 @@
+# Overflow checks count the scrollbar as page width
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from the branch `calummoore/homepage-functionality-vjxs`, review round 1, finding 4.
+- **Location:** `docs/mockups/src/_tests_/responsive.spec.ts:51`, `docs/mockups/src/_tests_/responsive.spec.ts:57`, `docs/mockups/src/_tests_/viewer.spec.ts:128`, `docs/mockups/src/_tests_/viewer-builds.spec.ts:106`, `docs/mockups/src/_tests_/viewer-builds.spec.ts:202`, `docs/mockups/src/_tests_/emails.spec.ts:76`, `apps/site/tests/browser/docs-sample.spec.ts:59`, `apps/site/tests/browser/accessibility.ts:123`, `docs/mockups/src/_tests_/disk.spec.ts:193`, `apps/site/tests/browser/home-zoom.ts`
+- **Reason:** The shared reader and the eight older checks reach browser tests of other areas that the home zoom change does not touch.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Classic scrollbar:** a scrollbar that takes room beside the page, as Chrome draws it on Windows and Linux. An overlay scrollbar, as on macOS and phones, takes no room.
+  - **Overflow check:** a browser test assertion that a page does not scroll sideways. It compares the document's scroll width with a width of the window.
+  - **Hidden scrollbars:** Playwright starts headless Chromium with `--hide-scrollbars`, so its scrollbars take no room. `launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] }` shows them.
+- **Background:**
+  - `window.innerWidth` is the window's width with its scrollbar. `document.documentElement.clientWidth` is the page's width without a classic scrollbar.
+  - On 2026-11-24, Chromium with shown scrollbars measured an `innerWidth` of 1440 and a `clientWidth` of 1425 in a 1440px window. In a 390px window it measured 390 and 375.
+  - With hidden scrollbars the two widths are equal, so every check below is exact in the default runs.
+  - These eight checks assert `document.documentElement.scrollWidth <= innerWidth`: `responsive.spec.ts:51` and `:57`, `viewer.spec.ts:128`, `viewer-builds.spec.ts:106` and `:202` and `emails.spec.ts:76` under `docs/mockups/src/_tests_/`, and `docs-sample.spec.ts:59` and `accessibility.ts:123` under `apps/site/tests/browser/`.
+  - The disk smoke check in `docs/mockups/src/_tests_/disk.spec.ts` had the same divisor. With classic scrollbars it compared 2850 / 1440 with 2 and rejected the correct home drawing at 200%.
+  - On 2026-11-24 the home zoom branch changed that check to divide the scroll width by `clientWidth` for every drawing. It expects 2 for the home zoomed in to 200% and 1 for every other drawing. One run with shown scrollbars passed all 1627 documents.
+  - The site's home zoom specs read the same width through `windowWidth()` in `apps/site/tests/browser/home-zoom.ts`. So two suites read one width in two ways.
+  - Chromium's `clientWidth` does not subtract a reserved scrollbar gutter that holds no scrollbar. Under `scrollbar-gutter: stable` it reported 1280 for a 1265px layout once the page fitted the window. A reader for such a page must read the root element's box width.
+- **Problem:** With a classic scrollbar, each of the eight checks accepts a page that scrolls sideways by up to the scrollbar's width, 15px in Chromium. A part sized with `100vw` overflows by exactly that width, so no overflow check catches it in either scrollbar setting.
+- **Impact if no action:** A page that scrolls sideways for readers with classic scrollbars passes every overflow check. Each new check can copy the `innerWidth` comparison.
+- **Root question:** How do the browser checks measure sideways overflow, so that the result does not depend on the scrollbar setting?
+- **Options:**
+  - **A.** Change the eight checks to compare the scroll width with `document.documentElement.clientWidth`. Effort: Small.
+  - **B.** Add one shared reader for the document's scroll width and the page's width without its scrollbar. Use it in the eight checks, in the disk check's ratio and in `windowWidth()`. Effort: Medium.
+  - **C.** B, and run the overflow checks once with shown scrollbars, so that a `100vw` part fails. This adds browser run time and a new check, which needs the user's approval. Effort: Medium.
+- **Left out:** A tolerance of the scrollbar's width, because it accepts real overflow. Hidden scrollbars as a rule for every run, because they hide the `100vw` defect class.
+- **Wider fix:** B. One reader states which width a check compares, so a new check cannot pick the wrong one.
+- **Previous examples:** The disk smoke check of the home drawing at 200%, fixed on 2026-11-24 on the home zoom branch. `windowWidth()` in `apps/site/tests/browser/home-zoom.ts` already reads `clientWidth`.
+- **Recommendation:** B. It makes the compared widths explicit in both suites at Medium effort. C best protects the codebase, because it would catch a `100vw` part, but it adds a check.
+- **Action:** fix after merge, apply B, because the reader and the eight checks reach browser tests that the home zoom change does not touch.

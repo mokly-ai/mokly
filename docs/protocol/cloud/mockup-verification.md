@@ -172,7 +172,8 @@ The disk smoke opens every generated HTML document at 390px or 1440px, waits
 for documents, fonts and images, and rejects browser errors, missing
 resources, blank content and horizontal overflow, including frames. The one
 exception is the home's `zoomed-in` state: it keeps the home's layout of 100%
-at 200%, so the smoke requires it to be exactly twice the window wide.
+at 200%, so the smoke requires it to be exactly twice the page's width without
+its scrollbar.
 HTTP checks open the settings panes through the dialog rail, account entry and
 every flow through Browse, and check keyboard focus in account entry. They read
 the canvas frames by their labels, check a settings pane in its Light and Dark

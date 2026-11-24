@@ -1,0 +1,36 @@
+# Site parity exceptions exempt whole rules
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from the branch `calummoore/homepage-functionality-vjxs`, review round 1, the wider fix of finding 5.
+- **Location:** `docs/mockups/src/_tests_/design-site-parity.test.ts:46`, `docs/mockups/src/_tests_/design-site-parity.test.ts:60`, `docs/mockups/src/_tests_/design-site-parity-chrome.ts`, `docs/mockups/src/_tests_/design-site-parity-docs.ts`, `docs/mockups/src/_tests_/design-site-parity-changelog.ts`, `docs/mockups/src/_tests_/design-site-parity-pricing.ts`, `docs/mockups/src/_tests_/design-site-parity-home.ts`
+- **Reason:** The change makes 35 existing exceptions stricter, and stricter validation needs Cal's approval.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Parity test:** `docs/mockups/src/_tests_/design-site-parity.test.ts`. It compares each CSS rule that the site sheets under `apps/site/src/styles/` and the site mockup sheets under `docs/mockups/styles/site/` both declare.
+  - **Whole-rule exception:** an entry of `INTENTIONAL` in the parity test. The test skips every declaration of its selector.
+  - **Property exception:** an entry of `INTENTIONAL_PROPERTY` in the parity test. The test skips one named property of its selector and compares the other declarations.
+- **Background:**
+  - The parity test compares a wide and a narrow composition. Each area module lists its exceptions, each with a reason.
+  - The whole-rule exceptions are 5 in the chrome area, 5 in the docs, 15 in the changelog and 10 in pricing: 35 in total. The home has none.
+  - On 2026-11-24 the home zoom branch added the one property exception. `.site-root--zoomed-in .site-footer-inner` may differ in `width` only, because the drawings scale the frame with CSS `zoom` and the site with a transform.
+  - A property exception also requires its two values to still differ, so a resolved difference fails the test.
+  - On 2026-11-24 a read of both sheets found that each of the 35 rules differs in one to seven properties. `.site-menu` differs in `inset`, `max-height`, `overflow-y`, `overscroll-behavior`, `transition` and `translate`.
+  - `.site-release-group-title` differs only in `letter-spacing`, and `.site-pricing-props td` only in `font-size`.
+  - In the review of the home zoom branch, `max-width: 1000px` on the mockup's zoomed footer rule passed the test while that rule was a whole-rule exception.
+  - The always-on rules reserve a stricter validation for the user.
+- **Problem:** A whole-rule exception hides every later difference in its rule, not only the difference that its reason explains.
+- **Impact if no action:** The site and its mockups can drift apart in 35 exempt rules, and no test fails.
+- **Root question:** How does the parity test allow a recorded difference and still catch each other difference in the same rule?
+- **Options:**
+  - **A.** Keep the whole-rule exceptions. Only the zoomed footer rule is checked per property. Effort: Small.
+  - **B.** Record each of the 35 exceptions with the properties that it lets differ. Compare every other declaration, and require each recorded property to still differ. A hidden difference that this finds needs a fix or a reason. Effort: Medium.
+  - **C.** Share each excepted rule between the site and the mockups through one stylesheet path for both builds, and keep apart only the value that each renderer needs. Effort: Large.
+- **Left out:** Removing the exceptions, because each records a structural difference that its reason explains.
+- **Wider fix:** C. Shared rules leave no copy that can drift. B detects the drift of the copies that stay.
+- **Previous examples:** The zoomed footer exception, narrowed to its `width` on 2026-11-24. `plans/follow-ups/site-defect-classes-lack-site-wide-checks.md` notes that the parity test lets the site differ wherever it lists an intentional difference.
+- **Related:** `plans/follow-ups/site-parity-compares-only-the-last-desktop-step.md` changes how the same test resolves a desktop composition. Both changes edit the comparison of `design-site-parity.test.ts`.
+- **Recommendation:** B. It keeps each recorded reason and checks every other declaration of the 35 rules again, at Medium effort. C best protects the codebase, but it needs a stylesheet path that both builds share.
+- **Action:** ask the user, because B makes 35 existing exceptions stricter, and the always-on rules reserve stricter validation for the user.

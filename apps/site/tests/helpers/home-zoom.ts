@@ -9,11 +9,13 @@
  * transform, each part takes its own height in the page plus the bottom
  * margin that the island gives it. Between `main` and the frame the footer
  * keeps a 100px gap, and after the frame the 100px status bar holds the
- * pill, so the page is 6300px tall at 100%. The browser clamps the scroll
- * position to the page. Where it anchors, it keeps the point at the
- * window's top in place, and where it scrolls in whole pixels, it drops the
- * fraction; WebKit does both. The stub finds each part by the marks of
- * `zoom-marks.ts`, which the site's markup takes too.
+ * pill, so the page is 6300px tall at 100%. Above 100% the page is the zoom
+ * times the window's width, and up to 100% it is the window's width. The
+ * browser clamps the scroll position to the page, down and sideways. Where
+ * it anchors, it keeps the point at the window's top in place, and where it
+ * scrolls in whole pixels, it drops the fraction; WebKit does both. The stub
+ * finds each part by the marks of `zoom-marks.ts`, which the site's markup
+ * takes too.
  */
 
 import {
@@ -149,7 +151,7 @@ export interface ZoomStub {
    * width does, and the browser tells the resize observers.
    */
   resizeWorkspace(height: number): void;
-  /** The reader scrolls the page sideways to `x`. */
+  /** The reader scrolls the page sideways to `x`, or to the page's side. */
   scrollSideways(x: number): void;
   /** Which pill shows, the zoom, and the buttons with `aria-disabled`. */
   shown(): {
@@ -193,6 +195,8 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
           : y + (main - laidOut.main);
     laidOut = { main, zoom };
     const page = main + FOOTER_GAP + frame.taken() + STATUS_BAR;
+    const width = WINDOW.width * Math.max(zoom, 1);
+    x = Math.min(Math.max(0, x), width - WINDOW.width);
     y = Math.min(Math.max(0, y), page - WINDOW.height);
     return page;
   };
@@ -268,6 +272,7 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
     },
     scrollSideways: (next) => {
       x = next;
+      layout();
     },
     shown: () => ({
       atEnd: (["out", "in"] as const).filter(

@@ -291,6 +291,16 @@ Milestone 6 added these calls, also on 2026-11-24:
   scaled target into view by its drawn box, and an anchor lands where it
   lands at 100%.
 
+The review of 2026-11-24 added this call:
+
+- **The home always draws the window's vertical scrollbar.** With classic
+  scrollbars, a zoom out that made the page fit the window removed the
+  scrollbar, widened the layout and moved the pill. A stable scrollbar
+  gutter was rejected, because headless Chromium reserves its room but
+  leaves it in `clientWidth`, which broke 16 site browser tests. The cost
+  is an empty track on classic-scrollbar platforms while the zoomed-out
+  page fits the window.
+
 Contract owners:
 
 - [Site](../docs/protocol/cloud/site.md), its accessibility rules.

@@ -121,7 +121,7 @@ test("after each press the pill keeps its place in the window, also where the br
   assert.deepEqual(anchored.place(), { pill: 1600, x: 0, y: 4600 });
 });
 
-test("where the browser scrolls in whole pixels, a run of presses keeps the pill within a pixel of its place", () => {
+test("where the browser scrolls in whole pixels, a run of presses keeps the pill and the window's centre within a pixel of their places", () => {
   // At 850px the pill is 50px above its place at the page's end, so no step
   // from 100% to 26% and back reaches an end of the page. Most of those
   // steps leave a fraction of a pixel that the browser drops.
@@ -136,6 +136,17 @@ test("where the browser scrolls in whole pixels, a run of presses keeps the pill
     tops,
     Array.from({ length: 12 }, () => 850),
   );
+
+  // Above 100% each press keeps the content's point 500px from its left
+  // edge at the window's centre: at 156.25% the scroll of 281.25px drops
+  // to 281px, and at 195.3125% that of 476.5625px to 476px.
+  const wide = openZoom({ wholePixels: true, y: END });
+  const lefts: number[] = [];
+  for (const step of ["in", "in", "in", "in", "out", "out", "out"] as const) {
+    wide.press(step);
+    lefts.push(wide.place().x);
+  }
+  assert.deepEqual(lefts, [125, 281, 476, 500, 300, 140, 0]);
 });
 
 test("above 100% the point of the content at the window's centre stays at the centre", () => {
@@ -151,6 +162,22 @@ test("above 100% the point of the content at the window's centre stays at the ce
   assert.equal(home.place().x, 200);
   home.press("out");
   assert.equal(home.place().x, 0, "at 100% the page does not scroll sideways");
+  // At 100% the window's centre is 500px into the content again.
+  home.press("in");
+  assert.equal(home.place().x, 125, "after 100% a press keeps that centre");
+
+  // At 156.25% the reader scrolls to the page's right end, 562.5px, where
+  // 1062.5px, 680px of the content, is at the centre. At 125% that point
+  // lies past the right end, so the browser stops at 250px, which puts
+  // 600px of the content at the centre. Zoom in keeps 600px there.
+  const side = openZoom({ y: END });
+  side.press("in", 2);
+  side.scrollSideways(1000);
+  assert.equal(side.place().x, 562.5);
+  side.press("out");
+  assert.equal(side.place().x, 250);
+  side.press("in");
+  assert.equal(side.place().x, 437.5, "the content at the centre stays there");
 });
 
 test("each press that changes the zoom moves the page, then fires the zoom event once", () => {

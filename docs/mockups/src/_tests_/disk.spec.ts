@@ -191,10 +191,13 @@ for (const { file, path, viewport, scheme } of views) {
       (await page.locator("main").innerText()).trim().length,
     ).toBeGreaterThan(5);
     // No page scrolls sideways, except the home zoomed in to 200%: it keeps
-    // its layout of 100% at twice the size, so it is twice the window wide.
+    // its layout of 100% at twice the size, so it is twice the page's width
+    // without its scrollbar, which a classic scrollbar takes from the window.
     expect(
-      await page.evaluate(() =>
-        Math.max(document.documentElement.scrollWidth / innerWidth, 1),
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth /
+          document.documentElement.clientWidth,
       ),
     ).toBe(path === sidewaysDrawing ? 2 : 1);
     const targets = await page

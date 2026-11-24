@@ -2,7 +2,16 @@ import { type Locator, type Page, expect, test } from "@playwright/test";
 
 import { SITE_PATHS } from "../../src/navigation.js";
 
-import { DESKTOP, stepThrough, windowWidth, zoomPill } from "./home-zoom.js";
+import {
+  DESKTOP,
+  DOWN_TO_END,
+  UP_FROM_END,
+  expectNear,
+  settled,
+  stepThrough,
+  windowWidth,
+  zoomPill,
+} from "./home-zoom.js";
 import { scrollWidth } from "./large-text.js";
 
 /**
@@ -11,9 +20,10 @@ import { scrollWidth } from "./large-text.js";
  * docs/protocol/cloud/site-design-pages.md fix it: the group and its
  * buttons, the steps from 8% to 200%, a button at its end that keeps focus,
  * the sideways scroll above 100% with the bars in place, the pill's place
- * after each press, also with reduced motion, the measured values at every
- * zoom, and the depicted pill without script. `home-zoom-scale.spec.ts`
- * checks the scaled layout and the Specs panel, and
+ * once the layout settles after each press, also with reduced motion, the
+ * measured values at every zoom, and the depicted pill without script.
+ * `home-zoom-scale.spec.ts` checks the scaled layout and the Specs panel,
+ * `home-zoom-scrollbar.spec.ts` the layout with classic scrollbars, and
  * `tests/home_zoom.test.ts` and `tests/home_zoom_island.test.ts` check the
  * steps and the island's decisions against a stub page.
  */
@@ -82,22 +92,28 @@ test("above 100% the home scrolls sideways while the tool bar and the status bar
   await expect.poll(() => page.evaluate(() => window.scrollX)).toBe(0);
 });
 
-/** Press through 41% and up to 200%; the pill stays at its place. */
+/**
+ * Press down to 8% and up to 200%. Once the layout settles after each
+ * press, the pill stays at its place, and no part that the zoom scales
+ * changes its own height. On a desktop the Specs panel and the workspace
+ * share a row, and at 9% and 8% the panel is taller than the scaled
+ * workspace, so it must not stretch the workspace.
+ */
 async function pillKeepsItsPlace(page: Page): Promise<void> {
   await page.goto(SITE_PATHS.home);
   const { group, zoomIn, zoomOut } = zoomPill(page);
   await zoomOut.focus();
-  const place = (await group.boundingBox())?.y ?? Number.NaN;
+  const start = await settled(group);
   const presses: ReadonlyArray<readonly [Locator, string]> = [
-    ...["80%", "64%", "51%", "41%"].map((zoom) => [zoomOut, zoom] as const),
-    ...["51%", "64%", "80%", "100%", "125%", "156%", "195%", "200%"].map(
-      (zoom) => [zoomIn, zoom] as const,
-    ),
+    ...DOWN_TO_END.map((zoom) => [zoomOut, zoom] as const),
+    ...UP_FROM_END.map((zoom) => [zoomIn, zoom] as const),
   ];
   for (const [button, zoom] of presses) {
     await stepThrough(group, button, [zoom]);
-    const top = (await group.boundingBox())?.y ?? Number.NaN;
-    expect(Math.abs(top - place), `at ${zoom}`).toBeLessThanOrEqual(1);
+    const now = await settled(group);
+    expect(now.heights, `at ${zoom}, the own heights`).toEqual(start.heights);
+    expectNear(now.x, start.x, `at ${zoom}, the pill's left`);
+    expectNear(now.y, start.y, `at ${zoom}, the pill's top`);
   }
 }
 

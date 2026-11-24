@@ -106,10 +106,10 @@ export interface ZoomWindow<Part extends ZoomedElement> {
 /**
  * The places that a run of presses keeps, in CSS pixels: the pill's top in
  * the window and the point of the content at the window's centre, at 100%,
- * with the pill's top and the sideways scroll after the run's last press.
+ * with the pill's top after the run's last press.
  */
 interface Run {
-  readonly after: { readonly left: number; readonly top: number };
+  readonly after: number;
   readonly centre: number;
   readonly top: number;
 }
@@ -188,24 +188,30 @@ export function startZoomPill<Part extends ZoomedElement>(
   };
 
   /**
-   * The places that the next press keeps. A run of presses keeps the places
-   * of its first press until the reader moves the page, so the whole pixels
-   * that WebKit scrolls by miss them by less than a pixel and do not add up.
+   * The places that the next press keeps. A run of presses keeps the pill's
+   * top of its first press while the pill stays within a pixel of where the
+   * last press left it, and the run's point of the content while that point
+   * stays within a pixel of the window's centre. The whole pixels that
+   * WebKit scrolls by then miss them by less than a pixel and do not add up.
+   * A scroll of the reader, the return to 100%, where the page stops
+   * scrolling sideways, and a scroll that the page's side stops each move
+   * the centre further, so the next press keeps the point at the centre
+   * then.
    */
   const places = (): Run => {
     const top = control.getBoundingClientRect().top;
-    const left = window.scrollX;
-    if (
-      run !== undefined &&
-      Math.abs(top - run.after.top) < 1 &&
-      Math.abs(left - run.after.left) < 1
-    )
-      return run;
     // Up to 100% the page does not scroll sideways, so its centre is the
     // window's. The content grows from its left edge, so a point of it lies
     // at its zoomed distance from that edge.
-    const centre = (left + page.clientWidth / 2) / Math.max(zoom, 1);
-    return { after: { left, top }, centre, top };
+    const scale = Math.max(zoom, 1);
+    const middle = window.scrollX + page.clientWidth / 2;
+    const centre =
+      run !== undefined && Math.abs(run.centre * scale - middle) < 1
+        ? run.centre
+        : middle / scale;
+    const kept =
+      run !== undefined && Math.abs(top - run.after) < 1 ? run.top : top;
+    return { after: top, centre, top: kept };
   };
 
   const press = (step: ZoomStep) => {
@@ -221,8 +227,7 @@ export function startZoomPill<Part extends ZoomedElement>(
       left: next > 1 ? kept.centre * next - page.clientWidth / 2 : 0,
       top: window.scrollY + moved,
     });
-    const top = control.getBoundingClientRect().top;
-    run = { ...kept, after: { left: window.scrollX, top } };
+    run = { ...kept, after: control.getBoundingClientRect().top };
     window.dispatchEvent(new Event(HOME_ZOOM_EVENT));
   };
 
