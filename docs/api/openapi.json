@@ -3543,6 +3543,55 @@
         ]
       }
     },
+    "/v1/live/projects/{projectId}": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "summary": "Open a project WebSocket for a signed-in member.",
+        "operationId": "openLiveChannel",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "description": "Exact configured public application origin, or mokly-app://desktop when MKC_DESKTOP_CLIENT is true;\nrequired on browser mutations including public authentication. Missing or other origins are refused.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching Protocols. The WebSocket sends ServerMessage objects in text frames."
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "x-reasons": [
+          "csrf-rejected",
+          "internal-error",
+          "not-found",
+          "session-expired",
+          "unauthenticated",
+          "validation-failed"
+        ]
+      }
+    },
     "/v1/projects/{projectId}/branches": {
       "get": {
         "tags": [
@@ -6004,6 +6053,20 @@
         },
         "additionalProperties": false
       },
+      "ClientEvent": {
+        "type": "object",
+        "description": "A client event uses its kind as the message type.\n\nEach registered kind defines its own fields in the same JSON object.",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(?:notice|resync)(?![\\s\\S]))"
+          }
+        },
+        "additionalProperties": {}
+      },
       "Comment": {
         "type": "object",
         "required": [
@@ -7067,6 +7130,31 @@
           }
         },
         "additionalProperties": false
+      },
+      "Notice": {
+        "type": "object",
+        "description": "A stored record changed. Read the record through its REST operation.",
+        "required": [
+          "kind",
+          "id",
+          "sequence"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind of stored record."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The identity of the changed record."
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The sequence defined by the notice kind."
+          }
+        }
       },
       "Page_AuditEvent": {
         "type": "object",
@@ -8334,6 +8422,62 @@
           }
         },
         "additionalProperties": false
+      },
+      "ServerMessage": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ServerSignal",
+            "description": "A notice or resync signal from the server."
+          },
+          {
+            "$ref": "#/components/schemas/ClientEvent",
+            "description": "An event sent by another socket of the project."
+          }
+        ],
+        "description": "A message sent to a project socket in one text frame."
+      },
+      "ServerSignal": {
+        "oneOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Notice",
+                "description": "One stored record changed."
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "notice"
+                    ]
+                  }
+                }
+              }
+            ],
+            "description": "One stored record changed."
+          },
+          {
+            "type": "object",
+            "description": "Read again each kind shown by the client.",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "resync"
+                ]
+              }
+            }
+          }
+        ],
+        "description": "The messages that the server creates."
       },
       "Session": {
         "type": "object",

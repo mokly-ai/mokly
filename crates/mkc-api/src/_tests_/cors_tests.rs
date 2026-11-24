@@ -36,6 +36,7 @@ async fn cors_admission_matches_the_flag_and_never_reflects_a_third_origin() {
                     trusted_proxies: TrustedProxies::default(),
                     dispatcher: Arc::new(dispatcher),
                     upload: Arc::new(Unimock::new(())),
+                    live: Arc::new(Unimock::new(())),
                     origins: AdmittedOrigins::new(app.into(), desktop),
                     billing_configured: false,
                 }

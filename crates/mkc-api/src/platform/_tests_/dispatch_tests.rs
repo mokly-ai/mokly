@@ -31,10 +31,9 @@ fn every_implemented_platform_operation_executes_a_handler() {
     params.insert("workspaceSlug".to_owned(), "workspace".to_owned());
     params.insert("projectSlug".to_owned(), "project".to_owned());
     let mut auth_operations = BTreeSet::new();
-    for route in routes()
-        .into_iter()
-        .filter(|route| route.implemented && !route.operation_id.upload())
-    {
+    for route in routes().into_iter().filter(|route| {
+        route.implemented && !route.operation_id.upload() && !route.operation_id.live()
+    }) {
         let operation = route.operation_id;
         let bytes = if operation == Operation::CancelBuild {
             Vec::new()

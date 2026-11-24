@@ -49,6 +49,7 @@ fn serve_replica_process() {
         github: Arc::new(SystemGitHubProviderFactory),
         billing: Arc::new(SystemBillingProviderFactory),
         runtime: Arc::new(mkc_auth::runtime::SystemRuntime),
+        ..Default::default()
     }
     .create(settings_url(
         &database,

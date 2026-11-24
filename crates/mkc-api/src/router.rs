@@ -23,7 +23,9 @@ use utoipa::{OpenApi, openapi};
 use crate::contract::document::ApiDoc;
 use crate::dispatch::{self, Dispatcher, WebhookHeaders};
 use crate::error::{ApiError, ApiErrorResultExt, Result};
+use crate::live::handler::LiveHandler;
 use crate::operation::Operation;
+use crate::request_headers;
 use crate::response;
 use crate::route_contract::routes;
 use crate::upload::UploadHandler;
@@ -32,6 +34,7 @@ pub(crate) struct RouterFactory {
     pub(crate) trusted_proxies: TrustedProxies,
     pub(crate) dispatcher: Arc<dyn Dispatcher>,
     pub(crate) upload: Arc<dyn UploadHandler>,
+    pub(crate) live: Arc<dyn LiveHandler>,
     pub(crate) origins: AdmittedOrigins,
     pub(crate) billing_configured: bool,
 }
@@ -52,6 +55,7 @@ impl RouterFactory {
         for route in routes(document)? {
             let dispatcher = self.dispatcher.clone();
             let upload = self.upload.clone();
+            let live = self.live.clone();
             let proxies = self.trusted_proxies.clone();
             let billing_configured = self.billing_configured;
             router = router.route(
@@ -66,6 +70,7 @@ impl RouterFactory {
                           request: Request| {
                         let dispatcher = dispatcher.clone();
                         let upload = upload.clone();
+                        let live = live.clone();
                         let proxies = proxies.clone();
                         async move {
                             let params = match params {
@@ -74,6 +79,9 @@ impl RouterFactory {
                             };
                             if route.operation_id.upload() {
                                 return upload.handle(route.operation_id, params, request).await;
+                            }
+                            if route.operation_id.live() {
+                                return live.handle(params, request).await;
                             }
                             let (parts, body) = request.into_parts();
                             let forwarded =
@@ -87,20 +95,10 @@ impl RouterFactory {
                                 };
                             let client_ip = proxies.client_ip(peer.ip(), forwarded);
                             let field = |key: &str| {
-                                parts
-                                    .headers
-                                    .get(key)
-                                    .and_then(|value| value.to_str().ok())
-                                    .map(str::to_owned)
+                                request_headers::text(&parts.headers, key).map(str::to_owned)
                             };
-                            let cookie = field("cookie").and_then(|cookies| {
-                                cookies.split(';').find_map(|cookie| {
-                                    cookie
-                                        .trim()
-                                        .strip_prefix("mkc_session=")
-                                        .map(str::to_owned)
-                                })
-                            });
+                            let cookie = request_headers::session_credential(&parts.headers)
+                                .map(str::to_owned);
                             if route.operation_id != Operation::ReceiveBillingWebhook
                                 || billing_configured
                             {

@@ -125,6 +125,7 @@ impl Harness {
             github: Arc::new(SystemGitHubProviderFactory),
             billing: Arc::new(SystemBillingProviderFactory),
             runtime,
+            ..Default::default()
         };
         let mut settings = settings(&schema, listener.address, configured, &github.origin);
         settings.desktop_client = desktop_client;

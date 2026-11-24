@@ -47,6 +47,12 @@ envelope; the reason catalogue in [REST API](../../docs/protocol/cloud/rest-api.
 is the contract. Client failures (4xx) log at warn and internal or unavailable
 failures (5xx) at error, each correlated with the echoed `X-Request-ID`.
 
+`GET /v1/live/projects/{projectId}` opens a project WebSocket for an authorized
+member. The API starts one hub with an injected relay when it begins serving.
+The default relay connects sockets within the process. On SIGTERM or Ctrl-C
+the hub signals close code 1001, and the server waits for the upgraded sockets
+to finish during graceful shutdown. [Live channel](../../docs/protocol/cloud/live-channel.md)
+
 The platform service runs each command in one transaction and executes its
 recorded effects, such as the invitation mail, after the commit. Workspace
 and project create and full-update commands take typed slugs; a conflict
@@ -165,13 +171,14 @@ use their existing behavior. `GET /v1/health` is public, sets
 version, the build revision and live migration readiness; pending migrations
 return 503 `migrations-pending`.
 
-`ApplicationFactory::create` returns an `Application` with two entry points.
+`ApplicationFactory::create` returns an `Application` with three serving entry points.
 The `serve` command uses `Application::serve`, which binds the `bind` setting.
 `Application::serve_on` serves a `tokio::net::TcpListener` that the caller
 already bound, in place of the `bind` setting. An embedding caller can bind
 port 0 and write the bound address into the `api_origin` setting. No other
-socket can then take the port before the API serves. Both entry points serve
-the same routes, run the same workers and stop in the same way.
+socket can then take the port before the API serves. `Application::serve_on_until`
+accepts a shutdown future from the caller. All three entry points serve the same
+routes, run the same workers and close live sockets during graceful shutdown.
 
 ## Quick Start
 
@@ -347,8 +354,10 @@ setting or test detection that selects the fake runner. The
 - [preview_seed/factory.rs](./src/preview_seed/factory.rs) and [preview_seed/service.rs](./src/preview_seed/service.rs) — `PreviewSeedFactory` and `PreviewSeeder`, the configuration guard, shared server composition and ordered one-time seed.
 - [preview_seed/identity.rs](./src/preview_seed/identity.rs), [preview_seed/upload.rs](./src/preview_seed/upload.rs) and [preview_seed/retry.rs](./src/preview_seed/retry.rs) — sample identity actions, captured ingestion and the injected storage retry budget.
 - [publishing_storage.rs](./src/publishing_storage.rs) — shared local and GCS composition for immutable content and replaceable seed objects.
-- [application.rs](./src/application.rs) — `ApplicationFactory`, `SystemApplicationFactory` and `ConfiguredApplicationFactory`, the composition root that migrates, connects the store, selects the mailer, composes every service and worker and returns the `Application` that serves; the configured factory takes an injected `GitHubProviderFactory`, `BillingProviderFactory` and `BuildProviderFactory` for embedded use.
-- [application_server.rs](./src/application_server.rs) — the `Application` implementation, which serves the router and runs every worker. `serve` binds the `bind` setting. `serve_on` serves a listener that the caller bound.
+- Application entry points and injected dependencies. [application.rs](./src/application.rs)
+- Migrations, adapter setup, and service and worker composition. [application_composition.rs](./src/application_composition.rs)
+- Router and worker lifetimes, including graceful shutdown of upgraded sockets. [application_server.rs](./src/application_server.rs)
+- SIGTERM and Ctrl-C signal handling. [application_shutdown.rs](./src/application_shutdown.rs)
 - [contract/document.rs](./src/contract/document.rs) — `ApiDoc` merges the area contracts, schema adapters, security schemes and deferred types.
 - [contract/parameters.rs](./src/contract/parameters.rs) — shared header and pagination parameters for the operation stubs.
 - [contract/responses.rs](./src/contract/responses.rs) — the shared `ErrorResponse` component for standard operation failures.
@@ -356,6 +365,10 @@ setting or test detection that selects the fake runner. The
 - [contract/account.rs](./src/contract/account.rs) and [account/desktop_grant.rs](./src/contract/account/desktop_grant.rs) — account contracts, including authenticated desktop grant issue and public grant exchange with the inherited session deadline.
 - [contract/metadata.rs](./src/contract/metadata.rs) — derives deferred operation markers from `Operation::implemented()` after the area merges.
 - [contract/builds.rs](./src/contract/builds.rs) — the five cloud build contracts, including member-only reads with anonymous `not-found` transport.
+- The project WebSocket operation and message components. [contract/live.rs](./src/contract/live.rs)
+- WebSocket admission, hub composition, and tracking of upgraded sockets. [live/handler.rs](./src/live/handler.rs)
+- Read-only session and project access checks. [live/access.rs](./src/live/access.rs)
+- Socket message delivery, keepalive, and close codes. [live/socket.rs](./src/live/socket.rs)
 - `src/contract/deferred/` — request and response types for comment and approval operations that return 503 until implemented.
 - [contract/_tests_/response_validation.rs](./src/contract/_tests_/response_validation.rs) — the shared schema validator for unit and integration HTTP responses.
 - [views/](./src/views/) — response schema modules preserve component names and required nullable fields beside the serde wire types.

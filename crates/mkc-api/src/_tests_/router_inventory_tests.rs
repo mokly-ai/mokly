@@ -17,6 +17,7 @@ use crate::contract::response_capture::checked;
 use crate::contract::route_fixture::routes;
 use crate::dispatch::DispatchMock;
 use crate::error::ApiError;
+use crate::live::handler::LiveHandlerMock;
 use crate::response;
 use crate::router::RouterBuilder;
 use crate::upload::UploadHandlerMock;
@@ -28,7 +29,17 @@ async fn every_documented_method_and_path_dispatches_its_operation() {
     for route in routes() {
         let operation = route.operation_id;
         let mut factory = factory();
-        if operation.upload() {
+        let (status, reason) = if operation.live() {
+            factory.live = Arc::new(Unimock::new(
+                LiveHandlerMock
+                    .some_call(matching!(_, _))
+                    .answers(&|_, params, _| {
+                        assert_eq!(params["projectId"], "00000000-0000-7000-8000-000000000001");
+                        Box::pin(async { response::failure(ApiError::ValidationFailed) })
+                    }),
+            ));
+            (400, "validation-failed")
+        } else if operation.upload() {
             factory.upload = Arc::new(Unimock::new(
                 UploadHandlerMock
                     .next_call(matching!(_, _, _))
@@ -37,6 +48,7 @@ async fn every_documented_method_and_path_dispatches_its_operation() {
                         Box::pin(async { response::failure(ApiError::OperationUnavailable) })
                     })),
             ));
+            (503, "operation-unavailable")
         } else {
             factory.dispatcher = Arc::new(Unimock::new(
                 DispatchMock
@@ -46,13 +58,14 @@ async fn every_documented_method_and_path_dispatches_its_operation() {
                         Err(ApiError::OperationUnavailable)
                     })),
             ));
-        }
+            (503, "operation-unavailable")
+        };
         let response = checked(
             factory.build().unwrap(),
             request(&route.method, &route.path),
         )
         .await;
-        assert_error(response, 503, "operation-unavailable").await;
+        assert_error(response, status, reason).await;
     }
 }
 

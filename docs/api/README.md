@@ -7,9 +7,12 @@ access and billing. `utoipa` derives the
 client types from that document. The comment and approval paths are deferred
 contracts whose registered routes return typed 503. Cloud builds have five
 REST operations, member-only logs and project/reference capabilities. See
-[Cloud build API](../protocol/cloud/cloud-build-api.md). The
-[REST API](../protocol/cloud/rest-api.md) protocol defines the running boundary and
-owns the error reason catalogue.
+[Cloud build API](../protocol/cloud/cloud-build-api.md).
+`openLiveChannel` defines the project WebSocket upgrade and its message
+schemas. [Live channel](../protocol/cloud/live-channel.md)
+
+The [REST API](../protocol/cloud/rest-api.md) protocol defines the running
+boundary and owns the error reason catalogue.
 
 ## Conventions
 

@@ -1,7 +1,5 @@
 # REST API
 
-Status: The live route is not built yet. The [live route milestone](../../../plans/live-channel-foundation.md#milestone-3-live-route) builds it.
-
 The REST API serves the [OpenAPI 3.1 operations](../../api/openapi.json) under `/v1`.
 The application and published catalogues are served by other origins; this
 API never serves publication HTML.

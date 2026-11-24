@@ -146,7 +146,9 @@ My calls, 2026-11-25, after a check of the code:
   a bounded outbound queue. When the queue is full, the hub drops the message
   and marks the connection. When the queue has room again, the hub sends
   `resync` before the next message. So the hub never holds unbounded memory,
-  and a reader never misses a notice without a resync.
+  and a reader never misses a notice without a resync. The queue holds 256
+  messages (my call, 2026-11-25): far more than one tick sends to a socket,
+  and a small bound for each connection's memory.
 - **An interface crate for the trait and the messages.** The 2026-11-24 call
   put the `LiveRelay` trait in `mkc-live`, beside the hub. The crate layering
   of the [architecture doc](../docs/architecture/cloud.md) puts each trait
@@ -198,12 +200,12 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Turn on the Axum `ws` feature in `mkc-api` and add the route with the
+- [x] Turn on the Axum `ws` feature in `mkc-api` and add the route with the
       cookie, Origin and member checks, the access check every 30 seconds,
       the pings and the shutdown.
-- [ ] Add the message schemas to the OpenAPI document and regenerate the
+- [x] Add the message schemas to the OpenAPI document and regenerate the
       app's client.
-- [ ] Test the route with one replica and the in-memory relay.
+- [x] Test the route with one replica and the in-memory relay.
 
 ## Milestone 4: Postgres relay and notices
 

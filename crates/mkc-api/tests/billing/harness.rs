@@ -71,6 +71,7 @@ impl Harness {
                 origin: stripe.origin.clone(),
             }),
             runtime: runtime.clone(),
+            ..Default::default()
         };
         let app = factory
             .create(settings(

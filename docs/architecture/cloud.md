@@ -1,6 +1,6 @@
 # Architecture
 
-Status: The live channel is not built yet. The [live route](../../plans/live-channel-foundation.md#milestone-3-live-route), [Postgres relay and notices](../../plans/live-channel-foundation.md#milestone-4-postgres-relay-and-notices) and [app live client](../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) milestones build it.
+Status: The database relay, notices and app client are planned in the [Postgres relay and notices](../../plans/live-channel-foundation.md#milestone-4-postgres-relay-and-notices) and [app live client](../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) milestones.
 
 Mokly Cloud is the hosted companion to the open-source `@mokly/mokly` mockup
 catalogue CLI. Teams author React mockups in their own repository; the cloud

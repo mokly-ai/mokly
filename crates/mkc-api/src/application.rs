@@ -1,48 +1,30 @@
-//! Composition-root factory and trait-backed API server.
+//! Application entry points and dependency injection for the API.
 
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use mkc_auth::runtime::{Runtime, SystemRuntime};
-use mkc_auth::service::{AuthService, Authenticator, PreviewSignIn};
-use mkc_billing::entitlements::DatabaseEntitlements;
-use mkc_billing::lifecycle::{BillingLifecycle, SubscriptionLifecycle};
-use mkc_billing::prices::{PriceVerifier, ProviderPriceVerifier};
-use mkc_billing::seats::worker::{DatabaseSeatReconciler, SeatReconciler};
-use mkc_billing::worker::worker::{BillingDeliveryWorker, DatabaseBillingDeliveryWorker};
-use mkc_config::settings::{Mail, Settings};
-use mkc_db::migration::{
-    DieselMigrations, MigrationRunner, MigrationStatusFactory, PooledMigrationStatusFactory,
-};
+use mkc_billing::seats::worker::SeatReconciler;
+use mkc_billing::worker::worker::BillingDeliveryWorker;
+use mkc_config::settings::Settings;
 use mkc_domain::client_origins::AdmittedOrigins;
-use mkc_email_interface::mail::Mailer;
-use mkc_email_postmark::delivery::{LogMailer, PostmarkMailer};
-use mkc_email_postmark::transport::{PostmarkHttpFactory, TransportFactory};
-use mkc_publications::build_head::DatabaseBuildHeadRecorder;
+use mkc_live::memory::MemoryRelay;
+use mkc_live_interface::relay::LiveRelay;
 use mkc_publications::build_reconciliation::BuildReconciler;
-use mkc_publications::build_scheduler::DatabaseBuildScheduler;
 use mkc_publications::build_worker::service::BuildWorker;
-use mkc_store_pg::connection::{PgStoreFactory, StoreFactory};
-use mkc_store_pg::runtime;
 use tokio::net::TcpListener;
 
-use crate::billing::service::{BillingService, BillingServiceConfig, DatabaseBillingService};
 use crate::billing_providers::{BillingProviderFactory, SystemBillingProviderFactory};
 use crate::build_providers::{BuildProviderFactory, SystemBuildProviderFactory};
-use crate::builds::service::{BuildsApi, BuildsService};
 use crate::check_runtime::CheckDelivery;
-use crate::dispatch::{ApiDispatcher, Dispatcher};
-use crate::error::{ApiErrorResultExt, Result};
-use crate::github_composition::{GitHubComposer, GitHubComposition};
+use crate::dispatch::Dispatcher;
+use crate::error::Result;
 use crate::github_providers::{GitHubProviderFactory, SystemGitHubProviderFactory};
 use crate::github_worker::worker::DeliveryWorker;
-use crate::health::{DatabaseHealth, HealthCheck, SystemHealthClock};
-use crate::platform::initial_plan::PreviewWorkspacePlan;
-use crate::platform::service::{Platform, PlatformService};
-use crate::preview_seed::factory::{SeedComposer, SystemSeedComposer};
+use crate::live::handler::LiveComposition;
+use crate::live_clock::{LiveClock, TokioLiveClock};
 use crate::preview_seed::service::PreviewSeeder;
-use crate::publishing::{PublishingFactory, SystemPublishingFactory};
 use crate::upload::UploadHandler;
 
 /// Running API behavior, independent of concrete wiring.
@@ -54,6 +36,13 @@ pub trait Application: Send + Sync {
     fn serve_on(
         &self,
         listener: TcpListener,
+    ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
+
+    /// Serve a bound listener until the embedding caller requests shutdown.
+    fn serve_on_until(
+        &self,
+        listener: TcpListener,
+        shutdown: Pin<Box<dyn Future<Output = ()> + Send>>,
     ) -> Pin<Box<dyn Future<Output = Result<()>> + Send + '_>>;
 }
 
@@ -76,6 +65,10 @@ pub struct ConfiguredApplicationFactory {
     pub runtime: Arc<dyn Runtime>,
     /// Build provider factory; tests inject a runner without E2B access.
     pub builds: Arc<dyn BuildProviderFactory>,
+    /// Relay injected into the live hub when the application starts serving.
+    pub live_relay: Arc<dyn LiveRelay + Send + Sync>,
+    /// Monotonic clock for live socket deadlines.
+    pub live_clock: Arc<dyn LiveClock>,
 }
 
 pub(crate) struct ApiApplication {
@@ -90,6 +83,7 @@ pub(crate) struct ApiApplication {
     pub(crate) billing_worker: Option<Arc<dyn BillingDeliveryWorker>>,
     pub(crate) seat_worker: Option<Arc<dyn SeatReconciler>>,
     pub(crate) upload: Arc<dyn UploadHandler>,
+    pub(crate) live: LiveComposition,
 }
 
 impl ApplicationFactory for SystemApplicationFactory {
@@ -105,6 +99,8 @@ impl Default for ConfiguredApplicationFactory {
             billing: Arc::new(SystemBillingProviderFactory),
             runtime: Arc::new(SystemRuntime),
             builds: Arc::new(SystemBuildProviderFactory),
+            live_relay: Arc::new(MemoryRelay::default()),
+            live_clock: Arc::new(TokioLiveClock),
         }
     }
 }
@@ -112,164 +108,5 @@ impl Default for ConfiguredApplicationFactory {
 impl ApplicationFactory for ConfiguredApplicationFactory {
     fn create(&self, settings: Settings) -> Result<Arc<dyn Application>> {
         Ok(Arc::new(self.compose(settings)?))
-    }
-}
-
-impl ConfiguredApplicationFactory {
-    pub(crate) fn compose(&self, settings: Settings) -> Result<ApiApplication> {
-        let migrations: Arc<dyn MigrationRunner> = Arc::new(DieselMigrations);
-        migrations
-            .migrate(&settings.database_url)
-            .context("migrate platform database")?;
-        let factory: &dyn StoreFactory = &PgStoreFactory {
-            runtime: Arc::new(runtime::SystemRuntime),
-        };
-        let store = factory.connect(&settings.database_url)?;
-        let runtime = self.runtime.clone();
-        let mailer: Arc<dyn Mailer> = match &settings.mail {
-            Mail::Log => Arc::new(LogMailer),
-            Mail::Postmark {
-                from,
-                token,
-                site_origin,
-            } => Arc::new(PostmarkMailer {
-                from: from.clone(),
-                site_origin: site_origin.clone(),
-                transport: PostmarkHttpFactory
-                    .build(
-                        "https://api.postmarkapp.com/email/withTemplate".to_owned(),
-                        token.clone(),
-                    )
-                    .context("initialize Postmark transport")?,
-            }),
-        };
-        let origins = AdmittedOrigins::new(settings.app_origin.clone(), settings.desktop_client);
-        let auth: Arc<dyn Authenticator> = Arc::new(AuthService {
-            store: store.clone(),
-            runtime: runtime.clone(),
-            mailer: mailer.clone(),
-            origins: origins.clone(),
-            preview_sign_in: settings
-                .preview_sign_in
-                .as_ref()
-                .map(|config| PreviewSignIn::new(&config.secret, config.email.clone())),
-        });
-        let publishing = SystemPublishingFactory.create(
-            &settings.publications,
-            &settings.app_origin,
-            &settings.api_origin,
-            store.clone(),
-            runtime.clone(),
-        )?;
-        let mut billing = None;
-        let mut billing_worker = None;
-        let mut seat_worker = None;
-        let mut billing_provider = None;
-        if let Some(config) = &settings.billing {
-            let providers = self.billing.create(config)?;
-            let prices = Arc::new(
-                ProviderPriceVerifier {
-                    provider: providers.price_provider,
-                }
-                .verify(),
-            );
-            billing_provider = Some(providers.provider.clone());
-            billing = Some(Arc::new(DatabaseBillingService::new(
-                store.clone(),
-                runtime.clone(),
-                providers.provider.clone(),
-                providers.verifier,
-                prices.clone(),
-                BillingServiceConfig {
-                    app_origin: settings.app_origin.clone(),
-                },
-            )) as Arc<dyn BillingService>);
-            billing_worker = Some(Arc::new(DatabaseBillingDeliveryWorker::new(
-                store.clone(),
-                runtime.clone(),
-                providers.provider.clone(),
-                prices.identities(),
-            )) as Arc<dyn BillingDeliveryWorker>);
-            if let Some(price_ids) = prices.identities() {
-                seat_worker = Some(Arc::new(DatabaseSeatReconciler::new(
-                    store.clone(),
-                    runtime.clone(),
-                    providers.provider,
-                    price_ids,
-                )) as Arc<dyn SeatReconciler>);
-            }
-        }
-        let billing_lifecycle: Arc<dyn BillingLifecycle> = Arc::new(SubscriptionLifecycle {
-            store: store.clone(),
-            provider: billing_provider,
-        });
-        let readiness: &dyn MigrationStatusFactory = &PooledMigrationStatusFactory;
-        let health: Arc<dyn HealthCheck> = Arc::new(DatabaseHealth {
-            migrations: readiness
-                .connect(&settings.database_url)
-                .context("connect readiness")?,
-            clock: Arc::new(SystemHealthClock),
-            cache: Mutex::new(None),
-        });
-        health.check()?;
-        let composer: &dyn GitHubComposer = &GitHubComposition {
-            factory: self.github.clone(),
-            builds: self.builds.clone(),
-            store: store.clone(),
-            runtime: runtime.clone(),
-        };
-        let integration = composer.create(&settings, &publishing)?;
-        let builds: Arc<dyn BuildsApi> = integration.build_api.unwrap_or_else(|| {
-            Arc::new(BuildsService {
-                head_recorder: Arc::new(DatabaseBuildHeadRecorder),
-                store: store.clone(),
-                runtime: runtime.clone(),
-                scheduler: Arc::new(DatabaseBuildScheduler { configured: false }),
-                repositories: None,
-                pull_requests: None,
-                locations: publishing.locations.clone(),
-                configured: false,
-            })
-        });
-        let platform: Arc<dyn Platform> = Arc::new(PlatformService {
-            builds: builds.clone(),
-            store: store.clone(),
-            runtime: runtime.clone(),
-            mailer,
-            entitlements: Arc::new(DatabaseEntitlements),
-            billing: billing_lifecycle,
-            preview_workspace: settings.preview_sign_in.as_ref().map(|config| {
-                PreviewWorkspacePlan {
-                    email: config.email.clone(),
-                    plan: config.plan,
-                }
-            }),
-            app_origin: settings.app_origin.clone(),
-        });
-
-        let preview_seed =
-            SystemSeedComposer.compose(auth.clone(), platform.clone(), &publishing, runtime);
-        Ok(ApiApplication {
-            preview_seed,
-            settings,
-            origins,
-            dispatcher: Arc::new(ApiDispatcher {
-                builds,
-                auth,
-                platform,
-                health,
-                github: integration.service,
-                billing,
-                access: publishing.access,
-                viewer: publishing.viewer,
-            }),
-            github_worker: integration.worker,
-            check_worker: integration.checks,
-            build_worker: integration.build_worker,
-            build_reconciler: integration.reconciler,
-            billing_worker,
-            seat_worker,
-            upload: publishing.upload,
-        })
     }
 }

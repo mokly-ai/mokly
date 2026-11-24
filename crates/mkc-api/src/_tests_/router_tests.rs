@@ -41,6 +41,7 @@ async fn stripe_signature_must_be_present_exactly_once_before_body_read() {
             trusted_proxies: TrustedProxies::default(),
             dispatcher: Arc::new(unimock::Unimock::new(())),
             upload: Arc::new(unimock::Unimock::new(())),
+            live: Arc::new(unimock::Unimock::new(())),
             origins: AdmittedOrigins::new("https://app.example.com".into(), false),
             billing_configured: true,
         }

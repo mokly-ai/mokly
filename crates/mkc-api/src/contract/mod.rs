@@ -15,6 +15,7 @@ pub(crate) mod error;
 mod github;
 mod grants;
 mod health;
+mod live;
 mod members;
 mod metadata;
 pub(crate) mod operations;

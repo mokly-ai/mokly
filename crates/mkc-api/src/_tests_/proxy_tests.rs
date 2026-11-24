@@ -53,6 +53,7 @@ async fn rate_limit_boundary_receives_only_the_verified_client() {
                 billing: None,
             }),
             upload: Arc::new(Unimock::new(())),
+            live: Arc::new(Unimock::new(())),
             origins: AdmittedOrigins::new("https://app.example.com".into(), false),
             billing_configured: false,
         }

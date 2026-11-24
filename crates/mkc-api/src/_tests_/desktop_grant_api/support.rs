@@ -142,6 +142,7 @@ pub(super) fn router(
         origins,
         billing_configured: false,
         upload: Arc::new(Unimock::new(())),
+        live: Arc::new(Unimock::new(())),
         dispatcher: Arc::new(ApiDispatcher {
             auth: Arc::new(auth),
             platform: Arc::new(platform),

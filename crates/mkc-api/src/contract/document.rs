@@ -6,7 +6,7 @@ use super::metadata::{DeferredOperations, Metadata};
 use super::responses::ErrorResponse;
 use super::session_cookie::SessionCookie;
 use super::{
-    account, approvals, billing, builds, catalogue_access, comments, github, grants, health,
+    account, approvals, billing, builds, catalogue_access, comments, github, grants, health, live,
     members, projects, publications, tokens, uploads, workspaces,
 };
 
@@ -43,6 +43,7 @@ impl OpenApi for ApiDoc {
             tokens::Doc::openapi(),
             grants::Doc::openapi(),
             builds::Doc::openapi(),
+            live::Doc::openapi(),
             publications::Doc::openapi(),
             uploads::Doc::openapi(),
             catalogue_access::Doc::openapi(),

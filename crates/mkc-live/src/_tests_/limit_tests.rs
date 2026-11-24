@@ -45,6 +45,7 @@ async fn unknown_and_malformed_messages_are_ignored_with_one_warning() {
     with_default(
         tracing_subscriber::registry().with(warnings.clone()),
         || {
+            sender.submit_binary(32).unwrap();
             sender.submit_text(r#"{"type":"unknown"}"#).unwrap();
             sender.submit_text(r#"[{"type":"emit"}]"#).unwrap();
             sender.submit_text(r#"{"type":13}"#).unwrap();

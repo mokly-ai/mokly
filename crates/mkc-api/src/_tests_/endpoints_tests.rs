@@ -39,8 +39,8 @@ fn every_document_operation_dispatches_exactly_when_implemented() {
             route.anonymous_read,
             "{operation:?}"
         );
-        if operation.upload() {
-            assert!(route.implemented, "publication uploads must be active");
+        if operation.upload() || operation.live() {
+            assert!(route.implemented, "separate handler for {operation:?}");
             continue;
         }
         let body = if operation == Operation::CancelBuild {

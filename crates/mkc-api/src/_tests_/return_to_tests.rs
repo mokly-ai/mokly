@@ -134,6 +134,7 @@ async fn magic_link_issue_and_exchange_preserve_the_exact_return_destination() {
             billing: None,
         }),
         upload: Arc::new(Unimock::new(())),
+        live: Arc::new(Unimock::new(())),
         origins: AdmittedOrigins::new(APP_ORIGIN.into(), false),
         billing_configured: false,
     }

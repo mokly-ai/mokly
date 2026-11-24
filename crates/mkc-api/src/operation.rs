@@ -13,6 +13,8 @@ pub(crate) enum OptionalConfiguration {
 pub(crate) enum Operation {
     #[serde(rename = "getHealth")]
     GetHealth,
+    #[serde(rename = "openLiveChannel")]
+    OpenLiveChannel,
     #[serde(rename = "uploadPublication")]
     UploadPublication,
     #[serde(rename = "uploadPublicationBlob")]

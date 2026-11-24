@@ -158,6 +158,7 @@ pub(super) fn factory() -> RouterFactory {
         trusted_proxies: TrustedProxies::default(),
         dispatcher: Arc::new(Unimock::new(())),
         upload: Arc::new(Unimock::new(())),
+        live: Arc::new(Unimock::new(())),
         origins: AdmittedOrigins::new("https://app.example.com".into(), false),
         billing_configured: true,
     }

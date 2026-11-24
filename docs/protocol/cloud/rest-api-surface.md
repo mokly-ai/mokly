@@ -56,6 +56,9 @@ The [cloud build API](./cloud-build-api.md) implements five operations,
 project and reference fields, and four reasons. The generated document and
 [REST catalogue](./rest-api.md#reason-catalogue) describe them.
 
+`GET /v1/live/projects/{projectId}` upgrades to a WebSocket for a signed-in
+member and answers 101. [Live channel](./live-channel.md)
+
 The running router's methods, paths and operation IDs match the generated
 document exactly, as [Contract source](./rest-api.md#contract-source) requires.
 Every documented operation has one unique operation ID.

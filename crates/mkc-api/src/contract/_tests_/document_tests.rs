@@ -4,13 +4,14 @@
 
 use std::collections::BTreeSet;
 
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::error::ApiError;
 use crate::operation::Operation;
 
 use super::enum_values::enum_values;
 use super::response_validation::document;
+use super::response_validation::validator_at;
 use super::route_fixture::anonymous;
 
 #[test]
@@ -60,6 +61,47 @@ fn deferred_markers_match_operation_implementation_exactly() {
             assert_eq!(contract.get("x-deferred"), expected, "{operation:?}");
         }
     }
+}
+
+#[test]
+fn the_live_operation_requires_a_session_and_documents_the_upgrade_and_refusals() {
+    let doc = document();
+    let operation = &doc["paths"]["/v1/live/projects/{projectId}"]["get"];
+    assert_eq!(operation["operationId"], "openLiveChannel");
+    assert_eq!(doc["security"], json!([{"session": []}]));
+    assert!(
+        operation.get("security").is_none(),
+        "inherits the session requirement"
+    );
+    assert!(operation.get("x-deferred").is_none());
+    let statuses: BTreeSet<_> = operation["responses"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .map(String::as_str)
+        .collect();
+    assert_eq!(statuses, BTreeSet::from(["101", "4XX", "5XX"]));
+    assert_eq!(
+        operation["x-reasons"],
+        json!([
+            "csrf-rejected",
+            "internal-error",
+            "not-found",
+            "session-expired",
+            "unauthenticated",
+            "validation-failed"
+        ])
+    );
+    let schema = validator_at("/components/schemas/ServerMessage");
+    let notice = json!({
+        "type": "notice",
+        "kind": "build",
+        "id": "00000000-0000-0000-0000-000000000001",
+        "sequence": 23,
+    });
+    assert!(schema.is_valid(&notice));
+    assert!(schema.is_valid(&json!({"type": "resync"})));
+    assert!(!schema.is_valid(&json!({"type": "notice"})));
 }
 
 #[test]

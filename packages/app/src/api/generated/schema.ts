@@ -634,6 +634,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/live/projects/{projectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open a project WebSocket for a signed-in member. */
+        get: operations["openLiveChannel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/projects/{projectId}/branches": {
         parameters: {
             query?: never;
@@ -1247,6 +1264,16 @@ export interface components {
              */
             url: string;
         };
+        /**
+         * @description A client event uses its kind as the message type.
+         *
+         *     Each registered kind defines its own fields in the same JSON object.
+         */
+        ClientEvent: {
+            type: string;
+        } & {
+            [key: string]: unknown;
+        };
         Comment: {
             /** Format: uuid */
             id: string;
@@ -1542,6 +1569,21 @@ export interface components {
             status: "active" | "invited";
             /** Format: int64 */
             version: number;
+        };
+        /** @description A stored record changed. Read the record through its REST operation. */
+        Notice: {
+            /** @description The kind of stored record. */
+            kind: string;
+            /**
+             * Format: uuid
+             * @description The identity of the changed record.
+             */
+            id: string;
+            /**
+             * Format: int64
+             * @description The sequence defined by the notice kind.
+             */
+            sequence: number;
         };
         Page_AuditEvent: {
             items: components["schemas"]["AuditEvent"][];
@@ -1927,6 +1969,16 @@ export interface components {
              * @description Monthly price per seat in USD cents, null while the price is unverified.
              */
             unitAmountCents: number | null;
+        };
+        /** @description A message sent to a project socket in one text frame. */
+        ServerMessage: components["schemas"]["ServerSignal"] | components["schemas"]["ClientEvent"];
+        /** @description The messages that the server creates. */
+        ServerSignal: (components["schemas"]["Notice"] & {
+            /** @enum {string} */
+            type: "notice";
+        }) | {
+            /** @enum {string} */
+            type: "resync";
         };
         Session: {
             user: components["schemas"]["User"];
@@ -3835,6 +3887,34 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Build"];
                 };
+            };
+            "4XX": components["responses"]["ErrorResponse"];
+            "5XX": components["responses"]["ErrorResponse"];
+        };
+    };
+    openLiveChannel: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Exact configured public application origin, or mokly-app://desktop when MKC_DESKTOP_CLIENT is true;
+                 *     required on browser mutations including public authentication. Missing or other origins are refused.
+                 */
+                Origin: string;
+            };
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Switching Protocols. The WebSocket sends ServerMessage objects in text frames. */
+            101: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             "4XX": components["responses"]["ErrorResponse"];
             "5XX": components["responses"]["ErrorResponse"];

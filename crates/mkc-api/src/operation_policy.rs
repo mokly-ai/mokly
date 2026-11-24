@@ -45,6 +45,11 @@ impl Operation {
         )
     }
 
+    /// A project WebSocket upgrade handled outside JSON dispatch.
+    pub(crate) fn live(self) -> bool {
+        self == Self::OpenLiveChannel
+    }
+
     pub(crate) fn anonymous_read(self) -> bool {
         matches!(
             self,
@@ -69,6 +74,7 @@ impl Operation {
             || matches!(
                 self,
                 Self::GetHealth
+                    | Self::OpenLiveChannel
                     | Self::UploadPublication
                     | Self::UploadPublicationBlob
                     | Self::CompletePublicationUpload

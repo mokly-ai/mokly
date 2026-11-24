@@ -75,6 +75,16 @@ impl Connection {
     /// return an error that the route can use to close the socket.
     pub fn submit_text(&mut self, text: &str) -> Result<()> {
         check_frame_size(text.len())?;
+        self.submit(Some(text))
+    }
+
+    /// Count a binary message and apply the warning for invalid messages.
+    pub fn submit_binary(&mut self, bytes: usize) -> Result<()> {
+        check_frame_size(bytes)?;
+        self.submit(None)
+    }
+
+    fn submit(&mut self, text: Option<&str>) -> Result<()> {
         if !self.rate_limit.admit(Instant::now()) {
             if !self.warned_rate {
                 self.warned_rate = true;
@@ -82,7 +92,7 @@ impl Connection {
             }
             return Ok(());
         }
-        if let Ok(event) = serde_json::from_str::<ClientEvent>(text)
+        if let Some(event) = text.and_then(|text| serde_json::from_str::<ClientEvent>(text).ok())
             && let Some(kind) = self
                 .event_kinds
                 .iter()
