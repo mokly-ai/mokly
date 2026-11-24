@@ -142,8 +142,6 @@ A branch from this branch applies each answer and deletes the file.
 - [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): A.
 - [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md): A.
 - [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): B.
-- [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
-  F.
 - [design-external-link-check.md](follow-ups/design-external-link-check.md):
   E.
 

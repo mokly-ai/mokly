@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use mokly_graph::reference_positions::{self, ReferenceKind};
 use mokly_html::tree::{self, Element, Node, RegionKind};
 use mokly_model::canonical::compare_utf16;
 use mokly_model::usage::ComponentInputOwner;
@@ -121,17 +122,22 @@ pub(crate) fn attributes(element: &Element, projection: &Projection) -> Vec<(Str
                                 .map_or(String::new(), |fragment| format!("#{fragment}"))
                         )
                     })
-            } else if matches!(
-                name.as_str(),
-                "href" | "src" | "poster" | "data" | "xlink:href"
-            ) {
-                material_urls::url(&attribute.value, &projection.route, &projection.resources)
-            } else if name == "srcset" {
-                material_urls::srcset(&attribute.value, &projection.route, &projection.resources)
             } else if name == "style" {
                 material_urls::css(&attribute.value, &projection.route, &projection.resources)
             } else {
-                attribute.value.clone()
+                match reference_positions::kind(&element.name, &name) {
+                    Some(ReferenceKind::Url) => material_urls::url(
+                        &attribute.value,
+                        &projection.route,
+                        &projection.resources,
+                    ),
+                    Some(ReferenceKind::Srcset) => material_urls::srcset(
+                        &attribute.value,
+                        &projection.route,
+                        &projection.resources,
+                    ),
+                    Some(ReferenceKind::EmbeddedDocument) | None => attribute.value.clone(),
+                }
             };
             Some((name, value))
         })

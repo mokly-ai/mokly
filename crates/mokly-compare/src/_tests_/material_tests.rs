@@ -28,6 +28,28 @@ fn wrap(mut nodes: Vec<Node>) -> Vec<Node> {
 }
 
 #[test]
+fn canonical_material_normalizes_data_only_on_objects() {
+    let nodes = [
+        tree::element("object", &[("data", "../static/a.pdf")], vec![]),
+        tree::element("p", &[("data", "../static/a.pdf")], vec![]),
+    ];
+    let projection = Projection {
+        route: "screen/index.html".into(),
+        ..Projection::default()
+    };
+    let material = canonical(&nodes, &projection);
+    let [
+        Material::Element(_, _, object, _),
+        Material::Element(_, _, paragraph, _),
+    ] = material.as_slice()
+    else {
+        panic!("expected two canonical elements");
+    };
+    assert_eq!(object, &[("data".into(), "static/a.pdf".into())]);
+    assert_eq!(paragraph, &[("data".into(), "../static/a.pdf".into())]);
+}
+
+#[test]
 fn deep_values_compare_hash_and_drop_without_using_tree_depth_as_stack_depth() {
     thread::spawn(|| {
         let left = canonical(

@@ -48,6 +48,7 @@ pub mod public_denial;
 pub mod public_inputs;
 mod public_locations;
 pub mod reference_index;
+pub mod reference_positions;
 pub mod references;
 mod render_calculation;
 pub mod render_class;

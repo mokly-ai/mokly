@@ -65,8 +65,10 @@ trailing whitespace, root-absolute URLs and protocol-relative `//` URLs.
 Shared link and resource validation still checks portable paths, targets,
 fragments and confinement. URL failures use the diagnostic above.
 
-This attribute allowlist covers `href` and `src`. HTML `srcset` and `poster`
-use the resource URL rules of the [public closure](./mokly-public-closure.md):
+This attribute allowlist covers `href` and `src`. The other URLs at the
+reference positions of the
+[comparison resource rule](./mokly-comparison.md#resources) use the resource
+URL rules of the [public closure](./mokly-public-closure.md):
 local references are checked, and external and data references are not copied.
 They are resource inputs outside the Markdown attribute allowlist.
 

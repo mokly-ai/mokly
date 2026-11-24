@@ -45,6 +45,36 @@ fn image(url: &str) -> Node {
 }
 
 #[test]
+fn collects_object_data_and_ignores_paragraph_metadata() {
+    let tree = [
+        element("object", &[("data", "a.pdf")], vec![]),
+        element(
+            "p",
+            &[("data", "hello"), ("data-nav-href", "page.html#summary")],
+            vec![],
+        ),
+    ];
+    let urls: Vec<_> = references::collect(&tree)
+        .into_iter()
+        .map(|item| item.url)
+        .collect();
+    assert_eq!(urls, ["a.pdf"]);
+}
+
+#[test]
+fn collects_embedded_document_references_only_from_iframes() {
+    let tree = [
+        element("iframe", &[("srcdoc", "<img src='in.svg'>")], vec![]),
+        element("div", &[("srcdoc", "<img src='out.svg'>")], vec![]),
+    ];
+    let urls: Vec<_> = references::collect(&tree)
+        .into_iter()
+        .map(|item| item.url)
+        .collect();
+    assert_eq!(urls, ["in.svg"]);
+}
+
+#[test]
 fn nested_regions_and_srcdoc_keep_exact_instance_keys_and_reference_order() {
     let tree = vec![
         instance(
