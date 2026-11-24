@@ -35,7 +35,7 @@ a reset or a Fit control, and it does not keep the zoom across visits.
 - The options check of the `implementation-review` skill did not run on
   these decisions, because Cal had already answered both before the plan
   existed.
-- **2026-11-24, decision 3, how Zoom in enlarges the home: open.** The
+- **2026-11-24, decision 3, how Zoom in enlarges the home: H.** The
   Milestone 1 mockups show a problem with decision 2. CSS `zoom` lays the
   content out in the window's width divided by the zoom, but the window
   still picks the composition. Above 100% the frames column then gets less
@@ -108,8 +108,17 @@ a reset or a Fit control, and it does not keep the zoom across visits.
     the codebase and keeps 200% on windows from 1280px, at Large effort.
   - Wider fix: F. At each zoom it shows a composition that the site already
     draws for that room, so a later change to a part holds at every zoom.
-  - Waits for the answer: the last Milestone 1 TODO, Milestone 2 and
-    Milestone 3.
+  - **H.** Added by Cal: D, but the zoomed home scrolls sideways, so the
+    reader reaches the sides. Decision 2 had rejected sideways scrolling.
+    Effort: Medium.
+  - **Answer, 2026-11-24: H.** Cal wrote "maybe we allow zoom with scroll
+    at the bigger than 100%?". The orchestrator reads it as H and told Cal
+    so. Above 100% the home's `main` and footer frame keep the layout of
+    100% at the window's width and grow with CSS `zoom`. The page then
+    scrolls sideways, and only then. The tool bar and the status bar keep
+    their place and size. A focused link at a side scrolls into view, so
+    the focus harm of D goes away. This changes the no-sideways-scroll rule
+    of site design for the zoomed home only.
   - The options check ran on 2026-11-24. Its report is
     `.context/home-zoom-pill/options-check-decision-3.md`.
 
@@ -220,6 +229,8 @@ Depends on: 1
       is kept. The rest of the status bar stays a depiction.
 - [ ] Add the zoom to the Home section of `site-design-pages.md` and to the
       island table of `site-delivery-islands.md`.
+- [ ] Change the no-sideways-scroll rule of `site-design.md` for decision 3:
+      the home zoomed above 100% scrolls sideways, and no other page does.
 - [ ] Update `apps/site/README.md` and `docs/mockups/README.md`.
 
 ## Milestone 3: The home zoom island
