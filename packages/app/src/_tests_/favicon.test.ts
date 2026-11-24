@@ -4,17 +4,23 @@ import { resolve } from "node:path";
 import { test } from "node:test";
 
 import { GET as siteFavicon } from "../../../../apps/site/src/pages/favicon.svg";
+import { attribute, documentElements } from "../../../../tests/helpers/html";
 
 import { repositoryRoot } from "./root";
 
 const publicDirectory = resolve(repositoryRoot, "packages/app/public");
 
-/** The `href` of every `<link rel="icon">` in the application's document. */
+/**
+ * The `href` of every active `<link rel="icon">` in the application's
+ * document, read through an HTML parser so that a commented-out link or
+ * link-shaped text does not count.
+ */
 function iconLinks(document: string): string[] {
-  return [...document.matchAll(/<link\b[^>]*>/g)]
-    .map((match) => match[0])
-    .filter((tag) => /\brel="icon"/.test(tag))
-    .map((tag) => /\bhref="([^"]+)"/.exec(tag)?.[1] ?? "");
+  return documentElements(
+    document,
+    (element) =>
+      element.tagName === "link" && attribute(element, "rel") === "icon",
+  ).map((element) => attribute(element, "href") ?? "");
 }
 
 /**
