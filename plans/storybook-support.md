@@ -2,8 +2,8 @@
 
 Status: Active, paused by the user on 2026-11-24. On branch
 `calummoore/mokly-storybook-integration`, with no pull request into `main`
-yet. Tracks A, B, C, and J are merged into this branch, and the pull request
-of track D is open. Tracks E to I have not started. The section [Where the work stands](#where-the-work-stands)
+yet. Tracks A, B, C, D, and J are merged into this branch. Tracks E to I
+have not started. The section [Where the work stands](#where-the-work-stands)
 gives what is done, what waits for the user, and how to continue. Each track
 works on its own branch from this branch and opens a pull request into this
 branch, as design calls 1 and 25 say. Pull requests from this branch into
@@ -89,8 +89,8 @@ Replaced ways:
 
 ## Where the work stands
 
-The user paused the work on 2026-11-24, after tracks A, B, C, and J merged
-into this branch. Track D's pull request is open. This section tells the next
+The user paused the work on 2026-11-24, after tracks A, B, C, D, and J
+merged into this branch. This section tells the next
 agent what is done, what waits for the user, and how to continue.
 
 | Track                    | Pull request | Done                         | Open                                                                                  |
@@ -98,7 +98,7 @@ agent what is done, what waits for the user, and how to continue.
 | A. Mockups               | #339, merged | Milestone 1, except one TODO | The mockup update for decision 27                                                     |
 | B. Story reading         | #492, merged | Milestones 3 to 6            | The B4 TODO of Milestone 2, Milestone 7, and Milestone 8                              |
 | C. Imported assets       | #453, merged | Milestones 9 to 12           | None                                                                                  |
-| D. Vite adapter          | #493, open   | Milestones 13 and 16         | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
+| D. Vite adapter          | #493, merged | Milestones 13 and 16         | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
 | J. Spike for decision 18 | #349, merged | Milestone 37                 | None                                                                                  |
 | E to I                   | None         | Nothing                      | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
 | All                      | None         | Nothing                      | Milestone 38, which ends with the pull request into `main`                            |
@@ -119,10 +119,13 @@ option. None has an answer yet, so no option applies.
   error document of a failed story. It blocks Milestone 23.
 - [B4](#b4-malformed-mokly-parameter-values): malformed `mokly` parameter
   values. It blocks Milestone 7 and the last TODO of Milestone 2.
-- Track D decisions 2 and 3: the files that the Vite setup reads outside the
+- [Track D decision 2](#track-d-decision-2-files-that-the-setup-reads-outside-the-graph)
+  and [track D decision 3](#track-d-decision-3-untracked-env-files-on-the-base-side):
+  the files that the Vite setup reads outside the
   module graph, and untracked env files on the base side. They block one
   TODO of Milestone 15.
-- Track D decision 4: settings that the Vite setup replaces. It blocks one
+- [Track D decision 4](#track-d-decision-4-replaced-settings-stay-silent-under-vite):
+  settings that the Vite setup replaces. It blocks one
   TODO of Milestone 14.
 
 ### Follow-up items that wait for the user
@@ -170,6 +173,14 @@ branch fixes it as its file says. Fix them before the pull request into
   Severity Low.
 - [describe-failure-names-every-file.md](follow-ups/describe-failure-names-every-file.md):
   Severity Low.
+
+- [crate-topic-pages-skip-link-check.md](follow-ups/crate-topic-pages-skip-link-check.md):
+  the Markdown link check does not read crate topic pages.
+
+The user chose on 2026-11-24 not to pursue
+[workspace-setup-misses-gate-tools.md](follow-ups/workspace-setup-misses-gate-tools.md)
+for now. It records the tools and services that a fresh workspace needs
+for the complete gate, so read it before a gate run on a new machine.
 
 The other follow-up items that this plan added need no decision. A later
 branch fixes each one as its file says.
@@ -2628,9 +2639,11 @@ Depends on: 14
 
 Depends on: 13, 14, 15, 16
 
-Merge justifications of the merge of the primary branch with `main`, on
-2026-11-20: `.context/storybook-support/merge-justifications.md`. The pull
-request description copies them.
+Pull request #493 merged Milestones 13 to 16 into this branch on
+2026-11-24, at the user's request, before the open TODOs of Milestones 14 and
+15 and before the review. Its description holds the justifications of the
+track D merges of this branch. No review has read Milestone 16 or the last
+merges. The review TODO below reviews the merged code.
 
 - [x] Remove each status line whose page this track completes. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [ ] Run the targeted tests and `cargo xtask check`.
