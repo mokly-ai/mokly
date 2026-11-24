@@ -33,6 +33,14 @@
   - An installed `0.1.0` on macOS finds the new release with **Check for updates**, downloads it in full and installs it.
   - At the first rerun of a platform job in a release run, the log of its step "Download earlier build records" lists the build record of the earlier attempt, such as `desktop-build-record-macos-1`. When that platform uploaded its complete set before the failure, the rerun logs "Reusing earlier upload" and passes. Record this check when the first such rerun happens.
   - When a check fails, record the run, the failed job and its log, and open a fix.
+- **Results:** Release `v0.2.0` shipped from the merge `4bd5e0fe8` of pull request #486 in run `45481828652`. Results of 2026-11-24:
+  - Passed: the three jobs **Release desktop (macos)**, **Release desktop (linux)** and **Promote desktop release**.
+  - Passed: the promotion log says "Desktop release v0.2.0 is latest." and has no promotion warning.
+  - Passed: one release has the tag `v0.2.0`. It is not a draft and not a pre-release, and it holds the twelve fixed names.
+  - Passed: GitHub returns a digest for each of the twelve assets, and each digest and size match the build records `desktop-build-record-macos-1` and `desktop-build-record-linux-1`.
+  - Passed: `releases/latest` returns `v0.2.0`.
+  - Passed: the fixed latest addresses of `Mokly-mac-arm64.dmg`, `Mokly-mac-x64.dmg`, `Mokly-linux-x86_64.AppImage` and `Mokly-linux-amd64.deb` end with HTTP 200.
+  - Not checked yet: the update of an installed `0.1.0` on macOS, and the first rerun of a platform job.
 - **Impact if no action:** A defect in the promotion can leave every release a draft, so the future download page links break. A defect in the updater path can strand installed `0.1.0` apps. A defect in the record download or in the digests makes each rerun after a complete upload fail, so that release needs a new version.
-- **Needs:** The first desktop release after the merge, the first rerun of a platform job in a release run, and a Mac with `0.1.0` installed.
+- **Needs:** The first rerun of a platform job in a release run, and a Mac with `0.1.0` installed.
 - **Done when:** Each check of the task has a dated result, and each failure has a fix pull request.

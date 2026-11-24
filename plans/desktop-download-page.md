@@ -55,7 +55,9 @@ workspace. Its notes are in `.context/download-page/brainstorm.md`.
    orchestrator merges release pull request #486 at once, watches the
    release, and checks the four download addresses. 0.2.0 is the first
    release with fixed names. Until it is promoted, every link of the page
-   returns 404, so this pull request merges only after it.
+   returns 404, so this pull request merges only after it. #486 merged as
+   `4bd5e0fe8` on 2026-11-24, and `v0.2.0` is the latest release. The four
+   addresses return their installers.
    - Rejected: **B**, Cal merges #486 later, because an early run of the new
      release path leaves time to fix it before the page depends on it.
 
@@ -150,7 +152,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Check that each of the four latest download addresses returns the
+- [x] Check that each of the four latest download addresses returns the
       installer, after desktop 0.2.0 is promoted.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
