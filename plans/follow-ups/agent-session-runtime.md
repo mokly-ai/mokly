@@ -24,6 +24,6 @@
 - **Left out:** A Cloudflare Durable Object, because Cal chose Rust, Postgres and Kubernetes on 2026-11-24.
 - **Wider fix:** A, because the lease and resume code already exists for builds.
 - **Previous examples:** The build claims and fences in `docs/protocol/cloud/cloud-build-lifecycle.md`.
-- **Related:** Mokly Cloud is gaining a live WebSocket for each open project in `mkc-api`, with a Postgres `LISTEN`/`NOTIFY` relay between replicas, chosen by Cal on 2026-11-24. How readers see stored changes on it is still open: notices without content followed by REST reads, agent text on the socket, or long polling. This item does not wait for that answer, but the agent loop must send what it chooses.
+- **Related:** Mokly Cloud is gaining a live WebSocket for each open project in `mkc-api`, with a Postgres `LISTEN`/`NOTIFY` relay between replicas, chosen by Cal on 2026-11-24. On the same day Cal chose how readers see stored changes: a database trigger calls `pg_notify` when a write commits, the socket carries a notice with the kind, the ID and a sequence number, and the reader reads the change through REST. The agent loop's stored steps then need such a trigger. Presence has an `agent` participant kind, so a running agent can show in the avatar stack. This item does not wait for that work.
 - **Recommendation:** A. It reuses the build worker's leases and keeps secrets out of the sandbox.
 - **Action:** Ask the user, because it decides the runtime of a new product phase.
