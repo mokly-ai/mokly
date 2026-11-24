@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { PRICING_GROUPS } from "../../src/components/pricing/compare-rows.js";
 import {
   APP_PATHS,
-  GET_STARTED_PATH,
+  INSTALL_GUIDE_PATH,
   SITE_PATHS,
 } from "../../src/navigation.js";
 
@@ -26,7 +26,7 @@ test("the plan actions and the docs link open their targets", async ({
   await page.goto(SITE_PATHS.pricing);
   const main = page.getByRole("main");
   for (const [name, href] of [
-    ["Get started", GET_STARTED_PATH],
+    ["Get started", INSTALL_GUIDE_PATH],
     ["Create an account", APP_PATHS.signUp],
     ["Start a 7-day trial", APP_PATHS.signUp],
     ["Read Plans and billing", "/docs/cloud/plans-and-billing/"],

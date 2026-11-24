@@ -9,7 +9,8 @@
 /**
  * Each plan frame in reading order: its name, its prices with the words
  * under them, and its one action with the kind of button and the mockup it
- * opens. The cloud plans start at sign-up; Get started opens the docs.
+ * opens. The cloud plans start at sign-up; the CLI's Get started opens the
+ * docs.
  */
 export const plans = [
   {

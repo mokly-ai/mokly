@@ -64,7 +64,7 @@ router and the app on the one public origin.
 
 | Route         | Purpose                                                   | Primary action                   |
 | ------------- | --------------------------------------------------------- | -------------------------------- |
-| `/`           | Explain Mokly as a design tool for teams; lead to the CLI | Get started → Install guide      |
+| `/`           | Explain Mokly as a design tool for teams; lead to sign-up | Get started → `/sign-up`         |
 | `/docs/…`     | Documentation for the CLI, authoring, catalogue and cloud | Read; search                     |
 | `/changelog`  | Release notes from the installed package changelog        | Open the release on GitHub       |
 | `/pricing`    | The open-source CLI and the plans of Mokly Cloud          | Start a 7-day trial → `/sign-up` |
@@ -82,21 +82,24 @@ ownership reaches the origin router and the reserved workspace names.
 
 ## Get Started
 
-**Get started →** links to the relative path `/docs/start/install/`, the first
-Getting started guide, from every place that shows it: the header, the menu,
-the home and the Open source plan of the pricing page. The home's **Download
+**Get started →** in the header, the menu and the home hero links to the app's
+relative path `/sign-up`, the cloud sign-up. Sending it to the Install guide
+was rejected, because the site's main call to action is a cloud account. **Get
+started →** beside the open-source CLI, in the home's open foundation and the
+Open source plan of the pricing page, links to the relative path
+`/docs/start/install/`, the first Getting started guide. The home's **Download
 for Mac** opens `https://github.com/mokly-ai/mokly-desktop/releases`, the
 release list of the desktop app, because every desktop release is still a
 pre-release. **GitHub** and **View on GitHub** open the public
 `https://github.com/mokly-ai/mokly` repository.
 
-The site links one application route. **Create an account** and **Start a
-7-day trial** on the pricing page link to the relative path `/sign-up`. The
-site has no **Sign in** link. The site build fails on a link to a path that the
-site does not publish, unless [Site delivery](./site-delivery.md) accepts the
-path as an application route. Decision 3 links the plan actions to the app
-now. Sending them to the Plans and billing docs page until the cloud launch
-was rejected, because the cloud features ship before go-live.
+The site links one application route, `/sign-up`. The main **Get started →**,
+and **Create an account** and **Start a 7-day trial** on the pricing page, link
+to it. The site has no **Sign in** link. The site build fails on a link to a
+path that the site does not publish, unless [Site delivery](./site-delivery.md)
+accepts the path as an application route. Decision 3 links the plan actions to
+the app now. Sending them to the Plans and billing docs page until the cloud
+launch was rejected, because the cloud features ship before go-live.
 
 The site and the app share the production apex rather than separate hosts;
 the [origin router](./origin-router.md) sends application paths to the app.

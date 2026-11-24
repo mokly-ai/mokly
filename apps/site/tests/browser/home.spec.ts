@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import {
   EXTERNAL_LINKS,
   GET_STARTED_PATH,
+  INSTALL_GUIDE_PATH,
   SITE_PATHS,
 } from "../../src/navigation.js";
 
@@ -38,17 +39,18 @@ test("the home description and its social metadata repeat the hero lead", async 
     await expect(page.locator(selector)).toHaveAttribute("content", LEAD);
 });
 
-test("both Get started actions open the Install guide", async ({ page }) => {
+test("the hero's Get started opens sign-up and the open foundation's the Install guide", async ({
+  page,
+}) => {
   await page.goto(SITE_PATHS.home);
   const actions = page
     .getByRole("main")
     .getByRole("link", { name: "Get started" });
   await expect(actions).toHaveCount(2);
-  for (const action of await actions.all()) {
-    await expect(action).toHaveAttribute("href", GET_STARTED_PATH);
-  }
-  await actions.first().click();
-  await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
+  await expect(actions.first()).toHaveAttribute("href", GET_STARTED_PATH);
+  await expect(actions.last()).toHaveAttribute("href", INSTALL_GUIDE_PATH);
+  await actions.last().click();
+  await expect(page).toHaveURL(new RegExp(`${INSTALL_GUIDE_PATH}$`));
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toHaveText("Install");

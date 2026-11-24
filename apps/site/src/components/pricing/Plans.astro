@@ -4,12 +4,12 @@
  * frames. Mokly CLI holds the open-source frame, and Mokly Cloud holds the
  * Free and Team frames. Each box is a group that its dark tag names. Team is
  * the selected frame: its corner handles, its size tag with the frame's
- * rendered size and Maya's cursor are depictions. Get started opens the
- * Install guide; Create an account and the filled Start a trial open the
+ * rendered size and Maya's cursor are depictions. The Open source plan's Get
+ * started opens the Install guide; Create an account and the filled Start a trial open the
  * app's sign-up route. The hero's redline measures down to the plan grid,
  * `pricing-plan-grid`.
  */
-import { APP_PATHS, GET_STARTED_PATH } from "../../navigation.js";
+import { APP_PATHS, INSTALL_GUIDE_PATH } from "../../navigation.js";
 import Button from "../Button.astro";
 import Cursor from "../Cursor.astro";
 import SectionBox from "../SectionBox.astro";
@@ -45,7 +45,7 @@ import "../../styles/pricing-plans.css";
         summary="For building catalogues locally."
       >
         <PlanPrice amount="$0" note="MIT license" slot="price" />
-        <Button arrow href={GET_STARTED_PATH} kind="secondary" slot="action">
+        <Button arrow href={INSTALL_GUIDE_PATH} kind="secondary" slot="action">
           Get started
         </Button>
       </PlanFrame>

@@ -156,9 +156,8 @@ it. Missing or stale site output fails rather than skips.
   derived brand asset drifts.
 - The link check walks the built HTML and CSS: every internal href, anchor,
   asset (including responsive images and CSS URLs) and frame source resolves
-  in the output. The relative `/sign-up` link of the pricing page is the only
-  internal path accepted without a site file, because the app router owns
-  it. External URLs are not fetched. Missing output, an output tree
+  in the output. The relative `/sign-up` link is the only internal path
+  accepted without a site file, because the app router owns it. External URLs are not fetched. Missing output, an output tree
   without HTML, and a search index that is missing or one build behind the
   pages all fail.
 - The browser check serves the built output through a local preview and opens

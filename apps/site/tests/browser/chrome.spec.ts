@@ -107,16 +107,12 @@ for (const region of ["banner", "contentinfo"] as const) {
   });
 }
 
-test("Get started opens the first Getting started guide", async ({ page }) => {
+test("Get started opens the app's sign-up", async ({ page }) => {
+  // The app serves the sign-up route, so the site preview checks the href.
   await page.goto(SITE_PATHS.home);
-  await page
-    .getByRole("banner")
-    .getByRole("link", { name: "Get started" })
-    .click();
-  await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
   await expect(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText("Install");
+    page.getByRole("banner").getByRole("link", { name: "Get started" }),
+  ).toHaveAttribute("href", GET_STARTED_PATH);
 });
 
 test("the header composition follows the viewport", async ({ page }) => {

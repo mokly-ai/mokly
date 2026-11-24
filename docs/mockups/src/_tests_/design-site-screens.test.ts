@@ -133,7 +133,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         "design/site/changelog",
         "design/site/pricing",
         undefined,
-        "design/site/docs",
+        "product/account/sign-up",
       ],
     );
     const footerLinks = elements(
