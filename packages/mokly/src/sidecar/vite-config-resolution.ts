@@ -29,7 +29,7 @@ export function withViteConfigResolution<T>(
           fileURLToPath(context.parentURL),
           (source, parentURL) =>
             active.exit(() =>
-              context.conditions.includes("require")
+              Array.from(context.conditions).includes("require")
                 ? pathToFileURL(createRequire(parentURL).resolve(source)).href
                 : nextResolve(source, { ...context, parentURL }).url,
             ),

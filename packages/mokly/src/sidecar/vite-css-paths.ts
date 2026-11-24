@@ -26,8 +26,8 @@ export function viteCssEnabled(
   );
 }
 
-export function viteInlineCssId(file: string): string {
-  return `${file.split(path.sep).join("/")}?inline`;
+export function viteCssPath(file: string): string {
+  return file.split(path.sep).join("/");
 }
 
 /** Rebase nested assets without handing them to Vite's asset loader. */
@@ -65,7 +65,7 @@ export class ViteCssUrls {
   }
 
   owns(file: string): boolean {
-    return file.startsWith(`${this.config.root}/${this.prefix}/`);
+    return viteCssPath(file).startsWith(`${this.config.root}/${this.prefix}/`);
   }
 
   restore(css: string): string {

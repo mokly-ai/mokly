@@ -165,7 +165,7 @@ fn vite_sides_with_different_plugin_inputs_move_every_javascript_key() {
             "c/filled",
             "html",
             "label",
-            "label/Primary",
+            "label/Secondary",
             "p",
             "s/s",
             "t/t",

@@ -3,13 +3,14 @@ import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
 import type { ViteCssResult } from "../generated/sidecar/ViteCssResult.js";
 
 import { fileDigest, metadataDigest } from "./file-digests.js";
-import { viteInlineCssId, ViteCssUrls } from "./vite-css-paths.js";
+import { viteCssPath, ViteCssUrls } from "./vite-css-paths.js";
 import { recordViteInput } from "./vite-inputs.js";
 import { viteMetadata } from "./vite-metadata.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { viteFile } from "./vite-urls.js";
 
 class InlineStylesheet {
+  readonly file: string;
   readonly id: string;
   readonly urls: ViteCssUrls;
   readonly reports = new Set<string>();
@@ -18,22 +19,23 @@ class InlineStylesheet {
   text: string | undefined;
 
   constructor(
-    readonly file: string,
+    file: string,
     config: ResolvedConfig,
     private readonly input: ViteInputs,
     stylesheet: string,
   ) {
-    this.id = viteInlineCssId(file);
+    this.file = viteCssPath(file);
+    this.id = `${this.file}?inline`;
     this.urls = new ViteCssUrls(config, input.paths, stylesheet);
   }
 
   report = (file: string): void => {
-    if (file !== this.file) this.reports.add(file);
+    if (viteCssPath(file) !== this.file) this.reports.add(file);
   };
 
   async read(id: string, importer?: string): Promise<void> {
     const file = viteFile(id);
-    if (!file || file === this.file) return;
+    if (!file || viteCssPath(file) === this.file) return;
     await recordViteInput(this.input, file);
     this.imports.set(file, viteFile(importer ?? "") ?? this.file);
   }
@@ -45,8 +47,9 @@ export class ViteCssTransform {
 
   forId(id: string): InlineStylesheet | undefined {
     const active = this.active;
-    if (active && id.endsWith("?inline") && viteFile(id) === active.file)
-      return active;
+    if (!active || !id.endsWith("?inline")) return;
+    const file = viteFile(id);
+    if (file && viteCssPath(file) === active.file) return active;
   }
 
   capture(): Plugin {
