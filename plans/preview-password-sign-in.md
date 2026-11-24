@@ -1,0 +1,559 @@
+# Preview password sign-in
+
+Status: Active. On branch `calummoore/preview-password-sign-in-jofl`, no pull
+request yet. The pull request that completes the work deletes this plan, as
+the `plans` skill says. The plan waits for Cal's answers to the decisions
+below. No product code changes before Cal approves the plan.
+
+A PR preview is a temporary deployment of one pull request at
+`https://pr-N.preview.mokly.ai`, with its own namespace `mkc-preview-pr-N` and
+database. Today a reviewer of this public repository signs in to the shared
+account `preview@mokly.ai` with an emailed link. The API writes that link to
+its log, and the reviewer reads it with `kubectl` and
+`infra/scripts/preview-link.py`. Reviewers without cluster access cannot sign
+in alone. This change lets a reviewer type one shared preview password on the
+preview's Sign-in page.
+
+Cal chose option C on 2026-11-24: a preview password with derived values. An
+operator creates one strong password once, and the team keeps it in its
+password manager. A copy lives where only the trusted preview deploy job can
+read it. Each preview stores only a value derived from the password with a
+slow salted hash, for example `KDF(password, "preview-pr-504")`, in place of
+today's random value in Secret `preview-sign-in`. The Sign-in page shows a
+"Preview password" field only when the API has the `preview_sign_in`
+capability, which production never has. The app sends the typed password to
+`POST /v1/auth/preview`. The API derives the value from the typed password,
+compares it in constant time, and on a match signs in `preview@mokly.ai`, as
+today. The same password works for every preview, and a session keeps its
+ordinary lifetime. Cal rejected on the same day: real email in PR previews,
+through a Postmark token or a trusted relay; a private link workflow; a plain
+shared password in every preview (option B); and a sign-in link, or an
+expiring link, in the public PR comment.
+
+The options check of 2026-11-24 found that a value derived from the password
+and the preview's name is the same after every label cycle. If that value also
+opened the preview, a leaked Open preview link could no longer be retired by a
+label cycle. The recommended options therefore keep today's random link value
+as it is and add the derived value beside it as a verifier, which opens
+nothing by itself. This changes two sentences of Cal's decision, so decisions
+1 and 3 ask Cal.
+
+The change does not add a password to stable environments, does not change
+the sessions that a sign-in issues, and does not change the email sign-in of
+other addresses.
+
+Contract owners:
+
+- [Authentication and sessions](../docs/protocol/cloud/auth-sessions.md#preview-sign-in).
+- [Preview seed](../docs/protocol/cloud/preview-seed.md).
+- [Preview scripts](../docs/protocol/cloud/preview-scripts.md).
+- [PR preview environments](../docs/protocol/cloud/pr-preview-environments.md).
+- [REST API](../docs/protocol/cloud/rest-api.md).
+- [Account mockups](../docs/protocol/cloud/product-mockups-account.md) and
+  [Folio chrome: account entry](../docs/protocol/cloud/folio-chrome-account.md).
+- The [preview runbook](../docs/ops/preview.md),
+  [environment](../docs/ops/environment.md) and
+  [secrets](../docs/ops/secrets.md) runbooks.
+
+The recommended options replace no old way: the random link value, its
+Secret and its setting stay. If Cal picks option A or B of decision 3, the
+random value is replaced, and this plan then gets a `Replaced ways` list.
+
+## Terms
+
+- **Release job:** the trusted `release` job of
+  `.github/workflows/preview.yml`. It runs the scripts of `main`, holds the
+  deploy identity, and deploys the preview. PR code never runs in it.
+- **Verifier:** a value made from the password with a slow hash. It checks a
+  typed password and opens nothing by itself.
+- **Secret Manager:** Google Cloud's secret store in project `mokly-508518`.
+  Operator values such as `mkc-catalogue-dns-token` live there.
+- **Log reader:** `infra/scripts/preview-link.py`, which reads an emailed
+  sign-in link for one address from the API logs with `kubectl`.
+- **Open preview link:** the link
+  `https://pr-N.preview.mokly.ai/auth/preview/callback#secret=…` that the PR
+  comment carries only for a private repository.
+
+## Design
+
+This design follows the recommended option of each decision. Each item marked
+**my call** is a design call that I made on 2026-11-24, with its reason.
+Cal's answers can change any of them.
+
+- **Verifier.** The verifier is a standard self-describing scrypt string,
+  `$scrypt$ln=14,r=8,p=5$<salt>$<hash>`, with a random 16-byte salt and a
+  32-byte hash (decision 2, E). An operator makes it once with
+  `python3 infra/scripts/preview-lifecycle.py preview-verifier`, which reads
+  the password from standard input. The command warns on a password shorter
+  than 20 characters (decision 5, D). The operator adds the verifier as a new
+  version of the Secret Manager ID `mkc-preview-sign-in-password` (decision 1,
+  D). Every preview holds the same verifier.
+- **Memory bound, my call.** The API accepts a verifier only with r = 8,
+  1 ≤ p ≤ 8 and ln ≤ 16, so one check uses at most 64 MiB. A verifier outside
+  these bounds fails startup with a typed configuration error. Reason: the
+  verifier comes from an operator, but a typing error must not take the API's
+  memory.
+- **Settings.** `MKC_PREVIEW_SIGN_IN_SECRET`, `MKC_PREVIEW_SIGN_IN_EMAIL`,
+  `MKC_PREVIEW_SIGN_IN_PLAN`, Secret `preview-sign-in` and the Open preview
+  link stay as they are (decision 3, D). A new optional setting,
+  `MKC_PREVIEW_SIGN_IN_VERIFIER`, comes from a new optional Secret,
+  `preview-password`. It requires the existing pair and the same
+  `preview_sign_in` capability, like the plan setting. Without it, the API
+  accepts no password.
+- **Exchange.** `POST /v1/auth/preview` accepts a typed password beside
+  today's `secret`, as decision 9 defines. The API checks the password
+  against the verifier in constant time and never logs it. The gate, the
+  Origin check, the body check, the admission of 20 attempts per peer IP per
+  60 seconds, and the session issue stay as today. A `secret` never matches
+  the verifier, and a password never matches the link value.
+- **Bounded hashing, my call.** One API process checks at most two passwords
+  at once. Further attempts wait. Reason: each check uses about 16 MiB with
+  the recommended parameters, and the API's memory limit is 1 GiB.
+- **Field discovery.** `GET /v1/auth/methods` answers whether this API accepts
+  a password, and for which account (decision 4, C, and decision 8, D). Sign
+  in waits for the answer in its waiting form, so the panel does not move.
+  When the read fails, Sign in draws email and GitHub sign-in only.
+- **Screens, my call.** The section shows on Sign in only. Sign up and the
+  desktop window do not draw it. Reason: the password signs in the shared
+  account, which already exists, and the desktop window signs in through the
+  browser. The proposed layout puts a second `or` rule under Continue with
+  email, then a **Password** field and a `secondary` action, **Continue as
+  preview@mokly.ai**. The account entry allows one `primary` action, which
+  stays Continue with email. A refused password marks the field with "This
+  password isn't valid.", in the voice of "This link isn't valid". Other
+  failures, such as the rate limit, show beside the action, as every write of
+  the page does. The app trims leading and trailing white space before it
+  sends the password, as it trims the email. The mockups settle the final
+  layout and copy.
+- **Deploy.** The release job reads the verifier with
+  `gcloud secrets versions access` into a private mode-0600 runner-temporary
+  file, as it reads the DNS token. It writes Secret `preview-password` when
+  the value differs, before the Helm upgrade. When Helm did not roll the API
+  pod, for example on a rerun with the same image, the deploy restarts the
+  API Deployment and waits for the rollout. Reason, my call: the API reads
+  its settings at startup, and the API pod uses the `Recreate` strategy, so a
+  second roll after Helm's roll costs downtime.
+- **Missing verifier.** A missing or malformed verifier gives a warning
+  annotation on the workflow run, and the deploy writes no verifier (decision
+  5, D). An existing Secret `preview-password` is then deleted, so that a
+  preview never keeps a verifier that the store no longer holds. Reason, my
+  call: the store is the one source of the verifier. The discovery answer is
+  then false, and Sign in draws no section.
+- **Rotation.** An operator makes a new verifier from a new password and adds
+  it as a new version. Each preview picks it up on its next deploy. A running
+  preview accepts the old password until then. A rerun of the workflow
+  deploys again.
+- **Comment and seed.** The comment and its Open preview link do not change.
+  The seed keeps its steps and its status. The release job never passes the
+  verifier to the seed. The seed reads the same settings as `serve`, so the
+  verifier rules apply to it too.
+- **Same derivation.** One fixture file under `infra/tests/fixtures/` holds a
+  fixed password and a verifier made from it by hand with Python's
+  `hashlib.scrypt`. Both the Rust tests and the Python tests read it
+  (decision 7, C).
+- **Local stack, my call.** `scripts/cloud/dev-api.sh` keeps a random local
+  password in `.context/preview-password` (mode 0600), created once, and its
+  verifier in `.context/preview-verifier`. Reason: a developer can test the
+  section with the same tools as a preview. The local Open preview link stays
+  as it is.
+- **Password, my call.** The runbook creates the password with
+  `python3 -c 'import secrets; print(secrets.token_urlsafe(24))'`: 32
+  characters and 192 random bits. Reason: with a long random password, a
+  leaked verifier does not give the password back.
+- **Docs layout, my call.** The Preview Sign-In section moves out of
+  `auth-sessions.md` into a new protocol page, `preview-sign-in.md`, and the
+  old section links to it. Reason: `auth-sessions.md` has 240 lines, and the
+  gate caps protocol Markdown at 250. `preview-scripts.md` (239 lines) and
+  `preview-seed.md` (236 lines) link to the new page in place of new text.
+- **Security statement.** The protocol states these facts. The Sign-in page
+  and the API of a preview run the pull request's own code, so a hostile
+  branch could capture a typed password. Only repository writers can deploy a
+  preview, and the protocol treats previews as trusted code. A leaked
+  verifier, from logs, namespace read access or the store, opens no preview.
+  The slow hash keeps a long random password hard to recover from it. A
+  leaked Open preview link opens only its own preview until a label cycle.
+
+## Decisions
+
+Each decision waits for Cal. The options check of 2026-11-24 ran over the
+first draft and added options. Its report is in
+`.context/preview-password-sign-in/options-check-report.md`. The decisions
+were then numbered by severity again. The recommended options of decisions 1,
+2 and 5 need option D of decision 3.
+
+### 1. Where the preview password lives
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** `infra/terraform/foundation/preview.tf`, `infra/scripts/preview-common.sh`, `.github/workflows/preview.yml`.
+- **Background:** The release job already reads operator values from Secret Manager with `gcloud secrets versions access`, for example `mkc-catalogue-dns-token`. Foundation Terraform declares each Secret Manager ID and gives the deploy identity read access. The values never enter Terraform state. `preview.yml` also runs a `pull_request` job, `deploy-pr`, from the branch's own copy of the workflow file.
+- **Problem:** The deploy needs one copy of the password, or of a value made from it, that only trusted deploy code can read.
+- **Impact if no action:** No preview can check a typed password.
+- **Root question:** Where does the deploy's copy live, and what does it hold, so that only trusted deploy code can read it?
+- **Options:**
+  - **A.** A GitHub Actions secret on environment `preview`, given to the release job as a private file. No Terraform change. A branch's own workflow job that uses environment `preview` can read it, unless that environment allows only `main`, which no doc records. Effort: Small.
+  - **B.** A new Secret Manager ID `mkc-preview-sign-in-password` that holds the password, with read access for the deploy identity only. The release job reads it as it reads the DNS token and derives a value for each preview. It needs a foundation apply, and then an operator adds the first value. Effort: Medium.
+  - **C.** A Kubernetes Secret in namespace `mkc-preview-system`, which an operator writes with `kubectl`. No Terraform change. It adds a second model for operator values, and every cluster administrator can read it. Effort: Small.
+  - **D.** The Secret Manager ID of B holds a verifier, not the password. A verifier checks a typed password and opens nothing by itself. An operator makes it once with a runbook command, and the release job copies it into each preview. The password then stays only in the team's password manager. Every preview holds the same verifier, which changes the words "derived from the password and its own name" of Cal's decision. It needs option D of decision 3. Effort: Medium.
+- **Left out:** An encrypted file in the repository, because it needs a key that the release job must read from a store anyway. A store that the API reads at runtime, because it gives PR code access to it. A repository-level GitHub secret, because A is better on every point. A password manager's CI integration, because its own token needs the home of A or B.
+- **Wider fix:** None, because this is a choice of a new home, not a class of defect.
+- **Previous examples:** `mkc-catalogue-dns-token` and `mkc-cloudflare-worker-token`. `docs/ops/secrets.md` put the second one in Secret Manager because its provider accepts only the `main` workflow.
+- **Related:** Decision 3: option D here needs its option D. Decision 5: the check of a short password moves into the runbook command under D.
+- **Recommendation:** D, changed from B by the options check. No machine store then holds the password, and a leaked stored value opens nothing. B stays best if decision 3 keeps A.
+- **Action:** ask the user, because Cal asked to settle where the password lives, and option D changes one sentence of his decision.
+
+### 2. Which slow hash makes the verifier
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** `crates/mkc-auth/src/preview.rs`, `infra/scripts/preview-lifecycle.py`.
+- **Background:** Python code from `main` makes the value, and Rust code from the pull request checks it. The API pod has a memory limit of 1 GiB and a CPU request of 250m. Admission allows 20 attempts per peer IP per 60 seconds. Python's `hashlib.scrypt` refuses N = 2^15, r = 8, p = 3 under its default memory limit. N = 2^14, r = 8, p = 5 runs in about 0.17 seconds.
+- **Problem:** The plan must name the hash, its cost and how the value records them.
+- **Impact if no action:** A fast hash lets a person with a leaked value test many guesses. A heavy hash costs the API memory and time on each attempt.
+- **Root question:** How does a leaked stored value stay useless for finding the password, at a cost per attempt that a preview API can carry?
+- **Options:**
+  - **A.** PBKDF2-HMAC-SHA256 with 600 000 iterations, as 64 hex digits. Python has it, and Rust uses the `pbkdf2` crate. It uses no memory, so graphics cards test guesses cheaply. Effort: Small.
+  - **B.** scrypt with N = 2^14, r = 8, p = 5, as 64 hex digits, with a fixed salt. Python has it, and Rust uses the `scrypt` crate. It uses about 16 MiB for each attempt. The parameters are constants on both sides. Effort: Small.
+  - **C.** Argon2id with 19 MiB, two passes and one lane. Rust uses the `argon2` crate. Python needs the `argon2-cffi` package, the first third-party package in the trusted release job. Effort: Medium.
+  - **D.** HMAC-SHA256 keyed by the password, as 64 hex digits. It needs no new crate and no memory. It protects only a long random password, so it needs a length failure. It drops the slow hash of Cal's decision. Effort: Small.
+  - **E.** scrypt as in B, stored as a standard self-describing string, `$scrypt$ln=14,r=8,p=5$<salt>$<hash>`, with a random salt. The API reads the parameters and the salt from the value, within a memory bound. The parameters can rise later without a change to the API. It needs option D of decision 3, because an older image refuses a value that is not 64 hex digits. Effort: Medium.
+- **Left out:** None. The fast hash, left out in the first draft, came back as D.
+- **Wider fix:** E, because the value then carries everything that both sides must agree on.
+- **Previous examples:** None found.
+- **Related:** Decision 7: E is the wider fix of that item. Decision 3: E needs its option D.
+- **Recommendation:** E, changed from B by the plan after the options check. It is memory-hard, needs no new Python package, and removes most ways for the two sides to disagree. B, with the parameters above, stays best if decision 3 keeps A.
+- **Action:** ask the user, because Cal asked to settle the hash and its parameters.
+
+### 3. Which credential the one-click link carries
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** `infra/scripts/preview-comment.py`, `crates/mkc-config/src/preview.rs`, `docs/protocol/cloud/preview-seed.md`.
+- **Background:** In a private repository, the PR comment carries an Open preview link with a random value in its fragment. The page `/auth/preview/callback` sends that value to `POST /v1/auth/preview` as `{secret}`. When a link leaks, the runbook says to remove and add the `preview` label, which creates a new random value. This repository is public, so its comment has no link. Smoke scripts, two browser specs and the local sign-in steps use the same `{secret}` exchange.
+- **Problem:** Cal's option C puts a derived value in place of the random value. A derived value is the same after every label cycle.
+- **Impact if no action:** A leaked link can no longer be retired by a label cycle, or the link breaks.
+- **Root question:** Which credential does a private repository's one-click link carry, so that a leaked link can still be retired?
+- **Options:**
+  - **A.** The link carries the derived value. The API accepts `{secret}` equal to the stored value, beside the typed password. No new Secret. A leaked link opens its preview until the password is rotated, because a label cycle makes the same value. Effort: Small.
+  - **B.** A second Secret holds a new random value for the link, and the derived value takes the place of today's value. The API holds two credentials. Older images then read the derived value as the link value. Effort: Medium.
+  - **C.** Remove the link, the page `/auth/preview/callback`, the `{secret}` body and the link logic of the comment script. It deletes functionality on `origin/main`, and it breaks the smoke scripts, two browser specs and the local sign-in steps. Effort: Medium.
+  - **D.** Keep the link, Secret `preview-sign-in`, its random value and `MKC_PREVIEW_SIGN_IN_SECRET` as they are. Add the verifier in a new optional Secret and setting, for example `MKC_PREVIEW_SIGN_IN_VERIFIER`. The API compares the verifier only with a typed password. Older images ignore the new setting. A label cycle still retires a leaked link, and a leaked verifier opens nothing. It changes "in place of today's random value" of Cal's decision. Effort: Medium.
+- **Left out:** A link that carries the password, because a PR comment would then hold the password of every preview.
+- **Wider fix:** None, because this is a choice about one credential.
+- **Previous examples:** None found.
+- **Related:** Decisions 1, 2 and 5: their recommended options need D here.
+- **Recommendation:** D, changed from A by the options check. It keeps today's link and its recovery, keeps the verifier useless by itself, and changes nothing that older images and tests read.
+- **Action:** ask the user, because option D changes one sentence of Cal's decision, and option C deletes functionality on `origin/main`.
+
+### 4. How Sign in knows to show the field
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Product bug.
+- **Location:** `packages/app/src/screens/account/entry-screen.tsx`.
+- **Background:** The Sign-in page of the Expo app under `packages/app` draws GitHub and email sign-in. The app learns that GitHub sign-in is off only after a press, from a 503 `operation-unavailable` answer. The API grants `preview_sign_in` only with `MKC_ENV=preview` or `development`. Each environment builds its own app image.
+- **Problem:** The page must show the field only where the API accepts a password. No API answer says this before the reader acts.
+- **Impact if no action:** The field shows nowhere, or it shows everywhere, production included.
+- **Root question:** How does a reviewer reach a password form only where the API accepts a password?
+- **Options:**
+  - **A.** A build flag in the preview app image, such as `EXPO_PUBLIC_MKC_PREVIEW_PASSWORD=true`. No API change. The flag can disagree with the API, for example in local development. Effort: Small.
+  - **B.** A new field in the answer of `GET /v1/health`. It puts a sign-in method into the operations health answer, which smoke checks read. Sign in waits for the answer in its waiting form. Effort: Small.
+  - **C.** A new public endpoint `GET /v1/auth/methods`, with `Cache-Control: no-store`. It answers an object with one field for each sign-in method that configuration controls, today only the preview password. Sign in waits for the answer in its waiting form. It adds an endpoint, its OpenAPI entry and generated types. Effort: Medium.
+  - **D.** A page of its own, for example `/auth/preview`, which the PR comment links. No discovery is needed, and Sign in stays the same in every environment. A reviewer whom the app sends from a deep link to Sign in must go back to the comment. The comment contract changes, and the page needs its own mockups. Effort: Medium.
+  - **E.** On load, Sign in sends `POST /v1/auth/preview` with an empty body, and draws the field on 400 and not on 503. The protocol fixes the order of these checks, and the attempt uses no admission. Every production Sign in then sends a write that the API answers with 503. Effort: Small.
+- **Left out:** A check of the host name, because it fails in local development. A field that always shows, because it draws a dead field in production. A flag that the app server serves, because C is better on every point.
+- **Wider fix:** C, because its object takes a later method as a new field. A field for GitHub sign-in would fix the notice that shows only after a press, and it is a follow-up item.
+- **Previous examples:** The GitHub notice in `entry-screen.tsx`, which shows only after a press.
+- **Related:** Decision 8: its option D reads the account address from this answer.
+- **Recommendation:** C. The API that checks the password is the one source of the answer, and production pays one cheap read.
+- **Action:** ask the user, because Cal asked how the app learns to show the field, and option C adds a public endpoint that no requirement covers.
+
+### 5. What deploy does without a usable verifier
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Process.
+- **Location:** `infra/scripts/preview-common.sh`, `infra/scripts/preview-deploy.sh`.
+- **Background:** The release job runs the scripts of `main`, so the new deploy starts only after this change merges. The store of decision 1 can then still be empty until an operator adds a value. A read of a Secret Manager ID that does not exist yet answers a permission error. An operator can also store a short password, which the slow hash protects less.
+- **Problem:** The deploy needs a rule for a missing, malformed or weak value.
+- **Impact if no action:** Deploys fail with a raw provider error, or the field refuses the right password with no sign of the cause.
+- **Root question:** What does a deploy without a usable value leave for reviewers and operators?
+- **Options:**
+  - **A.** Fail the deploy with a message that names the store or the minimum of 20 characters. Every labelled PR stays undeployed until an operator acts. It adds a new deploy failure. Effort: Small.
+  - **B.** Warn and continue with a random value in Secret `preview-sign-in`, as today. The field then shows and refuses every password until an operator acts. Effort: Small.
+  - **C.** Warn on a missing value, as in B, and fail on a short password, as in A. It adds a new deploy failure for the length only. Effort: Small.
+  - **D.** Warn with an annotation on the workflow run, and write no verifier. A malformed value gets the same treatment, with its own warning. The discovery answer is then false, and Sign in draws no field. The link and the log reader keep working. The runbook command of decision 1 warns on a password shorter than 20 characters. It needs option D of decision 3. Effort: Small.
+- **Left out:** A check in the API, because the API never sees the password before a reviewer types it.
+- **Wider fix:** None, because this is a rule for one input.
+- **Previous examples:** None found.
+- **Related:** Decision 3: D needs its option D. Rollout: the Secret Manager ID should hold a value before the deploy change runs, so that the permission-error window does not occur.
+- **Recommendation:** D, changed from B by the options check. It keeps the rollout graceful and never shows a field that calls the right password wrong. B stays best if decision 3 keeps A.
+- **Action:** ask the user, because options A and C add a new deploy failure, which the always-on rules leave to the user.
+
+### 6. Whether the email link and log reader stay
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `infra/scripts/preview-link.py`, `docs/ops/preview.md`.
+- **Background:** In a preview, the API writes every email to its log. The log reader reads the sign-in link of any address from that log. Today it is the only way to sign in to a preview of this public repository. Reviewers also use it to sign in as other addresses, for example to test sign up or an invitation.
+- **Problem:** The password replaces the log reader for the shared account only. The plan must say what stays.
+- **Impact if no action:** The runbook keeps sending reviewers to `kubectl` for the shared account.
+- **Root question:** How does a reviewer sign in to a preview as an address other than the shared account?
+- **Options:**
+  - **A.** Keep the email link and the log reader for every address. The runbook makes the password the first way for the shared account, and the log reader the way for other addresses. Effort: Small.
+  - **B.** Let the password sign in any address that the reviewer types beside it. It changes Cal's decision, which signs in the shared account only, and it creates unverified accounts for any address. Effort: Medium.
+  - **C.** Remove the log reader. It deletes functionality on `origin/main` and stops tests of sign up and invitations in previews. Effort: Medium.
+  - **D.** A preview-only page that shows sent mail to the shared account. It puts every address behind the shared password, adds a page that only previews draw, and needs a mail store that previews do not have. Effort: Large.
+- **Left out:** Real email and a private link workflow, because Cal rejected both on 2026-11-24.
+- **Wider fix:** None, because no class of defect is involved.
+- **Previous examples:** None found.
+- **Recommendation:** A. It keeps every way to sign in and only changes which way the runbook gives first.
+- **Action:** ask the user, because Cal asked to settle whether the email or log link path stays.
+
+### 7. How both sides keep the same derivation
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Test.
+- **Location:** `crates/mkc-auth/src/preview.rs`, `infra/tests/`.
+- **Background:** After the deploy, a seed Job runs the PR's own API binary. It creates the shared account and a sample project, and writes its status. No deploy check sends a credential to the API. Python code from `main` makes the value, and Rust code from the PR checks it.
+- **Problem:** A PR that changes the Rust side breaks its own password sign-in, and after the merge it can break every preview.
+- **Impact if no action:** A reviewer sees "This password isn't valid" with the right password.
+- **Root question:** How do the deploy from `main` and a pull request's API keep the same derivation?
+- **Options:**
+  - **A.** No new deploy check. The Rust tests and the Python tests each assert one fixed password and its expected value as literals. A PR that changes one side and its own literal still passes. Effort: Small.
+  - **B.** After the smoke checks, the release job sends the password once to the preview. A refusal fails the required check. It sends the password to PR code on every deploy, and it adds a new deploy failure. Effort: Small.
+  - **C.** As A, but one fixture file holds the password and its expected value, and both test suites read it. A PR that changes one side then fails the other side's test. Effort: Small.
+  - **D.** The seed checks a fixed public test vector with the PR's code and writes the result to its status. The release job warns on a difference. It changes the seed status schema, which needs its own PR first. Effort: Medium.
+  - **E.** Option E of decision 2: the value carries its parameters and salt, so only a change of the algorithm needs both sides. Effort: Medium.
+- **Left out:** None. The check inside the seed Job, left out in the first draft, came back as D with a public vector.
+- **Wider fix:** E, because it removes most ways for the two sides to differ.
+- **Previous examples:** None found.
+- **Related:** Decision 2: E there is E here.
+- **Recommendation:** C, changed from A by the options check, together with E through decision 2. It costs the same as A and catches the PR that changes one side.
+- **Action:** ask the user, because Cal asked to settle the seed and the tests, and option B adds a new deploy failure.
+
+### 8. What the password section says
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** UX wording.
+- **Location:** `packages/app/src/screens/account/entry-screen.tsx`, `docs/protocol/cloud/pr-preview-environments.md`.
+- **Background:** Cal's decision names the field "Preview password". `pr-preview-environments.md` says "No product screen gains environment labels". The `product-ui` rules say the same for normal views. The account entry allows one `primary` action, so the password action takes the `secondary` tone.
+- **Problem:** "Preview password" names the environment, which a protocol line and a product rule forbid.
+- **Impact if no action:** The screen breaks a protocol requirement, or the protocol changes without a decision.
+- **Root question:** Which text tells a reviewer which password to type?
+- **Options:**
+  - **A.** "Preview password", with the action "Continue with password". It says which password to type. It needs the protocol line changed. Effort: Small.
+  - **B.** "Password", with the action "Continue with password". No environment name. A reader can think that Mokly accounts have passwords. Effort: Small.
+  - **C.** "Team password", with the same action. "Team" is also the name of a plan, so the label can read as a plan's password. Effort: Small.
+  - **D.** "Password", with the action "Continue as preview@mokly.ai". The address comes from the discovery answer of decision 4. It names the one account that the password opens, with configured data and no environment name. Effort: Small.
+- **Left out:** Helper text under the field, because the copy rules remove text that does not change what the reader does.
+- **Wider fix:** None, because this is one text.
+- **Previous examples:** None found.
+- **Related:** Decision 4: D needs the address in its answer.
+- **Recommendation:** D, changed from A by the options check. It says whose password to type and keeps the protocol line. A stays possible if Cal wants his words, with the protocol line changed.
+- **Action:** ask the user, because the label in Cal's decision conflicts with a protocol requirement, and the user decides which side wins.
+
+### 9. The request body for a typed password
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `crates/mkc-api/src/contract/account.rs`, `docs/protocol/cloud/rest-api.md`.
+- **Background:** Cal's decision says that the app sends the password to `POST /v1/auth/preview`. It accepts `{secret}` today and answers a wrong value with `magic-link-invalid`, a reason that `rest-api.md` already uses for a preview credential. Its answer's `returnTo` is always `/dashboard`. Email sign-in accepts an optional `returnTo`, so a reader returns to the page that sent them to Sign in.
+- **Problem:** The typed password needs a body shape, a size limit, a refusal reason and a destination.
+- **Impact if no action:** The API, the OpenAPI document and the app can disagree on the body.
+- **Root question:** What does the API accept and answer for a typed password?
+- **Options:**
+  - **A.** The body holds exactly one of `secret` or `password`, and an optional `returnTo` with the password, validated like the email request. A password has 1 to 1024 bytes and is compared as sent. Both fields, neither field, or a longer password fail with `validation-failed` and use no admission, because such a body cannot match. A wrong password answers `magic-link-invalid`. Effort: Small.
+  - **B.** As A, and a wrong password answers a new reason, `preview-password-invalid`. It adds a reason to the code, `rest-api.md` and the OpenAPI document. Effort: Small.
+  - **C.** As A, without `returnTo`. Every password sign-in lands on the dashboard. A reviewer who opened a deep link must find the page again. Effort: Small.
+  - **D.** A separate operation, for example `POST /v1/auth/preview/password`, with `{password, returnTo}`, behind the same gate and admission. The link's operation stays unchanged. It differs from the endpoint that Cal's decision names. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None, because this is one request contract.
+- **Previous examples:** Request bodies with one of several shapes exist, such as `CreateProject` and `RequestBuild`.
+- **Recommendation:** A. It follows Cal's endpoint, reuses the reason that already covers a preview credential, and returns the reviewer to the page that they asked for.
+- **Action:** ask the user, because the body, its limit and its destination are new behaviour at the boundary that no requirement covers.
+
+## Milestone 1: Mockups
+
+Tags: mockup
+
+Depends on: none
+
+The Sign-in screen gains the password section in the cloud mockup catalogue
+under `docs/mockups`. Each page draws its mobile and desktop variants.
+
+- [ ] Add the password section to the Sign-in screen component under
+      `docs/mockups/src/screens/product/account/`, as a prop that the default
+      Sign-in page leaves off.
+- [ ] Add the pages under
+      `docs/mockups/src/entries/product/account/sign-in/preview-password/`:
+      the section at rest, the refused password on the field, the action
+      while it signs in, and a failure beside the action. Keep each page at
+      five screens or fewer.
+- [ ] Link the new pages from the Sign-in page, so that a reader reaches them
+      from the existing account pages.
+- [ ] Run the mockup check that `docs/mockups/README.md` gives. Smoke-test the
+      changed pages in a browser, and save screenshots under
+      `.context/preview-password-sign-in/`.
+- [ ] Update the design and the TODOs of this plan for each problem that the
+      mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1
+
+The docs state the requirements and the decisions in force for the work
+below. History stays in this plan.
+
+- [ ] Create `docs/protocol/cloud/preview-sign-in.md` from the Preview
+      Sign-In section of `auth-sessions.md`. Add the verifier, its setting
+      and its bounds, the exchange of decision 9, the discovery answer of
+      decision 4, the security statement, and rotation. Leave a short section
+      with a link in `auth-sessions.md`.
+- [ ] Narrow the sentence "Human passwords are not accepted" in
+      `auth-sessions.md` to name the preview password as the one exception.
+- [ ] Update `rest-api.md` and `rest-api-surface.md` for the exchange body and
+      the discovery endpoint.
+- [ ] Update `preview-seed.md`: the Secret rows, and the verifier format in
+      Contract With Main, because `main` makes it and the PR's API reads it.
+- [ ] Update `preview-scripts.md`: deploy step 2, the verifier read, the
+      missing-verifier warning, and the Sign-In Log Reader introduction.
+- [ ] Update `pr-preview-environments.md`: the resource table, the Secret
+      Manager ID, and the API mount paragraph.
+- [ ] Update `preview-seed-local.md` for the local password.
+- [ ] Update `product-mockups-account.md` and `folio-chrome-account.md` for
+      the new section and pages.
+- [ ] Update `docs/ops/preview.md`: review step 3 uses the password, the log
+      reader serves other addresses, and the steps to create and rotate the
+      password.
+- [ ] Update `docs/ops/secrets.md`, `docs/ops/environment.md`,
+      `docs/development/cloud.md`, `infra/README.md` and
+      `infra/terraform/README.md` for the store and the verifier.
+- [ ] Update `crates/mkc-config/README.md` and `crates/mkc-api/README.md`.
+- [ ] Check every changed protocol page against the 250-line cap.
+
+## Milestone 3: API password exchange
+
+Depends on: 2
+
+The API checks a typed password against an optional verifier and keeps
+today's secret exchange.
+
+- [ ] Add `MKC_PREVIEW_SIGN_IN_VERIFIER` to `mkc-config`, with the pair,
+      capability and bound rules of the design.
+- [ ] Add the `scrypt` crate to `mkc-auth` with `cargo add`, on the `digest`
+      generation of the locked `sha2` and `hmac` crates.
+- [ ] Accept the request body of decision 9 in `POST /v1/auth/preview`, with
+      bounded hashing. Keep the order of the gate, Origin, body and admission
+      checks.
+- [ ] Regenerate `docs/api/openapi.json` and
+      `packages/app/src/api/generated/schema.ts`.
+- [ ] Tests, each at the lowest level that fails without the change:
+  - [ ] Configuration: a verifier without the pair, without the capability,
+        malformed, or outside the bounds fails startup with a typed error
+        that names the key.
+  - [ ] The shared fixture: its password matches its verifier, and another
+        password does not.
+  - [ ] The exchange signs in with the right password, refuses a wrong one
+        with `magic-link-invalid`, refuses a password without a verifier,
+        still accepts the link value as `secret`, and refuses the verifier
+        sent as `secret`.
+  - [ ] A body that decision 9 calls invalid fails with `validation-failed`
+        and uses no admission. A wrong password uses admission, and the 21st
+        attempt in the window is refused.
+
+## Milestone 4: Field discovery
+
+Depends on: 3
+
+The API tells the app whether it accepts a password, and for which account.
+
+- [ ] Add `GET /v1/auth/methods` and its contract. Regenerate the OpenAPI
+      document and the generated types.
+- [ ] Tests: the answer names the account with a verifier configured, and
+      says that no password is accepted without one.
+
+## Milestone 5: Store, deploy and local stack
+
+Depends on: 2
+
+The release job copies the verifier into each preview. This works with API
+images from before Milestone 3, because they ignore the new Secret.
+
+- [ ] Declare the Secret Manager ID `mkc-preview-sign-in-password` in
+      `infra/terraform/foundation/preview.tf`, with read access for the
+      deploy identity, and update its contract test.
+- [ ] Add the `preview-verifier` command to
+      `infra/scripts/preview-lifecycle.py`, with Python's `hashlib`.
+- [ ] Change `preview-common.sh` and `preview-deploy.sh`: read the verifier
+      privately, validate it, write or delete Secret `preview-password`,
+      restart the API only when Helm did not roll it, and warn on a missing
+      or malformed verifier.
+- [ ] Mount `preview-password` as an optional Secret in the chart's PR
+      overlay, and map it to `MKC_PREVIEW_SIGN_IN_VERIFIER` in the API
+      entrypoint. Update the Helm golden file.
+- [ ] Change `scripts/cloud/dev-api.sh` to the local password of the design.
+- [ ] Tests: the Python command makes a verifier that the shared fixture's
+      check accepts, and it warns on a short password. Shell tests in
+      `infra/tests/` cover the write, the unchanged value, the restart rule,
+      the deletion, and the missing and malformed verifier.
+
+## Milestone 6: Sign-in password section
+
+Tags: ui
+
+Depends on: 1, 4
+
+The app draws the section as the mockups show and sends the password.
+
+- [ ] Add the password call and the discovery read to
+      `packages/app/src/data/auth.ts`.
+- [ ] Draw the section in `packages/app/src/screens/account/entry-screen.tsx`
+      from the `@firna/ui` and app components, as the mockups show. Keep the
+      file under 300 lines.
+- [ ] Tests: the section shows only when the discovery answer names an
+      account, the trimmed password goes to the API with the page's
+      `returnTo`, a refused password marks the field, and a success leaves
+      for the answer's `returnTo`.
+- [ ] Smoke-test the section against the local stack: sign in with the local
+      password, and refuse a wrong one. Save screenshots under
+      `.context/preview-password-sign-in/`.
+
+## Milestone 7: Verification, commit, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
+- [ ] Add a follow-up item for a GitHub field in the discovery answer, so
+      that Sign in can say that GitHub sign-in opens soon before a press.
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      plan".
+- [ ] Open the pull request. Its description gives the decisions and the
+      design calls of this plan with their dates, a permalink to this plan,
+      and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+The release job runs the scripts of `main`, so a preview uses the new deploy
+only after the merge.
+
+- [ ] Let the Foundation workflow apply the new Secret Manager ID. Then make
+      the password and its verifier, add the verifier as the first version,
+      and put the password in the team's password manager.
+- [ ] Deploy one labelled PR. Sign in with the password, and check that a
+      wrong password is refused.
+- [ ] Rotate the password once, rerun the workflow, and check that only the
+      new password signs in.

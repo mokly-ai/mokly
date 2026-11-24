@@ -11,6 +11,9 @@ under [follow-ups](./follow-ups/).
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
+- [Preview password sign-in](./preview-password-sign-in.md) — let a reviewer
+  sign in to a PR preview with one shared preview password on its Sign-in
+  page.
 
 ## Completed Plans
 
