@@ -9,7 +9,9 @@
  *
  * The frame is the root of the `browse` demo. With motion allowed it plays
  * once in view: the connector draws itself in, and Sam's cursor sweeps the
- * Swipe divider to 26% and 74% and back to 50%. The built page draws the
+ * Swipe divider to 26% and 74% and back to 50%. Once the reader's pointer
+ * moves over the compared screens, the sweep stops and the divider follows
+ * the pointer, as `swipe-control.ts` says. The built page draws the
  * finished state: the connector drawn and the divider at 50%.
  *
  * The rules are in `src/styles/home-browse.css`, the connector's in

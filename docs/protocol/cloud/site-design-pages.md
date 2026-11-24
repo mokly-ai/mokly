@@ -36,7 +36,8 @@ owns the islands that make the parts below move.
   - Browse: a pull request's check card with a filled View changes button,
     joined by a `signal` connector to a depicted viewer window. Its compare
     toolbar lists the product's five compare modes in the product's order,
-    and its stage shows the Swipe mode with the divider.
+    and its stage shows the Swipe mode with the divider, which the reader's
+    pointer can move.
   - Review: a wash of artboards, where a selected component carries a name
     tag and a padding redline, beside a pinned comment and a thread card with
     a filled Approve button.

@@ -16,18 +16,18 @@ a measured size tag, type badge or redline value does not show. Every island
 honours reduced motion: nothing moves, and each part shows its finished
 state.
 
-| Island          | Pages                          | Behaviour                                                          |
-| --------------- | ------------------------------ | ------------------------------------------------------------------ |
-| Scheme          | every page                     | Applies the scheme choice before the first paint; runs the control |
-| Menu            | every page                     | Opens and closes the mobile menu                                   |
-| Measurements    | home, docs, changelog, pricing | Shows rendered sizes in size tags, type badges and redlines        |
-| Home demos      | home                           | Plays each demo in view; marks the section in view in Specs        |
-| Search          | docs                           | The search dialog and its keys                                     |
-| Copy            | docs                           | The copy control of each code panel                                |
-| Tree            | docs                           | The tree scroll memory and the tree sheet                          |
-| Docs scroll spy | docs                           | Marks the section in view and shows the reading progress           |
-| Sample          | docs                           | Runs the controls, the lit lines and the wire of a sample band     |
-| Changelog       | changelog                      | Runs the filter; marks the release in view in Version history      |
+| Island          | Pages                          | Behaviour                                                                           |
+| --------------- | ------------------------------ | ----------------------------------------------------------------------------------- |
+| Scheme          | every page                     | Applies the scheme choice before the first paint; runs the control                  |
+| Menu            | every page                     | Opens and closes the mobile menu                                                    |
+| Measurements    | home, docs, changelog, pricing | Shows rendered sizes in size tags, type badges and redlines                         |
+| Home demos      | home                           | Plays each demo in view; runs the Swipe divider; marks the section in view in Specs |
+| Search          | docs                           | The search dialog and its keys                                                      |
+| Copy            | docs                           | The copy control of each code panel                                                 |
+| Tree            | docs                           | The tree scroll memory and the tree sheet                                           |
+| Docs scroll spy | docs                           | Marks the section in view and shows the reading progress                            |
+| Sample          | docs                           | Runs the controls, the lit lines and the wire of a sample band                      |
+| Changelog       | changelog                      | Runs the filter; marks the release in view in Version history                       |
 
 - The scheme island loads in the page head as a blocking, content-hashed,
   same-origin script, so it sets the scheme from the choice of
@@ -40,6 +40,12 @@ state.
   hydration.
 - A home demo plays once when it comes into view and rests in its finished
   state, which the built page draws.
+- A reader's pointer over the compared screens of the Browse demo takes the
+  Swipe divider: a mouse or a pen as it moves, and any pointer, a tap
+  included, as it presses. The demo's sweep stops, and the divider and the
+  branch screen's clip follow the pointer and stay where it leaves them. A
+  touch that moves without a press scrolls the page. The divider takes no
+  focus. Without script the divider rests at 50%.
 - The changelog filter shows only the notes of the chosen group and the
   releases that hold them, and its status line counts them. Without script
   the filter does not show, and every note shows.

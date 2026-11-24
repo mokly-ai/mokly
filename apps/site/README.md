@@ -85,7 +85,9 @@ static components at build time: the hero's heading as a selected text
 layer, the spread of the app's screens and component sets, and the depicted
 product in the Browse, Review and Edit frames and the open foundation. The
 home demos island plays each frame's demo once when it comes into view, and
-marks the section in view in the Specs panel. The built page draws each demo
+marks the section in view in the Specs panel. A reader's pointer over the
+Browse frame's compared screens stops its sweep and moves the Swipe divider.
+The built page draws each demo
 in its finished state, so a reader without script or with reduced motion
 sees that state.
 

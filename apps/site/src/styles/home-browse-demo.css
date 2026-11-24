@@ -8,7 +8,8 @@
    branch screen's clip follows the divider. Only clip-path and transform
    move, and each animation fills backwards only, so the demo rests where the
    base rules draw it. Under reduced motion the island sets no state, and
-   home.css stops every animation of a demo. */
+   home.css stops every animation of a demo. Once the reader's pointer takes
+   the divider, the sweep stops and the divider follows the pointer. */
 
 /* The connector, wiped in from View changes: right to left on the desktop
    layouts and top to bottom on a phone, each wipe across its own layout's
@@ -118,4 +119,24 @@
   68.421% {
     clip-path: inset(0 0 0 74%);
   }
+}
+
+/* The reader's hold, which the Swipe control of
+   src/components/home/swipe-control.ts sets: the reader's pointer takes the
+   divider, so the sweep stops, and the divider's track and the branch
+   screen's clip follow --swipe-share, the divider's share of the
+   stage's width. A ready stage shows a resize pointer. */
+
+.site-stage-frame[data-home-swipe-state] {
+  cursor: ew-resize;
+}
+
+.site-stage-frame[data-home-swipe-state="held"] .site-home-swipe-track {
+  animation: none;
+  transform: translateX(calc(var(--swipe-share) - 50%));
+}
+
+.site-stage-frame[data-home-swipe-state="held"] .site-home-swipe-branch {
+  animation: none;
+  clip-path: inset(0 0 0 var(--swipe-share));
 }

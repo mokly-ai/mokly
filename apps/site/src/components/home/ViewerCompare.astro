@@ -9,8 +9,10 @@
  *
  * The divider and the cursor sit on one track over the compared screens,
  * which the Browse demo slides once, while the branch screen's clip follows
- * it; the built page rests at 50%. A depiction: the viewer that holds it is
- * hidden from assistive technology, and its modes are drawn, not controls.
+ * it; the built page rests at 50%. The stage carries `data-home-swipe`, so
+ * the Swipe control of `swipe-control.ts` hands the divider to the reader's
+ * pointer. A depiction: the viewer that holds it is hidden from assistive
+ * technology, and its modes are drawn, not controls.
  *
  * Use: `<ViewerCompare />` in `Viewer.astro`. The rules are in
  * `src/styles/home-viewer-frame.css` and `src/styles/home-viewer-stage.css`.
@@ -47,7 +49,7 @@ import "../../styles/home-viewer-stage.css";
     </span>
   </div>
   <div class="site-stage">
-    <div class="site-stage-frame">
+    <div class="site-stage-frame" data-home-swipe>
       <div class="site-stage-screen">
         <AcmePaymentDesktop version="main" />
       </div>
