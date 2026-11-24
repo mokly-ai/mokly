@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The Mokly mark in the light and dark Canvas colours, switched by the
+       reader's colour scheme. The same drawing as the site's favicon. The
+       mask cuts a true gap where the front layer's halo goes, because a
+       favicon has no surface of its own. -->
+  <style>
+    :root { --text: #0d1410; --signal: #12b76a; --on-signal: #04130b }
+    @media (prefers-color-scheme: dark) {
+      :root { --text: #f4f4f5; --signal: #22c97d; --on-signal: #04130b }
+    }
+  </style>
+  <mask id="gap" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+    <rect width="32" height="32" fill="#fff" />
+    <rect x="9" y="8" width="20" height="21" rx="4.8" fill="#000" stroke="#000" stroke-width="1.6" />
+  </mask>
+  <rect x="3.6" y="3.6" width="18.8" height="19.8" rx="4.6" fill="none" stroke="var(--text)" stroke-width="1.8" mask="url(#gap)" />
+  <rect x="9" y="8" width="20" height="21" rx="4.8" fill="var(--signal)" />
+  <path d="M14 15h10M14 20h7" fill="none" stroke="var(--on-signal)" stroke-linecap="round" stroke-width="2.1" />
+</svg>
