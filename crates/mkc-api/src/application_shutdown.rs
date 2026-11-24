@@ -1,5 +1,7 @@
 //! Process signals that initiate graceful API shutdown.
 
+use std::io::Result;
+
 use tokio::signal::ctrl_c;
 #[cfg(unix)]
 use tokio::signal::unix::{SignalKind, signal};
@@ -11,7 +13,7 @@ pub(crate) async fn shutdown_signal() {
 }
 
 #[cfg(unix)]
-async fn wait() -> std::io::Result<()> {
+async fn wait() -> Result<()> {
     let mut terminate = match signal(SignalKind::terminate()) {
         Ok(terminate) => terminate,
         Err(error) => {
@@ -26,6 +28,6 @@ async fn wait() -> std::io::Result<()> {
 }
 
 #[cfg(not(unix))]
-async fn wait() -> std::io::Result<()> {
+async fn wait() -> Result<()> {
     ctrl_c().await
 }
