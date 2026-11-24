@@ -12,7 +12,9 @@
   - **Pinned publisher:** electron-publish 26.18.0, whose `GitHubPublisher.getOrCreateRelease` finds or creates the release of a platform job.
 - **Background:**
   - The pinned publisher lists the releases and takes the first one whose tag is `v{version}` or `{version}`. It returns a draft at once.
-  - `publishRelease` checks for existing asset names, uploads every file, then reads the release by id and requires a draft with the tag `v{version}`.
+  - `publishRelease` first reads the asset list of the release that the pinned publisher chose. When that release holds no file of its platform, it checks that no built file name exists there, then uploads every file.
+  - On 2026-11-24 the owner chose that a rerun can reuse a complete upload. A rerun that finds the complete fixed set of its platform on the release uploads nothing. It goes on only when the GitHub `digest` and size of each asset match the build record of an earlier attempt. This path adds no upload before the tag check.
+  - After the uploads, or after that reuse, `publishRelease` reads the release by id and requires a draft with the tag `v{version}`.
   - A review probe with a stray draft tagged `1.2.3` sent every upload to that draft. The job then failed. On `main` it failed with HTTP 404 on `/releases/tags/v1.2.3`. On the branch it fails with "Release 5 is not a draft with tag v1.2.3".
   - `mokly-ai/mokly-desktop` has only `v`-prefixed tags. A stray unprefixed draft needs a manual mistake.
   - Assets are never replaced or deleted, so the files stay on the stray draft.

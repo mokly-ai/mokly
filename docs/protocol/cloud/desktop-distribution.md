@@ -29,11 +29,11 @@ release here is the npm release, which holds no desktop files.
 
 ### Latest Release
 
-Every desktop release becomes a full GitHub release, and GitHub marks it as
-latest. A release becomes latest only after the check of the complete assets
-of both platforms. A release whose platform job or asset check fails stays a
-draft and never becomes latest, as [Drafts And Promotion](#drafts-and-promotion)
-says. The latest download address of each asset therefore never breaks:
+A desktop release becomes a full GitHub release marked latest, but only after
+the check of the complete assets of both platforms. A release stays a draft
+when a platform job or asset check fails, or when a higher version is already
+latest, as [Drafts And Promotion](#drafts-and-promotion) says. The latest
+download address of each asset therefore never breaks:
 `https://github.com/mokly-ai/mokly-desktop/releases/latest/download/{name}`.
 
 These fixed addresses give download links a stable target. A version record
@@ -81,7 +81,7 @@ version, writes the changelog and starts the release.
   builds on a macOS runner and a Linux runner and uploads to the draft release
   `v<version>` of the feed. The `deb` updater opens the release page of that
   tag. A final [promotion](#drafts-and-promotion) makes the draft the latest
-  release.
+  release, unless a higher version is already latest.
 - Pull requests run the same packaging without release signing or
   publishing, so the build is proven before any secret is used.
 
@@ -105,47 +105,53 @@ use the `mokly` executable name in both modes.
 
 ### Drafts And Promotion
 
-Release packaging first builds with publishing disabled in a fresh output
-directory. One draft `v<version>` holds the files of both platforms. A
-platform job fails when a release that is not a draft already has that tag.
+One draft `v<version>` holds the files of both platforms. A platform job fails
+when a published release already has that tag. Before any upload, each
+platform attempt records the name, size and SHA-256 hash of each built file.
+The jobs only add assets: an uploaded asset is never replaced or deleted. An
+existing asset name or an upload collision fails the job, unless the draft
+already holds the complete fixed set of its platform, and the GitHub digest
+and size of each file match one record of an earlier attempt. In that case the
+job uploads nothing. A partial set, an extra file, a mismatch or no matching
+record still fails. Each job then requires a draft with that tag. A skipped
+upload, or a file without its size and `uploaded` state, fails the job. A
+rerun that replaces draft assets was rejected, because it reverses the
+never-delete rule, and so was the draft as the only record, because it drops
+the recorded sizes.
 
-The platform jobs only add assets. An uploaded asset is never replaced or
-deleted. An existing asset name or a racing upload collision fails the job.
-After uploading, each platform job reads the release with the release token
-and requires a draft with that tag. It checks every package, blockmap and
-update file that it built by name, size and `uploaded` state. A skipped upload
-or a partial inventory fails the job, even when no upload reports an error.
+A final promotion runs only after both platform jobs pass. It requires exactly
+the assets that [Latest Release](#latest-release) lists, each with the size
+that its platform job recorded and the `uploaded` state, and the tag
+`v<version>` of the shell's version. When GitHub's latest release has a higher
+version, the promotion does not publish: the release stays a draft, and the
+job passes with a warning that names both versions. With no latest release,
+or one with an equal or lower version, one publication request makes the
+draft a full release marked latest, and the promotion then checks that mark.
+The latest mark never moves backward, because a newer version holds every
+change of the older one. Publishing the older release without the latest
+mark, and moving the mark back after each promotion, were rejected.
 
-A final promotion runs only after both platform jobs pass. It requires that
-the release has the tag `v<version>` of the shell's version. It requires
-exactly the assets that [Latest Release](#latest-release) lists. Each asset
-must have the size that its platform job recorded and the `uploaded` state.
-One publication request then makes the draft a full release marked latest.
-The promotion then checks that GitHub's latest release is that release.
-
-Only the publication request of the promotion makes a release public. A
-failure before that request, such as a failed platform job or asset check,
-keeps the release a draft. A failure of the request, or after it, can leave a
-full release. A rerun of the promotion does not change a full release, but it
-checks the latest mark again. A rerun of the failed jobs repairs a run whose
-failed platform uploaded nothing, and it also runs the skipped promotion. A
-partly uploaded release stays a draft and needs a new version from the next
-release pull request. A rerun never repairs uploaded assets.
+Only the publication request makes a release public. A failure before it
+keeps the release a draft, and a failure of the request or after it can leave
+a full release. A rerun of the promotion leaves a full release unchanged and
+checks the latest mark again, or it passes with a warning when a higher
+version is latest. A rerun of the failed jobs repairs a run whose failed
+platform uploaded nothing or its complete set, and it runs the skipped
+promotion. A release with a partly uploaded platform stays a draft and needs a
+new version. The build records, and the records that the promotion reads, are
+kept for 35 days, which covers GitHub's 30-day rerun window.
 
 ### Release Secrets
 
-The platform jobs and the promotion read the desktop release secrets from the
-`desktop-release` GitHub environment, which admits only `main`.
-[Secrets](../../ops/secrets.md) records their owners and rotation. Repository
-secrets were rejected, because a workflow on any branch can read them, and the
-signing credentials decide which builds install as an update. Pull requests,
-manual dispatches and fork builds receive none of them.
-
-Only three steps receive these secrets. Each receives `DESKTOP_RELEASES_TOKEN`
-as `GH_TOKEN`. The macOS step that signs, notarizes and publishes also receives
-`CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_API_KEY`, `APPLE_API_KEY_ID` and
-`APPLE_API_ISSUER`. The Linux publishing step and the promotion step receive
-only that token. The promotion job runs no third-party package code.
+The platform jobs and the promotion read the signing credentials and the
+release token from the `desktop-release` GitHub environment, which admits only
+`main`. [Secrets](../../ops/secrets.md) records their names, owners and
+rotation. Repository secrets were rejected, because a workflow on any branch
+can read them, and the signing credentials decide which builds install as an
+update. Pull requests, manual dispatches and fork builds receive none of them.
+Only the macOS signing step receives the signing credentials, and no release
+token. The publishing steps and the promotion step receive only the release
+token. The promotion job runs no third-party package code.
 
 ### Updates In The App
 

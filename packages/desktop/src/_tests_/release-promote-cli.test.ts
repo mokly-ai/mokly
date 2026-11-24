@@ -10,12 +10,13 @@ import { fileURLToPath } from "node:url";
 import desktop from "../../package.json" with { type: "json" };
 import {
   publishRelease,
+  releaseInventory,
   writeReleaseManifest,
 } from "../../scripts/release-assets.mjs";
 import type { ReleaseAsset } from "../../scripts/release-assets.mjs";
-import { releaseInventory } from "../../scripts/release-promote.mjs";
 
 const expectedTag = `v${desktop.version}`;
+const newerTag = `v${BigInt(desktop.version.split(".")[0]) + 1n}.0.0`;
 const command = fileURLToPath(
   new URL("../../scripts/release-promote.mjs", import.meta.url),
 );
@@ -25,7 +26,11 @@ const releaseId = 7;
 const releasesUrl = `https://api.github.com/repos/${owner}/${repo}/releases`;
 const releaseUrl = `${releasesUrl}/${releaseId}`;
 
-async function runPromotion(context: TestContext, tag: string) {
+async function runPromotion(
+  context: TestContext,
+  tag: string,
+  latestTag?: string,
+) {
   const directory = await mkdtemp(join(tmpdir(), "mokly-release-promote-"));
   context.after(() => rm(directory, { recursive: true, force: true }));
 
@@ -52,6 +57,7 @@ async function runPromotion(context: TestContext, tag: string) {
       name,
       file: join(directory, platform, name),
       size: index + 1,
+      sha256: "a".repeat(64),
     }));
     const publisher = {
       _release: { value: Promise.resolve({ id: releaseId }) },
@@ -77,13 +83,17 @@ async function runPromotion(context: TestContext, tag: string) {
 
   const patchLog = join(directory, "patches.jsonl");
   const fetchDouble = join(directory, "github-fetch.mjs");
-  const remote = { release: draft, assets };
+  const remote = {
+    release: draft,
+    assets,
+    latest: latestTag ? { id: 6, tag_name: latestTag } : null,
+  };
   await writeFile(patchLog, "");
   await writeFile(
     fetchDouble,
     `import { appendFile } from "node:fs/promises";
 
-const { release, assets } = ${JSON.stringify(remote)};
+const { release, assets, latest } = ${JSON.stringify(remote)};
 const releaseUrl = ${JSON.stringify(releaseUrl)};
 
 globalThis.fetch = async (url, { method, body }) => {
@@ -99,8 +109,11 @@ globalThis.fetch = async (url, { method, body }) => {
   if (method === "GET") {
     if (url === releaseUrl) return Response.json(release);
     if (url.startsWith(releaseUrl + "/assets?")) return Response.json(assets);
-    if (url === ${JSON.stringify(`${releasesUrl}/latest`)})
-      return Response.json({ id: release.draft ? 6 : release.id });
+    if (url === ${JSON.stringify(`${releasesUrl}/latest`)}) {
+      if (!release.draft) return Response.json({ id: release.id, tag_name: release.tag_name });
+      if (latest) return Response.json(latest);
+      return new Response(null, { status: 404 });
+    }
   }
   throw new Error("Unexpected GitHub request: " + method + " " + url);
 };
@@ -135,11 +148,21 @@ test("the promotion command publishes the manifests from the platform artifact d
 });
 
 test("the promotion command rejects a manifest tag that differs from the desktop package version", async (context) => {
-  const result = await runPromotion(context, `${expectedTag}-other`);
+  const result = await runPromotion(context, newerTag);
   assert.equal(result.status, 1, result.stderr);
   assert.deepEqual(result.patches, []);
   assert.ok(
     result.stderr.startsWith(`Both manifests must have tag ${expectedTag}.`),
     result.stderr,
+  );
+});
+
+test("the promotion command warns and exits zero when a newer release is latest", async (context) => {
+  const result = await runPromotion(context, expectedTag, newerTag);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(result.patches, []);
+  assert.equal(
+    result.stdout,
+    `::warning::GitHub's latest release ${newerTag} is newer than ${expectedTag}. Release ${expectedTag} stays a draft.\n`,
   );
 });

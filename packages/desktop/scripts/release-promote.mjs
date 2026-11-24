@@ -1,30 +1,15 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { isReleaseAsset, releaseManifestFilename } from "./release-assets.mjs";
+import {
+  isReleaseAsset,
+  releaseInventory,
+  releaseManifestFilename,
+} from "./release-assets.mjs";
 import { githubClient, isReleaseId } from "./release-github.mjs";
 
-/** @typedef {import("./release-assets.mjs").ReleaseManifest} ReleaseManifest */
+/** @typedef {Omit<import("./release-assets.mjs").ReleaseManifest, "assets"> & {assets: import("./release-assets.mjs").ReleaseAsset[]}} PromotionManifest */
 /** @typedef {Pick<ReturnType<typeof githubClient>, "release" | "assets" | "promote" | "latest">} PromotionClient */
-
-export const releaseInventory = {
-  macos: [
-    "Mokly-mac-arm64.dmg",
-    "Mokly-mac-x64.dmg",
-    "Mokly-mac-arm64.zip",
-    "Mokly-mac-x64.zip",
-    "Mokly-mac-arm64.dmg.blockmap",
-    "Mokly-mac-x64.dmg.blockmap",
-    "Mokly-mac-arm64.zip.blockmap",
-    "Mokly-mac-x64.zip.blockmap",
-    "latest-mac.yml",
-  ],
-  linux: [
-    "Mokly-linux-x86_64.AppImage",
-    "Mokly-linux-amd64.deb",
-    "latest-linux.yml",
-  ],
-};
 
 const expectedManifests = "Expected one macOS manifest and one Linux manifest.";
 const latestMarkAdvice =
@@ -45,8 +30,39 @@ function beforePublicationFailure(error) {
   );
 }
 
+/** @param {string} tag @returns {[bigint, bigint, bigint]} */
+function releaseVersion(tag) {
+  const parts = /^v(\d+)\.(\d+)\.(\d+)$/.exec(tag);
+  if (!parts || parts[0] !== tag)
+    throw new Error(
+      `Invalid desktop release tag ${JSON.stringify(tag)}. Expected vMAJOR.MINOR.PATCH.`,
+    );
+  return [BigInt(parts[1]), BigInt(parts[2]), BigInt(parts[3])];
+}
+
+/** @param {bigint[]} candidate @param {bigint[]} current */
+function higherVersion(candidate, current) {
+  for (const [index, part] of candidate.entries()) {
+    if (part !== current[index]) return part > current[index];
+  }
+  return false;
+}
+
+/** @param {string} tag @param {string} latestTag @param {boolean} draft */
+function newerReleaseWarning(tag, latestTag, draft) {
+  return `GitHub's latest release ${latestTag} is newer than ${tag}. Release ${tag} stays ${draft ? "a draft" : "a full release"}.`;
+}
+
+/** @param {PromotionClient} github @param {string} tag */
+async function checkLatestBeforePublication(github, tag) {
+  const version = releaseVersion(tag);
+  const latest = await github.latest();
+  if (latest && higherVersion(releaseVersion(latest.tag_name), version))
+    return newerReleaseWarning(tag, latest.tag_name, true);
+}
+
 /**
- * @param {ReleaseManifest[]} manifests
+ * @param {PromotionManifest[]} manifests
  * @param {PromotionClient} github
  * @param {string} tag
  */
@@ -108,7 +124,7 @@ async function checkRelease(manifests, github, tag) {
 
 /**
  * Check both manifests and GitHub's inventory before updating the release.
- * @param {ReleaseManifest[]} manifests
+ * @param {PromotionManifest[]} manifests
  * @param {PromotionClient} github
  * @param {string} tag
  */
@@ -118,16 +134,35 @@ export async function promoteRelease(manifests, github, tag) {
       throw beforePublicationFailure(error);
     },
   );
+  if (draft) {
+    const warning = await checkLatestBeforePublication(github, tag).catch(
+      (error) => {
+        throw beforePublicationFailure(error);
+      },
+    );
+    if (warning) return warning;
+  }
   let latest;
   try {
     if (draft) await github.promote(id);
     latest = await github.latest();
+    if (
+      !draft &&
+      latest &&
+      latest.id !== id &&
+      higherVersion(releaseVersion(latest.tag_name), releaseVersion(tag))
+    )
+      return newerReleaseWarning(tag, latest.tag_name, false);
   } catch (error) {
     throw new Error(
       `${message(error)} Could not verify that ${tag} is GitHub's latest release. ${latestMarkAdvice}`,
       { cause: error },
     );
   }
+  if (!latest)
+    throw new Error(
+      `GitHub has no latest release for ${tag}. ${latestMarkAdvice}`,
+    );
   if (latest.id !== id)
     throw new Error(
       `${tag} is not GitHub's latest release. GitHub returned release ${latest.id} as latest, expected ${id}. ${latestMarkAdvice}`,
@@ -148,7 +183,7 @@ async function readJson(file) {
 
 /**
  * @param {unknown} value
- * @returns {value is ReleaseManifest}
+ * @returns {value is PromotionManifest}
  */
 function isReleaseManifest(value) {
   return (
@@ -220,8 +255,9 @@ if (import.meta.main) {
     ).catch((error) => {
       throw beforePublicationFailure(error);
     });
-    await promoteRelease(manifests, github, tag);
-    console.log(`Desktop release ${tag} is latest.`);
+    const warning = await promoteRelease(manifests, github, tag);
+    if (warning) console.log(`::warning::${warning}`);
+    else console.log(`Desktop release ${tag} is latest.`);
   } catch (error) {
     console.error(message(error));
     process.exitCode = 1;

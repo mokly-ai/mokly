@@ -237,17 +237,17 @@ Depends on: 2
 The promotion keeps the latest mark on the highest version, and a platform
 rerun can accept its complete set by hash.
 
-- [ ] Promotion: read the latest release before publication. Skip with a
+- [x] Promotion: read the latest release before publication. Skip with a
       warning when it has a higher version. Treat a 404 as no latest release.
-- [ ] Platform jobs: split the release step into a build step and a publish
+- [x] Platform jobs: split the release step into a build step and a publish
       step. Upload a per-attempt build record with names, sizes and SHA-256
       hashes before any upload. Accept a complete existing set on a rerun
       only when each GitHub `digest` matches an earlier record.
-- [ ] Keep the records and the manifests for 35 days, which covers the
+- [x] Keep the records and the manifests for 35 days, which covers the
       30-day rerun window.
-- [ ] Tests for both answers, and the workflow test update.
-- [ ] Protocol, README and runbook text for both answers.
-- [ ] Delete the follow-up items that the answers close:
+- [x] Tests for both answers, and the workflow test update.
+- [x] Protocol, README and runbook text for both answers.
+- [x] Delete the follow-up items that the answers close:
       `desktop-promotion-can-move-latest-backward.md`,
       `desktop-stranded-draft-needs-repair-path.md` and
       `desktop-promotion-manifests-expire.md`.

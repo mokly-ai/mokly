@@ -11,13 +11,20 @@ const artifacts = [
     name: "Mokly-linux-x86_64.AppImage",
     file: "/build/Mokly-linux-x86_64.AppImage",
     size: 12,
+    sha256: "a".repeat(64),
   },
   {
     name: "Mokly-linux-amd64.deb",
     file: "/build/Mokly-linux-amd64.deb",
     size: 34,
+    sha256: "b".repeat(64),
   },
-  { name: "latest-linux.yml", file: "/build/latest-linux.yml", size: 56 },
+  {
+    name: "latest-linux.yml",
+    file: "/build/latest-linux.yml",
+    size: 56,
+    sha256: "c".repeat(64),
+  },
 ];
 const remoteAssets = () =>
   artifacts.map((asset) => ({ ...asset, state: "uploaded" }));
@@ -131,9 +138,9 @@ test("a complete draft is checked by id and returns the verified platform manife
     release: 7,
     platform: "linux",
     assets: [
-      { name: "Mokly-linux-x86_64.AppImage", size: 12 },
-      { name: "Mokly-linux-amd64.deb", size: 34 },
-      { name: "latest-linux.yml", size: 56 },
+      { name: "Mokly-linux-x86_64.AppImage", size: 12, sha256: "a".repeat(64) },
+      { name: "Mokly-linux-amd64.deb", size: 34, sha256: "b".repeat(64) },
+      { name: "latest-linux.yml", size: 56, sha256: "c".repeat(64) },
     ],
   });
 });
@@ -183,7 +190,7 @@ test("a publisher skip fails before uploads", async () => {
   assert.deepEqual(calls, []);
 });
 
-test("existing assets fail before uploads and remain untouched", async () => {
+test("existing assets without a matching record fail before uploads and remain untouched", async () => {
   const before = remoteAssets();
   const { calls, publisher, github } = fixture({ before });
   await assert.rejects(

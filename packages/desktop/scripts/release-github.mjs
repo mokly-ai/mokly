@@ -29,6 +29,15 @@ function hasReleaseId(value) {
   );
 }
 
+/** @param {Response} response @returns {Promise<unknown>} */
+async function readLookup(response) {
+  if (!response.ok)
+    throw new Error(`GitHub lookup returned HTTP ${response.status}.`);
+  return response.json().catch(() => {
+    throw new Error("GitHub lookup returned invalid JSON.");
+  });
+}
+
 /**
  * Read releases and assets, append assets, and promote a draft with a fixed
  * release update. Asset uploads use a single POST.
@@ -49,26 +58,17 @@ export function githubClient(
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   };
-  /** @param {string} path @returns {Promise<unknown>} */
-  const get = async (path) => {
-    const response = await request(
-      `https://api.github.com${repository}${path}`,
-      {
-        method: "GET",
-        headers,
-        redirect: "error",
-      },
-    );
-    if (!response.ok)
-      throw new Error(`GitHub lookup returned HTTP ${response.status}.`);
-    return response.json().catch(() => {
-      throw new Error("GitHub lookup returned invalid JSON.");
+  /** @param {string} path */
+  const get = (path) =>
+    request(`https://api.github.com${repository}${path}`, {
+      method: "GET",
+      headers,
+      redirect: "error",
     });
-  };
   return {
     /** @param {number} id */
     async release(id) {
-      const release = await get(releasePath(id));
+      const release = await readLookup(await get(releasePath(id)));
       if (
         !hasReleaseId(release) ||
         typeof release.tag_name !== "string" ||
@@ -80,10 +80,12 @@ export function githubClient(
       return { id: release.id, tag_name, draft, prerelease };
     },
     async latest() {
-      const release = await get("/releases/latest");
-      if (!hasReleaseId(release))
-        throw new Error("GitHub returned an invalid latest release ID.");
-      return { id: release.id };
+      const response = await get("/releases/latest");
+      if (response.status === 404) return null;
+      const release = await readLookup(response);
+      if (!hasReleaseId(release) || typeof release.tag_name !== "string")
+        throw new Error("GitHub returned invalid latest release data.");
+      return { id: release.id, tag_name: release.tag_name };
     },
     /** @param {number} id */
     async promote(id) {
@@ -108,13 +110,13 @@ export function githubClient(
     },
     /**
      * @param {number} id
-     * @returns {Promise<(import("./release-assets.mjs").ReleaseAsset & {state: string})[]>}
+     * @returns {Promise<import("./release-assets.mjs").GitHubAsset[]>}
      */
     async assets(id) {
       const assets = [];
       for (let page = 1; ; page++) {
-        const batch = await get(
-          `${releasePath(id)}/assets?per_page=100&page=${page}`,
+        const batch = await readLookup(
+          await get(`${releasePath(id)}/assets?per_page=100&page=${page}`),
         );
         if (
           !Array.isArray(batch) ||
@@ -126,7 +128,14 @@ export function githubClient(
           )
         )
           throw new Error("GitHub returned invalid asset data.");
-        assets.push(...batch);
+        assets.push(
+          ...batch.map(({ name, size, state, digest }) => ({
+            name,
+            size,
+            state,
+            ...(typeof digest === "string" ? { digest } : {}),
+          })),
+        );
         if (batch.length < 100) return assets;
       }
     },

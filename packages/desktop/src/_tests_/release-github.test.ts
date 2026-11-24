@@ -18,20 +18,36 @@ test("release lookup by id, latest and asset pagination use GET with the token i
     const path = String(url);
     let body: unknown;
     if (path.endsWith("/releases/7")) body = draft;
-    else if (path.endsWith("/releases/latest")) body = { id: 6 };
+    else if (path.endsWith("/releases/latest"))
+      body = { id: 6, tag_name: "v1.2.2" };
     else if (path.endsWith("page=1"))
       body = Array.from({ length: 100 }, (_, id) => ({
         name: `asset-${id}`,
         size: 12,
         state: "uploaded",
       }));
-    else body = [{ name: "asset-100", size: 12, state: "uploaded" }];
+    else
+      body = [
+        {
+          name: "asset-100",
+          size: 12,
+          state: "uploaded",
+          digest: "sha256:fixture",
+        },
+      ];
     return new Response(JSON.stringify(body));
   };
   const client = githubClient(info, "token-fixture", request);
   assert.deepEqual(await client.release(7), draft);
-  assert.deepEqual(await client.latest(), { id: 6 });
-  assert.equal((await client.assets(7)).length, 101);
+  assert.deepEqual(await client.latest(), { id: 6, tag_name: "v1.2.2" });
+  const assets = await client.assets(7);
+  assert.equal(assets.length, 101);
+  assert.deepEqual(assets.at(-1), {
+    name: "asset-100",
+    size: 12,
+    state: "uploaded",
+    digest: "sha256:fixture",
+  });
   assert.deepEqual(
     calls.map(({ url }) => url),
     [
@@ -51,6 +67,18 @@ test("release lookup by id, latest and asset pagination use GET with the token i
     assert.equal(options.body, undefined);
     assert.ok(!url.includes("token-fixture"));
   }
+});
+
+test("only the latest lookup treats HTTP 404 as no release", async () => {
+  const client = githubClient(
+    info,
+    "token-fixture",
+    async () => new Response(null, { status: 404 }),
+  );
+  assert.equal(await client.latest(), null);
+  await assert.rejects(client.release(7), {
+    message: "GitHub lookup returned HTTP 404.",
+  });
 });
 
 test("promotion sends one release PATCH with the fixed body and token in the authorization header", async () => {
