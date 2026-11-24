@@ -35,6 +35,13 @@ resource "google_sql_database_instance" "this" {
       name  = "cloudsql.iam_authentication"
       value = "on"
     }
+    # The tier's default limit is 100. Six API and six catalogue pods at their
+    # pool caps, one outgoing pod of each during a rollout, and the jobs need
+    # about 140. Pods that still run the eager pool of eight need about 118.
+    database_flags {
+      name  = "max_connections"
+      value = "160"
+    }
     ip_configuration {
       ipv4_enabled    = false
       private_network = var.network_id
