@@ -1,0 +1,33 @@
+# Pool connect threads race OpenSSL exit cleanup
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from branch `calummoore/gcp-project-cost-qz5o` (PR #495), review finding 9 and the readiness-pool note of the same review round.
+- **Location:** `crates/mkc-store-pg/src/connection.rs:21`, `crates/mkc-db/src/migration.rs:84`.
+- **Reason:** The race exists on `main` with the eager store pool and in the readiness pool, and the branch that found it only made it rarer.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **r2d2 worker:** a thread of the r2d2 connection pool that opens Postgres connections in the background. Nothing stops or joins it when the process exits.
+  - **`OPENSSL_cleanup`:** the exit handler that libcrypto registers. It frees process-wide OpenSSL state.
+- **Background:**
+  - The store pool (`crates/mkc-store-pg/src/connection.rs`) and the migration readiness pool (`crates/mkc-db/src/migration.rs:84`) both use r2d2 0.8.10. r2d2 runs each `ManageConnection::connect` on a worker thread. A caller that waits longer than the 5-second acquisition timeout returns an error, and the worker keeps connecting.
+  - libpq uses OpenSSL for TLS and for SCRAM password logins. When the process exits while a worker is inside libpq, `OPENSSL_cleanup` can free state that the worker still uses. The process then dies with SIGSEGV or SIGABRT, also after a command that succeeded.
+  - On 2026-11-24, with the store pool set to keep one idle connection, CI crashed this way in `crates/mkc-api/tests/build_maintenance_tests.rs`: 18 of 30 local runs. A core dump showed the worker in `EVP_PKEY_copy_parameters` and the main thread in `OPENSSL_cleanup`. The store pool now keeps no idle minimum, so it starts no connection that no call asked for, and that test passed 50 of 50 runs.
+  - A loopback proxy that stalls the TLS handshake until the 5-second timeout still crashes a maintenance command: 18 of 80 runs with the eager pool on `main` (up to three workers in `PQconnectdb` at exit), and 1 of 80 with the current pool. On `main`, a background refill after a killed backend also crashed 15 of 60 commands that had succeeded.
+  - Stable environments connect to the local Cloud SQL Auth Proxy with `sslmode=disable` and no password (`infra/helm/mokly-cloud/templates/_runtime.tpl:134`). In a rebuilt stable path, libpq called no OpenSSL function, so stable environments do not meet the race. PR preview namespaces log in with a password to Postgres 16, which uses SCRAM (`infra/scripts/preview-lifecycle.py:77`), and CI and local runs use TLS. There a connect that stalls about 5 seconds and then resumes can crash a command.
+- **Problem:** No process waits for its pool workers before exit, so any connect that outlives its caller can race the OpenSSL exit handler.
+- **Impact if no action:** Rare crashes of maintenance commands and tests in CI, local runs and preview namespaces, with a core dump and a non-zero exit after work that succeeded.
+- **Root question:** How does a process exit cleanly while a pool worker is still opening a Postgres connection?
+- **Options:**
+  - **A.** Call OpenSSL's init with `OPENSSL_INIT_NO_ATEXIT` at startup of each binary, so libcrypto registers no exit handler. The kernel frees the memory at exit anyway. It needs a small FFI call or an `openssl-sys` dependency, and it changes process-wide behaviour. Effort: Small.
+  - **B.** Give each pool a worker that the product owns. Before exit, drop the pool, queue a marker job, and wait for it with a bound. Every exit path of the three binaries changes. Effort: Medium.
+  - **C.** Give the maintenance commands one connection that the command owns, with a bounded connect on the calling thread. This removes the race for the commands that exit every few minutes, not for the servers. It is option E of `plans/follow-ups/database-connection-budget.md`. Effort: Medium.
+  - **D.** Replace r2d2 with a pool that can cancel or join connection attempts and applies one deadline to acquisition and validation. Effort: Large.
+- **Left out:** Shorter timeouts still leave workers running at exit. Reverting the store pool to the eager pool of `main` makes the race more common, not less.
+- **Wider fix:** D. It removes the race for every pool and every trigger. A removes it for every pool at the OpenSSL layer, with less change.
+- **Previous examples:** The CI failure of PR #495 at `abdc0a74a`/`9bafe4b6f` (run 45424134266), fixed in `54a1c4eea`.
+- **Related:** `plans/follow-ups/database-connection-budget.md`, option E: a one-connection store for maintenance commands also removes their part of this race.
+- **Recommendation:** A. It is Small, covers both pools and every trigger, and needs no change to the exit paths.
+- **Action:** fix after merge, apply A, because the race is not reachable in stable environments and the fix reaches every binary.

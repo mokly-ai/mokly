@@ -35,10 +35,12 @@ resource "google_sql_database_instance" "this" {
       name  = "cloudsql.iam_authentication"
       value = "on"
     }
-    # The tier's default limit is 100. Six API and six catalogue pods at their
-    # pool caps, one outgoing pod of each during a rollout, and three
-    # maintenance jobs at one session each need about 139. Pods and jobs that
-    # still run the eager pool of eight need about 126.
+    # The tier's default limit is 100. At six API and six catalogue pods with
+    # full pools, a rollout step holds one surge pod and one outgoing pod of
+    # each, and three maintenance jobs hold one session each: about 139. A
+    # second outgoing pod of each, when a drain outlasts a step, gives about
+    # 156. Pods and jobs that run the eager pool of eight from before this
+    # change need about 160 in a rollout at that scale.
     database_flags {
       name  = "max_connections"
       value = "160"

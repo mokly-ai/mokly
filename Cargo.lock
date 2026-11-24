@@ -3013,6 +3013,7 @@ dependencies = [
  "mkc-domain",
  "mkc-store-interface",
  "mkc-test-pg",
+ "scheduled-thread-pool",
  "thiserror",
  "unimock",
  "uuid",
