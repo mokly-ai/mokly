@@ -8,6 +8,9 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
+- [Source packages in module resolution](./source-packages.md) — load a
+  workspace package's `src` files where its exports name `dist`, so that a
+  comparison base renders without built output. Decision 1 waits for Cal.
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
