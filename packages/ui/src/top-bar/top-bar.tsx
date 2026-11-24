@@ -85,9 +85,10 @@ export function TopBar({
   /**
    * Whether the bar's controls act, as they do by default. A static depiction
    * that runs no script sets `false`: the compact search's toggle is then a
-   * native button without a handler, as the search field is a native field,
-   * and Close search is left out, because a static search never opens. A
-   * brand without an address is then a picture of itself.
+   * picture of itself, named Search catalogue, which a narrow bar shows in
+   * place of the field, and Close search is left out, because a static
+   * search never opens. A brand without an address is then a picture of
+   * itself.
    */
   interactive?: boolean;
   /**
@@ -158,17 +159,27 @@ export function TopBar({
       <div className="mbk-topbar-end mbk-reset">
         {/* The compact search opens this group over the whole bar. */}
         <div className="mbk-search-group mbk-reset">
-          <button
-            aria-controls={searchId}
-            aria-expanded={interactive && compactSearchOpen}
-            aria-label="Search catalogue"
-            className="mbk-search-toggle mbk-reset"
-            onClick={interactive ? () => setCompactSearchOpen(true) : undefined}
-            ref={searchToggle}
-            type="button"
-          >
-            <SearchIcon />
-          </button>
+          {interactive ? (
+            <button
+              aria-controls={searchId}
+              aria-expanded={compactSearchOpen}
+              aria-label="Search catalogue"
+              className="mbk-search-toggle mbk-reset"
+              onClick={() => setCompactSearchOpen(true)}
+              ref={searchToggle}
+              type="button"
+            >
+              <SearchIcon />
+            </button>
+          ) : (
+            <span
+              aria-label="Search catalogue"
+              className="mbk-search-toggle mbk-reset"
+              role="img"
+            >
+              <SearchIcon />
+            </span>
+          )}
           <div className="mbk-search mbk-reset">
             <SearchIcon />
             <input

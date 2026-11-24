@@ -28,7 +28,7 @@ test("the brand links to its address, and to the catalogue home without one", ()
   assert.equal(brand.textContent, "mokly.");
 });
 
-test("a bar that is not interactive draws its brand as a picture and its search parts as native controls", () => {
+test("a bar that is not interactive draws its controls as pictures and keeps its search field", () => {
   const { container } = render(
     <TopBar
       {...IDS}
@@ -40,20 +40,18 @@ test("a bar that is not interactive draws its brand as a picture and its search 
   );
   const header = bar(container);
   // No control in the bar acts without a script, and the bar draws no menu,
-  // as the shell's bar does. The compact search's toggle is the one button: a
-  // native button that names the field it would open, as a narrow bar shows
-  // it. A static search never opens, so Close search is left out.
-  const [toggle, ...others] = within(header).queryAllByRole("button");
-  assert.deepEqual(others, []);
-  assert.ok(toggle);
+  // as the shell's bar does. The compact search's toggle is a picture of
+  // itself with the toggle's look, which a narrow bar shows in place of the
+  // field. A static search never opens, so Close search is left out.
+  assert.deepEqual(within(header).queryAllByRole("button"), []);
+  const toggle = within(header).getByRole("img", { name: "Search catalogue" });
+  assert.equal(toggle.tagName, "SPAN");
   assert.equal(toggle.className, "mbk-search-toggle mbk-reset");
-  assert.equal(toggle.getAttribute("aria-label"), "Search catalogue");
-  assert.equal(toggle.getAttribute("aria-expanded"), "false");
-  assert.equal(toggle.getAttribute("aria-controls"), "root-mb-search");
-  // The toggle has no handler, so a press leaves the search closed.
+  assert.ok(toggle.querySelector("svg"));
+  assert.equal(toggle.hasAttribute("tabindex"), false);
+  // A press on the picture leaves the search closed.
   fireEvent.click(toggle);
   assert.equal(header.getAttribute("data-compact-search"), "closed");
-  assert.equal(toggle.getAttribute("aria-expanded"), "false");
   assert.deepEqual(within(header).queryAllByRole("link"), []);
   assert.equal(header.querySelector("[data-mokly-menu]"), null);
   const brand = within(header).getByRole("img", { name: "Mokly" });
@@ -79,5 +77,9 @@ test("a bar that is not interactive keeps the address it is given", () => {
     screen.getByRole("link", { name: "Mokly" }).getAttribute("href"),
     "../home/",
   );
-  assert.deepEqual(screen.queryAllByRole("img"), []);
+  // The brand is a link, so the bar's one picture is the search toggle.
+  assert.deepEqual(
+    screen.queryAllByRole("img").map((img) => img.getAttribute("aria-label")),
+    ["Search catalogue"],
+  );
 });

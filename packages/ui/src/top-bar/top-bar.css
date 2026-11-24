@@ -72,6 +72,12 @@
   cursor: pointer;
 }
 
+/* The picture of the toggle in a static depiction acts on nothing, so it
+   keeps the default pointer. */
+span.mbk-search-toggle {
+  cursor: default;
+}
+
 /* The rounded corners shape the focus glow of the brand link, as the other
    controls of the bar shape theirs. */
 .mbk-brand {

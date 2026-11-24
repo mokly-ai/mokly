@@ -160,8 +160,9 @@ for (const viewport of ["desktop", "mobile"] as const)
           page.getByRole("button", { name: publication.branch }),
         ).toBeVisible();
         // At 390px the package's search field is its own search button, as
-        // in the app, and a wider bar shows the field in its place.
-        const search = viewer.getByRole("button", {
+        // in the app, drawn as a picture of itself because a static search
+        // never opens, and a wider bar shows the field in its place.
+        const search = viewer.getByRole("img", {
           name: "Search catalogue",
           exact: true,
         });
@@ -170,6 +171,17 @@ for (const viewport of ["desktop", "mobile"] as const)
         });
         await expect(search).toBeVisible({ visible: viewport === "mobile" });
         await expect(field).toBeVisible({ visible: viewport === "desktop" });
+        await expect(
+          viewer.getByRole("button", {
+            name: "Search catalogue",
+            includeHidden: true,
+          }),
+        ).toHaveCount(0);
+        if (viewport === "mobile") {
+          const box = await search.boundingBox();
+          expect(box?.width).toBe(30);
+          expect(box?.height).toBe(30);
+        }
       },
     );
 
