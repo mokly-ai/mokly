@@ -17,14 +17,22 @@
 - **Root question:** How should `site:links` judge a fragment-only CSS reference, wherever the build puts its stylesheet?
 - **Options:**
   - **A.** Keep the code, and state the `.css` exception in the link-check rule of the protocol. Small sheets that Astro inlines keep the anchor check. Effort: Small.
-  - **B.** Separate CSS references from HTML anchors throughout the checker, with one fragment rule for `.css` files, `style` elements, and `style` attributes. Authored `style` attributes lose a check whose declarations always apply to their own element. Effort: Medium.
+  - **B.** Skip fragment-only references in all CSS text: `.css` files, `style` elements, and `style` attributes. It is C plus one filter in the `style` attribute branch of `htmlDocument`. Authored `style` attributes lose a check whose declarations always apply to their own element. Effort: Small.
   - **C.** Give every `style` element the rule of a `.css` file, keep the anchor check for `style` attributes, and state the rule in the protocol. One verdict then holds for every sheet that a build step moves inline. Authored `style` elements lose a fragment check that no site source uses today. Effort: Small.
-  - **D.** Check a fragment-only reference only where its rule applies: match the selectors of each document's sheets against the parsed document, and fail when a matching rule names a missing id. It adds `css-select` as a direct dependency and a map from each document to its sheets. A rule that applies only after a script adds a class stays unchecked. Effort: Large.
+  - **E.** Check fragment-only references in the site browser check, which already opens every route at 320, 390, and 1440 px. For each element and its `::before` and `::after`, read the computed `filter`, `clip-path`, and `mask`, and fail on an id that the document does not have. The browser handles pseudo-elements, nesting, and media queries. Rules of a state such as `:hover` stay unchecked, the browser check runs longer, and part of the link-check rule moves to the browser-check rule of `site-delivery.md`. Nobody has probed this approach yet. Effort: Medium.
+  - **D.** Check a fragment-only reference only where its rule can apply, in `site:links`. Read each URL with the selector of its rule, drop the pseudo-elements and the state pseudo-classes such as `:hover` and `:focus-visible` from the selector, and match the rest against the parsed document with `css-select`. Fail when a matching rule names an id that the document does not have.
+    - The rewrite is needed. On 2026-11-24, both installed `css-select` versions, 5.2.2 and 6.0.0, threw on `::before`, `:focus`, `:focus-visible`, `:focus-within`, `:target`, `:lang()`, and nested `&`, and matched no element for `:hover`, `:active`, and `:visited`. The site sources hold 82 uses of `::before` or `::after` and 28 of `:focus-visible`. A probe with the installed `css-what` 6.2.2 turned `.icon:hover::after` into `.icon`, and `css-select` matched it.
+    - D adds `css-select` and `css-what` as direct dependencies, a reader that gives each URL with the selector of its rule, and a map from each document to its sheets.
+    - A state inside `:not()` and a class that a script adds stay unchecked. A nested rule needs its full selector before the match.
+    - Effort: Large.
 - **Left out:**
   - Turning off Astro's inlining. It breaks the rule of `docs/protocol/cloud/site-delivery.md` that small stylesheets are inlined to avoid a render-blocking request.
   - Placeholder SVG targets. They change the published document, can change how an element renders, and hide real defects.
   - A lint that rejects fragment-only references in shared sheets. It rejects valid styles.
 - **Wider fix:** C. It does not depend on which build step moved a sheet inline.
 - **Previous examples:** The closed PR #431 inlined the stylesheets of the old home stage frame. It needed a marker attribute, so that `site:links` gave those `style` elements the rule of a `.css` file. #488 removed that frame.
+- **Related:**
+  - `plans/follow-ups/link-check-misses-some-css-urls.md` changes the reader of the same CSS URLs in `cssReferences`. Option D here needs a reader that gives each URL with the selector of its rule, and option B of that item gives one. Choose the reader of both items together.
+  - `plans/follow-ups/link-check-skips-svg-presentation-urls.md` records fragment references in SVG presentation attributes, which `site:links` does not read at all.
 - **Recommendation:** C. One rule for every stylesheet text, at Small effort, with the protocol stating it.
 - **Action:** ask the user, because C changes the verdict of the required `site:links` check for authored `style` elements, and a check change needs the user's approval.

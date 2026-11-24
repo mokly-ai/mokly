@@ -1,22 +1,32 @@
-# Mokly may read a nested @import as an import
+# Mokly reads a nested @import as an import
 
-- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Low. **Harder later:** No.
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-21, from the check of review finding 5 of the branch `ci-fix/site-lighthouse-run-lighthouse-budget` (PR #431, closed without a merge).
-- **Location:** `crates/mokly-css/src/syntax.rs:50`, the token scanner. `crates/mokly-css/src/compiler.rs:122-135`, where the compiler resolves imports.
-- **Reason:** The check found it by code reading in a Mokly crate, and nobody ran it.
+- **Location:**
+  - `crates/mokly-css/src/syntax.rs:50`, where the token scanner sets the import flag of a scan frame at any block depth.
+  - `crates/mokly-css/src/compiler.rs:122-135`, where the compiler resolves each import and returns the resolver error.
+  - `crates/mokly-graph/src/resource_edges.rs:14` and `crates/mokly-graph/src/references.rs:188` and `:211`, where the public closure walk takes every reference of a stylesheet, a `style` attribute, or a `style` element as an edge.
+  - `crates/mokly-render/src/postcss_nested.rs:92-97`, where the PostCSS check resolves each import and returns the resolver error.
+  - `crates/mokly-css/src/token_sections.rs`, the shared statement reader of option C.
+- **Reason:** The fix changes the CSS scanner of a Mokly crate, which the site branch that found it did not touch, and the case needs a run first.
 
 - **Terms:**
-  - **`@import` at-rule:** a CSS rule that loads another stylesheet. It is valid only at the top level of a stylesheet.
-- **Background:** Mokly bundles each configured stylesheet and inlines its local imports before delivery. Its token scanner finds the imports and assets of a stylesheet.
-- **Problem:** By code reading, the scanner treats an `@import` keyword at any block level as an import prelude. A custom property such as `.x { --caption: @import"./theme.css"; }` would then make the compiler resolve `theme.css`, and the build would fail when that file is absent. A browser reads that value as plain text. No test covers a nested `@import`, and nobody ran the case.
-- **Impact if no action:** A valid stylesheet with `@import` text in a custom property can fail the Mokly build.
-- **Root question:** Does Mokly treat only top-level `@import` rules as imports?
+  - **`@import` at-rule:** a CSS rule that loads another stylesheet. It is valid only at the top level of a stylesheet, before the other rules.
+- **Background:** Mokly bundles each configured stylesheet and inlines its local imports before delivery. Its token scanner, `syntax::references`, finds the imports and the assets of CSS text. It scans each nested block, such as a rule body or a custom property value, in a nested scan frame.
+- **Problem:** A read of the code shows each step of the failure. The scanner treats an `@import` keyword at any block depth as an import prelude. So in `.x { --caption: @import "./theme.css"; }`, the string becomes an import reference, although a browser reads that value as plain text. Three paths then act on it:
+  - The compiler resolves `theme.css` as an import, and returns the resolver error when the file is absent.
+  - The public closure walk takes `theme.css` as an edge of the stylesheet.
+  - The PostCSS check resolves it as an import, and returns the resolver error when the file is absent.
+  - The bundle step returns the first stylesheet failure in root order, and no later root starts, so the build stops. No test covers a nested `@import`, and nobody has run the case.
+- **Impact if no action:** A valid stylesheet with `@import` text in a custom property, a `style` attribute, or a nested rule stops the Mokly build. A stylesheet from a package is hard for its user to change.
+- **Root question:** How does Mokly treat only top-level `@import` rules as imports?
 - **Options:**
-  - **A.** Add a test with a nested `@import` in a custom property, and run it. When it fails, track the block depth in the scanner and accept an import prelude only at depth 0. Effort: Small.
-  - **B.** Close the item when the test passes, and keep the test. Effort: Small.
-- **Left out:** None. The test decides between fixing and closing.
-- **Wider fix:** None. A Mokly test covers the case once it exists.
+  - **A.** Run the case first: build a catalogue under `.context/` with the stylesheet of the problem, and copy the command and its diagnostic into this item. When Mokly accepts the stylesheet, close the item with the run as its record. Otherwise apply B. Effort: Small.
+  - **B.** Accept an import prelude only in the top-level scan frame of `syntax::references`. This one change covers the compiler, the closure walk, and the PostCSS check. Add scanner tests for a custom property, a `style` attribute, and a rule inside `@media`. Effort: Small.
+  - **C.** Read import statements only from the shared statement reader in `crates/mokly-css/src/token_sections.rs`, which reads the statements of each block level and names each at-rule, and drop the import flag from the token scanner. Add the same tests. Effort: Medium.
+- **Left out:** A filter at each of the three callers. Three callers read the reference, so one fix in the scanner is better on every point.
+- **Wider fix:** C. The import rules then live in the one reader that knows CSS statements, so a new nesting form cannot bring the case back.
 - **Previous examples:** The reader of the old home stage of the public site had the same pattern problem. The closed PR #431 replaced that pattern with a tokenizer that accepted an import only at block depth 0. #488 then removed the stage.
-- **Recommendation:** A. A test shows whether the problem is real.
-- **Action:** fix after merge, apply A, because the case needs a reproduction in a crate outside the scope.
+- **Recommendation:** A, then B. The run confirms the trace in one step, and B fixes every caller with a small change.
+- **Action:** fix after merge, apply A, because the case is outside the scope of the change that found it, and it changes a Mokly crate.

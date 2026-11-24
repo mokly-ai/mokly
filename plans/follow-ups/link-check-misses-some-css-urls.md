@@ -3,25 +3,31 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-21, from the review checks of the branch `ci-fix/site-lighthouse-run-lighthouse-budget` (PR #431, closed without a merge), its findings 5 and 7.
-- **Location:** `apps/site/scripts/links/documents.ts`, `cssReferences` and the `style` attribute branch of `htmlDocument`. `apps/site/tests/links.test.ts`.
-- **Reason:** The best fix makes a required check stricter, which needs the user.
+- **Location:** `apps/site/scripts/links/documents.ts`, `cssReferences` and the `style` attribute branch of `htmlDocument`. `apps/site/scripts/links/check.ts:106-129`, which records a parse error and fails the check. `apps/site/tests/links.test.ts`.
+- **Reason:** The recommended fix makes the required `site:links` check stricter, and option A changes a protocol rule, so the user decides.
 
 - **Terms:**
   - **`site:links`:** the required check of the public site, `npm run site:links`, which resolves every internal reference of the built HTML and CSS in `apps/site/dist`.
   - **`cssReferences`:** the function of `apps/site/scripts/links/documents.ts` that lists the URLs of CSS text with the Lightning CSS dependency analysis.
-- **Background:** `site:links` reads every `.css` file, every HTML `style` element, and every `style` attribute of the built site. It finds their URLs with `cssReferences`, which calls `transform({ analyzeDependencies: true })` of Lightning CSS and keeps the `url` and `import` dependencies.
-- **Problem:** Probes of 2026-11-21 found three gaps:
-  - Lightning CSS reports the dependencies after its minify pass. In `.e{background-image:url(six.svg);background-image:url(seven.svg)}` it dropped the overridden declaration, so `site:links` never checked `six.svg`.
-  - A relative `url()` in a custom property makes the call throw `AmbiguousUrlInCustomProperty`. `site:links` then reports a parse error for that text and checks none of its files.
+  - **Custom property:** a CSS value such as `--icon: url(icon.svg)` that another declaration uses through `var(--icon)`.
+- **Background:**
+  - `site:links` reads every `.css` file, every HTML `style` element, and every `style` attribute of the built site. It finds their URLs with `cssReferences`, which calls `transform({ analyzeDependencies: true })` of Lightning CSS and keeps the `url` and `import` dependencies. It resolves each URL against the file that supplied it.
+  - A browser resolves a relative URL in a custom property where `var()` uses it, not where the property is declared, as CSS Custom Properties Level 1, section 2, says. A property registered with `@property` and the syntax `<url>` resolves against the sheet that declares it. No site source uses a URL in a custom property or `@property` on 2026-11-24.
+  - Lightning CSS 1.33.0 also has visitor callbacks. The `Url` and `Declaration` callbacks see both URLs of an overridden pair. The `Url` callback does not see `image-set()` strings or `@import`, and the `Declaration` callback does not see `@font-face` sources.
+- **Problem:** Probes of 2026-11-21 and 2026-11-24 found three gaps:
+  - Lightning CSS reports the dependencies after its minify pass. In `.e{background-image:url(six.svg);background-image:url(seven.svg)}` it dropped the overridden declaration, so `site:links` never checks `six.svg`.
+  - A relative `url()` in a custom property makes the call throw. `site:links` then fails the sheet with "Ambiguous url('icon.svg') in custom property. Relative paths are resolved from the location the var() is used, not where the custom property is defined. Use an absolute URL instead", also when the file exists. A root-relative URL in a custom property is checked normally.
   - No link test fails when `htmlDocument` drops the CSS references of `style` attributes. All 24 link tests passed with that change.
-- **Impact if no action:** A missing file can pass the required check when only an overridden declaration or a custom property names it, and a regression in the `style` attribute branch goes unnoticed.
-- **Root question:** How does `site:links` see every URL that the built CSS can load?
+- **Impact if no action:** A missing file can pass the required check when only an overridden declaration names it. A valid stylesheet with a relative URL in a custom property fails the check. A regression in the `style` attribute branch goes unnoticed. The site browser check fails a route on a console error, so it catches a missing CSS asset of a rule that applies when the page loads, but not of a hover state or another media query.
+- **Root question:** What must `site:links` do with each CSS URL, so that it checks the file that the browser requests?
 - **Options:**
-  - **A.** Add the missing test for `style` attributes, and accept the other two gaps with a sentence in the link-check rule of `docs/protocol/cloud/site-delivery.md`. Effort: Small.
-  - **B.** Keep Lightning CSS as the reader, but get every declaration before its minify pass, and resolve a relative `url()` in a custom property against its sheet. Add tests for all three gaps. The same probes found that `transform` drops an overridden declaration also without its `minify` option, so B may need another entry point or a second parser. Effort: Medium.
-  - **C.** Replace the reader in `cssReferences` with a small CSS tokenizer. It skips comments and strings, and it reports each `url()`, each string candidate of `image-set()`, and each top-level `@import`, also in a custom property or an overridden declaration. Add tests for all three gaps. The closed PR #431 built such a tokenizer for the reader of the old home stage. Effort: Medium.
-- **Left out:** Rejecting custom properties with relative URLs. It rejects valid CSS.
-- **Wider fix:** C. One reader that keeps the source text sees every declaration, so an overridden declaration or a custom property cannot hide a URL.
+  - **A.** Add the missing test for `style` attributes. State in the link-check rule of `docs/protocol/cloud/site-delivery.md` that a relative URL in a custom property fails, and that an overridden declaration is not checked. Effort: Small.
+  - **B.** Keep Lightning CSS as the reader. Read each URL with the `Url` and `Declaration` visitor callbacks, which see overridden declarations, and keep the dependency output for `image-set()` strings, `@import`, and `@font-face` sources. Keep rejecting a relative URL in a custom property. Add tests for all three gaps. Effort: Medium.
+  - **C.** Replace the reader in `cssReferences` with a small CSS tokenizer that keeps the source text. It skips comments and strings, and it reports each `url()`, each string candidate of `image-set()`, and each top-level `@import`, also in an overridden declaration. It keeps rejecting a relative URL in a custom property, because the tokenizer cannot know the `var()` use. Add tests for all three gaps. The closed PR #431 built such a tokenizer for the reader of the old home stage. Effort: Medium.
+  - **D.** Do B or C, and resolve a relative URL in a custom property at each `var()` use, against the sheet of that use. It needs a map from each custom property to its uses, across sheets and documents, and it must respect the `@property` exception. Effort: Large.
+- **Left out:** Resolving a custom-property URL against the sheet that declares it. It checks a file that the browser does not request, so it fails the goal.
+- **Wider fix:** C or B. Either one reads every declaration, so an overridden declaration cannot hide a URL. C also keeps the source text for every later rule.
 - **Previous examples:** None found.
-- **Recommendation:** C. It sees the URLs that the Lightning CSS pass drops or rejects, and the closed PR #431 showed that such a tokenizer stays small.
-- **Action:** ask the user, because C makes the required `site:links` check see more URLs, which is a stricter check.
+- **Related:** `plans/follow-ups/link-check-fragment-css-by-location.md` judges another kind of URL that `cssReferences` reads. Its option D needs a reader that gives each URL with the selector of its rule. B gives that, and C does not. Choose the reader of both items together.
+- **Recommendation:** B. It closes the overridden-declaration gap with the installed parser, keeps the clear rejection of relative custom-property URLs, and gives the selectors that the related item can need.
+- **Action:** ask the user, because B makes the required `site:links` check see more URLs, which is a stricter check.

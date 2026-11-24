@@ -53,6 +53,13 @@
     branch, and
     [experiment-records-related-lines.md](./experiment-records-related-lines.md)
     records missing **Related** lines.
+  - On 2026-11-24, #488 added the scores of the Canvas site to
+    [flaky-site-lighthouse-performance.md](./flaky-site-lighthouse-performance.md)
+    and set a temporary 0.9 threshold. Its options A, B, C, and E kept their
+    six-route audit counts and their claims about the removed home frame, and
+    none of them said that a miss that repeats in each audit fails it. The
+    review of the branch `calummoore/ci-fix-site-lighthouse-hn4n` found the
+    case, and that branch corrected the options.
 - **Problem:** A change that adds facts to an item can leave its other fields,
   its causes, and its links out of date, and no rule asks the writer to check
   them.
