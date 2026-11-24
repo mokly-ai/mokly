@@ -77,16 +77,18 @@ Contract owners:
 
 Depends on: none
 
-- [ ] State the rule in `docs/protocol/mokly-comparison-packages.md`, where
+- [x] State the rule in `docs/protocol/mokly-comparison-packages.md`, where
       workspace packages come from each side's sources.
-- [ ] Update `docs/protocol/mokly-sidecar-modules.md`: where the rule runs
+- [x] Update `docs/protocol/mokly-sidecar-modules.md`: where the rule runs
       among the workspace mapping, tsconfig paths and package lookup, and its
       reuse evidence.
-- [ ] Update `docs/protocol/mokly-configuration.md` and
+- [x] Update `docs/protocol/mokly-configuration.md` and
       `docs/protocol/mokly-configuration-imported-styles.md` for JavaScript
       and CSS imports of workspace packages.
-- [ ] Add a short section to `docs/guides/authoring/config.md`: workspace
+- [x] Add a short section to `docs/guides/authoring/config.md`: workspace
       packages need no build for Changes, with the folder rule.
+
+Evidence: `.context/source-packages/m1-format.log` and `.context/source-packages/m1-links.log`.
 
 ## Milestone 2: The rule and its case table
 

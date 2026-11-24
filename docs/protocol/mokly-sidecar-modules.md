@@ -1,5 +1,7 @@
 # Sidecar Module Sources
 
+Status: Workspace package source lookup is pending for [JavaScript and CSS imports from JavaScript](../../plans/source-packages.md#milestone-3-javascript-resolution).
+
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
@@ -70,9 +72,9 @@ A workspace or local `file:` package can resolve outside `node_modules`
 through a package-manager link. When its real path lies inside a supplied
 repository root, it uses the same relative path inside the side's source
 root. The mapped file must be regular and its real path must stay inside
-that source root. Missing files and escaping symlinks fail closed. npm and
-pnpm links follow the same rule. A file outside source, repository mapping,
-and selected dependencies fails closed for JavaScript and CSS alike.
+that source root. npm and pnpm links follow the same rule. A file outside
+source, repository mapping, and selected dependencies fails closed for
+JavaScript and CSS alike.
 
 The graph lists each module's imports in record order from the bundler's
 metafile. That order includes re-exports and dynamic imports. Stylesheets
@@ -99,6 +101,13 @@ tree. PostCSS static, dynamic, record-form, and synchronous requires use the
 same importer mapping. Installation metadata outside the source root is read
 from the selected installation, even when a tracked source directory has the
 same logical name.
+
+After path or package lookup and repository mapping, Mokly applies the
+[workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+before it tests the original target. This includes CSS imports from
+JavaScript. Missing files and escaping symlinks fail closed. Reuse evidence
+includes the package manifests, TypeScript configurations, and candidate
+sources the rule checks, including absent files and their directories.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected

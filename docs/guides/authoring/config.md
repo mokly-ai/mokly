@@ -79,6 +79,15 @@ React and React DOM resolve from the consumer. CSS imports use Mokly's delivery
 rules. Only `empty` can override `.css` and `.module.css` handling.
 A JavaScript `file` loader is invalid because it emits an undelivered file.
 
+### Workspace packages
+
+Changes can render a Git base without building its workspace packages.
+Mokly checks each side for source files that match the package targets.
+It uses `outDir` and `rootDir` from the package's `tsconfig.json` if both
+directories are inside the package. Otherwise it looks for the same path
+under `src` for targets in `dist`, `lib`, `build`, or `out`.
+For example, `dist/button.js` can map to `src/button.tsx`.
+
 ## Review and watch
 
 `review.base` selects the Git base, with `origin/main` as its default.

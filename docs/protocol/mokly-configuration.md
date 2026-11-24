@@ -1,5 +1,7 @@
 # Mokly Configuration Contract
 
+Status: Workspace package source lookup is pending for [JavaScript imports](../../plans/source-packages.md#milestone-3-javascript-resolution).
+
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
 resolves, and the validation that rejects an unsafe configuration.
@@ -210,3 +212,8 @@ settings name the ancestor and explicit `node_modules` directories that the
 matching directory, including outside-configuration and nested workspace imports.
 Configuration ancestors and explicit package roots provide fallback lookup.
 An unmappable lookup or a used directory missing from the base installation produces a `base-dependencies` warning naming its directory.
+
+Mokly applies the
+[workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+automatically after module lookup. The rule uses the `resolveExtensions`
+order for JavaScript targets.
