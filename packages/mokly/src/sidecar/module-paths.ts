@@ -4,6 +4,7 @@ import path from "node:path";
 import type { ModuleResolution } from "../generated/sidecar/ModuleResolution.js";
 
 import { DependencyUsage } from "./dependency-usage.js";
+import { missingFile } from "./file-digests.js";
 import { dependencyDirectory } from "./importer-resolution.js";
 import { moduleRoots, moduleRootsSync } from "./module-roots.js";
 import type { ModuleRoots } from "./module-roots.js";
@@ -273,19 +274,25 @@ export class ModulePaths {
     }
   }
 
+  /** Node-loaded requires prefer the native target on the selected side. */
   resolveSync(file: string, specifier?: string): string {
     if (!path.isAbsolute(file)) return file;
     const real = fs.realpathSync(file);
-    const candidate = this.candidate(
-      sourceDependencySync(this, real) ?? real,
-      specifier,
-    );
-    if (!candidate.mapped) return this.observe(candidate.file);
+    const target = this.location(sourceDependencySync(this, real) ?? real);
+    if (!target.mapped) return this.observe(target.file);
     try {
-      const real = fs.realpathSync(candidate.file);
-      return this.checked(candidate, real, fs.statSync(real).isFile());
-    } catch {
-      throw this.missing(candidate.name);
+      const real = fs.realpathSync(target.file);
+      return this.checked(target, real, fs.statSync(real).isFile());
+    } catch (error) {
+      if (missingFile(error)) {
+        const source = this.workspaceSource(target.file, specifier);
+        if (
+          source !== undefined &&
+          this.workspaceLookups.buildTarget(target.file)
+        )
+          return this.observe(source);
+      }
+      throw this.missing(target.name);
     }
   }
 }

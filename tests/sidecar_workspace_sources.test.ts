@@ -244,10 +244,9 @@ test("a workspace bundle changes when its package layout or source candidates ch
     /^[0-9a-f]{64}$/,
   );
   assert.equal(
-    ModulePaths.createSync(inputs).resolveSync(
-      path.join(head, "packages/local/compiled/value.js"),
-      "local",
-    ),
+    await (
+      await ModulePaths.create(inputs)
+    ).resolve(path.join(head, "packages/local/compiled/value.js"), "local"),
     await fs.realpath(path.join(head, "packages/local/first/value.ts")),
   );
   assert.equal(

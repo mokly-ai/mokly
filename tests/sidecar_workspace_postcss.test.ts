@@ -100,3 +100,41 @@ test("PostCSS imports and requires workspace plugins without build files", async
   assert.match(result.text, /selected:\s*static-dynamic/);
   await sidecar.call("shutdown");
 });
+
+test("a computed PostCSS require keeps an existing workspace build", async (context) => {
+  const root = await nativeRoot(context);
+  const pkg = path.join(root, "packages/local");
+  await write(
+    path.join(pkg, "package.json"),
+    '{"name":"workspace-local","exports":"./dist/index.js"}',
+  );
+  await write(path.join(pkg, "dist/index.js"), 'module.exports = "built";');
+  await write(path.join(pkg, "src/index.ts"), 'module.exports = "source";');
+  await link(pkg, path.join(root, "node_modules/workspace-local"));
+  await write(
+    path.join(root, "postcss.mjs"),
+    `
+    const value = require(["workspace", "local"].join("-"));
+    export default {plugins: [{postcssPlugin:"selected", Once(root) {
+      root.append({prop:"selected", value});
+    }}]};
+  `,
+  );
+
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<CssResult>(
+    "processCss",
+    cssParams({
+      sourceRoot: root,
+      postcss: "postcss.mjs",
+      moduleResolution: {
+        ...bundleParams().moduleResolution,
+        packageRoots: [root],
+      },
+      text: "a{}",
+    }),
+  );
+  assert.match(result.text, /selected:\s*built/);
+  await sidecar.call("shutdown");
+});

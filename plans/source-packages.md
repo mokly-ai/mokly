@@ -43,8 +43,10 @@ The rule:
    source folder. A `.js`, `.mjs` or `.cjs` file tries the configured resolve
    extensions in order when they end in `.tsx`, `.ts`, `.jsx`, `.js`, `.mts`,
    `.cts`, `.mjs`, or `.cjs`. Any other file, such as `.css`, keeps its name.
-4. When the side holds the source file, Mokly loads it. Otherwise Mokly
-   resolves as before: the head loads its built file, and a base without it
+4. Bundled imports load the first matching source file. A require that
+   Node loads keeps an existing built file on the selected side. It can
+   recover a source when the build file is missing. If no source matches,
+   keep the original target. A missing repository-mapped JavaScript target
    fails with `module {path} has no source in this side`.
 
 Design calls, mine, 2026-11-24:
@@ -52,10 +54,12 @@ Design calls, mine, 2026-11-24:
 - The rule does not ask Git whether a file is tracked, as the first
   description of the option said. The sidecar has no Git data, a base side
   never holds built output, and step 4 acts only when a source file exists.
-- The head also loads the sources, so both renders load the same kind of
-  file. Repositories whose package builds change their code, for example by
-  replacing environment values, may render differently than before. The
-  project is not in production, so the repository rules allow this.
+- For bundled imports, both renders load the same kind of file.
+  Repositories whose package builds replace environment values can render
+  differently when Mokly loads the source. The repository rules allow this.
+- Restored runtime requires and synchronous PostCSS requires use an
+  existing build on the side they load. The build can compile syntax and
+  relative imports that Node cannot load directly from source.
 - `tsconfig` folders win over the convention, because they state the
   package's own layout.
 - Keep local layout settings when an `extends` reference cannot be read.

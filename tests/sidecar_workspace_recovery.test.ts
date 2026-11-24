@@ -140,3 +140,51 @@ test("restored runtime requires resolve a workspace main field without a build",
   assert.equal(generation.require("workspace-local"), "Source");
   await sidecar.call("shutdown");
 });
+
+test("restored runtime requires keep a build on the head and recover on a base without it", async (context) => {
+  const root = await nativeRoot(context);
+  const head = path.join(root, "head");
+  const base = path.join(root, "base");
+  for (const side of [head, base]) {
+    const pkg = path.join(side, "packages/local");
+    await write(
+      path.join(pkg, "package.json"),
+      '{"name":"workspace-local","exports":"./dist/value.cjs"}',
+    );
+    await write(path.join(pkg, "src/value.cjs"), 'module.exports = "Source";');
+    await write(path.join(side, "entry.mjs"), 'export const value = "Entry";');
+  }
+  await write(
+    path.join(head, "packages/local/dist/value.cjs"),
+    'module.exports = "Built";',
+  );
+  await link(
+    path.join(head, "packages/local"),
+    path.join(head, "node_modules/workspace-local"),
+  );
+
+  const resolution = { resolveExtensions: [".cjs"] };
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  for (const [params, file, value] of [
+    [nativeParams(head, {}, resolution), "dist/value.cjs", "Built"],
+    [
+      nativeParams(
+        base,
+        { repositoryRoots: [head] },
+        { ...resolution, dependencyRoot: head, packageRoots: [head] },
+      ),
+      "src/value.cjs",
+      "Source",
+    ],
+  ] as const) {
+    const result = await sidecar.call<BundleResult>("bundle", params);
+    const runtime = restore(params, result.compiled, result.modules).require;
+    assert.equal(
+      runtime.resolve("workspace-local"),
+      path.join(params.sourceRoot, "packages/local", file),
+    );
+    assert.equal(runtime("workspace-local"), value);
+  }
+  await sidecar.call("shutdown");
+});

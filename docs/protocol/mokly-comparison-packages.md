@@ -50,8 +50,11 @@ when a package import reaches it.
    `.js`, `.mts`, `.cts`, `.mjs`, or `.cjs`, in the configured order.
    For other targets, keep the file name.
 4. Load the first matching regular source file on that side. If none exists,
-   keep the original target. A missing repository-mapped JavaScript target
-   fails with `module {path} has no source in this side`.
+   keep the original target. When Node selects a target for a restored
+   runtime require or a synchronous PostCSS require, keep an existing build
+   file on the selected side. Use the source rule if that side lacks the
+   build file. A missing repository-mapped JavaScript target fails with
+   `module {path} has no source in this side`.
 
 When native JavaScript lookup fails, Mokly tries each target of the matched
 export key. For a package without `exports`, it tries the declared main

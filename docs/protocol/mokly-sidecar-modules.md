@@ -100,10 +100,10 @@ same importer mapping. Installation metadata outside the source root is read
 from the selected installation, even when a tracked source directory has the
 same logical name.
 
-For bare package specifiers, the
-[workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
-can supply a source file when a build target is present or missing. This
-includes CSS imports from JavaScript. Both bundle capture modes keep workspace
+The [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+applies to bundled imports of bare package specifiers, including JavaScript
+imports of CSS. It also covers missing build targets for requires that Node
+loads. Both bundle capture modes keep workspace
 layout probes in private reuse evidence, including when no source matches.
 Layout files and package manifests used for build targets also enter the
 bundle metadata. Build and source candidate probes retain absent paths as watch
