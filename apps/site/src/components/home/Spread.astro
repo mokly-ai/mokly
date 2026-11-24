@@ -4,9 +4,11 @@
  * canvas, zoomed out. On the desktop composition the Specs box holds eight
  * artboards of phones and desktops in both schemes, and the Components box
  * beside it holds the component sets under the quiet `works with Storybook`
- * label; both bleed off the right edge. Claude edits the pricing page,
- * Codex has the Button set selected and Sam is on checkout. A phone draws
- * three phones, the middle one centred, with Claude's cursor.
+ * label. Claude edits the pricing page, Codex has the Button set selected
+ * and Sam is on checkout. Where the window cannot hold all of it, the Specs
+ * box first drops its right column, the parts marked
+ * `site-home-spread-roomy`, and then the Components box folds under it. A
+ * phone draws three phones, the middle one centred, with Claude's cursor.
  *
  * The site sends one page to every width, so the spread holds the parts of
  * both compositions. Each artboard's class names its spot, which the sheet
@@ -31,6 +33,7 @@ import SpreadSets from "./SpreadSets.astro";
 import StorybookMark from "./StorybookMark.astro";
 
 import "../../styles/home-spread.css";
+import "../../styles/home-spread-sets.css";
 ---
 
 <div aria-hidden="true" class="site-home-spread">
@@ -63,7 +66,7 @@ import "../../styles/home-spread.css";
         <AcmeReviewOrder />
       </Artboard>
       <Artboard
-        class="site-home-spread-pricing site-home-spread-wide"
+        class="site-home-spread-pricing site-home-spread-wide site-home-spread-roomy"
         device="desktop"
         name="pricing"
       >
@@ -86,14 +89,14 @@ import "../../styles/home-spread.css";
         <AcmeSettings />
       </Artboard>
       <Artboard
-        class="site-home-spread-pricing-phone site-home-spread-wide"
+        class="site-home-spread-pricing-phone site-home-spread-wide site-home-spread-roomy"
         device="phone"
         name="pricing"
       >
         <AcmePricingPhone />
       </Artboard>
       <Artboard
-        class="site-home-spread-pricing-dark site-home-spread-wide"
+        class="site-home-spread-pricing-dark site-home-spread-wide site-home-spread-roomy"
         dark
         device="phone"
         name="pricing"
@@ -101,7 +104,7 @@ import "../../styles/home-spread.css";
         <AcmePricingPhone dark />
       </Artboard>
       <Artboard
-        class="site-home-spread-payment-dark site-home-spread-wide"
+        class="site-home-spread-payment-dark site-home-spread-wide site-home-spread-roomy"
         dark
         device="phone"
         name="checkout/payment"
@@ -121,7 +124,10 @@ import "../../styles/home-spread.css";
       <SpreadSets />
     </SectionBox>
     {/* status: "ahead" (Claude) */}
-    <Cursor class="site-home-spread-claude" person="claude" />
+    <Cursor
+      class="site-home-spread-claude site-home-spread-roomy"
+      person="claude"
+    />
     {/* status: "ahead" (Codex) */}
     <Cursor
       class="site-home-spread-codex site-home-spread-wide"

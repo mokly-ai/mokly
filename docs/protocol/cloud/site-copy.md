@@ -30,7 +30,7 @@ hero reaches search results and shared links in the same edit.
 **Spread** (under the hero copy): the demo app on the canvas, zoomed out. A
 Specs box labelled `acme/storefront · main · 24 screens` holds phone and
 desktop artboards of its screens in both schemes. On desktop a Components box
-beside it holds the app's component sets and the quiet `works with Storybook`
+beside it, or under it on a narrow desktop window, holds the app's component sets and the quiet `works with Storybook`
 label with the official Storybook icon; the
 [Storybook guide](../../guides/authoring/storybook.md) backs that claim. On a
 phone the spread is three phones. The cursors of the people and agents in the

@@ -1,0 +1,81 @@
+/* The Components box of the home spread: the quiet works with Storybook
+   label beside its tag and the component sets it holds. The class names and
+   the rules match docs/mockups/styles/site/home-spread.css. */
+
+/* The quiet works with Storybook label beside the Components tag */
+
+.site-home-spread-components .site-section-box-meta {
+  font-family: var(--mk-font-sans);
+  overflow: visible;
+}
+
+.site-home-works {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+}
+
+.site-home-works b {
+  color: var(--mk-color-text-secondary);
+  font-weight: 560;
+}
+
+.site-home-storybook-shape {
+  fill: var(--mk-color-people-pink-fill);
+}
+
+.site-home-storybook-letter {
+  fill: var(--mk-color-on-signal-fill);
+}
+
+/* The component sets at half size, on a light backing in both schemes */
+
+.site-home-set {
+  position: absolute;
+}
+
+.site-home-set-label {
+  align-items: center;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  font-family: var(--mk-font-mono);
+  font-size: 11px;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.site-home-set-box {
+  background: color-mix(in srgb, var(--mk-color-surface) 70%, transparent);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-text) 8%, transparent);
+  outline: 1px dashed color-mix(in srgb, var(--mk-color-text) 22%, transparent);
+  outline-offset: 3px;
+  padding: 10px;
+}
+
+/* A dark backing is the text role. The mockups key it on the pinned scheme;
+   the site is dark through the scheme choice or, without a choice, through
+   the system scheme. */
+
+:root[data-color-scheme="dark"] .site-home-set-box {
+  background: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-home-set-box {
+    background: var(--mk-color-text);
+  }
+}
+
+.site-home-set-inner {
+  zoom: 0.5;
+}
+
+.site-home-set .site-home-set-peer {
+  border-radius: 3px;
+  inset: 13px -7px -7px;
+}
