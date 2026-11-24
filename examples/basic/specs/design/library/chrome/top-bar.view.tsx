@@ -18,8 +18,9 @@ function address(to: DesignDestination | undefined): string | undefined {
 /**
  * The shipped top bar, which draws no menu, as the shell's bar does. A
  * static artboard runs no script, so its brand links to its artboard, a
- * control without one is a picture, and the compact search, which needs a
- * script, is left out. The search field ends with the registered tag picker.
+ * control without one is a picture, and the compact search's toggle is a
+ * native button without a handler, which only a narrow embedded bar shows.
+ * The search field ends with the registered tag picker.
  * The bar's frame carries the flag that this component's stylesheet draws:
  * the compact bar of a mobile render at every width.
  */
