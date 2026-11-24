@@ -15,6 +15,7 @@ import { ModulePaths } from "./module-paths.js";
 import type { ModuleSources } from "./module-paths.js";
 import { importerDirectory } from "./package-directory.js";
 import { moduleBytes } from "./postcss-evidence.js";
+import { postcssScriptLoaders } from "./postcss-source.js";
 import { resolutionOptions } from "./resolution.js";
 
 let sources: ModulePaths;
@@ -146,7 +147,7 @@ function requireLocal(file: string): unknown {
   dynamicFiles.add(file);
   try {
     const code = transformSync(moduleBytes(file).toString(), {
-      loader: /\.[cm]?tsx?$/.test(file) ? "ts" : "js",
+      loader: postcssScriptLoaders[path.extname(file)] ?? "js",
       format: "cjs",
       sourcefile: file,
       define: {
