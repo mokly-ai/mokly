@@ -24,7 +24,7 @@ resource "google_sql_database_instance" "this" {
   database_version    = "POSTGRES_16"
   deletion_protection = true
   settings {
-    tier                        = var.environment == "production" ? "db-custom-2-7680" : "db-custom-1-3840"
+    tier                        = "db-custom-1-3840"
     edition                     = "ENTERPRISE"
     availability_type           = var.environment == "production" ? "REGIONAL" : "ZONAL"
     disk_type                   = "PD_SSD"
