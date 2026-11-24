@@ -2,8 +2,8 @@
 
 Status: Active, paused by the user on 2026-11-24. On branch
 `calummoore/mokly-storybook-integration`, with no pull request into `main`
-yet. Tracks A, B, C, D, and J are merged into this branch. Tracks E to I have
-not started. The section [Where the work stands](#where-the-work-stands)
+yet. Tracks A, B, C, and J are merged into this branch, and the pull request
+of track D is open. Tracks E to I have not started. The section [Where the work stands](#where-the-work-stands)
 gives what is done, what waits for the user, and how to continue. Each track
 works on its own branch from this branch and opens a pull request into this
 branch, as design calls 1 and 25 say. Pull requests from this branch into
