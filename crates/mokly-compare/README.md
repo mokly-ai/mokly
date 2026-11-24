@@ -262,8 +262,10 @@ parsed CSS cache counts do not depend on the worker count.
 `dyn ReuseAttempt`. `Changes` calls the attempt as its `dyn Comparison`.
 Without a fence, the attempt reuses and keeps nothing. Admission finds the
 kept view of each route. The worker of that view then checks its read set
-before preparation, through `comparison_identity` and the head's
-`comparison_document_proof`, with no base source read. A proven view skips
+before preparation, through `comparison_identity` and the checked head
+document proof, with no base source read. Complete head validation supplies
+that proof when it read the document or adopted its kept checks, and
+`comparison_document_proof` supplies it otherwise. A proven view skips
 preparation and takes its current head usage from that proof. The ordered
 pass adds its shared evidence, its warnings, and the current usage of both
 sides. Call
@@ -308,7 +310,13 @@ The CLI implements `BaseProvider`, which supplies the base render generation
 through the common graph. A JavaScript provider uses the same request's source
 and repository handles for extraction and dependency leases. The CLI supplies
 `mokly_render::runtime::Runtime` for both sides, sharing its render cache,
-sidecar pool, and cancellation.
+sidecar pool, and cancellation. `BaseRequest::source_request` gives the
+source-only `BaseSourcesRequest`, which carries no head. So a provider can
+start source work as soon as the working configuration validates.
+A fresh preparation first asks `BaseProvider::historical_sources`, after the
+kept-base lookup misses. A
+provider that adopts a pending preparation returns its source readers there.
+The default returns `None`, and `Changes` creates the sources itself.
 
 `BaseProvider` can also keep one captured base between classifications. After
 the pin and before any base read, `Changes` calls `BaseProvider::find_kept`
@@ -459,13 +467,37 @@ development dependencies, and no test uses the internet.
   `ReuseWork`, the bounded view comparison reuse of Serve. The private
   `reuse_*.rs` modules record proof reads, charge the bound, and collect the
   candidate.
+- [`src/validation_head.rs`](./src/validation_head.rs) defines the private
+  `Head`, the `HeadValidation` of one Serve reuse attempt. `Engine` passes it
+  to `RenderGeneration::validate_head` before pairing, and it calls
+  `render_all` when it has no reuse collection. `Head` checks each head
+  document once. It validates a view without a document read only when the
+  document key and the policy identity are equal, every link-target read of
+  its fragment links and then every recorded walk read are equal in order,
+  and the generation adopts the kept document checks. That view takes its
+  anchors, links, warnings, and usage from its kept outputs. Any other view
+  takes its checked read. Its closure facts are still proven when the key, the
+  policy identity, the document checks, and every walk read are equal.
+  Otherwise it replays the background walk of the same generation, or records
+  a new walk. Each view keeps its proof, with usage, for the view stream.
+  Facts never depend on pairing. The private `validation_*.rs` modules keep
+  the facts, the kept outputs, and their reads.
+- [`src/reuse_optional.rs`](./src/reuse_optional.rs) defines the private
+  `Arena`, the optional store of the facts and kept outputs of one
+  classification inside the comparison bound. The bound clears every optional
+  arena before it refuses a comparison charge, so facts and kept outputs never
+  displace kept comparisons.
 - [`src/base_render.rs`](./src/base_render.rs) defines `ChangesService`,
   `Changes`, `BaseProvider`, `PreparedBase`, and `BasePreparationError`, which
   pin the base, prepare its sources, report whether its tier-two install ran
   with lifecycle scripts off, carry its freshness evidence, and compare it with
   the head. The default `BaseProvider::find_kept`, `keep`, and `release`
   methods keep nothing. `PreparedBase::prefetch` holds the `PrefetchGuard` of
-  the early renders of a fresh base.
+  the early renders of a fresh base. `BaseProvider::historical_sources` lets a
+  provider adopt pending source readers.
+- [`src/base_sources.rs`](./src/base_sources.rs) defines
+  `BaseSourcesRequest`, the inputs of base source work that need no head
+  generation, and `BaseRequest::source_request`.
 - [`src/base_retention.rs`](./src/base_retention.rs) defines
   `BaseRetentionRequest`, `KeptBase`, `BaseReuse`, and `BaseRelease`: the
   inputs of the kept base's key and freshness checks, the kept capture with
@@ -483,8 +515,9 @@ development dependencies, and no test uses the internet.
 - [`src/base_classification.rs`](./src/base_classification.rs) holds the
   classification path of `Changes`: one kept base or one fresh capture, the
   `review.base-tree` action, and the single fresh preparation after a failed
-  reuse. It holds the `PrefetchGuard` of a fresh base until the capture of
-  that base returns, so each exit stops its early renders and waits for them.
+  reuse. Each fresh preparation takes the provider's historical sources when
+  it has them. It holds the `PrefetchGuard` of a fresh base until the capture
+  of that base returns, so each exit stops its early renders and waits for them.
 - [`src/base_reader.rs`](./src/base_reader.rs) defines `BaseReader`, the
   per-classification reader of a kept base. It keeps only its `BaseReuse`,
   checks its cancellation before each call, and forwards retained inputs,
@@ -497,7 +530,8 @@ development dependencies, and no test uses the internet.
   `Steps`, the comparison steps that a command shows while Changes runs.
 - [`src/base_selection.rs`](./src/base_selection.rs) defines `BaseLookup`,
   `GitBaseLookup`, and `PinnedBase`, the one pinned repository, ref, and merge
-  base.
+  base. `PinnedBase::resolved` pins a merge base that the caller already
+  resolved, with the repository errors of a lookup.
 - [`src/sources.rs`](./src/sources.rs) and
   [`src/git_tree.rs`](./src/git_tree.rs) define `GitSources` and `GitTree`,
   the commit-pinned source reader and its `SourceTree` adapter.
@@ -599,6 +633,7 @@ development dependencies, and no test uses the internet.
 - [Comparison serving](../../docs/protocol/mokly-comparison-serving.md) and
   [Changes serving](../../docs/protocol/mokly-changes-serving.md).
 - [Base preparation](../../docs/protocol/mokly-base-preparation.md),
+  [eager base preparation](../../docs/protocol/mokly-eager-base-preparation.md),
   [base cache](../../docs/protocol/mokly-base-cache.md),
   [render store](../../docs/protocol/mokly-render-store.md),
   [Serve edit plans](../../docs/protocol/mokly-sidecar-plans.md),

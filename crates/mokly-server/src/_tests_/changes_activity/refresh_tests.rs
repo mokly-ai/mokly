@@ -69,8 +69,8 @@ async fn moved_reference_keeps_activity_through_refresh_and_classification_then_
                 None
             })),
         ChangeSourceMock::classify
-            .next_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, _, _| {
+            .next_call(matching!(_, _, _))
+            .answers_arc(Arc::new(move |_, _, _, _| {
                 classified
                     .lock()
                     .unwrap()

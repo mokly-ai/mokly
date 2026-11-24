@@ -18,6 +18,7 @@ import { metadataDigest } from "./file-digests.js";
 import type { Measurements } from "./measurements.js";
 import type { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
+import { prepareRecipeEncoding } from "./recipe-encoding.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
@@ -67,6 +68,9 @@ export async function bundleRecipe(
   );
   // The compilation identity: module paths, imports and non-CSS source and
   // loader bytes, then the metadata inputs and the settings hashed below.
+  // Without a full capture owner the evidence is never complete, so the
+  // random runtime key keeps the identity fresh and the sources stay out.
+  const sourced = evidence !== undefined;
   const hash = createHash("sha256");
   const physicalInputs: Record<string, string | null> = {};
   const metadataInputs: Record<string, string | null> = {};
@@ -82,9 +86,9 @@ export async function bundleRecipe(
           `Bundled source bytes were not recorded: ${module.path}`,
         );
       module.digest = createHash("sha256").update(text).digest("hex");
-      hash.update(JSON.stringify([module.path, module.imports]));
+      if (sourced) hash.update(JSON.stringify([module.path, module.imports]));
       if (!module.path.endsWith(".css")) {
-        hash.update(text);
+        if (sourced) hash.update(text);
         physicalInputs[absolute] = module.digest;
       }
     }
@@ -210,7 +214,8 @@ export async function bundleRecipe(
     delete namedPlan.candidates;
     retainedPlan = capturedPlan(namedPlan, reuseEvidence);
   }
-  const result = bundleResult(generation, retainedPlan);
+  const encoding = new Map<object, string>();
+  const result = bundleResult(generation, retainedPlan, encoding);
   if (reusable && !compilation.reuseEvidence.complete) {
     delete compilation.metadataIdentity;
     compilation.identity = createHash("sha256")
@@ -219,6 +224,6 @@ export async function bundleRecipe(
       .digest("hex");
     generation.id = generationId(compilation.identity, params.evaluation);
     result.generation = generation.id;
-  }
+  } else prepareRecipeEncoding(result, encoding);
   return { generation, result };
 }

@@ -6,7 +6,8 @@
   exact Serve plan change, on branch
   `calummoore/mokly-plan-reuse-editor-files-6dni`. The call asked for this
   item for the restart misses that the change leaves.
-- **Location:** `packages/mokly/src/sidecar/compiled.ts:155` to line 166,
+- **Location:** `packages/mokly/src/sidecar/compiled.ts:167` to line 180
+  (`reuse`),
   `packages/mokly/src/sidecar/resolution-inputs.ts:76` to line 84,
   `packages/mokly/src/sidecar/physical-input-reader.ts:243` to line 261,
   `crates/mokly-render/src/bundle_attempt.rs:112` to line 124,
@@ -41,8 +42,8 @@
 - **Background:**
   - A restart of Serve tries to reuse the head entry. The pool restores the
     stored compilation with `restoreGeneration`. Then `reuse()` in
-    `packages/mokly/src/sidecar/compiled.ts` checks it. Line 155 to line 160
-    compare the `inputDirectories` lists, and line 161 to line 166 check the
+    `packages/mokly/src/sidecar/compiled.ts` checks it. Line 165 to line 170
+    compare the `inputDirectories` lists, and line 171 to line 176 check the
     captured reuse evidence. A difference makes the head compile with
     capture. The new compilation then replaces the head entry.
   - Three kinds of check compare whole directories:

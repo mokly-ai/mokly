@@ -225,7 +225,7 @@ async fn debug_timings_keep_plain_stdout_and_emit_safe_json() {
         assert!(record["elapsedMs"].is_number());
         if record["event"] == "end" {
             assert_eq!(starts[&record["id"].as_u64().unwrap()], record["stage"]);
-            assert_eq!(record["status"], "ok");
+            assert_eq!(record["status"], "ok", "{record}");
             assert!(record["durationMs"].is_number());
         }
         if record["stage"] == "render.document" && record["event"] == "end" {

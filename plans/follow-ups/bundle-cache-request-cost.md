@@ -5,9 +5,13 @@
 - **Added:** 2026-11-18, from the options check of design call 32 of the
   bundle disk cache plan, on branch `calummoore/lisbon-h906`. That check
   reviewed the reopened design of the synchronous bundle cache write.
-- **Location:** `crates/mokly-sidecar/src/pool_bundle_cache.rs:112` to line
-  118, `crates/mokly-compare/src/bundle_codec_write.rs:60`,
-  `crates/mokly-sidecar/src/pool_bundle_cache.rs:59`, and
+  Narrowed on 2026-11-21 by `calummoore/mokly-restored-bundle-reuse-answer-pspj`,
+  which shares each module list through an `Arc`.
+- **Location:** `crates/mokly-sidecar/src/pool_bundle_cache.rs:174` to line
+  181 (the offer in `complete_bundle`),
+  `crates/mokly-compare/src/bundle_codec_write.rs:75` (`encode`),
+  `crates/mokly-sidecar/src/pool_bundle_cache.rs:112` (`disk_seed_request` in
+  `seed_bundle`), and
   `crates/mokly-compare/src/bundle_cache_write.rs:44`.
 - **Reason:** No run has split the cost of these stages. The warm-restart
   goal passes, and this profile can keep every response, timing, and warning
@@ -31,7 +35,7 @@
 - **Background:**
   - The pool of `crates/mokly-sidecar` sends each `bundle` request to a Node
     sidecar. After each successful request in the `full` capture mode,
-    `complete_bundle` at `crates/mokly-sidecar/src/pool_bundle_cache.rs:96`
+    `complete_bundle` at `crates/mokly-sidecar/src/pool_bundle_cache.rs:149`
     makes the offer. Since the capture decision C1 of 2026-11-18, a
     `serveEdit` request of a Serve head makes none.
     `crates/mokly-sidecar/src/pool_requests.rs:144` to line 145 runs it
@@ -57,28 +61,34 @@
     that day ran no compile and no esbuild operation. The same save code gave
     every sample.
   - Four sources of request cost have no profile:
-    - The offer copy: `pool_bundle_cache.rs:112` to line 118 copies the
-      settings and the module list of the result for each offer. Since the
-      `Arc` change of 2026-11-18, the offer shares the compilation through
-      an `Arc`. Before that change, it also deep-copied the compilation. The
+    - The offer copy: `pool_bundle_cache.rs:174` to line 181, in
+      `complete_bundle`, copies the
+      settings of the result for each offer. Since the `Arc` change of
+      2026-11-18, the offer shares the compilation through an `Arc`, and
+      since 2026-11-21 it also shares the module list through an `Arc`.
+      Before those changes, it also deep-copied both. The
       copy comes before the receipt check, so a disk hit or a memory reuse
       that writes nothing also pays it. It also comes before the type checks
       that reject a compilation without complete and durable evidence.
     - The frame count: after `encode` serializes the entry, it builds the
       `restoreGeneration` request with `disk_seed_request`, at
-      `crates/mokly-compare/src/bundle_codec_write.rs:60`. That function
-      copies the settings and the module list, and it shares the
+      `crates/mokly-compare/src/bundle_codec_write.rs:75`. That function
+      copies the settings, and it shares the module list and the
       compilation through an `Arc`, at
       `crates/mokly-sidecar/src/reusable_recipe.rs:69` to line 71, in
-      `disk_seed_request`. Before
-      the `Arc` change, it also deep-copied the compilation. `encode`
+      `disk_seed_request`. Before the `Arc` changes, it also deep-copied
+      the module list and the compilation. `encode`
       serializes this request a second time only to count its bytes against
       the 64 MiB frame limit.
     - The restore copy: on a disk hit, the store returns an owned recipe
-      snapshot. `pool_bundle_cache.rs:59` builds the `restoreGeneration`
+      snapshot. `pool_bundle_cache.rs:112`, in `seed_bundle`, builds the
+      `restoreGeneration`
       request from it with `disk_seed_request`, so it copies the settings
-      and the module list again and shares the compilation. After that,
-      line 76 uses only its runtime key.
+      again and shares the module list and the compilation. The bundle
+      attempt then keeps the whole loaded recipe until the request ends. A
+      short sidecar reply can name that restore, and the core then rebuilds
+      the result from that storage. The attempt also reads the runtime key
+      and the plan of the recipe.
     - The Linux flush: `bundle_replace` flushes the stage data at
       `crates/mokly-compare/src/bundle_cache_write.rs:44`, through `sync_tree`
       at `crates/mokly-compare/src/durability.rs:98`. On Linux, line 104 calls
@@ -161,6 +171,10 @@
       `crates/mokly-sidecar/src/reusable_recipe.rs:17` keeps it. The offer
       stays the compilation that the request served. The pool calls the
       store outside its mutex.
+    - Restored reuse: a short sidecar reply can name any restore of its
+      process, so each bundle request keeps the storage of each restored
+      seed until it ends. The "Restored reuse" section of
+      `docs/protocol/mokly-sidecar-recipes.md` gives the reply rules.
     - Only complete and durable evidence reaches the disk, through
       `ReusableRecipe::new` at `reusable_recipe.rs:22` and
       `DurableRecipe::new` at `crates/mokly-sidecar/src/durable_recipe.rs:13`.
@@ -181,18 +195,18 @@
       the fault classes and their output. `Reported` at
       `crates/mokly-cli/src/bundle_runtime.rs:129` emits the warnings of each
       save. A save fault sets the `cache` value of the request, at
-      `pool_bundle_cache.rs:119` to line 123.
+      `pool_bundle_cache.rs:182` to line 186, in `complete_bundle`.
     - The write stays inside the bundle response and its `catalogue.bundle`
       span. The span set does not change.
     - No write runs after the pool stops. Each write ends inside its request,
-      and `served` offers nothing after a stop, at `pool_bundle_cache.rs:134`
-      to line 140.
+      and `served` offers nothing after a stop, at `pool_bundle_cache.rs:197`
+      to line 204.
     - No time gate and no new runtime setting are added. Every existing test
       and assertion stays.
 - **Problem:** A bundle request runs optional bundle cache work that nobody
-  profiled. Each offer copies the settings and the module list, the frame
-  count copies them and serializes the recipe again, and each disk hit
-  copies them for the restore. On Linux, each write also flushes the whole
+  profiled. Each offer copies the settings, the frame count copies them and
+  serializes the recipe again, and each disk hit copies them for the
+  restore. On Linux, each write also flushes the whole
   filesystem.
 - **Impact if no action:** Each compiling request keeps its synchronous save.
   The probes measured 23.400 to 122.441 ms for a first write, and the product
@@ -208,24 +222,28 @@
   - **A.** Change nothing. Each compiling request keeps its save, and each
     request keeps the copies. Effort: Small.
   - **B.** Remove the recipe copies and the second serialization:
-    - Make the offer without a deep copy, at `pool_bundle_cache.rs:112` to
-      line 118. For example, run the receipt check before any copy, or let
+    - Make the offer without a settings copy, at `pool_bundle_cache.rs:174`
+      to line 181, in `complete_bundle`. For example, run the receipt check before any copy, or let
       the result and the offer share one immutable `Arc` of the served
       compilation.
-    - Count the frame bytes at `bundle_codec_write.rs:60` without a copy. For
+    - Count the frame bytes at `bundle_codec_write.rs:75` without a copy. For
       example, serialize a borrowed view of the restore request. Or compute
       the count from the payload length and the fixed wrapper lengths, with a
       test that compares it with a real serialization.
-    - Build the restore request at `pool_bundle_cache.rs:59` from the owned
-      recipe of the disk hit, in place of a copy. Read its runtime key first.
+    - Build the restore request at `pool_bundle_cache.rs:112`, in
+      `seed_bundle`, from the owned
+      recipe of the disk hit, in place of a settings copy. The bundle attempt
+      must keep the storage of that recipe, its runtime key, and its plan
+      until the request ends, because a short sidecar reply can name the
+      restore.
     - Each change keeps the bytes of each stored entry and each request.
     - It changes types of `crates/mokly-sidecar`, for example the `compiled`
       field of `results::Bundle`, and their test literals. No run has
       measured its gain.
     - Since the `Arc` change of 2026-11-18, the result, the offer, and the
       restore request already share the compilation, and `results::Bundle`
-      holds it in an `Arc`. The copies of the settings and the module list
-      remain.
+      holds it in an `Arc`. Since 2026-11-21, they also share the module
+      list. Only the copies of the settings remain.
     - Effort: Medium.
   - **C.** Flush only the bundle entry on Linux:
     - In `bundle_replace`, at `bundle_cache_write.rs:44`, flush the one data

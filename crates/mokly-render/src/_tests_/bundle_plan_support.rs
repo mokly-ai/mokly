@@ -61,7 +61,7 @@ pub(super) fn result(
         epoch: 1,
         cache: None,
         compile_count: 1,
-        modules: vec![],
+        modules: Default::default(),
         unmapped_dependency_directories: None,
         compiled: Arc::new(CompiledGeneration {
             toolchain: "fixture".into(),

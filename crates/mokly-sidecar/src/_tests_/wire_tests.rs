@@ -2,6 +2,7 @@
 
 use serde_json::{Value, json};
 
+use crate::client_origins::Origins;
 use crate::compiled_fixture::compiled;
 use crate::methods::{Call, Hello};
 use crate::wire::{MethodResult, Request, Response};
@@ -60,6 +61,11 @@ fn every_method_and_result_round_trips() {
             json!({"generation":"g","entries":{"entry#default":{"path":"entry","title":"Entry"}}}),
             Value::Null,
         ),
+        (
+            "prepareContext",
+            json!({"context":"css","postcss":"postcss.cjs","sourceRoot":"/repo","repositoryRoots":[],"moduleResolution":{}}),
+            Value::Null,
+        ),
         ("disposeContext", json!({"context":"css"}), Value::Null),
         ("dispose", json!({"generation":"g"}), Value::Null),
         ("shutdown", json!({}), Value::Null),
@@ -72,7 +78,9 @@ fn every_method_and_result_round_trips() {
             serde_json::from_value(json!({"method":method,"params":encoded["params"]})).unwrap();
         let response: Response =
             serde_json::from_str(&json!({"id":12,"result":result}).to_string()).unwrap();
-        response.decode_result(&request).unwrap();
+        response
+            .decode_result(&request, &Origins::default())
+            .unwrap();
     }
 }
 
@@ -84,7 +92,10 @@ fn authoring_metadata_is_preserved_until_catalogue_validation() {
             .unwrap();
     let response: Response =
         serde_json::from_str(&json!({"id":1,"result":result}).to_string()).unwrap();
-    let MethodResult::Definitions(definitions) = response.decode_result(&request).unwrap() else {
+    let MethodResult::Definitions(definitions) = response
+        .decode_result(&request, &Origins::default())
+        .unwrap()
+    else {
         panic!()
     };
     assert_eq!(
@@ -113,7 +124,7 @@ fn duplicate_result_fields_keep_the_last_payload_value() {
     };
     let response: Response =
         serde_json::from_str(r#"{"id":1,"result":{"version":"first","version":"last"}}"#).unwrap();
-    let decoded = response.decode_result(&request);
+    let decoded = response.decode_result(&request, &Origins::default());
     assert!(
         decoded.is_ok(),
         "legacy last-key result rejected: {decoded:?}"

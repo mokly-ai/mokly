@@ -6,7 +6,7 @@ These rules belong to the `bundle` and `restoreGeneration` requests of the
 
 ## Compiled Recipe
 
-Every private `bundle` result carries `compiled`: code, runtime import key,
+Every full `bundle` result carries `compiled`: code, runtime import key,
 captured entry text, resolved peers, physical input digests, logical metadata
 digests, reuse evidence, the toolchain identity, and the compilation identity.
 A compilation with complete reuse evidence also carries the optional
@@ -20,9 +20,9 @@ the toolchain identity, and only when the reuse evidence is also stable and the
 toolchain identity is known. Without them, the render store neither reads nor
 writes the documents that depend on that compilation.
 `restoreGeneration` installs that recipe with its original parameters, module
-graph, and evaluated generation id. The bundle result carries the graph once. It
-reads no current source file and invokes no compiler. Peer packages retain the
-selected physical installation. Failed peer resolutions remain explicit and
+graph, and evaluated generation id. It reads no current source file and invokes
+no compiler. A full bundle result carries the graph once. Peer packages retain
+the selected physical installation. Failed peer resolutions remain explicit and
 raise `MODULE_NOT_FOUND`; native fallback cannot bypass that failure. Equal
 compilations keep independent maps, bindings, and authoring registrations. A
 `restoreGeneration` envelope above the [frame limit](./mokly-sidecar.md) fails
@@ -174,39 +174,43 @@ The [package folder reuse rules](./mokly-sidecar-folder-reuse.md) add the live
 checks and the private folder files of each import that esbuild selects
 through a package folder mapping, and the fallback at the metadata bounds.
 
+## Restored Reuse
+
+A restored generation is one that a successful `restoreGeneration` request
+installed in a sidecar process. A `restoreGeneration` request for an id that the
+process already holds changes nothing, also when a `bundle` request installed
+that id. A restored generation ends with a successful `dispose` of its id, with
+a successful `bundle` result that returns its id, or with its process.
+
+When the reuse checks of a `bundle` request accept the compilation of a restored
+generation of its process, the result is short:
+`{ generation, restoredGeneration }`. `restoredGeneration` names that restored
+generation. `generation` names the new lifetime, and the two ids can be equal.
+When the frame limit rules change the full result, such as by dropping the reuse
+evidence, the result is full. Every other `bundle` result is full, such as a
+fresh compile or the reuse of a generation that a `bundle` request installed.
+Decision: a short result names a compilation that the core already holds. A
+cheaper encoding of the full result was rejected, because it keeps the transfer
+and the decode. A short result without the size check was rejected, because a
+restore alone does not prove that the full result fits.
+
+The core reads a short result as the full result with the exact `compiled` value
+and module graph of that restored generation, and no `plan`. Its
+`unmappedDependencyDirectories` are those of that `compiled` value, or an empty
+list when it has none. The core recomputes no member from current files. Every
+rule that reads a full result treats a short result in the same way, such as the
+stored plan of a [warm start](./mokly-sidecar-plans.md#warm-start). So a short
+result changes no output, warning, diagnostic, or error.
+
+The core resolves `restoredGeneration` against the restored generations that the
+process held before the request. A short result that names no such restored
+generation is a malformed frame, so it fails with `sidecar-protocol`. The core
+resolves short results only from recipe data that it already holds. Short
+results add no decoded copy and no retained recipe data to the core.
+
 ## Released Recipes
 
-Each `bundle` call starts an unevaluated lifetime, also when the content id
-matches an earlier evaluated lifetime. The core installs its maps,
-description, and bindings before rendering. Releasing a generation or a
-PostCSS context reaches every process that used it and starts no sidecar.
-
-After the final graph or request releases a captured compilation or a marked
-one, the pool keeps its recipe in memory for later `bundle` calls. The pool
-keeps at most one released recipe for each set of bundle settings: the last one
-released. The pool compares settings without the evaluation digest. A later
-`bundle` call can reuse that recipe. Equal settings, equal resolved roots, and
-the input rules above are the only reuse checks, for released, stored, and live
-compilations alike.
-
-The pool counts each released recipe at the size of its serialized
-`restoreGeneration` envelope. The released recipes of one pool use at most 64
-MiB in total, the value of the frame limit. A release of an unmarked incomplete
-recipe or of a recipe above that bound removes the older released recipe of
-equal settings and keeps nothing. When a new recipe takes the total above the
-bound, the pool removes the least recently used recipes until the total fits.
-The pool discards every released recipe when it stops: on shutdown,
-cancellation, and forced termination. A release after the stop keeps nothing.
-
-Decision: the pool keeps the last released recipe of each set of bundle
-settings, in practice one head and one base recipe. The bound equals the
-frame limit, so every recipe that a sidecar can restore fits. In a measured
-Serve session with two edits and two reverts, this served all 6 of 10
-bundles that repeated an earlier compile, with about 6.4 MiB of recipes.
-Stores of many recipes within 16, 32, or 64 MiB were rejected. A `bundle`
-call restores only one released recipe of its settings, so older recipes
-would hold memory and never serve a bundle. A 128 MiB bound was rejected,
-because it differs from 64 MiB only for a recipe above 32 MiB.
+The [release rules](./mokly-sidecar-release.md) define the released recipes.
 
 ## Bundle Cache Seeding
 

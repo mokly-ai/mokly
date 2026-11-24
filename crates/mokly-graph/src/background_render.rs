@@ -15,6 +15,7 @@ use crate::document_store::StoreKey;
 use crate::error::{GraphError, InternalError, Result};
 use crate::session::Session;
 use crate::session_lookup::DocumentRead;
+use crate::session_render::Finish;
 use crate::types::RenderGeneration;
 use crate::workers::ArtifactWorker;
 use crate::{document_composition, fragment_weight};
@@ -78,7 +79,7 @@ impl BackgroundWorker for Read<'_> {
         match self.session.raw_lookup(route)? {
             DocumentRead::Hit(artifact) => self
                 .session
-                .finish_artifact(route, artifact)
+                .finish_artifact(route, artifact, Finish::Background)
                 .map(BackgroundRead::Complete),
             DocumentRead::Miss(key) => Ok(BackgroundRead::Miss(Box::new(Miss {
                 session: self.session.clone(),
@@ -170,7 +171,8 @@ impl ArtifactWorker for Prepared<'_> {
         let composed = self
             .session
             .compose_miss(route, attempt.key, attempt.prepared)?;
-        self.session.finish_artifact(route, composed)
+        self.session
+            .finish_artifact(route, composed, Finish::Background)
     }
 
     fn closure_job(&self, route: &str) -> Result<Closure> {

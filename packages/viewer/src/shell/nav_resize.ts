@@ -1,6 +1,6 @@
 /** The navigation column's width: its resize callbacks and its bounds. */
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { RefObject } from "react";
 
 import { useStartingNavigationWidth } from "./canvas_layout.js";
@@ -15,22 +15,58 @@ import { useShellStore, type ShellStore } from "./store_context.js";
  * follow it. The root context holds that state. Only an interactive store
  * makes the column resizable.
  */
-export function useNavigationResize(store: ShellStore) {
+export function useNavigationResize(
+  store: ShellStore,
+  latest: RefObject<ShellStore>,
+) {
   const root = useShellRoot();
-  const ref = useRef<HTMLElement>(null);
-  const starting = useStartingNavigationWidth();
-  return {
-    maximumWidth: store.state.navigationMaximum,
-    onResizing: (resizing: boolean) =>
-      root?.setResizing(resizing ? "navigation" : undefined),
-    onWidth: (width: number) => store.setNavigationWidth(width),
-    onWidthCommit: (width: number) => store.persistNavigationWidth(width),
-    onWidthReset: () => store.resetNavigationWidth(),
-    ref: root?.elements.navigation ?? ref,
-    resizable: store.interactive,
-    startingWidth: starting,
-    width: navigationWidth(store, starting),
-  };
+  const localRef = useRef<HTMLElement>(null);
+  const ref = root?.elements.navigation ?? localRef;
+  const setResizing = root?.setResizing;
+  const onResizing = useCallback(
+    (resizing: boolean) => setResizing?.(resizing ? "navigation" : undefined),
+    [setResizing],
+  );
+  const onWidth = useCallback(
+    (width: number) => latest.current.setNavigationWidth(width),
+    [latest],
+  );
+  const onWidthCommit = useCallback(
+    (width: number) => latest.current.persistNavigationWidth(width),
+    [latest],
+  );
+  const onWidthReset = useCallback(
+    () => latest.current.resetNavigationWidth(),
+    [latest],
+  );
+  const { navigationMaximum: maximumWidth } = store.state;
+  const startingWidth = useStartingNavigationWidth();
+  const width = navigationWidth(store, startingWidth);
+  const resizable = store.interactive;
+  return useMemo(
+    () => ({
+      maximumWidth,
+      onResizing,
+      onWidth,
+      onWidthCommit,
+      onWidthReset,
+      ref,
+      resizable,
+      startingWidth,
+      width,
+    }),
+    [
+      maximumWidth,
+      onResizing,
+      onWidth,
+      onWidthCommit,
+      onWidthReset,
+      ref,
+      resizable,
+      startingWidth,
+      width,
+    ],
+  );
 }
 
 /** The catalogue's width: the chosen width, or the starting width, bounded. */

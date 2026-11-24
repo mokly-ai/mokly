@@ -50,6 +50,17 @@ fill the capacity. Otherwise it atomically holds a place for one call in a
 `SidecarPool::request_claimed` runs a call with its claim. When that
 call starts a new slot, it takes a held budget without a new memory check.
 Dropping the `CallClaim` ends the claim.
+`PoolCapacity::try_eager_claim` holds a claim for one eager base call of
+Serve and reserves its slot in the same step. The slot is an idle slot that
+is empty or in the call's base root, or a new slot within the slot limit, so
+the call never takes the warm head worker or another head worker. It returns
+`Ok(None)` at a capacity of one, while another eager reservation exists, when
+the claims fill the capacity, for a call in the head root, and when it finds
+no eligible slot. The call that holds the claim takes the reserved slot, and
+dropping an unused claim returns it. Serve registers a weak wake through
+`PoolCapacity::observe_admission` when it creates an eager handle. A
+released claim or a returned slot then wakes its waiting admission. Without
+eager preparation, Serve registers no such wake.
 
 `WorkerFactory::spawn` returns `Spawned` or a `SpawnFailure`. The
 `SpawnFailure::NotStarted` variant means that the factory created no child
@@ -72,9 +83,16 @@ to the claim that held it, if that claim is still live.
 `SysinfoMemory` reads physical total minus used memory. On Linux,
 `CgroupMemory` reads finite v1 or v2 controller limits through `dyn MemoryFiles`.
 
-Every bundle result includes its compiled recipe. The pool retains these
+A full bundle result includes its compiled recipe. The pool retains these
 recipes, CSS Modules maps, and resolved handle tables. A new process restores
-old code without compiling changed sources.
+old code without compiling changed sources. When the sidecar reuses a restored
+compilation, it can send the short result of the
+[restored reuse rules](../../docs/protocol/mokly-sidecar-recipes.md#restored-reuse).
+`Client` rebuilds it into a full `results::Bundle` that shares the `Arc`
+compilation and module graph of that restore. `Client` reaches them only
+through `Weak` references, and each pool `bundle` request pins the recipes
+that its sidecar can reuse until the request ends. So a short result adds no
+recipe copy, and `Client` keeps no recipe alive.
 Epoch-specific releases retain newer lifetimes with the same id. Releases
 record state without waiting for a worker. An idle cleanup worker sends
 disposal to each affected slot. Busy slots apply it before their next request.
@@ -97,7 +115,10 @@ available. That worker bundled the newest head generation, or rendered it last
 after a successful render request. A warm-up replay does not move it. The pool
 bound covers all roots.
 Replacement drops the old root's affinities for that slot and emits one debug
-event. PostCSS context affinity prevents duplicate workers. A busy affine
+event. PostCSS context affinity prevents duplicate workers. Each admission
+path, the ordinary one and the eager one, binds the context of a call to its
+slot when it selects the slot, so a later request of that context waits for
+that slot, also while the slot still starts. A busy affine
 request does not block independent work on another available slot. Returning
 slots recheck pending releases before becoming idle. `cancel_requests` kills
 and reaps busy sidecars before `shutdown` drains idle sidecars. Scheduling,
@@ -158,8 +179,19 @@ owns the retention rule and the bound. Each entry costs the bytes of its
 serialized `restoreGeneration` envelope, with its private seed id and
 without the LF delimiter. `MAX_FRAME_BYTES` bounds the total. A use counter,
 not a clock, orders eviction. Keeping or seeding an entry counts as a use.
+For a `bundle` call with a PostCSS preparation, the pool records the context
+on the slot after the slot cleanup. It then sends `prepareContext` to the same
+slot, before the bundle cache read and any seed. An error reply that leaves the
+process usable does not fail the call.
 Before a `bundle` call, the pool restores the stored entry with equal
-settings under a private seed id. It then prepares the first live generation
+settings under a private seed id. It first compares the entry with the newest
+live generation of equal settings. For each source that the two record with
+different digests, it reads the current digest once, until the first
+difference. A current source that differs from the entry rules the entry out,
+so the pool sends no seed. A missing or unreadable source rules nothing out.
+The use counter and the `cache` outcome stay as for a sent seed, and the
+[release rules](../../docs/protocol/mokly-sidecar-release.md) own this rule.
+It then prepares the first live generation
 with equal settings: a captured generation before a marked one, then the
 highest epoch. The generation id breaks a tie. The `BundleCapture` of the
 call admits each seed. A `Full` call takes only captured seeds, and a
@@ -172,10 +204,10 @@ on another worker. Captured candidates still take priority in the sidecar's
 reuse check.
 Directory membership can change without a change of the content id. The
 private seed id keeps a stored and a live recipe with the same content id
-apart, so both reach the sidecar's `reuse` check. Bundle results carry the
-public content id, never a seed id. Cleanup disposes of the seed when the
-slot returns from the bundle request. A reused recipe leaves the store when
-it becomes live. Its next final release can keep it again. Only a `bundle`
+apart, so both reach the sidecar's `reuse` check. The `generation` of a bundle
+result is the public content id, never a seed id. Cleanup disposes of the seed
+when the slot returns from the bundle request. A reused recipe leaves the store
+when it becomes live. Its next final release can keep it again. Only a `bundle`
 call loads stored entries. A replay never loads one. A replay still restores
 the live generation that a request names, also an incomplete one.
 `shutdown`, `abort`, and `cancel_requests` clear the store. A late release
@@ -399,7 +431,11 @@ with equal settings, the exact envelope bound, and clearing on every stop.
 They retain a selected live seed when its final lease ends during restoration.
 Real-process recipe tests count esbuild operations. A revert after a
 release skips esbuild, a changed input compiles, and a stored and a live
-recipe with one content id both stay usable. The shutdown unit tests
+recipe with one content id both stay usable. Restored reply tests cover the
+shared rebuild of short replies, origin lifetimes, protocol failures, full
+reply decoding, and the request pins of the pool. The origin lifetime and seed pin tests release
+or evict a live, loaded, released-recipe, Serve edit fallback, or disk seed
+while the request that names it is busy, and the reply still resolves. The shutdown unit tests
 control exit and drain independently through `WaitMock`. Command stderr tests
 acknowledge all forwarded bytes before shutdown and check bounded pieces and
 process reaping. Direct sidecar tests check graceful exit code 0 and the final
@@ -422,9 +458,12 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_leases.rs`](./src/pool_leases.rs) defines `Pool::acquire`, the
   root-aware FIFO queue of waiting requests. It protects the warm head worker
   from base requests, removes each taken slot from the return pass, and fails
-  a call affine to a retired slot.
+  a call affine to a retired slot. A call with an eager claim takes its
+  reserved slot first. [`src/pool_eager.rs`](./src/pool_eager.rs) reserves
+  that slot in `Pool::eager_claim` and hands it over in `Pool::take_eager`.
   [`src/pool_affinity.rs`](./src/pool_affinity.rs) chooses the slot that a
-  request takes. Its pure rank orders the idle slots of one root by the
+  request takes, and its `bind_context` binds the context of a call to the
+  selected slot for both `acquire` and `Pool::take_eager`. Its pure rank orders the idle slots of one root by the
   generation state that a call needs. For a `bundle` call, it then prefers the
   newest `Slot::last_compilation`, the epoch that `Pool::execute` records
   after a head compile. Growth reuses a free slot before it adds a new one.
@@ -455,9 +494,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `PoolOptions`, the launch settings and the pool size and deadline override.
   The pool sets `Launch::capture_durability` when it keeps a bundle store.
 - [`src/pool_admission.rs`](./src/pool_admission.rs) defines `PoolCapacity`,
-  with the read-only `capacity` and the atomic `try_claim`, and the shared slot
-  reservation calculation. [`src/pool_claim.rs`](./src/pool_claim.rs) defines
-  `CallClaim`, the call-scoped hold that ends on drop, and the held budgets
+  with the read-only `capacity`, the atomic `try_claim` and `try_eager_claim`,
+  and `observe_admission`, and the shared slot reservation calculation.
+  [`src/pool_claim.rs`](./src/pool_claim.rs) defines `CallClaim`, the call-scoped hold that ends on drop, and the held budgets
   that a claimed call takes when it starts a new slot.
 - [`src/pool_start.rs`](./src/pool_start.rs) defines `StartLease`, which holds
   the admission of a new slot until a process starts in it. `Pool::acquire`
@@ -476,16 +515,22 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/pool_releases.rs`](./src/pool_releases.rs) keeps the recipe of each
   final release in that store, and
   [`src/pool_preparation.rs`](./src/pool_preparation.rs) selects the memory
-  seeds that each `bundle` call's capture admits, captured seeds first. Its
+  seeds that each `bundle` call's capture admits, captured seeds first. It
+  sends no stored seed that `rules_out` in
+  [`src/source_digests.rs`](./src/source_digests.rs) rules out. That module also
+  holds `SourceDigests`, the current source digest boundary, and its native
+  `SystemSourceDigests`, which `Pool::with_source_digests` can replace. Its
   `Prerequisites` gives the inputs that each generation call needs, for
   replay and for the rank alike.
 - [`src/pool_bundle_cache.rs`](./src/pool_bundle_cache.rs) seeds a `bundle`
   call from the bundle store, keeps the request-local provenance of its disk
   seed, sets the `cache` outcome of its result, and offers the served recipe
-  of each `Full` call to the store. The provenance keeps the runtime key and
-  the plan of a restored stored compilation. A result with that runtime key
-  carries that plan. It reports `hit` when its count of `esbuild` events is
-  zero.
+  of each `Full` call to the store. The provenance keeps the loaded recipe of
+  a restored stored compilation, with its runtime key and plan. A result with
+  that runtime key carries that plan. It reports `hit` when its count of
+  `esbuild` events is zero. `BundleAttempt` also holds the request pins of the
+  live slot generations and the restored seeds. `install_live` and `install_released`
+  pin each live or released seed before they restore it in the slot.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
   `load`, `save`, and `invalidate`, its `ReadOutcome` and `WriteOutcome`, and
   `RecordToken`, the id of one publication.
@@ -531,11 +576,23 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [`src/workers.rs`](./src/workers.rs) defines the injected `WorkerFactory`,
   `Worker`, `Clock`, and `Diagnostics` traits. It also defines `SpawnFailure`,
   the factory error that says whether a child process started.
+  `Diagnostics::for_source_root` lets the caller route the diagnostic text of
+  one source root. `NodeFactory` asks for it with the source root of each
+  process that it starts. A routed reporter still forwards timing lines and
+  operation counts at once.
 - [`src/process_clock.rs`](./src/process_clock.rs) and
   [`src/process_memory.rs`](./src/process_memory.rs) define the host
   `SystemClock` and `SystemMemory` that the composition root injects.
 - [`src/client.rs`](./src/client.rs) defines `Client`, which performs hello,
-  forwards diagnostic events, and decodes each result.
+  forwards diagnostic events, and decodes each result. The private `Origins`
+  of [`src/client_origins.rs`](./src/client_origins.rs) records whether a
+  `bundle` result or a `restoreGeneration` request loaded each generation of
+  its process. It rebuilds a short reply before `Client` records the returned
+  id.
+- [`src/bundle_reply.rs`](./src/bundle_reply.rs) defines `BundleReply`, a full
+  `results::Bundle` or a short `RestoredBundle`. The private
+  [`src/bundle_reply_decode.rs`](./src/bundle_reply_decode.rs) decodes either
+  form in one typed pass.
 - [`src/codec.rs`](./src/codec.rs) frames NDJSON messages within
   `MAX_FRAME_BYTES`. After each complete frame, its `Decoder` keeps at most
   16 KiB of buffer capacity.
@@ -543,17 +600,27 @@ spawn the built sidecar and render a component, screen, story, and page. The
   and [`src/wire.rs`](./src/wire.rs) define the request payloads, the result
   payloads, and the envelopes of the wire protocol. `BundleRequest` flattens
   the persisted `Bundle` settings and adds the optional request-only
-  `BundleCapture`, `Full` by default or `ServeEdit`, and the optional
-  request-only `plan` of a Serve edit. `results::Bundle` carries the optional
-  `plan` beside `compiled`. Pool state, store calls, and restore requests take
+  `BundleCapture`, `Full` by default or `ServeEdit`, the optional
+  request-only `plan` of a Serve edit, and the optional request-only
+  `preparation`. [`src/postcss_preparation.rs`](./src/postcss_preparation.rs)
+  defines that `PostcssPreparation`. It also defines `PrepareContext`, the
+  params of `Call::PrepareContext`, which the pool builds from a prepared
+  `bundle` request. `Call::postcss_context` gives the PostCSS context of a
+  `processCss` call, a `prepareContext` call, or a prepared `bundle` call.
+  The pool uses that context for its slot affinity and its release.
+  `results::Bundle` carries the optional `plan` beside `compiled`. Pool state, store calls, and restore requests take
   only the `Bundle` settings. A successful `Response`
   keeps its result as owned raw JSON until `decode_result` decodes the type of
-  the pending request. The private [`src/wire_decode.rs`](./src/wire_decode.rs)
+  the pending request. A `bundle` result decodes as a `BundleReply`, and the
+  restore origins of the `Client` resolve a short reply. A failed
+  typed decode falls back once to a generic JSON tree.
+  The private [`src/wire_decode.rs`](./src/wire_decode.rs)
   decodes each envelope field by field, with no generic JSON tree.
   `results::Bundle` and the `RestoreGeneration` of
-  [`src/compiled.rs`](./src/compiled.rs) hold the compilation in an `Arc`, and
-  a compilation holds its `ReuseEvidence` in an `Arc`. Pool records, store
-  offers, and restore requests share the compilation instead of copying it.
+  [`src/compiled.rs`](./src/compiled.rs) hold the compilation and the module
+  graph in an `Arc` each, and a compilation holds its `ReuseEvidence` in an
+  `Arc`. Pool records, store offers, restore requests, and rebuilt short
+  replies share them instead of copying them.
   `ReuseEvidence` can carry the `UncapturedEvidence` marker of a deliberate
   Serve edit omission. Its `captured`, `serve_edit`, and `reusable` methods
   decide which candidates a call admits.
@@ -577,5 +644,6 @@ spawn the built sidecar and render a component, screen, story, and page. The
 - [Definition transport](../../docs/protocol/mokly-sidecar-definitions.md).
 - [Render records](../../docs/protocol/mokly-sidecar-render-records.md) and
   [module sources](../../docs/protocol/mokly-sidecar-modules.md).
-- [Source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md).
+- [Source root scheduling](../../docs/protocol/mokly-sidecar-root-scheduling.md)
+  and [eager admission](../../docs/protocol/mokly-eager-base-preparation.md#admission).
 - [Rust core architecture](../../docs/architecture/rust-core.md).

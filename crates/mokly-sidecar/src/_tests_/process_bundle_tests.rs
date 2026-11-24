@@ -28,7 +28,7 @@ fn response(id: u64) -> Frame {
             epoch: 0,
             cache: None,
             compile_count: 0,
-            modules: vec![],
+            modules: Default::default(),
             unmapped_dependency_directories: None,
         })
         .unwrap(),
@@ -106,6 +106,7 @@ fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
                     id,
                     quiet: false,
                     call: Call::Bundle(BundleRequest {
+                        preparation: None,
                         plan: None,
                         params: Bundle {
                             evaluation: None,

@@ -116,3 +116,7 @@ mod bundle_codec_tests;
 #[cfg(test)]
 #[path = "_tests_/bundle_plan_codec_tests.rs"]
 mod bundle_plan_codec_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_codec_read_tests.rs"]
+mod bundle_codec_read_tests;

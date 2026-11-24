@@ -97,6 +97,8 @@ export function restore(
 export function bundleResult(
   generation: Generation,
   plan?: ResolutionPlan,
+  encoding?: Map<object, string>,
+  checkSize = checkRecipeSize,
 ): BundleResult {
   const result: BundleResult = {
     ...(plan ? { plan } : {}),
@@ -106,15 +108,19 @@ export function bundleResult(
     modules: generation.modules,
     compiled: generation.compiled,
   };
-  checkRecipeSize(generation.params, result);
+  checkSize(generation.params, result, undefined, encoding);
   return result;
 }
+
+/** The input that differed in the last reuse check of this process. */
+let lastFailedInput: string | undefined;
 
 /** A live compilation can serve another evaluation only while its consumed inputs agree. */
 export async function reuse(
   generations: Iterable<Generation>,
   params: BundleParams,
   capture: BundleCapture = "full",
+  selected?: (source: Generation) => void,
 ): Promise<Generation | undefined> {
   const paths = await ModulePaths.create(params);
   params = { ...params, sourceRoot: paths.sourceRoot };
@@ -138,6 +144,9 @@ export async function reuse(
             ),
         )
       : [];
+  const peers = candidates.filter(
+    (generation) => settings(generation.params) === settings(params),
+  );
   for (const generation of [...captured, ...uncaptured]) {
     if (
       !toolchain ||
@@ -148,7 +157,11 @@ export async function reuse(
     )
       continue;
     const current =
-      (await currentFileInputs(generation.compiled.inputs)) &&
+      (await currentFileInputs(
+        generation.compiled.inputs,
+        likelyChanged(generation, peers),
+        (file) => (lastFailedInput = file),
+      )) &&
       (await everyInput(
         Object.entries(generation.compiled.inputDirectories),
         async ([directory, names]) =>
@@ -161,7 +174,30 @@ export async function reuse(
           new PhysicalInputReader().markedCurrent(
             generation.compiled.reuseEvidence,
           ));
-    if (current)
+    if (current) {
+      selected?.(generation);
       return restore(params, generation.compiled, generation.modules);
+    }
   }
+}
+
+/**
+ * Inputs that an edit most likely changed: the input that failed the last check,
+ * then each input whose digest differs from another held generation of equal settings.
+ */
+function likelyChanged(
+  generation: Generation,
+  peers: readonly Generation[],
+): string[] {
+  const inputs = generation.compiled.inputs;
+  const differing = Object.keys(inputs).filter((file) =>
+    peers.some(
+      (peer) =>
+        peer !== generation &&
+        (peer.compiled.inputs[file] ?? null) !== inputs[file],
+    ),
+  );
+  return lastFailedInput === undefined
+    ? differing
+    : [lastFailedInput, ...differing];
 }

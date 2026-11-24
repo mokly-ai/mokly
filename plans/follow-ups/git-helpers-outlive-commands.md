@@ -7,7 +7,7 @@
   `plans/follow-ups/macos-stop-mid-walk-orphans.md` found it outside the diff
   of that branch.
 - **Location:** `docs/protocol/mokly-git.md:32` to line 33,
-  `docs/protocol/mokly-runtime.md:231` to line 232,
+  `docs/protocol/mokly-runtime.md:227` to line 228,
   `crates/mokly-git/src/system.rs:68` to line 72 and line 165, and
   `crates/mokly-platform/src/unix_process_tree/group.rs:57` to line 64.
 - **Reason:** The promise is older than the branch that found it, and the
@@ -56,7 +56,7 @@
       group". For Git, this holds on Linux and macOS.
     - "On macOS, a stop does not signal a descendant outside the manager's
       process group whose parent exited before the stop."
-  - `docs/protocol/mokly-runtime.md:231` to line 232 says that no orphan
+  - `docs/protocol/mokly-runtime.md:227` to line 228 says that no orphan
     process survives a normal shutdown, a failed startup, or an interruption.
     Its exception names only "the base install limits", not a Git tree.
   - On Windows, `crates/mokly-platform/src/windows.rs:74` sets only

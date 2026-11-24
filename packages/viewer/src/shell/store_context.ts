@@ -1,6 +1,6 @@
 /** React context boundary for one live Browse shell. */
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useLayoutEffect, useRef } from "react";
 
 import type { FrameNavigation } from "@mokly/frame";
 import type { FramesToggleName } from "@mokly/ui/frames-filter";
@@ -83,4 +83,13 @@ export function useShellStore(): ShellStore {
   const store = useContext(ShellStoreContext);
   if (!store) throw new Error("The shell store is unavailable.");
   return store;
+}
+
+/** Let stable event callbacks read the store of the latest committed render. */
+export function useLatestShellStore(store: ShellStore) {
+  const latest = useRef(store);
+  useLayoutEffect(() => {
+    latest.current = store;
+  }, [store]);
+  return latest;
 }

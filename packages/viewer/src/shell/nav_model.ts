@@ -5,12 +5,24 @@ import { folderTitlesAt } from "../registry/folder_titles.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
-import type { ShellContext } from "./context.js";
+import type { NavigationContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
 import { withMovedRows } from "./nav_moves.js";
+import { reuseSections, sameNavigation } from "./nav_reuse.js";
 import { buildNavSections } from "./nav_tree.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { queryConstrains, rowMatchesQuery, searchRow } from "./search_query.js";
+
+const sectionsByHierarchy = new WeakMap<
+  Catalogue["hierarchy"],
+  readonly NavSectionNode[]
+>();
+
+/** Selection fields that decide which navigation rows and groups show. */
+export type NavigationSelection = Pick<
+  ViewerSelection,
+  "view" | "search" | "tags"
+>;
 
 /**
  * Build the complete current-and-removed tree displayed in the rail. A removed
@@ -21,6 +33,42 @@ import { queryConstrains, rowMatchesQuery, searchRow } from "./search_query.js";
 export function catalogueNavSections(
   catalogue: Catalogue,
 ): readonly NavSectionNode[] {
+  return (
+    sectionsByHierarchy.get(catalogue.hierarchy) ??
+    installSections(catalogue, buildCatalogueNavSections(catalogue))
+  );
+}
+
+/**
+ * Install the sections of a newly adopted catalogue from the installed one:
+ * the same sections while every field that places and names a row stays
+ * equal, or else a rebuild that keeps each equal subtree. Every later
+ * `catalogueNavSections` call for the catalogue returns the result.
+ */
+export function shareNavSections(
+  catalogue: Catalogue,
+  installed: Catalogue,
+): readonly NavSectionNode[] {
+  const known = sectionsByHierarchy.get(catalogue.hierarchy);
+  if (known) return known;
+  const held = catalogueNavSections(installed);
+  return installSections(
+    catalogue,
+    sameNavigation(installed, catalogue)
+      ? held
+      : reuseSections(held, buildCatalogueNavSections(catalogue)),
+  );
+}
+
+function installSections(
+  catalogue: Catalogue,
+  sections: readonly NavSectionNode[],
+): readonly NavSectionNode[] {
+  sectionsByHierarchy.set(catalogue.hierarchy, sections);
+  return sections;
+}
+
+function buildCatalogueNavSections(catalogue: Catalogue): NavSectionNode[] {
   const lookup = branchPoints(catalogue);
   const removed: NavLeafNode[] = catalogue.removedEntries.map(
     ({ entry, snapshotId }) => {
@@ -85,8 +133,8 @@ export function navEntryRow(
 /** Whether one leaf survives the current search and Changes constraints. */
 export function navLeafVisible(
   leaf: NavLeafNode,
-  selection: Pick<ViewerSelection, "view" | "search" | "tags">,
-  context: ShellContext,
+  selection: NavigationSelection,
+  context: NavigationContext,
 ): boolean {
   const status = context.changedEntries ? "ready" : context.changesStatus;
   if (selection.view === "changes" && status !== "ready") return false;
@@ -113,8 +161,8 @@ export function navLeafVisible(
 /** Whether a group should remain in the filtered tree. */
 export function navNodeVisible(
   node: NavNode,
-  selection: Pick<ViewerSelection, "view" | "search" | "tags">,
-  context: ShellContext,
+  selection: NavigationSelection,
+  context: NavigationContext,
 ): boolean {
   if (selection.view !== "changes" && node.hidden) return false;
   if (node.kind === "leaf")
@@ -133,7 +181,7 @@ export function navNodeVisible(
 }
 
 /** Whether search or Changes filtering currently constrains the tree. */
-export function navigationFiltering(selection: ViewerSelection): boolean {
+export function navigationFiltering(selection: NavigationSelection): boolean {
   return (
     selection.view === "changes" ||
     queryConstrains({ freeText: selection.search, tags: selection.tags })

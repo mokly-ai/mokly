@@ -33,4 +33,6 @@
 - **Impact if no action:** Rich idle children can remain resident beside another root's children. Queue completion order can change the process-tree peak without changing the worker count.
 - **Needs:** Nothing. Inspect `docs/protocol/mokly-sidecar-memory.md` for admission and recycling. Inspect `docs/protocol/mokly-sidecar-root-scheduling.md` for root and generation selection.
 - **Done when:** A separate design records the memory and speed trade-offs with process snapshots and lifecycle events. The owner chooses a policy before product behavior changes. Any chosen change includes its behavior tests and before/after measurements.
-- **Related:** [sidecar-loaded-state-selection.md](./sidecar-loaded-state-selection.md) addresses the useful state that cross-root replacement destroys. Design both policies together.
+- **Related:**
+  - [sidecar-loaded-state-selection.md](./sidecar-loaded-state-selection.md) addresses the useful state that cross-root replacement destroys. Design both policies together.
+  - [eager-base-postcss-edit-peak-variance.md](./eager-base-postcss-edit-peak-variance.md): occasional higher edit peaks at the same sampled process set. That task must establish attribution before it assumes idle-child retention.

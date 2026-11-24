@@ -5,6 +5,7 @@ import type { StoryHints } from "../generated/sidecar/StoryHints.js";
 
 import type { BundleExports, Generation } from "./bundle.js";
 import { dataProps } from "./definition-fields.js";
+import type { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
 import { storyHints } from "./story-hints.js";
 
@@ -25,6 +26,7 @@ export async function describeStories(
   generation: Generation,
   exports: BundleExports,
   result: Definitions,
+  cache: ExportNameCache,
 ): Promise<void> {
   if (!Object.keys(exports.stories).length) return;
   const storybook = generation.require("@storybook/react") as typeof Storybook;
@@ -79,6 +81,7 @@ export async function describeStories(
       generation.sources.get(file) ?? "",
       composed,
       file,
+      cache,
     )) {
       const story = value as PortableStory;
       const annotation = module[exportName] as StoryAnnotations;

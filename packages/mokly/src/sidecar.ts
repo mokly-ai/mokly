@@ -10,7 +10,7 @@ import { guardParentOutput } from "./sidecar/parent-output.js";
 import { Session } from "./sidecar/session.js";
 import { timingOutput } from "./sidecar/timing-output.js";
 import { Timings } from "./sidecar/timings.js";
-import { encodeFrame, frames } from "./sidecar/transport.js";
+import { encodeFrame, encodeResponse, frames } from "./sidecar/transport.js";
 
 const version = (
   JSON.parse(
@@ -24,7 +24,7 @@ const timings = new Timings(performance, output, process.pid, randomUUID());
 globalThis.console = new Console(process.stderr, process.stderr);
 process.stdout.write = process.stderr.write.bind(process.stderr);
 const send = async (id: number, outcome: object) => {
-  const frame = encodeFrame({ id, ...outcome });
+  const frame = encodeResponse(id, outcome);
   await new Promise<void>((resolve, reject) =>
     write(frame, (error) => (error ? reject(error) : resolve())),
   );

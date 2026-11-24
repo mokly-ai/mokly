@@ -5,11 +5,13 @@ use std::path::Path;
 use std::sync::Arc;
 
 use axum::body::Bytes;
+use axum::http::HeaderValue;
 use mokly_model::namespace::{FONT_FACES, viewer};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;
 
 use crate::error::{InternalError, Result, ServerError};
+use crate::validator;
 
 /// Immutable public response bytes with a fixed MIME type.
 #[derive(Clone, Debug)]
@@ -18,6 +20,21 @@ pub struct File {
     pub bytes: Bytes,
     /// Fixed validated HTTP MIME type.
     pub content_type: String,
+}
+
+/// A generated stylesheet with the strong validator of its immutable bytes.
+#[derive(Clone)]
+pub struct Stylesheet {
+    pub(crate) file: File,
+    pub(crate) etag: HeaderValue,
+}
+
+impl Stylesheet {
+    /// Compute the validator before the worker returns this version.
+    pub fn new(file: File) -> Result<Self> {
+        let etag = validator::bytes(&file.bytes)?;
+        Ok(Self { file, etag })
+    }
 }
 
 /// Package asset loader boundary, separate from authored resources.

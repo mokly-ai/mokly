@@ -14,17 +14,12 @@ import type { PhysicalInputObserver } from "./physical-input-observer.js";
 import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { candidateDirectories } from "./plan-candidate-directories.js";
 import { candidateMetadata } from "./plan-candidate-metadata.js";
+import {
+  blocksDirectory,
+  fixedNames,
+  nameChargeBound,
+} from "./plan-candidate-names.js";
 import { bareSpecifier } from "./specifier.js";
-
-const fixed = [
-  "node_modules",
-  "package.json",
-  "tsconfig.json",
-  "jsconfig.json",
-  ".pnp.data.json",
-  ".pnp.cjs",
-  ".pnp.js",
-];
 
 /** Bounded lookup names affect only the optional plan's directory comparisons. */
 export class PlanCandidates implements PhysicalInputObserver {
@@ -33,6 +28,9 @@ export class PlanCandidates implements PhysicalInputObserver {
   private readonly blocked = new Set<string>();
   private readonly selectedTargets = new Set<string>();
   private readonly extensions: readonly string[];
+  private readonly longestExtensionLength: number;
+  /** Holds at most one existing name set per charged directory until the collector is freed. */
+  private readonly completedFiles = new Set<ReadonlySet<string>>();
   private bytes = 0;
   private overflow = false;
   private proved = version === "0.28.2";
@@ -41,6 +39,10 @@ export class PlanCandidates implements PhysicalInputObserver {
     this.extensions = settings.resolveExtensions.length
       ? settings.resolveExtensions
       : [".tsx", ".ts", ".jsx", ".js", ".css", ".json"];
+    this.longestExtensionLength = this.extensions.reduce(
+      (longest, extension) => Math.max(longest, extension.length),
+      0,
+    );
     if (
       this.extensions.some(
         (extension) => /[/\\]/.test(extension) || extension.includes("\0"),
@@ -75,7 +77,15 @@ export class PlanCandidates implements PhysicalInputObserver {
     while (this.active()) {
       const parent = path.dirname(file);
       if (parent === file) break;
-      this.add(parent, path.basename(file));
+      const name = path.basename(file);
+      // A directory key's ancestor steps ran when the key was created.
+      // With enough room, the remaining steps cannot overflow on a duplicate.
+      if (
+        this.names.get(parent)?.has(name) &&
+        this.room() >= nameChargeBound(file.length)
+      )
+        break;
+      this.add(parent, name);
       file = parent;
     }
   }
@@ -88,6 +98,15 @@ export class PlanCandidates implements PhysicalInputObserver {
   }
 
   private file(base: string): void {
+    const names = this.names.get(base);
+    // A completed base has no names left to add. The bound covers the repeat's fit checks.
+    if (
+      names &&
+      this.completedFiles.has(names) &&
+      this.room() >=
+        nameChargeBound(base.length + this.longestExtensionLength + 5)
+    )
+      return;
     this.path(base);
     const directory = path.dirname(base);
     const name = path.basename(base);
@@ -116,6 +135,9 @@ export class PlanCandidates implements PhysicalInputObserver {
         return;
       this.add(directory, name.slice(0, -extension.length) + replacement);
     }
+    // The extension loop creates the name set for base while the collector is active.
+    const completed = this.names.get(base);
+    if (completed && this.active()) this.completedFiles.add(completed);
   }
 
   private relative(directory: string, name: string): void {
@@ -204,8 +226,12 @@ export class PlanCandidates implements PhysicalInputObserver {
     return this.proved && !this.overflow;
   }
 
+  private room(): number {
+    return EVIDENCE_LIMIT - this.bytes;
+  }
+
   private fits(bytes: number): boolean {
-    if (bytes > EVIDENCE_LIMIT - this.bytes) this.overflow = true;
+    if (bytes > this.room()) this.overflow = true;
     return !this.overflow;
   }
 
@@ -216,33 +242,44 @@ export class PlanCandidates implements PhysicalInputObserver {
   }
 
   private retain(value: string, containerBytes: number): boolean {
-    const bytes = stringBytes(
-      value,
-      EVIDENCE_LIMIT - this.bytes - containerBytes,
-    );
+    const bytes = stringBytes(value, this.room() - containerBytes);
     if (bytes === undefined) this.overflow = true;
     return bytes !== undefined && this.budget(bytes + containerBytes);
   }
 
   private add(directory: string, name: string): boolean {
     if (!this.active()) return false;
+    let names = this.names.get(directory);
+    if (names?.has(name)) {
+      // A stored name already passed the name checks and is lowercase.
+      // A duplicate can still overflow its JSON byte check.
+      const room = this.room();
+      if (
+        room < nameChargeBound(name.length) &&
+        stringBytes(name, room - 1) === undefined
+      )
+        this.overflow = true;
+      return false;
+    }
     if (!name) {
       this.proved = false;
       return false;
     }
-    let names = this.names.get(directory);
     if (!names) {
       if (!this.retain(directory, 4)) return false;
       names = new Set();
       this.names.set(directory, names);
-      for (const name of fixed) this.add(directory, name);
+      for (const { name, bytes } of fixedNames) {
+        if (!this.budget(bytes)) return false;
+        names.add(name);
+      }
     }
-    if (Buffer.byteLength(name) !== name.length || /[/\\]/.test(name)) {
+    if (blocksDirectory(name)) {
       if (!this.blocked.has(directory) && this.retain(directory, 1))
         this.blocked.add(directory);
       return false;
     }
-    const bytes = stringBytes(name, EVIDENCE_LIMIT - this.bytes - 1);
+    const bytes = stringBytes(name, this.room() - 1);
     if (bytes === undefined) {
       this.overflow = true;
       return false;

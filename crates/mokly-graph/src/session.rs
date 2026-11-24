@@ -22,6 +22,8 @@ use crate::comparison_stream::ComparisonConsumer;
 use crate::delivery_inputs::DeliveryInputs;
 use crate::document_store::StoreKey;
 use crate::error::Result;
+use crate::head_validation::{DocumentChecks, HeadValidation, ValidationRead};
+use crate::head_walks::PassWalks;
 use crate::link_index::LinkIndex;
 use crate::link_results::LinkResults;
 use crate::policy::PublicPolicy;
@@ -46,6 +48,7 @@ pub(crate) struct Session {
 pub(crate) struct State {
     pub(crate) prefetch: Mutex<Option<Arc<Flights>>>,
     pub(crate) fresh: Mutex<BTreeMap<String, StoreKey>>,
+    pub(crate) walks: PassWalks,
     pub(crate) anchor_flights: Arc<dyn Requests>,
     pub(crate) link_results: Arc<dyn LinkResults>,
     pub(crate) link_index: LinkIndex,
@@ -86,6 +89,24 @@ pub(crate) struct SessionInput {
 }
 
 impl RenderGeneration for Session {
+    fn validate_head(&self, validation: &dyn HeadValidation) -> Result<RenderSummary> {
+        self.complete_head(validation)
+    }
+    fn validation_document(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.checked_head_document(route)
+    }
+    fn validation_identity(&self, kind: ValidationRead, route: &str) -> Option<ContentIdentity> {
+        self.head_identity(kind, route)
+    }
+    fn validation_checks(&self, route: &str) -> Option<DocumentChecks> {
+        self.state
+            .plans
+            .contains_key(route)
+            .then(DocumentChecks::default)
+    }
+    fn adopt_validation(&self, route: &str, _checks: &DocumentChecks) -> bool {
+        self.adopt_head(route)
+    }
     fn prepare_render_reuse(&self) {
         self.prepare_render_inputs();
     }

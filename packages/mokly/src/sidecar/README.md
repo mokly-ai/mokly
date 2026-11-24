@@ -16,12 +16,40 @@ its requests and results. The paths below are relative to the package root.
   which wraps standard error: timing records start on their own line and use
   the original writer, and its `quiet` control drops every other write.
 - [`src/sidecar/session.ts`](./session.ts) holds `Session`, which
-  dispatches each sidecar request to its method. It removes the request-only
-  `capture` and `plan` values of a `bundle` request before the reuse check,
-  the compile, the identity, and the restore see the settings. It gives a
-  `CaptureDurability` only to a `full` request.
+  dispatches each sidecar request to its method. It passes the params of a
+  `prepareContext` request to `PostcssWorkers.prepare` and answers without
+  waiting for the child. It removes the request-only
+  `capture`, `plan`, and `preparation` values of a `bundle` request before the
+  reuse check, the compile, the identity, and the restore see the settings. A
+  `bundle` request starts no child. When the bundle fails, the session disposes
+  the context of its `preparation` before it returns the error. It gives a
+  `CaptureDurability` only to a `full` request. It ignores a
+  `restoreGeneration` request for an id that it already holds. It adds each
+  generation that a `restoreGeneration` request installs to a `WeakSet`. Both
+  reply forms of `bundle` follow the same checks of `reuse` and the same size
+  check of `bundleResult`. The reply is a short
+  `RestoredBundle` under the
+  [restored reuse rules](../../../../docs/protocol/mokly-sidecar-recipes.md#restored-reuse)
+  only when `reuse` selected a generation of that set, the size check kept the
+  same reuse evidence, and the result has no plan. Every other `bundle` reply
+  is the full result, such as after a fresh compile or after the reuse of a
+  generation that a `bundle` request installed. A generation that a `bundle`
+  request installs replaces the generation of an equal id, and it is never in
+  that set.
+  It keeps one `KeptContext` for the guarded compiles of its `serveEdit`
+  requests, emits an `esbuild` operation for each of its rebuilds, and
+  disposes of it at `shutdown`.
 - [`src/sidecar/transport.ts`](./transport.ts) splits and decodes
-  the binary's typed requests and limits the size of each response.
+  the binary's typed requests and limits the size of each response. Its
+  `encodeResponse` encodes each response with `jsonText` from
+  [`src/sidecar/json.ts`](./json.ts), which sorts object keys in UTF-16
+  order and keeps negative zero.
+- [`src/sidecar/export-order.ts`](./export-order.ts) holds `orderedExports`,
+  which restores source order with parsed names from the `ExportNameCache` of
+  [`src/sidecar/export-name-cache.ts`](./export-name-cache.ts) that its caller
+  passes. `describe` keeps one bounded cache for the process and passes it to
+  `orderedExports` and `describeStories`. Each call reads the current
+  namespace values.
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
@@ -122,26 +150,62 @@ its requests and results. The paths below are relative to the package root.
   target. Examples are a relative `require.resolve` and a failed relative
   `require` inside `try`. An external relative `require.resolve` or
   `require` edge that the callback did not answer discards it too. `verify`
-  records the observations and the dependency usage of the unanswered internal
-  edges only after every edge passes.
+  records the observations of the unanswered internal edges only after every
+  edge passes. Their names are relative, and dependency usage records only bare
+  names, so they add none.
   After a discarded result or a failed guarded compile, `bundle` runs the
   complete planned compile, in which the callback takes every import. That
   compile gives the result or the error. A guarded result that stands has the
   output, the evidence, the watch inputs, and the returned plan of the
   complete planned compile.
+  The guarded compile rebuilds the kept context of the session; the complete
+  planned compile is always a fresh build.
+- [`src/sidecar/kept-context.ts`](./kept-context.ts) holds `KeptContext`, the
+  one esbuild build context of a process under the
+  [kept build context rules](../../../../docs/protocol/mokly-sidecar-kept-context.md).
+  `bundle` uses it only as the compile function of a guarded attempt. Each
+  request plugin sets up against a recorder, which lists its hooks. The setups
+  follow the order of a fresh build: they run over a copy of the plugin list,
+  `resolve` fails until every setup has ended, and the compile reads the build
+  options after the setups, so an option that a setup assigns through
+  `initialOptions` counts. The key of the context holds those build options
+  without plugins, the plugin names, and the kind, filter, and namespace of
+  each hook. An equal key rebuilds the context. Another key disposes of it and
+  creates a new one, and a failed setup or rebuild disposes of it. The plugins
+  of the context hold only those hook shapes and forward each call to the
+  hooks of the current request, which the compile clears after its rebuild. A
+  request's `onDispose` hooks run after its rebuild, as after a fresh build.
 - [`src/sidecar/bundle-recipe.ts`](./bundle-recipe.ts) holds
   `bundleRecipe`, which turns one compile into its compiled recipe: the module
   graph, the input digests, the reuse evidence, the toolchain identity, and
-  the compilation identity. An incomplete recipe gets a fresh identity, also
-  when `checkRecipeSize` in
+  the compilation identity. A compile without a full capture owner, such as a
+  `serveEdit` compile, hashes no module source into its identity, because its
+  incomplete evidence adds the random runtime key. An incomplete recipe gets a
+  fresh identity, also when `checkRecipeSize` in
   [`src/sidecar/recipe-size.ts`](./recipe-size.ts) drops its
   evidence to fit a frame. `checkRecipeSize` drops the optional plan of the
-  result before it drops the evidence. A `serveEdit` compile gets incomplete
-  evidence with the `uncaptured: "serveEdit"` marker, and its inputs hold only
-  its private folder files. A compile without a toolchain identity gets no
-  marker. A `serveEdit` compile also gets no marker when
+  result before it drops the evidence. For a new compile, `bundleRecipe`
+  passes a request-local map through `bundleResult` in
+  [`src/sidecar/compiled.ts`](./compiled.ts). The check then encodes the
+  `compiled` and `modules` members once each with `jsonText` and counts the
+  bytes of those texts. It keeps both texts when it drops the plan, and it
+  encodes `compiled` again when it drops the evidence. A `serveEdit` compile
+  gets incomplete evidence with the `uncaptured: "serveEdit"` marker, and its
+  inputs hold only its private folder files. A compile without a toolchain
+  identity gets no marker. A `serveEdit` compile also gets no marker when
   `ServeEditImports.record` returns no evidence. `bundleRecipe` calls it in
   the `sidecar.bundle.mapped-lookups` timing phase, before `resolutionInputs`.
+- [`src/sidecar/recipe-encoding.ts`](./recipe-encoding.ts) keeps the texts
+  of a new compile from its size check until its response. As its last
+  step, `bundleRecipe` stores its request-local map with
+  `prepareRecipeEncoding`, in a `WeakMap` keyed by the result object. When
+  the check drops complete evidence, the recipe gets its fresh identity after
+  the check, so `bundleRecipe` stores no texts. `encodeResponse` takes and
+  removes the entry. `jsonText` then writes each saved text in place of its
+  member object. A member object that code replaced after the check gets the
+  normal encoding, and no text stays with a retained generation. The reuse
+  branch of `Session` calls `bundleResult` with no map. Its check counts
+  `JSON.stringify` texts, and its response gets the normal encoding.
 - [`src/sidecar/serve-edit-imports.ts`](./serve-edit-imports.ts) holds
   `ServeEditImports`, which only a `serveEdit` compile creates. Its plugin
   clears `reusable` for an authored absolute specifier whose configuration it
@@ -202,6 +266,9 @@ its requests and results. The paths below are relative to the package root.
   metadata bytes of the existing evidence capture. It adds no physical read.
   Matching absolute `paths` mappings and other unproved forms keep whole
   comparisons. Collector overflow keeps the plan without candidate names.
+  [`src/sidecar/plan-candidate-names.ts`](./plan-candidate-names.ts)
+  defines fixed-name charges, the name block test, and the upper bound on
+  name charges.
   [`src/sidecar/plan-candidate-directories.ts`](./plan-candidate-directories.ts)
   merges lexical names into recorded canonical directories and adds their
   table positions. It skips each canonical directory that the evidence does
@@ -227,7 +294,13 @@ its requests and results. The paths below are relative to the package root.
   captured compilations first, and also checks their reuse evidence. Then a
   `serveEdit` request tries the marked compilations with these live checks
   and their private folder files. A `full` request never takes a marked
-  compilation. Its `restore` installs a recipe without a compile.
+  compilation. `reuse` reads first the input that failed the last check of the
+  process, then the inputs whose digests differ from another held generation of
+  equal settings. The checks stop at the first difference, so this order changes
+  no result. `reuse` gives the generation whose compilation passed these
+  checks to its optional `selected` callback. `restore` installs a recipe
+  without a compile. `bundleResult` builds the full result of a generation and
+  runs the size check on it.
 - [`src/sidecar/toolchain.ts`](./toolchain.ts) holds
   `toolchainIdentity`, which each sidecar process computes once from the
   package root, the Mokly, esbuild, and Node versions, and every `dist/` file.
@@ -397,9 +470,42 @@ its requests and results. The paths below are relative to the package root.
   `sameCaptureStat` compares a witness with its recheck.
   [`src/sidecar/capture-volumes.ts`](./capture-volumes.ts)
   classifies each volume by its Linux file system type or by the hint.
+- [`src/sidecar/styles.ts`](./styles.ts) holds `collectStyles`, which
+  collects the styles of one render. It filters the React Native Web registry
+  text with the `RegistryIndex` of the generation, from
+  [`src/sidecar/registry-index.ts`](./registry-index.ts). `registryIndexOf`
+  keeps one index for each generation object under a weak key. The index ends
+  with its generation at `dispose`, at `shutdown`, or when a `bundle` result
+  replaces the generation. The index of a generation holds at most
+  `REGISTRY_TEXT_LIMIT` registry texts, which is 1, and `REGISTRY_OUTPUT_LIMIT`
+  filtered outputs for each text, which is 64. At a limit, the least recently
+  used entry leaves first. So the memory of an index is a function of its one
+  text. The index holds the text, the parsed tree and the analysis of the
+  text, and at most 64 outputs. Each output is at most the size of the text.
+  The key of an output takes a few characters for each rule that the output
+  keeps. A measurement on 2026-11-23 used the 12,821-character registry text
+  of the mokly-cloud catalogue. It counted each output as one flat string, as
+  the sidecar holds it after it encodes the response. With that text and one
+  output, one index retains about 0.33 MB. A strict build of that catalogue
+  filtered 1,557 distinct fragments with that text. They gave only 2 distinct
+  outputs, and with them the index retains about the same, 0.31 MB. With 64
+  outputs that each hold almost the whole text, it retains about 1.2 MB. For a
+  text that the index cannot analyse, such as a text that does not parse, the
+  index calls `registryStyles` in
+  [`src/sidecar/registry-styles.ts`](./registry-styles.ts), the filter without
+  an index, which gives its own output or error. The index gives the same
+  bytes as `registryStyles`.
 - [`src/sidecar/postcss.ts`](./postcss.ts) holds `PostcssWorkers`,
-  which owns the PostCSS child processes.
+  which owns the PostCSS child processes. Its `prepare` starts the child of a
+  [prepared context](../../../../docs/protocol/mokly-sidecar-postcss.md#prepared-contexts)
+  with the roots and resolution settings of the `prepareContext` request. That
+  child processes no stylesheet before the first `process` call
+  of its context, and that call takes the child, also after the child failed.
+  `dispose` also stops a start whose path lookup still runs, so that start
+  forks no child.
 - [`src/generated/sidecar`](../generated/sidecar) holds the request and
   result types that `cargo xtask generate-types` writes from the Rust types.
+  `BundleReply`, the reply of `bundle`, is the full `BundleResult` or the short
+  `RestoredBundle`.
 - The [Rust sidecar pool](../../../../crates/mokly-sidecar/README.md) starts and
   stops the sidecar processes.

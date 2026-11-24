@@ -36,6 +36,7 @@ pub(super) fn source(fixture: &Fixture, sidecars: Arc<dyn PoolScheduling>) -> So
     )
     .begin();
     Source {
+        preparation: None,
         references: Mutex::new(None),
         staging: Mutex::new(None),
         operation: fixture.operation.clone(),
@@ -44,6 +45,10 @@ pub(super) fn source(fixture: &Fixture, sidecars: Arc<dyn PoolScheduling>) -> So
         head: Arc::new(Unimock::new(())),
         warnings,
         services: ServeChanges {
+            purge_delay: Arc::new(Unimock::new(())),
+            routing: None,
+            eager: None,
+            diagnostics: Arc::new(Unimock::new(())),
             reuse: Arc::new(MemoryComparisons::new(32 * 1024 * 1024)),
             kept_base: fixture.slot.clone(),
             sidecars,

@@ -22,9 +22,11 @@ use crate::comparison_input::{RetainedComparisonInput, RetainedDocumentEvidence}
 use crate::comparison_proof::{ComparisonRead, ContentIdentity, DocumentProof, ProofMode};
 use crate::comparison_stream::{self, ComparisonConsumer};
 use crate::error::Result;
+use crate::head_validation::{DocumentChecks, HeadValidation, ValidationRead};
 use crate::key::NodeKey;
 use crate::prefetch::PrefetchGuard;
 use crate::resource_inputs::ResourceObserver;
+pub use crate::transient_documents::{ComparisonDocument, TemporaryDocument};
 use crate::workers::ComparisonTask;
 
 /// A document's input key and render recipe, available before rendering.
@@ -79,18 +81,29 @@ pub struct ComparisonCapture {
     pub encoded_bytes: usize,
 }
 
-/// One transient comparison input, released after its worker encodes it.
-#[derive(Debug)]
-pub struct ComparisonDocument {
-    /// Exact document bytes and composed tree.
-    pub artifact: Arc<Artifact>,
-    /// Validated authored resources and comparison evidence.
-    pub closure: Closure,
-}
-
 /// Shared generation interface for Serve, comparison, and static output.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenderGenerationMock))]
 pub trait RenderGeneration: GeneratedResources {
+    /// Complete head validation before pairing, with optional caller-owned facts.
+    fn validate_head(&self, _validation: &dyn HeadValidation) -> Result<RenderSummary> {
+        self.render_all()
+    }
+    /// Read one current document without replacing the later complete link pass.
+    fn validation_document(&self, route: &str) -> Result<Arc<Artifact>> {
+        self.comparison_document(route)
+    }
+    /// Prove one closure-walk input. Unknown or failed reads are ordinary misses.
+    fn validation_identity(&self, _kind: ValidationRead, _route: &str) -> Option<ContentIdentity> {
+        None
+    }
+    /// Export the checks of this route's last checked head read for a later adoption.
+    fn validation_checks(&self, _route: &str) -> Option<DocumentChecks> {
+        None
+    }
+    /// Adopt kept checks of a proven document instead of its checked read. False declines.
+    fn adopt_validation(&self, _route: &str, _checks: &DocumentChecks) -> bool {
+        false
+    }
     /// Prepare optional generation-owned reuse evidence without changing keys or rendering.
     fn prepare_render_reuse(&self) {}
 
@@ -274,16 +287,3 @@ pub trait GraphFactory: Send + Sync {
     /// Construct a graph over the current source tree and injected services.
     fn create(&self, config: &ResolvedConfig) -> Result<Arc<dyn RenderGraph>>;
 }
-
-/// A transient preview and its checked closure, never inserted as a saved document.
-#[derive(Clone, Debug)]
-pub struct TemporaryDocument {
-    /// Serialized bytes and usage from the normal composition pipeline.
-    pub artifact: Arc<Artifact>,
-    /// Resources checked through the generation's public-file policy.
-    pub closure: Closure,
-}
-
-#[cfg(test)]
-#[path = "_tests_/comparison_usage_tests.rs"]
-mod comparison_usage_tests;

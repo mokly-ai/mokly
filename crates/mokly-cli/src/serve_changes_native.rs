@@ -1,40 +1,52 @@
 //! Blocking Git lookup and comparison use the command's shared runtime.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use mokly_cli::cancelled_work::CancellableWorkers;
 use mokly_cli::serial_stylesheets::SerialStylesheets;
-use mokly_compare::base_freshness::{Freshness, FreshnessChecks};
-use mokly_compare::base_render::{Changes, ChangesService, GitSourceFactory, selected_base};
-use mokly_compare::base_selection::GitBaseLookup;
+use mokly_compare::base_render::selected_base;
+use mokly_compare::base_selection::{BaseLookup, PinnedBase};
 use mokly_compare::comparison::Engine;
 use mokly_compare::comparison_reuse::{ReuseAttempt, ReuseFence};
-use mokly_compare::comparison_types::ComparisonResult;
-use mokly_compare::install_inputs::SystemInstallInputs;
 use mokly_compare::moves::Detector;
-use mokly_compare::working_inputs::SystemWorkingInputs;
 use mokly_css::parsed_cache::MemoryParsedCss;
 use mokly_git::command::{ProcessMode, Request};
-use mokly_git::disk::SystemDisk;
-use mokly_git::repository::GitRepositories;
-use mokly_git::tree::Limits;
+use mokly_git::repository::Repositories;
 use mokly_render::runtime::Runtime;
-use mokly_server::changes::{ChangeCancellation, ChangeProgress};
+use mokly_server::changes::ChangeCancellation;
 use mokly_server::error::{Result, ServerError};
 
-use crate::base_dependencies::NativeDependencies;
-use crate::base_render_admission::ImmediateBaseRenders;
-use crate::changes_base::NativeBase;
-use crate::serve_base::ServeBase;
-use crate::serve_base_cancel::{BaseLifetime, PreparingBase};
+use crate::serve_base_cancel::BaseLifetime;
 use crate::serve_capture_workers;
 use crate::serve_changes::Source;
-use crate::serve_changes_base::{
-    AttemptBase, CacheNotice, CombinedCancel, PreparingDependencies, RunSteps,
-};
+
+/// The base lookup of one attempt pins the merge base of the attempt's reference read.
+/// It opens the repository when the classification reads the base, and it resolves no
+/// reference again.
+pub(super) struct AttemptLookup {
+    /// Repository opening on the classification's Git runner.
+    pub(super) repositories: Arc<dyn Repositories>,
+    /// The merge base that the reference read of the attempt returned.
+    pub(super) merge_base: String,
+}
+
+impl BaseLookup for AttemptLookup {
+    fn pin(&self, root: &Path, reference: &str) -> mokly_compare::error::Result<Arc<PinnedBase>> {
+        PinnedBase::resolved(
+            self.repositories.as_ref(),
+            root,
+            reference,
+            &self.merge_base,
+        )
+        .map(Arc::new)
+    }
+}
 
 impl Source {
     /// Resolve HEAD and the selected base to commits and return their merge base.
+    /// `merge-base` takes the base commit first, as the base pin of `build` and of eager
+    /// preparation does, because Git chooses among equal merge bases by argument order.
     /// While both commits stay the same, it returns the cached merge base without running
     /// `merge-base` again, and the equal result keeps the current classification.
     pub(super) fn references_native(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String> {
@@ -84,7 +96,7 @@ impl Source {
             directory: self.config.repo_root.clone(),
             args: ["--no-optional-locks", "merge-base"]
                 .into_iter()
-                .chain(refs.iter().map(String::as_str))
+                .chain(refs.iter().rev().map(String::as_str))
                 .map(Into::into)
                 .collect(),
             stdin: Vec::new(),
@@ -102,97 +114,6 @@ impl Source {
         let base = String::from_utf8_lossy(&output.stdout).trim().to_owned();
         *cached = Some((refs, base.clone()));
         Ok(base)
-    }
-
-    pub(super) fn classify_native(
-        &self,
-        cancel: Arc<dyn ChangeCancellation>,
-        progress: Arc<dyn ChangeProgress>,
-    ) -> Result<ComparisonResult> {
-        let comparison = self.comparison_attempt();
-        self.pending
-            .lock()
-            .unwrap_or_else(|error| error.into_inner())
-            .clear();
-        let cancellation = Arc::new(CombinedCancel {
-            operation: self.operation.clone(),
-            command: self.services.cancellation.clone(),
-            generation: cancel.clone(),
-        });
-        let lifetime: Arc<dyn BaseLifetime> = Arc::new(PreparingBase::new(cancellation.clone()));
-        let runtime = match self.classification_runtime(lifetime.clone()) {
-            Ok(runtime) => runtime,
-            Err(source) => return Err(ServerError::Render { source }),
-        };
-        let freshness: Arc<dyn Freshness> = Arc::new(FreshnessChecks {
-            working: Arc::new(SystemWorkingInputs),
-            installs: Arc::new(SystemInstallInputs {
-                cancellation: cancellation.clone(),
-            }),
-        });
-        let changes: &dyn ChangesService = &Changes {
-            lookup: Arc::new(GitBaseLookup {
-                repositories: Arc::new(GitRepositories {
-                    runner: self.services.git.runner(lifetime.clone()),
-                    disk: Arc::new(SystemDisk),
-                }),
-            }),
-            pinned: None,
-            sources: Arc::new(GitSourceFactory {
-                limits: Limits::default(),
-                batch_bytes: 48 * 1024 * 1024,
-                snapshots: self.services.extraction_snapshots.clone(),
-            }),
-            provider: Arc::new(ServeBase {
-                slot: Arc::downgrade(&self.services.kept_base),
-                runtime: runtime.clone(),
-                freshness: freshness.clone(),
-                reader: cancellation,
-                origin: cancel.clone(),
-                lifetime: lifetime.clone(),
-                inner: Arc::new(AttemptBase {
-                    warnings: self.pending.clone(),
-                    inner: Arc::new(NativeBase {
-                        admission: Arc::new(ImmediateBaseRenders),
-                        runtime,
-                        cancellation: lifetime.clone(),
-                        freshness: Some(freshness),
-                        dependencies: Arc::new(PreparingDependencies {
-                            progress: progress.clone(),
-                            inner: Arc::new(NativeDependencies {
-                                cancellation: lifetime,
-                                reporter: Arc::new(CacheNotice {
-                                    announced: self.services.cache_announced.clone(),
-                                    warnings: self.warnings.clone(),
-                                    terminal: self.services.terminal.clone(),
-                                    style: self.services.style.clone(),
-                                    redactor: self.services.redactor.clone(),
-                                    cancel: cancel.clone(),
-                                }),
-                            }),
-                        }),
-                    }),
-                    progress,
-                }),
-            }),
-            comparison,
-            steps: Arc::new(RunSteps {
-                progress: self.services.progress.clone(),
-                cancel: cancel.clone(),
-            }),
-        };
-        match changes.classify(
-            &self.config,
-            self.services.base.as_deref(),
-            self.head.clone(),
-            self.services.install_scripts,
-        ) {
-            Ok(result) if !cancel.cancelled() => Ok(result),
-            Ok(_) => Err(ServerError::ChangesReplaced),
-            Err(source) => Err(ServerError::Comparison {
-                source: Box::new(source),
-            }),
-        }
     }
 
     pub(super) fn comparison_attempt(&self) -> Arc<dyn ReuseAttempt> {

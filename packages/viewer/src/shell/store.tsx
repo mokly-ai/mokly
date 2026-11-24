@@ -35,6 +35,7 @@ import { withFilterSelection } from "./store_filters.js";
 import { type EmbeddedShellEnvironment, useShellHost } from "./store_host.js";
 import { hostRoute } from "./store_host_routes.js";
 import { createInitialShellState } from "./store_initial.js";
+import { useStableShellContext } from "./store_projection.js";
 import type { ShellInitialState, ShellState } from "./store_state.js";
 import { WorkspaceProvider } from "./workspace_context.js";
 
@@ -115,17 +116,19 @@ function ShellStoreContents({
   });
   const activeCatalogue = data.snapshot.catalogue;
   const model = activeCatalogue.publicModel;
-  const activeContext = useMemo(
+  const { screenPath, snapshotId } = state.selection;
+  const projectedContext = useMemo(
     () => ({
-      ...shellContext(model, state.selection),
+      ...shellContext(model, {
+        screenPath,
+        ...(snapshotId === undefined ? {} : { snapshotId }),
+      }),
       ...context,
     }),
-    [context.embedded, context.theme, model, state.selection],
+    [context.embedded, context.theme, model, screenPath, snapshotId],
   );
-  const sections = useMemo(
-    () => catalogueNavSections(activeCatalogue),
-    [activeCatalogue],
-  );
+  const activeContext = useStableShellContext(projectedContext);
+  const sections = catalogueNavSections(activeCatalogue);
   const browser = useShellBrowser({
     onAppearanceRoute,
     catalogue: activeCatalogue,
@@ -144,10 +147,11 @@ function ShellStoreContents({
     setState,
     state,
   });
-  const runtimeContext = useMemo(
+  const projectedRuntime = useMemo(
     () => currentContext(activeContext, state),
     [activeContext, state.changesStatus, state.route],
   );
+  const runtimeContext = useStableShellContext(projectedRuntime);
   const store = shellStore({
     catalogue: activeCatalogue,
     context: runtimeContext,

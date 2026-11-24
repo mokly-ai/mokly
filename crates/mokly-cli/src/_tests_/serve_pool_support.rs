@@ -24,6 +24,9 @@ pub(crate) fn capacity(count: usize) -> Arc<dyn PoolCapacity> {
             CapacityMock::try_claim
                 .each_call(matching!())
                 .answers(&|_| Ok(Some(CallClaim::fixed()))),
+            CapacityMock::try_eager_claim
+                .each_call(matching!(_))
+                .answers(&|_, _| Ok(Some(CallClaim::fixed()))),
         ))
         .no_verify_in_drop(),
     )
@@ -58,7 +61,7 @@ pub(super) fn pool() -> (Unimock, Arc<dyn SidecarPool>, Arc<Mutex<Observed>>) {
     (pool, shared, events)
 }
 
-pub(super) fn css(root: &str, sequence: usize) -> Call {
+pub(crate) fn css(root: &str, sequence: usize) -> Call {
     Call::ProcessCss(ProcessCss {
         source_root: root.into(),
         context: format!("{root}:{sequence}"),

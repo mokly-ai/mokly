@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use axum::body::to_bytes;
-use axum::http::{StatusCode, Uri};
+use axum::http::{HeaderMap, StatusCode, Uri};
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::Closure;
 use mokly_graph::types::{RenderGeneration, RenderGenerationMock};
@@ -122,7 +122,9 @@ async fn selected_variant_with_parent_owned_rules_redirects_and_captures_only_va
     app.comparisons = Some(store.clone());
     let path = "mokly-viewer/diffs/selection";
     let uri: Uri = format!("/{path}?path={VARIANT}").parse().unwrap();
-    let response = comparison_routes::route(&app, path, &uri).await.unwrap();
+    let response = comparison_routes::route(&app, path, &uri, &HeaderMap::new())
+        .await
+        .unwrap();
     let status = response.status();
     let location = response.headers().get("location").cloned();
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -130,9 +132,14 @@ async fn selected_variant_with_parent_owned_rules_redirects_and_captures_only_va
     assert!(body.is_empty());
     let uri: Uri = location.unwrap().to_str().unwrap().parse().unwrap();
     assert!(uri.path().ends_with('/'));
-    let response = comparison_routes::route(&app, uri.path().trim_start_matches('/'), &uri)
-        .await
-        .unwrap();
+    let response = comparison_routes::route(
+        &app,
+        uri.path().trim_start_matches('/'),
+        &uri,
+        &HeaderMap::new(),
+    )
+    .await
+    .unwrap();
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
     let generation = uri.path().split('/').nth(4).unwrap();
     assert!(

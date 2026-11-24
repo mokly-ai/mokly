@@ -111,18 +111,8 @@ no other verb: validation is `build --strict`, and the static site is `build`.
 
 ## Sidecar Pool
 
-A sidecar starts when the catalogue uses any of these inputs:
-
-- A JavaScript entry or registered JavaScript component.
-- A Storybook stories file.
-- A configured renderer module.
-- A stylesheet processed by a consumer PostCSS module.
-
-HTML, YAML, and Markdown alone start no sidecar. The
-[sidecar contract](./mokly-sidecar.md) defines pool size, deadlines, recycling,
-and failure codes. The core selects renders, cache keys, invalidation, and
-document composition. A sidecar failure fails only the request that needs it,
-with its typed code. Other routes and shutdown stay available.
+The [sidecar pool rules](./mokly-sidecar-pool.md) define the inputs that start
+a sidecar, the work that the core keeps, and the isolation of a sidecar failure.
 
 ## Routes
 
@@ -142,11 +132,17 @@ writes the same relative paths as files. In addition:
 in the repository. Every route answers GET and HEAD; HEAD returns the same
 status and headers without a body, and a HEAD request to the event stream
 opens no stream. Serve sends `Cache-Control: no-store` on every response,
-because a watched rebuild replaces bytes at stable URLs. A route that the
-catalogue model does not declare returns 404 even when a file of that name
-exists; no reserved route falls back to the filesystem. The path decoder
-rejects malformed encoding, absolute and empty paths, dot segments, and
-separators introduced by decoding before any filesystem resolution, and
+because a watched rebuild replaces bytes at stable URLs. Generated stylesheets
+and assets and authored assets instead carry a strong `ETag` of their bytes
+and `Cache-Control: no-cache`. A GET or HEAD whose `If-None-Match` names that
+`ETag` gets 304 without a body. Decision: revalidation was chosen over
+content-addressed URLs, because it keeps the document bytes and the artifact
+paths. The files of a comparison generation follow the
+[comparison serving contract](./mokly-comparison-serving.md#generation-and-serving).
+A route that the catalogue model does not declare returns 404 even when a file
+of that name exists; no reserved route falls back to the filesystem. The path
+decoder rejects malformed encoding, absolute and empty paths, dot segments,
+and separators introduced by decoding before any filesystem resolution, and
 authored assets never resolve outside the roots or through a symlink that
 leaves the repository. Protected authoring inputs are never served.
 
@@ -237,8 +233,8 @@ commit point and never leave a partial output directory in place.
 
 No command writes into the repository except `build` into its output directory. Serve,
 Changes, live prop editing, and comparison generations keep every result in process memory.
-The [caches](./mokly-base-cache.md) outside the repository are the only other files Mokly writes.
-Deleting them changes time only, except for [unsupported inputs](./mokly-render-store.md#restarts-and-deletion).
+The [caches](./mokly-base-cache.md) outside the repository are the only other files Mokly writes, apart from the unnamed temporary copies of asset responses. Serve writes such a copy of a generated or authored asset so that a response sends exactly the bytes of its `ETag`. The copy goes away when the last request or response that holds it ends.
+Deleting the caches changes time only, except for [unsupported inputs](./mokly-render-store.md#restarts-and-deletion).
 
 ## Related Docs
 

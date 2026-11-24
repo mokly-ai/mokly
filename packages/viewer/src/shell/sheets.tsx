@@ -7,12 +7,14 @@
  * selected tab.
  */
 
+import { useMemo } from "react";
+
 import { CanvasDock } from "@mokly/ui/canvas-dock";
 import type { FloatingPanelSheet } from "@mokly/ui/floating-panel";
 
 import { useNavigationWidth } from "./nav_resize.js";
 import { useShellRoot, useShownCanvas } from "./root_context.js";
-import { useShellStore } from "./store_context.js";
+import { useLatestShellStore, useShellStore } from "./store_context.js";
 import type { ShellSheet } from "./store_state.js";
 
 /**
@@ -64,18 +66,24 @@ export function usePanelSheet(): FloatingPanelSheet {
  */
 function ShellDock() {
   const store = useShellStore();
+  const latest = useLatestShellStore(store);
   const elements = useShellRoot()?.elements;
   const canvas = useShownCanvas()?.handle;
-  if (store.state.sheet !== undefined) return null;
-  const selected = store.state.route.view.kind === "target";
-  return (
-    <CanvasDock
-      catalogueRef={elements?.dock.ref("catalogue")}
-      onCatalogue={() => store.setSheet("catalogue")}
-      onFit={canvas ? () => canvas.fit() : undefined}
-      onTab={() => store.setSheet("panel")}
-      tab={selected ? store.state.panelTab : undefined}
-      tabRef={elements?.dock.ref("tab")}
-    />
+  const hidden = store.state.sheet !== undefined;
+  const tab =
+    store.state.route.view.kind === "target" ? store.state.panelTab : undefined;
+  return useMemo(
+    () =>
+      hidden ? null : (
+        <CanvasDock
+          catalogueRef={elements?.dock.ref("catalogue")}
+          onCatalogue={() => latest.current.setSheet("catalogue")}
+          onFit={canvas ? () => canvas.fit() : undefined}
+          onTab={() => latest.current.setSheet("panel")}
+          tab={tab}
+          tabRef={elements?.dock.ref("tab")}
+        />
+      ),
+    [canvas, elements, hidden, latest, tab],
   );
 }

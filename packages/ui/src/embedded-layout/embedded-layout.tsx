@@ -9,12 +9,13 @@
  * breakpoint, and the dock floats at the bottom of the stage host.
  */
 
-import type {
-  CSSProperties,
-  KeyboardEvent,
-  MouseEvent,
-  ReactNode,
-  Ref,
+import {
+  useMemo,
+  type CSSProperties,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  type Ref,
 } from "react";
 
 import type { Appearance } from "../appearance-selector/appearance-selector.js";
@@ -141,6 +142,27 @@ export function EmbeddedLayout({
    */
   topBar: (host: TopBarHost) => ReactNode;
 }) {
+  const { topBarStart, topBarCenter, topBarEnd } = slots ?? {};
+  const topBarHost = useMemo<TopBarHost>(
+    () => ({
+      start: (
+        <HostSlot name="topBarStart" ref={slotRef?.("topBarStart")}>
+          {topBarStart}
+        </HostSlot>
+      ),
+      center: (
+        <HostSlot name="topBarCenter" ref={slotRef?.("topBarCenter")}>
+          {topBarCenter}
+        </HostSlot>
+      ),
+      end: (
+        <HostSlot name="topBarEnd" ref={slotRef?.("topBarEnd")}>
+          {topBarEnd}
+        </HostSlot>
+      ),
+    }),
+    [slotRef, topBarStart, topBarCenter, topBarEnd],
+  );
   const rail = (
     <div className="mokly-rail-host mbk-reset">
       <HostSlot name="railStart" ref={slotRef?.("railStart")}>
@@ -166,25 +188,7 @@ export function EmbeddedLayout({
       data-mokly-theme={theme}
     >
       <SkipLink href={mainHref} />
-      <div className="mokly-top-host mbk-reset">
-        {topBar({
-          start: (
-            <HostSlot name="topBarStart" ref={slotRef?.("topBarStart")}>
-              {slots?.topBarStart}
-            </HostSlot>
-          ),
-          center: (
-            <HostSlot name="topBarCenter" ref={slotRef?.("topBarCenter")}>
-              {slots?.topBarCenter}
-            </HostSlot>
-          ),
-          end: (
-            <HostSlot name="topBarEnd" ref={slotRef?.("topBarEnd")}>
-              {slots?.topBarEnd}
-            </HostSlot>
-          ),
-        })}
-      </div>
+      <div className="mokly-top-host mbk-reset">{topBar(topBarHost)}</div>
       <ShellBody>
         {catalogueSheet === undefined ? (
           rail

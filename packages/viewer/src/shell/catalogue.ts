@@ -1,3 +1,5 @@
+import { currentCatalogueEntries } from "../catalogue/entry_selection.js";
+import { keepEqualJson } from "../catalogue/json_values.js";
 import type {
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
@@ -21,19 +23,25 @@ export interface Catalogue {
   previousPaths: ReadonlyMap<string, string>;
 }
 
-/** Build navigation once from the validated generated records and index tree. */
-export function createCatalogue(model: ShellCatalogueReadModel): Catalogue {
-  const entries = [
-    ...model.screens,
-    ...model.pages,
-    ...model.documents,
-    ...model.useCases,
-    ...model.components,
-  ];
+/** Index the records and tree, reusing lookups that already hold those records. */
+export function createCatalogue(
+  model: ShellCatalogueReadModel,
+  previous?: Catalogue,
+): Catalogue {
+  const entries = currentCatalogueEntries<ShellCatalogueRoutedEntry>(model);
+  if (
+    previous &&
+    model.tree === previous.publicModel.tree &&
+    model.treeOrder === previous.publicModel.treeOrder &&
+    sameRecords(previous.entries, entries) &&
+    sameRecords(previous.removedEntries, model.removedEntries)
+  )
+    return { ...previous, publicModel: model };
   const byPath = new Map<string, ShellCatalogueRoutedEntry>(
     entries.map((entry) => [entry.path, entry]),
   );
   for (const { entry } of model.removedEntries) byPath.set(entry.path, entry);
+  const tags = [...new Set(entries.flatMap((entry) => entry.tags))].sort();
   return {
     publicModel: model,
     entries,
@@ -46,7 +54,7 @@ export function createCatalogue(model: ShellCatalogueReadModel): Catalogue {
         entry.colorSchemes.includes("dark"),
     ),
     hierarchy: catalogueHierarchy(entries, model.tree, model.treeOrder),
-    tags: [...new Set(entries.flatMap((entry) => entry.tags))].sort(),
+    tags: previous ? keepEqualJson(previous.tags, tags) : tags,
     removedEntries: model.removedEntries,
     previousPaths: new Map(
       entries.flatMap(({ path, previousPath }) =>
@@ -54,4 +62,11 @@ export function createCatalogue(model: ShellCatalogueReadModel): Catalogue {
       ),
     ),
   };
+}
+
+function sameRecords<T>(held: readonly T[], next: readonly T[]): boolean {
+  return (
+    held.length === next.length &&
+    next.every((item, index) => item === held[index])
+  );
 }

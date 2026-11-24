@@ -14,11 +14,11 @@ use mokly_model::public_metadata::ChangesStatus;
 use mokly_model::routes;
 
 use crate::assets::File;
+use crate::changes_background::PendingChanges;
 use crate::changes_detail;
 use crate::changes_signal::{ChangeSignal, Signals};
 use crate::comparison_metadata;
 use crate::detail_encoding::DetailEncoder;
-use crate::detail_publication::PublicationKind;
 use crate::error::{Result, ServerError};
 use crate::revision::RevisionLease;
 use crate::revision_file::RevisionFile;
@@ -104,6 +104,12 @@ pub trait ChangeSource: Send + Sync {
     /// Prepare optional evidence after an accepted terminal completion returns.
     fn settled(&self) {}
 
+    /// Explicitly drain preparation after classification, including a failed reference probe.
+    fn settle_pending(&self, _accepted: bool) {}
+    /// Transfer this origin's pending preparation into its usage pass.
+    fn pending(&self) -> Option<Arc<dyn PendingChanges>> {
+        None
+    }
     /// Start command progress for one accepted background attempt.
     fn started(&self, _cancel: Arc<dyn ChangeCancellation>) -> Option<Box<dyn ChangeRun>> {
         None
@@ -118,11 +124,13 @@ pub trait ChangeSource: Send + Sync {
     }
     /// Poll HEAD and base tips and return their merge base without rendering either side.
     fn references(&self, cancel: Arc<dyn ChangeCancellation>) -> Result<String>;
-    /// Pin the base once and classify through the command's shared render runtime.
+    /// Classify against `merge_base`, the result of the reference read of the same attempt,
+    /// through the command's shared render runtime, without resolving the base again.
     fn classify(
         &self,
         cancel: Arc<dyn ChangeCancellation>,
         progress: Arc<dyn ChangeProgress>,
+        merge_base: &str,
     ) -> Result<ComparisonResult>;
     /// Release unaccepted staging when an execution ends, without terminal output.
     fn discarded(&self) {}
@@ -153,17 +161,13 @@ pub(crate) fn project(
     accepted: Option<Arc<Accepted>>,
     encoder: &dyn DetailEncoder,
 ) -> Result<Arc<Snapshot>> {
-    let mut next = current.clone();
-    next.index.revision += 1;
-    next.lease = Arc::new(RevisionLease::default());
-    next.changes = accepted;
-    next.index = projection::index(
+    let mut index = projection::index(
         &current.model,
         &current.view_keys,
         &Publication {
             config_path: current.config_path.clone(),
             deployment_id: current.index.deployment_id.clone(),
-            revision: next.index.revision,
+            revision: current.index.revision + 1,
             base: current.index.base.clone(),
             changes_status: status,
             live_generation: current
@@ -173,35 +177,31 @@ pub(crate) fn project(
                 .map(|live| live.generation.clone()),
         },
     );
-    next.index.identity = current.index.identity.clone();
-    if let Some(accepted) = &next.changes {
-        projection_index::apply(&mut next.index, &accepted.result);
+    index.identity = current.index.identity.clone();
+    if let Some(accepted) = &accepted {
+        projection_index::apply(&mut index, &accepted.result);
         let historical = comparison_metadata::base(accepted, current);
-        next.index.removed_entries = projection_removed::records(&accepted.result, historical);
+        index.removed_entries = projection_removed::records(&accepted.result, historical);
         let ids = comparison_metadata::detail_ids(accepted, current)?;
-        for record in &mut next.index.removed_entries {
+        for record in &mut index.removed_entries {
             if let Some(id) = ids.get(record.entry.path()) {
                 record.entry.set_detail_id(id);
             }
         }
-        next.index.comparison_url = Nullable(Some(routes::comparison_generation(&accepted.id)));
+        index.comparison_url = Nullable(Some(routes::comparison_generation(&accepted.id)));
     }
-    changes_detail::apply(&mut next)?;
-    let kind = if next.changes.is_some() {
-        PublicationKind::ChangesEvidence
-    } else {
-        PublicationKind::ChangesStatus
+    let mut next = Snapshot {
+        changes: accepted,
+        document_keys: current.document_keys.clone(),
+        generation: current.generation.clone(),
+        details: current.details.clone(),
+        recent_details: current.recent_details.clone(),
+        completed: current.completed.clone(),
+        lease: Arc::new(RevisionLease::default()),
+        index,
+        files: current.files.clone(),
     };
-    for (path, detail) in &mut next.details {
-        Arc::make_mut(detail).revision = Some(next.index.revision);
-        let route = viewer(&format!("entries/{path}.json"));
-        let adjacent = current.details.get(path).zip(current.files.get(&route));
-        let file = next
-            .recent_details
-            .publish(kind, detail, adjacent, encoder)?;
-        projection::set_detail_id(&mut next.index, path, &detail.detail_id);
-        next.files.insert(route, file);
-    }
+    changes_detail::apply(&mut next, encoder)?;
     next.files.insert(
         viewer("index.json"),
         RevisionFile::new(encode_index(&next.index)),
