@@ -22,9 +22,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
+import { siteScreens } from "./site-stylesheets";
 
 const sections = SECTION_IDS.map((id) => SECTION_TITLES[id]);
 

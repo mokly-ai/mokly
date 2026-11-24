@@ -9,9 +9,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
+import { siteScreens } from "./site-stylesheets";
 
 /** The control that opens the menu, read from one header. */
 function menuControl(id: string, viewport: "mobile" | "desktop") {

@@ -12,8 +12,8 @@ import {
   label,
   siteDocument,
   siteEntry,
-  siteScreens as screens,
 } from "./design-site-test-helpers";
+import { siteScreens as screens } from "./site-stylesheets";
 
 test("every site screen owns its folder, viewports and schemes", () => {
   for (const id of screens) {

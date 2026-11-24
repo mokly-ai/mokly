@@ -22,8 +22,8 @@ import {
   siteStyles,
   textContent,
   type Element,
-  type SiteScreenPath,
 } from "./design-site-test-helpers";
+import { type SiteScreenPath } from "./site-stylesheets";
 
 /** The installed package, which the site reads its guides from. */
 const PACKAGE = "node_modules/@mokly/mokly";

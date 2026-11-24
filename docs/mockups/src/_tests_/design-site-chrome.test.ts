@@ -9,10 +9,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   siteStyles,
-  type SiteScreenPath,
 } from "./design-site-test-helpers";
+import { siteScreens, type SiteScreenPath } from "./site-stylesheets";
 
 /** The page name that each screen's file title and status bar show. */
 const pageNames: Record<SiteScreenPath, string> = {

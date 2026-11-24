@@ -14,10 +14,10 @@ import {
   repositoryRoot,
   siteDocument,
   siteStyles,
-  siteStylesheets,
   textContent,
   type Element,
 } from "./design-site-test-helpers";
+import { siteStylesheets } from "./site-stylesheets";
 
 /** Cal's hero heading, with the non-breaking space that keeps "in code." together. */
 const HEADING = "Design in\u00a0code.";

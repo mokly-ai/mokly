@@ -4,14 +4,18 @@
  * ranks above the shadow that its control draws at rest and under the
  * pointer, and keeps the resting shadow under the glow; only the glow
  * removes the outline, and forced colours keep a system outline. The
- * mockup sheets are the ones that `mokly.config.json` links into every site
- * mockup. The browser walk checks the drawn glow of every control on every
- * route, and `contrast.test.ts` checks that the glow keeps 3:1.
+ * mockup sheets are the ones that the site mockups load: the font sheets of
+ * the site rule of `mokly.config.json`, then the CSS that each site screen
+ * imports, read from the sources as the mockup tests read them. The browser
+ * walk checks the drawn glow of every control on every route, and
+ * `contrast.test.ts` checks that the glow keeps 3:1.
  */
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
+
+import { siteStylesheets } from "../../../docs/mockups/src/_tests_/site-stylesheets.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -23,9 +27,6 @@ const CODE_GLOW = "color-mix(in srgb, var(--mk-color-signal) 75%, transparent)";
 const HALOS = [`0 0 0 4px ${GLOW}`, `inset 0 0 0 4px ${GLOW}`];
 const CODE_HALO = `inset 0 0 0 4px ${CODE_GLOW}`;
 
-/** The rule of `mokly.config.json` that gives every site mockup its sheets. */
-const MOCKUP_SHEETS = "design/site/**/index.html";
-
 interface Rule {
   readonly declarations: readonly string[];
   /** Whether the rule sits in a forced-colors media query. */
@@ -35,40 +36,9 @@ interface Rule {
   readonly sheet: string;
 }
 
-/** Whether a parsed JSON value is an object with named fields. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/** Whether a parsed JSON value is a list of strings. */
-function isStringList(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === "string")
-  );
-}
-
-/**
- * The site mockup sheets as absolute paths, in link order, read from the one
- * rule of `mokly.config.json` that gives every site mockup its sheets, as
- * the mockup tests read them.
- */
+/** The sheets of every site mockup as absolute paths, in cascade order. */
 function mockupSheets(): string[] {
-  const config: unknown = JSON.parse(
-    readFileSync(path.resolve(repositoryRoot, "mokly.config.json"), "utf8"),
-  );
-  const rules: unknown[] =
-    isRecord(config) && Array.isArray(config.stylesheets)
-      ? config.stylesheets
-      : [];
-  const rule = rules.find(
-    (candidate) => isRecord(candidate) && candidate.match === MOCKUP_SHEETS,
-  );
-  const sheets: unknown = isRecord(rule) ? rule.stylesheets : undefined;
-  assert.ok(
-    isStringList(sheets),
-    `mokly.config.json has no stylesheet list for ${MOCKUP_SHEETS}`,
-  );
-  return sheets.map((sheet) => path.resolve(repositoryRoot, sheet));
+  return siteStylesheets().map((sheet) => path.resolve(repositoryRoot, sheet));
 }
 
 /** Every site sheet as an absolute path, in name order. */
