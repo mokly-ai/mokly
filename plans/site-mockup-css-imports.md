@@ -133,9 +133,11 @@ Replaced ways:
 
 - The site stylesheet list in `mokly.config.json` → module imports of the
   site screens. Consumers: every site mockup document, the header of
-  `docs/mockups/styles/site/base.css`, `siteStylesheets()` and
-  `siteStyles()` in `docs/mockups/src/_tests_/design-site-test-helpers.ts`,
-  and the tests that call them. Moved in Milestone 1. Deleted in
+  `docs/mockups/styles/site/base.css`, `siteStylesheets()` in
+  `docs/mockups/src/_tests_/site-stylesheets.ts`, `siteStyles()` in
+  `docs/mockups/src/_tests_/design-site-test-helpers.ts`, the focus glow
+  test `apps/site/tests/styles-focus.test.ts`, and the tests that call
+  them. Moved in Milestone 1. Deleted in
   Milestone 1.
 
 ## Milestone 1: Site mockups import their CSS

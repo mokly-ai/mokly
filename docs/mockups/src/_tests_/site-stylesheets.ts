@@ -49,7 +49,7 @@ function isStringList(value: unknown): value is string[] {
 }
 
 /** The sheets that the site rule of `mokly.config.json` links, in link order. */
-function siteRuleStylesheets(): string[] {
+export function siteRuleStylesheets(): string[] {
   const config: unknown = JSON.parse(
     readFileSync(resolve(repositoryRoot, "mokly.config.json"), "utf8"),
   );

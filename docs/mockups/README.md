@@ -126,11 +126,11 @@ Folio stylesheets, the email rule links only the base stylesheet and the inbox
 frame, and everything else takes the Design stylesheets. Each site screen
 module imports the site stylesheets through the style modules of
 `src/screens/design/site/styles/`: the shared module first, then the module of
-its own area, before its other imports, so that no sheet that a part imports
-comes first. Mokly bundles them into the entry's own stylesheet after the font
-sheets, in that order, so a site page loads no sheet of another area. Add a
-new site sheet to the shared module when every site page uses it, and
-otherwise to the module of its area, not to the site rule.
+its own area, before its other imports. Mokly bundles them into the entry's own
+stylesheet after the font sheets, in that order, so a site page loads no sheet
+of another area. Add a new site sheet to the shared module when it styles
+parts of more than one area, and otherwise to the module of its area, not to
+the site rule.
 Add a new product family's directory to the Folio pattern,
 because an unmatched path silently receives Design styles; scheme-only CSS
 uses `lightStylesheets` or `darkStylesheets`. No rule links a Canvas sheet of
@@ -301,7 +301,8 @@ directory, never in the repository, and deleting that cache is safe.
 - `src/_tests_/disk-overlay-policy.ts` — `checkDiskOverlay`, the Tab guard that the disk test runs before its capture on each page with an open viewer panel: it requires the `inert` viewer backdrop, then presses Tab once for each panel control from the top of the page and requires each stop inside the panel.
 - `src/_tests_/overlay.spec.ts` — the overlay focus checks in Chromium: the regressions that a built settings confirmation page and an open mobile row menu keep focus out of the frame beneath them, and the rejection and acceptance fixtures of the hidden-subtree focus rule in `document-policy.ts`, the inert viewer backdrop and `checkDiskOverlay`.
 - `src/_tests_/viewer-builds.spec.ts`, `viewer-panels.spec.ts`, `viewer-ready-stage.spec.ts` and `viewer-recovery.spec.ts` — the Chromium checks of the build and publishing pages, the four slot panels, the ready canvas with its frames, its right panel and its compact layout, and the stage's recovery cards, with the in-page measures in `viewer-measures.ts`.
-- `src/_tests_/imported-stylesheets.ts` — `importedStylesheets`, the stylesheets that an entry module reaches through its relative imports, read from the authored sources in the order in which Mokly bundles them: each sheet at its first reach, depth first, in import order. `design-site-test-helpers.ts` builds `siteStylesheets` and `siteStyles` on it: the font sheets of the site rule, then the sheets that one site screen imports, or without a screen those of every site screen. A test of one site page passes its screen, so that it reads only the CSS of that page.
+- `src/_tests_/imported-stylesheets.ts` — `importedStylesheets`, the stylesheets that a module reaches through its relative imports, read from the authored sources in the order in which Mokly bundles them: each sheet at its first reach, depth first, in import order.
+- `src/_tests_/site-stylesheets.ts` — `siteScreens` and `siteStylesheets`, the CSS of the site mockups read from the sources with no catalogue build: the font sheets of the site rule, then the sheets that one site screen imports, or without a screen those of every site screen. `siteStyles` in `design-site-test-helpers.ts` and the focus glow test of `apps/site` read it. A test of one site page passes its screen, so that it reads only the CSS of that page.
 - `src/emails/content.ts` — the typed content of each email, the placeholder names and the formatted lifetime.
 - `src/emails/styles.ts` — the literal style table per scheme and viewport and the dark and mobile override groups derived from it.
 - `src/emails/document.tsx` — `EmailBody`, the table subtree both compositions render, and `EmailDocument`, the delivered shell around it; each takes `brandRoot` beside the content.

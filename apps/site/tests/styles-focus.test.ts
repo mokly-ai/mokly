@@ -15,7 +15,11 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { siteStylesheets } from "../../../docs/mockups/src/_tests_/site-stylesheets.js";
+import {
+  siteScreens,
+  siteStylesheets,
+  type SiteScreenPath,
+} from "../../../docs/mockups/src/_tests_/site-stylesheets.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -36,9 +40,14 @@ interface Rule {
   readonly sheet: string;
 }
 
-/** The sheets of every site mockup as absolute paths, in cascade order. */
-function mockupSheets(): string[] {
-  return siteStylesheets().map((sheet) => path.resolve(repositoryRoot, sheet));
+/**
+ * The sheets of one site mockup, or of every site mockup, as absolute paths,
+ * in cascade order.
+ */
+function mockupSheets(screen?: SiteScreenPath): string[] {
+  return siteStylesheets(screen).map((sheet) =>
+    path.resolve(repositoryRoot, sheet),
+  );
 }
 
 /** Every site sheet as an absolute path, in name order. */
@@ -162,5 +171,23 @@ for (const [side, { global, rules: all }] of Object.entries(sides)) {
         host,
       );
     }
+  });
+}
+
+// Each site mockup loads only the shared sheets and its own area's sheets,
+// so each one must carry the base glow and the forced-colours outline.
+for (const screen of siteScreens) {
+  test(`mockup ${screen}: its own sheets hold the base glow and the forced outline`, () => {
+    const own = rules(mockupSheets(screen)).filter(
+      (rule) => rule.selector === sides.mockup.global,
+    );
+    assert.deepEqual(own.find((rule) => !rule.forced)?.declarations, [
+      `box-shadow: ${HALOS[0]}`,
+      "outline: none",
+    ]);
+    assert.deepEqual(own.find((rule) => rule.forced)?.declarations, [
+      "box-shadow: none",
+      "outline: 2px solid Highlight",
+    ]);
   });
 }
