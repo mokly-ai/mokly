@@ -28,8 +28,10 @@ cache key. Third-party dependencies follow three tiers:
 
 ## Workspace Package Sources
 
-After package lookup and repository mapping, Mokly checks for a source file
-on the side being rendered. This rule applies to the head and the base.
+After lookup of a bare package specifier and repository mapping, Mokly
+checks for a source file on the side being rendered. This rule applies to
+the head and the base. A configured file keeps its exact path, including
+when a package import reaches it.
 
 1. The target must be a repository path outside `node_modules`. The nearest
    `package.json` above the target, within the repository, must have a

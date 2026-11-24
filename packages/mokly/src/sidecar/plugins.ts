@@ -167,7 +167,7 @@ export function consumerPlugins(
           });
           if (resolved.errors.length) return { errors: resolved.errors };
           try {
-            const file = await paths.resolve(resolved.path);
+            const file = await paths.resolve(resolved.path, args.path);
             await paths.dependencyUsage.resolved(
               args.path,
               args.resolveDir,
@@ -218,7 +218,7 @@ export function consumerPlugins(
           )
             return resolved;
           try {
-            const file = await paths.resolve(resolved.path);
+            const file = await paths.resolve(resolved.path, args.path);
             await paths.dependencyUsage.resolved(
               args.path,
               args.resolveDir,

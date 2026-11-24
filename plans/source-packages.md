@@ -27,9 +27,11 @@ makes this repository's base render pass, with the Changes comparison.
 
 The rule:
 
-1. A resolved file is inside a workspace package when it is a repository
-   file outside `node_modules`, and the nearest `package.json` above it,
-   inside the repository, has a `name`. That directory is the package root.
+1. The rule applies to a target reached through a bare package specifier.
+   The target must be a repository path outside `node_modules`. The nearest
+   `package.json` above it, inside the repository, must have a `name`. That
+   directory is the package root. A configured file keeps its exact path,
+   including when a package import reaches that file.
 2. The build folder and the source folder of the package come from the
    `outDir` and `rootDir` of the package root's `tsconfig.json`, with its
    `extends` chain, when both are set and both are inside the package root.
@@ -53,6 +55,8 @@ Design calls, mine, 2026-11-24:
   project is not in production, so the repository rules allow this.
 - `tsconfig` folders win over the convention, because they state the
   package's own layout.
+- Package source lookup applies to bare package specifiers. It serves imports
+  of package build targets and keeps relative paths and configured files exact.
 - One table of cases, shared as a test fixture, holds the rule. The
   sidecar's JavaScript resolution and the Rust CSS resolver must both pass
   it, so the two copies of the rule cannot drift.

@@ -54,7 +54,7 @@ export async function resolvePlugin(
             });
             if (resolved.errors.length) return { errors: resolved.errors };
             try {
-              resolvedPath = await sources.resolve(resolved.path);
+              resolvedPath = await sources.resolve(resolved.path, name);
               await sources.dependencyUsage.resolved(
                 name,
                 path.dirname(file),
@@ -133,7 +133,7 @@ function nativePath(
     if (!found) throw error;
     resolved = found;
   }
-  const mapped = sources.resolveSync(resolved);
+  const mapped = sources.resolveSync(resolved, name);
   sources.dependencyUsage.resolvedSync(authored, path.dirname(file), mapped);
   return mapped;
 }

@@ -96,11 +96,7 @@ export class PlannedRelative {
         const planned = this.plan.get(importer, edge.original, edge.kind);
         if (planned && this.plan.plan.paths[planned[3]] !== edge.path)
           return false;
-        if (
-          !planned ||
-          !this.skipped.has(edge.original) ||
-          paths.repositoryOwned(edge.path)
-        ) {
+        if (!planned || !this.skipped.has(edge.original)) {
           let target = targets.get(edge.path);
           if (!target) {
             target = classifyNativeTarget(paths, this.scope, edge.path);

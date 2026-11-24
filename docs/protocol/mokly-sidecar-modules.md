@@ -100,7 +100,7 @@ same importer mapping. Installation metadata outside the source root is read
 from the selected installation, even when a tracked source directory has the
 same logical name.
 
-After path or package lookup and repository mapping, Mokly applies the
+After lookup of a bare package specifier and repository mapping, Mokly applies the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
 before it tests the original target. This includes CSS imports from
 JavaScript. Missing files and escaping symlinks fail closed. Reuse evidence

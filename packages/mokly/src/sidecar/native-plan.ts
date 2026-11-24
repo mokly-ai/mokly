@@ -6,13 +6,13 @@ import type { PlannedImport } from "../generated/sidecar/PlannedImport.js";
 import type { PlannedImportKind } from "../generated/sidecar/PlannedImportKind.js";
 import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
-import { virtualEntry } from "./bundle-entry.js";
 import { detail, protocol } from "./errors.js";
 import type { ModulePaths } from "./module-paths.js";
 import { nativeImport, nativeResolveFilter } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 import type { PlanCandidates } from "./plan-candidates.js";
 import { PlanBuilder } from "./resolution-plan.js";
+import { bareSpecifier } from "./specifier.js";
 
 interface Target {
   path: string;
@@ -49,15 +49,13 @@ export async function planNative(
   candidates?: PlanCandidates,
 ): Promise<NativePlan> {
   const scope = new PackageScope();
-  const entry = path.join(paths.sourceRoot, virtualEntry);
-  const imports = new Map<string, Promise<Target | undefined>>();
-  const configured = new Map<string, Promise<Target | undefined>>();
-  const target = (file: string, authored: boolean) => {
-    const targets = authored ? imports : configured;
-    let found = targets.get(file);
+  const targets = new Map<string, Promise<Target | undefined>>();
+  const target = (file: string, specifier: string) => {
+    const key = bareSpecifier(specifier) ? `${specifier}\0${file}` : file;
+    let found = targets.get(key);
     if (!found) {
-      found = classifyNativeTarget(paths, scope, file, authored);
-      targets.set(file, found);
+      found = classifyNativeTarget(paths, scope, file, specifier);
+      targets.set(key, found);
     }
     return found;
   };
@@ -89,7 +87,7 @@ export async function planNative(
           directory,
           kind: edge.kind,
           file: edge.path,
-          target: target(edge.path, path.normalize(file) !== entry),
+          target: target(edge.path, edge.original),
         });
     }
   }
@@ -139,7 +137,7 @@ export async function plannedResult(
   try {
     const target = plan.paths[planned[3]];
     if (target === undefined) protocol("invalid resolution plan reference");
-    const file = paths.workspaceSource(target) ?? target;
+    const file = paths.workspaceSource(target, args.path) ?? target;
     paths.observe(file);
     await paths.dependencyUsage.resolved(args.path, args.resolveDir, file);
     return { path: file, sideEffects: planned[4] };
@@ -153,10 +151,10 @@ export async function classifyNativeTarget(
   paths: ModulePaths,
   scope: PackageScope,
   file: string,
-  preferSources = true,
+  specifier?: string,
 ): Promise<Target | undefined> {
   try {
-    const resolved = await paths.resolve(file, preferSources);
+    const resolved = await paths.resolve(file, specifier);
     return {
       path: resolved,
       sideEffects: await scope.sideEffects(file),

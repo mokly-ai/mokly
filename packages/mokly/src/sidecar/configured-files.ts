@@ -2,30 +2,19 @@ import path from "node:path";
 
 import type { Plugin } from "esbuild";
 
-import type { BundleParams } from "../generated/sidecar/BundleParams.js";
-
 import { virtualEntry } from "./bundle-entry.js";
 import type { ModulePaths } from "./module-paths.js";
+import { plannedResult } from "./native-plan.js";
 import type { Resolution } from "./native-resolution.js";
 import { PackageScope } from "./package-scope.js";
 import { absoluteSpecifierPattern } from "./path-pattern.js";
 
 /** Generated imports select their configured files without TypeScript path remapping. */
 export function configuredFiles(
-  params: BundleParams,
   paths: ModulePaths,
-  preview: string | null | undefined,
   resolution: Resolution,
 ): Plugin {
-  const importer = path.resolve(params.sourceRoot, virtualEntry);
-  const configured = new Set(
-    [
-      ...params.entryFiles,
-      ...params.storiesFiles,
-      ...(params.renderer ? [params.renderer] : []),
-      ...(preview ? [preview] : []),
-    ].map((file) => path.resolve(params.sourceRoot, file)),
-  );
+  const importer = path.resolve(paths.sourceRoot, virtualEntry);
   const scope = new PackageScope();
   return {
     name: "mokly-configured-files",
@@ -35,10 +24,10 @@ export function configuredFiles(
           args.namespace !== "file" ||
           args.pluginData !== undefined ||
           args.importer !== importer ||
-          !configured.has(args.path)
+          !paths.configuredFile(args.path)
         )
           return;
-        const file = await paths.resolve(args.path, false);
+        const file = await paths.resolve(args.path);
         const planned =
           resolution.mode === "planned"
             ? resolution.plan.get(args.importer, args.path, args.kind)
@@ -48,7 +37,7 @@ export function configuredFiles(
           planned &&
           resolution.plan.plan.paths[planned[3]] === file
         )
-          return { path: file, sideEffects: planned[4] };
+          return plannedResult(paths, args, resolution.plan.plan, planned);
         return { path: file, sideEffects: await scope.sideEffects(file) };
       });
     },

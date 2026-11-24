@@ -49,6 +49,7 @@ export function bundleOptions({
   handledImports,
 }: BundleBuild) {
   const settings = params.moduleResolution;
+  if (preview) paths.addConfigured(preview);
   if (evidence) paths.workspaceLookups.recordInto(evidence.physical);
   const loaders = Object.fromEntries(
     Object.entries(settings.loaders).filter(
@@ -80,7 +81,7 @@ export function bundleOptions({
     logLevel: "silent",
     ...(resolution.mode === "native" ? { logOverride: nativeLogOverride } : {}),
     plugins: [
-      configuredFiles(params, paths, preview, resolution),
+      configuredFiles(paths, resolution),
       ...(evidence ? [evidence.plugin] : []),
       ...(editImports ? [editImports.plugin] : []),
       ...consumerPlugins(

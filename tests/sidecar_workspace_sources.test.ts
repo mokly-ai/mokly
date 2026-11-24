@@ -144,6 +144,47 @@ test("a package without source uses its built file or reports its absence", asyn
   await historical.call("shutdown");
 });
 
+test("workspace imports preserve configured files and relative build paths", async (context) => {
+  const { head, params } = await workspace(context);
+  await write(
+    head,
+    "entry.mjs",
+    'export {value} from "local"; export {other} from "./packages/local/dist/relative.mjs";',
+  );
+  await write(
+    head,
+    "packages/local/package.json",
+    '{"name":"local","exports":"./dist/configured.mjs"}',
+  );
+  for (const [file, name] of [
+    ["configured", "value"],
+    ["relative", "other"],
+  ]) {
+    await write(
+      head,
+      `packages/local/dist/${file}.mjs`,
+      `export const ${name} = "Built";`,
+    );
+    await write(
+      head,
+      `packages/local/src/${file}.ts`,
+      `export const ${name} = "Source";`,
+    );
+  }
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<BundleResult>("bundle", {
+    ...params(head),
+    entryFiles: ["entry.mjs", "packages/local/dist/configured.mjs"],
+  });
+  assert.deepEqual(result.modules.map((module) => module.path).sort(), [
+    "entry.mjs",
+    "packages/local/dist/configured.mjs",
+    "packages/local/dist/relative.mjs",
+  ]);
+  await sidecar.call("shutdown");
+});
+
 test("a workspace bundle changes when its package layout or source candidates change", async (context) => {
   const { head, params } = await workspace(context);
   const layout = (rootDir: string) =>
@@ -197,6 +238,7 @@ test("a workspace bundle changes when its package layout or source candidates ch
   assert.equal(
     ModulePaths.createSync(inputs).resolveSync(
       path.join(head, "packages/local/compiled/value.js"),
+      "local",
     ),
     await fs.realpath(path.join(head, "packages/local/first/value.ts")),
   );

@@ -69,7 +69,7 @@ export function sideRequire(paths: ModulePaths, file: string): NodeJS.Require {
         !path.isAbsolute(original) ||
         inside(paths.sourceRoot, realpathSync(original))
       )
-        return paths.resolveSync(original);
+        return paths.resolveSync(original, name);
     } catch (error) {
       if (
         !error ||
@@ -81,7 +81,7 @@ export function sideRequire(paths: ModulePaths, file: string): NodeJS.Require {
     }
     const directory = importerDirectory(paths, name, path.dirname(file));
     const resolver = createRequire(path.join(directory, path.basename(file)));
-    return paths.resolveSync(resolver.resolve(name, options));
+    return paths.resolveSync(resolver.resolve(name, options), name);
   };
   const require = Object.assign(
     (name: string) => native(resolve(name)),

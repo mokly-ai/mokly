@@ -58,7 +58,7 @@ export async function consumerRequire(
           );
         else {
           try {
-            peers.set(name, await paths.resolve(resolved.path));
+            peers.set(name, await paths.resolve(resolved.path, name));
           } catch (error) {
             peers.set(name, new Error(detail(error)));
           }

@@ -16,6 +16,7 @@ import {
   sourceDependencyRoots,
   sourceDependencySync,
 } from "./source-dependencies.js";
+import { bareSpecifier } from "./specifier.js";
 import { WorkspaceLookups } from "./workspace-lookups.js";
 import { WorkspaceSources } from "./workspace-sources.js";
 
@@ -24,6 +25,10 @@ export interface ModuleSources {
   repositoryRoots: string[];
   moduleResolution: ModuleResolution;
   configurationDirectory?: string;
+  entryFiles?: readonly string[];
+  storiesFiles?: readonly string[];
+  renderer?: string | null;
+  postcss?: string;
 }
 
 /** All filesystem checks share one side's canonical roots and logical names. */
@@ -33,6 +38,8 @@ export class ModulePaths {
   readonly lookupDirectories = new Set<string>();
   readonly workspaceLookups = new WorkspaceLookups(this);
   private readonly workspace: WorkspaceSources;
+  private readonly configured: Set<string>;
+  private canonicalConfigured: Set<string> | undefined;
   private readonly observed = new Set<string>();
 
   private constructor(
@@ -43,7 +50,11 @@ export class ModulePaths {
     readonly sourceDependencyRoots: SourceDependencyRoot[],
     readonly settings: ModuleResolution,
     readonly dependencyUsage: DependencyUsage,
+    configured: readonly string[],
   ) {
+    this.configured = new Set(
+      configured.map((file) => path.resolve(sourceRoot, file)),
+    );
     this.workspace = new WorkspaceSources(
       sourceRoot,
       settings.resolveExtensions,
@@ -86,6 +97,12 @@ export class ModulePaths {
             : root
           : path.resolve(root, params.configurationDirectory),
       ),
+      [
+        ...(params.entryFiles ?? []),
+        ...(params.storiesFiles ?? []),
+        ...(params.renderer ? [params.renderer] : []),
+        ...(params.postcss ? [params.postcss] : []),
+      ],
     );
   }
 
@@ -175,16 +192,40 @@ export class ModulePaths {
     return { file: real, mapped: false, name: this.name(real) };
   }
 
-  private candidate(real: string, preferSources = true) {
+  addConfigured(file: string): void {
+    this.configured.add(path.resolve(this.sourceRoot, file));
+    this.canonicalConfigured = undefined;
+  }
+
+  configuredFile(file: string): boolean {
+    if (this.configured.has(file)) return true;
+    this.canonicalConfigured ??= new Set(
+      [...this.configured].flatMap((candidate) => {
+        try {
+          return [fs.realpathSync(candidate)];
+        } catch {
+          return [];
+        }
+      }),
+    );
+    return this.canonicalConfigured.has(file);
+  }
+
+  private candidate(real: string, specifier?: string) {
     const location = this.location(real);
-    const source = preferSources
-      ? this.workspaceSource(location.file)
-      : undefined;
+    const source = this.workspaceSource(location.file, specifier);
     return source === undefined ? location : { ...location, file: source };
   }
 
-  workspaceSource(file: string): string | undefined {
-    return this.repositoryOwned(file) ? this.workspace.source(file) : undefined;
+  workspaceSource(file: string, specifier?: string): string | undefined {
+    if (
+      specifier &&
+      bareSpecifier(specifier) &&
+      !path.isAbsolute(specifier) &&
+      this.repositoryOwned(file) &&
+      !this.configuredFile(file)
+    )
+      return this.workspace.source(file);
   }
 
   private checked(
@@ -212,12 +253,12 @@ export class ModulePaths {
     return new Error(`module ${name} has no source in this side`);
   }
 
-  async resolve(file: string, preferSources = true): Promise<string> {
+  async resolve(file: string, specifier?: string): Promise<string> {
     if (!path.isAbsolute(file)) return file;
     const real = await fs.promises.realpath(file);
     const candidate = this.candidate(
       (await sourceDependency(this, real)) ?? real,
-      preferSources,
+      specifier,
     );
     if (!candidate.mapped) return this.observe(candidate.file);
     try {
@@ -232,10 +273,13 @@ export class ModulePaths {
     }
   }
 
-  resolveSync(file: string): string {
+  resolveSync(file: string, specifier?: string): string {
     if (!path.isAbsolute(file)) return file;
     const real = fs.realpathSync(file);
-    const candidate = this.candidate(sourceDependencySync(this, real) ?? real);
+    const candidate = this.candidate(
+      sourceDependencySync(this, real) ?? real,
+      specifier,
+    );
     if (!candidate.mapped) return this.observe(candidate.file);
     try {
       const real = fs.realpathSync(candidate.file);
