@@ -25,5 +25,5 @@
   - Run the promotion command test from a temporary copy of the promotion scripts with no `node_modules`.
   - Set `GH_TOKEN` in the build test, so its check can fail.
 - **Impact if no action:** A regression in the publish command can upload changed files that a later rerun rejects, or fail every release after the uploads.
-- **Related:** `plans/follow-ups/desktop-release-scripts-need-coverage-floor.md` holds the wider fix for this class, which waits for the owner.
+- **Related:** On 2026-11-24 the owner declined a coverage floor for the release scripts. The `testing` skill rule and the review stay the guard for this class.
 - **Done when:** A test runs `release-publish` and fails when its hash comparison is removed, and the workflow test reads no step label.
