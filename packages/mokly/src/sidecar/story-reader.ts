@@ -2,15 +2,19 @@ import { createRequire } from "node:module";
 
 import type * as Storybook from "@storybook/react";
 import type * as Csf from "storybook/internal/csf";
+import type * as PreviewApi from "storybook/preview-api";
 
 import type { BundleExports, Generation } from "./bundle.js";
 import type { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
+import { wrapStoryArgs } from "./story-render.js";
 
 export type PortableStory = ReturnType<typeof Storybook.composeStory>;
 
 type ProjectAnnotations = ReturnType<typeof Storybook.setProjectAnnotations>;
 type BeforeEach = NonNullable<ProjectAnnotations["beforeEach"]>;
+type CsfModule = Omit<typeof Csf, "includeConditionalArg"> &
+  Partial<Pick<typeof Csf, "includeConditionalArg">>;
 
 export interface StoredStory {
   compose: (cleanups: Csf.CleanupCallback[]) => PortableStory;
@@ -47,7 +51,7 @@ export function readStories(
 ): ReadStories {
   const storybook = generation.require("@storybook/react") as typeof Storybook;
   const require = createRequire(generation.require.resolve("@storybook/react"));
-  const csf = require("storybook/internal/csf") as typeof Csf;
+  const csf = require("storybook/internal/csf") as CsfModule;
   const factory = Object.values(module).find(csf.isStory);
   const meta = record(module.default ?? factory?.meta.input);
   const preview =
@@ -67,13 +71,20 @@ export function readStories(
       { tags: ["mokly"] },
       annotations,
     ]);
-    const { beforeAll, beforeEach } = project;
+    const { beforeAll, beforeEach, applyDecorators, loaders } = project;
     const wrap = (value: unknown) =>
       render ? wrapStoryHooks(value, render.cleanups) : value;
-    // The combined project hooks include core and addon hooks.
-    if (render && beforeEach)
-      project.beforeEach = wrapBeforeEach(beforeEach, render.cleanups);
     try {
+      if (render) {
+        // The combined project hooks include core and addon hooks.
+        if (beforeEach)
+          project.beforeEach = wrapBeforeEach(beforeEach, render.cleanups);
+        const decorate =
+          applyDecorators ??
+          (require("storybook/preview-api") as typeof PreviewApi)
+            .defaultDecorateStory;
+        wrapStoryArgs(project, decorate, csf.includeConditionalArg);
+      }
       const copied = Object.fromEntries(
         Object.entries(module).map(([name, value]) => [
           name,
@@ -92,7 +103,8 @@ export function readStories(
       );
       return { stories: composeStories(copied), beforeAll };
     } finally {
-      if (beforeEach) project.beforeEach = beforeEach;
+      if (render)
+        Object.assign(project, { beforeEach, applyDecorators, loaders });
     }
   };
   const { stories: composed, beforeAll } = compose();

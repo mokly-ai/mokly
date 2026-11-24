@@ -87,6 +87,11 @@ stays out of the props with the `props-not-data` warning of the
 [entry props contract](./mokly-entry-props.md#schema-inference). The args that
 remain are the data args of the story.
 
+Each story render applies the argTypes `mapping` and `if` of its composed
+story, as Storybook's own preview does. A mapped arg reaches the decorators,
+the loaders, the `beforeEach` hooks, and the render with its mapped value. An
+arg whose `if` condition does not hold is not in their args.
+
 Decision: Mokly follows the composed argTypes and leaves React element args
 out without a warning, so Storybook's own example stories pass `--strict`.
 Leaving out function args only was rejected, and so were slots for React

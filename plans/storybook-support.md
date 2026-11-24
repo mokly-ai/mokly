@@ -164,8 +164,6 @@ branch fixes it as its file says. Fix them before the pull request into
 
 - [storybook-factory-helper-exports-become-stories.md](follow-ups/storybook-factory-helper-exports-become-stories.md):
   Severity High.
-- [storybook-argtypes-mapping-skipped-in-render.md](follow-ups/storybook-argtypes-mapping-skipped-in-render.md):
-  Severity Medium.
 - [variant-props-docs-say-merged.md](follow-ups/variant-props-docs-say-merged.md):
   Severity Medium.
 - [story-required-keys-derived-twice.md](follow-ups/story-required-keys-derived-twice.md):
