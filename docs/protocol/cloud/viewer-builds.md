@@ -1,5 +1,7 @@
 # Viewer Builds
 
+Status: The reads on each build notice and the 30-second poll while a live socket is open are not built yet. The [app live client and build notices milestone](../../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) builds them.
+
 How the viewer shows [cloud builds](./cloud-builds.md): the build route, the
 build card in the stage, references that have a build but no ready
 publication, builds in history and the switcher, and the Automatic builds
@@ -154,7 +156,9 @@ region a keyboard reader can focus and scroll. Its keyboard outline follows
 the [shared focus rule](./design-tokens.md#radius-elevation-and-focus). While
 the build is `queued` or
 `running`, or the log is not yet `complete`, and the tab is visible, the card
-reads the build and the log after its last sequence every three seconds,
+reads the build and the log after its last sequence on each
+[build notice](./cloud-build-api.md#live-notices) and by its poll: every three
+seconds while it has no open live socket, and every 30 seconds while it has one,
 reading further windows at once, up to eight, while a window comes back full;
 a hidden tab pauses, and a tab that becomes visible reads at once. A window is
 full when it holds 100 chunks or more than 192 KiB of text, the most a window

@@ -1,6 +1,6 @@
 # Live channel foundation
 
-Status: Active. On branch `calummoore/rust-realtime-postgres-libraries-5fi6`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/live-channel-foundation-implementation-n1hi`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Mokly Cloud cannot push anything to a reader. The build card polls every 3
 seconds, and comments, agent sessions and live cursors all need a push. This
@@ -114,15 +114,53 @@ My calls, 2026-11-24:
 - **Every message has a `type`.** Later kinds join without a new route.
 - **Message types.** The messages are OpenAPI component schemas from the Rust
   types, so the app's generated client holds their TypeScript types.
-- **Crates.** `mkc-live` holds the message types, the hub, the tick, the
-  limits, a `LiveRelay` trait and an in-memory relay for tests. `mkc-live-pg`
-  holds the Postgres relay. The route lives in `mkc-api`. The migration lives
-  in `mkc-db`.
+- **Crates.** `mkc-live-interface` holds the message types and the
+  `LiveRelay` trait. `mkc-live` holds the hub, the tick, the limits and an
+  in-memory relay for tests. `mkc-live-pg` holds the Postgres relay. The route
+  lives in `mkc-api`. The migration lives in `mkc-db`. The interface crate
+  came on 2026-11-25, as the call below says.
 - **The build card is the first user.** Builds and their log rows notify
   through triggers. The build card reads on each notice. It keeps today's
   3-second poll while the socket is down, and polls every 30 seconds while the
   socket is up, as a safety net. This proves the whole path in production
   before comments and agents use it.
+
+My calls, 2026-11-25, after a check of the code:
+
+- **SIGTERM starts the shutdown.** The API stops only on Ctrl-C today, and
+  Kubernetes sends SIGTERM. The API also handles SIGTERM: the hub closes each
+  socket with code 1001, then the existing graceful shutdown runs. Without
+  this, a socket stays open until Kubernetes kills the pod.
+- **Two build kinds with filtered triggers.** `build` notices come from an
+  insert into `builds` and from an update that changes a column that a reader
+  sees, with the row's `log_sequence` as the sequence. `build-log` notices
+  come from an insert into `build_log_chunks`, with the row's `sequence`. A
+  lease renewal and the `log_sequence` or `log_bytes` update of a log append
+  send no `build` notice, because a lease renewal changes nothing that a
+  reader sees and the `build-log` notice already covers the append.
+- **The route is a documented operation.** The router builds every route from
+  the OpenAPI document, so the live route is an operation with a 101 answer,
+  and the router sends it to the live handler, as it sends the upload
+  operations to the upload handler.
+- **A slow socket gets a resync, not an unbounded queue.** Each connection has
+  a bounded outbound queue. When the queue is full, the hub drops the message
+  and marks the connection. When the queue has room again, the hub sends
+  `resync` before the next message. So the hub never holds unbounded memory,
+  and a reader never misses a notice without a resync.
+- **An interface crate for the trait and the messages.** The 2026-11-24 call
+  put the `LiveRelay` trait in `mkc-live`, beside the hub. The crate layering
+  of the [architecture doc](../docs/architecture/cloud.md) puts each trait
+  that crosses a boundary in an `-interface` crate, and an adapter depends
+  only on interfaces. So `mkc-live-interface` holds the trait and the message
+  types, and both `mkc-live` and `mkc-live-pg` depend on it.
+- **Every open counts as a resync.** The client reads again each kind that it
+  shows each time its socket opens, the first open included. A change can
+  commit between the first REST read and the first open, and its notice then
+  reaches no socket. The cost is one more read for each page load.
+- **Docs that the change makes stale.** The
+  [viewer builds](../docs/protocol/cloud/viewer-builds.md) doc states the
+  card's 3-second poll, and the [viewer](../docs/protocol/cloud/viewer.md) doc
+  states the exact Content Security Policy. Both change with this work.
 
 Contract owners:
 
@@ -138,20 +176,21 @@ Contract owners:
 
 Depends on: none
 
-- [ ] Write `docs/protocol/cloud/live-channel.md` with a status line: the
+- [x] Write `docs/protocol/cloud/live-channel.md` with a status line: the
       route, the auth, the access checks, the message envelope, notices,
       client events, resync, the limits and the reconnect.
-- [ ] Add the route to `docs/protocol/cloud/rest-api.md`.
-- [ ] Add build notices and the poll rule to
+- [x] Add the route to `docs/protocol/cloud/rest-api.md`.
+- [x] Add build notices and the poll rule to
       `docs/protocol/cloud/cloud-build-api.md`.
-- [ ] Add the live channel to `docs/architecture/cloud.md`.
+- [x] Add the live channel to `docs/architecture/cloud.md`.
 
 ## Milestone 2: Live hub
 
 Depends on: 1
 
-- [ ] Create `mkc-live` with the message envelope, the hub, the tick with
-      coalesce keys, the limits and the `LiveRelay` trait.
+- [ ] Create `mkc-live-interface` with the message envelope and the
+      `LiveRelay` trait, and `mkc-live` with the hub, the tick with coalesce
+      keys and the limits.
 - [ ] Add the in-memory relay and tests for notices, client events,
       coalescing, resync and limits.
 

@@ -1,5 +1,7 @@
 # Cloud Build API
 
+Status: Build notices, the reads on each notice and the 30-second poll while a live socket is open are not built yet. The [app live client and build notices milestone](../../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) builds them.
+
 The REST surface of [cloud builds](./cloud-builds.md). It follows
 [REST transport](./rest-transport.md) for bodies, cursors, CSRF, cache headers
 and error envelopes, and [Viewer read model](./viewer-read-model.md) for
@@ -107,7 +109,8 @@ and application fixtures use the typed boolean.
 ## getBuild
 
 Returns the `Build` with its stored pull request context. Responses are
-`no-store`; the application polls it with the log while the build is active.
+`no-store`; the application reads it with the log while the build is active,
+as [Live notices](#live-notices) says.
 
 ## listBuildLog
 
@@ -139,6 +142,28 @@ nothing follows `nextAfter`; until then a reader keeps reading. `elision` is
 `{afterSequence, bytes}` while output after the head was dropped, and null
 otherwise. Invalid `after` or `limit` values are
 `validation-failed`.
+
+## Live Notices
+
+Builds send two [notice kinds](./live-channel.md#notices) to the live sockets
+of their project. The `id` of both kinds is the build ID.
+
+| Kind        | Sent on                                                                                 | `sequence`               |
+| ----------- | --------------------------------------------------------------------------------------- | ------------------------ |
+| `build`     | An insert into `builds`, and an update that changes a field of [`Build`](#build-shapes) | The row's `log_sequence` |
+| `build-log` | An insert into `build_log_chunks`                                                       | The chunk's `sequence`   |
+
+A lease renewal changes no field of `Build`, so it sends no `build` notice.
+The log counters that a log append updates, such as `log_sequence` and
+`log_bytes`, are not fields of `Build` either. So a log append sends only its
+`build-log` notices, which cover it. Only members hold a live socket, so build
+notices reach only the readers that the build reads admit.
+
+A reader keeps reading a build and its log until the log is `complete`, as
+[listBuildLog](#listbuildlog) says. While it does, it reads `getBuild` and the
+log window after its last sequence on each notice of that build. It also polls
+both reads: every 3 seconds while it has no open live socket, and every 30
+seconds while it has one, as a safety net.
 
 ## requestBuild
 

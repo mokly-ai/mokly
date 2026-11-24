@@ -88,6 +88,9 @@ Change a doc only when a requirement or a decision changes.
   rules, limits, pagination, versions and the error envelope, and
   [trusted proxies](./rest-proxies.md) the verified client-IP selection and
   hop configuration.
+- [Live channel](./live-channel.md) — the WebSocket of each open project:
+  authentication, access checks, messages, notices, client events, resync,
+  limits, reconnect and close codes.
 - [Persistence boundaries](./persistence-boundaries.md) — table ownership;
   [transactions, migrations and retention](./persistence-transactions.md)
   owns atomic work, the migration lifecycle and the retention of

@@ -1,5 +1,7 @@
 # Architecture
 
+Status: The live channel is not built yet. The [live hub](../../plans/live-channel-foundation.md#milestone-2-live-hub), [live route](../../plans/live-channel-foundation.md#milestone-3-live-route), [Postgres relay and notices](../../plans/live-channel-foundation.md#milestone-4-postgres-relay-and-notices) and [app live client](../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) milestones build it.
+
 Mokly Cloud is the hosted companion to the open-source `@mokly/mokly` mockup
 catalogue CLI. Teams author React mockups in their own repository; the cloud
 publishes each branch's exported catalogue, hosts the viewer, posts a GitHub
@@ -67,6 +69,25 @@ The API binary is a composition root. It constructs the concrete adapters
 sandbox runner, and the upload memory budget) and injects them into the
 services as trait objects. A service never names an adapter.
 
+### The live channel
+
+The API also serves the live channel: one WebSocket for each project that a
+member has open in the app. Each API replica runs a hub that holds its own
+sockets and checks their access again while they stay open. The hubs share no
+state. Postgres joins them through `LISTEN` and `NOTIFY` on two channels:
+
+- Change notices. A trigger on each table with a notice kind sends a notice
+  inside the write transaction, so every writer notifies. Postgres delivers
+  the notice to every replica only after the commit. A notice names the
+  changed record but carries no content. The app reads the change through the
+  REST read of its kind, which keeps the access rule of that read.
+- Client events. Each replica relays the client events of its sockets to the
+  other replicas.
+
+A replica that stops loses only its own sockets. Their readers reconnect to
+another replica and read again. The
+[live channel](../protocol/cloud/live-channel.md) holds the requirements.
+
 ### The catalogue server
 
 The catalogue server reads a ready publication's file index from the database
@@ -95,7 +116,7 @@ around it.
 | Origin           | Hosts                                                             | Serves                                                         |
 | ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------- |
 | Public origin    | `<domain>` in production; `<label>.preview.<domain>` in previews  | The site at its declared paths and the app at every other path |
-| API origin       | `api.<domain>`; `<label>.preview.api.<domain>` in previews        | The REST API                                                   |
+| API origin       | `api.<domain>`; `<label>.preview.api.<domain>` in previews        | The REST API and the live channel                              |
 | Catalogue origin | `p-<publication id>.<catalogue domain>`, one host per publication | The publication's files                                        |
 
 Published catalogues are user-authored HTML, so they are served only from
@@ -194,6 +215,7 @@ holds the preview lifecycle requirements.
   [Cloud build sandbox](../protocol/cloud/cloud-build-sandbox.md), and
   [Cloud build API](../protocol/cloud/cloud-build-api.md).
 - [REST API](../protocol/cloud/rest-api.md),
+  [Live channel](../protocol/cloud/live-channel.md),
   [Platform model](../protocol/cloud/platform-model.md),
   [Authentication and sessions](../protocol/cloud/auth-sessions.md),
   [GitHub App](../protocol/cloud/github-app.md), [Email](../protocol/cloud/email.md), and
