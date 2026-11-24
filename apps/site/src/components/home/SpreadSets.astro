@@ -3,11 +3,12 @@
  * The component sets in the spread's Components box: Button, PriceCard,
  * Badge, Avatar, Input and Toast of the depicted acme/storefront app, each a
  * labelled box that draws the component's variants at half size, at its
- * spot in the box. Codex has the Button set selected. A depiction: the
+ * spot in the box. One layer holds the sets, so a phone can shrink them
+ * together. Codex has the Button set selected. A depiction: the
  * spread hides it from assistive technology.
  *
  * Use: `<SpreadSets />`, in the Components box of `Spread.astro`. The rules
- * are in `src/styles/home-spread.css`.
+ * are in `src/styles/home-spread-sets.css`.
  */
 import Icon from "../Icon.astro";
 import Selection from "../Selection.astro";
@@ -33,20 +34,22 @@ const SETS: readonly SpreadSet[] = [
 ];
 ---
 
-{SETS.map((set) => (
-  <div class="site-home-set" style={spotStyle(set.at)}>
-    <span class="site-home-set-label">
-      <Icon name="component" size={12} />
-      {set.label}
-    </span>
-    <div class="site-home-set-box">
-      <div class="site-home-set-inner">
-        <AcmeSet name={set.name} />
+<div class="site-home-sets">
+  {SETS.map((set) => (
+    <div class="site-home-set" style={spotStyle(set.at)}>
+      <span class="site-home-set-label">
+        <Icon name="component" size={12} />
+        {set.label}
+      </span>
+      <div class="site-home-set-box">
+        <div class="site-home-set-inner">
+          <AcmeSet name={set.name} />
+        </div>
       </div>
+      {/* status: "ahead" (Codex) */}
+      {set.name === "button" && (
+        <Selection class="site-home-set-peer" handles="none" person="codex" />
+      )}
     </div>
-    {/* status: "ahead" (Codex) */}
-    {set.name === "button" && (
-      <Selection class="site-home-set-peer" handles="none" person="codex" />
-    )}
-  </div>
-))}
+  ))}
+</div>

@@ -1,7 +1,8 @@
 /**
  * The component sets in the spread's Components box: Button, PriceCard,
  * Badge, Avatar, Input and Toast, each a labelled box that draws the
- * component's variants at half size. Codex has the Button set selected.
+ * component's variants at half size. One layer holds the sets, so a phone
+ * can shrink them together. Codex has the Button set selected.
  */
 
 import { SiteIcon } from "../parts/icons.js";
@@ -26,7 +27,7 @@ const SETS: ReadonlyArray<{
 /** Every component set at its spot in the Components box. */
 export function SpreadSets() {
   return (
-    <>
+    <div className="site-home-sets">
       {SETS.map((set) => (
         <div className="site-home-set" key={set.name} style={spotStyle(set.at)}>
           <span className="site-home-set-label">
@@ -48,6 +49,6 @@ export function SpreadSets() {
           ) : null}
         </div>
       ))}
-    </>
+    </div>
   );
 }

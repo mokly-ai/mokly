@@ -3,17 +3,21 @@ import { type Locator, type Page, expect, test } from "@playwright/test";
 import { SITE_PATHS } from "../../src/navigation.js";
 
 /**
- * The home spread's desktop compositions, in a real browser. A window that
- * holds the whole spread draws every artboard with the Components box
- * beside the Specs box. A narrower window first drops the right column of
- * the Specs box, the pricing desktop and the three phones under it, with
- * Components still beside Specs, and then folds Components under Specs.
- * Every composition keeps the Components box inside the window. The parts
- * are depictions with no role, so the spec finds them by their classes.
+ * The home spread's compositions, in a real browser. A window that holds
+ * the whole spread draws every artboard with the Components box beside the
+ * Specs box. A narrower window first drops the right column of the Specs
+ * box, the pricing desktop and the three phones under it, with Components
+ * still beside Specs, and then folds Components under Specs. A phone draws
+ * three phones with Components under them. Every composition keeps the
+ * Components box inside the window. The parts are depictions with no role,
+ * so the spec finds them by their classes.
  */
 
 /** Runs a test in the desktop projects only. */
 const DESKTOP = { tag: "@desktop" };
+
+/** Runs a test in the mobile projects only. */
+const MOBILE = { tag: "@mobile" };
 
 /** The right column of the Specs box, which a narrower window drops. */
 const ROOMY = [
@@ -87,3 +91,23 @@ for (const { name, width, roomy, folded } of [
     },
   );
 }
+
+test(
+  "a phone draws the Components box under the three phones",
+  MOBILE,
+  async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(SITE_PATHS.home);
+    const { components } = boxes(page);
+    const phones = page.locator(".site-home-spread .site-home-board");
+    await expect(phones).toHaveCount(8);
+    await expect(phones.filter({ visible: true })).toHaveCount(3);
+    await expect(components).toBeVisible();
+    const phone = await box(page.locator(".site-home-spread-payment"));
+    const componentsBox = await box(components);
+    const width = page.viewportSize()?.width ?? 0;
+    expect(componentsBox.y).toBeGreaterThan(phone.y + phone.height);
+    expect(componentsBox.x).toBeGreaterThanOrEqual(0);
+    expect(componentsBox.x + componentsBox.width).toBeLessThanOrEqual(width);
+  },
+);

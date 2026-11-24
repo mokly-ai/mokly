@@ -7,7 +7,8 @@
  * all of it, the Specs box first drops its right column, the roomy parts,
  * and then the Components box folds under it; the 1280px desktop frame
  * draws the first step. On the mobile composition the spread is three
- * phones with the middle one centred. The whole spread is a depiction.
+ * phones with the middle one centred, and the Components box under them
+ * with its sets at 70 percent. The whole spread is a depiction.
  */
 
 import type { ReactNode } from "react";
@@ -138,32 +139,28 @@ export function Spread({ viewport }: { viewport: "mobile" | "desktop" }) {
             </Artboard>
           ))}
         </SiteSectionBox>
-        {wide ? (
-          <SiteSectionBox
-            className="site-home-spread-components"
-            meta={
-              <span className="site-home-works">
-                works with
-                <StorybookMark />
-                <b>Storybook</b>
-              </span>
-            }
-            tag="Components"
-          >
-            <SpreadSets />
-          </SiteSectionBox>
-        ) : null}
+        <SiteSectionBox
+          className="site-home-spread-components"
+          meta={
+            <span className="site-home-works">
+              works with
+              <StorybookMark />
+              <b>Storybook</b>
+            </span>
+          }
+          tag="Components"
+        >
+          <SpreadSets />
+        </SiteSectionBox>
         {/* status: "ahead" (Claude) */}
         <SiteCursor
           className="site-home-spread-claude site-home-spread-roomy"
           person="claude"
         />
+        {/* status: "ahead" (Codex) */}
+        <SiteCursor className="site-home-spread-codex" person="codex" />
         {wide ? (
-          <>
-            {/* status: "ahead" (Codex) */}
-            <SiteCursor className="site-home-spread-codex" person="codex" />
-            <SiteCursor className="site-home-spread-sam" person="sam" />
-          </>
+          <SiteCursor className="site-home-spread-sam" person="sam" />
         ) : null}
       </div>
     </div>

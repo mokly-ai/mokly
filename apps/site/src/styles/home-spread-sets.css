@@ -29,6 +29,14 @@
   fill: var(--mk-color-on-signal-fill);
 }
 
+/* The layer of the component sets, which a phone shrinks as one */
+
+.site-home-sets {
+  inset: 0;
+  position: absolute;
+  transform-origin: 0 0;
+}
+
 /* The component sets at half size, on a light backing in both schemes */
 
 .site-home-set {

@@ -87,6 +87,12 @@
 
 /* The component sets at half size, on a light backing in both schemes */
 
+.site-home-sets {
+  inset: 0;
+  position: absolute;
+  transform-origin: 0 0;
+}
+
 .site-home-set {
   position: absolute;
 }
@@ -191,4 +197,26 @@
     left: 58px;
     top: 954px;
   }
+}
+
+/* A phone draws the Components box under the three phones, as wide as the
+   Specs line, with its sets shrunk to 70 percent, and Codex's cursor on the
+   Button set. */
+
+[data-site-viewport="mobile"]
+  .site-home-spread-canvas
+  .site-home-spread-components {
+  height: 364px;
+  left: -175px;
+  top: 438px;
+  width: 350px;
+}
+
+[data-site-viewport="mobile"] .site-home-spread .site-home-sets {
+  transform: scale(0.7);
+}
+
+[data-site-viewport="mobile"] .site-home-spread-canvas .site-home-spread-codex {
+  left: -150px;
+  top: 511px;
 }

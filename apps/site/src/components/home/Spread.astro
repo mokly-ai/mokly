@@ -8,7 +8,8 @@
  * and Sam is on checkout. Where the window cannot hold all of it, the Specs
  * box first drops its right column, the parts marked
  * `site-home-spread-roomy`, and then the Components box folds under it. A
- * phone draws three phones, the middle one centred, with Claude's cursor.
+ * phone draws three phones, the middle one centred, with Claude's cursor,
+ * and the Components box under them with its sets at 70 percent.
  *
  * The site sends one page to every width, so the spread holds the parts of
  * both compositions. Each artboard's class names its spot, which the sheet
@@ -112,10 +113,7 @@ import "../../styles/home-spread-sets.css";
         <AcmePaymentPhone dark />
       </Artboard>
     </SectionBox>
-    <SectionBox
-      class="site-home-spread-components site-home-spread-wide"
-      tag="Components"
-    >
+    <SectionBox class="site-home-spread-components" tag="Components">
       <span class="site-home-works" slot="meta">
         works with
         <StorybookMark />
@@ -129,10 +127,7 @@ import "../../styles/home-spread-sets.css";
       person="claude"
     />
     {/* status: "ahead" (Codex) */}
-    <Cursor
-      class="site-home-spread-codex site-home-spread-wide"
-      person="codex"
-    />
+    <Cursor class="site-home-spread-codex" person="codex" />
     <Cursor class="site-home-spread-sam site-home-spread-wide" person="sam" />
   </div>
 </div>
