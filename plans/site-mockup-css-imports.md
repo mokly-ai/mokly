@@ -187,20 +187,23 @@ Depends on: 1
 The docs state the new way: the site screens import their CSS, and the
 styles guide steers authors to imports.
 
-- [ ] Update [mockup tooling](../docs/protocol/cloud/mockup-tooling.md):
+- [x] Update [mockup tooling](../docs/protocol/cloud/mockup-tooling.md):
       the site rule links the fonts, and the site screens import their
       sheets.
-- [ ] Update [site mockups](../docs/protocol/cloud/site-mockups.md): each
+- [x] Update [site mockups](../docs/protocol/cloud/site-mockups.md): each
       site document gets the fonts from the rule and its page's sheets from
       its imports.
-- [ ] Update the stylesheet paragraph and the key code list of the
+- [x] Update the stylesheet paragraph and the key code list of the
       [mockups README](../docs/mockups/README.md).
-- [ ] Add a paragraph to the [styles guide](../docs/guides/authoring/styles.md):
+- [x] Add a paragraph to the [styles guide](../docs/guides/authoring/styles.md):
       import the CSS of a mockup. Use a rule for an HTML screen, for sheets
       of one colour scheme, and for remote URLs. Say that the Changes view
       names imported CSS by the bundle of the mockup.
-- [ ] Run `npm run format:check` and
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+
+Evidence: `.context/site-mockup-css-imports/logs/`, with
+`m2-format-check.log`, `m2-markdown-links.log` and `m2-guides.log`.
 
 ## Milestone 3: Verification, commit, review, and pull request
 
