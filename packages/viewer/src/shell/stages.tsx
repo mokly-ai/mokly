@@ -1,24 +1,33 @@
 // The route stage renderer of the served Mokly shell: the routed entry's
-// stage, which waits for the entry's detail. All embedded consumer documents
-// are sandboxed without script permission.
+// stage, which waits for the entry's detail. A screen, a component, a page,
+// a Markdown document and a use case stand on the canvas in both layouts.
+// All embedded consumer documents are sandboxed without script permission.
 
-import type { GeneratedComponentView } from "../components/views.js";
-
+import { CanvasReadingStage } from "./canvas_reading.js";
+import { CanvasUseCaseStage } from "./canvas_use_case.js";
+import type { UseCaseFramesChoice } from "./canvas_use_case_frames.js";
+import {
+  CanvasWorkspaceStage,
+  type WorkspaceCanvas,
+} from "./canvas_workspace.js";
 import type { Catalogue } from "./catalogue.js";
 import { useRouteDelivery } from "./data_context.js";
-import { PublicStage } from "./public_stage.js";
 import { RetryContent, useRetryFocus } from "./retry_focus.js";
 import { routedEntries } from "./selection.js";
 import { StageDelivery } from "./stage_delivery.js";
 import type { RouteTarget } from "./target.js";
 
-/** Render the route-specific preview below the shell-owned heading. */
+/** Render the route-specific preview of the routed entry. */
 export function TargetStage(props: {
+  /** A workspace's frames on the canvas. */
+  canvas?: WorkspaceCanvas | undefined;
   catalogue: Catalogue;
   fragment?: string;
-  previewViews?: readonly GeneratedComponentView[];
   target: RouteTarget;
-  variantPath?: string | undefined;
+  /** The viewport and the scheme that a use case's step frames show. */
+  useCaseChoice?: UseCaseFramesChoice | undefined;
+  /** The step frame that the compact layout shows of a use case. */
+  useCaseStep?: string | undefined;
 }) {
   const delivery = useRouteDelivery();
   const focus = useRetryFocus();
@@ -34,14 +43,31 @@ export function TargetStage(props: {
   // After a Try again of the stage, its first frame takes focus.
   return (
     <RetryContent value={focus}>
-      <PublicStage
-        catalogue={model}
-        entry={current}
-        hasDarkFragments={props.catalogue.hasDarkFragments}
-        {...(props.fragment ? { fragment: props.fragment } : {})}
-        {...(props.previewViews ? { previewViews: props.previewViews } : {})}
-        {...(props.variantPath ? { variantPath: props.variantPath } : {})}
-      />
+      {current.kind === "use-case" && props.useCaseChoice ? (
+        // Another use case mounts its own step frames.
+        <CanvasUseCaseStage
+          catalogue={props.catalogue}
+          choice={props.useCaseChoice}
+          entry={current}
+          fragment={props.fragment}
+          key={current.path}
+          picked={props.useCaseStep}
+        />
+      ) : props.canvas &&
+        (current.kind === "screen" || current.kind === "component") ? (
+        <CanvasWorkspaceStage
+          canvas={props.canvas}
+          catalogue={props.catalogue}
+          entry={current}
+          fragment={props.fragment}
+        />
+      ) : current.kind === "page" || current.kind === "document" ? (
+        <CanvasReadingStage
+          catalogue={props.catalogue}
+          entry={current}
+          fragment={props.fragment}
+        />
+      ) : null}
     </RetryContent>
   );
 }

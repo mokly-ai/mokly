@@ -1,0 +1,125 @@
+---
+/**
+ * The code panel, the one dark surface of the site in both schemes, drawn
+ * at build time: a 44px tab bar that names the code, then the code as lines
+ * of syntax tokens. It has no Copy control and runs no script. The sheet
+ * draws the line numbers and the `$` prompt, so the code's text holds only
+ * the code. A long line wraps with a hanging indent.
+ *
+ * - `language`: the code's language. Without `files`, the one tab names
+ *   it, with the terminal icon for a shell and the file icon otherwise.
+ * - `files`: the tabs, the first one open with its icon; the language then
+ *   sits at the bar's end. A file's name may shrink and end in an ellipsis,
+ *   and its text keeps the whole name.
+ * - `meta`: a path or a note in the bar, such as `src/mockups`.
+ * - `icon`: the open tab's icon, in place of the default.
+ * - `lines`: the code, each line its tokens, typed by `code-lines.ts`.
+ * - `numbered` draws the line numbers and `prompt` a `$` before each line.
+ * - `lit` and `dimmed`: lines by their 1-based numbers, which take the
+ *   signal tint or the panel's muted text.
+ * - The `foot` slot: content under the code inside the panel, such as a
+ *   terminal.
+ *
+ * Use: `<CodePanel files={["pricing.mockup.tsx"]} language="tsx" lines={SOURCE} numbered />`.
+ * The rules are in `src/styles/code.css`, then `src/styles/code-tokens.css`,
+ * which holds the syntax colours, the dark text colours and the dimmed lines
+ * and must load second.
+ */
+import type { CodeLine } from "./code-lines.js";
+import Icon from "./Icon.astro";
+import type { IconName } from "./icons.js";
+
+import "../styles/code.css";
+import "../styles/code-tokens.css";
+
+interface Props {
+  readonly class?: string;
+  readonly dimmed?: readonly number[];
+  readonly files?: readonly string[];
+  readonly icon?: IconName;
+  readonly language: string;
+  readonly lines: readonly CodeLine[];
+  readonly lit?: readonly number[];
+  readonly meta?: string;
+  readonly numbered?: boolean;
+  readonly prompt?: boolean;
+}
+
+const {
+  class: className,
+  dimmed = [],
+  files,
+  icon,
+  language,
+  lines,
+  lit = [],
+  meta,
+  numbered = false,
+  prompt = false,
+} = Astro.props;
+
+/** The languages whose one tab takes the terminal icon. */
+const SHELLS: ReadonlySet<string> = new Set(["bash", "console", "sh", "shell"]);
+
+const tabIcon: IconName =
+  icon ?? (files === undefined && SHELLS.has(language) ? "terminal" : "file");
+
+/**
+ * Each line's tokens with its classes, as `dimmed` and `lit` mark it. In the
+ * `pre` every character of the template shows, so the code's markup breaks
+ * its lines only inside expressions and keeps no text between its tags.
+ */
+const rows = lines.map((tokens, index) => ({
+  classes: [
+    "site-code-line",
+    dimmed.includes(index + 1) && "site-code-line--dim",
+    lit.includes(index + 1) && "site-code-line--lit",
+  ],
+  tokens,
+}));
+---
+
+<div
+  class:list={[
+    "site-code",
+    numbered && "site-code--numbered",
+    prompt && "site-code--prompt",
+    className,
+  ]}
+>
+  <div class="site-code-head">
+    {files === undefined ? (
+      <span class="site-code-tab site-code-tab--open site-code-language">
+        <Icon name={tabIcon} size={13} />
+        {language}
+      </span>
+    ) : (
+      files.map((file, index) => (
+        <span
+          class:list={["site-code-tab", index === 0 && "site-code-tab--open"]}
+        >
+          {index === 0 && <Icon name={tabIcon} size={13} />}
+          <span class="site-code-tab-name">{file}</span>
+        </span>
+      ))
+    )}
+    {meta !== undefined && <span class="site-code-meta">{meta}</span>}
+    {files !== undefined && (
+      <span class="site-code-language site-code-language--end">{language}</span>
+    )}
+  </div>
+  <pre class="site-code-body"><code>{
+    rows.map(({ classes, tokens }) => (
+      <span class:list={classes}>{
+        tokens.map((token) =>
+          typeof token === "string" ? (
+            token
+          ) : (
+            <span class={`site-code-token--${token[0]}`}>{token[1]}</span>
+          ),
+        )
+      }</span>
+    ))
+  }</code></pre>
+  <slot name="foot" />
+</div>

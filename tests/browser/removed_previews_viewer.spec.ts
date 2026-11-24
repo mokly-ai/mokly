@@ -12,6 +12,7 @@ import { expect, type Page, type Request } from "@playwright/test";
 
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -24,6 +25,7 @@ import {
   type ComparisonViewerHost,
 } from "./comparison_viewer_host.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
+import { historicalFrame, previousVersionLabel } from "./previous_version.js";
 import { blockedFormSubmission } from "./shell_error_allowances.js";
 
 const STAGE = "#viewer [data-mokly-preview]";
@@ -68,7 +70,10 @@ function documentRequests(page: Page): string[] {
 const historicalPage = (page: Page) =>
   page.frameLocator(`${STAGE} iframe`).locator("h1");
 const historicalScreen = (page: Page) =>
-  page.frameLocator(`${STAGE} .mbk-frame-desktop iframe`).locator("h1");
+  historicalFrame(page.locator("#viewer"), "desktop")
+    .locator("iframe")
+    .contentFrame()
+    .locator("h1");
 
 for (const adapter of ["same-origin", "cross"] as const) {
   test(`an embedded viewer shows previous versions through the ${adapter} adapter`, async ({
@@ -80,7 +85,7 @@ for (const adapter of ["same-origin", "cross"] as const) {
     const requests: string[] = [];
     page.on("request", (sent) => requests.push(sent.url()));
     await page.goto(viewerAt(adapter));
-    await expect(page.locator("#viewer .mbk-previous")).toHaveText(
+    await expect(previousVersionLabel(page.locator("#viewer"))).toHaveText(
       "Showing previous version",
     );
     await expect(historicalPage(page)).toHaveText("Historical page");
@@ -90,7 +95,7 @@ for (const adapter of ["same-origin", "cross"] as const) {
       page.locator("#viewer"),
       comparisonPaths.removedScreen,
     );
-    await expect(page.locator("#viewer .mbk-diff-toolbar")).toHaveCount(0);
+    await expectNoComparison(page.locator("#viewer"));
     // No generation read carries a query: each reads the pinned generation's file.
     expect(
       requests.filter(
@@ -177,7 +182,9 @@ test("an embedded host CSP permits historical resources", async ({ page }) => {
   await page.goto(
     viewerAt("cross", comparisonPaths.removedLightOnly, host.cspUrl),
   );
-  const screen = page.frameLocator(`${STAGE} .mbk-frame-desktop iframe`);
+  const screen = historicalFrame(page.locator("#viewer"), "desktop")
+    .locator("iframe")
+    .contentFrame();
   await expect(screen.locator("h1")).toHaveText("Former screen");
   // The Before theme stylesheet colours the card that the screen used.
   await expect(screen.locator(".accent")).toHaveCSS(
@@ -216,9 +223,10 @@ test("a viewer selection change fences the previous request", async ({
   );
   const ended = endedRequests(page);
   await page.goto(viewerAt("same-origin"));
-  await expect(page.locator("#viewer .mbk-preview-status")).toHaveText(
-    "Loading previous version…",
-  );
+  const loading = page
+    .locator(STAGE)
+    .getByText("Loading previous version…", { exact: true });
+  await expect(loading).toBeVisible();
   await expect.poll(() => heldRequests.length).toBe(1);
   await navRow(page, comparisonPaths.removedScreen).click();
   await expect(historicalScreen(page)).toHaveText("Historical screen");
@@ -226,7 +234,7 @@ test("a viewer selection change fences the previous request", async ({
   await expect.poll(() => ended.has(heldRequests[0]!)).toBe(true);
   await passRenderingUpdates(page);
   await expect(historicalScreen(page)).toHaveText("Historical screen");
-  await expect(page.locator("#viewer .mbk-preview-status")).toHaveCount(0);
+  await expect(loading).toHaveCount(0);
 });
 
 test("several viewers on one page keep their own stages", async ({ page }) => {
@@ -240,11 +248,14 @@ test("several viewers on one page keep their own stages", async ({ page }) => {
     document.body.append(frame);
   }, `/viewer.html?adapter=same-origin&view=changes&entry=${comparisonPaths.removedScreen}`);
   const second = page.frameLocator("#second");
-  await expect(second.locator("#viewer .mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(second.locator("#viewer"))).toHaveText(
     "Showing previous version",
   );
   await expect(
-    second.frameLocator(`${STAGE} .mbk-frame-desktop iframe`).locator("h1"),
+    historicalFrame(second.locator("#viewer"), "desktop")
+      .locator("iframe")
+      .contentFrame()
+      .locator("h1"),
   ).toHaveText("Historical screen");
   await expect(historicalPage(page)).toHaveText("Historical page");
 });

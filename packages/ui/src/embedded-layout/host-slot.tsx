@@ -8,13 +8,18 @@ import type { CSSProperties, ReactNode, Ref } from "react";
 
 import { useMergedRef } from "../merged-ref/merged-ref.js";
 
-/** The slots of an embedded root that hold host content in the layout. */
+/**
+ * The slots of an embedded root that hold host content: the layout's, and
+ * the Changes tab's `changesStart`, which the right panel places.
+ */
 export type HostSlotName =
+  | "changesStart"
   | "emptyState"
   | "railEnd"
   | "railStart"
   | "sidePanel"
   | "stageOverlay"
+  | "topBarCenter"
   | "topBarEnd"
   | "topBarStart";
 
@@ -46,8 +51,14 @@ export interface StageOverlayContent {
   pointerEvents: "auto" | "none";
 }
 
-/** The preview surfaces that an overlay covers, in the order of the search. */
-const STAGE_SELECTOR = "[data-workspace-preview], .mbk-flow, .mbk-stage-embed";
+/**
+ * The preview surfaces that an overlay covers: a workspace's preview, and the
+ * routed canvas, which holds a use case's section or a document's reading
+ * frame. The search takes the first surface in the tree's order, so a
+ * workspace's preview, which holds its own canvas, keeps the overlay.
+ */
+const STAGE_SELECTOR =
+  "[data-workspace-preview], .mbk-canvas[data-mokly-stage]";
 
 /**
  * The stage overlay slot. It covers the shown preview surface of its stage

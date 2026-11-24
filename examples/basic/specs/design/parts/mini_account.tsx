@@ -7,12 +7,6 @@ const PROFILE_LINES: readonly SettingLine[] = [
   ["Photo", "Uploaded"],
 ];
 
-const SECURITY_LINES: readonly SettingLine[] = [
-  ["Password", "Changed 3 months ago"],
-  ["Two-step sign-in", "On"],
-  ["Signed-in devices", "2"],
-];
-
 function SettingsShot({
   action,
   compact,
@@ -54,19 +48,6 @@ export function MiniProfile({ compact }: { compact?: boolean | undefined }) {
       heading="Your profile"
       lines={PROFILE_LINES}
       place="Account · Profile"
-    />
-  );
-}
-
-/** Miniature depiction of the Security screen in the Profile folder. */
-export function MiniSecurity({ compact }: { compact?: boolean | undefined }) {
-  return (
-    <SettingsShot
-      action="Change password"
-      compact={compact}
-      heading="Security"
-      lines={SECURITY_LINES}
-      place="Account · Profile · Security"
     />
   );
 }

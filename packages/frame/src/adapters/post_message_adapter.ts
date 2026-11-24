@@ -34,6 +34,8 @@ export function postMessageAdapter(options: {
         throw new FrameError("origin");
       const url = frameUrl(frame, view, frameOrigin);
       let usage = frameUsage(view.usage);
+      const { canvasInput } = view;
+      let allowedEvents = frameEvents(usage, canvasInput);
       url.searchParams.set("mokly-host", win.location.origin);
       const bytes = win.crypto.getRandomValues(new Uint8Array(16));
       const nonce = [...bytes]
@@ -98,7 +100,7 @@ export function postMessageAdapter(options: {
       const subscribeEvents = () =>
         transport.request({
           type: "subscribe",
-          events: listeners.size ? frameEvents(usage) : [],
+          events: listeners.size ? allowedEvents : [],
         });
       const subscribed = () => {
         void subscribeEvents().catch((error: unknown) => {
@@ -113,6 +115,7 @@ export function postMessageAdapter(options: {
         async updateUsage(next) {
           if (disposed) throw new FrameError("disposed");
           usage = frameUsage(next);
+          allowedEvents = frameEvents(usage, canvasInput);
           await Promise.all([mounted.highlight([], "off"), subscribeEvents()]);
           if (disposed) throw new FrameError("disposed");
         },
@@ -136,6 +139,22 @@ export function postMessageAdapter(options: {
           check([key]);
           await transport.request({ type: "scroll-to", key });
           check([key]);
+        },
+        async boxModel(key) {
+          check([key]);
+          const response = await transport.request({ type: "measure", key });
+          check([key]);
+          if (response.type !== "box-model")
+            throw new FrameError("invalid-message");
+          return response.boxModel;
+        },
+        async contentBox() {
+          if (disposed) throw new FrameError("disposed");
+          const response = await transport.request({ type: "measure-content" });
+          if (disposed) throw new FrameError("disposed");
+          if (response.type !== "content-box")
+            throw new FrameError("invalid-message");
+          return response.contentBox;
         },
         subscribe(listener) {
           if (disposed) throw new FrameError("disposed");
@@ -178,8 +197,11 @@ export function postMessageAdapter(options: {
         }
         if (message.type === "error" && message.requestId === null)
           notify({ type: "error", code: message.code });
-        const events: readonly string[] = frameEvents(usage);
-        if (!listeners.size || !events.includes(message.type)) return;
+        if (
+          !listeners.size ||
+          !allowedEvents.some((type) => type === message.type)
+        )
+          return;
         if (message.type === "hover" || message.type === "click") {
           if (message.key !== null && !knownKey(usage, message.key)) {
             notify({ type: "error", code: "invalid-message" });
@@ -195,6 +217,26 @@ export function postMessageAdapter(options: {
           notify({ type: "pick-end", reason: message.reason });
         else if (message.type === "navigation")
           notify({ type: "navigation", navigation: message.navigation });
+        else if (message.type === "canvas-wheel")
+          notify({
+            type: message.type,
+            deltaY: message.deltaY,
+            deltaMode: message.deltaMode,
+            x: message.x,
+            y: message.y,
+          });
+        else if (message.type === "canvas-pinch")
+          notify({
+            type: message.type,
+            scale: message.scale,
+            x: message.x,
+            y: message.y,
+          });
+        else if (message.type === "canvas-key")
+          notify({ type: message.type, key: message.key });
+        else if (message.type === "canvas-focus")
+          notify({ type: message.type, visible: message.visible });
+        else if (message.type === "canvas-blur") notify({ type: message.type });
       };
       const load = () => {
         if (loaded) {

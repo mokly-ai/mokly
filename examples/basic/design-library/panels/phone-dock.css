@@ -1,0 +1,43 @@
+/* The phone's floating dock: a raised surface holding Catalogue, the right
+   panel's current tab, and Fit, each a 44px target, between hairline rules.
+   The composed zoom pill draws Fit. The Canvas layout places the dock. */
+.cv-dock {
+  align-items: center;
+  background: var(--cv-surface);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--cv-shadow-3);
+  display: inline-flex;
+  gap: 2px;
+  padding: 5px;
+}
+
+.cv-dock-control {
+  align-items: center;
+  border-radius: 11px;
+  color: var(--cv-text);
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 560;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px 0 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cv-dock-control > .cv-glyph {
+  color: var(--cv-text-secondary);
+}
+
+a.cv-dock-control:hover {
+  background: var(--cv-hover);
+}
+
+.cv-dock-rule {
+  background: var(--cv-border);
+  height: 24px;
+  margin: 0 4px;
+  width: 1px;
+}

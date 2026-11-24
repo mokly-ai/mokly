@@ -6,7 +6,7 @@ import { exampleToken } from "../fixtures/product-states";
 
 import { catalogueEntries } from "./catalogue-index";
 import { screenFile } from "./catalogue-paths";
-import { drawnPalette } from "./catalogue-reads";
+import { drawnPalette, viewPalette } from "./catalogue-reads";
 import { variantParent } from "./catalogue-variants";
 import {
   inventoryPages,
@@ -36,11 +36,23 @@ test("every standard product screen owns canonical, empty, loading and error sta
     );
     assert.ok(
       productInventoryViolations(entries, (path) =>
-        path === id ? "default" : drawnPalette(path),
+        path === id ? undefined : drawnPalette(path),
       ).length,
       id,
     );
   }
+  for (const id of [
+    "product/viewer/standalone",
+    "product/viewer/switcher/error",
+    "product/settings/project",
+    "product/account/sign-in/loading",
+  ])
+    assert.ok(
+      productInventoryViolations(entries, (path) =>
+        path === id ? "paper" : drawnPalette(path),
+      ).length,
+      id + " paper",
+    );
   const variants = entries.filter(
     (entry) => variantParent(entry) === "product/settings/project",
   );
@@ -75,13 +87,13 @@ test("every standard product screen owns canonical, empty, loading and error sta
   );
 });
 
-test("all 290 inventory pages render both widths and schemes with their stable identity", () => {
+test("all 292 inventory pages render both widths and schemes with their stable identity", () => {
   let rendered = 0;
   for (const { path: id, state } of inventoryPages())
     for (const view of ["mobile", "desktop"] as const)
       for (const scheme of ["light", "dark"] as const) {
         const html = readFileSync(screenFile(id, view, scheme), "utf8");
-        assert.ok(html.includes('class="folio-scope"'), id);
+        assert.equal(viewPalette(id, view, scheme), "default", id);
         assert.ok(html.includes('data-mkc-screen="' + id + '"'), id);
         if (!id.startsWith("product/viewer/"))
           assert.ok(!html.includes("<iframe"), id);
@@ -98,7 +110,7 @@ test("all 290 inventory pages render both widths and schemes with their stable i
         );
         rendered += 1;
       }
-  assert.equal(rendered / 4, 290);
+  assert.equal(rendered / 4, 292);
 });
 
 test("a state child that repeats its canonical drawing says why", () => {

@@ -31,7 +31,7 @@ Keep rejection fixtures under `docs/mockups/src/_tests_/` for every policy:
 6. Internal links, flow back-links and referenced resources resolve in the
    build. Build fresh output before tests inspect it.
 
-Email policy checks also require the five Folio colors, three accent roles
+Email policy checks also require the five named roles, three accent roles
 and transparency, and the two published logo images. The message table keeps
 separate borders with zero spacing. Only the action cell carries an accent
 fill. Each view equals the shared delivered body for its content, scheme and
@@ -172,7 +172,9 @@ The disk smoke opens every generated HTML document at 390px or 1440px, waits
 for documents, fonts and images, and rejects browser errors, missing
 resources, blank content and horizontal overflow, including frames.
 HTTP checks open the settings panes through the dialog rail, account entry and
-every flow through Browse, with keyboard focus and the Appearance control.
+every flow through Browse, and check keyboard focus in account entry. They read
+the canvas frames by their labels, check a settings pane in its Light and Dark
+frames, and choose Light and Dark for each flow with the flow's Frames filter.
 Control checks verify that each registered wrapper renders the real Firna
 component with the mapped theme, atomic styles, accessible fields, focus
 fallback, disabled states and the control-style policy.
@@ -206,8 +208,9 @@ reaches a control outside the panel.
 Browse requires HTTP. [Mockup baselines](./mockup-baselines.md) defines how
 the comparison base renders and when Changes are unavailable.
 
-Selection policies verify screen coverage, ownership and the Folio palette
-from the catalogue index and the rendered documents. Review screens remain deferred. Site policies require all eight
+Selection policies read the catalogue index and the rendered documents. They
+verify screen coverage, ownership and the palette that the
+[renderer boundary](./mockups.md#screen-and-renderer-boundary) chooses. Review screens remain deferred. Site policies require all eight
 site screens, their reciprocal tour, four viewport/scheme documents, semantic
 tokens and parity with `apps/site`. The entry identities and directory checks
 use `design/site/*`. Settings policies verify the rules of
@@ -225,9 +228,9 @@ sources and could install its dependencies during the suite.
 
 The paths, bytes and times of the build output are the same before startup,
 after the suite and after shutdown. Serve, including
-`serve --no-watch`, writes nothing into the repository. Serve
-frames each journey step's desktop view, or its mobile view while the shell is
-at most 760px wide. Mobile journeys also open the same owning
-mobile screens in Browse.
+`serve --no-watch`, writes nothing into the repository. Serve shows each
+journey under the package's
+[use-case rule](../mokly-shell-canvas-stage.md#use-case). Mobile journeys also
+open the same owning mobile screens in Browse.
 Test account-entry layouts at 320px and 200% text too. Keep wrapping and grid
 minimums readable without clipping or hidden overflow.

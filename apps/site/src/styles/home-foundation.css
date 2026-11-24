@@ -1,0 +1,297 @@
+/* The open-foundation frame on the home: the dark code panel with the
+   terminal under the source, wired to the rendered pricing artboard, and
+   its demo. The terminal's text mixes the signal into the panel's own
+   text, which keeps it above 4.5:1. The rules match the frame rules of
+   docs/mockups/styles/site/home-foundation.css and home-responsive.css;
+   home-closing.css holds the section's copy, facts and steps. The mockups
+   pin a composition with data-site-viewport; the site switches at 768px,
+   so each base rule is the phone composition, where the artboard follows
+   the code, and the desktop values and steps follow under the 768px query,
+   in the mockup's order. The code panel sits in a box that hides it from
+   assistive technology, as the artboard's box does. */
+
+.site-module-detail.site-home-source {
+  align-items: center;
+  display: grid;
+  gap: 64px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 72px;
+}
+
+.site-home-source .site-code,
+.site-home-source-board {
+  position: relative;
+  z-index: 2;
+}
+
+/* The artboard is centred in its column, which shows once it follows the
+   code; beside the code its column is as wide as the artboard. */
+
+.site-home-source-board {
+  justify-self: center;
+}
+
+.site-home-source .site-code-tab + .site-code-tab,
+.site-home-source .site-code-language--end {
+  display: none;
+}
+
+.site-home-terminal {
+  background: color-mix(in srgb, var(--mk-color-on-signal) 40%, transparent);
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  font-family: var(--mk-font-mono);
+  font-size: 11.5px;
+  line-height: 1.8;
+  padding: 12px 16px 14px;
+}
+
+.site-home-terminal-prompt {
+  color: var(--mk-color-signal);
+  margin-right: 12px;
+}
+
+.site-home-terminal-out {
+  align-items: center;
+  color: color-mix(in srgb, currentColor 40%, var(--mk-color-signal));
+  display: flex;
+  gap: 9px;
+}
+
+.site-home-terminal-out svg {
+  flex: none;
+  stroke-width: 2;
+}
+
+/* Codex's cursor, under the selected card. The page loads this sheet
+   before the shared cursor rules, so the selector takes the board's class
+   too, to outweigh the cursor's own place. */
+
+.site-home-source-board .site-home-source-codex {
+  left: calc(100% - 120px);
+  top: 76%;
+}
+
+/* The wire from the PriceCard's lines to the card on the artboard. The
+   site sends one page to every width, and a phone draws no wire, which the
+   mockups' mobile document leaves out: the frame hides the wire there with
+   a selector that outweighs the wire's own rule. */
+
+.site-home-wire {
+  height: 100%;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 3;
+}
+
+.site-home-source > .site-home-wire {
+  display: none;
+}
+
+.site-home-wire-path {
+  fill: none;
+  stroke: var(--mk-color-signal);
+  stroke-linecap: round;
+  stroke-width: 1.75;
+}
+
+.site-home-wire-end {
+  fill: var(--mk-color-surface);
+  stroke: var(--mk-color-signal);
+  stroke-width: 1.75;
+}
+
+/* The wire that fits each width below 1440px: a 400px box at the source
+   frame's right edge, where the code and the artboard keep their places. */
+
+.site-home-fit-wire {
+  display: none;
+  height: 400px;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 400px;
+  z-index: 3;
+}
+
+/* The desktop composition from the 768px breakpoint upward: the 286px
+   artboard beside the code, the 1440px wire, both tabs and the larger
+   terminal. */
+
+@media (min-width: 768px) {
+  .site-module-detail.site-home-source {
+    gap: 96px;
+    grid-template-columns: minmax(0, 1fr) 286px;
+    margin-top: 104px;
+  }
+
+  .site-home-source .site-code-tab + .site-code-tab {
+    display: inline-flex;
+  }
+
+  .site-home-source .site-code-language--end {
+    display: block;
+  }
+
+  .site-home-terminal {
+    font-size: 13px;
+    padding: 14px 20px 16px;
+  }
+
+  .site-home-source-board .site-home-board--phone .site-home-board-frame {
+    height: 618.9px;
+    width: 286px;
+  }
+
+  .site-home-source-board .site-home-board--phone .site-home-board-screen {
+    transform: scale(0.733333);
+  }
+
+  .site-home-source > .site-home-wire {
+    display: block;
+  }
+}
+
+/* The intermediate desktop steps: below 1440px the fitted wire takes over;
+   below 1280px the artboard narrows to 250px, so the code keeps its lines
+   whole beside the Specs panel; below 960px the artboard follows the code
+   and the wire leaves. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-home-wire,
+  .site-home-source > .site-home-wire {
+    display: none;
+  }
+
+  .site-home-fit-wire--large {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-module-detail.site-home-source {
+    gap: 64px;
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+
+  .site-home-source-board .site-home-board--phone .site-home-board-frame {
+    height: 541px;
+    width: 250px;
+  }
+
+  .site-home-source-board .site-home-board--phone .site-home-board-screen {
+    transform: scale(0.641026);
+  }
+
+  .site-home-fit-wire--large {
+    display: none;
+  }
+
+  .site-home-fit-wire--small {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 959px) {
+  .site-module-detail.site-home-source {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .site-home-source-board .site-home-board--phone .site-home-board-frame {
+    height: 519.4px;
+    width: 240px;
+  }
+
+  .site-home-source-board .site-home-board--phone .site-home-board-screen {
+    transform: scale(0.615385);
+  }
+
+  .site-home-fit-wire--small {
+    display: none;
+  }
+}
+
+/* The demo. The rules above draw its finished state, which the built page
+   shows. With motion allowed, the home demos island arms the frame while
+   it is out of view, and each animation waits paused at its start: the
+   lines unlit, the wire clipped back to its first dot and the selection
+   hidden. In view the frame plays: the lines light, the wire draws to the
+   PriceCard and the selection appears. Each animation ends on the frame's
+   own rules, so it fills backwards only and lets go at its end, and the
+   frame rests exactly as the built page draws it. Only opacity and
+   clip-path move, so while the island runs the demo each lit line draws
+   its tint on a layer under its code. Under reduced motion the island
+   sets no state, and home.css stops every animation. */
+
+.site-home-source[data-home-demo-state] .site-code-line--lit {
+  background: none;
+  position: relative;
+}
+
+.site-home-source[data-home-demo-state] .site-code-line--lit::after {
+  animation: site-home-source-show 300ms var(--mk-motion-easing) 150ms backwards;
+  background: color-mix(in srgb, var(--mk-color-signal) 13%, transparent);
+  content: "";
+  inset: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.site-home-source[data-home-demo-state] .site-home-wire,
+.site-home-source[data-home-demo-state] .site-home-fit-wire {
+  animation: site-home-source-wire 600ms var(--mk-motion-easing) 450ms backwards;
+}
+
+.site-home-source[data-home-demo-state] .site-home-fit-wire--small {
+  animation-name: site-home-source-wire-small;
+}
+
+.site-home-source[data-home-demo-state] .site-home-card-sel {
+  animation: site-home-source-show 300ms var(--mk-motion-easing) 1050ms
+    backwards;
+}
+
+.site-home-source[data-home-demo-state="armed"] .site-code-line--lit::after,
+.site-home-source[data-home-demo-state="armed"] .site-home-wire,
+.site-home-source[data-home-demo-state="armed"] .site-home-fit-wire,
+.site-home-source[data-home-demo-state="armed"] .site-home-card-sel {
+  animation-play-state: paused;
+}
+
+@keyframes site-home-source-show {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Each wire's clip opens from just before its first dot to just past its
+   last, measured from the frame's right edge, where every wire box ends:
+   the code's edge sits 382px from it beside the 286px artboard and 314px
+   beside the 250px one, and the dot on the card 274px and 240px. Each end
+   is outset by the dot's radius and half its stroke, as the drawings of
+   src/components/home/foundation-wires.ts place them. */
+
+@keyframes site-home-source-wire {
+  from {
+    clip-path: inset(0 387px 0 0);
+  }
+
+  to {
+    clip-path: inset(0 269px 0 0);
+  }
+}
+
+@keyframes site-home-source-wire-small {
+  from {
+    clip-path: inset(0 319px 0 0);
+  }
+
+  to {
+    clip-path: inset(0 235px 0 0);
+  }
+}

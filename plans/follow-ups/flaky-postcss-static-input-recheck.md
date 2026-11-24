@@ -143,3 +143,11 @@
   dependency. C still needs a named source.
 - **Action:** ask the user, because option B named no source, and the user
   asked to choose the next step, including A, for that result.
+
+**Reproduction, added 2026-11-20** from
+`calummoore/canvas-redesign-m1-cloud-viewer-mockups-1osn`: after an edit to
+one stylesheet under `docs/mockups/styles/product/` and no other change,
+`npm run mockups:build` failed every time with
+`[mokly/export-invalid] Inputs changed during the build`. Deleting the cached
+entry bundles under the Mokly cache directory made the next build pass. This
+gives a repeatable starting point for option A's trace.

@@ -6,7 +6,13 @@
 
 import { expect } from "@playwright/test";
 
-import { modeButton } from "./comparison_ui.js";
+import { comparisonSection, paneFrame } from "./comparison_sections.js";
+import {
+  chooseMode,
+  compareStage,
+  comparisonFrames,
+  modeButton,
+} from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import {
   generationOf,
@@ -43,33 +49,38 @@ test("a failed comparison stays in the screen and retries explicitly", async ({
     { times: 1 },
   );
   const requests = selectedRequests(page);
-  const frames = page.locator("[data-diff-stage] iframe");
+  const frames = comparisonFrames(page);
+  // The version before of the first frame, Desktop · Light.
+  const before = paneFrame(comparisonSection(page, "desktop"), "before");
   await page.goto(`/view/${changed}/`);
-  await modeButton(page, "Overlay").click();
+  await chooseMode(page, "Overlay");
   await expect(
     page.getByRole("button", { name: "Try again", exact: true }),
   ).toBeVisible();
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
+  // Inspect's head still names the screen behind the Changes tab.
+  await expect(page.locator('[data-inspect-section="details"] h2')).toHaveText(
     "Changed screen",
   );
   await expect(modeButton(page, "Overlay")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
+  await expect(frames).toHaveCount(0);
   expect(requests).toHaveLength(1);
 
   await loadComparison(page, "Try again");
   // The stage that shows the load and then the panes keeps the focus.
-  await expect(page.locator("[data-diff-stage]")).toBeFocused();
-  await expect(frames).toHaveCount(4);
-  await expect(frames.first()).toHaveAttribute(PANE_SOURCE, BEFORE_SNAPSHOT);
-  const retried = (await frames.first().getAttribute(PANE_SOURCE))!;
+  await expect(compareStage(page)).toBeFocused();
+  // Overlay stacks both versions in each of the four frames.
+  await expect(frames).toHaveCount(8);
+  await expect(before).toHaveAttribute(PANE_SOURCE, BEFORE_SNAPSHOT);
+  const retried = (await before.getAttribute(PANE_SOURCE))!;
 
   await loadComparison(page, "Refresh comparison");
-  await expect(frames).toHaveCount(4);
-  await expect(frames.first()).not.toHaveAttribute(PANE_SOURCE, retried);
-  await expect(frames.first()).toHaveAttribute(PANE_SOURCE, BEFORE_SNAPSHOT);
-  const refreshed = (await frames.first().getAttribute(PANE_SOURCE))!;
+  await expect(frames).toHaveCount(8);
+  await expect(before).not.toHaveAttribute(PANE_SOURCE, retried);
+  await expect(before).toHaveAttribute(PANE_SOURCE, BEFORE_SNAPSHOT);
+  const refreshed = (await before.getAttribute(PANE_SOURCE))!;
   expect(generationOf(refreshed)).not.toBe(generationOf(retried));
   // Only the reader's retry and refresh ask Serve for a new capture.
   expect(requests.map((url) => url.searchParams.get("refresh"))).toEqual([

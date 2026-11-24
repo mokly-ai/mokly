@@ -10,7 +10,7 @@ export default defineScreen({
   render: (_props, context) => (
     <SiteSecurityScreen viewport={context.viewport} />
   ),
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Security",
   useCasePaths: ["design/site/tour"],
 });

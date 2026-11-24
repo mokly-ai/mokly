@@ -7,13 +7,13 @@
 - **Added:** 2026-11-19, from the branch `calummoore/combine-mokly-cloud-into-repo-704s` (PR #350), CI run 44596520325.
 - **Location:**
   - `.github/workflows/ci.yml:629`: the `site-lighthouse` job. `.github/workflows/ci.yml:705`: the `required` job, Required CI, whose `needs` list leaves that job out.
-  - `apps/site/src/lighthouse.ts:34` and `:50`: the throttling profiles of option A. `:91`: `THRESHOLDS`, whose performance entry option C replaces. `:122`: `measurementWithRetry`, the retry that option B replaces. Option E adds a score rule.
+  - `apps/site/src/lighthouse.ts:34` and `:50`: the throttling profiles of option A. `:96`: `THRESHOLDS`, whose performance entry option C replaces. `:138`: `measurementWithRetry`, the retry that option B replaces. Option E adds a score rule.
   - `apps/site/scripts/lighthouse.mjs:45-101`: the audit loop, the category scores that it reads, and the shortfall lines. Options B, C, and E change it.
   - `apps/site/tests/lighthouse.test.ts:24-105`: the tests of the audited pages, the CPU multiplier, the retry, and the thresholds. Options B, C, and E change them.
   - `docs/protocol/cloud/site-delivery.md:165-182`: the Performance Budget requirement. Options B, C, and E change it. Options D and F keep it.
   - `apps/site/README.md:128`, `:251`, and `:258`: the command table and the Key Code entries of the budget. Options B, C, and E update them.
   - `apps/site/tests/site_ci.test.ts:62`: the test that no Lighthouse result can fail Required CI. Every option keeps it.
-  - `apps/site/src/components/home/Stage.astro` and `apps/site/scripts/stage.mjs`: the sandboxed stage frame of the home page, and the script that publishes its documents. Option D investigated there.
+  - `apps/site/src/pages/index.astro`: the home page. It draws its demos as static components at build time and embeds no frame. The sandboxed stage frame, where option D investigated, and the script that published its documents are deleted.
   - `apps/site/scripts/stage/fragments.ts:187`: `rewriteStage`, which rewrites each stage document and collects the resources that it links. Option F inlines the stylesheets there.
   - `docs/protocol/cloud/site-delivery.md:97-133`: the Home Stage requirement. Lines 102-103 copy each stylesheet beside the stage documents. Option F changes that rule.
   - `apps/site/tests/stage.test.ts:94` and `:224`: the tests that publish the stage stylesheets and other resources beside the documents. Option F changes them.
@@ -30,7 +30,9 @@
   - The `site-lighthouse` job, Site Lighthouse, makes one budget run on the GitHub-hosted `ubuntu-24.04` runner.
   - On 2026-11-19, PR #350 moved the job there from a Blacksmith runner, under the runner decision of main PR #342.
   - The budget audits `/`, `/docs/`, `/docs/authoring/config/`, `/docs/cli/serve/`, `/changelog/`, and `/terms/` at 390 px and 1440 px.
-  - The thresholds are performance ≥ 0.95, accessibility = 1, best practices ≥ 0.95, and SEO ≥ 0.95.
+  - The thresholds were performance ≥ 0.95, accessibility = 1, best practices ≥ 0.95, and SEO ≥ 0.95.
+  - On 2026-11-24, the Canvas redesign (PR #488) gave the same two performance scores in CI runs 45343539672 and 45347529329 and in one local run: `/changelog/` at 390 px scored 0.94, and `/pricing/` at 1440 px scored 0.93. Each other route scored 0.96 or more, the home 0.96 at 390 px and 1.00 at 1440 px. The Canvas home no longer embeds the stage frame.
+  - On 2026-11-24, Cal asked for rules that make the budget pass for now. The performance threshold is 0.9 until this item is decided. The other thresholds stay. Each option below names its own threshold.
   - The performance score checks first contentful paint, largest contentful paint, Speed Index, and total blocking time. It also checks layout stability.
   - The tables use FCP for first contentful paint, LCP for largest contentful paint, and TBT for total blocking time.
   - Both widths use simulated throttling with a fixed CPU slowdown multiplier of 1. The 390 px audit uses slow 4G, and the 1440 px audit uses 40 ms round trips at 10 Mbps.

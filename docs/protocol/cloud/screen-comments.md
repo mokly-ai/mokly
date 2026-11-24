@@ -37,7 +37,7 @@ use viewer locale with an absolute time accessible on request.
 `outdated` is separate from resolved/open. Compare the original anchor to the
 selected publication using validated per-view material evidence. An unchanged
 screen/view carries its thread forward; a changed/removed screen, missing
-viewport/theme, or unresolved element path marks it outdated. Unknown comparison
+viewport/scheme, or unresolved element path marks it outdated. Unknown comparison
 is `unverified`, never assumed unchanged. Source-file movement alone is not
 visual change. Do not mutate the original anchor when carrying forward.
 Outdated threads offer View original; a new comment on the current screen
@@ -46,8 +46,8 @@ while its PR is open and the author still has access.
 
 ## Panel And Composer
 
-Folio places comments below the catalogue stage. The panel names the selected
-screen, viewport and theme; desktop can show the two thread summaries side by
+Comments sit below the catalogue stage. The panel names the selected
+screen, viewport and scheme; desktop can show the two thread summaries side by
 side, while mobile stacks them. A full discussion opens as a document-width
 page in the soft-sidebar shell, with replies, composer and approval following
 in reading order. Open/Resolved filters use the registered Firna segmented

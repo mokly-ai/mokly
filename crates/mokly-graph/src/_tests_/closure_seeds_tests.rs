@@ -11,6 +11,7 @@ use crate::closure::{ClosureBuilder, Walker};
 use crate::policy::{PublicFile, PublicPolicyMock};
 use crate::public_denial::PublicDenial;
 use crate::reference_index::MemoryReferenceIndex;
+use crate::viewer_fonts::ViewerFonts;
 
 use super::queue;
 
@@ -101,7 +102,12 @@ fn a_public_stylesheet_seed_enters_the_closure_with_the_warning() {
             .returns(Ok(b"body { color: red; }".to_vec())),
     );
     let closure = walker(policy, tree)
-        .collect(ROUTE, &[], &seeds(&["styles/theme.css"]))
+        .collect(
+            ROUTE,
+            &[],
+            &seeds(&["styles/theme.css"]),
+            ViewerFonts::Denied,
+        )
         .unwrap();
     assert!(closure.files.contains("styles/theme.css"));
     assert_eq!(closure.warnings.len(), 1);
@@ -116,7 +122,11 @@ fn a_protected_stylesheet_seed_fails_without_a_warning() {
             .next_call(matching!("styles/theme.css"))
             .returns(Err(PublicDenial::Missing)),
     );
-    let result =
-        walker(policy, Unimock::new(())).collect(ROUTE, &[], &seeds(&["styles/theme.css"]));
+    let result = walker(policy, Unimock::new(())).collect(
+        ROUTE,
+        &[],
+        &seeds(&["styles/theme.css"]),
+        ViewerFonts::Denied,
+    );
     assert!(result.is_err());
 }

@@ -7,15 +7,15 @@
   aria-labelledby="mokly-icon-title"
 >
   <title id="mokly-icon-title">Mokly</title>
-  <g fill="#a3cdb4" transform="scale(2)">
-    <rect x="3" y="3" width="20" height="21" rx="4" opacity=".3" />
-    <rect x="9" y="8" width="20" height="21" rx="4" />
-    <path
-      d="M14 15h10M14 20h7"
-      fill="none"
-      stroke="#17221b"
-      stroke-width="2"
-      stroke-linecap="round"
-    />
+  <defs>
+    <mask id="mokly-icon-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" fill="#ffffff" />
+      <rect x="9" y="8" width="20" height="21" rx="4.8" fill="#000000" stroke="#000000" stroke-width="1.6" />
+    </mask>
+  </defs>
+  <g transform="scale(2)">
+    <rect x="3.6" y="3.6" width="18.8" height="19.8" rx="4.6" fill="none" stroke="#f4f4f5" stroke-width="1.8" mask="url(#mokly-icon-gap)" />
+    <rect x="9" y="8" width="20" height="21" rx="4.8" fill="#22c97d" />
+    <path d="M14 15h10M14 20h7" fill="none" stroke="#04130b" stroke-width="2.1" stroke-linecap="round" />
   </g>
 </svg>

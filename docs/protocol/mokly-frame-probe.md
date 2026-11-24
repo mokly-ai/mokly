@@ -64,15 +64,23 @@ no root region; content outside every region belongs to the screen.
 The script draws nothing in the preview document: no mask, no outline, and no
 label. It reports instance boundaries, geometry notifications, hovers, and
 picks, under the [wire protocol](./mokly-frame-probe-wire.md#wire-protocol-v3).
-The shell draws the
+On request it measures the box model of one instance, under the
+[box model rules](./mokly-frame-box-model.md) and the
+[`measure` request](./mokly-frame-probe-wire.md#wire-protocol-v4). On request
+it also measures the document's [content box](./mokly-frame-content-box.md).
+It reports [canvas input and focus](./mokly-frame-canvas-input.md) while the
+host subscribes to those events.
+The content box follows the document's own layout, so a component that fills
+its block shows at full width. The shell draws the
 [Highlight components](./mokly-component-explorer.md#highlight-components)
 visuals from the reported boxes, for highlights and picks alike, as the
-[frame adapter contract](./mokly-frame-adapter.md) requires. Host labels and
-keyboard-accessible instance lists use public catalogue titles. Do not clone
-or restyle consumer content.
+[frame adapter contract](./mokly-frame-adapter.md) requires. It draws the
+[canvas selection](./mokly-viewer-selection-canvas.md) from the reported boxes
+and the box model. Host labels and keyboard-accessible instance lists use
+public catalogue titles. Do not clone or restyle consumer content.
 
-Outgoing fields contain only validated ASCII identities/control values and
-numeric geometry.
+Outgoing fields contain only validated ASCII identities and control values,
+numeric geometry and input values, and focus visibility.
 
 ## Delivery Constraints
 
@@ -82,9 +90,10 @@ same-origin adapter's inspection even when published copies contain the inert
 script.
 No React, server module, cookie, network request, or host-specific integration is
 included in the IIFE. The built `client/frame-probe.js` stays within a
-**9 KiB (9,216 bytes) minified, uncompressed** script budget. The budget
-excludes the separately bounded per-document inert metadata, which is not
-executable code.
+**11 KiB (11,264 bytes) minified, uncompressed** script budget.
+Decision: 11 KiB, not 10 KiB, because the canvas input and the focus events need the room.
+The budget excludes the separately bounded per-document inert metadata, which
+is not executable code.
 
 ## Related Docs
 

@@ -27,7 +27,7 @@ retargeting. The `snapshot` query of the removed entry's `/view/<path>/` URL,
 its survival across axis and filter changes, and its removal by navigation to
 current content follow the
 [shell destination contract](./mokly-shell-destinations.md). Direct URLs and
-Back/Forward restore the exact record, and titles, breadcrumbs, Details,
+Back/Forward restore the exact record, and titles, breadcrumbs, Inspect,
 status, active rows, preview lookup, and navigation events always use it.
 Removed screens expose only their read-only previous version, with no
 component picking, inspection, or comparison action.
@@ -45,9 +45,15 @@ reject without committing. A partial selection that explicitly supplies
 `screenPath` without `snapshotId` returns to current content and clears a
 historical selection; viewport, scheme, filter, search and tag changes keep
 it. Shell links and pending route intents propose `{ screenPath, snapshotId }`
-atomically. The component page's variant bar links to the parent's own entry
-and its variant entries, proposing `select({ screenPath })` for the chosen
-entry; comparison mode across siblings follows
+atomically. On a screen, Inspect's
+[Variants list](./mokly-component-inspector-design.md#inspect) links to the
+parent's own entry and its variant entries, proposing `select({ screenPath })`
+for the chosen entry. On a component's variant set, choosing a variant on the
+wide canvas selects the variant's Light frame in place, under the
+[canvas selection](./mokly-viewer-selection-canvas.md#clicks-by-tab) contract.
+In the compact layout, the choice opens the variant's entry and proposes
+`{ screenPath, colorScheme }` to a controlled host as one selection, with the
+scheme of the variant's chosen frame. Comparison mode across siblings follows
 [variant navigation](./mokly-variant-navigation.md). A committed selection
 replaces frames and announces `onScreenNavigate` once. Switching control mode
 requires remounting. Never mutate supplied objects or arrays.
@@ -104,7 +110,9 @@ highlighted or pickable keys. In a frame without either, hover and click
 report any instance. When reportable instances nest under the pointer, the
 innermost one wins, for hover and for click. Decision: hover reports only the
 highlighted or pickable keys, like click, not every instance under the
-pointer, because hover then matches click in every mode.
+pointer, because hover then matches click in every mode. Inside the shell, the
+right panel's selected tab decides what a click on a frame selects, under the
+[canvas selection](./mokly-viewer-selection-canvas.md) contract.
 
 `highlightInstance`, `highlightInstances` and `scrollToInstance` operate on
 exact current views and reject missing or unavailable instances without
@@ -156,18 +164,28 @@ A mounted viewer keeps this shell state:
   and normalises it to the canonical form; React hosts receive route changes
   through `onScreenNavigate` and own their own URL.
 - **Selection** is the public `ViewerSelection`. The standalone shell keeps
-  viewport, scheme and filters in memory across in-shell navigation.
-- **Disclosure** covers navigation groups, the details inspector, navigation
-  split width and responsive drawer. Group storage and reconciliation follow
-  the [disclosure persistence contract](./mokly-disclosure-persistence.md).
-  Details and split-width choices persist per origin; the drawer and tag
-  picker panel reset on a full page load.
-- **Scroll** is tracked per shell `data-mokly-scroll` region for history;
-  comparison-document regions and the Scroll together choice follow their
-  [scrolling contracts](./mokly-comparison-scrolling.md).
-- **Workspace** state (props under edit, inspector tab and pane size, active
-  pick, highlight scope) lives with the mounted view and is discarded on
-  route change or source replacement.
+  viewport, scheme and filters across in-shell navigation. Its address names
+  a viewport other than Both as `viewport=mobile` or `viewport=desktop`, and
+  an address without `viewport` shows Both: each destination address of a
+  navigation, the Changes landing's included, names the kept viewport, and a
+  change on the shown entry, by a toggle of the
+  [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) or a pick of
+  the compact frame picker, replaces the query of the current history entry.
+  Decision: the address names the viewport, not the shell's memory alone, so
+  a copied address opens the shown viewport.
+- **Panel** is the right panel's selected tab, Inspect or Changes. It survives
+  in-shell navigation when the destination has that tab; otherwise, and on a
+  full page load, Inspect is selected.
+- **Disclosure** covers navigation groups, navigation split width and the
+  compact sheets. Group storage and reconciliation follow the
+  [disclosure persistence contract](./mokly-disclosure-persistence.md).
+  Split-width choices persist per origin; the sheets and the tag picker panel
+  reset on a full page load.
+- **Scroll** of comparison-document regions and the Scroll together choice
+  follow their [scrolling contracts](./mokly-comparison-scrolling.md).
+- **Workspace** state (props under edit, the unfolded sections of Inspect, the
+  canvas selection and its box model, active pick, highlight scope) lives with
+  the mounted view and is discarded on route change or source replacement.
 - **Data** is the installed index and the details the shell holds for the
   page's lifetime. In Serve the standalone shell adopts each publication under
   the [Serve update rules](./mokly-shell-delivery.md#updates-in-serve). A React
@@ -203,10 +221,10 @@ To establish the invariant, Browse must:
 6. reapply navigation visibility after those adjustments; and
 7. scroll the active row into the nearest visible part of the catalogue pane.
 
-The responsive drawer closes after navigation so it does not cover the new
-screen. Its tree keeps the opened destination path for the next time it is
-opened. A user may collapse the active path afterward; the next route change
-re-establishes the invariant.
+The catalogue sheet of the compact layout closes after navigation so it does
+not cover the new screen. Its tree keeps the opened destination path for the
+next time it is opened. A user may collapse the active path afterward; the
+next route change re-establishes the invariant.
 
 Each user edit to search or the All/Changes filter opens groups to reveal the
 rows matching the updated constraints. Reapplying the same active constraints
@@ -216,15 +234,15 @@ reopened. Clearing every filtering constraint restores the disclosure state
 captured before filtering began, except that an ancestor opened for the
 navigated destination stays open so the active row stays visible.
 
-Enhanced navigation preserves the selected viewport, colour scheme, and
-details disclosure. It collapses an expanded frame before installing the
-destination. Filters and search stay unchanged when the destination is already
-visible. Destination queries for the view axes and removed-entry snapshots
+Enhanced navigation preserves the selected viewport, colour scheme, and the
+right panel's tab. Filters and search stay unchanged when the destination is
+already visible. Destination queries for the view axes and removed-entry snapshots
 follow the [shell destination contract](./mokly-shell-destinations.md).
 
 ## Related Docs
 
 - [Embeddable viewer](./mokly-viewer.md)
+- [Canvas selection](./mokly-viewer-selection-canvas.md)
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md)
 - [Shell delivery and read model routes](./mokly-shell-delivery.md)
 - [Catalogue navigation](./mokly-navigation.md)

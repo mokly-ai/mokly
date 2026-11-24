@@ -1,0 +1,31 @@
+---
+/**
+ * The head of the changelog: the page title as the selected text layer,
+ * with eight handles, the name tag `Heading`, a size tag and, on desktop, a
+ * type badge with the face and the weight, then the lead. The measurements
+ * island writes the title's rendered size into the size tag and its font
+ * size into the badge.
+ *
+ * Use: `<Intro lead="Every release of the Mokly CLI, newest first." />`.
+ */
+import Selection from "../Selection.astro";
+
+interface Props {
+  readonly lead: string;
+}
+
+const { lead } = Astro.props;
+---
+
+<div class="site-changelog-intro">
+  <div class="site-changelog-heading">
+    <h1 id="changelog-title">What&#8217;s new in Mokly</h1>
+    <Selection
+      badge="Geist Semibold"
+      handles="all"
+      measure="changelog-title"
+      name="Heading"
+    />
+  </div>
+  <p class="site-lead">{lead}</p>
+</div>

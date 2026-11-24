@@ -19,7 +19,14 @@ export async function bundleProbe(entryPoint, outfile) {
   });
   const { code } = await minify(probePool(result.outputFiles[0].text), {
     ecma: 2023,
-    compress: { passes: 5, toplevel: true },
+    compress: {
+      passes: 5,
+      toplevel: true,
+      hoist_funs: true,
+      reduce_funcs: false,
+      sequences: false,
+      conditionals: false,
+    },
     mangle: { properties: { regex: probePrivateProperties } },
     format: { comments: false },
   });

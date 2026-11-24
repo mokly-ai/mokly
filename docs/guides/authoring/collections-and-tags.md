@@ -100,8 +100,8 @@ export default defineScreen({
 Tags are optional vocabulary, not a second
 hierarchy: an untagged catalogue is perfectly valid. A list must not repeat a
 tag, and folders have no tags or other entry metadata. In the catalogue,
-search for `tag:forms` to narrow the tree, and the details of a screen list
-its tags as chips you can search from.
+search for `tag:forms` to narrow the tree, and Inspect lists a screen's tags
+as chips you can search from.
 
 ## Exported types
 

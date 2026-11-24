@@ -7,8 +7,8 @@ import { entryDetailPath } from "../../packages/viewer/src/catalogue/delivery_pa
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
-
 import type {} from "./viewer_harness.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 declare global {
   interface Window {
@@ -65,7 +65,7 @@ for (const field of ["views", "identity"] as const) {
       ).toBeVisible();
       await expect(
         page
-          .getByTitle("Home — mobile", { exact: true })
+          .locator(canvasFrame("mobile"))
           .contentFrame()
           .getByRole("button", { name: "Visible", exact: true }),
       ).toBeVisible();
@@ -119,7 +119,7 @@ for (const field of ["views", "identity"] as const) {
       ).toBeVisible();
       await expect(
         page
-          .getByTitle("Home — mobile", { exact: true })
+          .locator(canvasFrame("mobile"))
           .contentFrame()
           .getByRole("button", { name: "Visible", exact: true }),
       ).toBeVisible();

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import type { MoklyViewerHandle, ViewerSelection } from "@mokly/viewer";
 
@@ -6,6 +6,8 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
 import { startViewerPick } from "./viewer_pick.js";
+import { clickRouteProbe, lastSelection } from "./viewer_route_probe.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -25,7 +27,9 @@ test("uncontrolled selection, slots and handle lifecycle", async ({ page }) => {
   await page.waitForFunction(
     () => window.viewerHarness.get("one").ref.current !== null,
   );
-  await expect(page.locator("#one .mbk-frag").first()).toHaveAttribute(
+  // The first shown frame: the canvas shows the column of the selection's
+  // viewport, Mobile.
+  await expect(page.locator("#one .mbk-frag:visible").first()).toHaveAttribute(
     "src",
     /\/static\/mokly-generated\/home\/index.mobile.html/,
   );
@@ -102,19 +106,27 @@ test("uncontrolled shell links apply valid axes independently on the same destin
   page,
 }) => {
   await page.evaluate(() => window.viewerHarness.start("one"));
-  const viewport = page.locator("#one [data-workspace-viewport]");
-  const scheme = page.locator("#one [data-workspace-scheme]");
+  // The root states the selection's preview scheme.
+  const root = page.locator("#one .mbk[data-mokly-shell]");
 
   await clickRouteProbe(page, "/view/home/?viewport=desktop&scheme=invalid");
-  await expect(viewport).toHaveValue("desktop");
-  await expect(scheme).toHaveAttribute("aria-pressed", "false");
+  await expect
+    .poll(() => lastSelection(page))
+    .toEqual(
+      expect.objectContaining({ viewport: "desktop", colorScheme: "light" }),
+    );
+  await expect(root).toHaveAttribute("data-mokly-color-scheme", "light");
 
   await clickRouteProbe(
     page,
     "/view/home/?viewport=mobile&viewport=desktop&scheme=dark",
   );
-  await expect(viewport).toHaveValue("desktop");
-  await expect(scheme).toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(() => lastSelection(page))
+    .toEqual(
+      expect.objectContaining({ viewport: "desktop", colorScheme: "dark" }),
+    );
+  await expect(root).toHaveAttribute("data-mokly-color-scheme", "dark");
 
   await clickRouteProbe(page, "/view/home/?viewport=invalid&scheme=invalid");
   expect(
@@ -133,10 +145,9 @@ test("controlled shell-axis proposals stay inert until the host accepts them", a
     window.viewerHarness.start("one", { controlled: true }),
   );
   await clickRouteProbe(page, "/view/home/?viewport=desktop&scheme=dark", true);
-  const viewport = page.locator("#one [data-workspace-viewport]");
-  const scheme = page.locator("#one [data-workspace-scheme]");
-  await expect(viewport).toHaveValue("mobile");
-  await expect(scheme).toHaveAttribute("aria-pressed", "false");
+  // The root states the shown selection's preview scheme.
+  const root = page.locator("#one .mbk[data-mokly-shell]");
+  await expect(root).toHaveAttribute("data-mokly-color-scheme", "light");
 
   const proposal = await page.evaluate(() =>
     window.viewerHarness
@@ -157,8 +168,7 @@ test("controlled shell-axis proposals stay inert until the host accepts them", a
         .value as ViewerSelection,
     );
   });
-  await expect(viewport).toHaveValue("desktop");
-  await expect(scheme).toHaveAttribute("aria-pressed", "true");
+  await expect(root).toHaveAttribute("data-mokly-color-scheme", "dark");
 });
 
 test("StrictMode replay and independent roots", async ({ page }) => {
@@ -196,7 +206,7 @@ test("postMessage frames emit pick/hover/click and support imperative rejection"
     const host = window.viewerHarness.get("one");
     await host.ref.current.startPick();
   });
-  const frame = page.frameLocator('#one iframe[data-workspace-frame="mobile"]');
+  const frame = page.frameLocator(`#one ${canvasFrame("mobile")}`);
   await frame.getByText("Visible", { exact: true }).hover();
   await expect
     .poll(() =>
@@ -260,25 +270,3 @@ test("postMessage frames emit pick/hover/click and support imperative rejection"
     ]),
   );
 });
-
-async function clickRouteProbe(
-  page: Page,
-  href: string,
-  keyboard = false,
-): Promise<void> {
-  await page.evaluate((destination) => {
-    document
-      .querySelectorAll("#one [data-route-probe]")
-      .forEach((element) => element.remove());
-    const link = document.createElement("a");
-    link.dataset.routeProbe = "";
-    link.href = destination;
-    link.textContent = "Route probe";
-    document.querySelector("#one [data-mokly-shell]")?.append(link);
-  }, href);
-  const link = page.locator("#one [data-route-probe]");
-  if (keyboard) {
-    await link.focus();
-    await page.keyboard.press("Enter");
-  } else await link.click();
-}

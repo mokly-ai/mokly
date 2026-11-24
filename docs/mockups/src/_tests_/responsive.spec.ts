@@ -61,9 +61,11 @@ for (const id of screens) {
       // Every page must reach the reader with something, and every active plain
       // link must show where focus is. Only an open panel is exempt from having
       // one: it is the whole document, and everything before it is the inert
-      // backdrop, so it carries no skip link to be that link. Asserting the
-      // outline on the package's own controls instead of ours was tried and is
-      // not available here — they focus with `outline: auto`.
+      // backdrop, so it carries no skip link to be that link. A link of the
+      // package's shell, inside its `.mbk` root, shows the focus glow of
+      // decision 38: no outline and a box shadow, on the link or, for a
+      // catalogue row, on its pill. The cloud's own links keep the solid
+      // outline.
       const overlay = await page.locator(".fo-viewer-backdrop").count();
       const links = await plainLinks(page).all();
       if (overlay === 0) expect(links.length).toBeGreaterThan(0);
@@ -74,9 +76,17 @@ for (const id of screens) {
       for (const link of links) {
         await link.focus();
         await expect(link).toBeFocused();
-        expect(
-          await link.evaluate((node) => getComputedStyle(node).outlineStyle),
-        ).toBe("solid");
+        const focus = await link.evaluate((node) => ({
+          glow: [undefined, "::before", "::after"].some(
+            (part) => getComputedStyle(node, part).boxShadow !== "none",
+          ),
+          outline: getComputedStyle(node).outlineStyle,
+          shell: node.closest(".mbk") !== null,
+        }));
+        if (focus.shell) {
+          expect(focus.outline).toBe("none");
+          expect(focus.glow).toBe(true);
+        } else expect(focus.outline).toBe("solid");
       }
     },
   );
@@ -126,7 +136,7 @@ for (const scheme of ["light", "dark"] as const) {
         const headerBounds = await contentBounds(header);
         const content = page.locator(".fo-account-content");
         const panelBounds = await contentBounds(content);
-        for (const font of ["var(--mk-font-display)", "serif"]) {
+        for (const font of ["var(--mk-font-sans)", "sans-serif"]) {
           await page.addStyleTag({
             content: ".review-brand { font-family: " + font + "; }",
           });

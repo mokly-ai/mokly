@@ -5,9 +5,10 @@ around the hosted viewer. Accounts, onboarding, roles and settings are in
 [Product accounts and roles](./product-accounts-and-roles.md). See
 [Viewer](./viewer.md), [Settings dialog](./settings-dialog.md), and the
 [OpenAPI boundary](../../api/README.md); comments and approvals are the draft
-contracts of the review phase. Product uses Folio's neutrals, generous
-sans typography and [shared controls](./shared-controls.md). The Mokly mark,
-serif wordmark and green accent remain the brand.
+contracts of the review phase. Product uses the Canvas palette, Geist and
+[shared controls](./shared-controls.md). The Mokly mark, the Geist wordmark
+and the signal green are the brand, as [Shell brand](../mokly-shell-brand.md)
+defines.
 
 ## Routes And Entry
 
@@ -195,22 +196,26 @@ catalogue for nothing the chrome cannot show. Once signed in with a project,
 the user is always inside the hosted `@mokly/viewer` stage, and every piece of
 cloud chrome lives in the package's slots: the workspace and project
 switcher, the branch and pull request switcher, publication history, share,
-settings and the account menu. Project and workspace lists are panels
-opened from that chrome, not destinations. Settings opens the dialog over the
-viewer; workspace and project settings are its panes, not pages. The only
-full pages outside the viewer are account entry and onboarding, which end by
-opening the new project's viewer with its build or publishing card until the
-first publication arrives.
+and the account menu with Theme, Settings, Docs, Changelog and Sign out.
+Project and workspace lists are panels opened from that chrome, not
+destinations. Settings opens the dialog over the viewer; workspace and project
+settings are its panes, not pages. Docs and Changelog open the site's `/docs/`
+and `/changelog/`, as
+[Marketing site](./marketing-site.md#links-from-the-app-to-the-site) defines.
+The only full pages outside the viewer are account entry and onboarding, which
+end by opening the new project's viewer with its build or publishing card until
+the first publication arrives.
 
-The package host contract, the mapping of six cloud controls into the
-package's two top-bar slots, and the mockup representation are in
-[Viewer chrome](./viewer-chrome.md); the top bar's geometry is in
-[Folio viewer compositions](./folio-viewer.md).
+The package host contract, the mapping of five cloud controls into the package's
+three top-bar slots, and the mockup representation are in [Viewer
+chrome](./viewer-chrome.md); the top bar's geometry is in [Viewer
+compositions](./folio-viewer.md).
 
-Mobile keeps the same model: the publication stays in the compact top bar and
-the project, history, Share, Settings and account actions live in its **More**
-menu. The switcher, history and Share open as bottom sheets, while Settings and
-account use full-screen layers.
+Mobile keeps the same model: the publication stays in the compact top bar, and
+its **More** menu holds the project, History and Share, then the account rows:
+who is signed in, Theme, Settings, Docs, Changelog and Sign out. The switcher,
+history and Share open as bottom sheets, and Settings opens the full-screen
+settings layers.
 History/share confirmations may use a centered shared modal on desktop or a
 bottom sheet on mobile; Escape/Close restores focus to the trigger. Product
 screens own one main landmark, one H1 and a skip link. Use Firna typography for

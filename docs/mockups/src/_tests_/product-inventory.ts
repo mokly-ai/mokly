@@ -162,8 +162,8 @@ export function inventoryPages(): {
 /**
  * The catalogue index holds exactly the product screens that the inventory
  * declares, each parent with its variants in authored order, and every one
- * of them renders in the Folio palette. `palette` gives the palette of an
- * entry's rendered documents.
+ * of them renders in the default Canvas palette. `palette` gives
+ * the palette of an entry's rendered documents.
  */
 export function productInventoryViolations(
   entries: readonly InventoryRecord[],
@@ -177,9 +177,9 @@ export function productInventoryViolations(
     if (
       entry?.kind !== "screen" ||
       variantParent(entry) !== undefined ||
-      palette(screen.path) !== "folio"
+      palette(screen.path) !== "default"
     ) {
-      problems.push("Folio parent screen: " + screen.path);
+      problems.push("parent screen in its family's palette: " + screen.path);
       continue;
     }
     const variants = entries
@@ -189,8 +189,8 @@ export function productInventoryViolations(
       problems.push("variants in authored order: " + screen.path);
     for (const path of screen.variants) {
       const variant = byId.get(path);
-      if (variant?.kind !== "screen" || palette(path) !== "folio")
-        problems.push("Folio variant: " + path);
+      if (variant?.kind !== "screen" || palette(path) !== "default")
+        problems.push("variant in its family's palette: " + path);
     }
     if (!entry.path.startsWith("product/" + screen.family + "/"))
       problems.push("family path: " + screen.path);

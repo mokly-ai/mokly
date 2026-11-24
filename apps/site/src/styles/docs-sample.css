@@ -1,0 +1,295 @@
+/* The HTML sample band that src/docs/sample-band.ts draws: a band of canvas
+   across the page sheet that sets a guide's HTML sample, under the screen's
+   section header, beside the views it renders, under the viewport and
+   saved-state controls. The sample island, src/components/docs/
+   sample-island.ts, shows the controls, switches the views and places the
+   wire that ties the lit line to its element. docs-sample-frames.css draws
+   the frames.
+
+   The class names and the rules match docs/mockups/styles/site/
+   docs-sample.css and the sample rules of docs-responsive.css and
+   docs-steps.css. The mobile composition is the base rule, the desktop one
+   follows at 768px, and the step that stacks the band while the page frame
+   is narrower than 846px follows it as ranges from 768px. */
+
+.site-docs-sample {
+  align-items: start;
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-position: -1px -1px;
+  background-size: 24px 24px;
+  box-shadow:
+    inset 0 1px 0 var(--mk-color-border),
+    inset 0 -1px 0 var(--mk-color-border);
+  column-gap: 40px;
+  display: grid;
+  grid-template-areas:
+    "head"
+    "code"
+    "controls"
+    "stage";
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 12px;
+  padding: 28px 14px 0;
+  row-gap: 14px;
+}
+
+/* The screen's section header: its title as a dark tag and its path */
+
+.site-docs-sample-head {
+  align-items: center;
+  display: flex;
+  gap: var(--mk-space-2);
+  grid-area: head;
+  min-height: 34px;
+}
+
+.site-docs-sample-name {
+  background: var(--mk-color-text);
+  border-radius: 6px;
+  color: var(--mk-color-surface);
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.01em;
+  line-height: 24px;
+  padding: 0 9px;
+}
+
+.site-docs-sample-head .site-chip {
+  background: var(--mk-color-surface);
+}
+
+/* The code, in the numbered panel; on mobile its bar leaves out the folder */
+
+.site-docs-sample-code {
+  grid-area: code;
+}
+
+.site-docs-sample-code .site-code-body {
+  font-size: 0.75rem;
+}
+
+.site-docs-sample-code .site-code-meta {
+  display: none;
+}
+
+.site-docs-sample-code .site-code-language--end {
+  margin-left: auto;
+}
+
+/* The viewport and saved-state controls: native radios drawn as the
+   segments of a track; the chosen segment sits on the canvas tone. Only the
+   sample island shows them, once it runs them. */
+
+.site-docs-sample-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-2);
+  grid-area: controls;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.site-docs-sample:not([data-sample-ready]) .site-docs-sample-controls {
+  display: none;
+}
+
+.site-docs-sample-control {
+  background: var(--mk-color-surface);
+  border: 0;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: inline-flex;
+  gap: 2px;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 2px;
+}
+
+.site-docs-sample-option {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--mk-color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: var(--mk-layout-control-min);
+  justify-content: center;
+  min-width: var(--mk-layout-control-min);
+  padding: 0 10px;
+  position: relative;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+  white-space: nowrap;
+}
+
+.site-docs-sample-option::before {
+  content: "";
+  inset: -7px 0;
+  position: absolute;
+}
+
+.site-docs-sample-option:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:checked) {
+  background: var(--mk-color-background);
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+/* The radio is hidden, so its segment draws the focus glow, before the
+   chosen segment's ring */
+
+.site-docs-sample-option:has(.site-docs-sample-input:focus-visible) {
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:checked:focus-visible) {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
+}
+
+.site-docs-sample-option svg {
+  flex: none;
+}
+
+/* The stage of the frames; docs-sample-frames.css draws each frame */
+
+.site-docs-sample-stage {
+  grid-area: stage;
+  justify-self: center;
+  margin-top: 22px;
+  padding: 0 0 34px;
+  position: relative;
+}
+
+.site-docs-sample-stage--desktop {
+  justify-self: stretch;
+}
+
+/* The wire from the lit line at the code panel's edge to the middle of its
+   element at the frame's edge, with a dot at each end. The sample island
+   places the wire and its ends, and shows it only while the band sets the
+   frame beside the code. */
+
+.site-docs-sample-wire {
+  color: var(--mk-color-signal);
+  pointer-events: none;
+  position: absolute;
+}
+
+.site-docs-sample-wire svg {
+  display: block;
+}
+
+.site-docs-sample-end {
+  background: var(--mk-color-surface);
+  border: 1.5px solid currentColor;
+  border-radius: var(--mk-radius-pill);
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  position: absolute;
+  width: 7px;
+}
+
+/* The desktop composition: the code beside the stage, under the head and
+   the controls, and the 30px segments with the 44px band of their ::before */
+
+@media (min-width: 768px) {
+  .site-docs-sample {
+    grid-template-areas:
+      "head controls"
+      "code stage";
+    grid-template-columns: minmax(0, 1fr) 266px;
+    padding: 44px 32px 6px;
+    row-gap: 40px;
+  }
+
+  .site-docs-sample-code .site-code-meta {
+    display: block;
+  }
+
+  .site-docs-sample-code .site-code-language--end {
+    margin-left: 0;
+  }
+
+  .site-docs-sample-controls {
+    margin-top: 0;
+  }
+
+  .site-docs-sample-option {
+    height: 30px;
+    min-width: 34px;
+  }
+
+  .site-docs-sample-stage {
+    justify-self: auto;
+    margin-top: 0;
+    padding-left: 16px;
+  }
+}
+
+/* The band stacks the code, the controls and the frame while the page frame
+   is narrower than about 846px, the width that the frame and its code need
+   side by side */
+
+@media (min-width: 768px) and (max-width: 1169px),
+  (min-width: 1280px) and (max-width: 1429px) {
+  .site-docs-sample {
+    grid-template-areas:
+      "head"
+      "code"
+      "controls"
+      "stage";
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
+  }
+
+  .site-docs-sample-controls {
+    margin-top: 22px;
+  }
+
+  .site-docs-sample-stage {
+    justify-self: center;
+    margin-top: 26px;
+    padding-left: 0;
+  }
+
+  .site-docs-sample-stage--desktop {
+    justify-self: stretch;
+  }
+}
+
+/* Forced colors drop the canvas tone and the ring, and the radio stays
+   hidden, so the chosen segment takes the system highlight, as the scheme
+   control's does. Forced colours also drop the focus glow, so the focused
+   segment takes an outline in the system text colour. */
+
+@media (forced-colors: active) {
+  .site-docs-sample-option:has(.site-docs-sample-input:checked) {
+    background: Highlight;
+    box-shadow: none;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .site-docs-sample-option:has(.site-docs-sample-input:focus-visible),
+  .site-docs-sample-option:has(.site-docs-sample-input:checked:focus-visible) {
+    box-shadow: none;
+    outline: 2px solid CanvasText;
+  }
+}

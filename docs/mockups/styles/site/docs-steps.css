@@ -1,0 +1,165 @@
+/* The documentation's intermediate desktop steps, between 700px and the
+   1440px design width: below 1280px the Inspect panel leaves and On this
+   page sits under the lead; below 1024px the Layers panel leaves for the
+   sub-bar and the page frame takes the width. The sample fence sets the
+   screen beside its code, with the wire, where the page frame is wide
+   enough, and stacks without the wire while it is too narrow. */
+
+/* The desktop document draws the sub-bar and the On this page disclosure,
+   and shows each only below its step */
+
+[data-site-viewport="desktop"] .site-docs-subbar,
+[data-site-viewport="desktop"] .site-docs-outline {
+  display: none;
+}
+
+/* Below the design width the sheet keeps narrower margins, and the title
+   and the lead scale with the window */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-docs-frame .site-page-sheet {
+    grid-template-columns:
+      [bleed-start] minmax(76px, 1fr) [text-start] minmax(0, 568px)
+      [text-end] minmax(48px, 1fr) [bleed-end];
+  }
+
+  [data-site-viewport="desktop"] .site-docs-frame .site-document-intro h1 {
+    font-size: clamp(2.5rem, 4.3vw, 3.875rem);
+  }
+
+  [data-site-viewport="desktop"] .site-docs-frame .site-pullquote {
+    font-size: clamp(1.125rem, 1.5vw, 1.28125rem);
+  }
+}
+
+/* Below 1280px: the Layers panel and the page frame; On this page sits
+   under the lead with the page's properties and Edit on GitHub */
+
+@media (max-width: 1279px) {
+  [data-site-viewport="desktop"] .site-docs {
+    grid-template-columns: 252px minmax(0, 1fr);
+    padding: 56px 24px 0 16px;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-rail {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-outline {
+    display: block;
+  }
+}
+
+/* Below 1024px: the sub-bar opens the tree and search in place of the
+   Layers panel, and the page frame takes the width with its canvas margin */
+
+@media (max-width: 1023px) {
+  [data-site-viewport="desktop"] .site-docs {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 52px 24px 0;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-side {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-subbar {
+    display: flex;
+    top: 56px;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-frame {
+    max-width: 820px;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-frame .site-document-body h2 {
+    scroll-margin-top: 132px;
+  }
+}
+
+/* The sample fence's wire, which only the desktop document draws: it
+   leaves the code panel's edge at the lit line and ends on the frame's
+   edge at the heading's middle. Each view places its own box and ends. */
+
+.site-docs-sample-wire {
+  color: var(--mk-color-signal);
+  height: 257px;
+  left: -40px;
+  position: absolute;
+  top: 49.5px;
+  width: 56px;
+}
+
+.site-docs-sample-wire svg {
+  display: block;
+}
+
+.site-docs-sample-end {
+  background: var(--mk-color-surface);
+  border: 1.5px solid currentColor;
+  border-radius: var(--mk-radius-pill);
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  position: absolute;
+  width: 7px;
+}
+
+.site-docs-sample-end--source {
+  left: 0;
+  top: 256.1px;
+}
+
+.site-docs-sample-end--element {
+  left: 56px;
+  top: 0.8px;
+}
+
+.site-docs-sample-wire--desktop {
+  height: 291px;
+  top: 15.9px;
+}
+
+.site-docs-sample-wire--desktop .site-docs-sample-end--source {
+  top: 289.7px;
+}
+
+/* The sample fence stacks the code, the controls and the frame while the
+   page frame is narrower than about 846px, the width that the screen and
+   its code need side by side; the wire leaves with that layout. The
+   Desktop view's frame then takes the band's width, up to the canvas zoom
+   of 60% that the Mobile view keeps. */
+
+@media (max-width: 1169px), (min-width: 1280px) and (max-width: 1429px) {
+  [data-site-viewport="desktop"] .site-docs-sample {
+    grid-template-areas:
+      "head"
+      "code"
+      "controls"
+      "stage";
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-sample-controls {
+    margin-top: 22px;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-sample-stage {
+    justify-self: center;
+    margin-top: 26px;
+    padding-left: 0;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-sample-stage--desktop {
+    justify-self: stretch;
+  }
+
+  [data-site-viewport="desktop"] .site-docs-sample-frame--desktop {
+    margin-inline: auto;
+    width: min(100%, 768px);
+  }
+
+  [data-site-viewport="desktop"] .site-docs-sample-wire {
+    display: none;
+  }
+}

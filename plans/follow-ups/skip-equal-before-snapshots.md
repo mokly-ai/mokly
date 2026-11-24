@@ -21,7 +21,8 @@
     `mokly-viewer/diffs/generations/{generation}/` that a build with Changes
     writes. It holds `snapshots/before/` and `snapshots/after/`.
   - **Pane:** one side of a comparison. The viewer shows the snapshot HTML
-    with a `<base href>` at the pane's own snapshot address. A frame inside
+    with its relative addresses resolved against the pane's own snapshot
+    address. A frame inside
     the pane loads its document as a plain request on that side.
   - **Shared document:** a current screen or component view, at the same
     path on both sides, whose before and after documents have equal bytes.

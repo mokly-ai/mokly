@@ -1,4 +1,8 @@
 //! Exact route scopes pin every shared stylesheet and all saved library variants.
+//!
+//! The library alone links the component sheets. The Canvas route links the
+//! Canvas sheets, and the library links the preview, mini-screen and shared
+//! Canvas sheets for its Canvas samples.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -7,15 +11,25 @@ use mokly_graph::urls::local_target;
 use mokly_html::tree::Node;
 use mokly_model::catalogue::EntryContent;
 
-pub const SHEETS: [&str; 9] = [
-    "design-stage.css",
+/// The shared sheets that the design routes link, in link order.
+pub const SHEETS: [&str; 18] = [
+    "design-preview.css",
+    "design-shots.css",
+    "design-canvas.css",
+    "design-canvas-inspect.css",
+    "design-canvas-sections.css",
+    "design-canvas-changes.css",
+    "design-canvas-outcomes.css",
+    "design-canvas-flows.css",
+    "design-canvas-loading.css",
+    "design-canvas-search.css",
+    "design-canvas-components.css",
+    "design-canvas-props.css",
+    "design-canvas-evidence.css",
+    "design-canvas-shell.css",
+    "design-canvas-compact.css",
     "design-components.css",
-    "design-component-inspection.css",
     "design-component-details.css",
-    "design-component-inspector.css",
-    "design-component-workspace.css",
-    "design-component-view.css",
-    "design-component-controls.css",
     "design-library.css",
 ];
 
@@ -36,7 +50,7 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             .iter()
             .filter(|entry| entry.metadata.variant_of.is_some())
             .count(),
-        69
+        75
     );
     let screens: BTreeSet<_> = entries
         .iter()
@@ -57,20 +71,6 @@ pub fn check(result: &ComparisonResult) -> Scopes {
         .map(|path| path.as_str().unwrap().to_owned())
         .collect();
     assert_eq!(screens, frozen);
-    assert_eq!(
-        screens
-            .iter()
-            .filter(|path| path.starts_with("design/components/"))
-            .count(),
-        53
-    );
-    assert_eq!(
-        screens
-            .iter()
-            .filter(|path| path.starts_with("design/components/controls/"))
-            .count(),
-        20
-    );
     let mut scopes = Scopes::new();
     for entry in entries {
         let path = &entry.metadata.path;
@@ -78,21 +78,21 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             entry.content,
             EntryContent::Screen { .. } | EntryContent::Component { .. }
         );
+        let library = path.starts_with("design/library/");
+        let canvas = screens.contains(path) && path.starts_with("design/canvas/");
         let sheets: Vec<_> = SHEETS
             .iter()
             .filter(|sheet| {
                 visual
-                    && (path.starts_with("design/library/")
-                        || match **sheet {
-                            "design-stage.css"
-                            | "design-component-inspector.css"
-                            | "design-component-workspace.css" => screens.contains(path),
-                            "design-component-controls.css" => {
-                                path.starts_with("design/components/controls/")
-                            }
-                            "design-library.css" => false,
-                            _ => path.starts_with("design/components/"),
-                        })
+                    && match **sheet {
+                        "design-components.css"
+                        | "design-component-details.css"
+                        | "design-library.css" => library,
+                        "design-preview.css" | "design-shots.css" | "design-canvas.css" => {
+                            library || canvas
+                        }
+                        _ => canvas,
+                    }
             })
             .map(|sheet| (*sheet).to_owned())
             .collect();

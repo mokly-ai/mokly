@@ -1,13 +1,18 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the down chevron of a
 // select, the closed / open folder icons for collapsible folders, the screen /
-// page / use-case leaf icons, the top bar's brand, search and tag controls,
-// the device chrome's copy and expand / collapse controls, and the workspace
-// controls' icons. Icons are stroke-based on a 24-unit viewBox and inherit
-// `currentColor`; the brand mark is the filled Mokly logo on its own 32-unit
-// grid. Authored folder groups swap closed and open folder icons; top-level
-// catalogue sections and the details inspector use the disclosure chevron.
+// page / use-case leaf icons, the top bar's search and tag controls, the
+// copy and expand / collapse glyphs, and the workspace controls' icons. Icons
+// are stroke-based on a 24-unit viewBox and inherit `currentColor`. The brand
+// mark, the Mokly logo on its own 32-unit grid, lives with the top bar that
+// draws and colours it, and the canvas glyphs, on the 16-unit grid of the
+// Canvas design, live in `canvas-icons.tsx`; this module, the package's icons
+// entry, exports both. Authored folder groups swap closed and open folder
+// icons; top-level catalogue sections use the disclosure chevron.
 
 import type { ReactNode } from "react";
+
+export { BrandIcon } from "../top-bar/brand-icon.js";
+export { CanvasIcon, type CanvasIconName } from "./canvas-icons.js";
 
 export function IconSvg(props: { children: ReactNode; size: number }) {
   return (
@@ -24,42 +29,6 @@ export function IconSvg(props: { children: ReactNode; size: number }) {
       width={props.size}
     >
       {props.children}
-    </svg>
-  );
-}
-
-/**
- * Mokly's brand mark: two overlapping rounded screens, the front one carrying
- * two short rules. The screens fill with `currentColor`; the `mbk-mark-rules`
- * class paints the rules in the surface color behind the mark.
- */
-export function BrandIcon(props: { size?: number }) {
-  const size = props.size ?? 22;
-  return (
-    <svg
-      aria-hidden="true"
-      className="mbk-reset"
-      height={size}
-      viewBox="0 0 32 32"
-      width={size}
-    >
-      <rect
-        fill="currentColor"
-        height={21}
-        opacity={0.3}
-        rx={4}
-        width={20}
-        x={3}
-        y={3}
-      />
-      <rect fill="currentColor" height={21} rx={4} width={20} x={9} y={8} />
-      <path
-        className="mbk-mark-rules"
-        d="M14 15h10M14 20h7"
-        fill="none"
-        strokeLinecap="round"
-        strokeWidth={2}
-      />
     </svg>
   );
 }
@@ -156,40 +125,6 @@ export function SearchIcon(props: { size?: number }) {
   );
 }
 
-/** The copy affordance at the trailing edge of a browser bar's address pill. */
-export function CopyIcon(props: { size?: number }) {
-  return (
-    <IconSvg size={props.size ?? 13}>
-      <rect height={13} rx={2} width={13} x={9} y={9} />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </IconSvg>
-  );
-}
-
-/** Outward arrows on the browser bar's toggle while the frame is inline. */
-export function ExpandIcon(props: { size?: number }) {
-  return (
-    <IconSvg size={props.size ?? 13}>
-      <polyline points="15 3 21 3 21 9" />
-      <polyline points="9 21 3 21 3 15" />
-      <path d="M21 3l-7 7" />
-      <path d="M3 21l7-7" />
-    </IconSvg>
-  );
-}
-
-/** Inward arrows on the browser bar's toggle while the frame is expanded. */
-export function CollapseIcon(props: { size?: number }) {
-  return (
-    <IconSvg size={props.size ?? 13}>
-      <polyline points="4 14 10 14 10 20" />
-      <polyline points="20 10 14 10 14 4" />
-      <path d="M14 10l7-7" />
-      <path d="M3 21l7-7" />
-    </IconSvg>
-  );
-}
-
 /** A complete catalogue page: a document that may hold several states. */
 export function PageIcon(props: { size?: number }) {
   return (
@@ -233,15 +168,7 @@ export function FlowIcon(props: { size?: number }) {
 }
 
 /** The glyphs of the shared workspace controls. */
-export type WorkspaceIconName =
-  | "details"
-  | "components"
-  | "props"
-  | "usage"
-  | "highlight"
-  | "scheme"
-  | "viewport"
-  | "close";
+export type WorkspaceIconName = "components" | "highlight" | "scheme";
 
 /** One consistent stroke icon of the shared workspace controls. */
 export function WorkspaceIcon({
@@ -253,41 +180,15 @@ export function WorkspaceIcon({
 }) {
   return (
     <IconSvg size={size}>
-      {name === "details" ? (
-        <>
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 11v6m0-10v.1" />
-        </>
-      ) : name === "components" ? (
-        <>
-          <path d="m12 3 9 5-9 5-9-5Zm-9 9 9 5 9-5m-18 5 9 5 9-5" />
-        </>
-      ) : name === "props" ? (
-        <>
-          <path d="m8 5-6 7 6 7m8-14 6 7-6 7m-3-17-2 20" />
-        </>
-      ) : name === "usage" ? (
-        <>
-          <rect x="2" y="8" width="6" height="8" rx="1" />
-          <path d="M8 12h6m0-7v14m0-14h3m-3 14h3" />
-          <rect x="17" y="2" width="5" height="6" rx="1" />
-          <rect x="17" y="16" width="5" height="6" rx="1" />
-        </>
+      {name === "components" ? (
+        <path d="m12 3 9 5-9 5-9-5Zm-9 9 9 5 9-5m-18 5 9 5 9-5" />
       ) : name === "highlight" ? (
         <>
           <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />
           <rect x="7" y="7" width="10" height="10" rx="1" />
         </>
-      ) : name === "scheme" ? (
-        <path d="M20.5 13a8.5 8.5 0 0 1-9.5-9.5A8.5 8.5 0 1 0 20.5 13Z" />
-      ) : name === "viewport" ? (
-        <>
-          <rect x="6" y="3" width="16" height="12" rx="2" />
-          <path d="M12 15v5m-2 0h8" />
-          <rect x="2" y="9" width="7" height="12" rx="1" />
-        </>
       ) : (
-        <path d="m6 6 12 12M6 18 18 6" />
+        <path d="M20.5 13a8.5 8.5 0 0 1-9.5-9.5A8.5 8.5 0 1 0 20.5 13Z" />
       )}
     </IconSvg>
   );

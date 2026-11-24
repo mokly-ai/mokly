@@ -45,8 +45,17 @@ for (const refresh of [false, true]) {
         response.writeHead(refresh ? 503 : 204);
         response.end();
       } else {
+        // The band's hooks that the action reads: the right panel's Changes
+        // tab, selected, and a mode of the Comparison mode group or Refresh.
+        const trigger = `<button id="trigger">${action}</button>`;
         response.writeHead(200, { "content-type": "text/html" });
-        response.end(`<button id="trigger">${action}</button>`);
+        response.end(
+          `<div role="tablist"><button role="tab" aria-selected="true">Changes</button></div>${
+            refresh
+              ? trigger
+              : `<div role="group" aria-label="Comparison mode">${trigger}</div>`
+          }`,
+        );
       }
     });
     server.listen(0, "127.0.0.1");

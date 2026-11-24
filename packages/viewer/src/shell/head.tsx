@@ -1,12 +1,6 @@
 // The heading for a catalogue view uses the title, path, and folder
 // ancestors from the shared hierarchy or removed entry baseline.
 
-import type { ReactNode } from "react";
-
-import { ScreenHeader } from "@mokly/ui/screen-header";
-import { SegmentedControl, type Segment } from "@mokly/ui/segmented-control";
-
-import type { ViewerSelection } from "../host/types.js";
 import { viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -15,84 +9,8 @@ import {
   type VariantParentResolution,
 } from "./catalogue_branch_point.js";
 import { structuredCrumbTrail, type CatalogueCrumb } from "./crumbs.js";
-import { useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { variantHeading } from "./view_title.js";
-
-const VIEWPORTS: readonly Segment<ViewerSelection["viewport"]>[] = [
-  ["mobile", "Mobile"],
-  ["desktop", "Desktop"],
-  ["both", "Both"],
-];
-
-const SCHEMES: readonly Segment<ViewerSelection["colorScheme"]>[] = [
-  ["light", "Light"],
-  ["dark", "Dark"],
-];
-
-/** Viewport selection shown in the header of a screen route. */
-export function ViewportSwitch() {
-  const store = useShellStore();
-  return (
-    <SegmentedControl
-      attribute="data-viewport-option"
-      label="Viewport"
-      mark="data-mokly-viewswitch"
-      onChange={(value) => store.selectViewport(value)}
-      segments={VIEWPORTS}
-      value={store.state.selection.viewport}
-    />
-  );
-}
-
-/**
- * Preview color scheme selection for catalogues that render dark fragments. It
- * chooses what a device screen shows, not the appearance of the interface
- * around it, which an embedding host supplies. The shell
- * renders one instance in the top bar and one in the screen head band; the
- * stylesheet reveals whichever fits the current width.
- */
-export function SchemeSwitch() {
-  const store = useShellStore();
-  return (
-    <SegmentedControl
-      attribute="data-color-scheme-option"
-      label="Preview color scheme"
-      mark="data-mokly-schemeswitch"
-      onChange={(value) => store.selectColorScheme(value)}
-      segments={SCHEMES}
-      value={store.state.selection.colorScheme}
-    />
-  );
-}
-
-/**
- * The breadcrumb, title, and optional action rendered above a target view. A
- * folder crumb reveals its row in the navigation, and the path chip copies
- * the path and announces the copy.
- */
-export function ScreenHead(props: {
-  action?: ReactNode;
-  status?: ReactNode;
-  crumbs: readonly CatalogueCrumb[];
-  heading: string;
-  path?: string | undefined;
-}) {
-  const store = useShellStore();
-  return (
-    <ScreenHeader
-      action={props.action}
-      crumbs={props.crumbs}
-      heading={props.heading}
-      onCopyPath={(path) => store.copy(path, `Copied path ${path}`)}
-      onRevealFolder={({ folder }) => {
-        if (folder) store.revealFolder(folder.section, folder.path);
-      }}
-      path={props.path}
-      status={props.status}
-    />
-  );
-}
 
 /**
  * The crumb for a variant's parent: an eligible current parent links to its

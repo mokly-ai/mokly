@@ -47,7 +47,15 @@ export function controlDocumentViolations({
   )) {
     if (!allowDisabled && button.getAttribute("aria-disabled") === "true")
       problems.push("enabled action rendered disabled");
-    if (!button.textContent?.trim()) problems.push("action label required");
+    // An icon-only Button draws its glyph alone: it is named by its
+    // accessible name, which an element around it gives as its tooltip.
+    const name = button.getAttribute("aria-label")?.trim();
+    if (!button.textContent?.trim()) {
+      if (!name || !button.querySelector("svg"))
+        problems.push("action label required");
+      else if (button.closest("[title]")?.getAttribute("title") !== name)
+        problems.push("icon-only action needs its name as its tooltip");
+    }
     if (button.querySelector("a, button, input, [tabindex='0']"))
       problems.push("nested interactive control");
   }

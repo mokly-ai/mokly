@@ -10,7 +10,11 @@ import {
   openHeldViewer,
   openShareFromMore,
 } from "./viewer/compact-handoff";
-import { publishedViewerReady, publishedProject } from "./viewer/support";
+import {
+  publicationReference,
+  publishedViewerReady,
+  publishedProject,
+} from "./viewer/support";
 import { pressWrite } from "./writes";
 
 /** How far the document scrolls sideways; anything but zero is a defect. */
@@ -74,22 +78,20 @@ test("the bar fits a person who has not set a name, at 320px", async ({
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
   await page.getByTestId("viewer-more").click();
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
-  await expect(menu).toContainText(made.email);
+  const sheet = page.getByTestId("viewer-panel-more");
+  await expect(sheet).toBeVisible();
+  // More's account rows name the reader by their whole address, once.
+  await expect(sheet.getByText(made.email, { exact: true })).toHaveCount(1);
   expect(
     await sidewaysOverflow(page),
     "the viewer does not scroll sideways at 320px",
   ).toBe(0);
-  // The whole address is still reachable without hovering: it is the
-  // control's own accessible name, which is what a screen reader announces
-  // and what voice control matches on.
-  await expect(menu.getByText("Account", { exact: true })).toBeVisible();
 });
 
 /**
  * A long pull request title must not make the compact viewer scroll sideways.
- * The publication trigger must retain its full accessible name at 390px and
- * 320px.
+ * The compact pill shows the pull request's number, and its one control keeps
+ * the whole name at 390px and 320px: the full reference, then its state.
  */
 test("a pull request publication does not scroll sideways", async ({
   page,
@@ -113,13 +115,10 @@ test("a pull request publication does not scroll sideways", async ({
     await page.setViewportSize({ width, height: 844 });
     await open(page, await publicationPathFor(page, projectId, published.id));
     await publishedViewerReady(page);
-    await expect(page.getByTestId("viewer-publication")).toContainText("#42");
-    await expect(
-      page.getByRole("button", {
-        name: "#42 Name the pull request on every publication address",
-        exact: true,
-      }),
-    ).toHaveCount(1);
+    await expect(publicationReference(page)).toHaveText("#42");
+    await expect(page.getByTestId("viewer-publication")).toHaveAccessibleName(
+      /^#42 Name the pull request on every publication address, octocat · Ready · /,
+    );
     expect(
       await sidewaysOverflow(page),
       `the viewer does not scroll sideways at ${width}px`,
@@ -153,10 +152,12 @@ test("a reader who set a name is called by it, at every width", async ({
   for (const width of [1440, 320]) {
     await page.setViewportSize({ width, height: 844 });
     if (width === 320) {
+      // More's account rows name the reader by their name, with their
+      // address beneath it.
       await page.getByTestId("viewer-more").click();
-      const menu = page.getByRole("menu", { name: "Viewer actions" });
-      await expect(menu, `${width}px`).toContainText(named);
-      await expect(menu, `${width}px`).not.toContainText(made.email);
+      const sheet = page.getByTestId("viewer-panel-more");
+      await expect(sheet.getByText(named, { exact: true })).toBeVisible();
+      await expect(sheet.getByText(made.email, { exact: true })).toBeVisible();
       await page.keyboard.press("Escape");
     } else {
       await expect(page.getByTestId("viewer-account"), `${width}px`).toHaveText(

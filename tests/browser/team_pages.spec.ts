@@ -2,7 +2,11 @@ import { expect } from "@playwright/test";
 
 import { shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
-import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  DOCUMENT_FRAME,
+  expectFrameSource,
+} from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
   test(`${width}px: the invitation page keeps its authored document in both appearances`, async ({
@@ -11,10 +15,11 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/team/invitation/");
     await expect(page.locator("#mb-main h2")).toHaveText("Invitation email");
-    const element = page.locator(".mbk-stage-embed iframe");
+    const element = page.locator(DOCUMENT_FRAME);
     const frame = element.contentFrame();
     await expect(element).toHaveCount(1);
-    await expect(page.getByLabel("Viewport", { exact: true })).toHaveCount(0);
+    // A page has no Frames filter: its one reading frame takes the canvas.
+    await expect(page.locator("[data-frames-toggle]")).toHaveCount(0);
     for (const scheme of ["light", "dark"] as const) {
       await chooseScheme(page, scheme);
       await expect(page.locator(shellRoot)).toHaveAttribute(
@@ -63,7 +68,7 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/team/member-roles/?fragment=choose-a-role");
     await expect(page.locator("#mb-main h2")).toHaveText("Member roles");
-    const element = page.locator(".mbk-stage-embed iframe");
+    const element = page.locator(DOCUMENT_FRAME);
     const frame = element.contentFrame();
     for (const scheme of ["light", "dark"] as const) {
       await chooseScheme(page, scheme);

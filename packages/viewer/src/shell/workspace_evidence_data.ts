@@ -1,5 +1,6 @@
 /** Merge route classification with the routed detail's comparison evidence. */
 
+import type { ShellCatalogueView } from "../catalogue/scoped_types.js";
 import { mergeCssAnalysis } from "../review/css/evidence.js";
 import { keepsComponentRecord } from "../review/shared_impact.js";
 import type {
@@ -18,7 +19,8 @@ export interface WorkspaceComparisonEvidence {
   comparison: ComparedEntry | undefined;
   /** Parent id of a component workspace, whose own rules keep its sentence. */
   componentId: string | undefined;
-  views: readonly ReviewView[];
+  /** The ids of the content that the comparison leaves out, each once. */
+  ignoredIds: readonly string[];
   resourceViews: readonly EvidenceReasons[];
   reasons: readonly ChangeReason[];
   /**
@@ -32,8 +34,8 @@ export interface WorkspaceComparisonEvidence {
 /**
  * Keep catalogue facts, including the routed detail's reasons and the
  * selected views' live evidence in Current, while adding the compared views'
- * evidence once a comparison loads. Each reason appears once, whatever its
- * sources.
+ * evidence once a comparison loads. Each reason and each ignored id appears
+ * once, whatever its sources.
  */
 export function workspaceComparisonEvidence(
   data: WorkspaceData,
@@ -51,7 +53,7 @@ export function workspaceComparisonEvidence(
   return {
     comparison,
     componentId: data.component?.path,
-    views,
+    ignoredIds: mergeIgnoredIds(data.entry.views, views),
     resourceViews: [...resources, ...viewEvidence],
     sharedImpact:
       data.included === false &&
@@ -92,4 +94,30 @@ function mergeReasons(reasons: readonly ChangeReason[]): ChangeReason[] {
     } else merged.set(key, reason);
   }
   return [...merged.values()];
+}
+
+/**
+ * The paired ignore ids of each shown view whose classification evidence is
+ * ready, then those of a loaded comparison's views, each id once in the order
+ * first seen. Only a view that differs names them: an `unchanged` view's
+ * ignored content is the same on both sides. A view whose evidence is
+ * unknown, pending or partial adds none.
+ */
+function mergeIgnoredIds(
+  shown: readonly ShellCatalogueView[],
+  loaded: readonly ReviewView[],
+): string[] {
+  const classified = shown.flatMap((view) =>
+    view.state && view.ignoredIds && view.resourceEvidence
+      ? namedIgnoredIds({ state: view.state, ignoredIds: view.ignoredIds })
+      : [],
+  );
+  return [...new Set([...classified, ...loaded.flatMap(namedIgnoredIds)])];
+}
+
+/** A view's paired ignore ids, unless the view is unchanged. */
+function namedIgnoredIds(
+  view: Pick<ReviewView, "ignoredIds" | "state">,
+): readonly string[] {
+  return view.state === "unchanged" ? [] : view.ignoredIds;
 }

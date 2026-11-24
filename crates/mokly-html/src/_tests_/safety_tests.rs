@@ -15,9 +15,12 @@ fn raw_html_is_literal_and_heading_ids_skip_earlier_suffixes() {
             .answers(&|_, value| Ok(Destination::Url(value.into()))),
     );
     let body = "# Guide\n# Guide-2\n# Guide\n# !!!\n# Café_文\n\n- [x] Done\n\n| A | B |\n| :- | -: |\n| 1 | 2 |\n\n<script onclick=\"run()\">literal</script>\n\n**Later prose** [External](https://example.com/a)\n";
-    for scheme in [ColorScheme::Light, ColorScheme::Dark] {
-        let tree = render(body, "Guide", scheme, &resolver).unwrap();
-        safety::validate(&tree).unwrap();
+    for (scheme, route) in [
+        (ColorScheme::Light, "guide/index.html"),
+        (ColorScheme::Dark, "guide/index.dark.html"),
+    ] {
+        let tree = render(body, "Guide", scheme, route, &resolver).unwrap();
+        safety::validate(&tree, route).unwrap();
         let html = serialize::html(&tree);
         assert!(html.contains("id=\"guide-3\""));
         assert!(html.contains("id=\"café_文\""));
@@ -45,12 +48,22 @@ fn unsafe_final_markup_and_outer_wrapper_events_are_rejected_independently() {
             "<!doctype html><html lang=\"en\" style=\"color-scheme: light\"><head><title>Safe</title><style>p{{color:red}}</style></head><body><main>{body}</main></body></html>"
         );
         assert!(
-            safety::validate(&parse::html(DeliveredHtml::document(&document))).is_err(),
+            safety::validate(
+                &parse::html(DeliveredHtml::document(&document)),
+                "safe/index.html"
+            )
+            .is_err(),
             "{body}"
         );
     }
     let document = "<!doctype html><html lang=\"en\" style=\"color-scheme: light\"><head><style>p{}</style></head><body><html onload=\"run()\"><main>Text</main></body></html>";
-    assert!(safety::validate(&parse::html(DeliveredHtml::document(document))).is_err());
+    assert!(
+        safety::validate(
+            &parse::html(DeliveredHtml::document(document)),
+            "safe/index.html"
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -60,8 +73,8 @@ fn gfm_autolinks_keep_code_and_explicit_link_labels_literal() {
             .each_call(matching!(_))
             .answers(&|_, value| Ok(Destination::Url(value.into()))),
     );
-    let tree = render("Visit https://example.com/a, www.example.com, or reader@example.com. `https://code.example` [https://label.example](https://target.example).", "Links", ColorScheme::Light, &resolver).unwrap();
-    safety::validate(&tree).unwrap();
+    let tree = render("Visit https://example.com/a, www.example.com, or reader@example.com. `https://code.example` [https://label.example](https://target.example).", "Links", ColorScheme::Light, "links/index.html", &resolver).unwrap();
+    safety::validate(&tree, "links/index.html").unwrap();
     let html = serialize::html(&tree);
     assert!(html.contains("href=\"https://example.com/a\""));
     assert!(html.contains("href=\"http://www.example.com\""));
@@ -81,8 +94,9 @@ fn markdown_safety_uses_scheme_position_for_url_colons() {
         "[Fragment](#x:y) [Query](?t=10:30) [Path](./images/a:b.svg)",
         "Links",
         ColorScheme::Light,
+        "links/index.html",
         &resolver,
     )
     .unwrap();
-    safety::validate(&tree).unwrap();
+    safety::validate(&tree, "links/index.html").unwrap();
 }

@@ -15,6 +15,7 @@ import { useNavigationBounds } from "../shell/nav_resize.js";
 import { RetryContent, useRetryFocus } from "../shell/retry_focus.js";
 import { useShellRoot } from "../shell/root_context.js";
 import { routeFromUrl } from "../shell/routes.js";
+import { useCanvasLayoutParts } from "../shell/sheets.js";
 import { ShellStoreProvider } from "../shell/store.js";
 import { persistDisclosures } from "../shell/store_actions.js";
 import { useShellStore } from "../shell/store_context.js";
@@ -200,12 +201,12 @@ export function StandaloneShellContents({
     () => persistDisclosures(selection, disclosures, true),
     [disclosures, selection],
   );
+  const canvas = useCanvasLayoutParts();
   return (
     <ShellLayout
       announcement={store.state.announcement}
+      {...canvas}
       colorScheme={appearance.scheme}
-      drawerOpen={store.state.drawerOpen}
-      frameExpanded={Boolean(store.state.expandedFrame)}
       resizing={shellRoot?.resizing}
       main={
         <ShellMain

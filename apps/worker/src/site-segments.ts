@@ -13,10 +13,10 @@ export const SITE_FIRST_SEGMENTS = [
   "favicon.svg",
   "og",
   "pagefind",
+  "pricing",
   "privacy",
   "robots.txt",
   "security",
   "sitemap.xml",
-  "stage",
   "terms",
 ] as const;

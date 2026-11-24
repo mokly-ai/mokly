@@ -5,12 +5,14 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
+import { currentScreen } from "../fixtures/viewer-catalogue";
+
 import { catalogueEntries } from "./catalogue-index";
 import { catalogueRoot, screenFile } from "./catalogue-paths";
-import { drawnPalette } from "./catalogue-reads";
+import { drawnPalette, viewPalette } from "./catalogue-reads";
 import { variantParent } from "./catalogue-variants";
 import { attribute, byClass, elements } from "./design-site-test-helpers";
-import { folioInventoryViolations, folioScreens } from "./folio-inventory";
+import { folioInventoryViolations, permanentScreens } from "./folio-inventory";
 
 /**
  * Whether a document draws the package's viewer shell. Every document also
@@ -21,10 +23,10 @@ function drawsViewerShell(html: string): boolean {
   return /class="(?:[^"]* )?mokly-viewer[ "]/.test(html);
 }
 
-test("Folio screens have permanent ids and folders, with all registered controls retained", () => {
+test("Canvas screens have permanent ids and folders, with all registered controls retained", () => {
   const entries = catalogueEntries();
   assert.deepEqual(folioInventoryViolations(entries, drawnPalette), []);
-  for (const { path: id } of folioScreens) {
+  for (const { path: id } of permanentScreens) {
     assert.ok(
       folioInventoryViolations(
         entries.filter((e) => e.path !== id),
@@ -34,7 +36,7 @@ test("Folio screens have permanent ids and folders, with all registered controls
     );
     assert.ok(
       folioInventoryViolations(entries, (path) =>
-        path === id ? "default" : drawnPalette(path),
+        path === id ? undefined : drawnPalette(path),
       ).length,
       id,
     );
@@ -50,6 +52,13 @@ test("Folio screens have permanent ids and folders, with all registered controls
       id,
     );
   }
+  for (const { path: id } of permanentScreens)
+    assert.ok(
+      folioInventoryViolations(entries, (path) =>
+        path === id ? "paper" : drawnPalette(path),
+      ).length,
+      id + " paper",
+    );
   assert.deepEqual(
     entries
       .filter((e) => e.kind === "component" && variantParent(e) === undefined)
@@ -137,12 +146,12 @@ test("retired product families stay absent while the Design site is present", ()
   assert.ok(!config.includes("marketing"));
 });
 
-test("all preserved Folio screens render both widths and schemes at permanent IDs", () => {
-  for (const { path: id } of folioScreens)
+test("all preserved Canvas screens render both widths and schemes at permanent IDs", () => {
+  for (const { path: id, palette } of permanentScreens)
     for (const viewport of ["mobile", "desktop"] as const)
       for (const scheme of ["light", "dark"] as const) {
         const html = readFileSync(screenFile(id, viewport, scheme), "utf8");
-        assert.ok(html.includes('class="folio-scope"'));
+        assert.equal(viewPalette(id, viewport, scheme), palette, id);
         assert.ok(html.includes('data-mkc-screen="' + id + '"'));
         assert.ok(!html.includes("<iframe"));
         assert.ok(!html.includes("explore-"));
@@ -160,10 +169,16 @@ test("ready viewer pages render the published package shell and cloud slots", ()
         assert.ok(html.includes('data-mokly-slot="topBarEnd"'), label);
         assert.ok(!html.includes('href="/'), label);
         assert.ok(html.includes(">Home<"), label);
-        // The frames hold the cloud's sample screen and load no document.
+        // The canvas frames hold the cloud's sample screen and load no
+        // document: a frame for each view of the screen on a desktop, and
+        // the compact layout's one frame on a phone.
         assert.ok(!html.includes("<iframe"), label);
-        const frames = byClass(parse(html), "mbk-frame-wrap");
-        assert.equal(frames.length, 2, label);
+        const frames = byClass(parse(html), "mbk-canvas-frame");
+        assert.equal(
+          frames.length,
+          viewport === "desktop" ? currentScreen.views.length : 1,
+          label,
+        );
         for (const frame of frames)
           assert.equal(
             elements(

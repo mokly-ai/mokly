@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import type { Workspace, Project } from "../../api/types";
 import { Action } from "../../components/action";
-import { ContentList } from "../../components/controls";
 import { Pending, StateMessage } from "../../components/page-parts";
 import { ControlPlaceholder, TextBar } from "../../components/placeholders";
 import { PaneResource } from "../../components/resource-state";
@@ -12,6 +11,8 @@ import { listProjects } from "../../data/projects";
 import { useResource } from "../../data/use-resource";
 import { listWorkspaces } from "../../data/workspaces";
 import { projectPath } from "../../navigation/paths";
+
+import { PanelList } from "./panel-rows";
 
 /** One workspace the reader can open, with the projects inside it. */
 interface WorkspaceProjects {
@@ -102,7 +103,7 @@ function Workspaces({
             projects.length === 0 ? (
               <p className="fo-copy">No projects here yet.</p>
             ) : (
-              <ContentList
+              <PanelList
                 label={workspace.name + " projects"}
                 rows={projects.map((project) => ({
                   id: project.id,
@@ -110,8 +111,10 @@ function Workspaces({
                   detail: appAddress(
                     projectPath(project.workspaceSlug, project.slug),
                   ),
+                  // The project the reader is in takes the signal-soft fill
+                  // and says Current in place of a destination.
                   ...(project.id === currentProjectId
-                    ? { meta: "Current" }
+                    ? { current: true, mark: "Current" }
                     : {
                         href: projectPath(project.workspaceSlug, project.slug),
                         action: "Open",
@@ -155,7 +158,7 @@ function WaitingWorkspace() {
       name={<TextBar width="5em" />}
       accounts={<TextBar width="5em" />}
       projects={
-        <ContentList
+        <PanelList
           label="Projects"
           rows={[
             {

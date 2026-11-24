@@ -24,9 +24,10 @@ import {
   SHARED,
   VARIANT_TERMINAL,
   evidenceFiles,
-  openEvidence,
+  openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import { chooseFilter, navRow } from "./comparison_ui.js";
+import { openInspectFold, zoomToTags } from "./workspace_actions.js";
 
 const test = additionsCopyTest(
   "browser-react-evidence",
@@ -41,8 +42,7 @@ async function expectUsersNotAffected(
   page: Page,
   usedBy: readonly string[],
 ): Promise<void> {
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  const usage = await openInspectFold(page, "usage");
   await expect(usage).toBeVisible();
   await expect(
     usage.locator('[data-usage-section="used-by"]').getByRole("link"),
@@ -59,7 +59,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       page,
     }) => {
       await page.goto(`/view/${paths.checkout}/`);
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect
         .poll(() => evidenceFiles(evidence))
         .toEqual([[sheets.bundle, [[MATCHED_LEAD, [".heading"]]]]]);
@@ -72,7 +72,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     }) => {
       for (const route of [paths.badgeVariant, paths.badge]) {
         await page.goto(`/view/${route}/`);
-        const evidence = await openEvidence(page);
+        const evidence = await openChangesEvidence(page);
         await expect(
           evidence.getByText(COMPONENT_FILES_LEAD, { exact: true }),
         ).toBeVisible();
@@ -96,37 +96,47 @@ test("screen inspection records real nested, repeated and hidden instances witho
     "Unmodified",
   );
   await expect(navRow(page, paths.home)).not.toHaveAttribute("data-changed");
-  await page.getByRole("tab", { name: "Components", exact: true }).click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Components", exact: true }),
-  ).toContainText("5 instances");
-  const highlight = page.getByRole("button", {
+  await expect(await openInspectFold(page, "components")).toContainText(
+    "5 instances",
+  );
+  // The switch stands in Inspect's Frames filter.
+  const highlight = page.getByRole("switch", {
     name: "Highlight components",
     exact: true,
   });
   await expect(highlight).toBeEnabled();
   await highlight.click();
+  // The switch draws on every shown frame: on the canvas, each scheme's.
   await expect(
-    page.locator('.mbk-highlight-layer[data-highlight-viewport="desktop"]'),
+    page
+      .locator('.mbk-highlight-layer[data-highlight-viewport="desktop"]')
+      .first(),
   ).toBeVisible();
   await expect(
     page.locator(".mbk-highlight-label").filter({ hasText: "hidden" }),
   ).toHaveCount(0);
-  await page
+  // Below 60% zoom the labels hide, so the canvas zooms in first. The labels
+  // keep their size over scaled frames, so a neighbour's label can cover
+  // this one; the keys press it.
+  await zoomToTags(page);
+  const footer = page
     .locator(".mbk-highlight-label")
     .filter({ hasText: "footer" })
-    .first()
-    .click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Props", exact: true }),
-  ).toContainText("Finish");
+    .first();
+  await footer.focus();
+  await page.keyboard.press("Enter");
+  // Inspect's Selection section lists the props that the selected
+  // instance's owner supplies.
+  const selection = page.locator('[data-inspect-section="selection"]');
+  await expect(selection).toContainText("Finish");
   await page.keyboard.press("Escape");
   await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
   await expect(highlight).toBeFocused();
   await chooseFilter(page, "changed");
   await expect(navRow(page, paths.home)).toBeHidden();
   await expect(navRow(page, paths.button)).toBeVisible();
-  await page.getByRole("link", { name: "Open component", exact: true }).click();
+  // The selection's chip opens the instance's component.
+  await selection.getByRole("link", { name: "Button", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Button", exact: true }),
   ).toBeVisible();

@@ -4,8 +4,10 @@ The viewer is the application: once signed in with a project, the user is
 always inside it, and one viewer serves standalone browsing and pull request
 links. The app hosts the workspace `@mokly/viewer` and fills its slots with
 workspace and project switching, branch and pull request selection,
-publication history, share, settings and the account menu; the package owns
-Browse, Changes, search, screen rendering, comparisons, viewport and theme.
+publication history, share, the account menu with Theme, Settings, Docs,
+Changelog and Sign out, and the Mokly check in the Changes tab; the package
+owns Browse, Changes, search, screen rendering, comparisons and viewports, and
+draws its interface in the scheme that Theme sets.
 There is no separate project or workspace page: the viewer's slots carry
 workspace, project and publication switching, so a list page outside the
 viewer would duplicate them and take the reader out of the publication. See
@@ -31,8 +33,8 @@ catalogue cookie for a private catalogue, and passes them to the package as
 objects, as [Viewer host](./viewer-host.md#sources) defines.
 The viewer sends its own reads with `credentials: "omit"`, and its root
 React API has no transport for them. These reads are the documents of a pinned
-comparison, which its Side by side, Overlay and Difference modes present,
-and documents of a removed entry's previous version. For a private catalogue
+comparison, which its Side by side, Overlay, Difference and Swipe modes
+present, and documents of a removed entry's previous version. For a private catalogue
 they answer 401 even after the access exchange succeeds.
 
 Public catalogues, including their comparisons and previous versions, are
@@ -59,9 +61,12 @@ the app's cookie has none for that tab either.
 
 ## Slot Inventory
 
-[Viewer chrome](./viewer-chrome.md) defines the two package slots, six cloud
-actions, compact More menu, overlay ownership, focus handoff and publication
-context.
+[Viewer chrome](./viewer-chrome.md) defines the package slots that the cloud
+fills, its five actions, the compact More menu, overlay ownership, focus
+handoff and publication context,
+[its account menu page](./viewer-chrome-account.md) defines the account
+menu and Theme, and [its check slot page](./viewer-chrome-check.md) defines
+the check in the Changes tab.
 The empty stage and a build card's plan refusal share its
 [workspace-role read rule](./viewer-chrome.md#workspace-role) through
 one function, `workspaceRole()`, so the two cannot disagree about who is an

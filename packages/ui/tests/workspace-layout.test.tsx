@@ -15,21 +15,20 @@ function workspace(busy?: boolean, ref = createRef<HTMLElement>()) {
   return (
     <WorkspaceLayout
       {...(busy === undefined ? {} : { busy })}
-      header={<h2>Header</h2>}
-      inspector={<aside>Inspector</aside>}
+      entryBar={<p>Entry bar</p>}
       overlay={<b>Labels</b>}
+      panel={<section aria-label="Panel">Right panel</section>}
       preview={<i>Stage</i>}
       previewStatus={<p role="status">Rendering</p>}
       ref={ref}
-      variantBar={<nav aria-label="Variants" />}
     />
   );
 }
 
-test("the workspace lays out its header, variants, preview, inspector, and overlay", () => {
+test("the entry bar and the preview with its status fill the canvas, and the right panel and the overlay follow", () => {
   assert.equal(
     renderToString(workspace()),
-    '<section class="mbk-workspace mbk-reset" data-workspace=""><h2>Header</h2><nav aria-label="Variants"></nav><div class="mbk-workspace-panes mbk-reset"><div class="mbk-preview-pane mbk-reset" data-workspace-preview=""><div class="mbk-preview-busy mbk-reset"><i>Stage</i></div><p role="status">Rendering</p></div><aside>Inspector</aside></div><b>Labels</b></section>',
+    '<section class="mbk-workspace mbk-reset" data-workspace="" data-workspace-canvas=""><p>Entry bar</p><div class="mbk-workspace-panes mbk-reset"><div class="mbk-preview-pane mbk-reset" data-workspace-preview=""><div class="mbk-preview-busy mbk-reset"><i>Stage</i></div><p role="status">Rendering</p></div></div><section aria-label="Panel">Right panel</section><b>Labels</b></section>',
   );
 });
 
@@ -47,5 +46,4 @@ test("the host receives the workspace and finds the preview pane in it", () => {
   assertSameElement(section.current, container.firstElementChild);
   const pane = section.current?.querySelector("[data-workspace-preview]");
   assertSameElement(screen.getByText("Rendering").parentElement, pane);
-  assertSameElement(pane?.nextElementSibling, screen.getByText("Inspector"));
 });

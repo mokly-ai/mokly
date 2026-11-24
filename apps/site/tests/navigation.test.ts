@@ -15,6 +15,7 @@ test("every site route is published with a trailing slash", () => {
     "/",
     "/docs/",
     "/changelog/",
+    "/pricing/",
     "/terms/",
     "/privacy/",
     "/complaints/",
@@ -46,6 +47,7 @@ test("a documentation route marks Docs and nothing else", () => {
     assert.equal(currentPage(route, SITE_PATHS.docs), "page");
     assert.equal(currentPage(route, SITE_PATHS.home), undefined);
     assert.equal(currentPage(route, SITE_PATHS.changelog), undefined);
+    assert.equal(currentPage(route, SITE_PATHS.pricing), undefined);
   }
 });
 
@@ -54,6 +56,12 @@ test("other routes mark only themselves", () => {
   assert.equal(currentPage("/", SITE_PATHS.docs), undefined);
   assert.equal(currentPage("/changelog/", SITE_PATHS.changelog), "page");
   assert.equal(currentPage("/changelog/", SITE_PATHS.docs), undefined);
+  assert.equal(currentPage("/pricing/", SITE_PATHS.pricing), "page");
+  for (const target of Object.values(SITE_PATHS).filter(
+    (path) => path !== SITE_PATHS.pricing,
+  )) {
+    assert.equal(currentPage("/pricing/", target), undefined, target);
+  }
   assert.equal(currentPage("/terms/", SITE_PATHS.terms), "page");
   assert.equal(currentPage("/terms/", SITE_PATHS.privacy), undefined);
   assert.equal(currentPage("/security/", SITE_PATHS.security), "page");

@@ -17,14 +17,12 @@ The site workflow:
   `https://pr-<number>.mokly-site.pages.dev`. Forks and Release Please PRs
   (head branches starting
   `release-please--` or labels containing `autorelease:`) skip deploy and close.
-- Both deploy jobs use repository variable `SITE_STAGE_PR`, falling back to
-  `sydney-v1`, and render it only as the stage label suffix.
-- Both install the pinned Node, npm and `package-lock.json`, then build the
-  mockups before the site. Deployment uses the npm workspace's installed Wrangler
-  with no registry fallback. The deployed `_headers` file gives public
-  resources the same wildcard CORS response used by local preview, which the
-  opaque-origin home frame requires. Actions use the same immutable pins as
-  CI and the catalogue preview workflow.
+- Both deploy jobs install the pinned Node, npm and `package-lock.json`, then
+  build the site. Deployment uses the npm workspace's installed Wrangler with
+  no registry fallback. The deployed `_headers` file emits the wildcard CORS
+  response and the other headers that
+  [Site delivery](./site-delivery.md#output) defines. Actions use the same
+  immutable pins as CI and the catalogue preview workflow.
 - Credentials mirror the preview workflow: repository variable
   `CLOUDFLARE_ACCOUNT_ID` and secret `CLOUDFLARE_PAGES_API_TOKEN`, falling
   back to `CLOUDFLARE_API_TOKEN`, enter only the validation, deploy and

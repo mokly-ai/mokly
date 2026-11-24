@@ -240,7 +240,7 @@ follows the configuration and base dependency contracts.
 
 The shim also passes `MOKLY_VIEWER_DIST`, the directory of the
 `@mokly/viewer/browser` build that its own installation resolves. The binary
-serves exactly that build's browser inventory, stylesheet, and font, so the
+serves exactly that build's browser inventory, stylesheet, and fonts, so the
 consumer's working directory never selects the viewer.
 
 The binary's version is the `@mokly/mokly` package version. The sidecar

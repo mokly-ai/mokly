@@ -6,7 +6,11 @@ import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
 
 import type { test as baseTest } from "./browser_test.js";
-import { awaitRoutedDetail, chooseFilter } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  chooseFilter,
+  expectNoCompareModes,
+} from "./comparison_ui.js";
 import {
   ACTION,
   dot,
@@ -19,6 +23,8 @@ import {
   showDetails,
   type MovedHost,
 } from "./moved_rows.js";
+import { previousVersionLabel } from "./previous_version.js";
+import { revealInPanel } from "./workspace_actions.js";
 
 /** Register the row and Details cases on `host`, which `test` serves. */
 export function registerMovedRowCases(
@@ -116,15 +122,15 @@ export function registerMovedRowCases(
 
   test("Details name the path each moved entry came from", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    for (const [entry, previous, open] of [
-      [INVOICE, `${PREVIOUS}/invoice`, "tab"],
-      [moves.keptInvoiceVariant, `${PREVIOUS}/invoice/overdue`, "tab"],
-      [moves.movedPage, `${PREVIOUS}/guide`, "summary"],
-      [moves.metadataMovedVariant, `${PREVIOUS}/action/ghost`, "tab"],
+    // Inspect's head holds the Details rows of a screen, a variant and a page.
+    for (const [entry, previous] of [
+      [INVOICE, `${PREVIOUS}/invoice`],
+      [moves.keptInvoiceVariant, `${PREVIOUS}/invoice/overdue`],
+      [moves.movedPage, `${PREVIOUS}/guide`],
+      [moves.metadataMovedVariant, `${PREVIOUS}/action/ghost`],
     ] as const) {
       await host.open(page, entry);
-      if (open === "tab") await showDetails(page);
-      else await page.locator("[data-mokly-details] summary").click();
+      await showDetails(page);
       const moved = page.locator(".mbk-meta-row", {
         has: page.locator(".mbk-meta-k", { hasText: "Moved from" }),
       });
@@ -140,13 +146,15 @@ export function registerMovedRowCases(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, moves.pureMovedScreen);
-    await expect(page.locator(".mbk-entry-status")).toHaveText("Unmodified");
+    await expect(page.locator("[data-workspace-status]")).toHaveText(
+      "Unmodified",
+    );
     await awaitRoutedDetail(page, moves.pureMovedScreen);
-    await expect(
-      page.getByRole("group", { name: "Comparison mode" }),
-    ).toHaveCount(0);
-    await showDetails(page);
+    await expectNoCompareModes(page);
+    // The comparison details stand in the Changes tab, which a pure move
+    // in Changes keeps.
     const evidence = page.locator("[data-workspace-evidence]");
+    await revealInPanel(page, evidence);
     await expect(evidence).toContainText(
       `The previous version is at ${PREVIOUS}/receipt, where it was before the move.`,
     );
@@ -160,12 +168,13 @@ export function registerMovedRowCases(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, moves.removedInvoiceVariant);
-    await expect(page.locator(".mbk-previous")).toHaveText(
+    await expect(previousVersionLabel(page)).toHaveText(
       "Showing previous version",
     );
+    // The Path row's segment of the parent links to the parent's page.
     const crumb = page
-      .getByLabel("Catalogue location")
-      .getByRole("link", { name: "Invoice", exact: true });
+      .locator("[data-inspect-path]")
+      .getByRole("link", { name: "invoice", exact: true });
     await expect(crumb).toHaveAttribute("href", `/view/${INVOICE}/`);
     await showDetails(page);
     const parent = page

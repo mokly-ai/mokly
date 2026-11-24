@@ -45,21 +45,24 @@ test("a closed, merged or fork pull request names why and offers only the switch
       // published, as every pull request alias with nothing ready does.
       const bar = byClass(page, "fo-top-bar")[0];
       assert.ok(bar, where);
+      // Each composition's pill is one control, named by the whole reference
+      // and the state's phrase, which the full pill shows.
       const fullReference = card.pull.number + " " + card.pull.title;
+      const phrase = card.pull.author + " · Not published";
       const references = elements(
         bar,
         (node) =>
           (node.tagName === "a" || node.tagName === "button") &&
-          (attribute(node, "aria-label") ?? label(node)) === fullReference,
+          attribute(node, "aria-label") === fullReference + ", " + phrase,
       );
       assert.equal(
         references.length,
         view.startsWith("desktop") ? 2 : 1,
         where + " names the pull request",
       );
-      assert.equal(
-        label(byClass(bar, "fo-top-state-detail")[0]),
-        card.pull.author + " · Not published",
+      assert.deepEqual(
+        byClass(bar, "fo-top-state-detail").map(label),
+        view.startsWith("desktop") ? [phrase] : [],
         where,
       );
       // The stage names why, with a line only where the reader can do

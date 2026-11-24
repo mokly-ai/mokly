@@ -13,8 +13,8 @@ const publicOrigin = "https://mokly.ai";
 function expectedLinks(origin: string) {
   return {
     home: origin + "/",
-    docs: origin + "/docs",
-    changelog: origin + "/changelog",
+    docs: origin + "/docs/",
+    changelog: origin + "/changelog/",
     pricing: origin + "/pricing",
     terms: origin + "/terms",
     privacy: origin + "/privacy",

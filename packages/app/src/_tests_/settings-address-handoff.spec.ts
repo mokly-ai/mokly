@@ -10,7 +10,12 @@ import {
   endSession,
   retireAddressSlugs,
 } from "./settings-address-handoff";
-import { publishedProject } from "./viewer/support";
+import {
+  canvasFrame,
+  publicationReference,
+  publishedProject,
+  savedVariant,
+} from "./viewer/support";
 
 test("a signed-out retired settings link redirects without reading scope", async ({
   page,
@@ -123,18 +128,18 @@ test("private settings keep an exact branch and viewer query through email sign-
     "Publishing tokens",
     "notice/draft",
   );
-  await expect(page.getByTestId("viewer-publication")).toHaveText(branch);
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "both",
-  );
+  await expect(publicationReference(page)).toHaveText(branch);
+  // The canvas beneath the dialog holds the component's variant set. Its
+  // frames have no viewport, so the address is where the reader sees Both.
+  await expect(canvasFrame(page, "Draft")).toBeVisible();
+  await expect(page).toHaveURL(/viewport=both/);
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
   await expect(
-    page.locator('[data-workspace-variant="notice/draft"]'),
-  ).toHaveAttribute("aria-current", "page");
+    savedVariant(page, "Draft", { includeHidden: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("input[data-mokly-search]")).toHaveValue(
     "notice tag:a tag:b",
   );

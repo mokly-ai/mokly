@@ -1,17 +1,23 @@
 ---
 /**
- * The Mokly mark beside the lowercase serif wordmark with its accent period.
- * Together they link Home from every page with the accessible name
- * "Mokly home", and they mark the current page on the home itself.
+ * The Mokly mark, which `Mark.astro` draws, beside the lowercase Geist
+ * wordmark with its signal period. Together they link Home from every page
+ * with the accessible name "Mokly home", and they mark the current page on
+ * the home itself.
+ *
+ * Use: `<Brand route={route} />`, with the rendered route. `size` sets the
+ * mark's size in pixels, 30 by default.
  */
 import { SITE_PATHS, currentPage } from "../navigation.js";
+
+import Mark from "./Mark.astro";
 
 interface Props {
   readonly route: string;
   readonly size?: number;
 }
 
-const { route, size = 26 } = Astro.props;
+const { route, size = 30 } = Astro.props;
 ---
 
 <a
@@ -20,25 +26,8 @@ const { route, size = 26 } = Astro.props;
   class="site-brand"
   href={SITE_PATHS.home}
 >
-  <svg aria-hidden="true" height={size} viewBox="0 0 32 32" width={size}>
-    <rect
-      x="3"
-      y="3"
-      width="20"
-      height="21"
-      rx="4"
-      fill="currentColor"
-      opacity="0.3"
-    ></rect>
-    <rect x="9" y="8" width="20" height="21" rx="4" fill="currentColor"></rect>
-    <path
-      d="M14 15h10M14 20h7"
-      stroke="var(--mk-color-surface)"
-      stroke-width="2"
-      stroke-linecap="round"
-    ></path>
-  </svg>
-  <span>
+  <Mark size={size} />
+  <span class="site-brand-word">
     mokly<span class="site-brand-dot">.</span>
   </span>
 </a>

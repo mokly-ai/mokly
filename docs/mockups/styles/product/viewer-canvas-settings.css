@@ -1,0 +1,137 @@
+/* The settings dialog and its mobile layer, as Canvas draws them: the
+   registered dialog over the dot-grid stage on a pointer viewport and the
+   registered layer on a phone, with the rail, the bar and the pane in
+   Canvas. `viewer.css` imports this sheet, so the application and every
+   product drawing load it, the settings family's included. The
+   configuration's base.css declares the Geist faces. Every rule is scoped to
+   the element that carries `data-color-scheme`, the renderer's wrapper in a
+   drawing and the document root in the application, and to the parts of the
+   two frames, which the drawings and the application both draw, so it
+   outweighs a product sheet's rule for the same element and restyles the
+   frames without changing them. */
+@import "viewer-canvas-depth.css";
+
+/* The drawing's scrim and dialog frame. The application's dialog is the
+   package modal: its public surface style takes the same radius and deep
+   shadow, and its backdrop is the package's. */
+
+/* The scrim, as over an open panel: no blur, so the canvas still reads. */
+[data-color-scheme] .fo-settings-overlay {
+  background: var(--fo-canvas-scrim);
+  backdrop-filter: none;
+}
+
+/* The dialog floats over the canvas on the surface, with a hairline, a 12px
+   radius and a deep, soft shadow. */
+[data-color-scheme] .fo-dialog {
+  border-color: var(--mk-color-border);
+  border-radius: var(--fo-canvas-radius);
+  box-shadow: var(--fo-canvas-shadow-deep);
+}
+
+/* The rail on the muted surface: uppercase mono group labels over the panes,
+   and the current pane in the signal-soft fill with the signal-deep ink. */
+[data-color-scheme] .fo-dialog-rail {
+  padding: var(--mk-space-4) var(--mk-space-3);
+}
+[data-color-scheme] .fo-dialog-sections {
+  gap: var(--mk-space-4);
+}
+[data-color-scheme] .fo-dialog-sections .fo-group-label {
+  font-family: var(--mk-font-mono);
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+}
+[data-color-scheme] .fo-dialog-sections .fo-nav-item {
+  color: var(--mk-color-text-secondary);
+}
+[data-color-scheme] .fo-dialog-sections .fo-nav-label {
+  font-weight: var(--mk-font-regular);
+}
+[data-color-scheme] .fo-dialog-sections .fo-nav-item[aria-current] {
+  border-color: transparent;
+  background: var(--mk-color-signal-soft);
+  box-shadow: none;
+  color: var(--mk-color-signal-deep);
+}
+[data-color-scheme]
+  .fo-dialog-sections
+  .fo-nav-item[aria-current]
+  .fo-nav-label {
+  font-weight: var(--mk-font-semibold);
+}
+[data-color-scheme]
+  .fo-dialog-sections
+  .fo-nav-item[aria-current]
+  .fo-nav-icon {
+  color: var(--mk-color-signal-deep);
+}
+
+/* The pane's bar: its title at the panel's own size, and Close at the end. */
+[data-color-scheme] .fo-dialog-bar {
+  min-height: 52px;
+  padding: var(--mk-space-2) var(--mk-space-3) var(--mk-space-2)
+    var(--mk-space-6);
+}
+[data-color-scheme] .fo-dialog-bar .fo-dialog-title {
+  font-size: var(--mk-type-ui-title-size);
+  line-height: var(--mk-type-ui-title-line);
+  letter-spacing: -0.015em;
+}
+[data-color-scheme] .fo-dialog-body {
+  gap: var(--mk-space-6);
+  padding: var(--mk-space-5) var(--mk-space-6) var(--mk-space-8);
+}
+
+/* The pane's sections, in the dialog and in the layer: compact headings at
+   the interface size, tighter spacing, and the cards and the role chips at
+   the Canvas radii. */
+[data-color-scheme] :is(.fo-dialog-body, .fo-layer-body) .fo-stack {
+  gap: var(--mk-space-6);
+}
+[data-color-scheme]
+  :is(.fo-dialog-body, .fo-layer-body)
+  .fo-stack
+  > *
+  + .fo-two-columns {
+  padding-top: var(--mk-space-6);
+}
+[data-color-scheme]
+  :is(.fo-dialog-body, .fo-layer-body)
+  .review-section-heading
+  h2 {
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+}
+[data-color-scheme] :is(.fo-dialog-body, .fo-layer-body) .fo-section {
+  gap: var(--mk-space-3);
+}
+[data-color-scheme] :is(.fo-dialog-body, .fo-layer-body) .fo-note {
+  border-radius: var(--fo-canvas-radius);
+}
+[data-color-scheme] :is(.fo-dialog-body, .fo-layer-body) .fo-role {
+  border-radius: var(--mk-radius-small);
+}
+/* On a narrow screen a person's role and Manage go under their name, so the
+   avatar's column keeps the avatar's own width. */
+@media (max-width: 767px) {
+  [data-color-scheme]
+    :is(.fo-dialog-body, .fo-layer-body)
+    .fo-member-row
+    > .review-inline {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+/* A phone's layer is a page of its own on the surface, under a bar on the
+   same surface with a hairline. */
+[data-color-scheme] .fo-layer,
+[data-color-scheme] .fo-layer-bar {
+  background: var(--mk-color-surface);
+}
+[data-color-scheme] .fo-layer-heading .fo-dialog-title {
+  font-size: var(--mk-type-ui-title-size);
+  line-height: var(--mk-type-ui-title-line);
+  letter-spacing: -0.015em;
+}

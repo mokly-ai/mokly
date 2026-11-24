@@ -2,15 +2,14 @@ import { expect } from "@playwright/test";
 
 import {
   appearance,
-  desktopFrame,
-  mobileFrame,
+  expectCanvasFrames,
   screen,
   select,
   store,
 } from "./appearance_assertions.js";
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import { expectFrameSource, viewportFrame } from "./workspace_actions.js";
 
 let lightOnlySite: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeAll(async () => {
@@ -51,15 +50,23 @@ for (const catalogue of ["mixed", "light-only"] as const) {
             theme,
             value: theme,
           });
-        for (const [frame, frameViewport] of [
-          [mobileFrame, "mobile"],
-          [desktopFrame, "desktop"],
-        ] as const) {
-          const dark =
-            scheme === "dark" && catalogue === "mixed" ? ".dark" : "";
+        // Each frame keeps its own scheme in both layouts. Below 900px the
+        // compact layout shows the one frame of the preview scheme, such as
+        // Mobile · Dark under Dark; a light-only catalogue has Light frames.
+        await expectCanvasFrames(page, entry, catalogue === "mixed");
+        if (viewport.width < 900) {
+          const dark = scheme === "dark" && catalogue === "mixed";
+          const shown = page.locator(viewportFrame("mobile"));
+          await expect(shown).toHaveAttribute(
+            "data-workspace-color-scheme",
+            dark ? "dark" : "light",
+          );
           await expectFrameSource(
-            page.locator(frame),
-            new RegExp(`${entry}/index\\.${frameViewport}${dark}\\.html$`, "u"),
+            shown,
+            new RegExp(
+              `${entry}/index\\.mobile${dark ? "\\.dark" : ""}\\.html$`,
+              "u",
+            ),
           );
         }
       }
@@ -78,10 +85,7 @@ test("a scheme pin paints the document without being saved", async ({
       theme: "dark",
       value: "dark",
     });
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
-  );
+  await expectCanvasFrames(page, "example/screens/welcome", true);
   // A pin dresses one document; it is not the reader's saved preference.
   expect(
     await page.evaluate(() => localStorage.getItem("mokly:theme")),
@@ -107,10 +111,7 @@ test("a saved appearance is restored on a later visit", async ({ page }) => {
       theme: "dark",
       value: "dark",
     });
-  await expectFrameSource(
-    page.locator(desktopFrame),
-    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
-  );
+  await expectCanvasFrames(page, "example/screens/welcome", true);
 });
 
 test("a light-only catalogue mounts with a saved Dark appearance", async ({
@@ -121,10 +122,7 @@ test("a light-only catalogue mounts with a saved Dark appearance", async ({
   await expect
     .poll(() => appearance(page))
     .toEqual({ scheme: "dark", theme: "dark", value: "dark" });
-  await expectFrameSource(
-    page.locator(mobileFrame),
-    /home\/index\.mobile\.html$/,
-  );
+  await expectCanvasFrames(page, "home", false);
 });
 
 for (const width of [390, 1280])
@@ -160,18 +158,10 @@ for (const width of [390, 1280])
           ),
         ).toBe(false);
       }
-      await expect(page.locator(".phone-screen")).toHaveCSS(
-        "background-color",
-        "rgb(255, 255, 255)",
-      );
-      await expect(page.locator(".phone-status")).toHaveCSS(
-        "color",
-        "rgb(26, 29, 28)",
-      );
-      await expect(page.locator(".browser-viewport")).toHaveCSS(
-        "background-color",
-        "rgb(255, 255, 255)",
-      );
-      await expect(page.locator(".mbk-frame-scheme-note")).toHaveCount(0);
+      // The canvas of a catalogue without a dark axis names no Light-only
+      // fallback.
+      await expect(
+        page.locator("[data-mokly-stage]").getByText("Light only"),
+      ).toHaveCount(0);
     }
   });

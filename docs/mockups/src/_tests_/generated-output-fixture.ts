@@ -34,9 +34,9 @@ export function sha256(bytes: Uint8Array | undefined): string {
 /** The directory that `mokly build` writes when it gets no `--out`. */
 export const outputDirectory = path.basename(outputRoot);
 
-/** The catalogue's own self-hosted Inter, which the fixture's stylesheet loads. */
-const authoredFont = "docs/mockups/styles/fonts/InterVariable.woff2";
-const fontSource = "source/assets/fonts/InterVariable.woff2";
+/** The catalogue's own self-hosted Geist, which the fixture's stylesheet loads. */
+const authoredFont = "docs/mockups/styles/fonts/Geist-Variable.woff2";
+const fontSource = "source/assets/fonts/Geist-Variable.woff2";
 
 /**
  * Buildable source with an imported stylesheet that loads a binary font, the
@@ -91,7 +91,7 @@ export async function outputFixture() {
   );
   await write(
     "source/fixture.css",
-    '@font-face { font-family: Fixture; src: url("./assets/fonts/InterVariable.woff2") format("woff2"); }\nmain { font-family: Fixture; }\n',
+    '@font-face { font-family: Fixture; src: url("./assets/fonts/Geist-Variable.woff2") format("woff2"); }\nmain { font-family: Fixture; }\n',
   );
   await write(
     "entries/screen.mockup.tsx",

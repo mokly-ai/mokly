@@ -95,6 +95,7 @@ export function ViewerPanelHost(input: PanelInput) {
           projectId={project.id}
           workspaceSlug={project.workspaceSlug}
           projectSlug={project.slug}
+          current={input.publicationRef}
           onFollow={input.onFollow}
           setUpPublishing={setUpPublishing}
         />

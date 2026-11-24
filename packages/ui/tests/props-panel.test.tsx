@@ -142,3 +142,12 @@ test("the tab's data loads in a status, and a failed load offers Try again", () 
   fireEvent.click(within(section).getByRole("button", { name: "Try again" }));
   assert.equal(retries, 1);
 });
+
+test("a static depiction's failed load links Try again to its address, with the text button's look", () => {
+  assert.equal(
+    renderToStaticMarkup(
+      <PropsStatus retryHref="../loading/" status="failed" wording={WORDING} />,
+    ),
+    '<section aria-label="Props status" class="mbk-reset" data-props-section="status"><p class="mbk-reset" role="alert">Props couldn’t be loaded.</p><a class="mbk-text-button mbk-reset" href="../loading/">Try again</a></section>',
+  );
+});

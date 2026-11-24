@@ -12,7 +12,7 @@ import {
   toggleFolder,
   watchedScreen,
 } from "./watch_fixture.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { canvasFrame, chooseViewport } from "./workspace_actions.js";
 
 test("watched path moves keep the missing old URL until the new row is selected", async ({
   page,
@@ -55,11 +55,11 @@ test("watched path moves keep the missing old URL until the new row is selected"
   await moved.click();
   await expect(page).toHaveURL(/\/view\/fixture\/archive\/moved\/$/u);
   await expect(page.locator("#mb-main h2")).toHaveText("Moved home");
-  await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture›Archive");
+  // Inspect's Path row names the moved screen's folders.
+  const path = page.locator("[data-inspect-path]");
+  await expect(path.locator("code")).toHaveText("fixture/archive/moved");
   await expect(
-    page
-      .locator(".mbk-crumbs")
-      .getByRole("button", { name: "Archive", exact: true }),
+    path.getByRole("button", { name: "archive", exact: true }),
   ).toBeVisible();
   await expect(moved).toHaveAttribute("aria-current", "page");
   await expect(screens).not.toHaveAttribute("open", "");
@@ -73,7 +73,7 @@ test("watched folder moves prune old disclosure keys and keep unrelated document
   await page.goto(`${watched.url}/view/fixture/other/`);
   await chooseViewport(page, "mobile");
   await markPage(page);
-  const frame = page.locator(".mbk-frame-mobile iframe");
+  const frame = page.locator(canvasFrame("mobile"));
   await expect(frame.contentFrame().locator("h1")).toHaveText("Other");
   await markDocument(frame);
   const screens = folder(page, "screens");

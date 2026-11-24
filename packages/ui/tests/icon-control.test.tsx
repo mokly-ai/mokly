@@ -3,23 +3,10 @@ import "./dom.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import {
-  IconButton,
-  IconSelect,
-  IconSwitch,
-  type IconSelectOption,
-} from "../src/icon-control/icon-control.js";
-import { ChevronDownIcon } from "../src/icons/icons.js";
-
-type Size = "small" | "large";
-
-const SIZES: readonly IconSelectOption<Size>[] = [
-  ["small", "Small"],
-  ["large", "Large"],
-];
+import { IconButton } from "../src/icon-control/icon-control.js";
 
 test("an icon button keeps the shell's attribute order", () => {
   assert.equal(
@@ -85,126 +72,4 @@ test("a disabled button reports no press", () => {
   assert.equal(button.hasAttribute("disabled"), true);
   fireEvent.click(button);
   assert.equal(presses, 0);
-});
-
-test("an icon select lays its select over the glyph and the 18px down chevron", () => {
-  const markup = renderToStaticMarkup(
-    <IconSelect
-      glyph={<span data-glyph="" />}
-      label="Size"
-      mark="data-size"
-      options={SIZES}
-      title="Size"
-      value="large"
-    >
-      <span data-after="" />
-    </IconSelect>,
-  );
-  assert.equal(
-    markup,
-    `<label class="mbk-icon-select mbk-reset" title="Size"><span data-glyph=""></span>${renderToStaticMarkup(<ChevronDownIcon size={18} />)}<select aria-label="Size" data-size="" class="mbk-reset"><option class="mbk-reset" value="small">Small</option><option class="mbk-reset" value="large" selected="">Large</option></select><span data-after=""></span></label>`,
-  );
-});
-
-test("the select shows its value, names its description, and reports each choice", () => {
-  const choices: Size[] = [];
-  render(
-    <IconSelect
-      describedBy="root-size-changed"
-      glyph={<span />}
-      label="Size"
-      onChange={(size) => choices.push(size)}
-      options={SIZES}
-      title="Size"
-      value="small"
-    />,
-  );
-  const select = screen.getByRole("combobox", { name: "Size" });
-  assert.ok(select instanceof HTMLSelectElement);
-  assert.equal(select.value, "small");
-  assert.equal(select.getAttribute("aria-describedby"), "root-size-changed");
-  assert.deepEqual(
-    within(select)
-      .getAllByRole("option")
-      .map((option) => option.textContent),
-    ["Small", "Large"],
-  );
-  fireEvent.change(select, { target: { value: "large" } });
-  fireEvent.change(select, { target: { value: "small" } });
-  assert.deepEqual(choices, ["large", "small"]);
-});
-
-test("a value that the select does not offer reports nothing", () => {
-  const choices: Size[] = [];
-  render(
-    <IconSelect
-      glyph={<span />}
-      label="Size"
-      onChange={(size) => choices.push(size)}
-      options={SIZES}
-      title="Size"
-      value="small"
-    />,
-  );
-  const select = screen.getByRole("combobox", { name: "Size" });
-  fireEvent.change(select, { target: { value: "huge" } });
-  assert.deepEqual(choices, []);
-});
-
-test("a switch lays a native checkbox over its glyph in a label with the button's look", () => {
-  assert.equal(
-    renderToStaticMarkup(
-      <IconSwitch
-        checked
-        description="Inspect component regions."
-        label="Highlight components"
-        mark="data-workspace-highlight"
-        title="Highlight components"
-      >
-        <span data-glyph="" />
-      </IconSwitch>,
-    ),
-    '<label class="mbk-icon-button mbk-reset" title="Highlight components"><input class="mbk-reset" type="checkbox" role="switch" aria-label="Highlight components" aria-description="Inspect component regions." data-workspace-highlight="" checked=""/><span data-glyph=""></span></label>',
-  );
-});
-
-test("a switch starts at its state, then holds the reader's check", () => {
-  render(
-    <IconSwitch
-      checked={false}
-      describedBy="root-mark"
-      label="Dark preview"
-      title="Dark preview"
-    >
-      <span />
-    </IconSwitch>,
-  );
-  const control = screen.getByRole("switch", { name: "Dark preview" });
-  assert.ok(control instanceof HTMLInputElement);
-  assert.equal(control.checked, false);
-  assert.equal(control.getAttribute("aria-describedby"), "root-mark");
-  assert.equal(
-    control.closest("label")?.className,
-    "mbk-icon-button mbk-reset",
-  );
-  fireEvent.click(control);
-  assert.equal(control.checked, true);
-});
-
-test("a disabled switch keeps its state", () => {
-  render(
-    <IconSwitch
-      checked={false}
-      disabled
-      label="Highlight components"
-      title="No registered components in this view"
-    >
-      <span />
-    </IconSwitch>,
-  );
-  const control = screen.getByRole("switch", { name: "Highlight components" });
-  assert.ok(control instanceof HTMLInputElement);
-  assert.equal(control.disabled, true);
-  fireEvent.click(control);
-  assert.equal(control.checked, false);
 });

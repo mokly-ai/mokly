@@ -1,0 +1,69 @@
+---
+/**
+ * The note filter: a group of native radios named Show notes, for all notes
+ * and for each main note group, each with its icon and its count, then the
+ * status of what the page shows, announced politely. Native radios give the
+ * group its keyboard behaviour; the changelog island applies the choice.
+ * The built page shows every note with All checked. The filter needs
+ * script, so without script it does not show.
+ *
+ * Use: `<Filter releases={releases} />`.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import Icon from "../Icon.astro";
+import type { IconName } from "../icons.js";
+
+import { GROUP_ICONS, GROUP_NAMES, totalNotes } from "./facts.js";
+import { FILTER_GROUPS, filterStatus, type FilterChoice } from "./status.js";
+
+interface Props {
+  readonly releases: readonly PublishedRelease[];
+}
+
+const { releases } = Astro.props;
+
+/** One option: its value, its icon, its name and its count. */
+interface Option {
+  readonly count: number;
+  readonly icon: IconName | undefined;
+  readonly label: string;
+  readonly value: FilterChoice;
+}
+
+const options: readonly Option[] = [
+  {
+    count: totalNotes(releases),
+    icon: undefined,
+    label: "All",
+    value: "all",
+  },
+  ...FILTER_GROUPS.map((kind) => ({
+    count: totalNotes(releases, kind),
+    icon: GROUP_ICONS[kind],
+    label: GROUP_NAMES[kind].short,
+    value: kind,
+  })),
+];
+---
+
+<div class="site-changelog-filterbar">
+  <fieldset aria-label="Show notes" class="site-changelog-filter">
+    {options.map((option) => (
+      <label class="site-changelog-filter-option">
+        <input
+          checked={option.value === "all"}
+          class="site-changelog-filter-input site-visually-hidden"
+          name="site-changelog-filter"
+          type="radio"
+          value={option.value}
+        />
+        {option.icon !== undefined && <Icon name={option.icon} size={15} />}
+        <span>{option.label}</span>{" "}
+        <span class="site-changelog-filter-count">{option.count}</span>
+      </label>
+    ))}
+  </fieldset>
+  <p aria-live="polite" class="site-changelog-filter-status">
+    {filterStatus("all", totalNotes(releases), releases.length)}
+  </p>
+</div>

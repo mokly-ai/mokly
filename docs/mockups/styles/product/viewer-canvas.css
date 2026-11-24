@@ -1,0 +1,16 @@
+/* The Canvas look of the viewer drawings that only the drawings need: the
+   inline end of the bar's two compositions, which the open menus share. The
+   bar's composition and its controls, which the application draws too, are
+   in the shared `viewer-bar.css` and `viewer-controls.css`. `chrome.tsx`
+   imports this sheet, so Mokly bundles it into each viewer entry's own
+   stylesheet, after the product sheets that the configuration links, and the
+   application never loads it. Every rule is scoped to the renderer's wrapper,
+   the element that carries `data-color-scheme`, and styles cloud elements
+   only. */
+
+[data-color-scheme] .fo-viewer-screen {
+  /* The inline end of the full bar and of the compact bar, which the open
+     menus under each bar's last control share. */
+  --fo-canvas-bar-end: var(--mk-space-3);
+  --fo-canvas-compact-end: var(--mk-space-2);
+}

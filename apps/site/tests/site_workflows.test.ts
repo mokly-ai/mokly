@@ -106,13 +106,9 @@ test("site events and guards exclude forks and release pull requests", () => {
   assert.equal(allowsPullRequest(site.jobs["close-pr"]!), false);
 });
 
-test("deployments derive origins and build mockups before the site", () => {
+test("deployments derive origins and build the site without mockups", () => {
   assert.equal(site.env?.CLOUDFLARE_PROJECT_NAME, "mokly-site");
   assert.equal(site.env?.MOKLY_COMMENT_MARKER, "<!-- mokly-site -->");
-  assert.equal(
-    site.env?.SITE_STAGE_PR,
-    "${{ vars.SITE_STAGE_PR || 'sydney-v1' }}",
-  );
   assert.equal(
     site.jobs["deploy-main"]?.env?.SITE_ORIGIN,
     "https://${{ vars.MKC_DOMAIN }}",
@@ -138,12 +134,8 @@ test("deployments derive origins and build mockups before the site", () => {
     );
     const install = workflowStep(job, "Install dependencies");
     assert.equal(install.run, "npm ci");
-    const build = workflowStep(job, "Build mockups and site");
-    assert.equal(
-      build.run,
-      "npm run mockups:build --workspace @mokly-cloud/mockups\n" +
-        "npm run site:build\n",
-    );
+    const build = workflowStep(job, "Build site");
+    assert.equal(build.run, "npm run site:build");
     const deploy = job.steps.find((step) =>
       step.run?.includes("wrangler pages deploy"),
     );
@@ -167,7 +159,6 @@ test("missing deployment settings fail before build with an annotation", async (
     CLOUDFLARE_PROJECT_NAME: "mokly-site",
     MKC_DOMAIN: "example.com",
     SITE_ORIGIN: "https://example.com",
-    SITE_STAGE_PR: "sydney-v1",
   };
   for (const name of ["deploy-main", "deploy-pr"]) {
     const step = workflowStep(

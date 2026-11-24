@@ -1,0 +1,74 @@
+---
+/**
+ * One component set of the depicted acme/storefront app, drawn bare on the
+ * set's backing, as the spread's Components box shows it: the variants of
+ * one component.
+ *
+ * - `name`: `button`, `priceCard`, `badge`, `avatar`, `input` or `toast`.
+ *
+ * Use: `<AcmeSet name="badge" />`.
+ */
+import type { AcmeSetName } from "./acme-sets.js";
+import AcmeAvatar from "./AcmeAvatar.astro";
+import AcmeBadge from "./AcmeBadge.astro";
+import AcmeButton from "./AcmeButton.astro";
+import AcmeField from "./AcmeField.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import AcmeTile from "./AcmeTile.astro";
+import PriceCard from "./PriceCard.astro";
+
+interface Props {
+  readonly name: AcmeSetName;
+}
+
+const { name } = Astro.props;
+---
+
+<AcmeRoot kind="bare">
+  {name === "avatar" && (
+    <div class="site-acme-set-row">
+      <AcmeAvatar initials="JE" size="large" />
+      <AcmeAvatar initials="RK" size="large" tone="sage" />
+      <AcmeAvatar initials="AM" size="large" tone="plum" />
+      <AcmeAvatar initials="+4" size="large" tone="cream" />
+    </div>
+  )}
+  {name === "badge" && (
+    <div class="site-acme-set-row">
+      <AcmeBadge>Most popular</AcmeBadge>
+      <AcmeBadge tone="sage">New roast</AcmeBadge>
+      <AcmeBadge tone="plum">Decaf</AcmeBadge>
+      <AcmeBadge tone="muted">Sold out</AcmeBadge>
+    </div>
+  )}
+  {name === "button" && (
+    <div class="site-acme-set-row">
+      <AcmeButton>Continue</AcmeButton>
+      <AcmeButton tone="secondary">Back</AcmeButton>
+      <AcmeButton tone="danger">Delete</AcmeButton>
+    </div>
+  )}
+  {name === "input" && (
+    <div class="site-acme-set-column">
+      <AcmeField label="Email" value="jordan@example.com" />
+      <AcmeField label="Email" state="focus" value="jordan@exam" />
+      <AcmeField
+        label="Email"
+        note="Enter a full email address."
+        state="error"
+        value="jordan@"
+      />
+    </div>
+  )}
+  {name === "priceCard" && <PriceCard plan="regular" tone="primary" />}
+  {name === "toast" && (
+    <div class="site-acme-toast">
+      <AcmeTile roast="guji" size="small" />
+      <span class="site-acme-lines">
+        <b>Added to bag</b>
+        <i>Guji, Ethiopia · 250 g</i>
+      </span>
+      <span class="site-acme-toast-undo">Undo</span>
+    </div>
+  )}
+</AcmeRoot>

@@ -1,0 +1,13 @@
+/* Instrument Serif is self-hosted for the depicted acme/storefront app, whose
+   titles, logo and prices name it with a platform serif as the fallback
+   while it loads. The regular Latin face and its SIL Open Font License are
+   copied unchanged from the @fontsource/instrument-serif npm package 5.3.0,
+   which Fontsource builds from the Google Fonts release of the Instrument
+   Serif project. Every site document links this file after geist.css. */
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("instrument-serif-latin-400-normal.woff2") format("woff2");
+}

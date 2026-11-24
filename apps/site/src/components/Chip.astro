@@ -1,0 +1,43 @@
+---
+/**
+ * A chip: a short label on a pill, at least 22px tall in 12px type, for a
+ * version, a status or a branch. `signal` is the green of a version or of
+ * an added entry; `changed` and `removed` mark a change; `neutral`, the
+ * default, sits on the canvas tone with a hairline, as the `main` branch
+ * chip does. `mono` sets the label in Geist Mono, `dot` leads it with a
+ * status dot and `icon` with a 13px icon.
+ *
+ * Use: `<Chip icon="branch" mono>main</Chip>`. The label is the slot.
+ */
+import Icon from "./Icon.astro";
+import type { IconName } from "./icons.js";
+
+interface Props {
+  readonly class?: string;
+  readonly dot?: boolean;
+  readonly icon?: IconName;
+  readonly mono?: boolean;
+  readonly tone?: "changed" | "neutral" | "removed" | "signal";
+}
+
+const {
+  class: className,
+  dot = false,
+  icon,
+  mono = false,
+  tone = "neutral",
+} = Astro.props;
+---
+
+<span
+  class:list={[
+    "site-chip",
+    `site-chip--${tone}`,
+    mono && "site-chip--mono",
+    className,
+  ]}
+>
+  {dot && <span aria-hidden="true" class="site-chip-dot" />}
+  {icon !== undefined && <Icon name={icon} size={13} />}
+  <slot />
+</span>

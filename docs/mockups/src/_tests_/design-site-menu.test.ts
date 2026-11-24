@@ -9,18 +9,9 @@ import {
   elements,
   label,
   siteDocument,
+  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
-
-const screens = [
-  "design/site/home",
-  "design/site/docs",
-  "design/site/changelog",
-  "design/site/terms",
-  "design/site/privacy",
-  "design/site/complaints",
-  "design/site/security",
-] as const;
 
 /** The control that opens the menu, read from one header. */
 function menuControl(id: string, viewport: "mobile" | "desktop") {
@@ -34,7 +25,7 @@ function menuControl(id: string, viewport: "mobile" | "desktop") {
 
 test("every header draws the closed menu control and no open menu", () => {
   for (const viewport of ["mobile", "desktop"] as const)
-    for (const id of screens) {
+    for (const id of siteScreens) {
       const { control, document } = menuControl(id, viewport);
       assert.equal(control.tagName, "button");
       assert.equal(attribute(control, "aria-label"), "Menu");
@@ -69,6 +60,7 @@ test("the open menu lists the destinations over the mobile home", () => {
   assert.deepEqual(links.map(label), [
     "Docs",
     "Changelog",
+    "Pricing",
     "GitHub",
     "Get started →",
   ]);
@@ -77,15 +69,21 @@ test("the open menu lists the destinations over the mobile home", () => {
     [
       "design/site/docs",
       "design/site/changelog",
+      "design/site/pricing",
       undefined,
       "design/site/docs",
     ],
   );
-  assert.equal(attribute(links[2]!, "href"), openSource.github);
+  assert.equal(attribute(links[3]!, "href"), openSource.github);
   // The home is not one of the destinations, so none of them is current.
   assert.deepEqual(
     links.filter((node) => attribute(node, "aria-current")),
     [],
+  );
+  assert.equal(
+    elements(menu, (node) => attribute(node, "type") === "radio").length,
+    0,
+    "the menu holds no scheme control",
   );
 });
 
@@ -98,8 +96,33 @@ test("the desktop view of the open menu keeps the destinations in the row", () =
       byClass(document, "site-nav")[0]!,
       (node) => node.tagName === "a",
     ).map(label),
-    ["Docs", "Changelog", "GitHub", "Get started →"],
+    ["Docs", "Changelog", "Pricing", "GitHub"],
   );
+});
+
+test("Get started stays in the tool bar beside the menu control", () => {
+  for (const viewport of ["mobile", "desktop"] as const) {
+    const { document } = siteDocument("design/site/home/menu", viewport);
+    const header = byClass(document, "site-header")[0];
+    assert.ok(header);
+    const actions = elements(
+      header,
+      (node) =>
+        node.tagName === "a" &&
+        (attribute(node, "class") ?? "").includes("site-button--primary"),
+    );
+    assert.deepEqual(actions.map(label), ["Get started →"], viewport);
+    assert.equal(
+      attribute(actions[0]!, "data-mokly-link"),
+      "design/site/docs",
+      viewport,
+    );
+    assert.equal(
+      byClass(byClass(document, "site-nav")[0]!, "site-button").length,
+      0,
+      `${viewport}: Get started sits outside the navigation, which the mobile tool bar hides`,
+    );
+  }
 });
 
 test("only the mobile composition draws the menu control", () => {

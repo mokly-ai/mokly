@@ -10,7 +10,7 @@ export default defineScreen({
   render: (_props, context) => (
     <SiteComplaintsScreen viewport={context.viewport} />
   ),
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Complaints",
   useCasePaths: ["design/site/tour"],
 });

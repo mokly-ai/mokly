@@ -15,19 +15,23 @@ use crate::head_validation::{ValidationRead, ValidationRecorder};
 use crate::references::{ResourceReference, collect_with};
 use crate::resource_reach::ResourceReach;
 use crate::urls::local_target;
+use crate::viewer_fonts::ViewerFonts;
 
 pub(crate) fn collect(
     walker: &Walker,
     route: &str,
     tree: &[Node],
     seeds: &[String],
+    fonts: ViewerFonts,
     recorder: &dyn ValidationRecorder,
 ) -> Result<Closure> {
     recorder.input(ValidationRead::Policy, "");
     recorder.input(ValidationRead::Document, route);
     let mut result = Closure::default();
     let source = namespace::generated(route);
-    let references = collect_with(tree, &|css| walker.index.style_references(css));
+    let references = collect_with(tree, &|css| {
+        fonts.followed(&source, walker.index.style_references(css))
+    });
     let mut queue: VecDeque<_> = references
         .iter()
         .cloned()

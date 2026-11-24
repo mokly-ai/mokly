@@ -1,6 +1,6 @@
 ---
 title: Security
-effective: 2026-09-22
+effective: 2026-11-22
 ---
 
 This page summarizes how Mokly protects account, workspace, project,

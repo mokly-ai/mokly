@@ -134,11 +134,58 @@ as unavailable with the diagnostics.
 The [changelog](/changelog/) entry of the Rust core release lists every export
 that the release removes.
 
+## Update @mokly/ui imports
+
+The canvas parts, such as `@mokly/ui/canvas-stage` and
+`@mokly/ui/canvas-frame`, and the right panel replace the one-frame stage
+with its device chrome and its inspector. Remove each import of these
+subpaths and exports:
+
+- The subpaths `@mokly/ui/browser-bar`, `@mokly/ui/comparison-toolbar`,
+  `@mokly/ui/details-panel`, `@mokly/ui/device-frame`, `@mokly/ui/flow-step`,
+  `@mokly/ui/inspector`, `@mokly/ui/previous-version`,
+  `@mokly/ui/scheme-fallback`, `@mokly/ui/screen-header`,
+  `@mokly/ui/segmented-control`, `@mokly/ui/stage`, `@mokly/ui/variant-bar`,
+  and `@mokly/ui/view-controls`.
+- `PreviewFrame`, `DocumentFrame`, `FramePlacement`, and `FrameViewport` of
+  `@mokly/ui/preview-frame`. `PreviewIframe` stays.
+- `PreviewLoading` and `PreviewUnavailable` of `@mokly/ui/preview-state`.
+- `IconSelect`, `IconSwitch`, and `IconSelectOption` of
+  `@mokly/ui/icon-control`. `IconButton` stays.
+- `ComparisonStage`, `ComparisonSection`, and `ComparisonUnavailable` of
+  `@mokly/ui/comparison-stage`. `ComparisonPanes` and `ComparisonFailure`
+  stay.
+- `CopyIcon`, `ExpandIcon`, and `CollapseIcon` of `@mokly/ui/icons`, and the
+  `WorkspaceIcon` names `details`, `props`, `usage`, `viewport`, and `close`.
+  `WorkspaceIcon` keeps `components`, `highlight`, and `scheme`.
+- `WorkspaceLayout` no longer takes `header`, `variantBar`, `inspector`, or
+  `panesRef`.
+- The `ShellResizing` value `inspector` of `@mokly/ui/shell-layout`.
+  `ShellResizing` keeps `navigation`.
+- `SavedPropsPanel` of `@mokly/ui/controls-panel` no longer takes `current`,
+  `currentHref`, or `onCurrent`, and it draws no Switch to Current action.
+
 ## Republish hosted catalogues
 
 Rebuild and republish every hosted catalogue with the matching viewer and
 receiver. A hosted service that stores catalogues from an earlier release
 must reset them. The upload exchange is unchanged.
+
+## Upgrade to frame wire version 4
+
+The frame probe can now measure the box model of one instance and the content
+box of a document. It can also forward canvas input and focus to the host.
+These changes move its wire version from 3 to 4. Version 4 adds the
+`measure` and `measure-content` requests, the `box-model` and `content-box`
+replies, and the `canvas-wheel`, `canvas-pinch`, `canvas-key`, `canvas-focus`
+and `canvas-blur` events. Pages that an earlier release built and the viewer
+of this release reject one another.
+
+- Rebuild and republish every hosted catalogue with this release. Upgrade
+  `@mokly/viewer` in each embedding application to the same release at the
+  same time.
+- Update each custom frame adapter that sends wire messages to the frame
+  probe. Use version 4.
 
 ## Upgrade to the frame probe
 
@@ -164,7 +211,7 @@ report catalogue links.
 - Replace the earlier script path in each host rule that names it, such as a
   file allowlist or a content security policy.
 - Update each custom frame adapter that sends wire messages to the script. Use
-  the channel `mokly-frame-probe` and version 3.
+  the channel `mokly-frame-probe` and version 4.
 - Remove `data-mokly-frame-probe` and `data-mokly-frame-probe-link` attributes
   from your markup. The build reserves both and fails when your markup uses
   one.

@@ -12,7 +12,7 @@ test("an address with no state reads the defaults and corrects nothing", () => {
     selection: {
       view: "all",
       screen: undefined,
-      viewport: "desktop",
+      viewport: "both",
       scheme: "light",
       search: "",
       tags: [],
@@ -45,7 +45,7 @@ test("a value this publication cannot honour falls back and says so", () => {
     const { state, corrected } = readViewerState(query, defaults);
     assert.equal(corrected, true, JSON.stringify(query));
     assert.equal(state.selection.view, "all");
-    assert.equal(state.selection.viewport, "desktop");
+    assert.equal(state.selection.viewport, "both");
     assert.equal(state.selection.scheme, "light");
     assert.equal(state.panel, undefined);
   }
@@ -118,7 +118,7 @@ test("the address names the reader's own choices and nothing else", () => {
           view: "changes",
           screen: removed.screen,
           snapshotId: removed.snapshotId,
-          viewport: "both",
+          viewport: "mobile",
           scheme: "dark",
           search: "checkout form",
           tags: ["forms", "critical"],
@@ -129,7 +129,7 @@ test("the address names the reader's own choices and nothing else", () => {
     ),
     path +
       `?view=changes&catalogueScreen=${encodeURIComponent(removed.screen)}` +
-      `&catalogueSnapshot=${removed.snapshotId}&viewport=both` +
+      `&catalogueSnapshot=${removed.snapshotId}&viewport=mobile` +
       "&scheme=dark&search=checkout+form&tag=forms&tag=critical" +
       "&panel=history",
   );
@@ -151,7 +151,7 @@ test("an address round-trips through the state it describes", () => {
     view: "changes",
     catalogueScreen: removed.screen,
     catalogueSnapshot: removed.snapshotId,
-    viewport: "both",
+    viewport: "desktop",
     scheme: "dark",
     search: "checkout",
     tag: ["forms", "critical"],
@@ -163,9 +163,28 @@ test("an address round-trips through the state it describes", () => {
     viewerHref(path, state, defaults),
     path +
       `?view=changes&catalogueScreen=${encodeURIComponent(removed.screen)}` +
-      `&catalogueSnapshot=${removed.snapshotId}&viewport=both&scheme=dark` +
+      `&catalogueSnapshot=${removed.snapshotId}&viewport=desktop&scheme=dark` +
       "&search=checkout&tag=forms&tag=critical&panel=share",
   );
+});
+
+test("a single viewport is written and Both, the default, is left out", () => {
+  const path = "/acme/website/publications/p1";
+  for (const viewport of ["desktop", "mobile"] as const) {
+    const read = readViewerState({ viewport }, defaults);
+    assert.equal(read.state.selection.viewport, viewport);
+    assert.equal(read.corrected, false, viewport);
+    assert.equal(
+      viewerHref(path, read.state, defaults),
+      `${path}?viewport=${viewport}`,
+    );
+  }
+  // A link that names the default is still valid, so the route keeps it as it
+  // is, and the next address the viewer writes over it leaves Both out.
+  const both = readViewerState({ viewport: "both" }, defaults);
+  assert.equal(both.state.selection.viewport, "both");
+  assert.equal(both.corrected, false);
+  assert.equal(viewerHref(path, both.state, defaults, "?viewport=both"), path);
 });
 
 test("a panel that needs a publication is not opened over nothing", () => {

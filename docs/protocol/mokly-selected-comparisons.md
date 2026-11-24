@@ -1,28 +1,54 @@
 # Selected live comparisons
 
-A selected comparison compares one shown view in Serve on demand: the screen
-or component entry the reader opened, at the selected viewport and colour
-scheme, head against base. It reads only that entry's views and their
-resources. It never renders the whole catalogue, reclassifies Changes, or
-compares other entries; `build` and the background Changes calculation stay
-exhaustive.
+A selected comparison compares, in Serve on demand, each compared row that the
+canvas shows, head against base, in the row's shown views. It reads only those
+rows' views and their resources. It never renders the whole catalogue,
+reclassifies Changes, or compares a row that the canvas does not show; `build`
+and the background Changes calculation stay exhaustive.
+
+On the canvas, a component's [section](./mokly-shell-canvas-stage.md#section)
+is its variant set: a row for its own example and then a row for each saved
+variant. Every other entry's section, such as a screen's, is one row with all
+of its frames. Each row is its own catalogue entry with its own path. Each
+compared row has its own selection, its own generation, its own renewal, its
+own failure, and its own retry. A row compares when its shown views are
+eligible under the
+[screen controls](./mokly-changes-controls.md#screen-controls): a Changed
+view, a Removed view of a component parent or variant, or an Unmodified view
+whose usage holds a changed component that the row's own entry detail names.
+A row without a comparison, such as an Added variant or an Unmodified row that
+uses no changed component, sends no request and keeps its current frames.
 
 ## Requests and evidence
 
-The shell requests `/mokly-viewer/diffs/selection?path=<path>` when a
-reader selects a diff mode, where the path names the selected screen or
-component entry, adding `refresh=1` for an explicit retry or refresh. The
-path uses the [path grammar](./mokly-paths.md#segment-grammar); the server
+While a diff mode is selected in Serve, the shell requests one selection for
+each compared row that the canvas shows:
+`/mokly-viewer/diffs/selection?path=<path>`, where the path names the row's
+own screen or component entry, adding `refresh=1` for an explicit retry or
+refresh. It never requests a row that the canvas does not show: a row whose
+frames the [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) hides,
+and in Side by side every row but the one of the compared frame. Decision: a
+variant set requests one selection for each compared row, not one selection
+for the whole set and not one for the selected entry alone. Each row is its
+own entry and Serve captures one entry for each selection, so a set-wide
+request would change the endpoint and the server's capture.
+
+The path uses the [path grammar](./mokly-paths.md#segment-grammar); the server
 derives every address. There is no `variant` parameter, because a component
-variant is an entry, and no removed-entry parameter, because a removed
-entry's previous version is delivered with its detail under the generation
-that the index's `comparisonUrl` names, under
+variant is an entry, and no removed-entry parameter, because a removed entry's
+previous version is delivered with its detail under the generation that the
+index's `comparisonUrl` names, under
 [removed previews](./mokly-removed-previews.md). Current browsing never
 requests comparison documents. A static build requests no selection: it
-resolves the selected entry's documents against its packaged `comparisonUrl`.
-Removed component parents and variants also use the advertised generation
-root in every host, including Serve. Their retry uses that root in every
-host, and their HEAD renewal in Serve uses it too.
+resolves every compared row's documents against its packaged `comparisonUrl`.
+Its shell checks the
+[deployment file](./mokly-export-delivery.md#static-navigation) once for each
+change, when it opens the comparison or changes the shown views or the mode,
+not once for each row. Removed component parents and variants also use the
+advertised generation root in every host, row by row, including Serve, where
+each removed row reads that root while the current rows of its set use their
+own selections. Their retry uses that root in every host, and their HEAD
+renewal in Serve uses it too.
 
 The response redirects to `/mokly-viewer/diffs/generations/selected-<uuid>/`,
 the root of an immutable in-memory generation. The root answers 204 with no
@@ -31,35 +57,48 @@ resolve relative to that root and only from that generation; unknown paths, trav
 are unavailable through this route. No comparison directory is written.
 
 Serve uses live delivery, and a static build and a React host use pinned
-delivery. In live delivery, changing viewport or colour scheme inside a
-comparison, or switching between diff modes, first renews the loaded
-generation with a non-cached HEAD request to its root. A successful response
-at that same URL extends the server's retention and lets the shell reuse the
-generation before it displays the requested panes. If the generation is
-missing or the response resolves to a different generation, the shell
-requests the selection endpoint again, without `refresh=1`, and renders only
-after the replacement generation is ready. A removed component parent or
-variant reacquires its advertised root instead of the selection endpoint. It
-never reuses old document URLs after a failed renewal and never depends on
-matching browser and server clocks.
+delivery. In live delivery, each row renews its own generation. A switch
+between diff modes first renews each loaded row's generation with its own
+non-cached HEAD request to its root, before the row's new panes load. A
+change of one row's shown views renews that row's generation alone. A
+successful response at that same URL extends the server's retention and lets
+the shell reuse the generation before it displays the row's requested panes.
+If a row's generation is missing or the response resolves to a different
+generation, the shell requests that row's selection again, without
+`refresh=1`, and renders the row only after its replacement generation is
+ready. The other rows keep their generations. A removed component parent or
+variant reacquires its advertised root instead of the selection endpoint. The
+shell never reuses old document URLs after a failed renewal and never depends
+on matching browser and server clocks.
 
 Only live delivery renews a generation. Pinned delivery reads a fixed
 generation that no server expires, so it sends no renewal request for a
 comparison or a removed preview.
 
-Repeated view or mode switches share pending work and apply the latest axes
-and mode when it completes. Navigating to a sibling entry keeps that mode,
-requests the sibling's own generation, keeps Props and highlighting in their
-comparison states, and fences the earlier response. Current and navigation
-cancel both renewal and comparison requests; late responses cannot replace
-the current view. A new Serve revision under the
-[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve)
-cancels pending comparisons, discards the cached selection, and returns an
-active comparison to Current while it preserves the mounted catalogue; the
-next explicit selection uses the new revision. Network and comparison
-failures use the comparison failure state with explicit retry.
+Repeated view or mode switches share each row's pending work. Each row loads
+its latest views when its own work completes. The canvas shows the latest mode
+once the work of every compared row has completed, so its frames never show
+two modes at once. Navigation between
+the entries of one variant set keeps the mode, every row's generation, and
+every row's pending work, because the canvas keeps the same rows. It also
+keeps Props and highlighting in their comparison states. Current, and
+navigation that opens another section on the canvas, cancel every row's
+requests and renewals, and a late response for any row cannot replace the
+current view. A row that leaves the canvas cancels its pending request. When
+it shows again in Serve, the shell renews the row's generation before any of
+the row's new panes load. A new Serve revision under the
+[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve) cancels
+every row's pending comparison, discards every row's cached selection, and
+returns an active comparison to Current while it preserves the mounted
+catalogue; the next explicit selection uses the new revision.
 
-The server captures the selected entry from the completed background
+A row whose request meets a network or comparison failure shows the
+[comparison failure state](./mokly-comparison-panes.md#lifecycle), with Try
+again, on its own frames, and the other rows still compare. Try again requests
+that row's selection again with `refresh=1`. Refresh requests the selection of
+every compared row again with `refresh=1`.
+
+The server captures the selection's entry from the completed background
 classification without reclassification. Both sides
 are the views the render graph composed for that classification under the
 [comparison contract](./mokly-comparison.md): the head from the working tree
@@ -73,10 +112,10 @@ commit is the one the accepted Changes snapshot pinned. Missing or pending
 Changes evidence produces the retryable comparison failure state; the server
 never falls back to an exhaustive foreground build.
 
-The selection returns no comparison record. The selected entry's
-[detail](./mokly-shell-delivery.md#entry-detail) carries its comparison
-facts: its `before` address, view states, ignored regions, rule and resource
-evidence with owners, and direct reasons, under the
+The selection returns no comparison record. The
+[detail](./mokly-shell-delivery.md#entry-detail) of the selection's entry
+carries its comparison facts: its `before` address, view states, ignored
+regions, rule and resource evidence with owners, and direct reasons, under the
 [comparison records](./mokly-component-comparison-records.md). A component
 parent's generation captures the documents of its own views, and a variant's
 generation only the variant's documents. The parent record still supplies
@@ -133,5 +172,5 @@ remains pending until capacity is free, or replacement or shutdown cancels it. M
 Expired generations are collected
 periodically and before a new capture. A failed refresh preserves the
 earlier documents and does not poison later requests. An idle open
-comparison does not keep its generation alive; its next view or mode switch
-renews or reacquires it before new panes load.
+comparison does not keep a row's generation alive; the row's next view or mode
+switch renews or reacquires it before the row's new panes load.

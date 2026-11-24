@@ -1,0 +1,111 @@
+/* The end of the code panel rules, which CodePanel.astro loads after
+   code.css, so that each rule here follows the rules that it replaces: the
+   syntax colours, which mix the panel's own text colour with a signal or
+   person role, the dark scheme's text colours, and the dimmed lines. Every
+   text colour keeps at least 4.5:1 on the panel's fill in both schemes.
+
+   The rules match the end of docs/mockups/styles/site/code.css, from its
+   syntax colours on. The mockups key the dark rules on the pinned scheme;
+   the site is dark through the scheme choice or, without a choice, through
+   the system scheme, so each dark rule is written for both. */
+
+/* Syntax colours */
+
+.site-code-token--keyword {
+  color: color-mix(in srgb, currentColor 25%, var(--mk-color-signal));
+}
+
+.site-code-token--string {
+  color: color-mix(
+    in srgb,
+    currentColor 62%,
+    var(--mk-color-people-orange-fill)
+  );
+}
+
+.site-code-token--type {
+  color: color-mix(in srgb, currentColor 55%, var(--mk-color-people-blue-fill));
+}
+
+.site-code-token--attr {
+  color: color-mix(
+    in srgb,
+    currentColor 60%,
+    var(--mk-color-people-violet-fill)
+  );
+}
+
+.site-code-token--number {
+  color: color-mix(in srgb, currentColor 50%, var(--mk-color-people-pink-fill));
+}
+
+.site-code-token--fn {
+  color: var(--mk-color-surface);
+}
+
+.site-code-token--punct {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+}
+
+/* The dark scheme's text roles for the muted and the bright text */
+
+:root[data-color-scheme="dark"] .site-code-tab,
+:root[data-color-scheme="dark"] .site-code-meta,
+:root[data-color-scheme="dark"] .site-code-language--end,
+:root[data-color-scheme="dark"] .site-code-copy,
+:root[data-color-scheme="dark"] .site-code--numbered .site-code-line::before,
+:root[data-color-scheme="dark"] .site-code-token--punct {
+  color: var(--mk-color-text-muted);
+}
+
+:root[data-color-scheme="dark"] .site-code-tab--open,
+:root[data-color-scheme="dark"] .site-code-copy:hover,
+:root[data-color-scheme="dark"] .site-code-token--fn {
+  color: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-code-tab,
+  :root:not([data-color-scheme="light"]) .site-code-meta,
+  :root:not([data-color-scheme="light"]) .site-code-language--end,
+  :root:not([data-color-scheme="light"]) .site-code-copy,
+  :root:not([data-color-scheme="light"])
+    .site-code--numbered
+    .site-code-line::before,
+  :root:not([data-color-scheme="light"]) .site-code-token--punct {
+    color: var(--mk-color-text-muted);
+  }
+
+  :root:not([data-color-scheme="light"]) .site-code-tab--open,
+  :root:not([data-color-scheme="light"]) .site-code-copy:hover,
+  :root:not([data-color-scheme="light"]) .site-code-token--fn {
+    color: var(--mk-color-text);
+  }
+}
+
+/* A dimmed line, such as a line that the chosen view leaves out, takes the
+   panel's muted text throughout: its code, its tokens and its line number,
+   at full opacity, so it keeps 4.5:1 on the panel in both schemes. These
+   rules follow the token and line number rules that they replace. */
+
+.site-code .site-code-line--dim,
+.site-code .site-code-line--dim *,
+.site-code .site-code-line--dim::before {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+}
+
+:root[data-color-scheme="dark"] .site-code .site-code-line--dim,
+:root[data-color-scheme="dark"] .site-code .site-code-line--dim *,
+:root[data-color-scheme="dark"] .site-code .site-code-line--dim::before {
+  color: var(--mk-color-text-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-code .site-code-line--dim,
+  :root:not([data-color-scheme="light"]) .site-code .site-code-line--dim *,
+  :root:not([data-color-scheme="light"])
+    .site-code
+    .site-code-line--dim::before {
+    color: var(--mk-color-text-muted);
+  }
+}

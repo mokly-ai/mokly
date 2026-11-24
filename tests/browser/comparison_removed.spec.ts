@@ -2,11 +2,16 @@ import { expect } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
+  awaitRoutedDetail,
   chooseFilter,
+  chooseMode,
+  comparisonFrames,
   comparisonIndex,
   navRow,
   snapshotOf,
 } from "./comparison_ui.js";
+import { historicalFrame, previousVersionLabel } from "./previous_version.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 const PREVIEW = "iframe[data-mokly-preview-frame]";
 const DOCUMENT_ICON = '.mbk-nav-ico path[d="M9 13h6M9 17h4"]';
@@ -53,15 +58,15 @@ for (const [kind, removedPath, title, content] of [
     const current = new RegExp(`/view/${comparisonPaths.changed}/$`);
     const frame =
       kind === "screen"
-        ? "[data-mokly-preview] .mbk-frame-desktop iframe"
-        : PREVIEW;
+        ? historicalFrame(page, "desktop").locator("iframe")
+        : page.locator(PREVIEW);
     const expectHistorical = async () => {
       await expect(page.locator("#mb-main h2").first()).toHaveText(title);
-      await expect(page.locator(".mbk-previous")).toHaveText(
+      await expect(previousVersionLabel(page)).toHaveText(
         "Showing previous version",
       );
       await expect(
-        page.frameLocator(frame).getByRole("heading", { name: content }),
+        frame.contentFrame().getByRole("heading", { name: content }),
       ).toBeVisible();
     };
     const expectCurrent = async () => {
@@ -99,9 +104,6 @@ for (const changed of [false, true])
       ? [comparisonPaths.component, comparisonPaths.removedVariant, "Archived"]
       : [comparisonPaths.quietParent, comparisonPaths.quietRemoved, "Old tag"];
     await page.goto(`/view/${parent}/`);
-    await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
-      "both",
-    );
     await chooseFilter(page, "changed");
     const removed = navRow(page, variant);
     await expect(removed).toHaveAttribute(
@@ -109,25 +111,37 @@ for (const changed of [false, true])
       new RegExp(`/view/${variant}/\\?snapshot=[a-f0-9]{64}$`),
     );
     await removed.click();
+    // From an unchanged parent, the Changes landing opens the first changed
+    // view, whose Mobile viewport the address names.
+    const landing = changed ? "" : "viewport=mobile&";
     await expect(page).toHaveURL(
-      new RegExp(`/view/${variant}/\\?snapshot=[a-f0-9]{64}$`),
+      new RegExp(`/view/${variant}/\\?${landing}snapshot=[a-f0-9]{64}$`),
     );
-    await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-      `${title} · Removed`,
-    );
-    // Arriving from Changes opens the first changed view of a quiet parent.
-    await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
-      changed ? "both" : "mobile",
-    );
-    await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-    await page.getByRole("button", { name: "Side by side" }).click();
-    await expect(page.locator("[data-current-screen]")).toBeHidden();
-    await expect(page.locator("[data-diff-stage]")).toBeVisible();
-    // Each shown viewport keeps its previous version and a missing side,
-    // worded with the design catalogue's copy.
-    const panes = changed ? 2 : 1;
-    await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(panes);
-    await expect(page.locator(".mb-pane--after .mb-pane-missing")).toHaveText(
-      Array.from({ length: panes }, () => "This variant has been removed."),
-    );
+    // The shell names the removed variant and its parent, and its status.
+    await awaitRoutedDetail(page, variant);
+    await expect(page).toHaveTitle(new RegExp(`^${title} · `, "u"));
+    await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
+    // Current shows that the variant was removed, and the band offers its
+    // comparison.
+    const gone = page.getByRole("heading", {
+      name: "This variant was removed",
+      exact: true,
+    });
+    await expect(gone).toBeVisible();
+    await openPanelTab(page, "Changes");
+    await expect(
+      page.getByRole("group", { name: "Comparison mode" }),
+    ).toBeVisible();
+    await chooseMode(page, "Side by side");
+    await expect(gone).toBeHidden();
+    // Side by side compares the variant's first frame: its previous version
+    // beside the missing current side, worded with the design catalogue's
+    // copy.
+    await expect(
+      page.locator('[data-mokly-stage] [data-compare-mode="side"]'),
+    ).toHaveCount(2);
+    await expect(comparisonFrames(page)).toHaveCount(1);
+    await expect(page.locator(".mb-pane--after .mb-pane-missing")).toHaveText([
+      "This variant has been removed.",
+    ]);
   });

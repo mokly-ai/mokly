@@ -35,7 +35,7 @@ test("frame probe ignores wrong-origin/source/nonce, unknown fields and oversize
   )!.key;
   const request = {
     channel: "mokly-frame-probe",
-    version: 3,
+    version: 4,
     nonce,
     type: "highlight",
     requestId: 100,
@@ -53,7 +53,7 @@ test("frame probe ignores wrong-origin/source/nonce, unknown fields and oversize
           window.parent,
         ],
         [JSON.stringify({ ...request, extra: true }), host, window.parent],
-        [JSON.stringify({ ...request, version: 2 }), host, window.parent],
+        [JSON.stringify({ ...request, version: 3 }), host, window.parent],
         [
           JSON.stringify({
             ...request,
@@ -164,7 +164,7 @@ test("host rejects forged frame events and accepts only its active subscribed se
       )!.nonce;
       const event = {
         channel: "mokly-frame-probe",
-        version: 3,
+        version: 4,
         nonce,
         type: "geometry",
       };

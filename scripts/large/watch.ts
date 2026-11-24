@@ -9,6 +9,7 @@ import {
   delivered,
   observeDelivery,
 } from "./delivery.js";
+import { viewFrame } from "./frames.js";
 import type { PreparedFixture } from "./setup.js";
 import { fixtureEdits, withFixtureEdit } from "./watch_edits.js";
 
@@ -81,15 +82,16 @@ export async function watch(
 ) {
   const page = await context.newPage();
   await observeDelivery(page);
-  await page.goto(`${url}/view/${firstScreen}/`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
+  // The address names the viewport, so the canvas shows the Desktop frames
+  // alone.
+  await page.goto(`${url}/view/${firstScreen}/?viewport=desktop`);
   for (const edit of await fixtureEdits(fixture, WATCH_BROWSER_TIMEOUT_MS)) {
     await edit.verify(page, false);
     const before = await delivered(page, {
       timeoutMs: WATCH_BROWSER_TIMEOUT_MS,
     });
     if (!before.index.live) throw new Error("Watch needs a live generation");
-    const frame = page.locator('[data-workspace-frame="desktop"]');
+    const frame = page.locator(viewFrame("desktop")).first();
     const previousSrc = await frame.getAttribute("src");
     if (!previousSrc) throw new Error("Watch preview has no source URL");
     let navigations = 0;

@@ -4,8 +4,11 @@ import { useRef } from "react";
 
 /** The narrowest column, in pixels. */
 const MINIMUM_WIDTH = 192;
-/** The column width that a double click restores, in pixels. */
-const DEFAULT_WIDTH = 248;
+/**
+ * The column width that a double click restores by default, in pixels: the
+ * catalogue's starting width from the 73.75rem panel step up.
+ */
+export const STARTING_WIDTH = 252;
 /** The change of one arrow key press, in pixels. */
 const STEP = 16;
 
@@ -18,6 +21,12 @@ export interface ResizeActions {
   onWidth: ((width: number) => void) | undefined;
   /** Receives the width to keep once a drag, a key, or a double click ends. */
   onWidthCommit: ((width: number) => void) | undefined;
+  /**
+   * Receives a double click, which restores the starting width. With it the
+   * host forgets the chosen width instead of receiving the starting width
+   * through `onWidth` and `onWidthCommit`.
+   */
+  onWidthReset?: (() => void) | undefined;
   /** Receives `true` when a drag starts and `false` when it ends. */
   onResizing: ((resizing: boolean) => void) | undefined;
 }
@@ -25,13 +34,14 @@ export interface ResizeActions {
 /**
  * The separator. A drag with the primary pointer captures it and resizes the
  * column continuously; Left and Right change the width by 16px, Home and End
- * choose its bounds, and a double click restores 248px. A column that is not
- * operable draws only the picture of its grip.
+ * choose its bounds, and a double click restores the starting width. A
+ * column that is not operable draws only the picture of its grip.
  */
 export function ResizeHandle({
   actions,
   maximum,
   operable,
+  startingWidth = STARTING_WIDTH,
   width,
 }: {
   actions: ResizeActions;
@@ -39,10 +49,12 @@ export function ResizeHandle({
   maximum: number;
   /** Whether the separator is a control, or only the picture of its grip. */
   operable: boolean;
+  /** The width that a double click restores, in pixels. */
+  startingWidth?: number | undefined;
   /** The column width, in pixels. */
   width: number;
 }) {
-  const { onResizing, onWidth, onWidthCommit } = actions;
+  const { onResizing, onWidth, onWidthCommit, onWidthReset } = actions;
   const drag = useRef<
     { pointer: number; start: number; width: number } | undefined
   >(undefined);
@@ -78,8 +90,12 @@ export function ResizeHandle({
       className="mbk-nav-resize mbk-reset"
       data-mokly-nav-resize=""
       onDoubleClick={() => {
-        onWidth?.(DEFAULT_WIDTH);
-        onWidthCommit?.(DEFAULT_WIDTH);
+        if (onWidthReset) {
+          onWidthReset();
+          return;
+        }
+        onWidth?.(startingWidth);
+        onWidthCommit?.(startingWidth);
       }}
       onKeyDown={(event) => {
         if (!onWidth) return;

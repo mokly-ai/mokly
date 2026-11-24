@@ -1,0 +1,196 @@
+/* The pricing plans: the plan frames inside their section boxes. The
+   desktop grid has five rows: the box head, then the frame's head, price,
+   action and list. Each box and each frame passes the rows down as a
+   subgrid, so the rows line up across the three frames. On mobile the boxes
+   and the frames stack. pricing-frame.css holds the contents of a frame.
+
+   The class names and the rules match
+   docs/mockups/styles/site/pricing-plans.css and the mobile composition of
+   pricing-responsive.css. Each base rule is the mobile composition, and the
+   desktop values and the desktop steps follow under the 768px query, in the
+   mockup's order. */
+
+.site-pricing-plans {
+  padding-top: 64px;
+}
+
+.site-pricing-plan-grid {
+  align-items: start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: none;
+  row-gap: 28px;
+}
+
+/* The section boxes: the shared part, outset so that its frames sit on the
+   tracks, with room under the frames for the selection. On mobile each box
+   stacks its head and its frames. */
+
+.site-pricing-plans .site-section-box {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  grid-column: 1;
+  grid-row: auto;
+  grid-template-rows: subgrid;
+  margin: 0 -10px;
+  padding: 12px 10px 52px;
+}
+
+.site-pricing-box--cli {
+  grid-column: 1;
+}
+
+/* No size tag or cursor sits under the Open source frame, so on mobile the
+   Mokly CLI box closes 24px under it. The rule names the plans, as the
+   section box rule does, so that it outweighs that rule's padding. The
+   desktop section box rule below sets the padding again. */
+
+.site-pricing-plans .site-pricing-box--cli {
+  padding-bottom: 24px;
+}
+
+.site-pricing-box--cloud {
+  column-gap: 24px;
+  grid-column: 3 / 6;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.site-pricing-plans .site-section-box-head {
+  grid-column: 1 / -1;
+  margin-bottom: -8px;
+}
+
+/* A plan frame: on desktop its four rows are the box's rows */
+
+.site-pricing-plan {
+  background: var(--mk-color-surface);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: flex;
+  flex-direction: column;
+  grid-row: 2 / span 4;
+  grid-template-rows: subgrid;
+  padding: 24px 22px 26px;
+  position: relative;
+  transition: box-shadow var(--mk-motion-standard) var(--mk-motion-easing);
+}
+
+.site-pricing-plan:not(.site-pricing-plan--selected):hover {
+  box-shadow:
+    0 0 0 1.5px var(--mk-color-signal),
+    var(--mk-shadow-medium);
+}
+
+.site-pricing-plan:not(.site-pricing-plan--selected):hover .site-frame-name {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-pricing-plan--selected {
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+}
+
+/* Team is the selected frame: the selection sits on the frame's edge, and
+   Maya's cursor rests on its lower right corner. The shared cursor rule
+   loads after this sheet and sets a cursor at its parent's top-left
+   corner, so the cursor's place takes the weight of the canvas root,
+   .site-root on body, as the mockup's later area sheet does. */
+
+.site-pricing-plan > .site-sel {
+  inset: -1px;
+}
+
+.site-root .site-pricing-cursor {
+  left: calc(100% - 64px);
+  top: calc(100% - 10px);
+}
+
+/* The desktop composition from the breakpoint up. The mobile column of
+   the section box rule outweighs the Cloud box's own track, as the mockup's
+   mobile rule does only under its viewport attribute. So the Cloud box
+   restates its track with the canvas root, .site-root on body, which gives
+   the rule that attribute's weight. */
+
+@media (min-width: 768px) {
+  .site-pricing-plan-grid {
+    grid-template-columns:
+      minmax(0, 1fr) 64px minmax(0, 1fr) 24px
+      minmax(0, 1fr);
+    grid-template-rows: repeat(5, auto);
+    row-gap: normal;
+  }
+
+  .site-pricing-plans .site-section-box {
+    display: grid;
+    gap: normal;
+    grid-row: 1 / span 5;
+    margin: 0 -20px;
+    padding: 14px 20px 56px;
+  }
+
+  .site-root .site-pricing-box--cloud {
+    column-gap: 24px;
+    grid-column: 3 / 6;
+  }
+
+  .site-pricing-plans .site-section-box-head {
+    margin-bottom: 38px;
+  }
+
+  .site-pricing-plan {
+    display: grid;
+    padding: 28px 28px 30px;
+  }
+
+  .site-root .site-pricing-cursor {
+    left: calc(100% - 46px);
+  }
+}
+
+/* Narrower desktops. From 1279px down the frames pad a little less. Below
+   1100px the boxes stack: the Mokly CLI frame spans the column with its
+   list in a second inner column, and the Free and Team frames stay side by
+   side with their rows lined up. */
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-pricing-plan {
+    padding: 26px 24px 28px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .site-pricing-plan-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 28px;
+  }
+
+  .site-pricing-plans .site-section-box {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .site-pricing-plans .site-pricing-box--cli {
+    grid-template-rows: auto auto;
+    padding-bottom: 28px;
+  }
+
+  .site-pricing-plans .site-pricing-box--cloud {
+    grid-template-rows: auto repeat(4, auto);
+  }
+
+  .site-pricing-plan {
+    padding: 28px 28px 30px;
+  }
+
+  .site-pricing-box--cli .site-pricing-plan {
+    column-gap: 48px;
+    grid-row: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto 1fr;
+  }
+}

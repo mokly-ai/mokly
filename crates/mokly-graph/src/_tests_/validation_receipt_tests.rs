@@ -9,6 +9,7 @@ use crate::closure::{ClosureBuilder, Walker};
 use crate::head_validation::{ValidationRead, ValidationRecorderMock};
 use crate::policy::{PublicFile, PublicPolicyMock};
 use crate::reference_index::{ReferenceEdges, ReferenceIndexMock};
+use crate::viewer_fonts::ViewerFonts;
 
 #[test]
 fn walk_keeps_the_returned_edge_receipt_when_its_own_read_loses_a_parse_race() {
@@ -67,7 +68,13 @@ fn walk_keeps_the_returned_edge_receipt_when_its_own_read_loses_a_parse_race() {
         ))),
     };
     let closure = walker
-        .collect_recorded("home/index.html", &[], &["theme.css".into()], &recorder)
+        .collect_recorded(
+            "home/index.html",
+            &[],
+            &["theme.css".into()],
+            ViewerFonts::Denied,
+            &recorder,
+        )
         .unwrap();
     assert_eq!(*received.lock().unwrap(), [Some([7; 32])]);
     assert_eq!(closure.files.into_iter().collect::<Vec<_>>(), ["theme.css"]);

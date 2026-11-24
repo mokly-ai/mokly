@@ -10,61 +10,51 @@ import { currentScreen } from "../fixtures/viewer-catalogue";
 import { screenFile } from "./catalogue-paths";
 import type { Scheme } from "./catalogue-paths";
 import { rgb } from "./color-metrics";
+import {
+  controlDocumentViolations,
+  controlPolicyInput,
+} from "./controls-document-policy";
+import { canvasFrameViolations } from "./viewer-measures";
 
 /**
- * The ready stage of a branch's publication: the view of the current screen
- * that each frame shows, and the view controls above the stage. The chrome
- * around every viewer screen is checked in `viewer.spec.ts`.
+ * The ready canvas of a branch's publication: the frames of the current
+ * screen with the view that each shows, the floating catalogue, the right
+ * panel, the compact layout's entry bar and dock, and the package's search
+ * in the bar, each control a native control or a picture of itself. The
+ * chrome around every viewer screen is checked in `viewer.spec.ts`.
  */
-
-/** Each viewport's device frame on the ready stage. */
-const devices = [
-  ["mobile", ".phone-frame"],
-  ["desktop", ".browser-frame"],
-] as const;
 
 /**
- * What the ready stage shows of Home in each document. Home is drawn in light
- * and dark, so Mokly publishes both views in each viewport. Under Dark
- * each frame therefore shows its dark view, and no frame keeps a light view
- * that the package's Light only note would name. Only the mobile document's
- * stage shows the phone. Every view of Home changed, so each document hides a
- * changed view in the other viewport and one in the other scheme: `marks`
- * holds the description that the viewer then gives the Viewport select and
- * the Dark preview switch.
+ * The frames that the ready canvas shows of Home in each document, by name,
+ * with the scheme of the view that each shows. Home is drawn in light and
+ * dark, so Mokly publishes both views in each viewport. A desktop document
+ * shows all four frames, each in its own scheme whatever the document's
+ * scheme is, so no frame keeps a light view that `Light only` would name. A
+ * phone shows the compact layout's one frame, the mobile frame of the
+ * document's scheme, named after the screen's slug.
  */
-const readyStage = {
-  "desktop light": {
-    mobile: "light",
-    desktop: "light",
-    lightOnly: 0,
-    marks: ["Other viewport changed", "Other theme changed"],
-  },
-  "desktop dark": {
-    mobile: "dark",
-    desktop: "dark",
-    lightOnly: 0,
-    marks: ["Other viewport changed", "Other theme changed"],
-  },
-  "mobile light": {
-    mobile: "light",
-    desktop: "light",
-    lightOnly: 0,
-    marks: ["Other viewport changed", "Other theme changed"],
-  },
-  "mobile dark": {
-    mobile: "dark",
-    desktop: "dark",
-    lightOnly: 0,
-    marks: ["Other viewport changed", "Other theme changed"],
-  },
-} as const satisfies Record<
-  string,
-  Record<"mobile" | "desktop", Scheme> & {
-    lightOnly: number;
-    marks: readonly [viewport: string, scheme: string];
-  }
->;
+const readyFrames = {
+  "desktop light": [
+    ["Desktop · Light", "light"],
+    ["Mobile · Light", "light"],
+    ["Desktop · Dark", "dark"],
+    ["Mobile · Dark", "dark"],
+  ],
+  "desktop dark": [
+    ["Desktop · Light", "light"],
+    ["Mobile · Light", "light"],
+    ["Desktop · Dark", "dark"],
+    ["Mobile · Dark", "dark"],
+  ],
+  "mobile light": [["home · Mobile · Light", "light"]],
+  "mobile dark": [["home · Mobile · Dark", "dark"]],
+} as const satisfies Record<string, readonly (readonly [string, Scheme])[]>;
+
+/** The size of Mokly's canvas frame of each viewport, the drawing's documents. */
+const frameDocument = {
+  desktop: { width: 1280, height: 800 },
+  mobile: { width: 390, height: 844 },
+} as const;
 
 for (const viewport of ["desktop", "mobile"] as const)
   for (const scheme of ["light", "dark"] as const) {
@@ -78,65 +68,87 @@ for (const viewport of ["desktop", "mobile"] as const)
     };
 
     test(
-      "the ready stage renders the published catalogue: " + label,
+      "the ready canvas renders the published catalogue: " + label,
       async ({ page }) => {
         await page.setViewportSize(size);
         await page.goto(url);
         const viewer = page.locator(".mokly-viewer");
         await expect(viewer).toBeVisible();
-        await expect(
-          viewer.getByRole("heading", { name: "Home" }),
-        ).toBeVisible();
-        // The selected viewport's device frame shows the current screen.
-        await expect(
-          viewer
-            .locator(
-              "[data-mokly-stage] " +
-                (viewport === "mobile" ? ".phone-frame" : ".browser-frame"),
-            )
-            .locator('[data-mkc-sample-screen="' + currentScreen.path + '"]'),
-        ).toBeVisible();
         // Each frame records the scheme of the view it shows, and its sample
         // paints that view's palette, whatever the document's scheme is.
-        const stage = viewer.locator("[data-mokly-stage]");
-        const expected = readyStage[label];
-        for (const [frameViewport, device] of devices) {
-          const frame = stage
-            .locator("[data-preview-color-scheme]")
-            .filter({ has: page.locator(device) });
-          const shown = expected[frameViewport];
-          await expect(frame, frameViewport).toHaveAttribute(
+        const frames = viewer.locator("[data-mokly-stage] [data-canvas-frame]");
+        const expected = readyFrames[label];
+        await expect(frames).toHaveCount(expected.length);
+        for (const [name, shown] of expected) {
+          const frame = viewer
+            .locator("[data-mokly-stage]")
+            .getByRole("figure", { name });
+          await expect(frame, name).toHaveAttribute(
             "data-preview-color-scheme",
             shown,
           );
-          const palette = paletteColors(shown, "folio");
+          const palette = paletteColors(shown);
           const screen = frame.locator(
             '[data-mkc-sample-screen="' + currentScreen.path + '"]',
           );
-          await expect(screen, frameViewport).toHaveCSS(
+          await expect(screen, name).toBeVisible();
+          await expect(screen, name).toHaveCSS(
             "background-color",
             rgb(palette.surface),
           );
-          await expect(screen, frameViewport).toHaveCSS(
-            "color",
-            rgb(palette.text),
-          );
+          await expect(screen, name).toHaveCSS("color", rgb(palette.text));
         }
         await expect(
-          stage.getByText("Light only").filter({ visible: true }),
-        ).toHaveCount(expected.lightOnly);
-        // The Dark preview toggle keeps the scheme the reader asked for, and
-        // each view control describes the changed view it hides.
-        const controls = viewer.getByRole("group", { name: "View options" });
-        const darkPreview = controls.getByRole("switch", {
-          name: "Dark preview",
-        });
-        const [viewportMark, schemeMark] = expected.marks;
-        await expect(darkPreview).toBeChecked({ checked: scheme === "dark" });
-        await expect(darkPreview).toHaveAccessibleDescription(schemeMark);
-        await expect(
-          controls.getByRole("combobox", { name: "Viewport" }),
-        ).toHaveAccessibleDescription(viewportMark);
+          viewer.getByText("Light only").filter({ visible: true }),
+        ).toHaveCount(0);
+        // The workspace, the dock and the catalogue's sheet run no script:
+        // every control that they draw is a native control or a picture of
+        // itself.
+        for (const part of ["[data-workspace]", "[data-canvas-dock]"])
+          await expect(
+            viewer.locator(part).getByRole("button", { includeHidden: true }),
+            part,
+          ).toHaveCount(0);
+        for (const name of ["Expand catalogue", "Close catalogue"])
+          await expect(
+            viewer.getByRole("img", { name, includeHidden: true }),
+            name,
+          ).toHaveCount(1);
+        if (viewport === "desktop") {
+          await expect(
+            viewer.getByRole("group", { name: "Zoom" }).getByRole("img"),
+          ).toHaveCount(3);
+          // The right panel shows Inspect, the current tab, beside Changes,
+          // and Inspect's head and Frames filter name the screen's frames.
+          const panel = viewer.getByRole("region", { name: "Panel" });
+          await expect(
+            panel.getByRole("img", { name: "Inspect" }),
+          ).toHaveAttribute("aria-current", "true");
+          await expect(
+            panel.getByRole("img", { name: "Changes" }),
+          ).toBeVisible();
+          await expect(
+            panel.getByRole("heading", { level: 2, name: "Home" }),
+          ).toBeVisible();
+          const filter = panel.getByRole("group", { name: "Frames" });
+          for (const toggle of ["Mobile", "Desktop", "Light", "Dark"])
+            await expect(
+              filter.getByRole("checkbox", { name: toggle }),
+            ).toBeChecked();
+        } else {
+          // The compact layout picks the frame in the entry bar and holds
+          // Catalogue, the panel's tab and Fit in its dock.
+          await expect(
+            viewer
+              .getByRole("combobox", { name: "Frame" })
+              .getByRole("option", { selected: true }),
+          ).toHaveText(scheme === "dark" ? "Mobile · Dark" : "Mobile · Light");
+          const dock = viewer.getByRole("group", { name: "Canvas controls" });
+          for (const control of ["Catalogue", "Inspect", "Fit"])
+            await expect(
+              dock.getByRole("img", { name: control }),
+            ).toBeVisible();
+        }
         await expect(
           page.getByRole("heading", { level: 1, includeHidden: true }),
         ).toHaveText(sample.project + " · " + publication.branch);
@@ -147,6 +159,69 @@ for (const viewport of ["desktop", "mobile"] as const)
         await expect(
           page.getByRole("button", { name: publication.branch }),
         ).toBeVisible();
+        // At 390px the package's search field is its own search button, as
+        // in the app, drawn as a picture of itself because a static search
+        // never opens, and a wider bar shows the field in its place.
+        const search = viewer.getByRole("img", {
+          name: "Search catalogue",
+          exact: true,
+        });
+        const field = viewer.getByRole("searchbox", {
+          name: "Search catalogue",
+        });
+        await expect(search).toBeVisible({ visible: viewport === "mobile" });
+        await expect(field).toBeVisible({ visible: viewport === "desktop" });
+        await expect(
+          viewer.getByRole("button", {
+            name: "Search catalogue",
+            includeHidden: true,
+          }),
+        ).toHaveCount(0);
+        if (viewport === "mobile") {
+          const box = await search.boundingBox();
+          expect(box?.width).toBe(30);
+          expect(box?.height).toBe(30);
+        }
+      },
+    );
+
+    test(
+      "the ready canvas holds its frames clear of its floating controls in Mokly's frame: " +
+        label,
+      async ({ page }) => {
+        await page.setViewportSize(frameDocument[viewport]);
+        await page.goto(url);
+        await expect
+          .poll(() => page.evaluate(canvasFrameViolations))
+          .toEqual([]);
       },
     );
   }
+
+test("History's glyph form keeps its name and its tooltip, which the control policy checks", async ({
+  page,
+}) => {
+  const input = controlPolicyInput(false);
+  const url = pathToFileURL(
+    screenFile("product/viewer/standalone", "desktop"),
+  ).href;
+  for (const [part, problem] of [
+    ["aria-label", "action label required"],
+    ["title", "icon-only action needs its name as its tooltip"],
+  ] as const) {
+    await page.goto(url);
+    expect(await page.evaluate(controlDocumentViolations, input)).toEqual([]);
+    await page
+      .locator('[title="History"] [aria-label="History"]')
+      .evaluate(
+        (node, name) =>
+          (name === "title" ? node.closest("[title]") : node)?.removeAttribute(
+            name,
+          ),
+        part,
+      );
+    expect(await page.evaluate(controlDocumentViolations, input)).toContain(
+      problem,
+    );
+  }
+});

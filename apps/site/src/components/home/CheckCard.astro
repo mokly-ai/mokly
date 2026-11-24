@@ -1,0 +1,40 @@
+---
+/**
+ * The GitHub check card of the home's Browse frame: acme/storefront's pull
+ * request #482 with the Mokly check, which counts the changed screens and
+ * offers View changes. A depiction of another product: the card is hidden
+ * from assistive technology, and View changes is drawn, not a link.
+ *
+ * Use: `<CheckCard />`. The rules are in `src/styles/home-browse.css`.
+ */
+import Icon from "../Icon.astro";
+import Mark from "../Mark.astro";
+
+import "../../styles/home-browse.css";
+---
+
+<div aria-hidden="true" class="site-home-check">
+  <div class="site-home-check-head">
+    <Icon class="site-home-check-github" name="github" size={17} />
+    <b>acme/storefront</b>
+    <span class="site-home-check-pr">
+      <Icon name="pullRequest" size={14} />
+      #482
+    </span>
+    <span class="site-home-check-state">Open</span>
+  </div>
+  <p class="site-home-check-title">feat/checkout-v2 → main</p>
+  <div class="site-home-check-row">
+    <Icon class="site-home-check-ok" name="checkCircle" size={17} />
+    <span class="site-home-check-app">
+      <Mark size={22} />
+    </span>
+    <span class="site-home-check-text">
+      <b>Mokly</b>
+      <span>3 screens changed, 1 added</span>
+    </span>
+    <span class="site-home-check-link">
+      View changes <span class="site-button-arrow">→</span>
+    </span>
+  </div>
+</div>

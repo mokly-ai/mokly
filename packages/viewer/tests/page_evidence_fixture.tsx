@@ -143,7 +143,10 @@ export function renderPage(catalogue: Catalogue): string {
   );
 }
 
-/** Every status badge beside the routed title. */
+/**
+ * Every status badge beside the routed title: the head band's, then, in the
+ * wide layout, the one in the section head on the canvas.
+ */
 export const status = (markup: string) =>
   [
     ...markup.matchAll(

@@ -1,0 +1,241 @@
+/* The messages of the Claude chat that AgentChat.astro docks in the Edit
+   window: the prompts in ink bubbles with the picked chip, Claude's answers
+   beside its avatar, the diff hunk, the composer and the foot with Publish
+   and Replay. Then the chat's part of the Edit demo.
+
+   The class names and the rules match the chat's rules of
+   docs/mockups/styles/site/home-edit.css. The mockups key the dark bubbles
+   on the pinned scheme; the site is dark through the scheme choice or,
+   without a choice, through the system scheme. */
+
+.site-agent-turn {
+  align-self: flex-end;
+  background: var(--mk-color-text);
+  border-radius: 14px 14px 4px 14px;
+  color: var(--mk-color-surface);
+  font-size: 14px;
+  line-height: 1.45;
+  max-width: 92%;
+  padding: 10px 13px;
+}
+
+:root[data-color-scheme="dark"] .site-agent-turn:not(.site-agent-turn--reply) {
+  background: var(--mk-color-surface-raised);
+  color: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"])
+    .site-agent-turn:not(.site-agent-turn--reply) {
+    background: var(--mk-color-surface-raised);
+    color: var(--mk-color-text);
+  }
+}
+
+.site-agent-turn--reply {
+  align-self: stretch;
+  background: none;
+  border-radius: 0;
+  color: var(--mk-color-text);
+  display: flex;
+  gap: 10px;
+  line-height: 1.5;
+  max-width: none;
+  padding: 0;
+}
+
+.site-home-reply-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-agent-turn code {
+  font-family: var(--mk-font-mono);
+  font-size: 12.5px;
+  font-weight: var(--mk-font-medium);
+}
+
+.site-home-chip {
+  align-items: center;
+  background: color-mix(in srgb, var(--mk-color-signal) 22%, transparent);
+  border-radius: 6px;
+  color: color-mix(
+    in srgb,
+    var(--mk-color-signal) 55%,
+    var(--mk-color-surface)
+  );
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+  font-weight: var(--mk-font-medium);
+  gap: 4px;
+  height: 22px;
+  line-height: 1;
+  margin-right: 6px;
+  padding: 0 7px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+:root[data-color-scheme="dark"] .site-home-chip {
+  color: var(--mk-color-signal-deep);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-home-chip {
+    color: var(--mk-color-signal-deep);
+  }
+}
+
+.site-home-diff {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--mk-color-border);
+  display: block;
+  font-family: var(--mk-font-mono);
+  font-size: 12px;
+  line-height: 1.75;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.site-home-diff-head {
+  background: var(--mk-color-surface-muted);
+  border-bottom: 1px solid var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+}
+
+.site-home-diff-add {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-home-diff-del {
+  color: var(--mk-color-danger);
+  margin-left: 6px;
+}
+
+.site-home-diff-line {
+  display: block;
+  overflow: hidden;
+  padding: 0 10px;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
+.site-home-diff-line--del {
+  background: var(--mk-color-danger-soft);
+  color: var(--mk-color-danger);
+}
+
+.site-home-diff-line--add {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-signal-deep);
+}
+
+.site-agent-input {
+  align-items: flex-end;
+  border-radius: 13px;
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-border-strong) 45%, transparent);
+  display: flex;
+  gap: 8px;
+  margin: 0 12px 10px;
+  min-height: 70px;
+  padding: 10px 10px 10px 13px;
+}
+
+.site-home-agent-placeholder {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 46px;
+}
+
+.site-agent-send {
+  background: var(--mk-color-background);
+  border-radius: 10px;
+  color: var(--mk-color-text-muted);
+  display: grid;
+  flex: none;
+  height: 38px;
+  place-items: center;
+  width: 38px;
+}
+
+.site-home-agent-foot {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 14px;
+}
+
+.site-home-agent-foot .site-home-publish {
+  border-radius: 11px;
+  flex: 1;
+  font-size: 14px;
+  height: 44px;
+}
+
+.site-home-replay {
+  border-radius: 11px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: grid;
+  flex: none;
+  height: 44px;
+  place-items: center;
+  width: 44px;
+}
+
+/* The chat's part of the Edit demo, on the timeline that home-edit.css
+   sets out: the prompt rises in at 0.3s, Claude's edit with its diff at
+   1.4s and its answer at 4.7s, once the scan has re-rendered the artboard;
+   at 5.3s the drawn Publish turns from a muted control to the filled one.
+   The finished state is the base rules above. */
+
+[data-home-demo="edit"][data-home-demo-state="armed"] .site-home-agent-step {
+  opacity: 0;
+}
+
+[data-home-demo="edit"][data-home-demo-state="armed"] .site-home-publish {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"] .site-home-agent-step {
+  animation: site-home-agent-rise 0.45s var(--mk-motion-easing) backwards;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-agent-step--prompt {
+  animation-delay: 0.3s;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-agent-step--edit {
+  animation-delay: 1.4s;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"]
+  .site-home-agent-step--done {
+  animation-delay: 4.7s;
+}
+
+[data-home-demo="edit"][data-home-demo-state="play"] .site-home-publish {
+  animation: site-home-agent-ready 0.4s var(--mk-motion-easing) 5.3s backwards;
+}
+
+@keyframes site-home-agent-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes site-home-agent-ready {
+  from {
+    filter: grayscale(1);
+    opacity: 0.5;
+  }
+}

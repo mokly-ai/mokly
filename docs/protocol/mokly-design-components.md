@@ -3,11 +3,10 @@
 ## Scope
 
 Mokly's shared design UI has its own component pages, saved variants,
-editable local props and recorded consumers. The Browse, Changes, component
-explorer, inspection and controls artboards render the same registered
-implementations as those pages. One component implementation or owned-style
-edit appears at its component entry; consuming artboards are affected unless
-they also have independent changes.
+editable local props and recorded consumers. Every design artboard renders the
+same registered implementations as those pages. One component implementation or
+owned-style edit appears at its component entry; consuming artboards are
+affected unless they also have independent changes.
 
 The components live in the repository's mockup catalogue under
 `examples/basic/specs/design`. The package's browser shell stays in the
@@ -18,7 +17,10 @@ registration. Its public stylesheet imports the package stylesheets of the
 component and of each package component that it renders. The component keeps
 no copy of that markup or CSS. Decision: the mockup renders
 the package component, not its own copy kept aligned by tests, because two
-implementations drift and one serves the product and its mockups.
+implementations drift and one serves the product and its mockups. Nine
+inventory components render a package component. The eleven
+[Canvas viewer parts](./mokly-design-component-library-canvas.md), which the
+package does not provide, implement their own markup and stylesheet.
 
 A desktop render follows the shell's
 [layout breakpoint](./mokly-shell-device-chrome.md#responsive-behavior), so
@@ -27,8 +29,8 @@ holds the desktop form at that width, because the mockups show what the shell
 draws.
 
 Every other artboard part that a package component provides renders that
-component too, such as an artboard's shell and workspace layout, its panels
-and lists, and its highlight mask. The sheet that styles such a part imports
+component too, such as an artboard's shell layout, its panels and lists, and
+its highlight mask. The sheet that styles such a part imports
 the package stylesheets by repository path, and the artboard keeps no copy of
 that markup or CSS. Decision: the rule covers the artboard scaffolds, not only
 the inventory components, because an artboard copy drifts as an inventory copy
@@ -40,25 +42,26 @@ the pictured usage fixtures keep their separate roles. Usage in the outer
 inspector comes from the entry detail Mokly records, not from those pictured
 fixtures. Samples and artboards add no consumer scripts.
 
-Each screen uses the shared Details inspector and viewport toolbar. Top-bar
-Appearance owns the scheme. The footer has one current form; no alternative
-disclosure, presentation or behavior fields are supported. Comparison-mode
-controls keep their segments. Component entry metadata stays outside the
-rendered sample. Samples contain no implementation notes, environment badges
-or extra footers.
+Each Canvas screen uses the floating panels and the phone dock, and the zoom
+pill while the canvas holds a section. The startup states of
+`design/canvas/loading/catalogue` draw their one status line alone, because the
+shell draws no chrome before the catalogue arrives. Top-bar Appearance owns the
+scheme. The compare modes keep their one presentation. Component entry metadata
+stays outside the rendered sample. Samples contain no implementation notes,
+environment badges or extra footers.
 
 ## Catalogue And Source Ownership
 
 `Components → Design → Shared components` sits beneath the same `Design`
 folder as `Specs → Design`: a folder holding both kinds appears in both
 sections with its own children in each, under the
-[catalogue tree rule](./mokly-catalogue.md#tree). The Component explorer
-design section and the Components → Example → Components group stay beside
-it. The gallery folders are `Design → Shared components` and its `Chrome`,
-`Controls`, `Inspector`, and `Preview` children. They contain the 16
-component parents in the inventory; each parent's variant entries nest
-beneath its row under the [variant contract](./mokly-variants.md) rather than
-adding folder members.
+[catalogue tree rule](./mokly-catalogue.md#tree). The Components → Example →
+Components group stays beside it, and the Component explorer designs stand in
+the `Canvas viewer` folder of `Specs → Design`. The gallery folders are `Design → Shared components` and its `Canvas`,
+`Chrome`, `Controls`, `Inspector`, `Panels`, and `Preview` children. They
+contain the 20 component parents in the inventory; each parent's variant
+entries nest beneath its row under the [variant contract](./mokly-variants.md)
+rather than adding folder members.
 
 Each component is a `defineComponent` definition. For inventory group `G` and
 slug `S`:
@@ -90,30 +93,26 @@ Variants never become an unbounded screenshot gallery.
 Each inventory component has one markup and style implementation. Screens
 render it through its registered `.Component`, and no story-only copy exists.
 
-Shells, page layouts, preview workspaces, stage and grid layout helpers, and
-owning screen components stay ordinary composition. Where the shared UI
+Shells, page layouts, stage and grid layout helpers, and owning screen
+components stay ordinary composition. Where the shared UI
 package provides one of these parts, the composition renders the package
 component. Their meaningful constituent controls, panels and frames are
 registered components. A whole-artboard component would make initial
 highlighting select nearly the entire screen and would obscure the screen's
 independent content boundary.
 
-Browse and Changes share the same bounded preview/inspector layout as component
-designs. Desktop keeps the divider resize grip; mobile uses the same icon strip
-and compact/expanded sheet. Only panel content and the preview scroll. Opening
-and closing Details acts locally through its icon; its canonical owning artboard
-stays in the catalogue. The Details slot holds the descriptions, metadata,
-tags and comparison evidence.
+The Canvas screens use the layout of the
+[canvas stage](./mokly-shell-canvas-stage.md): the floating panels over the
+canvas, and in their compact form the sheets and the dock. Inspect holds the
+descriptions, metadata, tags and props, and Changes holds the comparison
+evidence.
 
-Selected-screen view options appear once in the header: a viewport dropdown
-and the Highlight components toggle, which every screen and component page
-draws in the state that the shell shows for its view. The top-bar Appearance
-selector owns the catalogue-wide scheme; there is no second scheme icon in the
-header and no authored light/dark link pair. Unsupported transitions stay
-disabled. Viewport changes select the actual mobile/desktop previews without
-scrolling the whole page. Simultaneous previews reserve their intrinsic minimum
-width and wrap when needed; full-size phone frames must never overlap adjacent
-desktop content. Comparison mode segments stay comparison controls.
+When a Canvas screen depicts a screen or a component, its Inspect holds the
+Frames filter. The filter holds the Highlight components switch, in the state
+that the shell shows for its view. The top-bar Appearance selector owns the
+catalogue-wide scheme; there is no second scheme control and no authored
+light/dark link pair. Unsupported transitions stay disabled. The compare
+modes stay comparison controls.
 
 Every owning screen has separate desktop and mobile React components. Flows
 compose their owning screen components, with links back to those screens. No
@@ -145,7 +144,7 @@ artboard without its navigation context.
 
 Callbacks, React nodes in nested data objects and arbitrary style objects are
 not data props. A registered boundary takes content slots, never a render
-function. The inspector takes named slots plus a plain tab list.
+function.
 
 Components render through the catalogue's renderer and providers. Component
 pages get a minimal consumer-owned preview host supplying design tokens and
@@ -156,15 +155,14 @@ in their screen context. Mobile comparison buttons, links and static labels
 share the same compact sizing so the control remains usable with different
 system fonts.
 
-Design components use `colorSchemes: ["light"]`, like the artboards that own
-them, except the appearance selector and the top bar that composes it: their own
-subject is the catalogue's appearance, so they render in both schemes alongside
-the appearance screens. A depicted dark-preview state is an explicit prop,
-distinct from the outer catalogue's color scheme; the appearance artboards set
-that prop from the scheme they were rendered for, so their chrome and previews
-change together. Select real mobile/desktop render contexts;
-device-frame `device` chooses a pictured phone/browser independently of the
-artboard viewport, so a mobile artboard may still depict a desktop comparison.
+Design components use `colorSchemes: ["light"]`, except the appearance
+selector and the top bar that composes it: their own subject is the
+catalogue's appearance, so they render in both schemes. The Canvas viewer
+parts' samples draw in the Canvas palette, as a Canvas artboard does. A
+depicted frame's scheme, such as a Canvas frame's dark scheme, is an explicit
+prop, distinct from the outer catalogue's color scheme. Select real
+mobile/desktop render contexts; a Canvas frame's `kind` chooses a depicted
+desktop or mobile frame independently of the artboard viewport.
 
 Local controls edit the selected component's supplied data and Reset restores
 the saved variant. Published pages show the same examples and read-only props.
@@ -173,10 +171,10 @@ turning the whole artboard into a second running application.
 
 ## Styles And Change Attribution
 
-Mixed files such as `design.css`, `design-stage.css`, `design-review.css` and
-`design-component-*.css` hold the shared, layout and global rules. Component
-selectors live in the inventory's component sheets. Shared tokens, resets,
-cross-component selectors and screen layout live in configured sheets. All
+Mixed files such as `design.css`, `design-canvas*.css` and
+`design-component-*.css` hold the shared, layout and global rules.
+Component selectors live in the inventory's component sheets. Shared tokens,
+resets, cross-component selectors and screen layout live in configured sheets. All
 these files use the same kept own-page match rule; none has an owner record
 that decides attribution.
 
@@ -206,10 +204,10 @@ or an empty Tag picker. No shared global sheet is filtered out as a substitute
 for matching changed rules to component output. Standalone stories and screen
 stylesheets never hold copies of the same rules.
 
-Descendant and state selectors work in situ and in the minimal host,
-including `:has()` viewport/theme state, inspector sizing, popovers and focus
-rings. Cross-component state remains explicit or a documented shared context;
-class proximity is not proof of exclusive ownership.
+Descendant and state selectors work in situ and in the minimal host, including
+`:has()` viewport/theme state, popovers and focus rings. Cross-component state
+remains explicit or a documented shared context; class proximity is not proof of
+exclusive ownership.
 
 Change attribution for these components follows the
 [component change contract](./mokly-component-changes.md), including each CSS

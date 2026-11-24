@@ -1,0 +1,180 @@
+/* The Canvas parts that sit on the dot grid: the frame label that
+   FrameLabel.astro draws over the top-left corner of its positioned frame,
+   and the selection box with its square handles, its name tag and its type
+   badge that Selection.astro draws over its positioned parent. Selections
+   use the signal green, or a person's colour. canvas-tags.css holds the
+   filled tags and the spacing redline. The rules match
+   docs/mockups/styles/site/canvas.css. */
+
+.site-frame-name {
+  align-items: center;
+  bottom: calc(100% + 10px);
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 7px;
+  left: 0;
+  line-height: 1;
+  position: absolute;
+  right: 0;
+  white-space: nowrap;
+}
+
+.site-frame-name svg {
+  flex: none;
+}
+
+.site-frame-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-frame-name-text b {
+  color: var(--mk-color-text-secondary);
+  font-weight: var(--mk-font-medium);
+}
+
+.site-frame-name-size {
+  margin-left: auto;
+}
+
+.site-frame-name--selected {
+  color: var(--mk-color-signal-deep);
+}
+
+/* The selection box: an outline over its positioned parent */
+
+.site-sel {
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  color: var(--mk-color-signal);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 3;
+}
+
+.site-sel--soft {
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, currentColor 42%, transparent);
+}
+
+.site-sel--maya {
+  color: var(--mk-color-people-pink-fill);
+}
+
+.site-sel--sam {
+  color: var(--mk-color-people-blue-fill);
+}
+
+.site-sel--claude {
+  color: var(--mk-color-people-orange-fill);
+}
+
+.site-sel--codex {
+  color: var(--mk-color-people-violet-fill);
+}
+
+.site-sel-handle {
+  background: var(--mk-color-surface);
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  position: absolute;
+  width: 9px;
+}
+
+/* A dark handle is filled with the text role. The mockups key it on the
+   pinned scheme; the site is dark through the scheme choice or, without a
+   choice, through the system scheme. */
+
+:root[data-color-scheme="dark"] .site-sel-handle {
+  background: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-sel-handle {
+    background: var(--mk-color-text);
+  }
+}
+
+.site-sel-handle--nw,
+.site-sel-handle--sw,
+.site-sel-handle--w {
+  left: 0;
+}
+
+.site-sel-handle--n,
+.site-sel-handle--s {
+  left: 50%;
+}
+
+.site-sel-handle--ne,
+.site-sel-handle--se,
+.site-sel-handle--e {
+  left: 100%;
+}
+
+.site-sel-handle--nw,
+.site-sel-handle--n,
+.site-sel-handle--ne {
+  top: 0;
+}
+
+.site-sel-handle--w,
+.site-sel-handle--e {
+  top: 50%;
+}
+
+.site-sel-handle--sw,
+.site-sel-handle--s,
+.site-sel-handle--se {
+  top: 100%;
+}
+
+/* The name tag over the top-left corner, such as T Heading */
+
+.site-sel-name {
+  align-items: center;
+  bottom: calc(100% + 9px);
+  color: var(--mk-color-signal-deep);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  left: -1px;
+  line-height: 1;
+  position: absolute;
+  white-space: nowrap;
+}
+
+/* The type badge over the top-right corner, such as Geist Semibold 162 */
+
+.site-sel-badge {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: 6px;
+  bottom: calc(100% + 7px);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  position: absolute;
+  right: -1px;
+  white-space: nowrap;
+}
+
+.site-sel-badge b {
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
+}

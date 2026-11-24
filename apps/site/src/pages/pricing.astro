@@ -1,0 +1,32 @@
+---
+/**
+ * The pricing page, one more file in the depicted design file: the hero on
+ * the plan grid, the plans as frames in two section boxes with Team
+ * selected, the compare table drawn as a component's props table, and the
+ * questions as resolved comment threads. Every plan fact comes from the plan
+ * catalogue of `docs/protocol/cloud/billing.md`.
+ */
+import Compare from "../components/pricing/Compare.astro";
+import Hero from "../components/pricing/Hero.astro";
+import Plans from "../components/pricing/Plans.astro";
+import Questions from "../components/pricing/Questions.astro";
+import Site from "../layouts/Site.astro";
+import { PAGE_METADATA } from "../metadata.js";
+import { SITE_PATHS } from "../navigation.js";
+
+import "../styles/pricing.css";
+
+const { description, title } = PAGE_METADATA[SITE_PATHS.pricing];
+---
+
+<Site
+  description={description}
+  main="site-pricing"
+  route={SITE_PATHS.pricing}
+  title={title}
+>
+  <Hero />
+  <Plans />
+  <Compare />
+  <Questions />
+</Site>

@@ -8,6 +8,7 @@ import { PAGE_METADATA, socialSlug } from "../src/metadata.js";
 import {
   CARD_HEIGHT,
   CARD_WIDTH,
+  LIGHT_LOCKUP,
   cardDocument,
   cardTitle,
   cards,
@@ -39,14 +40,19 @@ test("the card is drawn at the declared size with the title escaped", () => {
   assert.ok(document.includes(`height="${CARD_HEIGHT}"`));
   assert.ok(document.includes("Terms &amp; &lt;Privacy&gt;"));
   assert.ok(!document.includes("· Mokly"));
-  assert.ok(document.includes("mokly"), "the card carries the wordmark");
+  // The rasterizer loads no web font, so the card carries the wordmark as the
+  // published light lockup's own drawing: its mark and outlined lettering.
+  const lockup = readFileSync(LIGHT_LOCKUP, "utf8").trim();
+  const drawing = lockup.slice(lockup.indexOf(">") + 1);
+  assert.ok(drawing.includes("<path"), "the lockup draws outlines");
+  assert.ok(document.includes(drawing), "the card carries the wordmark");
 });
 
 test("every card closes with the home hero heading", () => {
   for (const [file, document] of cards())
     assert.match(
       document,
-      /<text [^>]*>Mockup your entire app\.<\/text><\/svg>$/,
+      /<text [^>]*>Design in code\.<\/text><\/svg>$/,
       file,
     );
 });

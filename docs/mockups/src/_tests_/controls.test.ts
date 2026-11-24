@@ -180,11 +180,16 @@ test("the adoption preserves existing registration schemas, controls and saved v
     "singleLine",
     "accessibilityLabel",
     "busy",
+    "lead",
+    "iconOnly",
   ]) {
     assert.ok(button.propSchema.properties[added].optional, added);
     delete button.propSchema.properties[added];
     delete button.controls[added];
   }
+  // The parts a Button draws inside itself: a declared slot, never a prop.
+  assert.deepEqual(button.slots, ["content"]);
+  delete button.slots;
   assert.equal(button.propSchema.properties.tone.schema.values.pop(), "danger");
   assert.deepEqual(button.controls.tone.options.pop(), {
     label: "Danger",

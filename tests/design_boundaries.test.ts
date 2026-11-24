@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { boundaryContrast, designPalette } from "./helpers/design_palette.js";
+import { markedBoundaryRules } from "./helpers/design_boundary_rules.js";
+import {
+  auditPalettes,
+  boundaryContrast,
+  designPalette,
+  PREVIEW_SHEET,
+} from "./helpers/design_palette.js";
 import {
   boundaryOf,
   designStyleRules,
@@ -10,30 +16,9 @@ import {
   type StyleRule,
 } from "./helpers/design_styles.js";
 
-/**
- * Selectors that mark a control state. A boundary drawn only in one of these
- * states is the state's own indicator, so it carries the 3:1 requirement.
- */
-const STATE_SELECTOR =
-  /:hover|:focus|:checked|:has\(input:checked\)|:disabled|\[open\]|\.active|aria-pressed|aria-current/u;
-
-/**
- * Fills that mark a selected, active or status surface, derived from the
- * palette so a new accent or status role joins the audit without an edit here.
- */
-function markedFillTokens(tokens: Map<string, string>): string[] {
-  return [...tokens.keys()].filter(
-    (token) =>
-      token.startsWith("--mbk-accent-") ||
-      token === "--mbk-danger-bg" ||
-      token === "--chrome-disabled-bg" ||
-      (token.startsWith("--mbk-status-") && token.endsWith("-bg")),
-  );
-}
-
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.mbk-icon-button|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
 
 /**
  * `@mokly/ui` stylesheets that style a control through a base class whose
@@ -55,11 +40,6 @@ const HAIRLINE_TOKENS = new Set([
  */
 const DECORATIVE_BOUNDARIES = new Map([
   [".mbk-control-alert", "a label naming its own state in 5.97:1 ink"],
-  [".ce-action:disabled", "WCAG exempts a disabled control"],
-  [
-    ":where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
-    "the user kept the shipped border on 2026-10-31",
-  ],
 ]);
 
 /**
@@ -74,18 +54,11 @@ const EXEMPT_SURFACES = new Map<string, string>();
  * names a rule, by its sheet and selector, with the reason that exempts it.
  * Each entry must be reached by the control-edge audit, so a future control
  * cannot quietly inherit the exemption. A kept hairline that a state draws,
- * such as a pressed icon control's, is exempt from the marked-boundary audit
- * too: the state shows through its fill and its accent glyph.
+ * such as a pressed instance's in the component tree, is exempt from the
+ * marked-boundary audit too: the state shows through its fill and its accent
+ * text.
  */
 const EXEMPT_CONTROL_SURFACES = new Map([
-  [
-    "packages/ui/src/segmented-control/segmented-control.css .mbk-seg",
-    "the user kept the shipped border on 2026-10-30",
-  ],
-  [
-    'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
-    "the user kept the shipped border on 2026-10-30",
-  ],
   [
     "packages/ui/src/tag-chip/tag-chip.css .mbk-chip",
     "the user kept the shipped border on 2026-10-30",
@@ -100,30 +73,22 @@ const EXEMPT_CONTROL_SURFACES = new Map([
  * Every rule the audit collects, so a failure names the rule that appeared or
  * vanished instead of only reporting that the total moved. A component that
  * `@mokly/ui` provides is audited in the package stylesheet that its library
- * sheet imports.
+ * sheet imports. Keyboard focus draws as a glow, a shadow rather than a
+ * boundary, in the package controls and in the design sheets alike, so no
+ * focus rule is listed; packages/ui/tests/palette.test.ts holds the glow at
+ * 3:1.
  */
 const AUDITED_BOUNDARIES = [
-  "design-component-controls.css .ce-action--quiet",
-  'design-component-inspection.css .ce-button[aria-pressed="true"]',
-  "design-components.css .ce-action:disabled",
-  "design-components.css .ce-badge",
-  "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
-  "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:focus-within",
+  "design-canvas-inspect.css .cv-variant[aria-current] > .cv-variant-mark",
+  "design-library/inspector/frames-filter.css .cv-ff:has(> input:checked)",
+  "design-library/inspector/frames-filter.css .cv-switch > input:checked + .cv-switch-track",
+  "design-library/panels/compare-modes.css .cv-mode-frame[aria-current]",
+  "design-library/panels/compare-modes.css .cv-mode-switch > input:checked + .cv-mode-switch-track",
+  "design-library/panels/compare-modes.css .cv-mode[aria-current]",
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
-  "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
-  "packages/ui/src/catalogue-tree/catalogue-tree.css .mbk-nav-variants-toggle:focus-visible",
-  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:checked + .mbk-diff-sync-track",
-  "packages/ui/src/comparison-toolbar/comparison-toolbar.css .mbk-diff-sync input:focus-visible + .mbk-diff-sync-track",
   "packages/ui/src/controls-panel/controls-panel.css .mbk-control-alert",
-  "packages/ui/src/icon-control/icon-control.css .mbk-icon-button:focus-visible, .mbk-icon-select:focus-within, .mbk-icon-button:has(> input:focus-visible)",
-  'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
-  "packages/ui/src/inspector/inspector.css .mbk-sheet-grab:has(> input:focus-visible)",
   'packages/ui/src/instance-tree/instance-tree.css .mbk-instance-select[aria-pressed="true"], .mbk-instance-tree a.mbk-instance-select[aria-current="true"]',
-  "packages/ui/src/prop-field/prop-field.css .mbk-control-field input:focus-visible, .mbk-control-field select:focus-visible",
   "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
-  "packages/ui/src/text-button/text-button.css .mbk-text-button:focus-visible",
-  "packages/ui/src/variant-bar/variant-bar.css .mbk-selection-bar a:focus-visible",
-  'packages/ui/src/variant-bar/variant-bar.css .mbk-selection-bar a[aria-current="page"], .mbk-selection-bar > .mbk-variant-option[aria-current="page"]',
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {
@@ -144,35 +109,8 @@ function describe(reference: ColorReference): string {
   return reference.token ?? reference.literal ?? "?";
 }
 
-/**
- * Rules whose boundary is a control or state indicator: either the selector
- * names a state, or the rule fills itself with a marked surface.
- */
-async function markedBoundaryRules() {
-  const palette = await designPalette();
-  const marked = new Set(
-    markedFillTokens(palette.light).flatMap((token) => [
-      token,
-      palette.light.get(token)?.toLowerCase() ?? token,
-      palette.dark.get(token)?.toLowerCase() ?? token,
-    ]),
-  );
-  return (await designStyleRules()).flatMap((rule) => {
-    const boundary = boundaryOf(rule.body);
-    if (!boundary) return [];
-    const fill = fillOf(rule.body);
-    const fillMark = fill?.token ?? fill?.literal?.toLowerCase();
-    if (
-      !STATE_SELECTOR.test(rule.selector) &&
-      !(fillMark && marked.has(fillMark))
-    )
-      return [];
-    return [{ ...rule, boundary, fill }];
-  });
-}
-
 test("every marked boundary is visible against an adjacent colour", async () => {
-  const palette = await designPalette();
+  const palettesOf = await auditPalettes();
   const rules = await markedBoundaryRules();
   assert.deepEqual(
     rules.map((rule) => `${rule.file} ${rule.selector}`).sort(),
@@ -194,24 +132,28 @@ test("every marked boundary is visible against an adjacent colour", async () => 
     if (DECORATIVE_BOUNDARIES.has(rule.selector)) continue;
     if (isExemptSurface(rule.file, rule.selector)) continue;
     if (keepsHairline(rule)) continue;
-    for (const appearance of ["light", "dark"] as const) {
-      const tokens = palette[appearance];
-      const reached = boundaryContrast(rule.boundary, rule.fill, tokens);
-      assert.ok(
-        reached !== undefined,
-        `${rule.file} ${rule.selector}: ${describe(rule.boundary)} is not in the ${appearance} palette`,
-      );
-      if (reached < 3)
-        failures.push(
-          `${rule.file} ${rule.selector}: ${describe(rule.boundary)} reaches only ${reached}:1 in ${appearance}`,
+    for (const { name, tokens } of palettesOf(rule.file))
+      for (const appearance of ["light", "dark"] as const) {
+        const reached = boundaryContrast(
+          rule.boundary,
+          rule.fill,
+          tokens[appearance],
         );
-    }
+        assert.ok(
+          reached !== undefined,
+          `${rule.file} ${rule.selector}: ${describe(rule.boundary)} is not in the ${name} ${appearance} palette`,
+        );
+        if (reached < 3)
+          failures.push(
+            `${rule.file} ${rule.selector}: ${describe(rule.boundary)} reaches only ${reached}:1 in ${name} ${appearance}`,
+          );
+      }
   }
   assert.deepEqual(failures, []);
 });
 
 test("every control boundary is a readable control edge", async () => {
-  const palette = await designPalette();
+  const palettesOf = await auditPalettes();
   const rules = await designStyleRules();
   for (const [surface, reason] of EXEMPT_CONTROL_SURFACES)
     assert.ok(
@@ -236,35 +178,34 @@ test("every control boundary is a readable control edge", async () => {
       );
       continue;
     }
-    for (const appearance of ["light", "dark"] as const) {
-      const reached = boundaryContrast(
-        boundary,
-        fillOf(rule.body),
-        palette[appearance],
-      );
-      if (reached === undefined)
-        failures.push(
-          `${rule.file} ${rule.selector}: ${describe(boundary)} is not in the ${appearance} palette`,
+    for (const { name, tokens } of palettesOf(rule.file))
+      for (const appearance of ["light", "dark"] as const) {
+        const reached = boundaryContrast(
+          boundary,
+          fillOf(rule.body),
+          tokens[appearance],
         );
-      else if (reached < 3)
-        failures.push(
-          `${rule.file} ${rule.selector}: ${describe(boundary)} reaches only ${reached}:1 in ${appearance}`,
-        );
-    }
+        if (reached === undefined)
+          failures.push(
+            `${rule.file} ${rule.selector}: ${describe(boundary)} is not in the ${name} ${appearance} palette`,
+          );
+        else if (reached < 3)
+          failures.push(
+            `${rule.file} ${rule.selector}: ${describe(boundary)} reaches only ${reached}:1 in ${name} ${appearance}`,
+          );
+      }
   }
   assert.deepEqual(failures, []);
 });
 
 /**
  * Sheets that define a palette, where a literal is the definition itself:
- * the interface palette, the preview palette with its fixed device hardware,
- * the component explorer's scoped palette for depicted content, and the
- * shipped theme that the package components draw in.
+ * the interface palette, the preview palette, and the shipped theme that the
+ * package components draw in.
  */
 const PALETTE_SOURCES = new Set([
   "design.css",
-  "design-stage.css",
-  "design-component-view.css",
+  PREVIEW_SHEET,
   "packages/ui/src/theme/theme.css",
 ]);
 

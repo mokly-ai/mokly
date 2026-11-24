@@ -1,0 +1,48 @@
+---
+/**
+ * A wire of the open-foundation frame below 1440px, where the frame
+ * narrows: the curve from line 11 of the source to the selected PriceCard,
+ * with a dot at each end, in a 400px box at the frame's right edge, because
+ * the code and the artboard keep their places from that edge. `size` picks
+ * the drawing that fits the artboard: `large` joins the 286px artboard and
+ * `small` the 250px one. The sheet shows the drawing that fits each width.
+ * A depiction: hidden from assistive technology.
+ *
+ * Use: `<FitWire size="large" />`, in the open-foundation frame. The
+ * drawings are in `foundation-wires.ts`, and the rules in
+ * `src/styles/home-foundation.css`.
+ */
+import {
+  FIT_WIRES,
+  type FitWireSize,
+  WIRE_END_RADIUS,
+  wirePath,
+} from "./foundation-wires.js";
+
+interface Props {
+  readonly size: FitWireSize;
+}
+
+const { size } = Astro.props;
+const wire = FIT_WIRES[size];
+---
+
+<svg
+  aria-hidden="true"
+  class:list={["site-home-fit-wire", `site-home-fit-wire--${size}`]}
+  focusable="false"
+>
+  <path class="site-home-wire-path" d={wirePath(wire)}></path>
+  <circle
+    class="site-home-wire-end"
+    cx={wire.from.x}
+    cy={wire.from.y}
+    r={WIRE_END_RADIUS}
+  ></circle>
+  <circle
+    class="site-home-wire-end"
+    cx={wire.to.x}
+    cy={wire.to.y}
+    r={WIRE_END_RADIUS}
+  ></circle>
+</svg>

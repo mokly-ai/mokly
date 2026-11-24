@@ -36,29 +36,30 @@ stream writes on every new connection. The stream exists only in Serve.
 
 The shell adopts a publication under the
 [Serve update rules](./mokly-shell-delivery.md#updates-in-serve); the page
-never reloads for it. During and after adoption the shell keeps the navigation tree, the
-All/Changes buttons, the mounted preview frames, the filter, search text,
-section and folder disclosure, focus, the drawer, and scroll positions. It
-updates the Changes count and status, the changed-entry marks, and the
-removed rows from the same state: retained removed rows keep their identity,
-and additions and removals follow the canonical server order after the
-current tree. Removed rows of every kind appear only in Changes.
+never reloads for it. During and after adoption the shell keeps the navigation
+tree, the All/Changes buttons, the mounted preview frames, the filter, search
+text, section and folder disclosure, focus, an open catalogue, and scroll
+positions. It updates the Changes count and status, the changed-entry marks,
+and the removed rows from the same state: retained removed rows keep their
+identity, and additions and removals follow the canonical server order after
+the current tree. Removed rows of every kind appear only in Changes.
 
 A frame whose `documentKey` is unchanged keeps its document, scroll, and
 selection. A removed entry's detail is fetched from the generation the
 refreshed index names; a record absent from the refreshed index shows the
 missing state.
 
-Changes `preparing`, loading, and empty or unavailable states use the sidebar
-design of the [on-demand contract](./mokly-on-demand.md); `preparing`
-precedes loading only in a per-commit rebuild. A status-only publication
-replaces the count slot and the selected-Changes sidebar without touching the
-tree, the current documents, or the focused control; the tree stays
-`aria-busy` while a working state is selected. Adoption never runs
-destination-reveal recovery: a search may hide the current entry and its
-folder may be collapsed on purpose, and an update cannot clear that search,
-open the disclosure, or scroll the route into view. Explicit navigation still
-reveals its destination under the normal rules.
+Changes `preparing`, loading, and empty or unavailable states use the
+catalogue states of the
+[navigation design](./mokly-shell-design-navigation.md#catalogue-panel);
+`preparing` precedes loading only in a per-commit rebuild. A status-only
+publication replaces the count slot and the message of a selected Changes
+filter without touching the tree, the current documents, or the focused
+control; the tree stays `aria-busy` while a working state is selected.
+Adoption never runs destination-reveal recovery: a search may hide the current
+entry and its folder may be collapsed on purpose, and an update cannot clear
+that search, open the disclosure, or scroll the route into view. Explicit
+navigation still reveals its destination under the normal rules.
 
 The shell opens one `EventSource` on `/mokly-viewer/events` when the index
 carries `live`. Abort and page exit close it and any refresh in flight. `EventSource` is
@@ -89,11 +90,11 @@ catalogue has been checked." and never shows a zero-consumer result.
 One unavailable view keeps every Used by list unavailable until the next
 render generation.
 
-The route details' workspaces update comparison eligibility, Details evidence,
-and the complete Used by and Affected lists in place. A current component
-variant reads both lists from its parent's workspace. Only that workspace
-proves that its lists are complete. While any route detail is in flight the
-Usage panel shows `Loading usage…` of the
+The route details' workspaces update comparison eligibility, the inspector's
+evidence, and the complete Used by and Affected lists in place. A current
+component variant reads both lists from its parent's workspace. Only that
+workspace proves that its lists are complete. While any route detail is in
+flight Usage shows `Loading usage…` of the
 [component pages contract](./mokly-component-explorer.md#catalogue-and-component-pages)
 without counts,
 an empty state, or rows. A failed or rejected read shows its failure copy with

@@ -181,7 +181,8 @@ test("another deployment keeps the stage loading until the host replaces the ind
     } as MoklyViewerProps;
     host.render();
   }, other);
-  await expect(viewer.locator("iframe").first()).toBeVisible();
+  // A shown frame: the canvas keeps the hidden viewport's frames mounted.
+  await expect(viewer.locator("iframe:visible").first()).toBeVisible();
   await expect(viewer.getByText("Loading preview…")).toHaveCount(0);
   // The unavailable stage with Try again never appeared, and one deployment
   // change reported one error.

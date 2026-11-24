@@ -1,0 +1,288 @@
+/* The depicted acme/storefront app, continued: its checkout. The two
+   desktop payment screens that the Browse compare draws come first, then
+   the checkout on a phone with its order rows. The rules match
+   docs/mockups/styles/site/home-acme-checkout.css. */
+
+/* The two payment screens that the compare draws: the plain form on main,
+   and the redesign with its stepper and summary card */
+
+.site-acme-stepper {
+  align-items: center;
+  display: flex;
+  font-size: 14.5px;
+  gap: 12px;
+}
+
+.site-acme-stepper > span,
+.site-acme-secure {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.site-acme-stepper em {
+  border-radius: var(--mk-radius-pill);
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, currentColor 20%, transparent);
+  display: grid;
+  font-size: 12.5px;
+  font-weight: 650;
+  height: 26px;
+  place-items: center;
+  width: 26px;
+}
+
+.site-acme-stepper-on em {
+  background: currentColor;
+  box-shadow: none;
+}
+
+.site-acme-stepper-on em b {
+  color: var(--mk-color-on-signal-fill);
+}
+
+.site-acme-stepper-done .site-acme-icon {
+  background: color-mix(
+    in srgb,
+    currentColor 35%,
+    var(--mk-color-on-signal-fill)
+  );
+  border-radius: var(--mk-radius-pill);
+  height: 26px;
+  padding: 5px;
+  stroke: color-mix(in srgb, currentColor 40%, var(--mk-color-on-signal));
+  stroke-width: 2.4;
+  width: 26px;
+}
+
+.site-acme-stepper > i {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  height: 1.5px;
+  width: 44px;
+}
+
+.site-acme-secure {
+  font-size: 14px;
+}
+
+.site-acme-checkout-desktop {
+  display: grid;
+  gap: 64px;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  padding: 40px 80px 0;
+}
+
+.site-acme-checkout-desktop .site-acme-toggle-row {
+  margin-top: 4px;
+}
+
+.site-acme-checkout-desktop .site-acme-pay {
+  margin-top: 22px;
+}
+
+/* The order summary card holds every declaration of its selector, the paper
+   fill included, which the mockups set in home-acme.css, so the card does
+   not depend on the order of the acme sheets. */
+
+.site-acme-summary {
+  align-self: start;
+  background: var(--mk-color-on-signal-fill);
+  border-radius: 24px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent),
+    0 30px 60px -40px
+      color-mix(in srgb, var(--mk-color-on-signal) 45%, transparent);
+  margin-top: 6px;
+  padding: 28px 30px 30px;
+}
+
+.site-acme-summary-title {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.site-acme-checkout-desktop--before {
+  gap: 72px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  padding: 52px 120px 0;
+}
+
+.site-acme-summary--plain {
+  background: none;
+  border-left: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 0;
+  padding: 6px 0 0 40px;
+}
+
+.site-acme-before .site-acme-input {
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
+  height: 44px;
+}
+
+.site-acme-before .site-acme-field {
+  margin-top: 12px;
+}
+
+.site-acme-before .site-acme-button {
+  border-radius: 5px;
+  margin-top: 24px;
+}
+
+/* The checkout on a phone: the step bar, the order lines, the payment
+   methods, the address and card lines and the totals. The desktop payment
+   screen shares the lines, the methods and the totals. */
+
+.site-acme-checkout-bar {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  height: 52px;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.site-acme-checkout-bar b {
+  font-size: 16px;
+}
+
+.site-acme-checkout-bar span {
+  font-size: 12.5px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.site-acme-steps {
+  display: flex;
+  gap: 6px;
+  padding: 2px 20px 0;
+}
+
+.site-acme-steps i {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 2px;
+  flex: 1;
+  height: 4px;
+}
+
+.site-acme-steps .site-acme-steps-done {
+  background: currentColor;
+}
+
+.site-acme-steps .site-acme-steps-on {
+  background: linear-gradient(
+    90deg,
+    currentColor 55%,
+    color-mix(in srgb, currentColor 22%, transparent) 55%
+  );
+}
+
+.site-acme-checkout {
+  display: flex;
+  flex-direction: column;
+  height: 734px;
+  padding: 16px 20px 28px;
+}
+
+.site-acme-checkout .site-acme-title {
+  margin-top: 22px;
+}
+
+.site-acme-checkout .site-acme-pay {
+  margin-top: auto;
+}
+
+/* The order rows: the mini summary, the items, the line cards, the
+   payment methods and the totals */
+
+.site-acme-mini-summary i,
+.site-acme-items i,
+.site-acme-line-card i {
+  font-size: 12.5px;
+}
+
+.site-acme-mini-summary {
+  border-radius: 17px;
+  font-size: 14px;
+  padding: 10px 14px 10px 10px;
+}
+
+.site-acme-mini-summary .site-acme-tile + .site-acme-tile {
+  box-shadow: 0 0 0 3px var(--mk-color-on-signal-fill);
+  margin-left: -22px;
+}
+
+.site-acme-methods {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 18px;
+}
+
+.site-acme-methods > span {
+  align-items: center;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  font-size: 13.5px;
+  font-weight: 600;
+  gap: 6px;
+  height: 66px;
+  justify-content: center;
+}
+
+.site-acme-methods .site-acme-methods-on {
+  box-shadow:
+    inset 0 0 0 1.5px currentColor,
+    0 8px 18px -12px
+      color-mix(in srgb, var(--mk-color-on-signal) 50%, transparent);
+}
+
+.site-acme-methods--large > span {
+  font-size: 14.5px;
+  height: 80px;
+}
+
+.site-acme-items {
+  margin-top: 14px;
+}
+
+/* The order line and the total hold every declaration of their selectors,
+   which the mockups split with home-acme-parts.css and home-acme.css, so
+   they do not depend on the order of the acme sheets. */
+
+.site-acme-item {
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  display: flex;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.site-acme-line-card {
+  border-radius: 15px;
+  margin-top: 12px;
+  padding: 14px 16px;
+}
+
+.site-acme-totals {
+  display: grid;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.site-acme-totals > span {
+  display: flex;
+  font-size: 14.5px;
+  justify-content: space-between;
+}
+
+.site-acme-totals .site-acme-totals-sum {
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  color: inherit;
+  font-size: 17px;
+  font-weight: 650;
+  padding-top: 12px;
+}

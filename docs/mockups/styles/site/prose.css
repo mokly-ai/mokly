@@ -1,0 +1,179 @@
+/* The document typography that the legal pages, the documentation and the
+   changelog share: the document column, its intro with the page title, its
+   ruled body and the location trail set as the mono eyebrow above a page
+   title. */
+
+.site-document {
+  min-width: 0;
+  padding: var(--mk-space-12);
+  width: 100%;
+}
+
+.site-document-intro {
+  border-bottom: 1px solid var(--mk-color-border);
+  display: grid;
+  gap: var(--mk-space-4);
+  margin-bottom: var(--mk-space-10);
+  padding-bottom: var(--mk-space-8);
+}
+
+/* A word that is wider than the column, such as a one-word title or a
+   published path at 200% text on a 320px window, breaks rather than
+   widening the document, as the site's document rules break it */
+
+.site-document-intro > * {
+  overflow-wrap: anywhere;
+}
+
+.site-document-intro h1 {
+  font-size: 3.5rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.052em;
+  line-height: 1;
+}
+
+.site-document-body {
+  display: grid;
+  gap: var(--mk-space-12);
+}
+
+.site-document-body section {
+  display: grid;
+  gap: var(--mk-space-4);
+  justify-items: start;
+  overflow-wrap: anywhere;
+  scroll-margin-top: var(--mk-space-6);
+}
+
+.site-document-body h2 {
+  font-size: 1.6875rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.034em;
+  line-height: 1.16;
+}
+
+.site-document-body p {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.0625rem;
+  letter-spacing: -0.006em;
+  line-height: 1.7;
+  max-width: var(--mk-layout-prose-max);
+}
+
+.site-document-body ul,
+.site-document-body ol {
+  display: grid;
+  gap: 10px;
+  padding-left: var(--mk-space-5);
+}
+
+/* List markers are small selection handles */
+
+.site-document-body ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.site-document-body ul > li {
+  padding-left: 26px;
+  position: relative;
+}
+
+.site-document-body ul > li::before {
+  background: var(--mk-color-surface);
+  border: 1.5px solid var(--mk-color-signal);
+  border-radius: 2px;
+  content: "";
+  height: 7px;
+  left: 3px;
+  position: absolute;
+  top: 0.72em;
+  width: 7px;
+}
+
+.site-document-body li {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  min-width: 0;
+}
+
+/* A body link takes a 6px radius, which draws nothing at rest, so its
+   focus glow is rounded */
+
+.site-document-body a {
+  border-radius: 6px;
+  color: var(--mk-color-signal-deep);
+  font-weight: var(--mk-font-medium);
+  text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--mk-color-signal-deep) 45%,
+    transparent
+  );
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.site-document-body a:hover {
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+}
+
+.site-document-body code {
+  background: var(--mk-color-background);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-mono);
+  font-size: 0.86em;
+  padding: 2px 6px;
+}
+
+/* The location trail: the mono eyebrow, its last step in the signal green */
+
+.site-trail {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.site-trail-step {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-trail .site-trail-step:last-child {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-trail-sep {
+  padding: 0 var(--mk-space-2);
+}
+
+/* The mobile composition */
+
+[data-site-viewport="mobile"] .site-document {
+  padding: var(--mk-space-8) var(--mk-layout-gutter-mobile) var(--mk-space-12);
+}
+
+[data-site-viewport="mobile"] .site-document-intro h1 {
+  font-size: 2.5rem;
+}
+
+[data-site-viewport="mobile"] .site-document-body h2 {
+  font-size: 1.5rem;
+}
+
+[data-site-viewport="mobile"] .site-document-body p,
+[data-site-viewport="mobile"] .site-document-body li {
+  font-size: 1rem;
+  line-height: 1.68;
+}

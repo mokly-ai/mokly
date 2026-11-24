@@ -1,0 +1,297 @@
+/* The depicted acme/storefront app, continued: its type and the parts that
+   every acme screen shares: the phone status bar, the logo and the cart,
+   the buttons, badges, avatars and switches. Each colour comes from the
+   hues and the surfaces of home-acme.css. */
+
+/* The app's type: serif titles, sans text */
+
+.site-acme-title {
+  font-family: "Instrument Serif", ui-serif, Georgia, serif;
+  font-size: 46px;
+  letter-spacing: -0.012em;
+  line-height: 1;
+  margin-top: 6px;
+}
+
+.site-acme-title--large {
+  font-size: 60px;
+}
+
+.site-acme-title--display {
+  font-size: 80px;
+}
+
+.site-acme-heading {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.site-acme-eyebrow {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.site-acme-sub {
+  font-size: 15.5px;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+.site-acme-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+.site-acme-link {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 14px;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-acme-status {
+  align-items: center;
+  display: flex;
+  font-size: 15.5px;
+  height: 50px;
+  justify-content: space-between;
+  padding: 14px 26px 0 36px;
+}
+
+.site-acme-status svg {
+  height: 13px;
+  width: 72px;
+}
+
+.site-acme-logo {
+  align-items: center;
+  display: inline-flex;
+  font-family: "Instrument Serif", ui-serif, Georgia, serif;
+  font-size: 27px;
+  gap: 7px;
+  line-height: 1;
+}
+
+.site-acme-logo svg {
+  height: 22px;
+  width: 22px;
+}
+
+.site-acme-logo-bean {
+  fill: currentColor;
+}
+
+.site-acme-logo-crease {
+  fill: none;
+  stroke: var(--mk-color-on-signal-fill);
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}
+
+.site-acme-cart {
+  display: inline-flex;
+  position: relative;
+}
+
+.site-acme-cart i {
+  border-radius: 8px;
+  display: grid;
+  font-size: 10px;
+  font-weight: 600;
+  height: 16px;
+  min-width: 16px;
+  place-items: center;
+  position: absolute;
+  right: -7px;
+  top: -5px;
+}
+
+/* The depicted controls: the label nests in each one, so a filled one
+   fills from its hue and its label takes the light text */
+
+.site-acme-button {
+  border-radius: 13px;
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 600;
+  height: 46px;
+  padding: 0 20px;
+  white-space: nowrap;
+}
+
+.site-acme-button-label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
+.site-acme-button .site-acme-icon {
+  height: 18px;
+  width: 18px;
+}
+
+.site-acme-button--secondary {
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.site-acme-button--muted {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.site-acme-button--muted .site-acme-button-label {
+  color: color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.site-acme-button--block {
+  display: flex;
+  width: 100%;
+}
+
+.site-acme-button--large {
+  border-radius: 15px;
+  font-size: 16.5px;
+  height: 56px;
+}
+
+.site-acme-button--small {
+  border-radius: 10px;
+  font-size: 13.5px;
+  height: 36px;
+  padding: 0 14px;
+}
+
+/* Badges and avatars take their hue as the current colour */
+
+.site-acme-badge {
+  align-items: center;
+  background: color-mix(
+    in srgb,
+    currentColor 34%,
+    var(--mk-color-on-signal-fill)
+  );
+  border-radius: var(--mk-radius-pill);
+  display: inline-flex;
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  height: 26px;
+  padding: 0 11px;
+  white-space: nowrap;
+}
+
+.site-acme-badge > span {
+  color: color-mix(in srgb, currentColor 40%, var(--mk-color-on-signal));
+}
+
+.site-acme-badge--plum {
+  background: color-mix(
+    in srgb,
+    currentColor 16%,
+    var(--mk-color-on-signal-fill)
+  );
+}
+
+.site-acme-badge--plum > span {
+  color: currentColor;
+}
+
+.site-acme-badge--muted {
+  background: color-mix(
+    in srgb,
+    currentColor 9%,
+    var(--mk-color-on-signal-fill)
+  );
+}
+
+.site-acme-badge--muted > span {
+  color: color-mix(in srgb, currentColor 62%, transparent);
+}
+
+.site-acme-avatar {
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, currentColor 72%, var(--mk-color-on-signal-fill)),
+    color-mix(in srgb, currentColor 84%, var(--mk-color-on-signal))
+  );
+  border-radius: var(--mk-radius-pill);
+  display: inline-grid;
+  flex: none;
+  font-size: 13px;
+  font-weight: 650;
+  height: 38px;
+  place-items: center;
+  width: 38px;
+}
+
+.site-acme-avatar--sage > span {
+  color: color-mix(in srgb, currentColor 30%, var(--mk-color-on-signal));
+}
+
+.site-acme-avatar--cream {
+  background: color-mix(
+    in srgb,
+    currentColor 10%,
+    var(--mk-color-on-signal-fill)
+  );
+}
+
+.site-acme-avatar--cream > span {
+  color: color-mix(in srgb, currentColor 70%, transparent);
+}
+
+.site-acme-avatar--small {
+  font-size: 12px;
+  height: 32px;
+  width: 32px;
+}
+
+.site-acme-avatar--large {
+  font-size: 17px;
+  height: 54px;
+  width: 54px;
+}
+
+/* The switch and its row */
+
+.site-acme-switch {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 15px;
+  display: inline-flex;
+  flex: none;
+  height: 29px;
+  padding: 3px;
+  width: 48px;
+}
+
+.site-acme-switch--on {
+  justify-content: flex-end;
+}
+
+.site-acme-switch i {
+  background: var(--mk-color-on-signal-fill);
+  border-radius: var(--mk-radius-pill);
+  box-shadow: 0 1px 3px
+    color-mix(in srgb, var(--mk-color-on-signal) 22%, transparent);
+  height: 23px;
+  width: 23px;
+}
+
+.site-acme-toggle-row {
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 56px;
+}

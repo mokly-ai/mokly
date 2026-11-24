@@ -1,7 +1,10 @@
 /* Page layout for the public site: the home's full-measure main, the
-   centered document column and its ruled intro, and the home hero type.
-   Kept in parity with the promoted mockups under docs/mockups/styles/site/;
-   the mobile composition is the default and 768px raises the desktop one. */
+   centered document column and its ruled intro, the document type that the
+   legal pages, the documentation and the changelog share, and the location
+   trail set as the mono eyebrow above a page title. Kept in parity with the
+   promoted mockups under docs/mockups/styles/site/, whose prose.css holds the
+   shared document type and the trail; the mobile composition is the default
+   and 768px raises the desktop one. */
 
 .site-main {
   width: 100%;
@@ -27,11 +30,6 @@
   max-width: var(--mk-layout-content-max);
 }
 
-.site-policy {
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-policy);
-}
-
 .site-document-intro {
   border-bottom: 1px solid var(--mk-color-border);
   display: grid;
@@ -40,14 +38,26 @@
   padding-bottom: var(--mk-space-8);
 }
 
-.site-document-intro h1 {
-  font-size: var(--mk-type-heading1-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: -0.045em;
-  line-height: var(--mk-type-heading1-line);
+/* A word that is wider than the column, such as a one-word title at 200%
+   text size on a 320px window, breaks rather than widening the intro. Its
+   parts may sit at their own width, as the policy intro sets them, so the
+   break also lowers the narrowest width that each part asks for. */
+
+.site-document-intro > * {
+  overflow-wrap: anywhere;
 }
 
-/* Markdown documents share one readable body across docs and legal pages. */
+.site-document-intro h1 {
+  font-size: 2.5rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.052em;
+  line-height: 1;
+}
+
+/* Markdown documents share one readable body across docs and legal pages.
+   The site renders the Markdown as one flat list of parts, where the
+   mockups wrap each section in a section element: so the parts sit apart
+   by the body's gap, and each heading rules off its section. */
 
 .site-document-body {
   display: grid;
@@ -67,9 +77,10 @@
 
 .site-document-body h2 {
   border-top: 1px solid var(--mk-color-border);
-  font-size: var(--mk-type-heading3-size);
+  font-size: 1.5rem;
   font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-heading3-line);
+  letter-spacing: -0.034em;
+  line-height: 1.16;
   padding-top: var(--mk-space-8);
   scroll-margin-top: var(--mk-space-6);
 }
@@ -86,40 +97,91 @@
   scroll-margin-top: var(--mk-space-6);
 }
 
-.site-document-body p,
-.site-document-body li {
-  color: var(--mk-color-text-muted);
+.site-document-body p {
+  color: var(--mk-color-text-secondary);
+  font-size: 1rem;
+  letter-spacing: -0.006em;
+  line-height: 1.68;
+  max-width: var(--mk-layout-prose-max);
 }
 
 .site-document-body ul,
 .site-document-body ol {
   display: grid;
-  gap: var(--mk-space-2);
+  gap: 10px;
   padding-left: var(--mk-space-5);
 }
 
+/* List markers are small selection handles */
+
+.site-document-body ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.site-document-body ul > li {
+  padding-left: 26px;
+  position: relative;
+}
+
+.site-document-body ul > li::before {
+  background: var(--mk-color-surface);
+  border: 1.5px solid var(--mk-color-signal);
+  border-radius: 2px;
+  content: "";
+  height: 7px;
+  left: 3px;
+  position: absolute;
+  top: 0.72em;
+  width: 7px;
+}
+
 .site-document-body li {
+  color: var(--mk-color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.68;
   min-width: 0;
 }
 
+/* A body link takes a 6px radius, which draws nothing at rest, so its
+   focus glow is rounded */
+
 .site-document-body a {
-  color: var(--mk-color-accent);
+  border-radius: 6px;
+  color: var(--mk-color-signal-deep);
+  font-weight: var(--mk-font-medium);
   text-decoration: underline;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--mk-color-signal-deep) 45%,
+    transparent
+  );
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
 }
 
 .site-document-body a:hover {
-  color: var(--mk-color-accent-hover);
+  text-decoration-color: currentColor;
   text-decoration-thickness: 2px;
 }
 
 .site-document-body code {
-  background: var(--mk-color-surface-muted);
-  border-radius: var(--mk-radius-small);
+  background: var(--mk-color-background);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
   color: var(--mk-color-text);
   font-family: var(--mk-font-mono);
-  font-size: 0.875em;
-  padding: 1px var(--mk-space-1);
+  font-size: 0.86em;
+  padding: 2px 6px;
+}
+
+/* Code in a block, such as a code panel's, sheds the chip of inline code. */
+
+.site-document-body pre code {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .site-document-body table {
@@ -150,22 +212,34 @@
   padding-left: var(--mk-space-4);
 }
 
-.site-hero {
-  display: grid;
-  gap: var(--mk-space-4);
-  justify-items: start;
-  margin: 0 auto;
-  max-width: 62rem;
-  padding: var(--mk-space-10) var(--mk-layout-gutter-mobile) var(--mk-space-8);
-  text-align: left;
-  width: 100%;
+/* The location trail: the mono eyebrow above a page title, its last step in
+   the signal ink. Trail.astro draws it above the title of a documentation
+   page. */
+
+.site-trail {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
-.site-hero h1 {
-  font-size: var(--mk-type-hero-size);
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: -0.05em;
-  line-height: var(--mk-type-hero-line);
+.site-trail-step {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-trail .site-trail-step:last-child {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-trail-sep {
+  padding: 0 var(--mk-space-2);
 }
 
 /* The desktop composition from the 768px breakpoint upward. */
@@ -174,11 +248,17 @@
     padding: var(--mk-space-12);
   }
 
-  .site-hero {
-    gap: var(--mk-space-5);
-    justify-items: center;
-    padding: var(--mk-space-20) var(--mk-layout-gutter-desktop)
-      var(--mk-space-12);
-    text-align: center;
+  .site-document-intro h1 {
+    font-size: 3.5rem;
+  }
+
+  .site-document-body h2 {
+    font-size: 1.6875rem;
+  }
+
+  .site-document-body p,
+  .site-document-body li {
+    font-size: 1.0625rem;
+    line-height: 1.7;
   }
 }

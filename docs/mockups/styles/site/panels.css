@@ -1,0 +1,149 @@
+/* The floating panel with its rows, and the page frame: the white sheet of a
+   document on the canvas. */
+
+/* The floating panel: a raised surface with a hairline ring */
+
+.site-panel {
+  background: var(--mk-color-surface);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-medium);
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.site-panel-head {
+  align-items: center;
+  border-bottom: 1px solid var(--mk-color-border);
+  display: flex;
+  flex: none;
+  gap: var(--mk-space-3);
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.site-panel-title {
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-panel-meta {
+  color: var(--mk-color-text-muted);
+  font-size: 0.71875rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-panel-meta--mono {
+  font-family: var(--mk-font-mono);
+}
+
+.site-panel-body {
+  display: grid;
+  gap: 1px;
+  min-height: 0;
+  padding: var(--mk-space-2);
+}
+
+.site-panel-foot {
+  border-top: 1px solid var(--mk-color-border);
+  flex: none;
+  padding: var(--mk-space-2);
+}
+
+/* A row of a panel's list: icon, label and trailing note */
+
+.site-panel-row {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  font-weight: var(--mk-font-medium);
+  gap: 9px;
+  min-height: var(--mk-layout-control-min);
+  min-width: 0;
+  padding: 6px 9px;
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-panel-row svg {
+  color: var(--mk-color-text-muted);
+  flex: none;
+}
+
+a.site-panel-row:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-panel-row-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-panel-row-trail {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  margin-left: auto;
+}
+
+.site-panel-row--current,
+a.site-panel-row--current:hover {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-semibold);
+}
+
+.site-panel-row--current svg {
+  color: var(--mk-color-signal-deep);
+}
+
+/* A row draws the focus glow inside its box, so the glow stays whole in a
+   panel that scrolls, and no fill of a neighbouring row covers it. The
+   forced-colors outline draws inside too. */
+
+.site-panel-row:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline-offset: -2px;
+}
+
+/* The page frame: the document's white sheet, its file label and its
+   selection. The area sets the frame's width and the sheet's padding. */
+
+.site-page-frame {
+  margin: 0 auto;
+  min-width: 0;
+  position: relative;
+  width: 100%;
+}
+
+.site-page-frame > .site-frame-name {
+  bottom: calc(100% + 11px);
+}
+
+.site-page-frame > .site-sel {
+  inset: -1px;
+}
+
+.site-page-sheet {
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  min-width: 0;
+  overflow: clip;
+  position: relative;
+}

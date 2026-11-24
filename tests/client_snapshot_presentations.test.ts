@@ -12,25 +12,13 @@ const BEFORE = `${GENERATION}snapshots/before/mokly-generated/home/index.html`;
 const AFTER = `${GENERATION}snapshots/after/mokly-generated/home/index.html`;
 
 function documentFixture(): Document {
-  let baseHref = "";
-  const base = {
-    setAttribute(_name: string, value: string) {
-      baseHref = value;
-    },
-  };
-  const head = { firstChild: null, insertBefore: () => base };
   const root = {
     nodeType: 1,
-    get outerHTML() {
-      return `<html><head><base href="${baseHref}"></head><body>Snapshot</body></html>`;
-    },
+    outerHTML: "<html><head></head><body>Snapshot</body></html>",
   };
   return {
-    body: {},
     childNodes: [root],
-    createElement: () => base,
     documentElement: root,
-    head,
     querySelector: () => null,
     querySelectorAll: () => [],
   } as unknown as Document;

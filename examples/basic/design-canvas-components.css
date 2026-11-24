@@ -1,0 +1,186 @@
+/* The Canvas viewer's component explorer: a changed component compared on
+   its variant set, its Usage with the affected screens, a screen that also
+   changed its own props, screen inspection that waits or is unavailable,
+   and a removed saved variant. Each Canvas part keeps its own sheet; this
+   sheet holds only the states of these artboards. Saved props that a
+   comparison shows end with the shipped text button, from its @mokly/ui
+   stylesheet. */
+@import "../../packages/ui/src/text-button/text-button.css";
+
+/* ---- The version before --------------------------------------------- */
+
+/* The Action branch changed the Action's button: before it, the button had
+   smaller corners and narrower padding, wherever it rendered. */
+.cv-cx-before {
+  display: contents;
+}
+
+.cv-cx-before .mbk-shot-action {
+  border-radius: 3px;
+  padding-inline: 6px;
+}
+
+/* ---- A removed variant's frame --------------------------------------- */
+
+/* A removed component entry has no preview: the shipped pane of a version
+   without a document fills its frame, in the frame's own scheme, so the
+   removed row keeps the set's Light and Dark columns. The frame takes the
+   size of the version before, a small document, so the pane keeps its
+   label and its message in two lines inside it. */
+.cv-cx-missing {
+  background: var(--mbk-screen-bg);
+  color: var(--mbk-screen-ink-2);
+  inset: 0;
+  padding: 10px 12px;
+  position: absolute;
+}
+
+.cv-cx-missing > .mb-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.cv-cx-missing .mb-pane-label {
+  color: var(--mbk-screen-ink-2);
+  font: 500 11px/1 var(--cv-mono);
+  margin-bottom: 6px;
+}
+
+.cv-cx-missing .mb-pane-missing {
+  background: transparent;
+  border-color: color-mix(
+    in srgb,
+    var(--mbk-screen-ink) 34%,
+    var(--mbk-screen-bg)
+  );
+  border-radius: 8px;
+  color: var(--mbk-screen-ink-2);
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.35;
+  min-height: 0;
+  padding: 4px 6px;
+}
+
+/* A frame of Side by side names its version in its tag, so the pane of the
+   missing version keeps its message alone. */
+.cv-frame[data-cv-side] .cv-cx-missing .mb-pane-label {
+  display: none;
+}
+
+/* The removed Compact at the branch point: the Action's button with its
+   saved 4px corners. */
+.mbk-shot-action.cv-cx-compact {
+  border-radius: 4px;
+}
+
+/* ---- Side by side on a variant set ----------------------------------- */
+
+/* The stage holds the pair of each frame that compares and shows the
+   compared frame's: the version before in the set's first column and the
+   current version in its second, whatever the frame's scheme. */
+.cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"]
+  .cv-frame[data-cv-side="before"] {
+  grid-column: 1;
+}
+
+.cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"]
+  .cv-frame[data-cv-side="after"] {
+  grid-column: 2;
+}
+
+.cv-frames[data-cv-chosen="default-light"]
+  .cv-frame:not([data-cv-frame="default-light"]),
+.cv-frames[data-cv-chosen="compact-light"]
+  .cv-frame:not([data-cv-frame="compact-light"]) {
+  display: none;
+}
+
+/* ---- Comparison details ---------------------------------------------- */
+
+/* The shipped evidence names the saved variant in property rows, in
+   Inspect's type. Its changed component links take the link rule of the
+   comparison details in design-canvas-changes.css. */
+.cv-cx-evidence .mbk-comparison-evidence .mbk-props {
+  margin: 8px 0 0;
+}
+
+/* A screen's paired props: each view's heading names the instance, then
+   Before and Current in the quiet label type, each above its props in the
+   Canvas mono on the code fill, which wrap in the narrow panel. The changed
+   component after the last pair keeps the gap that follows a list. */
+.cv-cx-evidence .mbk-comparison-evidence > h3 ~ h3 {
+  font-weight: 560;
+  margin: 14px 0 0;
+}
+
+.cv-cx-evidence .mbk-comparison-evidence > p:has(+ pre) {
+  color: var(--cv-text-muted);
+  font-size: 11.5px;
+  margin-top: 6px;
+}
+
+.cv-cx-evidence .mbk-comparison-evidence > pre {
+  background: var(--cv-hover);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--cv-border);
+  color: var(--cv-text);
+  font: 11.5px/1.5 var(--cv-mono);
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  padding: 5px 8px;
+  white-space: pre-wrap;
+}
+
+.cv-cx-evidence .mbk-comparison-evidence > pre + p:not(:has(+ pre)) {
+  margin-top: 14px;
+}
+
+/* ---- Props ----------------------------------------------------------- */
+
+/* Saved props that cannot be edited here: the notice, then Switch to
+   Current in signal text, above the values. */
+.cv-fold-body .mbk-component-controls .mbk-controls-notice {
+  margin: 0 0 8px;
+}
+
+.cv-fold-body .mbk-component-controls .mbk-text-button {
+  color: var(--cv-signal-deep);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 560;
+  margin: 0 0 8px;
+}
+
+/* ---- Compact layout -------------------------------------------------- */
+
+/* The removed Compact's frames join the frames that the compact picker
+   swaps in place. A component's entry bar that holds a change status beside
+   the frame picker keeps its kind tag's glyph alone, so the status stays
+   clear of the picker; the tag keeps its words for assistive technology.
+   Side by side shows the picked frame's two versions next to each other, at
+   the compact zoom that fits both, with room between them for a narrow
+   frame's label. */
+@container cv (width < 56.25rem) {
+  .cv-work:has([data-cv-frame-pick])
+    .cv-frames[data-cv-kind="component"][data-cv-compare="side-by-side"] {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+  }
+
+  .cv-work:has(option[value="compact-light"]:checked)
+    .cv-frame[data-cv-frame="compact-light"],
+  .cv-work:has(option[value="compact-dark"]:checked)
+    .cv-frame[data-cv-frame="compact-dark"] {
+    display: block;
+  }
+
+  .cv-entry-bar:has(.cv-frame-pick)
+    .cv-entry-title:has(.mbk-entry-status)
+    > .cv-kind-tag {
+    font-size: 0;
+    gap: 0;
+  }
+}

@@ -1,0 +1,213 @@
+/* The changelog disclosures and the earlier releases: the summary of a
+   closed disclosure, the Earlier releases section and its compact frames,
+   and the states that the changelog island sets. This sheet loads after
+   changelog-release.css, whose frame rules the compact frames refine. The
+   rules match docs/mockups/styles/site/changelog-earlier.css and the compact
+   frame rules of changelog-responsive.css; changelog.css says how the site
+   writes the compositions. */
+
+/* A disclosure of the changelog: the Show notes control of a compact frame
+   and the document row of the upgrade notes. The summary drops its marker
+   and shows the words of its state, and its chevron turns when it opens. */
+
+.site-release-summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.site-release-summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-release-details[open] > .site-release-summary .site-release-when-closed,
+.site-release-details:not([open])
+  > .site-release-summary
+  .site-release-when-open {
+  display: none;
+}
+
+.site-release-details[open] > .site-release-summary .site-release-chevron {
+  rotate: 180deg;
+}
+
+/* Earlier releases: a section of the canvas with a compact frame for each
+   older release, each frame label above its frame. The section box's own
+   sheet loads after this one, so the rule carries the page's class. */
+
+.site-changelog .site-changelog-earlier {
+  margin-top: 112px;
+  padding: 14px 12px;
+}
+
+.site-changelog-earlier .site-section-box-meta {
+  white-space: normal;
+}
+
+.site-changelog-earlier > .site-release {
+  margin-top: 44px;
+}
+
+/* A compact frame. On mobile it flows as a wrapping row: the date sits
+   beside the version while the row holds both, and moves under it at a
+   large text size; the chips, the link and a full-width Show notes control
+   each take a row of their own. On desktop the version, the date, the
+   count chips and the release link share one row of a grid, with Show
+   notes at the end of the row over its disclosure. */
+
+.site-release--compact {
+  align-items: center;
+  column-gap: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 14px 16px;
+}
+
+.site-release--compact .site-release-date {
+  flex: 1 1 auto;
+}
+
+.site-release--compact .site-release-meta {
+  display: contents;
+}
+
+.site-release--compact .site-release-meta > * {
+  grid-area: auto;
+}
+
+.site-release--compact .site-release-meta .site-release-version {
+  font-size: 1.5rem;
+  letter-spacing: -0.04em;
+}
+
+.site-release--compact .site-release-meta time {
+  font-size: 0.875rem;
+}
+
+.site-release--compact .site-release-meta .site-release-counts {
+  border: 0;
+  gap: 0 4px;
+  padding: 0;
+}
+
+.site-release--compact .site-release-count .site-chip {
+  min-height: 28px;
+  padding: 0 8px 0 7px;
+}
+
+.site-release--compact .site-release-counts,
+.site-release--compact .site-release-links {
+  flex-basis: 100%;
+  margin-right: 0;
+}
+
+.site-release-more {
+  flex-basis: 100%;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.site-release-more > .site-release-summary {
+  justify-content: center;
+  min-height: var(--mk-layout-control-min);
+  min-width: 144px;
+  position: static;
+  right: 14px;
+  top: 8px;
+  width: 100%;
+}
+
+.site-release-more .site-release-notes {
+  border-top: 1px solid var(--mk-color-border);
+  margin: 14px -16px -14px;
+}
+
+/* The changelog island: a note group, a release and Earlier releases that
+   the filter hides, and a count chip whose group it hides, which goes quiet
+   but stays readable */
+
+.site-release-group[hidden],
+.site-release[hidden],
+.site-changelog-earlier[hidden] {
+  display: none;
+}
+
+.site-release-count[data-quiet] .site-chip,
+.site-release-count[data-quiet]:hover .site-chip {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-muted);
+}
+
+.site-release-count[data-quiet] :is(svg, b) {
+  color: var(--mk-color-text-muted);
+}
+
+/* The desktop composition: the compact frame's row */
+
+@media (min-width: 768px) {
+  .site-changelog .site-changelog-earlier {
+    margin-top: 150px;
+    padding: 14px 20px 20px;
+  }
+
+  .site-changelog-earlier .site-section-box-meta {
+    white-space: nowrap;
+  }
+
+  .site-release--compact {
+    display: grid;
+    gap: normal 18px;
+    grid-template-columns: 84px 158px minmax(0, 1fr) auto;
+    padding: 4px 14px 4px 20px;
+  }
+
+  .site-release--compact .site-release-links {
+    margin-right: 160px;
+  }
+
+  .site-release-more > .site-release-summary {
+    min-height: 36px;
+    position: absolute;
+    width: auto;
+  }
+
+  .site-release-more .site-release-notes {
+    margin: 4px -14px 0 -20px;
+  }
+}
+
+/* Narrower compact frames. Where the row cannot hold the version, the date,
+   up to seven chips, the link and Show notes, below 1156px and from 1200px
+   to 1395px beside Version history, the link takes a second row. Below
+   934px the chips take a row of their own too. */
+
+@media (min-width: 768px) and (max-width: 1155px),
+  (min-width: 1200px) and (max-width: 1395px) {
+  .site-release--compact {
+    grid-template-columns: 84px 140px minmax(0, 1fr);
+  }
+
+  .site-release--compact .site-release-meta .site-release-counts {
+    margin-right: 150px;
+  }
+
+  .site-release--compact .site-release-links {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    margin-right: 0;
+    padding-bottom: 6px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 933px) {
+  .site-release--compact {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 44px;
+  }
+
+  .site-release--compact .site-release-meta .site-release-counts {
+    grid-column: 1 / -1;
+    margin-right: 0;
+  }
+}

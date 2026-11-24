@@ -80,7 +80,6 @@ export type ControlsMode =
   | "editable"
   | "preparing"
   | "preparing-failed"
-  | "comparison"
   | "published"
   | "removed"
   | "read-only"
@@ -89,7 +88,6 @@ export type ControlsMode =
 /** The Props panel's mode for the shown entry in the current product context. */
 export function controlsMode(
   target: ControlTarget,
-  comparing: boolean,
   editing: LiveEditingStatus | undefined,
 ): ControlsMode {
   if (target.removed) return "removed";
@@ -98,7 +96,6 @@ export function controlsMode(
       target.suppliedSlots.length
       ? "read-only"
       : "no-props";
-  if (comparing) return "comparison";
   if (editing === "ready") return "editable";
   if (editing === "preparing") return "preparing";
   return editing === "failed" ? "preparing-failed" : "published";

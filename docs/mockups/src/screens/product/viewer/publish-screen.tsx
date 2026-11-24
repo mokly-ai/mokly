@@ -4,6 +4,7 @@ import { builds } from "../../../fixtures/builds";
 import { members } from "../../../fixtures/product";
 import { causes } from "../../../fixtures/product-states";
 
+import { namedReader } from "./account-trigger";
 import { BuildStage } from "./build-stage";
 import { StagePublish, StagePublishReader } from "./publish-stage";
 import { PullRequestPage } from "./pull-request-page";
@@ -126,7 +127,7 @@ export function ViewerStandalonePublishReaderScreen({
       state="empty"
       screen="product/viewer/standalone/publish/reader"
       subject={unpublishedBranch}
-      account={{ label: members[2].name }}
+      account={namedReader(members[2])}
       stage={<StagePublishReader reference="branch" />}
     />
   );
@@ -143,7 +144,7 @@ export function ViewerStandalonePullRequestReaderScreen({
       viewport={viewport}
       state="empty"
       screen="product/viewer/standalone/publish/reader-pull-request"
-      account={{ label: members[2].name }}
+      account={namedReader(members[2])}
       stage={<StagePublishReader reference="pull-request" />}
     />
   );

@@ -1,27 +1,30 @@
 import type { ReactNode } from "react";
 
+import type { ArtboardViewport } from "./artboards.js";
 import type {
   DepictedView,
   HighlightRegion,
   PreviewRegions,
 } from "./depicted_view.js";
-import type { ArtboardViewport } from "./shell.js";
+import { labelBox } from "./mini_action.js";
 
-/** A depicted form of the example's Welcome or Details screen. */
-export type MiniForm =
-  "details" | "welcome" | "welcome-empty" | "welcome-error";
+/**
+ * A depicted form of the example's Welcome or Details screen. The revised
+ * Welcome adds its one-line introduction below the heading.
+ */
+export type MiniForm = "details" | "welcome" | "welcome-revised";
 
 /** The Action that a form's real screen renders as its own instance. */
 interface MiniAction {
   id: string;
   label: string;
-  tone: "disabled" | "primary" | "secondary";
+  tone: "primary" | "secondary";
   /** Its fixed width, which the label never changes. */
   width: number;
 }
 
 /** The Toolbar that a form's real screen renders, with its slot's text. */
-interface MiniToolbar {
+export interface MiniToolbarContent {
   text: string;
   title: string;
 }
@@ -33,12 +36,11 @@ const WELCOME = {
 
 /**
  * The instances that each form's real screen in
- * `examples/basic/specs/catalogue.tsx` owns: its Action and its Toolbar. The
- * empty workspace has no Toolbar, and its Action waits for a name.
+ * `examples/basic/specs/catalogue.tsx` owns: its Action and its Toolbar.
  */
 const INSTANCES: Record<
   MiniForm,
-  { action: MiniAction; toolbar?: MiniToolbar | undefined }
+  { action: MiniAction; toolbar: MiniToolbarContent }
 > = {
   details: {
     action: {
@@ -53,15 +55,7 @@ const INSTANCES: Record<
     },
   },
   welcome: WELCOME,
-  "welcome-empty": {
-    action: {
-      id: "create-workspace",
-      label: "Create workspace",
-      tone: "disabled",
-      width: 140,
-    },
-  },
-  "welcome-error": WELCOME,
+  "welcome-revised": WELCOME,
 };
 
 /** The left edge of a mini screen's content, its padding. */
@@ -70,15 +64,15 @@ const LEFT = 20;
 /**
  * The fixed rows of a mini screen above its instances, each with its gap, as
  * `design-shots.css` draws them: the padding, the navigation, the heading, the
- * empty workspace's field, the save error, and Details' text. The error and
- * the text take one line on a desktop and two in a phone.
+ * revised Welcome's introduction, and Details' text. The introduction takes
+ * one line in both viewports; the text takes one line on a desktop and two in
+ * a phone.
  */
 const ROWS = {
   pad: 18,
   nav: 28.25 + 14,
   title: 25.5 + 10,
-  field: 32 + 10,
-  error: { desktop: 37.375 + 12, mobile: 56.75 + 12 },
+  intro: 19.375 + 12,
   text: { desktop: 19.375 + 12, mobile: 38.75 + 12 },
 } as const;
 
@@ -96,10 +90,8 @@ function actionTop(form: MiniForm, viewport: ArtboardViewport): number {
       return top + ROWS.text[viewport];
     case "welcome":
       return top + ROWS.nav;
-    case "welcome-empty":
-      return top + ROWS.nav + ROWS.field;
-    case "welcome-error":
-      return top + ROWS.nav + ROWS.error[viewport];
+    case "welcome-revised":
+      return top + ROWS.nav + ROWS.intro;
   }
 }
 
@@ -107,13 +99,12 @@ function formRegions(
   form: MiniForm,
   viewport: ArtboardViewport,
 ): PreviewRegions {
-  const { action, toolbar } = INSTANCES[form];
+  const { action } = INSTANCES[form];
   const y = actionTop(form, viewport);
   const own: HighlightRegion = {
     box: { x: LEFT, y, width: action.width, height: ACTION_ROW.height },
     label: `Action · ${action.id}`,
   };
-  if (toolbar === undefined) return [own];
   return [
     own,
     {
@@ -164,20 +155,48 @@ export function MiniInstances({
         {action.label}
       </span>
       <div className="mbk-shot-link-row">{link}</div>
-      {toolbar === undefined ? null : (
-        <div className="mbk-shot-toolbar">
-          <strong>{toolbar.title}</strong>
-          <span>{toolbar.text}</span>
-          <div className="mbk-shot-toolbar-actions">
-            <span className="mbk-shot-action mbk-shot-action--primary">
-              Browse details
-            </span>
-            <span className="mbk-shot-action mbk-shot-action--secondary">
-              Browse welcome
-            </span>
-          </div>
-        </div>
-      )}
+      <MiniToolbarCard {...toolbar} />
     </>
+  );
+}
+
+/** The two Actions that the example's Toolbar renders, by their labels. */
+const TOOLBAR_ACTIONS = [
+  { label: "Browse details", tone: "primary" },
+  { label: "Browse welcome", tone: "secondary" },
+] as const;
+
+/**
+ * A depicted Toolbar: its title, its slot's text where the caller fills the
+ * slot, and the two Actions that the example's Toolbar renders, in a row on
+ * a desktop and in a component document, and stacked in a phone. In a
+ * component document, each Action's label keeps its measured width.
+ */
+export function MiniToolbarCard({
+  measured = false,
+  text,
+  title,
+}: {
+  /** The card stands in its component document, at the measured layout. */
+  measured?: boolean | undefined;
+  text?: string | undefined;
+  title: string;
+}) {
+  return (
+    <div className="mbk-shot-toolbar">
+      <strong>{title}</strong>
+      {text === undefined ? null : <span>{text}</span>}
+      <div className="mbk-shot-toolbar-actions">
+        {TOOLBAR_ACTIONS.map(({ label, tone }) => (
+          <span
+            className={`mbk-shot-action mbk-shot-action--${tone}`}
+            key={label}
+            style={measured ? labelBox(label) : undefined}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

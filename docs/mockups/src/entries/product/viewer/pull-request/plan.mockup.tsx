@@ -21,7 +21,7 @@ export default defineScreen({
     "docs/protocol/cloud/billing.md",
     "docs/protocol/cloud/product-mockups-viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "plan"],
+  tags: ["product", "canvas", "viewer", "plan"],
   propSchema: {
     type: "object",
     additionalProperties: false,
@@ -39,7 +39,7 @@ export default defineScreen({
       title: "Pull request · Private on the free plan · Reader",
       description:
         "Pull request — the same pull request read by someone who cannot open billing: the card says what they can do instead and offers the switcher.",
-      tags: ["product", "folio", "viewer", "plan-reader"],
+      tags: ["product", "canvas", "viewer", "plan-reader"],
       props: { state: "reader" },
     },
   ],

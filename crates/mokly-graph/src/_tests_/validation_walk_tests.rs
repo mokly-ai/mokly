@@ -13,6 +13,7 @@ use crate::closure::{ClosureBuilder, ClosureObserverMock, GeneratedResourcesMock
 use crate::head_validation::{ValidationRead, ValidationRecorderMock};
 use crate::policy::{PublicFile, PublicPolicyMock};
 use crate::reference_index::MemoryReferenceIndex;
+use crate::viewer_fonts::ViewerFonts;
 
 #[test]
 fn walk_records_every_input_class_and_ignored_unavailable_targets() {
@@ -93,7 +94,13 @@ fn walk_records_every_input_class_and_ignored_unavailable_targets() {
         ),
     ];
     let closure = walker
-        .collect_recorded("home/index.html", &nodes, &[], &recorder)
+        .collect_recorded(
+            "home/index.html",
+            &nodes,
+            &[],
+            ViewerFonts::Denied,
+            &recorder,
+        )
         .unwrap();
     assert_eq!(
         *inputs.lock().unwrap(),
@@ -165,7 +172,13 @@ fn lexical_observer_runs_before_proof_or_validation_reads_a_static_target() {
         index: Arc::new(MemoryReferenceIndex::default()),
     };
     let closure = walker
-        .collect_recorded("home/index.html", &[], &["icon.png".into()], &boundary)
+        .collect_recorded(
+            "home/index.html",
+            &[],
+            &["icon.png".into()],
+            ViewerFonts::Denied,
+            &boundary,
+        )
         .unwrap();
     assert_eq!(closure.files, BTreeSet::from(["icon.png".into()]));
 }

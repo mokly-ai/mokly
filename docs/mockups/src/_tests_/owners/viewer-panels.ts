@@ -21,6 +21,32 @@ export const viewerPanelOwners = {
       "screens/viewer/more-menu.tsx",
     ],
   },
+  // The account menu and the compact More menu with its account rows, over
+  // the bar that opens them. The Theme choice is the menus' one control that
+  // the comparison reads, and `viewer/account-menu.tsx` writes it; the bar's
+  // controls are the slot bar's.
+  "product/viewer/standalone/account-menu": {
+    region: "bar",
+    files: [
+      "viewer/chrome.tsx",
+      "screens/viewer/slots.tsx",
+      "screens/viewer/more-menu.tsx",
+      "viewer/account-menu.tsx",
+    ],
+  },
+  // The settings dialog over the viewer, on the Members pane that its rail
+  // opens, which the members pane's own parts draw. Nothing on it has
+  // failed to load and no write has been refused, so neither shared answer is
+  // drawn here, and the pane's own module writes only the waits and the
+  // section headings, which no label on this page compares.
+  "product/viewer/standalone/settings": {
+    region: "pane",
+    files: [
+      "settings/panes/member-rows.tsx",
+      "settings/panes/member-invite.tsx",
+      "settings/panes/member-details.tsx",
+    ],
+  },
   // The bar in the Mac app is this page's whole subject: the cloud's slot
   // content starts after the window buttons. The same sources draw every
   // control on it as on the bar above.

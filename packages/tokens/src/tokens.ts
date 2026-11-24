@@ -1,27 +1,30 @@
+import { palettes } from "@mokly/ui/palette";
+
 /** The two color schemes every token table and generated document defines. */
 export type TokenColorScheme = "light" | "dark";
 
 /** The two viewports the type ramp and generated documents are sized for. */
 export type TokenViewport = "mobile" | "desktop";
 
-/** Canonical visual values shared by the catalogue and future product UI. */
+/** Canvas roles and their cloud semantic names share one palette source. */
+function canvasTokens(scheme: TokenColorScheme) {
+  const color = palettes.canvas[scheme];
+  return {
+    ...color,
+    accent: color.signalDeep,
+    accentHover: color.signalDeep,
+    accentActive: color.signalDeep,
+    accentSolid: color.signalFill,
+    onAccent: color.onSignalFill,
+    accentSoft: color.signalSoft,
+  };
+}
+
+/** Canonical visual values shared by the catalogue, application and site. */
 export const tokens = {
   color: {
     light: {
-      background: "#f5f6f4",
-      surface: "#ffffff",
-      surfaceRaised: "#ffffff",
-      surfaceMuted: "#e9ede8",
-      text: "#16211b",
-      textMuted: "#536258",
-      border: "#d3dbd4",
-      borderStrong: "#798a7e",
-      accent: "#2f5945",
-      accentHover: "#24483a",
-      accentActive: "#1c382d",
-      accentSolid: "#4f7864",
-      onAccent: "#ffffff",
-      accentSoft: "#e3eee6",
+      ...canvasTokens("light"),
       focus: "#0b6bcb",
       success: "#2f5945",
       successSoft: "#e3eee6",
@@ -44,29 +47,9 @@ export const tokens = {
       windowClose: "#ff5f57",
       windowMinimize: "#febc2e",
       windowZoom: "#28c840",
-      folio: "#faf9f6",
-      folioMuted: "#f1efe9",
-      folioSurface: "#ffffff",
-      folioInk: "#23211e",
-      folioInkMuted: "#6d675e",
-      folioLine: "#e7e3db",
-      folioLineStrong: "#8a8478",
     },
     dark: {
-      background: "#0f1713",
-      surface: "#17221b",
-      surfaceRaised: "#1e2c23",
-      surfaceMuted: "#26372b",
-      text: "#f1f6f2",
-      textMuted: "#adc0b1",
-      border: "#34483a",
-      borderStrong: "#708f7b",
-      accent: "#a3cdb4",
-      accentHover: "#bcdcc9",
-      accentActive: "#cfe7d8",
-      accentSolid: "#7aa78e",
-      onAccent: "#0f1713",
-      accentSoft: "#223029",
+      ...canvasTokens("dark"),
       focus: "#83baff",
       success: "#a3cdb4",
       successSoft: "#223029",
@@ -89,18 +72,11 @@ export const tokens = {
       windowClose: "#ff5f57",
       windowMinimize: "#febc2e",
       windowZoom: "#28c840",
-      folio: "#18181b",
-      folioMuted: "#1d1d20",
-      folioSurface: "#232326",
-      folioInk: "#f4f4f5",
-      folioInkMuted: "#a1a1aa",
-      folioLine: "#34343a",
-      folioLineStrong: "#71717a",
     },
   },
   font: {
-    sans: '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    sans: palettes.canvas.fonts.sans,
+    mono: palettes.canvas.fonts.mono,
     display: 'Georgia, "Times New Roman", serif',
     regular: 400,
     medium: 500,

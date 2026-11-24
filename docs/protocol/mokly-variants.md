@@ -17,11 +17,12 @@ Everything that addresses an entry by path addresses a variant the same way,
 including `mock:` links and use-case steps. Variants have no link grammar,
 query parameter, or comparison schema of their own.
 
-Light and dark are not variants. Color scheme is a view axis selected by the
-appearance switch, and a viewport is likewise a view. Per-view change
-evidence is surfaced on the view controls by the
-[runtime contract](./mokly-runtime.md#browse-shell); it never creates
-navigation rows.
+Light and dark are not variants. Color scheme is a view axis under the
+[preview scheme rules](./mokly-shell-device-chrome.md#color-scheme), and a
+viewport is likewise a view. Per-view change
+evidence marks each toggle of the
+[Frames filter](./mokly-shell-canvas-stage.md#frames-filter) that hides a
+changed view; it never creates navigation rows.
 
 ## Authoring
 
@@ -64,7 +65,7 @@ path, parent first and then variants in authored order. An export contributes
 exactly one definition under the
 [entry module contract](./mokly-entry-modules.md); the definition carries its
 variants, and the catalogue model flattens them. A component needs no variant:
-its page renders its own props first, then each variant.
+its own props render its own views.
 
 Fresh variant literals in direct calls keep excess-key checks. Generic
 inference can accept extra top-level keys. Registry preparation rejects every
@@ -124,8 +125,8 @@ defining module or file.
 A variant renders exactly as any entry of its kind: one document per effective
 viewport and color scheme through the parent's render with the merged props,
 with the same link rewriting, fragment validation, resource validation, and
-composition into the render cache. A component parent renders its own props
-first on its page, then each variant.
+composition into the render cache. A component parent renders its own views
+from its own props.
 
 The catalogue model records `variantOf` exactly on variant entries of either
 kind and holds the parent's path. Validation requires the named parent to be a

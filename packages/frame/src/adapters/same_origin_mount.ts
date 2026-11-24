@@ -1,8 +1,10 @@
 import type { CatalogueUsage } from "@mokly/model";
 
 import type {
+  Box,
   FrameEvent,
   InstanceBoundary,
+  InstanceBoxModel,
   MountedFrame,
 } from "../frame_adapter.js";
 
@@ -24,6 +26,8 @@ interface LocalOperations {
   list(): readonly InstanceBoundary[];
   highlight(keys: readonly string[], mode: "off" | "highlight" | "pick"): void;
   scroll(key: string): void;
+  boxModel(key: string): InstanceBoxModel | null;
+  contentBox(): Box | null;
   subscribe(enabled: boolean): void;
   dispose(): void;
 }
@@ -203,6 +207,8 @@ export function mountLocalDocument(
         listInstanceBoundaries: () => run(() => operations!.list()),
         highlight: (keys, mode) => run(() => operations!.highlight(keys, mode)),
         scrollTo: (key) => run(() => operations!.scroll(key)),
+        boxModel: (key) => run(() => operations!.boxModel(key)),
+        contentBox: () => run(() => operations!.contentBox()),
         subscribe(listener) {
           if (disposed) throw new FrameError("disposed");
           if (initialSubscription === listener) {

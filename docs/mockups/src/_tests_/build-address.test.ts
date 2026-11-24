@@ -31,11 +31,18 @@ test("a build address that resolved no build names This build in its slot", () =
         elements(bar, (node) => label(node) === "This build").length > 0,
         where + " names This build",
       );
-      assert.equal(
-        label(byClass(bar, "fo-top-state-detail")[0]),
-        state.detail,
-        where,
-      );
+      // Each composition's pill is one control named by This build and the
+      // state's phrase, also where the compact pill shows the name alone.
+      const pills = byClass(bar, "fo-canvas-pill");
+      assert.equal(pills.length, viewport === "desktop" ? 2 : 1, where);
+      for (const pill of pills)
+        assert.deepEqual(
+          elements(pill, (node) =>
+            (attribute(node, "data-testid") ?? "").startsWith("firna-button-"),
+          ).map((node) => attribute(node, "aria-label")),
+          ["This build, " + state.detail],
+          where,
+        );
       const canvas = byClass(page, "fo-stage-canvas")[0];
       assert.equal(byClass(canvas, "fo-build").length, 0, where);
       // The stage says one thing: a state's title, or the read it waits for,

@@ -23,7 +23,12 @@ import {
   shareSelection,
   uniqueSlug,
 } from "./readable-addresses-support";
-import { publishedViewerReady, publishedProject } from "./viewer/support";
+import {
+  expectShownViewport,
+  expectViewportToggles,
+  publishedViewerReady,
+  publishedProject,
+} from "./viewer/support";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -179,10 +184,10 @@ test("old shares, check links, and UUID permalinks survive both slug renames", a
   await expect(
     page.getByRole("heading", { level: 2, name: selection.title }),
   ).toBeVisible();
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    selection.viewport,
-  );
+  // The old share opens on the viewport that it named, and the Frames filter
+  // shows that viewport alone.
+  await expectShownViewport(page, selection.title, selection.viewport);
+  await expectViewportToggles(page, selection.viewport);
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     selection.scheme,

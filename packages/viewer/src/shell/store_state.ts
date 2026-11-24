@@ -1,35 +1,52 @@
 /** Value state owned by one mounted shell. */
 
 import type { ChangesStatus } from "@mokly/model";
+import type { PanelTab } from "@mokly/ui/panel-tabs";
 
 import type { ViewerSelection } from "../host/types.js";
 
+import type { FramesSchemes } from "./frames_filter.js";
 import type { ShellRoute } from "./routes.js";
 
 /** Stored browser preferences the standalone bundle reads before its first render. */
 export interface ShellInitialState {
   colorScheme?: ViewerSelection["colorScheme"];
-  detailsOpen?: boolean;
   disclosures?: Readonly<Record<string, boolean>>;
   navigationMaximum?: number;
   navigationWidth?: number;
 }
 
+/**
+ * A sheet of the compact layout: the catalogue's, or the right panel's. One
+ * sheet is open at a time.
+ */
+export type ShellSheet = "catalogue" | "panel";
+
 /** Complete interaction state for one standalone shell mount. */
 export interface ShellState {
   announcement: string;
   changesStatus: Exclude<ChangesStatus, "disabled"> | undefined;
-  detailsOpen: boolean;
   disclosures: Readonly<Record<string, boolean>>;
-  drawerOpen: boolean;
-  expandedFrame: string | undefined;
   filterBaseline: Readonly<Record<string, boolean>> | undefined;
-  inspectorTab: string | undefined;
+  /**
+   * The scheme toggles of the screens' Frames filter: the schemes that the
+   * canvas shows. They stay the same across in-shell navigation. Its
+   * viewport toggles show the selection's viewport.
+   */
+  frames: FramesSchemes;
   navigationMaximum: number;
   navScroll: number;
-  navigationWidth: number;
+  /**
+   * The catalogue's width that the reader chose, in pixels. Without it the
+   * catalogue takes its starting width.
+   */
+  navigationWidth: number | undefined;
+  /**
+   * The right panel's selected tab, which survives in-shell navigation to an
+   * entry that has it.
+   */
+  panelTab: PanelTab;
   query: string;
-  regionScrolls: Readonly<Record<string, number>>;
   /**
    * The folder disclosure a breadcrumb last revealed, with the selection when
    * it was requested. Each request stores a fresh object so the tree focuses
@@ -50,6 +67,10 @@ export interface ShellState {
    */
   comparisonIntent: boolean;
   selection: ViewerSelection;
+  /** The sheet that the compact layout shows open, if any. */
+  sheet: ShellSheet | undefined;
+  /** Whether the open sheet takes its expanded height. */
+  sheetExpanded: boolean;
   tagPickerIndex: number;
   tagPickerOpen: boolean;
 }

@@ -1,0 +1,81 @@
+/* The canvas: a full-bleed grid of dots at a 24px pitch, in the palette's dot
+   colour on its background colour. It fills its area and clips what it
+   holds, and the grid moves with the section when it pans. The canvas takes
+   the reader's drags, wheels and pinches itself, so the browser neither
+   scrolls nor zooms it. */
+.mbk-canvas {
+  position: relative;
+  display: block;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background-color: var(--cv-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--cv-dot) 1px,
+    transparent 1.3px
+  );
+  background-size: 24px 24px;
+  touch-action: none;
+  user-select: none;
+}
+
+.mbk-canvas[data-canvas-panning] {
+  cursor: grabbing;
+}
+
+/* The stage, which Fit and centring use: the canvas less the insets that a
+   layout sets, such as for floating panels, and less the zoom pill's room,
+   12px above the canvas's bottom edge plus the 36px pill. The canvas
+   measures this invisible box. */
+.mbk-canvas-stage {
+  position: absolute;
+  top: var(--mbk-canvas-inset-top, 0px);
+  right: var(--mbk-canvas-inset-end, 0px);
+  bottom: calc(var(--mbk-canvas-inset-bottom, 0px) + 48px);
+  left: var(--mbk-canvas-inset-start, 0px);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The section's place: the canvas moves it by a transform and sets its
+   zoom as --mbk-canvas-zoom, which each frame reads. */
+.mbk-canvas-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  transform-origin: 0 0;
+}
+
+/* The zoom pill floats at the bottom centre of the stage, 12px above the
+   canvas's bottom edge, over the section, its highlight masks and its
+   labels and markers. */
+.mbk-canvas-pill {
+  position: absolute;
+  bottom: 12px;
+  left: calc(
+    var(--mbk-canvas-inset-start, 0px) +
+      (
+        100% - var(--mbk-canvas-inset-start, 0px) -
+          var(--mbk-canvas-inset-end, 0px)
+      ) /
+      2
+  );
+  z-index: 7;
+  transform: translateX(-50%);
+}
+
+/* The compact layout has no zoom pill: a pinch zooms the canvas, and the
+   dock's Fit refits it. The stage then takes the canvas less its insets
+   alone. */
+@media (width < 56.25rem) {
+  .mbk-canvas-stage {
+    bottom: var(--mbk-canvas-inset-bottom, 0px);
+  }
+
+  .mbk-canvas-pill {
+    display: none;
+  }
+}

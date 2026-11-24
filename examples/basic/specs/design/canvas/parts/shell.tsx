@@ -1,0 +1,211 @@
+import type { CSSProperties, ReactNode } from "react";
+
+import {
+  MainRegion,
+  SkipLink,
+} from "../../../../../../packages/ui/src/shell-layout/shell-layout.js";
+import { zoomPill } from "../../library/canvas/zoom-pill.js";
+import { optional, useDesignInstance } from "../../library/composition.js";
+import { phoneDock } from "../../library/panels/phone-dock.js";
+import { useRenderedAppearance } from "../../parts/appearance.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
+import { canvasScope } from "../../parts/canvas_palette.js";
+import {
+  DesignNavigation,
+  useDesignNavigation,
+} from "../../parts/design_navigation.js";
+import { TopBar } from "../../parts/top_bar.js";
+
+import { CanvasCatalogue, type CatalogueView } from "./catalogue.js";
+import { CANVAS_PAGES, type CanvasDestination } from "./destinations.js";
+import type { CanvasEntry } from "./entries.js";
+import { RightPanel, type PanelTab } from "./panel.js";
+
+/** The sheet that a compact artboard shows open. */
+export type CanvasSheet = "catalogue" | "panel";
+
+/** The search field's query and the tag picker of the top bar. */
+export interface CanvasSearch {
+  /** The query in the search field, such as `tag:forms`. */
+  value?: string | undefined;
+  /** The tag that the query enters, whose chip the picker marks. */
+  activeTag?: string | undefined;
+  /** The tag picker open under the search field. */
+  pickerOpen?: boolean | undefined;
+}
+
+interface CanvasShellProps {
+  design: CanvasDestination;
+  viewport: ArtboardViewport;
+  /** The catalogue's filter and its selected row. */
+  catalogue: CatalogueView;
+  /** The selected entry, which the right panel inspects; none on home. */
+  entry?: CanvasEntry | undefined;
+  /** The body of the right panel's selected tab. */
+  panel?: ReactNode;
+  /** The right panel's selected tab, which the dock names; Inspect by default. */
+  tab?: PanelTab | undefined;
+  /** The sheet that the compact form shows open. */
+  sheet?: CanvasSheet | undefined;
+  /** The open sheet takes its expanded height, as after a drag on its grabber. */
+  expanded?: boolean | undefined;
+  /** The pill above the dock that names the selection, in the compact form. */
+  pill?: ReactNode;
+  /** The stage's zoom in percent, which the zoom pill shows. */
+  zoom?: number | undefined;
+  /**
+   * The compact form's zoom in percent, which the dock's Fit restores and at
+   * which the compact form draws a component's frames.
+   */
+  compactZoom?: number | undefined;
+  /** The top bar's search query and tag picker; an empty, closed field by default. */
+  search?: CanvasSearch | undefined;
+  /** The stage on the canvas. */
+  children: ReactNode;
+}
+
+/** The id of the main region, one shell per document. */
+const MAIN_ID = "cv-main";
+
+/**
+ * The root of a Canvas artboard: the theme's root class with the Canvas
+ * palette in the rendered appearance, and the design artboard class, whose
+ * Highlight components rule reveals the frames' highlight. A mobile render
+ * draws the compact form at every width. A startup page, which the shell
+ * draws before the catalogue arrives, holds its one state in this root
+ * alone.
+ */
+export function CanvasRoot({
+  children,
+  viewport,
+}: {
+  children: ReactNode;
+  viewport: ArtboardViewport;
+}) {
+  const scope = canvasScope(useRenderedAppearance());
+  return (
+    <div
+      {...scope}
+      className={`${scope.className} ce-design cv-root`}
+      data-cv-layout={viewport === "mobile" ? "compact" : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The Canvas viewer shell of one artboard: the top bar over a full-bleed
+ * dot-grid canvas, the floating catalogue and right panel, the zoom pill, and
+ * the compact form's dock. A desktop render draws both floating panels and
+ * the zoom pill, and turns compact below the shell's breakpoint. A mobile
+ * render draws only the sheet it shows open, and the dock, whose Fit takes
+ * the zoom pill's place.
+ */
+export function CanvasShell(props: CanvasShellProps) {
+  return (
+    <DesignNavigation design={props.design}>
+      <CanvasRoot viewport={props.viewport}>
+        <SkipLink href={`#${MAIN_ID}`} />
+        <CanvasTopBar {...props} />
+        <MainRegion id={MAIN_ID}>
+          <CanvasWork {...props} />
+        </MainRegion>
+      </CanvasRoot>
+    </DesignNavigation>
+  );
+}
+
+/**
+ * The package top bar, which draws no menu, as the shell's bar does: the
+ * dock's Catalogue opens the catalogue sheet, and the sheet's close control
+ * closes it. Its brand opens the Canvas home.
+ */
+function CanvasTopBar({ search, viewport }: CanvasShellProps) {
+  return (
+    <TopBar
+      activeTag={search?.activeTag}
+      links={{ brand: CANVAS_PAGES.home }}
+      searchValue={search?.value}
+      tagPickerOpen={search?.pickerOpen}
+      viewport={viewport}
+    />
+  );
+}
+
+function CanvasWork({
+  catalogue,
+  children,
+  compactZoom,
+  design,
+  entry,
+  expanded,
+  panel,
+  pill,
+  sheet,
+  tab = "inspect",
+  viewport,
+  zoom,
+}: CanvasShellProps) {
+  const transitions = useDesignNavigation().canvas ?? {};
+  const compact = viewport === "mobile";
+  const zoomInstance = useDesignInstance("zoom");
+  const dockInstance = useDesignInstance("dock");
+  // The compact form draws a component's frames at the zoom that the dock's
+  // Fit restores.
+  const fit: (CSSProperties & Record<"--cv-compact-zoom", number>) | undefined =
+    compactZoom === undefined
+      ? undefined
+      : { "--cv-compact-zoom": compactZoom / 100 };
+  return (
+    <div
+      className="cv-work"
+      data-cv-sheet={expanded ? "expanded" : undefined}
+      style={fit}
+    >
+      <div className="cv-canvas">{children}</div>
+      {!compact && zoom !== undefined ? (
+        <div className="cv-zoom-place">
+          <zoomPill.Component
+            moklyInstance={zoomInstance}
+            zoom={zoom}
+            presentation="pill"
+            {...optional("zoomInDestination", transitions.zoomIn)}
+            {...optional("zoomOutDestination", transitions.zoomOut)}
+            {...optional("fitDestination", transitions.fit)}
+          />
+        </div>
+      ) : null}
+      {!compact || sheet === "catalogue" ? (
+        <CanvasCatalogue
+          sheet={compact}
+          view={catalogue}
+          close={transitions.close}
+          design={design}
+        />
+      ) : null}
+      {entry !== undefined && (!compact || sheet === "panel") ? (
+        <RightPanel
+          close={transitions.close}
+          design={design}
+          entry={entry}
+          selected={tab}
+          sheet={compact}
+        >
+          {panel}
+        </RightPanel>
+      ) : null}
+      {pill === undefined ? null : <div className="cv-pill-place">{pill}</div>}
+      <div className="cv-dock-place">
+        <phoneDock.Component
+          moklyInstance={dockInstance}
+          catalogueDestination={CANVAS_PAGES.catalogue}
+          {...optional("tab", entry === undefined ? undefined : tab)}
+          {...optional("tabDestination", transitions.panelSheet)}
+          {...optional("zoom", entry === undefined ? undefined : compactZoom)}
+          {...optional("fitDestination", transitions.fit)}
+        />
+      </div>
+    </div>
+  );
+}

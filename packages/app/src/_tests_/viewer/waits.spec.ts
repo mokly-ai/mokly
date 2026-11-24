@@ -8,7 +8,11 @@ import { createToken, publish } from "../publish";
 
 import { pullRequest } from "./fixtures";
 import { holdReads, projectRead } from "./held-reads";
-import { publishedProject, publishedViewerReady } from "./support";
+import {
+  publicationReference,
+  publishedProject,
+  publishedViewerReady,
+} from "./support";
 
 /**
  * Every viewer wait draws the layout that it waits for, as Wait in
@@ -28,7 +32,7 @@ async function expectFrameWait(page: Page): Promise<void> {
   await expect(heading).toHaveAccessibleName("Opening your project…");
   await expect(page.getByText("Opening your project…")).toHaveCount(1);
   // The controls whose labels are known wait in their places, disabled.
-  for (const name of ["History", "Share", "Settings"])
+  for (const name of ["History", "Share"])
     await expect(
       page.getByRole("button", { name, exact: true }),
     ).toBeDisabled();
@@ -127,7 +131,7 @@ test("a pull request alias names its pull request until its publication's addres
 
   // While the alias resolves, its own address names the pull request.
   await pulls.arrived;
-  await expect(trigger).toHaveText("#7");
+  await expect(publicationReference(page)).toHaveText("#7");
   await expect(loading).toHaveCount(1);
   pulls.release();
 
@@ -138,7 +142,7 @@ test("a pull request alias names its pull request until its publication's addres
   await expect(trigger).toHaveCount(0);
   await expect(loading).toHaveCount(1);
   publication.release();
-  await expect(trigger).toHaveText("#7 Host the viewer");
+  await expect(publicationReference(page)).toHaveText("#7 Host the viewer");
 });
 
 test("each panel waits in its own groups, with one placeholder row in each list", async ({

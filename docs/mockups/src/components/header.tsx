@@ -24,23 +24,37 @@ export const headerInput = componentInput({
       <a href={site.home} className="brand" aria-label="Mokly home">
         <svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
           <rect
-            x="3"
-            y="3"
+            x="3.6"
+            y="3.6"
+            width="18.8"
+            height="19.8"
+            rx="4.6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <rect
+            x="9"
+            y="8"
             width="20"
             height="21"
-            rx="4"
-            fill="currentColor"
-            opacity=".3"
+            rx="4.8"
+            fill="var(--mk-color-signal)"
+            paintOrder="stroke"
+            stroke="var(--mk-color-surface)"
+            strokeWidth="1.6"
           />
-          <rect x="9" y="8" width="20" height="21" rx="4" fill="currentColor" />
           <path
             d="M14 15h10M14 20h7"
-            stroke="var(--mk-color-surface)"
-            strokeWidth="2"
+            fill="none"
+            stroke="var(--mk-color-on-signal)"
+            strokeWidth="2.1"
             strokeLinecap="round"
           />
         </svg>
-        <span>Mokly</span>
+        <span>
+          mokly<span className="brand-dot">.</span>
+        </span>
       </a>
       <nav aria-label="Main">{navigation}</nav>
       <div className="header-actions">{actions}</div>

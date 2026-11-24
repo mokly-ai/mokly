@@ -55,17 +55,19 @@ The address maps losslessly to the package selection:
 | `screenPath`  | `catalogueScreen`; absent maps to package `null`       |
 | `snapshotId`  | `catalogueSnapshot`, only beside `catalogueScreen`     |
 | `view`        | `view=changes`; All is omitted                         |
-| `viewport`    | `viewport=mobile` or `both`; desktop is omitted        |
-| `colorScheme` | `scheme=light` or `dark`; reader preference is omitted |
+| `viewport`    | `viewport=desktop` or `mobile`; Both is omitted        |
+| `colorScheme` | `scheme=light` or `dark`; system preference is omitted |
 | `search`      | `search=<text>`; an empty search is omitted            |
 | `tags`        | one `tag=<value>` per normalized tag, in package order |
 
-The complete defaults are catalogue home, All, desktop, the signed-in color
-preference (otherwise light), empty search and no tags. Cloud intentionally
-keeps desktop as its URL default even though the standalone package defaults to
-Both. `viewport=both` is first-class and is never collapsed. Search and tag
-values use normal URL encoding; repeated `tag` is the only repeatable viewer
-key. Empty, whitespace-containing or duplicate tags make an address invalid.
+The complete defaults are catalogue home, All, Both, the system color
+preference (otherwise light), empty search and no tags. Decision: the viewport
+default is Both, as in the package, rather than Desktop, because Desktop fits
+only a one-frame stage and opens a phone on a scaled desktop frame. An address
+that names a default value, such as `viewport=both`, is valid and is not
+corrected; the app's own writes omit it. Search and tag values use normal URL
+encoding; repeated `tag` is the only repeatable viewer key. Empty,
+whitespace-containing or duplicate tags make an address invalid.
 The package remains authoritative for its documented normalization of `tag:`
 search terms. A removed entry selected by path alone resolves to its one
 published record; that record's snapshot travels in later proposals.
@@ -176,11 +178,11 @@ changing publication or selection state.
 `viewport=desktop|mobile` and `scheme`. Search, tags, view, snapshot, panels and
 settings are working-state only and are not sent to that operation. For a
 comparison-backed publication, Share may offer an API-validated screen and its
-single viewport/scheme view. Package `viewport=both` is omitted from the API
-request because the operation does not support it. After the API returns the
-canonical app URL, the host adds `viewport=both` to that URL. The recipient
-therefore receives the same supported package viewport without broadening what
-the API claims to validate.
+single viewport/scheme view. Share requests `viewport=desktop` or
+`viewport=mobile` for a single viewport and no viewport for Both, which the
+operation does not support. The host copies the canonical app URL that the API
+returns unchanged. The recipient therefore opens the sender's viewport: a link
+without a viewport opens on Both, the default.
 
 Under the dark scheme, the package shows the light view of a screen that
 has no dark view. This doc calls that the light fallback. When the selected

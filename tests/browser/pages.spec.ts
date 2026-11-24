@@ -2,7 +2,14 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { missingResourceNotice } from "./document_error_allowance.js";
-import { chooseViewport } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseViewport,
+  closeOpenSheet,
+  DOCUMENT_FRAME,
+  openCatalogueSheet,
+  revealInPanel,
+} from "./workspace_actions.js";
 
 for (const width of [390, 1280]) {
   test(`catalogue guidance includes documents at ${width}px`, async ({
@@ -20,7 +27,7 @@ for (const width of [390, 1280]) {
     );
     await expect(
       page.getByRole("searchbox", { name: "Search catalogue" }),
-    ).toHaveAttribute("placeholder", "Search catalogue…");
+    ).toHaveAttribute("placeholder", "Search");
     await page.goto("/view/missing-document/");
     await expect(page.locator("#mb-main h2")).toHaveText("Item not found");
     await expect(page.locator("#mb-main")).toContainText(
@@ -36,7 +43,7 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/getting-started/?fragment=next-steps");
     await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
-    const frame = page.locator(".mbk-stage-embed iframe");
+    const frame = page.locator(DOCUMENT_FRAME);
     await expect(frame).toHaveCount(1);
     await expect(frame).toHaveAttribute(
       "src",
@@ -45,24 +52,21 @@ for (const width of [390, 1280]) {
     await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
     await expect(
       page.locator(
-        "#mb-main [data-diff-screen], #mb-main [data-viewport-option], #mb-main [data-color-scheme-option]",
+        "#mb-main [data-diff-screen], #mb-main [data-viewport-option], #mb-main [data-color-scheme-option], #mb-main [data-frames-toggle]",
       ),
     ).toHaveCount(0);
     await expect(
-      page.frameLocator(".mbk-stage-embed iframe").locator("#next-steps"),
+      page.frameLocator(DOCUMENT_FRAME).locator("#next-steps"),
     ).toBeVisible();
-    await page.locator("[data-mokly-details] summary").click();
-    await expect(page.locator("[data-mokly-details]")).not.toContainText(
+    // A page's Details rows stand in Inspect's head, in the right panel, a
+    // sheet of the compact layout.
+    const details = page.locator('[data-inspect-section="details"]');
+    await revealInPanel(page, details);
+    await expect(details).not.toContainText(
       "example/getting-started/index.html",
     );
-    await expect(page.locator("[data-mokly-details]")).toContainText(
-      "documents",
-    );
-    await page.locator("[data-mokly-details] summary").click();
-    if (width < 700)
-      await page
-        .getByRole("button", { name: "Open catalogue navigation" })
-        .click();
+    await expect(details).toContainText("documents");
+    if (width < 700) await openCatalogueSheet(page);
     await expect(
       page.locator(
         '[data-nav-section="specs"] [data-nav-folder="folder:example"]',
@@ -92,58 +96,28 @@ for (const width of [390, 1280]) {
       .click();
     await page.locator('[data-entry-id="example/screens/welcome"]').click();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-    if (width < 700) await chooseViewport(page, "mobile");
+    if (width < 700) {
+      await chooseViewport(page, "mobile");
+      await closeOpenSheet(page);
+    }
     const screenFrame =
-      width < 700 ? ".mbk-frame-mobile iframe" : ".mbk-frame-desktop iframe";
+      width < 700
+        ? `.mbk-canvas-cell:not([hidden]) ${canvasFrame("mobile")}`
+        : canvasFrame("desktop");
     await page
       .frameLocator(screenFrame)
       .getByRole("link", { name: "Read the handbook" })
       .click();
+    // The destination's address names the Mobile viewport that was kept.
+    const kept = width < 700 ? "&viewport=mobile" : "";
     await expect(page).toHaveURL(
-      /\/view\/example\/getting-started\/\?fragment=next-steps$/,
+      new RegExp(
+        `/view/example/getting-started/\\?fragment=next-steps${kept}$`,
+      ),
     );
     await page.goBack();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
     await page.goForward();
     await expect(frame).toHaveAttribute("src", /#next-steps$/);
-  });
-}
-
-for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: document designs navigate through their own details and drawer`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/design/browse/pages/view/");
-    await chooseViewport(page, viewport);
-    const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    await frame.locator(".mbk-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details\/$/);
-    await expect(frame.locator(".mbk-details-body")).toContainText(
-      "specs/catalogue.tsx",
-    );
-    await expect(frame.locator(".mbk-details-body")).not.toContainText(
-      "Generated",
-    );
-    await frame.locator(".mbk-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\/$/);
-    if (viewport === "mobile") {
-      await frame
-        .getByRole("link", { name: "Open catalogue navigation" })
-        .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/pages\/navigation\/$/,
-      );
-      await frame
-        .getByRole("link", { name: "Close catalogue navigation" })
-        .click();
-      await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\/$/);
-    }
-    await frame
-      .getByRole("link", { name: "Open Welcome", exact: true })
-      .click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    await page.goBack();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\/$/);
   });
 }

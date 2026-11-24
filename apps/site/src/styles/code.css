@@ -1,0 +1,248 @@
+/* The code panel that CodePanel.astro draws: dark in both schemes, as the
+   design file's one dark surface. In light the panel fills with the ink
+   role and its text mixes the surface role into the ink; in dark it fills
+   with the muted surface and its text takes the dark scheme's text roles.
+   Every text colour keeps at least 4.5:1 on the fill. code-tokens.css holds
+   the end of the panel's rules: the syntax colours, the dark scheme's text
+   colours and the dimmed lines, which CodePanel.astro loads after this
+   sheet.
+
+   The class names and the rules match docs/mockups/styles/site/code.css.
+   The mockups key the dark rules on the pinned scheme; the site is dark
+   through the scheme choice or, without a choice, through the system
+   scheme, so each dark rule is written for both. The mockups pin a
+   composition with data-site-viewport; the site resolves the same switch at
+   768px. So each base rule is the mobile composition, and the desktop
+   values follow under the 768px query at the end, in the mockup's order. */
+
+.site-code {
+  background: var(--mk-color-text);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-text),
+    var(--mk-shadow-small);
+  color: color-mix(in srgb, var(--mk-color-surface) 86%, var(--mk-color-text));
+  overflow: hidden;
+  width: 100%;
+}
+
+:root[data-color-scheme="dark"] .site-code {
+  background: var(--mk-color-surface-muted);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mk-color-text) 8%, transparent),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text-secondary);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-code {
+    background: var(--mk-color-surface-muted);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--mk-color-text) 8%, transparent),
+      var(--mk-shadow-small);
+    color: var(--mk-color-text-secondary);
+  }
+}
+
+/* The tab bar: the open tab, the other tabs, the language, a note, Copy */
+
+.site-code-head {
+  align-items: center;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  display: flex;
+  gap: 4px;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 4px 0 7px;
+}
+
+.site-code-tab {
+  align-items: center;
+  border-radius: 7px;
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 7px;
+  height: 28px;
+  min-width: 0;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.site-code-tab--open {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--mk-color-surface);
+}
+
+.site-code-tab--open svg {
+  color: var(--mk-color-signal);
+  flex: none;
+}
+
+/* A file tab's name shrinks and ends in an ellipsis where the bar cannot
+   hold it, so the language and Copy after it stay whole. Its text keeps the
+   whole name. */
+
+.site-code-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-code-language {
+  font-family: var(--mk-font-mono);
+  white-space: nowrap;
+}
+
+.site-code-meta,
+.site-code-language--end {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-code-meta,
+.site-code-language--end,
+.site-code-copy {
+  margin-left: auto;
+}
+
+.site-code-meta ~ .site-code-language--end,
+.site-code-meta ~ .site-code-copy,
+.site-code-language--end ~ .site-code-copy {
+  margin-left: 0;
+}
+
+.site-code-language--end {
+  flex: none;
+}
+
+.site-code-copy {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  font: inherit;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 10px;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-code-copy:hover {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  color: var(--mk-color-surface);
+}
+
+/* The panel clips an outer halo, so Copy's focus glow draws inside it, in
+   the signal green at 75%, which keeps 3:1 on the dark fill in both
+   schemes. The forced-colors outline draws inside too. */
+
+.site-code-copy:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal) 75%, transparent);
+  outline-offset: -2px;
+}
+
+/* The code: one block per line, the prompt and the numbers drawn in CSS.
+   The panel's own code element sheds the inline code chip of prose. */
+
+.site-code .site-code-body > code {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}
+
+.site-code-body {
+  counter-reset: site-code-line;
+  font-family: var(--mk-font-mono);
+  font-feature-settings: "calt" off;
+  font-size: 0.78125rem;
+  line-height: 1.78;
+  margin: 0;
+  padding: 13px 0 15px;
+}
+
+.site-code-line {
+  display: block;
+  min-height: 1.78em;
+  overflow-wrap: anywhere;
+  padding: 0 22px 0 18px;
+  white-space: pre-wrap;
+}
+
+/* A line that wraps hangs under its code, clear of the prompt or of the
+   line number */
+
+.site-code--prompt .site-code-line {
+  padding-left: calc(30px + 1ch);
+  text-indent: calc(-12px - 1ch);
+}
+
+.site-code--prompt .site-code-line::before {
+  color: var(--mk-color-signal);
+  content: "$" / "";
+  padding-right: 12px;
+}
+
+/* The line numbers' column holds two digits at any text size: it is 34px,
+   46px from the breakpoint, or two digits and the gap where the text is
+   larger */
+
+.site-code--numbered .site-code-line {
+  padding-left: max(34px, 2ch + 14px);
+  text-indent: min(-34px, -2ch - 14px);
+}
+
+.site-code--numbered .site-code-line::before {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  content: counter(site-code-line);
+  counter-increment: site-code-line;
+  display: inline-block;
+  padding-right: 14px;
+  text-align: right;
+  text-indent: 0;
+  width: max(34px, 2ch + 14px);
+}
+
+.site-code-line--lit {
+  background: color-mix(in srgb, var(--mk-color-signal) 13%, transparent);
+}
+
+/* The desktop composition from the breakpoint up: the larger code and the
+   wider line numbers */
+
+@media (min-width: 768px) {
+  .site-code-body {
+    font-size: 0.84375rem;
+    padding: 15px 0 17px;
+  }
+
+  .site-code--numbered .site-code-line {
+    padding-left: max(46px, 2ch + 18px);
+    text-indent: min(-46px, -2ch - 18px);
+  }
+
+  .site-code--numbered .site-code-line::before {
+    padding-right: 18px;
+    width: max(46px, 2ch + 18px);
+  }
+}

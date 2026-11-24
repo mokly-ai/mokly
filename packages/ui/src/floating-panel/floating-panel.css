@@ -1,0 +1,205 @@
+/* A panel that floats over the canvas, 8px from the top, the bottom and its
+   outer edge of the area that holds it: the surface with a 12px radius, a
+   hairline ring and the Canvas design's second shadow, which follows the
+   colour scheme that the shell root states for its appearance. The catalogue
+   takes the reader's width, 252px by default, and the right panel 312px;
+   below the 73.75rem panel step they are 224px and 284px. The panel draws no
+   clip of its own, so the catalogue's resize separator can straddle its
+   edge; a body that scrolls clips to the radius. */
+.mbk-float {
+  --mbk-float-lift:
+    0 1px 1px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 4%, transparent),
+        transparent
+      ),
+    0 4px 10px -2px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 6%, transparent),
+        transparent
+      ),
+    0 18px 36px -14px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 14%, transparent),
+        transparent
+      ),
+    0 0 0 1px
+      light-dark(
+        transparent,
+        color-mix(in srgb, var(--cv-text) 4%, transparent)
+      ),
+    0 6px 14px -4px
+      light-dark(
+        transparent,
+        color-mix(in srgb, var(--cv-background) 50%, transparent)
+      ),
+    0 22px 44px -16px
+      light-dark(
+        transparent,
+        color-mix(in srgb, var(--cv-background) 60%, transparent)
+      );
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 12px;
+  background: var(--cv-surface);
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--mbk-float-lift);
+  color: var(--cv-text);
+}
+
+.mbk-float[data-floating-panel="left"] {
+  left: 8px;
+  width: var(--mbk-nav-width, 252px);
+}
+
+.mbk-float[data-floating-panel="right"] {
+  right: 8px;
+  width: 312px;
+}
+
+.mbk-float-head {
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  height: 44px;
+  padding: 0 6px 0 4px;
+  border-bottom: 1px solid var(--cv-border);
+}
+
+.mbk-float-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mbk-float-body[data-floating-scroll] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 12px;
+}
+
+/* The grabber and the close control belong to the sheet alone. */
+.mbk-float-grab,
+.mbk-float-close {
+  display: none;
+}
+
+@media (width < 73.75rem) {
+  .mbk-float[data-floating-panel="left"] {
+    width: var(--mbk-nav-width, 224px);
+  }
+
+  .mbk-float[data-floating-panel="right"] {
+    width: 284px;
+  }
+}
+
+/* Below the breakpoint the panel is a bottom sheet over the canvas, which
+   shows only while it is open: it spans the area that holds it at 64% of
+   that area's height, or 88% expanded, so a strip of the canvas stays
+   visible above it. The rounded top holds the grabber and the close
+   control, and the bottom keeps clear of the device's safe area. */
+@media (width < 56.25rem) {
+  .mbk-float[data-floating-panel] {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: 64%;
+    padding-top: 12px;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 18px 18px 0 0;
+    box-shadow:
+      0 0 0 1px var(--cv-border),
+      var(--chrome-shadow-sheet);
+    transition: height 160ms ease;
+  }
+
+  .mbk-float[data-floating-panel]:not([data-sheet-open]) {
+    display: none;
+  }
+
+  .mbk-float[data-floating-panel][data-sheet-expanded] {
+    height: 88%;
+  }
+
+  .mbk-float[data-floating-panel][data-sheet-dragging] {
+    transition: none;
+  }
+
+  .mbk-float-body[data-floating-scroll] {
+    border-radius: 0;
+  }
+
+  /* The sheet's head takes the close control at its end. */
+  .mbk-float-head {
+    height: 46px;
+    padding-right: 52px;
+  }
+
+  /* The grabber: a wide target at the sheet's top centre that draws the
+     grip in the control edge, which keeps 3:1 on the surface. */
+  .mbk-float-grab {
+    position: absolute;
+    top: 0;
+    left: calc(50% - 48px);
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 96px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    cursor: ns-resize;
+    touch-action: none;
+  }
+
+  .mbk-float-grip {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--chrome-control-edge);
+  }
+
+  .mbk-float-close {
+    position: absolute;
+    top: 14px;
+    right: 8px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--cv-text-muted);
+    cursor: pointer;
+  }
+
+  button.mbk-float-close:hover {
+    background: var(--chrome-hover);
+    color: var(--cv-text);
+  }
+
+  /* The pictures of the grabber and the close control in a static
+     depiction act on nothing, so they keep their resting look and the
+     default pointer. */
+  span:is(.mbk-float-grab, .mbk-float-close) {
+    cursor: default;
+  }
+}

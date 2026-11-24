@@ -1,0 +1,100 @@
+/* The compare on the canvas fills its area as the canvas does. While it holds
+   a state, the canvas with the section stays mounted out of sight. */
+.mbk-canvas-compare,
+.mbk-canvas-compare-live {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mbk-canvas-compare:focus {
+  outline: none;
+}
+
+.mbk-canvas-compare-live[hidden] {
+  display: none;
+}
+
+/* The state in its card: one line, or the failure with its details. */
+.mbk-canvas-compare-state {
+  display: grid;
+  gap: 8px;
+  padding: 16px 20px;
+  color: var(--cv-text-secondary);
+  font: 400 13px/1.45 var(--cv-sans);
+}
+
+.mbk-canvas-compare-state p {
+  margin: 0;
+}
+
+.mbk-canvas-compare-state p > .mbk-empty-link {
+  margin: 0 0 0 4px;
+}
+
+/* A frame's document in a comparison fills the frame's document box. Its
+   page viewport draws no scrollbar, so each version keeps the frame's
+   nominal size; the reader scrolls it with the wheel, a swipe and the
+   keys. */
+.mbk-frame-compare {
+  position: absolute;
+  inset: 0;
+}
+
+.mbk-frame-compare .mb-viewport {
+  scrollbar-width: none;
+}
+
+.mbk-frame-compare .mb-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.mbk-frame-compare[data-compare-mode="overlay"] .mb-pane--after {
+  opacity: 0.5;
+}
+
+.mbk-frame-compare[data-compare-mode="difference"] .mb-pane--after {
+  mix-blend-mode: difference;
+}
+
+/* Swipe shows the current version only to the right of the divider. */
+.mbk-frame-compare[data-compare-mode="swipe"] .mb-pane--after {
+  clip-path: inset(0 0 0 var(--mbk-frame-split, 50%));
+}
+
+/* A version without a document holds its pane: its label, then the
+   explicit message, on the frame's own surface. */
+.mbk-frame-compare > .mb-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  background: var(--mbk-screen-bg);
+  color: var(--mbk-screen-ink);
+}
+
+[data-preview-color-scheme="dark"] .mbk-frame-compare > .mb-pane {
+  background: var(--mbk-dark-screen-bg);
+  color: var(--mbk-dark-screen-ink);
+}
+
+.mbk-frame-compare > .mb-pane > .mb-pane-label {
+  margin: 0 0 6px;
+  color: inherit;
+  font: 500 11px/1 var(--cv-mono);
+  opacity: 0.72;
+}
+
+.mbk-frame-compare > .mb-pane > .mb-pane-missing {
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+  border-color: color-mix(in srgb, currentColor 34%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+}

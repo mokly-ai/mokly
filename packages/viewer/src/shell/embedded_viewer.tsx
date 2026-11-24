@@ -12,11 +12,13 @@ import type {
   ViewerTheme,
 } from "../host/types.js";
 
+import { ChangesStartProvider } from "./changes_start.js";
 import { ShellFrameMarkerLayer } from "./frame_marker_layer.js";
 import { useShellFragment, useShellIdentifier } from "./identifier_context.js";
 import { CatalogueNav } from "./nav.js";
 import { useNavigationBounds } from "./nav_resize.js";
 import { useShellRoot } from "./root_context.js";
+import { useCanvasLayoutParts } from "./sheets.js";
 import { useShellStore } from "./store_context.js";
 import { useShellBindings } from "./store_interactions.js";
 import { normalizeTheme } from "./theme.js";
@@ -60,12 +62,12 @@ export function EmbeddedViewerShell({
   const statusId = useShellIdentifier("mb-status");
   useNavigationBounds(root);
   useShellBindings(root, store);
+  const canvas = useCanvasLayoutParts();
   return (
     <EmbeddedLayout
       announcement={store.state.announcement}
+      {...canvas}
       colorScheme={store.state.selection.colorScheme}
-      drawerOpen={store.state.drawerOpen}
-      frameExpanded={Boolean(store.state.expandedFrame)}
       resizing={shellRoot?.resizing}
       slotRef={shellRoot?.elements.slots.ref}
       emptyStateShown={
@@ -74,11 +76,13 @@ export function EmbeddedViewerShell({
       }
       labelLayer={inspection}
       main={
-        <ShellMain
-          catalogue={store.catalogue}
-          context={store.context}
-          view={store.state.route.view}
-        />
+        <ChangesStartProvider content={slots?.changesStart}>
+          <ShellMain
+            catalogue={store.catalogue}
+            context={store.context}
+            view={store.state.route.view}
+          />
+        </ChangesStartProvider>
       }
       mainHref={mainFragment}
       markerLayer={
@@ -95,7 +99,7 @@ export function EmbeddedViewerShell({
       slots={slots}
       statusId={statusId}
       theme={normalizeTheme(theme)}
-      topBar={<TopBar catalogue={store.catalogue} />}
+      topBar={(host) => <TopBar catalogue={store.catalogue} host={host} />}
     />
   );
 }

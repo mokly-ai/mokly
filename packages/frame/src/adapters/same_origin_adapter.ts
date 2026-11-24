@@ -29,6 +29,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
       if (!win) throw new FrameError("unavailable");
       const url = resolveUrl(frame, view, win.location.origin);
       let usage = frameUsage(view.usage);
+      const { canvasInput } = view;
       view.signal?.throwIfAborted();
       const mounting = mountLocalDocument(
         frame,
@@ -46,11 +47,13 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
           let subscribed = false;
           const subscribe = (enabled: boolean) => {
             subscribed = enabled;
-            runtime.__subscribe(enabled ? frameEvents(usage) : []);
+            runtime.__subscribe(enabled ? frameEvents(usage, canvasInput) : []);
           };
           return {
             list: () => runtime.__list(),
             scroll: (key) => runtime.__scroll(key),
+            boxModel: (key) => runtime.__boxModel(key),
+            contentBox: () => runtime.__contentBox(),
             highlight: (keys, mode) => runtime.__highlight(keys, mode),
             subscribe,
             updateUsage(next) {

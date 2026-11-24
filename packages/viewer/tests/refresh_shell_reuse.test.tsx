@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { act, fireEvent } from "@testing-library/react";
+import { act, fireEvent, within } from "@testing-library/react";
 
 import type { EntryDetailV4 } from "@mokly/model";
 
@@ -151,9 +151,18 @@ test("equal usage keeps an active highlight and selected instance during a publi
   const desktop = shell.mounts.find(
     ({ frame }) => frame.dataset.workspaceFrame === "desktop",
   )!;
-  const toggle = shell.view.getByRole("button", {
+  const toggle = shell.view.getByRole("switch", {
     name: "Highlight components",
   });
+  assert.ok(toggle instanceof HTMLInputElement);
+  const selection = shell.view.container.querySelector<HTMLElement>(
+    '[data-inspect-section="selection"]',
+  );
+  assert.ok(selection);
+  const selectedComponent = () =>
+    within(selection)
+      .getByRole("link", { name: "Action" })
+      .getAttribute("href");
 
   await act(async () => {
     fireEvent.click(toggle);
@@ -163,24 +172,18 @@ test("equal usage keeps an active highlight and selected instance during a publi
     desktop.receive?.({ type: "click", key, boxes: [] });
     await flush();
   });
-  assert.equal(toggle.getAttribute("aria-pressed"), "true");
+  assert.equal(toggle.checked, true);
   assert.deepStrictEqual(desktop.highlighted, [key]);
-  assert.equal(
-    shell.view.getByRole("heading", { name: "Action · action" }).textContent,
-    "Action · action",
-  );
+  assert.equal(selectedComponent(), "/view/components/action/");
 
   await shell.publish(indexAt(1), [
     { path: HOME },
     { ...structuredClone(detail), revision: 1 },
   ]);
 
-  assert.equal(toggle.getAttribute("aria-pressed"), "true");
+  assert.equal(toggle.checked, true);
   assert.deepStrictEqual(desktop.highlighted, [key]);
-  assert.equal(
-    shell.view.getByRole("heading", { name: "Action · action" }).textContent,
-    "Action · action",
-  );
+  assert.equal(selectedComponent(), "/view/components/action/");
   assert.deepStrictEqual(
     desktop.clearedOnUpdate.flat(),
     [],
@@ -215,7 +218,7 @@ test("a component route updates a frame only when its usage value changes", asyn
   const effects = () =>
     Object.fromEntries(
       shell.mounts.map(({ frame, updates }) => [
-        frame.dataset.workspaceFrame,
+        frame.dataset.workspaceVariant,
         {
           connected: frame.isConnected,
           updates: updates.map(({ status }) => status),
@@ -224,7 +227,10 @@ test("a component route updates a frame only when its usage value changes", asyn
     );
   const unchanged = { connected: true, updates: [] };
   assert.equal(shell.mounts.length, 2);
-  assert.deepStrictEqual(effects(), { mobile: unchanged, desktop: unchanged });
+  assert.deepStrictEqual(effects(), {
+    [PARENT]: unchanged,
+    [VARIANT]: unchanged,
+  });
 
   await shell.publish(
     publication(1),
@@ -232,7 +238,10 @@ test("a component route updates a frame only when its usage value changes", asyn
     componentPair(PARENT, 1),
   );
   assert.equal(shell.mounts.length, 2);
-  assert.deepStrictEqual(effects(), { mobile: unchanged, desktop: unchanged });
+  assert.deepStrictEqual(effects(), {
+    [PARENT]: unchanged,
+    [VARIANT]: unchanged,
+  });
 
   await shell.publish(
     publication(2, (index) => {
@@ -241,13 +250,15 @@ test("a component route updates a frame only when its usage value changes", asyn
     }),
     componentPair(VARIANT, 2, (detail) => {
       detail.detailId = USAGE_DETAIL_ID;
-      detail.views[0]!.usage = { status: "pending" };
+      const desktop = detail.views.find((view) => view.viewport === "desktop");
+      assert.ok(desktop);
+      desktop.usage = { status: "pending" };
     }),
     componentPair(PARENT, 2),
   );
   assert.equal(shell.mounts.length, 2);
   assert.deepStrictEqual(effects(), {
-    mobile: { connected: true, updates: ["unavailable"] },
-    desktop: unchanged,
+    [PARENT]: unchanged,
+    [VARIANT]: { connected: true, updates: ["unavailable"] },
   });
 });

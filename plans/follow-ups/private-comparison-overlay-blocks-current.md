@@ -2,29 +2,32 @@
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-02, from Decision 11 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01. An options check added options D, E and F. The app work item added the clipped-card fact on 2026-11-02.
-- **Location:** `packages/app/src/viewer/published.web.tsx:14-23`, the mockups `docs/mockups/src/screens/product/viewer/published-slots.tsx:221`, `docs/protocol/cloud/viewer.md`, section "Private Artifact Limit", and `docs/protocol/cloud/product-mockups-viewer.md`.
+- **Added:** 2026-11-02, from Decision 11 of the Mokly 0.18.0 upgrade on the branch `calummoore/mokly-cli-upgrade`. The Milestone 1 docs agent raised it on 2026-11-01. An options check added options D, E and F. The app work item added the clipped-card fact on 2026-11-02. Rewritten on 2026-11-23 on the branch `calummoore/canvas-redesign-m12-right-panel-and-fo8u`, because the Canvas viewer moved the compare modes into its right panel, above the overlay.
+- **Location:** `packages/app/src/viewer/published.web.tsx:16-27`, the overlay, `:92-98`, which clears it only when the selection changes, and `:128-135`, which shows it while the selection key of `:29-43` matches. `packages/app/src/viewer/stage.tsx:229-253`, the card. The mockups `docs/mockups/src/screens/product/viewer/published-slots.tsx:221-240`. `docs/protocol/cloud/viewer.md:51-62`, section "Private Artifact Limit", and `docs/protocol/cloud/product-mockups-viewer.md:159-166`.
 - **Reason:** On 2026-11-02 the user deferred the choice, and with it the private-comparison part of Decision 5.
 - **Category:** Product bug.
 
 - **Terms:**
-  - **Stage overlay:** content that the app draws over the viewer's preview area through the viewer's `stageOverlay` slot.
+  - **Stage overlay:** content that the app draws over the viewer's canvas through the viewer's `stageOverlay` slot.
   - **Decision 5:** the user's choice of 2026-11-01 to remove **Open catalogue in a new tab**, because the 0.18.0 standalone shell cannot load a private catalogue.
+  - **Compare modes:** the mode tiles in the Changes tab of the viewer's right panel. **Current** shows the current frames without a comparison.
 - **Background:**
-  - A private comparison fails, because the viewer reads its files without credentials. Decision 5 shows an overlay without an action on that error.
-  - The app and the mockups still show the card **Open the catalogue in its own tab** with its new-tab action, at `packages/app/src/viewer/stage.tsx:234-251`. With the 0.18.0 viewer, that tab never loaded a private catalogue. Since release 0.19.0, the standalone shell sends `credentials: "same-origin"` with every read, as `docs/protocol/mokly-shell-fences.md:53-55` requires. Nobody has checked whether the tab now loads a private catalogue in a browser that keeps the cookie in the catalogue's own store.
-  - In 0.18.0 the overlay covers the whole preview area, with the comparison toolbar and its **Current** button. With `pointerEvents: "auto"`, a mouse reader cannot select **Current**.
-  - The failed comparison area is about 220 px high, so the card is cut off at its lower edge.
-  - The viewer sends no event when the comparison mode changes: `docs/protocol/mokly-viewer-selection.md:16-17` keeps the comparison mode out of the controlled selection. A viewport or colour change keeps the mode, so the comparison fails again.
-  - `viewer.md` and `product-mockups-viewer.md` say that the package's controls stay usable around the overlay. That is not true in 0.18.0 until this item is fixed.
-  - These protocol statements describe Decision 5 and wait for this item: `viewer.md` on the overlay with no action and no new tab, `catalogue-hosting.md` on the overlay without an action and no new-tab link, `product-mockups-viewer.md` on the comparison variant, `mokly-artifact-compatibility.md` on the removed action, `docs/ops/preview.md`, `preview-seed-local.md` and the root `README.md` on Changes with an overlay without an action.
-- **Problem:** A reader who opens a private comparison cannot get back to the current screen with the mouse, and the card offers a new tab that never loads.
+  - A private comparison fails, because the viewer reads the documents of a comparison with `credentials: "omit"`, as `docs/protocol/cloud/viewer.md:36-40` says. On the `comparison` error of a credentialed source, the app keys the error to the selection, at `published.web.tsx:99-108`, and shows its overlay, at lines 128-135.
+  - The overlay is the card **Open the catalogue in its own tab** with the action **Open catalogue in a new tab**, at `stage.tsx:229-253`, with `pointerEvents: "auto"`. The mockups draw the same card and action, at `published-slots.tsx:221-240`.
+  - `docs/protocol/cloud/viewer.md:51-62` requires a message without an action that stays until the selection changes. Its decision offers no new tab. Under `docs/protocol/cloud/`, `catalogue-hosting.md:181`, `product-mockups-viewer.md:159-166`, `mokly-artifact-compatibility.md:188` and `preview-seed-local.md:44` describe the same overlay, and so does `docs/ops/preview.md:29`. So the app and the mockups do not apply Decision 5 yet.
+  - Since the Canvas viewer, the viewer draws the stage overlay over the canvas and under the floating panels, at `packages/ui/src/embedded-layout/embedded-layout.css:82-87`. So the right panel's Changes tab, with its compare modes and **Current**, stays usable.
+  - The app keys the overlay to the selection. `comparisonKey`, at `published.web.tsx:29-43`, holds the origin, the screen, the snapshot, the view, the viewport, the scheme, the search, and the tags. The app clears the overlay on each selection change from the viewer, at lines 92-98.
+  - The compare mode is not part of the controlled selection, as `docs/protocol/mokly-viewer-selection.md:15-17` says, and the viewer sends no event when it changes. So a pick of **Current** changes nothing that the app sees, and the overlay stays over the current frames. With `pointerEvents: "auto"`, it also takes the pointer from the canvas under it.
+  - A viewport or scheme change keeps the compare mode, because the mode belongs to the entry, at `packages/viewer/src/shell/use_comparison.ts:150-152`. So the comparison fails again.
+  - With the 0.18.0 viewer, the card's new tab never loaded a private catalogue. Since release 0.19.0, the standalone shell sends `credentials: "same-origin"` with every read, as `docs/protocol/mokly-shell-fences.md:52-54` requires. Nobody has checked whether the tab now loads a private catalogue in a browser that keeps the cookie in the catalogue's own store.
+  - The cloud app under `packages/app` owns the fix. The Canvas redesign (PR #488) rebuilt the cloud viewer's chrome there on 2026-11-24, and left this overlay as it was, because its fix needs a new `@mokly/viewer` event or a change to the overlay rule.
+- **Problem:** After a private comparison fails, the overlay stays over the current frames when the reader picks **Current**, until the selection changes. So the reader cannot see or use the current screen without a move to another screen or view. The card also still offers the new tab that Decision 5 removed.
 - **Impact if no action:** Readers think that the current screen is broken too, and they must pick another screen to recover.
 - **Root question:** How does a reader learn that private comparisons are unavailable, and get back to the screen?
 - **Options:**
-  - **A.** Keep the overlay until the selection changes, with only the title **Comparisons aren’t available for private publications**. A mouse reader still cannot reach **Current**. Effort: Small.
+  - **A.** Apply Decision 5 as `docs/protocol/cloud/viewer.md:51-57` states it. The overlay shows only the title **Comparisons aren’t available for private publications**, with no action, and stays until the selection changes. A mouse reader can pick **Current**, but the overlay still covers the current frames until the reader picks another screen, viewport, scheme, or filter. Effort: Small.
   - **B.** Do A, and add "Choose another screen to keep browsing." Effort: Small.
-  - **C.** Let clicks pass through the overlay, and show only a small notice away from the toolbar, so that **Current** stays usable. This needs a mockup change and a browser test. Effort: Medium.
+  - **C.** Draw the message as a small notice at an edge of the canvas, with `pointerEvents: "none"`, so that the current frames stay visible and usable after the reader picks **Current**. The notice stays until the selection changes. This changes the overlay rule of `viewer.md` and `product-mockups-viewer.md`, and the mockups. It needs a browser test. Effort: Medium.
   - **D.** Give the overlay a **Close** button. The viewer then shows its own error, whose **Try again** never works for a private catalogue. Effort: Medium.
   - **E.** Clear the overlay on the reader's next click or key press. This relies on viewer behaviour that no contract promises. Effort: Medium.
   - **F.** Offer no comparison modes for private catalogues, by giving the viewer the index without its comparison. No comparison then fails, but readers are not told why. Effort: Medium.
@@ -35,5 +38,5 @@
 - **Wider fix:** G for the overlay. F removes the failure itself, and `plans/follow-ups/private-catalogues-lose-changes-and-blocked-cookie-access.md` holds the restore of private Changes.
 - **Previous examples:** None found.
 - **Related:** `plans/follow-ups/blocked-cookie-message-has-no-words.md`, same code. The overlay reuses the blocked-cookie card in `packages/app/src/viewer/stage.tsx`, so both answers land in one change.
-- **Recommendation:** C. It is the only small change that lets a mouse reader reach **Current**, and it uses only documented slot properties. F removes the failure best.
-- **Action:** ask the user, because the choice changes the Decision 5 overlay and trades behaviour against undocumented viewer behaviour.
+- **Recommendation:** C. It shows the current frames after **Current** with app code alone, and it uses only documented slot properties. F removes the failure best.
+- **Action:** ask the user, because C changes the overlay rule of `docs/protocol/cloud/viewer.md:51-57`, and no recorded user decision covers that change.

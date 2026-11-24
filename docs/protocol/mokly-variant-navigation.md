@@ -3,7 +3,7 @@
 ## Navigation Rows
 
 The catalogue groups variants under their parent's row in Specs or Components,
-including the responsive drawer:
+in every layout:
 
 - A parent without variants renders as an ordinary entry.
 - A parent with variants renders its ordinary link beside a separate disclosure
@@ -32,11 +32,18 @@ variant, its list opens. Hiding a parent hides its complete leaf container and
 disclosure button. Tag terms, Changes, and free text compose as for every other
 entry.
 
-The component page's variant bar navigates to sibling variant entries. There is
-no variant query parameter. If a comparison mode is selected, navigation to a
-sibling keeps that mode and applies it to the sibling's eligible views. The
-workspace reads this single comparison-mode state: Props stay read-only and
-highlighting stays unavailable until the mode returns to Current. Late results for an earlier sibling cannot replace the selected entry.
+On the component page, Inspect's
+[Variants list](./mokly-component-inspector-design.md#inspect) chooses among
+sibling variant entries. There is no variant query parameter. If a comparison
+mode is selected, a move between the entries of one variant set keeps that mode
+and, for every [compared row](./mokly-selected-comparisons.md), its comparison,
+its pending work and its presented documents, because the canvas keeps the same
+rows. The workspace reads this single comparison-mode state: Props stay
+read-only and highlighting stays unavailable only while the Changes tab shows a
+compare mode; Inspect shows the current frames, where Props edits and
+highlighting works. Navigation to another section cancels every row's pending
+work and discards its comparison, and a late result for a row of the earlier
+section cannot replace the new section.
 
 ## Changes Rows
 
@@ -68,8 +75,7 @@ and shows its previous path in details, like every paired entry; a pure move
 keeps the row even though the variant is unmodified. Under All, a paired row
 of any kind carries the changed mark, and counts toward its parent's aggregate
 mark, only when its entry changed beyond the move, so a pure move shows no
-mark. The variant bar reads the same decision: a paired variant whose only
-edit is its metadata reads Changed, and a pure move reads Unmodified.
+mark.
 
 A removed variant keeps the `variantOf`, `parentTitle`, and folder titles it
 had at the base commit. Resolve its parent with the
@@ -77,9 +83,9 @@ had at the base commit. Resolve its parent with the
 When the result is a current parent, attach
 the removed row after current variants; removed siblings keep the authored
 order of the base commit, and their public records occupy the parent's ordering position.
-The parent's variant bar lists the removed variant in the same place, and the
-removed variant's own page opens with that parent's workspace in Serve, the
-static output, and the embedded viewer.
+A component parent's Variants list in Inspect names the removed variant in the
+same place, and the removed variant's own page opens with that parent's
+workspace in Serve, the static output, and the embedded viewer.
 A parent with no current variants still discloses the list. Removing both
 parent and variant yields one removed entry for each.
 

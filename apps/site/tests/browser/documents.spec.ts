@@ -5,43 +5,6 @@ import { SITE_PATHS } from "../../src/navigation.js";
 
 const RELEASES = readReleases();
 
-test("the changelog publishes every release, newest first", async ({
-  page,
-}) => {
-  await page.goto(SITE_PATHS.changelog);
-  const newest = RELEASES[0];
-  expect(newest).toBeDefined();
-  const rows = page.locator(".site-release");
-  await expect(rows).toHaveCount(RELEASES.length);
-  const first = rows.first();
-  await expect(first).toHaveAttribute("id", newest?.anchor ?? "");
-  await expect(first.getByRole("heading", { level: 2 })).toHaveText(
-    `Mokly CLI ${newest?.version ?? ""}`,
-  );
-  await expect(first.locator("time")).toHaveAttribute(
-    "datetime",
-    newest?.date ?? "",
-  );
-  await expect(first.locator("time")).toHaveText(newest?.readableDate ?? "");
-  await expect(
-    first.getByRole("link", { name: "Read release details" }),
-  ).toHaveAttribute("href", newest?.link ?? "");
-  await expect(first.locator(".site-release-group-head").first()).toHaveText(
-    newest?.sections[0]?.heading ?? "",
-  );
-});
-
-test("the release index reaches the release it names", async ({ page }) => {
-  await page.goto(SITE_PATHS.changelog);
-  const newest = RELEASES[0];
-  const index = page.locator(".site-release-index-link");
-  await expect(index).toHaveCount(RELEASES.length);
-  await expect(index.first()).toContainText(newest?.version ?? "");
-  await index.first().click();
-  await expect(page).toHaveURL(new RegExp(`#${newest?.anchor ?? ""}$`));
-  await expect(page.locator(`#${newest?.anchor ?? ""}`)).toBeInViewport();
-});
-
 test("the feed is linked and serves the releases", async ({ page }) => {
   await page.goto(SITE_PATHS.changelog);
   await expect(
@@ -114,10 +77,10 @@ for (const [
     ).toHaveText(firstSection);
     await expect(page.locator(".site-policy-date time")).toHaveAttribute(
       "datetime",
-      "2026-09-22",
+      "2026-11-22",
     );
     await expect(page.locator(".site-policy-date time")).toHaveText(
-      "22 September 2026",
+      "22 November 2026",
     );
     const navigation = page.getByRole("navigation", {
       name: "Legal documents",
@@ -133,50 +96,20 @@ for (const [
   });
 }
 
-test(
-  "desktop release lists start 12px below their heading lines",
-  { tag: "@desktop" },
-  async ({ page }) => {
-    await page.goto(SITE_PATHS.changelog);
-    for (const release of RELEASES) {
-      const row = page.getByRole("article").filter({
-        has: page.getByRole("heading", {
-          level: 2,
-          name: `Mokly CLI ${release.version}`,
-          exact: true,
-        }),
-      });
-      for (const section of release.sections) {
-        const heading = row.getByText(section.heading, { exact: true });
-        // Geometry needs browser evaluation. The text lines expose empty height
-        // in a stretched heading box that a box-to-box gap would miss.
-        const measured = await heading.evaluate(async (element) => {
-          await document.fonts.ready;
-          const list = element.nextElementSibling;
-          if (!(list instanceof HTMLUListElement)) {
-            throw new Error("the release group is missing its notes list");
-          }
-          const box = element.getBoundingClientRect();
-          const text = document.createRange();
-          text.selectNodeContents(element);
-          const lines = new Set(
-            Array.from(text.getClientRects(), (line) => line.top),
-          ).size;
-          const intrinsicHeight =
-            Number.parseFloat(getComputedStyle(element).lineHeight) * lines;
-          return {
-            headingHeight: box.height,
-            intrinsicHeight,
-            gap: list.getBoundingClientRect().top - box.top - intrinsicHeight,
-          };
-        });
-        expect
-          .soft(
-            measured.gap,
-            `Mokly CLI ${release.version} / ${section.heading}: ${JSON.stringify(measured)}`,
-          )
-          .toBe(12);
-      }
-    }
-  },
-);
+/**
+ * The not-found document as assistive technology reads it. It shares the
+ * legal documents' page frame and holds only its heading; the frame's file
+ * label and its selection are depictions, so the main holds nothing else.
+ */
+const NOT_FOUND_MAIN = `
+  - main:
+    - /children: equal
+    - heading "Page not found" [level=1]
+`;
+
+test("the page frame hides its depictions from assistive technology", async ({
+  page,
+}) => {
+  await page.goto("/does-not-exist/");
+  await expect(page.getByRole("main")).toMatchAriaSnapshot(NOT_FOUND_MAIN);
+});

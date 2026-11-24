@@ -1,0 +1,235 @@
+/* The Layers panel, a floating panel that panels.css draws: the search
+   control and the published CLI version at its top, every section listed
+   expanded under its rubric with its page count, each page a 44px panel
+   row with a file icon, and the Changelog row in its foot. A row hovers on
+   the canvas tone, and the page being read takes the signal tint with ink
+   text. The tree sheet below 1024px lists the same rows without the panel;
+   docs-sheet.css holds its own sizes.
+
+   The class names and the rules match docs/mockups/styles/site/
+   docs-tree.css, which applies to every composition. */
+
+.site-docs-layers-top {
+  border-bottom: 1px solid var(--mk-color-border);
+  display: grid;
+  flex: none;
+  gap: var(--mk-space-2);
+  padding: 10px 10px 12px;
+}
+
+/* The search control: shaped like a field, with its key, and the strong
+   edge of a control. It needs script, so without script it does not show. */
+
+.site-search {
+  align-items: center;
+  background: var(--mk-color-background);
+  border: 0;
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text-muted);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: var(--mk-space-2);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 8px 0 12px;
+  text-align: left;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    box-shadow var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+  width: 100%;
+}
+
+.site-search:hover {
+  background: var(--mk-color-surface);
+  box-shadow: inset 0 0 0 1px var(--mk-color-text);
+  color: var(--mk-color-text);
+}
+
+/* Focus: the glow before the control's strong edge, after the hover rule */
+
+.site-search:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
+}
+
+.site-search svg {
+  flex: none;
+}
+
+.site-search-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-search-key {
+  background: var(--mk-color-surface);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 1px var(--mk-color-border),
+    0 1px 0 var(--mk-color-border);
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  line-height: 20px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+@media (scripting: none) {
+  .site-search {
+    display: none;
+  }
+}
+
+/* The published CLI version: a row that links the changelog, the version
+   on its signal chip */
+
+.site-version-link {
+  align-items: center;
+  border-radius: 9px;
+  color: var(--mk-color-text-secondary);
+  display: flex;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  min-height: var(--mk-layout-control-min);
+  padding: 0 8px 0 12px;
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-version-link:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+/* The version row draws the focus glow inside its box, as a panel row does */
+
+.site-version-link:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline-offset: -2px;
+}
+
+.site-version {
+  align-items: center;
+  display: flex;
+  gap: var(--mk-space-2);
+}
+
+.site-doc-tree .site-version {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-version svg {
+  color: var(--mk-color-signal-deep);
+  flex: none;
+}
+
+.site-version-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The rubric: the small mono label of a section */
+
+.site-rubric {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: var(--mk-type-caption-size);
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: 0.12em;
+  line-height: var(--mk-type-caption-line);
+  text-transform: uppercase;
+}
+
+/* The Layers panel stays inside the window, and its sections scroll
+   inside it between its top and its foot */
+
+.site-doc-tree {
+  max-height: calc(100vh - 128px);
+}
+
+.site-doc-tree > .site-panel-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+}
+
+.site-doc-tree-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 8px 12px;
+  scrollbar-color: var(--mk-color-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.site-doc-section-head {
+  align-items: center;
+  display: flex;
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  letter-spacing: 0.06em;
+  min-height: 34px;
+  padding: 8px 9px 0;
+}
+
+.site-docs-section-count {
+  letter-spacing: 0;
+  margin-left: auto;
+}
+
+/* The pages' one column keeps the tree's width, so a long page name at a
+   large text size does not widen the rows past it */
+
+.site-doc-section ul {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-docs-command {
+  font-family: var(--mk-font-mono);
+  font-size: 0.78125rem;
+}
+
+/* The rows of the tree are the shared 44px panel rows. Every row takes
+   the row hover, because each page is a link; the page being read keeps
+   the selected fill under the pointer. */
+
+.site-doc-link {
+  min-height: var(--mk-layout-control-min);
+}
+
+.site-doc-link:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-doc-link[aria-current="page"],
+.site-doc-link[aria-current="page"]:hover {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-text);
+}
+
+/* The foot: the Changelog row, with the medium weight of a destination */
+
+.site-doc-tree-foot {
+  display: grid;
+}
+
+.site-doc-tree-foot .site-doc-link {
+  font-weight: var(--mk-font-medium);
+}

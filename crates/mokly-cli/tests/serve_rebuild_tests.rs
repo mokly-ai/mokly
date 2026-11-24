@@ -68,7 +68,8 @@ async fn manual_rebuild_publishes_a_fenced_state_and_failed_candidates_keep_it()
         ("viewer/browser/shell.js", ""),
         ("viewer/browser/frame-probe.js", ""),
         ("viewer/shell.css", ""),
-        ("viewer/assets/fonts/InterVariable.woff2", ""),
+        ("viewer/assets/fonts/Geist-Variable.woff2", ""),
+        ("viewer/assets/fonts/GeistMono-Variable.woff2", ""),
         ("viewer/assets/brand.svg", "<svg/>"),
     ] {
         let path = root.path().join(path);
@@ -220,7 +221,8 @@ async fn shortcuts_write_carriage_returns_on_a_real_raw_terminal() {
         ("viewer/browser/shell.js", ""),
         ("viewer/browser/frame-probe.js", ""),
         ("viewer/shell.css", ""),
-        ("viewer/assets/fonts/InterVariable.woff2", ""),
+        ("viewer/assets/fonts/Geist-Variable.woff2", ""),
+        ("viewer/assets/fonts/GeistMono-Variable.woff2", ""),
         ("viewer/assets/brand.svg", "<svg/>"),
     ] {
         let path = root.path().join(path);

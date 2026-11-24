@@ -59,12 +59,16 @@ test("a plan-refused pull request shows the branch's Team card by the reader's r
       assert.ok(bar, where);
       const named = (text: string) =>
         elements(bar, (node) => label(node) === text).length > 0;
+      // Each composition's pill is one control, named by the whole reference
+      // and the state's phrase: the full pill shows both, and the compact
+      // pill the number alone.
       const fullReference = pullRequest.number + " " + pullRequest.title;
+      const phrase = pullRequest.author + " · Not published";
       const references = elements(
         bar,
         (node) =>
           (node.tagName === "a" || node.tagName === "button") &&
-          (attribute(node, "aria-label") ?? label(node)) === fullReference,
+          attribute(node, "aria-label") === fullReference + ", " + phrase,
       );
       assert.equal(
         references.length,
@@ -72,16 +76,18 @@ test("a plan-refused pull request shows the branch's Team card by the reader's r
         where + " names the pull request",
       );
       assert.deepEqual(
-        references.map(label).sort(),
+        references
+          .map((node) => label(byClass(node, "fo-canvas-pill-name")[0]))
+          .sort(),
         (view.startsWith("desktop")
           ? [fullReference, pullRequest.number]
           : [pullRequest.number]
         ).sort(),
         where + " keeps the full and compact reference labels",
       );
-      assert.equal(
-        label(byClass(bar, "fo-top-state-detail")[0]),
-        pullRequest.author + " · Not published",
+      assert.deepEqual(
+        byClass(bar, "fo-top-state-detail").map(label),
+        view.startsWith("desktop") ? [phrase] : [],
         where,
       );
       if (view.startsWith("desktop"))

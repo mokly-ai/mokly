@@ -1,0 +1,44 @@
+---
+/**
+ * A section of the canvas that groups frames: a light wash of the surface
+ * with a faint ring, headed by a dark tag, such as `Specs`, and an optional
+ * mono meta line beside it, such as `acme/storefront · main · 24 screens`.
+ *
+ * - `tag`: the tag's label.
+ * - `meta`: the meta line. For a meta line with markup, pass it in the
+ *   `meta` slot instead.
+ * - `tagId`: makes the box a group that its tag names; the tag takes the id.
+ * - `class`: the area's class, which places the box and lays out its frames.
+ *
+ * Use: `<SectionBox meta="@mokly/mokly" tag="Mokly CLI" tagId="plans-cli">…</SectionBox>`.
+ * The frames are the slot. The rules are in `src/styles/labels.css`.
+ */
+
+interface Props {
+  readonly class?: string;
+  readonly meta?: string;
+  readonly tag: string;
+  readonly tagId?: string;
+}
+
+const { class: className, meta, tag, tagId } = Astro.props;
+const hasMeta = meta !== undefined || Astro.slots.has("meta");
+---
+
+<div
+  aria-labelledby={tagId}
+  class:list={["site-section-box", className]}
+  role={tagId === undefined ? undefined : "group"}
+>
+  <div class="site-section-box-head">
+    <span class="site-section-box-tag" id={tagId}>
+      {tag}
+    </span>
+    {hasMeta && (
+      <span class="site-section-box-meta">
+        <slot name="meta">{meta}</slot>
+      </span>
+    )}
+  </div>
+  <slot />
+</div>

@@ -9,6 +9,11 @@ import { expect, type Page } from "@playwright/test";
 import { movedFixturePaths } from "../helpers/moved_fixture_sources.js";
 
 import { awaitRoutedDetail, chooseFilter, navRow } from "./comparison_ui.js";
+import {
+  historicalFrame,
+  previousVersionLabel,
+  PREVIOUS,
+} from "./previous_version.js";
 import { test } from "./serve_comparison_test.js";
 
 /** One removed entry, the current entry beside it in Changes, and their titles. */
@@ -31,11 +36,12 @@ const HISTORY_ENTRIES = [
 
 type HistoryEntry = (typeof HISTORY_ENTRIES)[number];
 
+/** The title of Inspect's head, which names the routed entry. */
+const HEADING = '[data-inspect-section="details"] h2';
+
 async function expectHistorical(page: Page, entry: HistoryEntry) {
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
-    entry.previousTitle,
-  );
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(page.locator(HEADING)).toHaveText(entry.previousTitle);
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(
@@ -44,24 +50,29 @@ async function expectHistorical(page: Page, entry: HistoryEntry) {
     ),
   ).toHaveAttribute("aria-current", "page");
   await awaitRoutedDetail(page, entry.previousPath);
-  await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
+  // No comparison band: not one mode button, shown or hidden.
+  await expect(page.locator("[data-diff-mode]")).toHaveCount(0);
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
   if (entry.kind === "screen") {
     await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
     for (const viewport of ["mobile", "desktop"] as const)
       await expect(
-        page
-          .frameLocator(`[data-mokly-preview] .mbk-frame-${viewport} iframe`)
+        historicalFrame(page, viewport)
+          .locator("iframe")
+          .contentFrame()
           .locator("h1"),
       ).toHaveText("Historical screen");
     await expect(page.locator("[data-workspace-highlight]")).toBeDisabled();
   } else {
-    await expect(page.locator(".mbk-entry-status")).toHaveText("Removed");
+    // The section's head holds the Removed status.
+    await expect(
+      page.locator(PREVIOUS).getByText("Removed", { exact: true }),
+    ).toBeVisible();
     await expect(
       page.frameLocator("[data-mokly-preview] iframe").locator("h1"),
     ).toHaveText("Historical page");
   }
-  await expect(page.locator("#mb-main .mbk-stage .mbk-empty")).toHaveCount(0);
+  await expect(page.locator("[data-mokly-stage] .mbk-empty")).toHaveCount(0);
 }
 
 for (const entry of HISTORY_ENTRIES)
@@ -76,7 +87,7 @@ for (const entry of HISTORY_ENTRIES)
     const origin = changes.url;
     const previousUrl = `${origin}/view/${entry.previousPath}/?snapshot=${snapshotId!}`;
     const currentUrl = `${origin}/view/${entry.currentPath}/`;
-    const heading = page.locator("#mb-main h2").first();
+    const heading = page.locator(HEADING);
     await page.goto(currentUrl);
     await expect(heading).toHaveText(entry.currentTitle);
     await chooseFilter(page, "changed");

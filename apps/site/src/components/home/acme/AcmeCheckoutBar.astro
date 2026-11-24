@@ -1,0 +1,37 @@
+---
+/**
+ * The top bar of a step of the depicted acme checkout on a phone: back,
+ * `Checkout` and the step count, then the three step segments, done up to
+ * the current step, which fills halfway.
+ *
+ * - `step`: the current step, `2` for payment or `3` for the review.
+ *
+ * Use: `<AcmeCheckoutBar step={2} />`, after the status bar.
+ */
+import AcmeIcon from "./AcmeIcon.astro";
+
+interface Props {
+  readonly step: 2 | 3;
+}
+
+const { step } = Astro.props;
+---
+
+<div class="site-acme-checkout-bar">
+  <AcmeIcon name="back" />
+  <b>Checkout</b>
+  <span>{step} of 3</span>
+</div>
+<div class="site-acme-steps">
+  {[1, 2, 3].map((index) => (
+    <i
+      class={
+        index < step
+          ? "site-acme-steps-done"
+          : index === step
+            ? "site-acme-steps-on"
+            : undefined
+      }
+    />
+  ))}
+</div>

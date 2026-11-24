@@ -93,14 +93,14 @@ test("the message draws the account canvas and card of the application", () => {
     /\.fo-account-mark \{[^}]*margin-bottom: var\(--mk-space-8\)/,
   );
   for (const scheme of schemes) {
-    const folio = paletteColors(scheme, "folio");
+    const canvas = paletteColors(scheme);
     const desktop = emailStyles(scheme, "desktop");
-    assert.equal(desktop["e-canvas"].backgroundColor, folio.background);
+    assert.equal(desktop["e-canvas"].backgroundColor, canvas.background);
     assert.equal(desktop["e-canvas"].backgroundImage, canvasGradient(scheme));
     assert.equal(desktop["e-canvas"].backgroundSize, "24px 24px");
-    assert.ok(canvasGradient(scheme).includes(folio.border));
-    assert.equal(desktop["e-card"].backgroundColor, folio.surface);
-    assert.equal(desktop["e-card"].borderColor, folio.border);
+    assert.ok(canvasGradient(scheme).includes(canvas.border));
+    assert.equal(desktop["e-card"].backgroundColor, canvas.surface);
+    assert.equal(desktop["e-card"].borderColor, canvas.border);
     assert.equal(desktop["e-card"].borderRadius, tokens.radius.medium);
     assert.equal(desktop["e-card"].boxShadow, tokens.shadow[scheme].medium);
     assert.equal(desktop["e-card"].padding, "40px");

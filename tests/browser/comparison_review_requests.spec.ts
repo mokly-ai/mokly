@@ -7,16 +7,22 @@ import {
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
+  chooseMode,
+  compareStage,
+  compareState,
+  comparisonFrames,
   comparisonIndex,
+  expectNoCompareModes,
   modeButton,
   navRow,
 } from "./comparison_ui.js";
+import { inspectTitle } from "./inspect_head.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
 import { responseFailure } from "./shell_error_allowances.js";
+import { canvasFrame, setFrames } from "./workspace_actions.js";
 
 /** Every pane document of a comparison generation, without subresources. */
 const DOCUMENTS = "**/mokly-viewer/diffs/generations/*/snapshots/**/*.html";
-const stage = "[data-diff-stage]";
 
 test("pending requests cannot replace Current or a newly navigated screen", async ({
   page,
@@ -34,14 +40,16 @@ test("pending requests cannot replace Current or a newly navigated screen", asyn
   });
   const ended = endedRequests(page);
   await page.goto(`/view/${comparisonPaths.changed}/`);
-  await modeButton(page, "Overlay").click();
-  await expect(page.locator(stage)).toContainText("Loading comparison");
+  await chooseMode(page, "Overlay");
+  await expect(compareState(page)).toContainText("Loading comparison");
   // Move on only once the shell holds a request for a pane document.
   await expect.poll(() => heldRequests.length).toBeGreaterThan(0);
   await modeButton(page, "Current").click();
-  await expect(page.locator("[data-current-screen]")).toBeVisible();
+  // Current shows the live frames again, and no frame compares.
+  await expect(page.locator(canvasFrame("desktop"))).toBeVisible();
+  await expect(comparisonFrames(page)).toHaveCount(0);
   await navRow(page, comparisonPaths.unchanged).click();
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
+  await expect(inspectTitle(page)).toHaveText("Stable screen");
   // Release the held documents, wait until the browser ends those requests
   // (the shell cancels them when the reader chooses Current), then let the
   // shell handle and render the outcome.
@@ -50,10 +58,10 @@ test("pending requests cannot replace Current or a newly navigated screen", asyn
     .poll(() => heldRequests.every((held) => ended.has(held)))
     .toBe(true);
   await passRenderingUpdates(page);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
-  await expect(page.locator(`${stage} iframe`)).toHaveCount(0);
+  await expect(inspectTitle(page)).toHaveText("Stable screen");
+  await expect(comparisonFrames(page)).toHaveCount(0);
   await awaitRoutedDetail(page, comparisonPaths.unchanged);
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+  await expectNoCompareModes(page);
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
@@ -74,19 +82,18 @@ test("a failed comparison stays in the screen and retries explicitly", async ({
     { times: 1 },
   );
   await page.goto(`/view/${comparisonPaths.changed}/`);
-  await modeButton(page, "Overlay").click();
+  await chooseMode(page, "Overlay");
   const retry = page.getByRole("button", { name: "Try again", exact: true });
   await expect(retry).toBeVisible();
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
-    "Changed screen",
-  );
+  await expect(inspectTitle(page)).toHaveText("Changed screen");
   await expect(modeButton(page, "Overlay")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   await retry.click();
-  await expect(page.locator(`${stage} iframe`)).toHaveCount(4);
-  await expect(page.locator(`${stage} iframe`).first()).toHaveAttribute(
+  // Each of the canvas's four frames stacks its two versions.
+  await expect(comparisonFrames(page)).toHaveCount(8);
+  await expect(comparisonFrames(page).first()).toHaveAttribute(
     "data-mokly-preview-source",
     /\/snapshots\/before\//,
   );
@@ -108,9 +115,17 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
     { times: 1 },
   );
   await page.goto(`/view/${comparisonPaths.changed}/?viewport=mobile`);
-  await modeButton(page, "Overlay").click();
+  // The Frames filter shows the Mobile · Light frame alone, so one frame
+  // compares, here and after the navigation below.
+  await setFrames(page, {
+    mobile: true,
+    desktop: false,
+    light: true,
+    dark: false,
+  });
+  await chooseMode(page, "Overlay");
   await page.getByRole("button", { name: "Try again", exact: true }).click();
-  const frames = page.locator(`${stage} iframe`);
+  const frames = comparisonFrames(page);
   await expect(frames).toHaveCount(2);
   const sources = () =>
     frames.evaluateAll((items) =>
@@ -140,11 +155,11 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
   const ended = endedRequests(page);
   await page.getByRole("button", { name: "Refresh comparison" }).click();
   await expect.poll(() => held.length).toBe(2);
-  await expect(page.locator(stage)).toHaveAttribute("aria-busy", "true");
+  await expect(compareStage(page)).toHaveAttribute("aria-busy", "true");
   await navRow(page, comparisonPaths.lightOnly).click();
-  const heading = page.locator("#mb-main h2").first();
+  const heading = inspectTitle(page);
   await expect(heading).toHaveText("Daylight screen");
-  await modeButton(page, "Overlay").click();
+  await chooseMode(page, "Overlay");
   await expect.poll(() => held.length).toBe(4);
   /** The destination presents its own versions. */
   const expectDaylight = async () => {
@@ -160,7 +175,7 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
   // after them, and change nothing.
   for (const destination of held.slice(2)) destination.open();
   await expectDaylight();
-  await markPaneDocuments(page.locator(stage));
+  await markPaneDocuments(compareStage(page));
   for (const abandoned of held.slice(0, 2)) abandoned.open();
   await expect
     .poll(() => held.slice(0, 2).every(({ request }) => ended.has(request)))
@@ -168,5 +183,5 @@ test("a retry presents the pinned generation, and leaving abandons a pending ref
   await passRenderingUpdates(page);
   await expectDaylight();
   // The same pane documents stay, not equal replacements.
-  await expectPaneDocumentsKept(page.locator(stage));
+  await expectPaneDocumentsKept(compareStage(page));
 });

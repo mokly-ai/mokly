@@ -1,0 +1,33 @@
+# The modal backdrop misses the Canvas scrim
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-23, from `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`. The primary orchestrator chose on 2026-11-23 to keep the package modal's own backdrop in that branch and to record this item.
+- **Location:** The application's overlays: `packages/app/src/viewer/panel.tsx` (the viewer panel's `WebModalFrame`) and `packages/app/src/settings/surface.tsx` (the settings dialog's `WebModalFrame`). The scrim value: `docs/mockups/styles/product/viewer-canvas-depth.css` (`--fo-canvas-scrim`). The requirement: `docs/protocol/cloud/design-tokens.md`, section "Radius, Elevation, And Focus", the Overlay role, and the status line of that page. The package: the `@firna/ui` repository, checked out read-only at `/home/user/code/ui`: `src/modal/webModalFrameStyles.ts:14`, `src/modal/WebModalFrame.tsx:197`, `src/modal/WebModalFrame.web.tsx:180` and `src/modal/types.ts:40-64` in 5.1.0, and `src/modal/webModalFrameStyles.ts:13` in 4.0.0.
+- **Reason:** The backdrop is hard-coded in `@firna/ui`, which lives in its own repository, so the cloud cannot draw the scrim without a change and a release of that package.
+
+- **Terms:**
+  - **`WebModalFrame`:** the modal frame of the `@firna/ui` package, from its `/modal` subpath. The application opens every viewer panel and the settings dialog in it. It draws the portal, the focus trap, the backdrop and the surface.
+  - **Overlay role:** the elevation of the settings dialog and of the panels that the viewer's switchers, History and Share open, as `docs/protocol/cloud/design-tokens.md` defines it: `surface`, a hairline, `radius.float` and `shadow.deep` over a scrim.
+  - **Shade:** the colour that the Canvas shadows and the scrim mix: the `text` colour in light, `#0d1410`, and the `background` colour in dark, `#111113`, because a light ink would glow around a dark card.
+- **Background:**
+  - `docs/protocol/cloud/design-tokens.md` says that the scrim of the Overlay role is the shade at 24% in light and at 60% in dark, with no blur, so the canvas still reads beneath it.
+  - In CSS that is `color-mix(in srgb, var(--mk-color-text) 24%, transparent)` in light, which is `rgb(13 20 16 / 24%)`, and `color-mix(in srgb, var(--mk-color-background) 60%, transparent)` in dark, which is `rgb(17 17 19 / 60%)`.
+  - The drawings already draw this scrim: `docs/mockups/styles/product/viewer-canvas-depth.css` declares it as `--fo-canvas-scrim` on the element that carries `data-color-scheme`, and the panel and settings sheets beside it lay it under the drawn panel and dialog. The application loads the same sheets, so `--fo-canvas-scrim` is defined on its document root too.
+  - The `WebModalFrame` web backdrop is `rgba(20, 28, 22, 0.36)` in both schemes. Both 4.0.0, which this repository pins, and 5.1.0 hard-code it, in the frame's style sheet and in the native frame. The frame takes `bodyStyle`, `footerStyle`, `headerStyle`, `subtitleStyle`, `surfaceStyle` and `titleStyle`, but no backdrop style, and no theme role reaches the backdrop.
+  - The frame's surface shadow is hard-coded the same way, as `0 20px 60px rgba(20, 28, 22, 0.28)`. The application replaces it through the public `surfaceStyle` with `var(--fo-canvas-shadow-deep)`, which is why the panels and the dialog already take the deep shadow.
+  - `docs/protocol/cloud/shared-controls.md` says that theme overrides are the only way to change a control's colours, and that CSS selectors never restyle a `@firna/ui` control.
+- **Problem:** The application's panels and settings dialog lay the package's `rgba(20, 28, 22, 0.36)` over the viewer in both schemes, not the Overlay scrim.
+- **Impact if no action:** In light the backdrop is darker and greener than the scrim, and in dark it is lighter than the 60% near-black, so the application disagrees with its drawings and the canvas reads differently beneath every panel and the dialog.
+- **Root question:** How do the application's panels and settings dialog lay the Overlay scrim over the viewer?
+- **Options:**
+  - **A.** Add a public backdrop style to `WebModalFrame`, for example `backdropStyle`, release `@firna/ui`, move this repository's one `@firna/ui` pin to that release, and pass `{ backgroundColor: "var(--fo-canvas-scrim)" }` from the panel and the dialog. Every other caller keeps the package's backdrop. A pin move across a major version also takes that version's other changes. Effort: Medium.
+  - **B.** Add a scrim colour role to the `@firna/ui` theme, which every modal and sheet backdrop reads, release it, move the pin, and feed the role from the cloud's theme mapping in `packages/tokens/src/shared-ui-theme.ts` with the shade at 24% in light and at 60% in dark. Every consumer of the theme then supplies or defaults the role. Effort: Medium.
+  - **C.** Keep `@firna/ui` and give the cloud's panel sheet one rule for the modal's backdrop element. This breaks the rule of `docs/protocol/cloud/shared-controls.md` that CSS never restyles a `@firna/ui` control, and the backdrop has no class, so the selector depends on the frame's private markup. Effort: Small.
+  - **D.** Keep the package's backdrop, change the Overlay role of `docs/protocol/cloud/design-tokens.md` to say that the application's overlays lay the package modal's backdrop, and draw that backdrop in the drawings. Effort: Small.
+- **Left out:** A second scrim that the cloud draws behind the modal, because the package's backdrop still paints over it.
+- **Wider fix:** B, because one theme role sets the scrim for every modal and sheet of every consumer.
+- **Previous examples:** The modal's surface shadow, which the application already replaces through `surfaceStyle` in `packages/app/src/viewer/panel.tsx` and `packages/app/src/settings/surface.tsx`.
+- **Recommendation:** B. It keeps the scrim in the theme mapping, as `docs/protocol/cloud/shared-controls.md` asks for every control colour, and one release reaches every modal and sheet. A is the smaller change if the package should not grow a theme role.
+- **Action:** ask the user, because the fix changes the public API of `@firna/ui` in its own repository and moves this repository's one `@firna/ui` pin, and the user owns both.
+- **Done when:** The application's viewer panels and settings dialog lay the Overlay scrim over the viewer, and the status lines of `docs/protocol/cloud/design-tokens.md` and `docs/protocol/cloud/folio-viewer.md` no longer name this item.

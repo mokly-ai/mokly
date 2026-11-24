@@ -55,12 +55,12 @@ test("a settled package pointer press activates History once", async ({
   );
 });
 
-test("a settled package Space press activates Settings once", async ({
+test("a settled package Space press opens the account menu once", async ({
   page,
 }) => {
   const { publicationPath } = await publishedProject(
     page,
-    "settled-settings-press",
+    "settled-account-press",
   );
   await open(page, publicationPath);
   await publishedViewerReady(page);
@@ -71,7 +71,7 @@ test("a settled package Space press activates Settings once", async ({
       (event) => {
         if (
           event.target instanceof Element &&
-          event.target.closest('[data-testid="viewer-settings"]')
+          event.target.closest('[data-testid="viewer-account"]')
         ) {
           const value = Number(
             document.documentElement.dataset.viewerNativeClicks ?? "0",
@@ -84,7 +84,8 @@ test("a settled package Space press activates Settings once", async ({
       true,
     );
   });
-  const trigger = page.getByTestId("viewer-settings");
+  const historyLength = await page.evaluate(() => window.history.length);
+  const trigger = page.getByTestId("viewer-account");
   await trigger.focus();
   await expect(trigger).toBeFocused();
   await page.keyboard.down("Space");
@@ -95,7 +96,11 @@ test("a settled package Space press activates Settings once", async ({
       Number(document.documentElement.dataset.viewerNativeClicks ?? "0"),
     ),
   ).toBe(1);
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
-  await expect(page.getByTestId("settings-dialog")).toHaveCount(1);
-  await expect(page).toHaveURL(/settings=/);
+  const menu = page.getByRole("menu", { name: "Account" });
+  await expect(menu).toBeVisible();
+  await expect(menu).toHaveCount(1);
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  // A menu is not an overlay of the address: opening it adds no entry.
+  await expect(page).not.toHaveURL(/settings=|panel=/);
+  expect(await page.evaluate(() => window.history.length)).toBe(historyLength);
 });

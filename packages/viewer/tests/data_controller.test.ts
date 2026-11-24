@@ -137,17 +137,23 @@ test("navigating away aborts the load the new route no longer wants", async () =
   assert.equal(fixture.source.details.length, 3);
 });
 
-test("a sibling variant keeps its held parent detail", async () => {
+test("a sibling variant keeps its held parent detail and its set's loads", async () => {
   const fixture = controllerFixture(indexWithSecondVariant());
   fixture.navigate("/view/components/action/default/");
+  // The variant set shows each saved variant's row, so the first route
+  // already reads its sibling.
   const firstVariant = fixture.source.detail("components/action/default");
   const parent = fixture.source.detail("components/action");
+  const sibling = fixture.source.detail(SECOND_VARIANT);
   parent.resolve(detailFixture({ path: "components/action" }));
   await flush();
 
   fixture.navigate(`/view/${SECOND_VARIANT}/`);
 
-  assert.equal(firstVariant.signal.aborted, true);
+  // The sibling's route shows the same set, so no load is abandoned or read
+  // again.
+  assert.equal(firstVariant.signal.aborted, false);
+  assert.equal(sibling.signal.aborted, false);
   assert.ok(
     fixture.controller.snapshot.details.has(
       detailKey({ path: "components/action" }),
@@ -161,6 +167,16 @@ test("a sibling variant keeps its held parent detail", async () => {
       { path: SECOND_VARIANT },
     ],
   );
+});
+
+test("a route outside the variant set abandons the set's loads", async () => {
+  const fixture = controllerFixture(indexWithSecondVariant());
+  fixture.navigate("/view/components/action/default/");
+  const firstVariant = fixture.source.detail("components/action/default");
+  const sibling = fixture.source.detail(SECOND_VARIANT);
+  fixture.navigate("/view/guide/");
+  assert.equal(firstVariant.signal.aborted, true);
+  assert.equal(sibling.signal.aborted, true);
 });
 
 test("a failed detail stays unavailable until a retry", async () => {

@@ -4,14 +4,16 @@ import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { paletteUiTheme } from "@mokly-cloud/tokens/shared-ui-theme";
 import { expect, test } from "@playwright/test";
 
+import { currentScreen } from "../fixtures/viewer-catalogue";
+
 import { screenFile } from "./catalogue-paths";
 import { rgb } from "./color-metrics";
-import { folioScreens } from "./folio-inventory";
+import { permanentScreens } from "./folio-inventory";
 
 for (const viewport of ["mobile", "desktop"] as const)
   for (const scheme of ["light", "dark"] as const) {
     test(
-      "Folio preserves surfaces, geometry and frames: " +
+      "Folio and Canvas preserve surfaces, geometry and frames: " +
         viewport +
         " " +
         scheme,
@@ -20,14 +22,15 @@ for (const viewport of ["mobile", "desktop"] as const)
           width: viewport === "mobile" ? 390 : 1440,
           height: viewport === "mobile" ? 844 : 900,
         });
-        for (const { path: id } of folioScreens) {
+        for (const { path: id, palette } of permanentScreens) {
           await page.goto(pathToFileURL(screenFile(id, viewport, scheme)).href);
-          // The renderer's wrapper carries the palette and paints the page.
+          // The renderer's wrapper paints the page. The default Canvas palette
+          // needs no scope class, so the wrapper carries none.
           const wrapper = page.locator("[data-color-scheme][data-viewport]");
-          await expect(wrapper).toHaveClass("folio-scope");
+          await expect(wrapper).not.toHaveClass(/-scope\b/);
           await expect(wrapper).toHaveCSS(
             "background-color",
-            rgb(paletteColors(scheme, "folio").background),
+            rgb(paletteColors(scheme, palette).background),
           );
           await expect(page.locator("main")).toBeVisible();
           await expect(page.locator("h1")).toHaveCount(1);
@@ -35,13 +38,18 @@ for (const viewport of ["mobile", "desktop"] as const)
           if (await action.count())
             await expect(action).toHaveCSS(
               "border-radius",
-              paletteUiTheme(scheme, "folio").radii.md + "px",
+              paletteUiTheme(scheme, palette).radii.md + "px",
             );
-          // The viewer's stage draws the publication's screen in its phone
-          // and browser frames; no Folio screen frames a document.
+          // The viewer's canvas draws the publication's screen in each frame:
+          // a frame for each view on a desktop and one frame on a phone; no
+          // Folio screen frames a document.
+          const frames =
+            viewport === "desktop" ? currentScreen.views.length : 1;
           await expect(
-            page.locator("[data-mokly-stage] [data-mkc-sample-screen]"),
-          ).toHaveCount(id.startsWith("product/viewer/") ? 2 : 0);
+            page.locator(
+              "[data-mokly-stage] [data-canvas-frame] [data-mkc-sample-screen]",
+            ),
+          ).toHaveCount(id.startsWith("product/viewer/") ? frames : 0);
           await expect(page.locator("iframe")).toHaveCount(0);
           if (id.startsWith("product/settings/")) {
             const frame = page.locator(

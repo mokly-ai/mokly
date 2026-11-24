@@ -1,0 +1,294 @@
+/* The code panel: dark in both schemes, as the design file's one dark
+   surface. In light the panel fills with the ink role and its text mixes
+   the surface role into the ink; in dark it fills with the muted surface
+   and its text takes the dark scheme's text roles. Every text colour keeps
+   at least 4.5:1 on the fill; the syntax colours mix a signal or person
+   role into the panel's own text colour. */
+
+.site-code {
+  background: var(--mk-color-text);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-text),
+    var(--mk-shadow-small);
+  color: color-mix(in srgb, var(--mk-color-surface) 86%, var(--mk-color-text));
+  overflow: hidden;
+  width: 100%;
+}
+
+[data-color-scheme="dark"] .site-code {
+  background: var(--mk-color-surface-muted);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mk-color-text) 8%, transparent),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text-secondary);
+}
+
+/* The tab bar: the open tab, the other tabs, the language, a note, Copy */
+
+.site-code-head {
+  align-items: center;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  display: flex;
+  gap: 4px;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 4px 0 7px;
+}
+
+.site-code-tab {
+  align-items: center;
+  border-radius: 7px;
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 7px;
+  height: 28px;
+  min-width: 0;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.site-code-tab--open {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--mk-color-surface);
+}
+
+.site-code-tab--open svg {
+  color: var(--mk-color-signal);
+  flex: none;
+}
+
+/* A file tab's name shrinks and ends in an ellipsis where the bar cannot
+   hold it, so the language and Copy after it stay whole. Its text keeps the
+   whole name. */
+
+.site-code-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-code-language {
+  font-family: var(--mk-font-mono);
+  white-space: nowrap;
+}
+
+.site-code-meta,
+.site-code-language--end {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-code-meta,
+.site-code-language--end,
+.site-code-copy {
+  margin-left: auto;
+}
+
+.site-code-meta ~ .site-code-language--end,
+.site-code-meta ~ .site-code-copy,
+.site-code-language--end ~ .site-code-copy {
+  margin-left: 0;
+}
+
+.site-code-language--end {
+  flex: none;
+}
+
+.site-code-copy {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  font: inherit;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 10px;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-code-copy:hover {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  color: var(--mk-color-surface);
+}
+
+/* The panel clips an outer halo, so Copy's focus glow draws inside it, in
+   the signal green at 75%, which keeps 3:1 on the dark fill in both
+   schemes. The forced-colors outline draws inside too. */
+
+.site-code-copy:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal) 75%, transparent);
+  outline-offset: -2px;
+}
+
+/* The code: one block per line, the prompt and the numbers drawn in CSS.
+   The panel's own code element sheds the inline code chip of prose. */
+
+.site-code .site-code-body > code {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}
+
+.site-code-body {
+  counter-reset: site-code-line;
+  font-family: var(--mk-font-mono);
+  font-feature-settings: "calt" off;
+  font-size: 0.84375rem;
+  line-height: 1.78;
+  margin: 0;
+  padding: 15px 0 17px;
+}
+
+.site-code-line {
+  display: block;
+  min-height: 1.78em;
+  overflow-wrap: anywhere;
+  padding: 0 22px 0 18px;
+  white-space: pre-wrap;
+}
+
+/* A line that wraps hangs under its code, clear of the prompt or of the
+   line number */
+
+.site-code--prompt .site-code-line {
+  padding-left: calc(30px + 1ch);
+  text-indent: calc(-12px - 1ch);
+}
+
+.site-code--prompt .site-code-line::before {
+  color: var(--mk-color-signal);
+  content: "$" / "";
+  padding-right: 12px;
+}
+
+/* The line numbers' column holds two digits at any text size: it is 46px,
+   34px on mobile, or two digits and the gap where the text is larger */
+
+.site-code--numbered .site-code-line {
+  padding-left: max(46px, 2ch + 18px);
+  text-indent: min(-46px, -2ch - 18px);
+}
+
+.site-code--numbered .site-code-line::before {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+  content: counter(site-code-line);
+  counter-increment: site-code-line;
+  display: inline-block;
+  padding-right: 18px;
+  text-align: right;
+  text-indent: 0;
+  width: max(46px, 2ch + 18px);
+}
+
+.site-code-line--lit {
+  background: color-mix(in srgb, var(--mk-color-signal) 13%, transparent);
+}
+
+/* Syntax colours */
+
+.site-code-token--keyword {
+  color: color-mix(in srgb, currentColor 25%, var(--mk-color-signal));
+}
+
+.site-code-token--string {
+  color: color-mix(
+    in srgb,
+    currentColor 62%,
+    var(--mk-color-people-orange-fill)
+  );
+}
+
+.site-code-token--type {
+  color: color-mix(in srgb, currentColor 55%, var(--mk-color-people-blue-fill));
+}
+
+.site-code-token--attr {
+  color: color-mix(
+    in srgb,
+    currentColor 60%,
+    var(--mk-color-people-violet-fill)
+  );
+}
+
+.site-code-token--number {
+  color: color-mix(in srgb, currentColor 50%, var(--mk-color-people-pink-fill));
+}
+
+.site-code-token--fn {
+  color: var(--mk-color-surface);
+}
+
+.site-code-token--punct {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+}
+
+/* The dark scheme's text roles for the muted and the bright text */
+
+[data-color-scheme="dark"] .site-code-tab,
+[data-color-scheme="dark"] .site-code-meta,
+[data-color-scheme="dark"] .site-code-language--end,
+[data-color-scheme="dark"] .site-code-copy,
+[data-color-scheme="dark"] .site-code--numbered .site-code-line::before,
+[data-color-scheme="dark"] .site-code-token--punct {
+  color: var(--mk-color-text-muted);
+}
+
+[data-color-scheme="dark"] .site-code-tab--open,
+[data-color-scheme="dark"] .site-code-copy:hover,
+[data-color-scheme="dark"] .site-code-token--fn {
+  color: var(--mk-color-text);
+}
+
+/* A dimmed line, such as a line that the chosen view leaves out, takes the
+   panel's muted text throughout: its code, its tokens and its line number,
+   at full opacity, so it keeps 4.5:1 on the panel in both schemes. These
+   rules follow the token and line number rules that they replace. */
+
+.site-code .site-code-line--dim,
+.site-code .site-code-line--dim *,
+.site-code .site-code-line--dim::before {
+  color: color-mix(in srgb, var(--mk-color-surface) 58%, var(--mk-color-text));
+}
+
+[data-color-scheme="dark"] .site-code .site-code-line--dim,
+[data-color-scheme="dark"] .site-code .site-code-line--dim *,
+[data-color-scheme="dark"] .site-code .site-code-line--dim::before {
+  color: var(--mk-color-text-muted);
+}
+
+[data-site-viewport="mobile"] .site-code-body {
+  font-size: 0.78125rem;
+  padding: 13px 0 15px;
+}
+
+[data-site-viewport="mobile"] .site-code--numbered .site-code-line {
+  padding-left: max(34px, 2ch + 14px);
+  text-indent: min(-34px, -2ch - 14px);
+}
+
+[data-site-viewport="mobile"] .site-code--numbered .site-code-line::before {
+  padding-right: 14px;
+  width: max(34px, 2ch + 14px);
+}

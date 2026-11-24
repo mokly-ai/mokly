@@ -1,0 +1,233 @@
+/* The panels that the viewer's slots open, as Canvas draws them: the panel
+   frame over the inert viewer, its bar and its body, the uppercase group
+   labels and the rows of the switcher, History, Share and the projects
+   panel. `viewer.css` imports this sheet, so the application and every
+   product drawing load it. Every rule is scoped to the element that carries
+   `data-color-scheme`, the renderer's wrapper in a drawing and the document
+   root in the application, and most to `.fo-canvas-panel`, the main landmark
+   of an open viewer panel: the drawing's surface around the registered panel
+   frame, and the application's composition inside the package modal. So a
+   rule here outweighs a product sheet's rule for the same element, restyles
+   the registered frame only where a viewer panel uses it, and leaves the
+   settings questions that use the same frame alone. A phone is the shared
+   breakpoint, as for the panel's own bottom sheet. */
+@import "viewer-canvas-depth.css";
+
+/* The drawing's scrim and frame. The application's frame is the package
+   modal: its public surface style takes the same radius and deep shadow, its
+   sheet draws its own grab handle, and its backdrop is the package's. */
+
+/* The scrim: the ink at about a quarter in light and near-black at about a
+   half in dark, with no blur, so the canvas still reads beneath it. */
+[data-color-scheme] .fo-viewer-surface {
+  background: var(--fo-canvas-scrim);
+  backdrop-filter: none;
+}
+
+/* The panel floats over the canvas on the surface, with a hairline, a 12px
+   radius on a pointer viewport and a deep, soft shadow. */
+[data-color-scheme] .fo-viewer-surface .fo-viewer-panel {
+  border-color: var(--mk-color-border);
+  box-shadow: var(--fo-canvas-shadow-deep);
+}
+[data-color-scheme] .fo-viewer-surface .fo-viewer-modal {
+  border-radius: var(--fo-canvas-radius);
+}
+
+/* On a phone the panel is a bottom sheet with a grab handle above its bar. */
+[data-color-scheme] .fo-viewer-surface .fo-viewer-sheet {
+  position: relative;
+  padding-top: var(--mk-space-3);
+}
+[data-color-scheme] .fo-viewer-surface .fo-viewer-sheet::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: calc(50% - 18px);
+  width: 36px;
+  height: 4px;
+  border-radius: var(--mk-radius-pill);
+  background: var(--fo-canvas-line-strong);
+}
+
+/* The bar: the title at the panel's own size, with a reference beside it in
+   mono, and Close at the end. */
+[data-color-scheme] .fo-canvas-panel .fo-viewer-panel-bar {
+  gap: var(--mk-space-3);
+  min-height: 52px;
+  padding: var(--mk-space-2) var(--mk-space-3) var(--mk-space-2)
+    var(--mk-space-5);
+}
+[data-color-scheme] .fo-canvas-panel .fo-viewer-panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--mk-space-2);
+}
+[data-color-scheme] .fo-canvas-panel .fo-viewer-panel-title {
+  font-size: var(--mk-type-ui-title-size);
+  line-height: var(--mk-type-ui-title-line);
+  letter-spacing: -0.015em;
+}
+[data-color-scheme] .fo-canvas-panel .fo-viewer-panel-subtitle {
+  margin-top: 0;
+  font-family: var(--mk-font-mono);
+}
+
+/* The switcher's search takes the title's place in the bar. The heading
+   stays for assistive technology, and the field fills the bar up to Close.
+   While the references load or fail the field is disabled, and it fades as
+   a disabled control does. */
+[data-color-scheme] .fo-canvas-panel-searching .fo-viewer-panel-heading {
+  flex: 1 1 auto;
+}
+[data-color-scheme] .fo-canvas-panel-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+[data-color-scheme] .fo-canvas-search-off {
+  opacity: 0.55;
+}
+
+[data-color-scheme] .fo-canvas-panel .fo-viewer-panel-body {
+  padding: var(--mk-space-4) var(--mk-space-5) var(--mk-space-5);
+}
+@media (max-width: 767px) {
+  [data-color-scheme] .fo-canvas-panel .fo-viewer-panel-body {
+    padding: var(--mk-space-4) var(--mk-layout-gutter-mobile) var(--mk-space-8);
+  }
+}
+[data-color-scheme] .fo-canvas-panel .fo-panel-stack {
+  gap: var(--mk-space-5);
+}
+[data-color-scheme] .fo-canvas-panel .fo-ref-group {
+  gap: var(--mk-space-1);
+}
+
+/* A group's label is the tool's voice: uppercase mono, muted. A workspace's
+   name is something the user wrote, so it keeps its own case. */
+[data-color-scheme] .fo-canvas-panel .fo-group-label {
+  font-family: var(--mk-font-mono);
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+}
+[data-color-scheme] .fo-canvas-panel .fo-ref-head {
+  padding-bottom: var(--mk-space-1);
+}
+[data-color-scheme] .fo-canvas-panel .fo-ref-name {
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  letter-spacing: 0;
+}
+[data-color-scheme] .fo-canvas-panel .fo-ref-detail {
+  font-family: var(--mk-font-mono);
+}
+/* A quiet action under a group's rows keeps its label in line with them. */
+[data-color-scheme] .fo-canvas-panel .fo-ref-group > .fo-panel-foot {
+  margin-inline-start: calc(-1 * var(--mk-space-3));
+}
+
+/* A state inside a panel sits in a well on the muted surface, because the
+   panel is already its frame. */
+[data-color-scheme] .fo-canvas-panel .fo-viewer-panel-body .fo-state {
+  padding: var(--mk-space-8) var(--mk-space-5);
+  border-color: transparent;
+  border-radius: var(--fo-canvas-radius);
+  background: var(--mk-color-surface-muted);
+}
+
+/* A panel's rows: no hairlines between them. Each row's frame reaches into
+   the body's gutter by its own padding, so its fill rounds off around the
+   row while its content starts where the labels above it do. */
+[data-color-scheme] .fo-canvas-rows {
+  margin-inline: calc(-1 * var(--mk-space-3));
+}
+[data-color-scheme] .fo-canvas-rows li:has(> .fo-canvas-row-current) {
+  border-radius: var(--mk-radius-chrome);
+  background: var(--mk-color-signal-soft);
+}
+[data-color-scheme] .fo-canvas-rows .content-list-row {
+  gap: var(--mk-space-1) var(--mk-space-3);
+  padding-right: 0;
+}
+[data-color-scheme] .fo-canvas-row-title {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-medium);
+}
+/* A branch is a reference, so it reads in mono, at the interface size also
+   on a phone, where its wider letters would otherwise wrap a long name; a
+   pull request keeps its title in sans after its number. */
+[data-color-scheme] .fo-canvas-row-reference {
+  font-family: var(--mk-font-mono);
+}
+[data-color-scheme] .fo-canvas-row-number {
+  font-weight: var(--mk-font-semibold);
+}
+
+/* The row's end: its destination, its choice or its mark, in one column of
+   one width, so the short SHAs before it line up; a phone's narrower column
+   leaves the row's title more room. A destination keeps its 44px target,
+   which reaches into the row's own padding, and a choice's quiet control
+   reaches past the column by its own padding, so its label ends where the
+   other ends do. */
+[data-color-scheme] .fo-canvas-rows .list-destination,
+[data-color-scheme] .fo-canvas-row-end {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 4.5rem;
+}
+[data-color-scheme] .fo-canvas-rows .list-destination {
+  margin-block: calc(-1 * var(--mk-space-3));
+  color: var(--mk-color-text-secondary);
+  font-weight: var(--mk-font-semibold);
+}
+[data-color-scheme] .fo-canvas-row-choice {
+  margin-inline-end: calc(-1 * var(--mk-space-3));
+}
+/* The mark of the row the reader is on, in the signal-deep ink. */
+[data-color-scheme] .fo-canvas-row-mark {
+  color: var(--mk-color-signal-deep);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+  font-weight: var(--mk-font-semibold);
+}
+
+/* Share: the link and Copy link in one row, Copy link level with the field,
+   and on a phone the link above a full-width Copy link. A refused copy puts
+   its cause above Copy link and the link above both, as on a phone, so the
+   cause can say where the link is. */
+[data-color-scheme] .fo-canvas-share-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--mk-space-2);
+}
+[data-color-scheme] .fo-canvas-share-link:has(> .fo-write-failure) {
+  grid-template-columns: minmax(0, 1fr);
+}
+[data-color-scheme] .fo-canvas-share-access {
+  gap: var(--mk-space-2);
+}
+
+@media (max-width: 767px) {
+  [data-color-scheme] .fo-canvas-row-title {
+    font-size: var(--mk-type-small-size);
+    line-height: var(--mk-type-small-line);
+  }
+  [data-color-scheme] .fo-canvas-row-reference {
+    font-size: var(--mk-type-ui-size);
+  }
+  [data-color-scheme] .fo-canvas-rows .list-destination,
+  [data-color-scheme] .fo-canvas-row-end {
+    min-width: 3rem;
+  }
+  [data-color-scheme] .fo-canvas-share-link {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

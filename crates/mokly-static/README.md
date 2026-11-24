@@ -40,6 +40,9 @@ id. Removed page and document previews carry typed preview metadata.
 `mokly_compare::projection_removed` owns these records, details, and metadata.
 The caller uses its shared workspace initializer for removed visual details
 before applying the comparison workspace projection.
+Each generation also holds a copy of each viewer face that the output
+delivers, at `snapshots/mokly-viewer/fonts/`, where the unchanged face address
+of a snapshot document resolves; the copies join the generation identity.
 The comparison inventory is finalized before deployment identity. Disabled or
 unavailable Changes writes no generation; both states remain explicit in the index.
 Assembly trusts the typed index and detail records from the same build.

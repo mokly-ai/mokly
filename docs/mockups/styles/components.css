@@ -50,6 +50,8 @@
   min-height: var(--mk-space-24);
   border-bottom: 1px solid var(--mk-color-border);
 }
+/* The header's brand: the mark, whose outline takes the ink, and the Geist
+   wordmark `mokly.` with its period in the signal green. */
 .brand {
   display: inline-flex;
   align-items: center;
@@ -57,12 +59,18 @@
   color: var(--mk-color-text);
   text-decoration: none;
   min-height: var(--mk-layout-control-min);
+  font-family: var(--mk-font-sans);
   font-size: var(--mk-type-heading3-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: -0.04em;
+  font-weight: 640;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
 }
 .brand svg {
-  color: var(--mk-color-accent);
+  flex: none;
+  color: var(--mk-color-text);
+}
+.brand-dot {
+  color: var(--mk-color-signal);
 }
 .site-header nav {
   display: flex;

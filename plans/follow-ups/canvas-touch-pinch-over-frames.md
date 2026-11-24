@@ -1,0 +1,31 @@
+# Touch pinch over a frame misses the canvas
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-23, from `calummoore/canvas-redesign-m25-canvas-gestures-mp0s`. The primary orchestrator kept the touch pinch out of that branch on 2026-11-23.
+- **Location:** `docs/protocol/mokly-shell-canvas-stage.md:106`, `docs/protocol/mokly-shell-device-chrome.md:123`, `docs/protocol/mokly-frame-canvas-input.md`, `packages/frame/src/probe/canvas_input.ts`
+- **Reason:** A touch pinch needs a non-passive touch listener in every canvas frame and more probe bytes, and that trade needs its own decision.
+
+- **Terms:**
+  - **Frame probe:** the script that the static build adds to each published page, from `packages/frame/src/probe/index.ts`. `docs/protocol/mokly-frame-probe.md` caps it at 11,264 bytes.
+  - **Canvas input:** the `canvas-wheel`, `canvas-pinch`, `canvas-key`, `canvas-focus` and `canvas-blur` frame events of `docs/protocol/mokly-frame-canvas-input.md`. A frame's document sends them to the host when its mount sets `canvasInput: true`.
+  - **Non-passive listener:** an event listener that may call `preventDefault`. The browser waits for it before each scroll that the event can start.
+- **Background:**
+  - The canvas stage contract, section "Pan, Zoom And Fit" of `docs/protocol/mokly-shell-canvas-stage.md`, says that a two-finger pinch on a touch screen zooms the canvas about the pinch.
+  - The compact layout of `docs/protocol/mokly-shell-device-chrome.md` shows one frame at a time and says that a pinch zooms the canvas.
+  - A frame's document receives every touch that starts over it. The host page never sees those touches.
+  - Canvas input forwards a wheel event with Ctrl or Command, which is how Chrome, Edge and Firefox report a trackpad pinch. It also forwards the WebKit gesture events, which Safari sends for a trackpad pinch and iOS sends for a two-finger touch pinch.
+  - Chrome on Android and the browsers of touch-screen Windows report a two-finger touch pinch only as touch and pointer events.
+  - Frame wire version 4 adds the canvas input events and has not shipped yet. A probe rejects a `subscribe` request that names an event that it does not know.
+- **Problem:** On Android and on touch-screen Windows, a two-finger pinch that starts over a frame does not reach the canvas. The browser zooms the whole page instead.
+- **Impact if no action:** In the compact layout the frame fills most of the canvas, so most pinches on an Android phone zoom the page and not the canvas. After frame wire version 4 ships, a new event name for the touch pinch needs a new wire version.
+- **Root question:** How does a two-finger touch pinch over a frame zoom the canvas in browsers that report it only as touch and pointer events?
+- **Options:**
+  - **A.** Forward a two-touch pinch as `canvas-pinch`. While the subscription names `canvas-pinch`, the probe and the shared runtime track two touches. They send the change of the touch distance as the scale factor and the midpoint as the position, and they prevent the touch moves while two touches are down. Each canvas frame's document then holds a non-passive `touchmove` listener, so the browser waits for that listener before each touch scroll in the frame. In a same-origin frame that listener runs on the viewer's main thread, so a busy viewer delays the start of the scroll. The probe needs about 300 more bytes, and it has 202 bytes free under its cap, so the cap rises again. Effort: Medium.
+  - **B.** Change the requirement. On touch screens without gesture events, a pinch over a frame keeps the browser's page zoom, and only a pinch over the canvas around the frames zooms the canvas. Update both contracts above. Effort: Small.
+  - **C.** Change nothing. The contracts then promise a pinch that Android readers do not get. Effort: Small.
+- **Left out:** A transparent layer above the frames, because the first touch of a pinch already reaches the frame, and a layer that stays stops taps and scrolling in the frame.
+- **Wider fix:** None, because this is one missing input, not a class of defects.
+- **Previous examples:** None found.
+- **Recommendation:** A. The compact layout depends on the pinch, and the scroll delay touches only canvas frames on touch screens. Measure the scroll delay on an Android phone first.
+- **Action:** ask the user, because option A trades touch scrolling and probe bytes for the pinch, and no option is clearly best before a measurement.

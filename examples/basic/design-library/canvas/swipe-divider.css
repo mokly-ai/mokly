@@ -1,0 +1,70 @@
+/* Swipe's divider over a frame. It fills the frame and lets the pointer
+   through: the line stands at the divider's position, the grip in the middle
+   of the line, and the tags at the top, the version before's to the left of
+   the line and the current version's to its right. Its marks keep their size
+   at every zoom. The line and the grip take the surface of the document
+   under them, so they read on both versions. */
+.cv-swipe {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.cv-swipe-line {
+  background: var(--cv-signal);
+  bottom: 0;
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--mbk-screen-bg) 60%, transparent);
+  left: var(--cv-swipe-at);
+  margin-left: -1px;
+  position: absolute;
+  top: 0;
+  width: 2px;
+}
+
+/* The tags: the version before in the dark tag, the current version in the
+   signal tag, each 8px from the line. */
+.cv-swipe-tag {
+  align-items: center;
+  border-radius: 4px;
+  display: inline-flex;
+  font: 500 10.5px/1 var(--cv-mono);
+  height: 18px;
+  padding: 0 6px;
+  position: absolute;
+  top: 8px;
+  white-space: nowrap;
+}
+
+.cv-swipe-tag[data-side="before"] {
+  background: var(--cv-text);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cv-surface) 24%, transparent);
+  color: var(--cv-surface);
+  right: calc(100% - var(--cv-swipe-at) + 8px);
+}
+
+.cv-swipe-tag[data-side="after"] {
+  background: var(--cv-signal);
+  color: var(--cv-on-signal);
+  left: calc(var(--cv-swipe-at) + 8px);
+}
+
+/* The grip: a round handle on the line with a signal ring. */
+.cv-swipe-grip {
+  align-items: center;
+  background: var(--mbk-screen-bg);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--cv-signal),
+    0 6px 14px -4px color-mix(in srgb, var(--cv-shade) 35%, transparent);
+  color: var(--mbk-screen-ink);
+  display: flex;
+  height: 28px;
+  justify-content: center;
+  left: var(--cv-swipe-at);
+  margin: -14px 0 0 -14px;
+  position: absolute;
+  top: 50%;
+  width: 28px;
+}

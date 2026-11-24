@@ -13,7 +13,7 @@ frame and access rules are in
 The host is the cloud boundary around the workspace package.
 It is controlled: the route supplies the complete selection and writes every
 `onSelectionChange` proposal back to the address. The package owns Browse,
-Changes, its rail, frames and their loading, empty and unavailable
+Changes, its catalogue, frames and their loading, empty and unavailable
 presentation. The cloud owns publication state, the access exchange, the
 catalogue index and detail reads, routing and the chrome placed in the package
 slots. Only a ready publication mounts a catalogue; every other
@@ -32,13 +32,15 @@ grammar and the history rules, and [Viewer catalogue](./viewer-catalogue.md)
 defines the index and the details. The package takes no root identifier, so
 the host passes none.
 
-The package draws its own top bar, rail and stage chrome around the cloud
-slots, so its interface follows the app chrome. The host passes the app
-chrome's resolved scheme as the package `theme`, never the package's `auto`,
-so the package chrome and the cloud controls it holds always come from one
-value. `theme` is independent of the selection's preview scheme, which chooses
-the preview documents and stays the reader's address state; a change of
-`theme` keeps the mounted runtime, frames and selection.
+The package draws its own top bar, catalogue and stage chrome around the
+cloud slots, so its interface follows the app chrome. The app's scheme is the
+reader's [Theme](./viewer-chrome-account.md#theme) choice, which the device
+keeps, or their system preference until they choose. The host passes that
+resolved scheme as the package `theme`, never the package's `auto`, so the
+package chrome and the cloud controls it holds always come from one value.
+`theme` is independent of the selection's preview scheme, which chooses the
+preview documents and stays the reader's address state; a change of `theme`
+keeps the mounted runtime, frames and selection.
 
 ### Sources
 
@@ -74,14 +76,21 @@ them changes. A query-only Back that reconstructs the route keeps the same
 source and its version failure.
 
 Link the public `@mokly/viewer/styles.css` export once, and serve the font
-bytes it declares unchanged beside it. The containing host maps Folio's
-shared tokens only through `--mokly-accent`, `--mokly-accent-contrast` and
-`--mokly-accent-soft`; package selectors, geometry and internal `--chrome-*`
-variables are not extension points. The visible desktop rail spends the
-package's one solid selection fill. At compact widths the closed rail leaves
-no large solid accent visible; the cloud does not promote an unrelated action
-merely to fill that budget. The app does not deep-import package rendering
-code.
+bytes it declares unchanged beside it. The package and the app chrome take
+their colours from the one Canvas palette of `@mokly/ui`, as
+[Viewer palette](../mokly-viewer-palette.md) and
+[Design token colors](./design-tokens-color.md) define, so the package's
+defaults already match the chrome around them. The containing host passes its
+Canvas accent roles only through `--mokly-accent`, `--mokly-accent-contrast`
+and `--mokly-accent-soft`; package selectors, geometry and internal
+`--chrome-*` variables are not extension points. Decision: one palette source
+serves the package and the cloud, rather than a cloud override of the
+package's private roles, because one source cannot drift. The package's
+catalogue marks its current row with a soft fill, so the ready viewer's one
+filled button is the cloud's Share, as
+[Viewer compositions](./folio-viewer.md#compositions) defines. At compact
+widths Share sits in **More**, and the cloud does not promote another action
+to fill that budget. The app does not deep-import package rendering code.
 
 The package has no ready or loading callback, and the host does not
 manufacture lifecycle events. Cloud consumes only the documented `onError`

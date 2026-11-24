@@ -23,6 +23,7 @@ import {
   label,
 } from "./design-site-test-helpers";
 import {
+  buttonsIn,
   controlStates,
   drawnPage,
   linksIn,
@@ -127,8 +128,15 @@ test("a stage read draws the stage's waiting card, titled with the read", () => 
       assert.deepEqual(controlStates(canvas), [], where);
       assert.deepEqual(linksIn(canvas), [], where);
       if (viewport === "mobile") continue;
+      // The trigger says the workspace, or its address, and the project, and
+      // the whole of what it says names it.
       const project = only(only(page.main, "fo-top-bar"), "fo-top-project");
       assert.deepEqual(controlStates(project), [[entry.project, false]], where);
+      assert.deepEqual(
+        buttonsIn(project).map((button) => attribute(button, "aria-label")),
+        [entry.project],
+        where,
+      );
     }
 });
 
@@ -139,12 +147,22 @@ test("the project read draws the cloud frame with its bar's controls waiting", (
     drawnPage("product/viewer/standalone/loading").main,
     "fo-top-trail",
   );
+  // History, Share and the account's avatar, whose control keeps the
+  // reader's name; Settings lives in the account menu, not in the bar. A
+  // desktop drawing draws the full bar and the compact bar for the switch in
+  // `viewer-bar.css` to show one, so the bar's last group also holds the
+  // compact bar's More, and History's labelled and glyph forms for its label
+  // rule.
   const trail = controlStates(loaded).map(([shown]) => shown);
-  assert.deepEqual(trail, ["History", "Share", "Settings", sample.viewer.name]);
-  // A desktop drawing draws the full bar and the compact bar for the switch
-  // in `viewer.css` to show one, so its bar also holds the compact bar's More.
+  assert.deepEqual(trail, [
+    "History",
+    "History",
+    "Share",
+    sample.viewer.name,
+    "More",
+  ]);
   for (const [viewport, known] of [
-    ["desktop", [...trail, "More"]],
+    ["desktop", trail],
     ["mobile", ["More"]],
   ] as const) {
     const where = id + " " + viewport;

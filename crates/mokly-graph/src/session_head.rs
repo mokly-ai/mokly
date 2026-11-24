@@ -34,10 +34,14 @@ impl DocumentWorker for Worker<'_> {
             .document
             .as_ref()
             .ok_or_else(|| GraphError::InputsChanged { path: route.into() })?;
-        let closure = match self
-            .validation
-            .closure(route, document, &walker, proof, pass)
-        {
+        let closure = match self.validation.closure(
+            route,
+            document,
+            &walker,
+            self.session.viewer_fonts(route),
+            proof,
+            pass,
+        ) {
             Ok(closure) => closure,
             Err(source) => {
                 return Err(GraphError::Attempt {

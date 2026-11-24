@@ -27,7 +27,14 @@ export function screenInstance(
   };
 }
 
-export function variantInstance(fixture: MarkerFixture): InstanceRef {
+/**
+ * The Action instance of the saved variant `pane/second` in one viewport's
+ * Light view: the canvas shows a component's desktop views.
+ */
+export function variantInstance(
+  fixture: MarkerFixture,
+  viewport: "mobile" | "desktop" = "mobile",
+): InstanceRef {
   const component = fixture.index.components.find(
     ({ path }) => path === "pane",
   )!;
@@ -35,12 +42,12 @@ export function variantInstance(fixture: MarkerFixture): InstanceRef {
     .filter((entry) => entry.variantOf === component.path)
     .find(({ path }) => path === "pane/second")!;
   const view = fixture.details.current[variant.path]!.views.find(
-    (view) => view.viewport === "mobile" && view.colorScheme === "light",
+    (view) => view.viewport === viewport && view.colorScheme === "light",
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");
   return {
     screenPath: "pane/second",
-    viewport: "mobile",
+    viewport,
     colorScheme: "light",
     key: view.usage.instances.find(
       (instance) => instance.componentId === "action",
@@ -109,27 +116,33 @@ export async function expectMarkerState(
     .toBe(status);
 }
 
+/**
+ * Expect the marker over the labelled button of a frame: the frame at
+ * `frame` among the shown frames, or the frame that a selector names.
+ */
 export async function expectMarkerAligned(
   page: Page,
   markerId: string,
-  frameIndex: number,
+  frame: number | string,
   label: string,
 ) {
+  const target =
+    typeof frame === "number"
+      ? page.locator("iframe[data-mokly-frame-state]").nth(frame)
+      : page.locator(frame);
   await expect
     .poll(async () => {
       const marker = await page
         .locator(`[data-mokly-marker="${markerId}"]`)
         .boundingBox();
-      const target = await page
-        .locator("iframe[data-mokly-frame-state]")
-        .nth(frameIndex)
+      const button = await target
         .contentFrame()
         .getByRole("button", { name: label, exact: true })
         .boundingBox();
-      if (!marker || !target) return Number.POSITIVE_INFINITY;
+      if (!marker || !button) return Number.POSITIVE_INFINITY;
       return Math.max(
         ...(["x", "y", "width", "height"] as const).map((key) =>
-          Math.abs(marker[key] - target[key]),
+          Math.abs(marker[key] - button[key]),
         ),
       );
     })

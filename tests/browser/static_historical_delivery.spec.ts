@@ -12,6 +12,7 @@ import {
   copiedComparisonDirectory,
   test,
 } from "./comparison_test.js";
+import { historicalFrame } from "./previous_version.js";
 
 for (const width of [390, 1280]) {
   for (const [entryPath, text, metadata, document] of [
@@ -44,7 +45,12 @@ for (const width of [390, 1280]) {
       await page.goto(
         `/view/${entryPath}/?snapshot=${removed.snapshotId}&viewport=desktop`,
       );
-      const frame = page.locator("iframe[data-mokly-preview-frame]");
+      // A removed screen's section holds a frame for each scheme of the
+      // chosen viewport; its Light frame shows the checked document.
+      const frame =
+        metadata === "screen"
+          ? historicalFrame(page, "desktop").locator("iframe")
+          : page.locator("iframe[data-mokly-preview-frame]");
       await expect(frame).toHaveCount(1);
       await expect(frame.contentFrame().locator("h1")).toHaveText(text);
       const documentUrl = `${generation}snapshots/before/mokly-generated/${entryPath}/${document}`;

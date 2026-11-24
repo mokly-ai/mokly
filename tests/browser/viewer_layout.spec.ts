@@ -107,18 +107,15 @@ for (const width of [1440, 900, 390, 320]) {
           const navBounds = nav.getBoundingClientRect();
           const stageBounds = stage.getBoundingClientRect();
           return {
-            detailsDisplay: getComputedStyle(
-              document.querySelector("#one .mbk-details-body")!,
-            ).display,
-            navRight: navBounds.right,
+            navLeft: navBounds.left,
             navTop: navBounds.top,
             stageLeft: stageBounds.left,
             stageTop: stageBounds.top,
           };
         });
-        expect(desktop.detailsDisplay).toBe("grid");
-        expect(desktop.navRight).toBeLessThanOrEqual(desktop.stageLeft);
-        expect(desktop.navTop).toBe(desktop.stageTop);
+        // The rail host floats over the stage, 8px from its top and its start.
+        expect(desktop.navLeft).toBe(desktop.stageLeft + 8);
+        expect(desktop.navTop).toBe(desktop.stageTop + 8);
       }
 
       if (width <= 390) {
@@ -234,9 +231,12 @@ test("an embedded missing-capture note keeps its width and wrapping at different
     await page.goto(
       `${host.url}/viewer.html?adapter=same-origin&responsive=1&view=changes&entry=${removed.entry.path}&viewport=mobile`,
     );
-    const note = page.getByRole("status").filter({
-      hasText: "No previous mobile version was captured.",
-    });
+    // The canvas holds the note in the place of each Mobile frame, Light
+    // and Dark; the Light frame's note is measured.
+    const note = page
+      .getByRole("figure", { name: /^Mobile · Light/u })
+      .getByRole("status")
+      .filter({ hasText: "No previous mobile version was captured." });
     await expect(note).toHaveText(
       "No previous mobile version was captured. Switch to Desktop to see it.",
     );

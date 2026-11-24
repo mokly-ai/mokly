@@ -6,7 +6,6 @@ import {
 } from "../shell/disclosure_storage.js";
 import type { ShellInitialState } from "../shell/store_state.js";
 
-const DETAILS_KEY = "mokly:details-disclosure";
 const WIDTH_KEY = "mokly:navigation-width:v1";
 const MINIMUM_WIDTH = 192;
 const MAXIMUM_WIDTH = 480;
@@ -18,8 +17,8 @@ export interface PreferenceWindow {
 }
 
 /**
- * Read the stored disclosure map, Details choice and navigation width. A
- * blocked or invalid store is a missing preference, never a failure.
+ * Read the stored disclosure map and navigation width. A blocked or invalid
+ * store is a missing preference, never a failure.
  */
 export function readStandalonePreferences(
   win: PreferenceWindow,
@@ -33,7 +32,6 @@ export function readStandalonePreferences(
     }
   };
   const disclosures = parseDisclosureMap(read(disclosureStorageKey));
-  const details = read(DETAILS_KEY);
   const maximum = Math.max(
     MINIMUM_WIDTH,
     Math.min(MAXIMUM_WIDTH, Math.floor(win.innerWidth / 2)),
@@ -42,9 +40,6 @@ export function readStandalonePreferences(
   return {
     colorScheme,
     disclosures,
-    ...(details === "open" || details === "closed"
-      ? { detailsOpen: details === "open" }
-      : {}),
     navigationMaximum: maximum,
     ...(Number.isFinite(stored)
       ? {

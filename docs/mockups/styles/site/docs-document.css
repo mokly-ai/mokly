@@ -1,190 +1,219 @@
-/* The document: a wide reading measure inside a ruled structure */
-
-.site-document {
-  min-width: 0;
-  padding: var(--mk-space-12);
-  width: 100%;
-}
+/* The open guide's page frame: a sheet with a centred reading column that
+   holds the trail, the title and the lead with its green rule; each section
+   is ruled across the whole sheet with its index hung in the margin, and
+   previous and next close the sheet as two small frames. */
 
 .site-docs-document {
-  max-width: var(--mk-layout-site-document);
-  padding: var(--mk-space-10) var(--mk-space-12) var(--mk-space-20);
+  min-width: 0;
+  padding: 0;
 }
 
-.site-document-intro {
-  border-bottom: 1px solid var(--mk-color-border);
+.site-docs-frame {
+  max-width: 880px;
+}
+
+/* The sheet's columns: a margin, the reading column and a margin; a band
+   such as the sample fence spans the whole sheet */
+
+.site-docs-frame .site-page-sheet {
   display: grid;
-  gap: var(--mk-space-4);
-  margin-bottom: var(--mk-space-10);
-  padding-bottom: var(--mk-space-8);
+  grid-template-columns:
+    [bleed-start] minmax(88px, 1fr) [text-start] minmax(0, 568px)
+    [text-end] minmax(64px, 1fr) [bleed-end];
+  padding-top: 60px;
 }
 
-.site-document-intro h1 {
-  font-size: var(--mk-type-heading1-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: -0.045em;
-  line-height: var(--mk-type-heading1-line);
-}
-
-.site-pullquote {
-  border-left: 2px solid var(--mk-color-accent);
-  color: var(--mk-color-text);
-  font-size: var(--mk-type-heading3-size);
-  line-height: var(--mk-type-heading3-line);
-  margin-top: var(--mk-space-2);
-  max-width: 46ch;
-  padding-left: var(--mk-space-5);
-}
-
-.site-document-body {
-  display: grid;
-  gap: var(--mk-space-12);
-}
-
-.site-document-body section {
-  display: grid;
-  gap: var(--mk-space-4);
-  justify-items: start;
-  scroll-margin-top: var(--mk-space-6);
-}
-
-.site-document-body h2 {
-  font-size: var(--mk-type-heading3-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-heading3-line);
-}
-
-.site-document-body p {
-  color: var(--mk-color-text-muted);
-  max-width: var(--mk-layout-prose-max);
-}
-
-.site-document-body ul,
-.site-document-body ol {
-  display: grid;
-  gap: var(--mk-space-2);
-  padding-left: var(--mk-space-5);
-}
-
-.site-document-body li {
-  color: var(--mk-color-text-muted);
+.site-docs-frame .site-page-sheet > * {
+  grid-column: text;
   min-width: 0;
 }
 
-.site-document-body a {
-  color: var(--mk-color-accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+/* The intro: the trail, the title and the lead */
 
-.site-document-body a:hover {
-  color: var(--mk-color-accent-hover);
-  text-decoration-thickness: 2px;
-}
-
-.site-document-body code {
-  background: var(--mk-color-surface-muted);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
-  font-family: var(--mk-font-mono);
-  font-size: 0.875em;
-  padding: 1px var(--mk-space-1);
-}
-
-.site-docs-document .site-document-body {
+.site-docs-frame .site-document-intro {
+  border-bottom: 0;
   gap: 0;
-}
-
-.site-docs-document .site-document-body section {
-  padding-bottom: var(--mk-space-10);
-  padding-top: var(--mk-space-10);
-}
-
-.site-docs-document .site-document-body section:first-child {
-  padding-top: 0;
-}
-
-.site-docs-document .site-document-body section + section {
-  border-top: 1px solid var(--mk-color-border);
-}
-
-.site-docs-document .site-pager {
-  margin-top: 0;
-}
-
-/* The on-this-page rail */
-
-.site-docs-rail {
-  align-self: start;
-  border-left: 1px solid var(--mk-color-border);
-  display: block;
-  padding: var(--mk-space-10) 0 var(--mk-space-10) var(--mk-space-6);
-  position: sticky;
-  top: var(--mk-space-6);
-}
-
-.site-onpage {
-  display: grid;
-  gap: var(--mk-space-2);
-}
-
-.site-onpage ol {
-  display: grid;
-  list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.site-onpage li + li {
+.site-docs-frame .site-document-intro h1 {
+  font-size: 3.875rem;
+  margin-top: 20px;
+}
+
+.site-docs-frame .site-document-intro .site-pullquote {
+  margin-top: 24px;
+}
+
+/* The lead: a pull quote with the green rule, not a box */
+
+.site-pullquote {
+  border-left: 2px solid var(--mk-color-signal);
+  color: var(--mk-color-text-secondary);
+  font-size: 1.28125rem;
+  letter-spacing: -0.014em;
+  line-height: 1.5;
+  max-width: 31em;
+  padding: 2px 0 2px 18px;
+}
+
+/* The sections: each one spans the sheet, so its rule crosses the frame,
+   and sets its content in the reading column */
+
+.site-docs-frame .site-document-body,
+.site-docs-frame .site-document-body > section {
+  display: grid;
+  grid-column: bleed;
+  grid-template-columns: subgrid;
+}
+
+.site-docs-frame .site-document-body {
+  gap: 0;
+}
+
+.site-docs-frame .site-document-body > section {
   border-top: 1px solid var(--mk-color-border);
+  gap: 18px 0;
+  justify-items: stretch;
+  margin-top: 44px;
+  padding-top: 48px;
+  position: relative;
 }
 
-.site-onpage-link {
-  align-items: center;
+.site-docs-frame .site-document-body > section > * {
+  grid-column: text;
+  min-width: 0;
+}
+
+.site-docs-frame .site-document-body > section > .site-docs-sample {
+  grid-column: bleed;
+}
+
+.site-docs-frame .site-document-body h2 {
+  scroll-margin-top: 84px;
+}
+
+.site-docs-frame .site-document-body > section > .site-code {
+  margin-block: 8px;
+}
+
+/* The index hangs in the margin beside its heading; the section in view,
+   the first as the page opens, takes the signal green */
+
+.site-docs-section-index {
   color: var(--mk-color-text-muted);
-  display: flex;
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
-  min-height: var(--mk-layout-control-min);
-  padding: var(--mk-space-1) 0;
-  text-decoration: none;
-  text-underline-offset: 4px;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  grid-column: text;
+  grid-row: 1;
+  left: -52px;
+  line-height: 22px;
+  position: absolute;
+  top: 5px;
 }
 
-.site-onpage-link:hover {
-  color: var(--mk-color-text);
-  text-decoration: underline;
+.site-docs-frame
+  .site-document-body
+  > section:first-child
+  .site-docs-section-index {
+  color: var(--mk-color-signal-deep);
 }
 
-/* Previous and next, as cards that gain a stronger edge on hover */
+/* Previous and next: two small frames under their labels, below a rule
+   that crosses the sheet */
 
 .site-pager {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 60px;
+  padding: 64px 0 72px;
+  position: relative;
+}
+
+.site-pager::before {
   border-top: 1px solid var(--mk-color-border);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--mk-space-4);
-  justify-content: space-between;
-  margin-top: var(--mk-space-10);
-  padding-top: var(--mk-space-6);
+  content: "";
+  left: -100vmax;
+  position: absolute;
+  right: -100vmax;
+  top: 0;
 }
 
 .site-pager-item {
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
+  align-content: start;
+  background: var(--mk-color-surface);
+  box-shadow: 0 0 0 1px var(--mk-color-border-strong);
   color: var(--mk-color-text);
   display: grid;
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-1);
-  min-height: var(--mk-layout-control-min);
-  min-width: 200px;
-  padding: var(--mk-space-3) var(--mk-space-4);
-  transition: border-color var(--mk-motion-fast) var(--mk-motion-easing);
+  gap: 6px;
+  min-height: 112px;
+  padding: 18px 20px 20px;
+  position: relative;
+  transition: box-shadow var(--mk-motion-fast) var(--mk-motion-easing);
 }
 
 .site-pager-item:hover {
-  border-color: var(--mk-color-border-strong);
+  box-shadow:
+    0 0 0 1.5px var(--mk-color-signal),
+    var(--mk-shadow-medium);
+}
+
+/* Focus: the glow over the frame's strong ring, after the hover rule; the
+   site links each frame */
+
+.site-pager-item:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    0 0 0 1px var(--mk-color-border-strong);
 }
 
 .site-pager-item--next {
+  grid-column: 2;
   text-align: right;
+}
+
+.site-pager-label {
+  align-items: center;
+  bottom: calc(100% + 9px);
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  left: 0;
+  line-height: 1;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.site-pager-item--next .site-pager-label {
+  left: auto;
+  right: 0;
+}
+
+.site-docs-pager-section {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.site-docs-pager-title {
+  font-size: 1.1875rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.site-docs-pager-description {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.84375rem;
+  line-height: 1.5;
 }

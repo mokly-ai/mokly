@@ -1,6 +1,6 @@
 /**
  * Props delivery on the example Serve host, under the component controls
- * contract: until the routed entry's detail arrives, the Props tab shows
+ * contract: until the routed entry's detail arrives, Props shows
  * `Loading props…` and no fields, so the fields first appear in the detail's
  * declared order and never move. A failed detail offers Try again.
  */
@@ -8,12 +8,22 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { chooseRow } from "./live_props.js";
 import { networkFailure } from "./shell_error_allowances.js";
+import { openInspectFold } from "./workspace_actions.js";
 
-const ORIGIN = "design/library/chrome/top-bar";
-/** Its index lists `status, title`; its detail declares `title, status`. */
-const DESTINATION = "design/library/chrome/screen-header";
-const DECLARED = ["title", "status"];
+const ORIGIN = "design/library/canvas/selection";
+/** Its index lists `presentation, zoom`; its detail declares `zoom, presentation`. */
+const DESTINATION = "design/library/canvas/zoom-pill";
+const DECLARED = ["zoom", "presentation"];
+
+/**
+ * The routed entry's title in Inspect's head. The panel follows the canvas,
+ * so a failure card's own heading on the canvas comes first.
+ */
+function title(page: Page) {
+  return page.locator('#mb-main [data-inspect-section="details"] h2');
+}
 
 /** Hold the first read of the destination's detail; later reads continue. */
 async function holdDetail(page: Page, fail = false) {
@@ -29,10 +39,8 @@ async function holdDetail(page: Page, fail = false) {
 /** Open Props on the origin, then move to the destination in the page. */
 async function openDestination(page: Page) {
   await page.goto(`/view/${ORIGIN}/`);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Top bar");
-  const tab = page.getByRole("tab", { name: "Props", exact: true });
-  // A click on the selected icon would close the panel.
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
+  await expect(title(page)).toHaveText("Selection");
+  await openInspectFold(page, "props");
   // Record the order of every field list that the panel ever shows.
   await page.evaluate(() => {
     const orders: string[] = [];
@@ -52,8 +60,10 @@ async function moveToDestination(page: Page) {
       `nav.mbk-nav a[data-nav-row][data-route="${DESTINATION}/index.html"]`,
     )
     .click();
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Screen header");
-  return page.getByRole("tabpanel", { name: "Props", exact: true });
+  await expect(title(page)).toHaveText("Zoom pill");
+  // Props edits the row of the selected frame: the component's own row.
+  await chooseRow(page, DESTINATION);
+  return openInspectFold(page, "props");
 }
 
 function fieldOrders(page: Page): Promise<string[]> {
@@ -82,7 +92,7 @@ test("Props wait for the routed detail, then show the fields once in their decla
   ).toEqual(DECLARED);
   // The destination's fields never showed the index's order.
   expect(
-    (await fieldOrders(page)).filter((order) => order === "status,title"),
+    (await fieldOrders(page)).filter((order) => order === "presentation,zoom"),
   ).toEqual([]);
 });
 

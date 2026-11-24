@@ -1,0 +1,172 @@
+/* The pricing compare table: a component's props table in a frame. Its
+   column heads stick under the tool bar, and the Team column carries a
+   signal tint. */
+
+.site-pricing-compare {
+  padding-top: 144px;
+}
+
+.site-pricing-props-frame {
+  background: var(--mk-color-surface);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  margin-top: 76px;
+  position: relative;
+}
+
+.site-pricing-props {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.90625rem;
+  line-height: 1.45;
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* A cell breaks a word that is wider than its column, such as Unlimited at
+   200% text on a 320px window, rather than spilling under the next cell */
+
+.site-pricing-props th,
+.site-pricing-props td {
+  border-bottom: 1px solid var(--mk-color-border);
+  font-weight: var(--mk-font-regular);
+  overflow-wrap: anywhere;
+  padding: 15px 22px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.site-pricing-props tbody:last-child tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* The column heads: the product line in mono over the plan */
+
+.site-pricing-props thead th {
+  background: var(--mk-color-surface);
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--mk-color-border-strong) 20%,
+    var(--mk-color-border)
+  );
+  color: var(--mk-color-text);
+  font-size: 1.0625rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.02em;
+  padding: 20px 22px 16px;
+  position: sticky;
+  top: 56px;
+  z-index: 2;
+}
+
+.site-pricing-props small {
+  color: var(--mk-color-text-muted);
+  display: block;
+  font-size: 0.78125rem;
+  margin-top: 3px;
+}
+
+.site-pricing-props thead small,
+.site-pricing-props thead .site-pricing-props-property,
+.site-pricing-props-group th {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.site-pricing-props thead small {
+  margin: 0 0 7px;
+}
+
+.site-pricing-props thead .site-pricing-props-property {
+  vertical-align: bottom;
+  width: 31%;
+}
+
+/* The groups, like the sections of a props table */
+
+.site-pricing-props-group th {
+  background: var(--mk-color-surface-muted);
+  letter-spacing: 0.06em;
+  padding: 26px 22px 9px;
+}
+
+.site-pricing-props th[scope="row"] {
+  color: var(--mk-color-text);
+  font-weight: 540;
+}
+
+.site-pricing-props td {
+  color: var(--mk-color-text-secondary);
+}
+
+.site-pricing-props .site-pricing-props-team {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-signal) 6%,
+    var(--mk-color-surface)
+  );
+  color: var(--mk-color-text);
+}
+
+.site-pricing-props thead .site-pricing-props-team small {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-pricing-props tr:not(.site-pricing-props-group) > * {
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-pricing-props
+  tbody
+  tr:not(.site-pricing-props-group):hover
+  > :not(.site-pricing-props-team) {
+  background: var(--mk-color-surface-muted);
+}
+
+/* The values: a check, a dash, a token or lines of text */
+
+.site-pricing-check {
+  color: var(--mk-color-signal-deep);
+  display: block;
+  margin-top: 2px;
+  stroke-width: 1.8;
+}
+
+.site-pricing-dash {
+  color: var(--mk-color-text-muted);
+}
+
+/* A token chip wraps inside its cell */
+
+.site-pricing-props .site-chip {
+  white-space: normal;
+}
+
+.site-pricing-line {
+  display: block;
+}
+
+/* Narrower desktops: the section gap follows the viewport from 1439px
+   down, and below 1100px the cells pad less, so that each plan column
+   keeps a readable measure. */
+
+@media (max-width: 1439px) {
+  [data-site-viewport="desktop"] .site-pricing-compare {
+    padding-top: clamp(7rem, 10vw, 9.5rem);
+  }
+}
+
+@media (max-width: 1099px) {
+  [data-site-viewport="desktop"] .site-pricing-props th,
+  [data-site-viewport="desktop"] .site-pricing-props td {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

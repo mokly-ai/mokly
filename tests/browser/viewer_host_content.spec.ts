@@ -18,10 +18,10 @@ test.afterAll(async () => {
 
 /**
  * Host markup: ordinary elements, and class names that package rules also
- * use, such as the device chrome's `address` and `browser-frame`.
+ * use, such as the comparison pane's `mb-pane-missing` and `mb-viewport`.
  */
 const HOST_MARKUP =
-  '<div class="host-content" data-host-content=""><a class="address" href="#host">Host link</a><p class="flow-step-head">Host text</p><h2 class="mb-pane">Host title</h2><span class="browser-frame lights"><i>Host i</i></span><button class="browser-expand" type="button">Host button</button><input aria-label="Host field"><iframe title="Host frame"></iframe></div>';
+  '<div class="host-content" data-host-content=""><a class="mb-pane-missing" href="#host">Host link</a><p class="mb-pane-label">Host text</p><h2 class="mb-pane">Host title</h2><span class="mb-viewport mb-viewport-box"><i>Host i</i></span><button class="mb-viewport-spacer" type="button">Host button</button><input aria-label="Host field"><iframe title="Host frame"></iframe></div>';
 
 test("no viewer rule matches the host page or host slot content", async ({
   page,
@@ -40,21 +40,19 @@ test("no viewer rule matches the host page or host slot content", async ({
   }, HOST_MARKUP);
   // The browser's own styles stay on host content in a Light root: a host
   // link keeps the link colour, and a host paragraph keeps its margin.
-  const link = page.locator('#one [data-mokly-slot="sidePanel"] a.address');
+  const link = page.locator(
+    '#one [data-mokly-slot="sidePanel"] a.mb-pane-missing',
+  );
   await expect(link).toHaveCSS("color", "rgb(0, 0, 238)");
   await expect(link).toHaveCSS("box-sizing", "content-box");
   await expect(
-    page.locator('#one [data-mokly-slot="sidePanel"] p.flow-step-head'),
+    page.locator('#one [data-mokly-slot="sidePanel"] p.mb-pane-label'),
   ).not.toHaveCSS("margin-top", "0px");
   await page.evaluate(() => {
     // Every mark of the root at once, so a rule that applies only while one
     // holds also meets the host content.
     const shell = document.querySelector("#one .mbk[data-mokly-shell]")!;
-    shell.classList.add(
-      "frame-expanded",
-      "mbk-nav-resizing",
-      "mbk-inspector-resizing",
-    );
+    shell.classList.add("mbk-nav-resizing");
     shell.setAttribute("data-mokly-theme", "dark");
     shell.setAttribute("data-mokly-color-scheme", "dark");
     shell.setAttribute("data-drawer", "open");
@@ -97,7 +95,7 @@ test("no viewer rule matches the host page or host slot content", async ({
     };
   });
   expect(report.rules).toBeGreaterThan(400);
-  expect(report.slotted).toBe(8);
+  expect(report.slotted).toBe(9);
   expect(report.checked).toBeGreaterThan(80);
   expect(report.matches).toEqual([]);
 });

@@ -1,0 +1,28 @@
+---
+/**
+ * The two bags of the depicted acme order, each with its tile, its grind
+ * and its price, as the phone review and the desktop summary list them.
+ *
+ * Use: `<AcmeOrderLines />`.
+ */
+import AcmeTile from "./AcmeTile.astro";
+---
+
+<div class="site-acme-items">
+  <div class="site-acme-item">
+    <AcmeTile roast="guji" size="medium" />
+    <span class="site-acme-lines">
+      <b>Guji, Ethiopia</b>
+      <i>250 g · Whole bean</i>
+    </span>
+    <b>$19.00</b>
+  </div>
+  <div class="site-acme-item">
+    <AcmeTile roast="huila" size="medium" />
+    <span class="site-acme-lines">
+      <b>Huila, Colombia</b>
+      <i>250 g · Filter grind</i>
+    </span>
+    <b>$21.00</b>
+  </div>
+</div>

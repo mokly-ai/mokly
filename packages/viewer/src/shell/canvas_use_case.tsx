@@ -1,0 +1,76 @@
+/**
+ * A use case's canvas: one section of its step frames in one row, which pans,
+ * zooms and fits as a screen's section does, at and above the layout
+ * breakpoint and in the compact layout. The section head names the use case
+ * with its title, its path and its change status, and no kind tag. Each step
+ * frame is mounted by `canvas_use_case_frame.tsx`.
+ *
+ * The use case shows its own Frames choice, apart from a screen's frames and
+ * from the selection's preview scheme, which `use_case_choice.ts` holds and
+ * its Frames filter changes. The compact layout shows the picked step frame
+ * alone, from `canvas_use_case_pick.ts`; the others stay mounted out of the
+ * section.
+ */
+
+import type { CatalogueUseCase } from "@mokly/model";
+
+import { pickedAlone } from "./canvas_compact.js";
+import { DESKTOP_FRAME_SIZE, MOBILE_FRAME_SIZE } from "./canvas_frame_size.js";
+import { useCanvasLayout } from "./canvas_layout.js";
+import { CanvasEntryStage } from "./canvas_stage.js";
+import { CanvasUseCaseFrame } from "./canvas_use_case_frame.js";
+import {
+  useCaseFrames,
+  type UseCaseFramesChoice,
+} from "./canvas_use_case_frames.js";
+import type { Catalogue } from "./catalogue.js";
+import { targetHead } from "./head.js";
+import { publicEntryStatus } from "./public_workspace.js";
+
+export function CanvasUseCaseStage({
+  catalogue,
+  choice,
+  entry,
+  fragment,
+  picked,
+}: {
+  catalogue: Catalogue;
+  /** The viewport and the scheme that every step frame shows. */
+  choice: UseCaseFramesChoice;
+  entry: CatalogueUseCase;
+  fragment?: string | undefined;
+  /** The key of the step frame that the compact layout shows alone. */
+  picked?: string | undefined;
+}) {
+  const wide = useCanvasLayout();
+  const head = targetHead(catalogue, { kind: "entry", entry });
+  const size =
+    choice.viewport === "desktop" ? DESKTOP_FRAME_SIZE : MOBILE_FRAME_SIZE;
+  const plans = useCaseFrames(catalogue.publicModel.screens, entry, choice);
+  const one = !wide && picked !== undefined;
+  return (
+    <CanvasEntryStage
+      fitKey={`${entry.path}:${choice.viewport}:${choice.scheme}${one ? `:${picked}` : ""}`}
+      frames={(one ? pickedAlone(plans, picked) : plans).map((plan) => ({
+        column: plan.column,
+        height: size.height,
+        hidden: plan.hidden,
+        key: plan.key,
+        node: (
+          <CanvasUseCaseFrame
+            fragment={plan.step.index === 0 ? fragment : undefined}
+            hasDarkFragments={catalogue.hasDarkFragments}
+            plan={plan}
+            size={size}
+          />
+        ),
+        row: plan.row,
+        width: size.width,
+      }))}
+      kind="use-case"
+      path={head.path}
+      status={publicEntryStatus(entry)}
+      title={head.title}
+    />
+  );
+}

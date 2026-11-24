@@ -14,6 +14,7 @@ import {
   emulateChangesStatus,
 } from "./serve_changes_emulation.js";
 import { test } from "./serve_comparison_test.js";
+import { openCatalogueSheet } from "./workspace_actions.js";
 
 const DETAIL =
   "This takes a moment. You can keep browsing All while it finishes.";
@@ -36,7 +37,7 @@ for (const mobile of [false, true]) {
       mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
     );
     await page.goto(`/view/${changes.paths.changed}/`);
-    if (mobile) await page.locator("[data-mokly-menu]").click();
+    if (mobile) await openCatalogueSheet(page);
     const all = page.locator('[data-filter="all"]');
     const changesFilter = page.locator('[data-filter="changed"]');
     const filter = page.locator("[data-mokly-filter]");

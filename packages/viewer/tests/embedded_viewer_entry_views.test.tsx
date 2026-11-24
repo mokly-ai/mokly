@@ -20,6 +20,7 @@ import {
 import {
   embeddedMarkup,
   heldEmbeddedMarkup,
+  offeredModeTiles,
   withDarkViews,
 } from "./presentation_v7_helpers.js";
 
@@ -61,17 +62,22 @@ test("the embedded viewer selects a component variant entry in navigation, chrom
     defaultSelection: { screenPath: SECOND },
   });
   assert.match(html, /<h2 class="mbk-reset">Action<\/h2>/);
+  const path =
+    /<div class="mbk-meta-row mbk-reset" data-inspect-path=""[^]*?<\/code>/u.exec(
+      html,
+    )?.[0];
+  assert.equal(path?.replace(/<[^>]+>/gu, ""), `Path${SECOND}`);
   assert.match(
     html,
-    /data-copy-path="components\/action\/second"[^>]*>components\/action\/second<\/button>/,
+    /Variant of<\/span>[^]*?href="\/view\/components\/action\/"[^]*?Action<\/a>/u,
   );
   assert.match(
     html,
-    /aria-label="Catalogue location"[^]*href="\/view\/components\/action\/"[^]*Action/,
+    /<button aria-pressed="true" class="mbk-inspect-variant mbk-reset" data-checked="" data-inspect-variant="components\/action\/second" type="button">[^]*?Second<\/button>/u,
   );
-  assert.match(
-    html,
-    /aria-label="Saved variants"[^]*aria-current="page"[^]*href="\/view\/components\/action\/second\/"[^]*Second/,
+  assert.equal(
+    html.match(/aria-pressed="true" class="mbk-inspect-variant/gu)?.length,
+    1,
   );
   assert.match(
     html,
@@ -174,15 +180,58 @@ test("the embedded viewer resolves light fallback evidence across status, marks 
     index,
     defaultSelection: {
       screenPath: screen.path,
-      viewport: "mobile",
+      viewport: "both",
       colorScheme: "dark",
     },
   });
 
-  assert.match(html, /data-workspace-status="">Unmodified</);
-  assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
-  assert.match(html, /data-view-changed="scheme" hidden=""/);
-  assert.doesNotMatch(html, /data-view-changed="viewport" hidden=""/);
+  // The selection shows both viewports, each in the light scheme of the
+  // light-only screen, so the changed desktop view decides the status and
+  // offers the comparison, and no toggle hides a changed view.
+  assert.match(html, /data-workspace-status="">Changed</);
+  assert.deepEqual(offeredModeTiles(html), [
+    "current",
+    "side",
+    "overlay",
+    "difference",
+    "swipe",
+  ]);
+  assert.match(html, /data-frames-toggle="dark" disabled=""/);
+  assert.doesNotMatch(html, /data-view-changed="(?:scheme|viewport)">/);
+});
+
+test("an embedded root with dark previews draws the preview scheme control of a use case and a document in Inspect, not in the top bar", () => {
+  const index = rawIndexFixture();
+  // Action and its variants offer Dark, so the catalogue has dark previews.
+  for (const component of index.components) {
+    component.colorSchemes = ["light", "dark"];
+    component.views = withDarkViews(component.views);
+  }
+  // A use case and a document each show one preview scheme: the use case's
+  // Frames filter chooses it, and the document's Dark preview button.
+  for (const [screenPath, control, count] of [
+    ["tour", /data-frames-toggle="(?:light|dark)"[^>]*type="radio"/gu, 2],
+    ["product", /aria-label="Dark preview"[^>]*data-workspace-scheme=""/gu, 1],
+  ] as const) {
+    const html = heldEmbeddedMarkup({ index, selection: { screenPath } });
+    const bar =
+      /<header[^>]*class="mbk-topbar[^"]*"[^>]*>([^]*?)<\/header>/u.exec(
+        html,
+      )?.[1];
+    assert.ok(bar, `${screenPath}: the top bar renders`);
+    assert.doesNotMatch(
+      bar,
+      /data-workspace-scheme|data-frames-toggle/u,
+      screenPath,
+    );
+    const inspect = html.slice(html.indexOf('class="mbk-inspect mbk-reset"'));
+    assert.equal(html.match(control)?.length, count, screenPath);
+    assert.equal(
+      inspect.match(control)?.length,
+      count,
+      `${screenPath}: Inspect`,
+    );
+  }
 });
 
 test("the embedded viewer preserves comparison ineligibility while view evidence is unknown", () => {
@@ -200,5 +249,6 @@ test("the embedded viewer preserves comparison ineligibility while view evidence
   });
 
   assert.match(html, /data-workspace-status="">Changed</);
-  assert.match(html, /class="mbk-diff-toolbar mbk-reset" hidden=""/);
+  assert.match(html, /aria-label="Compared"/);
+  assert.deepEqual(offeredModeTiles(html), []);
 });

@@ -3,6 +3,7 @@ import { buildScenario } from "./build-scenario";
 import { stateDocumentViolations } from "./document-policy";
 import { expect, open, test } from "./harness";
 import { build, buildId } from "./viewer/build-fixtures";
+import { publicationReference } from "./viewer/support";
 
 /**
  * The build address itself: an unknown or unreadable build, the one screen it
@@ -18,7 +19,7 @@ test("an unknown build is unavailable and a failed read can be repeated", async 
   const { double, projectId } = scenario;
   await open(page, scenario.buildAt(buildId(220)));
   await expect(page.getByText("This build is unavailable")).toBeVisible();
-  await expect(page.getByTestId("viewer-publication")).toHaveText("This build");
+  await expect(publicationReference(page)).toHaveText("This build");
   await expect(page.locator(".fo-top-state")).toContainText(
     "Build unavailable",
   );

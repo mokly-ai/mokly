@@ -1,8 +1,7 @@
-/* The controls the marketing pages, the changelog and the policy documents
-   share: status badges, the inline link with its trailing glyph, the solid
-   and quiet action buttons, and the action row that repeats in the hero and
-   the closing. Ported from the promoted mockups in
-   the dogfood catalogue; every value resolves from the token workspace. */
+/* The controls the pages share: status badges, the inline link with its
+   trailing glyph and the action row that repeats in the hero and the
+   closing. buttons.css holds the buttons. Every value resolves from the
+   token workspace. */
 
 .site-badge {
   align-items: center;
@@ -34,6 +33,7 @@
 
 .site-link {
   align-items: center;
+  border-radius: 6px;
   color: var(--mk-color-accent);
   display: inline-flex;
   gap: var(--mk-space-2);
@@ -52,35 +52,8 @@
   text-decoration: none;
 }
 
-.site-button--primary {
-  background: var(--mk-color-accent-solid);
-  border-color: var(--mk-color-accent-solid);
-  color: var(--mk-color-on-accent);
-}
-
-.site-button--primary:hover {
-  background: var(--mk-color-accent-hover);
-  border-color: var(--mk-color-accent-hover);
-}
-
-.site-button--primary:active {
-  background: var(--mk-color-accent-active);
-  border-color: var(--mk-color-accent-active);
-}
-
-.site-button--quiet {
-  border-color: var(--mk-color-border-strong);
-  color: var(--mk-color-text);
-}
-
-.site-button--quiet:hover {
-  background: var(--mk-color-surface-muted);
-  border-color: var(--mk-color-border-strong);
-}
-
 .site-actions {
-  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--mk-space-3);
+  gap: 12px;
 }

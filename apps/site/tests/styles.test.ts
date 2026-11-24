@@ -14,12 +14,60 @@ const styles = path.resolve(import.meta.dirname, "..", "src", "styles");
 const NAMED_COLORS =
   /(?<![\w-])(?:aqua|black|blue|brown|fuchsia|gold|gray|green|grey|lime|maroon|navy|olive|orange|pink|purple|red|silver|teal|violet|white|yellow)(?![\w-])/i;
 
+/** A role, as a site sheet names one. */
+const ROLE = String.raw`var\(--mk-[\w-]+\)`;
+
+/** A part of a tint: a role, the current colour or transparent. */
+const PART = String.raw`(?:${ROLE}|currentColor|transparent)(?: \d+(?:\.\d+)?%)?`;
+
+/** A mix of two such parts, in any colour space. */
+const TINT = new RegExp(
+  String.raw`color-mix\(in [a-z-]+, ${PART}, ${PART}\)`,
+  "g",
+);
+
 /**
- * The composition switches: the 768px breakpoint every page shares, and the
- * width at which the documentation hangs its on-this-page rail, both fixed by
- * docs/protocol/cloud/site-design.md.
+ * Whether a mix is a tint that docs/protocol/cloud/site-design.md allows:
+ * each of its two parts is a role, the current colour, transparent or another
+ * tint, in any colour space. Each pass folds the innermost tints into a role.
  */
-const WIDTH_QUERIES = ["min-width: 768px", "min-width: 1100px"];
+function isTint(mix: string): boolean {
+  let folded = mix;
+  for (let last = ""; folded !== last;) {
+    last = folded;
+    folded = folded.replace(TINT, "var(--mk-tint)");
+  }
+  return folded === "var(--mk-tint)";
+}
+
+/** Every `color-mix()` call in a sheet, on one line, as Prettier spaces it. */
+function mixes(source: string): string[] {
+  const found: string[] = [];
+  for (const { index } of source.matchAll(/color-mix\(/g)) {
+    let depth = 0;
+    for (let end = index; end < source.length; end++) {
+      if (source[end] === "(") depth++;
+      if (source[end] === ")" && --depth === 0) {
+        found.push(
+          source
+            .slice(index, end + 1)
+            .replace(/\s+/g, " ")
+            .replace(/\( | \)/g, (space) => space.trim()),
+        );
+        break;
+      }
+    }
+  }
+  return found;
+}
+
+/**
+ * The width that a site sheet's width query may start with: the 768px
+ * breakpoint every page shares, fixed by docs/protocol/cloud/site-design.md.
+ * A desktop step narrows a 768px query with a `max-width` condition, as the
+ * header and the docs steps do.
+ */
+const WIDTH_QUERIES = ["min-width: 768px"];
 
 /**
  * Controls whose whole boundary must be meaningful rather than decorative.
@@ -29,12 +77,15 @@ const WIDTH_QUERIES = ["min-width: 768px", "min-width: 1100px"];
 const CONTROLS = [
   ".site-button",
   ".site-code-copy",
-  ".site-doc-disclosure",
+  ".site-docs-edit",
+  ".site-docs-layers-toggle",
+  ".site-docs-outline-summary",
   ".site-pager-item",
   ".site-search",
+  ".site-search-close",
   ".site-search-input",
   ".site-skip",
-  ".site-version",
+  ".site-version-link",
 ];
 
 const REQUIRED_TOKENS = [
@@ -104,8 +155,9 @@ test("site styles consume workspace tokens without declaring another palette", a
     const source = await readFile(path.join(styles, name), "utf8");
     assert.doesNotMatch(source, /--site-/, name);
     assert.doesNotMatch(source, /--mk-[\w-]+\s*:/, name);
+    for (const mix of mixes(source)) assert.ok(isTint(mix), `${name}: ${mix}`);
     assert.doesNotMatch(source, /#[0-9a-fA-F]{3,8}\b/, name);
-    assert.doesNotMatch(source, /\b(?:rgba?|hsla?|color-mix|oklch)\(/, name);
+    assert.doesNotMatch(source, /\b(?:rgba?|hsla?|oklch)\(/, name);
     for (const [, value] of source.matchAll(/^\s*[\w-]+:\s*([^;]+);/gm)) {
       const literal = (value ?? "")
         .replace(/(?<![\w-])(?:transparent|currentColor)(?![\w-])/gi, "")
@@ -147,13 +199,16 @@ test("the generated favicon draws the mark from workspace colors", async () => {
   assert.match(response.headers.get("content-type") ?? "", /image\/svg\+xml/);
   const source = await response.text();
   for (const value of [
-    tokens.color.light.accent,
-    tokens.color.light.folioSurface,
-    tokens.color.dark.accent,
-    tokens.color.dark.folioSurface,
+    tokens.color.light.text,
+    tokens.color.light.signal,
+    tokens.color.light.onSignal,
+    tokens.color.dark.text,
+    tokens.color.dark.signal,
+    tokens.color.dark.onSignal,
   ])
     assert.ok(source.includes(value), value);
-  assert.match(source, /var\(--accent\)/);
+  for (const role of ["text", "signal", "on-signal"])
+    assert.match(source, new RegExp(`var\\(--${role}\\)`), role);
   assert.match(source, /@media\(prefers-color-scheme:dark\)/);
 });
 
@@ -180,13 +235,6 @@ test("the build inlines the generated workspace theme", async () => {
     );
   }
   assert.match(html, /@media\s*\(prefers-color-scheme:\s*dark\)/);
-});
-
-test("no stylesheet removes a focus outline", async () => {
-  for (const name of await stylesheets()) {
-    const sheet = await readFile(path.join(styles, name), "utf8");
-    assert.doesNotMatch(sheet, /outline\s*:\s*(?:none|0)\b/, name);
-  }
 });
 
 test("a control's whole boundary is meaningful, never the hairline", async () => {

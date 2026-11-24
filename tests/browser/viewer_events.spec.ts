@@ -9,9 +9,10 @@ import type {
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
 import type {} from "./viewer_harness.js";
 import { startViewerPick } from "./viewer_pick.js";
-import { chooseVariant } from "./workspace_actions.js";
+import { canvasFrame, chooseVariant } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
@@ -25,16 +26,19 @@ test.beforeEach(async ({ page }) => {
   await page.waitForFunction(() => Boolean(window.viewerHarness));
 });
 
-test("frame links and saved variants emit only committed navigation", async ({
+test("frame links emit committed navigation, and a row of Variants selects its frame without one", async ({
   page,
 }) => {
   await page.evaluate(() => window.viewerHarness.start("one", { cross: true }));
-  const frame = page.frameLocator('#one iframe[data-workspace-frame="mobile"]');
+  const frame = page.frameLocator(`#one ${canvasFrame("mobile")}`);
   await frame.getByRole("link", { name: "Open Action" }).click();
   await expect(
     page.locator("#one").getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await chooseVariant(page, "Disabled");
+  await expect(
+    page.locator('#one [data-inspect-section="variants"] [data-checked]'),
+  ).toHaveText("Disabled");
   const events = await page.evaluate(() =>
     window.viewerHarness
       .get("one")
@@ -50,13 +54,12 @@ test("frame links and saved variants emit only committed navigation", async ({
         activation: "primary",
       },
     }),
-    { screenPath: "action/disabled" },
   ]);
 });
 
 async function activateUnknownFrameLink(page: Page) {
   const link = page
-    .frameLocator('iframe[data-workspace-frame="mobile"]')
+    .frameLocator(canvasFrame("mobile"))
     .getByRole("link", { name: "Open Action" });
   await link.evaluate((element) =>
     element.setAttribute("data-mokly-link", "missing-entry"),
@@ -175,8 +178,8 @@ test("flow events preserve the screen key and identify the owning step", async (
   await page.evaluate(async () => {
     await window.viewerHarness.get("one").ref.current.startPick();
   });
-  await page
-    .frameLocator(".flow-step:nth-child(2) iframe")
+  await useCaseStepFrame(page, 2)
+    .contentFrame()
     .getByText("Visible", { exact: true })
     .click();
   await expect

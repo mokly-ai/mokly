@@ -1,0 +1,116 @@
+/* The entry bar of the compact layout: a 52px row over the top of the
+   canvas, which fades from the canvas colour into the canvas below it. The
+   title tag and the kind tag take the section head's look from the canvas
+   section's stylesheet. The frame picker is a native select in a pill, with
+   the picked frame's glyph before its text and a chevron after it, neither
+   of which takes the pointer. From the layout breakpoint up the section's
+   head names the entry, so the bar hides. */
+.mbk-entry-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 8;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 52px;
+  padding: 0 12px;
+  background: linear-gradient(var(--cv-background) 62%, transparent);
+  color: var(--cv-text);
+  font-family: var(--cv-sans);
+  pointer-events: none;
+}
+
+.mbk-entry-bar > * {
+  pointer-events: auto;
+}
+
+.mbk-entry-bar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.mbk-entry-bar-title > .mbk-canvas-title-tag {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mbk-entry-bar .mbk-entry-status {
+  padding: 3px 6px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* The quiet label, such as "Showing previous version", takes the canvas
+   section's look, and it gives way first when the bar runs out of room. */
+.mbk-entry-bar-quiet {
+  flex-shrink: 4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* With a picker and a status, the kind tag keeps its glyph alone, so the
+   status stays clear of the picker; its words stay for assistive
+   technology. */
+.mbk-entry-bar:has(.mbk-frame-pick)
+  .mbk-entry-bar-title:has(.mbk-entry-status)
+  .mbk-entry-bar-kind {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mbk-frame-pick {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border-radius: 18px;
+  color: var(--cv-text-secondary);
+}
+
+.mbk-frame-pick > select {
+  height: 36px;
+  max-width: 200px;
+  padding: 0 30px;
+  border: 1px solid var(--cv-border-strong);
+  border-radius: 18px;
+  background: var(--cv-surface);
+  color: inherit;
+  font: 500 12px/1 var(--cv-mono);
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+}
+
+.mbk-frame-pick-kind,
+.mbk-frame-pick-chevron {
+  position: absolute;
+  display: inline-flex;
+  color: var(--cv-text-muted);
+  pointer-events: none;
+}
+
+.mbk-frame-pick-kind {
+  left: 11px;
+}
+
+.mbk-frame-pick-chevron {
+  right: 11px;
+}
+
+@media (width < 56.25rem) {
+  .mbk-entry-bar {
+    display: flex;
+  }
+}

@@ -3,7 +3,6 @@ import { expect } from "@playwright/test";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
-
 import type {} from "./viewer_harness.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
@@ -16,7 +15,7 @@ test.afterAll(async () => {
   await fixture?.close();
 });
 
-test("outside clicks close embedded pickers and expanded frames with conditional focus return", async ({
+test("outside clicks close embedded pickers with conditional focus return", async ({
   page,
 }) => {
   await page.goto(fixture.host.url);
@@ -62,15 +61,4 @@ test("outside clicks close embedded pickers and expanded frames with conditional
   await expect(
     page.getByRole("button", { name: "Outside host" }),
   ).toBeFocused();
-
-  await page
-    .getByRole("button", { name: "Expand to a wider viewport" })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Collapse viewport" }),
-  ).toBeVisible();
-  await page.mouse.click(2, 2);
-  await expect(
-    page.getByRole("button", { name: "Expand to a wider viewport" }),
-  ).toBeVisible();
 });

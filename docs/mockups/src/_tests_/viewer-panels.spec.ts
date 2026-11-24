@@ -21,11 +21,15 @@ import { screenFile } from "./catalogue-paths";
 /**
  * The query of the link Share copies in each viewport: to Home, the screen the
  * reader is on, and to the whole catalogue of a current-only publication. The
- * address leaves out the desktop viewport and the reader's own scheme. Home
- * has a view in both schemes, so no link needs the light fallback's scheme.
+ * address names the document's single viewport and leaves out the reader's
+ * own scheme. Home has a view in both schemes, so no link needs the light
+ * fallback's scheme.
  */
 const shareQueries = {
-  desktop: { screen: "?catalogueScreen=home", catalogue: "" },
+  desktop: {
+    screen: "?catalogueScreen=home&viewport=desktop",
+    catalogue: "?viewport=desktop",
+  },
   mobile: {
     screen: "?catalogueScreen=home&viewport=mobile",
     catalogue: "?viewport=mobile",
@@ -86,18 +90,21 @@ for (const viewport of ["desktop", "mobile"] as const)
             name: "Details",
           }),
         ).toHaveCount(2);
-        // A row reads its newest build while one publishes, and opening it
-        // still resolves the reference: to its ready publication when it has
-        // one, otherwise to the build running in its stage.
+        // A row reads its newest build while one publishes. The branch the
+        // reader is on is where they already are, so its row says Current in
+        // place of a destination; a pull request with nothing ready opens the
+        // build running in its stage.
         const opens = (text: string) =>
           rows
             .filter({ hasText: text })
             .getByRole("link")
             .getAttribute("data-mokly-link");
         await expect(rows.filter({ hasText: "Publishing now" })).toHaveCount(2);
-        expect(await opens(publication.branch)).toBe(
-          "product/viewer/standalone",
-        );
+        const current = rows.filter({ hasText: publication.branch });
+        await expect(current).toContainText("Publishing now");
+        await expect(current).toContainText("Current");
+        await expect(current.getByRole("link")).toHaveCount(0);
+        await expect(rows.filter({ hasText: "Current" })).toHaveCount(1);
         expect(await opens(buildingPullRequest.title)).toBe(
           "product/viewer/pull-request/publishing",
         );

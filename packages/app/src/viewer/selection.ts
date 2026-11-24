@@ -128,7 +128,7 @@ export function readViewerState(
   defaults: SelectionDefaults,
 ): { state: ViewerUrlState; corrected: boolean } {
   const view = member(views, single(query.view)) ?? "all";
-  const viewport = member(viewports, single(query.viewport)) ?? "desktop";
+  const viewport = member(viewports, single(query.viewport)) ?? "both";
   const scheme = member(schemes, single(query.scheme)) ?? defaults.scheme;
   const search = single(query.search) ?? "";
   const read = readTags(query.tag);
@@ -199,7 +199,7 @@ export function viewerHref(
   for (const key of retiredKeys) query.delete(key);
   put(
     "viewport",
-    selection.viewport === "desktop" ? undefined : selection.viewport,
+    selection.viewport === "both" ? undefined : selection.viewport,
   );
   put(
     "scheme",

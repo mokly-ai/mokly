@@ -1,6 +1,3 @@
-import { DESTINATIONS } from "./destinations.js";
-import type { Crumb } from "./shell.js";
-
 /**
  * Paths of the depicted catalogue's current entries: the identity the path
  * chip and Details show. The depicted spec root has no prefix, so each path is
@@ -27,16 +24,3 @@ export const PREVIOUS_PATHS = {
   invoiceOverdue: "billing/invoice/overdue",
   paymentTerms: "billing/payment-terms",
 } as const;
-
-/**
- * The Example folder's README is the folder's own page, so its crumb opens
- * that page from All. Changes states and removed entries keep folder crumbs as
- * text, as they keep a parent entry's crumb.
- */
-export const EXAMPLE_CRUMB = {
-  label: "Example",
-  to: DESTINATIONS.exampleOverview,
-} as const satisfies Crumb;
-
-/** Crumbs of a current screen in Example › Screens, viewed from All. */
-export const SCREEN_CRUMBS: readonly Crumb[] = [EXAMPLE_CRUMB, "Screens"];

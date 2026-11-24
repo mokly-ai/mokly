@@ -1,5 +1,16 @@
+/**
+ * The tree scroll memory of the Layers panel, which shows from 1024px. The
+ * panel's tree keeps its scroll offset across docs pages in the same tab,
+ * through refresh and history, and reveals the current page when it opens
+ * outside the visible tree. When tab storage is unavailable the links still
+ * work and the current page is still revealed. The tree sheet below 1024px
+ * keeps no position.
+ */
+
+import { revealCurrent } from "./tree-reveal.js";
+
 const STORAGE_KEY = "mokly.docs.tree.scrollTop";
-const DESKTOP = window.matchMedia("(min-width: 768px)");
+const PANEL = window.matchMedia("(min-width: 1024px)");
 
 function savedScrollTop(): number | null {
   try {
@@ -20,25 +31,13 @@ function saveScrollTop(offset: number): void {
   }
 }
 
-function revealCurrent(tree: HTMLElement): void {
-  const current = tree.querySelector<HTMLElement>('[aria-current="page"]');
-  if (!current) return;
-  const viewport = tree.getBoundingClientRect();
-  const row = current.getBoundingClientRect();
-  if (row.top < viewport.top) {
-    tree.scrollTop += row.top - viewport.top;
-  } else if (row.bottom > viewport.bottom) {
-    tree.scrollTop += row.bottom - viewport.bottom;
-  }
-}
-
 const tree = document.querySelector<HTMLElement>(
   ".site-docs-side .site-doc-tree-scroll",
 );
 
 if (tree) {
   const restore = () => {
-    if (!DESKTOP.matches) return;
+    if (!PANEL.matches) return;
     const saved = savedScrollTop();
     if (saved !== null) tree.scrollTop = saved;
     revealCurrent(tree);
@@ -48,13 +47,13 @@ if (tree) {
   tree.addEventListener(
     "scroll",
     () => {
-      if (DESKTOP.matches) saveScrollTop(tree.scrollTop);
+      if (PANEL.matches) saveScrollTop(tree.scrollTop);
     },
     { passive: true },
   );
   tree.addEventListener("click", () => {
-    if (DESKTOP.matches) saveScrollTop(tree.scrollTop);
+    if (PANEL.matches) saveScrollTop(tree.scrollTop);
   });
-  DESKTOP.addEventListener("change", restore);
+  PANEL.addEventListener("change", restore);
   restore();
 }

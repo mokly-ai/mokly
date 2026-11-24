@@ -32,10 +32,7 @@ test("text edits wait for the 150 ms debounce; a boolean edit renders at once", 
     const props = await openProps(page, server.url);
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("Hello 1"),
-        expect.stringContaining("Hello 1"),
-      ]);
+      .toEqual([expect.stringContaining("Hello 1")]);
     const sent = renders(page);
     await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1_000);
     const label = props.getByRole("textbox", { name: "label" });
@@ -45,22 +42,18 @@ test("text edits wait for the 150 ms debounce; a boolean edit renders at once", 
     await page.clock.runFor(149);
     expect(sent).toHaveLength(0);
     await page.clock.runFor(1);
-    await expect.poll(() => sent.length).toBe(2);
+    // On the canvas the card, a component of a light-only catalogue, shows
+    // its desktop view in one frame, so each edit renders once.
+    await expect.poll(() => sent.length).toBe(1);
     expect(
       sent.map(renderBody).map(({ viewport, label }) => [viewport, label]),
-    ).toEqual([
-      ["mobile", "Edited"],
-      ["desktop", "Edited"],
-    ]);
+    ).toEqual([["desktop", "Edited"]]);
     await props.getByRole("checkbox", { name: "active" }).check();
-    await expect.poll(() => sent.length).toBe(4);
+    await expect.poll(() => sent.length).toBe(2);
     await page.clock.resume();
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("Edited 1Active"),
-        expect.stringContaining("Edited 1Active"),
-      ]);
+      .toEqual([expect.stringContaining("Edited 1Active")]);
   } finally {
     await closeServe(page, server);
   }
@@ -78,10 +71,9 @@ test("an edit renders again after a revision adoption and after a live.generatio
     const props = await openProps(page, server.url);
     const sent = renders(page);
     await props.getByRole("textbox", { name: "label" }).fill("Kept edit");
-    await expect.poll(() => sent.length).toBe(2);
+    await expect.poll(() => sent.length).toBe(1);
     const first = await liveIndex(server.url);
     expect(sent.map((request) => renderBody(request).revision)).toEqual([
-      first.revision,
       first.revision,
     ]);
 
@@ -116,10 +108,7 @@ test("an edit renders again after a revision adoption and after a live.generatio
     );
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("v2Kept edit"),
-        expect.stringContaining("v2Kept edit"),
-      ]);
+      .toEqual([expect.stringContaining("v2Kept edit")]);
     expect((await liveIndex(server.url)).generation).not.toBe(first.generation);
     expect(descriptors.length).toBeGreaterThan(0);
     expect(sent.length).toBeGreaterThan(count);
@@ -165,7 +154,7 @@ test("a 409 refreshes the index once and retries while the event stream is down"
         indexReads.push(sent.length);
     });
     await label.fill("Before the publication");
-    await expect.poll(() => statuses).toEqual([200, 200]);
+    await expect.poll(() => statuses).toEqual([200]);
     const before = await liveIndex(server.url);
 
     await replaceFile(
@@ -177,10 +166,7 @@ test("a 409 refreshes the index once and retries while the event stream is down"
     await label.fill("After the publication");
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("After the publication 1"),
-        expect.stringContaining("After the publication 1"),
-      ]);
+      .toEqual([expect.stringContaining("After the publication 1")]);
     expect(rejected.size).toBeGreaterThan(0);
     expect(rejected.has(before.revision)).toBe(true);
     expect(statuses.at(-1)).toBe(200);

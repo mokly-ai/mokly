@@ -1,5 +1,5 @@
-/* The workspace fills the main region: the header and the variant bar above
-   the panes, and the preview pane beside the inspector. */
+/* The workspace fills the main region: the entry bar of the compact layout,
+   the panes, whose preview pane fills them, and the right panel. */
 .mbk-workspace {
   display: flex;
   flex: 1;
@@ -11,10 +11,6 @@
 
 .mbk-workspace [hidden] {
   display: none !important;
-}
-
-.mbk-workspace .mbk-screen-head {
-  align-items: center;
 }
 
 .mbk-workspace-panes {
@@ -44,23 +40,27 @@
   min-width: 0;
 }
 
-/* The stage of a workspace shows the frames of the chosen viewport only. */
-.mbk-workspace [data-mokly-stage][data-viewport="mobile"] .mbk-frame-desktop,
-.mbk-workspace [data-mokly-stage][data-viewport="desktop"] .mbk-frame-mobile {
-  display: none;
+/* The status of a render stands at the top of the stage, clear of the zoom
+   pill and the dock at the bottom. */
+.mbk-workspace[data-workspace-canvas] .mbk-edit-status {
+  top: calc(var(--mbk-canvas-inset-top, 0px) + 12px);
+  right: var(--mbk-canvas-inset-end, 0px);
+  bottom: auto;
+  left: var(--mbk-canvas-inset-start, 0px);
 }
 
 @media (width < 56.25rem) {
-  .mbk-workspace .mbk-screen-head {
-    gap: 8px;
-    padding: 12px;
+  .mbk-workspace[data-workspace-canvas] .mbk-edit-status {
+    left: 0;
+    right: 0;
   }
+}
 
-  .mbk-workspace-panes {
-    padding-bottom: 46px;
-  }
-
-  .mbk-workspace .mbk-previous {
-    padding: 8px 12px;
-  }
+/* The comparison details stand in the panel's padding, under a hairline:
+   in Changes after the compare modes, and in Inspect after the head. */
+.mbk-float[data-floating-panel="right"] .mbk-comparison-evidence {
+  margin: 0;
+  padding: 14px 16px 20px;
+  border-top: 0;
+  border-bottom: 1px solid var(--cv-border);
 }

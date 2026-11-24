@@ -159,6 +159,7 @@ export function runtimeFixture(
     win,
     doc,
     runtime,
+    environment,
     events,
     signals,
     cancelled,

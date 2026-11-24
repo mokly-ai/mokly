@@ -8,23 +8,13 @@
   display: contents;
 }
 
-/* The compact flag draws the narrow bar at every width: the menu shows, the
-   brand keeps its mark, and the tag picker anchors to the bar. Below its
-   breakpoint the package stylesheet draws that bar on its own, as the shell
-   does. */
-.mbk-topbar-frame[data-compact] .mbk-menu {
-  display: inline-flex;
-}
-
+/* The compact flag draws the narrow bar at every width: the brand keeps its
+   mark, and the tag picker anchors to the bar. Below its breakpoint the
+   package stylesheet draws that bar on its own, as the shell does. */
 .mbk-topbar-frame[data-compact] .mbk-name {
   display: none;
 }
 
 .mbk-topbar-frame[data-compact] .mbk-search {
   position: static;
-}
-
-/* A bar without a menu draws none at any width. */
-.mbk-topbar-frame[data-menu="none"] .mbk-menu {
-  display: none;
 }

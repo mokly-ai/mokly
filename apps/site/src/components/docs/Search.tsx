@@ -1,12 +1,22 @@
 /**
- * Documentation search. The header control opens a dialog that queries the
- * index the build wrote beside the pages, and every result links to the page
- * and, when the match is inside a section, to that heading. The index is
- * loaded on the first search, so a reader who never searches downloads
- * nothing.
+ * Documentation search. The island renders the search dialog once on every
+ * docs page and binds the search controls that the page draws in the Layers
+ * panel and in the sub-bar, each of which names the dialog in
+ * `aria-controls`. ⌘K or Ctrl K, and `/` outside a text field, open it too,
+ * and on Apple platforms the controls' key hint reads ⌘K. Close, Escape and
+ * a press on the dimmed page close it. A press inside it, also on its
+ * padding, keeps it open. The dialog queries the index the build wrote
+ * beside the pages, and every result links to the page and, when the match
+ * is inside a section, to that heading. The index is loaded on the first
+ * search, so a reader who never searches downloads nothing.
  */
 
 import { useEffect, useRef, useState } from "react";
+
+import { closeOnBackdrop } from "../dialog-backdrop.js";
+
+import { CanvasIcon } from "./CanvasIcon.js";
+import { keyHint, opensSearch } from "./search-keys.js";
 
 interface SubResult {
   readonly title: string;
@@ -26,6 +36,9 @@ interface SearchIndex {
   }>;
 }
 
+/** The id of the dialog, which each search control names in `aria-controls`. */
+const DIALOG = "site-search";
+
 const RESULTS = 6;
 
 let index: Promise<SearchIndex> | undefined;
@@ -41,12 +54,49 @@ async function load(): Promise<SearchIndex> {
   return index;
 }
 
-/** The header search control and the dialog it opens. */
+/** The search dialog, its controls and its keys. */
 export default function Search() {
   const dialog = useRef<HTMLDialogElement>(null);
+  const field = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<readonly ResultData[]>([]);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const element = dialog.current;
+    if (!element) return;
+    const open = () => {
+      if (!element.open) element.showModal();
+      field.current?.focus();
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (!opensSearch(event)) return;
+      event.preventDefault();
+      open();
+    };
+    const controls = [
+      ...document.querySelectorAll<HTMLButtonElement>(
+        `button[aria-controls="${DIALOG}"]`,
+      ),
+    ];
+    const hint = keyHint(navigator.userAgent);
+    for (const control of controls) {
+      control.addEventListener("click", open);
+      const key = control.querySelector("kbd");
+      if (key) key.textContent = hint;
+    }
+    document.addEventListener("keydown", onKey);
+    // `closedby="any"` closes the dialog on a press on the dimmed page, and
+    // `closeOnBackdrop` does where the browser does not implement it.
+    const stopBackdrop = closeOnBackdrop(element);
+    return () => {
+      for (const control of controls) {
+        control.removeEventListener("click", open);
+      }
+      document.removeEventListener("keydown", onKey);
+      stopBackdrop();
+    };
+  }, []);
 
   useEffect(() => {
     const term = query.trim();
@@ -81,57 +131,41 @@ export default function Search() {
   }, [query]);
 
   return (
-    <>
-      <button
-        className="site-search"
-        onClick={() => dialog.current?.showModal()}
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          fill="none"
-          height="14"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          width="14"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-3.9-3.9" />
-        </svg>
-        Search docs
-      </button>
-      <dialog
-        aria-label="Search the documentation"
-        className="site-search-dialog"
-        ref={dialog}
-      >
-        <div className="site-search-field">
-          <label className="site-visually-hidden" htmlFor="site-search-input">
-            Search the documentation
-          </label>
+    <dialog
+      aria-label="Search the documentation"
+      className="site-search-dialog"
+      closedby="any"
+      id={DIALOG}
+      ref={dialog}
+    >
+      <div className="site-search-field">
+        <label className="site-visually-hidden" htmlFor="site-search-input">
+          Search the documentation
+        </label>
+        <span className="site-search-box">
+          <CanvasIcon name="search" size={17} />
           <input
             autoComplete="off"
             className="site-search-input"
             id="site-search-input"
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search the documentation"
+            ref={field}
             type="search"
             value={query}
           />
-          <button
-            className="site-code-copy"
-            onClick={() => dialog.current?.close()}
-            type="button"
-          >
-            Close
-          </button>
-        </div>
-        <Results failed={failed} query={query} results={results} />
-      </dialog>
-    </>
+        </span>
+        <button
+          className="site-search-close"
+          onClick={() => dialog.current?.close()}
+          type="button"
+        >
+          <CanvasIcon name="close" size={16} />
+          Close
+        </button>
+      </div>
+      <Results failed={failed} query={query} results={results} />
+    </dialog>
   );
 }
 

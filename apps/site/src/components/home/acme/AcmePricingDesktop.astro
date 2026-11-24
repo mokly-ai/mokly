@@ -1,0 +1,62 @@
+---
+/**
+ * The depicted acme `pricing` screen on a desktop, at 1280 × 800: the shop's
+ * navigation with Subscriptions current, the heading block and the three
+ * plans side by side, each with its bags.
+ *
+ * - `dark`: the app's dark screen.
+ * - `padding`: the PriceCards' padding, `24` (the default) or `16`.
+ * - `tone`: the Regular card's button tone, `primary` (the default) or
+ *   `secondary`.
+ *
+ * Use: `<AcmePricingDesktop dark padding={16} tone="secondary" />`.
+ */
+import {
+  ACME_CURRENT_LINK,
+  ACME_LINKS,
+  type AcmePricingProps,
+} from "./acme-pricing.js";
+import AcmeAvatar from "./AcmeAvatar.astro";
+import AcmeCart from "./AcmeCart.astro";
+import AcmeIcon from "./AcmeIcon.astro";
+import AcmeLogo from "./AcmeLogo.astro";
+import AcmePricingHead from "./AcmePricingHead.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import PriceCard from "./PriceCard.astro";
+
+type Props = AcmePricingProps;
+
+const { dark = false, padding = 24, tone = "primary" } = Astro.props;
+---
+
+<AcmeRoot dark={dark} kind="desktop">
+  <div class="site-acme-desktop-nav">
+    <AcmeLogo />
+    <span class="site-acme-desktop-links">
+      {ACME_LINKS.map((link) => (
+        <span
+          class={
+            link === ACME_CURRENT_LINK ? "site-acme-desktop-on" : undefined
+          }
+        >
+          {link}
+        </span>
+      ))}
+    </span>
+    <span class="site-acme-desktop-end">
+      <AcmeIcon name="search" />
+      <AcmeCart />
+      <AcmeAvatar initials="JE" size="small" />
+    </span>
+  </div>
+  <div class="site-acme-pricing-desktop">
+    <div class="site-acme-pricing-head">
+      <AcmePricingHead large />
+    </div>
+    <div class="site-acme-pricing-grid">
+      <PriceCard art padding={padding} plan="taster" />
+      <PriceCard art padding={padding} plan="regular" tone={tone} />
+      <PriceCard art padding={padding} plan="cafe" />
+    </div>
+  </div>
+</AcmeRoot>

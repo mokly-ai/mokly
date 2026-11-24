@@ -136,12 +136,12 @@ control rendering follows
 [Shared control rendering](./shared-control-rendering.md#static-rendering-and-navigation).
 
 Mokly passes the renderer no tags, so the renderer chooses the palette from
-the entry's kind and path. Screens under `product/`,
-`design/site/` and `design/email/` render in the Folio palette with its scoped
-control theme. A component page keeps paper, and every other screen, such as
-the token inventory, keeps the base palette. A registered component inside a
-screen takes that screen's palette. Decision: the palette follows the entry's
-kind and path, not a tag, because the renderer input carries no tags.
+the entry's kind. A component page takes paper, the palette of the Design
+material. Every screen takes Canvas, the default surface family.
+[Design token colors](./design-tokens-color.md) defines both palettes, and
+each document takes the control theme of its palette. A registered component
+inside a screen takes that screen's palette. Decision: the palette follows the
+entry's kind, not a tag, because the renderer input carries no tags.
 
 Screen components own a `main` landmark and one primary heading. The renderer
 does not add product copy or duplicate landmarks. Each product screen carries
@@ -149,9 +149,9 @@ the root marker `data-mkc-screen="<entry-path>"`. That marker is consumer-owned
 policy metadata, not a package API.
 Notes and fixture explanations stay outside it. Catalogue-only links below
 an artboard use the shared catalogue-links navigation and base styles.
-Mokly supplies device/browser chrome. Nested chrome belongs only to registered
-illustration material and to the device frames of the viewer drawings; never
-duplicate the owning screen chrome.
+Mokly supplies the frame around each view. Nested chrome belongs only to
+registered illustration material and to the canvas frames of the viewer
+drawings; never duplicate the owning screen chrome.
 
 Every product screen has mobile and desktop plus light and dark output. A
 screen and its at most four variants hold no more than five semantic states,

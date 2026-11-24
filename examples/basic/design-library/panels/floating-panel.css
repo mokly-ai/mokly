@@ -1,0 +1,99 @@
+/* A panel that floats over the canvas: a surface with a 12px radius, a
+   hairline ring, and a soft shadow, holding an optional head, the scrolling
+   body, and an optional foot. Its sheet form has a rounded top, a grabber,
+   and a close control. The Canvas layout places the panel and the sheet. */
+.cv-float {
+  background: var(--cv-surface);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--cv-shadow-2);
+  color: var(--cv-text);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.cv-float[data-side="left"] {
+  width: 252px;
+}
+
+.cv-float[data-side="right"] {
+  width: 312px;
+}
+
+.cv-float-head {
+  align-items: stretch;
+  border-bottom: 1px solid var(--cv-border);
+  display: flex;
+  flex: none;
+  height: 44px;
+  padding: 0 6px 0 4px;
+}
+
+/* The body is a stacking context of its own, so no content that it scrolls,
+   such as the shipped catalogue column with the stacking level of its
+   drawer, rises over the sheet's close control, which follows the body. */
+.cv-float-body {
+  flex: 1;
+  isolation: isolate;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--cv-line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.cv-float-foot {
+  background: var(--cv-surface-muted);
+  border-top: 1px solid var(--cv-border);
+  flex: none;
+  padding: 12px 14px;
+}
+
+/* The sheet: the rounded top, the grabber above the head, and the close
+   control at the head's end. The grabber expands the sheet, so it draws the
+   control edge. */
+.cv-float[data-sheet] {
+  border-radius: 18px 18px 0 0;
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--cv-shadow-sheet);
+  padding-top: 8px;
+  width: auto;
+}
+
+.cv-float[data-sheet] > .cv-float-head {
+  height: 46px;
+  padding-right: 52px;
+}
+
+.cv-float-grab {
+  background: var(--cv-border-strong);
+  border-radius: 2px;
+  height: 4px;
+  left: calc(50% - 18px);
+  position: absolute;
+  top: 6px;
+  width: 36px;
+}
+
+.cv-float-close {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--cv-text-muted);
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  position: absolute;
+  right: 8px;
+  top: 11px;
+  width: 40px;
+}
+
+a.cv-float-close:hover {
+  background: var(--cv-hover);
+  color: var(--cv-text);
+}

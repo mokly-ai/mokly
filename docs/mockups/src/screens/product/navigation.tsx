@@ -36,7 +36,8 @@ export function Brand({ compact = false }: { compact?: boolean }) {
 
 /**
  * The logged-out account screens leave for the public site from the mark. The
- * mark keeps the brand accent on every surface; the wordmark is ink.
+ * mark keeps the brand accent on every surface; the wordmark is ink with a
+ * signal period.
  */
 export function SiteBrand() {
   return (

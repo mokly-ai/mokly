@@ -1,7 +1,7 @@
-import type { InstanceBoundary } from "../frame_adapter.js";
+import type { InstanceBoundary, InstanceBoxModel } from "../frame_adapter.js";
 
-import { edges, viewport } from "./clipping.js";
-import { geometry } from "./geometry.js";
+import { boundedBox, boundedPixel, edges, viewport } from "./clipping.js";
+import { geometry, hasText } from "./geometry.js";
 import { metadataKeys, type ProbeMetadata } from "./metadata.js";
 import { documentRanges } from "./ranges.js";
 
@@ -33,6 +33,57 @@ export const inspection = (doc: Document, metadata: ProbeMetadata) => {
       }));
     },
     __keys: requireKeys,
+    __boxModel(key: string): InstanceBoxModel | null {
+      requireKeys([key]);
+      const ranges = documentRanges(doc, metadata).filter(
+        (_, index) => metadata.ranges[index]![0] === key,
+      );
+      const range = ranges[0];
+      if (ranges.length !== 1 || range!.startContainer !== range!.endContainer)
+        return null;
+      const nodes = [...range!.startContainer.childNodes]
+        .slice(range!.startOffset, range!.endOffset)
+        .filter(
+          (node) =>
+            node.nodeType !== 8 &&
+            (node.nodeType !== 3 || hasText(node as Text)),
+        );
+      const element = nodes[0] as Element | undefined;
+      if (
+        nodes.length !== 1 ||
+        element?.nodeType !== 1 ||
+        !element.getClientRects().length
+      )
+        return null;
+      const rect = element.getBoundingClientRect();
+      const style = doc.defaultView!.getComputedStyle(element);
+      const sides = (border: boolean) => {
+        const [top, right, bottom, left] = (
+          ["Top", "Right", "Bottom", "Left"] as const
+        ).map((side) =>
+          boundedPixel(
+            parseFloat(
+              style[
+                border
+                  ? (`border${side}Width` as const)
+                  : (`padding${side}` as const)
+              ],
+            ),
+          ),
+        );
+        return {
+          top: top!,
+          right: right!,
+          bottom: bottom!,
+          left: left!,
+        };
+      };
+      return {
+        box: boundedBox(rect.left, rect.top, rect.width, rect.height),
+        border: sides(true),
+        padding: sides(false),
+      };
+    },
     __scroll(key: string): void {
       requireKeys([key]);
       const range = documentRanges(doc, metadata).find(

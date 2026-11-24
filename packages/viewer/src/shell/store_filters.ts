@@ -23,7 +23,11 @@ export function withFilterSelection(
   return withSelection(state, selection, filtersChanged);
 }
 
-/** Install a route, revealing only the destination path and hidden constraints. */
+/**
+ * Install a standalone shell's route, revealing only the destination path
+ * and hidden constraints. Its address names the viewport, so a route without
+ * one shows Both.
+ */
 export function withRoute(
   state: ShellState,
   route: ShellRoute,
@@ -33,7 +37,7 @@ export function withRoute(
   let selection = { ...state.selection, screenPath: routeScreenId(route) };
   if (route.snapshot) selection.snapshotId = route.snapshot;
   else delete selection.snapshotId;
-  if (route.viewport) selection.viewport = route.viewport;
+  selection.viewport = route.viewport ?? "both";
   selection = revealSelection(
     catalogue.publicModel,
     folderTitleLookup(catalogue.hierarchy),

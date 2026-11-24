@@ -1,65 +1,67 @@
-/** React lifecycle controller for one entry's lazy comparison snapshots. */
+/**
+ * React lifecycle controller for the lazy comparison snapshots of each
+ * compared row: one generation for each row that the comparison demands,
+ * which `comparison_row_lifecycle.ts` requests, renews and cancels.
+ */
 
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 
-import { DeploymentChangedError } from "../catalogue/sources.js";
-
-import { useComparisonEnvironment } from "./comparison_context.js";
+import {
+  useComparisonEnvironment,
+  type ComparisonEnvironment,
+} from "./comparison_context.js";
 import { useComparisonIntent } from "./comparison_intent.js";
 import { useComparisonModeState } from "./comparison_mode.js";
 import {
   comparisonDemand,
   type ComparisonDemand,
+  type ComparisonFrameDemand,
   type ComparisonMode,
   type ComparisonPresentation,
 } from "./comparison_presentation.js";
+import type { LoadedComparison } from "./comparison_request.js";
 import {
-  COMPARISON_UNAVAILABLE,
-  renewComparison,
-  requestComparison,
-  type ComparisonScope,
-  type LoadedComparison,
-} from "./comparison_request.js";
+  createComparisonRows,
+  type ComparisonRows,
+} from "./comparison_row_lifecycle.js";
+import {
+  IDLE_ROWS,
+  rowsSnapshot,
+  type ComparisonGenerations,
+  type ComparisonRowsSnapshot,
+} from "./comparison_row_snapshot.js";
 import { useShellStore } from "./store_context.js";
 
+export type { ComparisonGenerations } from "./comparison_row_snapshot.js";
 export type { ComparisonPresentation } from "./comparison_presentation.js";
 
-interface LoadedState {
-  scopeKey: string;
-  value: LoadedComparison;
-}
-
-interface FailureState {
-  key: string;
-  message: string;
-}
-
-interface PendingOperation {
-  controller: AbortController;
-  scopeKey: string;
-}
-
-/** State and actions consumed by the comparison toolbar and pane renderer. */
+/** State and actions consumed by the comparison band and the canvas. */
 export interface ComparisonController {
+  /** Whether a demanded row's request or renewal runs. */
   busy: boolean;
+  /** The routed row's request failure, for its current key. */
   failure?: string;
+  /**
+   * The generation of each demanded row that has one, also while it renews,
+   * with the rows that still load and the rows whose request failed.
+   */
+  generations?: ComparisonGenerations;
+  /** The routed row's generation, while the comparison demands that row. */
   loaded?: LoadedComparison;
   mode: ComparisonMode;
+  /** The mode and axes that every demanded row has settled into. */
   presentation?: ComparisonPresentation;
+  /** Request every demanded row again. */
   refresh(): void;
-  retry(): void;
+  /** Request one demanded row again: `entry`, or else the routed row. */
+  retry(entry?: string): void;
   selectMode(mode: ComparisonMode): void;
 }
 
-/** Keep one request owner across rapid toolbar, viewport, and scheme changes. */
-export function useComparison({
-  effectiveColorScheme,
-  eligible,
-  eligibilityKnown,
-  historical = false,
-  entryId,
-  owner,
-}: {
+/** What a workspace tells its comparison. */
+export interface ComparisonOptions {
+  /** Side by side: the key of the compared frame among `frames`. */
+  comparedFrame?: string;
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
   /**
@@ -68,148 +70,105 @@ export function useComparison({
    * for it.
    */
   eligibilityKnown: boolean;
-  historical?: boolean;
   entryId: string;
+  /**
+   * The shown frames whose rows compare, in canvas order. The comparison
+   * requests one generation for each of their rows; Side by side requests only
+   * the row of the compared frame. Without `frames`, the comparison holds the
+   * routed entry's row alone (`entryId`, with `historical`), keyed on the
+   * selection's axes.
+   */
+  frames?: readonly ComparisonFrameDemand[];
+  historical?: boolean;
+  /** The workspace that owns the rows: a variant set's parent path. */
   owner?: string;
-}): ComparisonController {
+}
+
+/** The rows of one owner in one environment, and what the last render showed. */
+interface RowsHolder {
+  environment: ComparisonEnvironment | undefined;
+  ownerKey: string;
+  rows: ComparisonRows;
+  shown: ComparisonRowsSnapshot;
+}
+
+/**
+ * One rows engine for each owner and environment, fed with the latest demand.
+ * Each render shows the rows for its own demand, before the effect applies
+ * it. A new owner, a new environment and unmount cancel every row.
+ */
+function useComparisonRows(
+  environment: ComparisonEnvironment | undefined,
+  ownerKey: string,
+  demand: ComparisonDemand | undefined,
+): { rows: ComparisonRows; snapshot: ComparisonRowsSnapshot } {
+  const holder = useRef<RowsHolder | undefined>(undefined);
+  if (
+    !holder.current ||
+    holder.current.environment !== environment ||
+    holder.current.ownerKey !== ownerKey
+  )
+    holder.current = {
+      environment,
+      ownerKey,
+      rows: createComparisonRows(environment),
+      shown: IDLE_ROWS,
+    };
+  const current = holder.current;
+  const { rows } = current;
+  const states = useSyncExternalStore(
+    rows.subscribe,
+    rows.snapshot,
+    rows.snapshot,
+  );
+  current.shown = rowsSnapshot(current.shown, states, demand);
+  const latest = useRef(demand);
+  latest.current = demand;
+  useEffect(() => {
+    rows.demand(latest.current);
+  }, [rows, demand?.key]);
+  useEffect(() => () => rows.reset(), [rows]);
+  return { rows, snapshot: current.shown };
+}
+
+/** Keep one request owner across rapid toolbar, viewport, and scheme changes. */
+export function useComparison({
+  comparedFrame,
+  effectiveColorScheme,
+  eligible,
+  eligibilityKnown,
+  entryId,
+  frames,
+  historical = false,
+  owner,
+}: ComparisonOptions): ComparisonController {
   const store = useShellStore();
   const environment = useComparisonEnvironment();
-  const selection = store.state.selection;
+  const { colorScheme, viewport } = store.state.selection;
+  const model = store.catalogue.publicModel;
   // A publication returns an active comparison to Current.
-  const evidenceKey = String(store.catalogue.publicModel.revision);
-  const comparisonUrl = historical
-    ? store.catalogue.publicModel.comparisonUrl
-    : undefined;
-  const scope = useMemo<ComparisonScope>(
-    () => ({
-      id: entryId,
-      ...(comparisonUrl === undefined ? {} : { comparisonUrl }),
-    }),
-    [entryId, comparisonUrl],
-  );
-  const scopeKey = useMemo(() => JSON.stringify(scope), [scope]);
-  const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
+  const ownerKey = `${owner ?? entryId}\u0000${String(model.revision)}`;
   const [modeState, setModeState] = useComparisonModeState(ownerKey);
   const mode = modeState.ownerKey === ownerKey ? modeState.mode : "current";
-  const [loadedState, setLoadedState] = useReducer(
-    (_current: LoadedState | undefined, next: LoadedState | undefined) => next,
-    undefined,
-  );
-  const [presentation, setPresentation] = useReducer(
-    (
-      _current: (ComparisonPresentation & { scopeKey: string }) | undefined,
-      next: (ComparisonPresentation & { scopeKey: string }) | undefined,
-    ) => next,
-    undefined,
-  );
-  const [failure, setFailure] = useReducer(
-    (_current: FailureState | undefined, next: FailureState | undefined) =>
-      next,
-    undefined,
-  );
-  const [busy, toggleBusy] = useReducer(
-    (_current: boolean, next: boolean) => next,
-    false,
-  );
-  const loadedRef = useRef<LoadedState | undefined>(undefined);
-  const failureRef = useRef<FailureState | undefined>(undefined);
-  const pendingRef = useRef<PendingOperation | undefined>(undefined);
-  const completedRef = useRef<string | undefined>(undefined);
-  const latestDemand = useRef<ComparisonDemand | undefined>(undefined);
   const currentOwner = useRef(ownerKey);
-  const currentEligibility = useRef(eligible);
   currentOwner.current = ownerKey;
-  currentEligibility.current = eligible;
   const demand =
-    eligible && mode !== "current"
-      ? comparisonDemand(
-          scope,
-          scopeKey,
-          mode,
-          selection.viewport,
-          effectiveColorScheme ?? selection.colorScheme,
-          selection.colorScheme,
-        )
+    environment && eligible && mode !== "current"
+      ? comparisonDemand({
+          comparedFrame,
+          comparisonUrl: model.comparisonUrl,
+          entryId,
+          frames,
+          historical,
+          presentation: {
+            colorScheme: effectiveColorScheme ?? colorScheme,
+            mode,
+            requestedColorScheme: colorScheme,
+            viewport,
+          },
+        })
       : undefined;
-  latestDemand.current = demand;
-
-  const begin = useCallback(
-    (kind: "load" | "renew", refresh = false) => {
-      const requested = latestDemand.current;
-      if (!requested || !environment) return;
-      pendingRef.current?.controller.abort();
-      const controller = new AbortController();
-      const operation = { controller, scopeKey: requested.scopeKey };
-      pendingRef.current = operation;
-      failureRef.current = undefined;
-      setFailure(undefined);
-      toggleBusy(true);
-      const current = loadedRef.current;
-      const work =
-        kind === "renew" && current?.scopeKey === requested.scopeKey
-          ? renewComparison(
-              environment,
-              current.value,
-              requested.scope,
-              controller.signal,
-            )
-          : requestComparison(
-              environment,
-              requested.scope,
-              refresh,
-              controller.signal,
-            );
-      void work.then(
-        (value) => {
-          const latest = latestDemand.current;
-          if (
-            controller.signal.aborted ||
-            pendingRef.current !== operation ||
-            !latest ||
-            latest.scopeKey !== operation.scopeKey
-          )
-            return;
-          const nextLoaded = { scopeKey: latest.scopeKey, value };
-          loadedRef.current = nextLoaded;
-          completedRef.current = latest.key;
-          setLoadedState(nextLoaded);
-          setPresentation({
-            scopeKey: latest.scopeKey,
-            colorScheme: latest.colorScheme,
-            mode: latest.mode,
-            requestedColorScheme: latest.requestedColorScheme,
-            viewport: latest.viewport,
-          });
-          pendingRef.current = undefined;
-          toggleBusy(false);
-        },
-        (error: unknown) => {
-          if (controller.signal.aborted || pendingRef.current !== operation)
-            return;
-          pendingRef.current = undefined;
-          if (error instanceof DeploymentChangedError) {
-            toggleBusy(false);
-            return;
-          }
-          const latest = latestDemand.current;
-          if (!latest || latest.scopeKey !== operation.scopeKey) return;
-          const nextFailure = {
-            key: latest.key,
-            message: COMPARISON_UNAVAILABLE,
-          };
-          loadedRef.current = undefined;
-          failureRef.current = nextFailure;
-          completedRef.current = undefined;
-          setLoadedState(undefined);
-          setPresentation(undefined);
-          setFailure(nextFailure);
-          toggleBusy(false);
-          environment.reportError?.(error);
-        },
-      );
-    },
-    [environment],
-  );
+  const { rows, snapshot } = useComparisonRows(environment, ownerKey, demand);
 
   // Another comparison environment starts from Current.
   useEffect(() => {
@@ -224,55 +183,19 @@ export function useComparison({
     if (!eligible) setModeState({ ownerKey, mode: "current" });
   }, [eligible, ownerKey]);
 
-  useEffect(() => {
-    if (!demand || !environment) {
-      pendingRef.current?.controller.abort();
-      pendingRef.current = undefined;
-      loadedRef.current = undefined;
-      failureRef.current = undefined;
-      completedRef.current = undefined;
-      setLoadedState(undefined);
-      setPresentation(undefined);
-      setFailure(undefined);
-      toggleBusy(false);
-      return;
-    }
-    const pending = pendingRef.current;
-    if (pending?.scopeKey === demand.scopeKey) return;
-    if (pending) {
-      pending.controller.abort();
-      pendingRef.current = undefined;
-    }
-    if (failureRef.current?.key === demand.key) return;
-    if (completedRef.current === demand.key) return;
-    const loaded = loadedRef.current;
-    begin(loaded?.scopeKey === demand.scopeKey ? "renew" : "load");
-  }, [begin, demand?.key, demand?.scopeKey]);
-
-  useEffect(
-    () => () => {
-      pendingRef.current?.controller.abort();
-      pendingRef.current = undefined;
-    },
-    [],
-  );
-
-  const currentLoaded =
-    loadedState?.scopeKey === scopeKey ? loadedState.value : undefined;
-  const currentPresentation =
-    presentation?.scopeKey === scopeKey ? presentation : undefined;
-  const currentFailure =
-    failure && failure.key === demand?.key ? failure : undefined;
+  const { busy, generations, presentation } = snapshot;
+  const loaded = generations?.get(entryId);
+  const failure = generations?.failures?.get(entryId);
   return {
     busy,
     mode,
-    ...(currentFailure ? { failure: currentFailure.message } : {}),
-    ...(demand && currentLoaded ? { loaded: currentLoaded } : {}),
-    ...(demand && currentPresentation
-      ? { presentation: currentPresentation }
-      : {}),
-    refresh: () => begin("load", true),
-    retry: () => begin("load", true),
+    ...(failure === undefined ? {} : { failure }),
+    ...(generations ? { generations } : {}),
+    ...(loaded ? { loaded } : {}),
+    ...(presentation ? { presentation } : {}),
+    refresh: () => rows.refresh(),
+    // The package's failure state passes its click event, which names no row.
+    retry: (entry) => rows.retry(typeof entry === "string" ? entry : entryId),
     selectMode: (next) => setModeState({ mode: next, ownerKey }),
   };
 }

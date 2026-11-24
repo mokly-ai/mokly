@@ -1,8 +1,9 @@
 /**
- * The documentation architecture the site depicts. Sections and
- * their page order follow the information architecture in
- * `docs/protocol/cloud/site-docs.md`; destinations the design catalogue does not
- * own render as plain text, the rule the rest of the design mockups follow.
+ * The documentation architecture the site depicts, which the Layers panel
+ * lists. Sections and their page order follow the information architecture
+ * in `docs/protocol/cloud/site-docs.md`; destinations the design catalogue
+ * does not own render as plain text, the rule the rest of the design
+ * mockups follow. `docs-pages.ts` models the pages that a mockup draws.
  */
 
 /** One documentation section and its pages, in sidebar order. */
@@ -108,13 +109,3 @@ export const DOCS_SECTIONS: readonly DocsSection[] = [
     title: "Review and edit",
   },
 ];
-
-/** The section and page this documentation mockup renders. */
-export const DOCS_PAGE = { page: "Install", section: "Getting started" };
-
-/** The headings the on-this-page rail lists for the depicted page. */
-export const DOCS_HEADINGS = [
-  { id: "install-the-package", title: "Install the package" },
-  { id: "add-the-configuration", title: "Add the configuration" },
-  { id: "author-your-first-screen", title: "Author your first screen" },
-] as const;

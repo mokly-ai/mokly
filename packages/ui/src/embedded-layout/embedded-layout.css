@@ -34,9 +34,14 @@
   background: var(--chrome-surface);
 }
 
-.mokly-viewer .mokly-top-host .mbk-topbar {
+/* The embedded bar keeps its two equal outer columns at every window width,
+   so a host's centre slot stays in the middle of the bar beside a filled
+   start slot. Only the top host's own width switches it to the compact bar
+   below. */
+.mokly-top-host > .mbk-topbar {
   flex: 1;
   min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 }
 
 .mokly-viewer .mokly-rail-host {
@@ -49,6 +54,13 @@
 .mokly-viewer .mokly-rail-host .mbk-nav {
   flex: 1;
   min-height: 0;
+}
+
+/* In the Canvas layout the rail host fills the floating catalogue, with the
+   host's rail slots above and below the navigation. */
+.mokly-viewer .mbk-float > .mbk-float-body > .mokly-rail-host {
+  flex: 1;
+  min-width: 0;
 }
 
 .mokly-viewer .mokly-stage-host {
@@ -67,28 +79,28 @@
   display: none;
 }
 
+/* The stage overlay lies over the canvas and under the floating panels. */
 .mokly-viewer [data-mokly-slot="stageOverlay"] {
   position: absolute;
-  z-index: 10;
+  z-index: 9;
   overflow: hidden;
 }
 
+/* The marker and label layers lie over the canvas and its highlight masks,
+   and under the stage overlay and the canvas's floating chrome: the zoom
+   pill, the entry bar, the dock, the floating panels and the top bar cover
+   them, as they cover the frames. */
 .mokly-viewer [data-mokly-marker-layer],
 .mokly-viewer [data-mokly-label-layer] {
   display: block;
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 11;
+  z-index: 5;
 }
 
 .mokly-viewer [data-mokly-slot="markers"]:empty {
   display: block;
-}
-
-.mokly-viewer.frame-expanded
-  :is([data-mokly-marker-layer], [data-mokly-label-layer]) {
-  z-index: 952;
 }
 
 .mokly-viewer [data-mokly-slot="sidePanel"] {
@@ -108,29 +120,55 @@
   display: none;
 }
 
+/* The host's top-bar slots, which the top bar places in its columns. The
+   start and centre slots fill the free room of their column, so that host
+   content can fill it too, with that content at their start. They give way
+   when their column runs short, so their content can truncate. The end slot
+   keeps the width of its content. */
 .mokly-viewer [data-mokly-slot="topBarStart"],
+.mokly-viewer [data-mokly-slot="topBarCenter"],
 .mokly-viewer [data-mokly-slot="topBarEnd"] {
   display: flex;
   flex: none;
   align-items: center;
 }
 
+.mokly-viewer [data-mokly-slot="topBarStart"],
+.mokly-viewer [data-mokly-slot="topBarCenter"] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* A host that leaves the start slot empty and fills the centre slot gets the
+   bar's free room in the centre column, which starts after the mark, in the
+   three columns and in the compact row alike. The end column then keeps the
+   width of its content. A filled start slot keeps the centre in the middle. */
+.mokly-top-host
+  > .mbk-topbar:has(
+    > .mbk-topbar-start > [data-mokly-slot="topBarStart"]:empty
+  ):has(> .mbk-topbar-center > [data-mokly-slot="topBarCenter"]:not(:empty)) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
 @media (width < 56.25rem) {
-  .mokly-viewer .mokly-rail-host {
+  .mokly-viewer:not([data-canvas-layout]) .mokly-rail-host {
     width: 0;
   }
 }
 
 /* The compact top bar switches at the viewer contract's container width of
    560px. The query uses pixels, so the host page's root font size cannot
-   move it. */
+   move it. It holds one row: the start column with its start slot takes the
+   free room, then the centre slot and the end column keep the width of their
+   content, unless the rule above gives the room to the centre column. */
 @container mokly-top-host (max-width: 560px) {
   .mokly-top-host > .mbk-topbar {
-    gap: 8px;
-    padding: 0 8px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 8px;
+    padding-inline: max(8px, var(--mokly-top-bar-inset-start, 0px))
+      max(8px, var(--mokly-top-bar-inset-end, 0px));
   }
 
-  .mokly-top-host > .mbk-topbar .mbk-brand,
   .mokly-top-host > .mbk-topbar .mbk-search,
   .mokly-top-host > .mbk-topbar .mbk-search-close {
     display: none;
@@ -140,23 +178,27 @@
     display: inline-flex;
   }
 
-  .mokly-top-host > .mbk-topbar[data-compact-search="open"] {
+  /* The open search covers the whole bar. Every other part of the bar, each
+     host slot included, stays mounted and laid out under it. */
+  .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search-group {
     position: absolute;
     inset: 0;
-    z-index: 12;
-    width: auto;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-inline: max(8px, var(--mokly-top-bar-inset-start, 0px))
+      max(8px, var(--mokly-top-bar-inset-end, 0px));
     background: var(--chrome-surface);
   }
 
-  .mokly-top-host
-    > .mbk-topbar[data-compact-search="open"]
-    > :not(.mbk-search, .mbk-search-close) {
+  .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search-toggle {
     display: none;
   }
 
   .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search {
     display: flex;
-    max-width: none;
+    flex: 1 1 auto;
   }
 
   .mokly-top-host > .mbk-topbar[data-compact-search="open"] .mbk-search-close {

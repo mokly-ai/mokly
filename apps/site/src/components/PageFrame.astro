@@ -1,0 +1,56 @@
+---
+/**
+ * A document page as a frame on the canvas, the way the design file shows
+ * the open page: the `surface` sheet with a `border` ring and
+ * `shadow.small`, labelled with its source file and selected with corner
+ * handles in a soft outline. The label and the selection are depictions,
+ * hidden from assistive technology, so only the sheet's content reaches it.
+ *
+ * - `file`: the page's source path, such as `legal/terms.md`. The label
+ *   keeps its folder muted and sets its file name apart.
+ * - `measure`: an id for the sheet. With it, a size tag under the frame
+ *   shows the sheet's rendered size, which the measurements island writes
+ *   and keeps in step with resizing; without script the tag does not show.
+ *   Without it, the frame has no size tag.
+ * - `class`: the area's class. The area's rules set the frame's width and,
+ *   through their own rule for `.site-page-sheet`, the sheet's padding.
+ *
+ * Use: `<PageFrame file="legal/terms.md">…</PageFrame>`, or
+ * `<PageFrame file="start/install.md" measure="docs-page">…</PageFrame>`.
+ * The sheet's content is the slot. The rules are in
+ * `src/styles/page-frame.css`.
+ */
+import FrameLabel from "./FrameLabel.astro";
+import Selection from "./Selection.astro";
+
+import "../styles/page-frame.css";
+
+interface Props {
+  readonly class?: string;
+  readonly file: string;
+  readonly measure?: string;
+}
+
+const { class: className, file, measure } = Astro.props;
+
+const slash = file.lastIndexOf("/") + 1;
+const folder = file.slice(0, slash);
+const name = file.slice(slash);
+---
+
+<div class:list={["site-page-frame", className]}>
+  <FrameLabel icon="file" selected>
+    <Fragment slot="name">
+      {folder}
+      <b>{name}</b>
+    </Fragment>
+  </FrameLabel>
+  <div class="site-page-sheet" id={measure}>
+    <slot />
+  </div>
+  {measure === undefined ? (
+    <Selection soft />
+  ) : (
+    <Selection measure={measure} soft />
+  )}
+</div>

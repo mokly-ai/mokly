@@ -78,9 +78,9 @@ function consumed(
 }
 
 /**
- * Every shared component has its page, exactly its saved variants in order,
- * and a real design-screen consumer in each viewport, direct or composed, by
- * the recorded usage.
+ * Every shared component has its page, which declares at least one control,
+ * exactly its saved variants in order, and a real design-screen consumer in
+ * each viewport, direct or composed, by the recorded usage.
  */
 export function libraryViolations(catalogue: ServedCatalogue): string[] {
   const components = catalogue.index.components;
@@ -92,10 +92,13 @@ export function libraryViolations(catalogue: ServedCatalogue): string[] {
     .map((entry) => `${entry.path} is not an inventory component`);
   for (const [id, variants] of Object.entries(SHARED_COMPONENTS)) {
     const parent = `${LIBRARY}${id}`;
-    if (!parents.some((entry) => entry.path === parent)) {
+    const page = parents.find((entry) => entry.path === parent);
+    if (!page) {
       violations.push(`${parent} has no page`);
       continue;
     }
+    if (Object.keys(page.controls).length === 0)
+      violations.push(`${parent} declares no control`);
     const saved = components
       .filter((entry) => entry.variantOf === parent)
       .map((entry) => entry.path.slice(parent.length + 1));
@@ -166,12 +169,29 @@ export function reachabilityViolations(catalogue: ServedCatalogue): string[] {
   ];
 }
 
+/** The sheets that the Canvas route links and no other design route links. */
+const CANVAS_ROUTE_SHEETS = [
+  "design-canvas-inspect.css",
+  "design-canvas-sections.css",
+  "design-canvas-changes.css",
+  "design-canvas-outcomes.css",
+  "design-canvas-flows.css",
+  "design-canvas-loading.css",
+  "design-canvas-search.css",
+  "design-canvas-components.css",
+  "design-canvas-props.css",
+  "design-canvas-evidence.css",
+  "design-canvas-shell.css",
+  "design-canvas-compact.css",
+];
+
 /**
- * The shared design sheets keep their route scopes: the component design
- * sheets link from the fifty-three `design/components/**` screens, the controls
- * sheet from its twenty entries, the library sheet from no screen, the
- * inspector and workspace sheets from every design screen, and every shared
- * sheet from the library pages and their 70 saved variants.
+ * The shared design sheets keep their route scopes: the design sheet links
+ * from every design view; the component design sheets and the library sheet
+ * from no screen; the preview, mini-screen, and Canvas sheets from every
+ * Canvas screen; and the other sheets of the Canvas route from the Canvas
+ * screens only. The library pages and their 75 saved variants link every
+ * listed sheet apart from the Canvas route's own sheets.
  */
 export function scopeViolations(catalogue: ServedCatalogue): string[] {
   const linked = new Map<string, Set<string>>();
@@ -181,41 +201,30 @@ export function scopeViolations(catalogue: ServedCatalogue): string[] {
         if (!sheet.startsWith("design-library/"))
           linked.set(sheet, (linked.get(sheet) ?? new Set()).add(view.path));
   const entries = designEntries(catalogue);
-  const library = entries.filter((entry) => entry.path.startsWith(LIBRARY));
-  const variants = library.filter((entry) => entry.variantOf).length;
+  const library = entries
+    .filter((entry) => entry.path.startsWith(LIBRARY))
+    .map((entry) => entry.path);
+  const variants = entries.filter(
+    (entry) => entry.path.startsWith(LIBRARY) && entry.variantOf,
+  ).length;
   const screens = (pattern: RegExp) =>
     entries
       .filter((entry) => entry.kind === "screen" && pattern.test(entry.path))
       .map((entry) => entry.path);
+  const canvas = screens(/^design\/canvas\//u);
   const scopes: [string[], string[]][] = [
+    [["design.css"], [...screens(/^design\//u), ...library]],
+    [["design-components.css", "design-component-details.css"], library],
+    [["design-library.css"], library],
     [
-      [
-        "design-components.css",
-        "design-component-inspection.css",
-        "design-component-details.css",
-        "design-component-view.css",
-      ],
-      screens(/^design\/components\//u),
+      ["design-preview.css", "design-shots.css", "design-canvas.css"],
+      [...canvas, ...library],
     ],
-    [
-      ["design-component-controls.css"],
-      screens(/^design\/components\/controls\//u),
-    ],
-    [["design-library.css"], []],
-    [
-      [
-        "design.css",
-        "design-stage.css",
-        "design-component-inspector.css",
-        "design-component-workspace.css",
-      ],
-      screens(/^design\//u),
-    ],
+    [CANVAS_ROUTE_SHEETS, canvas],
   ];
-  const violations = variants === 70 ? [] : [`${variants} saved variants`];
-  for (const [sheets, scope] of scopes)
+  const violations = variants === 75 ? [] : [`${variants} saved variants`];
+  for (const [sheets, expected] of scopes)
     for (const sheet of sheets) {
-      const expected = [...scope, ...library.map((entry) => entry.path)];
       const actual = [...(linked.get(sheet) ?? [])];
       const extra = actual.filter((entry) => !expected.includes(entry));
       const missing = expected.filter((entry) => !actual.includes(entry));
@@ -224,10 +233,5 @@ export function scopeViolations(catalogue: ServedCatalogue): string[] {
           `${sheet}: ${extra.length} extra (${extra.slice(0, 3).join(", ")}), ${missing.length} missing (${missing.slice(0, 3).join(", ")})`,
         );
     }
-  const pins = [
-    screens(/^design\/components\//u).length,
-    screens(/^design\/components\/controls\//u).length,
-  ];
-  if (pins.join() !== "53,20") violations.push(`scopes pin ${pins.join(", ")}`);
   return violations;
 }

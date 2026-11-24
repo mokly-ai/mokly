@@ -1,0 +1,195 @@
+/* The people and agents in the depicted design file: the avatars and the
+   presence group that Avatar.astro and Presence.astro draw, and the cursors
+   that Cursor.astro draws. Maya is pink, Sam blue, Claude orange and Codex
+   violet; each avatar's initial or spark and each cursor's name tag take
+   the ink role of its colour. The Mokly avatar draws the mark on the
+   surface. The rules match docs/mockups/styles/site/people.css. */
+
+/* Avatars, on a ring of the surface they sit on */
+
+.site-avatar {
+  border-radius: var(--mk-radius-pill);
+  box-shadow: 0 0 0 2px var(--mk-color-surface);
+  display: inline-grid;
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-semibold);
+  height: 28px;
+  line-height: 1;
+  place-items: center;
+  width: 28px;
+}
+
+.site-avatar--small {
+  font-size: 0.625rem;
+  height: 22px;
+  width: 22px;
+}
+
+.site-avatar--maya {
+  background: var(--mk-color-people-pink-fill);
+  color: var(--mk-color-people-pink-ink);
+}
+
+.site-avatar--sam {
+  background: var(--mk-color-people-blue-fill);
+  color: var(--mk-color-people-blue-ink);
+}
+
+.site-avatar--claude {
+  background: var(--mk-color-people-orange-fill);
+  color: var(--mk-color-people-orange-ink);
+}
+
+.site-avatar--codex {
+  background: var(--mk-color-people-violet-fill);
+  color: var(--mk-color-people-violet-ink);
+}
+
+.site-avatar--mokly {
+  background: var(--mk-color-surface);
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+/* The presence group: the avatars overlap */
+
+.site-presence {
+  align-items: center;
+  display: inline-flex;
+}
+
+.site-presence .site-avatar + .site-avatar {
+  margin-left: -6px;
+}
+
+.site-presence--small .site-avatar + .site-avatar {
+  margin-left: -3px;
+}
+
+/* Cursors: the arrow in the person's colour and the name label */
+
+.site-cursor {
+  height: 22px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 20px;
+  z-index: 6;
+}
+
+.site-cursor-arrow {
+  display: block;
+  filter: drop-shadow(var(--mk-shadow-small));
+  overflow: visible;
+}
+
+.site-cursor-arrow path {
+  stroke: var(--mk-color-surface);
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+/* A dark arrow is edged with the text role. The mockups key it on the
+   pinned scheme; the site is dark through the scheme choice or, without a
+   choice, through the system scheme. */
+
+:root[data-color-scheme="dark"] .site-cursor-arrow path {
+  stroke: var(--mk-color-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-scheme="light"]) .site-cursor-arrow path {
+    stroke: var(--mk-color-text);
+  }
+}
+
+/* A cursor is a depiction, so its name tag keeps the drawn size of its
+   arrow at any text size: 12.5px, and 10px for an agent's badge. A tag that
+   grew with the reader's text would pass the window from a cursor near the
+   right edge. */
+
+.site-cursor-tag {
+  align-items: center;
+  border-radius: 4px 11px 11px;
+  box-shadow:
+    0 0 0 1.5px var(--mk-color-surface),
+    var(--mk-shadow-medium);
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: var(--mk-font-semibold);
+  gap: 5px;
+  height: 23px;
+  left: 15px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  padding: 0 8px;
+  position: absolute;
+  top: 19px;
+  white-space: nowrap;
+}
+
+/* The site's base rule caps an svg at its box's width. The tag takes the
+   width of its content, so an agent's spark would shrink to nothing: it
+   keeps its own size here. The mockups have no such base rule. */
+
+.site-cursor-tag svg {
+  flex: none;
+  max-width: none;
+}
+
+.site-cursor--flip .site-cursor-tag {
+  border-radius: 11px 4px 11px 11px;
+  left: auto;
+  right: 6px;
+}
+
+.site-cursor-agent {
+  background: color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 6px;
+  font-family: var(--mk-font-mono);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.02em;
+  margin-left: 2px;
+  padding: 3px 5px;
+  text-transform: uppercase;
+}
+
+.site-cursor--maya .site-cursor-arrow path {
+  fill: var(--mk-color-people-pink-fill);
+}
+
+.site-cursor--maya .site-cursor-tag {
+  background: var(--mk-color-people-pink-fill);
+  color: var(--mk-color-people-pink-ink);
+}
+
+.site-cursor--sam .site-cursor-arrow path {
+  fill: var(--mk-color-people-blue-fill);
+}
+
+.site-cursor--sam .site-cursor-tag {
+  background: var(--mk-color-people-blue-fill);
+  color: var(--mk-color-people-blue-ink);
+}
+
+.site-cursor--claude .site-cursor-arrow path {
+  fill: var(--mk-color-people-orange-fill);
+}
+
+.site-cursor--claude .site-cursor-tag {
+  background: var(--mk-color-people-orange-fill);
+  color: var(--mk-color-people-orange-ink);
+}
+
+.site-cursor--codex .site-cursor-arrow path {
+  fill: var(--mk-color-people-violet-fill);
+}
+
+.site-cursor--codex .site-cursor-tag {
+  background: var(--mk-color-people-violet-fill);
+  color: var(--mk-color-people-violet-ink);
+}

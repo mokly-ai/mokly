@@ -22,30 +22,37 @@ reasons, component results, or comparison states. A new classification
 generation replaces the projection and clears stale evidence while Changes is
 pending or unavailable.
 
-The inspector merges classification evidence with a loaded selected
+The comparison details merge classification evidence with a loaded selected
 comparison. Classification evidence is the review entry's `reasons`, the
 projected records, and the live comparison's views of the selected screen or
 variant, so Current shows the same files and sentences as a loaded
 comparison. Records merge by stylesheet and selector, with sorted selector
 unions and unresolved precedence. Keep each rule's owner. A retained file
 suppresses its exclusion across all selected views; rendered-resource and
-ignored-content details remain available. Loaded evidence is selection-scoped
+ignored-content details remain available. The ignored-content details name,
+once each, the paired ignore ids of every selected view whose state is not
+`unchanged`, in Current and in a loaded comparison alike. An `unchanged` view
+names none, because its ignored content did not change, and naming it would
+repeat the line on every screen that renders the region. Loaded evidence is selection-scoped
 and clears on classification invalidation. Component change facts come from
 the review entries of the components and the rules they own. Do not infer them
 from a consumer's matches, file owners or the loaded comparison subset. A
 component-owned rule on a page adds no Affected screens on its own. Pending or unavailable generations clear all page evidence.
 
-A whole-document page has no workspace and no views. Its Details read the
-page's `resourceEvidence` from its entry detail in every delivery: Serve, the
+A whole-document page has no workspace and no views. Its comparison details
+read the page's `resourceEvidence` from its entry detail in every delivery: Serve, the
 static build and hosts alike. That one record holds the page's files and
 excluded files, so no view merge applies. The grouping is
 the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
 
-Each viewport section of a loaded comparison has one stage heading: “Mobile”
-or “Desktop”, then “ · ” and the view's label, for example “Desktop · Screen
-changed”. A Light view that stands in for a Dark selection adds “ · Light
-only”.
+Each compared frame of a loaded comparison has one view heading, a line of
+the comparison details in the Changes tab: the frame's viewport, or its
+variant in a variant set, then “ · ” and its scheme, then “ · ” and its view's
+label, for example “Desktop · Light · Screen changed”. A Light view that
+stands in for the frame's Dark view adds “ · Light only”. Decision: the
+heading names the frame's scheme, not its viewport alone, because the canvas
+shows both schemes at once.
 
 `ReviewState` has no resource-only variant. A view says “Styles this screen uses
 changed” when its state is `changed`, its review entry has a reason, every
@@ -77,21 +84,24 @@ component's markup change reaches the heading through usage. Every other
 
 ## Details Copy
 
-Screens, component variants and whole-document pages use one shared
-comparison heading in Details. Show “Compared with the branch point on
+Screens, component variants and whole-document pages use one shared heading
+in their comparison details. Show “Compared with the branch point on
 \<name\>.” only when the name is known. The name is the `base` ref of the
 catalogue index; an empty or blank name is unknown, and an index without
 `base` shows no sentence.
-Keep the “Comparison details” heading and the rest of Details, including its
-metadata, evidence, exclusions and status lines. An index with `base` shows
-the sentence in every delivery.
+Keep the “Comparison details” heading and the rest of the comparison details,
+including their metadata, evidence, exclusions and status lines. An index with
+`base` shows the sentence in every delivery, except in the
+[Changes tab](./mokly-changes-controls.md#changes-tab), whose Compared rail
+names the branch point in place of the sentence.
 
-During navigation, Details show the same sentence while the destination's
-detail loads and after it loads. The sentence uses the `base` ref that the
-index already carries. The name never comes from a route or from a default.
-An index without `base` still shows no sentence and keeps its other Details.
+During navigation, the comparison details show the same sentence while the
+destination's detail loads and after it loads. The sentence uses the `base`
+ref that the index already carries. The name never comes from a route or from
+a default. An index without `base` still shows no sentence and keeps the rest
+of the comparison details.
 
-For a component entry, Details use these sentences:
+For a component entry, the comparison details use these sentences:
 
 | Evidence                     | Sentence                                                                              |
 | ---------------------------- | ------------------------------------------------------------------------------------- |
@@ -103,10 +113,10 @@ For a component entry, Details use these sentences:
 | Several excluded stylesheets | “These stylesheets changed, but none of the changed styles apply to this variant.”    |
 
 Component copy names the shown entry a variant, as the
-[variants contract](./mokly-variants.md) and the saved-variant strip do. The
-parent's own entry uses the same word.
+[variants contract](./mokly-variants.md) and the list of saved variants do.
+The parent's own entry uses the same word.
 
-Screen Details lists only the sorted retained files beneath “Changes to these files may affect this screen:”. Excluded stylesheet evidence remains available for unchanged entries in All.
+A screen's comparison details list only the sorted retained files beneath “Changes to these files may affect this screen:”. Excluded stylesheet evidence remains available for unchanged entries in All.
 
 A whole-document page uses the screen sentences with “page” in place of
 “screen”. Its files list follows “Changes to these files may affect this
@@ -136,9 +146,9 @@ Use these exact sentences when the page selector list is nonempty:
 
 Choose the column by whether any record with one of the displayed selectors
 has a component owner. The technical details stay in this
-secondary list. Keep the comparison-stage heading and catalogue row
-labels; do not expose owner records, schema fields or internal status names in
-product copy. A whole-document page still has no comparison controls.
+secondary list. The view headings and the catalogue row labels keep their
+copy, and no product copy exposes owner records, schema fields or internal
+status names. A whole-document page still has no comparison controls.
 
 When the stylesheet has an `unresolved` rule owned by the entry, show a
 separate paragraph under that same path. Use the unresolved screen and component sentences of the Details Copy table,
@@ -168,8 +178,8 @@ and selector. Union page selectors separately from component-only and
 unresolved selectors. Never merge away the stylesheet-to-selector relationship.
 The excluded files are the sorted union of excluded files minus any retained
 file. Use singular or
-plural excluded copy by file count. Viewport and scheme controls do not change
-Details; desktop and mobile present the same facts. Loaded comparisons and
+plural excluded copy by file count. The Frames filter does not change the
+comparison details, which hold the same facts for every viewport and scheme. Loaded comparisons and
 classification evidence merge once, without duplicate paragraphs or files.
 
 ## File Outcomes
@@ -213,8 +223,8 @@ entry gains no sentence from those rules.
 A whole-document page may use component elements
 under the [pages contract](./mokly-pages.md#authoring), but only screens and
 components have [usage records](./mokly-component-usage-records.md#validation).
-A page is therefore no consumer: its Details never link a changed component
-or say that sentence, and no component's Usage lists it.
+A page is therefore no consumer: its comparison details never link a changed
+component or say that sentence, and no component's Usage lists it.
 
 The terminal line, “No changes to this screen.”, “No changes to this page.” or
 “No changes to this variant.”, appears only when the routed entry is
@@ -225,5 +235,5 @@ be unmodified.
 A current whole-document page shows Added, Changed or Unmodified beside its
 title once its Changes are ready, from the catalogue change kind: Added when
 the base side lacks the page, Changed when Changes names it, and otherwise
-Unmodified. A removed page keeps its Removed badge. The page's
-Details show the comparison details whenever its status is known.
+Unmodified. A removed page keeps its Removed badge. The page shows its
+comparison details whenever its status is known.

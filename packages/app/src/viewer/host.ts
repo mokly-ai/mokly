@@ -22,13 +22,7 @@ export type ViewerTheme = "light" | "dark";
 
 /** A logical cloud control that can occupy fallback and package chrome. */
 export type ViewerSlotName =
-  | "projects"
-  | "switcher"
-  | "history"
-  | "share"
-  | "settings"
-  | "account"
-  | "more";
+  "projects" | "switcher" | "history" | "share" | "account" | "more";
 
 /** The typed form of the viewer's URL keys. */
 export interface ViewerSelection {
@@ -46,16 +40,25 @@ export interface ViewerSelection {
   tags: readonly string[];
 }
 
-/** The cloud chrome the package's top bar renders; an absent slot draws nothing. */
+/**
+ * The cloud chrome the package renders: the controls of its top bar, and the
+ * Mokly check in its Changes tab. An absent slot draws nothing.
+ */
 export interface ViewerSlots {
   project?: ReactNode;
   publication?: ReactNode;
   history?: ReactNode;
   share?: ReactNode;
-  settings?: ReactNode;
+  /** The reader's avatar and the account menu it opens. */
   account?: ReactNode;
-  /** The compact composition of project, history, share, settings and account. */
+  /** The compact composition of project, history, share and the account. */
   more?: ReactNode;
+  /**
+   * The Mokly check of a pull request's publication with a comparison, which
+   * the package's Changes tab shows after its change stepper. The cloud's own
+   * bar draws no Changes tab, so it never draws the check.
+   */
+  check?: ReactNode;
 }
 
 /** What the stage shows; only `ready` mounts a catalogue. */
@@ -90,7 +93,10 @@ export interface ViewerHostProps {
   status: ViewerStatus;
   /** The in-stage card for every status other than `ready`. */
   stageMessage?: ReactNode;
-  /** The six cloud actions, composed into the package's two top-bar slots. */
+  /**
+   * The five cloud actions and More, which the bar composes into the
+   * package's three top-bar slots.
+   */
   slots?: ViewerSlots;
   /** Keep the fallback mounted while one of its slot activations concludes. */
   holdReady?: boolean;
@@ -99,7 +105,7 @@ export interface ViewerHostProps {
 /** The selection a route falls back to before any URL state is read. */
 export const defaultSelection: ViewerSelection = {
   view: "all",
-  viewport: "desktop",
+  viewport: "both",
   scheme: "light",
   search: "",
   tags: [],

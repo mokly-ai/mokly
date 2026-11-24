@@ -1,0 +1,26 @@
+---
+/**
+ * The tinted square that frames a bag of the depicted acme/storefront app
+ * in a list, tinted from the bag's roast.
+ *
+ * - `roast`: the bag's roast.
+ * - `size`: `large` (the default, 64px), `medium` (58px) or `small` (42px).
+ *
+ * Use: `<AcmeTile roast="guji" size="medium" />`.
+ */
+import { roastTone, type AcmeRoast } from "./acme-bag.js";
+import AcmeBag from "./AcmeBag.astro";
+
+interface Props {
+  readonly roast: AcmeRoast;
+  readonly size?: "large" | "medium" | "small";
+}
+
+const { roast, size = "large" } = Astro.props;
+---
+
+<span
+  class:list={["site-acme-tile", `site-acme-tile--${size}`, roastTone(roast)]}
+>
+  <AcmeBag roast={roast} />
+</span>

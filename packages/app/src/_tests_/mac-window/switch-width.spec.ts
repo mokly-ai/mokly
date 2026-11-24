@@ -1,4 +1,4 @@
-import type { Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { projectName } from "../../screens/account/project-name";
 import { installedRepository } from "../database-fixture";
@@ -6,14 +6,14 @@ import { expect, open, test } from "../harness";
 import { taggedLayoutFixture } from "../viewer/layout-fixture";
 import { expectReadableBar } from "../viewer/layout-geometry";
 import { publishedProject, publishedViewerReady } from "../viewer/support";
+import {
+  macAgent,
+  openWidestCentre,
+  switchWidth,
+} from "../viewer/widest-centre";
 
 import { clearMacWindow, emulateMacWindow, partsUnderButtons } from "./regions";
-
-/**
- * The narrowest bar that draws the full composition: the one switch width in
- * the shared `viewer.css`, 87rem, at the default text size.
- */
-const switchWidth = 87 * 16;
+import type { WindowEdge } from "./regions";
 
 /**
  * How a variable label sits in its control: on one line, and cut with an
@@ -86,4 +86,50 @@ test("at the switch width, the full bar keeps its controls apart beside the wind
   } finally {
     tagged.dispose();
   }
+});
+
+/** The parts of the centre that its slot cuts off at either side. */
+function clippedCentre(viewer: Locator): Promise<string[]> {
+  return viewer.locator(".fo-package-publication").evaluate((slot) => {
+    const box = slot.getBoundingClientRect();
+    return [...slot.querySelectorAll(".fo-top-slot > *")]
+      .filter((part) => {
+        const rect = part.getBoundingClientRect();
+        return rect.left < box.left - 0.5 || rect.right > box.right + 0.5;
+      })
+      .map((part) => part.textContent?.trim() || part.className);
+  });
+}
+
+/** Every control whole, beside the window's buttons at one edge or none. */
+async function expectWholeBar(page: Page, viewer: Locator, edge?: WindowEdge) {
+  if (edge) await emulateMacWindow(page, edge);
+  const where = edge ? `buttons at the ${edge}` : "no window buttons";
+  await expectReadableBar(viewer);
+  await expect
+    .poll(() => clippedCentre(viewer), `the centre is whole, ${where}`)
+    .toEqual([]);
+  if (edge) await clearMacWindow(page);
+}
+
+test.describe("on a Mac", () => {
+  test.use({ userAgent: macAgent });
+
+  test("at the switch width, the widest centre keeps every control whole beside the window buttons", async ({
+    page,
+  }) => {
+    const { viewer } = await openWidestCentre(page, "switch-width-widest-mac");
+    // The key cap draws its `⌘` as a glyph beside the `K`.
+    await expect(viewer.locator(".mbk-search-hint")).toHaveText("K");
+    for (const edge of ["start", "end"] as const)
+      await expectWholeBar(page, viewer, edge);
+  });
+});
+
+test("at the switch width, the widest centre keeps every control whole beside the wider Ctrl K search", async ({
+  page,
+}) => {
+  const { viewer } = await openWidestCentre(page, "switch-width-widest-other");
+  await expect(viewer.locator(".mbk-search-hint")).toHaveText("Ctrl K");
+  await expectWholeBar(page, viewer);
 });

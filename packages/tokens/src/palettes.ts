@@ -1,57 +1,41 @@
 import { tokens } from "./tokens";
 import type { TokenColorScheme } from "./tokens";
 
-/** Surface families a document can bind the shared semantic roles to. */
-export type PaletteRoles = "paper" | "folio";
+/** The default Canvas family or the paper family of Design components. */
+export type DocumentPalette = "default" | "paper";
 
-/** The visual system one generated document uses end to end. */
-export type DocumentPalette = "default" | "paper" | "folio";
-
-const roleSources = {
-  paper: {
-    base: "paper",
-    muted: "paperMuted",
-    surface: "paperSurface",
-    ink: "paperInk",
-    inkMuted: "paperInkMuted",
-    line: "paperLine",
-    lineStrong: "paperLineStrong",
-  },
-  folio: {
-    base: "folio",
-    muted: "folioMuted",
-    surface: "folioSurface",
-    ink: "folioInk",
-    inkMuted: "folioInkMuted",
-    line: "folioLine",
-    lineStrong: "folioLineStrong",
-  },
-} as const satisfies Record<
-  PaletteRoles,
-  Record<string, keyof typeof tokens.color.light>
->;
-
-/** Which surface family and scope class each document palette selects. */
+/** The only family that needs a scope class over the document's defaults. */
 export const documentPalettes = {
   paper: { roles: "paper", scope: "paper-scope" },
-  folio: { roles: "folio", scope: "folio-scope" },
-} as const satisfies Record<
-  Exclude<DocumentPalette, "default">,
-  { roles: PaletteRoles; scope: string }
->;
+} as const;
 
-/** Bind the shared semantic color roles to one surface family. */
-export function paletteColors(scheme: TokenColorScheme, palette: PaletteRoles) {
+/** Bind surface, text and line roles without changing accent or status roles. */
+export function paletteColors(
+  scheme: TokenColorScheme,
+  palette: DocumentPalette = "default",
+) {
   const color = tokens.color[scheme];
-  const source = roleSources[palette];
+  if (palette === "paper")
+    return {
+      background: color.paper,
+      surface: color.paperSurface,
+      surfaceRaised: color.paperSurface,
+      surfaceMuted: color.paperMuted,
+      text: color.paperInk,
+      textSecondary: color.paperInkMuted,
+      textMuted: color.paperInkMuted,
+      border: color.paperLine,
+      borderStrong: color.paperLineStrong,
+    };
   return {
-    background: color[source.base],
-    surface: color[source.surface],
-    surfaceRaised: color[source.surface],
-    surfaceMuted: color[source.muted],
-    text: color[source.ink],
-    textMuted: color[source.inkMuted],
-    border: color[source.line],
-    borderStrong: color[source.lineStrong],
+    background: color.background,
+    surface: color.surface,
+    surfaceRaised: color.surfaceRaised,
+    surfaceMuted: color.surfaceMuted,
+    text: color.text,
+    textSecondary: color.textSecondary,
+    textMuted: color.textMuted,
+    border: color.border,
+    borderStrong: color.borderStrong,
   };
 }

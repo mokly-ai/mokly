@@ -1,0 +1,46 @@
+/* The Canvas viewer's Props and controls: the edit states of Inspect's Props
+   section. Each Canvas part keeps its own sheet; this sheet holds only the
+   layout and the states of these artboards. The alerts' actions and the
+   status of a render in flight are the shipped ones, from their @mokly/ui
+   stylesheets, in the package's order; the rules below place the status on
+   the canvas. */
+@import "../../packages/ui/src/text-button/text-button.css";
+@import "../../packages/ui/src/edit-status/edit-status.css";
+
+/* While a render of edits is in flight, each frame of the edited variant
+   keeps its last valid preview, and the status stands at the frame's top
+   right as a pill, in both layouts, above the component, which its
+   document draws 24px from the top. The pill carries the panel's surface,
+   so it reads over a frame of either scheme. */
+.cv-frame > .mbk-edit-status {
+  bottom: auto;
+  left: auto;
+  margin: 0;
+  right: 4px;
+  top: 4px;
+  width: max-content;
+  z-index: 3;
+}
+
+.cv-frame > .mbk-edit-status:not(:empty) {
+  background: var(--cv-surface);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--cv-shadow-2);
+  color: var(--cv-text-secondary);
+  padding: 2px 8px;
+}
+
+/* The Props status while the route's details load, or after their load
+   failed, reads as the section's other lines. After a failure, Try again
+   follows the alert at the gap that Usage keeps above its Try again. */
+.cv-fold-body [data-props-section="status"] > p {
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  margin: 0;
+}
+
+.cv-fold-body [data-props-section="status"] > p[role="alert"] {
+  margin-bottom: 6px;
+}

@@ -78,6 +78,7 @@ export function CatalogueNav({ context }: { context: ShellContext }) {
         {...actions}
         {...resize}
         {...scroll}
+        base={context.base}
         busy={
           navSelection.view === "changes" &&
           (filter?.status === "pending" || filter?.status === "preparing")

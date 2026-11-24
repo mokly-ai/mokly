@@ -123,10 +123,9 @@ names and the reserved first segment; the pattern does not encode those
 exceptions.
 
 `getShareLink` accepts and mints `catalogueScreen`, `viewport` and `scheme`;
-its viewport input is `desktop|mobile`. The viewer host may append its
-supported package-only `viewport=both` state to the returned app URL, after the
-operation validates and mints the canonical link; the API does not claim to
-validate that package value. A `screen` key is rejected. Values are encoded
+its viewport input is `desktop|mobile`. A request without a viewport mints a
+link without one, which the app opens on Both, its default. The app copies
+the returned URL unchanged. A `screen` key is rejected. Values are encoded
 once and sharing never issues an access grant. Provider check links use the
 same screen key. This context follows project visibility, including direct
 grantees and public anonymous readers. All authorized roles receive the same

@@ -75,8 +75,8 @@ GitHub-native review policy is not overridden by a cloud decision.
 
 ## Presentation And Audit
 
-Folio places the decision after the discussion, separated by a hairline, in the
-same document-width column. The viewer's action is “Approve”; it sits beside
+The decision follows the discussion, separated by a hairline, in the same
+document-width column. The viewer's action is “Approve”; it sits beside
 Share above the stage. Confirmation names the PR and selected
 publication; the optional summary is a labelled multi-line field. After
 confirmation show “Approved” with reviewer and time. Required state says
@@ -85,8 +85,8 @@ the earlier decision with its warning and a View latest action. Empty means no
 eligible PR/decision; loading uses skeletons; submission failure retains the
 summary and offers Retry. No automatic approval on page open, comment
 submission or share. Buttons, the summary field, avatars and the single dotted
-status badge are the [shared controls](./shared-controls.md) through the Folio
-theme mapping. Approval is never a color-only signal.
+status badge are the [shared controls](./shared-controls.md) through the shared
+control theme. Approval is never a color-only signal.
 
 Every review surface, mockup or live, draws one approval action composition
 from the same inputs: the actor, the PR author and state, project access,

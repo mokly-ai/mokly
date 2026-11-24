@@ -26,8 +26,9 @@ namespace. A component parent has its own view, rendered from its own props,
 under the [entry props contract](./mokly-entry-props.md). A link to a
 component parent resolves to that view in the effective viewport and colour
 scheme, and a link to a variant resolves to that variant's own view; Browse
-opens the parent's page or the variant's page, and the variant bar marks the
-shown entry. The [explorer contract](./mokly-component-explorer.md) owns usage
+opens the parent's page or the variant's page, and on the variant's page
+Inspect's [Variants list](./mokly-component-inspector-design.md#inspect) checks
+the variant. The [explorer contract](./mokly-component-explorer.md) owns usage
 queries and selecting an actual consumer instance; variant rows follow the
 [variant contract](./mokly-variants.md). View and theme swaps replace iframe
 history; outer Back/Forward continues between catalogue entries. Only
@@ -177,13 +178,13 @@ With the shell mounted, an unmodified primary or keyboard activation of a
 default/`_self` marked link asks the outer shell to navigate through its
 latest-wins route transition. The shell resolves the destination in the index
 and renders it; it does not fetch a shell document. The resulting history
-entry has the canonical `/view/<path>/[?fragment=...]` URL; the title,
-breadcrumbs, heading, details inspector, frames, focus, and status
-announcement all describe the destination. Back and Forward return through
-those outer route entries and restore their route-owned scroll. Once React
-owns a same-origin frame session, that ownership is continuous: a valid marked
-activation during a viewport, scheme, variant, fragment, or route handoff
-navigates the parent exactly once. The
+entry has the canonical `/view/<path>/[?fragment=...]` URL, which in a
+standalone shell also names a kept viewport other than Both; the title,
+breadcrumbs, heading, inspector, frames, focus, and status announcement all
+describe the destination. Back and Forward return through those outer route
+entries. Once React owns a same-origin frame session, that ownership is
+continuous: a valid marked activation during a viewport, scheme, variant,
+fragment, or route handoff navigates the parent exactly once. The
 [same-origin document rules](./mokly-frame-adapter.md#same-origin-documents)
 decide which document keeps host-owned navigation during a handoff. Readiness
 gates inspection, not logical navigation. Disposing or unsubscribing the
@@ -195,9 +196,8 @@ fragment focus and scrolling. Document identity includes origin, pathname and
 query but excludes the hash. A history event within the displayed document
 must not change the rendered route, reinstall its workspace, or move focus
 away from the native target. It invalidates any pending route transition so an
-obsolete result cannot replace the retained view. Saved scroll positions may
-be restored without a reload. A changed route or query still uses in-shell
-navigation and its normal history restoration.
+obsolete result cannot replace the retained view. A changed route or query
+still uses in-shell navigation and its normal history restoration.
 
 In every delivery the shell resolves that trusted path through the index to
 the exact `/view/<path>/` URL before rendering or opening any context; there

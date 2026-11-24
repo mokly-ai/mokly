@@ -1,6 +1,6 @@
 # Theming
 
-This page belongs to the [`@mokly/viewer` README](../../README.md). It explains the interface appearance, the accent properties, and the preferences that the standalone shell stores.
+This page belongs to the [`@mokly/viewer` README](../../README.md). It explains the interface appearance, the accent and top-bar inset properties, and the preferences that the standalone shell stores.
 
 `theme` accepts `"auto"`, `"light"`, or `"dark"`. Auto is the default and
 follows the system preference. It is independent of `selection.colorScheme`, so
@@ -32,9 +32,15 @@ properties on a containing element:
 Keep readable contrast between `--mokly-accent` and `--mokly-accent-contrast` in
 both appearances. Unset overrides use the current palette defaults. These
 properties tune the accent only; the Mokly logo in the top bar keeps its brand
-colours in each appearance. Viewer styles are scoped away from the surrounding
-application and host slot content. Internal selectors, DOM structure, geometry,
-and other custom properties are not extension APIs.
+colours in each appearance.
+
+A host that draws its own window controls over the top bar, such as the
+buttons of a desktop window, sets `--mokly-top-bar-inset-start` and
+`--mokly-top-bar-inset-end` to the room that those controls take. Each is a
+length, `0` by default, and the bar keeps at least its own padding on each
+side. Viewer styles are scoped away from the surrounding application and host
+slot content. Internal selectors, DOM structure, geometry, and other custom
+properties are not extension APIs.
 
 At a container width of 560px or less, the viewer switches to its compact
 search control. This follows the viewer container, not the browser viewport.
@@ -50,7 +56,7 @@ reads them before its first render:
 | `mokly:nav-disclosure:v4`          | Open navigation groups                                  |
 | `mokly:comparison-scroll-together` | `on` or `off`; missing means on                         |
 
-The Details disclosure and the navigation split width also persist per origin.
+The navigation split width also persists per origin.
 Scroll together appears after the comparison modes in Side by side, Overlay,
 and Difference, and it updates the open comparison without reloading panes. An
 embedded `MoklyViewer` reads no browser storage; it keeps these choices for the

@@ -1,9 +1,10 @@
 /**
  * Affected destinations on each host. Badge's moved consumers keep their
- * links. Tally's existing Affected consumers offer the band while their views show
- * Unmodified: Meter and its variant out of Changes, Slip as a pure move, and
- * Ledger, which Changes lists for its desktop view. Its Added consumer opens
- * Current without a comparison request because it has no base view.
+ * links. Tally's existing Affected consumers offer the band while their linked
+ * views show Unmodified: Meter and its variant out of Changes, Slip as a pure
+ * move, and Ledger, which Changes lists for its desktop view. Its Added
+ * consumer opens Current without a comparison request because it has no base
+ * view.
  */
 
 import { expect, type Locator, type Page } from "@playwright/test";
@@ -12,19 +13,27 @@ import type { UsageLink } from "../../packages/model/dist/index.js";
 import { branchPointPaths as paths } from "../helpers/branch_point_sources.js";
 
 import {
+  expectAffectedBand,
+  TALLY_AFFECTED,
+} from "./branch_point_destinations.js";
+import {
   type BranchPointHost,
   expectHead,
   expectRouted,
-  inspectorTab,
   openChanges,
   openEntry,
   variantBar,
 } from "./branch_point_ui.js";
-import { awaitRoutedDetail } from "./comparison_ui.js";
+import {
+  awaitRoutedDetail,
+  compareState,
+  comparisonFrames,
+} from "./comparison_ui.js";
 import {
   awaitSelectedComparison,
   selectedRequests,
 } from "./serve_comparison_ui.js";
+import { openInspectFold, viewportFrame } from "./workspace_actions.js";
 
 /** Badge keeps each current destination, including the consumer's own variant. */
 export function expectBadgeAffected(affected: UsageLink[]) {
@@ -57,19 +66,26 @@ export function expectBadgeAffected(affected: UsageLink[]) {
   ]);
 }
 
-/** Open a changed component's Usage and return its Affected links. */
+/**
+ * Open a changed component's Usage and return its Affected links. Its head
+ * names it in its folders, which a press reveals in the catalogue.
+ */
 async function affectedLinks(
   page: Page,
   host: BranchPointHost,
   component: string,
   title: string,
-  folder: string,
 ): Promise<Locator> {
   await openEntry(page, host, component);
-  await expectHead(page, title, ["Branch [button]", `${folder} [button]`]);
-  await inspectorTab(page, "Usage");
-  await expect(page.locator("[data-usage-section='used-by']")).toBeVisible();
-  return page.locator("[data-usage-section='affected'] a");
+  const [root, folder, slug] = component.split("/");
+  await expectHead(page, title, [
+    `${root} [button]`,
+    `${folder} [button]`,
+    `${slug} [text]`,
+  ]);
+  const usage = await openInspectFold(page, "usage");
+  await expect(usage.locator("[data-usage-section='used-by']")).toBeVisible();
+  return usage.locator("[data-usage-section='affected'] a");
 }
 
 /** Each link as its text, path, comparison intent, and named viewport. */
@@ -96,7 +112,6 @@ export async function movedConsumers(
     host,
     "branch/consumers/badge",
     "Badge",
-    "Consumers",
   );
   // A variant consumer is its own destination, titled by the variant. Each
   // link asks for its consumer's comparison.
@@ -115,9 +130,11 @@ export async function movedConsumers(
   await affected.nth(1).click();
   await expectRouted(page, host, paths.movedConsumer);
   await expectHead(page, "Status", [
-    "Branch [button]",
-    "Consumers [button]",
-    "Archive [button]",
+    "branch [button]",
+    "consumers [button]",
+    "archive [button]",
+    "status [text]",
+    "default [text]",
   ]);
   await expect
     .poll(() => variantBar(page))
@@ -126,15 +143,6 @@ export async function movedConsumers(
       `default -> ${paths.movedConsumer} (current)`,
     ]);
 }
-
-/** Tally's Affected links in list order, each with its stage noun and row. */
-const TALLY_AFFECTED = [
-  ["Meter", paths.impactParent, "variant", false, "Unmodified", "side"],
-  ["default", paths.impactVariant, "variant", false, "Unmodified", "side"],
-  ["Slip", paths.impactMoved, "screen", true, "Unmodified", "side"],
-  ["Ledger", paths.impactLedger, "screen", true, "Unmodified", "side"],
-  ["New consumer", paths.impactAdded, "screen", true, "Added", null],
-] as const;
 
 /**
  * Follow one Affected link. Serve captures the comparison that the link asks
@@ -155,80 +163,40 @@ async function follow(
   else await link.click();
 }
 
-/**
- * Unmodified destinations offer the band for the linked view. Serve and the
- * copy open Side by side; a React host opens Current. Added destinations keep
- * Current without the band.
- */
-async function expectAffectedBand(
-  page: Page,
-  host: BranchPointHost,
-  viewport: string,
-  noun: "screen" | "variant",
-  status: "Added" | "Unmodified",
-  offered: boolean,
-): Promise<void> {
-  await expect(page.locator("[data-workspace-status]")).toHaveText(status);
-  if (offered) await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  else await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  if (!offered) return;
-  const mode = host.affectedLinks === "current" ? "current" : "side";
-  await expect(page.locator(`[data-diff-mode=${mode}]`)).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  if (mode === "current") return;
-  const label = viewport === "mobile" ? "Mobile" : "Desktop";
-  await expect(page.locator("[data-diff-viewport] > h3")).toHaveText([
-    `${label} · Components this ${noun} uses changed`,
-  ]);
-}
-
 export async function affectedDestinations(
   page: Page,
   host: BranchPointHost,
 ): Promise<void> {
   const requests = selectedRequests(page);
-  const open = () =>
-    affectedLinks(page, host, paths.impactComponent, "Tally", "Impact");
+  const open = () => affectedLinks(page, host, paths.impactComponent, "Tally");
   const affected = await open();
   await expect(affected).toHaveCount(TALLY_AFFECTED.length);
   const facts = await linkFacts(affected);
   expect(
     facts.map(({ text, path, comparison }) => [text, path, comparison]),
   ).toEqual(
-    TALLY_AFFECTED.map(([text, path, , , , comparison]) => [
+    TALLY_AFFECTED.map(({ text, path, comparison }) => [
       text,
       `/view/${path}/`,
       comparison,
     ]),
   );
-  for (const [
-    index,
-    [, path, noun, listed, status, comparison],
-  ] of TALLY_AFFECTED.entries()) {
+  for (const [index, destination] of TALLY_AFFECTED.entries()) {
+    const { path, listed, comparison } = destination;
     if (index > 0) await open();
     const count = requests.length;
     await follow(page, host, affected.nth(index), comparison);
     await expectRouted(page, host, path);
-    await expectAffectedBand(
-      page,
-      host,
-      facts[index]!.viewport!,
-      noun,
-      status,
-      comparison !== null,
-    );
+    const viewport = facts[index]!.viewport as "desktop" | "mobile";
+    await expectAffectedBand(page, host, destination, viewport);
     if (comparison === null) {
       await awaitRoutedDetail(page, path);
-      await expect(page.locator("[data-current-screen]")).toBeVisible();
-      await expect(page.locator("[data-diff-stage]")).toBeHidden();
+      // The live frames show, and the canvas holds no comparison.
+      await expect(page.locator(viewportFrame(viewport))).toBeVisible();
+      await expect(compareState(page)).toBeHidden();
+      await expect(comparisonFrames(page)).toHaveCount(0);
       await expect(
-        page
-          .frameLocator(
-            `iframe[data-workspace-frame="${facts[index]!.viewport}"]`,
-          )
-          .locator("h1"),
+        page.frameLocator(viewportFrame(viewport)).locator("h1"),
       ).toHaveText("New consumer");
       expect(requests).toHaveLength(count);
     }

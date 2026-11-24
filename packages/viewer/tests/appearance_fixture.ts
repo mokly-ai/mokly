@@ -12,6 +12,7 @@ import {
   INDEX_PATH,
 } from "../src/catalogue/delivery_paths.js";
 import type { ViewerTheme } from "../src/host/types.js";
+import { NARROW_SHELL } from "../src/shell/layout_breakpoint.js";
 
 import { indexFixture, rawDetailFixtures } from "./catalogue_v9_fixture.js";
 
@@ -28,6 +29,12 @@ export async function environment(
     failStorage?: boolean;
     pending?: boolean;
     path?: string;
+    /**
+     * A window narrower than the layout breakpoint, whose compact layout
+     * shows one frame of a screen: the frame of the preview scheme. A wider
+     * window shows every frame, each in its own scheme.
+     */
+    narrow?: boolean;
   } = {},
 ) {
   GlobalRegistrator.register({
@@ -69,7 +76,7 @@ export async function environment(
     query === "(prefers-color-scheme: dark)"
       ? (media as MediaQueryList)
       : ({
-          matches: false,
+          matches: query === NARROW_SHELL && options.narrow === true,
           addEventListener() {},
           removeEventListener() {},
         } as unknown as MediaQueryList),
@@ -182,7 +189,11 @@ export async function environment(
       mount
         .querySelector("[data-mokly-color-scheme]")
         ?.getAttribute("data-mokly-color-scheme"),
-    frames: () => [...mount.querySelectorAll<HTMLIFrameElement>("iframe")],
+    /** The shown frames: the compact layout keeps its other frames hidden. */
+    frames: () =>
+      [...mount.querySelectorAll<HTMLIFrameElement>("iframe")].filter(
+        (frame) => !frame.closest("[hidden]"),
+      ),
     system: async (dark: boolean) => {
       media.matches = dark;
       await act(async () => {

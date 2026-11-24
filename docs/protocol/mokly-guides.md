@@ -63,15 +63,53 @@ cloud-owned pages and never appears in a packaged guide.
 ## Markdown Body
 
 Guide bodies use CommonMark with GitHub-style tables and fenced code blocks.
-Every fence names a language. The frontmatter supplies the page title, so the
-body contains no level-one heading and does not repeat that title. Body
-headings start at level two, and the same heading text does not occur twice in
-one page.
+Every fence names a language. The info string of an opening fence is the
+language alone, except for an [HTML sample](#html-samples). The frontmatter
+supplies the page title, so the body contains no level-one heading and does
+not repeat that title. Body headings start at level two, and the same heading
+text does not occur twice in one page.
 
 Outside code fences, HTML is forbidden except for comments. Comments carry
 release automation markers but render no reader-visible content. JSX, ESM
 imports, MDX components, and other executable extensions are forbidden outside
 code examples. Shell commands belong in language-labelled code fences.
+
+## HTML Samples
+
+A guide can show an HTML screen beside the view that it renders. An HTML
+sample is a fenced code block whose info string is `html` and one more word,
+`sample=<path>`:
+
+````markdown
+```html sample=specs/welcome.screen.html
+---
+title: Welcome
+props: { name: Ada }
+---
+
+<main>
+  <h1>Welcome, {{name}}</h1>
+</main>
+```
+````
+
+- `<path>` is the file's path from the project root, under the default
+  `specs` root, such as `specs/welcome.screen.html`. It ends in
+  `.screen.html`. A `/` separates its segments, and no segment is empty, `.`
+  or `..`.
+- The block holds the complete file: its front matter and its body, as the
+  [HTML screen rules](./mokly-html-screens.md) define them.
+- The sample renders alone. Its body uses no registered component and no
+  `mock:` link.
+- The documentation site under `apps/site` renders the sample beside its
+  code, at each viewport and saved state. Any other Markdown reader shows an
+  ordinary `html` code block, because CommonMark takes the first word of the
+  info string as the language.
+
+Decision 10, option C, makes the sample a general fence for every guide, not
+a showpiece for one guide, because one fence serves every guide. The sample
+mark is one info-string word, not an MDX component or embedded HTML, so the
+guide stays plain CommonMark.
 
 ## Guide Links
 

@@ -118,6 +118,10 @@ the same byte bound. It keeps the default `None` of
 need source IO. The contract owns the admission, retention, and capacity
 limits.
 
+The comparison routes serve the packaged viewer font faces at
+`snapshots/mokly-viewer/fonts/` for each retained generation. The routes read
+the faces directly from `ViewerAssets`.
+
 ## Temporary previews
 
 Temporary renders follow the

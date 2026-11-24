@@ -1,0 +1,34 @@
+/* The cloud's own stage in Canvas: the dot-grid canvas behind the fallback
+   bar, and each card that the stage holds floating on it. `viewer.css`
+   imports this sheet, so the application and every product drawing load it.
+   Every rule is scoped to the element that carries `data-color-scheme`, the
+   renderer's wrapper in a drawing and the document root in the application,
+   and to the cloud's stage, so it outweighs a product sheet's rule for the
+   same element. The package's own stage keeps its own look. */
+@import "viewer-canvas-depth.css";
+
+/* The canvas: the background with a dot grid on a 24px pitch. */
+[data-color-scheme] .fo-stage-canvas {
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.3px
+  );
+  background-size: 24px 24px;
+}
+
+/* The blank bar above the stage that the settings dialog opens over takes
+   the bar's surface, as the viewer's own bar does. */
+[data-color-scheme] .fo-stage-bar {
+  background: var(--mk-color-surface);
+}
+
+/* A State card, its waiting form and a build card float on the canvas as a
+   Canvas surface: the hairline, the 12px radius and a soft shadow. */
+[data-color-scheme] .fo-stage-canvas .fo-state,
+[data-color-scheme] .fo-stage-canvas .fo-build {
+  border-color: var(--mk-color-border);
+  border-radius: var(--fo-canvas-radius);
+  box-shadow: var(--fo-canvas-shadow-float);
+}

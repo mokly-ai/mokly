@@ -18,12 +18,14 @@ const HEADING = '<h3 class="mbk-reset">Comparison details</h3>';
 
 /**
  * The published fixture's screen, saved component view and document page,
- * with the Details that each shows after the shared heading.
+ * with the Details that each shows after the shared heading, and whether
+ * the Changes filter lists it, which moves its Details to its Changes tab.
  */
 const ENTRIES = [
   {
     kind: "screen",
     id: "product/browse/details",
+    changes: true,
     evidence: "data-workspace-evidence",
     rest:
       '<p class="mbk-reset">The previous version is at <code class="mbk-code mbk-reset">product/details</code>, where it was before the move.</p>' +
@@ -34,6 +36,7 @@ const ENTRIES = [
   {
     kind: "saved component view",
     id: "components/action/default",
+    changes: false,
     evidence: "data-workspace-evidence",
     rest:
       '<dl class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">Saved variant</dt><dd class="mbk-reset">Default</dd></div></dl>' +
@@ -44,6 +47,7 @@ const ENTRIES = [
   {
     kind: "document page",
     id: "guide",
+    changes: false,
     evidence: "data-page-evidence",
     rest:
       '<p class="mbk-reset">This stylesheet changed, but none of the changed styles apply to this page.</p>' +
@@ -51,6 +55,9 @@ const ENTRIES = [
       '<p class="mbk-reset">No changes to this page.</p>',
   },
 ] as const;
+
+/** The entries without a Changes tab, whose Details name the branch point. */
+const INSPECTED = ENTRIES.filter((entry) => !entry.changes);
 
 /** The fixture index without a base ref: no delivery knows a branch name. */
 function nameless(): CatalogueReadModel {
@@ -100,7 +107,7 @@ test("a changed page of an index without a base keeps each file and style withou
   assert.equal(section(html), CHANGED_SECTION.replace(sentence, ""));
 });
 
-for (const entry of ENTRIES)
+for (const entry of INSPECTED)
   test(`a standalone ${entry.kind} names the index's branch point after the heading`, () => {
     const details = section(standaloneMarkup({ path: `/view/${entry.id}/` }));
     assert.ok(details);
@@ -114,7 +121,7 @@ for (const entry of ENTRIES)
   });
 
 test("an embedded entry names the branch point exactly when its index has a base", () => {
-  for (const entry of ENTRIES) {
+  for (const entry of INSPECTED) {
     const opening = `<section class="mbk-comparison-evidence mbk-reset" ${entry.evidence}="">${HEADING}`;
     const named = section(embedded(rawIndexFixture(), entry.id));
     const unnamed = section(embedded(nameless(), entry.id));
@@ -128,4 +135,18 @@ test("an embedded entry names the branch point exactly when its index has a base
     assert.ok(unnamed.startsWith(opening), unnamed);
     assert.doesNotMatch(unnamed, /Compared with the branch point/);
   }
+});
+
+test("a screen that the Changes filter lists names the branch point on its Compared rail, and its Details leave out the sentence", () => {
+  const [screen] = ENTRIES;
+  const markup = standaloneMarkup({ path: `/view/${screen.id}/` });
+  assert.match(
+    markup,
+    /<span class="mbk-compared-side mbk-reset">Before<\/span> <span class="mbk-compared-name mbk-reset">Branch point on <code class="mbk-reset">main<\/code><\/span>/,
+  );
+  assert.equal(
+    section(markup),
+    `<section class="mbk-comparison-evidence mbk-reset" ${screen.evidence}="">` +
+      `${HEADING}${screen.rest}</section>`,
+  );
 });

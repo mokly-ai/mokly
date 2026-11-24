@@ -1,0 +1,114 @@
+/* The site buttons, shared by the chrome and every page. The filled kind
+   takes the signal fill with its white label in both schemes (3:1,
+   decision 4); the outlined kinds keep the strong border, the 3:1 boundary
+   of a control. Hover lifts each kind and deepens its shadow, and focus
+   adds the glow to the resting shadow. A label that its column cannot hold
+   wraps, centred, and the button grows taller than its 48px. */
+
+.site-button {
+  align-items: center;
+  border: 0;
+  border-radius: 10px;
+  display: inline-flex;
+  font-size: 0.96875rem;
+  font-weight: 560;
+  gap: 10px;
+  justify-content: center;
+  letter-spacing: -0.012em;
+  min-height: 48px;
+  padding: 0 20px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    transform var(--mk-motion-standard) var(--mk-motion-easing),
+    box-shadow var(--mk-motion-standard) var(--mk-motion-easing),
+    background var(--mk-motion-fast) var(--mk-motion-easing);
+  white-space: normal;
+}
+
+.site-button svg {
+  flex: none;
+}
+
+.site-button-arrow {
+  display: inline-block;
+  transition: transform var(--mk-motion-standard) var(--mk-motion-easing);
+}
+
+.site-button:hover .site-button-arrow {
+  transform: translateX(3px);
+}
+
+.site-button--primary {
+  background: var(--mk-color-signal-fill);
+  box-shadow:
+    inset 0 1px 0
+      color-mix(in srgb, var(--mk-color-on-signal-fill) 26%, transparent),
+    var(--mk-shadow-small);
+  color: var(--mk-color-on-signal-fill);
+}
+
+.site-button--primary:hover {
+  box-shadow:
+    inset 0 1px 0
+      color-mix(in srgb, var(--mk-color-on-signal-fill) 28%, transparent),
+    var(--mk-shadow-medium);
+  transform: translateY(-1px);
+}
+
+.site-button--primary:active {
+  transform: translateY(0) scale(0.985);
+}
+
+.site-button--secondary {
+  background: var(--mk-color-surface);
+  box-shadow:
+    inset 0 0 0 1px var(--mk-color-border-strong),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text);
+}
+
+.site-button--quiet {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+.site-button--secondary:hover,
+.site-button--quiet:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--mk-color-text),
+    var(--mk-shadow-medium);
+  transform: translateY(-1px);
+}
+
+.site-button--secondary:active,
+.site-button--quiet:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* Focus: the glow of base.css before each kind's resting shadow. These
+   rules follow the hover rules, so a focused button keeps its glow under
+   the pointer. */
+
+.site-button--primary:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 1px 0
+      color-mix(in srgb, var(--mk-color-on-signal-fill) 26%, transparent),
+    var(--mk-shadow-small);
+}
+
+.site-button--secondary:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong),
+    var(--mk-shadow-small);
+}
+
+.site-button--quiet:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
+}

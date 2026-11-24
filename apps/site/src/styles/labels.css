@@ -1,0 +1,121 @@
+/* The small labels of the Canvas pages: the kicker that Kicker.astro draws
+   above a heading, the chip that Chip.astro draws, a short label on a pill
+   for a version, a status or a branch, and the section box that
+   SectionBox.astro draws, which groups frames on the canvas under a dark
+   tag. The rules match docs/mockups/styles/site/labels.css. */
+
+/* The mono kicker above a heading, such as 01 Browse */
+
+.site-kicker {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  gap: 10px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.site-kicker-index {
+  color: var(--mk-color-signal-deep);
+  font-weight: var(--mk-font-medium);
+}
+
+/* The chip: a version, a status or a branch on a pill */
+
+.site-chip {
+  align-items: center;
+  border-radius: var(--mk-radius-pill);
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  gap: 5px;
+  line-height: 1;
+  min-height: 22px;
+  padding: 0 9px;
+  white-space: nowrap;
+}
+
+.site-chip--mono {
+  font-family: var(--mk-font-mono);
+}
+
+.site-chip--signal {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-signal-deep);
+}
+
+.site-chip--changed {
+  background: var(--mk-color-warning-soft);
+  color: var(--mk-color-warning);
+}
+
+.site-chip--removed {
+  background: var(--mk-color-danger-soft);
+  color: var(--mk-color-danger);
+}
+
+.site-chip--neutral {
+  background: var(--mk-color-background);
+  box-shadow: inset 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+}
+
+.site-chip svg {
+  flex: none;
+}
+
+.site-chip-dot {
+  background: currentColor;
+  border-radius: var(--mk-radius-pill);
+  flex: none;
+  height: 6px;
+  width: 6px;
+}
+
+.site-chip--signal .site-chip-dot {
+  background: var(--mk-color-signal);
+}
+
+/* The section box: a wash with a hairline, headed by a dark tag */
+
+.site-section-box {
+  background: color-mix(in srgb, var(--mk-color-surface) 42%, transparent);
+  border-radius: var(--mk-radius-large);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--mk-color-text) 8%, transparent);
+  min-width: 0;
+  padding: 14px;
+  position: relative;
+}
+
+.site-section-box-head {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.site-section-box-tag {
+  background: var(--mk-color-text);
+  border-radius: 6px;
+  color: var(--mk-color-surface);
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-semibold);
+  line-height: 24px;
+  padding: 0 10px;
+}
+
+.site-section-box-meta {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  line-height: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

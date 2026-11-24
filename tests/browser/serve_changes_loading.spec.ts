@@ -15,6 +15,7 @@ import {
   emulateChangesStatus,
 } from "./serve_changes_emulation.js";
 import { test } from "./serve_comparison_test.js";
+import { openCatalogueSheet } from "./workspace_actions.js";
 
 for (const mobile of [false, true]) {
   test(`Changes loading preserves navigation layout and selection (${mobile ? "mobile" : "desktop"})`, async ({
@@ -38,7 +39,7 @@ for (const mobile of [false, true]) {
     await page
       .locator("html")
       .evaluate((root) => root.setAttribute("data-test-retained", "true"));
-    if (mobile) await page.locator("[data-mokly-menu]").click();
+    if (mobile) await openCatalogueSheet(page);
     const all = page.locator('[data-filter="all"]');
     const changesFilter = page.locator('[data-filter="changed"]');
     const filter = page.locator("[data-mokly-filter]");
@@ -68,7 +69,14 @@ for (const mobile of [false, true]) {
     await expect(navRow(page, changes.paths.consumer)).toBeVisible();
     await expect(status).toBeHidden();
     expect(await filter.boundingBox()).toEqual(initialFilter);
-    expect(await tree.boundingBox()).toEqual(initialTree);
+    // The tree keeps its origin and width; in Changes the catalogue's foot,
+    // which names the comparison base, takes the room below it.
+    const shownTree = await tree.boundingBox();
+    expect([shownTree?.x, shownTree?.y, shownTree?.width]).toEqual([
+      initialTree?.x,
+      initialTree?.y,
+      initialTree?.width,
+    ]);
 
     emulation.set("pending");
     await publish("Consumer checked");

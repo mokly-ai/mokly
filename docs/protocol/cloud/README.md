@@ -118,21 +118,33 @@ Change a doc only when a requirement or a decision changes.
 - [Folio chrome](./folio-chrome.md) — the product compositions: section,
   record row, form, state, wait, write in progress, write failure and
   selection;
-  [viewer compositions](./folio-viewer.md) owns the stage, top bar, panels,
-  publication rows, build card, dialog and layer, and
+  [viewer compositions](./folio-viewer.md) owns the depth, stage, top bar,
+  publication pill, account menu, panels, publication rows, build card, check
+  card, dialog and layer, and
   [account entry](./folio-chrome-account.md) the one account panel.
-- [Public site](./site.md) — public routes, approved copy, real-content sources
-  and ahead-of-release pages.
-- [Site home copy](./site-copy.md) — approved hero, real stage, features and closing.
+- [Public site](./site.md) — public routes, actions, the source rule,
+  accessibility and ahead-of-release pages; [chrome](./site-chrome.md) owns
+  the header, menu, footer and scheme control,
+  [pricing](./site-pricing.md) the pricing page, and
+  [changelog](./site-changelog.md) the changelog sources and its version
+  history.
+- [Site home copy](./site-copy.md) — approved hero, demo spread, Specs panel,
+  features and open foundation.
 - [Site legal](./site-legal.md) — legal-document sources, operator facts,
   providers, retention, complaints and claim boundaries.
-- [Site design](./site-design.md) — Folio token mapping, responsive layout,
-  components and owning mockups.
+- [Site design](./site-design.md) — Canvas roles, type, layout and brand;
+  [components](./site-design-components.md) owns the Canvas parts, buttons,
+  header, menu, footer, document pages and code panel, and
+  [pages](./site-design-pages.md) the look of the home, the changelog and the
+  pricing page.
 - [Site mockups](./site-mockups.md) — site screen paths, tour and parity checks.
 - [Site docs](./site-docs.md) — package/cloud content ownership, merged page
-  model, navigation and verification.
+  model, navigation and verification; [layout](./site-docs-layout.md) owns the
+  Layers and Inspect panels, the page frame, narrow widths, code blocks,
+  search and the HTML sample band.
 - [Site delivery](./site-delivery.md) — static build, checks and direct-upload
-  Cloudflare Pages workflow.
+  Cloudflare Pages workflow; [islands](./site-delivery-islands.md) owns the
+  script islands and the build-time rendering of HTML samples.
 - [Site deployment](./site-deployment.md) — Pages workflow, PR cleanup and legacy redirects.
 - [Marketing boundary](./marketing-site.md) — route ownership and
   cross-origin links between `apps/site` and `packages/app`.
@@ -164,7 +176,12 @@ Change a doc only when a requirement or a decision changes.
   `@mokly/viewer` host boundary and the version failure.
 - [Viewer catalogue](./viewer-catalogue.md) — index and entry detail fetch,
   version gate, the package-owned read model and snapshot selection.
-- [Viewer chrome](./viewer-chrome.md) — slots, overlays, publication context and mockups.
+- [Viewer chrome](./viewer-chrome.md) — slots, the bar's actions, overlays,
+  publication context and mockups;
+  [account menu](./viewer-chrome-account.md) owns the avatar trigger, the
+  account menu with Theme, Settings, Docs, Changelog and Sign out, and More's
+  account rows, and
+  [check slot](./viewer-chrome-check.md) owns the check in the Changes tab.
 - [Viewer address state](./viewer-address-state.md) — controlled selection,
   query grammar, alias round trips, panels and browser history.
 - [Viewer read model](./viewer-read-model.md) — visibility, branch/PR/history reads,

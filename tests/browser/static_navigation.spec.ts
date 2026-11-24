@@ -7,14 +7,18 @@ import {
   tourRow,
   welcomeRow,
 } from "./browse_assertions.js";
+import { showProps } from "./live_props.js";
 import {
   staticFramesLoaded,
   staticRequests,
 } from "./static_delivery_assertions.js";
 import { test } from "./static_test.js";
+import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
+  DOCUMENT_FRAME,
   expectFrameSource,
 } from "./workspace_actions.js";
 
@@ -27,19 +31,22 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await chooseViewport(page, viewport);
     await markPage(page);
     const next = page
-      .frameLocator(`.mbk-frame-${viewport} iframe`)
+      .frameLocator(canvasFrame(viewport))
       .getByRole("link", { name: "View details", exact: true });
     await next.focus();
     await page.keyboard.press("Enter");
+    // The destination's address names the kept viewport.
     await expect(page).toHaveURL(
-      /\/view\/example\/screens\/details\/\?fragment=details$/,
+      new RegExp(
+        `/view/example/screens/details/\\?fragment=details&viewport=${viewport}$`,
+      ),
     );
     await expect(page.locator(detailsRow)).toHaveAttribute(
       "aria-current",
       "page",
     );
     await expectFrameSource(
-      page.locator(`.mbk-frame-${viewport} iframe`),
+      page.locator(canvasFrame(viewport)),
       /index\.(?:mobile|desktop)\.html#details$/,
     );
     expect(await hasMarker(page)).toBe(true);
@@ -49,9 +56,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
     await page.reload();
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
+    // Each canvas frame keeps its own scheme: the Dark frame shows the dark
+    // document at the fragment whatever the appearance.
     await chooseScheme(page, "dark");
     await expectFrameSource(
-      page.locator(`.mbk-frame-${viewport} iframe`),
+      page.locator(canvasFrame(viewport, "dark")),
       /\.dark\.html#details$/,
     );
     requests.assert();
@@ -75,19 +84,20 @@ test("copied static search, folders, tags, details and flows retain the shell", 
   await expect(page.locator("[data-mokly-search]")).toHaveValue("tag:forms");
   await expect(page.locator(tourRow)).toBeHidden();
   await page.locator("[data-mokly-search]").fill("");
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Details", exact: true }),
-  ).toBeVisible();
+  // Inspect's head shows the Details rows on every entry.
+  const details = page.locator('[data-inspect-section="details"]');
+  await expect(details).toBeVisible();
   await page.locator(detailsRow).click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Details", exact: true }),
-  ).toBeVisible();
+  await expect(details).toBeVisible();
   await page.locator(tourRow).click();
-  await expect(page.locator(".mbk-flow-screen iframe")).toHaveCount(2);
+  await expect(useCaseSteps(page)).toHaveCount(2);
+  // The use case keeps its own Light frames under Dark.
   await chooseScheme(page, "dark");
-  for (const frame of await page.locator(".mbk-flow-screen iframe").all())
-    await expectFrameSource(frame, /\.dark\.html$/);
+  for (const step of [1, 2])
+    await expectFrameSource(
+      useCaseStepFrame(page, step),
+      /\/index\.desktop\.html$/,
+    );
   expect(await hasMarker(page)).toBe(true);
   requests.assert();
 });
@@ -100,7 +110,7 @@ for (const suffix of ["/", "", "/index.html"]) {
     await page.goto(`/view/example/workspace-guide${suffix}`);
     await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
     await expect(
-      page.frameLocator(".mbk-stage-embed iframe").locator("body"),
+      page.frameLocator(DOCUMENT_FRAME).locator("body"),
     ).toContainText("workspace");
     await page.reload();
     await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
@@ -114,8 +124,8 @@ test("copied component variants retain their fragment and read-only props after 
   const requests = staticRequests(page);
   await page.goto("/view/example/components/action/disabled/?fragment=action");
   await expect(page.locator("#mb-main h2")).toContainText("Action");
-  await page.getByRole("tab", { name: "Props", exact: true }).click();
-  const props = page.getByRole("tabpanel", { name: "Props", exact: true });
+  // The routed saved variant's frame is selected, so Props shows its row.
+  const props = await showProps(page);
   await expect(props).toContainText(
     "Open this catalogue locally to edit props.",
   );
@@ -123,11 +133,7 @@ test("copied component variants retain their fragment and read-only props after 
     props.getByRole("heading", { name: "Saved props" }),
   ).toBeVisible();
   await expect(props).toContainText("disabled");
-  await expect(
-    page
-      .getByRole("tabpanel", { name: "Props", exact: true })
-      .locator("input, textarea, select"),
-  ).toHaveCount(0);
+  await expect(props.locator("input, textarea, select")).toHaveCount(0);
   await page.reload();
   await expect(page).toHaveURL(/\/action\/disabled\/\?fragment=action$/);
   await expect(page.locator("#mb-main h2")).toContainText("Action");
@@ -149,10 +155,7 @@ test("copied Current never polls revisions, opens events or requests renders", a
   const requests = staticRequests(page);
   await page.goto("/view/example/screens/welcome/");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  await staticFramesLoaded(
-    page,
-    /\/example\/screens\/welcome\/index\.(?:mobile|desktop)\.html$/,
-  );
+  await staticFramesLoaded(page, "example/screens/welcome");
   await page.clock.fastForward(120_000);
   await page.locator(detailsRow).click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");

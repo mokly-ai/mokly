@@ -81,6 +81,93 @@ export async function expectBarRegions(bar: Locator, label: string) {
 }
 
 /**
+ * What the Mac app's window does at one point, as Electron collects the
+ * page's regions: the region of the last element in document order whose box
+ * holds the point and that sets `drag` or `no-drag`, else `none`. An element
+ * that sets no region, such as a control's hit area drawn past its box,
+ * takes no click away from the region beneath it.
+ */
+export function regionAt(page: Page, x: number, y: number): Promise<string> {
+  return page.evaluate(
+    ([pointX, pointY, property]) => {
+      let region = "none";
+      for (const element of document.querySelectorAll("*")) {
+        const value = getComputedStyle(element).getPropertyValue(property);
+        if (value !== "drag" && value !== "no-drag") continue;
+        const box = element.getBoundingClientRect();
+        if (
+          pointX >= box.left &&
+          pointX < box.right &&
+          pointY >= box.top &&
+          pointY < box.bottom
+        )
+          region = value;
+      }
+      return region;
+    },
+    [x, y, appRegion] as const,
+  );
+}
+
+/**
+ * The part takes clicks at every point of its box in the Mac app's window,
+ * so no press on it moves the window: one pixel inside each edge, where its
+ * hairline is, and at its middle.
+ */
+export async function expectTakesClicksThroughout(
+  page: Page,
+  part: Locator,
+  label: string,
+) {
+  const box = await part.boundingBox();
+  expect(box, `${label} is drawn`).not.toBeNull();
+  if (box === null) return;
+  const { x, y, width, height } = box;
+  for (const [where, pointX, pointY] of [
+    ["start edge", x + 0.5, y + height / 2],
+    ["end edge", x + width - 0.5, y + height / 2],
+    ["top edge", x + width / 2, y + 0.5],
+    ["bottom edge", x + width / 2, y + height - 0.5],
+    ["middle", x + width / 2, y + height / 2],
+  ] as const)
+    await expect
+      .poll(
+        () => regionAt(page, pointX, pointY),
+        `${label} takes clicks at its ${where}`,
+      )
+      .toBe("no-drag");
+}
+
+/**
+ * What the page draws in the free space after a part, inside the slot that
+ * holds it: the space's width, and the computed region of the element at its
+ * middle, which says whether that space moves the Mac window.
+ */
+export async function spaceAfter(
+  page: Page,
+  part: Locator,
+  slot: Locator,
+): Promise<{ width: number; region: string }> {
+  const [box, room] = await Promise.all([
+    part.boundingBox(),
+    slot.boundingBox(),
+  ]);
+  if (box === null || room === null) return { width: 0, region: "missing" };
+  const start = box.x + box.width;
+  const width = room.x + room.width - start;
+  const region = await page.evaluate(
+    ([x, y, property]) => {
+      const element = document.elementFromPoint(x, y);
+      return element === null
+        ? "nothing"
+        : getComputedStyle(element).getPropertyValue(property);
+    },
+    [start + width / 2, box.y + box.height / 2, appRegion] as const,
+  );
+  return { width, region };
+}
+
+/**
  * Report the window buttons at one edge, as the Mac app does through the
  * window controls overlay. A browser has no overlay, so the test sets the
  * width on the root element, where the shared stylesheet reads it.

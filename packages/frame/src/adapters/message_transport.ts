@@ -6,29 +6,31 @@ import {
   type Message,
   type MessageBody,
 } from "../probe/schema.js";
-import { boundedJson, BYTE_LIMIT } from "../probe/values.js";
+import {
+  boundedJson,
+  BYTE_LIMIT,
+  type ProbeEventType,
+} from "../probe/values.js";
 
 import { FrameError } from "./frame_error.js";
 
 interface Pending {
-  expected: "ack" | "boundaries";
+  expected: "ack" | "boundaries" | "box-model" | "content-box";
   resolve(message: Message): void;
   reject(error: FrameError): void;
   timer: number;
 }
 type Request =
-  | { type: "list" }
+  | { type: "list" | "measure-content" }
   | {
       type: "highlight";
       keys: readonly string[];
       mode: "off" | "highlight" | "pick";
     }
-  | { type: "scroll-to"; key: string }
+  | { type: "scroll-to" | "measure"; key: string }
   | {
       type: "subscribe";
-      events: readonly (
-        "hover" | "click" | "navigation" | "pick-end" | "geometry"
-      )[];
+      events: readonly ProbeEventType[];
     };
 
 /** Bounded request/reply state, independent of the DOM and probe implementation. */
@@ -69,7 +71,14 @@ export function messageTransport(
         pending.set(requestId, {
           resolve,
           reject,
-          expected: body.type === "list" ? "boundaries" : "ack",
+          expected:
+            body.type === "list"
+              ? "boundaries"
+              : body.type === "measure"
+                ? "box-model"
+                : body.type === "measure-content"
+                  ? "content-box"
+                  : "ack",
           timer: win.setTimeout(() => {
             settle(requestId, undefined, "timeout");
             timeout();

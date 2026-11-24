@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use axum::body::Bytes;
 use axum::http::HeaderValue;
-use mokly_model::namespace::viewer;
+use mokly_model::namespace::{FONT_FACES, viewer};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;
 
@@ -40,7 +40,7 @@ impl Stylesheet {
 /// Package asset loader boundary, separate from authored resources.
 #[cfg_attr(test, unimock::unimock(api = ViewerAssetsMock))]
 pub trait ViewerAssets: Send + Sync {
-    /// Load exactly the browser inventory, shell stylesheet, and packaged font.
+    /// Load exactly the browser inventory, shell stylesheet, and packaged fonts.
     fn load(&self, dist: &Path) -> Result<BTreeMap<String, File>>;
 }
 
@@ -106,15 +106,18 @@ impl ViewerAssets for PackageAssets {
                 },
             );
         }
+        let faces = FONT_FACES.map(|face| (format!("assets/{face}"), face, "font/woff2"));
         for (source, route, mime) in [
-            ("shell.css", "shell.css", "text/css; charset=utf-8"),
-            ("assets/brand.svg", "client/brand.svg", "image/svg+xml"),
+            ("shell.css".into(), "shell.css", "text/css; charset=utf-8"),
             (
-                "assets/fonts/InterVariable.woff2",
-                "fonts/InterVariable.woff2",
-                "font/woff2",
+                "assets/brand.svg".into(),
+                "client/brand.svg",
+                "image/svg+xml",
             ),
-        ] {
+        ]
+        .into_iter()
+        .chain(faces)
+        {
             let bytes = match self.tree.read(&dist.join(source)) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(ServerError::InvalidAssets),

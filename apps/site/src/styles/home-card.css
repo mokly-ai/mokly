@@ -1,0 +1,94 @@
+/* The selected PriceCard of the depicted acme/storefront app, which
+   CardSelection.astro draws over a phone artboard in the Review and Edit
+   frames and the open foundation: the selection with its name tag, the
+   padding redline, Claude's live selection and Maya's pin. The box sits on
+   the featured card of the phone screen, in percent of the artboard, so
+   one rule serves every scale. A phone artboard in a frame is 240px wide.
+   The rules match the selected PriceCard rules of
+   docs/mockups/styles/site/home-review.css. */
+
+/* A phone artboard in a frame: 240px wide, its screen at 61.5 percent */
+
+.site-home-frames .site-home-board--phone .site-home-board-frame {
+  height: 519.4px;
+  width: 240px;
+}
+
+.site-home-frames .site-home-board--phone .site-home-board-screen {
+  transform: scale(0.615385);
+}
+
+/* The selected PriceCard */
+
+.site-home-card-sel {
+  height: 35.069%;
+  left: 5.128%;
+  position: absolute;
+  top: 37.883%;
+  width: 89.744%;
+  z-index: 3;
+}
+
+.site-home-card-sel--tall {
+  height: 37.675%;
+}
+
+.site-home-card-sel .site-sel-name {
+  background: var(--mk-color-signal);
+  border-radius: 4px;
+  bottom: calc(100% + 6px);
+  color: var(--mk-color-on-signal);
+  font-size: 11px;
+  gap: 4px;
+  height: 20px;
+  padding: 0 6px;
+}
+
+.site-home-card-sel .site-home-card-pad {
+  left: 0;
+  top: 42px;
+}
+
+.site-home-card-pad--16 {
+  width: 4.571%;
+}
+
+.site-home-card-pad--24 {
+  width: 6.857%;
+}
+
+/* The padding value sits left of its redline. The page loads this sheet
+   before the shared redline rules, so the selector takes the box's class
+   too, to outweigh the shared place of a horizontal redline's value. */
+
+.site-home-card-sel .site-home-card-pad .site-redline-value {
+  font-size: 10px;
+  left: auto;
+  right: calc(100% + 5px);
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.site-home-card-sel .site-home-card-claude {
+  border-radius: 3px;
+  inset: -4px;
+}
+
+.site-pin {
+  background: var(--mk-color-people-pink-fill);
+  border-radius: 17px 17px 17px 4px;
+  box-shadow:
+    0 0 0 2px var(--mk-color-on-signal-fill),
+    var(--mk-shadow-medium);
+  color: var(--mk-color-people-pink-ink);
+  display: grid;
+  font-size: 13px;
+  font-weight: var(--mk-font-semibold);
+  height: 34px;
+  left: calc(100% - 22px);
+  place-items: center;
+  position: absolute;
+  top: -18px;
+  width: 34px;
+  z-index: 4;
+}

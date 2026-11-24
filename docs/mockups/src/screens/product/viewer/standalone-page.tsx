@@ -6,7 +6,8 @@ import { sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { publication } from "../../../fixtures/publications";
 
-import type { AccountLabel } from "./chrome";
+import type { AccountLabel } from "./account-trigger";
+import { readyDetail } from "./pill";
 import { ViewerScreen, isPublishedPath } from "./screen";
 import type { SlotMeta } from "./slots";
 import { BranchSlot } from "./slots";
@@ -16,7 +17,7 @@ import { StageUnpublished } from "./unpublished-stage";
 const meta = {
   default: {
     state: "ready",
-    detail: publication.published,
+    detail: readyDetail(publication.published),
     sha: publication.sha,
   },
   empty: { state: "none", detail: "Not published" },
@@ -75,7 +76,10 @@ export function StandalonePage({
    * what the address named while no branch has resolved.
    */
   subject?: string;
-  /** What the chrome calls the reference, when the read never reached one. */
+  /**
+   * What the chrome calls the reference, when the read never reached one.
+   * It names no branch, so the pill draws no branch glyph beside it.
+   */
   reference?: string;
   /**
    * Whether nothing names the reference yet: the address names none, as a
@@ -112,6 +116,7 @@ export function StandalonePage({
           label: name,
           detail: current.detail,
           sha: current.sha,
+          kind: "branch",
           latest,
         }}
       />
@@ -124,6 +129,7 @@ export function StandalonePage({
           viewport={viewport}
           name={unnamed ? undefined : name}
           meta={current}
+          glyph={reference === undefined}
         />
       }
     >

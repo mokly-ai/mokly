@@ -28,7 +28,7 @@ export async function expectReadableBar(viewer: Locator) {
     .or(tag)
     .or(
       viewer.getByTestId(
-        /^viewer-(project|publication|history|share|settings|account|more)$/,
+        /^viewer-(project|publication|history|share|account|more)$/,
       ),
     )
     .filter({ visible: true });
@@ -66,20 +66,19 @@ export async function expectReadableBar(viewer: Locator) {
             }
           }
           if (element instanceof HTMLInputElement) {
+            // Measure the placeholder by the input's own overflow: with the
+            // placeholder as its value, the input scrolls exactly when that
+            // text is wider than its usable width, in the input's own font. A
+            // canvas cannot measure it, because the computed font shorthand
+            // is empty while the input sets font features.
             const style = getComputedStyle(element);
-            const context = document.createElement("canvas").getContext("2d");
-            if (context === null) {
-              issues.push("the search text could not be measured");
-              continue;
-            }
-            context.font = style.font;
-            const textWidth = Math.ceil(
-              context.measureText(element.placeholder).width,
-            );
-            const usableWidth =
-              element.clientWidth -
-              parseFloat(style.paddingLeft) -
-              parseFloat(style.paddingRight);
+            const padding =
+              parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+            const value = element.value;
+            element.value = element.placeholder;
+            const textWidth = element.scrollWidth - padding;
+            const usableWidth = element.clientWidth - padding;
+            element.value = value;
             if (usableWidth < textWidth) {
               issues.push(
                 `${name} has ${usableWidth}px for its ${textWidth}px placeholder`,

@@ -29,7 +29,8 @@ test(
         ["browser/frame-probe.js", "export {};"],
         ["shell.css", ""],
         ["assets/brand.svg", "<svg/>"],
-        ["assets/fonts/InterVariable.woff2", ""],
+        ["assets/fonts/Geist-Variable.woff2", ""],
+        ["assets/fonts/GeistMono-Variable.woff2", ""],
       ])
         await fs.writeFile(path.join(viewer, file!), content!);
       const source = path.join(root, "specs/home.mockup.ts");

@@ -187,7 +187,7 @@ main-preview and production.
 4. Set repository variables `MKC_REGION`, `MKC_DOMAIN`,
    `MKC_CLOUDFLARE_ZONE_ID`, `MKC_CATALOGUE_BASE_DOMAIN`,
    `MKC_CATALOGUE_CLOUDFLARE_ZONE_ID`, `MKC_STATE_BUCKET`, `MKC_POSTMARK_FROM`,
-   `CLOUDFLARE_ACCOUNT_ID`, optional `SITE_STAGE_PR` (default `sydney-v1`),
+   `CLOUDFLARE_ACCOUNT_ID`,
    `MKC_INGRESS_IPS` (JSON environment-to-reserved-IPv4 map for every enabled
    stable deployment environment; no `preview-pr-N` entries),
    `MKC_PREVIEW_INGRESS_IP` (foundation output `preview_ingress_ip`) and
@@ -378,8 +378,8 @@ npm exec --workspace @mokly-cloud/site -- \
 
 Run that command authenticated to the existing Cloudflare account with Pages
 edit access. Configure the repository variables `MKC_DOMAIN`,
-`CLOUDFLARE_ACCOUNT_ID` and optional `SITE_STAGE_PR` (default `sydney-v1`),
-plus the GitHub Actions secret `CLOUDFLARE_PAGES_API_TOKEN` (or the existing
+`CLOUDFLARE_ACCOUNT_ID`, plus the GitHub Actions secret
+`CLOUDFLARE_PAGES_API_TOKEN` (or the existing
 `CLOUDFLARE_API_TOKEN`). The derived origins must have no path, query,
 fragment or credentials; a trailing site-origin slash is allowed. In the Pages
 dashboard, attach the apex from `MKC_DOMAIN` under `mokly-site` → Custom
@@ -400,13 +400,14 @@ curl -sI 'https://getmokly.com/docs?from=legacy'
 curl -sI 'https://www.getmokly.com/docs?from=legacy'
 ```
 
-Every push to `main` builds the dogfood catalogue and site, derives its origin
-as `https://<MKC_DOMAIN>`, renders Sign in and Get started as relative
-`/…` paths, and deploys `apps/site/dist` to the Pages
-production branch. The workflow validates configuration before building and
+Every push to `main` builds the site and derives its origin as
+`https://<MKC_DOMAIN>`. The site renders its app links as relative `/…` paths.
+The workflow deploys `apps/site/dist` to the Pages production branch.
+The workflow validates configuration before building and
 never falls back to a registry-installed Wrangler. Cloudflare Pages applies
-the deployed `_headers` file, including the wildcard CORS response required by
-the opaque-origin dogfood frame and the same-origin script CSP. The first
+the deployed `_headers` file and its same-origin script CSP. The wildcard
+CORS response lets any origin, a sandboxed frame with an opaque origin
+included, read the public static files. The first
 production run and custom-domain
 smoke are post-merge operator actions; retain their workflow URL and tested
 origin as deployment evidence. See

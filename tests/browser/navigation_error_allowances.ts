@@ -12,6 +12,18 @@ export const nestedScriptNotice: ErrorAllowance = {
   url: /^(?:https:\/\/cross-origin\.example\.test\/nested\.html)?$/u,
 };
 
+/**
+ * A Props edit's render of the home screen holds no other document, so the
+ * generated details document that the render's nested frame names is not
+ * found under the render's address.
+ */
+export const renderedNestedDocument: ErrorAllowance = {
+  kind: "console",
+  message:
+    /^Failed to load resource: the server responded with a status of 404 \(Not Found\)$/u,
+  url: /\/mokly-viewer\/components\/renders\/[^/]+\/static\/mokly-generated\/fixture\/nested\/details\/index\.(?:desktop|mobile)\.html$/u,
+};
+
 /** Each denied operation is exercised explicitly by the sandbox security test. */
 export function navigationDenials(
   allow: (rule: ErrorAllowance) => void,

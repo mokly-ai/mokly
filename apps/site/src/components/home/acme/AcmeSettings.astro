@@ -1,0 +1,87 @@
+---
+/**
+ * The depicted acme `account/settings` screen on a desktop, at 1280 × 800,
+ * in the app's dark screen: the account menu beside the profile, the
+ * notifications, the saved cards and Close account.
+ *
+ * Use: `<AcmeSettings />`.
+ */
+import { ACME_ACCOUNT_CURRENT, ACME_ACCOUNT_MENU } from "./acme-screens.js";
+import AcmeAvatar from "./AcmeAvatar.astro";
+import AcmeBadge from "./AcmeBadge.astro";
+import AcmeButton from "./AcmeButton.astro";
+import AcmeIcon from "./AcmeIcon.astro";
+import AcmeLogo from "./AcmeLogo.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import AcmeToggleRow from "./AcmeToggleRow.astro";
+---
+
+<AcmeRoot class="site-acme-settings" dark kind="desktop">
+  <div class="site-acme-settings-menu">
+    <AcmeLogo />
+    <span class="site-acme-settings-links">
+      {ACME_ACCOUNT_MENU.map(([icon, label]) => (
+        <span
+          class={
+            label === ACME_ACCOUNT_CURRENT ? "site-acme-settings-on" : undefined
+          }
+        >
+          <AcmeIcon name={icon} />
+          {label}
+        </span>
+      ))}
+    </span>
+  </div>
+  <div class="site-acme-settings-body">
+    <div class="site-acme-title site-acme-title--large">Account settings</div>
+    <div class="site-acme-settings-grid">
+      <div class="site-acme-panel">
+        <div class="site-acme-panel-title">Profile</div>
+        <div class="site-acme-profile">
+          <AcmeAvatar initials="JE" size="large" />
+          <span class="site-acme-lines">
+            <b>Jordan Ellis</b>
+            <i>jordan@example.com</i>
+          </span>
+          <AcmeButton size="small" tone="secondary">
+            Edit
+          </AcmeButton>
+        </div>
+      </div>
+      <div class="site-acme-panel">
+        <div class="site-acme-panel-title">Notifications</div>
+        <AcmeToggleRow label="Roast day emails" />
+        <AcmeToggleRow label="Shipping updates" />
+        <AcmeToggleRow label="Brew guide newsletter" on={false} />
+      </div>
+      <div class="site-acme-panel">
+        <div class="site-acme-panel-title">Saved cards</div>
+        <div class="site-acme-saved">
+          <AcmeIcon name="card" />
+          <span class="site-acme-lines">
+            <b>Card ending 4242</b>
+            <i>Expires 08/28</i>
+          </span>
+          <AcmeBadge tone="sage">Default</AcmeBadge>
+        </div>
+        <div class="site-acme-saved">
+          <AcmeIcon name="card" />
+          <span class="site-acme-lines">
+            <b>Card ending 1881</b>
+            <i>Expires 02/27</i>
+          </span>
+          <span class="site-acme-link">Remove</span>
+        </div>
+      </div>
+      <div class="site-acme-panel">
+        <div class="site-acme-panel-title">Close account</div>
+        <div class="site-acme-sub">
+          Your subscription stops at the end of the month.
+        </div>
+        <AcmeButton class="site-acme-close" tone="danger">
+          Delete account
+        </AcmeButton>
+      </div>
+    </div>
+  </div>
+</AcmeRoot>

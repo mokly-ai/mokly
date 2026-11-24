@@ -1,41 +1,7 @@
-import type { ReactNode } from "react";
-
 import { optional, useDesignInstance } from "../library/composition.js";
 import { emptyState } from "../library/preview/empty-state.js";
-import { flowStep } from "../library/preview/flow-step.js";
 
 import type { DesignDestination } from "./destinations.js";
-
-export function FlowStep({
-  children,
-  name,
-  description,
-  number,
-  screenPath,
-  screenTitle,
-  title,
-}: {
-  children: ReactNode;
-  name: string;
-  description: string;
-  number: number;
-  screenPath: DesignDestination;
-  screenTitle: string;
-  title: string;
-}) {
-  return (
-    <flowStep.Component
-      moklyInstance={useDesignInstance(name)}
-      number={number}
-      title={title}
-      description={description}
-      screenTitle={screenTitle}
-      screenPath={screenPath}
-    >
-      {children}
-    </flowStep.Component>
-  );
-}
 
 export function EmptyState({
   body,

@@ -1,0 +1,14 @@
+---
+/**
+ * Loads the measurements island, `measurements-island.ts`, which writes the
+ * rendered sizes, font sizes and gaps that the measured parts show. Only
+ * `Selection.astro`, `SizeTag.astro` and `Redline.astro` render it, each
+ * only when it renders a measured value, so a page without one loads no
+ * island. Astro bundles the island into one module and emits it once per
+ * page, and the build moves it into a content-hashed same-origin file.
+ *
+ * Use: `{measured && <Measurements />}`, after the measured element.
+ */
+---
+
+<script src="./measurements-island.ts"></script>

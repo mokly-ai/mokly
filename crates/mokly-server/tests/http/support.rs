@@ -128,7 +128,8 @@ impl Harness {
             ("client/shell.js", "text/javascript; charset=utf-8"),
             ("client/frame-probe.js", "text/javascript; charset=utf-8"),
             ("shell.css", "text/css; charset=utf-8"),
-            ("fonts/InterVariable.woff2", "font/woff2"),
+            ("fonts/Geist-Variable.woff2", "font/woff2"),
+            ("fonts/GeistMono-Variable.woff2", "font/woff2"),
             ("client/brand.svg", "image/svg+xml"),
         ] {
             assets.insert(

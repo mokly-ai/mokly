@@ -5,7 +5,6 @@
  * catalogue document that frames it.
  */
 
-import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 import type { TokenColorScheme } from "@mokly-cloud/tokens/tokens";
 import { parseFragment } from "parse5";
@@ -37,16 +36,13 @@ const logoAlt = "Mokly";
 const wordmark = "mokly.";
 
 /**
- * Every color one scheme's message may carry: the Folio surfaces the
- * application scopes, the shared accent roles, and the absence of a fill the
+ * Every color one scheme's message may carry: the default Canvas surfaces,
+ * the shared accent roles, and the absence of a fill the
  * mobile card falls back to.
  */
 export function emailColors(scheme: TokenColorScheme): Set<string> {
   const { accent, accentSolid, onAccent } = tokens.color[scheme];
-  const { background, surface, text, textMuted, border } = paletteColors(
-    scheme,
-    "folio",
-  );
+  const { background, surface, text, textMuted, border } = tokens.color[scheme];
   return new Set([
     background,
     surface,

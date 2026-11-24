@@ -99,14 +99,35 @@ test("arrow keys step by 16px, Home and End choose the bounds, and each width is
   ]);
 });
 
-test("a double click restores 248px", () => {
+test("a double click restores the starting width, 252px by default", () => {
   const calls: unknown[][] = [];
-  render(<CatalogueNavigation {...resizable(calls, 360)} />);
+  const { unmount } = render(
+    <CatalogueNavigation {...resizable(calls, 360)} />,
+  );
+  fireEvent.doubleClick(separator());
+  unmount();
+  render(
+    <CatalogueNavigation {...resizable(calls, 360)} startingWidth={224} />,
+  );
   fireEvent.doubleClick(separator());
   assert.deepEqual(calls, [
-    ["width", 248],
-    ["commit", 248],
+    ["width", 252],
+    ["commit", 252],
+    ["width", 224],
+    ["commit", 224],
   ]);
+});
+
+test("a double click asks a host that forgets the chosen width to reset it", () => {
+  const calls: unknown[][] = [];
+  render(
+    <CatalogueNavigation
+      {...resizable(calls, 360)}
+      onWidthReset={() => calls.push(["reset"])}
+    />,
+  );
+  fireEvent.doubleClick(separator());
+  assert.deepEqual(calls, [["reset"]]);
 });
 
 test("a separator without width callbacks is inert", () => {

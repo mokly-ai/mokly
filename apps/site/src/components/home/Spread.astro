@@ -1,0 +1,132 @@
+---
+/**
+ * The spread under the hero: the whole depicted acme/storefront app on the
+ * canvas, zoomed out. On the desktop composition the Specs box holds eight
+ * artboards of phones and desktops in both schemes, and the Components box
+ * beside it holds the component sets under the quiet `works with Storybook`
+ * label; both bleed off the right edge. Claude edits the pricing page,
+ * Codex has the Button set selected and Sam is on checkout. A phone draws
+ * three phones, the middle one centred, with Claude's cursor.
+ *
+ * The site sends one page to every width, so the spread holds the parts of
+ * both compositions. Each artboard's class names its spot, which the sheet
+ * sets for each composition, and `site-home-spread-wide` marks the parts
+ * that only the desktop composition draws. The whole spread is a depiction:
+ * it is hidden from assistive technology and holds nothing that takes
+ * focus. The rules are in `src/styles/home-spread.css`; the hero's load
+ * motion, in `src/styles/home-hero.css`, lets the artboards settle.
+ */
+import Cursor from "../Cursor.astro";
+import SectionBox from "../SectionBox.astro";
+import Selection from "../Selection.astro";
+
+import AcmePaymentPhone from "./acme/AcmePaymentPhone.astro";
+import AcmePricingDesktop from "./acme/AcmePricingDesktop.astro";
+import AcmePricingPhone from "./acme/AcmePricingPhone.astro";
+import AcmeReviewOrder from "./acme/AcmeReviewOrder.astro";
+import AcmeSettings from "./acme/AcmeSettings.astro";
+import AcmeWelcome from "./acme/AcmeWelcome.astro";
+import Artboard from "./Artboard.astro";
+import SpreadSets from "./SpreadSets.astro";
+import StorybookMark from "./StorybookMark.astro";
+
+import "../../styles/home-spread.css";
+---
+
+<div aria-hidden="true" class="site-home-spread">
+  <div class="site-home-spread-canvas">
+    <SectionBox
+      class="site-home-spread-specs"
+      meta="acme/storefront · main · 24 screens"
+      tag="Specs"
+    >
+      <Artboard
+        class="site-home-spread-welcome"
+        device="phone"
+        name="onboarding/welcome"
+      >
+        <AcmeWelcome />
+      </Artboard>
+      <Artboard
+        class="site-home-spread-payment"
+        device="phone"
+        name="checkout/payment"
+      >
+        <AcmePaymentPhone />
+      </Artboard>
+      <Artboard
+        class="site-home-spread-review"
+        dark
+        device="phone"
+        name="checkout/review-order"
+      >
+        <AcmeReviewOrder />
+      </Artboard>
+      <Artboard
+        class="site-home-spread-pricing site-home-spread-wide"
+        device="desktop"
+        name="pricing"
+      >
+        <AcmePricingDesktop />
+        {/* status: "ahead" (agent sessions, Claude) */}
+        <Selection
+          class="site-home-spread-peer"
+          handles="none"
+          person="claude"
+          slot="overlay"
+          tag="Claude is editing"
+        />
+      </Artboard>
+      <Artboard
+        class="site-home-spread-settings site-home-spread-wide"
+        dark
+        device="desktop"
+        name="account/settings"
+      >
+        <AcmeSettings />
+      </Artboard>
+      <Artboard
+        class="site-home-spread-pricing-phone site-home-spread-wide"
+        device="phone"
+        name="pricing"
+      >
+        <AcmePricingPhone />
+      </Artboard>
+      <Artboard
+        class="site-home-spread-pricing-dark site-home-spread-wide"
+        dark
+        device="phone"
+        name="pricing"
+      >
+        <AcmePricingPhone dark />
+      </Artboard>
+      <Artboard
+        class="site-home-spread-payment-dark site-home-spread-wide"
+        dark
+        device="phone"
+        name="checkout/payment"
+      >
+        <AcmePaymentPhone dark />
+      </Artboard>
+    </SectionBox>
+    <SectionBox
+      class="site-home-spread-components site-home-spread-wide"
+      tag="Components"
+    >
+      <span class="site-home-works" slot="meta">
+        works with
+        <StorybookMark />
+        <b>Storybook</b>
+      </span>
+      <SpreadSets />
+    </SectionBox>
+    {/* status: "ahead" (Claude) */}
+    <Cursor class="site-home-spread-claude" person="claude" />
+    {/* status: "ahead" (Codex) */}
+    <Cursor
+      class="site-home-spread-codex site-home-spread-wide"
+      person="codex"
+    />
+    <Cursor class="site-home-spread-sam site-home-spread-wide" person="sam" />
+  </div>
+</div>

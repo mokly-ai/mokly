@@ -3,17 +3,58 @@
  * bar, navigation, and main region, the route status that announces each
  * navigation, and the state that takes a viewer root's place while it has no
  * shell to show. An embedded root lays out the same parts with its host's
- * slots.
+ * slots. In the Canvas layout the main region is the canvas below the top
+ * bar, the catalogue floats over it, and the dock of the compact layout
+ * floats at its bottom.
  */
 
 import type { ReactNode, Ref } from "react";
 
 import type { Appearance } from "../appearance-selector/appearance-selector.js";
 import { EmptyState, type EmptyStateRoot } from "../empty-state/empty-state.js";
+import {
+  FloatingPanel,
+  type FloatingPanelSheet,
+} from "../floating-panel/floating-panel.js";
 
-import { rootClassName, type ShellResizing } from "./root-marks.js";
+import {
+  canvasLayoutMarks,
+  rootClassName,
+  type ShellResizing,
+} from "./root-marks.js";
 
 export type { ShellResizing } from "./root-marks.js";
+
+/**
+ * The catalogue that floats over the canvas, or, below the layout
+ * breakpoint, opens as its sheet.
+ */
+export function FloatingCatalogue({
+  children,
+  interactive = true,
+  sheet,
+}: {
+  /** The catalogue's navigation, with the host's rail content of an embedded root. */
+  children?: ReactNode;
+  /**
+   * Whether the sheet's grabber and close control are buttons, as they are
+   * by default. A static depiction that runs no script sets `false`, which
+   * draws each as a picture of itself.
+   */
+  interactive?: boolean;
+  sheet: FloatingPanelSheet;
+}) {
+  return (
+    <FloatingPanel
+      interactive={interactive}
+      noun="catalogue"
+      sheet={sheet}
+      side="left"
+    >
+      {children}
+    </FloatingPanel>
+  );
+}
 
 /** The link that takes a keyboard reader past the chrome to the main region. */
 export function SkipLink({ href }: { href: string }) {
@@ -85,16 +126,22 @@ export function MainRegion({
 /**
  * The root of the standalone shell. It carries the shell's root class, which
  * holds the theme, and states its appearance and its preview scheme. It marks
- * a drag of a separator and an expanded browser window for the stylesheets.
+ * a drag of the navigation's separator for the stylesheets. With
+ * `catalogueSheet` it draws the Canvas layout: the catalogue floats over the
+ * canvas, and the root marks `data-canvas-layout`. Without it, the
+ * navigation stands in a column beside the main region.
  */
 export function ShellLayout({
   announcement,
+  catalogueSheet,
   colorScheme,
+  dock,
   drawerOpen,
-  frameExpanded,
+  interactive = true,
   main,
   mainHref,
   navigation,
+  navigationWidth,
   ref,
   resizing,
   statusId,
@@ -103,26 +150,45 @@ export function ShellLayout({
 }: {
   /** The route status's announcement of the last navigation. */
   announcement: string;
+  /**
+   * The catalogue's sheet of the compact layout. With it, the catalogue
+   * floats over the canvas, and below the layout breakpoint it opens as
+   * this sheet.
+   */
+  catalogueSheet?: FloatingPanelSheet | undefined;
   /** The scheme of the shown previews, as `data-mokly-color-scheme`. */
   colorScheme: "dark" | "light";
-  /** Whether the navigation drawer of a narrow shell is open. */
+  /** The dock of the compact layout, such as a `CanvasDock`, over the canvas. */
+  dock?: ReactNode;
+  /**
+   * Whether the navigation drawer of a narrow shell is open, as
+   * `data-drawer`. In the Canvas layout it is the catalogue's sheet.
+   */
   drawerOpen: boolean;
   /**
-   * Whether a browser window is expanded over the shell, which marks the root
-   * with `frame-expanded` and shows the scrim below the window.
+   * Whether the catalogue's sheet draws its grabber and close control as
+   * buttons, as it does by default. A static depiction that runs no script
+   * sets `false`, which draws each as a picture of itself.
    */
-  frameExpanded?: boolean | undefined;
+  interactive?: boolean;
   /** The main region with the routed view. */
   main: ReactNode;
   /** The address of the main region, for the skip link. */
   mainHref: string;
   navigation: ReactNode;
+  /**
+   * The width that the reader chose for the catalogue, in pixels, as
+   * `--mbk-nav-width` on the root. The floating catalogue and the canvas's
+   * start inset follow it. Without it, the catalogue takes its starting
+   * width.
+   */
+  navigationWidth?: number | undefined;
   /** Receives the shell root. */
   ref?: Ref<HTMLDivElement> | undefined;
   /**
    * The separator that the reader drags, which marks the root with
-   * `mbk-inspector-resizing` or `mbk-nav-resizing`: the whole shell keeps the
-   * drag's cursor, and no frame takes the pointer.
+   * `mbk-nav-resizing`: the whole shell keeps the drag's cursor, and no frame
+   * takes the pointer.
    */
   resizing?: ShellResizing | undefined;
   statusId: string;
@@ -132,7 +198,8 @@ export function ShellLayout({
 }) {
   return (
     <div
-      className={rootClassName("mbk", { frameExpanded, resizing })}
+      className={rootClassName("mbk", { resizing })}
+      {...canvasLayoutMarks(catalogueSheet !== undefined, navigationWidth)}
       data-drawer={drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={colorScheme}
       data-mokly-shell=""
@@ -142,8 +209,15 @@ export function ShellLayout({
       <SkipLink href={mainHref} />
       {topBar}
       <ShellBody>
-        {navigation}
+        {catalogueSheet === undefined ? (
+          navigation
+        ) : (
+          <FloatingCatalogue interactive={interactive} sheet={catalogueSheet}>
+            {navigation}
+          </FloatingCatalogue>
+        )}
         {main}
+        {dock}
       </ShellBody>
       <RouteStatus id={statusId}>{announcement}</RouteStatus>
     </div>

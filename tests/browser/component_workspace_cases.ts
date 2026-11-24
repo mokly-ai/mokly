@@ -1,10 +1,39 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { test as baseTest } from "./browser_test.js";
-import { componentDesignFixture } from "./component_design_fixture.js";
+import { designDocumentFixture } from "./component_design_fixture.js";
 import { unexpectedDesignScripts as servedScripts } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+import { canvasFrame } from "./workspace_actions.js";
+
+type Viewport = "desktop" | "mobile";
+
+/** One fold of a Canvas artboard's Inspect panel. */
+function fold(page: Page, section: string) {
+  return page.locator(`[data-cv-section="${section}"]`);
+}
+
+/**
+ * A leaf component and a component with nested components, each where its
+ * artboard draws the panel: a phone draws it only in an open panel sheet,
+ * and no phone artboard opens the Toolbar's.
+ */
+const COMPONENTS: Record<Viewport, { leaf: string; nested: string[] }> = {
+  desktop: {
+    leaf: "design/canvas/stage/component-set",
+    nested: ["design/canvas/stage/component-set/toolbar"],
+  },
+  mobile: { leaf: "design/canvas/stage/component-set/disabled", nested: [] },
+};
+
+/** Unchanged entries, also with temporary edits, which offer no comparison. */
+const UNCHANGED = [
+  "design/canvas/inspect/unchanged",
+  "design/canvas/stage/component-set",
+  "design/canvas/props/editing/edited",
+  "design/canvas/props/editing/unset",
+];
 
 /** Run the same assertions against each catalogue delivery. */
 export function registerComponentWorkspace(
@@ -18,7 +47,7 @@ export function registerComponentWorkspace(
     mode === "static"
       ? 'script:not([src="/mokly-viewer/client/frame-probe.js"])'
       : servedScripts();
-  const { componentDesignUrl } = componentDesignFixture(
+  const { designDocumentUrl } = designDocumentFixture(
     test,
     mode === "static" ? copiedDesignFileUrl : undefined,
   );
@@ -35,255 +64,146 @@ export function registerComponentWorkspace(
       test("component tabs distinguish leaves from nested components", async ({
         page,
       }) => {
+        const { leaf, nested } = COMPONENTS[viewport];
+        await page.goto(designDocumentUrl(leaf, viewport));
+        await expect(fold(page, "props"), leaf).toHaveCount(1);
+        await expect(fold(page, "nested"), leaf).toHaveCount(0);
+        for (const route of nested) {
+          await page.goto(designDocumentUrl(route, viewport));
+          await fold(page, "nested").locator(":scope > summary").click();
+          await expect(fold(page, "nested"), route).toContainText("Action");
+        }
+        // A screen without registered components keeps its Components fold.
         await page.goto(
-          componentDesignUrl("design/components/controls/controls", viewport),
+          designDocumentUrl("design/canvas/inspect/unchanged", viewport),
         );
-        const inspector = page.getByRole("region", {
-          name: "Inspector",
+        await expect(
+          fold(page, "components").locator(":scope > summary"),
+        ).toBeVisible();
+        await expect(
+          fold(page, "components").locator(".cv-sec-count"),
+        ).toHaveText("0");
+      });
+
+      test("a Frames filter change keeps edited fields", async ({ page }) => {
+        await page.goto(
+          designDocumentUrl(
+            "design/canvas/stage/component-set/disabled",
+            viewport,
+          ),
+        );
+        const label = fold(page, "props").getByRole("textbox", {
+          name: "Label",
           exact: true,
         });
-        await expect(
-          inspector.locator('[data-inspector-tab="components"]'),
-        ).toHaveCount(0);
-        await page.goto(
-          componentDesignUrl("design/components/pages/toolbar", viewport),
-        );
-        await inspector
-          .getByRole("button", { name: "Nested components", exact: true })
-          .click();
-        await expect(
-          inspector.getByRole("region", {
-            name: "Nested components",
-            exact: true,
-          }),
-        ).toContainText("Action");
-        await page.goto(
-          componentDesignUrl("design/components/states/empty", viewport),
-        );
-        await expect(
-          inspector.getByRole("button", { name: "Components", exact: true }),
-        ).toBeVisible();
-      });
-
-      test("grouped view controls change the previews and retain edited fields", async ({
-        page,
-      }) => {
-        await page.goto(
-          componentDesignUrl(
-            "design/components/controls/editing/edited",
-            viewport,
-          ),
-        );
-        const toolbar = page.getByRole("group", { name: "View options" });
-        const mode = toolbar.getByRole("combobox", {
-          name: "Viewport",
-        });
-        const label = page.getByRole("textbox", { name: "label", exact: true });
+        const light = page.locator('[data-cv-frames="light"]');
+        const frame = page.locator('.cv-frame[data-cv-frame="disabled-light"]');
         await label.fill("Keep this edit");
-        for (const selected of ["mobile", "desktop", "both"] as const) {
-          await mode.selectOption(selected);
-          await expect(page.locator(".ce-preview-view:visible")).toHaveCount(
-            selected === "both" ? 2 : 1,
-          );
-          if (selected !== "both")
-            await expect(
-              page.locator(".ce-preview-view:visible"),
-            ).toHaveAttribute("data-preview-viewport", selected);
-          await expect(label).toHaveValue("Keep this edit");
-        }
-        await expect(
-          toolbar.getByRole("switch", { name: "Dark preview" }),
-        ).toHaveCount(0);
-        await expect(
-          page.locator(".mbk-component-canvas:visible .mbk-frame-label"),
-        ).toHaveText(["Mobile", "Desktop"]);
-        const documents = page.locator(
-          ".mbk-component-canvas:visible .ce-canvas-content",
-        );
-        await expect(documents.first()).toHaveCSS(
-          "background-color",
-          "rgb(255, 255, 255)",
-        );
-        // The component stands where the shell's documents draw it: 24px from
-        // the top left inside the canvas's border.
-        expect(
-          await documents.evaluateAll((boxes) =>
-            boxes.map((box) => {
-              const inner = box.getBoundingClientRect();
-              const component = box.firstElementChild!.getBoundingClientRect();
-              return [
-                component.left - inner.left - box.clientLeft,
-                component.top - inner.top - box.clientTop,
-              ];
-            }),
-          ),
-        ).toEqual([
-          [24, 24],
-          [24, 24],
-        ]);
-        await expect(
-          page.locator(".mbk-topbar .mbk-seg, .ce-inspection-toolbar"),
-        ).toHaveCount(0);
-      });
-
-      test("single-component highlighting fills the screen and remains selectable", async ({
-        page,
-      }) => {
-        await page.goto(
-          componentDesignUrl(
-            "design/components/inspection/inspection-consumer",
-            viewport,
-          ),
-        );
-        await page
-          .getByRole("switch", { name: "Highlight components" })
-          .check();
-        const preview = page.locator(".ce-preview-view:visible");
-        const content = await preview
-          .locator(".ce-other-example")
-          .boundingBox();
-        const frame = await preview
-          .locator(
-            viewport === "mobile" ? ".phone-screen" : ".browser-viewport",
-          )
-          .boundingBox();
-        expect(content!.y + content!.height).toBeCloseTo(
-          frame!.y + frame!.height,
-          0,
-        );
-        // The shipped label of the highlighted Action opens its selection.
-        await preview
-          .getByRole("link", { name: "Action · Continue" })
-          .click({ timeout: 15_000 });
-        await expect(page).toHaveURL(
-          componentDesignUrl(
-            "design/components/inspection/inspection-consumer",
-            viewport,
-          ),
-        );
-        await expect(
-          page.getByRole("region", { name: "Selected instance" }),
-        ).toContainText("Continue");
+        await light.uncheck();
+        await expect(frame).toBeHidden();
+        await expect(label).toHaveValue("Keep this edit");
+        await light.check();
+        await expect(frame).toBeVisible();
+        await expect(label).toHaveValue("Keep this edit");
       });
 
       test("unchanged examples omit comparison modes including temporary edits", async ({
         page,
       }) => {
-        for (const route of [
-          "design/components/overview",
-          "design/components/controls/editing/unset",
-          "design/components/states/empty",
-        ]) {
-          await page.goto(componentDesignUrl(route, viewport));
+        const modes = page.getByRole("list", { name: "Comparison mode" });
+        for (const route of UNCHANGED) {
+          await page.goto(designDocumentUrl(route, viewport));
+          await expect(page.locator(".cv-root"), route).toHaveCount(1);
+          // An unchanged entry has no Changes tab and no status.
           await expect(
-            page.getByRole("group", { name: "Comparison mode" }),
+            page.locator('.cv-ptab[data-tab="changes"]'),
+            route,
           ).toHaveCount(0);
-          await expect(page.locator(".mbk-screen-head")).toContainText(
-            "Unmodified",
-          );
+          await expect(modes, route).toHaveCount(0);
+          await expect(page.locator(".mbk-entry-status"), route).toHaveCount(0);
         }
         await page.goto(
-          componentDesignUrl(
-            "design/components/controls/states/comparison",
+          designDocumentUrl(
+            "design/canvas/components/compare/current",
             viewport,
           ),
         );
+        await expect(modes).toBeVisible();
         await expect(
-          page.getByRole("group", { name: "Comparison mode" }),
-        ).toBeVisible();
-        await expect(page.locator(".mbk-screen-head")).not.toContainText(
-          "Unmodified",
-        );
+          page.locator(".cv-canvas .mbk-entry-status:visible"),
+        ).toHaveText("Changed");
       });
 
-      test("inspector resizing and scrolling keep the shell and tabs in place", async ({
+      test("only the panel body scrolls, and the tabs and the stage stay in place", async ({
         page,
       }) => {
         await page.goto(
-          componentDesignUrl(
-            "design/components/controls/editing/edited",
-            viewport,
-          ),
+          designDocumentUrl("design/canvas/inspect/sections", viewport),
         );
-        const pane = page.locator(".ce-preview-pane");
-        const inspector = page.locator(".mbk-inspector");
-        const heading = await page.locator(".mbk-screen-head").boundingBox();
-        const before = await inspector.boundingBox();
-        if (viewport === "desktop") {
-          const grip = (await page
-            .locator(".mbk-inspector-resize")
-            .boundingBox())!;
-          const x = grip.x + grip.width / 2;
-          const y = grip.y + grip.height / 2;
-          await page.mouse.move(x, y);
-          await page.mouse.down();
-          await page.mouse.move(x, y - 60, { steps: 12 });
-          await page.mouse.up();
-        } else {
-          await page
-            .getByRole("switch", { name: "Expanded inspector" })
-            .check();
-        }
-        await expect
-          .poll(async () => (await inspector.boundingBox())!.height)
-          .toBeGreaterThan(before!.height + 40);
-        const tabs = await inspector
-          .locator("details[open] > summary")
-          .boundingBox();
-        await inspector
-          .locator("details[open] .mbk-inspector-content")
-          .evaluate((node) => {
-            node.scrollTop = node.scrollHeight;
-          });
-        await expect(
-          page.getByRole("textbox", { name: "hint", exact: true }),
-        ).toBeInViewport();
-        expect(
-          await inspector.locator("details[open] > summary").boundingBox(),
-        ).toEqual(tabs);
-        expect(await page.locator(".mbk-screen-head").boundingBox()).toEqual(
-          heading,
-        );
+        const panel = page.getByRole("region", { name: "Panel", exact: true });
+        const tabs = panel.locator(".cv-ptabs");
+        const stage = page.locator(".cv-canvas");
+        const body = panel.locator(".cv-float-body");
+        const last = fold(page, "components");
+        // Arrange the panel at its top, where its last fold is out of view.
+        await body.evaluate((node) => {
+          node.scrollTop = 0;
+        });
+        const before = {
+          tabs: await tabs.boundingBox(),
+          stage: await stage.boundingBox(),
+        };
+        await expect(last).not.toBeInViewport();
+        await body.evaluate((node) => {
+          node.scrollTop = node.scrollHeight;
+        });
+        await expect(last).toBeInViewport();
+        expect(await tabs.boundingBox()).toEqual(before.tabs);
+        expect(await stage.boundingBox()).toEqual(before.stage);
         const scroll = await page.evaluate(() => ({
           document: document.documentElement.scrollHeight - innerHeight,
           main: document.querySelector(".mbk-main")!.scrollTop,
         }));
         expect(scroll.document).toBeLessThanOrEqual(1);
         expect(scroll.main).toBe(0);
-        await inspector
-          .getByRole("button", { name: "Props", exact: true })
-          .click();
-        await expect(inspector).toHaveCSS("height", "46px");
-        await expect(pane).toHaveCSS("resize", "none");
-        await inspector
-          .getByRole("button", { name: "Props", exact: true })
-          .click();
-        await expect(page.locator(".mbk-screen-head h2")).toBeInViewport();
       });
     });
   }
 
-  test("view controls and highlighting work inside sandboxed Browse frames", async ({
+  test("view controls, folds, and highlighting work inside sandboxed Browse frames", async ({
     page,
   }) => {
-    await page.goto("/view/design/components/inspection/inspection-details/");
-    const frame = page.frameLocator(".mbk-frame-desktop iframe");
-    const toolbar = frame.getByRole("group", { name: "View options" });
-    await toolbar
-      .getByRole("combobox", { name: "Viewport" })
-      .selectOption("both");
-    await toolbar.getByRole("switch", { name: "Highlight components" }).check();
-    await expect(
-      frame.locator(".ce-preview-view:visible .ce-highlight-layer:visible"),
-    ).toHaveCount(2);
+    // The viewer's desktop frame lays the artboard out at the frame's own
+    // width. Below 900px a Canvas root takes its compact form, which closes
+    // the panel, so the page gives the frame the full layout.
+    await page.setViewportSize({ width: 1920, height: 1000 });
+    await page.goto("/view/design/canvas/overview/");
+    // The design screen's Desktop · Light frame on the canvas.
+    const frame = page.frameLocator(canvasFrame("desktop"));
+    // The Frames filter hides the frames that it turns off.
+    const light = frame.locator('[data-cv-frames="light"]');
+    const desktop = frame.locator('.cv-frame[data-cv-frame="desktop-light"]');
+    await light.uncheck();
+    await expect(desktop).toBeHidden();
+    await light.check();
+    await expect(desktop).toBeVisible();
+    // Highlight components masks every frame, and each mask id is unique.
+    const toggle = frame.getByRole("switch", { name: "Highlight components" });
+    await toggle.check();
+    await expect(frame.locator(".mbk-highlight-mask:visible")).toHaveCount(4);
     const ids = await frame
       .locator("mask")
       .evaluateAll((nodes) => nodes.map((node) => node.id));
+    expect(ids).toHaveLength(4);
     expect(new Set(ids).size).toBe(ids.length);
-    await toolbar
-      .getByRole("switch", { name: "Highlight components" })
-      .uncheck();
-    await expect(frame.locator(".ce-highlight-layer:visible")).toHaveCount(0);
+    await toggle.uncheck();
+    await expect(frame.locator(".mbk-highlight-mask:visible")).toHaveCount(0);
+    // A native fold of Inspect opens and closes.
+    const usage = frame.locator('[data-cv-section="usage"]');
+    await usage.locator(":scope > summary").click();
+    await expect(usage.locator('[data-usage-section="used-by"]')).toBeVisible();
+    await usage.locator(":scope > summary").click();
+    await expect(usage.locator('[data-usage-section="used-by"]')).toBeHidden();
     await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
   });
 }

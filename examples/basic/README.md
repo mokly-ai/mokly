@@ -134,9 +134,15 @@ returns Firna's `domBackendCss` stylesheet, which holds the element resets and
 the focus rules, as a `style` element. The sidecar collects it, and the Rust
 core writes it in the document head. The collected styles come before the
 configured stylesheets, so `styles.css`, and `styles-dark.css` in dark views,
-colour the plain HTML around the components. The renderer also places each
-design library component in `LibraryHost`, which gives the standalone sample
-its frame. The `moduleResolution` settings give the bundle the
+colour the plain HTML around the components.
+
+The renderer also places each design library component in `LibraryHost`,
+which gives the standalone sample its frame. In a component's own document,
+the renderer gives its wrapper the width of its content. The wrapper also
+holds the margins of the component's root, so the document measures the
+component. Screens and design library samples keep the full width.
+
+The `moduleResolution` settings give the bundle the
 `react-native-web` alias, the `react-native` conditions and fields, the
 `.web.*` extensions, and the JSX loader for `.js` files. Through them, the
 bundle reads Firna's `react-native` build and selects its `.web.*` files. A
@@ -161,12 +167,32 @@ the render context's viewport. `artboardStates()` makes one screen whose
 variants show other states: a `state` prop names the state, and each variant
 sets it. The helper adapts design artboards, each a different tree; a product
 screen derives its states from real props instead.
-`specs/design/browse/loading/` shows the shell before the catalogue arrives,
-its failure and version states, and the stage while a preview loads.
-`specs/design/components/controls/parts/copy.ts` holds the settled copy of the
-Props tab's controls, and the Read-only and recovery gallery under
-`specs/design/components/controls/limits/` draws the states without editing
-and the recovery states that keep the edits.
+`specs/design/components/controls/parts/copy.ts` holds the settled copy of
+the controls in Inspect's Props section.
+
+`specs/design/canvas/` holds the Canvas viewer family: 41 screens and 67
+saved variants in eleven folders, which the
+[Canvas inventory](../../docs/protocol/mokly-shell-canvas-inventory.md)
+lists. A screen opens as four frames on a dot-grid canvas, between the
+floating catalogue and the right panel. A use case opens as one row of step
+frames, and a removed entry as the frames of its previous version. Each
+mobile view draws the compact layout: one frame and the dock. Only the
+startup views of `specs/design/canvas/loading/` draw no chrome, because the
+shell draws none before the catalogue arrives. The family's shared scaffolds,
+instance records
+and destinations live in `specs/design/canvas/parts/`, and each folder keeps
+the parts of its own states in its own `parts/` directory. The family's
+eleven shared parts, the `canvas` and `panels` groups of
+`specs/design/library/` and the inspector's Frames filter and box model,
+implement their own markup, because `@mokly/ui` does not provide them yet.
+The [library README](./specs/design/library/README.md#canvas-viewer-parts)
+describes them. `specs/design/parts/canvas_palette.ts` maps the Canvas
+palette of `@mokly/ui`, imported by repository path, to the custom properties
+of a Canvas root. The `design/canvas/**` route of the configuration links the
+Canvas sheets, and `design.css` imports Geist from `design-fonts/` on every
+design route. The
+[design library stylesheets README](./design-library/README.md) gives their
+order.
 
 `tests/design_catalogue.test.ts` serves this configuration once with
 `--no-watch` and the unresolved base `refs/mokly/browser-suite-no-base`, so
@@ -179,18 +205,23 @@ checks the shared components each design screen records, the stylesheets each
 view links, and every link's destination and focus behaviour. A new design
 screen updates the inventory. A family part that most screens show lists the
 screens without it, so a new screen without that part joins its `except` set.
-A part that only some screens show, such as the comparison toolbar, a
-comparison pane, an empty state, or the tag picker, lists those screens in its
-`only` set, so the test checks a new screen with that part only after it joins
-the set.
+A part that only some screens show, such as an empty state or the tag picker,
+lists those screens in its `only` set, so the test checks a new screen with
+that part only after it joins the set.
 
 The [shell design](../../docs/protocol/mokly-shell-design.md),
+[canvas stage](../../docs/protocol/mokly-shell-canvas-stage.md),
+[canvas frames](../../docs/protocol/mokly-shell-device-chrome.md),
 [design inventory](../../docs/protocol/mokly-shell-design-inventory.md),
+[Canvas inventory](../../docs/protocol/mokly-shell-canvas-inventory.md),
 [depicted catalogue](../../docs/protocol/mokly-shell-design-catalogue.md),
 [design links](../../docs/protocol/mokly-design-links.md),
 [design components](../../docs/protocol/mokly-design-components.md),
 [component library](../../docs/protocol/mokly-design-component-library.md),
+[Canvas library parts](../../docs/protocol/mokly-design-component-library-canvas.md),
 [component design](../../docs/protocol/mokly-component-design.md),
+[inspector design](../../docs/protocol/mokly-component-inspector-design.md),
+[comparison panes](../../docs/protocol/mokly-comparison-panes.md),
 [palette](../../docs/protocol/mokly-viewer-palette.md), and
 [appearance](../../docs/protocol/mokly-viewer-appearance.md) contracts own
 the details of these designs.
@@ -227,10 +258,10 @@ npm run dev
 Before Serve starts, it installs the dependencies with `npm ci` when they are
 missing or `package-lock.json` changed after the last install. It builds with
 `npm run build` when a build output is missing or older than the install. The
-build covers the native binary, the UI package, the viewer, the shim, and the
-sidecar. After you change Mokly's own sources, run `npm run build` before
-`npm run dev`. Put Serve options after `--`, for example
-`npm run dev -- --port 0`.
+build covers the native binary, the UI, model, and frame packages, the
+viewer, the shim, and the sidecar. After you change Mokly's own sources, run
+`npm run build` before `npm run dev`. Put Serve options after `--`, for
+example `npm run dev -- --port 0`.
 
 To validate the catalogue and write the static site:
 
@@ -256,9 +287,10 @@ To check the packed packages against this example:
 npm run package:smoke
 ```
 
-It packs the UI package, the viewer, the CLI, and the host's native package and
-installs them into a copy of this example outside the repository. The copy also
-holds the UI package sources that the design mockups import by repository path.
+It packs the UI, model, and frame packages, the viewer, the CLI, and the host's
+native package and installs them into a copy of this example outside the
+repository. The copy also holds the UI package sources that the design
+mockups import by repository path.
 It starts the installed `mokly serve` in a directory below `mokly.config.json`
 and opens a React, a design, and an HTML screen and a Markdown document in
 headless Chrome. It builds the copy with `--strict` and opens the same entries

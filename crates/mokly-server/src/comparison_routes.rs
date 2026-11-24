@@ -3,12 +3,14 @@
 use axum::http::header::CACHE_CONTROL;
 use axum::http::{HeaderMap, HeaderValue, StatusCode, Uri};
 use axum::response::Response;
-use mokly_model::namespace::viewer;
+use mokly_model::namespace::{FONT_FACES, snapshot_viewer, viewer};
 use mokly_model::paths::is_entry_path;
 use mokly_model::routes;
 use percent_encoding::percent_decode_str;
 
 use crate::application::Application;
+use crate::assets::File;
+use crate::comparison_store::Comparisons;
 use crate::json_delivery::JsonBody;
 use crate::{response, security};
 
@@ -62,7 +64,15 @@ pub(crate) async fn route(
             response::missing()
         });
     }
-    Some(match store.file(generation, file).await {
+    let result = if let Some(face) = FONT_FACES
+        .into_iter()
+        .find(|face| snapshot_viewer(face) == file)
+    {
+        Ok(face_file(app, store.as_ref(), generation, face))
+    } else {
+        store.file(generation, file).await
+    };
+    Some(match result {
         Ok(Some(file)) => {
             let mut response = if response::is_json(&file.content_type) {
                 JsonBody::Whole(file.bytes)
@@ -80,6 +90,24 @@ pub(crate) async fn route(
         Ok(None) => response::missing(),
         Err(_) => unavailable(),
     })
+}
+
+/// A live generation's copy of a viewer face, answered from the viewer asset table.
+///
+/// The bundle neither stores nor charges the face. The read renews the generation
+/// like any other file of it, and an unknown or collected generation answers 404.
+fn face_file(
+    app: &Application,
+    store: &dyn Comparisons,
+    generation: &str,
+    face: &str,
+) -> Option<File> {
+    let snapshot = app.publications.current();
+    snapshot
+        .assets
+        .get(&viewer(face))
+        .filter(|_| store.renew(generation))
+        .cloned()
 }
 
 fn unavailable() -> Response {

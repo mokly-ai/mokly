@@ -154,6 +154,7 @@ The static output of `build`, its safety and ownership rules, publication, and t
 
 The Browse shell: the embeddable viewer, appearance, navigation, frames, inspection, comparison panes, and evidence presentation.
 
+- [Canvas Selection](./mokly-viewer-selection-canvas.md)
 - [Changes Screen Controls](./mokly-changes-controls.md)
 - [Comparison Pane Presentation](./mokly-comparison-panes.md)
 - [Comparison Scroll Together](./mokly-comparison-scroll-together.md)
@@ -163,6 +164,9 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [CSS Evidence Presentation](./mokly-css-evidence-presentation.md)
 - [Embeddable Mokly Viewer](./mokly-viewer.md)
 - [Embeddable Viewer API](./mokly-viewer-api.md)
+- [Frame Box Model](./mokly-frame-box-model.md)
+- [Frame Canvas Input](./mokly-frame-canvas-input.md)
+- [Frame Content Box](./mokly-frame-content-box.md)
 - [Frame Link Navigation](./mokly-frame-link-navigation.md)
 - [Frame Package](./mokly-frame-package.md)
 - [Frame Probe](./mokly-frame-probe.md)
@@ -171,12 +175,15 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 - [Mokly Catalogue Navigation Contract](./mokly-navigation.md)
 - [Mokly Shell Brand](./mokly-shell-brand.md)
 - [Navigation Disclosure Persistence](./mokly-disclosure-persistence.md)
+- [Same-Origin Frame Documents](./mokly-frame-adapter-same-origin.md)
 - [Shared UI Package](./mokly-ui-package.md)
+- [Shell Canvas Frames, Preview Scheme And Compact Layout](./mokly-shell-device-chrome.md)
 - [Shell Destination Queries](./mokly-shell-destinations.md)
-- [Shell Device Chrome And Preview Scheme](./mokly-shell-device-chrome.md)
+- [Standalone Appearance Control](./mokly-viewer-appearance-standalone.md)
 - [Viewer Appearance](./mokly-viewer-appearance.md)
 - [Viewer Frame Adapter](./mokly-frame-adapter.md)
 - [Viewer Markers And Multi-Instance Highlights](./mokly-viewer-markers.md)
+- [Viewer Preview Palette](./mokly-viewer-palette-preview.md)
 - [Viewer Selection, Events And Shell State](./mokly-viewer-selection.md)
 - [Viewer Semantic Palette](./mokly-viewer-palette.md)
 
@@ -184,6 +191,9 @@ The Browse shell: the embeddable viewer, appearance, navigation, frames, inspect
 
 The design catalogue that depicts the shell, its inventories, and the shared design components.
 
+- [Canvas Design Inventory](./mokly-shell-canvas-inventory.md)
+- [Canvas Loading, Search And Evidence Inventory](./mokly-shell-canvas-inventory-states.md)
+- [Canvas Viewer Parts Of The Design Library](./mokly-design-component-library-canvas.md)
 - [Comparison Pane Design References](./mokly-comparison-pane-designs.md)
 - [Component Controls Design](./mokly-component-controls-design.md)
 - [Component Design Inventory](./mokly-component-design-inventory.md)
@@ -197,8 +207,10 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 - [Mokly Design Mockup Links](./mokly-design-links.md)
 - [Mokly Shell Design Contract](./mokly-shell-design.md)
 - [Registered Components In Mokly's Design Catalogue](./mokly-design-components.md)
+- [Shell Canvas Stage](./mokly-shell-canvas-stage.md)
 - [Shell Design Inventory](./mokly-shell-design-inventory.md)
-- [Shell Navigation Column Design](./mokly-shell-design-navigation.md)
+- [Shell Navigation Design](./mokly-shell-design-navigation.md)
+- [Shell Tag Picker Design](./mokly-shell-design-tag-picker.md)
 - [Viewer Appearance Mockups](./mokly-viewer-appearance-mockups.md)
 
 ## CI, Verification, And Release

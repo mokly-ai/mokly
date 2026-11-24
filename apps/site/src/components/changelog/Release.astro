@@ -1,0 +1,52 @@
+---
+/**
+ * A full release frame on the canvas: its anchor label, such as
+ * `# v0.19.0 · 12 November 2026`, the head, the count chips that jump to
+ * each group, and the groups on their rail, closed by the upgrade notes. A
+ * release without notes draws only its head. The frame's `data-notes` holds
+ * the size tag of its selection, which counts its notes.
+ *
+ * - `latest`: adds the Latest chip to the newest release.
+ * - `selected`: draws the selection with its size tag and turns the frame
+ *   label green, as the release in view. The built page selects the newest
+ *   release, and the changelog island moves the selection with the reader.
+ *
+ * Use: `<Release latest release={release} selected />`.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import FrameLabel from "../FrameLabel.astro";
+import Selection from "../Selection.astro";
+
+import { counted, noteCount } from "./facts.js";
+import ReleaseCounts from "./ReleaseCounts.astro";
+import ReleaseHead from "./ReleaseHead.astro";
+import ReleaseNotes from "./ReleaseNotes.astro";
+
+interface Props {
+  readonly latest?: boolean;
+  readonly release: PublishedRelease;
+  readonly selected?: boolean;
+}
+
+const { latest = false, release, selected = false } = Astro.props;
+const size = counted(noteCount(release), "note");
+---
+
+<article
+  aria-labelledby={release.titleId}
+  class="site-release"
+  data-notes={size}
+  id={release.anchor}
+>
+  <FrameLabel
+    icon="hash"
+    name={`v${release.version} · ${release.readableDate}`}
+    selected={selected}
+  />
+  <ReleaseHead latest={latest} release={release} />
+  <ReleaseCounts release={release} />
+  {(release.groups.length > 0 || release.upgrade.length > 0) && (
+    <ReleaseNotes release={release} />
+  )}
+  {selected && <Selection size={size} />}
+</article>

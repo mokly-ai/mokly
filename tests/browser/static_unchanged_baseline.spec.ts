@@ -13,8 +13,9 @@ import {
   awaitRoutedDetail,
   changesPaths,
   comparisonIndex,
+  expectNoCompareModes,
 } from "./comparison_ui.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseViewport, viewportFrame } from "./workspace_actions.js";
 
 const test = additionsCopyTest("browser-head-baseline", undefined, "HEAD");
 
@@ -44,13 +45,16 @@ test("the owning catalogue stays usable when HEAD is the unchanged baseline", as
       "Unmodified",
     );
     await awaitRoutedDetail(page, comparisonPaths.changed);
-    await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+    await expectNoCompareModes(page);
     await expect(
       page.locator('button[data-filter="changed"] .mbk-nav-filter-count'),
     ).toHaveText("0");
-    const frames = page.locator("[data-current-screen] iframe");
+    // The canvas shows the current frames of the chosen viewport.
+    const frames = page
+      .locator("iframe[data-workspace-frame]")
+      .filter({ visible: true });
     await expect(
-      frames.and(page.locator(`[data-workspace-frame="${viewport}"]`)),
+      frames.and(page.locator(viewportFrame(viewport))),
     ).toBeVisible();
     for (const frame of await frames.all()) {
       await expect(frame.contentFrame().locator("h1")).toHaveText(

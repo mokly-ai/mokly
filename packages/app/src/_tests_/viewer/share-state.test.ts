@@ -11,7 +11,7 @@ import { shareLinkState } from "../../viewer/share-state";
 const selection: ViewerSelection = {
   screen: "product/start",
   view: "all",
-  viewport: "desktop",
+  viewport: "both",
   scheme: "light",
   search: "",
   tags: [],

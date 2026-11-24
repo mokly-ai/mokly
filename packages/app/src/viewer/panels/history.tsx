@@ -1,7 +1,5 @@
 import type { Build, HistoryEntry, Publication } from "../../api/types";
 import { Action } from "../../components/action";
-import { ContentList } from "../../components/controls";
-import type { ContentRow, WaitingContentRow } from "../../components/controls";
 import { Pending, StateMessage } from "../../components/page-parts";
 import { PaneResource } from "../../components/resource-state";
 import { listHistory } from "../../data/builds";
@@ -15,6 +13,9 @@ import {
   publishedMoment,
   shortSha,
 } from "../resolution";
+
+import { PanelList } from "./panel-rows";
+import type { PanelRow, WaitingPanelRow } from "./panel-rows";
 
 /** What one earlier attempt on this reference says about itself. */
 function detailFor(publication: Publication, current: boolean): string {
@@ -34,10 +35,15 @@ interface RowContext {
   currentBuildId?: string;
 }
 
+/**
+ * The publication the stage shows is where the reader already is, so it takes
+ * the signal-soft fill and carries no destination, and its state line already
+ * says Current publication, so it carries no mark either.
+ */
 function publicationRow(
   publication: Publication,
   context: RowContext,
-): ContentRow {
+): PanelRow {
   const current = publication.id === context.currentId;
   const state = publicationState(publication);
   const openable = state === "ready" || state === "failed";
@@ -46,8 +52,8 @@ function publicationRow(
     title: publishedMoment(publication.publishedAt),
     detail: detailFor(publication, current),
     status: publicationTones[state],
-    meta: shortSha(publication.headSha),
-    mono: true,
+    sha: shortSha(publication.headSha),
+    current,
     ...(current || !openable
       ? {}
       : {
@@ -64,18 +70,20 @@ function publicationRow(
 /**
  * A build stands for its own upload until that upload commits, in the words a
  * publication uses: Publishing now while it runs and Unable to publish once it
- * failed. Its details are the build's own address.
+ * failed. Its details are the build's own address, and the build the stage
+ * shows is where the reader already is, as the current publication is.
  */
-function buildRow(build: Build, context: RowContext): ContentRow {
+function buildRow(build: Build, context: RowContext): PanelRow {
   const state = buildActive(build.state) ? "publishing" : "failed";
+  const current = build.id === context.currentBuildId;
   return {
     id: build.id,
     title: publishedMoment(build.createdAt),
     detail: state === "publishing" ? "Publishing now" : "Unable to publish",
     status: publicationTones[state],
-    meta: shortSha(build.headSha),
-    mono: true,
-    ...(build.id === context.currentBuildId
+    sha: shortSha(build.headSha),
+    current,
+    ...(current
       ? {}
       : {
           href: buildPath(context.workspaceSlug, context.projectSlug, build.id),
@@ -84,7 +92,7 @@ function buildRow(build: Build, context: RowContext): ContentRow {
   };
 }
 
-function rowFor(entry: HistoryEntry, context: RowContext): ContentRow {
+function rowFor(entry: HistoryEntry, context: RowContext): PanelRow {
   return entry.kind === "build"
     ? buildRow(entry.build, context)
     : publicationRow(entry.publication, context);
@@ -94,14 +102,13 @@ function rowFor(entry: HistoryEntry, context: RowContext): ContentRow {
  * An entry while the history's read runs: its state, its time and its head
  * are the read's, and its way on keeps its label as text.
  */
-const waitingEntry: WaitingContentRow = {
+const waitingEntry: WaitingPanelRow = {
   id: "waiting",
   waiting: true,
   title: "",
   detail: "",
   status: true,
-  meta: true,
-  mono: true,
+  sha: true,
   action: "Open",
 };
 
@@ -151,7 +158,7 @@ export function HistoryPanel({
             label="Loading publication history"
             labelMode="screen-reader-only"
           >
-            <ContentList label={label} rows={[waitingEntry]} />
+            <PanelList label={label} rows={[waitingEntry]} />
           </Pending>
         }
         failure="History couldn’t load"
@@ -173,7 +180,7 @@ export function HistoryPanel({
               }
             />
           ) : (
-            <ContentList
+            <PanelList
               label={label}
               rows={items.map((entry) => {
                 const row = rowFor(entry, context);

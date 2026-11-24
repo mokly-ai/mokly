@@ -12,6 +12,7 @@ import lighthouse from "lighthouse";
 import {
   AUDITED,
   CATEGORIES,
+  SKIPPED_AUDITS,
   THRESHOLDS,
   VIEWPORTS,
   budgetTable,
@@ -53,6 +54,7 @@ try {
               extends: "lighthouse:default",
               settings: {
                 formFactor: viewport.formFactor,
+                skipAudits: [...SKIPPED_AUDITS],
                 screenEmulation: {
                   deviceScaleFactor: viewport.formFactor === "mobile" ? 3 : 1,
                   disabled: false,

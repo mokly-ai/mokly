@@ -1,0 +1,27 @@
+---
+/**
+ * The notes of a release: its note groups on their rail in the changelog's
+ * order, then the upgrade notes when the release publishes them. The notes
+ * republish the package's text word for word, so the copy rules exempt
+ * them through `data-republished`.
+ *
+ * Use: `<ReleaseNotes release={release} />`, in a full or a compact frame.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+
+import ReleaseGroup from "./ReleaseGroup.astro";
+import Upgrade from "./Upgrade.astro";
+
+interface Props {
+  readonly release: PublishedRelease;
+}
+
+const { release } = Astro.props;
+---
+
+<div class="site-release-notes" data-republished>
+  {release.groups.map((group) => (
+    <ReleaseGroup group={group} />
+  ))}
+  <Upgrade release={release} />
+</div>

@@ -1,7 +1,8 @@
 import type { Page } from "@playwright/test";
 
+import type { CatalogueUsage } from "@mokly/model";
+
 import type * as LocalAdapter from "../../packages/frame/src/adapters/same_origin_adapter.js";
-import type { BrowserUsage } from "../../packages/viewer/tests/browser_documents.js";
 
 import type {
   crossOriginFixture,
@@ -11,27 +12,33 @@ import type {
 export async function mountLocalFrame(
   page: Page,
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
+  path = "/static/mokly-generated/home/index.mobile.html",
+  usage: CatalogueUsage = fixture.usage,
+  canvasInput = false,
 ) {
   await page.goto(fixture.host.url);
   // Direct adapter calls arrange inspection without adding host UI.
-  await page.evaluate(async (usageJson) => {
-    const { sameOriginAdapter } = (await import(
-      `${location.origin}/test-adapters.js`
-    )) as typeof LocalAdapter;
-    const state = window as unknown as FrameTestWindow;
-    const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
-    frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
-    state.frameEvents = [];
-    state.mounted = await sameOriginAdapter().mount(frame, {
-      url: new URL(
-        "/static/mokly-generated/home/index.mobile.html",
-        location.origin,
-      ),
-      usage: JSON.parse(usageJson) as BrowserUsage,
-    });
-    state.unsubscribe = state.mounted.subscribe((event) =>
-      state.frameEvents.push(event),
-    );
-    await state.mounted.listInstanceBoundaries();
-  }, JSON.stringify(fixture.usage));
+  await page.evaluate(
+    async ({ path, usageJson, canvasInput }) => {
+      const { sameOriginAdapter } = (await import(
+        `${location.origin}/test-adapters.js`
+      )) as typeof LocalAdapter;
+      const state = window as unknown as FrameTestWindow;
+      const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
+      frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
+      state.frameEvents = [];
+      const usage = JSON.parse(usageJson) as CatalogueUsage;
+      state.mounted = await sameOriginAdapter().mount(frame, {
+        url: new URL(path, location.origin),
+        usage,
+        canvasInput,
+      });
+      state.unsubscribe = state.mounted.subscribe((event) =>
+        state.frameEvents.push(event),
+      );
+      if (usage.status === "ready")
+        await state.mounted.listInstanceBoundaries();
+    },
+    { path, usageJson: JSON.stringify(usage), canvasInput },
+  );
 }

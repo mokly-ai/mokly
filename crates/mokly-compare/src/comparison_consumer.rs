@@ -9,6 +9,7 @@ use mokly_css::attribution::PageObservation;
 use mokly_css::observation;
 use mokly_model::catalogue::{EntryContent, ModelEntry};
 use mokly_model::evidence::ViewEvidence;
+use mokly_model::namespace;
 use mokly_model::review::ReviewState;
 use mokly_model::review_affected::ReviewSide;
 
@@ -138,11 +139,14 @@ impl ViewConsumer for Consumer<'_> {
         let inline = if equal_document {
             Vec::new()
         } else {
+            let [before_source, after_source] = [&before_route, &after_route]
+                .map(|route| namespace::generated(route.as_deref().unwrap_or("")));
             inline_styles::compare(
                 before_document.map(|document| document.tree.as_slice()),
                 after_document.map(|document| document.tree.as_slice()),
                 before_tree.as_deref(),
                 after_tree.as_deref(),
+                [&before_source, &after_source],
                 &format!(
                     "static/mokly-generated/{}",
                     after_route

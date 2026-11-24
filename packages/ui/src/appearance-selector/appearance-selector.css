@@ -25,9 +25,16 @@
   color: var(--mbk-accent-deep);
 }
 
-.mbk-appearance:focus-within {
-  outline: 2px solid var(--mbk-accent-deep);
-  outline-offset: 2px;
+/* The control draws the glow of the transparent select over it. Forced
+   colours drop the glow, so there the control takes the system outline. */
+.mbk-appearance:has(> select:focus-visible) {
+  box-shadow: var(--mbk-focus-glow);
+}
+
+@media (forced-colors: active) {
+  .mbk-appearance:has(> select:focus-visible) {
+    outline: 2px solid Highlight;
+  }
 }
 
 .mbk-appearance svg {

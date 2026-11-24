@@ -1,0 +1,32 @@
+---
+/**
+ * A site button: a link drawn as one of the three kinds of Site design.
+ * `primary` is the filled kind of a page's primary actions, `secondary` the
+ * raised surface with a strong ring, and `quiet` the strong ring alone. A
+ * button is 48px tall; an area resizes it through `class`, as the header's
+ * Get started does. `arrow` closes the label with the arrow that moves 3px
+ * on hover and is hidden from assistive technology, so the accessible name
+ * stays the label.
+ *
+ * Use: `<Button arrow href={GET_STARTED_PATH} kind="primary">Get started</Button>`.
+ * The label is the slot.
+ */
+
+interface Props {
+  readonly arrow?: boolean;
+  readonly class?: string;
+  readonly href: string;
+  readonly kind: "primary" | "quiet" | "secondary";
+}
+
+const { arrow = false, class: className, href, kind } = Astro.props;
+---
+
+<a class:list={["site-button", `site-button--${kind}`, className]} href={href}>
+  <slot />
+  {arrow && (
+    <span aria-hidden="true" class="site-button-arrow">
+      &#8594;
+    </span>
+  )}
+</a>

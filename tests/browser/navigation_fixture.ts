@@ -18,9 +18,10 @@ export function startNavigationFixture(): Promise<NavigationFixture> {
       "specs/index.mockup.tsx": `import {defineScreen, defineUseCase, definePage, MockLink} from "@mokly/mokly";
 import React from "react";
 const metadata = {relatedDocs: []};
-function Home({ compact }) {
+function Home({ compact, note }) {
   const nestedGenerated = compact ? "../details/index.mobile.html" : "../details/index.desktop.html";
   return <main id="home">
+    {note ? <p id="note">{note}</p> : null}
     <img alt="" src={compact ? "../../../../slow-navigation-mobile.svg" : "../../../../slow-navigation-desktop.svg"} />
     {compact ? <MockLink fragment="section" id="mock-link" to="fixture/nested/details">MockLink details</MockLink> : <a href="mock:fixture/nested/details#section" id="raw-link">Raw details</a>}
     <map name="destinations"><area href="mock:fixture/nested/details#section" id="area-link" shape="default" /></map>
@@ -48,7 +49,7 @@ function Details() {
   return <main id="section"><h1>Details destination</h1><a href="mock:fixture/nested/home" id="return-link">Return home</a><a href="mock:other/extra" id="extra-link">Extra</a></main>;
 }
 
-export const home = defineScreen({...metadata, description: "Home", path: "fixture/nested/home", title: "Home", props: {state: "home"}, render: (props, context) => props.state === "home" ? <Home compact={context.viewport === "mobile"}/> : <main id={"home-"+props.state}>{props.state === "empty" ? "Empty workspace" : "Save failed"}</main>, useCasePaths: ["fixture/nested/tour"], variants: [{slug: "empty", title: "Empty workspace", props: {state: "empty"}}, {slug: "error", title: "Save failed", props: {state: "error"}}]});
+export const home = defineScreen({...metadata, description: "Home", path: "fixture/nested/home", title: "Home", props: {state: "home", note: ""}, render: (props, context) => props.state === "home" ? <Home compact={context.viewport === "mobile"} note={props.note}/> : <main id={"home-"+props.state}>{props.state === "empty" ? "Empty workspace" : "Save failed"}</main>, useCasePaths: ["fixture/nested/tour"], variants: [{slug: "empty", title: "Empty workspace", props: {state: "empty"}}, {slug: "error", title: "Save failed", props: {state: "error"}}]});
 export const details = defineScreen({...metadata, description: "Details", path: "fixture/nested/details", title: "Details", props: {}, render: () => <Details/>, useCasePaths: ["fixture/nested/tour"]});
 export const extra = defineScreen({...metadata, description: "Extra", path: "other/extra", title: "Extra", props: {}, render: () => <main>Extra</main>});
 export const tour = defineUseCase({...metadata, description: "Tour", path: "fixture/nested/tour", title: "Tour", steps: [{screenPath: "fixture/nested/home"}, {screenPath: "fixture/nested/details"}]});

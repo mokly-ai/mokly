@@ -63,7 +63,7 @@ nothing linked and the frame needs only the canvas and the inbox lines.
 
 The catalogue's policy tests and browser checks hold the rules of
 [Email](./email.md): every color a rendered subtree carries is one of the
-five named Folio roles, one of the three shared accent roles, or
+five named roles, one of the three shared accent roles, or
 transparency; the subtree loads no resource but the two logos; the action
 cell alone carries the accent; the generated document equals the body
 rendered with the same fixture content, brand root, scheme and viewport; the

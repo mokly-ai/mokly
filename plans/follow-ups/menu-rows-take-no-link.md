@@ -1,0 +1,32 @@
+# Package menu rows take no link
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms` (Milestone 13).
+- **Location:** `packages/app/src/viewer/menu-list.tsx`, `packages/app/src/viewer/account-menu.tsx`, `packages/app/src/screens/viewer/more-menu.tsx`, `docs/mockups/src/screens/product/viewer/account-menu.tsx`, `docs/mockups/styles/product/viewer-canvas-menu.css`, `docs/mockups/src/_tests_/interactive-role-policy.ts`, and the Imports And Ownership section of `docs/protocol/cloud/shared-controls.md`.
+- **Reason:** The fix needs a release of `@firna/ui`, which lives in another repository.
+
+- **Source:** Implementation.
+- **Category:** Code structure.
+- **Terms:**
+  - **`@firna/ui`:** the shared control library that the app and the catalogue use, exact-pinned at 4.0.0 in every npm workspace that declares it.
+  - **Menu row:** one entry of `DropdownList`, which `DropdownMenu` and `ResponsiveMenu` draw: a pressable with the `menuitem` role.
+  - **Cloud menu rows:** the rows that the viewer's account menu and its compact More menu draw themselves, as a link for a page of the site and a button for an action.
+- **Background:**
+  - Cal chose on 2026-11-22 that the account menu, and More on compact widths, carry **Docs** and **Changelog** rows that open the site's `/docs/` and `/changelog/`. Each is a real link, so a pointer reader sees the address and can open it in a new tab.
+  - A `DropdownList` entry in `@firna/ui` 4.0.0 has no `href`. Its row renders a pressable with the `menuitem` role, so no anchor can sit inside it. Release 5.1.0 also has no `href`.
+  - The package's menu keyboard installs a document-level `keydown` listener while a menu is open. It takes Enter and Space for the active row wherever focus is, so it would take them from the Theme choice that sits in the same popover.
+  - So the cloud draws its own rows in the package's menu row metrics: 8px and 10px padding, a 7px radius, a 13px bold label on an 18px line, a 16px muted glyph column and the ring-and-soft-fill highlight. It owns their keyboard: focus moves through the rows with the arrow keys, Home and End, and Tab moves between the Theme choice and the menus.
+  - The catalogue's source policy, in `docs/mockups/src/_tests_/interactive-role-policy.ts`, lets an `a` element with an `href` take the `menuitem` role, so the drawings can draw the same link rows.
+- **Problem:** The cloud keeps a copy of the package's menu row look and its own keyboard model. A change to the package's rows does not reach the cloud's rows.
+- **Impact if no action:** The account menu and More drift from the package's other menus, such as the settings row menu, in look and in keyboard behaviour.
+- **Root question:** How does a package menu carry a row that is a real link, beside a control such as the Theme choice?
+- **Options:**
+  - **A.** Change nothing, and keep the cloud rows. Effort: Small.
+  - **B.** Add an `href` to the `DropdownList` entry in `@firna/ui`: the row renders an anchor with the `menuitem` role, which Enter follows. Let the menu keyboard leave Enter and Space to a focused control outside the rows. Release it, bump the pin in `packages/app`, `apps/mockups` and `packages/tokens`, move the account menu and More onto `ResponsiveMenu` and `DropdownList`, and delete the cloud rows, their stylesheet rules and the policy exception. Update the Imports And Ownership section of `docs/protocol/cloud/shared-controls.md`. Effort: Medium.
+- **Left out:** A row whose press assigns the address to the page, because it is not a link: it shows no address on hover and opens no new tab. A custom row slot in `DropdownList`, because each consumer would rebuild the link row that B gives once.
+- **Wider fix:** B, because one package row then serves every menu link.
+- **Previous examples:** None found.
+- **Related:** [viewer-more-menu-targets-below-required-size.md](./viewer-more-menu-targets-below-required-size.md) also changes the package's menu rows, for their size. A release for B can carry its row floor.
+- **Recommendation:** B. The cloud then keeps no copy of the package's row look or keyboard.
+- **Action:** fix after merge, apply B, because the package change ships from the `@firna/ui` repository first.

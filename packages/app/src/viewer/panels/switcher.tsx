@@ -1,18 +1,19 @@
 import { useState } from "react";
 
 import { Action } from "../../components/action";
-import type { ContentRow } from "../../components/controls";
-import { Field } from "../../components/field";
 import { Pending, StateMessage } from "../../components/page-parts";
 import { PaneResource } from "../../components/resource-state";
 import { everyBranch, everyPullRequest } from "../../data/publications";
+import type { PublicationRef } from "../../data/publications";
 import { useResource } from "../../data/use-resource";
 import type { ReferenceRowState } from "../build-state";
 import { publicationTones, publishedDay, shortSha } from "../resolution";
-import { rowTarget } from "../switcher-row";
+import { rowTarget, sameReference } from "../switcher-row";
 import type { RefRow } from "../switcher-row";
 
+import type { PanelRow } from "./panel-rows";
 import { RefGroup } from "./ref-group";
+import { SwitcherSearch } from "./switcher-search";
 
 /** Everything the switcher shows, read so that no row states another's facts. */
 interface Refs {
@@ -70,31 +71,37 @@ function detailFor(row: ReferenceRowState): string {
 /**
  * One reference's row. Its state comes from the newer of its newest
  * publication and newest build, and its short SHA from whichever that was.
- * Opening it resolves the reference, so a ready publication still wins over a
- * newer build. Details on a reference with nothing ready opens its failed
- * attempt's own address — a failed build's address or a failed publication's
- * details — whatever card the reference's stage shows.
+ * A branch reads in mono, as a reference does, and a pull request keeps its
+ * number and title in sans. The reference the reader is on is where they
+ * already are, so its row takes the signal-soft fill and says Current in
+ * place of a destination. Opening any other row resolves its reference, so a
+ * ready publication still wins over a newer build. Details on a reference
+ * with nothing ready opens its failed attempt's own address — a failed
+ * build's address or a failed publication's details — whatever card the
+ * reference's stage shows.
  */
 function rowFor(
   row: RefRow,
   workspaceSlug: string,
   projectSlug: string,
-): ContentRow {
+  current: PublicationRef | undefined,
+): PanelRow {
   const { state, href, details } = rowTarget(row, workspaceSlug, projectSlug);
   const detail = detailFor(state);
-  return {
+  const shown: PanelRow = {
     id: row.ref.kind + ":" + row.title,
     title: row.title,
+    form: row.ref.kind === "branch" ? "reference" : "pullRequest",
     detail: row.author ? row.author + " · " + detail : detail,
     status: publicationTones[state.state],
-    meta: shortSha(state.headSha),
-    mono: true,
-    href,
-    action: details ? "Details" : "Open",
+    sha: shortSha(state.headSha),
   };
+  return sameReference(row.ref, current)
+    ? { ...shown, current: true, mark: "Current" }
+    : { ...shown, href, action: details ? "Details" : "Open" };
 }
 
-function matching(rows: readonly ContentRow[], search: string): ContentRow[] {
+function matching(rows: readonly PanelRow[], search: string): PanelRow[] {
   const needle = search.trim().toLowerCase();
   if (needle.length === 0) return [...rows];
   return rows.filter((row) => row.title.toLowerCase().includes(needle));
@@ -177,12 +184,15 @@ export function SwitcherPanel({
   projectId,
   workspaceSlug,
   projectSlug,
+  current,
   onFollow,
   setUpPublishing,
 }: {
   projectId: string;
   workspaceSlug: string;
   projectSlug: string;
+  /** The reference the reader is on, whose row says Current. */
+  current?: PublicationRef;
   onFollow: (href: string) => void;
   /**
    * Where Set up publishing goes; absent for a reader who does not administer
@@ -197,9 +207,7 @@ export function SwitcherPanel({
   );
   return (
     <div className="fo-panel-stack">
-      <Field
-        label="Find a branch or pull request"
-        name="publication-search"
+      <SwitcherSearch
         value={search}
         onChange={setSearch}
         disabled={refs.state.status !== "ready"}
@@ -221,11 +229,11 @@ export function SwitcherPanel({
         {(value) => {
           const follow = (rows: readonly RefRow[]) =>
             rows
-              .map((row) => rowFor(row, workspaceSlug, projectSlug))
-              .map((row) => ({
-                ...row,
-                onFollow: () => onFollow(row.href as string),
-              }));
+              .map((row) => rowFor(row, workspaceSlug, projectSlug, current))
+              .map((row) => {
+                const href = row.href;
+                return href ? { ...row, onFollow: () => onFollow(href) } : row;
+              });
           const branches = matching(follow(value.branches), search);
           const pulls = matching(follow(value.pullRequests), search);
           const shown = value.branches.length + value.pullRequests.length;

@@ -69,8 +69,19 @@ cargo xtask check --suite viewer
   `createSnapshotPresentationLoader`, the shared loader that fetches and
   prepares snapshot documents for previews and comparison panes.
 - [`presentation_document.ts`](./presentation_document.ts) holds
-  `presentSnapshotDocument`, which applies the base and refresh edits and
-  serializes one document for `srcdoc`.
+  `presentSnapshotDocument`, which finds the effective base, removes the
+  `base` and refresh elements, resolves the document's addresses, and
+  serializes it for `srcdoc`.
+- [`presentation_addresses.ts`](./presentation_addresses.ts) holds
+  `rewriteDocumentAddresses`, which resolves the address attributes, styles,
+  template contents, and nested `srcdoc` documents of one document.
+- [`presentation_css.ts`](./presentation_css.ts) holds `rewriteCss`, which
+  resolves the `url()`, `@import`, and `image-set()` addresses of CSS text,
+  and [`presentation_css_tokens.ts`](./presentation_css_tokens.ts) holds the
+  CSS tokenizing helpers that it uses.
+- [`presentation_url.ts`](./presentation_url.ts) holds `relativeAddress`, the
+  rule for which addresses change, and `rewriteSrcset`, which resolves the
+  URLs of a `srcset` value.
 - [`snapshot_address.ts`](./snapshot_address.ts) checks a loader's generation
   and confines each address to the configured snapshot sides.
 - [`read_only.ts`](./read_only.ts) holds `enforcePreviewReadOnly`, the guard
@@ -78,14 +89,21 @@ cargo xtask check --suite viewer
 - [`presented_document.ts`](./presented_document.ts) holds
   `followPresentedDocument`, which finds a frame's viewer-owned `srcdoc`
   document as soon as it commits.
+- [`canvas_input.ts`](./canvas_input.ts) holds `forwardCanvasInput`, which
+  forwards the canvas input of each document that a frame without an adapter
+  presents, until the frame replaces it.
 - [`descriptor.ts`](./descriptor.ts) holds `previewKey`, the identity of one
   route-owned preview request. The shell passes preview data through props.
-- [`copy.ts`](./copy.ts) holds `PREVIEW_UNAVAILABLE`, the unavailable copy and
-  the Retry control of the shell.
+- [`copy.ts`](./copy.ts) holds `PREVIOUS_VERSION`, the loading copy and the
+  quiet label of the section's head, and `PREVIEW_UNAVAILABLE`, the
+  unavailable copy and the Retry control of the shell.
 - [`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the
   route-owned controller that requests, renews, and discards a preview.
-- [`../shell/previews.tsx`](../shell/previews.tsx) renders the loading,
-  unavailable, and loaded stages with the device chrome of current screens.
+- [`../shell/previews.tsx`](../shell/previews.tsx) renders the host of a
+  previous version, and
+  [`../shell/canvas_removed.tsx`](../shell/canvas_removed.tsx) the canvas that
+  holds its loading or unavailable state, or the section of its historical
+  views in canvas frames.
 
 Related boundaries: [the frame adapters](../../../frame/README.md#frames-without-an-adapter), the
 [shared shell](../shell/README.md), the

@@ -12,21 +12,16 @@ fn site_stage_runs_the_complete_gate_and_propagates_output_failures() {
         "package.json",
         r#"{
   "private": true,
-  "workspaces": ["apps/mockups"],
   "scripts": {
     "build": "node -e \"require('node:fs').writeFileSync('workspace-built', 'ready')\"",
-    "mockups:build": "npm run mockups:build --workspace @mokly-cloud/mockups",
     "site:check": "node scripts/site-check.mjs"
   }
 }"#,
     );
-    fixture.write("apps/mockups/package.json", r#"{"name":"@mokly-cloud/mockups","private":true,"scripts":{"mockups:build":"node ../../scripts/mockups-build.mjs"}}"#);
-    let build = "import { readFileSync, writeFileSync } from 'node:fs';\nreadFileSync('../../workspace-built');\nwriteFileSync('../../mockups-built', 'ready');\n";
-    fixture.write("scripts/mockups-build.mjs", build);
     fixture.write(
         "scripts/site-check.mjs",
         r#"import { readFile } from "node:fs/promises";
-await readFile("mockups-built", "utf8");
+await readFile("workspace-built", "utf8");
 let source;
 let output;
 try {
@@ -50,16 +45,6 @@ if (source !== output) throw new Error("site output stale");
     failure(fixture.xtask(&args), "npm run site:check");
     fixture.write("apps/site/dist/index.html", "<h1>Changed</h1>\n");
     success(fixture.xtask(&args));
-    fixture.write(
-        "scripts/mockups-build.mjs",
-        "throw new Error('mockup build failed');\n",
-    );
-    failure(
-        fixture.run("npm", &["run", "mockups:build"]),
-        "mockup build failed",
-    );
-    failure(fixture.xtask(&args), "npm run mockups:build");
-    fixture.write("scripts/mockups-build.mjs", build);
     fs::remove_file(fixture.root().join("apps/site/dist/index.html")).unwrap();
     failure(
         fixture.run("npm", &["run", "site:check"]),

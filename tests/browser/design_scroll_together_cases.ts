@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { expect, type Page } from "@playwright/test";
 
-import { paletteColor } from "../helpers/design_palette.js";
+import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 import { test as baseTest } from "./browser_test.js";
@@ -25,37 +25,42 @@ export function registerDesignScrollTogether(
   type Box = { bottom: number; left: number; right: number; top: number };
 
   /**
-   * Diff-mode designs from every family: route, whether Scroll together is on,
-   * and whether the design also renders in Dark.
+   * Diff-mode designs that draw the compare modes, in each viewport: route,
+   * whether the design also renders in Dark, and whether Side by side names
+   * its compared frame. A phone's Changes artboard in a comparison shows the
+   * one frame, so the library samples stand for it.
    */
-  const DIFF_MODES = [
-    ["design/changes/diff-controls/overlay", true, true],
-    ["design/changes/diff-controls/overlay-long", true, true],
-    ["design/changes/diff-controls/overlay-panel", true, true],
-    ["design/changes/diff-controls/side-by-side-apart", false, true],
-    ["design/changes/outcomes/changed", true, true],
-    ["design/changes/outcomes/difference", true, true],
-    ["design/changes/impact/styles/matched-excluded/matched", true, false],
-    ["design/browse/appearance/workspaces/side-by-side", true, true],
-    ["design/browse/appearance/workspaces/difference", true, true],
-    ["design/components/pages/comparison", true, false],
-    ["design/components/pages/stacked/overlay-tall", true, false],
-    ["design/components/states/removed", true, false],
-    ["design/library/controls/comparison-toolbar/overlay", true, false],
-    [
-      "design/library/controls/comparison-toolbar/side-by-side-apart",
-      false,
-      false,
+  const DIFF_MODES: Record<
+    Viewport,
+    readonly (readonly [string, boolean, boolean])[]
+  > = {
+    desktop: [
+      ["design/canvas/changes/side-by-side", true, true],
+      ["design/canvas/changes/overlay", true, false],
+      ["design/canvas/changes/difference", true, false],
+      ["design/canvas/changes/swipe", true, false],
+      ["design/canvas/components/compare", true, false],
+      ["design/canvas/outcomes/moved", true, false],
     ],
-  ] as const;
+    mobile: [
+      ["design/library/panels/compare-modes/side-by-side", false, true],
+      ["design/library/panels/compare-modes/swipe", false, false],
+    ],
+  };
 
-  /** Bands showing Current, where one version has nothing to scroll with. */
+  /** Compare modes in Current, where one version has nothing to scroll with. */
   const CURRENT = [
-    "design/changes/diff-controls/current",
-    "design/components/pages/affected",
-    "design/library/controls/comparison-toolbar/current",
-    "design/library/chrome/screen-header/changed",
+    "design/canvas/changes/current",
+    "design/canvas/outcomes/added/changes",
+    "design/library/panels/compare-modes/current",
+    "design/library/panels/compare-modes/added",
   ];
+
+  /** The design that switches Scroll together in each viewport. */
+  const SWITCHED: Record<Viewport, string> = {
+    desktop: "design/canvas/changes/side-by-side",
+    mobile: "design/library/panels/compare-modes/side-by-side",
+  };
 
   async function open(
     page: Page,
@@ -74,7 +79,7 @@ export function registerDesignScrollTogether(
         path.join(repositoryRoot, "examples/basic/mokly-generated", file),
       ).href,
     );
-    await expect(page.locator(".mbk-diff-toolbar"), file).toHaveCount(1);
+    await expect(page.locator(".cv-modes"), file).toHaveCount(1);
   }
 
   function overlaps(first: Box, second: Box): boolean {
@@ -95,7 +100,7 @@ export function registerDesignScrollTogether(
     test(`${viewport}: Scroll together follows the modes in every diff mode`, async ({
       page,
     }) => {
-      for (const [route, on, dual] of DIFF_MODES) {
+      for (const [route, dual, frames] of DIFF_MODES[viewport]) {
         const schemes: readonly Scheme[] = dual ? ["light", "dark"] : ["light"];
         for (const scheme of schemes) {
           const where = `${route} ${viewport} ${scheme}`;
@@ -104,73 +109,76 @@ export function registerDesignScrollTogether(
           await expect(toggle, where).toHaveCount(1);
           await expect(toggle, where).toBeVisible();
           await expect(toggle, where).toHaveAttribute("type", "checkbox");
-          if (on) await expect(toggle, where).toBeChecked();
-          else await expect(toggle, where).not.toBeChecked();
-          const facts = await page
-            .locator(".mbk-diff-toolbar")
-            .evaluate((toolbar) => {
-              const box = (element: Element) => {
-                const rect = element.getBoundingClientRect();
-                return {
-                  bottom: rect.bottom,
-                  left: rect.left,
-                  right: rect.right,
-                  top: rect.top,
-                };
-              };
-              const style = getComputedStyle(toolbar);
-              const control = toolbar.querySelector(".mbk-diff-sync")!;
+          await expect(toggle, where).toBeChecked();
+          const facts = await page.locator(".cv-modes").evaluate((modes) => {
+            const box = (element: Element) => {
+              const rect = element.getBoundingClientRect();
               return {
-                control: box(control),
-                label: control.textContent,
-                left:
-                  toolbar.getBoundingClientRect().left +
-                  parseFloat(style.paddingLeft),
-                modes: box(toolbar.querySelector(".mbk-seg")!),
-                order: [...toolbar.children].map((child) => child.className),
-                refresh: box(toolbar.querySelector(".mbk-diff-refresh")!),
-                right:
-                  toolbar.getBoundingClientRect().right -
-                  parseFloat(style.paddingRight),
-                track: getComputedStyle(
-                  control.querySelector(".mbk-diff-sync-track")!,
-                ).backgroundColor,
+                bottom: rect.bottom,
+                left: rect.left,
+                right: rect.right,
+                top: rect.top,
               };
-            });
-          expect(facts.order, where).toEqual([
-            "mbk-seg mbk-reset",
-            "mbk-diff-sync mbk-reset",
-            "mbk-diff-refresh mbk-reset",
+            };
+            const style = getComputedStyle(modes);
+            const sync = modes.querySelector(":scope > .cv-mode-sync")!;
+            const control = sync.querySelector(".cv-mode-switch")!;
+            return {
+              control: box(control),
+              label: control.textContent,
+              left:
+                modes.getBoundingClientRect().left +
+                parseFloat(style.paddingLeft),
+              order: [...modes.children].map((child) => child.className),
+              preceding: [...modes.children]
+                .filter((child) => child !== sync)
+                .map(box),
+              refresh: box(sync.querySelector(".cv-mode-refresh")!),
+              right:
+                modes.getBoundingClientRect().right -
+                parseFloat(style.paddingRight),
+              sync: [...sync.children].map((child) => child.className),
+              tiles: box(modes.querySelector(":scope > .cv-mode-tiles")!),
+              track: getComputedStyle(
+                control.querySelector(".cv-mode-switch-track")!,
+              ).backgroundColor,
+            };
+          });
+          expect(facts.order, where).toEqual(
+            frames
+              ? ["cv-mode-tiles", "cv-mode-frames", "cv-mode-sync"]
+              : ["cv-mode-tiles", "cv-mode-sync"],
+          );
+          expect(facts.sync, where).toEqual([
+            "cv-mode-switch",
+            "cv-mode-refresh",
           ]);
           expect(facts.label, where).toBe("Scroll together");
           expect(facts.track, `${where}: the drawn state`).toBe(
-            await paletteColor(
-              scheme,
-              on ? "--mbk-accent-deep" : "--chrome-bg",
-            ),
+            await canvasColor(scheme, "--cv-signal-deep"),
           );
-          expect(follows(facts.control, facts.modes), where).toBe(true);
+          for (const earlier of facts.preceding) {
+            expect(follows(facts.control, earlier), where).toBe(true);
+            expect(overlaps(facts.control, earlier), where).toBe(false);
+          }
           expect(follows(facts.refresh, facts.control), where).toBe(true);
-          expect(overlaps(facts.control, facts.modes), where).toBe(false);
           expect(overlaps(facts.control, facts.refresh), where).toBe(false);
           expect(facts.control.left, where).toBeGreaterThanOrEqual(facts.left);
           expect(facts.control.right, where).toBeLessThanOrEqual(facts.right);
           expect(
             Math.abs(facts.refresh.right - facts.right),
-            `${where}: Refresh closes the band`,
+            `${where}: Refresh closes the row`,
           ).toBeLessThan(0.5);
-          if (viewport === "mobile") {
-            expect(
-              [facts.modes.left - facts.left, facts.right - facts.modes.right],
-              `${where}: the modes take the first row`,
-            ).toEqual([0, 0]);
-            expect(facts.control.top, where).toBeGreaterThanOrEqual(
-              facts.modes.bottom,
-            );
-            expect(facts.control.left, `${where}: it starts the next row`).toBe(
-              facts.left,
-            );
-          }
+          expect(
+            [facts.tiles.left - facts.left, facts.right - facts.tiles.right],
+            `${where}: the modes take the first row`,
+          ).toEqual([0, 0]);
+          expect(facts.control.top, where).toBeGreaterThanOrEqual(
+            facts.tiles.bottom,
+          );
+          expect(facts.control.left, `${where}: it starts the next row`).toBe(
+            facts.left,
+          );
         }
       }
     });
@@ -182,20 +190,22 @@ export function registerDesignScrollTogether(
           page.getByRole("switch", { name: "Scroll together" }),
           route,
         ).toHaveCount(0);
-        // The shared band keeps both in place, hidden, as the shell does.
-        await expect(page.locator(".mbk-diff-sync"), route).toBeHidden();
-        await expect(page.locator(".mbk-diff-refresh"), route).toBeHidden();
+        await expect(page.locator(".cv-mode-sync"), route).toHaveCount(0);
       }
     });
 
     test(`${viewport}: Scroll together switches in place without opening anything`, async ({
       page,
     }) => {
-      await open(page, "design/changes/diff-controls/overlay-panel", viewport);
+      await open(page, SWITCHED[viewport], viewport);
       const address = page.url();
       const toggle = page.getByRole("switch", { name: "Scroll together" });
       await toggle.click();
       await expect(toggle).not.toBeChecked();
+      await expect(page.locator(".cv-mode-switch-track")).toHaveCSS(
+        "background-color",
+        await canvasColor("light", "--cv-surface"),
+      );
       await toggle.focus();
       await page.keyboard.press("Space");
       await expect(toggle).toBeChecked();

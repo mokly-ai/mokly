@@ -1,0 +1,53 @@
+---
+/**
+ * The three steps that close the open foundation: an ordered list of small
+ * frames, each with its number, its icon, its heading and its line, and a
+ * signal arrow from each frame to the next. The steps run in one row on
+ * desktop and in one column below 900px. They are the page's own content;
+ * the icons and the arrows are decorative.
+ *
+ * Use: `<Steps />`, at the end of the open foundation. The rules are in
+ * `src/styles/home-closing.css`.
+ */
+import Icon from "../Icon.astro";
+import type { IconName } from "../icons.js";
+
+import "../../styles/home-closing.css";
+
+/** One step: its heading, its line and its icon. */
+interface Step {
+  readonly body: string;
+  readonly icon: IconName;
+  readonly title: string;
+}
+
+/** The steps in order, with the approved copy of the open foundation. */
+const STEPS: readonly Step[] = [
+  {
+    body: "Author with React and your shared components.",
+    icon: "pencil",
+    title: "Shape the next screen.",
+  },
+  {
+    body: "Open the pull request check to review the screens that changed.",
+    icon: "branch",
+    title: "Publish the branch.",
+  },
+  {
+    body: "Keep comments and approvals with the pull request.",
+    icon: "checkCircle",
+    title: "Build from a shared decision.",
+  },
+];
+---
+
+<ol class="site-steps">
+  {STEPS.map((step, index) => (
+    <li class="site-step">
+      <span class="site-step-number">{String(index + 1).padStart(2, "0")}</span>
+      <Icon class="site-home-step-icon" name={step.icon} size={20} />
+      <h3>{step.title}</h3>
+      <p>{step.body}</p>
+    </li>
+  ))}
+</ol>

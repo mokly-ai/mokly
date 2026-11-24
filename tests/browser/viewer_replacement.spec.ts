@@ -2,7 +2,6 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
-import { chooseVariant } from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -85,19 +84,20 @@ for (const cross of [false, true]) {
           await page.waitForFunction(
             () => (window as unknown as ProbeWindow).pickProbe.waiting,
           );
-        if (transition === "variant") await chooseVariant(page, "Second");
-        else
-          await page.evaluate(
-            (transition) =>
-              window.viewerHarness
-                .get("one")
-                .ref.current.select(
-                  transition === "viewport"
-                    ? { viewport: "desktop" }
-                    : { colorScheme: "dark" },
-                ),
-            transition,
-          );
+        // The host commits another viewport, scheme, or saved variant.
+        await page.evaluate(
+          (transition) =>
+            window.viewerHarness
+              .get("one")
+              .ref.current.select(
+                transition === "viewport"
+                  ? { viewport: "desktop" }
+                  : transition === "scheme"
+                    ? { colorScheme: "dark" }
+                    : { screenPath: "pane/second" },
+              ),
+          transition,
+        );
         if (pending) {
           await expect
             .poll(() =>

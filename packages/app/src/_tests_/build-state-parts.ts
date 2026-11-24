@@ -36,9 +36,9 @@ export const phone: Surface = {
   name: "phone",
   openHistory: async (page) => {
     await page.getByTestId("viewer-more").click();
-    const menu = page.getByRole("menu", { name: "Viewer actions" });
+    const menu = page.getByRole("menu", { name: "More" });
     await expect(menu).toBeVisible();
-    await menu.getByText("History", { exact: true }).click();
+    await menu.getByRole("menuitem", { name: "History", exact: true }).click();
   },
   expectBilling: async (page) => {
     await expect(

@@ -103,7 +103,7 @@ function validateViewerReport(report) {
     "dist/shell.css",
     "dist/browser/frame-probe.js",
     "dist/browser/shell.js",
-    "dist/assets/fonts/Inter-OFL.txt",
+    "dist/assets/fonts/Geist-OFL.txt",
     "LICENSE",
     "README.md",
     "CHANGELOG.md",
