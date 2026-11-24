@@ -140,6 +140,10 @@ A branch from this branch applies each answer and deletes the file.
 - [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): A.
 - [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md): A.
 - [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): B.
+- [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
+  F.
+- [design-external-link-check.md](follow-ups/design-external-link-check.md):
+  E.
 
 ### Decisions that wait for the user
 
@@ -150,19 +154,6 @@ option. None has an answer yet, so no option applies.
   [decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere): mocks of
   modules that another setup owns, and roots whose Storybook folder lies
   elsewhere. They block Milestones 30 and 32.
-
-### Follow-up items that wait for the user
-
-These items block no milestone. Each file holds the full item and its
-recommended option.
-
-- [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
-  which attributes count as resource references. The user answered "D" on
-  2026-11-25, but the item has no option D, so the answer waits for a
-  clarification.
-- [design-external-link-check.md](follow-ups/design-external-link-check.md):
-  the design checks pass unmarked external links. The user asked on
-  2026-11-25 why the rule exists, before an answer.
 
 ### Defects in merged code
 

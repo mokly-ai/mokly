@@ -1,7 +1,7 @@
 # The Node design check passes unmarked external links
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-19, from the branch
   `conductor/storybook-support-a-mockups`. It is the blocked wider fix of the
   branch's review finding 8, which the branch fixed on 2026-11-18. The
@@ -15,8 +15,8 @@
   - `tests/browser/design_library_cases.ts:77`
   - `packages/ui/src/metadata-row/metadata-row.tsx:69`
   - `examples/basic/specs/design/components/parts/component_info.tsx:29`
-- **Reason:** The recommended option adds a stricter check, and a new check
-  needs the user's approval.
+- **Reason:** The check covers the design mockups of the repository only, and a
+  separate branch adds it.
 
 - **Source:** Review.
 - **Category:** Test.
@@ -149,5 +149,9 @@
     because the design library cases reject an external address.
 - **Recommendation:** E. It catches every such link in every design view, at
   the lowest test level.
-- **Action:** ask the user, because E adds a stricter check, and a new check
-  needs the user's approval.
+- **Answer:** The user chose option E, the recommendation, on 2026-11-25, after
+  learning that the rule covers only the design mockups of this repository and
+  no user catalogue. `linkViolations` rejects an unmarked external `href` in
+  each design view, and the example views keep the current rule.
+- **Action:** fix after merge, apply E, because the user approved the stricter
+  check on 2026-11-25.

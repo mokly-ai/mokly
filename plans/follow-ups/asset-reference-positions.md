@@ -1,7 +1,7 @@
 # Decide which attributes are resource references
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-21, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan: review finding 6 of round 2.
@@ -9,8 +9,8 @@
   `crates/mokly-compare/src/material.rs:126`,
   `docs/protocol/mokly-comparison.md:107-111`, and
   `docs/protocol/mokly-public-closure.md:45-50`.
-- **Reason:** The fix changes how existing catalogues validate and compare
-  attributes, in shared code and pages outside the files of that branch.
+- **Reason:** The fix changes shared code and protocol pages outside the asset
+  work of the Storybook integration branch, so it needs its own branch.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -80,5 +80,12 @@
 - **Recommendation:** B. It keeps PDF changes visible where a page loads the
   PDF, and it ends the build failure for plain `data` values. F protects the
   codebase best.
-- **Action:** ask the user, because B changes how existing catalogues validate
-  and compare `data` attributes on other elements.
+- **Answer:** The user chose option F on 2026-11-25, after a first answer that
+  named an option that the item does not have. One table of elements and
+  attributes in `mokly-graph`, which the reference reader and the material
+  comparison share, decides the resource references: `data` only on `<object>`,
+  `srcdoc` only on `<iframe>`, and `src`, `href`, `xlink:href`, `srcset`, and
+  `poster` on every element. The comparison resource rule states the table once,
+  and the closure page links it.
+- **Action:** fix after merge, apply F, because the user approved the change to
+  existing catalogues on 2026-11-25.
