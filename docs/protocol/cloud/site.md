@@ -89,9 +89,9 @@ was rejected, because the site's main call to action is a cloud account.
 Open source plan of the pricing page, links to the relative path `/docs/`, the
 documentation landing that the header's **Docs** opens. Naming it **Get
 started** was rejected, because each link name opens one destination. The
-home's **Download for Mac** opens `https://github.com/mokly-ai/mokly-desktop/releases`, the
-release list of the desktop app, because every desktop release is still a
-pre-release. **GitHub** and **View on GitHub** open the public
+home's **Download for Mac** opens
+`https://github.com/mokly-ai/mokly-desktop/releases`, the release list of the
+desktop app. **GitHub** and **View on GitHub** open the public
 `https://github.com/mokly-ai/mokly` repository.
 
 The site links one application route, `/sign-up`. **Get started →**,

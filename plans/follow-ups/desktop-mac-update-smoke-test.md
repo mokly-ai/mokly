@@ -18,8 +18,13 @@
     the user moves it.
 - **Background:**
   - Release builds of the Mokly desktop app update themselves from the
-    pre-releases of `mokly-ai/mokly-desktop`. Preview and local builds keep
-    the updater off.
+    latest release of `mokly-ai/mokly-desktop`. They take no pre-release or
+    draft. Preview and local builds keep the updater off.
+  - On 2026-11-24 the owner chose full desktop releases. Each release
+    becomes the latest release only after the asset check of both
+    platforms.
+  - An installed `0.1.0` keeps its own updater. It takes the newest release
+    of the feed, which can be a pre-release.
   - The app checks at launch and every four hours. On macOS it shows
     "Mokly {version} is ready" with **Restart now** and **Later** only after
     Squirrel.Mac accepts the download.

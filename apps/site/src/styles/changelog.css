@@ -27,13 +27,18 @@
 }
 
 /* The workspace: Version history, then the frames, up to 1080px and centred.
-   The mobile composition and the desktop below 1200px have no panel. */
+   Version history takes the place and the width of the docs Layers panel:
+   a 252px column 32px beside the frames, in a workspace at most 1680px wide
+   and centred, as docs-layout.css draws it. The mobile composition and the
+   desktop below 1200px have no panel. */
 
 .site-changelog-body {
   align-items: start;
   display: block;
-  gap: var(--mk-space-10);
-  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 32px;
+  grid-template-columns: 252px minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 1680px;
   padding: 0 var(--mk-layout-gutter-mobile);
 }
 

@@ -13,8 +13,7 @@ serves, built with the same two baked origins; the shell adds the window, the
 page's origin, the navigation policy, the scheme handoff and the updater, and
 never reads the session cookie or the CSRF token. The product therefore opens
 without the network, which local mode needs. Local mode lands in a later plan
-after Mokly gains a serve contract for a host program, with the public
-download page; until then the shell publishes pre-releases only.
+after Mokly gains a serve contract for a host program.
 
 Read [Web application](./web-app.md) for the export it serves,
 [Desktop sign-in](./desktop-sign-in.md) for the screens of browser sign-in,

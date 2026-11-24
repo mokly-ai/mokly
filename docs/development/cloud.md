@@ -80,7 +80,9 @@ first in the Mokly protocol docs.
   `mokly` scheme. The
   [desktop release workflow](../../.github/workflows/desktop-release.yml)
   packages previews without release signing. A merged desktop release pull
-  request starts a pre-release that signs and notarizes the macOS packages. The Linux `AppImage` and `deb` are unsigned.
+  request starts a release that signs and notarizes the macOS packages. The
+  Linux `AppImage` and `deb` are unsigned. Both platforms fill one draft,
+  which becomes the latest release only after the check of all its assets.
   [Desktop application](../protocol/cloud/desktop-app.md) defines the shell and
   [Desktop distribution](../protocol/cloud/desktop-distribution.md) its releases.
 - **REST API.** The API serves `/v1` on the API origin for the app and for

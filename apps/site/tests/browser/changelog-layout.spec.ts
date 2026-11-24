@@ -39,6 +39,24 @@ test(
   },
 );
 
+for (const width of [1200, 1440, 1920]) {
+  test(`at ${String(width)}px Version history has the place and the width of the docs Layers panel`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ height: 900, width });
+    await page.goto(SITE_PATHS.docs);
+    const layers = await page
+      .getByRole("navigation", { name: "Documentation" })
+      .boundingBox();
+    await page.goto(SITE_PATHS.changelog);
+    const panel = await history(page).boundingBox();
+    if (!layers || !panel) throw new Error("a panel has no box");
+    expect(panel.x).toBeCloseTo(layers.x, 0);
+    expect(panel.y).toBeCloseTo(layers.y, 0);
+    expect(panel.width).toBeCloseTo(layers.width, 0);
+  });
+}
+
 /** Each width from `from` to `to`, `step` apart. */
 function widths(from: number, to: number, step = 1): number[] {
   const found: number[] = [];
@@ -54,8 +72,7 @@ function widths(from: number, to: number, step = 1): number[] {
 const SWEEPS: Readonly<Record<string, readonly number[]>> = {
   "every width from 768px to 797px": widths(768, 797),
   "both sides of each layout step": [
-    767, 779, 799, 829, 933, 959, 1035, 1099, 1155, 1199, 1275, 1395, 1399,
-    1439,
+    767, 779, 799, 829, 933, 959, 1035, 1099, 1155, 1199, 1319, 1399, 1439,
   ].flatMap((edge) => [edge, edge + 1]),
   "every 40px from 320px to 1080px": widths(320, 1080, 40),
   "every 40px from 1120px to 1920px": widths(1120, 1920, 40),

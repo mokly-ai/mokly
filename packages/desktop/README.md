@@ -13,7 +13,7 @@ browser app.
 - Keep window bounds and the Chromium session across launches.
 - Keep the native Mac window buttons centred in the app's top bar at each
   page zoom.
-- Update release builds from the public pre-release feed.
+- Update release builds from the latest release of the public feed.
 
 ## What This Package Does
 
@@ -22,7 +22,8 @@ addresses and supplies the platform menu. It contains no product screen,
 preload, renderer bridge or viewer implementation. Electron is pinned to
 44.11.3, with Chromium 152 and Node 24.22.2. The package's exact pins are in
 [`package.json`](./package.json). The builder and the updater use the public
-`mokly-ai/mokly-desktop` GitHub feed, including pre-releases.
+`mokly-ai/mokly-desktop` GitHub feed. The updater follows its latest release
+and takes no pre-release or draft.
 Only release builds turn the updater on. Development, local builds and
 pull-request packages keep it off, and their **Check for updates** item is
 disabled. On macOS the ready dialog waits until the macOS update framework
@@ -144,7 +145,10 @@ context excludes the desktop bundle, release output and test runtime.
 
 [The release workflow](../../.github/workflows/desktop-release.yml) packages
 macOS arm64 and x64 as DMG and ZIP, and Linux x64 as AppImage and DEB. It uses
-`electron-builder.yml`; the Linux executable is `mokly`.
+`electron-builder.yml`; the Linux executable is `mokly`. Package names hold no
+version, for example `Mokly-mac-arm64.dmg`.
+[Latest release](../../docs/protocol/cloud/desktop-distribution.md#latest-release)
+lists the fixed names.
 
 The app icon comes from `build/icon.svg`. `build/icons/` holds its renderings
 at the freedesktop sizes from 16 to 512 px and the 1024 px master. macOS
@@ -155,9 +159,11 @@ from the repository root. A logic test rejects a PNG that differs from its sourc
 
 Pull requests that change package inputs build for main-preview without release
 credentials or publishing. The macOS package uses an ad-hoc signature with
-hardened runtime and notarization disabled. Each runner extracts the arm64 ZIP
-or Linux AppImage and runs `scripts/packaged-smoke.mjs` with Playwright. It
-proves the asar bundle renders **Try again** when the API is unreachable.
+hardened runtime and notarization disabled. The launch check first requires
+that the platform built exactly the fixed release file names that the promotion
+checks, and it names each missing or extra file. Each runner then extracts the
+arm64 ZIP or Linux AppImage and runs `scripts/packaged-smoke.mjs` with
+Playwright. It proves the asar bundle renders **Try again** when the API is unreachable.
 It checks the window overlay and the app's inset on both platforms. On macOS
 it also attempts a native window screenshot that includes the buttons. The
 proof JSON records a capture failure without failing the smoke. The page
@@ -173,10 +179,11 @@ and `CHANGELOG.md`, and creates the tag `desktop-v<version>` on the merge
 commit. [The release workflow](../../.github/workflows/release.yml) then checks
 that the tag names that commit, and calls `desktop-release.yml` with the tag and
 the commit. That job runs in the `desktop-release` environment, builds for
-production with the updater on, signs and notarizes on macOS, and publishes one
-pre-release to `mokly-ai/mokly-desktop`. That public release uses `v<version>`,
-which matches the updater's release-page address. Both platform publishers run
-in sequence. Manual dispatch runs preview packaging only.
+production with the updater on, signs and notarizes on macOS, and uploads to
+one draft release of `mokly-ai/mokly-desktop`. The draft uses `v<version>`,
+which matches the updater's release-page address. Both platform jobs run in
+sequence. The `promote` job then makes the checked draft the latest release,
+unless a higher version is latest. Manual dispatch runs preview packaging only.
 
 When the tag check fails, move the tag to the release commit that the error
 names, then rerun the failed jobs:
@@ -186,24 +193,58 @@ git push --force origin RELEASE_COMMIT:refs/tags/desktop-vX.Y.Z
 gh run rerun RUN_ID --failed
 ```
 
-Release packaging builds into a fresh directory with publishing off, then
-uses the pinned GitHub publisher through an append-only upload hook. It keeps
-the publisher's two-hour limit. It fails on an existing asset name, a skipped
-upload or any built file missing from the final GitHub asset list. The check
-also requires the uploaded size and completed state. Published assets are
-never replaced or deleted; `EP_GH_IGNORE_TIME` stays disabled. Rerun the failed
-jobs when nothing was uploaded. After a partial upload, release a new version
-through the next release pull request. Do not delete assets or rerun an old
-release to repair it.
+Each platform job packages in two steps. `scripts/package.mjs release-build`
+builds into a fresh `release/build` directory with publishing off, and on
+macOS it signs and notarizes. It writes `release/desktop-build-record.json`
+with the tag, the platform, and the name, size and SHA-256 hash of each built
+file. The workflow uploads that record as the artifact
+`desktop-build-record-{platform}-{attempt}`, with `github.run_attempt` as
+`{attempt}`, then downloads the records of every attempt of the platform.
+`scripts/package.mjs release-publish {records directory}` checks that the kept
+build still matches its own record. It then uploads through the pinned GitHub
+publisher and an append-only upload hook. The first platform creates the draft
+`v<version>`, and the second reuses it. The publisher removes
+`EP_GH_IGNORE_TIME`, `EP_PRE_RELEASE` and `EP_PRELEASE` from its environment.
+The last two would make the draft a public pre-release before the check.
+
+On a rerun, a draft that already holds the complete fixed set of the platform
+gets no upload, and the job logs "Reusing earlier upload". One earlier record
+of the same tag and platform must match each asset's `size` and `digest`
+(`sha256:{hash}`). Each platform job then uploads a manifest of the release,
+the tag, and the checked names, sizes and hashes as the artifact
+`desktop-release-macos` or `desktop-release-linux`. Records and manifests are
+kept for 35 days, which covers GitHub's 30-day rerun window.
+[Drafts and promotion](../../docs/protocol/cloud/desktop-distribution.md#drafts-and-promotion)
+holds the checks of the platform jobs and of the promotion.
+
+The `promote` job needs both platform jobs. It runs in the `desktop-release`
+environment, installs no npm package and reads both manifest artifacts. Before
+publication it reads GitHub's latest release, and HTTP 404 means no latest
+release. When the latest tag is a higher `vMAJOR.MINOR.PATCH` version, the job
+leaves the draft unchanged and passes with a `::warning::` that names both
+tags. The warning needs no action, because the newer release holds every
+change of the older one.
+
+Rerun the failed jobs within 30 days when the failed platform uploaded nothing
+or its complete set, or when the `promote` job failed. A platform rerun builds
+again, then accepts a complete set by its digests. A promotion rerun leaves a
+full release unchanged and checks the latest mark again, or warns when a
+higher version is latest. After a partial upload, the draft never becomes
+latest. Release a new version through the next release pull request. Do not
+delete assets or rerun an old release to repair it.
 
 Both modes derive origins from `MKC_DOMAIN` and `MKC_CATALOGUE_BASE_DOMAIN`
 repository variables through the deployment domain helpers. The release
 workflow passes the resolved origins, environment-specific catalogue domain and
 Git revision to `scripts/build.mjs`. Release secrets are listed in
-[Secrets](../../docs/ops/secrets.md#desktop-release-secrets). The packaging
-script writes the Apple certificate and API key to private temporary files.
-The builder reads their paths and other secrets only from its environment.
-Fork pull requests receive no repository variables. Their preview build uses
+[Secrets](../../docs/ops/secrets.md#desktop-release-secrets). Only the macOS
+signing step receives `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_API_KEY`,
+`APPLE_API_KEY_ID` and `APPLE_API_ISSUER`, and it receives no GitHub token.
+The packaging script writes the Apple certificate and API key to private
+temporary files. The builder reads their paths and other secrets only from its
+environment. The publish steps and the `promote` job receive only
+`DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`. Fork pull requests receive no
+repository variables. Their preview build uses
 the domain of the existing package homepage and reads the public main-preview
 `/_config` for the catalogue domain. It then uses the same deployment helpers.
 The fallback needs the deployed app's public metadata, but no API or secret.
@@ -239,11 +280,21 @@ The fallback needs the deployed app's public metadata, but no API or secret.
 - [App icon source](./build/icon.svg) and [icon renderer](./scripts/icon.mjs)
 - [Release inputs](./scripts/release-environment.py), [packaging](./scripts/package.mjs)
   and [packaged launch](./scripts/packaged-smoke.mjs)
-- [Release asset checks](./scripts/release-assets.mjs) and
-  [append-only publisher](./scripts/release-github.mjs)
+- [Build record](./scripts/release-build-record.mjs): each attempt's record of
+  its built files with SHA-256 hashes, and the reader of earlier records.
+- [Release asset checks](./scripts/release-assets.mjs): the fixed names, and
+  the check of each platform's files against the draft, with the rerun reuse.
+- [Append-only publisher](./scripts/release-publisher.mjs): the pinned GitHub
+  publisher with an upload hook that only adds assets.
+- [Promotion check](./scripts/release-promote.mjs): the `promote` job's checks
+  of the draft and the latest version, its promotion and the latest check.
+- [GitHub client](./scripts/release-github.mjs): reads, append-only asset
+  uploads and the one release promotion. It imports no npm package, and it
+  has no operation that deletes or changes an asset.
 
 ### Related Docs
 
 - [Desktop contract](../../docs/protocol/cloud/desktop-app.md)
+- [Desktop distribution](../../docs/protocol/cloud/desktop-distribution.md)
 - [App npm workspace](../app/README.md)
 - [Repository verification](../../docs/protocol/cloud/repository-verification.md)

@@ -1,6 +1,6 @@
 appId: ai.mokly.desktop
 productName: Mokly
-artifactName: Mokly-${version}-${os}-${arch}.${ext}
+artifactName: Mokly-${os}-${arch}.${ext}
 directories:
   output: release
 files:
@@ -32,5 +32,5 @@ publish:
   provider: github
   owner: mokly-ai
   repo: mokly-desktop
-  releaseType: prerelease
+  releaseType: draft
   tagNamePrefix: v
