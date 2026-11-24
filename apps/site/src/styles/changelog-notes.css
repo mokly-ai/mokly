@@ -231,12 +231,12 @@
 }
 
 /* Narrower frames. In a frame under 940px, below 1036px and from 1200px to
-   1275px beside Version history, the rail narrows and each note's links
+   1319px beside Version history, the rail narrows and each note's links
    flow after its text at the reading measure. In a frame under 700px, below
    780px, each group's head stands above its notes. */
 
 @media (min-width: 768px) and (max-width: 1035px),
-  (min-width: 1200px) and (max-width: 1275px) {
+  (min-width: 1200px) and (max-width: 1319px) {
   .site-release-group {
     grid-template-columns: 176px minmax(0, 1fr);
   }
