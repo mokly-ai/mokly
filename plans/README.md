@@ -8,9 +8,6 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
-- [Canvas redesign of the site and the viewer](./canvas-redesign.md) — give
-  the public site and the viewer the Canvas design-file look, and update the
-  site copy. Its open decisions wait for Cal.
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
