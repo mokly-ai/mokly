@@ -14,17 +14,19 @@ use crate::runtime::Runtime;
 use crate::transaction::DatabaseAttempt;
 
 const DEFAULT_POOL_SIZE: u32 = 8;
-/// Sessions an idle pool keeps open, so idle pods leave slots for busy ones.
-const IDLE_POOL_SIZE: u32 = 1;
-/// Idle time after which the pool closes a session, the last one included.
-/// The pool checks every 30 seconds and opens a replacement in the background
-/// to keep `IDLE_POOL_SIZE` sessions ready.
+/// The pool keeps no idle session. r2d2 opens kept sessions on a background
+/// thread, and a process that exits while one is opening crashes in the
+/// OpenSSL exit handler. Without kept sessions, a session opens only while a
+/// call waits for it.
+const IDLE_POOL_SIZE: u32 = 0;
+/// Idle time after which the pool closes a session. The pool checks every 30
+/// seconds, so a session closes 60 to 90 seconds after its last call.
 const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Composition-root factory for a shared store interface.
 pub trait StoreFactory {
-    /// Connect with a pool of up to eight sessions that keeps one idle session
-    /// ready, and a five-second acquisition timeout.
+    /// Connect with a pool of up to eight sessions that opens each session
+    /// when a call needs it, and a five-second acquisition timeout.
     fn connect(&self, database_url: &str) -> Result<Arc<dyn Store>>;
 }
 
@@ -48,6 +50,8 @@ impl StoreFactory for PgStoreFactory {
             .connection_timeout(Duration::from_secs(5))
             .build(ConnectionManager::new(database_url))
             .context("connect platform store")?;
+        // Open one session now, so an unreachable database fails at startup.
+        drop(pool.get().context("connect platform store")?);
         Ok(Arc::new(PgStore {
             pool,
             runtime: self.runtime.clone(),

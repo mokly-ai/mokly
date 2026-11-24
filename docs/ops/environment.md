@@ -285,8 +285,8 @@ integration harnesses create a fresh local store and isolated database schema
 for each run, then remove both during teardown.
 
 The API application pool has at most eight Postgres connections with a
-five-second acquisition timeout. An idle pool keeps one connection ready and
-closes each connection after 60 to 90 seconds idle. Each admitted upload serializes its short marker batches
+five-second acquisition timeout. The pool opens a connection only when a call
+needs one and closes each connection after 60 to 90 seconds idle. Each admitted upload serializes its short marker batches
 through at most one connection regardless of worker count; object I/O remains
 parallel and outside transactions. The health reader keeps its separate
 single-connection pool.

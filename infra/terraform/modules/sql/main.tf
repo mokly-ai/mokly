@@ -36,9 +36,9 @@ resource "google_sql_database_instance" "this" {
       value = "on"
     }
     # The tier's default limit is 100. Six API and six catalogue pods at their
-    # pool caps, one outgoing pod of each during a rollout, the two status jobs
-    # and one long maintenance job need about 148. Pods that still run the
-    # eager pool of eight need about 126.
+    # pool caps, one outgoing pod of each during a rollout, and three
+    # maintenance jobs at one session each need about 139. Pods and jobs that
+    # still run the eager pool of eight need about 126.
     database_flags {
       name  = "max_connections"
       value = "160"

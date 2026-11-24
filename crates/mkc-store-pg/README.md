@@ -15,9 +15,9 @@ transaction isolation and retry policy of the `Store` modes.
 ## What This Crate Does
 
 `PgStoreFactory::connect` opens a bounded connection pool and returns the
-store. The pool keeps one idle connection ready and opens another each time a call
-takes the last idle one, up to eight. Calls made one after another can
-therefore grow it too. `Store::transaction` runs the callback serializable and retries a
+store. The pool opens a connection only when a call needs one, up to eight, and
+closes each connection 60 to 90 seconds after its last call. `connect` opens
+one connection, so an unreachable database fails at startup. `Store::transaction` runs the callback serializable and retries a
 serialization or uniqueness failure with exponential backoff and jitter;
 `Store::read` runs read-only at READ COMMITTED; `Store::autocommit` runs one
 statement without a transaction envelope. A `Decision::Rollback` commits
