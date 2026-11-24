@@ -14,7 +14,7 @@ generation: string,
  */
 storyId: string,
 /**
- * Validated merged data args.
+ * Validated complete props of the story page.
  */
 props: { [key in string]: JsonValue },
 /**

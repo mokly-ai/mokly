@@ -11,7 +11,8 @@ and the diagnostics inside that envelope. The model crate's `ReviewEntry`,
 component entry's `before` address, whose shape is the generated
 [`ReviewEntryAddress`](../../packages/model/src/generated/catalogue/ReviewEntryAddress.ts)
 type, and each view's `state`, `ignoredIds`, and evidence. The side address of
-a screen or a component carries its merged props in the props codec of the
+a screen or a component carries its
+[complete props](./mokly-entry-props.md#one-model) in the props codec of the
 [catalogue read model](./mokly-catalogue.md).
 
 ## Sides And Pairing

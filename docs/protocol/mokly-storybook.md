@@ -58,13 +58,12 @@ repeats the state of the first story. A meta page with a fallback and a
 summary page were rejected.
 
 The story id is the file path, `#`, and the export name. `describe` lists
-every included story of the generation. Mokly infers the schema from the
-props of every included story under the
-[entry props contract](./mokly-entry-props.md#schema-inference). At the top
-level, a key is `required` when the props of every included story contain it.
-Every other top-level key is optional. Each included story renders with its
-own non-data args and exactly the data props of its render request. A data arg
-of the story that the request leaves out is unset in the render.
+every included story of the generation. Mokly infers the schema, with its
+required keys, from the props of every included story under the
+[entry props contract](./mokly-entry-props.md#schema-inference). Each included
+story renders with its own non-data args and exactly the data props of its
+render request. A data arg that the render request leaves out is not in the
+story's args.
 
 Decision: each story shows, edits, compares, and renders exactly its own args,
 so that each story renders as in Storybook. A render that lays the requested

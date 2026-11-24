@@ -16,7 +16,7 @@ colorSchemes: Array<ColorScheme>,
  */
 propSchema: PropSchema,
 /**
- * Own props or merged variant props.
+ * Complete props of this entry or variant.
  */
 props: { [key in string]: DataValue },
 /**

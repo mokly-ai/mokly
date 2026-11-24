@@ -25,9 +25,9 @@ state in one publication, and `build` writes both for every entry.
 
 - Screens and components emit one view per effective viewport and colour
   scheme, sorted mobile/light, mobile/dark, desktop/light, desktop/dark; the
-  light-only fallback stays in the viewer. A component parent's views render
-  its own props, and a variant's views render the merged props of the
-  [entry props contract](./mokly-entry-props.md). Documents copy the
+  light-only fallback stays in the viewer. The views of a component parent or
+  of a variant render its complete props under the
+  [entry props contract](./mokly-entry-props.md#one-model). Documents copy the
   catalogue's `colorSchemes`, carry one document key per scheme, and have no
   views. A page carries one document key; pages and use cases have no views
   and no usage, and a page's resource evidence is in its detail.

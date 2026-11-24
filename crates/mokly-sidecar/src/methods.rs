@@ -168,7 +168,7 @@ pub struct RenderComponent {
     pub ignore_scope: IgnoreScope,
 }
 
-/// Render a composed Storybook story with data args overlaid.
+/// Render a composed Storybook story with exactly the requested data props.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(rename = "RenderStoryParams")]
@@ -177,7 +177,7 @@ pub struct RenderStory {
     pub generation: String,
     /// Repository-relative file and story export.
     pub story_id: String,
-    /// Validated merged data args.
+    /// Validated complete props of the story page.
     pub props: BTreeMap<String, Value>,
     /// Viewport identifier.
     pub viewport: String,
