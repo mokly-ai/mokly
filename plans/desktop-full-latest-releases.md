@@ -251,7 +251,7 @@ rerun can accept its complete set by hash.
       `desktop-promotion-can-move-latest-backward.md`,
       `desktop-stranded-draft-needs-repair-path.md` and
       `desktop-promotion-manifests-expire.md`.
-- [ ] Review the answers with the `implementation-review` skill. Its
+- [x] Review the answers with the `implementation-review` skill. Its
       `fix now` findings become `fix after merge`, because the two fix
       rounds are used.
 
