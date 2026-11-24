@@ -101,10 +101,11 @@ a reset or a Fit control, and it does not keep the zoom across visits.
     right. A script that sets the steps from the room, and the phone
     composition at every zoom above 100%, because F is better on every
     point. Zoom in that enlarges only the text, which fails the goal.
-  - Recommendation: **C**, with the two changes in its text. One press then
-    holds at Medium effort, and Zoom in still works at page load. F best
-    protects the codebase and keeps 200% on windows from 1280px, at Large
-    effort.
+  - Recommendation: **D**, changed by the orchestrator from the first
+    recommendation, C. Decision 2 already accepted that zoom above 100%
+    cuts off the sides, and D keeps the layout whole up to 200%. C keeps
+    one press only, which changes the range of decision 2. F best protects
+    the codebase and keeps 200% on windows from 1280px, at Large effort.
   - Wider fix: F. At each zoom it shows a composition that the site already
     draws for that room, so a later change to a part holds at every zoom.
   - Waits for the answer: the last Milestone 1 TODO, Milestone 2 and
