@@ -6,11 +6,11 @@ defines dependency identities, installs, and fallback reasons.
 
 ## JavaScript Package Selection
 
-Repository-owned packages, including workspaces and local directory packages,
-resolve inside the side's own tree. The
-[dependency contract](./mokly-base-dependencies.md#dependency-identity)
-defines that mapping, the supported package managers, and the installation
-cache key. Third-party dependencies follow three tiers:
+The [repository mapping](./mokly-sidecar-modules.md#source-and-dependency-files)
+keeps repository-owned workspace and local directory packages on the side
+being rendered. The [dependency contract](./mokly-base-dependencies.md#dependency-identity)
+defines the supported package managers and the installation cache key.
+Third-party dependencies follow three tiers:
 
 1. The base's lockfile and manifest identities equal the working tree's under
    Git's clean conversion: the bundle resolves third-party dependencies from the
