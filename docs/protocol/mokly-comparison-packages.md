@@ -56,8 +56,10 @@ when a package import reaches it.
    build file. A missing repository-mapped JavaScript target fails with
    `module {path} has no source in this side`.
 
-When native JavaScript lookup fails, Mokly tries each target of the matched
-export key. For a package without `exports`, it tries the declared main
-fields for an import of the package root. It skips TypeScript declaration
-targets. The lookup succeeds when all remaining targets map to the same
-source file. Otherwise Mokly keeps the native error.
+When lookup for a bundled JavaScript import fails, Mokly tries each target
+of the matched export key. For a package without `exports`, it tries the
+declared main fields for an import of the package root. It skips TypeScript
+declaration targets. The lookup succeeds when all remaining targets map to
+the same source file. Otherwise Mokly keeps the native error. For requires
+loaded by Node, a native lookup invokes this recovery only after
+`MODULE_NOT_FOUND`.

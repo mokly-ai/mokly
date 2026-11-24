@@ -118,8 +118,7 @@ function requireTarget(
   try {
     return sources.resolveSync(native.resolve(name, options), name);
   } catch (error) {
-    if (!missingModule(error))
-      return requireSource(sources, name, directory, resolvers, error, options);
+    if (!missingModule(error)) throw error;
     for (const root of sources.dependencyRoots) {
       const resolver = createRequire(
         path.join(path.dirname(root), "package.json"),
@@ -128,15 +127,7 @@ function requireTarget(
       try {
         return sources.resolveSync(resolver.resolve(name, options), name);
       } catch (next) {
-        if (!missingModule(next))
-          return requireSource(
-            sources,
-            name,
-            directory,
-            resolvers,
-            next,
-            options,
-          );
+        if (!missingModule(next)) throw next;
       }
     }
     return requireSource(sources, name, directory, resolvers, error, options);

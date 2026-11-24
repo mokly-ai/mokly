@@ -97,16 +97,9 @@ export function requireSource(
   error: unknown,
   options?: Parameters<NodeJS.RequireResolve>[1],
 ): string {
-  if (
-    missingModule(error) ||
-    (!!error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "ERR_PACKAGE_PATH_NOT_EXPORTED")
-  ) {
-    const source = workspaceRequire(paths, name, directory, resolvers, options);
-    if (source !== undefined) return source;
-  }
+  if (!missingModule(error)) throw error;
+  const source = workspaceRequire(paths, name, directory, resolvers, options);
+  if (source !== undefined) return source;
   throw error;
 }
 
@@ -126,15 +119,7 @@ export function sideRequire(paths: ModulePaths, file: string): NodeJS.Require {
       )
         return paths.resolveSync(original, name);
     } catch (error) {
-      if (!missingModule(error))
-        return requireSource(
-          paths,
-          name,
-          path.dirname(file),
-          [native],
-          error,
-          options,
-        );
+      if (!missingModule(error)) throw error;
     }
     const directory = importerDirectory(paths, name, path.dirname(file));
     const resolver = createRequire(path.join(directory, path.basename(file)));

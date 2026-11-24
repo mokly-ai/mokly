@@ -188,3 +188,30 @@ test("restored runtime requires keep a build on the head and recover on a base w
   }
   await sidecar.call("shutdown");
 });
+
+test("a restored runtime require keeps Node's error for an import-only export", async (context) => {
+  const root = await nativeRoot(context);
+  const pkg = path.join(root, "packages/local");
+  await write(
+    path.join(pkg, "package.json"),
+    '{"name":"workspace-local","exports":{"import":"./dist/value.cjs"}}',
+  );
+  await write(path.join(pkg, "dist/value.cjs"), 'module.exports = "Built";');
+  await write(path.join(pkg, "src/value.cjs"), 'module.exports = "Source";');
+  await write(path.join(root, "entry.mjs"), 'export const value = "Entry";');
+  await link(pkg, path.join(root, "node_modules/workspace-local"));
+  const params = nativeParams(
+    root,
+    {},
+    { resolveExtensions: [".cjs"], conditions: ["import"] },
+  );
+
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const result = await sidecar.call<BundleResult>("bundle", params);
+  const runtime = restore(params, result.compiled, result.modules).require;
+  assert.throws(() => runtime.resolve("workspace-local"), {
+    code: "ERR_PACKAGE_PATH_NOT_EXPORTED",
+  });
+  await sidecar.call("shutdown");
+});
