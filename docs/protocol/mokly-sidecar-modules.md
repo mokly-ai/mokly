@@ -103,10 +103,12 @@ same logical name.
 For bare package specifiers, the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
 can supply a source file when a build target is present or missing. This
-includes CSS imports from JavaScript. Reuse evidence includes the package
-manifests and TypeScript configurations used for build targets. Build and
-source candidate probes retain absent paths as watch inputs. Selected source
-contents enter through the module graph and stylesheet inputs.
+includes CSS imports from JavaScript. Both bundle capture modes keep workspace
+layout probes in private reuse evidence, including when no source matches.
+Layout files and package manifests used for build targets also enter the
+bundle metadata. Build and source candidate probes retain absent paths as watch
+inputs. Selected source contents enter through the module graph and stylesheet
+inputs.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected

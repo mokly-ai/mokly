@@ -28,6 +28,7 @@ test("workspace package targets follow the shared source lookup cases", () => {
   const files = {
     regular,
     candidate: regular,
+    manifest: (file: string) => contents.get(file),
     metadata: () => {},
     read: (file: string) => {
       const text = contents.get(file);

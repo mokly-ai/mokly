@@ -31,8 +31,19 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   }
 
   regular(file: string): string | undefined {
-    const result = this.probe(file);
+    const result = this.observeFile(file);
     return result.kind === "file" ? result.real : undefined;
+  }
+
+  /** Package ownership on a layout miss already uses the module's ancestor inputs. */
+  manifest(file: string): string | null | undefined {
+    const result = this.probe(file);
+    if (result.kind !== "file") return undefined;
+    try {
+      return this.contents(result.real);
+    } catch {
+      return null;
+    }
   }
 
   private probe(file: string): Probe {
@@ -72,10 +83,18 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   metadata(file: string): void {
     if (this.metadataFiles.has(file)) return;
     this.metadataFiles.add(file);
+    if (this.observeFile(file).kind !== "unavailable")
+      this.paths.lookupFiles.add(file);
+  }
+
+  private observeFile(file: string): Probe {
     const result = this.observe(file);
-    if (result.kind === "unavailable") return;
-    this.paths.lookupFiles.add(file);
-    if (result.kind !== "file") return;
+    if (result.kind === "unavailable") return result;
+    if (result.kind === "absent") {
+      if (this.capture.file(file, true)?.kind !== "absent")
+        this.capture.complete = false;
+      return result;
+    }
     const observed = this.capture.file(result.real, true);
     const digest = this.digests.get(result.real);
     if (
@@ -83,6 +102,7 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
       (digest !== undefined && observed.digest !== digest)
     )
       this.capture.complete = false;
+    return result;
   }
 
   candidate(file: string): string | undefined {
@@ -124,6 +144,14 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   }
 
   read(file: string): string {
+    try {
+      return this.contents(file);
+    } finally {
+      this.observeFile(file);
+    }
+  }
+
+  private contents(file: string): string {
     const bytes = fs.readFileSync(file);
     const digest = createHash("sha256").update(bytes).digest("hex");
     const previous = this.digests.get(file);

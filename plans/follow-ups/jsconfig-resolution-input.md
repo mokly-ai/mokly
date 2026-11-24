@@ -138,6 +138,12 @@
   module chain rebuilds and moves the keys of the closures on that chain. In
   watched Serve, a marked edit compile also keeps the old module after an
   edit of such a file, because its live inputs do not hold the file.
+  Workspace package layout reads have a separate placement. Both capture
+  modes record their layout probes in private reuse evidence. For a build
+  target, a present relative `extends` file also enters bundle metadata.
+  Serve watches that file, and an edit can move every render key of the
+  side. For targets outside the conventional and declared build folders,
+  the file stays private. An edit then ends reuse at the next rebuild.
 - **Impact if no action:** A JavaScript catalogue that uses `jsconfig.json`
   aliases, or a `tsconfig.base.json`, keeps the old resolution in watched
   Serve until another watched change, a manual rebuild, or a restart. A
@@ -170,6 +176,8 @@
     configuration files that it reads there, including `jsconfig.json` and
     each extends target, and make the Rust chain use the reported files.
     Each edit then moves only the keys of the closures that read the file.
+    Use that list for workspace layout files too. A present `extends`
+    file then moves only the keys of closures that depend on its layout.
     One list then serves both sides. Effort: Large.
   - **D.** Change nothing. Both kinds stay reuse evidence and identity inputs
     only, and the exhaustive requirement stays. An edit takes effect at the
@@ -177,6 +185,14 @@
     old module until a JavaScript edit changes a consumed file, or until a
     restart. A view whose key did not move can keep its old render. Effort:
     Small.
+  - **E.** Keep present workspace layout `extends` files only in private
+    reuse evidence for both outcomes. A change then ends reuse at the next
+    rebuild. A layout edit stops starting a watched rebuild for a build
+    target. Effort: Small.
+  - **F.** Report workspace layout files as watch inputs separately from
+    shared metadata. A layout edit starts a rebuild. The module graph and
+    the selected source bytes determine which render keys move. This needs
+    a new result field and a Serve watch rule. Effort: Large.
 - **Left out:**
   - Put the whole reuse evidence into the metadata inputs. Its directory
     lists, absent candidates, and peer manifests would then move render
@@ -202,7 +218,7 @@
   moves only its closures' keys. A rare extends target edit moves every key
   of its side. D keeps the watch gap. The record first recommended A, while
   it graded B Large. C best protects the codebase.
-- **Action:** ask the user, because A, B, and C change the explicit
+- **Action:** ask the user, because A, B, C, E, and F change the explicit
   watch-input and render-key requirement of `docs/protocol/mokly-watch.md`.
   The general reuse and runtime rules do not authorize overriding that
   exhaustive list without a recorded choice.

@@ -7,6 +7,7 @@ import { inside, logical } from "./path-scope.js";
 export interface WorkspaceSourceFiles {
   regular(file: string): string | undefined;
   read(file: string): string;
+  manifest(file: string): string | null | undefined;
   metadata(file: string): void;
   candidate(file: string): string | undefined;
 }
@@ -95,23 +96,21 @@ export class WorkspaceSources {
   private packageRoot(directory: string): string | null {
     const cached = this.packages.get(directory);
     if (cached !== undefined) return cached;
-    const manifest = this.file(path.join(directory, "package.json"));
-    const root = manifest
-      ? this.named(manifest)
-        ? directory
-        : null
-      : directory === this.root
-        ? null
-        : this.packageRoot(path.dirname(directory));
+    const manifest = this.files.manifest(path.join(directory, "package.json"));
+    let root: string | null = null;
+    if (manifest === undefined) {
+      if (directory !== this.root)
+        root = this.packageRoot(path.dirname(directory));
+    } else if (manifest !== null && this.named(manifest)) {
+      root = directory;
+    }
     this.packages.set(directory, root);
     return root;
   }
 
-  private named(file: string): boolean {
+  private named(contents: string): boolean {
     try {
-      const json: unknown = JSON.parse(
-        this.files.read(file).replace(/^\uFEFF/, ""),
-      );
+      const json: unknown = JSON.parse(contents.replace(/^\uFEFF/, ""));
       return (
         jsonObject(json) &&
         typeof json.name === "string" &&
