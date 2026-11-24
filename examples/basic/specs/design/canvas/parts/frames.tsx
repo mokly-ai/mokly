@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { CanvasFrameProps } from "../../library/canvas/canvas-frame.js";
 import { FRAME_SIZES } from "../../library/canvas/frame_sizes.js";
 import { DesignInstances } from "../../library/composition.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import type { ArtboardViewport } from "../../parts/artboards.js";
 
 /** A frame's colour scheme. */
 export type FrameScheme = "light" | "dark";
@@ -46,6 +46,23 @@ export interface CanvasFrameSpec {
  */
 export function frameSize({ height, width }: CanvasFrameSpec) {
   return { width: Math.round(width), height: Math.round(height) };
+}
+
+/**
+ * The smallest zoom in percent at which a stage shows the tags on its
+ * frames, which keep their size at every zoom: the highlight's labels, and
+ * the selection's name tag, size tag and padding redline.
+ */
+const TAG_ZOOM = 60;
+
+/**
+ * The tags of a stage's frames at the stage's zoom in percent, which counts
+ * in whole percent as the zoom pill reads it: hidden below 60%, where a tag
+ * would cover more of a frame than it names. The outlines, the handles and
+ * the highlight's cutouts stay.
+ */
+export function stageTags(zoom: number): "hidden" | undefined {
+  return Math.round(zoom) < TAG_ZOOM ? "hidden" : undefined;
 }
 
 /** The name of each scheme, as a frame's label and Inspect show it. */

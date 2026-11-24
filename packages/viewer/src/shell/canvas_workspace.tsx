@@ -3,10 +3,12 @@
  * the workspace chose, each mounted by `canvas_live_frame.tsx`, in the
  * section that names the routed entry. A component frame takes the size
  * that its document's content needs, measured after each load; a fitted
- * canvas refits to the measured frames.
+ * canvas refits to the measured frames. The workspace's canvas selection
+ * reaches each frame as what lies over it, and a click on the empty canvas
+ * or on a selectable frame's name reaches the workspace.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 
 import type { ChangeStatusValue } from "@mokly/ui/change-status";
 
@@ -31,6 +33,15 @@ export interface WorkspaceCanvas {
   frames: readonly CanvasFramePlan[];
   /** The status beside the entry's title, as its head band shows it. */
   status?: ChangeStatusValue | undefined;
+  /** Hears of a click on the empty canvas, such as to clear the selection. */
+  onEmptyClick?: (() => void) | undefined;
+  /** Makes each frame's name a button that selects the frame. */
+  onFrameSelect?: ((plan: CanvasFramePlan) => void) | undefined;
+  /** Hears of each measured size of a component frame. */
+  onFrameSize?: ((key: string, size: CanvasFrameSize) => void) | undefined;
+  /** What lies over a frame of a size, such as the canvas selection. */
+  overlay?:
+    ((plan: CanvasFramePlan, size: CanvasFrameSize) => ReactNode) | undefined;
 }
 
 function frameSize(
@@ -57,14 +68,20 @@ export function CanvasWorkspaceStage({
   const [sizes, setSizes] = useState<Readonly<Record<string, CanvasFrameSize>>>(
     {},
   );
-  const onSize = useCallback((key: string, size: CanvasFrameSize) => {
-    setSizes((current) => {
-      const known = current[key];
-      return known?.width === size.width && known.height === size.height
-        ? current
-        : { ...current, [key]: size };
-    });
-  }, []);
+  const reportSize = canvas.onFrameSize;
+  const onSize = useCallback(
+    (key: string, size: CanvasFrameSize) => {
+      reportSize?.(key, size);
+      setSizes((current) => {
+        const known = current[key];
+        return known?.width === size.width && known.height === size.height
+          ? current
+          : { ...current, [key]: size };
+      });
+    },
+    [reportSize],
+  );
+  const onFrameSelect = canvas.onFrameSelect;
   return (
     <CanvasEntryStage
       fitKey={canvas.fitKey}
@@ -81,7 +98,13 @@ export function CanvasWorkspaceStage({
               // only that entry's frames open there, not the set's other rows.
               fragment={plan.entry.path === entry.path ? fragment : undefined}
               hasDarkFragments={catalogue.hasDarkFragments}
+              onSelect={
+                onFrameSelect === undefined
+                  ? undefined
+                  : () => onFrameSelect(plan)
+              }
               onSize={onSize}
+              overlay={canvas.overlay?.(plan, size)}
               plan={plan}
               size={size}
             />
@@ -91,6 +114,7 @@ export function CanvasWorkspaceStage({
         };
       })}
       kind={entry.kind}
+      onEmptyClick={canvas.onEmptyClick}
       path={head.path}
       status={canvas.status}
       title={head.title}

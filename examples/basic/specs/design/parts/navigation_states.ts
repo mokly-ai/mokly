@@ -1,11 +1,9 @@
-import { CANVAS_PAGES as C } from "../canvas/parts/destinations.js";
 import {
   CANVAS_NAVIGATION_STATES,
   type CanvasTransitions,
 } from "../canvas/parts/navigation_states.js";
-import { TAG_FILTERS } from "../canvas/search/parts/tags.js";
 
-import { DESTINATIONS as D, type DesignDestination } from "./destinations.js";
+import type { DesignDestination } from "./destinations.js";
 import type { CatalogueTag } from "./tags.js";
 
 /**
@@ -28,8 +26,6 @@ interface TagState {
 
 /** Only authored transitions are present; absence always means a depiction. */
 export interface NavigationState {
-  inspector?: DesignDestination;
-  drawer?: { open: boolean; to: DesignDestination };
   all?: DesignDestination;
   changes?: DesignDestination;
   tags?: TagState;
@@ -39,18 +35,10 @@ export interface NavigationState {
 
 /**
  * Canonical states for the entire design registry, never inferred from
- * labels. The older tag picker that stays opens the Canvas artboards: All
- * opens Welcome's overview, and the tag picker's button and chips open the
- * Canvas search.
+ * labels: the states of the Canvas artboards.
  */
-export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
-  ...CANVAS_NAVIGATION_STATES,
-  [D.tagPicker]: {
-    all: C.overview,
-    changes: C.changesCurrent,
-    tags: { active: null, picker: true, artboards: TAG_FILTERS },
-  },
-};
+export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> =
+  CANVAS_NAVIGATION_STATES;
 
 /** Open/close preserves the depicted query; a selection closes the picker. */
 export function tagPickerTarget(

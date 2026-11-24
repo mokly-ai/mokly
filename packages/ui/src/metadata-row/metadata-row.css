@@ -52,3 +52,32 @@
 .mbk-meta-row[hidden] {
   display: none;
 }
+
+/* A path whose folder segments are breadcrumbs wraps between its folders,
+   never inside a name, and each crumb keeps the chip's mono text. */
+.mbk-path {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.mbk-path-part {
+  white-space: nowrap;
+}
+
+.mbk-path-crumb {
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--cv-border-strong);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.mbk-path-crumb:hover {
+  color: var(--cv-signal-deep);
+  text-decoration-color: currentColor;
+}

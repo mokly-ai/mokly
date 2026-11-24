@@ -169,17 +169,20 @@ export function registerComponentControls(
       await set.uncheck();
       await expect(input).toBeHidden();
       await expect(notSet).toBeVisible();
+      // While Overlay stays chosen in Changes, Inspect shows the current
+      // frames, so Props edits Default from its saved props (decision 19 = A).
       await page.goto(
         designDocumentUrl("design/canvas/components/compare/props", viewport),
       );
-      await expect(props).toContainText("Comparisons show the saved props.");
-      await expect(props.locator("input, select")).toHaveCount(0);
-      await props
-        .getByRole("link", { name: "Switch to Current", exact: true })
-        .click();
-      await expect(page).toHaveURL(
-        designDocumentUrl("design/canvas/components/usage", viewport),
+      const label = props.getByRole("textbox", { name: "Label", exact: true });
+      await expect(label).toBeEditable();
+      await expect(label).toHaveValue("Continue");
+      await expect(props).not.toContainText(
+        "Comparisons show the saved props.",
       );
+      await expect(
+        props.getByRole("link", { name: "Switch to Current", exact: true }),
+      ).toHaveCount(0);
       await page.goto(
         designDocumentUrl("design/canvas/props/read-only", viewport),
       );

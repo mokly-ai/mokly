@@ -5,15 +5,14 @@ import { expect, type Page } from "@playwright/test";
 import { movedFixturePaths as moves } from "../helpers/moved_fixture_sources.js";
 
 import type { test as baseTest } from "./browser_test.js";
-import { modeButton } from "./comparison_ui.js";
-import {
-  INVOICE,
-  PREVIOUS,
-  showDetails,
-  type MovedHost,
-} from "./moved_rows.js";
+import { chooseMode, comparisonFrames, modeButton } from "./comparison_ui.js";
+import { INVOICE, PREVIOUS, type MovedHost } from "./moved_rows.js";
 import { loadComparison } from "./serve_comparison_ui.js";
-import { canvasFrame } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  openPanelTab,
+  revealInPanel,
+} from "./workspace_actions.js";
 
 /** The comparison panes for one side, named by the snapshot path they show. */
 function panes(page: Page, side: "after" | "before", path: string) {
@@ -47,7 +46,7 @@ async function expectBothSides(
 async function sideBySide(page: Page, host: MovedHost): Promise<void> {
   if (host.comparisons === "on demand")
     return loadComparison(page, "Side by side");
-  await modeButton(page, "Side by side").click();
+  await chooseMode(page, "Side by side");
 }
 
 /**
@@ -63,16 +62,13 @@ export function registerMovedComparisonCases(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await host.open(page, INVOICE);
-    await expect(page.locator(".mbk-screen-head .mbk-entry-status")).toHaveText(
-      "Changed",
-    );
+    await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
+    await openPanelTab(page, "Changes");
     await expect(modeButton(page, "Current")).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    await expect(
-      page.locator("iframe[data-mokly-comparison-frame]"),
-    ).toHaveCount(0);
+    await expect(comparisonFrames(page)).toHaveCount(0);
     await expect(
       page.frameLocator(canvasFrame("mobile")).locator("p"),
     ).toHaveText("Due on 14 March");
@@ -83,19 +79,15 @@ export function registerMovedComparisonCases(
     await sideBySide(page, host);
     await expectBothSides(page, ...sides);
     for (const mode of ["Overlay", "Difference"] as const) {
-      await modeButton(page, mode).click();
-      await expect(modeButton(page, mode)).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
+      await chooseMode(page, mode);
       await expectBothSides(page, ...sides);
     }
-    await modeButton(page, "Current").click();
-    await expect(
-      page.locator("iframe[data-mokly-comparison-frame]"),
-    ).toHaveCount(0);
-    await showDetails(page);
-    await expect(page.locator("[data-workspace-evidence]")).toContainText(
+    await chooseMode(page, "Current");
+    await expect(comparisonFrames(page)).toHaveCount(0);
+    // The comparison details stand in the Changes tab.
+    const evidence = page.locator("[data-workspace-evidence]");
+    await revealInPanel(page, evidence);
+    await expect(evidence).toContainText(
       `The previous version is at ${PREVIOUS}/invoice, where it was before the move.`,
     );
   });

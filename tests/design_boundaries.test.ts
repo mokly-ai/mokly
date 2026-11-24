@@ -18,7 +18,7 @@ import {
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.mbk-icon-(?:button|select)|\.mbk-seg|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.mbk-icon-button|\.mbk-appearance|\.mbk-chip:is\(\.flow, \.screen\)/u;
 
 /**
  * `@mokly/ui` stylesheets that style a control through a base class whose
@@ -40,10 +40,6 @@ const HAIRLINE_TOKENS = new Set([
  */
 const DECORATIVE_BOUNDARIES = new Map([
   [".mbk-control-alert", "a label naming its own state in 5.97:1 ink"],
-  [
-    ":where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
-    "the user kept the shipped border on 2026-10-31",
-  ],
 ]);
 
 /**
@@ -58,14 +54,11 @@ const EXEMPT_SURFACES = new Map<string, string>();
  * names a rule, by its sheet and selector, with the reason that exempts it.
  * Each entry must be reached by the control-edge audit, so a future control
  * cannot quietly inherit the exemption. A kept hairline that a state draws,
- * such as a pressed icon control's, is exempt from the marked-boundary audit
- * too: the state shows through its fill and its accent glyph.
+ * such as a pressed instance's in the component tree, is exempt from the
+ * marked-boundary audit too: the state shows through its fill and its accent
+ * text.
  */
 const EXEMPT_CONTROL_SURFACES = new Map([
-  [
-    'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
-    "the user kept the shipped border on 2026-10-30",
-  ],
   [
     "packages/ui/src/tag-chip/tag-chip.css .mbk-chip",
     "the user kept the shipped border on 2026-10-30",
@@ -80,26 +73,20 @@ const EXEMPT_CONTROL_SURFACES = new Map([
  * Every rule the audit collects, so a failure names the rule that appeared or
  * vanished instead of only reporting that the total moved. A component that
  * `@mokly/ui` provides is audited in the package stylesheet that its library
- * sheet imports.
+ * sheet imports. Keyboard focus draws as a glow, a shadow rather than a
+ * boundary, in the package controls and in the design sheets alike, so no
+ * focus rule is listed; packages/ui/tests/palette.test.ts holds the glow at
+ * 3:1.
  */
 const AUDITED_BOUNDARIES = [
-  "design-components.css .ce-badge",
-  "design-components.css .ce-design a:focus-visible, .ce-design button:focus-visible, .ce-design summary:focus-visible, .ce-design input:focus-visible, .ce-design select:focus-visible",
   "design-canvas-inspect.css .cv-variant[aria-current] > .cv-variant-mark",
   "design-library/inspector/frames-filter.css .cv-ff:has(> input:checked)",
-  "design-library/inspector/frames-filter.css .cv-ff:has(> input:focus-visible)",
   "design-library/inspector/frames-filter.css .cv-switch > input:checked + .cv-switch-track",
-  "design-library/inspector/frames-filter.css .cv-switch > input:focus-visible + .cv-switch-track",
   "design-library/panels/compare-modes.css .cv-mode-frame[aria-current]",
   "design-library/panels/compare-modes.css .cv-mode-switch > input:checked + .cv-mode-switch-track",
-  "design-library/panels/compare-modes.css .cv-mode-switch > input:focus-visible + .cv-mode-switch-track",
   "design-library/panels/compare-modes.css .cv-mode[aria-current]",
-  // The package controls draw keyboard focus as a glow, a shadow rather than a
-  // boundary; packages/ui/tests/palette.test.ts holds the glow at 3:1.
   "packages/ui/src/appearance-selector/appearance-selector.css .mbk-appearance:hover",
-  "packages/ui/src/browser-bar/browser-bar.css :where(.browser-bar:not([data-browser-static])) .browser-expand:hover:where(.mbk-reset)",
   "packages/ui/src/controls-panel/controls-panel.css .mbk-control-alert",
-  'packages/ui/src/icon-control/icon-control.css .mbk-icon-button[aria-selected="true"], .mbk-icon-button[aria-pressed="true"], .mbk-icon-button:has(> input:checked), details[open] > summary.mbk-icon-button',
   'packages/ui/src/instance-tree/instance-tree.css .mbk-instance-select[aria-pressed="true"], .mbk-instance-tree a.mbk-instance-select[aria-current="true"]',
   "packages/ui/src/tag-chip/tag-chip.css .mbk-chip.tag.active",
 ];
@@ -213,8 +200,8 @@ test("every control boundary is a readable control edge", async () => {
 
 /**
  * Sheets that define a palette, where a literal is the definition itself:
- * the interface palette, the preview palette with its fixed device hardware,
- * and the shipped theme that the package components draw in.
+ * the interface palette, the preview palette, and the shipped theme that the
+ * package components draw in.
  */
 const PALETTE_SOURCES = new Set([
   "design.css",

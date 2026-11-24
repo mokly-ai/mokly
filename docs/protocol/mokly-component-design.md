@@ -1,7 +1,5 @@
 # Component Explorer Design
 
-Status: Inspect's sections, the Changes tab and compare on every frame of a variant set are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
@@ -11,9 +9,9 @@ the component explorer and Props design entries and their owning folders.
 
 Component pages use the Canvas viewer of the shell designs. The canvas holds
 the component's variant set between the top bar, the floating catalogue and
-the right panel. The right panel holds Inspect and, where the entry has a
-comparison, Changes. Components use the stacked-layers icon of the Components
-panel in the Components section.
+the right panel. The right panel holds Inspect and, where the Changes filter
+lists the entry or the set offers the compare modes, Changes. Components use
+the stacked-layers icon of the Components panel in the Components section.
 Both sections are views of one tree, so the `Example` folder appears above
 `Screens` in Specs and above its `Components` library in Components, and
 component crumbs read `Example › Components`. A variant's page keeps its
@@ -38,9 +36,10 @@ deep signal colour, and it carries an explicit current-link state. Default and
 Disabled are Action's variant entries, each its own catalogue entry and
 Changes row under the [variant contract](./mokly-variants.md). Known unchanged
 shown views show Unmodified beside the title, under the
-[screen controls](./mokly-changes-controls.md#screen-controls). They have no
-Changes tab, unless a shown view uses a changed component that the entry
-detail names.
+[screen controls](./mokly-changes-controls.md#screen-controls). An entry with
+such views has no Changes tab unless a shown row of its variant set compares
+under those controls, such as another changed row or a row whose shown view
+uses a changed component that its own entry detail names.
 
 A depicted branch is the catalogue state that a group of artboards shares:
 which entries exist and which changed. A Variants row links to the artboard
@@ -49,16 +48,22 @@ A variant without such an artboard is a depiction. Navigation variant rows
 follow the same rule. Consuming screens depict the same Action and Toolbar
 examples as the component pages.
 
-A component compares on its variant set: every frame of the set compares its
-own view in the chosen mode of the
-[comparison panes](./mokly-comparison-panes.md). Side by side shows one
-frame's two versions next to each other, each in its own frame with a Before
-or Current tag. A chip names each frame of the set as the frame's label does.
-Overlay and Difference hold both versions in each frame: Current sits on top
-at half opacity, or blends by difference over the opaque Before layer. Both
-versions of a frame share one size: the larger width and the larger height of
-the two. On the depicted Action branch, no version before is larger than its
-current version, so each frame keeps the size of its current version.
+A component compares on its variant set, row by row. Each row is its own entry
+with its own comparison, under the
+[selected comparison contract](./mokly-selected-comparisons.md). Each frame of
+a compared row compares its own view in the chosen mode of the
+[comparison panes](./mokly-comparison-panes.md). A row without a comparison,
+such as an Added variant or an Unmodified row that uses no changed component,
+keeps its current frames. A failed row shows the comparison failure on its own
+frames, and the other rows still compare. Side by side shows one frame's two
+versions next to each other, each in its own frame with a Before or Current
+tag. A chip names each frame of a compared row as the frame's label does.
+Overlay and Difference hold both versions in each frame of a compared row:
+Current sits on top at half opacity, or blends by difference over the opaque
+Before layer. Both versions of a frame share one size: the larger width and
+the larger height of the two. On the depicted Action branch, no version before
+is larger than its current version, so each frame keeps the size of its
+current version.
 
 Inspect holds the sections of the
 [inspector design](./mokly-component-inspector-design.md#inspect). Selection

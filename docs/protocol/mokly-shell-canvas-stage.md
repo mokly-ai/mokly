@@ -1,7 +1,5 @@
 # Shell Canvas Stage
 
-Status: The Frames filter in Inspect is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
-
 This continues the [shell design contract](./mokly-shell-design.md#layout). It
 fixes the canvas below the top bar: the panels that float over it, the selected
 entry's section with its frames, a use case's section, the Frames filter, and
@@ -76,6 +74,26 @@ frames of each viewport and each scheme on and off. It replaces the viewport
 choice. Decision: one filter of the shown frames, not a viewport dropdown with
 a scheme control, because the canvas shows every frame at once and the reader
 hides only the frames that they do not compare.
+
+- The viewport toggles show the selection's `viewport`, whatever sets it: Both
+  turns both toggles on, and Mobile or Desktop turns that toggle on alone.
+- A change of a viewport toggle sets `viewport` to the viewport that stays on,
+  or to Both while both are on, as one selection change. A controlled host
+  receives it as a proposal, and the standalone shell writes it to its
+  [address](./mokly-viewer-selection.md#shell-tree-and-state).
+- The scheme toggles are view state of the shell, apart from the selection, as
+  the zoom is. In-shell navigation keeps them, and a full page load turns both
+  on.
+- Each axis keeps one toggle on, so its last shown toggle does not turn off.
+- In the [compact layout](./mokly-shell-device-chrome.md#compact-layout), the
+  selection's viewport names the picked frame, with Both read as Mobile. So
+  the viewport toggles there choose the picked frame's viewport, and the frame
+  picker lists the frames of both viewports.
+
+Decision: the viewport toggles are part of the public selection, not local
+view state, so an address, a Share link and a host selection keep the shown
+viewport. The scheme toggles stay local, because `colorScheme` keeps its
+meaning, the preview scheme.
 
 - A frame that the filter turns off leaves the canvas, and the stage refits
   around the frames that stay.

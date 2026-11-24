@@ -1,8 +1,9 @@
 /**
- * The selectors of the routed entry's frames in Browse. From 900px wide the
- * canvas shows each view in a frame of its own scheme, and a component as
- * rows of desktop frames, its own example first; below that width one frame
- * of each viewport shows the chosen scheme.
+ * The selectors of the routed entry's frames on Browse's canvas. The large
+ * checks open Browse 1440px wide, above the layout breakpoint, where a screen
+ * shows the view of each viewport in a frame of each scheme, a component its
+ * variant set of desktop frames, its own example's row first, and a page or a
+ * Markdown document one reading frame.
  */
 
 type Viewport = "desktop" | "mobile";
@@ -16,13 +17,12 @@ export function schemeFrame(
 }
 
 /**
- * A viewport's frame in either layout: the canvas's Light frame, or the one
- * frame of the narrow stage. A component's set has one in each row.
+ * A viewport's Light frame on the canvas. A component's variant set has one
+ * in each row, its own example's first.
  */
 export function viewFrame(viewport: Viewport): string {
-  return `[data-workspace-frame="${viewport}"]:not([data-workspace-color-scheme="dark"])`;
+  return schemeFrame(viewport, "light");
 }
 
-/** The frame of a page or a Markdown document in either layout. */
-export const DOCUMENT_FRAME =
-  "[data-mokly-stage] iframe, .mbk-stage-embed iframe";
+/** The canvas's reading frame of a page or a Markdown document. */
+export const DOCUMENT_FRAME = "[data-mokly-stage] iframe";

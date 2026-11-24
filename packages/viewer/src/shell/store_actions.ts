@@ -11,6 +11,7 @@ import {
   disclosureStorageKey,
   encodeDisclosureMap,
 } from "./disclosure_storage.js";
+import { toggledFilter } from "./frames_filter.js";
 import { NARROW_SHELL } from "./layout_breakpoint.js";
 import { navigationFiltering } from "./nav_model.js";
 import {
@@ -25,7 +26,6 @@ import type { ShellStore } from "./store_context.js";
 import { withFilterSelection } from "./store_filters.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
-const detailsStorageKey = "mokly:details-disclosure";
 const widthStorageKey = "mokly:navigation-width:v1";
 
 interface StoreActionsInput {
@@ -149,23 +149,28 @@ export function shellStore(input: StoreActionsInput): ShellStore {
         colorScheme: input.catalogue.hasDarkFragments ? value : "light",
       });
     },
-    selectViewport(value) {
-      updateSelection({ viewport: value });
-    },
-    setDetails(open, tab = "details") {
-      if (!input.embedded) persist(detailsStorageKey, open ? "open" : "closed");
-      input.setState((current) => ({
-        ...current,
-        detailsOpen: open,
-        inspectorTab: open ? tab : undefined,
-      }));
-    },
     setDisclosure(key, open) {
       input.setState((current) => {
         const disclosures = { ...current.disclosures, [key]: open };
         persistDisclosures(current.selection, disclosures, !input.embedded);
         return { ...current, disclosures };
       });
+    },
+    toggleFrame(name, checked) {
+      const { frames, selection } = input.stateRef.current;
+      const next = toggledFilter(frames, selection.viewport, name, checked);
+      if (next.viewport !== selection.viewport)
+        updateSelection({ viewport: next.viewport });
+      if (
+        next.schemes.dark !== frames.dark ||
+        next.schemes.light !== frames.light
+      )
+        input.setState((current) => ({ ...current, frames: next.schemes }));
+    },
+    setPanelTab(panelTab) {
+      input.setState((current) =>
+        current.panelTab === panelTab ? current : { ...current, panelTab },
+      );
     },
     setNavigationMaximum(value) {
       input.setState((current) => ({

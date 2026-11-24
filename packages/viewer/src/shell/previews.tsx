@@ -13,9 +13,12 @@ import type { ShellCatalogueRoutedEntry } from "../catalogue/scoped_types.js";
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 
 import { readingFrameLabel } from "./canvas_frames.js";
+import { useCanvasLayout } from "./canvas_layout.js";
 import { CanvasRemovedStage } from "./canvas_removed.js";
+import { removedSectionAxes } from "./canvas_removed_frames.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { shownSchemes } from "./frames_filter.js";
 import { documentLightOnly } from "./scheme_fallback.js";
 import { useShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
@@ -97,7 +100,15 @@ export function RemovedPreviewStage(props: {
   onShown?: ((path: string | undefined) => void) | undefined;
 }) {
   const store = useShellStore();
-  const { colorScheme, viewport } = store.state.selection;
+  const wide = useCanvasLayout();
+  // On the wide canvas the Frames filter chooses a removed screen's
+  // columns and rows; the compact layout shows the picked frame among them.
+  const { colorScheme, viewport } = removedSectionAxes(
+    store.state.frames,
+    store.state.selection,
+    wide,
+  );
+  const schemes = shownSchemes(store.state.frames, true);
   const preview = useRemovedPreview({
     colorScheme,
     data: props.data,
@@ -115,6 +126,7 @@ export function RemovedPreviewStage(props: {
         colorScheme={colorScheme}
         data={props.data}
         retry={preview.retry}
+        schemes={schemes}
         state={preview.state}
         viewport={viewport}
       />

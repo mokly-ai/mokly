@@ -66,7 +66,7 @@ test("a logical link right after the first mount is host-owned while the frame s
           new MouseEvent("click", { bubbles: true, cancelable: true }),
         ),
       );
-    await expectDestination(page);
+    await expectDestination(page, "desktop");
     expect(images).toBe(2);
   } finally {
     release();

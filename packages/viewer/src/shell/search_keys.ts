@@ -16,6 +16,7 @@ import type { RefObject } from "react";
 
 import type { SearchShortcut, TopBarHandle } from "@mokly/ui/top-bar";
 
+import { listenForShellKeys } from "./canvas_input.js";
 import { useShellRoot } from "./root_context.js";
 import { useShellStore } from "./store_context.js";
 
@@ -47,7 +48,7 @@ const NON_TEXT_INPUTS = new Set([
 ]);
 
 /** Whether keys typed at a target enter text, so they stay the field's own. */
-function inTextField(target: EventTarget | null): boolean {
+export function inTextField(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
   if (target instanceof HTMLInputElement)
@@ -112,7 +113,9 @@ export function useSearchShortcut(): SearchShortcut {
 /**
  * Bind the search keys of the shell while its top bar shows: on the whole
  * document of a standalone shell, and only on an embedded root. A key that
- * asks for the search moves focus through the bar's handle.
+ * asks for the search moves focus through the bar's handle. So does a search
+ * key that a canvas frame's document forwards, which cancelled the key in
+ * its own document.
  */
 export function useSearchKeys(bar: RefObject<TopBarHandle | null>): void {
   const store = useShellStore();
@@ -135,5 +138,15 @@ export function useSearchKeys(bar: RefObject<TopBarHandle | null>): void {
     const doc = element.ownerDocument;
     doc.addEventListener("keydown", keydown);
     return () => doc.removeEventListener("keydown", keydown);
+  }, [bar, embedded, interactive, root]);
+  useEffect(() => {
+    const element = root?.current;
+    if (!interactive || !element) return;
+    return listenForShellKeys(
+      embedded ? element : element.ownerDocument,
+      (key) => {
+        if (key === "search") bar.current?.focusSearch();
+      },
+    );
   }, [bar, embedded, interactive, root]);
 }

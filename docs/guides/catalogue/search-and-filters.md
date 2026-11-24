@@ -22,7 +22,7 @@ tag:forms
 ```
 
 You rarely type it: the field has a tag picker that enters the term for you,
-and the tags listed in an entry's details are chips that do the same.
+and the tags that Inspect lists for an entry are chips that do the same.
 
 ## All and Changes
 

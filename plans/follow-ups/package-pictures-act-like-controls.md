@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-30, from the branch `calummoore/mokly-ui-controls`, review finding 4 and two problems outside its scope.
-- **Location:** `packages/ui/src/catalogue-tree/catalogue-tree.css:51` and `:65`, which style the tree row picture of `packages/ui/src/catalogue-tree/tree-link.tsx`; `packages/ui/src/catalogue-navigation/catalogue-navigation.css:213` and `:237`, which style the separator picture of `packages/ui/src/catalogue-navigation/navigation-resize.tsx`; `packages/ui/src/icon-control/icon-control.css:22` and `:61`.
+- **Location:** `packages/ui/src/catalogue-tree/catalogue-tree.css:59` and `:73`, which style the tree row picture of `packages/ui/src/catalogue-tree/tree-link.tsx`; `packages/ui/src/catalogue-navigation/catalogue-navigation.css:251` and `:274`, which style the separator picture of `packages/ui/src/catalogue-navigation/navigation-resize.tsx`; `packages/ui/src/icon-control/icon-control.css:17` and `:25`.
 - **Reason:** The user chose B on 2026-10-31 as follow-up work. Its shared
   marker spans the picture forms of all five shell views pull requests.
 
@@ -22,7 +22,7 @@
 - **Background:**
   - Each package control that a static depiction draws has a link form for
     an address and a picture form without one. Examples are the top bar's
-    menu and brand, the screen header's path chip, the tag chip, the tag
+    brand, the canvas section's path chip, the tag chip, the tag
     button, the navigation filter options, Collapse all, the tree rows, and
     the navigation separator.
   - Each control's stylesheet gives its class the action feedback, so the
@@ -38,12 +38,13 @@
       `cursor: pointer` and the accent hover fill from `.mbk-nav-row`.
     - The separator picture, drawn when the navigation column is not
       operable, takes `cursor: col-resize` and the hover glow from
-      `.mbk-nav-resize`. Artboards show it through
-      `examples/basic/design-library/chrome/catalogue-navigation.css:13`.
+      `.mbk-nav-resize`. The responsive samples of the design library show
+      it, through
+      `examples/basic/specs/design/library/chrome/catalogue-navigation.view.tsx:99-100`
+      and the package rule at
+      `packages/ui/src/catalogue-navigation/catalogue-navigation.css:256`.
   - `.mbk-icon-button` gives every element form the pointer and a hover fill.
     A future picture of an icon control would inherit them.
-  - The explorer's depicted resize grip already leaves hit testing with
-    `pointer-events: none`, in `examples/basic/design-component-workspace.css:77`.
 - **Problem:** A picture that does nothing shows the pointer and a hover
   fill, so a reader expects it to act. Each new picture form repeats the
   defect unless its author remembers a per-control rule.
@@ -60,7 +61,7 @@
     marker, such as the class `mbk-picture`, whose rule sets
     `pointer-events: none` and `cursor: default`. No hover or press rule then
     reaches a picture. A picture loses its `title` tooltip, such as the
-    Refresh picture of `packages/ui/src/comparison-toolbar/comparison-toolbar.tsx:36`.
+    Refresh picture of `packages/ui/src/compare-modes/compare-modes.tsx:55`.
     Effort: Large.
 - **Left out:** A disabled button for each picture, because Chrome still draws
   the pointer and the hover fill on it with these sheets, and it tells a

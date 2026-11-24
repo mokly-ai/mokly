@@ -1,14 +1,13 @@
-/* The preview of a depicted view, which the Canvas frames and the older
-   design stage share: the preview tokens that a depicted document reads, and
-   the shipped highlight mask and labels over it, from their @mokly/ui
-   stylesheets. The Canvas route links this sheet, and design-stage.css
-   imports it for the older design routes. */
+/* The preview of a depicted view, which the Canvas frames and the library's
+   Canvas samples share: the preview tokens that a depicted document reads,
+   and the shipped highlight mask and labels over it, from their @mokly/ui
+   stylesheets. The Canvas route and the library route link this sheet. */
 @import "../../packages/ui/src/highlight-label/highlight-label.css";
 @import "../../packages/ui/src/highlight-mask/highlight-mask.css";
 
-/* Preview tokens describe what a device screen shows. They are deliberately
-   separate from the interface palette in design.css, so a light phone keeps its
-   light surfaces and ink inside a dark Mokly interface. */
+/* Preview tokens describe what a depicted document shows. They are
+   deliberately separate from the interface palette in design.css, so a light
+   frame keeps its light surfaces and ink inside a dark Mokly interface. */
 :root {
   --mbk-dark-screen-bg: #121514;
   --mbk-dark-screen-ink: #eef1ef;
@@ -22,12 +21,6 @@
   --mbk-screen-danger-bg: #fdf1ef;
   --mbk-screen-danger-edge: #e7c3bb;
   --mbk-screen-danger-ink: #8a3423;
-  --mbk-device-body: #171a18;
-  --mbk-device-notch: #0b0d0c;
-  --mbk-device-home: rgba(20, 24, 20, 0.4);
-  --mbk-device-light-close: #d9655b;
-  --mbk-device-light-minimise: #dba43d;
-  --mbk-device-light-expand: #50a86d;
 }
 
 /* A depicted screen keeps its own scheme: the sketches that a dark frame

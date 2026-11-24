@@ -96,6 +96,19 @@
   line-height: 1.5;
 }
 
+/* The outcome line of each compared frame reads as the sentences do, one
+   line under another, without the marker and the indent of a files list. */
+.cv-evidence .mbk-comparison-evidence .mbk-comparison-outcomes {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  padding: 0;
+}
+
+.cv-evidence .mbk-comparison-evidence .mbk-comparison-outcomes > li {
+  color: var(--cv-text-secondary);
+}
+
 /* Every Canvas evidence, in the Changes tab and in Inspect, spaces its
    sentences and lists as the evidence contract fixes, whatever other sheet the page links: 8px above each
    paragraph and list, the sentences and lists in a file's item included,

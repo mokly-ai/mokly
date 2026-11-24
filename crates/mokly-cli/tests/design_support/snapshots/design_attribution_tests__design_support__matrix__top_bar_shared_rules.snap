@@ -10,7 +10,6 @@ design/library/chrome/top-bar -> attribution-status
 design/library/chrome/top-bar -> attribution-target
 design/library/chrome/top-bar -> attribution-title
 design/library/chrome/top-bar -> attribution-value
-design/library/chrome/top-bar -> design/browse/views/screen/tag-picker
 design/library/chrome/top-bar -> design/canvas/changes/current
 design/library/chrome/top-bar -> design/canvas/changes/difference
 design/library/chrome/top-bar -> design/canvas/changes/overlay

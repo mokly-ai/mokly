@@ -216,9 +216,10 @@ test("the highlight masks follow the frames when the canvas pans", async ({
       'iframe[data-workspace-frame][data-mokly-frame-state="ready"]',
     ),
   ).toHaveCount(4);
+  // The masks draw at every zoom; only the labels hide below 60%.
   await page
-    .getByRole("button", { name: "Highlight components", exact: true })
-    .click();
+    .getByRole("switch", { name: "Highlight components", exact: true })
+    .check();
   const layer = page.locator(".mbk-highlight-layer").first();
   await expect(layer).toBeVisible();
   const before = await box(layer);
@@ -234,8 +235,8 @@ test("the highlight masks follow the frames when the canvas pans", async ({
 test("a variant set opens fitted to its components' measured frames at a readable zoom", async ({
   page,
 }) => {
-  // The inspector still stands below the canvas, so the window gives the
-  // stage the height that four rows need beside their fixed labels and gaps.
+  // The window gives the stage the height that four rows need beside their
+  // fixed labels and gaps.
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto("/view/example/components/action/");
   // Four rows, the action's own example and its three saved variants, each

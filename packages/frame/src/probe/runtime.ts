@@ -167,29 +167,39 @@ export const probeRuntime = (
       if (navigation) emit({ type: "navigation", navigation });
     }
   };
-  const on = (name: string, listener: EventListener) =>
-    doc.addEventListener(name, listener, options);
+  // A search key loses its default action, such as the browser's own search
+  // or a typed `/`, because the shell takes it and moves focus.
+  const forward = (event: KeyboardEvent, shell?: boolean) => {
+    const key = events.includes("canvas-key") && canvasKey(event, shell);
+    if (!key) return;
+    if (key === "search") event.preventDefault();
+    send({ type: "canvas-key", key });
+  };
+  const on = <K extends keyof DocumentEventMap>(
+    name: K,
+    listener: (event: DocumentEventMap[K]) => void,
+  ) => doc.addEventListener(name, listener, options);
   const move = (event: MouseEvent | null) => {
     pointer = event;
     if (events.includes("hover")) schedule();
   };
-  doc.addEventListener("pointermove", move, options);
+  on("pointermove", move);
   on("pointerleave", () => move(null));
-  on("click", activate as EventListener);
-  on("auxclick", activate as EventListener);
-  doc.addEventListener(
+  on("click", activate);
+  on("auxclick", activate);
+  on("keydown", (event) => {
+    if (event.key === "Escape" && active) {
+      event.preventDefault();
+      active = false;
+      emit({ type: "pick-end", reason: "escape" });
+    } else forward(event);
+  });
+  // The shell's keys wait for the document's own listeners: one that cancels
+  // a key or stops it keeps the key.
+  win.addEventListener(
     "keydown",
-    (event) => {
-      if (event.key === "Escape" && active) {
-        event.preventDefault();
-        active = false;
-        emit({ type: "pick-end", reason: "escape" });
-      } else if (events.includes("canvas-key")) {
-        const key = canvasKey(event);
-        if (key) send({ type: "canvas-key", key });
-      }
-    },
-    options,
+    (event) => event.defaultPrevented || forward(event, true),
+    { signal: controller.signal },
   );
   on("scroll", changed);
   on("load", changed);

@@ -16,10 +16,15 @@ import { OUTCOME_PAGES } from "./destinations.js";
  * Previous change opens the Example tour in Changes and whose Next change,
  * its Overdue variant, has no artboard; Compared; the compare modes in
  * Overlay, the one mode that an artboard shows; and the comparison details,
- * which name its previous path as the earlier side before the sentence of
- * its reason.
+ * which list each compared frame's outcome, then name its previous path as
+ * the earlier side before the sentence of its reason.
  */
-export function InvoiceChanges() {
+export function InvoiceChanges({
+  outcomes,
+}: {
+  /** The outcome line of each frame that Overlay compares. */
+  outcomes: readonly string[];
+}) {
   return (
     <>
       <changeStepper.Component
@@ -39,6 +44,7 @@ export function InvoiceChanges() {
         />
       </InspectSection>
       <ChangesEvidence
+        outcomes={outcomes}
         previousPath={PREVIOUS_PATHS.invoice}
         reasons={["material"]}
       />

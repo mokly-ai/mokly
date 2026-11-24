@@ -126,17 +126,17 @@ box model of an instance and the content box of a document. Its envelope
 carries `version: 4`. Each peer accepts only its own version. A version 3 probe
 and a version 4 viewer reject each other's handshake.
 
-| Type              | Direction | Additional fields                                                    |
-| ----------------- | --------- | -------------------------------------------------------------------- |
-| `measure`         | H → F     | `requestId`, `key`                                                   |
-| `box-model`       | F → H     | `requestId`, `boxModel: InstanceBoxModel \| null`                    |
-| `measure-content` | H → F     | `requestId`                                                          |
-| `content-box`     | F → H     | `requestId`, `contentBox: Box \| null`                               |
-| `canvas-wheel`    | F → H     | `deltaY: number`, `deltaMode: 0 \| 1 \| 2`, `x: number`, `y: number` |
-| `canvas-pinch`    | F → H     | `scale: number`, `x: number`, `y: number`                            |
-| `canvas-key`      | F → H     | `key: "zoom-in" \| "zoom-out" \| "zoom-100" \| "fit"`                |
-| `canvas-focus`    | F → H     | `visible: boolean`                                                   |
-| `canvas-blur`     | F → H     | none                                                                 |
+| Type              | Direction | Additional fields                                                             |
+| ----------------- | --------- | ----------------------------------------------------------------------------- |
+| `measure`         | H → F     | `requestId`, `key`                                                            |
+| `box-model`       | F → H     | `requestId`, `boxModel: InstanceBoxModel \| null`                             |
+| `measure-content` | H → F     | `requestId`                                                                   |
+| `content-box`     | F → H     | `requestId`, `contentBox: Box \| null`                                        |
+| `canvas-wheel`    | F → H     | `deltaY: number`, `deltaMode: 0 \| 1 \| 2`, `x: number`, `y: number`          |
+| `canvas-pinch`    | F → H     | `scale: number`, `x: number`, `y: number`                                     |
+| `canvas-key`      | F → H     | `key: "zoom-in" \| "zoom-out" \| "zoom-100" \| "fit" \| "escape" \| "search"` |
+| `canvas-focus`    | F → H     | `visible: boolean`                                                            |
+| `canvas-blur`     | F → H     | none                                                                          |
 
 `measure` returns `box-model` or `error`. `InstanceBoxModel` has exactly the
 fields `box`, `border` and `padding`. `border` and `padding` each have exactly

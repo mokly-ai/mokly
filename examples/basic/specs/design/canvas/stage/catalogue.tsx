@@ -1,8 +1,7 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboards } from "../../parts/artboards.js";
+import { artboards, type ArtboardViewport } from "../../parts/artboards.js";
 import { REMOVED_SCREENS } from "../../parts/nav_data.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
 import { CANVAS_PAGES } from "../parts/destinations.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { WelcomeInspect } from "../parts/inspect_welcome.js";

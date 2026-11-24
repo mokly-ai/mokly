@@ -57,7 +57,8 @@ test.describe("with a clean console", () => {
     await page.goto(route(WELCOME));
     await expect(heading(page)).toHaveText(names.get(WELCOME)!);
     const loads = loadsOf(page);
-    const crumbs = page.locator('p[aria-label="Catalogue location"]');
+    // Inspect's Path row names each route's folders.
+    const crumbs = page.locator("[data-inspect-path] code");
     const welcomeCrumbs = await crumbs.textContent();
     await openFolder(page, "example/team");
     await navLink(page, MEMBERS).click();

@@ -81,11 +81,19 @@
 
 /* A use case's step frame: the step's number in a dark tag leads the label,
    and the name is the link that opens the step's screen, with a chevron. The
-   label of a step frame or a linked frame holds the 18px tag on its line and
-   keeps 4px around the line for the link's focus glow, which it clips
-   otherwise: its box grows 4px on each side, and the line keeps its place,
-   7px above the frame. */
-.mbk-canvas-frame-label:has(.mbk-canvas-frame-link, .mbk-canvas-frame-step) {
+   name of a frame that a press selects, such as a variant set's, is a button
+   with the label's look. The label of a step frame, a linked frame, a frame
+   of Side by side, or a frame that a press selects keeps 4px around the line
+   for the focus glow of its link or button, which it clips otherwise: its box
+   grows 4px on each side, and the line keeps its place, 7px above the frame.
+   The line of a step frame, a linked frame or a frame of Side by side holds
+   the 18px tag. */
+.mbk-canvas-frame-label:has(
+  .mbk-canvas-frame-link,
+  .mbk-canvas-frame-select,
+  .mbk-canvas-frame-side,
+  .mbk-canvas-frame-step
+) {
   right: -4px;
   bottom: calc(100% + 3px);
   left: -4px;
@@ -94,9 +102,46 @@
   row-gap: 8px;
 }
 
-.mbk-canvas-frame-label:has(.mbk-canvas-frame-link, .mbk-canvas-frame-step)
+.mbk-canvas-frame-label:has(.mbk-canvas-frame-select) {
+  height: 22px;
+}
+
+.mbk-canvas-frame-label:has(
+    .mbk-canvas-frame-link,
+    .mbk-canvas-frame-side,
+    .mbk-canvas-frame-step
+  )
   > .mbk-canvas-frame-title {
   height: 18px;
+}
+
+/* A frame of Side by side leads its label with its version's tag: the
+   version before in the dark tag, the current version in the signal tag. */
+.mbk-canvas-frame-side {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font: 500 10.5px/1 var(--cv-mono);
+}
+
+.mbk-canvas-frame-side[data-side="before"] {
+  background: var(--cv-text);
+  color: var(--cv-surface);
+}
+
+.mbk-canvas-frame-side[data-side="after"] {
+  background: var(--cv-signal);
+  color: var(--cv-on-signal);
+}
+
+/* In the compact layout the tag stands in for the viewport's glyph. */
+@media (width < 56.25rem) {
+  .mbk-canvas-frame[data-canvas-side] .mbk-canvas-frame-title > svg {
+    display: none;
+  }
 }
 
 .mbk-canvas-frame-step {
@@ -133,7 +178,20 @@
   text-decoration: none;
 }
 
-.mbk-canvas-frame-link:hover > .mbk-canvas-frame-name {
+.mbk-canvas-frame-select {
+  display: inline-flex;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mbk-canvas-frame-link:hover > .mbk-canvas-frame-name,
+.mbk-canvas-frame-select:hover > .mbk-canvas-frame-name {
   text-decoration: underline;
   text-underline-offset: 2px;
 }

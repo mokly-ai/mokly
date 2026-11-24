@@ -6,32 +6,47 @@ type CanvasKeyEvent = Extract<FrameEvent, { type: "canvas-key" }>;
 type CanvasWheel = Extract<FrameEvent, { type: "canvas-wheel" }>;
 type CanvasPinch = Extract<FrameEvent, { type: "canvas-pinch" }>;
 
-/** Map keys outside editable controls, including controls in another realm. */
+/**
+ * Map keys outside editable controls, including controls in another realm.
+ * Without `shell`, map the canvas's zoom keys. With `shell`, map the keys of
+ * the shell: Escape, and the search keys `/`, ⌘K and Ctrl+K. K is the key
+ * that types k on a layout of Latin letters, and the key in K's place on
+ * any other layout.
+ */
 export function canvasKey(
   event: Pick<
     KeyboardEvent,
     "key" | "code" | "shiftKey" | "ctrlKey" | "metaKey" | "altKey" | "target"
   >,
+  shell?: boolean,
 ): CanvasKeyEvent["key"] | undefined {
   const target:
     (EventTarget & { localName?: string; isContentEditable?: boolean }) | null =
     event.target;
   const name = target?.localName;
+  const { key, code, shiftKey, ctrlKey, metaKey } = event;
+  // A target that is no element, such as the document, has neither field.
   if (
-    event.ctrlKey ||
-    event.metaKey ||
     event.altKey ||
-    (typeof name === "string" &&
-      (target?.isContentEditable === true ||
-        name === "input" ||
-        name === "select" ||
-        name === "textarea"))
+    target?.isContentEditable ||
+    name === "input" ||
+    name === "select" ||
+    name === "textarea"
   )
     return;
-  if (event.shiftKey && event.code === "Digit0") return "zoom-100";
-  if (event.shiftKey && event.code === "Digit1") return "fit";
-  if (event.key === "+" || event.key === "=") return "zoom-in";
-  if (event.key === "-") return "zoom-out";
+  if (ctrlKey || metaKey)
+    return shell &&
+      ctrlKey !== metaKey &&
+      !shiftKey &&
+      (/^[a-z]$/i.test(key) ? /k/i.test(key) : code === "KeyK")
+      ? "search"
+      : undefined;
+  if (shell)
+    return key === "/" ? "search" : key === "Escape" ? "escape" : undefined;
+  if (shiftKey && code === "Digit0") return "zoom-100";
+  if (shiftKey && code === "Digit1") return "fit";
+  if (key === "+" || key === "=") return "zoom-in";
+  if (key === "-") return "zoom-out";
 }
 
 type WebKitGesture = MouseEvent & { scale: number };

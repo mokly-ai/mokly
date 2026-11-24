@@ -1,7 +1,5 @@
 # Comparison Scroll Together
 
-Status: The switch in the Changes tab, and Scroll together in Swipe and on every frame of the canvas, are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Reader Control
 
 The Scroll together switch is a native `input type="checkbox"` with

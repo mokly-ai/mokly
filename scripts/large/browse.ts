@@ -1,6 +1,12 @@
 import { expect } from "@playwright/test";
 import type { BrowserContext, Page } from "@playwright/test";
 
+import {
+  openInspectFold,
+  openPanelTab,
+} from "../../tests/browser/panel_actions.js";
+import { chooseVariant } from "../../tests/browser/workspace_actions.js";
+
 import { changesSummary, firstScreen } from "./changes.js";
 import { changesVisible, delivered, observeDelivery } from "./delivery.js";
 import { DOCUMENT_FRAME, schemeFrame, viewFrame } from "./frames.js";
@@ -41,11 +47,9 @@ export async function browse(
   await page.getByRole("searchbox").fill("");
   const comparison =
     scope === "serve" ? await changesReadiness(page, fixture, beginning) : {};
+  // The canvas shows the view of each viewport in a frame of each scheme.
   for (const viewport of ["desktop", "mobile"] as const) {
-    await page.getByLabel("Viewport", { exact: true }).selectOption(viewport);
     for (const scheme of ["dark", "light"] as const) {
-      await page.getByLabel("Appearance", { exact: true }).selectOption(scheme);
-      // The canvas shows each scheme in its own frame.
       const frame = page.frameLocator(schemeFrame(viewport, scheme));
       await expect(frame.locator("html")).toHaveAttribute(
         "style",
@@ -65,10 +69,15 @@ export async function browse(
   const bytes = await previewBytes(new URL(src, url));
   const cachedPreviewMs = performance.now() - cached;
   await page.goto(`${url}/view/area-1/components/action/`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
-  await page.getByRole("tab", { name: "Props", exact: true }).click();
+  // Props is a section of Inspect. On a variant set, Props edits the row of
+  // the selected frame, so this chooses the component's own example.
+  await openPanelTab(page, "Inspect");
+  const props = await openInspectFold(page, "props");
+  await chooseVariant(page, "Action");
   const edited = performance.now();
-  await page.getByLabel("label", { exact: true }).fill("Benchmark action");
+  await props
+    .getByRole("textbox", { name: "label", exact: true })
+    .fill("Benchmark action");
   // The component's own example comes first in its variant set.
   await expect(
     page

@@ -1,7 +1,9 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import { EmptyState, LoadingState } from "../../parts/stage_content.js";
 import { CANVAS_PAGES as C } from "../parts/destinations.js";
 

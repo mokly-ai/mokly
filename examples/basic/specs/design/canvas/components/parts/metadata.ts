@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 
-import type { ArtboardVariant } from "../../../parts/artboards.js";
-import type { ArtboardViewport } from "../../../parts/shell.js";
+import type {
+  ArtboardVariant,
+  ArtboardViewport,
+} from "../../../parts/artboards.js";
 import { canvasDesignMetadata } from "../../parts/metadata.js";
 
 /** Shared authored evidence for the Component explorer screens. */

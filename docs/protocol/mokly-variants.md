@@ -20,9 +20,9 @@ query parameter, or comparison schema of their own.
 Light and dark are not variants. Color scheme is a view axis under the
 [preview scheme rules](./mokly-shell-device-chrome.md#color-scheme), and a
 viewport is likewise a view. Per-view change
-evidence is surfaced on the view controls by the
-[runtime contract](./mokly-runtime.md#browse-shell); it never creates
-navigation rows.
+evidence marks each toggle of the
+[Frames filter](./mokly-shell-canvas-stage.md#frames-filter) that hides a
+changed view; it never creates navigation rows.
 
 ## Authoring
 

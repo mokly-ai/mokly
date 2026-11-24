@@ -1,5 +1,5 @@
+import type { ArtboardViewport } from "../../../parts/artboards.js";
 import type { DepictedView } from "../../../parts/depicted_view.js";
-import type { ArtboardViewport } from "../../../parts/shell.js";
 import { DETAILS_VIEW, detailsFrames } from "../../parts/changes_sketches.js";
 import {
   CANVAS_PAGES,

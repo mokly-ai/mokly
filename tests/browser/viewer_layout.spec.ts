@@ -107,16 +107,12 @@ for (const width of [1440, 900, 390, 320]) {
           const navBounds = nav.getBoundingClientRect();
           const stageBounds = stage.getBoundingClientRect();
           return {
-            detailsDisplay: getComputedStyle(
-              document.querySelector("#one .mbk-details-body")!,
-            ).display,
             navLeft: navBounds.left,
             navTop: navBounds.top,
             stageLeft: stageBounds.left,
             stageTop: stageBounds.top,
           };
         });
-        expect(desktop.detailsDisplay).toBe("grid");
         // The rail host floats over the stage, 8px from its top and its start.
         expect(desktop.navLeft).toBe(desktop.stageLeft + 8);
         expect(desktop.navTop).toBe(desktop.stageTop + 8);

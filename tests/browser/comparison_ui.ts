@@ -10,7 +10,7 @@ import {
   type Page,
 } from "@playwright/test";
 
-import { revealInPanel } from "./workspace_actions.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 /** The index fields the comparison UI specs compare with the shell. */
 export interface ComparisonIndexEntry {
@@ -114,58 +114,149 @@ export async function chooseFilter(
   await expect(button).toHaveAttribute("aria-pressed", "true");
 }
 
+/** The value of `data-compare-mode` that each diff mode draws on the frames. */
+export const COMPARE_MODES = {
+  "Side by side": "side",
+  Overlay: "overlay",
+  Difference: "difference",
+  Swipe: "swipe",
+} as const;
+
+/** A diff mode, by its name on the band. */
+export type DiffMode = keyof typeof COMPARE_MODES;
+
+/** A diff mode, by the `data-compare-mode` that it draws. */
+export type CompareMode = (typeof COMPARE_MODES)[DiffMode];
+
+/** A comparison mode, by its name on the band: Current or a diff mode. */
+export type ModeName = "Current" | DiffMode;
+
 /** The comparison mode buttons by their visible names. */
-export function modeButton(
-  page: Page,
-  name: "Current" | "Side by side" | "Overlay" | "Difference",
-): Locator {
+export function modeButton(page: Page, name: ModeName): Locator {
   return page
     .getByRole("group", { name: "Comparison mode" })
     .getByRole("button", { name, exact: true });
 }
 
-const MODES = {
-  "Side by side": "side",
-  Overlay: "overlay",
-  Difference: "difference",
-} as const;
-
-/** Select a diff mode and wait for its panes to hold the loaded versions. */
-export async function showMode(
-  page: Page,
-  name: keyof typeof MODES,
-  frames = 2,
-): Promise<void> {
-  // In the compact layout the comparison band stands in the panel's sheet.
-  await revealInPanel(page, modeButton(page, name));
+/**
+ * Choose a comparison mode: open the right panel's Changes tab, which holds
+ * the band, press the mode, and wait until the band marks it pressed.
+ */
+export async function chooseMode(page: Page, name: ModeName): Promise<void> {
+  await openPanelTab(page, "Changes");
   await modeButton(page, name).click();
   await expect(modeButton(page, name)).toHaveAttribute("aria-pressed", "true");
+}
+
+/** Every version's frame that the canvas compares on its frames. */
+export function comparisonFrames(page: Page): Locator {
+  return page.locator("[data-mokly-stage] iframe[data-mokly-comparison-frame]");
+}
+
+/**
+ * The compare on the canvas, which names its entry in `data-diff-screen` and
+ * is busy while its comparison or its documents load.
+ */
+export function compareStage(page: Page): Locator {
+  return page.locator("[data-diff-screen]");
+}
+
+/**
+ * The state that the canvas holds in place of its frames, `Loading
+ * comparison…` or the failure with Try again. It exists only while the
+ * comparison loads or failed, and it never holds a pane.
+ */
+export function compareState(page: Page): Locator {
+  return page.locator("[data-diff-stage]");
+}
+
+/**
+ * Choose a diff mode and wait for its frames to hold the loaded versions:
+ * `frames` pane documents in all, two for each compared frame of Overlay,
+ * Difference or Swipe, such as eight for the four frames of a wide canvas,
+ * and two for the compared frame of Side by side.
+ */
+export async function showMode(
+  page: Page,
+  name: DiffMode,
+  frames: number,
+): Promise<void> {
+  await chooseMode(page, name);
   await expect(
-    page.locator(`[data-diff-stage] [data-compare-mode="${MODES[name]}"]`),
+    page.locator(
+      `[data-mokly-stage] [data-compare-mode="${COMPARE_MODES[name]}"]`,
+    ),
   ).not.toHaveCount(0);
+  await expect(comparisonFrames(page)).toHaveCount(frames);
+}
+
+/**
+ * Expect the routed entry of a page or of one viewer's root to offer no
+ * compare mode, as an Unmodified view without a changed component and a
+ * removed screen do: its Changes tab, when it has one, shows no band, so the
+ * check never passes only because Inspect is the selected tab or the compact
+ * layout's panel sheet is closed. Call it once the entry's detail settled,
+ * such as after `awaitRoutedDetail`.
+ */
+export async function expectNoCompareModes(
+  scope: Page | Locator,
+): Promise<void> {
+  const changes = scope.getByRole("tab", {
+    name: "Changes",
+    exact: true,
+    includeHidden: true,
+  });
+  // The tab stands in the panel's sheet in the compact layout, which
+  // `openPanelTab` opens.
+  if (await changes.count()) await openPanelTab(scope, "Changes");
   await expect(
-    page.locator("[data-diff-stage] iframe[data-mokly-comparison-frame]"),
-  ).toHaveCount(frames);
+    scope.getByRole("group", { name: "Comparison mode" }),
+  ).toBeHidden();
+}
+
+/**
+ * Expect the routed entry of a page or of one viewer's root, whose shown
+ * status is Added, to offer Current alone: its Changes tab's `Comparison
+ * mode` group holds one tile, Current, which shows. Call it once the
+ * entry's detail settled, such as after `awaitRoutedDetail`.
+ */
+export async function expectCurrentAlone(scope: Page | Locator): Promise<void> {
+  await openPanelTab(scope, "Changes");
+  const modes = scope.getByRole("group", { name: "Comparison mode" });
+  await expect(modes).toMatchAriaSnapshot(`
+    - group "Comparison mode":
+      - /children: equal
+      - button "Current" [pressed]
+  `);
+}
+
+/**
+ * The outcome line of each compared frame, which the band lists in a diff
+ * mode, such as `Desktop · Light · Screen changed`, in the frames' order.
+ */
+export function outcomeLines(scope: Page | Locator): Locator {
+  return scope
+    .getByRole("list", { name: "Compared frames" })
+    .getByRole("listitem");
 }
 
 /**
  * Wait until the shell shows `entryPath` and has applied its entry detail.
- * The head names the routed entry in the same render that starts the detail
- * load, and the stage and the Usage panel show that load until it settles.
- * The detail can still make an entry comparison-eligible, so every check that
- * the comparison band is absent waits for this first.
+ * The Path row of Inspect's head names the routed entry in the same render
+ * that starts the detail load, in either layout and while another tab is
+ * selected, and the stage and the Usage fold show that load until it
+ * settles. The detail can still make an entry comparison-eligible, so every
+ * check that the comparison band is absent waits for this first.
  */
 export async function awaitRoutedDetail(
   scope: Page | Locator,
   entryPath: string,
 ): Promise<void> {
-  await expect(
-    scope.locator(".mbk-screen-head [data-copy-path]"),
-  ).toHaveAttribute("data-copy-path", entryPath);
+  await expect(scope.locator("[data-inspect-path] code")).toHaveText(entryPath);
   await expect(
     scope.locator('[data-mokly-stage][aria-busy="true"]'),
   ).toHaveCount(0);
   await expect(
-    scope.locator('[data-inspector-panel="usage"] p[role="status"]'),
+    scope.locator('[data-inspect-section="usage"] p[role="status"]'),
   ).toHaveCount(0);
 }

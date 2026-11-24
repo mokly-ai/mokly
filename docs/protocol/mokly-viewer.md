@@ -1,6 +1,6 @@
 # Embeddable Mokly Viewer
 
-Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix. The `changesStart` slot is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
+Status: Some cleanup errors from removed host content can become catalogue failures. The [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) owns that fix.
 
 ## Package And Props
 
@@ -112,14 +112,14 @@ replaces the status. When the reader moved focus to another element in the
 meantime, focus stays there. An element that shows both the load and the
 content takes focus at once.
 
-| Try again of     | Status                                    | Content                   |
-| ---------------- | ----------------------------------------- | ------------------------- |
-| The catalogue    | `Loading catalogue…`                      | The main region           |
-| A preview frame  | Its `<iframe>`, busy while it loads       | The same `<iframe>`       |
-| The comparison   | The comparison stage, busy while it loads | The same stage            |
-| The routed stage | `Loading preview…`                        | The first preview frame   |
-| Props            | `Loading props…`                          | The panel heading         |
-| Usage            | `Loading usage…`                          | The first section heading |
+| Try again of                     | Status                                    | Content                   |
+| -------------------------------- | ----------------------------------------- | ------------------------- |
+| The catalogue                    | `Loading catalogue…`                      | The main region           |
+| A preview frame                  | Its `<iframe>`, busy while it loads       | The same `<iframe>`       |
+| The comparison or a compared row | The comparison stage, busy while it loads | The same stage            |
+| The routed stage                 | `Loading preview…`                        | The first preview frame   |
+| Props                            | `Loading props…`                          | The panel heading         |
+| Usage                            | `Loading usage…`                          | The first section heading |
 
 Decision (2026-11-20): one rule covers each Try again of the shell, so a
 keyboard or screen-reader reader always finds the recovery. Focus that stays

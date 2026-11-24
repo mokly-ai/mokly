@@ -14,19 +14,10 @@
       "folder-screen",
       "changed-member"
     ],
-    "chrome/screen-header": ["screen", "component", "changed", "removed"],
     "chrome/appearance-selector": ["auto", "light", "dark", "compact"],
-    "controls/view-controls": [
-      "default",
-      "both",
-      "highlighted",
-      "unavailable",
-      "changed-views"
-    ],
     "controls/tag-picker": ["all", "selected", "empty"],
     "controls/tag-chip": ["default", "selected", "inactive"],
     "controls/change-status": ["unmodified", "added", "changed", "removed"],
-    "inspector/inspector": ["details", "props", "closed"],
     "inspector/metadata-row": ["text", "code", "linked", "tags"],
     "inspector/prop-field": [
       "text",
@@ -34,13 +25,6 @@
       "invalid-number",
       "select",
       "optional-unset"
-    ],
-    "preview/device-frame": [
-      "phone",
-      "browser",
-      "dark",
-      "light-only",
-      "failed"
     ],
     "preview/empty-state": ["home", "missing-route", "no-changes"],
     "canvas/canvas-frame": [
@@ -1287,11 +1271,6 @@
     },
     {
       "source": "design/canvas/components/compare/props",
-      "name": "Switch to Current",
-      "target": "design/canvas/components/usage"
-    },
-    {
-      "source": "design/canvas/components/compare/props",
       "within": "cv-ptabs",
       "name": "Changes",
       "target": "design/canvas/components/compare"
@@ -1326,8 +1305,17 @@
     {
       "source": "design/canvas/components/affected/direct",
       "viewports": ["mobile"],
+      "colorSchemes": ["light"],
       "within": "cv-mode-frames",
       "name": "Mobile · Light",
+      "target": "design/canvas/components/affected/direct"
+    },
+    {
+      "source": "design/canvas/components/affected/direct",
+      "viewports": ["mobile"],
+      "colorSchemes": ["dark"],
+      "within": "cv-mode-frames",
+      "name": "Mobile · Dark",
       "target": "design/canvas/components/affected/direct"
     },
     {
@@ -1736,17 +1724,6 @@
         "onboarding": "design/canvas/overview"
       },
       "rows": ["Welcome"]
-    },
-    {
-      "path": "design/browse/views/screen/tag-picker",
-      "query": "",
-      "picker": true,
-      "active": [],
-      "toggle": "design/canvas/overview",
-      "chips": {
-        "forms": "design/canvas/search/tags/forms",
-        "onboarding": "design/canvas/search/tags/onboarding"
-      }
     }
   ]
 }

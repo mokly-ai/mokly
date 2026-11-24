@@ -1,9 +1,10 @@
 /**
  * The frames that an entry shows on the canvas. A screen shows Desktop
- * beside Mobile, its Light row above its Dark row, and the viewport choice
- * keeps one column. A component shows its variant set: a row for its own
- * example, then a row for each saved variant, each with its Light frame
- * beside its Dark frame, and each frame shows the row's desktop view. A
+ * beside Mobile, its Light row above its Dark row, and the Frames filter
+ * hides the columns and the rows that it turns off. A component shows its
+ * variant set: a row for its own example, then a row for each saved
+ * variant, each with its Light frame beside its Dark frame, of the schemes
+ * that the filter shows, and each frame shows the row's desktop view. A
  * page or a Markdown document shows one reading frame, named by its source
  * file. A use case's step frames, from `canvas_use_case_frames.ts`, carry
  * the step that each shows. A live edit renders the view of each shown frame
@@ -15,9 +16,7 @@ import type {
   ShellCatalogueScreen,
   ShellCatalogueView,
 } from "../catalogue/scoped_types.js";
-import { isComponentVariant } from "../catalogue/variants.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import type { ViewerSelection } from "../host/types.js";
 
 import { generatedView, temporaryView } from "./stage_sources.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
@@ -31,7 +30,7 @@ export interface CanvasFramePlan {
   /** The entry whose view the frame shows: the screen, or the set's row. */
   entry: ShellCatalogueComponent | ShellCatalogueScreen;
   /**
-   * Whether the viewport choice hides the frame: it stays mounted, with its
+   * Whether the Frames filter hides the frame: it stays mounted, with its
    * document, but takes no room on the canvas.
    */
   hidden?: boolean;
@@ -78,6 +77,27 @@ const SCHEMES: Readonly<Record<CanvasScheme, string>> = {
 
 const VIEWPORTS = { desktop: "Desktop", mobile: "Mobile" } as const;
 
+/** The viewports and the schemes whose frames the canvas shows. */
+export interface CanvasShown {
+  schemes: readonly CanvasScheme[];
+  viewports: readonly ("desktop" | "mobile")[];
+}
+
+/** Every frame of an entry shown, as the compact layout's picker lists them. */
+export const EVERY_FRAME: CanvasShown = {
+  schemes: ["light", "dark"],
+  viewports: ["desktop", "mobile"],
+};
+
+/** Whether any view or row of an entry has a dark view. */
+export function hasDarkView(
+  entries: readonly { views: readonly ShellCatalogueView[] }[],
+): boolean {
+  return entries.some((entry) =>
+    entry.views.some((view) => view.colorScheme === "dark"),
+  );
+}
+
 /** The rows or columns of an entry's schemes: Light, and Dark if it has one. */
 function schemes(views: readonly ShellCatalogueView[]): CanvasScheme[] {
   return views.some((view) => view.colorScheme === "dark")
@@ -97,27 +117,29 @@ function viewOf(
 
 /**
  * A screen's frames: Desktop beside Mobile, the Light row above the Dark
- * row, and only the Light row without a dark view. A viewport choice of
- * `desktop` or `mobile` keeps that column alone on the canvas; the other
- * column's frames stay mounted, so a later choice shows them at once.
+ * row, and only the Light row without a dark view. The shown viewports form
+ * the columns and the shown schemes the rows; the other frames stay
+ * mounted, so a later choice shows them at once.
  */
 function screenFrames(
   screen: ShellCatalogueScreen,
-  viewport: ViewerSelection["viewport"],
+  shown: CanvasShown,
 ): CanvasFramePlan[] {
   const sizes = ["desktop", "mobile"] as const;
-  const shown = sizes.filter(
-    (size) => viewport === "both" || viewport === size,
-  );
-  return schemes(screen.views).flatMap((scheme, row) =>
+  const columns = sizes.filter((size) => shown.viewports.includes(size));
+  const all = schemes(screen.views);
+  const rows = all.filter((scheme) => shown.schemes.includes(scheme));
+  return all.flatMap((scheme) =>
     sizes.map((size) => ({
-      column: Math.max(0, shown.indexOf(size)),
+      column: Math.max(0, columns.indexOf(size)),
       entry: screen,
-      ...(shown.includes(size) ? {} : { hidden: true }),
+      ...(columns.includes(size) && rows.includes(scheme)
+        ? {}
+        : { hidden: true }),
       key: `${size}-${scheme}`,
       kind: size,
       label: `${VIEWPORTS[size]} · ${SCHEMES[scheme]}`,
-      row,
+      row: Math.max(0, rows.indexOf(scheme)),
       scheme,
       selected: false,
       view: viewOf(screen, size, scheme),
@@ -127,50 +149,53 @@ function screenFrames(
 }
 
 /**
- * A component's variant set: one row for each current row of its variant
- * bar, in order, with its Light frame beside its Dark frame. The saved
- * variant that `selectedPath` names holds the selection on its Light frame.
+ * A component's variant set: one row for each current row of the
+ * workspace, its own example and then each saved variant, in order, with its
+ * Light frame beside its Dark frame. The shown schemes form the columns; a
+ * hidden scheme's frames stay mounted.
  */
 function variantSetFrames(
   rows: readonly WorkspaceVariant[],
-  selectedPath: string | undefined,
+  shown: CanvasShown,
 ): CanvasFramePlan[] {
   return rows
     .filter((row) => !row.removed)
     .flatMap(({ value: entry }, row) =>
-      schemes(entry.views).map((scheme, column) => ({
-        column,
-        entry,
-        key: `${entry.path}:${scheme}`,
-        kind: "component" as const,
-        label: `${entry.title} · ${SCHEMES[scheme]}`,
-        row,
-        scheme,
-        selected: scheme === "light" && entry.path === selectedPath,
-        variantPath: entry.path,
-        view: viewOf(entry, "desktop", scheme),
-        viewport: "desktop" as const,
-      })),
+      schemes(entry.views).map((scheme) => {
+        const column = shown.schemes.indexOf(scheme);
+        return {
+          column: Math.max(0, column),
+          entry,
+          ...(column < 0 ? { hidden: true } : {}),
+          key: `${entry.path}:${scheme}`,
+          kind: "component" as const,
+          label: `${entry.title} · ${SCHEMES[scheme]}`,
+          row,
+          scheme,
+          selected: false,
+          variantPath: entry.path,
+          view: viewOf(entry, "desktop", scheme),
+          viewport: "desktop" as const,
+        };
+      }),
     );
 }
 
 /**
  * The frames of a workspace's entry: a screen's frames or a variant set,
- * with the views of `previewViews` when it is given.
+ * of the viewports and schemes that `shown` names, with the views of
+ * `previewViews` when it is given.
  */
 export function workspaceFrames(
   data: WorkspaceData,
-  viewport: ViewerSelection["viewport"],
+  shown: CanvasShown,
   previewViews?: readonly GeneratedComponentView[],
 ): CanvasFramePlan[] {
   const entry = data.entry;
   const frames =
     entry.kind === "screen"
-      ? screenFrames(entry, viewport)
-      : variantSetFrames(
-          data.variants,
-          isComponentVariant(entry) ? entry.path : undefined,
-        );
+      ? screenFrames(entry, shown)
+      : variantSetFrames(data.variants, shown);
   return previewViews ? withEditPreviews(frames, previewViews) : frames;
 }
 

@@ -4,11 +4,12 @@
  * focus return. The tag picker sits in the search field, and the end control
  * is the standalone Appearance control. An embedded root has no end control
  * because the canvas shows both preview schemes at once. A view that shows
- * one scheme keeps its own preview scheme control in its head band or its
- * view controls. An embedded root passes the containers of its host's top-bar
- * slots, which the bar places in its columns. The search keys move focus to
- * the search field through the bar's handle. The bar has no menu: the dock
- * of the compact layout opens the catalogue's sheet.
+ * one scheme keeps its own preview scheme control in Inspect, such as a
+ * document's Dark preview control in its head. An embedded root passes the
+ * containers of its host's top-bar slots, which the bar places in its
+ * columns. The search keys move focus to the search field through the bar's
+ * handle. The bar has no menu: the dock of the compact layout opens the
+ * catalogue's sheet.
  */
 
 import { useRef } from "react";

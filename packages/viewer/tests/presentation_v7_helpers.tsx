@@ -143,3 +143,13 @@ export function withDarkViews<
     },
   ]);
 }
+
+/**
+ * The modes of the compare mode tiles that the Changes tab of a render
+ * offers, in their order; none while the tab has no Compare section.
+ */
+export function offeredModeTiles(markup: string): string[] {
+  return [...markup.matchAll(/data-diff-mode="(\w+)"/gu)].map(
+    ([, mode]) => mode ?? "",
+  );
+}

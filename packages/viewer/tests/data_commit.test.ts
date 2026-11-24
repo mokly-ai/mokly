@@ -104,7 +104,8 @@ test("a publication rebinds the routed record and keeps interaction state", () =
   const edited = {
     ...initial,
     query: "home",
-    detailsOpen: true,
+    frames: { ...initial.frames, dark: false },
+    panelTab: "changes" as const,
     disclosures: { ...initial.disclosures, "variants:components/action": true },
   };
   const after = withIndex(
@@ -118,7 +119,8 @@ test("a publication rebinds the routed record and keeps interaction state", () =
   assert.equal(next.route.view.target.entry.path, HOME);
   assert.equal(next.route.view.target.entry, after.catalogue.byPath.get(HOME));
   assert.equal(next.query, "home");
-  assert.equal(next.detailsOpen, true);
+  assert.equal(next.frames.dark, false);
+  assert.equal(next.panelTab, "changes");
   assert.equal(next.disclosures["variants:components/action"], true);
   assert.equal(next.changesStatus, "ready");
 });

@@ -1,7 +1,6 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboards } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import { artboards, type ArtboardViewport } from "../../parts/artboards.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";

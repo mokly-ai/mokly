@@ -1,12 +1,16 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import {
   COMPARISON_VIEW,
   type CompareFrame,
 } from "../parts/changes_sketches.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
+import { useOpeningFrame } from "../parts/picked_frames.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
@@ -64,9 +68,12 @@ const STATES = {
  * Welcome, which a changed stylesheet keeps in Changes, on its Changes tab:
  * in Side by side with the catalogue in the Changes filter, where Welcome is
  * the one change, or in Current with the catalogue in All. Side by side
- * compares Desktop · Light on a desktop and Mobile · Light on a phone. A
- * comparison cannot be highlighted; Current can. On a phone, the Changes
- * sheet is open at the comparison details.
+ * compares Desktop · Light on a desktop and, on a phone, the frame that the
+ * phone opens on. Its comparison details list the outcome of each compared
+ * frame, a change in the styles that Welcome uses: all four frames on a
+ * desktop, and on a phone the one frame that it shows. A comparison cannot
+ * be highlighted; Current can. On a phone, the Changes sheet is open at the
+ * comparison details.
  */
 function Styles({
   state,
@@ -78,9 +85,16 @@ function Styles({
   const { design, facts, mode } = STATES[state];
   const entry = CANVAS_ENTRIES.welcome;
   const side = mode === "side-by-side";
+  const opening = useOpeningFrame(styledWelcomeFrames());
   const frame: CompareFrame =
-    viewport === "desktop" ? "desktop-light" : "mobile-light";
+    viewport === "desktop" ? "desktop-light" : opening;
   const zoom = side ? FITS.sideBySide : FITS.welcome;
+  const outcomes = side
+    ? frameOutcomes(styledWelcomeFrames(), VIEW_OUTCOMES.screenStyles, {
+        picked: frame,
+        viewport,
+      })
+    : undefined;
   return (
     <CanvasShell
       catalogue={side ? STYLES_CHANGES : stylesAll("welcome")}
@@ -93,6 +107,7 @@ function Styles({
           facts={facts}
           frame={side ? frame : undefined}
           mode={mode}
+          outcomes={outcomes}
         />
       }
       sheet="panel"

@@ -5,8 +5,10 @@
  * Light row alone without a historical dark view. In the Dark row, a
  * viewport without a dark view keeps its Light view and says so. A viewport
  * without any historical view has the place of each of its frames, which
- * holds the note that no previous version was captured. A viewport choice
- * keeps one column, as it does for a current screen. A removed page or
+ * holds the note that no previous version was captured. The Frames filter
+ * keeps the columns of its viewports and the rows of its schemes, as it does
+ * for a current screen, and the compact layout shows the picked frame of the
+ * selection's viewport in a scheme that the filter shows. A removed page or
  * document has one reading frame instead.
  */
 
@@ -14,7 +16,28 @@ import type { ViewerSelection } from "../host/types.js";
 import type { PreviewContent } from "../previews/request.js";
 
 import { viewportFrameLabel, type CanvasScheme } from "./canvas_frames.js";
+import { workspaceShownAxes, type FramesSchemes } from "./frames_filter.js";
 import { schemeValue } from "./scheme_fallback.js";
+
+/**
+ * The viewport and the scheme of a removed screen's section: on the wide
+ * canvas, the selection's viewport, which the Frames filter's viewport
+ * toggles show, and the selection's scheme; in the compact layout, the
+ * picked frame in a scheme that the filter shows, as a current screen's.
+ */
+export function removedSectionAxes(
+  schemes: FramesSchemes,
+  selection: Pick<ViewerSelection, "colorScheme" | "viewport">,
+  wide: boolean,
+): { colorScheme: CanvasScheme; viewport: ViewerSelection["viewport"] } {
+  const axes = workspaceShownAxes(false, schemes, true, wide, selection);
+  return {
+    colorScheme: wide
+      ? selection.colorScheme
+      : (axes.schemes[0] ?? selection.colorScheme),
+    viewport: axes.viewport,
+  };
+}
 
 /** The axes of one historical view. */
 export interface RemovedViewAxes {
@@ -25,7 +48,7 @@ export interface RemovedViewAxes {
 /** One frame of a removed screen's section, or the place of a missing view. */
 export interface RemovedFramePlan<View extends RemovedViewAxes> {
   column: number;
-  /** Whether the viewport choice hides the frame. */
+  /** Whether the Frames filter hides the frame. */
   hidden: boolean;
   /** Names the frame among the section's frames, such as `mobile-light`. */
   key: string;
@@ -55,7 +78,12 @@ const VIEWPORTS = ["desktop", "mobile"] as const;
  */
 export function removedScreenFrames<View extends RemovedViewAxes>(
   views: readonly View[],
-  shown: { compact: boolean; viewport: ViewerSelection["viewport"] },
+  shown: {
+    compact: boolean;
+    /** The schemes whose rows show; every row without it. */
+    schemes?: readonly CanvasScheme[] | undefined;
+    viewport: ViewerSelection["viewport"];
+  },
 ): RemovedFramePlan<View>[] {
   const schemes: readonly CanvasScheme[] = views.some(
     (view) => view.colorScheme === "dark",
@@ -65,9 +93,12 @@ export function removedScreenFrames<View extends RemovedViewAxes>(
   const columns = VIEWPORTS.filter(
     (size) => shown.viewport === "both" || shown.viewport === size,
   );
+  const rows = schemes.filter(
+    (scheme) => shown.schemes?.includes(scheme) ?? true,
+  );
   const of = (size: "desktop" | "mobile", scheme: CanvasScheme) =>
     views.find((view) => view.viewport === size && view.colorScheme === scheme);
-  return schemes.flatMap((scheme, row) =>
+  return schemes.flatMap((scheme) =>
     VIEWPORTS.flatMap((size) => {
       const captured = views.some((view) => view.viewport === size);
       const exact = of(size, scheme);
@@ -78,12 +109,12 @@ export function removedScreenFrames<View extends RemovedViewAxes>(
       return [
         {
           column: Math.max(0, columns.indexOf(size)),
-          hidden: !columns.includes(size),
+          hidden: !columns.includes(size) || !rows.includes(scheme),
           key: `${size}-${scheme}`,
           label: viewportFrameLabel(size, scheme),
           lightOnly: view !== undefined && !exact,
           otherShown: !shown.compact && columns.includes(other),
-          row,
+          row: Math.max(0, rows.indexOf(scheme)),
           scheme: view?.colorScheme ?? scheme,
           view,
           viewport: size,

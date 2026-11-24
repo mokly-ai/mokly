@@ -26,6 +26,7 @@ import {
 import { ChangeStatus, type ChangeStatusValue } from "@mokly/ui/change-status";
 
 import { useCanvasLayout } from "./canvas_layout.js";
+import { useCanvasComparison } from "./comparison_canvas_context.js";
 import { FrameStageContext } from "./frame_layout_context.js";
 import {
   useOptionalShellFrameRegistry,
@@ -50,7 +51,7 @@ export const CanvasControlContext = createContext<CanvasControl | undefined>(
   undefined,
 );
 
-/** Whether the canvas shows, which a comparison in its place hides. */
+/** Whether the canvas shows, which a comparison's state in its place hides. */
 function shown(canvas: HTMLElement): boolean {
   return typeof canvas.checkVisibility === "function"
     ? canvas.checkVisibility()
@@ -111,11 +112,17 @@ function useGeometryRefresh(
   }, [registry]);
 }
 
-/** The routed entry's section on the canvas. */
+/**
+ * The routed entry's section on the canvas. While a compare draws on the
+ * frames, the compare gives the section its frames and its name, and while a
+ * state of the comparison covers the canvas, the canvas does not register
+ * for the dock's Fit.
+ */
 export function CanvasEntryStage({
-  fitKey,
-  frames,
+  fitKey: liveKey,
+  frames: live,
   kind,
+  onEmptyClick,
   path,
   quietLabel,
   status,
@@ -125,6 +132,8 @@ export function CanvasEntryStage({
   fitKey: string;
   frames: readonly CanvasSectionFrame[];
   kind: CanvasSectionKind;
+  /** Hears of a click on the empty canvas, such as to clear a selection. */
+  onEmptyClick?: (() => void) | undefined;
   path: string;
   /** The head's quiet label, such as a removed entry's `Showing previous version`. */
   quietLabel?: string | undefined;
@@ -132,6 +141,10 @@ export function CanvasEntryStage({
   title: string;
 }) {
   const store = useShellStore();
+  const comparison = useCanvasComparison();
+  const fitKey = comparison ? comparison.fitKey(liveKey) : liveKey;
+  const frames = comparison ? comparison.frames(live) : live;
+  const covered = comparison?.covered ?? false;
   const canvas = useRef<HTMLDivElement>(null);
   // The frames' stage: the canvas between the floating panels and above
   // the zoom pill, to which the markers clip.
@@ -151,8 +164,8 @@ export function CanvasEntryStage({
   const show = useShownCanvas()?.show;
   useEffect(() => {
     const shown = handle.current;
-    return shown && show ? show(shown) : undefined;
-  }, [show]);
+    return shown && show && !covered ? show(shown) : undefined;
+  }, [covered, show]);
   const compact = !useCanvasLayout();
   return (
     <FrameStageContext value={stage}>
@@ -160,6 +173,7 @@ export function CanvasEntryStage({
         <CanvasStage
           canvasRef={canvas}
           fitKey={fitKey}
+          onEmptyClick={onEmptyClick}
           onViewChange={viewChange}
           ref={handle}
           routed

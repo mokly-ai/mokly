@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { branchPoints } from "../src/shell/catalogue_branch_point.js";
 import type { ShellContext } from "../src/shell/context.js";
-import { EntryDetailsBody } from "../src/shell/details.js";
+import { EntryInspectHead } from "../src/shell/inspect_head.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { navRowPresentation } from "../src/shell/nav_moves.js";
 import type { NavLeafNode, NavNode } from "../src/shell/nav_tree.js";
@@ -194,7 +194,7 @@ test("Details name the path a moved entry came from, after its source", () => {
     const shown = catalogue.byPath.get(path);
     assert.ok(shown, path);
     return storeMarkup(
-      <EntryDetailsBody catalogue={catalogue} entry={shown} />,
+      <EntryInspectHead catalogue={catalogue} entry={shown} />,
     );
   };
   for (const [path, previous] of [

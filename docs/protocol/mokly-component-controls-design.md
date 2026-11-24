@@ -1,7 +1,5 @@
 # Component Controls Design
 
-Status: Inspect's Props section, which edits the variant of the selected frame on a variant set, is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
-
 ## Controls Panel
 
 The Props and controls artboards, except the one of a screen without props,
@@ -13,8 +11,8 @@ render draws the right panel beside the canvas, and a mobile render opens the
 panel sheet at Props over the chosen frame. The controls fill Inspect's Props
 section under the
 [inspector design](./mokly-component-inspector-design.md#inspect), and the
-[workspace design](./mokly-component-workspace-design.md) gives the view
-controls.
+[workspace design](./mokly-component-workspace-design.md#frames-filter-and-highlighting)
+gives the Frames filter and highlighting.
 
 The Action fixture demonstrates text (label), boolean (disabled), numeric
 (corner radius), select (emphasis), and optional text (hint). Its typed saved
@@ -51,8 +49,8 @@ Pending state keeps the last valid preview visible and shows Updating preview.
 In the compact layout that status is a pill at the top of the shown frame,
 above the open panel sheet.
 Rendering failure also retains that preview, with Try again and Reset actions.
-Retry leads back through the pending design state. Comparison shows the saved
-variant and read-only values, with a short secondary explanation. Published
+Retry leads back through the pending design state. A comparison shows the
+saved variant, and Props edits the current frames that Inspect shows. Published
 saved-variant designs keep values readable and variant links usable; their
 secondary guidance is Open this catalogue locally to edit props. Switching
 between the published Default and Disabled examples keeps both views read-only.
@@ -72,8 +70,7 @@ preview. An optional field shows Optional, a Set check box, and Not set while
 unset; an optional toggle's value check box carries the field's name. A
 number field's help and error name its bounds and its step. After
 Reset, the Try again of a failed render, or Update preview, focus moves to the
-Props heading; after
-Switch to Current, to the first field; after a start retry, to the status
+Props heading; after a start retry, to the status
 that replaces the button, and to the heading when that status leaves; after
 the Try again of a failed load, to `Loading props…` and then to the panel
 heading, as the [viewer's recovery focus rule](./mokly-viewer.md#package-and-props)
@@ -106,7 +103,7 @@ Other Canvas artboards show the same Props section in their own context:
 | ----------------------------------------------------- | --------------------------------------------------------- |
 | `design/canvas/inspect/props`                         | A screen's own props, with no instance selected           |
 | `design/canvas/stage/component-set/disabled`          | The Disabled saved variant chosen                         |
-| `design/canvas/components/compare/props`              | The saved props read-only while a comparison stays on     |
+| `design/canvas/components/compare/props`              | Editable props on the current frames during Overlay       |
 | `design/canvas/components/removed`                    | A removed saved variant's saved props, read-only          |
 | `design/canvas/components/usage/loading` and `failed` | Props waiting for the parent's detail, or failing with it |
 | `design/canvas/loading/entry` and `failed`            | Props waiting for the entry's detail, or failing with it  |

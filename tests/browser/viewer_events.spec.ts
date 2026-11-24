@@ -26,7 +26,7 @@ test.beforeEach(async ({ page }) => {
   await page.waitForFunction(() => Boolean(window.viewerHarness));
 });
 
-test("frame links and saved variants emit only committed navigation", async ({
+test("frame links emit committed navigation, and a row of Variants selects its frame without one", async ({
   page,
 }) => {
   await page.evaluate(() => window.viewerHarness.start("one", { cross: true }));
@@ -36,6 +36,9 @@ test("frame links and saved variants emit only committed navigation", async ({
     page.locator("#one").getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await chooseVariant(page, "Disabled");
+  await expect(
+    page.locator('#one [data-inspect-section="variants"] [data-checked]'),
+  ).toHaveText("Disabled");
   const events = await page.evaluate(() =>
     window.viewerHarness
       .get("one")
@@ -51,7 +54,6 @@ test("frame links and saved variants emit only committed navigation", async ({
         activation: "primary",
       },
     }),
-    { screenPath: "action/disabled" },
   ]);
 });
 

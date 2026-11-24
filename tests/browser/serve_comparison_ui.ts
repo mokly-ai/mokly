@@ -16,7 +16,15 @@ import {
 
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
+import {
+  comparisonSection,
+  paneFrame,
+  type FrameScheme,
+  type Side,
+} from "./comparison_sections.js";
+import { modeButton } from "./comparison_ui.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 /** The stable endpoint of Serve's selected comparisons. */
 export const SELECTED_ENDPOINT = "/mokly-viewer/diffs/selection";
@@ -33,6 +41,7 @@ export type ComparisonAction =
   | "Overlay"
   | "Refresh comparison"
   | "Side by side"
+  | "Swipe"
   | "Try again";
 
 /**
@@ -83,14 +92,25 @@ export async function awaitSelectedComparison(
   expect(await response.finished()).toBeNull();
 }
 
-/** Click one comparison button and wait for its selected comparison. */
+/**
+ * Click one comparison button and wait for its selected comparison. A mode
+ * and Refresh stand in the band of the right panel's Changes tab, which this
+ * opens first; Try again stands in the failure on the canvas.
+ */
 export async function loadComparison(
   page: Page,
   action: ComparisonAction,
 ): Promise<void> {
+  const button =
+    action === "Try again" || action === "Refresh comparison"
+      ? page.getByRole("button", { name: action, exact: true })
+      : modeButton(page, action);
   await awaitSelectedComparison(
     page,
-    () => page.getByRole("button", { name: action, exact: true }).click(),
+    async () => {
+      if (action !== "Try again") await openPanelTab(page, "Changes");
+      await button.click();
+    },
     action === "Try again" || action === "Refresh comparison",
   );
 }
@@ -205,16 +225,24 @@ export async function expectPresentedPane(
 
 /**
  * Expect the `side` pane of a Card comparison against the fixture's own base
- * to show `heading` and the `.accent` colour of that side's commit. Card's
- * own heading is the same in both commits, so only the colour proves which
- * version the pane shows.
+ * to show `heading` and the `.accent` colour of that side's commit, in the
+ * compared component frame of `scheme`, Light by default. Card's own heading
+ * is the same in both commits, so only the colour proves which version the
+ * pane shows. While several rows of the Card set compare, `row` names the
+ * frame's row by its title, such as `Featured`, as `comparisonSection` reads
+ * it.
  */
 export async function expectCardPane(
   page: Page,
-  side: "after" | "before",
+  side: Side,
   heading: string,
+  scheme: FrameScheme = "light",
+  row?: string,
 ): Promise<void> {
-  const frame = page.frameLocator(`.mb-pane--${side} iframe`);
+  const frame = paneFrame(
+    comparisonSection(page, "component", scheme, row),
+    side,
+  ).contentFrame();
   await expect(frame.locator("h2")).toHaveText(heading);
   await expect(frame.locator(".accent")).toHaveCSS(
     "color",

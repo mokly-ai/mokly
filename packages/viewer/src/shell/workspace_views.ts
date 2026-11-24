@@ -29,29 +29,37 @@ export interface ResolvedWorkspaceViews {
   views: readonly GeneratedComponentView[];
 }
 
-/** Resolve light fallback without changing the catalogue-wide scheme preference. */
+/**
+ * Resolve light fallback without changing the catalogue-wide scheme
+ * preference. `requested` names one scheme, or the schemes that the canvas
+ * shows, the preferred first; each shown viewport shows a view of each.
+ */
 export function resolveWorkspaceViews(
   data: WorkspaceData,
   variantPath: string | undefined,
   viewport: "both" | "desktop" | "mobile",
-  requestedScheme: "dark" | "light",
+  requested: ColorScheme | readonly ColorScheme[],
 ): ResolvedWorkspaceViews {
+  const schemes: readonly ColorScheme[] =
+    typeof requested === "string" ? [requested] : requested;
+  const requestedScheme = schemes[0] ?? "light";
   const variants = data.views.filter(
     (view) => view.variantPath === variantPath,
   );
   const views = (["mobile", "desktop"] as const)
     .filter((size) => viewport === "both" || viewport === size)
     .flatMap((size) => {
-      const view = schemeValue(
-        requestedScheme,
-        variants.find(
-          (item) => item.viewport === size && item.colorScheme === "light",
-        ),
-        variants.find(
-          (item) => item.viewport === size && item.colorScheme === "dark",
-        ),
+      const light = variants.find(
+        (item) => item.viewport === size && item.colorScheme === "light",
       );
-      return view ? [view] : [];
+      const dark = variants.find(
+        (item) => item.viewport === size && item.colorScheme === "dark",
+      );
+      const shown = schemes.flatMap((scheme) => {
+        const view = schemeValue(scheme, light, dark);
+        return view ? [view] : [];
+      });
+      return [...new Set(shown)];
     });
   return {
     colorScheme: views.some(
@@ -68,7 +76,7 @@ export function visibleWorkspaceViews(
   data: WorkspaceData,
   variantPath: string | undefined,
   viewport: "both" | "desktop" | "mobile",
-  colorScheme: ColorScheme,
+  colorScheme: ColorScheme | readonly ColorScheme[],
 ): readonly GeneratedComponentView[] {
   return resolveWorkspaceViews(data, variantPath, viewport, colorScheme).views;
 }
@@ -83,7 +91,7 @@ export function resolveWorkspaceView(
   data: WorkspaceData,
   selection: WorkspaceVariantSelection,
   viewport: "both" | Viewport,
-  colorScheme: ColorScheme,
+  colorScheme: ColorScheme | readonly ColorScheme[],
 ): ResolvedWorkspaceView {
   const variantPath = selection.variant?.value.path;
   const resolved = resolveWorkspaceViews(

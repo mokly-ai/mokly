@@ -1,6 +1,6 @@
 # Viewer Selection, Events And Shell State
 
-Status: A cleanup error of host slot or marker content that a teardown removes can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher. The right panel's tab and the canvas selection are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
+Status: A cleanup error of host slot or marker content that a teardown removes can still become a catalogue error, until the [host content cleanup item](../../plans/follow-ups/host-content-cleanup-errors.md) moves host content above the catalogue catcher.
 
 This continues the [embeddable viewer contract](./mokly-viewer.md), which
 defines the props and the types that this page uses.
@@ -45,9 +45,15 @@ reject without committing. A partial selection that explicitly supplies
 `screenPath` without `snapshotId` returns to current content and clears a
 historical selection; viewport, scheme, filter, search and tag changes keep
 it. Shell links and pending route intents propose `{ screenPath, snapshotId }`
-atomically. The component page's variant bar links to the parent's own entry
-and its variant entries, proposing `select({ screenPath })` for the chosen
-entry; comparison mode across siblings follows
+atomically. On a screen, Inspect's
+[Variants list](./mokly-component-inspector-design.md#inspect) links to the
+parent's own entry and its variant entries, proposing `select({ screenPath })`
+for the chosen entry. On a component's variant set, choosing a variant on the
+wide canvas selects the variant's Light frame in place, under the
+[canvas selection](./mokly-viewer-selection-canvas.md#clicks-by-tab) contract.
+In the compact layout, the choice opens the variant's entry and proposes
+`{ screenPath, colorScheme }` to a controlled host as one selection, with the
+scheme of the variant's chosen frame. Comparison mode across siblings follows
 [variant navigation](./mokly-variant-navigation.md). A committed selection
 replaces frames and announces `onScreenNavigate` once. Switching control mode
 requires remounting. Never mutate supplied objects or arrays.
@@ -158,7 +164,15 @@ A mounted viewer keeps this shell state:
   and normalises it to the canonical form; React hosts receive route changes
   through `onScreenNavigate` and own their own URL.
 - **Selection** is the public `ViewerSelection`. The standalone shell keeps
-  viewport, scheme and filters in memory across in-shell navigation.
+  viewport, scheme and filters across in-shell navigation. Its address names
+  a viewport other than Both as `viewport=mobile` or `viewport=desktop`, and
+  an address without `viewport` shows Both: each destination address of a
+  navigation, the Changes landing's included, names the kept viewport, and a
+  change on the shown entry, by a toggle of the
+  [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) or a pick of
+  the compact frame picker, replaces the query of the current history entry.
+  Decision: the address names the viewport, not the shell's memory alone, so
+  a copied address opens the shown viewport.
 - **Panel** is the right panel's selected tab, Inspect or Changes. It survives
   in-shell navigation when the destination has that tab; otherwise, and on a
   full page load, Inspect is selected.
@@ -167,9 +181,8 @@ A mounted viewer keeps this shell state:
   [disclosure persistence contract](./mokly-disclosure-persistence.md).
   Split-width choices persist per origin; the sheets and the tag picker panel
   reset on a full page load.
-- **Scroll** is tracked per shell `data-mokly-scroll` region for history;
-  comparison-document regions and the Scroll together choice follow their
-  [scrolling contracts](./mokly-comparison-scrolling.md).
+- **Scroll** of comparison-document regions and the Scroll together choice
+  follow their [scrolling contracts](./mokly-comparison-scrolling.md).
 - **Workspace** state (props under edit, the unfolded sections of Inspect, the
   canvas selection and its box model, active pick, highlight scope) lives with
   the mounted view and is discarded on route change or source replacement.

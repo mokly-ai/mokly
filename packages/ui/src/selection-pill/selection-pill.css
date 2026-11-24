@@ -1,0 +1,84 @@
+/* The pill above the compact layout's dock, which names the selection: the
+   component's chip, its first prop and its padding in mono, and a chevron.
+   It stands 10px above the dock, at the bottom centre of the canvas, and
+   shows below the layout breakpoint only, as the dock does. */
+.mbk-selection-pill {
+  position: absolute;
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 9;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  height: 44px;
+  padding: 0 10px 0 6px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cv-surface);
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    0 4px 10px -2px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 6%, transparent),
+        color-mix(in srgb, var(--cv-background) 50%, transparent)
+      ),
+    0 18px 36px -14px
+      light-dark(
+        color-mix(in srgb, var(--cv-text) 14%, transparent),
+        color-mix(in srgb, var(--cv-background) 60%, transparent)
+      );
+  color: var(--cv-text);
+  font-family: var(--cv-sans);
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateX(-50%);
+}
+
+.mbk-selection-pill-name {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 5px;
+  background: var(--cv-signal-soft);
+  color: var(--cv-signal-deep);
+  font: 500 12px/1 var(--cv-mono);
+}
+
+.mbk-selection-pill-props {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  font: 400 11.5px/1 var(--cv-mono);
+}
+
+/* A long first prop gives way before the padding, which stays whole. */
+.mbk-selection-pill-pair:not(:last-child) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mbk-selection-pill-pair:last-child {
+  flex: none;
+}
+
+.mbk-selection-pill-key {
+  color: var(--cv-text-muted);
+}
+
+.mbk-selection-pill > svg:last-child {
+  flex: none;
+  color: var(--cv-text-muted);
+  transform: rotate(-90deg);
+}
+
+@media (width < 56.25rem) {
+  .mbk-selection-pill {
+    display: flex;
+  }
+}

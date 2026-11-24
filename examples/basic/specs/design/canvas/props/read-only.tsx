@@ -1,12 +1,15 @@
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import { DETAILS_VIEW, detailsFrames } from "../parts/changes_sketches.js";
 import { ACTION_SAVED } from "../parts/component_props.js";
 import { CANVAS_ENTRIES } from "../parts/entries.js";
 import { DetailsInspect } from "../parts/inspect_details.js";
-import { actionSetFrames, frameOf } from "../parts/set_sketches.js";
+import { useChosenFrame } from "../parts/picked_frames.js";
+import { actionSetFrames } from "../parts/set_sketches.js";
 import { CanvasShell } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
 import { CanvasStage } from "../parts/stage.js";
@@ -40,7 +43,7 @@ function Published({
   viewport: ArtboardViewport;
 }) {
   const frames = actionSetFrames();
-  const frame = frameOf(frames, `${chosen}-light`);
+  const frame = useChosenFrame(frames, chosen, viewport);
   return (
     <ChosenVariantArtboard
       design={PUBLISHED[chosen]}

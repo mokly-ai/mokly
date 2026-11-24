@@ -12,9 +12,9 @@
       "types": "./dist/appearance-selector/appearance-selector.d.ts",
       "import": "./dist/appearance-selector/appearance-selector.js"
     },
-    "./browser-bar": {
-      "types": "./dist/browser-bar/browser-bar.d.ts",
-      "import": "./dist/browser-bar/browser-bar.js"
+    "./canvas-comparison": {
+      "types": "./dist/canvas-comparison/canvas-comparison.d.ts",
+      "import": "./dist/canvas-comparison/canvas-comparison.js"
     },
     "./canvas-dock": {
       "types": "./dist/canvas-dock/canvas-dock.d.ts",
@@ -35,6 +35,10 @@
     "./canvas-section": {
       "types": "./dist/canvas-section/canvas-section.d.ts",
       "import": "./dist/canvas-section/canvas-section.js"
+    },
+    "./canvas-selection": {
+      "types": "./dist/canvas-selection/canvas-selection.d.ts",
+      "import": "./dist/canvas-selection/canvas-selection.js"
     },
     "./canvas-stage": {
       "types": "./dist/canvas-stage/canvas-stage.d.ts",
@@ -64,6 +68,22 @@
       "types": "./dist/change-status/change-status.d.ts",
       "import": "./dist/change-status/change-status.js"
     },
+    "./change-stepper": {
+      "types": "./dist/change-stepper/change-stepper.d.ts",
+      "import": "./dist/change-stepper/change-stepper.js"
+    },
+    "./changes-panel": {
+      "types": "./dist/changes-panel/changes-panel.d.ts",
+      "import": "./dist/changes-panel/changes-panel.js"
+    },
+    "./compare-modes": {
+      "types": "./dist/compare-modes/compare-modes.d.ts",
+      "import": "./dist/compare-modes/compare-modes.js"
+    },
+    "./compared-rail": {
+      "types": "./dist/compared-rail/compared-rail.d.ts",
+      "import": "./dist/compared-rail/compared-rail.js"
+    },
     "./comparison-evidence": {
       "types": "./dist/comparison-evidence/comparison-evidence.d.ts",
       "import": "./dist/comparison-evidence/comparison-evidence.js"
@@ -76,21 +96,9 @@
       "types": "./dist/comparison-stage/comparison-stage.d.ts",
       "import": "./dist/comparison-stage/comparison-stage.js"
     },
-    "./comparison-toolbar": {
-      "types": "./dist/comparison-toolbar/comparison-toolbar.d.ts",
-      "import": "./dist/comparison-toolbar/comparison-toolbar.js"
-    },
     "./controls-panel": {
       "types": "./dist/controls-panel/controls-panel.d.ts",
       "import": "./dist/controls-panel/controls-panel.js"
-    },
-    "./details-panel": {
-      "types": "./dist/details-panel/details-panel.d.ts",
-      "import": "./dist/details-panel/details-panel.js"
-    },
-    "./device-frame": {
-      "types": "./dist/device-frame/device-frame.d.ts",
-      "import": "./dist/device-frame/device-frame.js"
     },
     "./edit-status": {
       "types": "./dist/edit-status/edit-status.d.ts",
@@ -112,9 +120,9 @@
       "types": "./dist/floating-panel/floating-panel.d.ts",
       "import": "./dist/floating-panel/floating-panel.js"
     },
-    "./flow-step": {
-      "types": "./dist/flow-step/flow-step.d.ts",
-      "import": "./dist/flow-step/flow-step.js"
+    "./frames-filter": {
+      "types": "./dist/frames-filter/frames-filter.d.ts",
+      "import": "./dist/frames-filter/frames-filter.js"
     },
     "./highlight-label": {
       "types": "./dist/highlight-label/highlight-label.d.ts",
@@ -132,9 +140,13 @@
       "types": "./dist/icons/icons.d.ts",
       "import": "./dist/icons/icons.js"
     },
-    "./inspector": {
-      "types": "./dist/inspector/inspector.d.ts",
-      "import": "./dist/inspector/inspector.js"
+    "./inspect-panel": {
+      "types": "./dist/inspect-panel/inspect-panel.d.ts",
+      "import": "./dist/inspect-panel/inspect-panel.js"
+    },
+    "./inspect-selection": {
+      "types": "./dist/inspect-selection/inspect-selection.d.ts",
+      "import": "./dist/inspect-selection/inspect-selection.js"
     },
     "./instance-tree": {
       "types": "./dist/instance-tree/instance-tree.d.ts",
@@ -148,6 +160,10 @@
       "types": "./dist/palette/palette.d.ts",
       "import": "./dist/palette/palette.js"
     },
+    "./panel-tabs": {
+      "types": "./dist/panel-tabs/panel-tabs.d.ts",
+      "import": "./dist/panel-tabs/panel-tabs.js"
+    },
     "./preview-frame": {
       "types": "./dist/preview-frame/preview-frame.d.ts",
       "import": "./dist/preview-frame/preview-frame.js"
@@ -155,10 +171,6 @@
     "./preview-state": {
       "types": "./dist/preview-state/preview-state.d.ts",
       "import": "./dist/preview-state/preview-state.js"
-    },
-    "./previous-version": {
-      "types": "./dist/previous-version/previous-version.d.ts",
-      "import": "./dist/previous-version/previous-version.js"
     },
     "./prop-field": {
       "types": "./dist/prop-field/prop-field.d.ts",
@@ -168,27 +180,19 @@
       "types": "./dist/props-panel/props-panel.d.ts",
       "import": "./dist/props-panel/props-panel.js"
     },
-    "./scheme-fallback": {
-      "types": "./dist/scheme-fallback/scheme-fallback.d.ts",
-      "import": "./dist/scheme-fallback/scheme-fallback.js"
-    },
-    "./screen-header": {
-      "types": "./dist/screen-header/screen-header.d.ts",
-      "import": "./dist/screen-header/screen-header.js"
-    },
-    "./segmented-control": {
-      "types": "./dist/segmented-control/segmented-control.d.ts",
-      "import": "./dist/segmented-control/segmented-control.js"
+    "./selection-pill": {
+      "types": "./dist/selection-pill/selection-pill.d.ts",
+      "import": "./dist/selection-pill/selection-pill.js"
     },
     "./shell-layout": {
       "types": "./dist/shell-layout/shell-layout.d.ts",
       "import": "./dist/shell-layout/shell-layout.js"
     },
-    "./stage": {
-      "types": "./dist/stage/stage.d.ts",
-      "import": "./dist/stage/stage.js"
-    },
     "./styles.css": "./dist/styles.css",
+    "./swipe-divider": {
+      "types": "./dist/swipe-divider/swipe-divider.d.ts",
+      "import": "./dist/swipe-divider/swipe-divider.js"
+    },
     "./tag-chip": {
       "types": "./dist/tag-chip/tag-chip.d.ts",
       "import": "./dist/tag-chip/tag-chip.js"
@@ -208,14 +212,6 @@
     "./usage-list": {
       "types": "./dist/usage-list/usage-list.d.ts",
       "import": "./dist/usage-list/usage-list.js"
-    },
-    "./variant-bar": {
-      "types": "./dist/variant-bar/variant-bar.d.ts",
-      "import": "./dist/variant-bar/variant-bar.js"
-    },
-    "./view-controls": {
-      "types": "./dist/view-controls/view-controls.d.ts",
-      "import": "./dist/view-controls/view-controls.js"
     },
     "./workspace-layout": {
       "types": "./dist/workspace-layout/workspace-layout.d.ts",

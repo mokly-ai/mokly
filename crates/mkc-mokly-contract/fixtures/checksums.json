@@ -3,12 +3,12 @@
   "files": {
     "catalogue-v9.json": "c46d55f8193aba30424d0ee5d78ab34f35a635be14975cb6394bc2308b4a959c",
     "cli-errors.json": "44fa80f5ebadffc97828af82df9c93a79ff2da025373401cc38135d29ff0ab4b",
-    "dogfood.tar.gz": "8f64dbed85e59e021082d107ee89198c3733a281e5061849c1e627adba20df84",
+    "dogfood.tar.gz": "711428be3d37c91ddf0238911a818ecfaa37f68240fabe286b8bb3983c0757ea",
     "export-ownership-v3.json": "3f9d7fed25844c93670cf05891b6acef12e750d4fab38d7994f74247be9b375d",
-    "index-v9.json": "ad81efbe76ff8b499f19c5881c0d5d7ad627ac3cc59e6ddb12053d17ae618836",
-    "inventory.json": "37c91ba1e27bd1219371ec8e009e72e13cb5e360d7b1951b7b2b766f1e2b0da6",
+    "index-v9.json": "20579c8965fbd8b937e84986e55282f86e041fe2fa5572ccda9746fb80d76118",
+    "inventory.json": "f779035a9716a9c0ed05dbd8afbc6d6f93e6cd0286006598926cceee256a631d",
     "mokly-upload.json": "177ec4b6958762b065060775201308fa95e195394a8f139c8ee0b7991d9ce205",
-    "plan.tar.gz": "ba0712337587898f48a9be56cade71a8bbfab5dd7ae35a02acb89857902eb6c2",
+    "plan.tar.gz": "11b024e961d03d35f7ff8cac3b7b1adc6e02d1dbacad49446e8aa4d60aa8f1bb",
     "upload-plan-v1.json": "e260ed994ba4c77d52646996de6a06f25a997d683b99cf3c36effa7560c89065"
   }
 }

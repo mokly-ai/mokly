@@ -1,15 +1,16 @@
 # Comparison Scrolling
 
-Status: Comparison frames at the nominal size of their canvas frame at every zoom, Swipe, and scrolling on every frame of the canvas are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Page Scroller
 
 Each comparison frame is exactly the nominal size of its
 [canvas frame](./mokly-shell-device-chrome.md#canvas-frames), and its document
 lays out at that size at every
 [zoom](./mokly-shell-canvas-stage.md#pan-zoom-and-fit). Viewport units,
-`position: fixed`, and `position: sticky` therefore resolve as in Current, and
-a document's size never depends on its measured size. Every size, range,
+`position: fixed`, and `position: sticky` therefore resolve as in Current. A
+screen's frame keeps its viewport's size, and a component's frame takes the
+larger width and height of its two versions, measured once when both
+documents load, under that contract; after that one measurement, a
+document's size never depends on its measured size. Every size, range,
 offset, and step on this page is in the document's CSS pixels, so the zoom
 changes none of them. In a comparison, each canvas frame has one page
 viewport, the only page-level scroll container for its panes; inner regions
@@ -26,9 +27,10 @@ The viewer measures a document as soon as it commits, before slow resources
 finish, and again on its `load`. It measures again when the document's root
 or body changes size, a resource loads, fonts finish loading, or a `<details>`
 element toggles. Measurement updates every page viewport's range and reapplies
-the current page offsets. No frame dimension depends on the result, so
-measurement cannot feed back into the document. Every measurement discards the
-region pairing results of its view, including the no-match results.
+the current page offsets. No frame dimension depends on these range
+measurements, so they cannot feed back into the document. Every measurement
+discards the region pairing results of its view, including the no-match
+results.
 
 ## Page Writes And Echoes
 

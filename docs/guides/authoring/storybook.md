@@ -63,6 +63,6 @@ A decorator can read the globals `moklyViewport` and `moklyColorScheme` to
 select a layout or product theme. Each story renders for the catalogue's
 viewports and enabled color schemes.
 
-Consumer JavaScript runs during static rendering. It does not enter the
-catalogue's browser frames. Use data args and static component output for the
-states you want to show.
+Consumer JavaScript runs during static rendering. It does not run in the
+catalogue's frames. Use data args and static component output for the states
+you want to show.

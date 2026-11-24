@@ -45,7 +45,7 @@ const RESET: DefaultState = {
 export const canvasPropsEditingScreen = defineScreen({
   ...propsDesignMetadata,
   description:
-    "The Action's variant set with Default chosen: its Light frame is selected, and Inspect's Props section edits Default with each control type, text, a toggle, a number, a select, and optional props. Reset stays off until a prop changes. On a phone, the frame picker shows Default · Light under the open Inspect sheet.",
+    "The Action's variant set with Default chosen: its Light frame is selected, and Inspect's Props section edits Default with each control type, text, a toggle, a number, a select, and optional props. Reset stays off until a prop changes. On a phone, the frame picker shows Default's frame of the appearance's scheme, Default · Light or, in a Dark appearance, Default · Dark, under the open Inspect sheet.",
   ...artboardStates(
     {
       state: "default",

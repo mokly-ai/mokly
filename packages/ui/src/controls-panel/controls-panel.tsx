@@ -1,5 +1,5 @@
 /**
- * The Props tab's controls: the form that edits the shown entry's props, and
+ * The Props section's controls: the form that edits the shown entry's props, and
  * the saved props of an entry that cannot be edited here. The host owns the
  * edit state and the wording. It names the elements that its recovery
  * actions focus through `focus`. A static depiction that runs no script gives
@@ -221,33 +221,23 @@ export function ControlsPanel({
 }
 
 /**
- * The saved props of an entry that cannot be edited here, with the reason,
- * and Switch to Current when a comparison shows them. The props and the
- * slots follow.
+ * The saved props of an entry that cannot be edited here, with the reason.
+ * The props and the slots follow.
  */
 export function SavedPropsPanel({
   children,
-  current,
-  currentHref,
   focus,
   heading,
   notice,
-  onCurrent,
   title,
 }: {
   /** The props and the slots. */
   children?: ReactNode;
-  /** The label of Switch to Current. Without it, the panel has no such action. */
-  current?: string | undefined;
-  /** The address that Switch to Current opens in a static depiction. */
-  currentHref?: string | undefined;
   focus?: ControlsFocusRef | undefined;
   /** The panel's heading, such as "Saved props". */
   heading: string;
   /** Why the props cannot be edited here. */
   notice: string;
-  /** Receives each press of Switch to Current. */
-  onCurrent?: (() => void) | undefined;
   /** The shown entry's title. */
   title: string;
 }) {
@@ -255,11 +245,6 @@ export function SavedPropsPanel({
     <section className="mbk-component-controls mbk-reset">
       <ControlsHeading focus={focus} heading={heading} title={title} />
       <p className="mbk-controls-notice mbk-reset">{notice}</p>
-      {current !== undefined ? (
-        <TextButton href={currentHref} onClick={onCurrent}>
-          {current}
-        </TextButton>
-      ) : null}
       {children}
     </section>
   );

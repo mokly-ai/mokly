@@ -40,20 +40,23 @@ test("a direct Serve URL restores its variant entry and fragment after refresh",
   await expectInitialVariantEntry(page);
 });
 
-test("variant entry navigation scrolls the active row back into view", async ({
+test("a history navigation to a variant entry scrolls its row back into view", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 620 });
-  await page.goto(componentPath);
+  await page.goto(variantPath);
+  await page
+    .locator(
+      'a[data-nav-row][data-route="example/components/action/index.html"]',
+    )
+    .click();
+  await expect(page).toHaveURL(new RegExp(`${componentPath}$`, "u"));
   const pane = page.locator("[data-mokly-nav-scroll]");
   const row = page.locator(variantRow);
   await moveOutsidePane(pane, variantRow);
   expect(await rowIsInsidePane(pane, row)).toBe(false);
 
-  await page
-    .getByRole("navigation", { name: "Saved variants" })
-    .getByRole("link", { name: "Disabled", exact: true })
-    .click();
+  await page.goBack();
 
   await expect(page).toHaveURL(
     /\/view\/example\/components\/action\/disabled\/$/,
@@ -62,11 +65,11 @@ test("variant entry navigation scrolls the active row back into view", async ({
 });
 
 async function expectInitialVariantEntry(page: Page): Promise<void> {
+  // The routed saved variant's frame is selected, so Inspect's Variants
+  // checks its row.
   await expect(
-    page
-      .getByRole("navigation", { name: "Saved variants" })
-      .getByRole("link", { name: "Disabled", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
+    page.locator('[data-inspect-section="variants"] [data-checked]'),
+  ).toHaveText("Disabled");
   // The variant's own row of the set opens at the fragment, and the parent's
   // row, another entry, does not.
   await expect(

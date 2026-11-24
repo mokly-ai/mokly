@@ -77,12 +77,12 @@ test("at 1440px the panels float over the canvas, and Fit centres the section be
 }) => {
   await openWelcome(page, 1440);
   await expectFloating(page, { catalogue: 252, panel: 312 });
-  // The right panel holds the head band and the inspector.
+  // The right panel holds the head band and Inspect.
   const panel = parts(page).panel;
   await expect(
     panel.getByRole("heading", { name: "Welcome", exact: true }),
   ).toBeVisible();
-  await expect(panel.getByRole("region", { name: "Inspector" })).toBeVisible();
+  await expect(panel.getByRole("tabpanel", { name: "Inspect" })).toBeVisible();
 });
 
 test("below 1180px the panels narrow to 224px and 284px", async ({ page }) => {

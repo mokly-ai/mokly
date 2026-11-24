@@ -29,8 +29,6 @@ test("shell stylesheet stays aligned with the design contract", () => {
   assert.match(STANDALONE_CSS, /--mbk-dark-screen-bg: #121514/);
   assert.match(STANDALONE_CSS, /--mbk-dark-screen-ink: #eef1ef/);
   assert.match(STANDALONE_CSS, /color-scheme: light/);
-  assert.match(STANDALONE_CSS, /width: 390px/);
-  assert.match(STANDALONE_CSS, /max-width: 1180px/);
   assert.match(STANDALONE_CSS, /@media \(width < 56\.25rem\)/);
   for (const styles of [STANDALONE_CSS, EMBEDDED_CSS])
     assert.doesNotMatch(styles, /max-width: 56\.25rem/);
@@ -51,85 +49,28 @@ test("shell stylesheet stays aligned with the design contract", () => {
     STANDALONE_CSS,
     /@media \(width < 56\.25rem\) \{[\s\S]*\.mbk-nav-resize \{[\s\S]*display: none;/,
   );
-  assert.match(
-    STANDALONE_CSS,
-    /\.phone-status:where\(\.mbk-reset\) \{[\s\S]*flex: 0 0 44px;[\s\S]*padding: 14px 28px 0;/,
-  );
-  assert.match(
-    STANDALONE_CSS,
-    /\.phone-screen:where\(\.mbk-reset\) \{[\s\S]*flex-direction: column;/,
-  );
-  assert.match(
-    STANDALONE_CSS,
-    /\.phone-screen \.mbk-frag \{[\s\S]*border-radius: 0 0 36px 36px;/,
-  );
 
   assert.match(STANDALONE_CSS, /prefers-reduced-motion/);
   assert.match(STANDALONE_CSS, /Geist-Variable\.woff2/);
   assert.match(STANDALONE_CSS, /GeistMono-Variable\.woff2/);
-  assert.match(STANDALONE_CSS, /\.mbk-pathchip \{[\s\S]*cursor: pointer;/);
-  assert.match(
-    STANDALONE_CSS,
-    /\.mbk-pathchip:active \{[\s\S]*transform: translateY\(1px\);/,
-  );
 });
 
-test("both split dividers share one grip shape and pointer look, and rest in their palette colours", () => {
+test("the navigation divider keeps its grip shape and palette colour, and each drag mark keeps the drag's pointer look", () => {
   const css = flatCss(STANDALONE_CSS);
-  for (const grip of [
+  const grip =
     '.mbk-nav-resize::after { content: ""; position: absolute; ' +
-      "top: calc(50% - 16px); left: 3px; width: 2px; height: 32px; " +
-      "border-radius: 999px; background: var(--chrome-border-strong); " +
-      "transition: background 120ms ease, box-shadow 120ms ease; }",
-    '.mbk-inspector-resize::after { content: ""; position: absolute; ' +
-      "top: 7px; left: calc(50% - 16px); width: 32px; height: 2px; " +
-      "border-radius: 999px; background: var(--chrome-control-edge); " +
-      "transition: background 120ms ease, box-shadow 120ms ease; }",
+    "top: calc(50% - 16px); left: 3px; width: 2px; height: 32px; " +
+    "border-radius: 999px; background: var(--chrome-border-strong); " +
+    "transition: background 120ms ease, box-shadow 120ms ease; }";
+  assert.ok(css.includes(grip), grip);
+  for (const state of [
+    ".mbk-nav-resize:hover::after,",
+    ".mbk-nav-resize:focus-visible::after,",
+    ".mbk.mbk-nav-resizing .mbk-nav-resize::after " +
+      `{ background: ${ACCENT}; ` +
+      `box-shadow: 0 0 0 3px ${ACCENT_SOFT}; }`,
   ])
-    assert.ok(css.includes(grip), grip);
-  assert.ok(
-    css.includes(
-      ".mbk-inspector-resize { position: absolute; z-index: 2; top: -8.5px; " +
-        "right: 0; left: 0; display: none; height: 16px;",
-    ),
-    "the handle clears the 1px border its padding box hides",
-  );
-  for (const handle of ["nav", "inspector"])
-    for (const state of [
-      `.mbk-${handle}-resize:hover::after,`,
-      `.mbk-${handle}-resize:focus-visible::after,`,
-      `.mbk.mbk-${handle}-resizing ` +
-        `.mbk-${handle}-resize::after ` +
-        `{ background: ${ACCENT}; ` +
-        `box-shadow: 0 0 0 3px ${ACCENT_SOFT}; }`,
-    ])
-      assert.ok(css.includes(state), `${handle}: ${state}`);
-  assert.ok(
-    css.includes(
-      ".mbk-inspector-resize:focus-visible " +
-        `{ box-shadow: inset 0 2px 0 ${ACCENT}; }`,
-    ),
-  );
-  // Outside forced colours the separator shows focus by its grip and its
-  // inset line, never by an outline. Forced colours drop both, so there it
-  // takes the system outline inside its box.
-  for (const styles of [STANDALONE_CSS, EMBEDDED_CSS]) {
-    const flat = flatCss(styles);
-    const unforced = flat.replace(
-      /@media \(forced-colors: active\) \{(?: [^{}]+ \{[^{}]*\})+ \}/gu,
-      "",
-    );
-    assert.equal(
-      unforced.includes(".mbk-inspector-resize:focus-visible { outline"),
-      false,
-    );
-    const forced =
-      /@media \(forced-colors: active\) \{ \.mbk-inspector-resize:focus-visible \{([^}]*)\}/u.exec(
-        flat,
-      )?.[1] ?? "";
-    assert.match(forced, /outline: 2px solid highlight;/iu);
-    assert.match(forced, /outline-offset: -2px;/u);
-  }
+    assert.ok(css.includes(state), state);
   for (const axis of ["col", "row"]) {
     const scope = axis === "col" ? "nav" : "inspector";
     assert.ok(
@@ -147,10 +88,6 @@ test("both split dividers share one grip shape and pointer look, and rest in the
       scope,
     );
   }
-  assert.match(
-    STANDALONE_CSS,
-    /@media \(width < 56\.25rem\) \{[\s\S]*\.mbk-inspector\[data-open="true"\] \.mbk-inspector-resize \{[\s\S]*display: none;/,
-  );
 });
 
 test("tag chips select in the accent and the bar clears the scrim", () => {

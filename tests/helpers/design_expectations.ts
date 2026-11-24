@@ -35,6 +35,12 @@ export interface DesignInventory {
 export interface LinkExpectation {
   source: string;
   viewports?: ("mobile" | "desktop")[];
+  /**
+   * The schemes of the views that hold the link, where a view's link differs
+   * by scheme, such as the frame that a phone opens on; every scheme by
+   * default.
+   */
+  colorSchemes?: ("light" | "dark")[];
   /** A class that a matching link sits inside, such as the stage's pane. */
   within?: string;
   /** The link's accessible name: its `aria-label`, or else its text. */
@@ -104,9 +110,8 @@ const STARTUP = /^design\/canvas\/loading\/catalogue(\/failed|\/version)?$/u;
 
 /**
  * The shared component ids that one design screen view must record, by the
- * adoption table of the design component library: shared chrome everywhere,
- * the screen header outside the Canvas family, and the family parts of
- * `adoption.json`.
+ * adoption table of the design component library: shared chrome everywhere
+ * and the family parts of `adoption.json`.
  */
 export function requiredComponents(
   path: string,
@@ -115,11 +120,6 @@ export function requiredComponents(
   if (STARTUP.test(path)) return ["design/library/preview/empty-state"];
   const ids = ["chrome/top-bar", "chrome/appearance-selector"];
   if (viewport === "desktop") ids.push("chrome/catalogue-navigation");
-  // The Canvas viewer names the selected entry on the canvas, in the section
-  // head and the compact entry bar, so it draws no screen header band. The
-  // older tag picker selects an entry.
-  const canvas = new RegExp(ADOPTION.families.canvas!, "u").test(path);
-  if (!canvas) ids.push("chrome/screen-header");
   for (const part of ADOPTION.parts)
     if (
       (part.viewports ?? [viewport]).includes(viewport) &&

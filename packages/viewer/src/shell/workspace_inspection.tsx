@@ -10,11 +10,7 @@ import {
 } from "react";
 
 import type { ShellInspectionClaim } from "./frame_inspection_types.js";
-import {
-  frameHasInstance,
-  frameInstanceRef,
-  workspaceFrameSessions,
-} from "./frame_instances.js";
+import { workspaceFrameSessions } from "./frame_instances.js";
 import {
   useOptionalShellFrameRegistry,
   type ShellFrameSession,
@@ -28,17 +24,21 @@ import {
   WorkspaceInspectionOverlay,
 } from "./workspace_inspection_labels.js";
 import {
+  endsHighlight,
   focusWorkspaceHighlightControl,
   inspectionAvailability,
   presentWorkspaceInspection,
   receiveWorkspaceFrameEvent,
-  WAITING_REASON,
   workspaceInspectionKeys,
   type WorkspaceInspectionInput,
   type WorkspaceInspectionResult,
 } from "./workspace_inspection_runtime.js";
 
-/** Own workspace masks, labels, selection events, and geometry refreshes. */
+/**
+ * Own the workspace's highlight: the masks and labels of the instances that
+ * each shown frame's view owns, and their geometry refreshes. A press of a
+ * label selects its instance through `onLabel`.
+ */
 export function useWorkspaceInspection(
   input: WorkspaceInspectionInput,
 ): WorkspaceInspectionResult {
@@ -107,51 +107,6 @@ export function useWorkspaceInspection(
     if (focus) focusWorkspaceHighlightControl(state.input.highlightRef.current);
   }, []);
 
-  // Each shown frame of the viewport, in either scheme, scrolls to the
-  // instance.
-  const reveal = useCallback(
-    (key: string, viewport: "desktop" | "mobile"): void => {
-      const state = latest.current;
-      if (!state.registry) return;
-      for (const target of state.sessions) {
-        if (target.identity.viewport !== viewport) continue;
-        const instance = frameInstanceRef(target, key);
-        if (!instance) continue;
-        void state.registry.inspection
-          .scrollToInstance(instance, [target])
-          .catch(() => undefined);
-      }
-    },
-    [],
-  );
-
-  const select = useCallback(
-    (key: string, viewport: "desktop" | "mobile", openProps = true): void => {
-      const state = latest.current;
-      if (
-        !state.sessions.some(
-          (session) =>
-            session.identity.viewport === viewport &&
-            frameHasInstance(session, key),
-        )
-      )
-        return;
-      state.input.onSelect(key, viewport, openProps);
-      if (
-        state.registry &&
-        inspectionAvailability(state.input, state.sessions).available
-      ) {
-        const currentClaim = claim.current;
-        if (!currentClaim || !state.registry.inspection.current(currentClaim))
-          claim.current = state.registry.inspection.claim("workspace");
-        state.highlighting = true;
-        setHighlighting(true);
-      }
-      if (openProps) reveal(key, viewport);
-    },
-    [reveal],
-  );
-
   const stop = useCallback(() => clearPresentation(false), [clearPresentation]);
   const toggle = useCallback(() => {
     const state = latest.current;
@@ -197,17 +152,12 @@ export function useWorkspaceInspection(
     const currentClaim = claim.current;
     if (!currentClaim || !registry.inspection.current(currentClaim)) return;
     if (!availability.available) {
-      if (availability.reason && availability.reason !== WAITING_REASON)
-        clearPresentation(false);
+      if (endsHighlight(availability)) clearPresentation(false);
       return;
     }
     const presentationClaim = registry.inspection.claim("workspace");
     claim.current = presentationClaim;
-    const request = {
-      registry,
-      sessions,
-      ...(input.selectedKey ? { selectedKey: input.selectedKey } : {}),
-    };
+    const request = { registry, sessions };
     void registry.inspection
       .run(presentationClaim, (current) =>
         presentWorkspaceInspection(request, current, geometry),
@@ -223,7 +173,6 @@ export function useWorkspaceInspection(
     availability.reason,
     clearPresentation,
     highlighting,
-    input.selectedKey,
     registry,
     sessionSignature,
     sessions,
@@ -233,15 +182,11 @@ export function useWorkspaceInspection(
     if (!registry) return;
     return registry.inspection.subscribeEvents((session, event) => {
       if (!latest.current.sessions.includes(session)) return;
-      receiveWorkspaceFrameEvent(
-        event,
-        session,
-        latest.current.highlighting,
-        select,
-        () => clearPresentation(true),
+      receiveWorkspaceFrameEvent(event, latest.current.highlighting, () =>
+        clearPresentation(true),
       );
     });
-  }, [clearPresentation, registry, select]);
+  }, [clearPresentation, registry]);
 
   useEffect(() => {
     if (!root || !workspaceHighlighting) return;
@@ -272,7 +217,7 @@ export function useWorkspaceInspection(
             ? [
                 {
                   boundaries: result.boundaries,
-                  keys: workspaceInspectionKeys(session, input.selectedKey),
+                  keys: workspaceInspectionKeys(session),
                   session,
                 },
               ]
@@ -284,15 +229,15 @@ export function useWorkspaceInspection(
     available: availability.available,
     ...(availability.reason ? { reason: availability.reason } : {}),
     highlighting: workspaceHighlighting,
-    select,
     toggle,
-    reveal,
     stop,
     overlay: (
       <WorkspaceInspectionOverlay
         labels={labels}
         measured={measured}
-        onSelect={select}
+        onSelect={(label) =>
+          latest.current.input.onLabel(label.session, label.key)
+        }
       />
     ),
   };

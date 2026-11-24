@@ -119,7 +119,6 @@ pub fn run(root: &Path, session: &Session, baseline: &ComparisonResult) {
                         "design/library/controls/tag-picker",
                         "design/library/chrome/top-bar",
                         "design/canvas/search/tags",
-                        "design/browse/views/screen/tag-picker",
                     ] {
                         assert!(
                             result
