@@ -5,3 +5,4 @@ function Label(props: { label: string }) {
 export default { title: "Label", component: Label, args: { label: "Story" } };
 
 export const Primary = {};
+export const Secondary = { args: { label: "Other" } };

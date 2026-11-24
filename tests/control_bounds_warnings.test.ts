@@ -26,7 +26,8 @@ test(
       "specs/count.mockup.ts": component(2),
       "specs/story.stories.ts": `import React from 'react';
       export default {title:'Count story',component:({count})=>React.createElement('p',null,count),
-        args:{count:8},argTypes:{count:{control:{min:0,max:4,step:2}}}};
+        argTypes:{count:{control:{min:0,max:4,step:2}}}};
+      export const First = {args:{count:8}};
       export const Saved = {args:{count:6}};
       export const Valid = {args:{count:2}};`,
     });
@@ -45,6 +46,7 @@ test(
       built.stderr,
     );
     assert.match(built.stderr, /component "count"/);
+    assert.match(built.stderr, /component "story"/);
     assert.match(built.stderr, /component "story\/Saved"/);
     assert.ok(!built.stderr.includes('"count/valid"'));
     assert.ok(!built.stderr.includes('"story/Valid"'));

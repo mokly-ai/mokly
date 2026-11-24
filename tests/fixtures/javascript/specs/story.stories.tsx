@@ -21,6 +21,7 @@ export default {
   },
 };
 
+export const Primary = { args: { count: 6 } };
 export const Alternate = {
   name: "Other story",
   args: { label: "Other", count: 4 },

@@ -32,7 +32,8 @@ variants: [{slug: other, title: Other, props: {alpha: 2}}]
         propSchema:{type:'object',additionalProperties:false,properties:{zulu:{type:'number'},alpha:{type:'number'}}},
         props:{alpha:1,zulu:1},render});`,
       "specs/story.stories.ts": `import React from 'react';
-      export default {title:'Story',component:()=>React.createElement('p',null,'Story'),args:{zulu:1,alpha:1}};
+      export default {title:'Story',component:()=>React.createElement('p',null,'Story')};
+      export const First = {args:{zulu:1,alpha:1}};
       export const Other = {args:{middle:true}};`,
     });
     const result = await command(

@@ -1202,16 +1202,329 @@ Depends on: none
 Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 14, and of findings 2, 10, and 11.
 
-- [ ] Move the Storybook section of `docs/protocol/mokly-sidecar.md` to a new
+- [x] Move the Storybook section of `docs/protocol/mokly-sidecar.md` to a new
       page, `docs/protocol/mokly-storybook.md`, and link it from the sidecar
       page and `docs/protocol/README.md`.
-- [ ] Write there the rules for CSF 2, CSF 3, and CSF Factories files; the
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Write there the rules for CSF 2, CSF 3, and CSF Factories files; the
       first story as the parent; args and their classification; names, tags,
       and the description; the `dev` and `!mokly` filters; `story.load()`
       and `beforeAll`; and the `mokly` parameter. Add the status line that
       `AGENTS.md` asks for.
-- [ ] Run `npm run format:check` and
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B3, option C, to the other protocol
+      pages: replace each stale Storybook sentence with a link to
+      `docs/protocol/mokly-storybook.md`, and keep only the exceptions that a
+      page needs. The proposed edits are in
+      `.context/storybook-support/b-out-of-scope-doc-edits.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Link each missing behaviour in the status line of
+      `docs/protocol/mokly-storybook.md` to the heading of the milestone
+      that owns it, as the `documentation` skill now asks.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B2 to the `beforeAll` rule of
+      `docs/protocol/mokly-storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
+      `docs/protocol/mokly-entry-props.md`, and `docs/protocol/mokly-variants.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [ ] Apply the answer to decision B4 to the protocol pages.
+      Branch: `conductor/storybook-support-b-story-reading`.
+
+Track B raised four decisions on 2026-11-18, while it wrote these docs. The
+orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
+call, B2 on 2026-11-20 with option D, and B1 on 2026-11-23 with option C. B4
+is open. It blocks the rule for malformed `mokly` parameter values in
+Milestone 7.
+
+### B1. Stories inherit the first story's args
+
+Answered on 2026-11-23: C. The orchestrator of this plan made this design
+call, because the user's decisions 3 and 7 already require that each story
+renders as in Storybook. A story variant's props are only its own data args,
+and the core does not lay them over the parent's props. A key is required
+only when every included story sets it. Each story renders with its own
+non-data args and exactly the requested data props, and the sidecar sets each
+data arg that the request leaves out to `undefined`.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `crates/mokly-catalogue/src/prepare_parent.rs:31-36`,
+  `crates/mokly-catalogue/src/prepare_entry.rs:113`,
+  `packages/mokly/src/sidecar/render.ts:43-49`,
+  `docs/protocol/mokly-entry-props.md:15-18` and `:105-110`.
+- **Background:**
+  - Decision 3 makes the first included story the parent page of a stories
+    entry, and the other stories its variants.
+  - Under the entry props contract, a variant's props replace only the keys
+    that they name. Every other key comes from the parent's props.
+  - The inferred schema marks each key of the parent's own props as
+    required.
+  - Today the parent's props are the meta's args. Every story's composed
+    args already hold them, so the inheritance never shows.
+  - A story render lays the requested props over the story's own args. A
+    data arg that the request leaves out keeps the story's value.
+- **Problem:** With the first story as the parent, each later story takes
+  every arg that the first story sets and it does not. In Storybook's Button
+  template, `Primary` sets `primary: true`, so `Secondary`, `Large`, and
+  `Small` render as primary buttons. Also, "unset" of an optional prop in
+  Serve does not change a story's render, because the story keeps its own
+  value.
+- **Impact if no action:** Most stories files show wrong variants after
+  Milestone 6, with no warning, in Browse and in Changes.
+- **Root question:** How do the props that Mokly shows, compares, and edits
+  for each story stay exactly the args that the story renders with?
+- **Options:**
+  - **A.** A story variant's props are its own data args, whole. The core
+    does not lay them over the parent's props. The schema marks a key as
+    required only when every included story sets it. This changes two rules
+    of the entry props contract, for stories files only. "Unset" still has
+    no effect. Effort: Medium.
+  - **B.** Keep inheritance. Give the parent only the args that every
+    included story sets, with the first story's values. Each variant sets
+    those keys itself, so nothing leaks, and the contract stays as it is.
+    An arg that only the first story sets, such as `primary`, then has no
+    control and is missing from the read model, while the parent's views
+    still show it. Effort: Small.
+  - **C.** Do A, and render each story with its own non-data args and
+    exactly the requested data props. The sidecar sets each data arg that
+    the request leaves out to `undefined`. "Unset" then works on every story
+    page. The render rule of `docs/protocol/mokly-storybook.md` changes.
+    Effort: Medium.
+  - **D.** Give each story its own inferred schema and controls, from its
+    own data args. Each story requires the args that it sets. A story then
+    has no control for an arg that only other stories set, and the core,
+    the variants contract, and the controls contract change. Effort: Large.
+- **Left out:** No change: it renders wrong variants. A `null` for each
+  inherited key: `null` is a value, so a default parameter of the component
+  does not apply. A list of keys that the sidecar tells the core to drop: it
+  gives the same result as A with one more transport field. One entry for
+  each story, with no parent: it breaks decision 3. A render that ignores
+  inherited keys: the read model and the controls would then show values
+  that the render does not use.
+- **Wider fix:** C. Each story's render then equals its shown props, for
+  inherited keys and for unset keys.
+- **Previous examples:** None found.
+- **Related:** B3, work that waits for the answer: this answer changes the
+  merge and required-key sentences of `mokly-entry-props.md` and
+  `mokly-variants.md`.
+- **Recommendation:** C. Each story then shows, edits, compares, and renders
+  exactly its Storybook args. The first pass recommended A, which keeps the
+  "unset" defect.
+- **Action:** ask the user, because C changes the variant merge rule and the
+  required-key rule of the entry props contract for stories files, and no
+  recorded decision covers that change.
+
+### B2. Old `beforeAll` setups stack in a sidecar
+
+Answered on 2026-11-20: D. The orchestrator of this plan made this call,
+because design call 10 is its own design call. D changes design call 10: each
+sidecar process keeps at most one active `beforeAll` setup. Before a story of
+another generation renders, the cleanup of the old setup runs, and then the
+new generation's `beforeAll` runs. A hook that threw does not run again for
+its generation. The release of a generation no longer runs a cleanup.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `packages/mokly/src/sidecar/session.ts:176-192`,
+  `docs/protocol/mokly-storybook.md`, section "Setup Before Render".
+- **Background:**
+  - Design call 10 runs the preview's `beforeAll` once for each bundle
+    generation, and its cleanup when the sidecar releases the generation.
+  - A setup changes state that the whole process shares, such as `fetch`,
+    timers, and `Date`, because the bundle runs in the main realm.
+  - A sidecar process serves one source root and handles one request at a
+    time. In Serve, an old and a new generation of the same root can both
+    stay loaded until the old one is disposed.
+  - Only the request dispatcher in `session.ts` sees the `dispose` and
+    `shutdown` requests. The track brief forbids changes to `session.ts`,
+    because tracks C, D, and E change it.
+- **Problem:** This track cannot run the cleanup at release without a change
+  to `session.ts`. Even with that change, two loaded generations keep two
+  setups active on the same globals.
+- **Impact if no action:** In Serve, each rebuild runs `beforeAll` again
+  while the old setup stays. A setup such as a mock server or a fake clock
+  then stacks until the sidecar recycles.
+- **Root question:** How does Mokly keep the `beforeAll` setup of an earlier
+  generation from staying active in a long-lived sidecar process?
+- **Options:**
+  - **A.** Allow this track a small change to `session.ts`: `dispose`,
+    `shutdown`, and the end of the input stream call a release function of
+    the story reader. A track that also edits that file may get a small
+    merge conflict. Two loaded generations still keep two setups.
+    Effort: Small.
+  - **B.** The story reader keeps each cleanup and exports the release
+    function, and this track leaves `session.ts` alone. A follow-up item
+    adds the calls on the primary branch after the tracks merge. Until then,
+    no cleanup runs. Effort: Small.
+  - **C.** Run no `beforeAll` cleanup, and change design call 10 to say so.
+    Effort: Small.
+  - **D.** Keep at most one active setup in each sidecar process. Before a
+    story renders, if the active setup belongs to another generation, its
+    cleanup runs, and then this generation's `beforeAll` runs. A hook that
+    threw does not run again for its generation. Storybook's own preview
+    does the same on a reload. Only the reader and the story path of
+    `render.ts` change. Design calls 10 and B-b and the page's cleanup rule
+    change. Renders that alternate between two generations run the hooks
+    again at each switch, and the last setup gets no cleanup when the
+    process exits. Effort: Small.
+- **Left out:** A process exit hook: it misses `dispose`, so setups still
+  stack in Serve. A garbage collection hook: it can run while another render
+  waits for a loader. A setup and a cleanup around each story render: a hook
+  that returns no cleanup would run again for each view, and its setup would
+  stack. A worker or a separate realm for each generation: it needs a new
+  evaluation design in `evaluate.ts`, which other tracks change.
+- **Wider fix:** D. It needs no release call, and it also serves a
+  generation with several preview files, which track E brings.
+- **Previous examples:** None found.
+- **Recommendation:** D. It never keeps two setups on the shared globals, it
+  matches Storybook's own preview, and it needs no change outside this
+  track. The first pass recommended A.
+- **Action:** ask the user, because D changes design call 10, which the user
+  approved for this track, and A needs a change to `session.ts`, which the
+  track brief forbids.
+
+### B3. Other protocol pages restate old Storybook rules
+
+Answered on 2026-11-20: C. The orchestrator of this plan made this scope
+call, because no other active track edits these eight pages.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** 16 sentences in 8 pages: `docs/protocol/mokly-entry-props.md`,
+  `mokly-variants.md`, `mokly-entry-modules.md`,
+  `mokly-sidecar-definitions.md`, `mokly-paths.md`, `mokly-authoring.md`,
+  `mokly-component-controls.md`, and `mokly-sidecar-render-records.md`. The
+  list is in `.context/storybook-support/b-out-of-scope-doc-edits.md`.
+- **Background:**
+  - Milestone 2 moves the Storybook rules to the new page
+    `docs/protocol/mokly-storybook.md`. Tracks E, F, and G add more rules to
+    it later.
+  - Some other protocol pages restate Storybook rules. For example, the
+    entry props page says that the meta's args are the props, and that
+    every story is a variant.
+  - The track brief allows doc changes only on the sidecar page, the new
+    page, and the protocol index. No other track edits these eight pages.
+- **Problem:** After this track, those sentences contradict the new
+  Storybook page.
+- **Impact if no action:** Readers and agents find two requirements that
+  disagree. A later change can bring back the old rule.
+- **Root question:** Which page holds each Storybook rule, so that the other
+  pages link to it and restate none of it?
+- **Options:**
+  - **A.** Allow this track to replace each stale sentence with a short
+    statement of the new rule and a link. Six of the pages then state
+    behaviour that is not implemented yet, so each needs a status line until
+    Milestone 8. Effort: Small.
+  - **B.** Leave those pages. A follow-up item fixes them on the primary
+    branch after the tracks merge. The contradiction stays until then, and
+    the answer to B1 still changes two of the pages in Milestone 6.
+    Effort: Small.
+  - **C.** Allow this track to replace each stale sentence with a pointer to
+    the new page. Where a general rule does not apply to stories, the page
+    gets only the exception and the link. These pages then say less on
+    their own, and they need no status line. Effort: Small.
+- **Left out:** A note on the Storybook page that it wins over the other
+  pages: two texts that disagree still stay, against the rule that each fact
+  lives in one place.
+- **Wider fix:** C. It removes the restated rules, so a later Storybook rule
+  change cannot leave another page stale.
+- **Previous examples:** None found.
+- **Related:** B1, work that waits for the answer: B1 changes the merge and
+  required-key sentences of `mokly-entry-props.md` and `mokly-variants.md`,
+  so answer the two together.
+- **Recommendation:** C. Each Storybook rule then lives on one page, with no
+  status lines on other pages. The first pass recommended A.
+- **Action:** ask the user, because the track brief limits the doc files of
+  this track, and only the user can widen that scope.
+
+### B4. Malformed `mokly` parameter values
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-storybook.md`, section "Globals For
+  Views".
+- **Background:**
+  - Decision 8 adds a `mokly` parameter with the fields `colorSchemes` and
+    `viewports`. Each maps a Mokly view name to an object of Storybook
+    globals.
+  - Storybook parameters are open objects. Storybook ignores the keys that
+    no addon reads.
+  - Mokly's own authoring inputs reject unknown fields. For example, a
+    variant with an unknown key fails with a diagnostic.
+  - The always-on rules say: when input is recoverable, warn and continue.
+    They also say that a new warning or error needs the user's approval.
+- **Problem:** No rule says what Mokly does with a `mokly` parameter that is
+  not an object, an unknown field such as `colourSchemes`, a mapped value
+  that is not an object, or a view name such as `tablet`.
+- **Impact if no action:** The code picks a behaviour that no review can
+  check. A typo can show the wrong theme with no hint.
+- **Root question:** How does Mokly treat a `mokly` parameter value that
+  matches no rule?
+- **Options:**
+  - **A.** Ignore it without a warning. A typo then shows only as a wrong
+    theme or layout in the views. Effort: Small.
+  - **B.** Ignore it, and give a new build warning that names the story and
+    the value. `--strict` then fails for such a file. The warning needs a
+    new code in the build warnings contract, which the track brief does not
+    include, and a new field in the `describe` result. Effort: Medium.
+  - **C.** Fail the story render with `render-failed`. A typo then stops the
+    build. After track F, the story shows an error document instead.
+    Effort: Small.
+  - **D.** Do A, and export a `MoklyParameter` type from `@mokly/mokly`.
+    TypeScript then reports a typo where the author applies the type with
+    `satisfies`. Storybook's own parameter type accepts any key, so other
+    files get no help. Effort: Small.
+  - **E.** Fail the stories file at describe time with the existing
+    `invalid-field` diagnostic, as for an unknown variant field. One typo
+    then makes the whole build invalid. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None, because this is one new input, and B covers every
+  malformed shape of it.
+- **Previous examples:** An unknown variant field fails with a diagnostic in
+  `crates/mokly-catalogue/src/variants.rs:60-80`.
+- **Recommendation:** B. The always-on rules ask for a warning when input is
+  recoverable, and the parameter belongs to Mokly. D is a cheap addition to
+  B. The first pass recommended A.
+- **Action:** ask the user, because B adds a new build warning, which needs
+  the user's approval.
+
+The options check of 2026-11-18 added options B1 C and D, B2 D, B3 C, and B4
+D and E, and it changed the recommendations of all four items. Its report is
+`.context/storybook-support/reports/b-options-check-full.md`.
+
+Design calls of track B, made on 2026-11-18:
+
+- B-a. When the preview's `beforeAll` hook throws, it does not run again for
+  that generation, and each story render of that generation fails with its
+  error. Reason: design call 10 runs the hook once, and a story without its
+  setup would render wrong output.
+- B-b. Each sidecar process runs `beforeAll` for each generation whose
+  stories it renders, and again after another generation's setup replaced
+  it. Reason: sidecar processes share no state, so one run cannot serve them
+  all. Changed on 2026-11-20 by the answer to B2.
+- B-c. The globals of the `mokly` parameter win over a story's own
+  `globals`. Reason: design call 11 applies them over the composed globals,
+  and a Chromatic mode's viewport also wins over a story's own viewport
+  global.
+- B-d. The meta's `includeStories` and `excludeStories` filters apply, as in
+  Storybook. Reason: Storybook's composition applies them already.
+- B-e. Made on 2026-11-20. A CSF Factories meta whose title is Storybook's
+  placeholder `ComposedStory` counts as untitled. Reason: Storybook's
+  `meta.story()` writes that placeholder into an untitled factory meta while
+  the stories file evaluates, before the reader runs. Only an authored title
+  of exactly `ComposedStory` loses, in favour of the fallback title.
+- B-f. Made on 2026-11-23. When a requested data prop has the key of a
+  non-data arg of the same story, the requested value renders. Reason: the
+  answer to B1 renders exactly the requested data props, and Storybook lays
+  extra args over a story's own args.
 
 ## Milestone 3: Story reader
 
@@ -1220,17 +1533,22 @@ Depends on: 2
 One reader turns CSF 2, CSF 3, and CSF Factories files into one shape, as
 design call 2 says. It fixes findings 2, 10, and 11.
 
-- [ ] Add the reader beside `packages/mokly/src/sidecar/stories.ts`. It
+- [x] Add the reader beside `packages/mokly/src/sidecar/stories.ts`. It
       composes from a copy of the meta, passes a module without a default
       export to `composeStories` unchanged, and takes a factory's meta and
       preview from its stories.
-- [ ] Move `describeStories` onto the reader. The title fallback then never
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Move `describeStories` onto the reader. The title fallback then never
       reads "ComposedStory", which fixes finding 10.
-- [ ] Take each variant's control hints from its composed argTypes, which
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Take each variant's control hints from its composed argTypes, which
       fixes finding 11.
-- [ ] Add a factories fixture, an untitled file, and a variant that does not
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Add a factories fixture, an untitled file, and a variant that does not
       set an arg with options to `tests/sidecar_storybook.test.ts`.
-- [ ] Update `docs/guides/authoring/storybook.md` for CSF Factories.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md` for CSF Factories.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 4: Story args, names, tags, and descriptions
 
@@ -1240,16 +1558,27 @@ Stories keep Storybook's names, tags, and description, and the standard
 Storybook files pass `--strict`. Decisions 7 and 14, and the `!mokly` tag of
 decision 5.
 
-- [ ] Leave out of the props, without a warning, each arg that the composed
+- [x] Leave out of the props, without a warning, each arg that the composed
       argTypes type as a function, and each React element arg, as design
       call 4 says.
-- [ ] Name each story as design call 6 says.
-- [ ] Map tags as design call 5 says, and the description as design call 7
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Name each story as design call 6 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Map tags as design call 5 says, and the description as design call 7
       says.
-- [ ] Include stories as design call 8 says.
-- [ ] Test that Storybook's Button template passes `--strict`, and test the
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Include stories as design call 8 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] In the commit that builds story tags, add to
+      `docs/protocol/mokly-entry-props.md` and `docs/protocol/mokly-variants.md`
+      that a story variant takes its tags from its own story, with a link to
+      `docs/protocol/mokly-storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that Storybook's Button template passes `--strict`, and test the
       names, the tags, the description, and the skipped stories.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 5: Story setup before render
 
@@ -1257,12 +1586,16 @@ Depends on: 3
 
 Loaders and `beforeEach` run before each story render, as decision 12 says.
 
-- [ ] Await `story.load()` before each story render, and run its cleanups as
+- [x] Await `story.load()` before each story render, and run its cleanups as
       Storybook does.
-- [ ] Run `beforeAll` as design call 10 says.
-- [ ] Test that a loader story and a `beforeEach` story render their prepared
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Run `beforeAll` as the answer to decision B2 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that a loader story and a `beforeEach` story render their prepared
       data.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 6: The first story as the parent page
 
@@ -1270,18 +1603,33 @@ Depends on: 4
 
 The first included story becomes the parent page, as decision 3 says.
 
-- [ ] Render the first included story in source order as the parent page,
+- [x] Render the first included story in source order as the parent page,
       with its composed args as the parent's props.
-- [ ] Make the other included stories the parent's variants.
-- [ ] Give a file without an included story no entry, as design call 3 says.
-- [ ] Delete the meta-only composition and move each consumer that "Replaced
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Make the other included stories the parent's variants.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B1: a story variant's props are only its
+      own data args, a key is required only when every included story sets
+      it, and a story renders with exactly the requested data props, each
+      left-out data arg `undefined`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that the variants of Storybook's Button template keep exactly
+      their own args, and that unset of an optional prop renders the story
+      without it.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Give a file without an included story no entry, as design call 3 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Delete the meta-only composition and move each consumer that "Replaced
       ways" lists.
-- [ ] Test that a meta without args builds, and that no base state repeats.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that a meta without args builds, and that no base state repeats.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 7: Globals from the `mokly` parameter
 
-Depends on: 3
+Depends on: 3, and the answer to decision B4 for malformed values
 
 Existing theme decorators follow Mokly's views, as decision 8 says.
 
@@ -1301,6 +1649,11 @@ Depends on: 2, 3, 4, 5, 6, 7
       save the result under `.context/storybook-support/`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+
+The justifications of the track B merges of the primary branch are in
+`.context/storybook-support/merge-2-justifications.md` and
+`.context/storybook-support/merge-3-justifications.md`. The pull request
+description copies them.
 
 ## Milestone 9: Imported assets documentation
 

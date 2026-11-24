@@ -13,9 +13,12 @@ const meta = {
   component: Button,
   args: { label: "Story", action: () => {} },
   argTypes: {
-    label: { name: "Button label", options: ["Story", "Other"] },
+    label: { options: ["Story", "Other"] },
     action: { control: false },
   },
 } satisfies Meta<typeof Button>;
 export default meta;
-export const Primary: StoryObj<typeof meta> = { args: { label: "Primary" } };
+export const Primary: StoryObj<typeof meta> = {
+  args: { label: "Primary" },
+  argTypes: { label: { name: "Button label" } },
+};

@@ -239,6 +239,10 @@ The property test of the source maps over the vendored HTML corpus lives in
 - [`src/preparation.rs`](./src/preparation.rs) defines `CatalogueBuilder` and
   `Builder`, which prepare one validated `PreparedCatalogue` per pass, with
   its shared `prop_validators`.
+- [`src/prepare_entry.rs`](./src/prepare_entry.rs) prepares parent and
+  variant props. It keeps a story variant's props separate from the parent's.
+- [`src/prepare_parent.rs`](./src/prepare_parent.rs) prepares the shared
+  schema. It requires only the props that every included story sets.
 - [`src/definition_provider.rs`](./src/definition_provider.rs) defines
   `DefinitionProvider`, the boundary that describes JavaScript definitions.
 - [`src/working_tree.rs`](./src/working_tree.rs) defines `WorkingTree`, the

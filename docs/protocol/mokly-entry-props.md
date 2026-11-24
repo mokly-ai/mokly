@@ -4,8 +4,8 @@
 
 Every screen and component is a render over props:
 
-- A render: an HTML body, a React function of props, or a Storybook
-  component.
+- A render: an HTML body, a React function of props, or a
+  [Storybook story](./mokly-storybook.md#the-entry-and-its-variants).
 - `propSchema`: a JSON Schema object under the
   [profile](#prop-schema-profile) below. It is required for a component,
   optional for a screen, where [inference](#schema-inference) supplies it,
@@ -15,7 +15,9 @@ Every screen and component is a render over props:
   declares `props`.
 - `variants`: optional. Each declares `slug`, `title`, and `props` that
   replace top-level keys of the entry's props and never deep merge, plus the
-  metadata overrides of the variants contract.
+  metadata overrides of the variants contract. A story variant takes its props
+  only from its own story under the
+  [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 - Controls: derived from the schema. A text control for `string` with
   `maxLength`; a toggle for `boolean`; a number control for `number` and
   `integer` with `minimum` and `maximum` as its bounds and a step that offers
@@ -30,9 +32,12 @@ Every screen and component is a render over props:
 The entry's own view renders `props`. Each variant is an entry of the
 parent's kind at the parent's path plus its slug, with `variantOf`, its own
 views, its own Changes row, and its own comparison, and it renders the
-parent's render with the merged props. A component needs no variant, and a
-component page shows the entry's own props first, then each variant. Light and
-dark and the viewports stay view axes, never variants.
+parent's render with the merged props. A story variant renders its own story
+under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
+A component needs no variant, and a component page shows the entry's own props
+first, then each variant. Light and dark and the viewports stay view axes,
+never variants.
 
 ## Prop Schema Profile
 
@@ -107,25 +112,30 @@ When an entry declares no `propSchema`, the schema is inferred, in the
 profile, from the entry's own props and every variant's merged props. Each key
 seen is a property. At the top level the keys of the entry's own props are
 `required`, and a key that only a variant adds is optional; inside an object,
-a key present in every object value of that key is `required`. A value's
+a key present in every object value of that key is `required`. For a stories
+file, the top-level `required` keys follow the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants)
+instead. A value's
 `type` comes from the value: `string`, `number`, `boolean`, `null`, `object`
 with inferred properties and `additionalProperties: false`, or `array` whose
 `items` is inferred from every element across the sets. Kinds that differ across sets or across elements form a `type`
 list, and an array that is empty in every set has no `items`. A function, a
 React element, or any other non-data value is not a prop: it is excluded from
 the schema and from the props, with the `props-not-data` warning naming the
-entry and the key. A declared `propSchema` is the schema, and props it rejects
-fail.
+entry and the key. The
+[Storybook stories contract](./mokly-storybook.md#args-and-props) says which
+args of a story are excluded without this warning. A declared `propSchema` is
+the schema, and props it rejects fail.
 
 ## Kinds
 
-| Kind                   | Render                                                                                                                                                        | Props                                                                                                                                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| React screen           | `render(props, context)` in `defineScreen`                                                                                                                    | `propSchema`, `props`, `variants`, and `controls` in the input                                                                                                                            |
-| React component        | `render(props, context)` in `defineComponent`                                                                                                                 | `propSchema` under the profile, and optional `slots`, `controls`, `props`, and `variants`                                                                                                 |
-| HTML screen            | the body, in the [template language](./mokly-html-screens.md#screen-body) of the HTML screens contract                                                        | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
-| HTML component         | the body, in the same template language and component element rules, with slot placeholders, under the [HTML components contract](./mokly-html-components.md) | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
-| Storybook stories file | the meta's component, through the [render sidecar](./mokly-sidecar.md#storybook)                                                                              | the meta's `args` are the props, the schema is inferred, `argTypes` enrich the derived controls, and each story is a variant whose slug is its export name and whose props are its `args` |
+| Kind                   | Render                                                                                                                                                        | Props                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| React screen           | `render(props, context)` in `defineScreen`                                                                                                                    | `propSchema`, `props`, `variants`, and `controls` in the input                                           |
+| React component        | `render(props, context)` in `defineComponent`                                                                                                                 | `propSchema` under the profile, and optional `slots`, `controls`, `props`, and `variants`                |
+| HTML screen            | the body, in the [template language](./mokly-html-screens.md#screen-body) of the HTML screens contract                                                        | front matter `propSchema`, `props`, and `variants`                                                       |
+| HTML component         | the body, in the same template language and component element rules, with slot placeholders, under the [HTML components contract](./mokly-html-components.md) | front matter `propSchema`, `props`, and `variants`                                                       |
+| Storybook stories file | a story, under the [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants)                                                              | story `args` and `argTypes`, under the [Storybook stories contract](./mokly-storybook.md#args-and-props) |
 
 A screen without `props` and without `variants` renders once per view with
 the empty map. A React screen variant has no `mobile` or `desktop` of its
@@ -136,11 +146,13 @@ variant that needs another tree is a separate file.
 
 ## Titles And Defaults
 
-A variant's `title` is its own. A story variant's title is its `name`
-annotation or its export name. A stories file entry is titled from the last
-segment of the meta `title`, else from the component's display name, else
-from its derived slug. A variant's description, tags, related docs, colour schemes, and declared
-slots default to the parent's; its supplied slots default to empty.
+A variant's `title` is its own. The
+[Storybook stories contract](./mokly-storybook.md#names-tags-and-the-description)
+gives the titles of a stories file entry and its variants. A variant's
+description, tags, related docs, colour schemes, and declared slots default to
+the parent's; its supplied slots default to empty. A story variant takes its
+tags from its own story under the
+[Storybook stories contract](./mokly-storybook.md#names-tags-and-the-description).
 
 ## Validation
 

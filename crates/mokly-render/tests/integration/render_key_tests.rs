@@ -104,7 +104,7 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
         "c/filled",
         "html",
         "label",
-        "label/Primary",
+        "label/Secondary",
         "p",
         "s/s",
         "t/t",
@@ -134,7 +134,7 @@ fn each_edit_moves_exactly_the_documents_of_its_render_inputs() {
         (
             "preview edit",
             Box::new(|c| c.replace(".storybook/preview.tsx", "\"one\"", "\"two\"")),
-            vec!["label", "label/Primary"],
+            vec!["label", "label/Secondary"],
         ),
         (
             "class map change",

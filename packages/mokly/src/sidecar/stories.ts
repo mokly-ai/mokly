@@ -1,26 +1,11 @@
-import type * as Storybook from "@storybook/react";
-
 import type { Definitions } from "../generated/sidecar/Definitions.js";
-import type { StoryHints } from "../generated/sidecar/StoryHints.js";
+import type { Story } from "../generated/sidecar/Story.js";
 
 import type { BundleExports, Generation } from "./bundle.js";
 import { dataProps } from "./definition-fields.js";
 import type { ExportNameCache } from "./export-name-cache.js";
-import { orderedExports } from "./export-order.js";
 import { storyHints } from "./story-hints.js";
-
-interface StoryAnnotations {
-  args?: Record<string, unknown>;
-  argTypes?: Record<string, Record<string, unknown>>;
-  name?: string;
-  title?: string;
-  component?: { displayName?: string; name?: string };
-}
-export interface PortableStory {
-  (props: Record<string, unknown>): unknown;
-  args: Record<string, unknown>;
-  globals: Record<string, unknown>;
-}
+import { readStories, type StoredStory } from "./story-reader.js";
 
 export async function describeStories(
   generation: Generation,
@@ -29,127 +14,100 @@ export async function describeStories(
   cache: ExportNameCache,
 ): Promise<void> {
   if (!Object.keys(exports.stories).length) return;
-  const storybook = generation.require("@storybook/react") as typeof Storybook;
-  const annotations = exports.preview?.default ?? exports.preview ?? {};
-
   for (const [file, module] of Object.entries(exports.stories)) {
-    const meta = (module.default ?? {}) as StoryAnnotations;
-    // Storybook keeps project annotations in global state, so each
-    // composition sets this generation's preview first. They are not passed
-    // to `composeStories` too, which would apply them a second time.
-    const compose = () => {
-      storybook.setProjectAnnotations(annotations);
-      return storybook.composeStories({
-        ...module,
-        default: module.default ?? {},
-      });
-    };
-    const composed = compose() as Record<string, PortableStory>;
-    generation.stories.set(`${file}#default`, {
-      compose: () => {
-        storybook.setProjectAnnotations(annotations);
-        return storybook.composeStory(
-          {},
-          module.default as Parameters<typeof storybook.composeStory>[1],
-          undefined,
-          "MoklyDefault",
-        );
-      },
+    const read = readStories(generation, exports, file, module, cache);
+    const stories = read.stories.map((entry) => {
+      const excludedProps: string[] = [];
+      const props = storyProps(
+        generation,
+        entry.story.args,
+        entry.story.argTypes,
+        excludedProps,
+      );
+      return { ...entry, props, excludedProps };
     });
-    const excludedProps: string[] = [];
-    const parent = {
-      excludedProps,
-      handle: `${file}#default`,
-      title:
-        meta.title?.split("/").at(-1) ??
-        meta.component?.displayName ??
-        meta.component?.name ??
-        file.split("/").at(-1)!.split(".")[0]!,
-      description: "",
+    const dataKeys = new Set(
+      stories.flatMap(({ props }) => Object.keys(props)),
+    );
+    const [first, ...variants] = stories.map(
+      ({ exportName, title, tags, story, compose, props, excludedProps }) => {
+        const id = `${file}#${exportName}`;
+        const argTypes = Object.fromEntries(
+          Object.entries(story.argTypes)
+            .filter(([key]) => dataKeys.has(key))
+            .map(([key, value]) => [key, storyHints(value)]),
+        );
+        const stored: StoredStory = {
+          compose,
+          beforeAll: read.beforeAll,
+          dataKeys: Object.keys(props),
+        };
+        generation.stories.set(id, stored);
+        result.stories.push({ id, title, props, argTypes });
+        return {
+          saved: { slug: exportName, title, tags, props, excludedProps },
+          argTypes,
+          stored,
+        };
+      },
+    );
+    if (!first) continue;
+    const handle = `${file}#default`;
+    generation.stories.set(handle, first.stored);
+    result.components.push({
+      excludedProps: first.saved.excludedProps,
+      handle,
+      title: read.title,
+      description: read.description,
       relatedDocs: [],
-      tags: [],
-      props: storyProps(meta.args ?? {}, meta.argTypes ?? {}, excludedProps),
-      argTypes: {} as Record<string, StoryHints>,
-      variants: [] as Definitions["components"][number]["variants"],
+      tags: first.saved.tags,
+      props: first.saved.props,
+      argTypes: first.argTypes,
+      variants: variants.map(({ saved }) => ({ ...saved, slots: {} })),
       slots: [],
       stylesheets: [],
       useCasePaths: [],
       steps: [],
-      controlOrder: [] as string[],
-    };
-    for (const [exportName, value] of orderedExports(
-      generation.sources.get(file) ?? "",
-      composed,
-      file,
-      cache,
-    )) {
-      const story = value as PortableStory;
-      const annotation = module[exportName] as StoryAnnotations;
-      const id = `${file}#${exportName}`;
-      const hints = { ...meta.argTypes, ...annotation.argTypes };
-      const excludedProps: string[] = [];
-      const props = storyProps(story.args, hints, excludedProps);
-      const title = annotation.name ?? exportName;
-      const argTypes: Record<string, StoryHints> = {};
-      for (const [key, value] of Object.entries(hints)) {
-        if (!Object.hasOwn(props, key)) continue;
-        argTypes[key] = storyHints(value);
-      }
-      result.stories.push({
-        id,
-        title,
-        props: props as Definitions["stories"][number]["props"],
-        argTypes,
-      });
-      parent.variants.push({
-        excludedProps,
-        slug: exportName,
-        title,
-        props: props as Definitions["stories"][number]["props"],
-        slots: {},
-      });
-      generation.stories.set(id, {
-        compose: () =>
-          (compose() as Record<string, PortableStory>)[exportName]!,
-        story,
-      });
-    }
-    const dataKeys = new Set([
-      ...Object.keys(parent.props),
-      ...parent.variants.flatMap((variant) => Object.keys(variant.props)),
-    ]);
-    parent.controlOrder = [...dataKeys];
-    parent.argTypes = Object.fromEntries(
-      Object.entries(meta.argTypes ?? {})
-        .filter(([key]) => dataKeys.has(key))
-        .map(([key, value]) => [key, storyHints(value)]),
-    );
-    result.components.push(parent as Definitions["components"][number]);
+      controlOrder: [...dataKeys],
+    });
   }
 }
 
 function storyProps(
+  generation: Generation,
   args: Record<string, unknown>,
   hints: Record<string, Record<string, unknown>>,
   excluded: string[],
-) {
+): Story["props"] {
+  const element = generation.runtime.react.isValidElement;
   const kept = Object.fromEntries(
-    Object.entries(args).filter(([key]) => {
+    Object.entries(args).filter(([key, value]) => {
       const hint = hints[key];
-      const table = hint?.table as { disable?: boolean } | undefined;
       const type = hint?.type;
       return !(
-        hint &&
-        (hint.control === false ||
-          table?.disable === true ||
-          hint.action ||
-          type === "function" ||
-          (typeof type === "object" &&
-            type !== null &&
-            "name" in type &&
-            type.name === "function"))
+        element(value) ||
+        (Array.isArray(value) && value.length > 0 && value.every(element)) ||
+        (hint &&
+          (hint.control === false ||
+            disabled(hint.control) ||
+            disabled(hint.table) ||
+            hint.action ||
+            type === "function" ||
+            (typeof type === "object" &&
+              type !== null &&
+              "name" in type &&
+              type.name === "function")))
       );
     }),
   );
-  return dataProps(kept, false, excluded);
+  return dataProps(kept, false, excluded) as Story["props"];
+}
+
+function disabled(value: unknown): boolean {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "disable" in value &&
+    value.disable === true
+  );
 }

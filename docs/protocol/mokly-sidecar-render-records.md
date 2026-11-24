@@ -63,7 +63,9 @@ The core applies the [page rules](./mokly-pages.md) to the document.
 After `describe`, the core resolves the catalogue paths and titles. It sends
 `bindings` with the generation and `entries`, a complete map from each
 described definition handle to `{ path, title }`. This includes the parent
-of each stories file. A variant has no handle and is not in this table.
+entry that a stories file gives under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
+A variant has no handle and is not in this table.
 
 The table supplies component paths and default instance ids, definition link
 targets, and parent identity. The core can replace the complete table when

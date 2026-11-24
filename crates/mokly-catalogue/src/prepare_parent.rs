@@ -26,14 +26,31 @@ pub(crate) fn prepare(
     source: &SourceLocation,
     configured: &[ColorScheme],
     candidates: &[Result<VariantInput, Issue>],
+    story: bool,
 ) -> Parent {
     let input = &parsed.input;
-    let merged: Vec<_> = candidates
+    let complete: Vec<_> = candidates
         .iter()
         .filter_map(|candidate| candidate.as_ref().ok())
-        .map(|variant| merge_props(&input.props, &variant.props))
+        .map(|variant| {
+            if story {
+                variant.props.clone()
+            } else {
+                merge_props(&input.props, &variant.props)
+            }
+        })
         .collect();
-    let inferred = infer(&input.props, &merged);
+    let mut inferred = infer(&input.props, &complete);
+    if story {
+        inferred.required = Some(
+            input
+                .props
+                .keys()
+                .filter(|key| complete.iter().all(|props| props.contains_key(*key)))
+                .cloned()
+                .collect(),
+        );
+    }
     let mut parent = Parent {
         visual: VisualEntry {
             color_schemes: configured.into(),
