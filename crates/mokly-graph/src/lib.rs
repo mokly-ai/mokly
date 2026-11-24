@@ -60,6 +60,7 @@ pub mod route_inventory;
 pub mod source_snapshot;
 pub mod types;
 pub mod urls;
+pub mod viewer_fonts;
 mod worker_context;
 pub mod workers;
 

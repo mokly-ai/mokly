@@ -13,6 +13,7 @@ use mokly_graph::head_validation::{
 };
 use mokly_graph::head_walks::WalkRecord;
 use mokly_graph::types::RenderGeneration;
+use mokly_graph::viewer_fonts::ViewerFonts;
 use mokly_graph::workers::ValidatedView;
 use mokly_html::composition::Composed;
 use mokly_model::usage::CatalogueUsage;
@@ -58,6 +59,7 @@ impl HeadValidation for Head {
         route: &str,
         document: &Composed,
         builder: &dyn ClosureBuilder,
+        fonts: ViewerFonts,
         proof: ClosureProof,
         pass: Option<WalkRecord>,
     ) -> Result<ClosureFacts> {
@@ -97,6 +99,7 @@ impl HeadValidation for Head {
             route,
             &document.tree,
             &document.resources,
+            fonts,
             &Recording {
                 resident: &self.resident,
                 arena: self.current,

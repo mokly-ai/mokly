@@ -94,7 +94,7 @@ test("the built dogfood font preserves the exact authored bytes", async () => {
   const sheet = stylesheetPath("docs/mockups/styles/base.css");
   const css = await readFile(path.join(outputRoot, sheet), "utf8");
   const fonts = [
-    ...css.matchAll(/url\(["']?([^\s)"']*InterVariable\.woff2)["']?\)/g),
+    ...css.matchAll(/url\(["']?([^\s)"']*Geist-Variable\.woff2)["']?\)/g),
   ];
   assert.equal(fonts.length, 1);
   assert.equal(
@@ -105,7 +105,7 @@ test("the built dogfood font preserves the exact authored bytes", async () => {
     ),
     sha256(
       await readFile(
-        path.join(repository, "docs/mockups/styles/fonts/InterVariable.woff2"),
+        path.join(repository, "docs/mockups/styles/fonts/Geist-Variable.woff2"),
       ),
     ),
   );

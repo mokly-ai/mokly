@@ -1,7 +1,7 @@
 # Product Mockup Inventory
 
 This inventory owns state coverage and flow membership for the product
-screens, which are authored in Folio per [Design tokens](./design-tokens.md).
+screens, whose values come from [Design tokens](./design-tokens.md).
 The viewer is the application: the product has no project or workspace
 page, the Workspace settings are panes of the
 [settings dialog](./settings-dialog.md), and the Viewer family draws its ready
@@ -99,9 +99,10 @@ diverging fails the suite until it is removed.
 
 Sign-in and sign-up are product screens under `product/account/`, paths
 `product/account/sign-in` and `product/account/sign-up`, each with the three state children.
-They keep the Folio treatment, and the wordmark, Terms and Privacy are external
-`href`s derived from the one site-origin fixture (see
-[Marketing site](./marketing-site.md)), not `MockLink` catalogue destinations.
+They draw the [account entry](./folio-chrome-account.md), and the wordmark,
+Terms and Privacy are external `href`s derived from the one site-origin
+fixture (see [Marketing site](./marketing-site.md)), not `MockLink` catalogue
+destinations.
 That fixture also places the site mockups' sign-in and sign-up destinations at
 `/sign-in` and `/sign-up` beneath the same origin.
 
@@ -170,10 +171,9 @@ land on a named state entry when that state is where the scenario ends, and the
 entry is still the owning screen for it. Browse follows Cal from the branch he is reading, through the switcher
 into a pull request, then its history and its link.
 
-UseCaseStep has no viewport selector. Serve frames each journey step's desktop
-view, or its mobile view while the shell is at most 760px wide, and the
-package's flow behavior is kept. Browser tests walk the
-same owning mobile screens through Browse.
+UseCaseStep has no viewport selector. Serve shows each journey under the
+package's [use-case rule](../mokly-shell-canvas-stage.md#use-case), unchanged.
+Browser tests walk the same owning mobile screens through Browse.
 
 Every flow step reuses an existing owning screen and reciprocally lists the
 flow path through `useCasePaths`; steps use `screenPath`.

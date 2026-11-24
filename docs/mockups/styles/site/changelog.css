@@ -1,157 +1,253 @@
-/* 9 -- Changelog --------------------------------------------------------- */
+/* The changelog: the workspace that sets Version history beside the release
+   frames, the page title as a selected text layer with its lead, and the
+   rows of Version history on their rail. changelog-timeline.css holds the
+   timeline and the filter, changelog-notes.css the note rows and the upgrade
+   notes, changelog-release.css the release frames and the breaking callout,
+   changelog-earlier.css the disclosures and the earlier releases, and
+   changelog-responsive.css the mobile composition. Every hairline that the
+   prototype draws darker than the border mixes a fifth of the strong border
+   into it, because the strong border is the 3:1 boundary of a control. */
 
 .site-changelog {
-  margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding-left: var(--mk-layout-gutter-desktop);
-  padding-right: var(--mk-layout-gutter-desktop);
+  min-width: 0;
+  padding-bottom: var(--mk-space-24);
+  width: 100%;
 }
 
-.site-changelog .site-document-intro {
-  max-width: 1120px;
-}
+/* The workspace: Version history, then the frames, up to 1080px and centred.
+   Version history takes the place and the width of the docs Layers panel:
+   a 252px column 32px beside the frames, in a workspace at most 1680px wide
+   and centred, as docs-tree.css draws it. */
 
 .site-changelog-body {
+  align-items: start;
   display: grid;
-  gap: var(--mk-space-12);
-  grid-template-columns: 220px minmax(0, 1fr);
-  max-width: var(--mk-layout-content-max);
+  gap: 32px;
+  grid-template-columns: 252px minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 1680px;
+  padding: 0 var(--mk-space-20) 0 var(--mk-space-4);
 }
+
+.site-changelog-frames {
+  margin: 0 auto;
+  max-width: 1080px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* The intro: the page title as a selected text layer, then the lead. Its
+   one column keeps the column's width, so a title word that is wider at a
+   large text size does not widen the intro and its selection. */
+
+.site-changelog-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  padding-top: 104px;
+}
+
+.site-changelog-heading {
+  max-width: 100%;
+  position: relative;
+}
+
+.site-changelog-heading h1 {
+  font-size: 6rem;
+  letter-spacing: -0.052em;
+  line-height: 0.98;
+}
+
+.site-changelog-heading > .site-sel {
+  inset: -4px -14px -8px;
+}
+
+.site-lead {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-lead-size);
+  line-height: var(--mk-type-lead-line);
+  max-width: var(--mk-layout-prose-max);
+}
+
+.site-changelog-intro .site-lead {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.3125rem;
+  letter-spacing: -0.012em;
+  line-height: 1.5;
+  margin-top: 54px;
+  max-width: 34ch;
+  text-wrap: pretty;
+}
+
+/* Version history: the floating panel, sticky under the tool bar; its list
+   scrolls inside it when the releases outgrow the window. It starts 56px
+   below the tool bar and keeps the height of the docs Layers panel. */
 
 .site-release-index {
-  align-self: start;
-  display: grid;
-  gap: 2px;
+  margin-top: 56px;
+  max-height: calc(100vh - 128px);
   position: sticky;
-  top: var(--mk-space-6);
+  top: calc(60px + var(--mk-space-6));
 }
 
-.site-release-index .site-tree-head {
-  padding: 0 0 var(--mk-space-2);
+.site-release-index .site-panel-body {
+  overflow-y: auto;
+  padding: 4px 8px 8px;
 }
+
+.site-release-index-month {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 13px 0 7px 30px;
+  position: relative;
+  text-transform: uppercase;
+}
+
+/* A row links its release: the shared panel row with the rail and a dot.
+   The current row keeps its version semibold and its date at the medium
+   weight, and keeps its fill under the pointer. */
 
 .site-release-index-link {
-  border-left: 2px solid var(--mk-color-border);
-  color: var(--mk-color-text-muted);
-  display: grid;
-  gap: 1px;
-  min-height: var(--mk-layout-control-min);
-  padding: var(--mk-space-2) var(--mk-space-3);
-  text-decoration: none;
-  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+  padding-left: 30px;
+  position: relative;
 }
 
 .site-release-index-link:hover {
-  background: var(--mk-color-surface-muted);
-  border-left-color: var(--mk-color-border-strong);
+  background: var(--mk-color-background);
   color: var(--mk-color-text);
 }
 
 .site-release-index-link--current {
-  border-left-color: var(--mk-color-accent);
-  color: var(--mk-color-text);
+  font-weight: var(--mk-font-medium);
 }
 
 .site-release-index-link--current:hover {
-  border-left-color: var(--mk-color-accent);
+  background: var(--mk-color-signal-soft);
+}
+
+/* The rail: a hairline through every month and every dot */
+
+.site-release-index-month::before,
+.site-release-index-link::before {
+  background: color-mix(
+    in srgb,
+    var(--mk-color-border-strong) 20%,
+    var(--mk-color-border)
+  );
+  bottom: 0;
+  content: "";
+  left: 15px;
+  position: absolute;
+  top: 0;
+  width: 1px;
+}
+
+.site-release-index-month:first-child::before {
+  top: 50%;
+}
+
+.site-release-index-link:last-child::before {
+  bottom: 50%;
+}
+
+/* The dot of a release: smaller for a patch, green for the release in view */
+
+.site-release-index-link::after {
+  background: var(--mk-color-surface);
+  border-radius: var(--mk-radius-pill);
+  box-shadow: inset 0 0 0 1.5px var(--mk-color-text-muted);
+  content: "";
+  height: 9px;
+  left: 11px;
+  position: absolute;
+  top: calc(50% - 4.5px);
+  width: 9px;
+}
+
+.site-release-index-link--patch::after {
+  height: 7px;
+  left: 12px;
+  top: calc(50% - 3.5px);
+  width: 7px;
+}
+
+.site-release-index-link--current::after {
+  background: var(--mk-color-signal);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--mk-color-signal) 24%, transparent);
+}
+
+.site-release-index-link--current .site-release-index-version {
+  font-weight: var(--mk-font-semibold);
 }
 
 .site-release-index-version {
+  color: var(--mk-color-text);
   font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-medium);
+  font-size: 0.78125rem;
+}
+
+.site-release-index-mark {
+  display: inline-grid;
+  margin-left: var(--mk-space-2);
+  vertical-align: -2px;
+}
+
+.site-release-index-mark svg {
+  color: var(--mk-color-warning);
 }
 
 .site-release-index-date {
-  font-size: var(--mk-type-caption-size);
+  font-family: var(--mk-font-sans);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.site-releases {
-  display: grid;
+/* Narrower desktop widths. Below 1200px the frames take the width without
+   Version history. The heading steps down where its 96px line no longer
+   fits, and its type badge and size tag, which state the 96px measures,
+   leave the selection. */
+
+@media (max-width: 1199px) {
+  [data-site-viewport="desktop"] .site-release-index {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-body {
+    display: block;
+    padding: 0 48px;
+  }
 }
 
-.site-release {
-  align-items: start;
-  border-top: 1px solid var(--mk-color-border);
-  display: grid;
-  gap: var(--mk-space-10);
-  grid-template-columns: 200px minmax(0, 1fr);
-  padding: var(--mk-space-8) 0;
-  scroll-margin-top: var(--mk-space-6);
+@media (max-width: 959px) {
+  [data-site-viewport="desktop"] .site-changelog-intro {
+    padding-top: 80px;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-heading h1 {
+    font-size: 5rem;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-heading .site-sel-badge,
+  [data-site-viewport="desktop"] .site-changelog-heading .site-sel-size {
+    display: none;
+  }
+
+  [data-site-viewport="desktop"] .site-changelog-intro .site-lead {
+    margin-top: 44px;
+  }
 }
 
-.site-release-meta {
-  align-content: start;
-  display: grid;
-  gap: var(--mk-space-2);
-  justify-items: start;
-}
+@media (max-width: 799px) {
+  [data-site-viewport="desktop"] .site-changelog-body {
+    padding: 0 40px;
+  }
 
-.site-release-meta h2 {
-  font-size: var(--mk-type-body-size);
-  font-weight: var(--mk-font-medium);
-}
-
-.site-release-meta time {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-small-size);
-}
-
-.site-release-link {
-  align-items: center;
-  color: var(--mk-color-accent);
-  display: inline-flex;
-  font-size: var(--mk-type-small-size);
-  gap: var(--mk-space-1);
-  min-height: var(--mk-layout-control-min);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.site-release-link:hover {
-  color: var(--mk-color-accent-hover);
-  text-decoration-thickness: 2px;
-}
-
-.site-release-notes {
-  display: grid;
-  gap: var(--mk-space-6);
-  max-width: var(--mk-layout-prose-max);
-}
-
-.site-release-group {
-  display: grid;
-  gap: var(--mk-space-3);
-}
-
-.site-release-group-head {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.site-release-notes ul {
-  color: var(--mk-color-text);
-  display: grid;
-  gap: var(--mk-space-2);
-  list-style: none;
-  padding: 0;
-}
-
-.site-release-notes li {
-  padding-left: var(--mk-space-5);
-  position: relative;
-}
-
-.site-release-notes li::before {
-  background: var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-pill);
-  content: "";
-  height: 5px;
-  left: var(--mk-space-2);
-  position: absolute;
-  top: 10px;
-  width: 5px;
+  [data-site-viewport="desktop"] .site-changelog-heading h1 {
+    font-size: 4rem;
+  }
 }

@@ -4,7 +4,11 @@ import { branchPathFor } from "../addresses";
 import { failWith } from "../api-responses";
 import { expect, open, test } from "../harness";
 import { notFoundPaths } from "../not-found-cases";
-import { publishedProject, publishedViewerReady } from "../viewer/support";
+import {
+  openAccountMenu,
+  publishedProject,
+  publishedViewerReady,
+} from "../viewer/support";
 
 import {
   clearMacWindow,
@@ -13,6 +17,9 @@ import {
   expectBarsClearOfButtons,
   expectMovesWindow,
   expectTakesClicks,
+  expectTakesClicksThroughout,
+  partsUnderButtons,
+  spaceAfter,
   windowInsets,
 } from "./regions";
 
@@ -107,16 +114,23 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
   await expect(fallback.getByTestId("viewer-history")).toBeVisible();
   await expectBarRegions(fallback, "the fallback bar");
   await expectBarsClearOfButtons(page, { "the fallback bar": fallback });
+  // The whole pill is one control, so no press on it moves the window, on
+  // its hairline neither.
+  await emulateMacWindow(page, "start");
+  await expectTakesClicksThroughout(
+    page,
+    fallback.locator(".fo-canvas-pill"),
+    "the fallback bar's pill",
+  );
+  await clearMacWindow(page);
 
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
-  const slots = {
-    "start slot": page.locator(".fo-package-slot-start"),
-    "end slot": page.locator(".fo-package-slot-end"),
-  };
+  const start = page.locator(".fo-package-slot-start");
+  const centre = page.locator(".fo-package-slot-center");
   for (const [width, composition] of [
     [1440, "full"],
-    [1024, "compact"],
+    [960, "compact"],
   ] as const) {
     await page.setViewportSize({ width, height: 900 });
     await expect(
@@ -124,23 +138,85 @@ test("the viewer's cloud bars move the window and keep clear of its buttons, whi
         composition === "full" ? "viewer-history" : "viewer-more",
       ),
     ).toBeVisible();
+    // The compact bar leaves the start slot empty.
+    const slots = {
+      ...(composition === "full" && { "start slot": start }),
+      "centre slot": centre,
+      "end slot": page.locator(".fo-package-slot-end"),
+    };
     for (const [label, slot] of Object.entries(slots)) {
       await expectBarRegions(slot, `the ${composition} bar's ${label}`);
     }
     await expectBarsClearOfButtons(page, slots);
+    await emulateMacWindow(page, "start");
+    await expectTakesClicksThroughout(
+      page,
+      centre.locator(".fo-canvas-pill"),
+      `the ${composition} bar's pill`,
+    );
+    await clearMacWindow(page);
+    // The space after the project, up to the pill, and on the compact bar the
+    // space after the pill, up to the search, belong to the cloud's slots, so
+    // they move the window too.
+    const [part, slot, label] =
+      composition === "full"
+        ? [page.getByTestId("viewer-project"), start, "after the project"]
+        : [page.getByTestId("viewer-publication"), centre, "after the pill"];
+    await expect
+      .poll(() => spaceAfter(page, part, slot), `the space ${label}`)
+      .toEqual({ width: expect.any(Number), region: "drag" });
+    expect((await spaceAfter(page, part, slot)).width).toBeGreaterThan(16);
   }
 
   // A dialog or a menu over the bar takes its clicks.
   await page.getByTestId("viewer-more").click();
-  const menu = page.getByRole("menu", { name: "Viewer actions" });
+  const menu = page.getByRole("menu", { name: "More" });
   await expectTakesClicks(menu, "More's menu");
-  await menu.getByText("History", { exact: true }).click();
+  await menu.getByRole("menuitem", { name: "History", exact: true }).click();
   await expect(page.getByTestId("viewer-panel-history")).toBeVisible();
   await expectTakesClicks(page.getByRole("dialog"), "the History panel");
   await page.getByTestId("close-history").click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByTestId("viewer-settings").click();
+  const account = await openAccountMenu(page);
+  await expectTakesClicks(account, "the account menu");
+  await account
+    .getByRole("menuitem", { name: "Settings", exact: true })
+    .click();
+  await expect(page.getByTestId("settings-dialog")).toBeVisible();
   await expectTakesClicks(page.getByRole("dialog"), "the settings dialog");
+});
+
+test("the viewer package's mark comes after the Mac window's buttons in both compositions", async ({
+  page,
+}) => {
+  const made = await publishedProject(page, "mac-window-viewer-mark");
+  await open(page, made.publicationPath);
+  await publishedViewerReady(page);
+  // The package's start column: its menu button where it shows, its mark and
+  // the cloud's start slot.
+  const start = page
+    .locator("[data-mokly-shell]")
+    .getByRole("link", { name: "Mokly", exact: true })
+    .locator("..");
+  for (const [width, composition] of [
+    [1440, "full"],
+    [960, "compact"],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(
+      page.getByTestId(
+        composition === "full" ? "viewer-history" : "viewer-more",
+      ),
+    ).toBeVisible();
+    await emulateMacWindow(page, "start");
+    await expect
+      .poll(
+        () => partsUnderButtons(start, "start"),
+        `the ${composition} bar's mark keeps clear of the buttons`,
+      )
+      .toEqual([]);
+    await clearMacWindow(page);
+  }
 });

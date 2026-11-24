@@ -8,15 +8,55 @@ import {
   withSigningFiles,
 } from "../../scripts/package.mjs";
 
-test("the packaged smoke finds electron-builder's architecture-specific artifacts", () => {
-  const files = [
-    "Mokly-0.1.0-alpha.1-mac-x64.zip",
-    "Mokly-0.1.0-alpha.1-mac-arm64.zip",
-    "Mokly-0.1.0-alpha.1-linux-x86_64.AppImage",
-    "Mokly-0.1.0-alpha.1-linux-amd64.deb",
-  ];
-  assert.equal(packageArtifact(files, "darwin"), files[1]);
-  assert.equal(packageArtifact(files, "linux"), files[2]);
+const macFiles = [
+  "Mokly-mac-arm64.dmg",
+  "Mokly-mac-x64.dmg",
+  "Mokly-mac-arm64.zip",
+  "Mokly-mac-x64.zip",
+  "Mokly-mac-arm64.dmg.blockmap",
+  "Mokly-mac-x64.dmg.blockmap",
+  "Mokly-mac-arm64.zip.blockmap",
+  "Mokly-mac-x64.zip.blockmap",
+  "latest-mac.yml",
+];
+const linuxFiles = [
+  "Mokly-linux-x86_64.AppImage",
+  "Mokly-linux-amd64.deb",
+  "latest-linux.yml",
+];
+
+test("the packaged smoke selects each platform's fixed launch artifact from a complete inventory", () => {
+  assert.equal(
+    packageArtifact([...macFiles, "mac-arm64", "builder-debug.yml"], "darwin"),
+    "Mokly-mac-arm64.zip",
+  );
+  assert.equal(
+    packageArtifact(
+      [...linuxFiles, "linux-unpacked", "builder-effective-config.yaml"],
+      "linux",
+    ),
+    "Mokly-linux-x86_64.AppImage",
+  );
+});
+
+test("the packaged smoke rejects versioned installers and lists the missing fixed names", () => {
+  const installers = macFiles.slice(0, -1);
+  const versioned = installers.map((name) =>
+    name.replace("Mokly-mac-", "Mokly-0.2.0-mac-"),
+  );
+  assert.throws(
+    () => packageArtifact([...versioned, "latest-mac.yml"], "darwin"),
+    {
+      message: `Missing release files are ${installers.toSorted().join(", ")}. Extra release files are ${versioned.toSorted().join(", ")}.`,
+    },
+  );
+});
+
+test("the packaged smoke rejects and names an extra release file", () => {
+  const extra = "Mokly-mac-universal.zip.blockmap";
+  assert.throws(() => packageArtifact([...macFiles, extra], "darwin"), {
+    message: "Extra release files are Mokly-mac-universal.zip.blockmap.",
+  });
 });
 
 test("preview packages never publish and macOS uses only an ad-hoc signature", () => {

@@ -2,7 +2,7 @@
  * The literal styles a delivered message inlines. Mail clients read neither
  * custom properties nor a linked stylesheet, so every value is resolved from
  * the shared tokens here, for one scheme and one viewport. The color roles are
- * bound through the Folio palette the application scopes, so the message is the
+ * bound to the default Canvas family of the application, so the message is the
  * account panel on the account canvas. Light at desktop is what the document
  * inlines; the two override groups below carry the dark palette and the mobile
  * composition for the clients that honor the queries.
@@ -10,7 +10,6 @@
  * because classic Outlook does not support rem units.
  */
 
-import { paletteColors } from "@mokly-cloud/tokens/palettes";
 import { tokens } from "@mokly-cloud/tokens/tokens";
 import type {
   TokenColorScheme,
@@ -79,7 +78,7 @@ function typeStyle(role: TypeRole, viewport: TokenViewport): CSSProperties {
 
 /** The account canvas's dotted grid, over the scheme's own hairline color. */
 export function canvasGradient(scheme: TokenColorScheme): string {
-  const { border } = paletteColors(scheme, "folio");
+  const { border } = tokens.color[scheme];
   return "radial-gradient(" + border + " 1px, transparent 1px)";
 }
 
@@ -102,12 +101,11 @@ export function emailStyles(
   viewport: TokenViewport,
 ): EmailStyleTable {
   const color = tokens.color[scheme];
-  const folio = paletteColors(scheme, "folio");
   const desktop = viewport === "desktop";
   const styles: EmailStyleTable = {
     "e-body": {
-      backgroundColor: folio.background,
-      color: folio.text,
+      backgroundColor: color.background,
+      color: color.text,
       fontFamily: tokens.font.sans,
       margin: tokens.space[0],
       padding: tokens.space[0],
@@ -124,12 +122,12 @@ export function emailStyles(
       visibility: "hidden",
     },
     "e-frame": {
-      backgroundColor: folio.background,
+      backgroundColor: color.background,
       borderCollapse: "collapse",
       width: "100%",
     },
     "e-canvas": {
-      backgroundColor: folio.background,
+      backgroundColor: color.background,
       backgroundImage: desktop ? canvasGradient(scheme) : "none",
       backgroundSize: tokens.space[6] + " " + tokens.space[6],
       padding: desktop ? tokens.space[10] : tokens.space[0],
@@ -142,8 +140,8 @@ export function emailStyles(
       width: "100%",
     },
     "e-card": {
-      backgroundColor: desktop ? folio.surface : "transparent",
-      borderColor: folio.border,
+      backgroundColor: desktop ? color.surface : "transparent",
+      borderColor: color.border,
       borderRadius: desktop ? tokens.radius.medium : tokens.space[0],
       borderStyle: "solid",
       borderWidth: desktop ? "1px" : tokens.space[0],
@@ -162,14 +160,14 @@ export function emailStyles(
     "e-logo-dark": logo(scheme === "dark"),
     "e-heading": { paddingTop: tokens.space[8] },
     "e-title": {
-      color: folio.text,
+      color: color.text,
       fontFamily: tokens.font.sans,
       ...typeStyle("heading3", viewport),
       letterSpacing: "-0.02em",
       margin: tokens.space[0],
     },
     "e-text": {
-      color: folio.text,
+      color: color.text,
       fontFamily: tokens.font.sans,
       ...typeStyle("body", viewport),
       paddingTop: tokens.space[4],
@@ -188,7 +186,7 @@ export function emailStyles(
       textDecoration: "none",
     },
     "e-note": {
-      color: folio.textMuted,
+      color: color.textMuted,
       fontFamily: tokens.font.sans,
       ...typeStyle("small", viewport),
       overflowWrap: "anywhere",
@@ -200,7 +198,7 @@ export function emailStyles(
       textDecoration: "underline",
     },
     "e-expiry": {
-      color: folio.textMuted,
+      color: color.textMuted,
       fontFamily: tokens.font.sans,
       ...typeStyle("small", viewport),
       paddingTop: tokens.space[3],

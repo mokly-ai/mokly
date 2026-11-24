@@ -1,79 +1,137 @@
 # Viewer Semantic Palette
 
+The shell draws in Canvas, the look of a design file: a dot-grid canvas,
+white frames and panels with hairlines, near-black ink, one signal green, and
+Geist with Geist Mono. Dark uses neutral graphite with a lighter signal green.
+This page holds the Canvas palette, the roles of the shell theme that take its
+values, and their recorded contrast. The
+[preview palette](./mokly-viewer-palette-preview.md) holds the colours of
+what a frame shows.
+
+## Canvas Palette
+
+`@mokly/ui/palette` exports the named palettes as data, and `canvas` is the
+one palette. It is the one source of every Canvas colour and font. The
+`@mokly/ui` theme stylesheet and the `mokly-html` Markdown style are generated
+from it, and Mokly Cloud's token package imports its shared values from it. A
+drift check compares each generated file with the module. Decision: one
+open-source source for every surface, not hand-kept copies in each consumer
+or a second palette for the cloud (decision 1, option D), because one source
+cannot drift and the open-source viewer must look like the product on the
+site.
+
+Each scheme has these roles, each an opaque six-digit hex value:
+
+| Role            | Light     | Dark      | Use                                        |
+| --------------- | --------- | --------- | ------------------------------------------ |
+| `background`    | `#f1f2ee` | `#111113` | The canvas behind every frame and panel    |
+| `dot`           | `#c9cec5` | `#2b2b30` | The dots of the canvas grid                |
+| `surface`       | `#ffffff` | `#1b1b1e` | Frames, panels and cards                   |
+| `surfaceRaised` | `#ffffff` | `#232326` | Popovers, menus and selected rows          |
+| `surfaceMuted`  | `#f7f8f5` | `#161618` | Fields, rails and panel feet               |
+| `text`          | `#0d1410` | `#f4f4f5` | Headings, body text and icons              |
+| `textSecondary` | `#434c46` | `#d4d4d8` | Descriptions and secondary values          |
+| `textMuted`     | `#626a64` | `#a1a1aa` | Labels, frame labels, size tags and counts |
+| `border`        | `#e1e4de` | `#2c2c31` | Decorative hairlines                       |
+| `borderStrong`  | `#626a64` | `#71717a` | Control boundaries and meaningful outlines |
+| `signal`        | `#12b76a` | `#22c97d` | Selections, handles, guides and size tags  |
+| `onSignal`      | `#04130b` | `#04130b` | Text and glyphs on `signal`                |
+| `signalSoft`    | `#e3f6ec` | `#0f2a1d` | Selected rows and approved states          |
+| `signalDeep`    | `#067a45` | `#5be3a0` | Signal text, icons and focus rings         |
+| `signalFill`    | `#109f5c` | `#109f5c` | The fill of a filled button                |
+| `onSignalFill`  | `#ffffff` | `#ffffff` | The label of a filled button               |
+
+The `people` roles colour each person or agent on a shared canvas: a `fill`
+for the cursor, the selection and the name label, and an `ink` for text on
+that fill.
+
+| Person   | Light fill and ink   | Dark fill and ink    |
+| -------- | -------------------- | -------------------- |
+| `pink`   | `#d61f69`, `#ffffff` | `#f0528f`, `#111113` |
+| `blue`   | `#2563eb`, `#ffffff` | `#5b8cff`, `#111113` |
+| `orange` | `#f97316`, `#1f0e02` | `#ff8b3d`, `#111113` |
+| `violet` | `#7c3aed`, `#ffffff` | `#a07aff`, `#111113` |
+
+The `sans` stack is `"Geist", ui-sans-serif, system-ui, -apple-system,
+"Segoe UI", sans-serif`, and the `mono` stack is `"Geist Mono", ui-monospace,
+"SFMono-Regular", Menlo, monospace`. Each consumer that draws in Canvas
+self-hosts Geist and Geist Mono under the SIL Open Font License. No page loads
+a font from a third-party host. Each Markdown document loads the faces that
+the viewer delivers, under the
+[closure rule](./mokly-public-closure.md#referenced-closure).
+
+`text`, `textSecondary`, `textMuted` and `signalDeep` read at 4.5:1 on
+`background`, on every surface and on `signalSoft`. `onSignal` on `signal`
+and each person's `ink` on its `fill` read at 4.5:1. `borderStrong` reaches
+3:1 on `background`, on every surface and on `signalSoft`. `onSignalFill` on
+`signalFill` reaches 3:1, at 3.42:1. Decision: keep this green fill with a
+white label in both schemes and accept 3:1 for this one pair (decision 4,
+option A), not a darker green or an ink label at 4.5:1, because the design
+chose this fill and every surface draws its filled buttons with it. Every
+other text pair keeps 4.5:1.
+
 ## Interface Palette
 
-One palette serves both appearances; each artboard selects one on its own root
-through `data-mbk-appearance`, and every role keeps its meaning. Names below are
-the mockup token names.
-
-### Cloud Alignment
-
-Dark interface neutrals follow the Folio family of Mokly Cloud's app. The
-Cloud's base green and Paper families are not the product reference.
-
-Dark Folio is Graphite: neutral greys with no hue tint. Decision: Graphite,
-not the warm brown-black, because a warm tint reads as brown beside the sage
-accent and the authored previews, and a neutral grey lets both stand out.
-
-| Viewer dark role                            | Cloud dark role   |
-| ------------------------------------------- | ----------------- |
-| Background                                  | `folio`           |
-| Panels                                      | `folioSurface`    |
-| Navigation, browser bars and disabled fills | `folioMuted`      |
-| Primary text                                | `folioInk`        |
-| Secondary, muted and disabled text          | `folioInkMuted`   |
-| Dividers, guides and disabled borders       | `folioLine`       |
-| Strong borders and control edges            | `folioLineStrong` |
-
-Hover uses 5% Folio ink over its panel surface, rounded to `#2d2d30`.
-Dots and count fills use the same ink with their recorded alpha. Sage accents,
-status colors, Light appearance and authored preview colors keep their own
-roles. Mockups and runtime adopt these values locally; no cloud package or
-network request is needed to render the viewer.
-
-The Mokly logo is identity, so `--chrome-brand` reuses Mokly Cloud's own
-accent in each appearance rather than a viewer role: the mark matches the Cloud's published light and dark logos, and
-its rules take `--chrome-surface` as the Cloud's rules take its surface.
+One palette serves both appearances. Each shell root, and each design
+artboard, states one appearance on its own root, and every role keeps its
+meaning in both. The theme declares every Canvas role in both appearances, so
+that every part that draws in Canvas can read it, such as the canvas, its
+frames, the selection and the size tags. A Canvas role or stack takes the name
+`--cv-` and its palette name in kebab case, such as `--cv-surface-raised`,
+`--cv-people-pink-fill` and `--cv-mono`. The theme's own roles below take
+their values from the Canvas roles. Names below are the theme's role names.
 
 ### Swatches
 
+| Role                                       | Canvas source                                       |
+| ------------------------------------------ | --------------------------------------------------- |
+| `--chrome-bg`                              | `background`                                        |
+| `--chrome-surface`                         | `surface`                                           |
+| `--chrome-raised`                          | `surface`: the floating catalogue                   |
+| `--chrome-hover`                           | `text` at 5% over `surface`                         |
+| `--chrome-ink`                             | `text`                                              |
+| `--chrome-ink-2`                           | `textSecondary`                                     |
+| `--chrome-muted`                           | `textMuted`                                         |
+| `--chrome-border`                          | `border`                                            |
+| `--chrome-border-strong`                   | `textMuted` at 32% over `surface`                   |
+| `--chrome-control-edge`                    | `borderStrong`                                      |
+| `--chrome-accent`                          | `signalDeep`                                        |
+| `--_mokly-private-accent-default`          | `signalDeep`: the default of `--mokly-accent`       |
+| `--mbk-accent-deep`                        | `signalDeep`                                        |
+| `--_mokly-private-accent-contrast-default` | `surface`: the default of `--mokly-accent-contrast` |
+| `--_mokly-private-accent-soft-default`     | `signalSoft`: the default of `--mokly-accent-soft`  |
+| `--_mokly-private-on-ink`                  | `surface`                                           |
+| `--_mokly-private-on-accent-deep`          | `surface`                                           |
+| `--mbk-accent-surface`                     | `signalSoft`                                        |
+| `--mbk-accent-edge`                        | `signal` at 45% opacity                             |
+| `--mbk-guide`                              | `border`                                            |
+| `--mbk-dot`                                | `dot`                                               |
+| `--chrome-count-bg`                        | `text` at 8% opacity                                |
+| `--chrome-scrim`                           | the shade at 40% opacity                            |
+
+Each mix is the colour of its two roles mixed in sRGB at that share. The shade
+is `text` in Light and `background` in Dark. Each shadow layers the shade, and
+Dark adds a 1px `text` ring:
+
+| Role                                           | Light                                                                   | Dark                                                              |
+| ---------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `--chrome-shadow-soft`                         | `0 1px 0` at 3%, `0 1px 2px` at 6%                                      | ring at 3%, `0 1px 2px` at 50%                                    |
+| `--chrome-shadow` and `--chrome-shadow-drawer` | `0 1px 1px` at 5%, `0 10px 20px -6px` at 8%, `0 40px 80px -28px` at 26% | ring at 5%, `0 14px 28px -8px` at 55%, `0 48px 96px -32px` at 70% |
+| `--chrome-shadow-sheet`                        | `0 -18px 40px -18px` at 28%                                             | `0 -18px 40px -18px` at 60%, no ring                              |
+
+The roles without a Canvas source keep fixed values:
+
 | Role                     | Light                                    | Dark                                  |
 | ------------------------ | ---------------------------------------- | ------------------------------------- |
-| `--chrome-bg`            | `#f4f4f1`                                | `#18181b`                             |
-| `--chrome-surface`       | `#ffffff`                                | `#232326`                             |
-| `--chrome-raised`        | `#fbfbfa`                                | `#1d1d20`                             |
-| `--chrome-hover`         | `#f4f6f3`                                | `#2d2d30`                             |
-| `--chrome-ink`           | `#1a1d1c`                                | `#f4f4f5`                             |
-| `--chrome-ink-2`         | `#4a4f4d`                                | `#a1a1aa`                             |
-| `--chrome-muted`         | `#676e6a`                                | `#a1a1aa`                             |
-| `--chrome-border`        | `#e3e5e0`                                | `#34343a`                             |
-| `--chrome-border-strong` | `#c8ccc4`                                | `#71717a`                             |
-| `--chrome-control-edge`  | `#868e88`                                | `#71717a`                             |
-| `--chrome-accent`        | `#2a4733`                                | `#a5cdb6`                             |
-| `--chrome-brand`         | `#2f5945`                                | `#a3cdb4`                             |
-| `--mbk-sage`             | `#4f7864`                                | `#86b79b`                             |
-| `--mbk-sage-deep`        | `#2f5945`                                | `#b6d8c4`                             |
-| `--mbk-accent-contrast`  | `#ffffff`                                | `#0e1a14`                             |
-| `--mbk-accent-soft`      | `rgba(79, 120, 100, 0.1)`                | `rgba(134, 183, 155, 0.16)`           |
-| `--mbk-accent-surface`   | `#edf3ef`                                | `#24312a`                             |
-| `--mbk-accent-edge`      | `#b9cfc2`                                | `#3c5648`                             |
-| `--mbk-guide`            | `#dbded8`                                | `#34343a`                             |
-| `--mbk-dot`              | `rgba(20, 28, 22, 0.05)`                 | `rgba(244, 244, 245, 0.07)`           |
-| `--mbk-browser-bar`      | `#ecede9`                                | `#1d1d20`                             |
-| `--chrome-count-bg`      | `rgba(20, 28, 22, 0.08)`                 | `rgba(244, 244, 245, 0.1)`            |
-| `--chrome-scrim`         | `rgba(20, 28, 22, 0.45)`                 | `rgba(0, 0, 0, 0.55)`                 |
-| `--chrome-shadow`        | `0 30px 90px rgba(20, 28, 22, 0.14)`     | `0 30px 90px rgba(0, 0, 0, 0.6)`      |
-| `--chrome-shadow-soft`   | `0 1px 2px rgba(20, 28, 22, 0.1)`        | `0 1px 2px rgba(0, 0, 0, 0.5)`        |
 | `--chrome-shadow-press`  | `inset 0 1px 2px rgba(20, 28, 22, 0.14)` | `inset 0 1px 2px rgba(0, 0, 0, 0.55)` |
-| `--chrome-shadow-drawer` | `0 18px 50px rgba(20, 28, 22, 0.3)`      | `0 18px 50px rgba(0, 0, 0, 0.6)`      |
-| `--chrome-shadow-sheet`  | `0 6px 28px rgba(36, 55, 43, 0.15)`      | `0 6px 28px rgba(0, 0, 0, 0.55)`      |
 | `--chrome-disabled-bg`   | `#e6ebe7`                                | `#1d1d20`                             |
 | `--chrome-disabled-edge` | `#d7dfd9`                                | `#34343a`                             |
 | `--chrome-disabled-ink`  | `#5d6f63`                                | `#a1a1aa`                             |
 
-Status and validation pairs. Added reuses the accent surface and deep accent
-ink so one selected-state family covers both jobs. Unmodified keeps
-`--chrome-ink-2` without a fill, and every status badge draws `--chrome-border`.
+Status and validation pairs keep fixed values. Added takes `signalDeep` text
+on `signalSoft`, the selected-state pair, so one family covers both jobs.
+Unmodified keeps `--chrome-ink-2` without a fill, and every status badge draws
+`--chrome-border`.
 
 | Role                        | Light     | Dark      |
 | --------------------------- | --------- | --------- |
@@ -89,152 +147,100 @@ ink so one selected-state family covers both jobs. Unmodified keeps
 
 ## Recorded Contrast
 
-| Pair                                         | Light | Dark  | Requirement |
-| -------------------------------------------- | ----- | ----- | ----------- |
-| ink on surface                               | 16.98 | 14.26 | 4.5 text    |
-| ink on background                            | 15.41 | 16.12 | 4.5 text    |
-| secondary ink on surface                     | 8.34  | 6.12  | 4.5 text    |
-| muted on surface                             | 5.23  | 6.12  | 4.5 text    |
-| muted on background                          | 4.74  | 6.91  | 4.5 text    |
-| muted on raised (navigation)                 | 5.05  | 6.56  | 4.5 text    |
-| muted on hover surface                       | 4.81  | 5.36  | 4.5 text    |
-| accent link on surface                       | 10.25 | 8.96  | 4.5 text    |
-| brand mark on surface                        | 7.96  | 8.92  | 3 non-text  |
-| sage on surface                              | 4.99  | 6.91  | 4.5 text    |
-| deep sage on surface                         | 7.96  | 10.16 | 4.5 text    |
-| deep sage on accent surface                  | 7.08  | 8.79  | 4.5 text    |
-| accent contrast on sage (active row)         | 4.99  | 7.87  | 4.5 text    |
-| control edge on surface                      | 3.36  | 3.24  | 3 non-text  |
-| control edge on background                   | 3.05  | 3.67  | 3 non-text  |
-| control edge on raised (navigation)          | 3.25  | 3.48  | 3 non-text  |
-| focus outline (deep sage) on background      | 7.23  | 11.48 | 3 non-text  |
-| state boundary (deep sage) on accent surface | 7.08  | 8.79  | 3 non-text  |
-| validation ink on validation surface         | 5.97  | 8.04  | 4.5 text    |
-| disabled ink on disabled surface             | 4.43  | 6.56  | disabled    |
-| changed status ink on its surface            | 5.62  | 8.27  | 4.5 text    |
-| removed status ink on its surface            | 5.73  | 8.04  | 4.5 text    |
-| added status ink on its surface              | 7.08  | 8.79  | 4.5 text    |
-| validation message on surface                | 6.66  | 8.13  | 4.5 text    |
+| Pair                                           | Light | Dark  | Requirement  |
+| ---------------------------------------------- | ----- | ----- | ------------ |
+| ink on surface                                 | 18.67 | 15.63 | 4.5 text     |
+| ink on background                              | 16.60 | 17.15 | 4.5 text     |
+| secondary ink on surface                       | 8.89  | 11.62 | 4.5 text     |
+| secondary ink on background                    | 7.91  | 12.76 | 4.5 text     |
+| muted on surface                               | 5.57  | 6.70  | 4.5 text     |
+| muted on background                            | 4.96  | 7.35  | 4.5 text     |
+| muted on muted surface (fields, panel feet)    | 5.23  | 7.05  | 4.5 text     |
+| muted on hover surface                         | 5.02  | 5.88  | 4.5 text     |
+| accent link on surface                         | 5.41  | 10.58 | 4.5 text     |
+| accent link on background                      | 4.81  | 11.62 | 4.5 text     |
+| deep accent on accent surface                  | 4.81  | 9.45  | 4.5 text     |
+| ink on accent surface (selected row)           | 16.59 | 13.95 | 4.5 text     |
+| accent contrast on accent (active row)         | 5.41  | 10.58 | 4.5 text     |
+| on-signal text on signal (tags)                | 7.25  | 8.81  | 4.5 text     |
+| button label on button fill                    | 3.42  | 3.42  | 3 (decision) |
+| control edge on surface                        | 5.57  | 3.55  | 3 non-text   |
+| control edge on background                     | 4.96  | 3.90  | 3 non-text   |
+| control edge on accent surface                 | 4.95  | 3.17  | 3 non-text   |
+| focus outline (deep accent) on background      | 4.81  | 11.62 | 3 non-text   |
+| state boundary (deep accent) on accent surface | 4.81  | 9.45  | 3 non-text   |
+| brand mark outline on surface                  | 18.67 | 15.63 | 3 non-text   |
+| validation ink on validation surface           | 5.97  | 8.04  | 4.5 text     |
+| disabled ink on disabled surface               | 4.43  | 6.56  | disabled     |
+| changed status ink on its surface              | 5.62  | 8.27  | 4.5 text     |
+| removed status ink on its surface              | 5.73  | 8.04  | 4.5 text     |
+| added status ink on its surface                | 4.81  | 9.45  | 4.5 text     |
+| validation message on surface                  | 6.66  | 8.91  | 4.5 text     |
 
 `--chrome-border`, `--chrome-border-strong` and `--mbk-guide` are decorative
 hairlines separating adjacent surfaces, not control boundaries, so they are not
 held to 3:1. Every control outline, grip, field border and focus ring uses
-`--chrome-control-edge` or `--mbk-sage-deep` instead. A control that marks its
-hovered, selected or checked state with a boundary uses `--mbk-sage-deep`,
-because `--chrome-control-edge` reaches only 2.99:1 in Light and 2.81:1 in
-Dark on `--mbk-accent-surface`, the fill those states carry.
+`--chrome-control-edge` or `--mbk-accent-deep` instead. A control that marks its
+hovered, selected or checked state with a boundary draws it in
+`--mbk-accent-deep`.
+
+The brand mark's `text` outline keeps the mark visible at 3:1 on every
+surface. Its `signal` front layer and the `signal` period of the wordmark are
+identity, so they have no contrast minimum. The
+[brand contract](./mokly-shell-brand.md) owns the mark.
 
 One family is exempt. The Added, Changed and Removed status badges and the
 validation alert are labels rather than controls: each names its own state in
-5.62:1 or better text inside a distinct tinted fill, so its outline adds no
+4.8:1 or better text inside a distinct tinted fill, so its outline adds no
 information and is held to the decorative hairline standard. The badges draw
 `--chrome-border`, and the alert draws `--mbk-danger-edge`.
 
-Seven controls keep a hairline boundary. The segmented control group, such as
-the viewport switch and the comparison modes, draws `--chrome-border`, and the
-resting navigation resize grip draws `--chrome-border-strong`. A pressed icon
-control, such as the pressed Highlight components toggle or a selected
-inspector tab, draws `--chrome-border`, and so do a resting tag chip and a
-selected instance of the Components tab. The address pill and the expand
-toggle of a browser frame's bar draw `--chrome-border`, and the toggle draws
-`--chrome-border-strong` on hover. The group shows its value through the
-filled selected segment, and the grip draws the accent on hover and focus. A
-pressed icon control fills with the accent tint and draws its glyph in the
-accent, a selected instance fills with the accent tint and draws its text in
-the accent, and a selected tag chip fills with the accent. On hover, the
-address pill draws its copy glyph in the accent, and the toggle draws its
-glyph in the accent. Decision: the shipped hairlines, not the control edge,
-because each control already shows its state through a fill or the accent,
-and the design mockups render these shipped controls. No other boundary may
-claim these exceptions; a control state that draws a boundary must reach 3:1
-against its own fill or the surface around it.
+Seven controls keep a hairline boundary. These draw `--chrome-border`: the
+segmented control group of the All/Changes filter; the compare-mode tiles and
+frame chips of the Changes tab; a pressed icon control, such as an embedded
+document's Dark preview toggle; a resting tag chip; and a selected instance of
+the component tree. The resting resize grip on the floating catalogue's edge
+draws `--chrome-border-strong`. The group fills its selected segment, a
+selected tile and a chosen frame chip draw a `--mbk-accent-deep` edge, the chip
+also fills with `signalSoft`, and the grip draws the accent while hovered,
+focused or dragged. A pressed icon control and a selected instance fill with
+the accent tint and draw their glyph or text in the accent, and a selected tag
+chip fills with the accent. Decision: the shipped hairlines, not the
+control edge, because each control already shows its state through a fill or
+the accent, a frame chip's label also names its frame, and the design mockups
+render them. No other boundary may claim these exceptions; a control state that
+draws a boundary must reach 3:1 against its own fill or the surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
 rather than a dimmed copy of the enabled colours, so a disabled control reads
-the same way in both appearances.
+the same way in both appearances. An icon control without a fill or an edge at
+rest, such as Previous change or Next change, dims to 42% opacity instead, also
+while it is pressed. Decision: dimming, not the disabled
+tokens, because on such a control the disabled ink reads almost as enabled.
 
 ## Role Use
 
-- `--chrome-muted` carries breadcrumbs, frame captions, navigation heads,
-  counts and field hints as normal text.
+- `--chrome-muted` carries breadcrumbs, frame labels, size tags, navigation
+  heads, counts and field hints as normal text.
 - `--chrome-control-edge` draws the boundary of the appearance control, the
-  inspector resize grip, the mobile sheet grabber and native fields, including
-  the prop field's input border. The view controls draw no boundary at rest.
-  `--chrome-border-strong` keeps the device and pane frames.
+  mobile sheet grabber and native fields, including the prop field's input
+  border. The icon controls, such as Previous change and Next change, draw no
+  boundary at rest.
+  `--chrome-border-strong` keeps the pane frames.
 - The invalid-field border uses `--mbk-danger-ink`, matching the message it
   accompanies.
 
 ## Preview Tokens
 
-Preview tokens describe what a device screen shows and never change with the
-interface appearance, so a light phone inside a dark catalogue keeps light
-surfaces, ink and status indicators.
-
-| Role                       | Light preview | Dark preview                        |
-| -------------------------- | ------------- | ----------------------------------- |
-| `--mbk-screen-bg`          | `#ffffff`     | `--mbk-dark-screen-bg` `#121514`    |
-| `--mbk-screen-ink`         | `#1a1d1c`     | `--mbk-dark-screen-ink` `#eef1ef`   |
-| `--mbk-screen-ink-2`       | `#4a4f4d`     | 78% ink mixed into the dark surface |
-| `--mbk-screen-muted`       | `#7d8480`     | 62% ink mixed into the dark surface |
-| `--mbk-screen-border`      | `#e3e5e0`     | 12% ink mixed into the dark surface |
-| `--mbk-screen-link`        | `#4f7864`     | `#7fae95`                           |
-| `--mbk-screen-link-strong` | `#2f5945`     | `#a4c9b3`                           |
-| `--mbk-screen-danger-bg`   | `#fdf1ef`     | `#fdf1ef`                           |
-| `--mbk-screen-danger-edge` | `#e7c3bb`     | `#e7c3bb`                           |
-| `--mbk-screen-danger-ink`  | `#8a3423`     | `#8a3423`                           |
-
-These values are the authored fragment's own colors, not the viewer interface.
-Each device screen also sets its own CSS `color-scheme`, so native controls and
-scrollbars inside a preview follow the preview rather than the interface. Fixed
-phone hardware and the browser traffic lights keep their intended colors in both
-appearances, and are named so no stylesheet repeats them:
-
-| Role                          | Both appearances        |
-| ----------------------------- | ----------------------- |
-| `--mbk-device-body`           | `#171a18`               |
-| `--mbk-device-notch`          | `#0b0d0c`               |
-| `--mbk-device-home`           | `rgba(20, 24, 20, 0.4)` |
-| `--mbk-device-light-close`    | `#d9655b`               |
-| `--mbk-device-light-minimise` | `#dba43d`               |
-| `--mbk-device-light-expand`   | `#50a86d`               |
-
-The highlight mask over a preview dims the preview around the highlighted
-component instances and outlines each instance. It marks the preview, not the
-interface, so its two roles keep their values in both appearances:
-
-| Role                    | Both appearances            |
-| ----------------------- | --------------------------- |
-| `--mbk-highlight-scrim` | `rgba(244, 246, 244, 0.72)` |
-| `--mbk-highlight-edge`  | `#336249`                   |
-
-A comparison in Difference mode paints an opaque base behind the compared
-frames, taken from the compared preview scheme, so the blended result is
-identical in both appearances.
-
-## Component Explorer Preview Tokens
-
-The component explorer draws a depicted component on its own canvas, inside the
-catalogue chrome. Those canvas colours describe the depicted content rather than
-the interface, so they stay Light in both appearances, exactly as the preview
-tokens above do. A stylesheet that needs one of these reads the token rather
-than repeating its value.
-
-| Role             | Both appearances |
-| ---------------- | ---------------- |
-| `--ce-surface`   | `white`          |
-| `--ce-text`      | `#252e28`        |
-| `--ce-secondary` | `#647068`        |
-| `--ce-soft`      | `#f3f6f3`        |
-| `--ce-edge`      | `#dce5de`        |
-
-The explorer's own artboards render in Light only, so these roles have no Dark
-counterpart; a dark component canvas would need this table extended before
-those artboards could publish a dark render. The explorer highlights a depicted
-component with the shell's highlight mask, in the two highlight roles of the
-preview tokens.
+The [preview palette](./mokly-viewer-palette-preview.md) holds the preview
+tokens: the colours of what a frame shows, which never change with the
+interface appearance. It also holds the highlight mask and the component
+explorer's preview tokens.
 
 ## Related Docs
 
 - [Viewer appearance](./mokly-viewer-appearance.md)
+- [Viewer preview palette](./mokly-viewer-palette-preview.md)
+- [Shell brand](./mokly-shell-brand.md)
 - [Shell design contract](./mokly-shell-design.md)

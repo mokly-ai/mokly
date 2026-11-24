@@ -1,149 +1,84 @@
-/* The documentation layout: the section tree on the page canvas behind one
-   vertical hairline, the ruled document column, the on-this-page rail hung
-   from its own hairline, the previous and next cards, the code panel and the
-   search dialog. Kept in parity with the promoted mockups under
-   docs/mockups/styles/site/; the mobile composition is the default,
-   768px raises the desktop one and 1100px hangs the rail. */
+/* The documentation workspace on the canvas, under the tool bar: the Layers
+   column, the page frame and the Inspect column side by side, 32px apart,
+   in a workspace at most 1680px wide. The columns sit below the tool bar
+   and stick 72px below the window top. The mobile composition is the base
+   rule: the page frame alone, with a 10px canvas margin, under the sub-bar.
+   From 768px the desktop composition draws the three columns; below 1280px
+   the Inspect column leaves, and below 1024px the Layers column leaves for
+   the sub-bar.
+
+   The class names and the rules match docs/mockups/styles/site/
+   docs-tree.css, docs-document.css, docs-inspect.css, docs-responsive.css
+   and docs-steps.css. The mockups pin a composition with data-site-viewport
+   and draw the desktop steps under max-width queries; the site resolves the
+   same switch at 768px and writes each step as a range from 768px. The
+   mobile mockup does not draw the two columns at all; the site draws them on
+   every page and hides them. A docs sheet loads before the shared sheets,
+   so a rule that overrides a shared rule carries a more specific
+   selector. */
 
 .site-docs {
+  align-items: start;
   display: grid;
+  gap: 0;
   grid-template-columns: minmax(0, 1fr);
   margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: 0 var(--mk-layout-gutter-mobile);
+  max-width: 1680px;
+  padding: 44px 10px 0;
   width: 100%;
 }
 
-/* The tree: a version chip, every section expanded, the changelog at the foot */
+/* The document column holds the page frame, without the shared document
+   padding */
 
-.site-docs-side {
-  display: none;
-}
-
-.site-doc-tree {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-}
-
-.site-doc-tree-scroll {
-  display: grid;
-  gap: var(--mk-space-5);
-  margin: var(--mk-space-4) 0;
-  padding-right: var(--mk-space-2);
-  scrollbar-color: var(--mk-color-border-strong) transparent;
-  scrollbar-width: thin;
-}
-
-.site-doc-tree .site-version {
-  background: none;
-  border: 0;
-  padding: 0 var(--mk-space-3);
-}
-
-.site-version {
-  align-items: center;
-  background: var(--mk-color-background);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text);
-  display: inline-flex;
-  font-family: var(--mk-font-mono);
-  font-size: var(--mk-type-caption-size);
-  gap: var(--mk-space-2);
-  padding: var(--mk-space-1) var(--mk-space-2);
-}
-
-.site-version-label {
-  color: var(--mk-color-text-muted);
-  font-family: var(--mk-font-sans);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.site-version-link {
-  align-items: center;
-  color: var(--mk-color-text);
-  display: inline-flex;
-  min-height: var(--mk-layout-control-min);
-  text-decoration: none;
-  text-underline-offset: 4px;
-}
-
-.site-version-link:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--mk-color-border-strong);
-}
-
-.site-doc-section-head {
-  padding: 0 var(--mk-space-3) var(--mk-space-2);
-}
-
-.site-doc-section ul {
-  display: grid;
-  list-style: none;
-  margin: 0;
+.site-docs .site-docs-document {
+  min-width: 0;
   padding: 0;
 }
 
-.site-doc-link {
-  align-items: center;
-  border-radius: var(--mk-radius-small);
-  color: var(--mk-color-text-muted);
-  display: flex;
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
-  min-height: var(--mk-layout-control-min);
-  padding: var(--mk-space-1) var(--mk-space-3);
-  text-decoration: none;
-  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+.site-docs-side,
+.site-docs-rail {
+  display: none;
 }
 
-.site-doc-link:hover {
-  background: var(--mk-color-surface-muted);
-  color: var(--mk-color-text);
+@media (min-width: 768px) {
+  .site-docs {
+    gap: 32px;
+    grid-template-columns: 252px minmax(0, 1fr) 236px;
+    padding: 56px var(--mk-space-4) 0;
+  }
+
+  .site-docs-side,
+  .site-docs-rail {
+    display: block;
+    min-width: 0;
+    position: sticky;
+    top: 72px;
+  }
 }
 
-.site-doc-link[aria-current="page"],
-.site-doc-link[aria-current="page"]:hover {
-  background: var(--mk-color-accent-soft);
-  color: var(--mk-color-accent);
-  font-weight: var(--mk-font-medium);
+/* Below 1280px: the Layers column and the page frame */
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .site-docs {
+    grid-template-columns: 252px minmax(0, 1fr);
+    padding: 56px 24px 0 16px;
+  }
+
+  .site-docs-rail {
+    display: none;
+  }
 }
 
-.site-doc-tree-foot {
-  border-top: 1px solid var(--mk-color-border);
-  display: grid;
-  padding-top: var(--mk-space-3);
-}
+/* Below 1024px: the page frame alone, under the sub-bar */
 
-.site-doc-tree-foot .site-doc-link {
-  color: var(--mk-color-text);
-  font-weight: var(--mk-font-medium);
-}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-docs {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 52px 24px 0;
+  }
 
-/* Below the breakpoint the tree is a native disclosure above the document */
-
-.site-doc-disclosure {
-  background: var(--mk-color-surface);
-  border: 1px solid var(--mk-color-border-strong);
-  border-radius: var(--mk-radius-small);
-  margin-top: var(--mk-space-6);
-  padding: 0 var(--mk-space-2);
-}
-
-.site-doc-disclosure > summary {
-  align-items: center;
-  border-radius: var(--mk-radius-small);
-  cursor: pointer;
-  display: flex;
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-medium);
-  min-height: var(--mk-layout-control-min);
-  padding: 0 var(--mk-space-2);
-}
-
-.site-doc-disclosure > summary:hover {
-  background: var(--mk-color-surface-muted);
+  .site-docs-side {
+    display: none;
+  }
 }

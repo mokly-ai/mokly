@@ -14,69 +14,62 @@ application or invented Components folder exists; a component library is
 conventionally a root with `path: "components"` under the
 [configuration contract](./mokly-configuration.md).
 
-A component page contains its title, description, a variant bar, preview
-canvas, grouped view controls, eligible comparison controls, and an icon
-inspector. Every component is a render over props under the
+A component page shows the component on the
+[canvas](./mokly-shell-canvas-stage.md#section) and in the
+[right panel](./mokly-component-inspector-design.md#right-panel). Every
+component is a render over props under the
 [entry props contract](./mokly-entry-props.md): the parent entry has its own
 views, rendered from its own props, and each saved variant is an entry at the
-parent's path plus its slug. The parent page shows the parent's own view on
-the stage, and the variant bar lists the parent first, then each variant in
-authored order, and marks the shown entry; a variant page shows that variant's
-view. The heading uses the parent component's title on the parent page and on
-every variant page. The path chip, status beside the heading, Details, and URL
-describe the shown entry. Screen variants have no variant bar and keep their
-own title as the heading. The canvas uses the entry's render and gives a
-small component suitable space without implying it is a whole phone screen.
-Mobile and desktop still select distinct viewport contexts; controls must not
-fake scaling or modify consumer props to fit. Long or full-width components
-stay inspectable by scrolling.
+parent's path plus its slug. A component opens as its variant set, and
+Inspect's Variants section lists its saved variants. A saved variant's page
+opens its parent's variant set with that variant's Light frame selected. The
+heading uses the parent component's title on the parent page and on every
+variant page. The path chip, status beside the heading, Details, and URL
+describe the shown entry. A screen variant keeps its own title as the heading.
+A component's frame shows its desktop view, sized to its content, so a small
+component takes the space that it needs without implying that it is a whole
+phone screen. Controls never modify consumer props to fit a frame. Long or
+full-width components stay inspectable through pan and zoom.
 
-One icon toolbar beside the title contains a Mobile/Desktop/Both dropdown and
-the Highlight components toggle, on component and screen pages alike. A
-component page highlights the registered components that its example renders;
-when it renders none, the toggle stays disabled and states that reason.
-Standalone uses one top-bar Appearance selector; embedded hosts keep a separate
-preview toggle.
-Both renders both real viewport contexts. The shell and title stay fixed. On
-desktop, the preview and vertically resizable inspector are sibling panes
-whose contents scroll, with the navigation divider's centred short-line grip.
-Runtime resizing supports pointer input across the divider and keyboard input,
-clamps both pane sizes, and restores usable bounds after closing and reopening
-or viewport changes. On mobile, the inspector is a rounded, non-modal bottom
-sheet over the full-size preview, with an iOS-style grabber, compact and
-expanded snap heights, safe-area spacing, pan gestures, and an accessible size
-toggle. The icon strip and close action stay outside scrolling content.
-Closing leaves the icon strip with no selected icon; reopening keeps edits. The
-mockups use a native switch for size changes; gesture handling belongs to the
-runtime.
+The [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) in Inspect
+chooses the shown frames. The
+[preview scheme rules](./mokly-shell-device-chrome.md#color-scheme) give the
+standalone Appearance selector and the Dark preview control of an embedded
+host. In the [compact layout](./mokly-shell-device-chrome.md#compact-layout),
+the right panel opens as the panel sheet: a rounded, non-modal sheet with
+compact and expanded snap heights, safe-area spacing, pan gestures, and an
+accessible size toggle. Its tab strip and close control stay outside the
+scrolling body. Closing the sheet keeps edits, and reopening shows them. The
+mockups draw each sheet at the height that its state gives; gesture handling
+belongs to the runtime.
 
 Each component variant is an entry, nav, search and Changes row, and `mock:`
-target under the [variant contract](./mokly-variants.md). The variant bar
-navigates by path in authored order, so URLs and Back/Forward need no query
-parameter.
+target under the [variant contract](./mokly-variants.md). A variant's page is
+addressed by its own path, so URLs and Back/Forward need no query parameter.
 
-Comparison modes apply to the shown entry and view axes. Sibling-mode
-retention, read-only Props, disabled highlighting, and response fencing follow
-[variant navigation](./mokly-variant-navigation.md). A removed component
-variant stays eligible with a missing current side; Added stays in Current.
+In a compare mode, each shown frame of a compared row compares its own view, and
+a row that does not compare, such as an Added one, keeps its current frames.
+Sibling-mode retention, read-only Props, disabled highlighting, and response
+fencing follow [variant navigation](./mokly-variant-navigation.md). A removed
+component variant stays eligible with a missing current side.
 
-Only expose comparison modes when the shown status is Changed or when a
-component variant entry's shown status is Removed. A known selection shows
-Added, Changed, Removed, or Unmodified beside its title from the selected
-viewport and scheme; Both follows the aggregation rule of the
-[Changes screen controls](./mokly-changes-controls.md#screen-controls). A
-removed variant is its own Removed entry and does not mark its surviving
-parent Removed; the parent's status describes the parent only. Added and
-Unmodified show only their current preview. Missing per-view evidence keeps
-entry-level status and eligibility rather than implying Unmodified. Affected
-consumers can stay eligible without entering Changes; temporary control edits
-never establish comparison eligibility. Do not eagerly generate screenshots to
-decide whether the mode row is available.
+Only offer the compare modes other than Current while a shown row compares: when
+its shown status is Changed, or when a component variant entry's shown status is
+Removed. A known selection shows Added, Changed, Removed, or Unmodified beside
+its title from the shown views; several shown views follow the aggregation rule
+of the [Changes screen controls](./mokly-changes-controls.md#screen-controls). A
+removed variant is its own Removed entry and does not mark its surviving parent
+Removed; the parent's status describes the parent only. Added and Unmodified
+show only their current preview. Missing per-view evidence keeps entry-level
+status and eligibility rather than implying Unmodified. Affected consumers can
+stay eligible without entering Changes; temporary control edits never establish
+comparison eligibility. Do not eagerly generate screenshots to decide whether
+the compare modes are available.
 
 A logical link can target a component parent or any of its variant entries by
 path under the [navigation contract](./mokly-navigation.md). A link to the
 parent resolves to the parent's own view in the effective viewport and theme;
-a link to a variant entry resolves to that entry's own view. Variant bar and
+a link to a variant entry resolves to that entry's own view. Variant and
 Used by links are shell-owned `/view/<path>/` URLs; do not overload the
 logical fragment grammar with component prop JSON or variant suffixes.
 Affected-consumer destinations use the
@@ -88,62 +81,63 @@ comparison query; an eligible removed component variant may request its
 comparison with the missing current side. The destination validates its view
 before activating a comparison query.
 
-The shared inspector has Details, Props, and Usage icons. Composed
-components also have Nested components, listing their rendered registered
-children and excluding themselves; leaves omit that tab. Screens keep the
-Components tab, including empty and unavailable states. Clicking an icon opens
-its panel or switches the open panel; clicking the active icon or Close
-collapses it. With no panel open, no icon is selected. Details contains
-source, docs, tags and any rendered-resource comparison evidence. Comparison
-details use validated reasons, paired prop values, and related changed
-components; they never infer visual explanations from pixels or add a banner
-above the canvas. Props contains the supplied values, and Usage contains Used
-by screens and components. These lists come from the `workspace` of the
+Inspect holds the sections of the
+[inspector design](./mokly-component-inspector-design.md#inspect). A composed
+component's Nested components section lists its rendered registered children
+and excludes the component itself. Comparison evidence, such as
+rendered-resource evidence, follows the
+[Changes and evidence](./mokly-component-inspector-design.md#changes-and-evidence)
+rule. Comparison details use validated reasons, paired prop values, and
+related changed components; they never infer visual explanations from pixels
+or add a banner above the canvas. Usage contains Used by screens and
+components. These lists come from the `workspace` of the
 [entry detail](./mokly-shell-delivery.md#entry-detail): `usedBy`, `affected`,
 `relatedComponents`, and `inputChanges`. A changed component also exposes
 Affected screens. A current component variant shows its parent's Used by and
 Affected lists from the parent's detail. Its related changed components and
 input changes stay specific to its own views. A removed variant shows its own
-lists. Removed consumers link to their Removed state; their
-comparison evidence stays in Details. Lists distinguish direct and transitive
-use and show actual instance and view counts without counting reused flow
-frames as additional screen uses. Empty lists have explicit empty states. The
+lists. Removed consumers link to their Removed state, which keeps their
+comparison evidence. Lists distinguish direct and transitive use and show
+actual instance and view counts without counting reused flow frames as
+additional screen uses. Empty lists have explicit empty states. The
 [inspector design contract](./mokly-component-inspector-design.md) defines the
 shared layout and native mockup behaviour; runtime keyboard focus and Escape
 handling belong to the shell.
 
 The index carries no usage, so no cross-route list is derived from it. Until
-all route details arrive, the Usage panel shows `Loading usage…` with no
-counts, list headings, rows, or empty state. A current component variant waits
-for its own detail and its parent's detail. A detail that fails to load or is
-rejected leaves the entry unavailable with a retry control under the shell
-delivery contract. Retry preserves the inspector disclosure and local edits.
-Only a ready detail with a complete workspace may show the zero-consumer state.
+all route details arrive, Usage shows `Loading usage…` with no counts, list
+headings, rows, or empty state. A current component variant waits for its own
+detail and its parent's detail. A detail that fails to load or is rejected
+leaves the entry unavailable with a retry control under the shell delivery
+contract. Retry preserves the state of the inspector and local edits. Only a
+ready detail with a complete workspace may show the zero-consumer state.
 
 ## Components In The Screen Inspector
 
-Every screen uses the same icon inspector. Its Components panel lists actual
-instances for the active viewport and scheme by owner, from the view's `usage`
-in the entry detail: the instances that the view holds, each with the
-instances nested in it under a disclosure. A count of the instances and their
-components leads the list, and a viewport choice comes first when the
-workspace shows both viewports. Each instance reads as its component title and
-its instance label. Decision: the list follows ownership rather than grouping
-instances by component, because the owner tree already shows each nesting.
-Selecting an instance opens Props with supplied data, slot references, and
-links to its component page. Decision: Props has no Highlight action of its
-own, because selecting an instance and the view toolbar's Highlight components
-toggle already highlight it. Unrendered conditional branches do not appear;
-null-rendering instances are listed without a visible region. An empty ready
-usage set says no registered components are used in this view. Unavailable
-usage says inspection is unavailable.
+Inspect's Components section lists actual instances by owner, from the view's
+`usage` in the entry detail: the instances that one frame's view holds, each
+with the instances nested in it under a disclosure. It lists the frame that
+holds the selection, else the first shown frame. A count of the instances and
+their components leads the list. Each instance reads as its component title
+and its instance label. Decision: the list follows ownership rather than
+grouping instances by component, because the owner tree already shows each
+nesting. Selecting an instance selects it on that frame under the
+[canvas selection](./mokly-viewer-selection-canvas.md#clicks-by-tab), and
+Inspect's Selection section shows the data and the slot references that its
+owner supplies, with a link to its component page. Decision: Selection has no
+Highlight action of its own, because the canvas outlines the selected instance
+and the Highlight components switch highlights every registered instance.
+Unrendered conditional branches do not appear; null-rendering instances are
+listed without a visible region. An empty ready usage set says no registered
+components are used in this view. Unavailable usage says inspection is
+unavailable.
 
-Pending usage is neither empty nor unavailable. The Components panel and the
-Highlight control use `Waiting for the component preview.` until ready usage
-is adopted into the mounted frame. Usage adopted during mounting reaches the
-frame before it is ready, so Highlight cannot use older usage. A detail that
-fails to load keeps inspection unavailable and offers recovery through the
-entry's retry control, never the empty-view copy.
+Pending usage is neither empty nor unavailable. The Components list and the
+Highlight components switch use `Waiting for the component preview.` until
+ready usage is adopted into the mounted frame. Usage adopted during mounting
+reaches the frame before it is ready, so Highlight cannot use older usage. A
+detail that fails to load keeps inspection unavailable and offers recovery
+through the entry's retry control, never the empty-view copy.
 
 Repeated instances stay individually selectable. Nested lists start collapsed
 and can be expanded to inspect inner instances. Selecting an instance
@@ -151,20 +145,23 @@ reveals its props and allows opening the canonical component page without
 losing the screen's navigation history. Raw source paths and identifiers stay
 secondary metadata; visible labels use the component title and instance label.
 
-Selecting a component-page Used by link opens the owning screen in Current,
-sets its recorded viewport and theme, and opens its selected instance in Props.
-Multiple matching occurrences stay selectable. Route query values reference
+Selecting a component-page Used by link opens the owning screen in Current
+with its instance selected on the frame of the link's recorded viewport and
+scheme, and Inspect shows the instance in its Selection section. Multiple
+matching occurrences stay selectable. Route query values reference
 validated instance keys of the [instance contract](./mokly-instances.md) and
 cannot introduce arbitrary DOM selectors or file paths.
 
 ## Highlight Components
 
-The view toolbar of each screen and component page has a keyboard-operable
-Highlight components toggle with an accessible pressed state. It starts off.
-In Current, enabling it dims the surrounding screen while registered component
+The Frames filter of each screen and component page holds a keyboard-operable
+Highlight components switch with an accessible checked state. It starts off. A
+component page highlights the registered components that its frames render;
+when they render none, the switch stays disabled and states that reason.
+In Current, turning it on dims each shown frame while its registered component
 regions keep their original appearance. Outlines and labels identify visible
-regions; selecting a region selects the corresponding instance and opens Props
-if needed. Selecting a Components entry highlights and scrolls its instance
+regions; selecting a region selects the corresponding instance and shows it in
+Selection. Selecting a Components entry selects its instance and scrolls it
 into view.
 
 Initially highlight outermost visible component boundaries. Selecting or
@@ -182,17 +179,17 @@ preview frame, also over a cross-origin frame, so consumer CSS cannot paint
 over it or restyle it.
 
 Bounds come from the active composed document, support multi-root and text
-ranges, and follow scroll, nested scroll containers, frame resize and
-expansion, fonts and images loading, and viewport and theme swaps. Clip to the
+ranges, and follow scroll, nested scroll containers, frame resize, pan and
+zoom, fonts and images loading, and viewport and theme swaps. Clip to the
 visible frame and its clipping ancestors; do not highlight unrelated content
 covered by occluding elements. Clipping follows the containing block of fixed
 elements, transformed ancestors, and inner scrollers. Zero-area and hidden
 instances stay inspectable in the inspector without an invented rectangle.
 Unsupported boundaries report unavailable inspection explicitly.
 
-While the toggle is on, selecting outlined regions inspects them rather than
+While the switch is on, selecting outlined regions inspects them rather than
 following their product links. Normal frame navigation is restored when it is
-off. Escape exits inspection and returns focus to the toggle. Selection is
+off. Escape exits inspection and returns focus to the switch. Selection is
 exposed through the Components list so neither hover nor pointer precision is
 required. Labels must not rely on colour alone.
 
@@ -200,9 +197,9 @@ Turning off highlighting removes all masks and listeners and returns the
 unmodified screen. Route changes and a full page load turn it off and clear
 stale instance selection. A viewport or theme change rebinds usage to the new
 document; preserve a selection only if its identity still exists. Entering a
-comparison turns highlighting off; its toggle is unavailable in comparison
-modes, whose snapshots stay unmodified. Removed screens also disable it because
-there is no current preview to inspect.
+compare mode other than Current turns highlighting off; the switch is
+unavailable in those modes, whose snapshots stay unmodified. Removed screens
+also disable it because there is no current preview to inspect.
 
 ## Frame And Delivery Boundary
 
@@ -213,7 +210,7 @@ receive no inspection privileges. Consumer scripts, forms, popups, and top
 navigation stay disabled; do not loosen frame sandbox policy for this feature.
 
 `build` writes the same entry details and the package-owned inspector code,
-so saved variants, inspector panels, backlinks, and highlighting work from the
+so saved variants, the inspector, backlinks, and highlighting work from the
 static output without Serve. Composed documents keep normal content and
 portable links; they do not require the interactive inspector. Temporary local
 controls are governed separately by the
@@ -237,10 +234,14 @@ clears stale inspection under the viewer lifecycle contract.
 
 ## Mockups
 
-The [component design](./mokly-component-design.md) depicts these pages in
-mobile and desktop artboards under `examples/basic/specs/design`: the
-component page and variants, a changed component and its Affected screens,
-screen inspector usage, highlight selection, loading Usage, and the empty and
-unavailable states. The
-[controls designs](./mokly-component-controls-design.md) belong to the
-inspector. Local Serve implements those controls.
+The [Canvas design inventory](./mokly-shell-canvas-inventory.md) depicts the
+variant set, Inspect and the selection. The
+[component design](./mokly-component-design.md) depicts these pages in mobile
+and desktop artboards under `design/canvas/components`: a changed component's
+comparison on its variant set, its Usage and Affected screens, a removed
+variant, screen inspection while usage waits or is unavailable, and Usage that
+loads or failed. The
+[controls designs](./mokly-component-controls-design.md) under
+`design/canvas/props` belong to the inspector. Local Serve implements those
+controls. The [shell design](./mokly-shell-design.md#design-mockups) names the
+states that the Canvas screens do not draw.

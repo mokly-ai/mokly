@@ -3,14 +3,14 @@
 This runbook covers a Mokly change that changes a format that the receiver or
 the viewer reads. The cloud uses the workspace Mokly packages, so the Deploy
 run of the merge commit deploys such a change; no package release or pin bump
-is involved. The runbook holds the frame upgrade of Mokly 0.19.0 and the
-earlier 0.18 format cutover from 0.14.
+is involved. The runbook holds the frame upgrade from wire version 3 to 4
+and the earlier 0.18 format cutover from 0.14.
 [Deployment](./deploy.md) holds the publish proof commands.
 
 ## Frame Upgrade
 
 1. Deploy the app and API from `main`. The workspace viewer requires frame
-   wire version 3, and pages from 0.18 use frame wire version 2.
+   wire version 4, and pages from 0.19 use frame wire version 3.
 2. Republish each hosted catalogue with the workspace CLI from a clean
    committed checkout of the deployed commit. Use the publish command below.
 3. Run the [publish proof](./deploy.md#publish-proof).

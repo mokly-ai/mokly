@@ -17,6 +17,7 @@ use tower::ServiceExt;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::application::{Application, HttpApplication};
+use crate::assets::File;
 use crate::clock::ClockMock;
 use crate::comparison_capture::SnapshotCapture;
 use crate::comparison_store::{Comparisons, MemoryComparisons};
@@ -25,6 +26,19 @@ use crate::entropy::EntropyMock;
 use crate::publication::SharedPublication;
 
 const SELECTED: &str = "/mokly-viewer/diffs/selection?path=sample";
+/// Each viewer face: its delivered path, its copy inside a generation, and its bytes.
+const FACES: [(&str, &str, &str); 2] = [
+    (
+        "mokly-viewer/fonts/Geist-Variable.woff2",
+        "snapshots/mokly-viewer/fonts/Geist-Variable.woff2",
+        "sans face",
+    ),
+    (
+        "mokly-viewer/fonts/GeistMono-Variable.woff2",
+        "snapshots/mokly-viewer/fonts/GeistMono-Variable.woff2",
+        "mono face",
+    ),
+];
 
 fn graph(document: &'static [u8], stylesheet: &'static [u8]) -> Arc<dyn RenderGeneration> {
     let artifact = Arc::new(Artifact {
@@ -67,7 +81,19 @@ fn setup(kind: ReviewKind) -> (Router, Arc<MemoryComparisons>, Arc<AtomicU64>) {
         entry.before.as_mut().unwrap().supplied_slots = Some(Vec::new());
         entry.after.as_mut().unwrap().supplied_slots = Some(Vec::new());
     }
-    let publications = Arc::new(SharedPublication::new(snapshot(Some(input))));
+    let mut published = (*snapshot(Some(input))).clone();
+    Arc::make_mut(&mut published.generation)
+        .assets
+        .extend(FACES.map(|(path, _, bytes)| {
+            (
+                path.to_owned(),
+                File {
+                    bytes: bytes.into(),
+                    content_type: "font/woff2".into(),
+                },
+            )
+        }));
+    let publications = Arc::new(SharedPublication::new(Arc::new(published)));
     let now = Arc::new(AtomicU64::new(0));
     let observed = now.clone();
     let serial = AtomicU64::new(0);
@@ -157,11 +183,43 @@ async fn read_selection(router: &Router, url: &str) -> Vec<Bytes> {
             documents.push(bytes);
         }
     }
+    for (_, copy, expected) in FACES {
+        let response = request(
+            router,
+            Method::GET,
+            &format!("{directory}{copy}"),
+            "private, max-age=31536000, immutable",
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers()["content-type"], "font/woff2");
+        let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        assert_eq!(bytes, expected);
+    }
     documents
+}
+
+/// Each face copy of a generation that the store does not hold answers 404.
+async fn faces_missing(router: &Router, directory: &str) {
+    for (_, copy, _) in FACES {
+        let response = request(
+            router,
+            Method::GET,
+            &format!("{directory}{copy}"),
+            "no-store",
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
 }
 
 async fn idle_recovery(kind: ReviewKind) {
     let (router, store, now) = setup(kind);
+    faces_missing(
+        &router,
+        &format!("/mokly-viewer/diffs/generations/{}/", "f".repeat(64)),
+    )
+    .await;
     let original = select(&router).await;
     let documents = read_selection(&router, &original).await;
     now.store(59_999, Ordering::SeqCst);
@@ -191,6 +249,7 @@ async fn idle_recovery(kind: ReviewKind) {
             .unwrap()
             .is_empty()
     );
+    faces_missing(&router, &original).await;
     let replacement = select(&router).await;
     assert_ne!(replacement, original);
     assert_eq!(read_selection(&router, &replacement).await, documents);

@@ -21,6 +21,11 @@ export function screenFile(title: string, body: string): string {
   return `---\ntitle: ${title}\nuseCasePaths: [tour]\n---\n<main>${body}</main>\n`;
 }
 
+/** A screen of the use case `tour` with a text prop, which its heading shows. */
+export function editableScreenFile(title: string): string {
+  return `---\ntitle: ${title}\nuseCasePaths: [tour]\nprops: {label: Hello}\n---\n<main><h1>{{label}} 1</h1></main>\n`;
+}
+
 /** The component `card`, with a text, a number, and a boolean prop. */
 export function cardFile(marker = ""): string {
   return [

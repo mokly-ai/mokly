@@ -11,7 +11,8 @@ const globals = [
   "Math",
 ];
 const builtins = ["Math.min", "Math.max", "Array.isArray"];
-export const probePrivateProperties = /^__(?:list|scroll|keys|node|index)$/;
+export const probePrivateProperties =
+  /^__(?:list|scroll|boxModel|contentBox|highlight|subscribe|dispose|keys|flush)$/;
 
 /** Pool repeated names as ordinary constants, preserving property names and receivers. */
 export function probePool(code) {
@@ -76,7 +77,7 @@ export function probePool(code) {
   const words = [...counts]
     .filter(
       ([word, saving]) =>
-        !probePrivateProperties.test(word) && saving > word.length + 9,
+        !probePrivateProperties.test(word) && saving > word.length + 6,
     )
     .map(([word]) => word);
   const aliases = new Map(

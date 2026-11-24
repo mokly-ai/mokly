@@ -4,6 +4,7 @@ import { apiOrigin } from "../origins";
 
 import { retainedFixture } from "./retained-fixture";
 import {
+  canvasFrame,
   expectSharePreparing,
   holdViewerRead,
   makePublic,
@@ -30,8 +31,8 @@ test("Share waits for the third screen page before offering its link", async ({
     );
     await publishedViewerReady(page);
     await expect(
-      page
-        .frameLocator('iframe[title="Current form — desktop"]')
+      canvasFrame(page, "Current form — desktop")
+        .contentFrame()
         .getByRole("heading", { name: "Published form" }),
     ).toBeVisible();
     const cursors: (string | null)[] = [];

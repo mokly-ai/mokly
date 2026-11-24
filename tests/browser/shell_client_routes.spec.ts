@@ -1,18 +1,16 @@
 /**
  * The client-rendered shell over Serve of the example, under the shell
- * delivery contract: the stub mount, in-shell history, scroll and search
- * retention, latest-wins navigation, frame handoff, the detail fences, and
- * detail failure with retry.
+ * delivery contract: the stub mount, in-shell history, search retention,
+ * latest-wins navigation, the detail fences, and detail failure with retry.
+ * `shell_client_route_layouts.spec.ts` covers each layout's stage history.
  */
 
 import { expect, type Route } from "@playwright/test";
 
-import { historyScrolls } from "../../packages/viewer/src/shell/store_scroll.js";
-
-import { desktopFrame, mobileFrame } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 import { networkFailure, responseFailure } from "./shell_error_allowances.js";
 import {
+  CANVAS_FRAMES,
   DETAILS,
   heading,
   holdReads,
@@ -26,7 +24,6 @@ import {
   titles,
   WELCOME,
 } from "./shell_route_fixture.js";
-import { chooseScheme, expectFrameLoaded } from "./workspace_actions.js";
 
 test.describe("with a clean console", () => {
   test("the stub mounts the routed entry from the index and its own detail", async ({
@@ -45,7 +42,7 @@ test.describe("with a clean console", () => {
     const reads = readsOf(page);
     await page.goto(route(WELCOME));
     await expect(heading(page)).toHaveText(names.get(WELCOME)!);
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+    await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
     expect(reads).toEqual([
       "/mokly-viewer/index.json",
       `/mokly-viewer/entries/${WELCOME}.json`,
@@ -60,7 +57,8 @@ test.describe("with a clean console", () => {
     await page.goto(route(WELCOME));
     await expect(heading(page)).toHaveText(names.get(WELCOME)!);
     const loads = loadsOf(page);
-    const crumbs = page.locator('p[aria-label="Catalogue location"]');
+    // Inspect's Path row names each route's folders.
+    const crumbs = page.locator("[data-inspect-path] code");
     const welcomeCrumbs = await crumbs.textContent();
     await openFolder(page, "example/team");
     await navLink(page, MEMBERS).click();
@@ -78,61 +76,6 @@ test.describe("with a clean console", () => {
       new RegExp(`^${names.get(MEMBERS)} — `),
     );
     expect(loads.count).toBe(0);
-  });
-
-  test("Back and Forward restore each route's stage scroll", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1280, height: 520 });
-    await page.goto(route(WELCOME));
-    const stage = page.locator('[data-mokly-scroll="stage"]');
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
-    await expect
-      .poll(() =>
-        stage.evaluate((element) => {
-          element.scrollTop = 160;
-          return element.scrollTop;
-        }),
-      )
-      .toBe(160);
-    await expect
-      .poll(
-        async () =>
-          historyScrolls(await page.evaluate(() => history.state))["stage"],
-      )
-      .toBe(160);
-    await openFolder(page, "example/team");
-    await navLink(page, MEMBERS).click();
-    await expect(page).toHaveURL(new RegExp(`${route(MEMBERS)}$`));
-    await expect
-      .poll(() => stage.evaluate((element) => element.scrollTop))
-      .toBe(0);
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
-    await expect
-      .poll(() =>
-        stage.evaluate((element) => {
-          element.scrollTop = 120;
-          return element.scrollTop;
-        }),
-      )
-      .toBe(120);
-    // The scroll offset changes before the scroll event saves it in history.
-    await expect
-      .poll(
-        async () =>
-          historyScrolls(await page.evaluate(() => history.state))["stage"],
-      )
-      .toBe(120);
-    await page.goBack();
-    await expect(page).toHaveURL(new RegExp(`${route(WELCOME)}$`));
-    await expect
-      .poll(() => stage.evaluate((element) => element.scrollTop))
-      .toBe(160);
-    await page.goForward();
-    await expect(page).toHaveURL(new RegExp(`${route(MEMBERS)}$`));
-    await expect
-      .poll(() => stage.evaluate((element) => element.scrollTop))
-      .toBe(120);
   });
 
   test("the search text stays while the shell navigates", async ({
@@ -173,7 +116,7 @@ test.describe("with a clean console", () => {
     await navLink(page, MEMBERS).click();
     await expect(heading(page)).toHaveText(names.get(MEMBERS)!);
     await aborted;
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+    await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
     release();
     await page.unrouteAll({ behavior: "wait" });
     await expect(page).toHaveURL(new RegExp(`${route(MEMBERS)}$`));
@@ -183,28 +126,6 @@ test.describe("with a clean console", () => {
         "title",
         new RegExp(`^${names.get(MEMBERS)} — `),
       );
-  });
-
-  test("a scheme change while one frame document is pending ends with every frame on that scheme", async ({
-    page,
-  }) => {
-    const darkDocument = (viewport: string) =>
-      new RegExp(`/${WELCOME}/index\\.${viewport}\\.dark\\.html$`);
-    await page.goto(route(WELCOME));
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
-    const release = await holdReads(
-      page,
-      `/${WELCOME}/index.desktop.dark.html`,
-    );
-    await chooseScheme(page, "dark");
-    await expectFrameLoaded(page.locator(mobileFrame), darkDocument("mobile"));
-    release();
-    await expectFrameLoaded(
-      page.locator(desktopFrame),
-      darkDocument("desktop"),
-    );
-    await expectFrameLoaded(page.locator(mobileFrame), darkDocument("mobile"));
-    await page.unrouteAll({ behavior: "wait" });
   });
 });
 
@@ -228,7 +149,7 @@ test("a detail of another deployment loads the requested URL again", async ({
   await expect.poll(() => loads.count).toBe(1);
   await expect(page).toHaveURL(new RegExp(`${route(DETAILS)}$`));
   await expect(heading(page)).toHaveText(names.get(DETAILS)!);
-  await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+  await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
   expect(reads).toBe(2);
 });
 
@@ -283,12 +204,12 @@ for (const [failure, answer, indexReads] of FAILURES)
       .filter({ hasText: "This screen could not be shown" });
     await expect(alert).toBeVisible();
     expect(indexReadsSoFar()).toBe(indexReads);
-    await expect(heading(page).first()).toHaveText(names.get(DETAILS)!);
+    await expect(heading(page)).toHaveText(names.get(DETAILS)!);
     await expect(page.locator("#mb-main iframe")).toHaveCount(0);
     await expect(navLink(page, WELCOME)).toBeVisible();
     failing = false;
     await alert.getByRole("button", { name: "Try again" }).click();
-    await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+    await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
     await expect(alert).toHaveCount(0);
     await expect(heading(page)).toHaveText(names.get(DETAILS)!);
     expect(indexReadsSoFar()).toBe(indexReads);

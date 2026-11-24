@@ -1,0 +1,258 @@
+/* The open foundation that closes the home, around its frame: the copy with
+   its actions, the four facts as pills, and the three steps as a flow of
+   frames, where each white frame holds its number, its icon, its heading
+   and its line, and a green arrow runs from each frame to the next.
+   home-foundation.css holds the frame.
+
+   The class names and the rules match docs/mockups/styles/site/closing.css
+   and the closing rules of home-foundation.css and home-responsive.css. The
+   mockups pin a composition with data-site-viewport; the site resolves the
+   same switch at 768px. So each base rule is the phone composition, where
+   the actions go under the copy and the steps stack in one column with the
+   arrows running down between the frames, and the desktop values and the
+   desktop steps follow under the 768px query, in the mockup's order. The
+   text is set in rem, so it grows with the reader's text size. */
+
+.site-closing {
+  margin-top: 112px;
+}
+
+.site-closing-copy h2 {
+  margin-top: 20px;
+}
+
+.site-closing-panel {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 32px 48px;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.site-closing-copy p {
+  max-width: 46ch;
+}
+
+.site-closing-panel p {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.03125rem;
+  letter-spacing: -0.004em;
+  line-height: 1.6;
+}
+
+.site-closing .site-actions {
+  flex: none;
+}
+
+/* The facts of the open-source CLI, which a phone sets closer to the frame.
+   A fact that its row cannot hold at a large text size wraps, and its pill
+   grows taller. */
+
+.site-closing .site-home-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+}
+
+.site-home-facts li {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: var(--mk-radius-pill);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-size: 0.875rem;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 15px 6px 13px;
+}
+
+.site-home-facts svg {
+  color: var(--mk-color-signal-deep);
+}
+
+.site-home-facts li:first-child {
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-mono);
+  font-size: 0.8125rem;
+}
+
+/* The steps, which a phone sets closer to the facts */
+
+.site-steps {
+  display: grid;
+  gap: 40px;
+  grid-template-columns: minmax(0, 1fr);
+  list-style: none;
+  padding: 0;
+}
+
+.site-closing .site-steps {
+  margin-top: 64px;
+}
+
+.site-step {
+  background: var(--mk-color-surface);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  padding: 24px 24px 26px;
+  position: relative;
+}
+
+.site-step:not(:last-child)::after {
+  background: linear-gradient(
+    180deg,
+    var(--mk-color-signal) 0 78%,
+    transparent 0
+  );
+  content: "";
+  height: 40px;
+  left: 34px;
+  position: absolute;
+  top: 100%;
+  width: 1.75px;
+}
+
+.site-step:not(:last-child)::before {
+  border-right: 1.75px solid var(--mk-color-signal);
+  border-top: 1.75px solid var(--mk-color-signal);
+  content: "";
+  height: 8px;
+  left: 30.5px;
+  position: absolute;
+  top: calc(100% + 26px);
+  transform: rotate(135deg);
+  width: 8px;
+}
+
+.site-step-number {
+  color: var(--mk-color-signal-deep);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+}
+
+.site-home-step-icon {
+  color: var(--mk-color-text-muted);
+  position: absolute;
+  right: 22px;
+  top: 22px;
+}
+
+.site-step h3 {
+  font-size: 1.3125rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin-top: 30px;
+  min-height: 0;
+}
+
+.site-step p {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.96875rem;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+/* The desktop composition from the 768px breakpoint upward: the actions
+   beside the copy, and the steps in one row, with the arrows running
+   across between the frames. */
+
+@media (min-width: 768px) {
+  .site-closing {
+    margin-top: 144px;
+  }
+
+  .site-closing-panel {
+    align-items: flex-end;
+    flex-direction: row;
+  }
+
+  .site-closing .site-home-facts {
+    margin-top: 56px;
+  }
+
+  .site-steps {
+    gap: 56px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .site-closing .site-steps {
+    margin-top: 96px;
+  }
+
+  .site-step:not(:last-child)::after {
+    background: linear-gradient(
+      90deg,
+      var(--mk-color-signal) 0 80%,
+      transparent 0
+    );
+    height: 1.75px;
+    left: 100%;
+    top: 50%;
+    width: 56px;
+  }
+
+  .site-step:not(:last-child)::before {
+    left: calc(100% + 42px);
+    top: calc(50% - 4px);
+    transform: rotate(45deg);
+  }
+
+  .site-step h3 {
+    min-height: 2.4em;
+  }
+}
+
+/* The intermediate desktop steps: below 1440px the top space scales with
+   the window; below 900px the actions go under the copy and the steps
+   stack in one column, with the arrows running down between the frames,
+   as the prototype does. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-closing {
+    margin-top: clamp(112px, 10vw, 150px);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 899px) {
+  .site-closing-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .site-steps {
+    gap: 40px;
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 520px;
+  }
+
+  .site-step:not(:last-child)::after {
+    background: linear-gradient(
+      180deg,
+      var(--mk-color-signal) 0 78%,
+      transparent 0
+    );
+    height: 40px;
+    left: 34px;
+    top: 100%;
+    width: 1.75px;
+  }
+
+  .site-step:not(:last-child)::before {
+    left: 30.5px;
+    top: calc(100% + 26px);
+    transform: rotate(135deg);
+  }
+
+  .site-step h3 {
+    min-height: 0;
+  }
+}

@@ -1,8 +1,10 @@
 /**
  * The standalone catalogue's one Appearance control. It sets the interface and
  * the previews together, so a standalone document needs no separate preview
- * switch; an embedded root keeps its own controls instead. This wrapper reads
- * the shell's identifier scope and routed workspace, and
+ * switch; an embedded root keeps its own controls instead. A screen and a
+ * component show the frames of both schemes on the canvas, where the Frames
+ * filter marks a hidden changed view, so the control marks no change for
+ * them. This wrapper reads the shell's identifier scope, and
  * `@mokly/ui/appearance-selector` renders the control.
  */
 
@@ -12,7 +14,6 @@ import type { ViewerTheme } from "../host/types.js";
 
 import { useShellIdentifier } from "./identifier_context.js";
 import { VIEW_CHANGED_IDS, VIEW_CHANGED_TEXT } from "./view_marks.js";
-import { useActiveWorkspace } from "./workspace_context.js";
 
 /** Appearance data and callback supplied by the standalone root. */
 export interface AppearanceState {
@@ -23,11 +24,10 @@ export interface AppearanceState {
 
 /** Show the selector only when its React change handler is installed. */
 export function AppearanceSelect(props: AppearanceState) {
-  const changed = useActiveWorkspace()?.marks.scheme ?? false;
   const changedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   return (
     <AppearanceSelector
-      changed={changed}
+      changed={false}
       changedId={changedId}
       changedText={VIEW_CHANGED_TEXT.scheme}
       hidden={!props.ready}

@@ -11,8 +11,6 @@ use std::process::Command;
 
 use tempfile::TempDir;
 
-use super::records;
-
 /// Workspace containing the built packages and authored example.
 pub(super) fn workspace() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -66,13 +64,6 @@ pub(super) fn copy() -> TempDir {
         directory.path().join("node_modules"),
     )
     .unwrap();
-    fs::write(
-        directory
-            .path()
-            .join("examples/basic/specs/behaviour-records.mockup.ts"),
-        records::SOURCE,
-    )
-    .unwrap();
     if let Ok(mutation) = env::var("MOKLY_TEST_DESIGN_MUTATION") {
         mutate(directory.path(), &mutation);
     }
@@ -84,32 +75,17 @@ fn mutate(root: &Path, mutation: &str) {
         "own-props" => (
             "library/controls/tag-chip.tsx",
             "render: TagChipView,",
-            "render: props => TagChipView({...props, destination: DESTINATIONS.forms}),",
+            "render: props => TagChipView({...props, destination: CANVAS_PAGES.tagForms}),",
         ),
         "stack" => (
-            "parts/compare_stack.tsx",
-            "<StackedVersion scrolled={scrolled} side=\"after\">",
-            "<StackedVersion scrolled={scrolled} side=\"before\">",
-        ),
-        "heading" => (
-            "components/parts/preview.tsx",
-            "changed: \"Variant changed\",",
-            "changed: \"Wrong recorded change\",",
+            "library/canvas/frame_compare.tsx",
+            "<ComparisonLayer side=\"after\">",
+            "<ComparisonLayer side=\"before\">",
         ),
         "stack-swap" => (
-            "components/parts/preview.tsx",
-            "after={<ComparedVersion before={false} subject={subject} />}\n          before={<ComparedVersion before subject={subject} />}",
-            "after={<ComparedVersion before subject={subject} />}\n          before={<ComparedVersion before={false} subject={subject} />}",
-        ),
-        "heading-record" => (
-            "components/parts/comparison_fixtures.ts",
-            "export const actionComparison = {\n  status: \"changed\",\n  reasons: [\"material\"],",
-            "export const actionComparison = {\n  status: \"changed\",\n  reasons: [\"removed\"],",
-        ),
-        "checklist" => (
-            "components/parts/component_page.tsx",
-            "return \"checklist\";",
-            "return \"component\";",
+            "library/canvas/frame_compare.tsx",
+            "<ComparisonSurface>{before}</ComparisonSurface>\n      </ComparisonLayer>\n      <ComparisonLayer side=\"after\">\n        <ComparisonSurface>{current}</ComparisonSurface>",
+            "<ComparisonSurface>{current}</ComparisonSurface>\n      </ComparisonLayer>\n      <ComparisonLayer side=\"after\">\n        <ComparisonSurface>{before}</ComparisonSurface>",
         ),
         _ => panic!("unknown design mutation {mutation}"),
     };

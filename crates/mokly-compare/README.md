@@ -282,6 +282,9 @@ trusted proof. Owned rules enter the same catalogue-wide evidence reducer of
 [CSS attribution contract](../../docs/protocol/mokly-css-attribution.md).
 Registry rule ownership stays separate from delivery style groups. Both the
 shared document codec and the head comparison retain these rule records.
+The head comparison names each viewer face by its artifact path on both
+sides, so a Markdown document that moves to another depth, and with it its
+relative face address, changes no rule.
 Saved prop edits retain their view records without marking unchanged
 consumers affected. Own CSS states and dependency reasons use kept own-page
 source proof. Actual-instance implementation reasons preserve own view states.

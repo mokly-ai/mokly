@@ -5,8 +5,8 @@ import type { CatalogueReadModel } from "@mokly/viewer";
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import { test } from "./browser_test.js";
-
 import type {} from "./viewer_harness.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
@@ -57,9 +57,7 @@ for (const cross of [false, true]) {
         });
         host.events.length = 0;
       });
-      const sibling = page.frameLocator(
-        'iframe[data-workspace-frame="desktop"]',
-      );
+      const sibling = page.frameLocator(canvasFrame("desktop"));
       await sibling
         .getByRole("button", { name: "Visible", exact: true })
         .hover();

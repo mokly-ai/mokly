@@ -1,0 +1,45 @@
+---
+/**
+ * The root of one depicted acme/storefront screen or component set: the
+ * app's warm palette, its ink and its type, which the app keeps in both page
+ * schemes. A phone screen draws at 390 × 844 and a desktop screen at
+ * 1280 × 800, their native sizes, and the place that shows the screen
+ * scales it, as an artboard does; a bare root, for a component set, takes
+ * its content's size and draws no fill.
+ *
+ * It loads the six acme sheets in the order of the site mockups, which
+ * their rules rely on, so a page that draws any acme screen or set loads
+ * them all. The acme parts sit inside a root and load no sheet themselves.
+ *
+ * - `kind`: `phone`, `desktop` or `bare`.
+ * - `dark`: the app's own dark screen.
+ * - `class`: the screen's own class, such as `site-acme-settings`.
+ *
+ * Use: `<AcmeRoot dark kind="phone">…</AcmeRoot>`. The screen is the slot.
+ */
+import "../../../styles/home-acme.css";
+import "../../../styles/home-acme-screens.css";
+import "../../../styles/home-acme-parts.css";
+import "../../../styles/home-acme-checkout.css";
+import "../../../styles/home-acme-pricing.css";
+import "../../../styles/home-acme-spread.css";
+
+interface Props {
+  readonly class?: string;
+  readonly dark?: boolean;
+  readonly kind: "bare" | "desktop" | "phone";
+}
+
+const { class: className, dark = false, kind } = Astro.props;
+---
+
+<div
+  class:list={[
+    "site-acme",
+    `site-acme--${kind}`,
+    dark && "site-acme--dark",
+    className,
+  ]}
+>
+  <slot />
+</div>

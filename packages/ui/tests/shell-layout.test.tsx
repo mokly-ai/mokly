@@ -3,7 +3,7 @@ import "./dom.js";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { createRef, type ComponentProps } from "react";
 import { renderToString } from "react-dom/server";
 
@@ -12,10 +12,7 @@ import { MainRegion, ShellLayout } from "../src/shell-layout/shell-layout.js";
 import { assertSameElement } from "./dom-assertions.js";
 
 /** The marks of the shell root's state. */
-type RootMarks = Pick<
-  ComponentProps<typeof ShellLayout>,
-  "frameExpanded" | "resizing"
->;
+type RootMarks = Pick<ComponentProps<typeof ShellLayout>, "resizing">;
 
 /** A shell with marked slot content, as the standalone viewer fills it. */
 function shell(
@@ -74,14 +71,10 @@ test("the shell root states its appearance and its preview scheme", () => {
   assert.equal(root?.getAttribute("data-mokly-color-scheme"), "dark");
 });
 
-test("the root marks a separator drag and an expanded window for the stylesheets", () => {
+test("the root marks a separator drag for the stylesheets", () => {
   assert.equal(
     rootClass({ resizing: "navigation" }),
     "mbk mbk-nav-resizing mbk-reset",
-  );
-  assert.equal(
-    rootClass({ frameExpanded: true, resizing: "inspector" }),
-    "mbk mbk-inspector-resizing frame-expanded mbk-reset",
   );
 });
 
@@ -104,6 +97,50 @@ test("the skip link goes to the main region, and the status announces each navig
   assert.equal(status.textContent, "Opened Home");
   assert.equal(status.getAttribute("aria-live"), "polite");
   assert.equal(status.getAttribute("aria-atomic"), "true");
+});
+
+test("with the catalogue's sheet, the catalogue floats over the canvas and the dock follows the main region", () => {
+  const closed: string[] = [];
+  const { container } = render(
+    <ShellLayout
+      announcement=""
+      catalogueSheet={{
+        expanded: false,
+        onClose: () => closed.push("catalogue"),
+        onExpandedChange: () => undefined,
+        open: true,
+      }}
+      colorScheme="light"
+      dock={<div data-dock="" />}
+      drawerOpen
+      main={<MainRegion id="mb-main">Routed view</MainRegion>}
+      mainHref="#mb-main"
+      navigation={<nav aria-label="Catalogue" />}
+      navigationWidth={300.4}
+      statusId="mb-status"
+      theme="auto"
+      topBar={<header>Top bar</header>}
+    />,
+  );
+  const root = container.firstElementChild as HTMLElement;
+  assert.equal(root.getAttribute("data-canvas-layout"), "");
+  assert.equal(root.style.getPropertyValue("--mbk-nav-width"), "300px");
+  const body = root.querySelector(".mbk-body");
+  assert.deepEqual(
+    [...(body?.children ?? [])].map(
+      (child) => child.getAttribute("data-floating-panel") ?? child.tagName,
+    ),
+    ["left", "MAIN", "DIV"],
+  );
+  const panel = body?.firstElementChild;
+  assertSameElement(
+    panel?.querySelector(".mbk-float-body > nav"),
+    screen.getByRole("navigation", { name: "Catalogue" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Close catalogue" }));
+  assert.deepEqual(closed, ["catalogue"]);
+  // Without the sheet the root keeps the column layout and no canvas mark.
+  assert.doesNotMatch(renderToString(shell(false)), /data-canvas-layout/u);
 });
 
 test("the main region records a removed entry's baseline only when it has one", () => {

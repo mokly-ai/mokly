@@ -22,7 +22,6 @@ export function useSlotRefs(): SlotRefs {
   const switcher = useRef<HTMLSpanElement | null>(null);
   const history = useRef<HTMLSpanElement | null>(null);
   const share = useRef<HTMLSpanElement | null>(null);
-  const settings = useRef<HTMLSpanElement | null>(null);
   const account = useRef<HTMLSpanElement | null>(null);
   const more = useRef<HTMLSpanElement | null>(null);
   const refs = useRef<SlotRefs>({
@@ -30,7 +29,6 @@ export function useSlotRefs(): SlotRefs {
     switcher,
     history,
     share,
-    settings,
     account,
     more,
   });

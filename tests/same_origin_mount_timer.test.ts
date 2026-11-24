@@ -102,6 +102,8 @@ test("each load restarts the limit, an accepted document ends it, and a later lo
     list: () => [],
     highlight: () => undefined,
     scroll: () => undefined,
+    boxModel: () => null,
+    contentBox: () => null,
     subscribe: () => undefined,
     dispose: () => undefined,
   };

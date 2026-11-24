@@ -165,7 +165,7 @@ function renderKindEvidence(
       components: [],
       comparisonEligible: true,
       comparisons: true,
-      entry: { path, title, kind },
+      entry: { path, title, kind, views: [] },
       inputChanges: [],
       relatedComponents: [],
       usedBy: [],

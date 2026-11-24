@@ -1,15 +1,25 @@
 import type { Box } from "../frame_adapter.js";
 
-import { clipNode, edges, viewport, type Edges } from "./clipping.js";
-const intersect = (a: Edges, b: Edges): Edges =>
-  a.map((value, axis) =>
-    (axis < 2 ? Math.max : Math.min)(value, b[axis]!),
-  ) as Edges;
+import {
+  boundedPixel,
+  clipNode,
+  combineEdges,
+  edges,
+  viewport,
+  type Edges,
+} from "./clipping.js";
+export const hasText = (text: Text): boolean => /[^\t\n\f\r ]/.test(text.data);
+export const nodeRects = (doc: Document, node: Node): DOMRectList => {
+  if (node.nodeType === 1) return (node as Element).getClientRects();
+  const range = doc.createRange();
+  range.selectNodeContents(node);
+  return range.getClientRects();
+};
 const visible = (box: Edges) => box[2] > box[0] && box[3] > box[1];
 /** Read actual element/text rectangles, clipping each node's own ancestors. */
 export const geometry = (doc: Document) => {
   const frame = viewport(doc);
-  if (!frame.every((value) => value >= 0 && value <= 1000000)) throw "limit";
+  frame.forEach((value) => boundedPixel(value));
   const candidates = [...doc.querySelectorAll("body *")].map(
     (node) => [node, node.getClientRects()] as const,
   );
@@ -20,19 +30,14 @@ export const geometry = (doc: Document) => {
     while ((node = walker.nextNode())) {
       if (range.comparePoint(node, 0)) continue;
       const clip = clipNode(node, frame);
-      let rendered = node as Element | Range;
-      if (node.nodeType !== 1) {
-        rendered = doc.createRange();
-        rendered.selectNodeContents(node);
-      }
-      for (const rect of rendered.getClientRects()) {
-        const box = intersect(edges(rect), clip);
+      for (const rect of nodeRects(doc, node)) {
+        const box = combineEdges(edges(rect), clip);
         if (!visible(box)) continue;
         let pieces = [box];
         for (const [candidate, rects] of candidates) {
           if (range.intersectsNode(candidate)) continue;
           for (const rect of rects) {
-            const cut = intersect(box, edges(rect));
+            const cut = combineEdges(box, edges(rect));
             if (
               !visible(cut) ||
               !candidate.contains(
@@ -44,17 +49,17 @@ export const geometry = (doc: Document) => {
             )
               continue;
             pieces = pieces.flatMap((piece) => {
-              const overlap = intersect(piece, cut);
-              return visible(overlap)
-                ? (
-                    [
-                      [piece[0], piece[1], piece[2], overlap[1]],
-                      [piece[0], overlap[3], piece[2], piece[3]],
-                      [piece[0], overlap[1], overlap[0], overlap[3]],
-                      [overlap[2], overlap[1], piece[2], overlap[3]],
-                    ] satisfies Edges[]
-                  ).filter(visible)
-                : [piece];
+              const overlap = combineEdges(piece, cut);
+              if (!visible(overlap)) return [piece];
+              const [left, top, right, bottom] = piece;
+              const [cutLeft, cutTop, cutRight, cutBottom] = overlap;
+              const remainder: Edges[] = [
+                [left, top, right, cutTop],
+                [left, cutBottom, right, bottom],
+                [left, cutTop, cutLeft, cutBottom],
+                [cutRight, cutTop, right, cutBottom],
+              ];
+              return remainder.filter(visible);
             });
           }
         }
@@ -66,8 +71,8 @@ export const geometry = (doc: Document) => {
         (box, index) =>
           !result.some(
             (other, j) =>
-              intersect(box, other).every(
-                (value, axis) => value === box[axis],
+              box.every((value, axis) =>
+                axis < 2 ? value >= other[axis]! : value <= other[axis]!,
               ) &&
               (j < index || other.some((value, axis) => value !== box[axis])),
           ),

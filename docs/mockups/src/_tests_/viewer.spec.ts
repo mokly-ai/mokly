@@ -24,6 +24,26 @@ import {
  * the panels' rows in `viewer-panels.spec.ts`.
  */
 
+/**
+ * The publication pill's names: the whole reference, the state's phrase and
+ * the short SHA, which both compositions keep.
+ */
+const pullReference = pullRequest.number + " " + pullRequest.title;
+const readyBranch = [
+  publication.branch,
+  "Ready · " + publication.time.split(",")[0],
+  publication.sha,
+].join(", ");
+const readyPullRequest = [
+  pullReference,
+  pullRequest.author + " · Ready · 15 Sep",
+  pullRequest.sha,
+].join(", ");
+const unpublishedPullRequest = [
+  pullReference,
+  pullRequest.author + " · Not published",
+].join(", ");
+
 /** The six screens of the family and whether a panel is open over the stage. */
 const family = [
   ["standalone", false],
@@ -54,7 +74,9 @@ for (const viewport of ["desktop", "mobile"] as const)
       "every viewer screen keeps the chrome over one stage: " + label,
       async ({ page }) => {
         await page.setViewportSize(size);
-        const folio = rgb(tokens.color[scheme].accentSolid);
+        // The solid accent of the Canvas tokens is the signal fill of a
+        // filled button.
+        const fill = rgb(tokens.color[scheme].accentSolid);
         for (const [screen, panel] of family)
           for (const state of ["", "empty", "loading", "error"]) {
             await page.goto(url(screen, state || undefined));
@@ -78,14 +100,12 @@ for (const viewport of ["desktop", "mobile"] as const)
               .getByTestId("firna-button-primary")
               .count();
             expect(primaries, screen + " " + state).toBeLessThanOrEqual(1);
-            // Every published desktop fixture spends the accent on its
-            // selected catalogue row, including the pull request in Changes.
-            const packageSelection =
-              published && viewport === "desktop" ? 1 : 0;
+            // The selected catalogue row draws the soft accent, not the
+            // solid one, so only a filled button spends the solid accent.
             expect(
-              await page.evaluate(accentFills, folio),
+              await page.evaluate(accentFills, fill),
               screen + " " + state,
-            ).toBe(primaries + packageSelection);
+            ).toBe(primaries);
           }
       },
     );
@@ -96,17 +116,9 @@ for (const viewport of ["desktop", "mobile"] as const)
         async ({ page }) => {
           await page.setViewportSize({ width: 320, height: 844 });
           for (const [screen, name, role] of [
-            ["standalone", publication.branch, "button"],
-            [
-              "pull-request",
-              pullRequest.number + " " + pullRequest.title,
-              "button",
-            ],
-            [
-              "pull-request/empty",
-              pullRequest.number + " " + pullRequest.title,
-              "link",
-            ],
+            ["standalone", readyBranch, "button"],
+            ["pull-request", readyPullRequest, "button"],
+            ["pull-request/empty", unpublishedPullRequest, "link"],
           ] as const) {
             await page.goto(url(screen));
             await page.addStyleTag({ content: "html { font-size: 200%; }" });
@@ -139,8 +151,11 @@ for (const viewport of ["desktop", "mobile"] as const)
       await page.goto(url("standalone"));
       const viewer = page.locator(".mokly-viewer");
       await expect(
-        viewer.getByRole("button", { name: publication.branch, exact: true }),
+        viewer.getByRole("button", { name: readyBranch, exact: true }),
       ).toBeVisible();
+      // The full bar holds the project switcher, History, Share and the
+      // account's avatar, named by the reader; Settings lives in the account
+      // menu, not in the bar.
       const labels =
         viewport === "mobile"
           ? ["More"]
@@ -148,19 +163,21 @@ for (const viewport of ["desktop", "mobile"] as const)
               sample.workspace + " / " + sample.project,
               "History",
               "Share",
-              "Settings",
               sample.viewer.name,
             ];
       for (const name of labels)
         await expect(
           viewer.getByRole("button", { name, exact: true }),
         ).toBeVisible();
+      await expect(
+        viewer.getByRole("button", { name: "Settings", exact: true }),
+      ).toHaveCount(0);
 
       if (viewport === "desktop") {
         await page.setViewportSize({ width: 700, height: 900 });
         for (const [screen, name] of [
-          ["standalone", publication.branch],
-          ["pull-request", pullRequest.number + " " + pullRequest.title],
+          ["standalone", readyBranch],
+          ["pull-request", readyPullRequest],
         ] as const)
           await test.step("narrow desktop " + screen, async () => {
             await page.goto(url(screen));
@@ -176,6 +193,52 @@ for (const viewport of ["desktop", "mobile"] as const)
           });
       }
     });
+
+    if (viewport === "desktop")
+      test(
+        "the full bar keeps History's label and the SHA at 1180px, then drops them and the phrase: " +
+          label,
+        async ({ page }) => {
+          await page.goto(url("standalone"));
+          const viewer = page.locator(".mokly-viewer");
+          const pill = viewer.locator(
+            ".fo-package-slot-center:not(.fo-package-slot-compact) .fo-canvas-pill",
+          );
+          const history = viewer
+            .getByRole("button", { name: "History", exact: true })
+            .filter({ visible: true });
+          const more = viewer.getByRole("button", {
+            name: "More",
+            exact: true,
+          });
+          // Each width sits between two of the bar's rules, widest first.
+          for (const [width, shown] of [
+            [1180, { label: "History", sha: true, phrase: true }],
+            [1174, { label: "History", sha: false, phrase: true }],
+            [1100, { label: "", sha: false, phrase: true }],
+            [1040, { label: "", sha: false, phrase: false }],
+          ] as const) {
+            await page.setViewportSize({ width, height: size.height });
+            const at = ` at ${width}px`;
+            await expect(history, "History" + at).toHaveText(shown.label);
+            await expect(pill.locator(".mono-value"), "SHA" + at).toBeVisible({
+              visible: shown.sha,
+            });
+            await expect(
+              pill.locator(".fo-top-state-detail"),
+              "phrase" + at,
+            ).toBeVisible({ visible: shown.phrase });
+            await expect(
+              pill.locator('.fo-top-state > [aria-hidden="true"]'),
+              "dot" + at,
+            ).toBeVisible();
+            await expect(more, "More" + at).toBeHidden();
+          }
+          await page.setViewportSize({ width: 1000, height: size.height });
+          await expect(more).toBeVisible();
+          await expect(history).toHaveCount(0);
+        },
+      );
 
     if (viewport === "desktop")
       test(

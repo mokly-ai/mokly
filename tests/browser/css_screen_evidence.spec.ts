@@ -20,14 +20,30 @@ import {
   UNRESOLVED_LEAD,
   evidenceFiles,
   evidenceSpacing,
-  openEvidence,
+  openChangesEvidence,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
-import { modeButton } from "./comparison_ui.js";
+import { chooseMode, outcomeLines } from "./comparison_ui.js";
+import { setFrames } from "./workspace_actions.js";
 
 /** Pane headings fixed by docs/protocol/mokly-css-evidence-shell.md. */
 const STYLE_HEADING = "Styles this screen uses changed";
 const UNCHANGED_HEADING = "No changes to this screen";
+
+/**
+ * The outcome line of each compared Light frame at each inspector size. The
+ * wide canvas compares both viewports' frames: the released Desktop view
+ * reads as unchanged beside the retained Mobile view. The compact layout
+ * compares its one frame, Mobile · Light; its Desktop view alone would show
+ * Unmodified and offer no comparison.
+ */
+const OUTCOMES = {
+  desktop: [
+    `Desktop · Light · ${UNCHANGED_HEADING}`,
+    `Mobile · Light · ${STYLE_HEADING}`,
+  ],
+  mobile: [`Mobile · Light · ${STYLE_HEADING}`],
+} as const;
 
 for (const [name, size] of INSPECTOR_VIEWPORTS)
   test.describe(`${name} screen evidence`, () => {
@@ -40,7 +56,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -66,17 +82,16 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
-      const evidence = await openEvidence(page);
+      const evidence = await openChangesEvidence(page);
       await expect(
         evidence.getByText(MATCHED_LEAD, { exact: true }),
       ).toBeVisible();
       await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
       for (const lead of [EXCLUDED_LEAD, EXAMINED_LEAD])
         await expect(evidence).not.toContainText(lead);
-      await modeButton(page, "Side by side").click();
-      await expect(page.locator(".mbk-diff-view h3")).toHaveText([
-        `Mobile · ${STYLE_HEADING}`,
-        `Desktop · ${UNCHANGED_HEADING}`,
-      ]);
+      // Each compared frame of the Light views names its own outcome.
+      await setFrames(page, { light: true, dark: false });
+      await chooseMode(page, "Side by side");
+      await expect(outcomeLines(page)).toHaveText([...OUTCOMES[name]]);
     });
   });

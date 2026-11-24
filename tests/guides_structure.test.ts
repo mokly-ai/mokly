@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import test from "node:test";
 
+import { guideSamplePath } from "./helpers/guide_samples.js";
 import {
   GUIDES,
   GUIDE_SECTIONS,
@@ -129,7 +130,12 @@ test("bodies use headings, comments, and fenced code within the contract", () =>
     for (const line of guide.body.split("\n")) {
       if (line.startsWith("```")) {
         if (fenced) assert.equal(line, "```", guide.id);
-        else assert.match(line, /^```[a-z][a-z0-9+-]*$/u, guide.id);
+        else
+          assert.ok(
+            /^```[a-z][a-z0-9+-]*$/u.test(line) ||
+              guideSamplePath(line.slice(3)) !== undefined,
+            `${guide.id}: ${line}`,
+          );
         fenced = !fenced;
         continue;
       }

@@ -6,9 +6,6 @@ export const welcomeRow =
 export const detailsRow =
   'a[data-nav-row][data-route="example/screens/details/index.html"]';
 
-export const designHomeRow =
-  'a[data-nav-row][data-route="design/browse/views/home/index.html"]';
-
 export const tourRow = 'a[data-nav-row][data-route="example/tour/index.html"]';
 
 /** The standalone shell's root, which carries its appearance and page marks. */
@@ -21,16 +18,12 @@ export const appearanceSelect = "[data-mokly-appearance-select]";
 export const face = (value: string) =>
   `[data-appearance-option="${value}"] .mbk-appearance-value`;
 
-export const mobileFrame = ".mbk-frame-mobile iframe";
-
-export const desktopFrame = ".mbk-frame-desktop iframe";
-
 export const darkSurface = "rgb(18, 21, 20)";
 
 export const formsChip =
-  '[data-inspector-panel="details"] [data-mokly-tag="forms"]';
+  '[data-inspect-section="details"] [data-mokly-tag="forms"]';
 
-export const accentFill = "rgb(79, 120, 100)";
+export const accentFill = "rgb(6, 122, 69)";
 
 export async function markPage(page: Page): Promise<void> {
   await page.evaluate(() => {

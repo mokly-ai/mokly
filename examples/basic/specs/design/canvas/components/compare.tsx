@@ -1,0 +1,186 @@
+import { defineScreen } from "@mokly/mokly";
+
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
+import { useChosenFrame } from "../parts/picked_frames.js";
+import { actionSetFrames } from "../parts/set_sketches.js";
+import { VariantSetArtboard } from "../parts/set_stage.js";
+import { CanvasShell } from "../parts/shell.js";
+import { SET_FITS } from "../parts/sketches.js";
+import { CanvasStage } from "../parts/stage.js";
+
+import {
+  CHANGED_DEFAULT,
+  EXPLORER_KEYS,
+  actionBranchChanges,
+} from "./parts/branch.js";
+import {
+  DEFAULT_FRAME,
+  DEFAULT_MODES,
+  DefaultChanges,
+  type DefaultMode,
+} from "./parts/changes.js";
+import { EXPLORER_PAGES as E } from "./parts/destinations.js";
+import { DefaultInspect } from "./parts/inspect_default.js";
+import { explorerChangesMetadata, explorerState } from "./parts/metadata.js";
+import {
+  PAIR_FITS,
+  actionCompareFrames,
+  actionSideFrames,
+} from "./parts/sketches.js";
+
+/**
+ * The Action's saved variant Default on the Changes tab of the Action
+ * branch: the Action's variant set, its own example and its saved variants,
+ * in the shown mode, which Overlay and Difference apply to every frame, and
+ * the catalogue in the Changes filter with Default selected. Every row of
+ * the set changed, so a comparison's details list the outcome of every
+ * frame. In Changes the canvas draws no selection. On a phone, Current shows
+ * the Changes sheet open, and a comparison the whole set.
+ */
+function DefaultCompare({
+  mode,
+  viewport,
+}: {
+  mode: Exclude<DefaultMode, "side-by-side">;
+  viewport: ArtboardViewport;
+}) {
+  const outcomes =
+    mode === "current"
+      ? undefined
+      : frameOutcomes(actionSetFrames(), VIEW_OUTCOMES.variantChanged, {
+          viewport,
+        });
+  return (
+    <VariantSetArtboard
+      catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
+      compare={mode}
+      design={DEFAULT_MODES[mode]}
+      entry={CHANGED_DEFAULT}
+      fit={SET_FITS.action}
+      frames={
+        mode === "current" ? actionSetFrames() : actionCompareFrames(mode)
+      }
+      panel={<DefaultChanges mode={mode} outcomes={outcomes} />}
+      sheet={mode === "current" ? "panel" : undefined}
+      tab="changes"
+      viewport={viewport}
+    />
+  );
+}
+
+/**
+ * Default's Changes tab in Side by side: its Light frame's version before
+ * beside its current version, at the set's fitted zoom, where the pair fits
+ * at full size. The stage holds every frame's pair, and the compact frame
+ * picker picks another pair in place. Every frame of the set compares, so
+ * the comparison details list the outcome of each on a desktop, and of the
+ * compared pair's frame on a phone. In Changes the canvas draws no
+ * selection. On a phone, the compared pair.
+ */
+function DefaultSideBySide({ viewport }: { viewport: ArtboardViewport }) {
+  const outcomes = frameOutcomes(
+    actionSetFrames(),
+    VIEW_OUTCOMES.variantChanged,
+    { picked: DEFAULT_FRAME, viewport },
+  );
+  return (
+    <CanvasShell
+      catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
+      compactZoom={PAIR_FITS.default.phone}
+      design={E.explorerCompareSide}
+      entry={CHANGED_DEFAULT}
+      panel={<DefaultChanges mode="side-by-side" outcomes={outcomes} />}
+      tab="changes"
+      viewport={viewport}
+      zoom={PAIR_FITS.default.zoom}
+    >
+      <CanvasStage
+        compare="side-by-side"
+        entry={CHANGED_DEFAULT}
+        frames={actionSideFrames()}
+        pickable={actionSetFrames()}
+        picked={DEFAULT_FRAME}
+        zoom={PAIR_FITS.default.zoom}
+      />
+    </CanvasShell>
+  );
+}
+
+/**
+ * Default on Inspect while Overlay stays chosen in the Changes tab: the
+ * canvas shows the current frames, with no compare, its Light frame is
+ * selected, and on a phone its frame of the appearance's scheme, and Props
+ * edits Default from its saved props. On a phone, the selected frame with
+ * the Inspect sheet open at Props.
+ */
+function OverlayInspect({ viewport }: { viewport: ArtboardViewport }) {
+  const frames = actionSetFrames();
+  const frame = useChosenFrame(frames, "default", viewport);
+  return (
+    <VariantSetArtboard
+      catalogue={actionBranchChanges(EXPLORER_KEYS.default)}
+      design={E.explorerCompareProps}
+      entry={CHANGED_DEFAULT}
+      fit={SET_FITS.action}
+      frames={frames}
+      panel={
+        <DefaultInspect
+          design={E.explorerCompareProps}
+          frame={frame}
+          state="props"
+        />
+      }
+      selection={{ frame }}
+      sheet="panel"
+      viewport={viewport}
+    />
+  );
+}
+
+export const canvasExplorerCompareScreen = defineScreen({
+  ...explorerChangesMetadata,
+  description:
+    "A changed component compares on its variant set: the Action's Default variant on the Changes tab, where Overlay holds both versions in every frame of the set. The stepper, Compared, the compare modes, and the comparison details with the saved variant follow.",
+  ...artboardStates(
+    {
+      state: "overlay",
+      title: "Overlay",
+      desktop: <DefaultCompare mode="overlay" viewport="desktop" />,
+      mobile: <DefaultCompare mode="overlay" viewport="mobile" />,
+    },
+    [
+      explorerState(
+        "current",
+        "Current",
+        "Default's Changes tab in Current: the set shows its current version, as Inspect does. On a phone, the Changes sheet is open.",
+        (viewport) => <DefaultCompare mode="current" viewport={viewport} />,
+      ),
+      explorerState(
+        "side-by-side",
+        "Side by side",
+        "Side by side on the set: Default · Light's version before stands beside its current version, at the same frame size, and a chip names each frame of the set by its variant and scheme. On a phone, the frame picker picks the pair.",
+        (viewport) => <DefaultSideBySide viewport={viewport} />,
+      ),
+      explorerState(
+        "difference",
+        "Difference",
+        "Difference on every frame of the set: what the two versions share turns dark, so only the button's corners and padding stand out.",
+        (viewport) => <DefaultCompare mode="difference" viewport={viewport} />,
+      ),
+      explorerState(
+        "props",
+        "Inspect during Overlay",
+        "Inspect while Overlay stays chosen in Changes: the canvas shows the current frames, Default's Light frame is selected, and on a phone its frame of the appearance's scheme, and Props edits Default from its saved props. Highlight components reads as in Current. On a phone, the Inspect sheet is open at Props.",
+        (viewport) => <OverlayInspect viewport={viewport} />,
+      ),
+    ],
+  ),
+  slug: "compare",
+  rationale:
+    "On the Action branch the Action's render changed, so the Action and its three saved variants each changed. Every frame of the set, the own example's included, compares its own view, and both versions share the frame's size. A compare mode shows only on the Changes tab, so Inspect keeps the current frames, where Props edits and Highlight components works while Overlay stays chosen. Showing Overlay again discards the edit, because a comparison compares the saved props.",
+  title: "Compare a component",
+});

@@ -29,6 +29,17 @@ test("the home names the catalogue, how to browse it, and what it holds", () => 
     );
 });
 
+test("on the canvas the home and a missing route stand in a card on the dot grid", () => {
+  for (const state of [
+    <HomeState canvas key="home" summary="3 screens" />,
+    <MissingRouteState canvas key="missing" requested="old/path" />,
+  ])
+    assert.match(
+      renderToStaticMarkup(state),
+      /^<div class="mbk-empty-canvas mbk-reset" data-empty-canvas=""><div class="mbk-empty mbk-reset"><h2/u,
+    );
+});
+
 test("a route that matches no entry shows the path and a link home", () => {
   assert.equal(
     renderToString(<MissingRouteState requested="view/missing/" />),

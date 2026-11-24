@@ -8,7 +8,7 @@ export type PalettePair = readonly [
   minimum: number | null,
 ];
 
-/** Every accessibility-bearing, status, and fixed-device pair in the shell. */
+/** Every accessibility-bearing, status, and fixed preview pair in the shell. */
 export const PALETTE_PAIRS: readonly PalettePair[] = [
   ["ink on surface", "--chrome-ink", "--chrome-surface", 4.5],
   ["ink on background", "--chrome-ink", "--chrome-bg", 4.5],
@@ -18,7 +18,16 @@ export const PALETTE_PAIRS: readonly PalettePair[] = [
   ["muted on raised", "--chrome-muted", "--chrome-raised", 4.5],
   ["muted on hover", "--chrome-muted", "--chrome-hover", 4.5],
   ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
-  ["brand mark on surface", "--chrome-brand", "--chrome-surface", 3],
+  // The mark's text outline keeps it visible; its signal front layer is
+  // identity, with no minimum.
+  ["brand mark outline on surface", "--chrome-ink", "--chrome-surface", 3],
+  [
+    "brand mark front layer on surface",
+    "--cv-signal",
+    "--chrome-surface",
+    null,
+  ],
+  ["on-signal text on signal", "--cv-on-signal", "--cv-signal", 4.5],
   [
     "accent on surface",
     "--_mokly-private-accent-default",
@@ -114,41 +123,5 @@ export const PALETTE_PAIRS: readonly PalettePair[] = [
     "--mbk-dark-screen-ink",
     "--mbk-dark-screen-bg",
     4.5,
-  ],
-  [
-    "device body around a light screen",
-    "--mbk-device-body",
-    "--mbk-screen-bg",
-    3,
-  ],
-  [
-    "device notch on a light screen",
-    "--mbk-device-notch",
-    "--mbk-screen-bg",
-    3,
-  ],
-  [
-    "device home indicator on a light screen",
-    "--mbk-device-home",
-    "--mbk-screen-bg",
-    null,
-  ],
-  [
-    "close light on the browser bar",
-    "--mbk-device-light-close",
-    "--mbk-browser-bar",
-    null,
-  ],
-  [
-    "minimise light on the browser bar",
-    "--mbk-device-light-minimise",
-    "--mbk-browser-bar",
-    null,
-  ],
-  [
-    "expand light on the browser bar",
-    "--mbk-device-light-expand",
-    "--mbk-browser-bar",
-    null,
   ],
 ];

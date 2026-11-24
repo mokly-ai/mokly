@@ -9,11 +9,11 @@ import {
   type ComparisonIndex,
 } from "./comparison_ui.js";
 import { endedRequests, passRenderingUpdates } from "./page_settling.js";
+import { historicalFrame, PREVIOUS } from "./previous_version.js";
 import { responseFailure } from "./shell_error_allowances.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { canvasFrame, chooseViewport } from "./workspace_actions.js";
 
 const PREVIEW = "iframe[data-mokly-preview-frame]";
-const SCREEN_PREVIEW = "[data-mokly-preview] .mbk-frame-desktop iframe";
 
 /** Every navigation the page or a frame starts after this call. */
 function documentRequests(page: Page): string[] {
@@ -133,7 +133,7 @@ test("browsing current entries requests no historical bytes", async ({
   await chooseViewport(page, "mobile");
   await expect(
     page
-      .frameLocator('iframe[data-workspace-frame="mobile"]')
+      .frameLocator(canvasFrame("mobile"))
       .getByRole("heading", { name: "After screen" }),
   ).toBeVisible();
   await navRow(page, comparisonPaths.component).click();
@@ -198,6 +198,8 @@ test("a preview that cannot be loaded offers another attempt", async ({
   await expect(
     page.getByRole("heading", { name: "Previous version unavailable" }),
   ).toBeVisible();
+  // The failure stands in place of the section, so the canvas has no pill.
+  await expect(page.getByRole("group", { name: "Zoom" })).toHaveCount(0);
   const retry = page.locator("[data-mokly-preview-retry]");
   await expect(retry).toHaveText("Retry");
   await chooseFilter(page, "changed");
@@ -231,16 +233,23 @@ test("navigation fences a late response and keeps history usable", async ({
   await page.goto(`/view/${comparisonPaths.changed}/`);
   await chooseFilter(page, "changed");
   await navRow(page, comparisonPaths.removedPage).click();
-  await expect(page.locator(".mbk-preview-status")).toHaveText(
-    "Loading previous version…",
-  );
+  // The canvas holds the loading state in place of the section, so it has
+  // no zoom pill until the section stands on it.
+  const loading = page
+    .locator(PREVIOUS)
+    .getByText("Loading previous version…", { exact: true });
+  const pill = page.getByRole("group", { name: "Zoom" });
+  await expect(loading).toBeVisible();
+  await expect(pill).toHaveCount(0);
   // Move on only once the shell holds a request for the page document.
   await expect.poll(() => heldRequests.length).toBeGreaterThan(0);
   await navRow(page, comparisonPaths.removedScreen).click();
-  const screen = page
-    .frameLocator(SCREEN_PREVIEW)
+  const screen = historicalFrame(page, "desktop")
+    .locator("iframe")
+    .contentFrame()
     .getByRole("heading", { name: "Historical screen" });
   await expect(screen).toBeVisible();
+  await expect(pill).toBeVisible();
   // Release the held document, wait until the browser ends that request
   // (the shell cancels it when the reader moves on), then let the shell
   // handle the outcome.
@@ -249,7 +258,7 @@ test("navigation fences a late response and keeps history usable", async ({
     .poll(() => heldRequests.every((held) => ended.has(held)))
     .toBe(true);
   await passRenderingUpdates(page);
-  await expect(page.locator(".mbk-preview-status")).toHaveCount(0);
+  await expect(loading).toHaveCount(0);
   await expect(screen).toBeVisible();
   await page.goBack();
   await expect(

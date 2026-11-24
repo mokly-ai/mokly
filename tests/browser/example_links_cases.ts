@@ -9,7 +9,9 @@ import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
 import { focusDesignLink } from "./design_test_helpers.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { copiedDesignFileUrl } from "./static_test.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
   expectFrameLoaded,
@@ -53,7 +55,8 @@ export function registerExampleLinks(
           release();
         }
         const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
-        const frameElement = page.locator(`.mbk-frame-${viewport} iframe`);
+        // The canvas frame of the viewport in its own scheme.
+        const frameElement = page.locator(canvasFrame(viewport, scheme));
         await expectFrameLoaded(
           frameElement,
           new RegExp(
@@ -71,11 +74,14 @@ export function registerExampleLinks(
         await expect(next).toBeFocused();
         await expect(next).toHaveCSS("outline-width", "2px");
         await page.keyboard.press("Enter");
+        // Each destination's address names the kept viewport.
         await expect(page).toHaveURL(
-          /\/view\/example\/screens\/details\/\?fragment=details$/,
+          new RegExp(
+            `/view/example/screens/details/\\?fragment=details&viewport=${viewport}$`,
+          ),
         );
         await expectFrameSource(
-          page.locator(`.mbk-frame-${viewport} iframe`),
+          page.locator(canvasFrame(viewport, scheme)),
           new RegExp(
             `example/screens/details/index\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
           ),
@@ -84,7 +90,9 @@ export function registerExampleLinks(
           .locator('a[data-mokly-link-control="button"]')
           .filter({ hasText: "Return to welcome" })
           .click();
-        await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
+        await expect(page).toHaveURL(
+          new RegExp(`/view/example/screens/welcome/\\?viewport=${viewport}$`),
+        );
 
         await page.goto(
           designFileUrl(
@@ -126,7 +134,7 @@ export function registerExampleLinks(
       for (const step of [0, 1]) {
         await page.goto("/view/example/tour/");
         await chooseScheme(page, scheme);
-        const frame = page.frameLocator(".mbk-flow-screen iframe").nth(step);
+        const frame = useCaseStepFrame(page, step + 1).contentFrame();
         const button = frame
           .locator('a[data-mokly-link-control="button"]')
           .filter({

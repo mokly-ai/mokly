@@ -1,6 +1,5 @@
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
 import type { CatalogueNavigationProps } from "../library/chrome/catalogue-navigation.js";
-
-import { DESTINATIONS } from "./destinations.js";
 
 type NavigationRows = CatalogueNavigationProps["rows"];
 
@@ -11,8 +10,8 @@ export type ProfileList = "closed" | "open";
  * The Profile screen is its folder's own page, so it renders as the folder's
  * row: a link beside a disclosure whose list holds its Unverified email
  * variant and then the folder's other members, Notifications and Security.
- * No artboard depicts Notifications or the variant, so those rows stay
- * depictions.
+ * Profile opens its Canvas artboard. No artboard depicts the members or the
+ * variant, so those rows stay depictions.
  */
 function profileRows(list: ProfileList): NavigationRows {
   return [
@@ -22,7 +21,7 @@ function profileRows(list: ProfileList): NavigationRows {
       depth: 1,
       kind: "screen",
       label: "Profile",
-      to: DESTINATIONS.indexEntry,
+      to: CANVAS_PAGES.unchanged,
       variants: list,
     },
     {
@@ -43,7 +42,6 @@ function profileRows(list: ProfileList): NavigationRows {
       depth: 2,
       kind: "screen",
       label: "Security",
-      to: DESTINATIONS.indexMember,
     },
   ];
 }
@@ -91,7 +89,7 @@ export function accountBranch(profile: ProfileList): NavigationRows {
       depth: 2,
       kind: "document",
       label: "Payment terms",
-      to: DESTINATIONS.document,
+      to: CANVAS_PAGES.document,
     },
     ...profileRows(profile),
   ];
@@ -100,7 +98,8 @@ export function accountBranch(profile: ProfileList): NavigationRows {
 /**
  * Changes on a branch where only Security changed. Profile is unmodified and
  * its only changed row is a folder member, not a variant, so its row stays a
- * container with no change dot; activating it opens its first changed member.
+ * container with no change dot. No artboard depicts the changed member, so
+ * both rows are pictures.
  */
 export const PROFILE_CHANGES_ROWS: NavigationRows = [
   {
@@ -116,7 +115,6 @@ export const PROFILE_CHANGES_ROWS: NavigationRows = [
     depth: 1,
     kind: "screen",
     label: "Profile",
-    to: DESTINATIONS.indexMemberChanges,
     variants: "open",
   },
   {
@@ -125,7 +123,6 @@ export const PROFILE_CHANGES_ROWS: NavigationRows = [
     depth: 2,
     kind: "screen",
     label: "Security",
-    to: DESTINATIONS.indexMemberChanges,
   },
 ];
 
@@ -155,7 +152,7 @@ export const MOVED_ROWS: NavigationRows = [
     kind: "screen",
     label: "Invoice",
     moved: true,
-    to: DESTINATIONS.moved,
+    to: CANVAS_PAGES.moved,
     variants: "open",
   },
   {

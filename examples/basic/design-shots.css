@@ -1,21 +1,12 @@
-/* The mini screen sketches that the shipped frames hold on the dotted stage:
-   the example's Welcome and Details, with the Action and the Toolbar that the
-   real screens render, in the preview tokens of design-stage.css. */
+/* The mini screen sketches that the Canvas frames hold: the example's
+   Welcome and Details, with the Action and the Toolbar that the
+   real screens render, and the component documents that a variant set's
+   frames hold, in the preview tokens of design-preview.css. */
 
 .mbk-shot-sections h3 {
   font-size: 13px;
   letter-spacing: -0.01em;
   margin: 16px 0 6px;
-}
-
-/* A long screen's introduction keeps one height in every version, so the
-   sections below it stay in place when the introduction changes. */
-.mbk-shot-hero {
-  min-height: 104px;
-}
-
-.phone-screen .mbk-shot-hero {
-  min-height: 140px;
 }
 
 .mbk-shot {
@@ -29,12 +20,6 @@
 
 .mbk-shot-pad {
   padding: 18px 20px;
-}
-
-.phone-screen .mbk-shot {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 0;
 }
 
 .mbk-shot-nav {
@@ -207,4 +192,76 @@
 
 [data-preview-color-scheme="dark"] .mbk-shot {
   background: transparent;
+}
+
+/* ---- Component documents ------------------------------------------- */
+
+/* A component's frame holds its document in the measured layout of the
+   built document's desktop view: the component 24px from the top left, as
+   the example's renderer draws it. Each label keeps its measured width, so
+   each part keeps its measured box in Geist. The Action's hint stands 8px
+   below its button. */
+.mbk-shot--action > .mbk-shot-pad {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+}
+
+.mbk-shot--toolbar > .mbk-shot-pad {
+  padding: 24px;
+}
+
+/* The real Action's button: 38px tall with a 1px border, 16px beside its
+   label in 13px bold, and 8px corners. */
+:is(.mbk-shot--action, .mbk-shot--toolbar) .mbk-shot-action {
+  box-sizing: content-box;
+  flex: none;
+  font-size: 13px;
+  font-weight: 700;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+}
+
+.mbk-shot--action p {
+  font-size: 13px;
+  line-height: 19.5px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The Toolbar: a card with 12px corners and 20px padding, its 16px bold
+   title, Default's 14px paragraph, and its two Actions 12px apart, 8px below
+   the title or 14px below the paragraph. */
+.mbk-shot--toolbar .mbk-shot-toolbar {
+  border-radius: 12px;
+  display: block;
+  height: auto;
+  padding: 20px;
+}
+
+.mbk-shot--toolbar .mbk-shot-toolbar > strong {
+  display: block;
+  font-size: 16px;
+  line-height: 19px;
+}
+
+.mbk-shot--toolbar .mbk-shot-toolbar > span {
+  display: block;
+  font-size: 14px;
+  line-height: 21px;
+  margin-top: 14px;
+}
+
+.mbk-shot--toolbar .mbk-shot-toolbar-actions {
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.mbk-shot--toolbar .mbk-shot-toolbar > span + .mbk-shot-toolbar-actions {
+  margin-top: 14px;
 }

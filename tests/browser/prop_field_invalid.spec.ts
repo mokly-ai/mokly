@@ -12,7 +12,7 @@ import { renderWithShellStyles } from "./shell_styles_page.js";
 
 /** The Light palette's danger ink and control edge. */
 const DANGER_INK = "rgb(150, 67, 52)";
-const CONTROL_EDGE = "rgb(134, 142, 136)";
+const CONTROL_EDGE = "rgb(98, 106, 100)";
 
 test.use({ colorScheme: "light" });
 

@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import type { Viewport } from "@mokly/mokly";
 
-import { ContentList } from "../../../entries/design/content-list.mockup";
 import { addresses, sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
@@ -10,6 +9,7 @@ import { workspaces } from "../../../fixtures/publications";
 import { Action, Pending, StateMessage } from "../page-parts";
 import { ControlPlaceholder, TextBar } from "../placeholders";
 
+import { PanelList } from "./panel-rows";
 import { ViewerPanelScreen } from "./screen";
 
 const title = "Projects";
@@ -64,8 +64,7 @@ function Workspaces({ state }: { state: ScreenState }) {
             state === "empty" && workspace.id === "personal" ? (
               <p className="fo-copy">No projects here yet.</p>
             ) : (
-              <ContentList
-                moklyInstance={"projects-" + workspace.id}
+              <PanelList
                 label={workspace.name + " projects"}
                 rows={workspace.projects.map((project) => ({
                   id: workspace.id + "-" + project.id,
@@ -73,7 +72,7 @@ function Workspaces({ state }: { state: ScreenState }) {
                   detail:
                     addresses.root + "/" + workspace.slug + "/" + project.slug,
                   ...(project.name === sample.project
-                    ? { meta: "Current" }
+                    ? { current: true, mark: "Current" }
                     : { to: "product/viewer/standalone", action: "Open" }),
                 }))}
               />
@@ -115,8 +114,7 @@ function WaitingWorkspace() {
       name={<TextBar width="5em" />}
       accounts={<TextBar width="5em" />}
       projects={
-        <ContentList
-          moklyInstance="projects-waiting"
+        <PanelList
           label="Projects"
           rows={[
             {

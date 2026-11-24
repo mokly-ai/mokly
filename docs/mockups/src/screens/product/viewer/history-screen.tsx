@@ -1,6 +1,5 @@
 import type { Viewport } from "@mokly/mokly";
 
-import { ContentList } from "../../../entries/design/content-list.mockup";
 import type { HistoryEntry } from "../../../fixtures/build-history";
 import { referenceHistory } from "../../../fixtures/build-history";
 import type { ScreenState } from "../../../fixtures/product-states";
@@ -8,6 +7,8 @@ import { failureReference } from "../../../fixtures/product-states";
 import { publication, publicationTones } from "../../../fixtures/publications";
 import { Action, Pending, StateMessage } from "../page-parts";
 
+import { PanelList } from "./panel-rows";
+import type { PanelRow } from "./panel-rows";
 import { ViewerPanelScreen } from "./screen";
 
 const title = "Publication history";
@@ -39,19 +40,20 @@ function detail(entry: HistoryEntry): string {
 
 /**
  * Newest first. The head of the publications is where the reader already is,
- * so it carries no destination. A row says when Mokly admitted the
+ * so it carries no destination and takes the signal-soft fill, and its state
+ * line already says Current publication. A row says when Mokly admitted the
  * publication or created the build, what became of it and which commit it
  * came from: everything `listHistory` returns about one, and it returns no
  * author. A build reads Publishing now or Unable to publish, exactly as a
  * publication does, and opens its own details.
  */
-const rows = referenceHistory.map((entry) => ({
+const rows = referenceHistory.map((entry): PanelRow => ({
   id: entry.kind + "-" + entry.sha,
   title: entry.time,
   detail: detail(entry),
   status: publicationTones[entry.state],
-  meta: entry.sha,
-  mono: true,
+  sha: entry.sha,
+  current: entry.kind === "publication" && entry.current === true,
   ...destination(entry),
 }));
 
@@ -79,8 +81,7 @@ function HistoryPage({
             label="Loading publication history"
             labelMode="screen-reader-only"
           >
-            <ContentList
-              moklyInstance="history-publications"
+            <PanelList
               label={"Publications of " + publication.branch}
               rows={[
                 {
@@ -88,8 +89,7 @@ function HistoryPage({
                   title: "",
                   detail: "",
                   status: "neutral",
-                  meta: "",
-                  mono: true,
+                  sha: "",
                   to: "product/viewer/standalone",
                   action: "Open",
                   waiting: true,
@@ -128,8 +128,7 @@ function HistoryPage({
             }
           />
         ) : (
-          <ContentList
-            moklyInstance="history-publications"
+          <PanelList
             label={"Publications of " + publication.branch}
             rows={rows}
           />

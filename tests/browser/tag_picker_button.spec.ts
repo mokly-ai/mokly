@@ -11,9 +11,9 @@ import { test } from "./browser_test.js";
 import { renderWithShellStyles } from "./shell_styles_page.js";
 
 /** The Light palette's hover fill of the button, and its inks. */
-const HOVER_FILL = "rgb(227, 229, 224)";
-const HOVER_INK = "rgb(74, 79, 77)";
-const RESTING_INK = "rgb(103, 110, 106)";
+const HOVER_FILL = "rgb(225, 228, 222)";
+const HOVER_INK = "rgb(67, 76, 70)";
+const RESTING_INK = "rgb(98, 106, 100)";
 const NO_FILL = "rgba(0, 0, 0, 0)";
 
 test.use({ colorScheme: "light" });

@@ -1,192 +1,63 @@
-import { COMPONENT_NAVIGATION_STATES } from "../components/parts/navigation_states.js";
-
 import {
-  DESTINATIONS as D,
-  type ComparisonMode,
-  type DesignDestination,
-} from "./destinations.js";
+  CANVAS_NAVIGATION_STATES,
+  type CanvasTransitions,
+} from "../canvas/parts/navigation_states.js";
+
+import type { DesignDestination } from "./destinations.js";
 import type { CatalogueTag } from "./tags.js";
+
+/**
+ * The artboards of one family's tag states of Welcome: by the tag that the
+ * search enters, or none, the artboard with the tag picker closed and open.
+ */
+export type TagArtboards = Readonly<
+  Record<
+    "none" | CatalogueTag,
+    Readonly<Record<"closed" | "open", DesignDestination>>
+  >
+>;
 
 interface TagState {
   active: CatalogueTag | null;
   picker: boolean;
+  /** The artboards of the family's tag states. */
+  artboards: TagArtboards;
 }
 
 /** Only authored transitions are present; absence always means a depiction. */
 export interface NavigationState {
-  inspector?: DesignDestination;
-  drawer?: { open: boolean; to: DesignDestination };
   all?: DesignDestination;
   changes?: DesignDestination;
-  comparison?: Partial<Record<ComparisonMode, DesignDestination>>;
   tags?: TagState;
+  /** The transitions of a Canvas artboard's stage, panels, and dock. */
+  canvas?: CanvasTransitions;
 }
 
-const welcomeFilters = { all: D.welcome, changes: D.current };
-const detailsFilters = { all: D.details, changes: D.added };
-/** Welcome routes that form one complete comparison family. */
-export const welcomeModes = {
-  current: D.current,
-  "side-by-side": D.changed,
-  overlay: D.overlay,
-  difference: D.difference,
-};
-const welcomeBrowse: NavigationState = {
-  ...welcomeFilters,
-  tags: { active: null, picker: false },
-};
-const appearanceFilters = {
-  all: D.appearance,
-  changes: D.appearanceSideBySide,
-};
-/** Appearance routes that form one complete comparison family. */
-export const appearanceModes = {
-  current: D.appearance,
-  "side-by-side": D.appearanceSideBySide,
-  difference: D.appearanceDifference,
-};
-
-/** Canonical states for the entire design registry, never inferred from labels. */
-export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
-  ...COMPONENT_NAVIGATION_STATES,
-  [D.home]: {},
-  [D.exampleOverview]: {},
-  [D.document]: {},
-  [D.page]: {
-    inspector: D.pageDetails,
-    drawer: { open: false, to: D.pageNavigation },
-    changes: D.stylePage,
-  },
-  [D.pageDetails]: {
-    inspector: D.page,
-    drawer: { open: false, to: D.pageNavigation },
-    changes: D.stylePage,
-  },
-  [D.pageNavigation]: {
-    inspector: D.pageDetails,
-    drawer: { open: true, to: D.page },
-    changes: D.stylePage,
-  },
-  [D.pageRemoved]: { all: D.home },
-  [D.pageRemovedLong]: { all: D.home },
-  [D.pageRemovedLoading]: { all: D.home },
-  [D.pageRemovedUnavailable]: { all: D.home },
-  [D.publication]: {},
-  [D.publicationChanges]: {
-    all: D.publicationChanges,
-    changes: D.current,
-    comparison: welcomeModes,
-  },
-  [D.missing]: {},
-  [D.navigation]: {},
-  [D.variantSelected]: { all: D.welcome, changes: D.variantChanges },
-  [D.variantChanges]: { all: D.variantSelected },
-  [D.variantRemoved]: { all: D.welcome },
-  [D.variantReparented]: { all: D.home },
-  [D.changedViews]: { all: D.welcome },
-  [D.indexEntry]: { changes: D.indexEntryChanges },
-  [D.indexMember]: { changes: D.indexMemberChanges },
-  [D.indexEntryChanges]: { all: D.indexEntry },
-  [D.indexMemberChanges]: { all: D.indexMember },
-  [D.tour]: {},
-  [D.welcome]: { ...welcomeBrowse },
-  [D.welcomeAppearanceVariant]: { ...welcomeBrowse },
-  [D.detailsAppearanceVariant]: { ...detailsFilters },
-  [D.details]: { ...detailsFilters },
-  [D.inspector]: { ...welcomeBrowse },
-  [D.appearance]: {
-    ...appearanceFilters,
-    comparison: appearanceModes,
-  },
-  [D.appearanceLightOnly]: { ...appearanceFilters },
-  [D.appearanceAuto]: { ...appearanceFilters },
-  [D.appearanceLightOnlyDocument]: { all: D.appearance },
-  [D.appearanceLightOnlyCurrent]: { ...appearanceFilters },
-  [D.appearanceProps]: { ...appearanceFilters },
-  [D.appearanceInstance]: { ...appearanceFilters },
-  [D.appearanceDrawer]: {
-    ...appearanceFilters,
-    drawer: { open: true, to: D.appearance },
-  },
-  [D.appearanceSideBySide]: {
-    ...appearanceFilters,
-    comparison: appearanceModes,
-  },
-  [D.appearanceDifference]: {
-    ...appearanceFilters,
-    comparison: appearanceModes,
-  },
-  [D.appearanceHome]: { all: D.appearance },
-  [D.appearanceLoading]: { all: D.appearance },
-  [D.appearanceError]: { all: D.appearance },
-  [D.appearanceUnavailable]: { all: D.appearance },
-  [D.appearanceFlow]: { all: D.appearance },
-  [D.tagPicker]: {
-    ...welcomeBrowse,
-    tags: { active: null, picker: true },
-  },
-  [D.formsPicker]: {
-    ...welcomeBrowse,
-    tags: { active: "forms", picker: true },
-  },
-  [D.forms]: {
-    ...welcomeBrowse,
-    tags: { active: "forms", picker: false },
-  },
-  [D.onboarding]: {
-    ...welcomeBrowse,
-    tags: { active: "onboarding", picker: false },
-  },
-  [D.onboardingPicker]: {
-    ...welcomeBrowse,
-    tags: { active: "onboarding", picker: true },
-  },
-  [D.current]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.overlay]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.overlayLong]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.overlayPanel]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.sideBySideApart]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.changed]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.difference]: { ...welcomeFilters, comparison: welcomeModes },
-  [D.moved]: {},
-  [D.added]: { ...detailsFilters },
-  [D.removed]: { all: D.home },
-  [D.removedLong]: { all: D.home },
-  [D.removedLoading]: { all: D.home },
-  [D.removedUnavailable]: { all: D.home },
-  [D.removedNoView]: { all: D.home },
-  [D.ignored]: { all: D.welcome, changes: D.empty },
-  [D.empty]: { all: D.ignored },
-  [D.styleMatched]: { all: D.styleExcluded, changes: D.styleMatched },
-  [D.styleUnresolved]: { all: D.welcome, changes: D.styleUnresolved },
-  [D.styleUnnamed]: { all: D.welcome, changes: D.styleUnnamed },
-  [D.styleExcluded]: { all: D.styleExcluded, changes: D.styleMatched },
-  [D.styleExcludedOnly]: {},
-  [D.stylePage]: { all: D.page },
-  [D.catalogueLoading]: {},
-  [D.catalogueFailed]: {},
-  [D.viewerVersion]: {},
-  [D.previewLoading]: {},
-  [D.preparing]: { all: D.welcome },
-  [D.unavailable]: { all: D.welcome },
-};
+/**
+ * Canonical states for the entire design registry, never inferred from
+ * labels: the states of the Canvas artboards.
+ */
+export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> =
+  CANVAS_NAVIGATION_STATES;
 
 /** Open/close preserves the depicted query; a selection closes the picker. */
 export function tagPickerTarget(
   tags: TagState | undefined,
 ): DesignDestination | undefined {
   if (!tags) return undefined;
-  if (tags.active === "forms") return tags.picker ? D.forms : D.formsPicker;
-  if (tags.active === "onboarding")
-    return tags.picker ? D.onboarding : D.onboardingPicker;
-  return tags.picker ? D.welcome : D.tagPicker;
+  const state = tags.artboards[tags.active ?? "none"];
+  return tags.picker ? state.closed : state.open;
 }
 
+/**
+ * A chip enters its tag and closes the picker; the chip of the entered tag
+ * clears the query.
+ */
 export function tagTarget(
   tags: TagState | undefined,
   tag: CatalogueTag,
 ): DesignDestination | undefined {
   if (!tags) return undefined;
-  if (tags.active === tag) return D.welcome;
-  return tag === "forms" ? D.forms : D.onboarding;
+  const artboards = tags.artboards;
+  return (tags.active === tag ? artboards.none : artboards[tag]).closed;
 }

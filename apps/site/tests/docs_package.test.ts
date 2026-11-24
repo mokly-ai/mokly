@@ -12,6 +12,7 @@ import {
   REFERENCE_DOCUMENTS,
   referenceRoute,
 } from "../src/docs/reference-allowlist.js";
+import { samplePath } from "../src/docs/sample-path.js";
 import { MOKLY_PACKAGE_VERSION } from "../src/mokly-package.js";
 
 const EXPECTED = [
@@ -151,7 +152,13 @@ test("package guide frontmatter and CommonMark stay inside the site boundary", a
     for (const line of body.split("\n")) {
       if (line.startsWith("```")) {
         if (fenced) assert.equal(line, "```", guide.id);
-        else assert.match(line, /^```[a-z][a-z0-9+-]*$/u, guide.id);
+        else
+          assert.ok(
+            /^```[a-z][a-z0-9+-]*$/u.test(line) ||
+              (line.startsWith("```html ") &&
+                samplePath(line.slice(8)) !== undefined),
+            `${guide.id}: ${line}`,
+          );
         fenced = !fenced;
         continue;
       }

@@ -66,6 +66,8 @@ for (const viewport of ["desktop", "mobile"] as const)
         label,
       async ({ page }) => {
         await page.setViewportSize(size);
+        // The solid accent of the Canvas tokens is the signal fill of a
+        // filled button.
         const fill = rgb(tokens.color[scheme].accentSolid);
         for (const id of [...buildCards, ...buildStages]) {
           await page.goto(pathToFileURL(screenFile(id, viewport, scheme)).href);

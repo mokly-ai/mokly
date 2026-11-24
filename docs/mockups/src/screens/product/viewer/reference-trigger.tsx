@@ -1,50 +1,83 @@
+import type { PublicationState } from "../../../fixtures/publications";
 import { Action } from "../page-parts";
 
+import {
+  Pill,
+  PillChevron,
+  PillDot,
+  PillGlyph,
+  pillName,
+  PillReference,
+  PillState,
+} from "./pill";
+import type { ReferenceKind } from "./pill";
 import { compactLabel } from "./published-bar";
 import type { SlotBar } from "./published-bar";
 
+/** The drawing of the open switcher, which every publication pill opens. */
+export const switcherPath = "product/viewer/switcher";
+
 /**
- * The branch or pull request trigger of one bar composition, which the
- * fallback and the published drawings share. The full bar names the whole
- * reference and the compact bar its compact name. Both keep the label on one
- * line in the cloud-owned reference wrapper, which truncates it when the bar
- * runs out of room, and the whole reference stays the control's accessible
- * name and its tooltip. A desktop drawing draws one trigger for each
- * composition, so each composition keeps its own instance key.
+ * The publication pill of one bar composition, which the fallback and the
+ * published drawings share: one quiet registered Button that draws the
+ * reference and what the stage shows of it as its own content, so a press
+ * anywhere on the pill opens the switcher. The full pill draws the
+ * reference's glyph, the whole reference and the publication's state with its
+ * short SHA and the chevron; the compact pill draws the status dot, the
+ * glyph, the reference's compact name and the chevron. In both, the Button is
+ * named by the whole reference, the state's phrase and the short SHA, and the
+ * pill's frame gives the same words as its tooltip. A glyph is drawn only once
+ * a branch or pull request names the reference. A desktop drawing draws one
+ * pill for each composition, so each keeps its own instance key.
  */
 export function ReferenceTrigger({
   bar,
+  kind,
   reference,
+  meta,
   to,
 }: {
   bar: SlotBar;
+  kind?: ReferenceKind;
   /** The branch, or the pull request's number and title. */
   reference: string;
-  /** The catalogue entry the trigger opens. A published slot opens none. */
+  /** What the pill says about the publication or build the stage shows. */
+  meta: { state: PublicationState; detail: string; sha?: string };
+  /** The catalogue entry the pill opens. A published slot opens none. */
   to?: string;
 }) {
+  const name = pillName(reference, meta);
   return (
-    <span
-      className={
-        bar.part === undefined
-          ? "fo-top-reference"
-          : "fo-top-reference " + bar.part
-      }
-      title={reference}
-    >
+    <Pill part={bar.part} title={name}>
       <Action
         instance={
           bar.compact ? "viewer-publication-compact" : "viewer-publication"
         }
-        label={bar.compact ? compactLabel(reference) : reference}
-        whole={reference}
-        tone="secondary"
+        label={name}
+        tone="quiet"
         size="sm"
-        chevron
         block
-        singleLine
         to={to}
+        content={
+          <span className="fo-canvas-pill-content">
+            {bar.compact && <PillDot state={meta.state} />}
+            {kind && <PillGlyph kind={kind} />}
+            <PillReference
+              reference={bar.compact ? compactLabel(reference) : reference}
+              kind={kind}
+            />
+            {bar.compact ? (
+              <PillChevron />
+            ) : (
+              <PillState
+                state={meta.state}
+                detail={meta.detail}
+                sha={meta.sha}
+              />
+            )}
+          </span>
+        }
       />
-    </span>
+    </Pill>
   );
 }

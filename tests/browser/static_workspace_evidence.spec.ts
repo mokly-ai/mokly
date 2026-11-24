@@ -9,8 +9,11 @@
 
 import { expect, type Page } from "@playwright/test";
 
+import { openChangesEvidence } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
+import { inspectTitle } from "./inspect_head.js";
+import { openInspectFold, openPanelTab } from "./workspace_actions.js";
 
 const CARD = `/view/${comparisonPaths.component}/`;
 
@@ -29,8 +32,8 @@ async function expectKeptDocument(page: Page): Promise<void> {
 
 /** Card's Usage lists the component and the three screens that its change affects. */
 async function expectAffectedConsumers(page: Page): Promise<void> {
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const affected = page.locator('[data-usage-section="affected"]');
+  const usage = await openInspectFold(page, "usage");
+  const affected = usage.locator('[data-usage-section="affected"]');
   await expect(affected.getByRole("heading")).toHaveText(
     "Affected screens and components",
   );
@@ -42,16 +45,15 @@ async function expectAffectedConsumers(page: Page): Promise<void> {
   ]);
 }
 
-/** The changed screen's Details name the changed component that affects it. */
+/**
+ * The changed screen's Details, in its Changes tab, name the changed
+ * component that affects it.
+ */
 async function expectChangedComponent(page: Page): Promise<void> {
-  await expect(page.locator("#mb-main h2").first()).toHaveText(
-    "Changed screen",
-  );
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
+  await expect(inspectTitle(page)).toHaveText("Changed screen");
+  const evidence = await openChangesEvidence(page);
   await expect(
-    page
-      .locator("[data-workspace-evidence]")
-      .getByText("Changed component: Card", { exact: true }),
+    evidence.getByText("Changed component: Card", { exact: true }),
   ).toBeVisible();
 }
 
@@ -59,7 +61,7 @@ test("client navigation keeps the document and shows each destination's own evid
   page,
 }) => {
   await page.goto(`/view/${comparisonPaths.unchanged}/`);
-  await expect(page.locator("#mb-main h2").first()).toHaveText("Stable screen");
+  await expect(inspectTitle(page)).toHaveText("Stable screen");
   await markDocument(page);
   await navRow(page, comparisonPaths.component).click();
   await expect(page).toHaveURL(new RegExp(`${CARD}$`, "u"));
@@ -90,10 +92,18 @@ for (const suffix of ["", "/", "/index.html"])
       .locator('[data-usage-section="affected"]')
       .getByRole("link", { name: "Changed screen", exact: true })
       .click();
-    // The routed instance opens Props when its detail arrives.
+    // The link names the screen's comparison, which opens on the Changes tab.
     await expect(
-      page.getByRole("tab", { name: "Props", exact: true }),
+      page.getByRole("tab", { name: "Changes", exact: true }),
     ).toHaveAttribute("aria-selected", "true");
+    // The routed instance is the selection once its detail arrives: Inspect's
+    // Selection section names its component.
+    await openPanelTab(page, "Inspect");
+    await expect(
+      page
+        .locator('[data-inspect-section="selection"]')
+        .getByRole("link", { name: "Card", exact: true }),
+    ).toBeVisible();
     await expectChangedComponent(page);
     await expectKeptDocument(page);
   });

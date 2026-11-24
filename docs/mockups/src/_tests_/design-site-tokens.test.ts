@@ -71,24 +71,40 @@ test("the responsive emitter keeps legacy root output and scopes complete themes
       "--mk-layout-site-wide",
     ])
       assert.ok(scoped.includes(role + ":"), `${scheme}: ${role}`);
-    assert.ok(scoped.includes(selector + ".folio-scope,"));
-    assert.ok(scoped.includes(selector + " .folio-scope{"));
+    assert.ok(scoped.includes(selector + ".paper-scope,"));
+    assert.ok(scoped.includes(selector + " .paper-scope{"));
     assert.ok(scoped.includes("@media (max-width:767.98px){" + selector));
   }
+});
+
+test("site mockup CSS contains no parallel tokens or literal colors", () => {
+  const css = siteStyles();
+  assert.doesNotMatch(css, /--site-/);
+  assert.doesNotMatch(css, /--mk-[\w-]+\s*:/);
+  assert.doesNotMatch(css, /#[\da-f]{3,8}\b|(?:rgb|hsl)a?\(/i);
+  for (const value of css.matchAll(/^\s*[\w-]+:\s*([^;]+);/gm))
+    assert.doesNotMatch(
+      value[1] ?? "",
+      /(?<![\w-])(?:aqua|black|blue|brown|fuchsia|gold|gray|green|grey|lime|maroon|navy|olive|orange|pink|purple|red|silver|teal|violet|white|yellow)(?![\w-])/i,
+    );
 });
 
 test("site styles use semantic mk roles without aliases", () => {
   const css = siteStyles();
   assert.doesNotMatch(css, /--site-/);
   assert.doesNotMatch(css, /--mk-[\w-]+\s*:/);
+  // Roles of the shared sheets: the canvas, the surfaces, the control
+  // boundary, the filled button pair, the signal and a person's colour.
   for (const role of [
     "--mk-color-background",
     "--mk-color-surface-muted",
     "--mk-color-border-strong",
-    "--mk-color-accent-solid",
-    "--mk-type-hero-size",
-    "--mk-layout-site-stage-mobile",
-    "--mk-layout-site-stage-desktop",
+    "--mk-color-signal-fill",
+    "--mk-color-on-signal-fill",
+    "--mk-color-dot",
+    "--mk-color-signal",
+    "--mk-color-people-pink-fill",
+    "--mk-layout-site-policy",
   ])
     assert.ok(css.includes(`var(${role})`), role);
 });

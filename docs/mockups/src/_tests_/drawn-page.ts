@@ -140,10 +140,13 @@ export function buttonsIn(node: Element): Element[] {
   );
 }
 
-/** Each registered button inside one part: its label and whether disabled. */
+/**
+ * Each registered button inside one part: its label, or the name of one that
+ * draws its icon alone, and whether it is disabled.
+ */
 export function controlStates(node: Element): [string, boolean][] {
   return buttonsIn(node).map((button) => [
-    label(button),
+    label(button) || (attribute(button, "aria-label") ?? ""),
     attribute(button, "aria-disabled") === "true",
   ]);
 }

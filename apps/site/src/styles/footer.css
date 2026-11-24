@@ -1,40 +1,56 @@
-/* The site footer: the brand and the open-source line beside the Product,
-   Account and Legal columns. Kept in parity with the promoted mockups under
-   docs/mockups/styles/site/; the columns become three at 768px. */
+/* The footer: the last frame on the canvas, labelled Footer, then the
+   design file's status bar on the canvas under it. The frame pairs the
+   brand column with the Product and Legal groups; scheme.css holds the
+   scheme control in the brand column.
+
+   The class names and the rules match docs/mockups/styles/site/footer.css.
+   The mockups pin a composition with data-site-viewport; the site resolves
+   the same switch at 768px. So each base rule is the mobile composition,
+   and the desktop values and the desktop step follow under the 768px
+   query, in the mockup's order. */
 
 .site-footer {
-  background: var(--mk-color-surface);
-  border-top: 1px solid var(--mk-color-border);
   margin-top: auto;
+  padding: 96px 20px 0;
 }
 
 .site-footer-inner {
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
   display: grid;
-  gap: var(--mk-space-8);
+  gap: 32px;
   grid-template-columns: minmax(0, 1fr);
   margin: 0 auto;
-  max-width: var(--mk-layout-site-wide);
-  padding: var(--mk-space-10) var(--mk-layout-gutter-mobile);
+  max-width: 1240px;
+  padding: 32px 24px 36px;
+  position: relative;
   width: 100%;
 }
 
 .site-footer-brand {
+  align-content: start;
   display: grid;
-  gap: var(--mk-space-3);
   justify-items: start;
 }
 
+.site-footer-brand .site-brand {
+  margin-left: -6px;
+}
+
 .site-footer-brand p {
-  color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-small-size);
-  line-height: var(--mk-type-small-line);
-  max-width: 34ch;
+  color: var(--mk-color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  margin-top: 14px;
+  max-width: 300px;
 }
 
 .site-footer-nav {
   align-items: start;
   display: grid;
-  gap: var(--mk-space-5);
+  gap: 20px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -45,44 +61,118 @@
 }
 
 .site-footer-heading {
-  color: var(--mk-color-text);
-  font-size: var(--mk-type-caption-size);
-  font-weight: var(--mk-font-bold);
-  letter-spacing: 0.08em;
-  margin-bottom: var(--mk-space-1);
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin-bottom: 4px;
   text-transform: uppercase;
 }
 
+/* A link breaks a word that is wider than its column, such as Complaints
+   at 200% text on a 320px window. Its 6px radius draws nothing at rest, so
+   its focus glow is rounded. */
+
 .site-footer-link {
   align-items: center;
-  color: var(--mk-color-text-muted);
+  border-radius: 6px;
+  color: var(--mk-color-text);
   display: inline-flex;
-  font-size: var(--mk-type-small-size);
+  font-size: 0.9375rem;
   min-height: var(--mk-layout-control-min);
+  min-width: var(--mk-layout-control-min);
+  overflow-wrap: anywhere;
   text-decoration: none;
   text-underline-offset: 4px;
   transition: color var(--mk-motion-fast) var(--mk-motion-easing);
 }
 
 .site-footer-link:hover {
-  color: var(--mk-color-text);
+  color: var(--mk-color-signal-deep);
   text-decoration: underline;
 }
 
 .site-footer-link[aria-current="page"] {
-  color: var(--mk-color-text);
+  color: var(--mk-color-signal-deep);
 }
 
-/* The desktop composition from the 768px breakpoint upward. */
+/* The status bar: the file, the people in it and the zoom; a depiction.
+   The mobile composition leaves the file out. */
+
+.site-statusbar {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: flex;
+  font-size: 0.78125rem;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1240px;
+  padding: 18px 0 28px;
+}
+
+.site-statusbar-item {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.site-statusbar-file {
+  display: none;
+}
+
+.site-statusbar .site-avatar {
+  box-shadow: 0 0 0 2px var(--mk-color-background);
+}
+
+.site-statusbar .site-presence {
+  margin-right: 4px;
+}
+
+.site-statusbar-zoom {
+  align-items: center;
+  background: var(--mk-color-surface);
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px var(--mk-color-border);
+  color: var(--mk-color-text-secondary);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  gap: 12px;
+  margin-left: auto;
+  padding: 5px 10px;
+}
+
+/* The desktop composition from the breakpoint up: the brand column beside
+   the two groups, and the file back in the status bar */
+
 @media (min-width: 768px) {
+  .site-footer {
+    padding: 120px 78px 0;
+  }
+
   .site-footer-inner {
-    gap: var(--mk-space-12);
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
-    padding: var(--mk-space-16) var(--mk-layout-gutter-desktop);
+    gap: 40px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.3fr);
+    padding: 44px 48px 52px;
   }
 
   .site-footer-nav {
-    gap: var(--mk-space-6);
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px;
+  }
+
+  .site-statusbar-file {
+    display: inline-flex;
+  }
+}
+
+/* The desktop step: below 1440px the canvas gutter beside the footer frame
+   and the status bar follows the prototype's fluid gutter, 5.4% of the
+   window, which is 78px at 1440px. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-footer {
+    padding-left: 5.4vw;
+    padding-right: 5.4vw;
   }
 }

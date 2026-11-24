@@ -54,8 +54,8 @@ export function siteOriginFor(publicAppOrigin: string): string {
 export function siteLinks(origin: string) {
   return {
     home: origin + "/",
-    docs: origin + "/docs",
-    changelog: origin + "/changelog",
+    docs: origin + "/docs/",
+    changelog: origin + "/changelog/",
     pricing: origin + "/pricing",
     terms: origin + "/terms",
     privacy: origin + "/privacy",

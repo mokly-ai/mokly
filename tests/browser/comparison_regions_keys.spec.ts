@@ -9,17 +9,22 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
-  documentExtent,
   expectRegionsAt,
   expectRegionsAtRest,
-  expectStackAt,
-  openComparison,
-  paneFrame,
   regionOffsets,
   regionRange,
+} from "./comparison_region_offsets.js";
+import {
+  documentExtent,
+  expectStackAt,
   sampleFrames,
 } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  openComparison,
+  paneFrame,
+  paneZoom,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 
 const regionsPage = comparisonPaths.regionsPage;
@@ -67,10 +72,13 @@ test("ArrowLeft and ArrowRight follow a right-to-left panel", async ({
 }) => {
   await openComparison(page, regionsPage, "desktop", "Overlay");
   const desktop = comparisonSection(page, "desktop");
+  // The click's offset is in the page's pixels, so it scales by the canvas
+  // zoom to press the strip 200 by 30 of the document's pixels in.
+  const zoom = await paneZoom(paneFrame(desktop, "after"));
   await paneFrame(desktop, "after")
     .contentFrame()
     .locator("#rg-rtl")
-    .click({ position: { x: 200, y: 30 } });
+    .click({ position: { x: 200 * zoom, y: 30 * zoom } });
   await page.keyboard.press("ArrowLeft");
   await expectRegionsAt(desktop, "#rg-rtl", [-40, -40], "x");
   await page.keyboard.press("ArrowLeft");

@@ -1,0 +1,29 @@
+---
+/**
+ * The build in the terminal under the source in the open-foundation frame:
+ * `npx mokly build` after the drawn `$` prompt, then its two lines of
+ * output, each after a check. A depiction: it sits in the frame's code
+ * panel, which the frame hides from assistive technology.
+ *
+ * Use: `<Terminal slot="foot" />`, in the frame's `CodePanel`. The rules are
+ * in `src/styles/home-foundation.css`.
+ */
+import Icon from "../Icon.astro";
+---
+
+<div class="site-home-terminal">
+  <p>
+    <span aria-hidden="true" class="site-home-terminal-prompt">
+      $
+    </span>
+    npx mokly build
+  </p>
+  <p class="site-home-terminal-out">
+    <Icon name="check" size={14} />
+    24 screens · mobile and desktop · light and dark
+  </p>
+  <p class="site-home-terminal-out">
+    <Icon name="check" size={14} />
+    Wrote mokly-static/
+  </p>
+</div>

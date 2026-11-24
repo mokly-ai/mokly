@@ -1,4 +1,3 @@
-import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { PREVIOUS_PATHS } from "./entry_paths.js";
 import type { CatalogueTag } from "./tags.js";
 
@@ -18,12 +17,12 @@ export type ScreenSubject =
   | "profileSecurity";
 
 interface SubjectMetadata {
+  /** The address that a screen declares, which Inspect's Address row shows. */
+  address?: string;
   description: string;
   /** The path a moved entry had at the branch point. */
   previousPath?: string;
   rationale: string;
-  /** A related document that is itself a catalogue entry, opened by its row. */
-  relatedDocument?: { title: string; to: DesignDestination };
   /** Whether the entry names a document a reader can still open. */
   relatedDocs: boolean;
   schemes: string;
@@ -43,6 +42,7 @@ const removed = {
 /** Inspector context for each pictured screen, including the retired examples. */
 export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   welcome: {
+    address: "example.test/welcome",
     description: "A linked landing screen for the neutral fixture.",
     rationale:
       "The landing screen anchors the example catalogue, so every cross-screen link starts from a known state.",
@@ -53,6 +53,7 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     tour: true,
   },
   details: {
+    address: "example.test/details",
     description: "Additional context for the example catalogue.",
     rationale:
       "The Details screen completes the example tour and provides a return to Welcome.",
@@ -108,7 +109,6 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     previousPath: PREVIOUS_PATHS.invoice,
     rationale:
       "Customers open an invoice to see what they owe and pay it, so the amount due and the payment action come first.",
-    relatedDocument: { title: "Payment terms", to: DESTINATIONS.document },
     relatedDocs: false,
     schemes: "light",
     source: "specs/account/billing/invoice.mockup.tsx",

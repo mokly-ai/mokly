@@ -1,37 +1,59 @@
-/* The 48px top bar: the drawer menu, the brand, the catalogue search, and the
-   end control. The narrow query is the shell's one layout breakpoint,
-   narrower than 900px. */
+/* The 48px top bar, in three columns: the start column holds the brand and a
+   host's start slot, after the menu that a static depiction draws, the
+   centre column a host's centre slot,
+   and the end column the catalogue search, the end control and a host's end
+   slot. The two outer columns share the room that the centre column leaves,
+   so the centre column sits in the middle. An embedded root gives that room
+   to the centre column instead while its host's start slot is empty, as its
+   layout stylesheet says. A host clears its own window controls with the two
+   inset properties: each side's padding is the larger of the bar's padding
+   and that side's inset. The narrow query is the shell's one layout
+   breakpoint, narrower than 900px. */
 .mbk-topbar {
   position: relative;
   z-index: 11;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 16px;
+  column-gap: 12px;
   height: 48px;
   flex-shrink: 0;
-  padding: 0 16px;
+  padding-block: 0;
+  padding-inline: max(12px, var(--mokly-top-bar-inset-start, 0px))
+    max(12px, var(--mokly-top-bar-inset-end, 0px));
   background: var(--chrome-surface);
   border-bottom: 1px solid var(--chrome-border);
 }
 
-.mbk-menu {
-  display: none;
+.mbk-topbar-start,
+.mbk-topbar-center,
+.mbk-topbar-end {
+  display: flex;
+  grid-row: 1;
   align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid var(--chrome-border);
-  border-radius: 8px;
-  background: var(--chrome-surface);
-  color: var(--chrome-ink-2);
-  font-size: 14px;
-  cursor: pointer;
+  min-width: 0;
 }
 
-/* The picture of the menu in a static depiction acts on nothing. */
-span.mbk-menu {
-  cursor: default;
+.mbk-topbar-start {
+  grid-column: 1;
+  gap: 8px;
+}
+
+.mbk-topbar-center {
+  grid-column: 2;
+  justify-content: center;
+}
+
+.mbk-topbar-end {
+  grid-column: 3;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* The search's parts sit in the end column. The compact search of an
+   embedded root opens the group over the whole bar. */
+.mbk-search-group {
+  display: contents;
 }
 
 .mbk-search-toggle,
@@ -50,50 +72,79 @@ span.mbk-menu {
   cursor: pointer;
 }
 
+/* The picture of the toggle in a static depiction acts on nothing, so it
+   keeps the default pointer. */
+span.mbk-search-toggle {
+  cursor: default;
+}
+
+/* The rounded corners shape the focus glow of the brand link, as the other
+   controls of the bar shape theirs. */
 .mbk-brand {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: none;
+  border-radius: 6px;
   color: inherit;
   text-decoration: none;
 }
 
+/* The mark: the outline frame in the ink, and the front layer in the Canvas
+   signal colour, ringed by a halo of the surface behind the mark. The two
+   rules on the front layer take the ink on the signal colour. The mark reads
+   the Canvas roles themselves, so it draws the same in every root that
+   declares them. */
 .mbk-mark {
   display: inline-grid;
   place-items: center;
   width: 22px;
   height: 22px;
   flex-shrink: 0;
-  color: var(--chrome-brand);
+  color: var(--cv-signal);
 }
 
-/* The brand mark's two rules take the surface colour behind the mark. */
-.mbk-mark-rules {
+.mbk-mark-back {
+  stroke: var(--chrome-ink);
+}
+
+.mbk-mark-front {
   stroke: var(--chrome-surface);
 }
 
+.mbk-mark-rules {
+  stroke: var(--cv-on-signal);
+}
+
+/* The Geist wordmark: weight 640 with tight tracking, its period in the
+   signal colour. */
 .mbk-name {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 20px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-weight: 640;
+  letter-spacing: -0.055em;
   line-height: 1;
   white-space: nowrap;
 }
 
+.mbk-name-dot {
+  color: var(--cv-signal);
+}
+
+/* The compact search field: about 180px on the muted field surface, which
+   gives way when its column runs short. */
 .mbk-search {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  gap: 7px;
+  flex: 0 1 180px;
   min-width: 0;
-  max-width: 440px;
-  height: 30px;
-  padding: 0 12px;
+  height: 32px;
+  padding: 0 9px;
   border: 1px solid var(--chrome-border);
   border-radius: 8px;
-  background: var(--chrome-bg);
+  background: var(--cv-surface-muted);
   color: var(--chrome-muted);
 }
 
@@ -115,11 +166,48 @@ span.mbk-menu {
   color: var(--chrome-muted);
 }
 
-/* Below the breakpoint the menu opens the drawer, the brand keeps only its
-   mark, and the scheme switch moves to the screen header. */
+/* The baseline focus rule leaves a search input to its field, so the field
+   draws the focus glow while its input holds focus. Forced colours drop the
+   glow, so there the field takes the system outline. */
+.mbk-search:has(> input:focus-visible) {
+  box-shadow: var(--mbk-focus-glow);
+}
+
+@media (forced-colors: active) {
+  .mbk-search:has(> input:focus-visible) {
+    outline: 2px solid Highlight;
+  }
+}
+
+/* The key hint before the tag picker: a small muted mono key cap. The drawn
+   `⌘` leaves room inside its own box, so it starts 1px closer to the edge. */
+.mbk-search-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex: none;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--cv-surface-muted);
+  box-shadow: inset 0 0 0 1px var(--cv-border);
+  color: var(--cv-text-muted);
+  font: 500 11px/1 var(--cv-mono);
+  white-space: nowrap;
+}
+
+.mbk-search-hint > svg {
+  flex: none;
+  margin-inline-start: -1px;
+}
+
+/* Below the breakpoint the brand keeps only its mark. The start column keeps
+   the width of its content and the end column takes the rest, so the search
+   keeps its room down to a 320px window. The key hint hides, which leaves
+   that room to the query. */
 @media (width < 56.25rem) {
-  .mbk-menu {
-    display: inline-flex;
+  .mbk-topbar {
+    grid-template-columns: auto auto minmax(0, 1fr);
   }
 
   .mbk-topbar[data-search] .mbk-name {
@@ -130,7 +218,7 @@ span.mbk-menu {
     position: static;
   }
 
-  .mbk-topbar > [data-mokly-schemeswitch] {
+  .mbk-search-hint {
     display: none;
   }
 }

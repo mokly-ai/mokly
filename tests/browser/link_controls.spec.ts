@@ -5,6 +5,8 @@ import { ISOLATED_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.j
 import { test } from "./browser_test.js";
 import { documentFavicon } from "./document_error_allowance.js";
 import { startLinkControlFixture } from "./link_controls_fixture.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let controls: Awaited<ReturnType<typeof startLinkControlFixture>>;
 
@@ -16,12 +18,12 @@ test.afterAll(async () => {
   await controls?.close();
 });
 
-for (const viewport of ["mobile", "desktop"]) {
+for (const viewport of ["mobile", "desktop"] as const) {
   test(`real Firna ${viewport} controls retain styling and navigate in Browse`, async ({
     page,
   }) => {
     await page.goto(`${controls.url}/view/home/`);
-    const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+    const frame = page.frameLocator(canvasFrame(viewport));
     const link = frame.getByTestId("continue");
     await expect(link).toHaveJSProperty("tagName", "A");
     await expect(link).toHaveAttribute(
@@ -75,7 +77,7 @@ test("child links provide keyboard focus and activation despite component outlin
   page,
 }) => {
   await page.goto(`${controls.url}/view/home/`);
-  const frame = page.frameLocator(".mbk-frame-mobile iframe");
+  const frame = page.frameLocator(canvasFrame("mobile"));
   const link = frame.locator("#outline-reset");
   await frame.getByTestId("continue").focus();
   await page.keyboard.press("Tab");
@@ -91,7 +93,7 @@ test("disabled, busy, and handler-less Firna controls stay inactive", async ({
   page,
 }) => {
   await page.goto(`${controls.url}/view/home/`);
-  const frame = page.frameLocator(".mbk-frame-mobile iframe");
+  const frame = page.frameLocator(canvasFrame("mobile"));
   for (const id of ["disabled", "busy", "no-handler"]) {
     const button = frame.getByTestId(id);
     await expect(button).not.toHaveAttribute("href");
@@ -103,9 +105,8 @@ test("disabled, busy, and handler-less Firna controls stay inactive", async ({
 
 test("adapted controls navigate from use-case frames", async ({ page }) => {
   await page.goto(`${controls.url}/view/tour/`);
-  await page
-    .frameLocator(".mbk-flow-screen iframe")
-    .first()
+  await useCaseStepFrame(page, 1)
+    .contentFrame()
     .getByTestId("continue")
     .click();
   await expect(page).toHaveURL(/\/view\/details\/$/);

@@ -194,12 +194,13 @@ test("plain HTML cannot substitute for registered interactive controls", () => {
     "<span role={role} />",
     '<span role={active ? role : "alert"} />',
     '<a role="button">Approve</a>',
+    '<a role="menuitem">Docs</a>',
   ])
     assert.ok(interactiveRoleViolations({ path: "screen.tsx", text }).length);
   assert.deepEqual(
     interactiveRoleViolations({
       path: "screen.tsx",
-      text: '<><Segmented /><section role={error ? "alert" : undefined} /><a href="/">Open</a><iframe src="/stage" tabIndex={-1} title="Stage" /></>',
+      text: '<><Segmented /><section role={error ? "alert" : undefined} /><a href="/">Open</a><a href="/docs/" role="menuitem">Docs</a><iframe src="/stage" tabIndex={-1} title="Stage" /></>',
     }),
     [],
   );

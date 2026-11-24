@@ -6,8 +6,35 @@ import type { InstanceRef, ViewerSelection } from "@mokly/viewer";
 import { test } from "./browser_test.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
+import { NARROW_WINDOW } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
+
+/**
+ * The frame that holds the selection: on the canvas, the selected saved
+ * variant's Light frame in its component's variant set.
+ */
+const SELECTED = ".mbk-canvas-frame[data-selected] iframe";
+
+/** Expect the selection on the Light frame of the variant `path`. */
+async function expectSelectedVariant(page: Page, path: string) {
+  await expect(page.locator(SELECTED)).toHaveAttribute(
+    "data-workspace-variant",
+    path,
+  );
+}
+
+/** The row of Inspect's Variants that the selection checks. */
+const CHECKED = '[data-inspect-section="variants"] [data-checked]';
+
+/** The selection and navigation events that root `one` reported. */
+function routeEvents(page: Page) {
+  return page.evaluate(() =>
+    window.viewerHarness
+      .get("one")
+      .events.filter((event) => ["selection", "navigate"].includes(event.name)),
+  );
+}
 
 test.beforeAll(async () => {
   fixture = await followupFixture();
@@ -27,85 +54,74 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
       }),
     { cross, controlled },
   );
-  await expect(
-    page
-      .getByRole("navigation", { name: "Saved variants" })
-      .getByRole("link", { name: "Default", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
+  // The routed saved variant's frame is selected, so Inspect's Variants
+  // checks its row; the compact layout keeps Inspect in its closed sheet.
+  await expect(page.locator(CHECKED)).toHaveText("Default");
 }
 
 for (const cross of [false, true]) {
   const adapter = cross ? "postMessage" : "same-origin";
 
-  test(`${adapter} commits variants from the workspace and public handle`, async ({
+  test(`${adapter} selects a row of the workspace without a route, and the public handle commits a variant`, async ({
     page,
   }) => {
     await openViewer(page, cross);
-    const variants = page.getByRole("navigation", { name: "Saved variants" });
-    const first = variants.getByRole("link", { name: "Default", exact: true });
-    const second = variants.getByRole("link", { name: "Second", exact: true });
-    await second.click();
-    await expect(second).toHaveAttribute("aria-current", "page");
+    // A row of Inspect's Variants selects its Light frame on the canvas.
+    await page
+      .locator(
+        '[data-inspect-section="variants"] [data-inspect-variant="pane/second"]',
+      )
+      .click();
+    await expect(page.locator(CHECKED)).toHaveText("Second");
+    await expectSelectedVariant(page, "pane/second");
     await expect(
-      page
-        .frameLocator('iframe[data-workspace-frame="desktop"]')
-        .getByText("Second content"),
+      page.frameLocator(SELECTED).getByText("Second content"),
     ).toBeVisible();
+    expect(await routeEvents(page)).toEqual([]);
+    // The public handle commits a variant's route, whose frame it selects.
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .ref.current.select({ screenPath: "pane/second" }),
+    );
     await page.evaluate(() =>
       window.viewerHarness
         .get("one")
         .ref.current.select({ screenPath: "pane/default" }),
     );
-    await expect(first).toHaveAttribute("aria-current", "page");
+    await expect(page.locator(CHECKED)).toHaveText("Default");
+    await expectSelectedVariant(page, "pane/default");
     await expect(
-      page
-        .frameLocator('iframe[data-workspace-frame="desktop"]')
-        .getByText("First content"),
+      page.frameLocator(SELECTED).getByText("First content"),
     ).toBeVisible();
-    const events = await page.evaluate(() =>
-      window.viewerHarness
-        .get("one")
-        .events.filter((event) =>
-          ["selection", "navigate"].includes(event.name),
-        ),
-    );
-    expect(events).toEqual([
-      {
-        name: "navigate",
-        value: { screenPath: "pane/second" },
-      },
+    expect(await routeEvents(page)).toEqual([
+      { name: "navigate", value: { screenPath: "pane/second" } },
       {
         name: "selection",
-        value: expect.objectContaining({
-          screenPath: "pane/second",
-        }),
+        value: expect.objectContaining({ screenPath: "pane/second" }),
       },
-      {
-        name: "navigate",
-        value: { screenPath: "pane/default" },
-      },
+      { name: "navigate", value: { screenPath: "pane/default" } },
       {
         name: "selection",
-        value: expect.objectContaining({
-          screenPath: "pane/default",
-        }),
+        value: expect.objectContaining({ screenPath: "pane/default" }),
       },
     ]);
   });
 
-  test(`${adapter} keeps a controlled variant proposal inert until committed`, async ({
+  test(`${adapter} keeps a controlled variant proposal of the compact frame picker inert until committed`, async ({
     page,
   }) => {
+    await page.setViewportSize(NARROW_WINDOW);
     await openViewer(page, cross, true);
-    const variants = page.getByRole("navigation", { name: "Saved variants" });
-    const first = variants.getByRole("link", { name: "Default", exact: true });
-    const second = variants.getByRole("link", { name: "Second", exact: true });
-    await second.click();
-    await expect(first).toHaveAttribute("aria-current", "page");
+    // The compact layout shows the selected frame alone; a pick of another
+    // row's frame proposes that row's entry.
+    const shown = ".mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame]";
+    await page
+      .getByRole("combobox", { name: "Frame", exact: true })
+      .selectOption("pane/second:light");
+    await expect(page.locator(CHECKED)).toHaveText("Default");
     await expect(
-      page
-        .frameLocator('iframe[data-workspace-frame="desktop"]')
-        .getByText("First content"),
+      page.frameLocator(shown).getByText("First content"),
     ).toBeVisible();
     const proposal = await page.evaluate(
       () =>
@@ -121,11 +137,9 @@ for (const cross of [false, true]) {
         .get("one")
         .setSelection(selection as ViewerSelection);
     }, proposal);
-    await expect(second).toHaveAttribute("aria-current", "page");
+    await expect(page.locator(CHECKED)).toHaveText("Second");
     await expect(
-      page
-        .frameLocator('iframe[data-workspace-frame="desktop"]')
-        .getByText("Second content"),
+      page.frameLocator(shown).getByText("Second content"),
     ).toBeVisible();
     expect(
       await page.evaluate(() =>
@@ -165,53 +179,77 @@ for (const cross of [false, true]) {
     ).toEqual([]);
   });
 
-  test(`${adapter} inspects only the selected non-default variant`, async ({
-    page,
-  }) => {
-    await openViewer(page, cross);
-    const component = fixture.index.components.find(
-      (entry) => entry.path === "pane",
-    )!;
-    const variant = fixture.index.components
-      .filter((entry) => entry.variantOf === component.path)
-      .find((entry) => entry.path === "pane/second")!;
-    const view = fixture.details.current[variant.path]!.views.find(
-      (entry) => entry.viewport === "desktop" && entry.colorScheme === "light",
-    )!;
-    if (view.usage.status !== "ready") throw new Error("Expected ready usage");
-    const instance: InstanceRef = {
-      screenPath: "pane/second",
-      viewport: "desktop",
-      colorScheme: "light",
-      key: view.usage.instances[0]!.key,
-    };
-    await page.evaluate(() =>
-      window.viewerHarness
-        .get("one")
-        .ref.current.select({ screenPath: "pane/second" }),
-    );
-    await expect(
-      page.locator('iframe[data-workspace-frame="desktop"]'),
-    ).toHaveAttribute("data-mokly-frame-state", "ready");
-    await expect(
-      page
-        .frameLocator('iframe[data-workspace-frame="desktop"]')
-        .getByText("Second content"),
-    ).toBeVisible();
-    await page.evaluate(
-      async ({ instance }) => {
-        const viewer = window.viewerHarness.get("one").ref.current;
-        await viewer.scrollToInstance(instance);
-        await viewer.highlightInstance(instance);
-      },
-      { instance },
-    );
-    await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
-      1,
-    );
-    const outcomes = await page.evaluate(async (instance) => {
+  for (const canvas of [true, false])
+    test(`${adapter} ${canvas ? "on the canvas, inspects the named variant's row and rejects an entry that it does not show" : "below the layout breakpoint, inspects only the selected non-default variant"}`, async ({
+      page,
+    }) => {
+      if (!canvas) await page.setViewportSize(NARROW_WINDOW);
+      await inspectsSecond(page, cross, canvas);
+    });
+}
+
+/**
+ * Highlight an instance of the selected saved variant `pane/second`, then a
+ * reference that the stage does not show: on the canvas, whose rows each show
+ * their own variant, an entry outside the set; below the layout breakpoint,
+ * the sibling variant that the compact layout's one frame does not show.
+ */
+async function inspectsSecond(page: Page, cross: boolean, canvas: boolean) {
+  await openViewer(page, cross);
+  const component = fixture.index.components.find(
+    (entry) => entry.path === "pane",
+  )!;
+  const variant = fixture.index.components
+    .filter((entry) => entry.variantOf === component.path)
+    .find((entry) => entry.path === "pane/second")!;
+  const view = fixture.details.current[variant.path]!.views.find(
+    (entry) => entry.viewport === "desktop" && entry.colorScheme === "light",
+  )!;
+  if (view.usage.status !== "ready") throw new Error("Expected ready usage");
+  const instance: InstanceRef = {
+    screenPath: "pane/second",
+    viewport: "desktop",
+    colorScheme: "light",
+    key: view.usage.instances[0]!.key,
+  };
+  await page.evaluate(() =>
+    window.viewerHarness
+      .get("one")
+      .ref.current.select({ screenPath: "pane/second" }),
+  );
+  const shown = canvas
+    ? SELECTED
+    : ".mbk-canvas-cell:not([hidden]) iframe[data-workspace-frame]";
+  await expect(page.locator(shown)).toHaveAttribute(
+    "data-mokly-frame-state",
+    "ready",
+  );
+  await expect(
+    page.frameLocator(shown).getByText("Second content"),
+  ).toBeVisible();
+  await page.evaluate(
+    async ({ instance }) => {
       const viewer = window.viewerHarness.get("one").ref.current;
-      const mismatched = { ...instance, screenPath: "pane/default" };
+      await viewer.scrollToInstance(instance);
+      await viewer.highlightInstance(instance);
+    },
+    { instance },
+  );
+  const labels = page.locator("[data-mokly-label-layer] button");
+  await expect(labels).toHaveCount(1);
+  // The one label stands over the named variant's frame: its centre lies on
+  // the frame's span, and it hangs at most its height above the frame.
+  const frame = (await page.locator(shown).boundingBox())!;
+  const label = (await labels.boundingBox())!;
+  const centre = label.x + label.width / 2;
+  expect(centre).toBeGreaterThanOrEqual(frame.x);
+  expect(centre).toBeLessThanOrEqual(frame.x + frame.width);
+  expect(label.y).toBeGreaterThanOrEqual(frame.y - label.height - 4);
+  expect(label.y).toBeLessThanOrEqual(frame.y + frame.height);
+  const outcomes = await page.evaluate(
+    async ({ instance, outside }) => {
+      const viewer = window.viewerHarness.get("one").ref.current;
+      const mismatched = { ...instance, screenPath: outside };
       return Promise.all([
         viewer.highlightInstance(mismatched).then(
           () => "resolved",
@@ -222,7 +260,8 @@ for (const cross of [false, true]) {
           () => "rejected",
         ),
       ]);
-    }, instance);
-    expect(outcomes).toEqual(["rejected", "rejected"]);
-  });
+    },
+    { instance, outside: canvas ? "home" : "pane/default" },
+  );
+  expect(outcomes).toEqual(["rejected", "rejected"]);
 }

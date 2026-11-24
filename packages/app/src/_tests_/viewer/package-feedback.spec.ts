@@ -1,6 +1,11 @@
 import { expect, open, test } from "../harness";
 
-import { publishedProject } from "./support";
+import {
+  canvasFrame,
+  openSettingsFromAccount,
+  publishedProject,
+  savedVariant,
+} from "./support";
 
 test("a listed screen response cannot erase a selected component variant", async ({
   page,
@@ -14,10 +19,13 @@ test("a listed screen response cannot erase a selected component variant", async
   const query =
     "catalogueScreen=notice%2Fdraft&viewport=both&scheme=dark&search=notice";
   await open(page, `${path}?${query}`);
-  const chosen = page.locator('[data-workspace-variant="notice/draft"]');
+  const chosen = savedVariant(page, "Draft");
+  // The canvas holds the component's variant set. Its frames have no
+  // viewport, so the address is where the reader sees the Both it keeps.
+  const draftFrame = canvasFrame(page, "Draft");
 
-  const stage = page.locator("[data-mokly-stage]");
-  await expect(stage).toHaveAttribute("data-viewport", "both");
+  await expect(draftFrame).toBeVisible();
+  await expect(page).toHaveURL(/viewport=both/);
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
@@ -29,7 +37,7 @@ test("a listed screen response cannot erase a selected component variant", async
   await expect(
     page.getByRole("button", { name: "Copy path notice/draft", exact: true }),
   ).toBeVisible();
-  await expect(chosen).toHaveAttribute("aria-current", "page");
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toHaveValue("notice");
@@ -56,14 +64,12 @@ test("a listed screen response cannot erase a selected component variant", async
   expect(shared.pathname).toBe(path);
   expect(shared.searchParams.get("scheme")).toBe("dark");
   expect(shared.searchParams.has("catalogueScreen")).toBe(false);
-  // The scheme the API validated and the Both the host carries, and none of
-  // the package's working state.
-  expect([...shared.searchParams.keys()].sort()).toEqual([
-    "scheme",
-    "viewport",
-  ]);
+  // The scheme the API validated, and none of the package's working state.
+  // Both is the default viewport, so neither the link nor the address that
+  // the panel wrote names one.
+  expect([...shared.searchParams.keys()]).toEqual(["scheme"]);
   await expect(page).toHaveURL(/catalogueScreen=notice%2Fdraft/);
-  await expect(page).toHaveURL(/viewport=both/);
+  await expect(page).not.toHaveURL(/viewport=/);
   await expect(page).toHaveURL(/search=notice/);
 
   await page.goBack();
@@ -75,28 +81,27 @@ test("a listed screen response cannot erase a selected component variant", async
   await expect(page).toHaveURL(/viewport=both/);
   await expect(page).toHaveURL(/scheme=dark/);
   await expect(page).toHaveURL(/search=notice/);
-  await expect(stage).toHaveAttribute("data-viewport", "both");
+  await expect(draftFrame).toBeVisible();
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
-  await expect(chosen).toHaveAttribute("aria-current", "page");
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toHaveValue("notice");
 
-  await page.getByTestId("viewer-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await openSettingsFromAccount(page);
   await page.getByTestId("close-settings").click();
   await expect(
     page.getByRole("heading", { level: 2, name: "Notice" }),
   ).toBeVisible();
-  await expect(stage).toHaveAttribute("data-viewport", "both");
+  await expect(draftFrame).toBeVisible();
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
-  await expect(chosen).toHaveAttribute("aria-current", "page");
+  await expect(chosen).toHaveAttribute("aria-pressed", "true");
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toHaveValue("notice");
@@ -128,8 +133,7 @@ test("package filters survive panels, Back and settings rerenders", async ({
   await expect(page).toHaveURL(/search=notice/);
   await expect(page).toHaveURL(/tag=review/);
 
-  await page.getByTestId("viewer-settings").click();
-  await expect(page.getByTestId("settings-dialog")).toBeVisible();
+  await openSettingsFromAccount(page);
   await page.getByTestId("close-settings").click();
   await expect(search).toHaveValue("notice tag:review");
   await expect(page).toHaveURL(/viewport=both/);

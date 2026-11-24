@@ -6,6 +6,7 @@ import type { FixtureBuild } from "../../../fixtures/build-types";
 import { builds } from "../../../fixtures/builds";
 import { publication } from "../../../fixtures/publications";
 
+import type { AccountLabel } from "./account-trigger";
 import type { BuildReader } from "./build-card";
 import type { BuildPress } from "./build-controls";
 import {
@@ -14,7 +15,7 @@ import {
   BuildUnavailable,
   BuildUnreadable,
 } from "./build-stage";
-import type { AccountLabel } from "./chrome";
+import { readyDetail } from "./pill";
 import { PullRequestPage } from "./pull-request-page";
 import type { SlotMeta } from "./slots";
 import { StandalonePage } from "./standalone-page";
@@ -29,7 +30,7 @@ function buildMeta(build: FixtureBuild): SlotMeta {
     case "running":
       return { state: "publishing", detail: "Publishing now" };
     case "published":
-      return { state: "ready", detail: publication.published };
+      return { state: "ready", detail: readyDetail(publication.published) };
     case "failed":
     case "timed-out":
       return { state: "failed", detail: "Unable to publish" };
@@ -118,6 +119,7 @@ export function ViewerBuildLoadingScreen({ viewport }: { viewport: Viewport }) {
       state="loading"
       screen="product/viewer/standalone/build/loading"
       subject="This build"
+      reference="This build"
       stage={<BuildPending />}
     />
   );
@@ -131,6 +133,7 @@ export function ViewerBuildErrorScreen({ viewport }: { viewport: Viewport }) {
       state="error"
       screen="product/viewer/standalone/build/error"
       subject="This build"
+      reference="This build"
       publicationMeta={{ state: "failed", detail: "Build unavailable" }}
       stage={<BuildUnavailable />}
     />
@@ -152,6 +155,7 @@ export function ViewerBuildUnreadableScreen({
       state="error"
       screen="product/viewer/standalone/build/unreadable"
       subject="This build"
+      reference="This build"
       publicationMeta={{ state: "failed", detail: "Build couldn’t load" }}
       stage={<BuildUnreadable />}
     />

@@ -9,10 +9,13 @@ import {
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
+import { useCaseStepFrame } from "./use_case_steps.js";
 import {
+  canvasFrame,
   expectFrameSource,
   chooseScheme,
   chooseViewport,
+  DOCUMENT_FRAME,
 } from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
@@ -30,46 +33,18 @@ test.beforeEach(async ({ page, allowBrowserError }) => {
   await routeNavigationNestedFrame(page);
 });
 
-async function actAndWaitForFrameLoad(
-  page: Page,
-  frameSelector: string,
-  act: () => Promise<void>,
-): Promise<void> {
-  const frame = page.locator(frameSelector);
-  await frame.evaluate((element) => {
-    element.setAttribute("data-test-load-state", "pending");
-    element.addEventListener(
-      "load",
-      () => element.setAttribute("data-test-load-state", "complete"),
-      { once: true },
-    );
-  });
-  await act();
-  await expect(frame).toHaveAttribute("data-test-load-state", "complete", {
-    timeout: 15_000,
-  });
-  await frame.evaluate((element) =>
-    element.removeAttribute("data-test-load-state"),
-  );
-}
-
 test("MockLink navigation reveals the destination and preserves shell state", async ({
   page,
 }) => {
   await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await chooseViewport(page, "mobile");
-  // Changing the appearance reloads the frame, which is what this exercises.
-  await actAndWaitForFrameLoad(page, ".mbk-frame-mobile iframe", () =>
-    chooseScheme(page, "dark"),
-  );
-  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-    "data-mokly-frame-state",
-    "ready",
-  );
-  const detailsPanel = page.locator("[data-workspace-inspector]");
-  if ((await detailsPanel.getAttribute("data-open")) === "true") {
-    await page.getByRole("tab", { name: "Details", exact: true }).click();
-  }
+  // The appearance leaves each canvas frame's own scheme; the Mobile · Dark
+  // frame holds the link.
+  await chooseScheme(page, "dark");
+  const mobile = page.locator(canvasFrame("mobile", "dark"));
+  await expect(mobile).toHaveAttribute("data-mokly-frame-state", "ready");
+  const inspect = page.getByRole("tab", { name: "Inspect", exact: true });
+  await expect(inspect).toHaveAttribute("aria-selected", "true");
   const other = page.locator('details[data-nav-folder="folder:other"]');
   await other.evaluate((element: HTMLDetailsElement) => {
     element.open = true;
@@ -81,15 +56,18 @@ test("MockLink navigation reveals the destination and preserves shell state", as
   );
   await expect(detailsRow).toBeHidden();
   await page
-    .frameLocator(".mbk-frame-mobile iframe")
+    .frameLocator(canvasFrame("mobile", "dark"))
     .locator("#mock-link")
     .click();
 
+  // The destination's address names the kept Mobile viewport.
   await expect(page).toHaveURL(
-    /\/view\/fixture\/nested\/details\/\?fragment=section$/,
+    /\/view\/fixture\/nested\/details\/\?fragment=section&viewport=mobile$/,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  await expect(page.locator(".mbk-crumbs")).toContainText("Nested");
+  await expect(page.locator("[data-inspect-path] code")).toHaveText(
+    "fixture/nested/details",
+  );
   await expect(detailsRow).toHaveAttribute("aria-current", "page");
   await expect(detailsRow).toBeVisible();
   await expect(page.locator("[data-mokly-search]")).toHaveValue("");
@@ -103,17 +81,16 @@ test("MockLink navigation reveals the destination and preserves shell state", as
     .all()) {
     await expect(ancestor).toHaveAttribute("open", "");
   }
-  await expect(detailsPanel).not.toHaveAttribute("data-open", "true");
-  await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
-    "data-viewport",
-    "mobile",
-  );
+  await expect(inspect).toHaveAttribute("aria-selected", "true");
+  // The Frames filter keeps the Mobile column alone on the canvas.
+  await expect(page.locator(canvasFrame("desktop", "dark"))).toBeHidden();
+  await expect(mobile).toBeVisible();
   await expect(page.locator(shellRoot)).toHaveAttribute(
     "data-mokly-color-scheme",
     "dark",
   );
   await expectFrameSource(
-    page.locator(".mbk-frame-mobile iframe"),
+    mobile,
     /details\/index\.mobile\.dark\.html#section$/,
   );
 
@@ -128,10 +105,7 @@ test("keyboard navigation retains constraints that already show the destination"
 }) => {
   await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   await page.fill("[data-mokly-search]", "details");
-  await page
-    .frameLocator(".mbk-frame-mobile iframe")
-    .locator("#mock-link")
-    .focus();
+  await page.frameLocator(canvasFrame("mobile")).locator("#mock-link").focus();
   await page.keyboard.press("Enter");
 
   await expectDestination(page);
@@ -150,29 +124,26 @@ test("keyboard navigation retains constraints that already show the destination"
 test("raw native links navigate from desktop, area, SVG, flow, and legacy frames", async ({
   page,
 }) => {
-  await navigateFrom(page, ".mbk-frame-desktop iframe", "#raw-link");
-  await navigateFrom(page, ".mbk-frame-mobile iframe", "#area-link", true);
-  await navigateFrom(page, ".mbk-frame-mobile iframe", "#svg-link");
+  await navigateFrom(page, canvasFrame("desktop"), "#raw-link");
+  await navigateFrom(page, canvasFrame("mobile"), "#area-link", true);
+  await navigateFrom(page, canvasFrame("mobile"), "#svg-link");
 
   await page.goto(`${navigation.url}/view/fixture/nested/tour/`);
-  await expect(page.locator(".mbk-flow-screen iframe").first()).toHaveAttribute(
+  await expect(useCaseStepFrame(page, 1)).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
   );
-  await page
-    .frameLocator(".mbk-flow-screen iframe")
-    .first()
-    .locator("#raw-link")
-    .click();
+  await useCaseStepFrame(page, 1).contentFrame().locator("#raw-link").click();
   await expectDestination(page);
 
+  // A page stands on the canvas as one reading frame.
   await page.goto(`${navigation.url}/view/guide/`);
-  await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
+  await expect(page.locator("[data-mokly-stage] iframe")).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
   );
   await page
-    .frameLocator(".mbk-stage-embed iframe")
+    .frameLocator("[data-mokly-stage] iframe")
     .locator("#legacy-link")
     .click();
   await expectDestination(page);
@@ -189,8 +160,11 @@ test("logical activation stays host-owned during a frame source handoff", async 
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
+  // A screen's frames keep their own scheme; the appearance hands a Markdown
+  // document's reading frame the render of the chosen scheme in the same
+  // element. The example's workspace guide links the welcome screen.
   await page.route(
-    "**/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
+    "**/static/mokly-generated/example/workspace-guide/index.dark.html",
     async (route) => {
       reportRequest();
       await requestReleased;
@@ -199,27 +173,25 @@ test("logical activation stays host-owned during a frame source handoff", async 
   );
 
   try {
-    await page.goto(`${navigation.url}/view/fixture/nested/home/`);
-    await chooseViewport(page, "mobile");
+    await page.goto("/view/example/workspace-guide/");
+    const reading = page.locator(DOCUMENT_FRAME);
+    await expect(reading).toHaveAttribute("data-mokly-frame-state", "ready");
     await chooseScheme(page, "dark");
     await requestStarted;
-    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-      "data-mokly-frame-state",
-      "loading",
-    );
+    await expect(reading).toHaveAttribute("data-mokly-frame-state", "loading");
     await page
-      .frameLocator(".mbk-frame-mobile iframe")
-      .locator("#area-link")
+      .frameLocator(DOCUMENT_FRAME)
+      .getByRole("link", { name: "welcome screen", exact: true })
       .evaluate((element) =>
         element.dispatchEvent(
           new MouseEvent("click", { bubbles: true, cancelable: true }),
         ),
       );
 
-    await expectDestination(page);
+    await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
-    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+    await expect(page).toHaveURL(/\/view\/example\/workspace-guide\/$/);
+    await expect(page.locator("#mb-main h2")).toHaveText("Workspace guide");
   } finally {
     releaseRequest();
   }

@@ -1,0 +1,190 @@
+/* The depicted acme/storefront app, continued: its pricing. The phone and
+   desktop pricing pages with their navigation, heading block and plan
+   grid, then the PriceCard, the component that the Review and Edit frames
+   discuss, with its two paddings. The rules match
+   docs/mockups/styles/site/home-acme-pricing.css. */
+
+/* The pricing pages: the phone and desktop navigation, the heading block,
+   the plan grid and the PriceCard with its two paddings */
+
+.site-acme-phone-nav,
+.site-acme-desktop-nav {
+  align-items: center;
+  display: flex;
+  height: 58px;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.site-acme-phone-nav-end,
+.site-acme-desktop-end {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.site-acme-desktop-nav {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  gap: 56px;
+  height: 78px;
+  justify-content: flex-start;
+  padding: 0 56px;
+}
+
+.site-acme-desktop-links {
+  display: flex;
+  font-size: 15px;
+  gap: 30px;
+}
+
+.site-acme-desktop-end {
+  gap: 22px;
+  margin-left: auto;
+}
+
+.site-acme-desktop-nav--plain {
+  justify-content: space-between;
+}
+
+.site-acme-pricing {
+  padding: 10px 20px 0;
+}
+
+.site-acme-pricing-desktop {
+  padding: 40px 92px 0;
+}
+
+.site-acme-pricing-head {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.site-acme-pricing-grid {
+  align-items: start;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 34px;
+}
+
+/* The acme PriceCard, the component that Review and Edit discuss, with
+   its two paddings and the art of the desktop plans */
+
+.site-acme-price-card {
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+  padding: 24px;
+  position: relative;
+}
+
+.site-acme-pricing-grid .site-acme-price-card,
+.site-acme--bare > .site-acme-price-card {
+  margin-top: 0;
+}
+
+.site-acme-price-card--pad-16 {
+  padding: 16px;
+}
+
+.site-acme-price-card--featured {
+  box-shadow:
+    inset 0 0 0 1.5px currentColor,
+    0 22px 40px -26px
+      color-mix(in srgb, var(--mk-color-on-signal) 50%, transparent);
+}
+
+.site-acme-price-card-art {
+  align-items: flex-end;
+  background: color-mix(
+    in srgb,
+    currentColor 24%,
+    var(--mk-color-on-signal-fill)
+  );
+  border-radius: 22px 22px 0 0;
+  display: flex;
+  gap: 6px;
+  height: 160px;
+  justify-content: center;
+  margin: -24px -24px 24px;
+  padding-bottom: 16px;
+}
+
+.site-acme-price-card--pad-16 .site-acme-price-card-art {
+  margin: -16px -16px 16px;
+}
+
+.site-acme-price-card-art .site-acme-bag {
+  width: 78px;
+}
+
+.site-acme-price-card-art .site-acme-bag:nth-child(2) {
+  width: 92px;
+}
+
+.site-acme-price-card-top {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.site-acme-price-card-name {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.site-acme-price-card-price {
+  align-items: baseline;
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.site-acme-price-card-price b {
+  font-family: "Instrument Serif", ui-serif, Georgia, serif;
+  font-size: 52px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+}
+
+.site-acme-price-card-price span,
+.site-acme-price-card-line,
+.site-acme-price-card-list {
+  font-size: 14.5px;
+}
+
+.site-acme-price-card-line {
+  margin-top: 8px;
+}
+
+.site-acme-price-card-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.site-acme-price-card-list > span {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+}
+
+.site-acme-price-card-list .site-acme-icon {
+  height: 18px;
+  stroke-width: 2.1;
+  width: 18px;
+}
+
+.site-acme-price-card-button {
+  margin-top: 22px;
+}
+
+.site-acme-price-card--pad-16 .site-acme-price-card-button {
+  margin-top: 16px;
+}

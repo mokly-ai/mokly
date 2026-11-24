@@ -1,0 +1,50 @@
+---
+/**
+ * One plan's value in a cell of the compare table. An included value reads
+ * "Included" and an absent one reads "Not included": the check and the dash
+ * that they draw are decorative. A token, such as a project's visibility,
+ * is a mono chip, green in the Team column. A value of several lines sets
+ * each line on its own line, with its note under them.
+ *
+ * Use: `<CompareValue team={false} value={row.values.free} />`. The rules
+ * are in `src/styles/pricing-compare-cells.css`.
+ */
+import Chip from "../Chip.astro";
+import Icon from "../Icon.astro";
+
+import type { PricingValue } from "./compare-rows.js";
+
+interface Props {
+  readonly team: boolean;
+  readonly value: PricingValue;
+}
+
+const { team, value } = Astro.props;
+---
+
+{value === true ? (
+  <>
+    <Icon class="site-pricing-check" name="check" size={18} />
+    <span class="site-visually-hidden">Included</span>
+  </>
+) : value === false ? (
+  <>
+    <span aria-hidden="true" class="site-pricing-dash">
+      &#8212;
+    </span>
+    <span class="site-visually-hidden">Not included</span>
+  </>
+) : typeof value === "string" ? (
+  value
+) : "token" in value ? (
+  <Chip mono tone={team ? "signal" : "neutral"}>
+    {value.token}
+  </Chip>
+) : (
+  <>
+    {value.lines.map((line) => (
+      <span class="site-pricing-line">{line} </span>
+    ))}
+    <small>{value.note}</small>
+  </>
+)}

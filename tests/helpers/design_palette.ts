@@ -1,6 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { CANVAS_SAMPLES } from "../../examples/basic/specs/design/library/metadata.js";
+import { libraryStyleFiles } from "../../examples/basic/specs/design/library/style_files.js";
+import { canvasProperties } from "../../examples/basic/specs/design/parts/canvas_palette.js";
+import { palettes } from "../../packages/ui/dist/palette/palette.js";
+
 import { designStyleRules, type ColorReference } from "./design_styles.js";
 import { repositoryRoot } from "./fixture.js";
 
@@ -42,19 +47,139 @@ export async function designPalette(): Promise<
   return { light: readTokens(light[1]), dark: readTokens(dark[1]) };
 }
 
+/**
+ * The custom properties that a Canvas root declares in one appearance, as
+ * its palette scope maps them from the Canvas palette of the built
+ * `@mokly/ui` palette module: the `--cv-*` roles and the shell tokens.
+ */
+export function canvasScopeTokens(appearance: Appearance): Map<string, string> {
+  return new Map(
+    Object.entries(
+      canvasProperties(palettes.canvas[appearance], palettes.canvas.fonts),
+    ),
+  );
+}
+
+/**
+ * Both palettes that a Canvas root draws in: the design palette, whose roles
+ * the root keeps where its scope declares nothing, overlaid with the tokens
+ * that its scope declares.
+ */
+export async function canvasPalette(): Promise<
+  Record<Appearance, Map<string, string>>
+> {
+  const design = await designPalette();
+  const overlay = (appearance: Appearance) =>
+    new Map([...design[appearance], ...canvasScopeTokens(appearance)]);
+  return { light: overlay("light"), dark: overlay("dark") };
+}
+
+/**
+ * The Canvas viewer's stylesheets, whose rules draw inside a Canvas root
+ * only: the shared Canvas sheets and the sheet of each Canvas part.
+ */
+export function isCanvasStylesheet(file: string): boolean {
+  return (
+    /^design-canvas(-[a-z]+)?\.css$/u.test(file) ||
+    Object.entries(libraryStyleFiles).some(
+      ([slug, sheet]) => sheet === file && CANVAS_SAMPLES.has(slug),
+    )
+  );
+}
+
+/** A role that the Canvas palette lacks: two scope roles mixed in sRGB. */
+const SRGB_MIX =
+  /^color-mix\(\s*in srgb,\s*var\((--[\w-]+)\)\s+(\d+(?:\.\d+)?)%,\s*var\((--[\w-]+)\)\s*\)$/u;
+
+/** Two opaque `#rrggbb` colours mixed in sRGB, as `color-mix()` mixes them. */
+function srgbMix(first: string, share: number, second: string): string {
+  const channels = (color: string) =>
+    [1, 3, 5].map((at) => Number.parseInt(color.slice(at, at + 2), 16));
+  const other = channels(second);
+  return `#${channels(first)
+    .map((value, index) =>
+      Math.round(value * share + other[index]! * (1 - share))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+/**
+ * The colour of one role on a Canvas root in one appearance: a role that its
+ * palette scope declares, or an opaque role that the root's rule in a shared
+ * Canvas sheet mixes from two scope roles, such as the stronger hairline.
+ */
+export async function canvasRoleColor(
+  role: string,
+  appearance: Appearance,
+): Promise<string | undefined> {
+  const tokens = canvasScopeTokens(appearance);
+  const declared = tokens.get(role);
+  if (declared) return declared;
+  const roots = new Set([".cv", `.cv[data-mbk-appearance="${appearance}"]`]);
+  const value = (await designStyleRules())
+    .filter((rule) => isCanvasStylesheet(rule.file) && roots.has(rule.selector))
+    .flatMap((rule) => [...rule.body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/gu)])
+    .findLast(([, name]) => name === role)?.[2];
+  const mix = SRGB_MIX.exec(value?.trim() ?? "");
+  if (!mix) return undefined;
+  const [first, second] = [tokens.get(mix[1]!), tokens.get(mix[3]!)];
+  return first && second
+    ? srgbMix(first, Number(mix[2]) / 100, second)
+    : undefined;
+}
+
+/** A palette that a rule draws in, by appearance, named for a failure. */
+export interface AuditPalette {
+  name: "design" | "Canvas";
+  tokens: Record<Appearance, Map<string, string>>;
+}
+
+/**
+ * The palettes that each design stylesheet's rules draw in: a Canvas
+ * sheet's in a Canvas root only, a `@mokly/ui` sheet's in the design
+ * catalogue's palette and in a Canvas root, and every other design sheet's
+ * in the design catalogue's palette.
+ */
+export async function auditPalettes(): Promise<
+  (file: string) => readonly AuditPalette[]
+> {
+  const design: AuditPalette = {
+    name: "design",
+    tokens: await designPalette(),
+  };
+  const canvas: AuditPalette = {
+    name: "Canvas",
+    tokens: await canvasPalette(),
+  };
+  return (file) =>
+    isCanvasStylesheet(file)
+      ? [canvas]
+      : file.startsWith("packages/ui/src/")
+        ? [design, canvas]
+        : [design];
+}
+
 const PREVIEW_BLOCK = /:root\s*\{([^}]*)\}/;
 
 /**
- * The preview tokens of the stage stylesheet: the screen, device, and traffic
- * light colours, which stay independent of the interface appearance.
+ * The sheet of the preview tokens, which the Canvas and the library routes
+ * link.
+ */
+export const PREVIEW_SHEET = "design-preview.css";
+
+/**
+ * The preview tokens of the preview stylesheet: the screen colours, which
+ * stay independent of the interface appearance.
  */
 export async function designPreviewTokens(): Promise<Map<string, string>> {
   const source = await fs.readFile(
-    path.join(repositoryRoot, "examples/basic/design-stage.css"),
+    path.join(repositoryRoot, "examples/basic", PREVIEW_SHEET),
     "utf8",
   );
   const block = PREVIEW_BLOCK.exec(source)?.[1];
-  if (!block) throw new Error("design-stage.css is missing its preview tokens");
+  if (!block) throw new Error(`${PREVIEW_SHEET} is missing its preview tokens`);
   return readTokens(block);
 }
 
@@ -64,13 +189,17 @@ export const SHIPPED_THEME = "packages/ui/src/theme/theme.css";
 /**
  * The tokens that the shipped theme declares on the viewer root class, which
  * every artboard's and sample's root carries, when a design stylesheet
- * imports the theme: its Light half, which the Dark half redeclares.
+ * imports the theme: its Light half, which the Dark half redeclares. The
+ * focus glows that the reset class declares on every package element join.
  */
 export async function designThemeTokens(): Promise<Map<string, string>> {
   const tokens = new Map<string, string>();
-  for (const rule of await designStyleRules())
-    if (rule.file === SHIPPED_THEME && rule.selector === ".mbk, .mbk-document")
-      for (const [, name, value] of rule.body.matchAll(
+  for (const { body, file, selector } of await designStyleRules())
+    if (
+      (file === SHIPPED_THEME && selector === ".mbk, .mbk-document") ||
+      (file === "packages/ui/src/reset/reset.css" && selector === ".mbk-reset")
+    )
+      for (const [, name, value] of body.matchAll(
         /(--[\w-]+)\s*:\s*([^;]+);/gu,
       ))
         tokens.set(name!, value!.replace(/\s+/gu, " ").trim());
@@ -161,12 +290,9 @@ function cssColor(color: string): string {
   return `rgb(${channels.join(", ")})`;
 }
 
-/** One palette token as the CSS `rgb()` value a computed style reports. */
-export async function paletteColor(
-  appearance: Appearance,
-  token: string,
-): Promise<string> {
-  const value = (await designPalette())[appearance].get(token);
-  if (!value) throw new Error(`design.css has no ${token} for ${appearance}`);
+/** One Canvas role on a Canvas root as the `rgb()` value a style reports. */
+export async function canvasColor(appearance: Appearance, role: string) {
+  const value = await canvasRoleColor(role, appearance);
+  if (!value) throw new Error(`Canvas has no opaque ${role} in ${appearance}`);
   return cssColor(value);
 }

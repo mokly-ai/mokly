@@ -1,0 +1,3 @@
+/* The Canvas viewer's search: the tag picker under the search field and the
+   catalogue that a tag filters. Each Canvas part keeps its own sheet; this
+   sheet holds only the layout and the states of these artboards. */

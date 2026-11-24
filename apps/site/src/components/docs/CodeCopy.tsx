@@ -8,6 +8,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { CanvasIcon } from "./CanvasIcon.js";
+
 const SLOT = ".site-code-copy-slot";
 
 function Copy({ panel }: { readonly panel: HTMLElement }) {
@@ -21,6 +23,8 @@ function Copy({ panel }: { readonly panel: HTMLElement }) {
 
   async function write(): Promise<void> {
     try {
+      // The block's text is its source, newlines included; the stylesheet
+      // draws the prompts and the line numbers, so they are never copied.
       await navigator.clipboard.writeText(
         panel.querySelector("pre")?.textContent ?? "",
       );
@@ -36,26 +40,35 @@ function Copy({ panel }: { readonly panel: HTMLElement }) {
       onClick={() => void write()}
       type="button"
     >
+      <CanvasIcon name="copy" size={14} />
       <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
     </button>
   );
 }
 
-/** Place a copy control in every code panel of the rendered document. */
+/**
+ * Place a copy control in the head of every code panel of the rendered
+ * document, after the head's copy slot, so the control is a sibling of the
+ * tabs, the path and the language, which the shared sheet places it after.
+ */
 export default function CodeCopy() {
-  const [slots, setSlots] = useState<readonly HTMLElement[]>([]);
+  const [heads, setHeads] = useState<readonly HTMLElement[]>([]);
 
   useEffect(() => {
-    setSlots([...document.querySelectorAll<HTMLElement>(SLOT)]);
+    setHeads(
+      [...document.querySelectorAll<HTMLElement>(SLOT)].flatMap((slot) =>
+        slot.parentElement ? [slot.parentElement] : [],
+      ),
+    );
   }, []);
 
   return (
     <>
-      {slots.map((slot, index) =>
-        slot.parentElement?.parentElement
+      {heads.map((head, index) =>
+        head.parentElement
           ? createPortal(
-              <Copy panel={slot.parentElement.parentElement} />,
-              slot,
+              <Copy panel={head.parentElement} />,
+              head,
               String(index),
             )
           : undefined,

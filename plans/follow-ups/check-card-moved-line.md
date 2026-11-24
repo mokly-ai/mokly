@@ -1,0 +1,34 @@
+# The check card misses the moved line
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-23, from `calummoore/canvas-redesign-m13-cloud-viewer-chrome-4gms`. The primary orchestrator chose on 2026-11-23 that the card draws the totals line only for now.
+- **Location:** `packages/app/src/viewer/check-card.tsx`, `crates/mkc-publications/src/reservation/finish.rs:35-42`, `crates/mkc-store-interface/src/publication_changes.rs:5-12`, `crates/mkc-store-pg/src/publication_row.rs:34-37`, `crates/mkc-api/src/viewer/views.rs:105-114`, `docs/protocol/cloud/viewer-read-model.md:151-157`
+- **Reason:** The publication response carries no moved count, and adding one needs a migration, an API field and the OpenAPI document, which lie outside the viewer chrome branch.
+
+- **Terms:**
+  - **Mokly check:** the GitHub check run that the cloud posts for each ready publication, which `docs/protocol/cloud/changes-check.md` defines.
+  - **Check card:** the card that the viewer's Changes tab shows for a pull request's publication with a comparison. The app draws it in `packages/app/src/viewer/check-card.tsx`, and the drawing `docs/mockups/src/screens/product/viewer/check-panel.tsx` draws the same markup.
+  - **Totals line and moved line:** the two count lines of the check's summary: `{c} changed, {a} added, {r} removed.`, then `{m} moved.` when entries moved.
+- **Background:**
+  - The section "Result" of `docs/protocol/cloud/changes-check.md` gives the check's summary. Its first line is the totals line. When `m > 0`, the moved line follows it. Moved is a subset of the total, not another addition to it.
+  - `crates/mkc-publications/src/check_summary.rs:42-46` reads the moved count from the stored catalogue index when it writes the summary.
+  - Admission, in `crates/mkc-publications/src/reservation/finish.rs:35-42`, stores `Counts` of `crates/mkc-store-interface/src/publication_changes.rs`, which holds `changed`, `added` and `removed` only. It drops the `moved` count of the index's `ChangesCount`.
+  - The store keeps them in the nullable columns `changes_added`, `changes_changed` and `changes_removed` of `crates/mkc-store-pg/src/publication_row.rs`. The merged migration `crates/mkc-db/migrations/202609162000_publications/up.sql` created them.
+  - The publication response's `changes`, `Changes` in `crates/mkc-api/src/viewer/views.rs`, holds `state`, `added`, `changed` and `removed`. The OpenAPI document `docs/api/openapi.json` and the app's generated `packages/app/src/api/generated/schema.ts` follow it.
+  - No public `@mokly/*` export counts moved entries.
+  - `docs/protocol/cloud/viewer-chrome-check.md` and the "Check card" composition of `docs/protocol/cloud/folio-viewer.md` say that the card shows the count lines of the check's summary.
+- **Problem:** The card draws the totals line and never the moved line. A pull request that moves entries shows fewer facts in the app than its check shows on GitHub.
+- **Impact if no action:** A reader in the app does not see how many entries moved. Each publication that admission stores before the fix has no stored moved count.
+- **Root question:** How does the check card learn the moved count of the check's summary?
+- **Options:**
+  - **A.** Persist the moved count at admission beside the other counts, in a new nullable `changes_moved` column of a new migration, whose `down.sql` reverses its `up.sql`. Add `moved` to `Changes` of the publication response, null where the other counts are null. Regenerate the OpenAPI document with `cargo xtask openapi` and the app's types with `npm run api:generate --workspace @mokly-cloud/app`. Update the stored counts sentence of `docs/protocol/cloud/viewer-read-model.md`. Draw `{m} moved.` under the totals line when `m > 0`. A publication stored before the column keeps a null moved count and shows no moved line, which is acceptable because the project is not in production. Effort: Medium.
+  - **B.** Read the moved count from the stored catalogue index each time the API serves a publication. No migration is needed, but each publication read then also reads the index blob, which slows the viewer's first read. Effort: Medium.
+  - **C.** Count the moved entries in the app from the catalogue index that the viewer already reads. The app then copies the counting rule of the section "Changes count" of `docs/protocol/cloud/publication-review.md`, which no public `@mokly/*` export gives, so the card and the check can disagree. Effort: Small.
+  - **D.** Change the requirement: the card shows the totals line only. Update `docs/protocol/cloud/viewer-chrome-check.md` and the composition in `docs/protocol/cloud/folio-viewer.md`. The app then shows fewer facts than the check, by design. Effort: Small.
+- **Left out:** Change nothing and keep the requirement, because the card then breaks the requirement in force.
+- **Wider fix:** None, because this is one missing field, not a class of defects.
+- **Previous examples:** None found.
+- **Recommendation:** A. One stored observation then feeds the check and the card, so they agree, and the publication read stays one read.
+- **Action:** fix after merge, apply A, because the fix needs a migration, an API field, the OpenAPI document and the generated client types, which lie outside the viewer chrome branch. Keep the code, the OpenAPI document and `docs/protocol/cloud/rest-api.md` in agreement, as `AGENTS.md` asks for the API's reasons. The change adds a response field and no reason.
+- **Done when:** The card draws the moved line when entries moved, and the status line of `docs/protocol/cloud/viewer-chrome-check.md` no longer names this item.

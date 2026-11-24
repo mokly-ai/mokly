@@ -12,20 +12,22 @@ The repository suite runs these checks in this order:
 4. The MIT dependency [boundary check](#dependency-boundary).
 5. Whitespace checks on every Git-visible text file.
 6. The generated TypeScript byte-identity check.
-7. Prettier and ESLint, once for the whole repository.
-8. ast-grep rule tests and the Rust and npm source scan.
-9. The unit tests of the npm boundary and cloud skip validator.
-10. The changed-file source and protocol [length audit](#length-audits).
-11. The four [repository ratchets](./verification-ratchets.md): JavaScript and
+7. `npm run palette:check`, the drift check of the stylesheets that the
+   `@mokly/ui` palette module generates.
+8. Prettier and ESLint, once for the whole repository.
+9. ast-grep rule tests and the Rust and npm source scan.
+10. The unit tests of the npm boundary and cloud skip validator.
+11. The changed-file source and protocol [length audit](#length-audits).
+12. The four [repository ratchets](./verification-ratchets.md): JavaScript and
     TypeScript file length, protocol document caps, unused internal exports,
     and public package exports.
-12. Rust formatting for every crate.
-13. Clippy with warnings denied for `mokly-*` and `xtask`.
-14. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
-15. `cargo xtask build-native`, then the `@mokly/ui`, `@mokly/model`,
+13. Rust formatting for every crate.
+14. Clippy with warnings denied for `mokly-*` and `xtask`.
+15. Clippy with warnings denied for the `mokly-cli` `design-matrix` feature.
+16. `cargo xtask build-native`, then the `@mokly/ui`, `@mokly/model`,
     `@mokly/frame`, `@mokly/viewer`, and `@mokly/mokly` builds, in that order.
-16. The Rust tests of `mokly-*` and `xtask`.
-17. The Rust file-length audit of every crate and xtask.
+17. The Rust tests of `mokly-*` and `xtask`.
+18. The Rust file-length audit of every crate and xtask.
 
 The [cloud suites](./ci-verification.md#cloud-suites) own Clippy and tests for
 `mkc-` crates. The whole-repository Markdown link test runs once in Viewer.
@@ -54,7 +56,7 @@ changed, or extra generated files fail the repository suite and its CI job.
 The check writes no files. Authors regenerate and commit changed output.
 
 The repository and native suites build the host native package and the five
-JavaScript packages in the order of item 15 before the Mokly Rust tests. The
+JavaScript packages in the order of item 16 before the Mokly Rust tests. The
 real sidecar smoke tests and the `xtask` fixtures that run the workspace
 `mokly` command require these fresh outputs on every host, including a clean
 checkout.

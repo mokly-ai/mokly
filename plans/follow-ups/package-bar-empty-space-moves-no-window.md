@@ -1,0 +1,22 @@
+# Package bar's empty space moves no Mac window
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-22, from step C3 of the viewer bar's Canvas redesign on `calummoore/canvas-redesign-m22-viewer-bar-to-the-19n5`, where the orchestrator's decision 8 kept a package-drawn drag region for later.
+- **Location:** `docs/protocol/cloud/desktop-bundle.md` (section Mac Window), `docs/protocol/mokly-viewer.md` (the embedded top bar and its host properties), `packages/ui/src/top-bar/top-bar.css`, `packages/ui/src/embedded-layout/embedded-layout.css`, `docs/mockups/styles/product/shared.css` (the drag rules) and `packages/app/src/layout/drag-covers.ts` (the covered parts).
+- **Reason:** The fix changes the rule of `desktop-bundle.md` that only the cloud's parts of the viewer's top bar move the window, and it adds a host property to the package's embedded layout, so it needs a decision.
+- **Category:** Product gap.
+- **Terms:**
+  - **Drag region:** A part of the page that moves the Mac app's window when the reader drags it. Electron reads it from the computed `-webkit-app-region: drag`; a control inside it opts out with `no-drag`.
+  - **Package bar:** The 48px top bar that the workspace `@mokly/viewer` draws: the mark, the cloud's three host slots, the search and the end control.
+- **Background:** The Mac app's window has no title bar, so the parts of the page that move it are its drag regions. `desktop-bundle.md` decides that only the cloud's parts of the viewer's top bar move the window, and that the part that the package draws, with its search, does not: a cloud drag band over the package's bar was rejected, because the package's own controls would then need to opt out of it, and the cloud does not style package parts. `docs/mockups/styles/product/shared.css` gives `-webkit-app-region: drag` to `.fo-package-slot`, the cloud's content in the package's host slots. Since the package draws the mark first, a compact search at the end and the bar's padding, the cloud's slots cover less of the bar. On 2026-11-22 the orchestrator chose to let the package's `topBarStart` slot container fill the free room of its column and the cloud's start slot content fill that container, so the space between the project and the pill moves the window; on the compact bar the cloud's centre slot content fills the room after the pill. It kept a drag region that the package draws itself, option B below, for later.
+- **Problem:** The rest of the bar's empty space still moves no window: the padding around the mark, the room around the search, the column gaps and, on the full bar, the space around the centred pill. A reader who drags the bar there gets no window move, while the same drag on a native title bar works anywhere.
+- **Impact if no action:** Moving the Mac window from the viewer stays fiddly: the reader has to find the cloud's own space between its controls.
+- **Root question:** Should the package bar's own empty space move the Mac window?
+- **Options:**
+  - **A.** Keep the current rule: only the cloud's slot content moves the window. Effort: Small.
+  - **B.** The package draws its own empty bar space as a drag region while a host sets a new optional property, for example `--mokly-top-bar-drag: drag`. The package keeps its own controls and surfaces clear of it: the mark's link, the search, its toggle and close buttons, the end control and every popover or open search that covers the bar opt out with `no-drag`. `desktop-bundle.md` then says that the whole bar moves the window except its controls, and `mokly-viewer.md` documents the property. The cloud's cover check in `packages/app/src/layout/drag-covers.ts` has to cover the package's drag space too, so that an open package surface over it takes presses. Effort: Medium.
+  - **C.** The cloud draws a drag band under the package bar and the package marks its controls `no-drag`. Effort: Medium.
+- **Left out:** A cloud stylesheet that gives the package's elements a drag region styles package parts, which `desktop-bundle.md` rules out.
+- **Recommendation:** B. The package knows its own controls and surfaces, so it can keep them clear, and an optional property keeps the browser and other hosts as they are.
+- **Action:** ask the user, because B changes the Mac Window rule of `desktop-bundle.md` and adds a host property to the package's contract.

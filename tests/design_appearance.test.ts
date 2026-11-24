@@ -3,14 +3,20 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { libraryStyleFiles } from "../examples/basic/specs/design/library/style_files.js";
+
+import { COMPONENT_PARAMETERS } from "./helpers/design_component_parameters.js";
 import {
+  canvasRoleColor,
+  canvasScopeTokens,
   contrast,
   designPalette,
   designPreviewTokens,
   designThemeTokens,
+  PREVIEW_SHEET,
   SHIPPED_THEME,
 } from "./helpers/design_palette.js";
-import { designStyleRules } from "./helpers/design_styles.js";
+import { designStyleRules, fillOf } from "./helpers/design_styles.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
@@ -22,7 +28,6 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ["muted on raised (navigation)", "--chrome-muted", "--chrome-raised", 4.5],
   ["muted on hover surface", "--chrome-muted", "--chrome-hover", 4.5],
   ["accent link on surface", "--chrome-accent", "--chrome-surface", 4.5],
-  ["brand mark on surface", "--chrome-brand", "--chrome-surface", 3],
   ["sage on surface", "--mbk-sage", "--chrome-surface", 4.5],
   ["deep sage on surface", "--mbk-sage-deep", "--chrome-surface", 4.5],
   [
@@ -96,6 +101,91 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
   ],
 ];
 
+/**
+ * The pairs that a Canvas root draws through its palette scope: the Canvas
+ * roles of the Canvas parts, and the shell tokens that the package
+ * components read, each on the surface it sits on.
+ */
+const CANVAS_PAIRS: readonly (readonly [string, string, string, number])[] = [
+  ["Canvas ink on surface", "--cv-text", "--cv-surface", 4.5],
+  ["Canvas ink on canvas", "--cv-text", "--cv-background", 4.5],
+  ["Canvas secondary on surface", "--cv-text-secondary", "--cv-surface", 4.5],
+  ["Canvas muted on surface", "--cv-text-muted", "--cv-surface", 4.5],
+  ["Canvas muted on canvas", "--cv-text-muted", "--cv-background", 4.5],
+  ["Canvas edge on surface", "--cv-border-strong", "--cv-surface", 3],
+  ["Canvas edge on canvas", "--cv-border-strong", "--cv-background", 3],
+  ["signal text on surface", "--cv-signal-deep", "--cv-surface", 4.5],
+  ["signal text on canvas", "--cv-signal-deep", "--cv-background", 4.5],
+  ["signal text on soft signal", "--cv-signal-deep", "--cv-signal-soft", 4.5],
+  ["Canvas ink on soft signal", "--cv-text", "--cv-signal-soft", 4.5],
+  [
+    "Canvas muted on muted surface",
+    "--cv-text-muted",
+    "--cv-surface-muted",
+    4.5,
+  ],
+  ["selection tag text on the signal", "--cv-on-signal", "--cv-signal", 4.5],
+  ["shell ink on surface", "--chrome-ink", "--chrome-surface", 4.5],
+  ["shell ink on canvas", "--chrome-ink", "--chrome-bg", 4.5],
+  ["shell secondary on surface", "--chrome-ink-2", "--chrome-surface", 4.5],
+  ["shell secondary on canvas", "--chrome-ink-2", "--chrome-bg", 4.5],
+  ["shell muted on surface", "--chrome-muted", "--chrome-surface", 4.5],
+  ["shell muted on canvas", "--chrome-muted", "--chrome-bg", 4.5],
+  ["shell muted on catalogue", "--chrome-muted", "--chrome-raised", 4.5],
+  ["control edge on surface", "--chrome-control-edge", "--chrome-surface", 3],
+  ["control edge on canvas", "--chrome-control-edge", "--chrome-bg", 3],
+  ["shell link on surface", "--chrome-accent", "--chrome-surface", 4.5],
+  ["accent text on surface", "--mbk-accent-deep", "--chrome-surface", 4.5],
+  [
+    "accent text on accent surface",
+    "--mbk-accent-deep",
+    "--mbk-accent-surface",
+    4.5,
+  ],
+  ["label on the accent", "--mokly-accent-contrast", "--mokly-accent", 4.5],
+  [
+    "label on the deep accent",
+    "--_mokly-private-on-accent-deep",
+    "--mbk-accent-deep",
+    4.5,
+  ],
+  ["added text on its surface", "--mb-added", "--mb-added-soft", 4.5],
+];
+
+test("every Canvas scope pair meets its criterion in both appearances", () => {
+  for (const [label, foreground, background, minimum] of CANVAS_PAIRS)
+    for (const appearance of ["light", "dark"] as const) {
+      const tokens = canvasScopeTokens(appearance);
+      const first = tokens.get(foreground);
+      const second = tokens.get(background);
+      assert.ok(first && second, `${label}: ${appearance} tokens are missing`);
+      assert.ok(
+        contrast(first, second) >= minimum,
+        `${label} (${appearance}): ${contrast(first, second)} < ${minimum}`,
+      );
+    }
+});
+
+test("the Canvas sheet's grabber reaches 3:1 on the sheet's surface in both appearances", async () => {
+  const grabber = (await designStyleRules()).find(
+    (rule) =>
+      rule.file === libraryStyleFiles["floating-panel"] &&
+      rule.selector === ".cv-float-grab",
+  );
+  const role = grabber && fillOf(grabber.body)?.token;
+  assert.ok(role, "the sheet's grabber fills with no palette role");
+  for (const appearance of ["light", "dark"] as const) {
+    const fill = await canvasRoleColor(role, appearance);
+    const surface = canvasScopeTokens(appearance).get("--cv-surface");
+    assert.ok(fill && surface, `${role} is not a Canvas role in ${appearance}`);
+    const reached = contrast(fill, surface);
+    assert.ok(
+      reached >= 3,
+      `the sheet's grabber (${appearance}): ${reached} < 3`,
+    );
+  }
+});
+
 /** Font stacks share the palette block but are not appearance roles. */
 const FONT_STACKS = new Set(["--sans", "--serif", "--mono"]);
 
@@ -131,8 +221,8 @@ test("preview tokens stay independent of the interface appearance", async () => 
       !name.startsWith("--mbk-screen"),
       `${name} belongs with the preview tokens, not the interface palette`,
     );
-  const stage = await fs.readFile(
-    path.join(repositoryRoot, "examples/basic/design-stage.css"),
+  const preview = await fs.readFile(
+    path.join(repositoryRoot, "examples/basic", PREVIEW_SHEET),
     "utf8",
   );
   for (const name of [
@@ -144,7 +234,7 @@ test("preview tokens stay independent of the interface appearance", async () => 
     "--mbk-screen-link",
     "--mbk-screen-link-strong",
   ])
-    assert.match(stage, new RegExp(`${name}:`), name);
+    assert.match(preview, new RegExp(`${name}:`), name);
 });
 
 /**
@@ -152,17 +242,6 @@ test("preview tokens stay independent of the interface appearance", async () => 
  * reads with a fallback, each with the reason, so a palette token cannot join
  * the list unnoticed.
  */
-const COMPONENT_PARAMETERS = new Map([
-  ["--mbk-indent", "each catalogue row sets its own indent"],
-  ["--mbk-nav-width", "a resizable catalogue column sets its own width"],
-  ["--inspector-height", "a resizable inspector sets its own height"],
-  ["--inspector-tabs", "a static inspector sets the number of its tabs"],
-  ["--inspector-tab", "each tab of a static inspector sets its own column"],
-  [
-    "--mbk-comparison-canvas",
-    "a comparison's host paints the canvas colour of each version",
-  ],
-]);
 
 test("the design stylesheets import the shipped theme and the reset class that every @mokly/ui component reads", async () => {
   const imported = new Set((await designStyleRules()).map((rule) => rule.file));
@@ -173,8 +252,9 @@ test("the design stylesheets import the shipped theme and the reset class that e
 test("the design palettes declare every token that a @mokly/ui stylesheet reads", async () => {
   // The root block of the interface palette declares each of its tokens, and
   // the same-roles test above holds the dark block to the same roles. The
-  // preview tokens of the stage stylesheet declare the device colours, and
-  // the shipped theme declares its own tokens on every artboard's root.
+  // preview tokens of the preview stylesheet declare the device colours, the
+  // shipped theme declares its own tokens on every artboard's root, and the
+  // reset class declares the focus glows on every package element.
   const declared = new Map([
     ...(await designPalette()).light,
     ...(await designPreviewTokens()),

@@ -57,18 +57,19 @@ preserves byte for byte.
   `settings` parameter names no pane, while an unknown pane value opens the
   first available pane.
 - Focus moves into the dialog on open, and on close returns to the page
-  beneath; returning it to the control that opened the dialog arrives with the
-  viewer chrome that carries that control. Escape closes unless a form is
-  dirty, in which case a discard confirmation appears inline; Cancel keeps the
-  draft and the dialog open. The backdrop, Close, the compact surface's Back
-  and the browser's back gesture ask the same question, and a confirmed
-  discard after a back gesture completes that gesture rather than choosing a
-  destination of its own. A gesture that leaves the document the surface was
-  loaded into cannot be stopped by the page, so the browser's own prompt
-  covers it for exactly as long as a draft exists. A confirmation field that
-  already matches what it confirms — the project name in the danger pane — is
-  not a draft, because discarding it would lose nothing the reader typed that
-  still means anything.
+  beneath, on the control that opened the dialog: for the account menu's
+  Settings, that menu's trigger, as the
+  [account menu](./viewer-chrome-account.md#menus) defines. Escape closes
+  unless a form is dirty, in which case a discard confirmation appears inline;
+  Cancel keeps the draft and the dialog open. The backdrop, Close, the compact
+  surface's Back and the browser's back gesture ask the same question, and a
+  confirmed discard after a back gesture completes that gesture rather than
+  choosing a destination of its own. A gesture that leaves the document the
+  surface was loaded into cannot be stopped by the page, so the browser's own
+  prompt covers it for exactly as long as a draft exists. A confirmation field
+  that already matches what it confirms — the project name in the danger pane
+  — is not a draft, because discarding it would lose nothing the reader typed
+  that still means anything.
 - A confirmation modal takes focus when it opens and returns it to the control
   that opened it when it closes, so a reader who declines lands back on the row
   they came from. Escape and the backdrop decline it, and declining never
@@ -175,11 +176,13 @@ destinations is in
 What the dialog costs the history stack is specified with every other
 surface's, in [Web product shell](./web-product-shell.md#settings). On the full-screen
 layer each pane is its own screen, so reaching one is a step Back takes the
-reader out of, to the index they came from. Entry points are the
-viewer top bar's Settings action, the account menu, the workspace and
-project switcher's settings actions, and the token-created flow, which lands
-on its pane with the relevant row selected. Invitation acceptance opens the
-accepted workspace's viewer or project setup.
+reader out of, to the index they came from. Entry points are the account
+menu's Settings, which opens the index because it names no pane, the workspace
+and project switcher's settings actions, and the token-created flow, which
+lands on its pane with the relevant row selected. The viewer bar carries no
+Settings action of its own, as [Viewer chrome](./viewer-chrome.md#slot-inventory)
+defines. Invitation acceptance opens the accepted workspace's viewer or
+project setup.
 External returns (GitHub installation, Stripe Checkout
 and the Customer Portal) arrive on the route form and redirect into the dialog
 on desktop. The Checkout return carries `checkout=success` or

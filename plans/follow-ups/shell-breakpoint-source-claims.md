@@ -3,11 +3,9 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan: outside the scope of the F18 review of 2026-10-20.
-- **Location:** `packages/viewer/src/shell/layout_breakpoint.ts:4`,
-  `packages/viewer/src/shell/README.md:279`,
-  `packages/viewer/src/shell/css_chrome_flow.ts:53`,
-  `packages/viewer/src/shell/css_views_responsive.ts:143`, and
-  `packages/viewer/src/viewer/styles.ts:33`.
+- **Location:** `packages/viewer/src/shell/layout_breakpoint.ts:10-12`,
+  `packages/viewer/src/shell/README.md:456-460`, and
+  `packages/ui/src/embedded-layout/embedded-layout.css:164`.
 - **Reason:** A viewer review found the false claim in files that its
   change did not touch, so a separate branch corrects it.
 
@@ -17,26 +15,25 @@
   - **`NARROW_SHELL`:** the media query `(width < 56.25rem)` in
     `layout_breakpoint.ts`, the shell's layout breakpoint at 900px.
 - **Background:**
-  - Below 900px the catalogue becomes a drawer and the inspector a bottom
-    sheet.
-  - The comment of `NARROW_SHELL` in `layout_breakpoint.ts`, at lines 3-8,
+  - Below 900px the shell uses the compact layout: the catalogue and the
+    right panel become sheets.
+  - The comment of `NARROW_SHELL` in `layout_breakpoint.ts`, at lines 7-13,
     says that every shell and viewer rule and script reads this one query.
-    The shell README repeats the claim at lines 279-282.
-  - Since PR #249 of 2026-10-30, `layout_breakpoint.ts` also exports the
-    760px device query as `NARROW_LAYOUT`. The `@mokly/ui` stylesheets
-    repeat both queries, and the viewer's styles test holds them to both.
-    Before, they repeated only `NARROW_SHELL`. The 560px container query
+    The shell README repeats the claim at lines 456-460.
+  - `layout_breakpoint.ts` also exports the 1180px panel step as
+    `NARROW_PANELS`. The `@mokly/ui` stylesheets repeat both queries, and
+    the viewer's styles test holds them to both. The 560px container query
     has no named constant.
-  - `docs/protocol/mokly-shell-device-chrome.md:97-98` names two
-    breakpoints: the layout breakpoint at 900px and the device breakpoint at
-    760px. So the comment and the README also contradict the protocol.
-- **Problem:** The claim is false. The phone layout uses 760px:
-  `narrow_layout.ts` reports a window at most 760px wide, and
-  `css_chrome_flow.ts`, `css_previews.ts`, and `css_views_responsive.ts` use
-  `@media (max-width: 760px)`. Since PR #249,
-  `packages/ui/src/screen-header/screen-header.css:120` uses it too.
-  The compact search uses the 560px container query of
-  `packages/viewer/src/viewer/styles.ts`.
+  - `docs/protocol/mokly-shell-device-chrome.md:100-101` names the layout
+    breakpoint at 900px and the panel step at 1180px, and
+    `docs/protocol/mokly-viewer.md:185-189` names the compact top bar at a
+    container width of 560px. So the comment and the README also contradict
+    the protocol.
+- **Problem:** The claim is false. The floating panels narrow at the 1180px
+  panel step: `floating-panel.css`, `panel-tabs.css`, and `shell-layout.css`
+  of `@mokly/ui` use `@media (width < 73.75rem)`. The compact top bar and its
+  search use the 560px container query of
+  `packages/ui/src/embedded-layout/embedded-layout.css:164`.
 - **Impact if no action:** A maintainer who trusts the comment can change
   `NARROW_SHELL` and expect every layout to follow, and miss the two other
   widths.
@@ -44,10 +41,10 @@
   switch its layouts?
 - **Options:**
   - **A.** Narrow the claim in the header and the README: name each width,
-    900px, 760px, and 560px, and what it switches. Effort: Small.
+    900px, 1180px, and 560px, and what it switches. Effort: Small.
   - **B.** Apply A, and give each width a named constant in one breakpoint
     module that every rule reads. Effort: Medium.
-- **Left out:** Making every rule read `NARROW_SHELL` moves the phone frame
+- **Left out:** Making every rule read `NARROW_SHELL` moves the panel step
   and the compact search to 900px, which changes the product's layouts.
 - **Wider fix:** None. The `documentation` skill already requires docs that
   match the code.

@@ -1,0 +1,266 @@
+/* The documentation Inspect panel: the open page's properties, Edit on
+   GitHub and On this page with its indexes and the reading progress. Below
+   the breakpoint the same outline, properties and link sit under the lead
+   in a native disclosure. */
+
+/* The Inspect column sticks below the tool bar and stays inside the window */
+
+.site-docs-rail {
+  min-width: 0;
+  position: sticky;
+  top: 72px;
+}
+
+.site-docs-inspect {
+  max-height: calc(100vh - 128px);
+}
+
+.site-docs-inspect > .site-panel-body {
+  gap: 0;
+  overflow-y: auto;
+  padding: 0;
+  scrollbar-color: var(--mk-color-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.site-docs-inspect-section {
+  padding: 12px 14px 10px;
+}
+
+.site-docs-inspect-section + .site-docs-inspect-section {
+  border-top: 1px solid var(--mk-color-border);
+}
+
+.site-docs-inspect-head {
+  align-items: center;
+  display: flex;
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-semibold);
+  justify-content: space-between;
+}
+
+.site-docs-inspect-section > .site-docs-inspect-head {
+  margin-bottom: 8px;
+}
+
+/* The page's properties: a label and a mono value on each row */
+
+.site-docs-facts {
+  display: grid;
+  margin: 0;
+}
+
+.site-docs-fact {
+  align-items: center;
+  display: grid;
+  gap: var(--mk-space-2);
+  grid-template-columns: 76px minmax(0, 1fr);
+  min-height: 28px;
+}
+
+.site-docs-fact dt {
+  color: var(--mk-color-text-muted);
+  font-size: 0.75rem;
+}
+
+.site-docs-fact dd {
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Edit on GitHub: a full-width link with the strong edge of a control */
+
+.site-docs-edit {
+  align-items: center;
+  background: var(--mk-color-background);
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+  display: flex;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: var(--mk-space-2);
+  margin-top: 10px;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 12px;
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    box-shadow var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-docs-edit:hover {
+  background: var(--mk-color-surface);
+  box-shadow: inset 0 0 0 1px var(--mk-color-text);
+}
+
+/* Focus: the glow before the link's strong edge, after the hover rule */
+
+.site-docs-edit:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
+}
+
+.site-docs-edit svg {
+  flex: none;
+}
+
+.site-docs-edit svg:last-child {
+  color: var(--mk-color-text-muted);
+  margin-left: auto;
+}
+
+/* On this page: the reading progress, then a row for each section with
+   its index; the section in view takes the selected fill */
+
+.site-onpage {
+  display: grid;
+  gap: var(--mk-space-2);
+}
+
+.site-docs-progress {
+  align-items: center;
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-regular);
+  gap: var(--mk-space-2);
+}
+
+.site-docs-progress-track {
+  background: var(--mk-color-border);
+  border-radius: 2px;
+  display: block;
+  height: 3px;
+  width: 34px;
+}
+
+.site-onpage ol {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-onpage-link {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--mk-color-text-secondary);
+  display: grid;
+  font-size: 0.78125rem;
+  gap: 6px;
+  grid-template-columns: 22px minmax(0, 1fr);
+  line-height: 1.35;
+  margin: 0 -6px;
+  min-height: var(--mk-layout-control-min);
+  padding: 4px 8px;
+  text-decoration: none;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-onpage-link:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-onpage-link[aria-current="location"] {
+  background: var(--mk-color-signal-soft);
+  color: var(--mk-color-text);
+  font-weight: var(--mk-font-semibold);
+}
+
+/* A heading row draws the focus glow inside its box, as a panel row does */
+
+.site-onpage-link:focus-visible {
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+  outline-offset: -2px;
+}
+
+.site-docs-index {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.65625rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--mk-font-medium);
+}
+
+.site-onpage-link[aria-current="location"] .site-docs-index {
+  color: var(--mk-color-signal-deep);
+}
+
+/* Below the breakpoint: On this page as a disclosure under the lead */
+
+.site-docs-outline {
+  background: var(--mk-color-surface);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border-strong),
+    var(--mk-shadow-small);
+  margin-top: 28px;
+}
+
+.site-docs-outline-summary {
+  align-items: center;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.875rem;
+  font-weight: var(--mk-font-semibold);
+  gap: 10px;
+  list-style: none;
+  min-height: 48px;
+  padding: 0 14px;
+  transition: background var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+.site-docs-outline-summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-docs-outline-summary:hover {
+  background: var(--mk-color-background);
+}
+
+.site-docs-outline-summary svg {
+  color: var(--mk-color-text-muted);
+  flex: none;
+}
+
+.site-docs-outline-count {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+}
+
+.site-docs-outline-chevron {
+  margin-left: auto;
+}
+
+.site-docs-outline[open] .site-docs-outline-chevron {
+  rotate: 180deg;
+}
+
+.site-docs-outline-body {
+  border-top: 1px solid var(--mk-color-border);
+  padding: 4px 14px 14px;
+}
+
+.site-docs-outline .site-onpage-link {
+  font-size: 0.90625rem;
+}
+
+.site-docs-outline-facts {
+  padding-top: 12px;
+}

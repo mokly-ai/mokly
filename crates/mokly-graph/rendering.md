@@ -9,6 +9,8 @@ head validation.
 
 ## Document plans and keys
 
+`Graph::prepare` reads stylesheet inputs and computes document plans.
+
 Preparation renders no document. Each plan carries a route and the document
 node's input hash, which is the public `documentKey` of the
 [rendering contract](../../docs/protocol/mokly-rendering.md). Stylesheet

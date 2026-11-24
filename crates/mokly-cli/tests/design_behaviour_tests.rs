@@ -11,13 +11,3 @@ fn design_parent_views_use_the_parents_own_props() {
 fn design_stacked_versions_share_one_frame_and_viewport() {
     design_behaviour::stacks::check();
 }
-
-#[test]
-fn design_comparison_headings_agree_with_recorded_changes() {
-    design_behaviour::headings::check();
-}
-
-#[test]
-fn design_checklist_has_one_change_and_no_consumers() {
-    design_behaviour::checklist::check();
-}

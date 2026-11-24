@@ -15,6 +15,7 @@ use crate::head_validation::{Unrecorded, ValidationRecorder};
 use crate::policy::PublicPolicy;
 use crate::reference_index::ReferenceIndex;
 use crate::resource_reach::ResourceReach;
+use crate::viewer_fonts::ViewerFonts;
 
 /// Generation-owned resources are read from plans and cache, never by disk route.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = GeneratedResourcesMock))]
@@ -54,17 +55,25 @@ pub trait ClosureBuilder: Send + Sync {
     /// Replay one lexical observer call before proving that target's reads.
     fn observe(&self, _route: &str, _path: &str) {}
     /// Follow one composed document and its renderer-declared seeds.
-    fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure>;
+    /// `fonts` sets whether the document's CSS may load the viewer's faces.
+    fn collect(
+        &self,
+        route: &str,
+        tree: &[Node],
+        seeds: &[String],
+        fonts: ViewerFonts,
+    ) -> Result<Closure>;
     /// Record every input at its read boundary, or decline retention.
     fn collect_recorded(
         &self,
         route: &str,
         tree: &[Node],
         seeds: &[String],
+        fonts: ViewerFonts,
         recorder: &dyn ValidationRecorder,
     ) -> Result<Closure> {
         recorder.unknown();
-        self.collect(route, tree, seeds)
+        self.collect(route, tree, seeds, fonts)
     }
 }
 
@@ -88,8 +97,14 @@ impl ClosureBuilder for Walker {
             observer.observe(route, path);
         }
     }
-    fn collect(&self, route: &str, tree: &[Node], seeds: &[String]) -> Result<Closure> {
-        self.collect_recorded(route, tree, seeds, &Unrecorded)
+    fn collect(
+        &self,
+        route: &str,
+        tree: &[Node],
+        seeds: &[String],
+        fonts: ViewerFonts,
+    ) -> Result<Closure> {
+        self.collect_recorded(route, tree, seeds, fonts, &Unrecorded)
     }
 
     fn collect_recorded(
@@ -97,9 +112,10 @@ impl ClosureBuilder for Walker {
         route: &str,
         tree: &[Node],
         seeds: &[String],
+        fonts: ViewerFonts,
         recorder: &dyn ValidationRecorder,
     ) -> Result<Closure> {
-        closure_walk::collect(self, route, tree, seeds, recorder)
+        closure_walk::collect(self, route, tree, seeds, fonts, recorder)
     }
 }
 

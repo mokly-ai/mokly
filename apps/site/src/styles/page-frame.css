@@ -1,0 +1,30 @@
+/* The page frame that PageFrame.astro draws: the white sheet of a document
+   on the canvas, its file label and its selection. The area sets the
+   frame's width and the sheet's padding. The sheet clips what its parts
+   draw past its edges, such as a hairline that crosses it. The rules match
+   the page frame of docs/mockups/styles/site/panels.css. */
+
+.site-page-frame {
+  margin: 0 auto;
+  min-width: 0;
+  position: relative;
+  width: 100%;
+}
+
+.site-page-frame > .site-frame-name {
+  bottom: calc(100% + 11px);
+}
+
+.site-page-frame > .site-sel {
+  inset: -1px;
+}
+
+.site-page-sheet {
+  background: var(--mk-color-surface);
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  min-width: 0;
+  overflow: clip;
+  position: relative;
+}

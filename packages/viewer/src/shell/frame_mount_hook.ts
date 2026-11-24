@@ -9,12 +9,18 @@ import {
 } from "react";
 import type { RefObject } from "react";
 
-import type { FrameAdapter, FrameErrorCode, FrameEvent } from "@mokly/frame";
+import type {
+  FrameAdapter,
+  FrameErrorCode,
+  FrameEvent,
+  MountedFrame,
+} from "@mokly/frame";
 import { FrameError, cancelFrameMount } from "@mokly/frame/internal";
 import type { CatalogueUsage } from "@mokly/model";
 
 import { sameJsonValue } from "../catalogue/json_values.js";
 
+import { isCanvasInput, type CanvasInputListener } from "./canvas_input.js";
 import { runCleanup } from "./cleanup.js";
 import type { FrameLayout } from "./frame_layout_context.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
@@ -39,10 +45,30 @@ interface MountedFrameInput {
   identity: ShellFrameIdentity;
   layout?: FrameLayout;
   sources?: readonly string[];
+  /**
+   * Receives the canvas input that the frame's document forwards, with the
+   * frame element. With it, each mount asks its adapter for canvas input,
+   * and no other listener receives that input. When the hook disposes of or
+   * replaces the mount, the listener hears `canvas-blur`, so the frame's
+   * focus state ends with its document: disposal itself sends nothing.
+   */
+  onCanvasInput?: CanvasInputListener | undefined;
   onEvent?(event: FrameEvent): void;
+  /**
+   * Hears once for each document that the frame mounts, when the document's
+   * session is ready. `signal` aborts when that session ends, such as when
+   * the frame loads another document. The listener must not throw.
+   */
+  onReady?: FrameReadyListener | undefined;
   source: string | undefined;
   usage: CatalogueUsage;
 }
+
+/** Hears of a mounted document whose session is ready. */
+export type FrameReadyListener = (
+  mounted: MountedFrame,
+  signal: AbortSignal,
+) => void;
 
 /**
  * Mount one frame and adopt evidence without replacing its DOM element.
@@ -60,6 +86,8 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const active = useRef<ActiveSession | undefined>(undefined);
   const latestEvent = useRef(input.onEvent);
+  const latestCanvas = useRef(input.onCanvasInput);
+  const latestReady = useRef(input.onReady);
   const latestLayout = useRef(input.layout);
   const latestSources = useRef(input.sources);
   latestLayout.current = input.layout;
@@ -75,6 +103,8 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         : "unavailable",
   );
   latestEvent.current = input.onEvent;
+  latestCanvas.current = input.onCanvasInput;
+  latestReady.current = input.onReady;
   latestIdentity.current = input.identity;
   latestUsage.current = input.usage;
 
@@ -107,8 +137,13 @@ export function useMountedShellFrame(input: MountedFrameInput): {
     active.current = session;
     registry.add(session);
     setStatus("loading");
+    const canvasInput = latestCanvas.current !== undefined;
     const receive = (event: FrameEvent) => {
       if (controller.signal.aborted) return;
+      if (isCanvasInput(event)) {
+        latestCanvas.current?.(event, element);
+        return;
+      }
       if (
         event.type === "error" &&
         isFrameFailure(event.code, session.status === "loading")
@@ -129,6 +164,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
       .then(() => {
         mountedUsageRevision = session.usageRevision;
         return (input.adapter ?? registry.adapter).mount(element, {
+          ...(canvasInput ? { canvasInput: true } : {}),
           onEvent: receive,
           signal: controller.signal,
           url,
@@ -154,6 +190,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
             session.status = "ready";
             setStatus("ready");
             registry.changed();
+            latestReady.current?.(mounted, controller.signal);
           }
         });
       })
@@ -165,7 +202,10 @@ export function useMountedShellFrame(input: MountedFrameInput): {
           registry.changed();
         }
       });
-    return () => disposeSession(registry, session, active, hostMark);
+    return () => {
+      disposeSession(registry, session, active, hostMark);
+      if (canvasInput) latestCanvas.current?.({ type: "canvas-blur" }, element);
+    };
   }, [
     hostMark,
     input.adapter,
@@ -181,9 +221,7 @@ export function useMountedShellFrame(input: MountedFrameInput): {
     if (!session) return;
     if (input.sources) session.sources = input.sources;
     const layout = input.layout;
-    const layoutChanged =
-      layout?.expanded !== session.layout?.expanded ||
-      layout?.stage !== session.layout?.stage;
+    const layoutChanged = layout?.stage !== session.layout?.stage;
     if (layout) session.layout = layout;
     if (layoutChanged || !sameFrameIdentity(session.identity, input.identity)) {
       session.identity = input.identity;

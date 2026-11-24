@@ -1,48 +1,17 @@
 /**
- * The frame of a preview: the wrapper that records the scheme of the shown
- * render, its viewport label with the Light-only note, the device chrome or
- * the document that it holds, and the lines of a preview that is unavailable
- * or that failed to load. `PreviewIframe` draws the `<iframe>` element, whose
- * document the host loads and reads; this package never reads it.
+ * The parts of a preview that a canvas frame holds: the scheme of the shown
+ * render, and the lines of a preview that is unavailable or that failed to
+ * load. `PreviewIframe` draws the `<iframe>` element, whose document the host
+ * loads and reads; this package never reads it.
  */
 
-import type { ReactNode, Ref } from "react";
+import type { Ref } from "react";
 
+import type { DataAttribute } from "../data-attribute/data-attribute.js";
 import { EmptyAction, EmptyLine } from "../empty-state/empty-state.js";
-import { LightOnlyNote } from "../scheme-fallback/scheme-fallback.js";
-import type { DataAttribute } from "../segmented-control/segmented-control.js";
-
-/** The viewport of one frame. */
-export type FrameViewport = "desktop" | "mobile";
 
 /** The scheme of a render. */
 export type FrameScheme = "dark" | "light";
-
-/**
- * Where a preview frame stands: a viewport's `frame` or a component's
- * `canvas` on a stage, the screen of a user flow's step, or the chrome of a
- * comparison pane.
- */
-export type FramePlacement =
-  | { kind: "canvas" | "frame"; viewport: FrameViewport }
-  | { kind: "flow" }
-  | { kind: "pane" };
-
-/** The viewport's name above a frame, with the Light-only note. */
-function FrameLabel({
-  fallback,
-  viewport,
-}: {
-  fallback: boolean;
-  viewport: FrameViewport;
-}) {
-  return (
-    <p className="mbk-frame-label mbk-reset">
-      {viewport === "mobile" ? "Mobile" : "Desktop"}
-      {fallback ? <LightOnlyNote suffix /> : null}
-    </p>
-  );
-}
 
 /**
  * How a frame whose document failed to load tries again: the host's callback,
@@ -50,127 +19,34 @@ function FrameLabel({
  */
 export type FrameRetry = { href: string } | { onClick(): void };
 
-/**
- * The content of a frame, or the line of a preview that has none, then the
- * line of a frame whose document failed to load, with Try again.
- */
-function FrameContent({
-  children,
-  error,
-  retry,
-}: {
-  children: ReactNode;
-  error: boolean;
-  retry: FrameRetry | undefined;
-}) {
-  return (
-    <>
-      {children ?? <EmptyLine>This preview is unavailable.</EmptyLine>}
-      {error ? (
-        <p className="mbk-frame-error mbk-reset" role="status">
-          This preview could not be loaded.
-          {retry ? (
-            <>
-              {" "}
-              <EmptyAction
-                action={
-                  "href" in retry
-                    ? { href: retry.href, label: "Try again" }
-                    : { label: "Try again", onClick: retry.onClick }
-                }
-              />
-            </>
-          ) : null}
-        </p>
-      ) : null}
-    </>
-  );
+/** The line of a preview that has no document to show. */
+export function FrameUnavailable() {
+  return <EmptyLine>This preview is unavailable.</EmptyLine>;
 }
 
-/** The class of a frame's wrapper. */
-function placementClass(placement: FramePlacement): string {
-  if (placement.kind === "flow") return "mbk-flow-screen";
-  if (placement.kind === "pane") return "mb-pane-chrome mbk-frame-wrap";
-  return `${placement.kind === "canvas" ? "mbk-component-canvas" : "mbk-frame-wrap"} mbk-frame-${placement.viewport}`;
-}
-
-/**
- * One preview frame. A frame or a canvas on a stage names its viewport above
- * the content. A view that keeps its light render under a Dark shell carries
- * the fallback mark, which reveals the label's note.
- */
-export function PreviewFrame({
-  children,
-  error = false,
-  fallback = false,
-  placement,
+/** The line of a frame whose document failed to load, with Try again. */
+export function FrameFailure({
   retry,
-  scheme,
 }: {
-  /** The frame in its device chrome. Without it, the preview is unavailable. */
-  children?: ReactNode;
-  /** Whether the frame's document failed to load. */
-  error?: boolean;
-  /** Whether the view keeps its light render while the shell is Dark. */
-  fallback?: boolean;
-  placement: FramePlacement;
-  /** Try again on the line of a document that failed to load. */
+  /** Try again: the host's callback, or the address of the outcome. */
   retry?: FrameRetry | undefined;
-  /** The scheme of the shown render, which its frame and chrome follow. */
-  scheme: FrameScheme;
 }) {
   return (
-    <div
-      className={`${placementClass(placement)} mbk-reset`}
-      data-color-scheme-fallback={fallback ? "" : undefined}
-      data-preview-color-scheme={scheme}
-    >
-      {placement.kind === "canvas" || placement.kind === "frame" ? (
-        <FrameLabel fallback={fallback} viewport={placement.viewport} />
+    <p className="mbk-frame-error mbk-reset" role="status">
+      This preview could not be loaded.
+      {retry ? (
+        <>
+          {" "}
+          <EmptyAction
+            action={
+              "href" in retry
+                ? { href: retry.href, label: "Try again" }
+                : { label: "Try again", onClick: retry.onClick }
+            }
+          />
+        </>
       ) : null}
-      <FrameContent error={error} retry={retry}>
-        {children}
-      </FrameContent>
-    </div>
-  );
-}
-
-/**
- * The frame of a whole document, such as a page or a Markdown document,
- * which fills the stage and keeps its scroll position as `embed`.
- */
-export function DocumentFrame({
-  children,
-  error = false,
-  ref,
-  retry,
-  scheme,
-}: {
-  /** The document's frame. Without it, the preview is unavailable. */
-  children?: ReactNode;
-  /** Whether the frame's document failed to load. */
-  error?: boolean;
-  /**
-   * Receives the document's stage, against which the host measures its
-   * frame, and whose scroll position it keeps.
-   */
-  ref?: Ref<HTMLDivElement> | undefined;
-  /** Try again on the line of a document that failed to load. */
-  retry?: FrameRetry | undefined;
-  /** The scheme of the shown render. */
-  scheme: FrameScheme;
-}) {
-  return (
-    <div
-      className="mbk-stage-embed mbk-reset"
-      data-mokly-scroll="embed"
-      data-preview-color-scheme={scheme}
-      ref={ref}
-    >
-      <FrameContent error={error} retry={retry}>
-        {children}
-      </FrameContent>
-    </div>
+    </p>
   );
 }
 

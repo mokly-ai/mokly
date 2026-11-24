@@ -26,6 +26,11 @@ function folder(page: Page, path: string) {
   return page.locator(`details[data-nav-folder="folder:${path}"]`);
 }
 
+/** Inspect's Path row, whose folder segments are the breadcrumbs. */
+function pathRow(page: Page) {
+  return page.locator("[data-inspect-path]");
+}
+
 test("a folder row only browses and its own page is the Overview row", async ({
   page,
 }) => {
@@ -45,7 +50,10 @@ test("a folder row only browses and its own page is the Overview row", async ({
   await expect(page).toHaveURL(/\/view\/fixture\/guide\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Guide");
   await expect(overview).toHaveAttribute("aria-current", "page");
-  await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture");
+  await expect(pathRow(page).locator("code")).toHaveText("fixture/guide");
+  await expect(
+    pathRow(page).getByRole("button", { name: "fixture" }),
+  ).toBeVisible();
 });
 
 test("a folder's own screen is one entry row listing its variants, then its members", async ({
@@ -102,13 +110,15 @@ test("a folder's own screen is one entry row listing its variants, then its memb
   ).toBeVisible();
 });
 
-test("breadcrumbs open a folder's page or reveal a folder without changing the view", async ({
+test("the Path row's breadcrumbs open a folder's page or reveal a folder without changing the view", async ({
   page,
 }) => {
   await page.goto(`${server.url}/view/fixture/billing/invoice/history/`);
-  const crumbs = page.getByLabel("Catalogue location");
-  await expect(crumbs).toHaveText("Fixture›Billing & Payments›Invoice");
-  await crumbs.getByRole("link", { name: "Invoice" }).click();
+  const crumbs = pathRow(page);
+  await expect(crumbs.locator("code")).toHaveText(
+    "fixture/billing/invoice/history",
+  );
+  await crumbs.getByRole("link", { name: "invoice" }).click();
   await expect(page).toHaveURL(/\/view\/fixture\/billing\/invoice\/$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Invoice");
 
@@ -117,10 +127,7 @@ test("breadcrumbs open a folder's page or reveal a folder without changing the v
   await expect(tools).toHaveAttribute("open", "");
   await tools.locator(":scope > summary").click();
   await expect(tools).not.toHaveAttribute("open", "");
-  await page
-    .getByLabel("Catalogue location")
-    .getByRole("button", { name: "Tools" })
-    .click();
+  await pathRow(page).getByRole("button", { name: "tools" }).click();
   await expect(tools).toHaveAttribute("open", "");
   await expect(tools.locator(":scope > summary")).toBeFocused();
   await expect(page).toHaveURL(/\/view\/fixture\/tools\/setup\/$/);
@@ -131,10 +138,7 @@ test("breadcrumbs open a folder's page or reveal a folder without changing the v
 
   await page.fill("[data-mokly-search]", "zzz");
   await expect(folder(page, "fixture")).toBeHidden();
-  await page
-    .getByLabel("Catalogue location")
-    .getByRole("button", { name: "Fixture" })
-    .click();
+  await pathRow(page).getByRole("button", { name: "fixture" }).click();
   await expect(page.locator("[data-mokly-search]")).toHaveValue("");
   await expect(folder(page, "fixture")).toBeVisible();
   await expect(
@@ -143,7 +147,7 @@ test("breadcrumbs open a folder's page or reveal a folder without changing the v
   await expect(page.locator("#mb-main h2")).toHaveText("Setup");
 });
 
-test("a narrow breadcrumb reveal opens the drawer at the folder", async ({
+test("a narrow breadcrumb reveal opens the catalogue's sheet at the folder", async ({
   page,
 }) => {
   await page.setViewportSize({ height: 844, width: 390 });
@@ -151,10 +155,13 @@ test("a narrow breadcrumb reveal opens the drawer at the folder", async ({
   const root = page.locator(".mbk[data-drawer]");
   await expect(root).toHaveAttribute("data-drawer", "closed");
   await expect(page.locator(".mbk-nav")).toBeHidden();
+  // The Path row stands in the right panel, which the dock opens as a sheet.
   await page
-    .getByLabel("Catalogue location")
-    .getByRole("button", { name: "Tools" })
+    .getByRole("group", { name: "Canvas controls" })
+    .getByRole("button", { name: "Inspect" })
     .click();
+  await pathRow(page).getByRole("button", { name: "tools" }).click();
+  await expect(page.getByRole("region", { name: "Panel" })).toBeHidden();
   await expect(root).toHaveAttribute("data-drawer", "open");
   await expect(page.locator(".mbk-nav")).toBeVisible();
   await expect(

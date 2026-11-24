@@ -55,6 +55,7 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         cargo(&["xtask", "boundary"]),
         cargo(&["xtask", "whitespace"]),
         cargo(&["xtask", "check-generated-types"]),
+        npm(&["run", "palette:check"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
         CommandSpec::new("node_modules/.bin/ast-grep").args(["test", "--skip-snapshot-tests"]),

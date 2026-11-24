@@ -37,18 +37,12 @@ for (const hostname of ["127.0.0.1", "localhost"])
       expect((await rendered).status()).toBe(200);
       await expect
         .poll(() => frameTexts(page))
-        .toEqual([
-          expect.stringContaining("Edited 1"),
-          expect.stringContaining("Edited 1"),
-        ]);
+        .toEqual([expect.stringContaining("Edited 1")]);
       await props.getByRole("button", { name: "Reset to Card" }).click();
       await expect(label).toHaveValue("Hello");
       await expect
         .poll(() => frameTexts(page))
-        .toEqual([
-          expect.stringContaining("Hello 1"),
-          expect.stringContaining("Hello 1"),
-        ]);
+        .toEqual([expect.stringContaining("Hello 1")]);
       expect(new Set(forwarder.hosts)).toEqual(new Set([host]));
     } finally {
       await closeServe(page, forwarder, server);
@@ -70,14 +64,13 @@ test("navigation cancels a pending edit, and returning shows the saved props", a
       if (isRender(request)) cancelled.push(request.failure()?.errorText ?? "");
     });
     await props.getByRole("textbox", { name: "label" }).fill("Never shown");
-    await expect.poll(() => held.length).toBe(2);
+    // The card's one frame on the canvas sends one render.
+    await expect.poll(() => held.length).toBe(1);
     await expect(page.getByText("Updating preview…").first()).toBeVisible();
 
     await page.locator('a[data-entry-id="home"][data-nav-row]').click();
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
-    await expect
-      .poll(() => cancelled)
-      .toEqual(["net::ERR_ABORTED", "net::ERR_ABORTED"]);
+    await expect.poll(() => cancelled).toEqual(["net::ERR_ABORTED"]);
     await expect(page.getByText("Updating preview…")).toHaveCount(0);
 
     await page.goBack();
@@ -88,10 +81,7 @@ test("navigation cancels a pending edit, and returning shows the saved props", a
     );
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("Hello 1"),
-        expect.stringContaining("Hello 1"),
-      ]);
+      .toEqual([expect.stringContaining("Hello 1")]);
   } finally {
     await closeServe(page, server);
   }
@@ -166,10 +156,7 @@ test("a failed render keeps the last valid preview, and Try again renders the ed
     await label.fill("First");
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("First 1"),
-        expect.stringContaining("First 1"),
-      ]);
+      .toEqual([expect.stringContaining("First 1")]);
     let failing = true;
     await page.route("**/mokly-viewer/components/render", (route) =>
       failing
@@ -186,17 +173,13 @@ test("a failed render keeps the last valid preview, and Try again renders the ed
     ).toBeVisible();
     expect(await frameTexts(page)).toEqual([
       expect.stringContaining("First 1"),
-      expect.stringContaining("First 1"),
     ]);
     await expect(label).toHaveValue("Second");
     failing = false;
     await props.getByRole("button", { name: "Try again" }).click();
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("Second 1"),
-        expect.stringContaining("Second 1"),
-      ]);
+      .toEqual([expect.stringContaining("Second 1")]);
     await expect(
       props.getByText("The preview could not be updated"),
     ).toHaveCount(0);
@@ -205,7 +188,7 @@ test("a failed render keeps the last valid preview, and Try again renders the ed
   }
 });
 
-test("a newer edit aborts the held render, and both frames show the newest text", async ({
+test("a newer edit aborts the held render, and the frame shows the newest text", async ({
   page,
 }) => {
   const server = await serveLiveCatalogue();
@@ -222,15 +205,12 @@ test("a newer edit aborts the held render, and both frames show the newest text"
       if (isRender(request)) aborted.push(renderBody(request).label);
     });
     await label.fill("Hang");
-    await expect.poll(() => held.length).toBe(2);
+    await expect.poll(() => held.length).toBe(1);
     await label.fill("Newest");
-    await expect.poll(() => aborted).toEqual(["Hang", "Hang"]);
+    await expect.poll(() => aborted).toEqual(["Hang"]);
     await expect
       .poll(() => frameTexts(page))
-      .toEqual([
-        expect.stringContaining("Newest 1"),
-        expect.stringContaining("Newest 1"),
-      ]);
+      .toEqual([expect.stringContaining("Newest 1")]);
     await expect(label).toHaveValue("Newest");
   } finally {
     await closeServe(page, server);

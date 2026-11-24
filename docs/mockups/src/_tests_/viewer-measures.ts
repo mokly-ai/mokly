@@ -45,10 +45,56 @@ export function overlappingChrome() {
   return overlaps;
 }
 
-/** The reference label's lines and the boundaries that can clip its chevron. */
+/**
+ * The frames of a drawn canvas that do not stand clear on it: each frame must
+ * lie inside the canvas and clear of each floating part over it that shows,
+ * the floating catalogue, the right panel, the zoom pill, the entry bar and
+ * the dock. A frame's label stands above its box, so only the box is
+ * measured.
+ */
+export function canvasFrameViolations() {
+  const canvas = document.querySelector("[data-mokly-stage]");
+  if (!canvas) return ["canvas required"];
+  const bounds = canvas.getBoundingClientRect();
+  const covers = [
+    ...document.querySelectorAll(
+      "[data-floating-panel], .mbk-zoom-pill, [data-entry-bar], [data-canvas-dock]",
+    ),
+  ].filter((node) => node.getClientRects().length > 0);
+  const problems: string[] = [];
+  for (const frame of canvas.querySelectorAll("[data-canvas-frame]")) {
+    const box = frame.getBoundingClientRect();
+    const name = frame.querySelector("figcaption")?.textContent ?? "frame";
+    if (
+      box.width === 0 ||
+      box.left < bounds.left ||
+      box.right > bounds.right ||
+      box.top < bounds.top ||
+      box.bottom > bounds.bottom
+    )
+      problems.push(name + " leaves the canvas");
+    for (const cover of covers) {
+      const other = cover.getBoundingClientRect();
+      if (
+        box.left < other.right &&
+        other.left < box.right &&
+        box.top < other.bottom &&
+        other.top < box.bottom
+      )
+        problems.push(name + " runs under " + cover.className);
+    }
+  }
+  return problems;
+}
+
+/**
+ * The reference label's lines and the boundaries that can clip its chevron,
+ * the last glyph that the trigger draws.
+ */
 export function referenceTriggerLayout(trigger: Element) {
   const label = trigger.querySelector("[dir=auto]");
-  const icon = trigger.querySelector("svg");
+  const icons = trigger.querySelectorAll("svg");
+  const icon = icons[icons.length - 1];
   const chevron = icon?.getBoundingClientRect();
   const bar = trigger.closest(".fo-top-bar, .mokly-top-host");
   const inside = (boundary: DOMRect | undefined) =>

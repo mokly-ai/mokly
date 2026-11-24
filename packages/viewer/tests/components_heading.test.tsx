@@ -9,19 +9,10 @@ import { test } from "node:test";
 
 import { viewsUsingComponents } from "../src/review/shared_impact.js";
 import type { ComparedEntry, ReviewView } from "../src/review/types.js";
-import { selectedComparisonViews } from "../src/shell/comparison_selection.js";
-import { ComparisonViews } from "../src/shell/comparison_views.js";
-import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 
-import { storeMarkup } from "./shell_markup.js";
+import { frameOutcome } from "./compared_outcome.js";
 
 const CARD = "components/card";
-const BOTH: ComparisonPresentation = {
-  colorScheme: "light",
-  mode: "side",
-  requestedColorScheme: "light",
-  viewport: "both",
-};
 
 function view(
   viewport: "mobile" | "desktop",
@@ -41,28 +32,17 @@ function compared(views: ReviewView[], path = "screens/home"): ComparedEntry {
   return { path, basePath: path, reasons: [], views };
 }
 
-/** Each shown viewport's heading of one compared entry route. */
+/** The outcome lines of an entry's Mobile and Desktop Light frames. */
 function headings(
   entry: ComparedEntry,
   kind: "component" | "screen",
   usingChanged?: ReadonlySet<string>,
-): string[] {
-  const loaded = {
-    url: `https://example.test/mokly-viewer/diffs/generations/${"b".repeat(64)}/`,
-  };
-  const views = selectedComparisonViews(loaded, BOTH, entry, usingChanged);
-  const markup = storeMarkup(
-    <ComparisonViews
-      entryId={entry.path}
-      entryKind={kind}
-      presentation={BOTH}
-      presentations={new Map()}
-      together
-      views={views}
-    />,
-  );
-  return [...markup.matchAll(/<h3 class="mbk-reset">(.*?)<\/h3>/g)].map(
-    (match) => match[1]!,
+): (string | undefined)[] {
+  return (["mobile", "desktop"] as const).map((viewport) =>
+    frameOutcome(entry, kind, {
+      viewport,
+      ...(usingChanged ? { usingChanged } : {}),
+    }),
   );
 }
 
@@ -81,8 +61,8 @@ test("an unchanged view with a component-owned record reads the components headi
   assert.deepEqual(
     headings(compared([view("mobile", cardRule), view("desktop")]), "screen"),
     [
-      "Mobile · Components this screen uses changed",
-      "Desktop · No changes to this screen",
+      "Mobile · Light · Components this screen uses changed",
+      "Desktop · Light · No changes to this screen",
     ],
   );
 });
@@ -102,8 +82,8 @@ test("a view whose usage holds a changed component reads the heading", () => {
     [{ path: CARD }],
   );
   assert.deepEqual(headings(home, "screen", usingChanged), [
-    "Mobile · Components this screen uses changed",
-    "Desktop · No changes to this screen",
+    "Mobile · Light · Components this screen uses changed",
+    "Desktop · Light · No changes to this screen",
   ]);
 });
 
@@ -121,8 +101,8 @@ test("an excluded record keeps the no-changes heading", () => {
   assert.deepEqual(
     headings(compared([view("mobile", excluded), view("desktop")]), "screen"),
     [
-      "Mobile · No changes to this screen",
-      "Desktop · No changes to this screen",
+      "Mobile · Light · No changes to this screen",
+      "Desktop · Light · No changes to this screen",
     ],
   );
 });
@@ -137,8 +117,8 @@ test("a consuming component's saved view reads the variant noun", () => {
       "component",
     ),
     [
-      "Mobile · Components this variant uses changed",
-      "Desktop · No changes to this variant",
+      "Mobile · Light · Components this variant uses changed",
+      "Desktop · Light · No changes to this variant",
     ],
   );
 });

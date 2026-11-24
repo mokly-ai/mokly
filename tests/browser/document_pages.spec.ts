@@ -1,11 +1,15 @@
 import { expect, type Page } from "@playwright/test";
 
 import { test } from "./browser_test.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import {
+  DOCUMENT_FRAME,
+  expectFrameSource,
+  revealInPanel,
+} from "./workspace_actions.js";
 
-/** One labelled metadata row in the open Details panel. */
+/** One labelled row of Inspect's Details. */
 function metaRow(page: Page, label: string) {
-  return page.locator(".mbk-details-body .mbk-meta-row", {
+  return page.locator('[data-inspect-section="details"] .mbk-meta-row', {
     has: page.locator(".mbk-meta-k", { hasText: label }),
   });
 }
@@ -16,30 +20,30 @@ for (const width of [390, 1280])
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/view/example/workspace-guide/");
-    const head = page.locator("#mb-main .mbk-screen-head");
-    const frame = page.locator(".mbk-stage-embed iframe");
-    const fallback = page.locator(".mbk-scheme-fallback");
+    const head = page.locator('#mb-main [data-inspect-section="details"]');
+    // Inspect's head and its Details rows stand in the right panel, which the
+    // compact layout opens as a sheet.
+    await revealInPanel(page, head);
+    const frame = page.locator(DOCUMENT_FRAME);
+    const fallback = page.locator("[data-mokly-stage]").getByText("Light only");
     for (const scheme of ["light", "dark"] as const) {
       await page.getByLabel("Appearance", { exact: true }).selectOption(scheme);
       await expect(head.locator("h2")).toHaveText("Workspace guide");
+      const path = head.locator("[data-inspect-path]");
+      await expect(path.locator("code")).toHaveText("example/workspace-guide");
       await expect(
-        page
-          .getByLabel("Catalogue location")
-          .getByRole("link", { name: "Example", exact: true }),
+        path.getByRole("link", { name: "example", exact: true }),
       ).toHaveAttribute("href", "/view/example/");
-      await expect(head.locator(".mbk-pathchip")).toHaveText(
-        "example/workspace-guide",
-      );
-      await expect(
-        head.locator("[data-mokly-viewswitch], [data-mokly-schemeswitch]"),
-      ).toHaveCount(0);
+      // The standalone Appearance sets the document's scheme, so the head
+      // has no preview control of its own.
+      await expect(head.locator("[data-workspace-scheme]")).toHaveCount(0);
       await expect(frame).toHaveAttribute("data-mokly-frame-state", "ready");
       await expectFrameSource(
         frame,
         scheme === "dark" ? /index\.dark\.html$/u : /index\.html$/u,
       );
       await expect(fallback).toHaveCount(0);
-      const image = page.frameLocator(".mbk-stage-embed iframe").locator("img");
+      const image = page.frameLocator(DOCUMENT_FRAME).locator("img");
       await expect(image).toBeVisible();
       await expect
         .poll(() =>
@@ -51,8 +55,8 @@ for (const width of [390, 1280])
         .toBe(true);
     }
 
-    await page.locator("[data-mokly-details] summary").click();
-    await expect(page.locator(".mbk-details-desc")).toHaveText(
+    // The head shows the description and the Details rows at once.
+    await expect(head.locator(".mbk-inspect-description")).toHaveText(
       "Find your way around the workspace.",
     );
     await expect(metaRow(page, "Source")).toContainText(

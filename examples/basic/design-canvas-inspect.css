@@ -1,0 +1,253 @@
+/* The Canvas viewer's Inspect body and the parts around the stage: Inspect's
+   sections, the shipped metadata rows in Canvas type, the variant list, the
+   folded sections, the compact frame picker, and the home card. */
+
+/* ---- Inspect -------------------------------------------------------- */
+
+.cv-sec {
+  border-bottom: 1px solid var(--cv-border);
+  padding: 14px;
+}
+
+.cv-sec:last-child {
+  border-bottom: 0;
+}
+
+.cv-sec-head {
+  align-items: center;
+  color: var(--cv-text);
+  display: flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: space-between;
+  margin: 0 0 10px;
+  min-height: 18px;
+}
+
+.cv-sec-count {
+  color: var(--cv-text-muted);
+  font: 400 11.5px/1 var(--cv-mono);
+}
+
+.cv-ins-title {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cv-ins-title > h2 {
+  font-size: 16px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.cv-ins-title .mbk-entry-status {
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 6px;
+}
+
+.cv-ins-desc {
+  color: var(--cv-text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 6px 0 12px;
+  text-wrap: pretty;
+}
+
+.cv-ins-rows {
+  display: grid;
+  gap: 6px;
+}
+
+/* The shipped metadata rows read as Inspect's property rows: the label in
+   the panel's quiet text, then the value. */
+.cv-ins .mbk-meta-row {
+  align-items: center;
+  gap: 8px;
+  grid-template-columns: 84px minmax(0, 1fr);
+  min-height: 24px;
+}
+
+.cv-ins .mbk-meta-k {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.cv-ins .mbk-meta-v {
+  color: var(--cv-text);
+  font-size: 12px;
+}
+
+.cv-why > p,
+.cv-hint {
+  color: var(--cv-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cv-hint {
+  color: var(--cv-text-muted);
+}
+
+/* The saved variants: a radio list whose shown variant is checked. A variant
+   that opens the artboard where it is chosen is a link over the whole row. */
+.cv-variants {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a.cv-variant {
+  text-decoration: none;
+}
+
+a.cv-variant:hover {
+  background: var(--cv-hover);
+  color: var(--cv-text);
+}
+
+.cv-variant {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--cv-text-secondary);
+  display: flex;
+  font-size: 13px;
+  gap: 9px;
+  height: 30px;
+  padding: 0 8px;
+}
+
+.cv-variant-mark {
+  border: 1.5px solid var(--cv-line-strong);
+  border-radius: 50%;
+  flex: none;
+  height: 14px;
+  width: 14px;
+}
+
+.cv-variant[aria-current] {
+  color: var(--cv-text);
+  font-weight: 560;
+}
+
+.cv-variant[aria-current] > .cv-variant-mark {
+  border: 4.5px solid var(--cv-signal-deep);
+}
+
+/* A folded section: its head is the native disclosure's summary. */
+.cv-fold > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.cv-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.cv-fold:not([open]) > summary {
+  margin-bottom: 0;
+}
+
+.cv-fold-title {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.cv-fold > summary > .cv-glyph {
+  color: var(--cv-text-muted);
+  transition: transform 120ms ease;
+}
+
+.cv-fold[open] > summary > .cv-glyph {
+  transform: rotate(180deg);
+}
+
+/* ---- Around the stage ---------------------------------------------- */
+
+/* The compact frame picker: a native select of the frames in a pill, with
+   the picked frame's viewport glyph. */
+.cv-frame-pick {
+  align-items: center;
+  border-radius: 18px;
+  box-shadow: var(--cv-shadow-1);
+  color: var(--cv-text-secondary);
+  display: inline-flex;
+  flex: none;
+  position: relative;
+}
+
+.cv-frame-pick > select {
+  appearance: none;
+  background: var(--cv-surface);
+  border: 1px solid var(--cv-border-strong);
+  border-radius: 18px;
+  color: inherit;
+  cursor: pointer;
+  font: 500 12px/1 var(--cv-mono);
+  height: 36px;
+  padding: 0 30px;
+}
+
+.cv-frame-pick-glyph {
+  color: var(--cv-text-muted);
+  display: inline-flex;
+  left: 11px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.cv-frame-pick > .cv-glyph {
+  color: var(--cv-text-muted);
+  pointer-events: none;
+  position: absolute;
+  right: 11px;
+}
+
+.cv-frame-pick:has(option[value^="desktop"]:checked) [data-glyph="mobile"],
+.cv-frame-pick:has(option[value^="mobile"]:checked) [data-glyph="desktop"] {
+  display: none;
+}
+
+/* The home guidance on the canvas, in a card. */
+.cv-home {
+  background: var(--cv-surface);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px var(--cv-border),
+    var(--cv-shadow-2);
+  display: flex;
+  max-width: 440px;
+}
+
+/* A sheet's tab strip takes larger tabs. */
+.cv-float[data-sheet] .cv-ptab {
+  font-size: 14px;
+  padding: 0 12px;
+}
+
+.cv-float[data-sheet] .cv-ptab[data-selected]::after {
+  left: 12px;
+  right: 12px;
+}
+
+/* A path in a code chip wraps between its folders, never inside a name. */
+.cv-ins .mbk-code {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.cv-path-part {
+  white-space: nowrap;
+}

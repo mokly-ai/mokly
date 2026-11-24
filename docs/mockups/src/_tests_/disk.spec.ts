@@ -171,6 +171,8 @@ for (const { file, path, viewport, scheme } of views) {
         controlPolicyInput(disabledByDesign(path)),
       ),
     ).toEqual([]);
+    // A primary action's label takes the on-accent colour of the tokens: the
+    // Canvas signal fill carries its own white label in both schemes.
     const foreground = tokens.color[scheme].onAccent;
     const rgb = [1, 3, 5]
       .map((start) => Number.parseInt(foreground.slice(start, start + 2), 16))
@@ -215,24 +217,21 @@ for (const { file, path, viewport, scheme } of views) {
           ).toBe(true);
         }
       }
-    // A viewer drawing's phone and browser frames each hold the sample
-    // screen, and the frame of the document's viewport shows it.
+    // A viewer drawing's canvas frames each hold the sample screen and show
+    // it: a frame for each view of the screen on a desktop, and on a phone
+    // the compact layout's one frame, of the document's viewport.
     const drawings = await page.locator(".mokly-viewer").count();
     const sample = '[data-mkc-sample-screen="' + currentScreen.path + '"]';
-    for (const device of [".phone-frame", ".browser-frame"])
+    const shown = drawings * (mobile ? 1 : currentScreen.views.length);
+    const frames = page.locator("[data-mokly-stage] [data-canvas-frame]");
+    await expect(frames).toHaveCount(shown);
+    await expect(frames.locator(sample).filter({ visible: true })).toHaveCount(
+      shown,
+    );
+    if (mobile)
       await expect(
-        page.locator("[data-mokly-stage] " + device + " " + sample),
-        device,
-      ).toHaveCount(drawings);
-    await expect(
-      page
-        .locator(
-          "[data-mokly-stage] " +
-            (mobile ? ".phone-frame " : ".browser-frame ") +
-            sample,
-        )
-        .filter({ visible: true }),
-    ).toHaveCount(drawings);
+        frames.and(page.locator('[data-canvas-frame="mobile"]')),
+      ).toHaveCount(shown);
     expect(errors).toEqual([]);
     const screenshot = resolve(screenshots, file + ".png");
     mkdirSync(dirname(screenshot), { recursive: true });

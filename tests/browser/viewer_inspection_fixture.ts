@@ -80,6 +80,10 @@ export async function startInspection(
       host.props.frameAdapter = {
         async mount(frame, options) {
           const viewport = frame.dataset["workspaceFrame"]!;
+          // The canvas also shows each view's Dark frame. The probe follows
+          // the Light frames, as the one-frame stage shows them under a light
+          // selection, while every frame withholds its own geometry.
+          const probed = frame.dataset["workspaceColorScheme"] !== "dark";
           const receiver = options.onEvent;
           const onEvent = receiver && withoutGeometry(receiver);
           const mounted = await original.mount(
@@ -95,33 +99,37 @@ export async function startInspection(
               };
             });
           };
-          if (viewport === "desktop" && sibling === "mounting") await hold();
+          if (probed && viewport === "desktop" && sibling === "mounting")
+            await hold();
           const after = async (operation: Operation) => {
-            if (viewport === "mobile" && probe.hold === operation) {
+            if (probed && viewport === "mobile" && probe.hold === operation) {
               delete probe.hold;
               await hold();
             }
           };
+          const record = (operation: string) => {
+            if (probed) probe.calls.push({ viewport, operation });
+          };
           return {
             ...mounted,
             async listInstanceBoundaries() {
-              probe.calls.push({ viewport, operation: "list" });
+              record("list");
               const boundaries = await mounted.listInstanceBoundaries();
               await after("list");
               return boundaries;
             },
             async highlight(keys, mode) {
-              probe.calls.push({ viewport, operation: mode });
+              record(mode);
               await mounted.highlight(keys, mode);
               if (mode !== "off") await after("highlight");
             },
             async scrollTo(key) {
-              probe.calls.push({ viewport, operation: "scroll" });
+              record("scroll");
               await mounted.scrollTo(key);
               await after("scroll");
             },
             subscribe(listener) {
-              if (viewport === "mobile") probe.emit = listener;
+              if (probed && viewport === "mobile") probe.emit = listener;
               return mounted.subscribe(
                 onEvent && listener === receiver
                   ? onEvent

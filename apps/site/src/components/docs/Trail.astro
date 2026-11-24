@@ -1,0 +1,31 @@
+---
+/**
+ * The location trail, set as the mono eyebrow above a document's title: the
+ * section names from the outermost to the page's own, with the last step in
+ * the signal ink. A step that the trail already names is left out, so the
+ * documentation landing reads Documentation once. Search does not index it.
+ *
+ * Use: `<Trail steps={["Documentation", "Getting started"]} />`.
+ */
+
+interface Props {
+  readonly steps: readonly string[];
+}
+
+const steps = Astro.props.steps.filter(
+  (step, index, all) => all.indexOf(step) === index,
+);
+---
+
+<nav aria-label="Location" class="site-trail" data-pagefind-ignore>
+  {steps.map((step, index) => (
+    <span class="site-trail-step">
+      {index > 0 && (
+        <span aria-hidden="true" class="site-trail-sep">
+          &#8250;
+        </span>
+      )}
+      {step}
+    </span>
+  ))}
+</nav>

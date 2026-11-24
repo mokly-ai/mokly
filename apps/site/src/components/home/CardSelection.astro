@@ -1,0 +1,59 @@
+---
+/**
+ * The selected PriceCard on a pricing artboard of the depicted
+ * acme/storefront app: the shared selection with the `PriceCard` name tag
+ * over the featured card, and, as each frame needs it, the card's padding
+ * redline, Maya's comment pin and Claude's live selection. The sheet places
+ * it on the featured card of the phone screen in percent of the artboard,
+ * so one rule serves every scale. A depiction: hidden from assistive
+ * technology.
+ *
+ * - `padding`: a redline with the demo app's padding, `16` or `24`, a
+ *   static value; without it, no redline.
+ * - `pin`: Maya's comment pin on the card's corner.
+ * - `claude`: Claude's live selection, `Claude is editing`.
+ * - `tall`: the card after the change, whose 24px padding makes it taller.
+ *
+ * Use: `<CardSelection padding="16" pin slot="overlay" />`, in an
+ * `Artboard` of `AcmePricingPhone`. The rules are in
+ * `src/styles/home-card.css`.
+ */
+import Redline from "../Redline.astro";
+import Selection from "../Selection.astro";
+
+import "../../styles/home-card.css";
+
+interface Props {
+  readonly claude?: boolean;
+  readonly padding?: "16" | "24";
+  readonly pin?: boolean;
+  readonly tall?: boolean;
+}
+
+const { claude = false, padding, pin = false, tall = false } = Astro.props;
+---
+
+<span
+  aria-hidden="true"
+  class:list={["site-home-card-sel", tall && "site-home-card-sel--tall"]}
+>
+  <Selection handles="none" name="PriceCard" nameIcon="component" />
+  {padding !== undefined && (
+    <Redline
+      class={`site-home-card-pad site-home-card-pad--${padding}`}
+      horizontal
+      value={padding}
+    />
+  )}
+  {/* status: "ahead" (agent sessions, Claude) */}
+  {claude && (
+    <Selection
+      class="site-home-card-claude"
+      handles="none"
+      person="claude"
+      tag="Claude is editing"
+    />
+  )}
+  {/* status: "ahead" (comments) */}
+  {pin && <span class="site-pin">M</span>}
+</span>

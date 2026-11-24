@@ -116,7 +116,7 @@ test("revealFolder opens and focuses a folder, saving v4 without touching earlie
     key: folder,
     selection: state().selection,
   });
-  assert.equal(state().drawerOpen, false);
+  assert.equal(state().sheet, undefined);
   assert.equal(state().route, initial.route);
   assert.deepEqual(
     JSON.parse(saved.get("mokly:nav-disclosure:v4") ?? "{}")[folder],

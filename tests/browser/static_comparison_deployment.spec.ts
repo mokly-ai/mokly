@@ -3,7 +3,9 @@ import { expect } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { comparisonDeployments } from "./comparison_deployment_fixture.js";
 import { comparisonPaths } from "./comparison_test.js";
+import { chooseMode, modeButton } from "./comparison_ui.js";
 import { staticRequests } from "./static_delivery_assertions.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof comparisonDeployments>>;
 let changedGenerationFixture: Awaited<ReturnType<typeof comparisonDeployments>>;
@@ -28,7 +30,7 @@ test("a new deployment reloads an old tab while its non-null comparison URL stay
   await page.goto(
     `${fixture.url}/view/${comparisonPaths.changed}/?viewport=desktop&comparison=side`,
   );
-  await page.locator('[data-diff-mode="side"]').click();
+  await chooseMode(page, "Side by side");
   await expect(page.locator("iframe[data-mokly-comparison-frame]")).toHaveCount(
     2,
   );
@@ -75,14 +77,17 @@ test("a deployment check reloads before opening a changed comparison", async ({
     html.setAttribute("data-test-old-tab", "true");
   });
   await changedGenerationFixture.replace();
+  // The mode stands in the band of the Changes tab. The deployment check
+  // reloads the page before the mode applies.
+  await openPanelTab(page, "Changes");
   const reloaded = page.waitForEvent("load");
-  await page.locator('[data-diff-mode="side"]').click();
+  await modeButton(page, "Side by side").click();
   await reloaded;
   await expect(page.locator("html")).not.toHaveAttribute(
     "data-test-old-tab",
     "true",
   );
-  await page.locator('[data-diff-mode="side"]').click();
+  await chooseMode(page, "Side by side");
   await expect(page.locator("iframe[data-mokly-comparison-frame]")).toHaveCount(
     2,
   );

@@ -2,8 +2,7 @@
  * A copy whose catalogue rendered Light only at the branch point and renders
  * Light and Dark now. The removed Old terms document has no dark render, so
  * its previous version keeps its light page and names that fallback only
- * under Dark, as `design/browse/appearance/states/light-only-document`
- * depicts.
+ * under Dark.
  */
 
 import { expect } from "@playwright/test";
@@ -14,6 +13,7 @@ import {
 } from "../helpers/light_only_sources.js";
 
 import { additionsCopyTest } from "./additions_copy_test.js";
+import { previousVersionLabel } from "./previous_version.js";
 
 const test = additionsCopyTest(
   "browser-light-only-base",
@@ -27,26 +27,28 @@ for (const width of [390, 1280])
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/view/${paths.removedDocument}/`);
     const appearance = page.getByLabel("Appearance", { exact: true });
-    const label = page.locator(".mbk-previous");
-    const note = label.locator(".mbk-frame-scheme-note");
-    const stage = page.locator(".mbk-stage-embed[data-preview-color-scheme]");
+    const preview = page.locator("[data-mokly-preview]");
+    // The quiet label after the Removed status: the section head's, or the
+    // entry bar's in the compact layout, whose section has no head.
+    const label = previousVersionLabel(page);
+    const frame = preview.getByRole("figure");
     const heading = page
       .frameLocator("iframe[data-mokly-preview-frame]")
       .getByRole("heading", { name: "Old terms", exact: true });
 
     await appearance.selectOption("light");
     await expect(heading).toBeVisible();
-    await expect(label).toHaveText(/^Showing previous version/u);
-    await expect(note).toBeHidden();
-    await expect(page.locator(".mbk-scheme-fallback")).toHaveCount(0);
+    await expect(label).toHaveText("Showing previous version");
+    await expect(
+      page.locator("[data-mokly-stage]").getByText("Light only"),
+    ).toHaveCount(0);
 
     await appearance.selectOption("dark");
-    await expect(note).toBeVisible();
     await expect(label).toHaveText("Showing previous version — Light only");
-    await expect(stage).toHaveAttribute("data-preview-color-scheme", "light");
+    await expect(frame).toHaveAttribute("data-preview-color-scheme", "light");
     await expect(heading).toBeVisible();
 
     await appearance.selectOption("light");
-    await expect(note).toBeHidden();
+    await expect(label).toHaveText("Showing previous version");
     await expect(heading).toBeVisible();
   });

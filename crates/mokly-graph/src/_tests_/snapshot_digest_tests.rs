@@ -12,6 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::closure::{ClosureBuilder, Walker};
 use crate::policy::{PublicFile, PublicPolicyMock};
 use crate::reference_index::MemoryReferenceIndex;
+use crate::viewer_fonts::ViewerFonts;
 
 use super::SourceSnapshot;
 
@@ -62,7 +63,12 @@ fn binary_resource_validation_keeps_no_snapshot_bytes() {
         index: Arc::new(MemoryReferenceIndex::default()),
     };
     let closure = walker
-        .collect("home/index.mobile.html", &[], &["assets/image.png".into()])
+        .collect(
+            "home/index.mobile.html",
+            &[],
+            &["assets/image.png".into()],
+            ViewerFonts::Denied,
+        )
         .unwrap();
     assert!(closure.files.contains("assets/image.png"));
     assert!(closure.edges["static/assets/image.png"].is_empty());

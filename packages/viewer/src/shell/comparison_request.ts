@@ -30,18 +30,18 @@ const SELECTION = `/${VIEWER_DIRECTORY}/diffs/selection`;
 /**
  * Establish the generation of one comparison. A pinned catalogue resolves its
  * advertised root without a request; Serve redirects a selection, or confirms
- * an advertised root, before any pane document loads.
+ * an advertised root, before any pane document loads. `deploymentCheck`
+ * replaces the environment's check, as the shared check of the rows that
+ * start together does.
  */
 export async function requestComparison(
   environment: ComparisonEnvironment,
   scope: ComparisonScope,
   refresh: boolean,
   signal: AbortSignal,
+  deploymentCheck = environment.deploymentCheck,
 ): Promise<LoadedComparison> {
-  if (
-    environment.deploymentCheck &&
-    !(await environment.deploymentCheck(signal))
-  )
+  if (deploymentCheck && !(await deploymentCheck(signal)))
     throw new DeploymentChangedError();
   const baseUrl = comparisonBaseUrl(environment.baseUrl);
   const delivery = environment.delivery();
@@ -76,11 +76,9 @@ export async function renewComparison(
   loaded: LoadedComparison,
   scope: ComparisonScope,
   signal: AbortSignal,
+  deploymentCheck = environment.deploymentCheck,
 ): Promise<LoadedComparison> {
-  if (
-    environment.deploymentCheck &&
-    !(await environment.deploymentCheck(signal))
-  )
+  if (deploymentCheck && !(await deploymentCheck(signal)))
     throw new DeploymentChangedError();
   const baseUrl = comparisonBaseUrl(environment.baseUrl);
   const delivery = environment.delivery();
@@ -107,7 +105,7 @@ export async function renewComparison(
   if (!renewed || !isLiveGeneration(baseUrl, renewed))
     throw new Error(COMPARISON_UNAVAILABLE);
   if (response.ok && renewed.href === current.href) return loaded;
-  return requestComparison(environment, scope, false, signal);
+  return requestComparison(environment, scope, false, signal, deploymentCheck);
 }
 
 /**

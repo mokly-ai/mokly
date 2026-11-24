@@ -9,17 +9,20 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import {
-  comparisonSection,
   expectRegionsAt,
-  expectStackAt,
-  openComparison,
-  paneFrame,
   regionOffset,
   regionOffsets,
   settleRegion,
   wheelOverRegion,
-  type Offset,
-} from "./comparison_scroll.js";
+} from "./comparison_region_offsets.js";
+import { expectStackAt, type Offset } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  frameLabels,
+  frameModes,
+  openComparison,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { modeButton } from "./comparison_ui.js";
 
@@ -64,7 +67,7 @@ test("Overlay and Difference move every version's panels together on both axes",
   await expectStackAt(desktop, 0);
 
   await modeButton(page, "Difference").click();
-  await expect(desktop.locator(".mb-panes")).toHaveAttribute(
+  await expect(frameModes(desktop)).toHaveAttribute(
     "data-compare-mode",
     "difference",
   );
@@ -132,13 +135,18 @@ test("a component's scrolling list moves in every version", async ({
     "desktop",
     "Overlay",
   );
-  const desktop = comparisonSection(page, "desktop");
-  await expect(desktop.locator(".mb-component-frame")).toHaveCount(1);
-  await wheelOverRegion(page, paneFrame(desktop, "after"), ".rg-tasks", 240);
-  await expectRegionsAt(desktop, ".rg-tasks", [240, 240]);
+  const list = comparisonSection(page, "component");
+  // One component frame stacks both versions; Side by side then shows each
+  // version in its own frame.
+  await expect(frameLabels(list)).toHaveText([/^List · Light/u]);
+  await wheelOverRegion(page, paneFrame(list, "after"), ".rg-tasks", 240);
+  await expectRegionsAt(list, ".rg-tasks", [240, 240]);
   await modeButton(page, "Side by side").click();
-  await expect(desktop.locator(".mb-component-frame")).toHaveCount(2);
-  const from = (await regionOffsets(desktop, ".rg-tasks")).before.y;
-  await wheelOverRegion(page, paneFrame(desktop, "before"), ".rg-tasks", 120);
-  await expectRegionsAt(desktop, ".rg-tasks", [from + 120, from + 120]);
+  await expect(frameLabels(list)).toHaveText([
+    /^Before List · Light/u,
+    /^Current List · Light/u,
+  ]);
+  const from = (await regionOffsets(list, ".rg-tasks")).before.y;
+  await wheelOverRegion(page, paneFrame(list, "before"), ".rg-tasks", 120);
+  await expectRegionsAt(list, ".rg-tasks", [from + 120, from + 120]);
 });

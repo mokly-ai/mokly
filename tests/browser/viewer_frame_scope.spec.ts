@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import type {
   CatalogueReadModel,
@@ -8,9 +8,10 @@ import type {
 } from "@mokly/viewer";
 
 import { test } from "./browser_test.js";
+import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
 import { followupFixture } from "./viewer_followup_fixture.js";
 import type {} from "./viewer_harness.js";
-import { chooseVariant } from "./workspace_actions.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -57,11 +58,16 @@ async function start(page: Page, cross: boolean, screenPath = "home") {
   );
 }
 
+/**
+ * Highlight `instance` and expect its one label and layer over `frame`, the
+ * frame that shows it: a canvas frame of its viewport and scheme, or a step
+ * of a use case.
+ */
 async function highlight(
   page: Page,
   instance: InstanceRef,
   cross: boolean,
-  index: number,
+  frame: Locator | string,
 ) {
   const frames = page.locator("iframe[data-mokly-frame-state]");
   for (let i = 0; i < (await frames.count()); i++)
@@ -74,8 +80,10 @@ async function highlight(
       window.viewerHarness.get("one").ref.current.highlightInstance(instance),
     instance,
   );
-  await expect(frames.nth(index)).toHaveAccessibleName(
-    new RegExp(`— ${instance.viewport}$`),
+  await expect(
+    typeof frame === "string" ? page.locator(frame) : frame,
+  ).toHaveAccessibleName(
+    new RegExp(`— ${instance.viewport}(?: — ${instance.colorScheme})?$`),
   );
   const labels = page.locator("[data-mokly-label-layer] button");
   await expect(labels).toHaveCount(1);
@@ -109,7 +117,10 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await start(page, cross);
-    const link = page.getByRole("link", { name: "Tour", exact: true });
+    // The catalogue's row of the use case; Inspect's Used by names it too.
+    const link = page
+      .locator("nav.mbk-nav")
+      .getByRole("link", { name: "Tour", exact: true });
     await link.evaluate((link) => {
       (link as HTMLAnchorElement).href += "?fragment=example-anchor";
     });
@@ -124,16 +135,14 @@ for (const cross of [false, true]) {
         await window.viewerHarness.get("one").ref.current.startPick();
         window.viewerHarness.get("one").ref.current.cancelPick();
       });
-      const frames = page.locator(".flow-step iframe");
-      await expect(frames).toHaveCount(3);
+      await expect(useCaseSteps(page)).toHaveCount(3);
       for (let i = 0; i < 3; i++) {
-        const frame = await (await frames
-          .nth(i)
-          .elementHandle())!.contentFrame();
+        const step = useCaseStepFrame(page, i + 1);
+        const frame = await (await step.elementHandle())!.contentFrame();
         expect(new URL(frame!.url()).hash).toBe(
           i === 0 ? "#example-anchor" : "",
         );
-        const source = await frames.nth(i).getAttribute("src");
+        const source = await step.getAttribute("src");
         expect(new URL(source!, fixture.host.url).hash).toBe(
           i === 0 ? "#example-anchor" : "",
         );
@@ -157,14 +166,14 @@ for (const cross of [false, true]) {
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
         0,
       );
-      for (const [index, viewport] of (
-        ["mobile", "desktop"] as const
-      ).entries())
+      // The canvas shows each viewport in each scheme; the highlight keeps to
+      // the frame of the instance's viewport and scheme.
+      for (const viewport of ["mobile", "desktop"] as const)
         await highlight(
           page,
           { screenPath: "home", key, viewport, colorScheme },
           cross,
-          index,
+          canvasFrame(viewport, colorScheme),
         );
     }
     await page.evaluate(() =>
@@ -185,7 +194,12 @@ for (const cross of [false, true]) {
     for (const variant of fixture.index.components.filter(
       (entry) => entry.variantOf === component.path,
     )) {
-      await chooseVariant(page, variant.title);
+      // The host opens each saved variant, which ends the last highlight.
+      await page.evaluate(
+        (screenPath) =>
+          window.viewerHarness.get("one").ref.current.select({ screenPath }),
+        variant.path,
+      );
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
         0,
       );
@@ -202,7 +216,7 @@ for (const cross of [false, true]) {
           colorScheme: "light",
         },
         cross,
-        1,
+        `${canvasFrame("desktop")}[data-workspace-variant="${variant.path}"]`,
       );
     }
   });
@@ -222,7 +236,12 @@ for (const cross of [false, true]) {
         colorScheme: "light" as const,
         stepIndex,
       };
-      const clicked = await highlight(page, instance, cross, stepIndex);
+      const clicked = await highlight(
+        page,
+        instance,
+        cross,
+        useCaseStepFrame(page, stepIndex + 1),
+      );
       expect(clicked).toMatchObject({
         frame: { entryPath: "tour", stepIndex },
       });

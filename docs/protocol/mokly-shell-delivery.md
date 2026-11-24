@@ -208,10 +208,11 @@ On a message whose `data` differs from the installed `deploymentId`, another
 server process answers, and the standalone shell performs a full page load of
 the current URL. On a message whose id is above the installed revision, the
 shell cancels a refresh still in flight, fetches the index and the current
-route's details, including a current component variant's parent detail,
+route's details, including a current component variant's parent detail and,
+on a component's route, the detail of each row of its variant set,
 requires one `revision` on all of them at or above the message id,
 and adopts them in one store commit: the navigation, the Changes marks,
-Usage, and the details panel update in place, and only the mounted frames
+Usage, and the inspector update in place, and only the mounted frames
 whose `documentKey` in the refreshed index changed reload, whether a frame
 shows a screen or component view, a page, a document, or a use-case step.
 When `live.generation` changed, the shell refetches the live descriptor and
@@ -220,8 +221,9 @@ shows the missing state under the kept URL until an index lists it again; no
 other update reloads the page. When a fetch fails or the details disagree after
 one more index fetch, the shell keeps its state, shows the entry as
 unavailable with retry, and waits for the next message. That state waits until
-each route detail, including a current component variant's parent detail, has
-arrived, failed, or been replaced.
+each route detail, including a current component variant's parent detail and
+the detail of each row of a component's variant set, has arrived, failed, or
+been replaced.
 
 ## Identity
 

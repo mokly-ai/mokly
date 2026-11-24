@@ -1,5 +1,5 @@
 /**
- * The Props tab's read-only views: the props that a page or a parent supplies
+ * The Props section's read-only views: the props that a page or a parent supplies
  * to a component instance, with the slots it fills, the line that says why
  * the tab shows no props, and the tab's state while its data loads.
  */
@@ -114,17 +114,22 @@ export function PropsPanel({
   );
 }
 
-/** The wording of the Props tab's loading state, which the host supplies. */
+/** The wording of the Props section's loading state, which the host supplies. */
 export interface PropsStatusWording {
   failed: string;
   loading: string;
   retry: string;
 }
 
-/** The Props tab while its data loads, or after the load failed, with Try again. */
+/**
+ * The Props section while its data loads, or after the load failed, with Try
+ * again. A static depiction that runs no script gives Try again an address,
+ * which draws it as a link.
+ */
 export function PropsStatus({
   focusRef,
   onRetry,
+  retryHref,
   status,
   wording,
 }: {
@@ -132,6 +137,11 @@ export function PropsStatus({
   focusRef?: Ref<HTMLParagraphElement> | undefined;
   /** Receives each press of Try again. */
   onRetry?: (() => void) | undefined;
+  /**
+   * The address that Try again opens in a static depiction, such as the
+   * document that shows the data loading again.
+   */
+  retryHref?: string | undefined;
   status: "failed" | "loading";
   wording: PropsStatusWording;
 }) {
@@ -146,7 +156,9 @@ export function PropsStatus({
           <p className="mbk-reset" role="alert">
             {wording.failed}
           </p>
-          <TextButton onClick={onRetry}>{wording.retry}</TextButton>
+          <TextButton href={retryHref} onClick={onRetry}>
+            {wording.retry}
+          </TextButton>
         </>
       ) : (
         <p

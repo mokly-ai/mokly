@@ -12,7 +12,13 @@ import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
 import { pullRequest } from "./fixtures";
-import { expectParentUsage, publishedViewerReady } from "./support";
+import {
+  canvasFrame,
+  expectParentUsage,
+  publicationReference,
+  publishedViewerReady,
+  savedVariant,
+} from "./support";
 
 /** A signed-in reader with a project whose publications this test writes. */
 async function project(page: Page, label: string): Promise<string> {
@@ -29,8 +35,8 @@ test("standalone entry opens a ready publication and names its branch", async ({
 
   await open(page, await projectPathFor(page, projectId));
   await expect(page).toHaveURL(new RegExp(`publications/${main.id}$`));
-  await expect(page.getByTestId("viewer-publication")).toHaveText("main");
-  await expect(page.locator(".fo-top-state")).toContainText("Published");
+  await expect(publicationReference(page)).toHaveText("main");
+  await expect(page.locator(".fo-top-state")).toContainText("Ready · ");
   const viewer = page.locator("[data-mokly-shell]");
   await expect(viewer).toBeVisible();
   await expect(
@@ -59,7 +65,7 @@ test("a branch alias resolves that branch's newest ready publication", async ({
   await open(page, await branchPathFor(page, projectId, "topic"));
   await expect(page).toHaveURL(new RegExp(`publications/${newer.id}$`));
   expect(newer.id).not.toBe(older.id);
-  await expect(page.getByTestId("viewer-publication")).toHaveText("topic");
+  await expect(publicationReference(page)).toHaveText("topic");
   await publishedViewerReady(page);
 
   // Switching from the chrome resolves the other branch the same way.
@@ -70,7 +76,7 @@ test("a branch alias resolves that branch's newest ready publication", async ({
     .filter({ hasText: "main" })
     .getByText("Open")
     .click();
-  await expect(page.getByTestId("viewer-publication")).toHaveText("main");
+  await expect(publicationReference(page)).toHaveText("main");
 });
 
 test("a pull request alias resolves its publication and can land on Changes", async ({
@@ -98,7 +104,10 @@ test("a pull request alias resolves its publication and can land on Changes", as
       .locator("[data-mokly-shell]")
       .getByRole("button", { name: /^Changes/ }),
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".fo-top-state")).toContainText("Changes");
+  // The Changes badge stands beside the publication pill.
+  await expect(
+    page.locator('[data-mkc-viewer-slot="switcher"] .fo-top-badge'),
+  ).toHaveText("Changes");
 });
 
 test("history lists every attempt on this branch, failed ones included", async ({
@@ -147,14 +156,17 @@ test("a reference alias carries the whole selection to the publication", async (
     "&search=notice&tag=review&screen=corrupt";
   const branchAlias = await branchPathFor(page, projectId, "main");
   const pullAlias = await pullRequestPathFor(page, projectId, 11);
+  const chosen = savedVariant(page, "Draft");
   for (const [alias, resolved] of [
     [`${branchAlias}&${selection}`, branch.id],
     [`${pullAlias}?${selection}`, pull.id],
   ] as const) {
     await open(page, alias);
     await expect(page).toHaveURL(new RegExp(`publications/${resolved}`));
-    const stage = page.locator("[data-mokly-stage]");
-    await expect(stage).toHaveAttribute("data-viewport", "both");
+    // The canvas holds the component's variant set. Its frames have no
+    // viewport, so the address is where the reader sees the Both it carried.
+    await expect(canvasFrame(page, "Draft")).toBeVisible();
+    await expect(page).toHaveURL(/viewport=both/);
     await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(
       "data-mokly-color-scheme",
       "dark",
@@ -162,9 +174,7 @@ test("a reference alias carries the whole selection to the publication", async (
     await expect(
       page.getByRole("heading", { level: 2, name: "Notice" }),
     ).toBeVisible();
-    await expect(
-      page.locator('[data-workspace-variant="notice/draft"]'),
-    ).toHaveAttribute("aria-current", "page");
+    await expect(chosen).toHaveAttribute("aria-pressed", "true");
     await expectParentUsage(page);
     await expect(page).toHaveURL(/catalogueScreen=notice%2Fdraft/);
     await expect(page).toHaveURL(/viewport=both/);
@@ -210,7 +220,7 @@ test("a routed move from a screen-bearing address keeps its path", async ({
     .filter({ hasText: "topic" })
     .getByText("Open")
     .click();
-  await expect(page.getByTestId("viewer-publication")).toHaveText("topic");
+  await expect(publicationReference(page)).toHaveText("topic");
   // The path names the page, with nothing of the reserved key's value in it.
   const path = new URL(page.url()).pathname;
   expect(path, "the rebuilt path carries no navigator segment").not.toContain(

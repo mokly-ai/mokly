@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseVariant,
   chooseViewport,
@@ -14,7 +15,12 @@ for (const scheme of ["light", "dark"] as const)
     await page.goto("/view/example/components/workspace-panel/");
     await chooseViewport(page, "mobile");
     await chooseScheme(page, scheme);
-    const frame = page.frameLocator(".mbk-frame-mobile iframe");
+    // On the canvas a component's row shows its desktop view in each scheme.
+    const row = (path: string) =>
+      page.frameLocator(
+        `${canvasFrame("desktop", scheme)}[data-workspace-variant="example/components/workspace-panel${path}"]`,
+      );
+    let frame = row("");
     await expect(frame.locator(".panel-heading")).toHaveText(
       "Pending invitations",
     );
@@ -23,10 +29,12 @@ for (const scheme of ["light", "dark"] as const)
       "New items appear here.",
     );
     await expect(frame.locator(".panel-actions")).toBeHidden();
+    // A row of Variants selects its Light frame on the canvas.
     await chooseVariant(page, "Workspace panel with actions");
-    await expect(page).toHaveURL(
-      /\/view\/example\/components\/workspace-panel\/with-actions\/$/u,
-    );
+    await expect(
+      page.locator('[data-inspect-section="variants"] [data-checked]'),
+    ).toHaveText("Workspace panel with actions");
+    frame = row("/with-actions");
     await expect(frame.locator(".panel-count")).toHaveText("1");
     await expect(frame.locator(".panel-body")).toHaveText(
       "sam@fernhill.example is invited as a member.",
@@ -43,7 +51,11 @@ for (const scheme of ["light", "dark"] as const)
     );
     await action.click();
     await expect(page).toHaveURL(/\/view\/example\/team\/invite\/$/u);
+    // The screen shows its Mobile frame of the scheme beside its Desktop
+    // frame.
     await expect(
-      frame.getByRole("heading", { name: "Invite a teammate", exact: true }),
+      page
+        .frameLocator(canvasFrame("mobile", scheme))
+        .getByRole("heading", { name: "Invite a teammate", exact: true }),
     ).toBeVisible();
   });

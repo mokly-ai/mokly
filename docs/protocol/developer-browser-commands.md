@@ -32,7 +32,7 @@ that open portable documents directly through `file://` URLs. For example,
 after the build above:
 
 ```bash
-MOKLY_PLAYWRIGHT_FILE_DIR=.context/example npm run test:browser -- tests/browser/component_inspector.spec.ts
+MOKLY_PLAYWRIGHT_FILE_DIR=.context/example npm run test:browser -- tests/browser/component_controls.spec.ts
 ```
 
 `npm run test:delivery:prepared` builds a fresh example after `npm run build`

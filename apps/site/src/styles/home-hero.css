@@ -1,0 +1,259 @@
+/* The home hero: the selected heading layer with its handles, its name tag,
+   its type badge and its size tag, the green redline that measures the gap
+   to the lead, Maya's cursor on the resize handle, then the lead and the
+   actions as one left-aligned group. A phone sets the heading at 5.125rem,
+   82px at the 16px base, on two lines, stacks the actions and draws no type
+   badge. The desktop composition sets the heading at 10.125rem, 162px, on
+   one line, and below 1440px the heading scales with the window.
+
+   The heading and the lead are set in rem, so they grow with the reader's
+   text size. The heading stops where the window cannot hold its longest
+   line: at 27vw on a phone, where a 320px window holds its longer line, and
+   at 13.5vw on the desktop steps, where a 768px window holds its line and
+   Maya's cursor after it. From 1440px, where the layout stops growing, the
+   heading stops at 194.4px, which is 13.5vw at 1440px.
+
+   The class names and the rules match docs/mockups/styles/site/home-hero.css
+   and the hero rules of home-responsive.css. The mockups pin a composition
+   with data-site-viewport; the site resolves the same switch at 768px. So
+   each base rule is the mobile composition, and the desktop values and the
+   desktop steps follow under the 768px query, in the mockup's order. */
+
+.site-hero {
+  padding-top: 64px;
+  position: relative;
+}
+
+.site-home-hero-inner {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 0 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.site-home-title-layer {
+  display: inline-block;
+  max-width: 100%;
+  position: relative;
+}
+
+.site-hero h1 {
+  font-size: min(5.125rem, 27vw);
+  letter-spacing: -0.058em;
+  line-height: 0.96;
+  white-space: normal;
+}
+
+/* The selection keeps the descender of the g inside it */
+
+.site-home-title-layer .site-home-title-sel {
+  inset: -4px -10px -8px;
+}
+
+/* A phone draws no type badge on the heading. The selector outweighs the
+   badge's own display, and the desktop composition shows the badge again. */
+
+.site-home-title-sel .site-sel-badge {
+  display: none;
+}
+
+/* Maya's cursor on the resize handle. The page loads this sheet before the
+   shared cursor rules, so the selector takes the layer's class too, to
+   outweigh the cursor's own place. */
+
+.site-home-title-layer .site-home-hero-maya {
+  left: 84%;
+  top: 78%;
+}
+
+.site-home-hero-group {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 52px;
+}
+
+.site-home-hero-copy {
+  position: relative;
+}
+
+.site-home-hero-redline {
+  bottom: 100%;
+  height: 52px;
+  left: 6px;
+}
+
+.site-hero-lead {
+  color: var(--mk-color-text-secondary);
+  font-size: 1.1875rem;
+  letter-spacing: -0.012em;
+  line-height: 1.45;
+  max-width: 29em;
+  text-wrap: balance;
+}
+
+.site-hero .site-actions {
+  flex-direction: column;
+}
+
+/* The desktop composition from the 768px breakpoint upward */
+
+@media (min-width: 768px) {
+  .site-hero {
+    padding-top: 86px;
+  }
+
+  .site-home-hero-inner {
+    padding: 0 78px;
+  }
+
+  .site-hero h1 {
+    font-size: min(10.125rem, 194.4px);
+    white-space: nowrap;
+  }
+
+  .site-home-title-layer .site-home-title-sel {
+    inset: -2px -14px -16px;
+  }
+
+  .site-home-title-sel .site-sel-badge {
+    display: inline-flex;
+  }
+
+  .site-home-title-layer .site-home-hero-maya {
+    left: calc(100% - 6px);
+    top: calc(100% - 14px);
+  }
+
+  .site-home-hero-group {
+    align-items: flex-start;
+    gap: 36px;
+    margin-top: 60px;
+  }
+
+  .site-home-hero-redline {
+    height: 60px;
+  }
+
+  .site-hero-lead {
+    font-size: 1.484375rem;
+  }
+
+  .site-hero .site-actions {
+    flex-direction: row;
+  }
+}
+
+/* The intermediate desktop steps, from the prototype: below 1440px the
+   heading scales with the window on one line, from 5.4rem at 768px, its
+   selection keeps the descender inside, and the gutter, the top space and
+   the lead follow. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-hero {
+    padding-top: clamp(64px, 6vw, 88px);
+  }
+
+  .site-home-hero-inner {
+    padding: 0 clamp(20px, 5.4vw, 80px);
+  }
+
+  .site-hero h1 {
+    font-size: min(clamp(5.4rem, 11.25vw, 10.125rem), 13.5vw);
+  }
+
+  .site-home-title-layer .site-home-title-sel {
+    inset: -2px -14px
+      calc(min(clamp(5.4rem, 11.25vw, 10.125rem), 13.5vw) * -0.1);
+  }
+
+  .site-hero-lead {
+    font-size: clamp(1.1875rem, 1.65vw, 1.5rem);
+  }
+}
+
+/* The load motion, from the prototype: the heading's selection draws from
+   its top-left corner, as a drag draws a selection in a design file, and its
+   tags rise into place; the spread's artboards and the Components box
+   settle into place in a stagger. Only these decorations move: the heading
+   and the lead never start hidden. Each animation plays once. Under reduced
+   motion none of them runs, so each part shows its finished state at once.
+   The selection's last frame equals the unclipped selection. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-home-title-layer .site-home-title-sel {
+    animation: site-home-sel-draw 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s
+      backwards;
+  }
+
+  .site-home-title-sel .site-sel-name,
+  .site-home-title-sel .site-sel-badge,
+  .site-home-title-sel .site-sel-size {
+    animation: site-home-tag-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.6s
+      backwards;
+  }
+
+  .site-home-spread .site-home-board,
+  .site-home-spread .site-home-spread-components {
+    animation: site-home-board-settle 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.25s
+      backwards;
+  }
+
+  .site-home-spread .site-home-spread-payment {
+    animation-delay: 0.31s;
+  }
+
+  .site-home-spread .site-home-spread-review {
+    animation-delay: 0.37s;
+  }
+
+  .site-home-spread .site-home-spread-pricing {
+    animation-delay: 0.43s;
+  }
+
+  .site-home-spread .site-home-spread-settings {
+    animation-delay: 0.49s;
+  }
+
+  .site-home-spread .site-home-spread-pricing-phone {
+    animation-delay: 0.55s;
+  }
+
+  .site-home-spread .site-home-spread-pricing-dark {
+    animation-delay: 0.61s;
+  }
+
+  .site-home-spread .site-home-spread-payment-dark {
+    animation-delay: 0.67s;
+  }
+
+  .site-home-spread .site-home-spread-components {
+    animation-delay: 0.7s;
+  }
+}
+
+@keyframes site-home-sel-draw {
+  from {
+    clip-path: inset(-60px calc(100% + 40px) calc(100% + 60px) -40px);
+  }
+
+  to {
+    clip-path: inset(-60px -40px);
+  }
+}
+
+@keyframes site-home-tag-rise {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+@keyframes site-home-board-settle {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.97);
+  }
+}

@@ -1,0 +1,100 @@
+---
+/**
+ * The depicted acme `checkout/payment` screen on a desktop, at 1280 × 800,
+ * in the two versions that the home's Browse frame compares: the plain form
+ * on `main`, and the redesigned step on `feat/checkout-v2`, with the
+ * stepper, the payment methods and the order summary card.
+ *
+ * - `version`: `main` or `branch`.
+ *
+ * Use: `<AcmePaymentDesktop version="branch" />`.
+ */
+import { ACME_ITEMISED } from "./acme-checkout.js";
+import AcmeButton from "./AcmeButton.astro";
+import AcmeCardForm from "./AcmeCardForm.astro";
+import AcmeField from "./AcmeField.astro";
+import AcmeIcon from "./AcmeIcon.astro";
+import AcmeLogo from "./AcmeLogo.astro";
+import AcmeMethods from "./AcmeMethods.astro";
+import AcmeOrderLines from "./AcmeOrderLines.astro";
+import AcmeRoot from "./AcmeRoot.astro";
+import AcmeTotals from "./AcmeTotals.astro";
+
+interface Props {
+  readonly version: "branch" | "main";
+}
+
+const { version } = Astro.props;
+---
+
+{version === "main" ? (
+  <AcmeRoot class="site-acme-before" kind="desktop">
+    <div class="site-acme-desktop-nav site-acme-desktop-nav--plain">
+      <AcmeLogo />
+      <b>Checkout</b>
+      <AcmeIcon name="bag" />
+    </div>
+    <div class="site-acme-checkout-desktop site-acme-checkout-desktop--before">
+      <div>
+        <div class="site-acme-heading">Payment details</div>
+        <AcmeField label="Card number" value="4242 4242 4242 4242" />
+        <AcmeField label="Expiry date" value="08 / 28" />
+        <AcmeField label="Security code" value="•••" />
+        <AcmeField label="Name on card" value="Jordan Ellis" />
+        <AcmeButton block size="large" tone="muted">
+          Continue
+        </AcmeButton>
+      </div>
+      <div class="site-acme-summary site-acme-summary--plain">
+        <div class="site-acme-summary-title">Order summary</div>
+        <AcmeTotals lines={ACME_ITEMISED} />
+      </div>
+    </div>
+  </AcmeRoot>
+) : (
+  <AcmeRoot kind="desktop">
+    <div class="site-acme-desktop-nav site-acme-desktop-nav--plain">
+      <AcmeLogo />
+      <span class="site-acme-stepper">
+        <span class="site-acme-stepper-done">
+          <AcmeIcon name="check" />
+          Bag
+        </span>
+        <i />
+        <span class="site-acme-stepper-on">
+          <em>
+            <b>2</b>
+          </em>
+          Payment
+        </span>
+        <i />
+        <span>
+          <em>3</em>
+          Review
+        </span>
+      </span>
+      <span class="site-acme-secure">
+        <AcmeIcon name="lock" />
+        Secure checkout
+      </span>
+    </div>
+    <div class="site-acme-checkout-desktop">
+      <div>
+        <div class="site-acme-title site-acme-title--large">Payment</div>
+        <div class="site-acme-sub">Choose how you would like to pay.</div>
+        <AcmeMethods large />
+        <AcmeCardForm />
+      </div>
+      <div class="site-acme-summary">
+        <div class="site-acme-summary-title">Order summary</div>
+        <AcmeOrderLines />
+        <AcmeField label="Gift card or code" muted value="Enter code">
+          <span class="site-acme-apply" slot="trail">
+            Apply
+          </span>
+        </AcmeField>
+        <AcmeTotals />
+      </div>
+    </div>
+  </AcmeRoot>
+)}

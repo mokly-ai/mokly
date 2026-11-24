@@ -1,0 +1,89 @@
+---
+/**
+ * The upgrade notes of a release: the last group on its rail, a closed
+ * document row that names the notes, lists their topics and counts them,
+ * and opens to the notes in full. The notes keep the changelog's words with
+ * their code spans and links. Each topic is a section of the shared
+ * document type, headed by its topic and holding its subtopics, paragraphs
+ * and lists; every topic and subtopic heading carries its anchor. A release
+ * without upgrade notes draws nothing.
+ *
+ * Use: `<Upgrade release={release} />`, after the release's groups.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import Icon from "../Icon.astro";
+
+import { counted, upgradeTopics } from "./facts.js";
+import Items from "./Items.astro";
+import Segments from "./Segments.astro";
+
+interface Props {
+  readonly release: PublishedRelease;
+}
+
+const { release } = Astro.props;
+const names = upgradeTopics(release);
+---
+
+{release.upgrade.length > 0 && (
+  <section
+    class="site-release-group site-release-group--upgrade"
+    data-kind="upgrade"
+    id={release.upgradeId}
+  >
+    <div class="site-release-group-head">
+      <h3 class="site-release-group-title">
+        <Icon name="doc" />
+        <span>Upgrade notes</span>
+      </h3>
+    </div>
+    <details class="site-release-details site-release-upgrade">
+      <summary class="site-release-summary site-release-upgrade-summary">
+        <span class="site-release-upgrade-main">
+          <span class="site-release-upgrade-name">
+            Upgrade notes for {release.version}
+          </span>
+          <span class="site-release-upgrade-topics">{names.join(" · ")}</span>
+        </span>
+        <span class="site-release-upgrade-count">
+          {counted(names.length, "note")}
+        </span>
+        <span class="site-button site-button--secondary site-release-toggle">
+          <span class="site-release-when-closed">Read</span>
+          <span class="site-release-when-open">Hide</span>
+          <Icon class="site-release-chevron" name="chevronDown" size={15} />
+        </span>
+      </summary>
+      <div class="site-document-body site-release-upgrade-body">
+        {release.upgrade.map((topic) => (
+          <section>
+            {topic.title !== undefined && (
+              <h4 id={topic.id}>
+                <span class="site-release-note-text">
+                  <Segments segments={topic.title} />
+                </span>
+              </h4>
+            )}
+            {topic.blocks.map((block) =>
+              block.kind === "subtopic" ? (
+                <h5 id={block.id}>
+                  <span class="site-release-note-text">
+                    <Segments segments={block.title} />
+                  </span>
+                </h5>
+              ) : block.kind === "paragraph" ? (
+                <p>
+                  <span class="site-release-note-text">
+                    <Segments segments={block.text} />
+                  </span>
+                </p>
+              ) : (
+                <Items items={block.items} />
+              ),
+            )}
+          </section>
+        ))}
+      </div>
+    </details>
+  </section>
+)}

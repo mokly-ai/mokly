@@ -1,11 +1,10 @@
 import { defineComponent } from "@mokly/mokly";
 
-import { DESTINATIONS } from "../../parts/destinations.js";
-import { libraryTags } from "../controls/tag-picker.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
+import { formsEnteredTags, libraryTags } from "../controls/tag-picker.js";
 import { libraryMetadata } from "../metadata.js";
 import {
   destination,
-  enumOptions,
   flag,
   tagRecords,
   text,
@@ -17,36 +16,39 @@ import { TopBarView } from "./top-bar.view.js";
 const propSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["menu", "tags", "pickerOpen"],
+  required: ["tags", "pickerOpen"],
   properties: {
     query: text,
     viewport: { enum: ["mobile", "desktop"] },
-    menu: { enum: ["none", "open", "close"] },
     tags: tagRecords,
     activeTag: text,
     appearance: { enum: ["auto", "light", "dark"] },
     pickerOpen: flag,
     appearanceChanged: flag,
     brandDestination: destination,
-    menuDestination: destination,
     pickerDestination: destination,
   },
 } as const;
 export type TopBarProps = LibraryProps<typeof propSchema>;
+
+/**
+ * The bar over the Canvas overview, which opens the artboards that the
+ * Canvas top bar opens: the brand the home, and the tag button the open
+ * picker. The bar has no menu: the dock's Catalogue opens the catalogue
+ * sheet.
+ */
 const sample = {
-  menu: "open",
   tags: libraryTags,
   pickerOpen: false,
-  brandDestination: DESTINATIONS.home,
-  menuDestination: DESTINATIONS.navigation,
-  pickerDestination: DESTINATIONS.tagPicker,
+  brandDestination: CANVAS_PAGES.home,
+  pickerDestination: CANVAS_PAGES.tagPicker,
 } as const;
 export const topBar = defineComponent({
   ...libraryMetadata(
     "chrome",
     "top-bar",
     "Top bar",
-    "Branding, search, catalogue navigation, tag filtering and appearance.",
+    "Branding, search, tag filtering and appearance.",
   ),
   propSchema,
   props: sample,
@@ -62,11 +64,6 @@ export const topBar = defineComponent({
         { label: "dark", value: "dark" },
       ],
     },
-    menu: {
-      kind: "select",
-      label: "Menu",
-      options: enumOptions(propSchema.properties.menu),
-    },
   },
   render: (props, context) => (
     <TopBarView
@@ -80,17 +77,22 @@ export const topBar = defineComponent({
     {
       slug: "search",
       title: "Search",
-      props: { ...sample, query: "tag:forms", activeTag: "forms" },
+      props: {
+        ...sample,
+        query: "tag:forms",
+        activeTag: "forms",
+        tags: formsEnteredTags,
+        pickerDestination: CANVAS_PAGES.tagFormsPicker,
+      },
     },
     {
       slug: "tag-picker",
       title: "Tag picker",
-      props: { ...sample, pickerOpen: true },
-    },
-    {
-      slug: "drawer-open",
-      title: "Drawer open",
-      props: { ...sample, menu: "close", menuDestination: DESTINATIONS.home },
+      props: {
+        ...sample,
+        pickerOpen: true,
+        pickerDestination: CANVAS_PAGES.overview,
+      },
     },
     {
       slug: "auto-appearance",

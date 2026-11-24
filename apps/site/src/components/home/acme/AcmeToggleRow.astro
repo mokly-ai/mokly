@@ -1,0 +1,25 @@
+---
+/**
+ * A settings row of the depicted acme/storefront app: a label and a drawn
+ * switch, on or off. The switch is a depiction, not a control.
+ *
+ * - `label`: the row's text.
+ * - `on`: the switch is on; it is by default.
+ *
+ * Use: `<AcmeToggleRow label="Shipping updates" />`.
+ */
+
+interface Props {
+  readonly label: string;
+  readonly on?: boolean;
+}
+
+const { label, on = true } = Astro.props;
+---
+
+<div class="site-acme-toggle-row">
+  <span>{label}</span>
+  <span class:list={["site-acme-switch", on && "site-acme-switch--on"]}>
+    <i></i>
+  </span>
+</div>

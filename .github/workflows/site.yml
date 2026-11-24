@@ -17,7 +17,6 @@ env:
   ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
   CLOUDFLARE_PROJECT_NAME: mokly-site
   MOKLY_COMMENT_MARKER: "<!-- mokly-site -->"
-  SITE_STAGE_PR: ${{ vars.SITE_STAGE_PR || 'sydney-v1' }}
 
 jobs:
   deploy-main:
@@ -43,7 +42,7 @@ jobs:
       - name: Validate deployment configuration
         run: |
           missing=0
-          for setting in MKC_DOMAIN SITE_ORIGIN SITE_STAGE_PR CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_PROJECT_NAME; do
+          for setting in MKC_DOMAIN SITE_ORIGIN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_PROJECT_NAME; do
             if [ -z "${!setting}" ]; then
               echo "::error title=Missing ${setting}::Configure ${setting} for the site workflow."
               missing=1
@@ -63,10 +62,8 @@ jobs:
         run: rustup toolchain install
       - name: Build workspace packages
         run: npm run build
-      - name: Build mockups and site
-        run: |
-          npm run mockups:build --workspace @mokly-cloud/mockups
-          npm run site:build
+      - name: Build site
+        run: npm run site:build
       - name: Deploy main site
         working-directory: apps/site
         run: npx --no-install wrangler pages deploy dist --project-name "${CLOUDFLARE_PROJECT_NAME}" --branch main
@@ -109,7 +106,7 @@ jobs:
       - name: Validate deployment configuration
         run: |
           missing=0
-          for setting in MKC_DOMAIN SITE_ORIGIN SITE_STAGE_PR CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_PROJECT_NAME; do
+          for setting in MKC_DOMAIN SITE_ORIGIN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_PROJECT_NAME; do
             if [ -z "${!setting}" ]; then
               echo "::error title=Missing ${setting}::Configure ${setting} for the site workflow."
               missing=1
@@ -129,10 +126,8 @@ jobs:
         run: rustup toolchain install
       - name: Build workspace packages
         run: npm run build
-      - name: Build mockups and site
-        run: |
-          npm run mockups:build --workspace @mokly-cloud/mockups
-          npm run site:build
+      - name: Build site
+        run: npm run site:build
       - name: Deploy site preview
         working-directory: apps/site
         run: |

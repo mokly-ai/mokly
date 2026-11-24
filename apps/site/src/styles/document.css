@@ -1,10 +1,31 @@
-/* The legal documents: the readable column already set by layout.css, the
-   published Markdown and links to the other documents. Kept in parity with
-   the promoted mockups under docs/mockups/styles/site/. */
+/* The legal pages, whose layout the 404 page shares: the document as a page
+   frame on the canvas at the policy measure, its intro, its body ruled by
+   hairlines across the whole sheet, and the links to the other legal
+   documents.
 
-.site-policy-body {
-  gap: var(--mk-space-8);
-  margin-bottom: var(--mk-space-10);
+   The class names and the rules match docs/mockups/styles/site/policy.css.
+   The mockups pin a composition with data-site-viewport; the site resolves
+   the same switch at 768px. So each base rule is the mobile composition,
+   and the desktop values and the desktop step follow under the 768px
+   query, in the mockup's order. */
+
+.site-policy {
+  margin: 0 auto;
+  max-width: var(--mk-layout-site-policy);
+  padding: 48px 10px 0;
+  width: 100%;
+}
+
+.site-policy .site-page-sheet {
+  padding: 36px 20px 0;
+}
+
+.site-policy .site-document-intro {
+  border-bottom: 0;
+  gap: 18px;
+  justify-items: start;
+  margin: 0;
+  padding: 0 0 32px;
 }
 
 .site-policy-date {
@@ -13,23 +34,131 @@
   line-height: var(--mk-type-small-line);
 }
 
+/* A hairline across the sheet, above the body, each section and the links */
+
+.site-policy-body,
 .site-policy-links {
+  position: relative;
+}
+
+.site-policy-body::before,
+.site-policy .site-document-body > h2:not(:first-child)::before,
+.site-policy-links::before {
   border-top: 1px solid var(--mk-color-border);
+  content: "";
+  left: -100vmax;
+  position: absolute;
+  right: -100vmax;
+  top: 0;
+}
+
+.site-policy-body {
+  margin-bottom: 0;
+  padding-bottom: 32px;
+  padding-top: 32px;
+}
+
+/* The flat body. The mockup wraps each section in a section element that
+   pads itself. The site renders the Markdown as one flat list of parts, so
+   here the parts sit the section gap apart, and each heading that follows
+   other parts opens a section: a hairline 32px below the part before it,
+   then 32px to the heading. The body's own padding closes the last
+   section. The introduction is the paragraphs before the first heading;
+   on mobile it keeps the body's line height, as the mockup draws it.
+
+   A page's sheet loads before the shared sheets, so each rule that
+   overrides the shared document body of layout.css carries the page's
+   .site-policy class. */
+
+.site-policy .site-document-body {
+  gap: var(--mk-space-4);
+}
+
+.site-policy .site-document-body > p:not(h2 ~ p) {
+  color: var(--mk-color-text);
+  font-size: 1.0625rem;
+  letter-spacing: -0.012em;
+  line-height: 1.68;
+}
+
+.site-policy .site-document-body > h2:not(:first-child) {
+  border-top: 0;
+  margin-top: 16px;
+  padding-top: 32px;
+  position: relative;
+}
+
+/* The links to the other legal documents */
+
+.site-policy-links {
+  border-top: 0;
   display: grid;
-  gap: var(--mk-space-3);
+  gap: var(--mk-space-2);
   justify-items: start;
-  padding-top: var(--mk-space-6);
+  padding: 32px 0 40px;
 }
 
 .site-policy-links-title {
   color: var(--mk-color-text-muted);
-  font-size: var(--mk-type-small-size);
-  font-weight: var(--mk-font-semibold);
-  line-height: var(--mk-type-small-line);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .site-policy-link-list {
-  display: flex;
+  display: grid;
   flex-wrap: wrap;
-  gap: var(--mk-space-2) var(--mk-space-5);
+  gap: 0 var(--mk-space-6);
+}
+
+/* The desktop composition from the breakpoint up: the wider sheet padding,
+   40px on each side of a hairline, and the links in one row */
+
+@media (min-width: 768px) {
+  .site-policy {
+    padding: 72px 0 0;
+  }
+
+  .site-policy .site-page-sheet {
+    padding: 60px 88px 0;
+  }
+
+  .site-policy .site-document-intro {
+    padding-bottom: 44px;
+  }
+
+  .site-policy-body {
+    padding-bottom: 40px;
+    padding-top: 40px;
+  }
+
+  .site-policy .site-document-body > p:not(h2 ~ p) {
+    font-size: 1.1875rem;
+    line-height: 1.6;
+  }
+
+  .site-policy .site-document-body > h2:not(:first-child) {
+    margin-top: 24px;
+    padding-top: 40px;
+  }
+
+  .site-policy-link-list {
+    display: flex;
+  }
+}
+
+/* The desktop step: below 1440px the page frame keeps the footer's fluid
+   canvas gutter on each side, so it never meets the window's edge, and at
+   narrow widths the frame and the footer frame share their edges. From
+   942px up the frame keeps its full policy measure. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-policy {
+    max-width: calc(var(--mk-layout-site-policy) + 10.8vw);
+    padding-left: 5.4vw;
+    padding-right: 5.4vw;
+  }
 }

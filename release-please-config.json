@@ -277,6 +277,16 @@
         },
         {
           "type": "json",
+          "path": "/packages/tokens/package.json",
+          "jsonpath": "$['dependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/tokens']['dependencies']['@mokly/ui']"
+        },
+        {
+          "type": "json",
           "path": "/apps/mockups/package.json",
           "jsonpath": "$['devDependencies']['@mokly/viewer']"
         },

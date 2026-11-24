@@ -4,6 +4,8 @@ import { expect, freshEmail, open, signIn, test } from "../harness";
 import { createProject } from "../project-setup";
 import { createToken, publish } from "../publish";
 
+import { publicationReference } from "./support";
+
 /**
  * A publication address names the pull request that produced it, whatever the
  * address said on the way in.
@@ -35,12 +37,15 @@ test("a publication address names its pull request and links to GitHub", async (
     page,
     `${await publicationPathFor(page, projectId, published.id)}?view=changes`,
   );
-  await expect(page.getByTestId("viewer-publication")).toHaveText(
+  await expect(publicationReference(page)).toHaveText(
     "#42 Name the pull request",
   );
   const state = page.locator(".fo-top-state");
   await expect(state).toContainText("octocat");
-  const github = state.getByRole("link", { name: "GitHub" });
+  // The pull request on GitHub stands beside the publication pill.
+  const github = page
+    .locator('[data-mkc-viewer-slot="switcher"]')
+    .getByRole("link", { name: "GitHub" });
   await expect(github).toHaveAttribute(
     "href",
     `https://github.com/${installedRepository}/pull/42`,
@@ -66,12 +71,12 @@ test("a pull request without an observed author names no author", async ({
   });
 
   await open(page, await publicationPathFor(page, projectId, published.id));
-  await expect(page.getByTestId("viewer-publication")).toHaveText(
+  await expect(publicationReference(page)).toHaveText(
     "#8 Retain the author login",
   );
   const detail = page.locator(".fo-top-state-detail");
-  await expect(detail).toHaveText(/^Published /);
-  // The separator is what an author would be attached by, so its absence is
-  // what says nothing was put where the author is not known.
-  await expect(detail).not.toContainText("·");
+  // An author would lead the phrase, attached by a separator of its own. The
+  // phrase leading with only its own separator says nothing was put where the
+  // author is not known.
+  await expect(detail).toHaveText(/^Ready · [^·]+$/);
 });

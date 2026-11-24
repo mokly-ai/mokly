@@ -1,0 +1,52 @@
+---
+/**
+ * Frame 01 Browse of the home: the module's copy beside the GitHub check
+ * card on the desktop composition, then the labelled frame with the
+ * depicted Mokly viewer on the branch, and the prototype connector that
+ * runs from View changes into the viewer's Changes filter. Below 1100px the
+ * card stacks under the copy, and a phone stacks the copy, the card and the
+ * frame. The check card, the viewer and the connector are depictions.
+ *
+ * The frame is the root of the `browse` demo. With motion allowed it plays
+ * once in view: the connector draws itself in, and Sam's cursor sweeps the
+ * Swipe divider to 26% and 74% and back to 50%. The built page draws the
+ * finished state: the connector drawn and the divider at 50%.
+ *
+ * The rules are in `src/styles/home-browse.css`, the connector's in
+ * `home-browse-connector.css`, the demo's in `home-browse-demo.css` and the
+ * viewer's in the `home-viewer-*.css` sheets.
+ */
+import CheckCard from "./CheckCard.astro";
+import FitConnector from "./FitConnector.astro";
+import ModuleFrame from "./ModuleFrame.astro";
+import ModuleText from "./ModuleText.astro";
+import Viewer from "./Viewer.astro";
+
+import "../../styles/home-browse.css";
+import "../../styles/home-browse-demo.css";
+---
+
+<article
+  aria-labelledby="browse-title"
+  class="site-module site-module--browse"
+  id="browse"
+>
+  <ModuleText
+    headingId="browse-title"
+    index="01"
+    kicker="Browse"
+    title="A visual diff for every branch."
+  >
+    Each branch and pull request publishes a catalogue built from your real
+    components. Changes shows what moved, and the check on the pull request
+    counts it.
+  </ModuleText>
+  <CheckCard />
+  <ModuleFrame demo="browse" name="01 Browse">
+    <Viewer />
+    <FitConnector layout="full" />
+    <FitConnector layout="wide" />
+    <FitConnector layout="stacked" />
+    <FitConnector layout="phone" />
+  </ModuleFrame>
+</article>

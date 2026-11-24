@@ -1,0 +1,146 @@
+---
+/**
+ * The prototype connector of the home's Browse frame, from the foot of the
+ * check card's View changes into the depicted viewer's Changes filter. It
+ * lives in the module frame, the root of the Browse demo, and it ends on the
+ * top edge of the Changes filter, 64px under the frame's top. Each layout
+ * keeps both ends on the parts they join:
+ *
+ * - `full`: the 1440px drawing, in pixels of the frame. The frames column
+ *   is 1080px wide from 1440px up, so the drawing holds there.
+ * - `wide` and `stacked`: below 1440px the curve stretches between its two
+ *   ends, and the start dot and the arrowhead keep their size. `wide` puts
+ *   the check card beside the copy, `stacked` under it.
+ * - `phone`: View changes spans the check card, so the curve runs from the
+ *   middle of the card's foot down to the Changes filter, which takes the
+ *   right half of the catalogue column.
+ *
+ * `src/styles/home-browse-connector.css` shows the layout that matches each
+ * width, and `home-browse-demo.css` draws the connector in when the Browse
+ * demo plays. A depiction: hidden from assistive technology, and it takes
+ * no focus.
+ *
+ * Use: `<FitConnector layout="wide" />` in the Browse frame.
+ */
+import "../../styles/home-browse-connector.css";
+
+/** A layout of the connector. */
+type Layout = "full" | "phone" | "stacked" | "wide";
+
+interface Props {
+  readonly layout: Layout;
+}
+
+/** A point of the 1440px drawing, in pixels from the frame's top-left. */
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * The 1440px drawing: it leaves the foot of View changes, bends down to
+ * just above the viewer's bar, and drops onto the Changes filter. These are
+ * the mockup's module pixels, less the 300px from the module's top to the
+ * frame's at 1440px.
+ */
+const FULL: { end: Point; start: Point; turn: number } = {
+  end: { x: 175, y: 64 },
+  start: { x: 1003, y: -85 },
+  turn: -18,
+};
+
+/**
+ * The curve of each fitted layout, in a box 100 units wide that the sheet
+ * stretches between the two ends: the box's height, the depth of the turn
+ * and the side of the box that the curve leaves from.
+ */
+const FITTED: Record<
+  Exclude<Layout, "full">,
+  { from: "left" | "right"; height: number; turn: number }
+> = {
+  phone: { from: "left", height: 124, turn: 42 },
+  stacked: { from: "right", height: 112, turn: 30 },
+  wide: { from: "right", height: 148, turn: 66 },
+};
+
+/** What one layout draws: the 1440px drawing, or a fitted curve. */
+type Drawing =
+  | { readonly curve: string; readonly head: string; readonly kind: "full" }
+  | {
+      readonly curve: string;
+      readonly height: number;
+      readonly kind: "fitted";
+      readonly layout: Exclude<Layout, "full">;
+    };
+
+/** The drawing of `layout`. */
+function drawing(layout: Layout): Drawing {
+  if (layout === "full") {
+    const { end, start, turn } = FULL;
+    const bend = (turn - start.y) / 2;
+    return {
+      curve: `M${start.x} ${start.y} C ${start.x} ${start.y + bend}, ${end.x} ${turn - bend}, ${end.x} ${turn} L ${end.x} ${end.y}`,
+      head: `M${end.x - 5} ${end.y - 7} L${end.x} ${end.y} L${end.x + 5} ${end.y - 7}`,
+      kind: "full",
+    };
+  }
+  const { from, height, turn } = FITTED[layout];
+  const [start, end] = from === "right" ? [100, 0] : [0, 100];
+  const bend = turn / 2;
+  return {
+    curve: `M${start} 0 C${start} ${bend}, ${end} ${bend}, ${end} ${turn} L${end} ${height}`,
+    height,
+    kind: "fitted",
+    layout,
+  };
+}
+
+const drawn = drawing(Astro.props.layout);
+---
+
+{drawn.kind === "full" ? (
+  <svg
+    aria-hidden="true"
+    class="site-home-connector site-home-connector--full"
+    focusable="false"
+  >
+    <path class="site-home-connector-halo" d={drawn.curve} />
+    <path class="site-home-connector-path" d={drawn.curve} />
+    <circle
+      class="site-home-connector-start"
+      cx={FULL.start.x}
+      cy={FULL.start.y}
+      r="4"
+    />
+    <path class="site-home-connector-path" d={drawn.head} />
+  </svg>
+) : (
+  <span
+    aria-hidden="true"
+    class={`site-home-fit-connector site-home-fit-connector--${drawn.layout}`}
+  >
+    <svg
+      class="site-home-fit-connector-curve"
+      focusable="false"
+      preserveAspectRatio="none"
+      viewBox={`0 0 100 ${drawn.height}`}
+    >
+      <path class="site-home-connector-halo" d={drawn.curve} />
+      <path class="site-home-connector-path" d={drawn.curve} />
+    </svg>
+    <svg
+      class="site-home-fit-connector-start"
+      focusable="false"
+      viewBox="0 0 12 12"
+    >
+      <circle class="site-home-connector-start" cx="6" cy="6" r="4" />
+    </svg>
+    <svg
+      class="site-home-fit-connector-head"
+      focusable="false"
+      viewBox="0 0 12 9"
+    >
+      <path class="site-home-connector-path" d="M1 1 L6 8 L11 1" />
+    </svg>
+  </span>
+)}

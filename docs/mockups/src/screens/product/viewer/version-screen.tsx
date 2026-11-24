@@ -4,6 +4,7 @@ import { sample } from "../../../fixtures/product";
 import { publication } from "../../../fixtures/publications";
 import { Action, StateMessage } from "../page-parts";
 
+import { readyDetail } from "./pill";
 import { ViewerScreen } from "./screen";
 import { BranchSlot } from "./slots";
 import { StageCard } from "./stage-card";
@@ -33,7 +34,7 @@ export function ViewerVersionScreen({ viewport }: { viewport: Viewport }) {
           name={publication.branch}
           meta={{
             state: "ready",
-            detail: publication.published,
+            detail: readyDetail(publication.published),
             sha: publication.sha,
           }}
         />

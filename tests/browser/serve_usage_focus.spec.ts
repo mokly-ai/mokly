@@ -7,7 +7,11 @@
 import { expect } from "@playwright/test";
 
 import { test } from "./serve_comparison_test.js";
-import { expectFrameLoaded } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  expectFrameLoaded,
+  openInspectFold,
+} from "./workspace_actions.js";
 
 test("a Changes completion keeps keyboard focus on an unchanged Usage link", async ({
   page,
@@ -21,8 +25,7 @@ test("a Changes completion keeps keyboard focus on an unchanged Usage link", asy
   // At the head commit nothing changed, so Usage lists only Used by.
   await changes.moveBase("head");
   await expect(status).toHaveText("Unmodified");
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  const usage = await openInspectFold(page, "usage");
   await expect(usage.locator('[data-usage-section="used-by"]')).toContainText(
     "Consumer screen",
   );
@@ -53,7 +56,7 @@ test("a Changes completion keeps keyboard focus on an unchanged Usage link", asy
     ),
   );
   await expectFrameLoaded(
-    page.locator('[data-workspace-frame="mobile"]'),
+    page.locator(canvasFrame("mobile")),
     /\/screens\/consumer\/index\.mobile\.html/u,
   );
 });
@@ -69,8 +72,7 @@ test("a live publication updates Used by on a component variant without a page l
   ).json();
   expect(variantDetail.workspace.usedBy).toBeUndefined();
   expect(variantDetail.workspace.affected).toBeUndefined();
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  const usage = await openInspectFold(page, "usage");
   await expect(
     usage.getByRole("link", { name: "Consumer screen", exact: true }).first(),
   ).toBeVisible();

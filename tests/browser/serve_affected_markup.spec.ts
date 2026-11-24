@@ -10,9 +10,12 @@ import { expect } from "@playwright/test";
 import type { ComparisonAdditions } from "../helpers/comparison_catalogue.js";
 import { write } from "../helpers/static_changes.js";
 
-import { modeButton } from "./comparison_ui.js";
+import { screenOutcomes } from "./comparison_outcomes.js";
+import { comparisonSection, paneFrame } from "./comparison_sections.js";
+import { chooseMode, outcomeLines } from "./comparison_ui.js";
 import { test } from "./serve_comparison_test.js";
 import { awaitSelectedComparison } from "./serve_comparison_ui.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 const STAMPED = "screens/stamped";
 
@@ -40,23 +43,23 @@ test("a component's markup change heads its affected consumer's views", async ({
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
-  await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  await awaitSelectedComparison(page, () =>
-    modeButton(page, "Side by side").click(),
+  await openPanelTab(page, "Changes");
+  await expect(
+    page.getByRole("group", { name: "Comparison mode" }),
+  ).toBeVisible();
+  await awaitSelectedComparison(page, () => chooseMode(page, "Side by side"));
+  await expect(outcomeLines(page)).toHaveText(
+    screenOutcomes("Components this screen uses changed"),
   );
-  await expect(page.locator("[data-diff-viewport] > h3")).toHaveText([
-    "Mobile · Components this screen uses changed",
-    "Desktop · Components this screen uses changed",
-  ]);
-  // Each version holds the stamp that its own commit renders.
-  for (const [title, text] of [
-    ["Before", "Before stamp"],
-    ["Current", "After stamp"],
-  ] as const)
-    await expect(
-      page
-        .locator(`[data-diff-stage] iframe[title^="${title} — desktop"]`)
-        .contentFrame()
-        .locator(".stamp"),
-    ).toHaveText(text);
+  // Each version of the compared frame, Desktop · Light, holds the stamp
+  // that its own commit renders.
+  const pair = comparisonSection(page, "desktop");
+  for (const [side, title, text] of [
+    ["before", "Before", "Before stamp"],
+    ["after", "Current", "After stamp"],
+  ] as const) {
+    const pane = paneFrame(pair, side);
+    await expect(pane).toHaveAttribute("title", `${title} — desktop — light`);
+    await expect(pane.contentFrame().locator(".stamp")).toHaveText(text);
+  }
 });

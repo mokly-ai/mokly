@@ -11,7 +11,9 @@ under `src/screens/product/viewer/`; each screen's entry is
 `src/entries/product/viewer/<screen>.mockup.tsx`, with the screens of
 Standalone and Pull request in `standalone/` and `pull-request/` directories
 matching their folders. Every one
-renders the same chrome, so the family reads as one application.
+renders the same chrome, so the family reads as one application. Every viewer
+drawing draws the cloud's own chrome, panels and cards in the Canvas palette
+with Geist, and its `@mokly/ui` parts with the package's own stylesheet.
 
 | Path                          | Canonical content and action                                                   | Empty / missing data                           | Error recovery                                 |
 | ----------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------- |
@@ -35,15 +37,25 @@ which `product/viewer/standalone/reader` draws as a screen beside
 because the same branch is read by both and only the card inside the stage
 differs.
 
-The ready drawing is a static depiction composed of workspace `@mokly/ui`
-parts. Its embedded layout holds the cloud chrome in the
-`topBarStart` and `topBarEnd` host slots around the package top bar.
-The layout also holds the catalogue navigation and the
-workspace layout, with its screen header and view controls.
-The stage holds the phone and browser frames, and a sample screen is the
-children of each frame. The navigation rows and the sample
-screen come from cloud fixtures, never from a fixture file of an installed
-package.
+The ready drawing is a static depiction composed of workspace `@mokly/ui` parts.
+Its embedded layout holds the cloud chrome in the `topBarStart`, `topBarCenter`
+and `topBarEnd` host slots of the package top bar, which takes no end control,
+because the cloud's bar has no theme toggle, and whose search field ends with
+the `⌘K` hint. The cloud controls take the looks of [Viewer
+compositions](./folio-viewer.md#compositions), in the ready drawing and in the
+cloud's own bar alike: the project switcher led by its workspace in muted ink,
+the publication pill, History with its history glyph, Share, the avatar, and
+More with its chevron. The layout also holds the catalogue navigation and the
+workspace on the canvas. A desktop drawing's canvas shows the current screen's
+section with its frames, Desktop beside Mobile and Light above Dark, the zoom
+pill, and the right panel with Inspect and Changes. A phone drawing shows the
+compact layout: the entry bar, the one frame of the document's scheme and the
+dock. A sample screen fills each frame in the frame's own scheme. The
+navigation rows and the sample screen come from cloud fixtures, never from a
+fixture file of an installed package. A static document cannot measure its
+canvas, so the drawing keeps the view that Fit gives in a document of the size
+of Mokly's canvas frame, where every frame stands clear of the right panel and
+the floating controls.
 
 The parts draw their controls through the package's static props, so the
 drawing runs no script, and the layout states the drawing's color scheme as
@@ -64,9 +76,37 @@ share panel, because it leaves the app for the site's CI setup guide.
 Every account is created by an email address, so a reader who has not set a
 display name is called by theirs. `product/viewer/standalone/account` draws that bar as
 a screen beside `product/viewer/standalone`, pairing a long workspace display
-name with a long address. The full bar keeps every action on one row and truncates
-the variable labels while their complete accessible names and tooltips remain;
-the compact bar keeps the address's identifying local part.
+name with a reader named by a long address. The full bar keeps every action on
+one row: the project switcher leads with the long workspace name in muted ink
+and truncates it first when the bar runs short, while its complete accessible
+name and tooltip remain, and the avatar shows the address's initials, with the
+whole address as its accessible name and tooltip.
+
+The account menu has its own screen beside `product/viewer/standalone`:
+`product/viewer/standalone/account-menu` draws it open under the avatar, with
+who is signed in, Theme with Light and Dark, Settings, Docs, Changelog and Sign
+out. Docs and Changelog carry the external glyph, because each leaves the app
+for the site. A desktop drawing whose bar is too narrow for the full
+composition opens **More** under its trigger instead, with the project, History
+and Share above the same account rows. Both are non-modal popovers, so the
+viewer beneath keeps its heading and landmark. The phone opens More as the
+panel's bottom sheet, titled More, whose rows are 44px targets, and the sheet
+takes the document's `main` and `h1`, as a panel does. Catalogue-only links
+below the artboard lead to the settings index, the site's documentation and
+changelog, the sign-in screen and the settings drawing.
+`product/viewer/standalone/settings`, another screen beside
+`product/viewer/standalone`, draws the settings dialog over the viewer in
+Canvas, on the Members pane that its rail opens, because the menu's Settings
+opens the index, which shows no pane. The phone shows the same pane in the
+settings layer.
+
+The drawing of `product/viewer/pull-request` opens the right panel on Changes,
+whose check slot holds the cloud's Mokly check, as [Viewer chrome: check
+slot](./viewer-chrome-check.md) places it. The check card says the check
+succeeded, gives the changed, added and removed counts of the drawing's
+catalogue, and links the pull request's checks on GitHub. The phone drawing
+holds the same tab in the panel's closed sheet, and no branch drawing has a
+check.
 
 A read that never produced the publication is not the same as one that is gone:
 `product/viewer/standalone/unreadable` draws the address that named a publication the
@@ -131,17 +171,17 @@ The disk browser smoke opens each viewer drawing from the build output, and it
 fails on every browser error and on every request outside that output. The
 one exception is Mokly's frame probe script: Mokly links it from the site root,
 so the smoke serves that file from the output.
-Both device frames must hold the sample screen, and the selected
-viewport must be visible.
+Every frame on the canvas must hold the sample screen and show it: each frame
+of a desktop drawing, and the one frame of a phone drawing, of its own
+viewport.
 
 Share offers the screen the link points at, beneath the link itself: the whole
 catalogue or one of the publication's own current screens, narrowed to the ones
 it draws at the selected single viewport and scheme. For Both, a current screen
-with either viewport in that scheme remains selectable; Share omits the
-unsupported API viewport and the host appends `viewport=both` to the canonical
-URL it receives. Under the dark scheme, Share still offers a current screen
-with no dark view at the selected viewport, or in either viewport for Both. The
-viewer shows that screen through its
+with either viewport in that scheme remains selectable, and the link names no
+viewport, so it opens on Both. Under the dark scheme, Share still offers a
+current screen with no dark view at the selected viewport, or in either
+viewport for Both. The viewer shows that screen through its
 [light fallback](./viewer-address-state.md#sharing), so its link carries
 `scheme=light`. A current-only publication has no released API screen
 inventory, so the choice is not offered, the package selection stays intact

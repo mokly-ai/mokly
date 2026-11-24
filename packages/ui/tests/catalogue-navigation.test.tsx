@@ -257,3 +257,30 @@ test("the scrolling pane holds the status line, then the tree, which reports thr
   );
   assert.deepEqual(choices, [["variants:home", true]]);
 });
+
+test("in Changes the foot names the comparison base after the tree, and All or no base has no foot", () => {
+  const foot = (view: "all" | "changes", base: string | undefined) => {
+    const { container, unmount } = render(
+      <CatalogueNavigation
+        {...column({
+          base,
+          filter: { count: 2, status: "ready", view },
+        })}
+      />,
+    );
+    const element = container.querySelector("[data-nav-foot]");
+    const text = element?.textContent;
+    const afterTree = element?.previousElementSibling?.hasAttribute(
+      "data-mokly-nav-scroll",
+    );
+    unmount();
+    return element ? { afterTree, text } : undefined;
+  };
+  assert.deepEqual(foot("changes", "origin/main"), {
+    afterTree: true,
+    text: "Compared with origin/main",
+  });
+  assert.equal(foot("all", "origin/main"), undefined);
+  assert.equal(foot("changes", ""), undefined);
+  assert.equal(foot("changes", undefined), undefined);
+});

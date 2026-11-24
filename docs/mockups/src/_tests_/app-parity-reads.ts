@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 
 import { sample } from "../fixtures/product";
 import { denseViewerChrome } from "../fixtures/product-states";
+import { publication } from "../fixtures/publications";
 
 import { ownerOf, repository } from "./app-owners";
 import type { ScreenId } from "./app-owners";
@@ -91,7 +92,11 @@ export function source(path: string): string {
     .replaceAll(/(^|[^:"'\\])\/\/[^\n]*/g, "$1");
 }
 
-/** Fixture values a label may carry, so the literal around them is compared. */
+/**
+ * Fixture values a label may carry, so the literal around them is compared.
+ * The publication pill's control draws the publication's day and short SHA
+ * beside the branch.
+ */
 const interpolated = [
   "Mokly Cloud",
   sample.workspace,
@@ -105,6 +110,8 @@ const interpolated = [
   "GitHub Actions",
   denseViewerChrome.workspace,
   denseViewerChrome.email,
+  publication.time.split(",")[0] ?? publication.time,
+  publication.sha,
 ];
 
 /**

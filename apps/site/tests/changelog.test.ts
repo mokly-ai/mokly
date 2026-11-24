@@ -4,16 +4,18 @@ import test from "node:test";
 
 import sax from "sax";
 
+import { releaseAnchor } from "../src/changelog/anchors.js";
 import { changelogFeed } from "../src/changelog/feed.js";
 import { parseNote, noteText } from "../src/changelog/notes.js";
 import { ChangelogError, parseChangelog } from "../src/changelog/parse.js";
 import {
   CHANGELOG_FILE,
+  changelogLinks,
   publishedReleases,
   readReleases,
-  releaseAnchor,
   readableDate,
 } from "../src/changelog/releases.js";
+import type { DocsPage } from "../src/docs/pages.js";
 import { MOKLY_PACKAGE_VERSION } from "../src/mokly-package.js";
 
 const origin = "https://mokly.example";
@@ -25,6 +27,16 @@ function headings(): string[] {
     .filter((line) => /^## \[?v?\d+\.\d+/.test(line));
 }
 
+/** A changelog from its lines. */
+function changelog(...lines: string[]): string {
+  return lines.join("\n");
+}
+
+/** A text segment. */
+function text(value: string) {
+  return { kind: "text", value } as const;
+}
+
 test("every release in this repository's changelog is published", () => {
   const releases = readReleases();
   assert.equal(releases.length, headings().length);
@@ -32,10 +44,10 @@ test("every release in this repository's changelog is published", () => {
   for (const release of releases) {
     assert.match(release.version, /^\d+\.\d+\.\d+/);
     assert.match(release.date, /^\d{4}-\d{2}-\d{2}$/);
-    assert.ok(release.sections.length > 0, release.version);
-    for (const section of release.sections) {
-      assert.ok(section.heading.length > 0);
-      assert.ok(section.items.length > 0, section.heading);
+    assert.ok(release.groups.length > 0, release.version);
+    for (const group of release.groups) {
+      assert.ok(group.heading.length > 0);
+      assert.ok(group.notes.length > 0, group.heading);
     }
   }
 });
@@ -51,7 +63,7 @@ test("the newest release is first and keeps its link and notes", () => {
     newest.link ?? "",
     new RegExp(`\\.\\.\\.v${MOKLY_PACKAGE_VERSION.replaceAll(".", "\\.")}$`),
   );
-  assert.ok(newest.sections.some((section) => section.heading === "Features"));
+  assert.ok(newest.groups.some((group) => group.kind === "features"));
 });
 
 test("a heading with no link publishes no link", () => {
@@ -61,10 +73,17 @@ test("a heading with no link publishes no link", () => {
   assert.deepEqual(releases, [
     {
       date: "2026-07-20",
-      link: null,
-      sections: [
-        { heading: "Features", items: [[{ kind: "text", value: "first" }]] },
+      groups: [
+        {
+          heading: "Features",
+          kind: "features",
+          notes: [
+            { items: [], refs: [], scope: undefined, text: [text("first")] },
+          ],
+        },
       ],
+      link: null,
+      upgrade: [],
       version: "0.1.0",
     },
   ]);
@@ -94,6 +113,32 @@ test("a heading that names a version but no date fails the build", () => {
   ]) {
     assert.throws(() => parseChangelog(`${heading}\n`), ChangelogError);
   }
+});
+
+test("a relative link to a published guide points at its page, and any other relative link keeps its text", () => {
+  const guide: DocsPage = {
+    description: "Upgrade Mokly.",
+    id: "start/upgrade",
+    kind: "guide",
+    order: 9,
+    route: "/docs/start/upgrade/",
+    section: "start",
+    source: "/package/docs/guides/start/upgrade.md",
+    title: "Upgrade",
+  };
+  const resolve = changelogLinks("/package/CHANGELOG.md", [guide]);
+  assert.deepEqual(
+    parseNote(
+      "the [guide](docs/guides/start/upgrade.md#node) and [a file](docs/other.md)",
+      resolve,
+    ),
+    [
+      text("the "),
+      { href: "/docs/start/upgrade/#node", kind: "link", text: "guide" },
+      text(" and "),
+      text("a file"),
+    ],
+  );
 });
 
 test("notes keep their links, code and emphasis as typed segments", () => {
@@ -127,8 +172,8 @@ test("a multi-line note is joined into one item", () => {
   const [release] = parseChangelog(
     "## 0.1.0 (2026-07-20)\n\n### Features\n\n* first line\n  second line\n",
   );
-  assert.deepEqual(release?.sections[0]?.items, [
-    [{ kind: "text", value: "first line second line" }],
+  assert.deepEqual(release?.groups[0]?.notes[0]?.text, [
+    { kind: "text", value: "first line second line" },
   ]);
 });
 
@@ -153,22 +198,46 @@ test("the feed is well-formed XML naming every release", () => {
 
 test("the feed escapes release text and falls back to the page anchor", () => {
   const feed = changelogFeed(
-    publishedReleases([
-      {
-        date: "2026-07-20",
-        link: null,
-        sections: [
-          {
-            heading: "Features",
-            items: [[{ kind: "text", value: "a & b <c>" }]],
-          },
-        ],
-        version: "0.1.0",
-      },
-    ]),
+    publishedReleases(
+      parseChangelog("## 0.1.0 (2026-07-20)\n\n### Features\n\n* a & b <c>\n"),
+    ),
     origin,
   );
   sax.parser(true).write(feed).close();
   assert.ok(feed.includes("a &amp; b &lt;c&gt;"));
   assert.ok(feed.includes(`${origin}/changelog/#release-0-1-0`));
+});
+
+test("the feed sets each group of notes on a line and names the upgrade topics", () => {
+  const feed = changelogFeed(
+    publishedReleases(
+      parseChangelog(
+        changelog(
+          "## 0.2.0 (2026-08-01)",
+          "### Performance Improvements",
+          "* **cli:** be quick ([#3](https://example.com/3)) ([abc1234](https://example.com/c/abc1234))",
+          "### Dependencies",
+          "* The following workspace dependencies were updated",
+          "  * dependencies",
+          "    * @mokly/viewer bumped from 0.1.0 to 0.2.0",
+          "### Upgrade Notes",
+          "#### First Topic",
+          "Words.",
+          "#### Second Topic",
+          "More words.",
+        ),
+      ),
+    ),
+    origin,
+  );
+  assert.ok(
+    feed.includes(
+      [
+        "<summary>Performance: cli: be quick (#3) (abc1234)",
+        "Dependencies: The following workspace dependencies were updated * dependencies * @mokly/viewer bumped from 0.1.0 to 0.2.0",
+        "Upgrade notes: First Topic; Second Topic</summary>",
+      ].join("\n"),
+    ),
+    feed,
+  );
 });

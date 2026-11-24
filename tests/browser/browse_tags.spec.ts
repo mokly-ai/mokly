@@ -5,7 +5,7 @@ import { test } from "./browser_test.js";
 const detailsRow =
   'a[data-nav-row][data-route="example/screens/details/index.html"]';
 const inspectorChip =
-  '[data-inspector-panel="details"] [data-mokly-tag="forms"]';
+  '[data-inspect-section="details"] [data-mokly-tag="forms"]';
 const panel = "#mb-tag-picker";
 const search = "[data-mokly-search]";
 const toggle = "[data-mokly-tag-toggle]";
@@ -66,26 +66,17 @@ test("the picker enters, keeps, and clears a tag term", async ({ page }) => {
   await expect(page.locator(tourRow)).toBeVisible();
 });
 
-test("the open picker takes Escape ahead of the expanded frame", async ({
+test("Escape closes the open picker, keeps the query, and returns focus to its toggle", async ({
   page,
 }) => {
-  await page.goto("/view/example/screens/welcome/");
+  await page.goto("/view/example/tour/");
   await page.fill(search, "welcome");
-  await page.click(".browser-expand");
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-
-  // Synthesised state: the expand scrim covers the bar, so no real click opens the panel here.
-  await page.locator(toggle).dispatchEvent("click");
-  await expect(page.locator(panel)).toBeVisible();
+  await openPicker(page);
   await page.keyboard.press("Escape");
 
   await expectClosed(page);
   await expect(page.locator(toggle)).toBeFocused();
   await expect(page.locator(search)).toHaveValue("welcome");
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
 });
 
 test("a click outside closes the picker without taking focus", async ({
@@ -100,11 +91,11 @@ test("a click outside closes the picker without taking focus", async ({
   await expect(page.locator(search)).toBeFocused();
 });
 
-test("an inspector tag closes the open picker and restores toggle focus", async ({
+test("a tag of Inspect's Details rows closes the open picker and restores toggle focus", async ({
   page,
 }) => {
   await page.goto("/view/example/screens/welcome/");
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
+  await expect(page.locator(inspectorChip)).toBeVisible();
   await openPicker(page);
 
   await page.locator(inspectorChip).click();

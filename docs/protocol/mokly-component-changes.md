@@ -62,7 +62,7 @@ view has a base side, in or out of Changes. An Added consumer opens Current
 because its view has no base side. A consumer without a row stays Unmodified and
 outside Changes. A pure move, a consumer whose other views changed, and a
 component variant compare the linked view the same way. A React host opens the
-consumer in Current, where the band offers the same comparison. A removed
+consumer in Current, where its compare modes offer the same comparison. A removed
 screen consumer opens its previous version. Affected describes usage evidence,
 not proof of a visual regression: a changed component can alter surrounding layout
 without changing any screen-owned markup, and no pixel or layout-safety claim

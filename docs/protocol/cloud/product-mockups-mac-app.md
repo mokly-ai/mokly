@@ -14,7 +14,7 @@ other screen with a top bar uses one of these compositions.
 
 | Path                                | Owner screen                | Draws                                                                                    |
 | ----------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------- |
-| `product/viewer/standalone/mac-app` | `product/viewer/standalone` | The ready viewer; the cloud's slot content starts after the buttons                      |
+| `product/viewer/standalone/mac-app` | `product/viewer/standalone` | The ready viewer; the package's mark and the cloud's slots start after the buttons       |
 | `product/account/sign-in/mac-app`   | `product/account/sign-in`   | Sign in; the buttons sit over the empty start of the account header                      |
 | `product/settings/sections/mac-app` | `product/settings/sections` | Settings; the buttons stay above the dialog's backdrop, and the compact bar starts after |
 

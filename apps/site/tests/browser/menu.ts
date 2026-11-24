@@ -18,7 +18,7 @@ export async function settle(element: Locator): Promise<void> {
   );
 }
 
-/** Open the mobile menu and wait until its panel has finished sliding in. */
+/** Open the mobile menu and wait until its sheet has settled below the bar. */
 export async function openMenu(page: Page): Promise<Locator> {
   await page.getByRole("button", { name: "Menu" }).click();
   const menu = page.getByRole("dialog", { name: "Menu" });

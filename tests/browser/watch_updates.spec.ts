@@ -11,9 +11,12 @@ import {
   watchedScreen,
 } from "./watch_fixture.js";
 import {
+  canvasFrame,
   chooseScheme,
   chooseViewport,
   expectFrameSource,
+  openCatalogueSheet,
+  viewportFrame,
 } from "./workspace_actions.js";
 
 test("watched authored edits replace the changed document and retain Browse state", async ({
@@ -40,20 +43,23 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(archive).toHaveAttribute("open", "");
     await chooseViewport(page, "mobile");
     await chooseScheme(page, "dark");
-    const frame = page.locator(".mbk-frame-mobile iframe");
+    // The canvas's Mobile · Dark frame shows the dark document.
+    const canvas = page.locator(canvasFrame("mobile", "dark"));
+    await expectFrameSource(canvas, /home\/index\.mobile\.dark\.html$/u);
+    await expect(canvas.contentFrame().locator("h1")).toHaveText(
+      "Original home",
+    );
+    await page.setViewportSize({ width: 420, height: 900 });
+    await openCatalogueSheet(page);
+    // Below the layout breakpoint the compact layout shows one frame, the
+    // frame of the chosen viewport and scheme: Mobile · Dark.
+    const frame = page.locator(viewportFrame("mobile"));
+    await expect(frame).toHaveAttribute("data-workspace-color-scheme", "dark");
     await expectFrameSource(frame, /home\/index\.mobile\.dark\.html$/u);
     await expect(frame.contentFrame().locator("h1")).toHaveText(
       "Original home",
     );
     await markDocument(frame);
-    const details = page.locator("[data-workspace-inspector]");
-    await expect(details).not.toHaveAttribute("data-open", "true");
-    await page.getByRole("tab", { name: "Details", exact: true }).click();
-    await expect(details).toHaveAttribute("data-open", "true");
-    await page.getByRole("tab", { name: "Details", exact: true }).click();
-    await expect(details).not.toHaveAttribute("data-open", "true");
-    await page.setViewportSize({ width: 420, height: 900 });
-    await page.locator("[data-mokly-menu]").click();
     const first = await watched.index();
     const keys = screenKeys(first, "screens/home");
     const { after } = await watched.change(
@@ -81,7 +87,7 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
     await expect(screens).toHaveAttribute("open", "");
     await expect(archive).toHaveAttribute("open", "");
-    await expect(page.locator(".mbk-frame-desktop")).toBeHidden();
+    await expect(page.locator(viewportFrame("desktop"))).toHaveCount(0);
     await expect(page.locator(shellRoot)).toHaveAttribute(
       "data-mokly-color-scheme",
       "dark",
@@ -93,7 +99,10 @@ test("watched authored edits replace the changed document and retain Browse stat
     await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
       "dark",
     );
-    await expect(details).not.toHaveAttribute("data-open", "true");
+    // The publication keeps the Frames filter's choice of the Mobile frames.
+    await expect(
+      page.locator('[data-frames-toggle="desktop"]'),
+    ).not.toBeChecked();
     await expect(page.locator(".mbk[data-mokly-shell]")).toHaveAttribute(
       "data-drawer",
       "open",
@@ -130,7 +139,7 @@ test("watched publications keep collapsed active ancestry until a route change r
       ),
     (index) => screenKeys(index, "screens/home")?.[0] !== keys?.[0],
   );
-  const frame = page.frameLocator(".mbk-frame-mobile iframe");
+  const frame = page.frameLocator(canvasFrame("mobile"));
   await expect(frame.locator("h1")).toHaveText("Edited home");
   expect(await hasMarker(page)).toBe(true);
   await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
@@ -138,7 +147,10 @@ test("watched publications keep collapsed active ancestry until a route change r
   await page.locator("[data-mokly-search]").fill("");
   await expect(screens).not.toHaveAttribute("open", "");
   await frame.getByRole("link", { name: "Details", exact: true }).click();
-  await expect(page).toHaveURL(/\/view\/fixture\/screens\/details\/$/u);
+  // The destination's address names the kept Mobile viewport.
+  await expect(page).toHaveURL(
+    /\/view\/fixture\/screens\/details\/\?viewport=mobile$/u,
+  );
   await expect(screens).toHaveAttribute("open", "");
   expect(await hasMarker(page)).toBe(true);
 });

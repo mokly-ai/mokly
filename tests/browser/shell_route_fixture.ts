@@ -9,6 +9,12 @@ export const WELCOME = "example/screens/welcome";
 export const DETAILS = "example/screens/details";
 export const MEMBERS = "example/team/members";
 
+/**
+ * The frames of an example screen on the canvas: Desktop beside Mobile, in
+ * Light and Dark.
+ */
+export const CANVAS_FRAMES = 4;
+
 /** Entry titles from the served index, so the specs never copy them. */
 export async function titles(request: APIRequestContext) {
   const index = (await (
@@ -17,7 +23,12 @@ export async function titles(request: APIRequestContext) {
   return new Map(index.screens.map((entry) => [entry.path, entry.title]));
 }
 
-export const heading = (page: Page) => page.locator("#mb-main h2");
+/**
+ * The routed entry's title in Inspect's head. The panel follows the canvas,
+ * so a failure card's own heading on the canvas comes first.
+ */
+export const heading = (page: Page) =>
+  page.locator('#mb-main [data-inspect-section="details"] h2');
 export const navLink = (page: Page, path: string) =>
   page.locator(`a[data-entry-id="${path}"][data-nav-row]`);
 export const route = (path: string) => `/view/${path}/`;

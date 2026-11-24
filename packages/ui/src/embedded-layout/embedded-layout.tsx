@@ -1,28 +1,38 @@
 /**
  * The layout of an embedded viewer root: the shell's parts with the slots of
- * its host. The top host holds the top bar between two slots, the rail host
- * the navigation between two slots, and the stage host the main region with
- * the empty state and the stage overlay. The side panel follows the stage
- * host, and the marker and label layers lie over the root.
+ * its host. The top host holds the top bar, which places the host's three
+ * top-bar slots in its columns. The rail host holds the navigation between two
+ * slots, and the stage host the main region with the empty state and the
+ * stage overlay. The side panel follows the stage host, and the marker and
+ * label layers lie over the root. In the Canvas layout the rail host floats
+ * over the canvas as the catalogue, or opens as its sheet below the layout
+ * breakpoint, and the dock floats at the bottom of the stage host.
  */
 
-import type {
-  CSSProperties,
-  KeyboardEvent,
-  MouseEvent,
-  ReactNode,
-  Ref,
+import {
+  useMemo,
+  type CSSProperties,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  type Ref,
 } from "react";
 
 import type { Appearance } from "../appearance-selector/appearance-selector.js";
+import type { FloatingPanelSheet } from "../floating-panel/floating-panel.js";
 import { LabelLayer } from "../highlight-label/highlight-label.js";
-import { rootClassName } from "../shell-layout/root-marks.js";
 import {
+  canvasLayoutMarks,
+  rootClassName,
+} from "../shell-layout/root-marks.js";
+import {
+  FloatingCatalogue,
   RouteStatus,
   ShellBody,
   SkipLink,
   type ShellResizing,
 } from "../shell-layout/shell-layout.js";
+import type { TopBarHost } from "../top-bar/top-bar.js";
 
 import {
   HostSlot,
@@ -36,6 +46,8 @@ export type { HostSlotName } from "./host-slot.js";
 /** The content that a host places in the slots of its root. */
 export interface EmbeddedSlots {
   topBarStart?: ReactNode;
+  /** The content in the centre of the top bar. */
+  topBarCenter?: ReactNode;
   topBarEnd?: ReactNode;
   railStart?: ReactNode;
   railEnd?: ReactNode;
@@ -48,15 +60,18 @@ export interface EmbeddedSlots {
 
 export function EmbeddedLayout({
   announcement,
+  catalogueSheet,
   colorScheme,
+  dock,
   drawerOpen,
   emptyStateShown,
-  frameExpanded,
+  interactive = true,
   labelLayer,
   main,
   mainHref,
   markerLayer,
   navigation,
+  navigationWidth,
   onClick,
   onKeyDown,
   ref,
@@ -69,18 +84,29 @@ export function EmbeddedLayout({
 }: {
   /** The route status's announcement of the last navigation. */
   announcement: string;
+  /**
+   * The catalogue's sheet of the compact layout. With it, the rail host
+   * floats over the canvas, and below the layout breakpoint it opens as this
+   * sheet; the root marks `data-canvas-layout`.
+   */
+  catalogueSheet?: FloatingPanelSheet | undefined;
   /** The scheme of the shown previews, as `data-mokly-color-scheme`. */
   colorScheme: "dark" | "light";
-  /** Whether the navigation drawer of a narrow root is open. */
+  /** The dock of the compact layout, such as a `CanvasDock`, over the canvas. */
+  dock?: ReactNode;
+  /**
+   * Whether the navigation drawer of a narrow root is open, as
+   * `data-drawer`. In the Canvas layout it is the catalogue's sheet.
+   */
   drawerOpen: boolean;
   /** Whether the empty state slot shows its content. */
   emptyStateShown: boolean;
   /**
-   * Whether a browser window is expanded over the shell, which marks the root
-   * with `frame-expanded`: the scrim shows below the window, and the marker
-   * and label layers stay above it.
+   * Whether the catalogue's sheet draws its grabber and close control as
+   * buttons, as it does by default. A static depiction that runs no script
+   * sets `false`, which draws each as a picture of itself.
    */
-  frameExpanded?: boolean | undefined;
+  interactive?: boolean;
   /** The label layer, such as a host inspection's. An empty one by default. */
   labelLayer?: ReactNode;
   /** The main region with the routed view. */
@@ -90,14 +116,19 @@ export function EmbeddedLayout({
   /** The layer of the host's markers. */
   markerLayer: ReactNode;
   navigation: ReactNode;
+  /**
+   * The width that the reader chose for the catalogue, in pixels, which the
+   * floating rail host and the canvas's start inset follow.
+   */
+  navigationWidth?: number | undefined;
   onClick?: ((event: MouseEvent<HTMLDivElement>) => void) | undefined;
   onKeyDown?: ((event: KeyboardEvent<HTMLDivElement>) => void) | undefined;
   /** Receives the root. */
   ref?: Ref<HTMLDivElement> | undefined;
   /**
    * The separator that the reader drags, which marks the root with
-   * `mbk-inspector-resizing` or `mbk-nav-resizing`: the whole shell keeps the
-   * drag's cursor, and no frame takes the pointer.
+   * `mbk-nav-resizing`: the whole shell keeps the drag's cursor, and no frame
+   * takes the pointer.
    */
   resizing?: ShellResizing | undefined;
   /**
@@ -112,11 +143,48 @@ export function EmbeddedLayout({
   statusId: string;
   /** The appearance that the root states, as `data-mokly-theme`. */
   theme: Appearance;
-  topBar: ReactNode;
+  /**
+   * Draws the top bar with the containers of the host's three top-bar slots,
+   * which the bar places in its columns.
+   */
+  topBar: (host: TopBarHost) => ReactNode;
 }) {
+  const { topBarStart, topBarCenter, topBarEnd } = slots ?? {};
+  const topBarHost = useMemo<TopBarHost>(
+    () => ({
+      start: (
+        <HostSlot name="topBarStart" ref={slotRef?.("topBarStart")}>
+          {topBarStart}
+        </HostSlot>
+      ),
+      center: (
+        <HostSlot name="topBarCenter" ref={slotRef?.("topBarCenter")}>
+          {topBarCenter}
+        </HostSlot>
+      ),
+      end: (
+        <HostSlot name="topBarEnd" ref={slotRef?.("topBarEnd")}>
+          {topBarEnd}
+        </HostSlot>
+      ),
+    }),
+    [slotRef, topBarStart, topBarCenter, topBarEnd],
+  );
+  const rail = (
+    <div className="mokly-rail-host mbk-reset">
+      <HostSlot name="railStart" ref={slotRef?.("railStart")}>
+        {slots?.railStart}
+      </HostSlot>
+      {navigation}
+      <HostSlot name="railEnd" ref={slotRef?.("railEnd")}>
+        {slots?.railEnd}
+      </HostSlot>
+    </div>
+  );
   return (
     <div
-      className={rootClassName("mbk mokly-viewer", { frameExpanded, resizing })}
+      className={rootClassName("mbk mokly-viewer", { resizing })}
+      {...canvasLayoutMarks(catalogueSheet !== undefined, navigationWidth)}
       data-drawer={drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={colorScheme}
       data-mokly-shell=""
@@ -127,25 +195,15 @@ export function EmbeddedLayout({
       data-mokly-theme={theme}
     >
       <SkipLink href={mainHref} />
-      <div className="mokly-top-host mbk-reset">
-        <HostSlot name="topBarStart" ref={slotRef?.("topBarStart")}>
-          {slots?.topBarStart}
-        </HostSlot>
-        {topBar}
-        <HostSlot name="topBarEnd" ref={slotRef?.("topBarEnd")}>
-          {slots?.topBarEnd}
-        </HostSlot>
-      </div>
+      <div className="mokly-top-host mbk-reset">{topBar(topBarHost)}</div>
       <ShellBody>
-        <div className="mokly-rail-host mbk-reset">
-          <HostSlot name="railStart" ref={slotRef?.("railStart")}>
-            {slots?.railStart}
-          </HostSlot>
-          {navigation}
-          <HostSlot name="railEnd" ref={slotRef?.("railEnd")}>
-            {slots?.railEnd}
-          </HostSlot>
-        </div>
+        {catalogueSheet === undefined ? (
+          rail
+        ) : (
+          <FloatingCatalogue interactive={interactive} sheet={catalogueSheet}>
+            {rail}
+          </FloatingCatalogue>
+        )}
         <div className="mokly-stage-host mbk-reset">
           {main}
           <HostSlot
@@ -159,6 +217,7 @@ export function EmbeddedLayout({
             ref={slotRef?.("stageOverlay")}
             value={slots?.stageOverlay}
           />
+          {dock}
         </div>
         <HostSlot
           name="sidePanel"

@@ -1,5 +1,5 @@
 import { useToast } from "@firna/ui/toast";
-import { Body } from "@firna/ui/typography";
+import { Caption } from "@firna/ui/typography";
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -9,6 +9,7 @@ import { StatusBadge } from "../../components/controls";
 import { Field } from "../../components/field";
 import { TextBar } from "../../components/placeholders";
 import { writeFailure } from "../../components/write-failure";
+import { useCompact } from "../../layout/viewport";
 
 /** What the reader is told about who can open the link they are copying. */
 const accessCopy = {
@@ -20,9 +21,10 @@ const accessCopy = {
 type Visibility = "private" | "public";
 
 /**
- * The link, who can open it and Copy link, as the prepared link and its wait
- * both draw them: the field, the line beside the visibility's badge, and the
- * control at the panel's foot.
+ * The link, Copy link beside it and who can open it, as the prepared link and
+ * its wait both draw them, and as the catalogue's `ShareLink` draws them: the
+ * field and the control in one row, then the line beside the visibility's
+ * badge. On a phone the control takes the panel's width under the field.
  */
 function LinkLayout({
   field,
@@ -37,29 +39,31 @@ function LinkLayout({
 }) {
   return (
     <>
-      {field}
-      <div className="review-inline">
-        <StatusBadge label={visibility === "public" ? "Public" : "Private"} />
-        <Body color="muted">{access}</Body>
+      <div className="fo-canvas-share-link">
+        {field}
+        {copy}
       </div>
-      {copy}
+      <div className="review-inline fo-canvas-share-access">
+        <StatusBadge label={visibility === "public" ? "Public" : "Private"} />
+        <Caption color="muted">{access}</Caption>
+      </div>
     </>
   );
 }
 
 /** Copy link, which waits disabled until there is a link to copy. */
 function CopyLink({ onCopy }: { onCopy?: () => void }) {
+  const compact = useCompact();
   return (
-    <div className="fo-panel-foot">
-      <Action
-        label="Copy link"
-        tone="primary"
-        size="md"
-        disabled={onCopy === undefined}
-        onPress={onCopy}
-        testID="share-copy"
-      />
-    </div>
+    <Action
+      label="Copy link"
+      tone="primary"
+      size="md"
+      block={compact}
+      disabled={onCopy === undefined}
+      onPress={onCopy}
+      testID="share-copy"
+    />
   );
 }
 

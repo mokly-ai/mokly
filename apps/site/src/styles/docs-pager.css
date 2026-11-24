@@ -1,0 +1,124 @@
+/* Previous and next at the foot of the page frame: two small frames under
+   their mono labels, below a hairline that crosses the sheet, which the
+   sheet clips. They stack on mobile and sit side by side from 768px.
+
+   The class names and the rules match docs/mockups/styles/site/
+   docs-document.css and docs-responsive.css. The mobile composition is the
+   base rule, and the desktop one follows at 768px. */
+
+.site-pager {
+  display: grid;
+  gap: 44px;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 44px;
+  padding: 56px 0 52px;
+  position: relative;
+}
+
+.site-pager::before {
+  border-top: 1px solid var(--mk-color-border);
+  content: "";
+  left: -100vmax;
+  position: absolute;
+  right: -100vmax;
+  top: 0;
+}
+
+.site-pager-item {
+  align-content: start;
+  background: var(--mk-color-surface);
+  box-shadow: 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+  display: grid;
+  gap: 6px;
+  min-height: 112px;
+  padding: 18px 20px 20px;
+  position: relative;
+  transition: box-shadow var(--mk-motion-fast) var(--mk-motion-easing);
+}
+
+/* The mockup draws each frame as text; on the site each frame is a link. */
+a.site-pager-item {
+  text-decoration: none;
+}
+
+.site-pager-item:hover {
+  box-shadow:
+    0 0 0 1.5px var(--mk-color-signal),
+    var(--mk-shadow-medium);
+}
+
+/* Focus: the glow over the frame's strong ring, after the hover rule */
+
+.site-pager-item:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    0 0 0 1px var(--mk-color-border-strong);
+}
+
+.site-pager-item--next {
+  grid-column: 1;
+  text-align: left;
+}
+
+.site-pager-label {
+  align-items: center;
+  bottom: calc(100% + 9px);
+  color: var(--mk-color-text-muted);
+  display: inline-flex;
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  left: 0;
+  line-height: 1;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.site-pager-item--next .site-pager-label {
+  left: 0;
+  right: auto;
+}
+
+.site-docs-pager-section {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.6875rem;
+  font-weight: var(--mk-font-medium);
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.site-docs-pager-title {
+  font-size: 1.1875rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.site-docs-pager-description {
+  color: var(--mk-color-text-secondary);
+  font-size: 0.84375rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+  .site-pager {
+    gap: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 60px;
+    padding: 64px 0 72px;
+  }
+
+  .site-pager-item--next {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .site-pager-item--next .site-pager-label {
+    left: auto;
+    right: 0;
+  }
+}

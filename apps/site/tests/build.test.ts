@@ -15,15 +15,11 @@ const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
 };
 const astro = path.join(path.dirname(manifestPath), manifest.bin.astro);
 
-for (const [setting, value] of [
-  ["SITE_ORIGIN", "invalid"],
-  ["SITE_STAGE_PR", "../main"],
-] as const) {
+for (const [setting, value] of [["SITE_ORIGIN", "invalid"]] as const) {
   test(`Astro build fails for ${setting}=${String(value)}`, async () => {
     const environment = {
       ...process.env,
       SITE_ORIGIN: "https://example.com",
-      SITE_STAGE_PR: "71",
     };
     environment[setting] = value;
     await assert.rejects(

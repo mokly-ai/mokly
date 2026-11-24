@@ -1,30 +1,50 @@
 /**
  * User decision 82 B on each host: a screen or component that only changed
  * components affect offers its comparison while it stays out of Changes and
- * shows Unmodified, an Affected screens link opens that comparison, and an
- * ordinary unmodified entry still offers none. In the copied comparison
- * output, Consumer screen and Toolbar use Card, whose shared stylesheet
- * changes; Stable screen and Plain use no changed component.
+ * shows Unmodified, an Affected screens link opens that comparison on the
+ * Changes tab, and an ordinary unmodified entry still offers none. In the
+ * copied comparison output, Consumer screen and Toolbar use Card, whose
+ * shared stylesheet changes; Stable screen and Plain use no changed
+ * component. The compare modes and the comparison details stand in the right
+ * panel's Changes tab, and the canvas compares while that tab is selected.
  */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { comparisonPaths } from "../helpers/comparison_catalogue.js";
 
 import type { test as baseTest } from "./browser_test.js";
 import {
-  awaitRoutedDetail,
   chooseFilter,
+  comparisonFrames,
   modeButton,
   navRow,
 } from "./comparison_ui.js";
+import { openPanelTab } from "./panel_actions.js";
 import { awaitSelectedComparison } from "./serve_comparison_ui.js";
 
 /** Where the catalogue comes from: Serve, or a static build. */
 export type ComparisonHost = "serve" | "static";
 
-const SCREEN_HEADING = "Components this screen uses changed";
-const VARIANT_HEADING = "Components this variant uses changed";
+/** The outcome line of each of Consumer screen's frames, in the canvas's order. */
+const SCREEN_LINES = [
+  "Desktop · Light · Components this screen uses changed",
+  "Mobile · Light · Components this screen uses changed",
+  "Desktop · Dark · Components this screen uses changed",
+  "Mobile · Dark · Components this screen uses changed",
+];
+
+/** The outcome lines of Consumer screen's Mobile frames, which a link to its Mobile view shows. */
+const MOBILE_SCREEN_LINES = [
+  "Mobile · Light · Components this screen uses changed",
+  "Mobile · Dark · Components this screen uses changed",
+];
+
+/** The outcome line of each frame of Toolbar's one row. */
+const VARIANT_LINES = [
+  "Toolbar · Light · Components this variant uses changed",
+  "Toolbar · Dark · Components this variant uses changed",
+];
 
 /** Run an action that starts a comparison; Serve captures it on demand. */
 async function comparing(
@@ -36,33 +56,77 @@ async function comparing(
   else await action();
 }
 
-/** The shown status, and whether the comparison band offers its modes. */
-async function expectBand(
-  page: Page,
-  path: string,
-  offered: boolean,
-): Promise<void> {
-  await awaitRoutedDetail(page, path);
+/**
+ * Wait until the shell shows `path` and has applied its entry detail: the
+ * Path row of Inspect names the routed entry in the render that starts the
+ * detail load, and the stage and the Usage fold show that load until it
+ * settles. The detail can still make an affected-only entry eligible, so a
+ * check that an entry offers no comparison waits for this first.
+ */
+async function awaitRoutedEntry(page: Page, path: string): Promise<void> {
+  await expect(page.locator("[data-inspect-path] code")).toHaveText(path);
+  await expect(
+    page.locator('[data-mokly-stage][aria-busy="true"]'),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('[data-inspect-section="usage"] p[role="status"]'),
+  ).toHaveCount(0);
+}
+
+/** The right panel's Changes tab. */
+function changesTab(page: Page): Locator {
+  return page.getByRole("tab", { name: "Changes", exact: true });
+}
+
+/** The tiles of the compare modes. */
+function compareModes(page: Page): Locator {
+  return page.getByRole("group", { name: "Comparison mode" });
+}
+
+/** An Unmodified entry whose Changes tab offers the compare modes. */
+async function expectModesOffered(page: Page, path: string): Promise<void> {
+  await awaitRoutedEntry(page, path);
   await expect(page.locator("[data-workspace-status]")).toHaveText(
     "Unmodified",
   );
-  if (offered) await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
-  else await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+  await openPanelTab(page, "Changes");
+  await expect(compareModes(page)).toBeVisible();
 }
 
-/** Side by side of every shown view: each heading, and both versions. */
+/**
+ * An Unmodified entry without a comparison: it has no Comparison mode group,
+ * also in its Changes tab when it has one. A role locator skips the tab that
+ * is not selected, so the Changes tab opens first.
+ */
+async function expectNoModes(page: Page, path: string): Promise<void> {
+  await awaitRoutedEntry(page, path);
+  await expect(page.locator("[data-workspace-status]")).toHaveText(
+    "Unmodified",
+  );
+  // The routed detail has settled, so the panel's tabs are final.
+  if (await changesTab(page).count()) await openPanelTab(page, "Changes");
+  await expect(compareModes(page)).toHaveCount(0);
+}
+
+/**
+ * Side by side: the outcome line of every compared frame in the Changes tab's
+ * details, and the two versions of the one frame that it compares.
+ */
 async function expectSideBySide(
   page: Page,
-  headings: readonly string[],
+  lines: readonly string[],
 ): Promise<void> {
   await expect(modeButton(page, "Side by side")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  await expect(page.locator("[data-diff-viewport] > h3")).toHaveText(headings);
   await expect(
-    page.locator("[data-diff-stage] iframe[data-mokly-comparison-frame]"),
-  ).toHaveCount(headings.length * 2);
+    page
+      .getByRole("tabpanel", { name: "Changes" })
+      .getByRole("list", { name: "Compared frames" })
+      .getByRole("listitem"),
+  ).toHaveText(lines);
+  await expect(comparisonFrames(page)).toHaveCount(2);
 }
 
 /** Register the affected-only comparison journeys for one host. */
@@ -74,19 +138,16 @@ export function registerAffectedComparisons(
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    for (const [path, heading] of [
-      [comparisonPaths.consumer, SCREEN_HEADING],
-      [comparisonPaths.consumingComponent, VARIANT_HEADING],
+    for (const [path, lines] of [
+      [comparisonPaths.consumer, SCREEN_LINES],
+      [comparisonPaths.consumingComponent, VARIANT_LINES],
     ] as const) {
       await page.goto(`/view/${path}/`);
-      await expectBand(page, path, true);
+      await expectModesOffered(page, path);
       await comparing(page, host, () =>
         modeButton(page, "Side by side").click(),
       );
-      await expectSideBySide(page, [
-        `Mobile · ${heading}`,
-        `Desktop · ${heading}`,
-      ]);
+      await expectSideBySide(page, lines);
       // The comparison keeps the entry Unmodified and out of Changes.
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
@@ -100,7 +161,7 @@ export function registerAffectedComparisons(
       comparisonPaths.plainComponent,
     ]) {
       await page.goto(`/view/${path}/`);
-      await expectBand(page, path, false);
+      await expectNoModes(page, path);
     }
   });
 
@@ -109,8 +170,11 @@ export function registerAffectedComparisons(
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`/view/${comparisonPaths.component}/`);
-    await page.getByRole("tab", { name: "Usage", exact: true }).click();
-    const link = page
+    // Usage is a fold of Inspect, which a full page load selects.
+    const usage = page.locator('[data-inspect-section="usage"]');
+    await usage.locator("summary").click();
+    await expect(usage).toHaveAttribute("open", "");
+    const link = usage
       .locator('[data-usage-section="affected"]')
       .getByRole("link", { name: "Consumer screen", exact: true });
     await expect(link).toHaveAttribute("href", /[?&]comparison=side(?:&|$)/u);
@@ -118,9 +182,19 @@ export function registerAffectedComparisons(
     await expect(page).toHaveURL(
       new RegExp(`/view/${comparisonPaths.consumer}/\\?`, "u"),
     );
-    await expectBand(page, comparisonPaths.consumer, true);
-    // The link names the consumer's first affected view: mobile, light.
-    await expectSideBySide(page, [`Mobile · ${SCREEN_HEADING}`]);
+    // The shell honours the link's comparison intent: before any click on a
+    // tab, Changes is selected, Side by side is shown, and the canvas
+    // compares the two versions of one frame.
+    await expect(changesTab(page)).toHaveAttribute("aria-selected", "true");
+    await expect(modeButton(page, "Side by side")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(comparisonFrames(page)).toHaveCount(2);
+    await expectModesOffered(page, comparisonPaths.consumer);
+    // The link names its usage's Mobile view, so the canvas shows the Mobile
+    // column, and each of its frames has its outcome line.
+    await expectSideBySide(page, MOBILE_SCREEN_LINES);
     await chooseFilter(page, "changed");
     await expect(navRow(page, comparisonPaths.consumer)).toBeHidden();
   });

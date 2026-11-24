@@ -1,0 +1,90 @@
+---
+/**
+ * The release timeline: a keyframe track like the timeline of a motion
+ * tool, with its legend, a ruler of months and weeks, a diamond keyframe
+ * for each release at its date and a playhead on the release in view. A
+ * patch is hollow, a breaking release amber and the release in view green.
+ * The timeline is a depiction, hidden from assistive technology with
+ * nothing that takes focus, because Version history holds the same links.
+ * Each keyframe's `data-release` and `data-version` let the changelog
+ * island move the playhead with the reader.
+ *
+ * Use: `<Timeline current={releases[0]?.version} releases={releases} />`.
+ */
+import type { PublishedRelease } from "../../changelog/releases.js";
+import Icon from "../Icon.astro";
+
+import { isBreaking, isPatch } from "./facts.js";
+import { at, timeline } from "./timeline.js";
+
+interface Props {
+  /** The version of the release in view. */
+  readonly current: string | undefined;
+  readonly releases: readonly PublishedRelease[];
+}
+
+const { current, releases } = Astro.props;
+const { keyframes, lanes, ticks } = timeline(releases);
+const first = keyframes[0]?.x ?? 0;
+const last = keyframes.at(-1)?.x ?? 0;
+const playhead = keyframes.find((key) => key.release.version === current);
+---
+
+<div aria-hidden="true" class="site-changelog-timeline">
+  <div class="site-changelog-timeline-head">
+    <span class="site-changelog-timeline-title">
+      <Icon name="history" size={14} />
+      Timeline
+    </span>
+    <span class="site-changelog-timeline-legend">
+      <span class="site-changelog-key"></span>
+      Release
+      <span class="site-changelog-key site-changelog-key--patch"></span>
+      Patch
+      <span class="site-changelog-key site-changelog-key--breaking"></span>
+      Breaking
+    </span>
+  </div>
+  <div class="site-changelog-timeline-area">
+    <div class="site-changelog-ruler">
+      {ticks.map((tick) => (
+        <span
+          class:list={[
+            "site-changelog-tick",
+            tick.label !== undefined && "site-changelog-tick--month",
+          ]}
+          style={`left: ${at(tick.x)}`}
+        >
+          {tick.label !== undefined && <b>{tick.label}</b>}
+        </span>
+      ))}
+    </div>
+    <div
+      class="site-changelog-keys"
+      style={`--lanes-narrow: ${lanes.narrow}; --lanes-wide: ${lanes.wide}`}
+    >
+      <span
+        class="site-changelog-bar"
+        style={`left: ${at(first)}; width: ${at(last - first)}`}
+      ></span>
+      {keyframes.map((key) => (
+        <span
+          class:list={[
+            "site-changelog-key",
+            isPatch(key.release) && "site-changelog-key--patch",
+            isBreaking(key.release) && "site-changelog-key--breaking",
+            key === playhead && "site-changelog-key--current",
+          ]}
+          data-release={key.release.anchor}
+          data-version={key.release.version}
+          style={`left: ${at(key.x)}; --lane-narrow: ${key.lanes.narrow}; --lane-wide: ${key.lanes.wide}`}
+        />
+      ))}
+    </div>
+    {playhead !== undefined && (
+      <span class="site-changelog-playhead" style={`left: ${at(playhead.x)}`}>
+        <b>v{playhead.release.version}</b>
+      </span>
+    )}
+  </div>
+</div>

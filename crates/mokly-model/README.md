@@ -111,8 +111,10 @@ index, and pending details from a validated model and the graph's input keys.
 `projection_usage` derives complete workspace consumers from ready usage. It
 omits workspace lists while their inputs are pending or unavailable.
 `namespace` owns the fixed deployed directory names and their generated
-TypeScript constants. `shell::html` supplies the same data-free shell stub to
-Serve and the static writer.
+TypeScript constants, and `FONT_FACES`, the paths of the viewer's two faces,
+which the Markdown renderer, the closure, the viewer assets, and the comparison
+generation copies all read. `shell::html` supplies the same data-free shell
+stub to Serve and the static writer.
 
 `review` and `review_affected` define direct reasons, view states, and complete
 usage chains. A comparison keeps the review result in memory and publishes its

@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import {
   computedStyle,
+  detailsRow,
   openScreensGroup,
   welcomeRow,
 } from "./browse_assertions.js";
@@ -22,7 +23,8 @@ test("desktop catalogue navigation resizes and remembers its width", async ({
   const grip = await handle.boundingBox();
   expect(start).not.toBeNull();
   expect(grip).not.toBeNull();
-  expect(start?.width).toBeCloseTo(248, 0);
+  // The floating catalogue starts 252px wide from the 1180px panel step up.
+  expect(start?.width).toBeCloseTo(252, 0);
   if (!start || !grip) throw new Error("navigation resize bounds unavailable");
   await page.mouse.move(grip.x + grip.width / 2, grip.y + 100);
   await page.mouse.down();
@@ -30,12 +32,12 @@ test("desktop catalogue navigation resizes and remembers its width", async ({
   await page.mouse.up();
   await expect
     .poll(async () => (await nav.boundingBox())?.width)
-    .toBeCloseTo(328, 0);
+    .toBeCloseTo(332, 0);
 
   await page.reload();
   await expect
     .poll(async () => (await nav.boundingBox())?.width)
-    .toBeCloseTo(328, 0);
+    .toBeCloseTo(332, 0);
 
   await handle.focus();
   await page.keyboard.press("Home");
@@ -53,16 +55,46 @@ test("desktop catalogue navigation resizes and remembers its width", async ({
   await expect(handle).toHaveAttribute("aria-valuenow", "480");
 });
 
-test("narrow viewports collapse navigation into a drawer", async ({ page }) => {
+test("the catalogue filter spans the column in two equal segments", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1_280 });
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Catalogue" });
+  const filter = nav.getByRole("group", { name: "Catalogue filter" });
+  const column = await nav.boundingBox();
+  const group = await filter.boundingBox();
+  const all = await filter
+    .getByRole("button", { name: "All", exact: true })
+    .boundingBox();
+  const changes = await filter
+    .getByRole("button", { name: /^Changes/ })
+    .boundingBox();
+  if (!column || !group || !all || !changes)
+    throw new Error("the catalogue filter must be laid out");
+  // The same inset on both sides, apart from the column's 1px end border.
+  const start = group.x - column.x;
+  const end = column.x + column.width - (group.x + group.width);
+  expect(Math.abs(start - end)).toBeLessThanOrEqual(1);
+  expect(group.width).toBeGreaterThan(column.width * 0.85);
+  expect(Math.abs(all.width - changes.width)).toBeLessThanOrEqual(1);
+});
+
+test("narrow viewports open the catalogue as a sheet from the dock", async ({
+  page,
+}) => {
   await page.setViewportSize({ height: 900, width: 420 });
   await page.goto("/");
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
   await expect(page.locator("[data-mokly-nav-resize]")).toBeHidden();
-  await page.click("[data-mokly-menu]");
+  await page
+    .getByRole("group", { name: "Canvas controls" })
+    .getByRole("button", { name: "Catalogue" })
+    .click();
   await expect(page.locator("[data-mokly-nav]")).toBeVisible();
-  await expect(page.locator("[data-mokly-menu]")).toHaveAttribute(
-    "aria-expanded",
-    "true",
+  await expect(page.locator(".mbk[data-drawer]")).toHaveAttribute(
+    "data-drawer",
+    "open",
   );
   expect(await computedStyle(page, ".mbk-topbar", "position")).toBe("relative");
   expect(await computedStyle(page, ".mbk-topbar", "zIndex")).toBe("11");
@@ -72,18 +104,20 @@ test("narrow viewports collapse navigation into a drawer", async ({ page }) => {
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
 });
 
-test("navigation stays a column at 900px and is a drawer below it", async ({
+test("the catalogue floats at 900px and is a sheet behind the dock below it", async ({
   page,
 }) => {
+  const dock = page.getByRole("group", { name: "Canvas controls" });
   await page.setViewportSize({ height: 900, width: 900 });
   await page.goto("/");
   await expect(page.locator("[data-mokly-nav]")).toBeVisible();
   await expect(page.locator("[data-mokly-nav-resize]")).toBeVisible();
-  await expect(page.locator("[data-mokly-menu]")).toBeHidden();
+  await expect(dock).toBeHidden();
   await page.setViewportSize({ height: 900, width: 899 });
   await expect(page.locator("[data-mokly-nav]")).toBeHidden();
   await expect(page.locator("[data-mokly-nav-resize]")).toBeHidden();
-  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
+  await expect(dock).toBeVisible();
+  await expect(page.locator("[data-mokly-menu]")).toHaveCount(0);
 });
 
 test("the narrow search bar drops the name and fits its controls", async ({
@@ -106,13 +140,35 @@ test("the narrow search bar drops the name and fits its controls", async ({
   );
   await expect(page.locator(".mbk-brand .mbk-name")).toBeHidden();
   await expect(page.getByRole("link", { name: "Mokly" })).toBeVisible();
-  await expect(page.locator("[data-mokly-menu]")).toBeVisible();
+  // The dock opens the catalogue, so the bar has no menu button.
+  await expect(page.locator("[data-mokly-menu]")).toHaveCount(0);
   await expect(page.locator("[data-mokly-search]")).toBeVisible();
 
   const modes = await page.locator(".mbk-search").boundingBox();
   if (!modes) throw new Error("the search must be laid out");
   expect(modes.x).toBeGreaterThanOrEqual(0);
   expect(modes.x + modes.width).toBeLessThanOrEqual(390);
+
+  // Down to a 320px window the search keeps its room before Appearance.
+  await page.setViewportSize({ height: 700, width: 320 });
+  const narrow = await page.locator(".mbk-topbar").evaluate((element) => {
+    const box = (selector: string) =>
+      element.querySelector(selector)!.getBoundingClientRect().toJSON() as {
+        left: number;
+        right: number;
+        width: number;
+      };
+    return {
+      client: element.clientWidth,
+      scroll: element.scrollWidth,
+      search: box(".mbk-search"),
+      appearance: box(".mbk-appearance"),
+    };
+  });
+  expect(narrow.scroll).toBeLessThanOrEqual(narrow.client);
+  expect(narrow.search.width).toBeGreaterThanOrEqual(150);
+  expect(narrow.search.right).toBeLessThanOrEqual(narrow.appearance.left);
+  expect(narrow.appearance.right).toBeLessThanOrEqual(320);
 
   await page.setViewportSize({ height: 800, width: 1_280 });
   await expect(page.locator(".mbk-brand .mbk-name")).toBeVisible();
@@ -156,4 +212,47 @@ test("the shell is keyboard navigable with a skip link", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect(page.locator("#mb-main")).toBeFocused();
+});
+
+test("keyboard focus draws the glow on the skip link and a catalogue row", async ({
+  page,
+}) => {
+  await page.goto("/");
+  // Each glow as the shell declares it, read from a probe inside the shell.
+  const glow = (property: string) =>
+    page.locator(".mbk-body").evaluate((body, name) => {
+      const probe = document.createElement("span");
+      probe.className = "mbk-reset";
+      probe.style.boxShadow = `var(${name})`;
+      body.append(probe);
+      const shadow = getComputedStyle(probe).boxShadow;
+      probe.remove();
+      return shadow;
+    }, property);
+  const outset = await glow("--mbk-focus-glow");
+  const inset = await glow("--mbk-focus-glow-inset");
+  expect(inset).toBe(`${outset} inset`);
+
+  await page.keyboard.press("Tab");
+  const skip = page.locator(".mbk-skip-link");
+  await expect(skip).toBeFocused();
+  await expect(skip).toHaveCSS("box-shadow", outset);
+  await expect(skip).toHaveCSS("outline-style", "none");
+
+  // A row of the scrolling tree draws the inset glow on its pill.
+  await openScreensGroup(page);
+  await page.locator(detailsRow).focus();
+  await page.keyboard.press("Tab");
+  const row = page.locator(welcomeRow);
+  await expect(row).toBeFocused();
+  await expect(row).toHaveCSS("box-shadow", "none");
+  await expect(row).toHaveCSS("outline-style", "none");
+  expect(
+    await row.evaluate((link) => getComputedStyle(link, "::before").boxShadow),
+  ).toBe(inset);
+
+  // Forced colours drop every shadow, so focus takes the system outline.
+  await page.emulateMedia({ forcedColors: "active" });
+  await expect(row).toHaveCSS("outline-style", "solid");
+  await expect(row).toHaveCSS("outline-width", "2px");
 });

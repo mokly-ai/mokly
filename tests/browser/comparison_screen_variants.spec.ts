@@ -17,6 +17,8 @@ import {
   chooseFilter,
   navRow,
 } from "./comparison_ui.js";
+import { inspectHead } from "./inspect_head.js";
+import { previousVersionLabel } from "./previous_version.js";
 
 const LIST = `[data-nav-disclosure="variants:${comparisonPaths.screenParent}"]`;
 
@@ -45,8 +47,12 @@ test("Changes opens the first changed variant of an unmodified screen parent", a
 
   await parent.click();
 
+  // The landing's address names the first changed view's Mobile viewport.
   await expect(page).toHaveURL(
-    new RegExp(`/view/${comparisonPaths.screenVariant}/$`, "u"),
+    new RegExp(
+      `/view/${comparisonPaths.screenVariant}/\\?viewport=mobile$`,
+      "u",
+    ),
   );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Save failed");
   await expect(navRow(page, comparisonPaths.screenVariant)).toHaveAttribute(
@@ -81,10 +87,8 @@ test("the changed mark draws one trailing dot on screen variants", async ({
     "aria-current",
     "page",
   );
-  expect(await changedDot(page, comparisonPaths.screenVariant)).toEqual({
-    ...dot,
-    color: "rgb(255, 255, 255)",
-  });
+  // The current row keeps the accent dot on its soft accent fill.
+  expect(await changedDot(page, comparisonPaths.screenVariant)).toEqual(dot);
 
   await chooseFilter(page, "all");
   await expect(navRow(page, comparisonPaths.screenSibling)).toBeVisible();
@@ -123,16 +127,18 @@ test("a removed screen variant keeps a Removed row under its surviving parent", 
     "Workspace deleted",
   );
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
-  await expect(page.locator(".mbk-previous")).toHaveText(
+  await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
   await expect(
     page.frameLocator("[data-mokly-preview] iframe").first().locator("h1"),
   ).toHaveText("Workspace deleted");
+  // Inspect's head names the surviving parent in its Variant of row.
   await expect(
-    page
-      .getByLabel("Catalogue location")
-      .getByRole("link", { name: "Workspace screen", exact: true }),
+    inspectHead(page).getByRole("link", {
+      name: "Workspace screen",
+      exact: true,
+    }),
   ).toHaveAttribute("href", `/view/${comparisonPaths.screenParent}/`);
 
   await chooseFilter(page, "all");

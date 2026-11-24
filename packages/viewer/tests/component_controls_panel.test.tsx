@@ -22,7 +22,6 @@ import {
   controlDraft,
   type ControlTarget,
 } from "../src/shell/control_values.js";
-import type { WorkspaceData } from "../src/shell/workspace_data.js";
 
 const target: ControlTarget = {
   path: "components/action/default",
@@ -40,10 +39,8 @@ const target: ControlTarget = {
   removed: false,
 };
 const saved = initialComponentEditorState(target, "s", controlDraft(target));
-const data = { components: [] } as unknown as WorkspaceData;
 const actions = {
   onChange: () => undefined,
-  onCurrent: () => undefined,
   onReset: () => undefined,
   onRetry: () => undefined,
   onStart: () => undefined,
@@ -57,7 +54,6 @@ function panel(
 ) {
   return ComponentControlsPanel({
     ...actions,
-    data,
     ...(focus ? { focus } : {}),
     mode,
     state: { ...saved, ...state },
@@ -201,16 +197,15 @@ test("fields wait while editing starts, and a failed start offers Try again", ()
 test("recovery actions can focus the heading, the fields, and the start status", () => {
   assert.deepEqual(focusNames("editable"), ["fields", "heading"]);
   assert.deepEqual(focusNames("preparing"), ["fields", "heading", "notice"]);
-  assert.deepEqual(focusNames("comparison"), ["heading"]);
+  assert.deepEqual(focusNames("published"), ["heading"]);
   assert.match(
-    html("comparison"),
+    html("published"),
     /<h3 class="mbk-reset" tabindex="-1">Saved props<\/h3>/,
   );
 });
 
 test("saved props without fields name the reason and every control's value", () => {
   for (const [mode, notice] of [
-    ["comparison", CONTROLS_COPY.comparison],
     ["published", CONTROLS_COPY.published],
     ["removed", CONTROLS_COPY.removed],
   ] as const) {
@@ -227,12 +222,8 @@ test("saved props without fields name the reason and every control's value", () 
       /<dl aria-label="Supplied props" class="mbk-props mbk-reset"><div class="mbk-reset"><dt class="mbk-reset">hint<\/dt><dd class="mbk-reset"><code class="mbk-reset">Not set<\/code><\/dd><\/div><div class="mbk-reset"><dt class="mbk-reset">label<\/dt><dd class="mbk-reset"><code class="mbk-reset">&quot;Continue&quot;<\/code><\/dd><\/div><\/dl>/,
     );
     assert.doesNotMatch(markup, /<input|<table|Reset to|Edited props/);
-    assert.deepEqual(
-      buttons(node),
-      mode === "comparison" ? ["Switch to Current"] : [],
-    );
+    assert.deepEqual(buttons(node), []);
   }
-  assert.equal(passed(panel("comparison")).onCurrent, actions.onCurrent);
 });
 
 test("an entry without controls shows read-only props and slots; without props, one line", () => {

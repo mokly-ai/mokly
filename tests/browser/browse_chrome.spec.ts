@@ -1,9 +1,10 @@
 import { expect } from "@playwright/test";
 
-import { detailsRow, shellRoot } from "./browse_assertions.js";
 import { test } from "./browser_test.js";
 
-test("path chips copy their path without navigating", async ({ page }) => {
+test("the canvas section's path chip copies its path without navigating", async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -17,8 +18,9 @@ test("path chips copy their path without navigating", async ({ page }) => {
   });
   await page.goto("/view/example/screens/welcome/");
   const url = page.url();
-  const pathChip = page.locator("[data-copy-path]");
-
+  // The section on the canvas names the entry; Inspect's Path row is its
+  // breadcrumbs, not a copy control.
+  const pathChip = page.locator("[data-mokly-stage] [data-copy-path]");
   await expect(pathChip).toHaveText("example/screens/welcome");
   await pathChip.hover();
   expect(
@@ -44,83 +46,4 @@ test("path chips copy their path without navigating", async ({ page }) => {
   await expect(page.locator("#mb-status")).toHaveText(
     "Copied path example/screens/welcome",
   );
-});
-
-test("the address pill copies its address from its copy icon", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "clipboard", {
-      configurable: true,
-      value: {
-        writeText(text: string) {
-          (window as Window & { __copiedUrl?: string }).__copiedUrl = text;
-          return Promise.resolve();
-        },
-      },
-    });
-  });
-  await page.goto("/view/example/screens/welcome/");
-  const icon = page.locator(".browser-bar .address-copy svg");
-  await expect(icon).toBeVisible();
-  const box = await icon.boundingBox();
-  expect(box?.width).toBe(13);
-  expect(box?.height).toBe(13);
-
-  await icon.click();
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () => (window as Window & { __copiedUrl?: string }).__copiedUrl,
-      ),
-    )
-    .toBe("example.test/welcome");
-  await expect(page.locator(".address-copied")).toHaveText("URL copied");
-});
-
-test("the expand toggle swaps its icon while the frame is expanded", async ({
-  page,
-}) => {
-  await page.goto("/view/example/screens/welcome/");
-  const expandIcon = page.locator(".browser-expand .i-expand svg");
-  const collapseIcon = page.locator(".browser-expand .i-collapse svg");
-  await expect(expandIcon).toBeVisible();
-  await expect(collapseIcon).toBeHidden();
-  const box = await expandIcon.boundingBox();
-  expect(box?.width).toBe(13);
-  expect(box?.height).toBe(13);
-
-  await page.click(".browser-expand");
-  await expect(expandIcon).toBeHidden();
-  await expect(collapseIcon).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(expandIcon).toBeVisible();
-  await expect(collapseIcon).toBeHidden();
-});
-
-/** The class that marks the shell root while a browser window is expanded. */
-const expandedMark = /(?:^|\s)frame-expanded(?:\s|$)/u;
-
-test("the browser frame expands to an overlay and collapses again", async ({
-  page,
-}) => {
-  await page.goto("/view/example/screens/welcome/");
-  await page.click(".browser-expand");
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  // The shell marks its own root, which draws the scrim, and not the page.
-  await expect(page.locator(shellRoot)).toHaveClass(expandedMark);
-  await expect(page.locator("body")).not.toHaveClass(expandedMark);
-  await expect(page.locator(".browser-expand")).toHaveAttribute(
-    "aria-expanded",
-    "true",
-  );
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
-  await page.click(".browser-expand");
-  await expect(page.locator(".browser-frame.is-expanded")).toBeVisible();
-  await page.mouse.click(8, 300);
-  await expect(page.locator(".browser-frame.is-expanded")).toHaveCount(0);
-  await expect(page.locator(shellRoot)).not.toHaveClass(expandedMark);
-  await page.click(detailsRow);
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
 });

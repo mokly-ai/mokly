@@ -1,0 +1,63 @@
+/* The Canvas viewer's use case: one section of step frames in a row, each
+   with its step number, its title and a link to its screen. Each Canvas part
+   keeps its own sheet; this sheet holds only the layout and the states of
+   these artboards. */
+
+/* The section leaves room above its row for each step frame's label and the
+   step's description below it. */
+.cv-section[data-cv-kind="use-case"] {
+  padding-top: 92px;
+}
+
+/* The steps stand in one row, in step order. A step holds a frame for each
+   viewport and scheme, and the Frames filter, which chooses one viewport and
+   one scheme, leaves one of them showing. */
+.cv-frames[data-cv-kind="use-case"] {
+  align-items: flex-start;
+  display: flex;
+  gap: 44px;
+}
+
+.cv-step {
+  flex: none;
+}
+
+/* The frame picker shows the glyph of the chosen viewport: Mobile, as on a
+   phone, unless the Frames filter chooses Desktop. */
+.cv-entry-bar[data-cv-kind="use-case"] [data-glyph="desktop"],
+.cv:has([data-cv-frames="desktop"]:checked)
+  .cv-entry-bar[data-cv-kind="use-case"]
+  [data-glyph="mobile"] {
+  display: none;
+}
+
+.cv:has([data-cv-frames="desktop"]:checked)
+  .cv-entry-bar[data-cv-kind="use-case"]
+  [data-glyph="desktop"] {
+  display: inline-flex;
+}
+
+/* The compact layout shows the step that the frame picker picks, alone,
+   below the entry bar, with room for its label and its description. */
+@container cv (width < 56.25rem) {
+  .cv-view[data-cv-kind="use-case"] {
+    padding-top: 112px;
+  }
+
+  .cv-section[data-cv-kind="use-case"] {
+    padding-top: 0;
+  }
+
+  .cv-frames[data-cv-kind="use-case"] {
+    display: block;
+  }
+
+  .cv-step {
+    display: none;
+  }
+
+  .cv-work:has(option[value="step-1"]:checked) .cv-step[data-cv-step="1"],
+  .cv-work:has(option[value="step-2"]:checked) .cv-step[data-cv-step="2"] {
+    display: block;
+  }
+}

@@ -27,7 +27,13 @@ pub(crate) fn markdown(
         .documents
         .get(&entry.metadata.path)
         .map_or("", String::as_str);
-    let tree = match markdown::render(body, &entry.metadata.title, plan.color_scheme, resolver) {
+    let tree = match markdown::render(
+        body,
+        &entry.metadata.title,
+        plan.color_scheme,
+        &plan.route,
+        resolver,
+    ) {
         Ok(tree) => tree,
         Err(source) => return Err(GraphError::Html { source }),
     };
@@ -129,7 +135,7 @@ fn validate(
         return Err(GraphError::Html { source });
     }
     if matches!(entry.content, EntryContent::Document { .. })
-        && let Err(source) = safety::validate(&document.tree)
+        && let Err(source) = safety::validate(&document.tree, &plan.route)
     {
         return Err(GraphError::Html {
             source: source.at(entry.metadata.source.clone()),

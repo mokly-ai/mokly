@@ -9,6 +9,8 @@
 import { expect, type Page, type Route } from "@playwright/test";
 
 import { test } from "./browser_test.js";
+import { useCaseStepFrame, useCaseSteps } from "./use_case_steps.js";
+import { DOCUMENT_FRAME, openInspectFold } from "./workspace_actions.js";
 
 /** Hold the first read of one entry detail; later reads continue. */
 async function holdDetail(page: Page, entryPath: string) {
@@ -26,20 +28,12 @@ async function holdDetail(page: Page, entryPath: string) {
   };
 }
 
-/** Open an inspector panel; a click on the selected icon would close it. */
-async function openPanel(page: Page, name: string) {
-  const tab = page.getByRole("tab", { name, exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  await expect(tab).toHaveAttribute("aria-selected", "true");
-  return page.getByRole("tabpanel", { name, exact: true });
-}
-
 test("Usage shows Loading usage until the detail arrives, then the complete list, never the empty state", async ({
   page,
 }) => {
   await page.goto("/view/example/components/toolbar/");
   await expect(page.locator("#mb-main h2").first()).toHaveText("Toolbar");
-  await openPanel(page, "Usage");
+  await openInspectFold(page, "usage");
   // Record whether the zero-consumer state ever renders.
   await page.evaluate(() => {
     const record = document.documentElement;
@@ -60,7 +54,7 @@ test("Usage shows Loading usage until the detail arrives, then the complete list
     .click();
   await expect.poll(() => detail.held.length).toBe(1);
   await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
-  const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
+  const usage = await openInspectFold(page, "usage");
   await expect(usage).toHaveText("Loading usage…");
   await expect(page.locator("[data-mokly-stage] [role=status]")).toHaveText(
     "Loading preview…",
@@ -86,7 +80,7 @@ test("a variant Usage waits for its parent detail and reuses it for a sibling", 
   const detail = await holdDetail(page, "example/components/action");
   await page.goto("/view/example/components/action/default/");
   await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
-  const usage = await openPanel(page, "Usage");
+  const usage = await openInspectFold(page, "usage");
   await expect.poll(() => detail.held.length).toBe(1);
   await expect(usage).toHaveText("Loading usage…");
   await expect(page.locator("[data-mokly-stage] [role=status]")).toHaveText(
@@ -101,18 +95,20 @@ test("a variant Usage waits for its parent detail and reuses it for a sibling", 
     ).toBeVisible();
   expect(detail.reads()).toBe(1);
 
+  // The variant set read the sibling's detail with this route, so the
+  // sibling's route reads neither its own detail nor the parent's again.
   const sibling = await holdDetail(page, "example/components/action/disabled");
   await page
-    .getByRole("navigation", { name: "Saved variants" })
-    .getByRole("link", { name: "Disabled", exact: true })
+    .locator(
+      'nav.mbk-nav a[data-nav-row][data-route="example/components/action/disabled/index.html"]',
+    )
     .click();
-  await expect.poll(() => sibling.held.length).toBe(1);
-  await sibling.release();
   await expect(page).toHaveURL(
     /\/view\/example\/components\/action\/disabled\/$/u,
   );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Action");
   await expect(usage.getByRole("heading", { name: "Used by" })).toBeVisible();
+  expect(sibling.reads()).toBe(0);
   expect(detail.reads()).toBe(1);
 });
 
@@ -120,7 +116,7 @@ test("an instance deep link selects its instance once the destination detail arr
   page,
 }) => {
   await page.goto("/view/example/components/action/");
-  const usage = await openPanel(page, "Usage");
+  const usage = await openInspectFold(page, "usage");
   const link = usage.getByRole("link", { name: "Welcome", exact: true });
   const href = await link.getAttribute("href");
   const instance = new URL(href!, "http://mokly.invalid").searchParams.get(
@@ -131,18 +127,16 @@ test("an instance deep link selects its instance once the destination detail arr
   await link.click();
   await expect.poll(() => detail.held.length).toBe(1);
   await expect(page).toHaveURL(new RegExp(`[?&]instance=${instance}(?:&|$)`));
-  await expect(await openPanel(page, "Components")).toHaveText(
+  await expect(await openInspectFold(page, "components")).toHaveText(
     "Waiting for the component preview.",
   );
 
+  // The route's instance selects once its frame's usage is ready, and
+  // Inspect's Selection names its props.
   await detail.release();
   await expect(
-    page.getByRole("tab", { name: "Props", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
-  await expect(
-    page.getByRole("tabpanel", { name: "Props", exact: true }),
+    page.locator('[data-inspect-section="selection"]'),
   ).toContainText("View details");
-  await openPanel(page, "Components");
   await expect(
     page.locator(`[data-instance-key="${instance}"]`),
   ).toHaveAttribute("aria-pressed", "true");
@@ -168,20 +162,21 @@ test("use-case and page frames load and navigate while usage and resource eviden
   );
   await page.goto("/view/example/tour/");
   await expect(page.locator("#mb-main h2").first()).toHaveText("Example tour");
-  const steps = page.locator(".mbk-flow-screen iframe");
-  await expect(steps).toHaveCount(2);
-  for (const step of await steps.all())
-    await expect(step).toHaveAttribute("data-mokly-frame-state", "ready");
-  await page
-    .frameLocator(".mbk-flow-screen iframe")
-    .first()
+  await expect(useCaseSteps(page)).toHaveCount(2);
+  for (const step of [1, 2])
+    await expect(useCaseStepFrame(page, step)).toHaveAttribute(
+      "data-mokly-frame-state",
+      "ready",
+    );
+  await useCaseStepFrame(page, 1)
+    .contentFrame()
     .getByRole("link", { name: "View details", exact: true })
     .click();
   await expect(page).toHaveURL(
     /\/view\/example\/screens\/details\/\?fragment=details$/u,
   );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Details");
-  await expect(await openPanel(page, "Components")).toContainText(
+  await expect(await openInspectFold(page, "components")).toContainText(
     "Component inspection is unavailable for this view.",
   );
 
@@ -193,10 +188,10 @@ test("use-case and page frames load and navigate while usage and resource eviden
   await expect(page.locator("#mb-main h2").first()).toHaveText(
     "Getting started",
   );
-  const document = page.locator(".mbk-stage-embed iframe");
+  const document = page.locator(DOCUMENT_FRAME);
   await expect(document).toHaveAttribute("data-mokly-frame-state", "ready");
   await page
-    .frameLocator(".mbk-stage-embed iframe")
+    .frameLocator(DOCUMENT_FRAME)
     .getByRole("link", { name: "Open Welcome" })
     .click();
   await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/u);

@@ -11,10 +11,14 @@ export const SCREEN_STYLE_COPY = {
   excluded:
     "This stylesheet changed, but none of the changed styles apply to this screen.",
   noChanges: "No changes to this screen.",
+  /**
+   * The outcome label of a changed view that only its stylesheets prove, as
+   * each compared frame of `design/canvas/evidence/styles` reads it.
+   */
   stylesChanged: "Styles this screen uses changed",
   /**
-   * The comparison pane heading of an unchanged view that changed components
-   * affect, as Screen affected by a changed component draws it.
+   * The outcome label of an unchanged view that changed components affect,
+   * as each compared frame of `design/canvas/components/affected` reads it.
    */
   componentsChanged: "Components this screen uses changed",
   /** Details of a screen that only changed components affect end with it. */
@@ -47,15 +51,3 @@ export const PAGE_STYLE_COPY = {
   unresolved:
     "This change can apply anywhere on the page, so the page stays in Changes:",
 } as const;
-
-/** One outcome under a stylesheet: its lead sentence and the styles it names. */
-export interface StylesheetOutcome {
-  lead: string;
-  selectors: readonly string[];
-}
-
-/** A changed file named once, with the evidence that file retained. */
-export interface StylesheetEvidence {
-  path: string;
-  outcomes: readonly StylesheetOutcome[];
-}

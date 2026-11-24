@@ -11,7 +11,7 @@ export default defineScreen({
     "docs/protocol/cloud/product-mockups.md",
     "docs/protocol/cloud/viewer.md",
   ],
-  tags: ["product", "folio", "viewer", "unreadable"],
+  tags: ["product", "canvas", "viewer", "unreadable"],
   render: (_props, { viewport }) => (
     <ViewerStandaloneUnreadableScreen viewport={viewport} />
   ),

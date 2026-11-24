@@ -1,6 +1,6 @@
 import type { CatalogueUsage } from "@mokly/model";
 
-/** Finite CSS pixels in the immediate frame's visible content viewport. */
+/** Finite CSS pixels in the coordinate system of the measurement. */
 
 export interface Box {
   x: number;
@@ -12,6 +12,17 @@ export interface InstanceBoundary {
   key: string;
   ranges: readonly { id: string; boxes: readonly Box[] }[];
 }
+export interface BoxSides {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+export interface InstanceBoxModel {
+  box: Box;
+  border: BoxSides;
+  padding: BoxSides;
+}
 export interface FrameMount {
   /** Cancel a pending mount or its active session. */
   signal?: AbortSignal;
@@ -19,6 +30,8 @@ export interface FrameMount {
   onEvent?: (event: FrameEvent) => void;
   url: URL;
   usage: CatalogueUsage;
+  /** Forward the document's canvas input as canvas events while a listener is subscribed. */
+  canvasInput?: boolean;
 }
 export type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
@@ -44,6 +57,20 @@ export type FrameEvent =
   | { type: "navigation"; navigation: FrameNavigation }
   | { type: "pick-end"; reason: "escape" }
   | { type: "geometry" }
+  | {
+      type: "canvas-wheel";
+      deltaY: number;
+      deltaMode: 0 | 1 | 2;
+      x: number;
+      y: number;
+    }
+  | { type: "canvas-pinch"; scale: number; x: number; y: number }
+  | {
+      type: "canvas-key";
+      key: "zoom-in" | "zoom-out" | "zoom-100" | "fit" | "escape" | "search";
+    }
+  | { type: "canvas-focus"; visible: boolean }
+  | { type: "canvas-blur" }
   | { type: "error"; code: FrameErrorCode };
 export interface MountedFrame {
   /** Refresh validated usage for the same document without replacing its session. */
@@ -54,6 +81,10 @@ export interface MountedFrame {
     mode: "off" | "highlight" | "pick",
   ): Promise<void>;
   scrollTo(key: string): Promise<void>;
+  /** Measure the unclipped border box and sides of a single element root. */
+  boxModel?(key: string): Promise<InstanceBoxModel | null>;
+  /** Measure the document's content in CSS pixels from its origin. */
+  contentBox?(): Promise<Box | null>;
   /**
    * Add a listener until the returned cleanup runs. Passing the mount's own
    * `onEvent` adopts that receiver, matched by function identity, instead of

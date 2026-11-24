@@ -1,0 +1,57 @@
+/* The right panel's tab strip: text tabs that stand on the panel head's
+   hairline. The selected tab is ink at 600 over a 2px signal rule, and each
+   label reserves the width of its bold form. */
+.cv-ptabs {
+  align-self: stretch;
+  display: flex;
+  min-width: 0;
+}
+
+.cv-ptab {
+  align-items: center;
+  color: var(--cv-text-muted);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  padding: 0 10px;
+  position: relative;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.cv-ptab:hover {
+  color: var(--cv-text);
+}
+
+.cv-ptab[data-selected] {
+  color: var(--cv-text);
+  font-weight: 600;
+}
+
+/* The rule lies on the head's hairline, under the selected tab's label. */
+.cv-ptab[data-selected]::after {
+  background: var(--cv-signal);
+  border-radius: 2px 2px 0 0;
+  bottom: -1px;
+  content: "";
+  height: 2px;
+  left: 10px;
+  position: absolute;
+  right: 10px;
+}
+
+/* The label keeps the width of its bold form, so no tab shifts. */
+.cv-ptab-label {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.cv-ptab-label::after {
+  content: attr(data-text);
+  font-weight: 600;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}

@@ -8,7 +8,13 @@ import {
   compactRanges,
   type ProbeMetadata,
 } from "../probe/metadata.js";
-import { BYTE_LIMIT, EVENTS, type ProbeEventType } from "../probe/values.js";
+import {
+  BYTE_LIMIT,
+  CANVAS_EVENTS,
+  DEFAULT_EVENTS,
+  EVENTS,
+  type ProbeEventType,
+} from "../probe/values.js";
 
 import { FrameError } from "./frame_error.js";
 
@@ -35,9 +41,15 @@ export function frameUsage(usage: CatalogueUsage): ProbeMetadata {
 export function knownKey(usage: ProbeMetadata, key: string): boolean {
   return !usage.error && metadataKeys(usage).includes(key);
 }
-/** Navigation is independent of inspection evidence and its bounded identities. */
-export function frameEvents(usage: ProbeMetadata): readonly ProbeEventType[] {
-  return usage.error ? ["navigation"] : EVENTS;
+const NAVIGATION_AND_CANVAS = ["navigation", ...CANVAS_EVENTS] as const;
+
+/** Navigation and canvas input are independent of inspection evidence. */
+export function frameEvents(
+  usage: ProbeMetadata,
+  canvasInput?: boolean,
+): readonly ProbeEventType[] {
+  if (canvasInput === true) return usage.error ? NAVIGATION_AND_CANVAS : EVENTS;
+  return usage.error ? ["navigation"] : DEFAULT_EVENTS;
 }
 export function validateBoundaryUsage(
   boundaries: readonly InstanceBoundary[],

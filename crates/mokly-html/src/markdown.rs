@@ -8,7 +8,7 @@ use pulldown_cmark::{CowStr, Event, Options, Parser, Tag, TagEnd, html};
 
 use crate::error::Result;
 use crate::tree::{Node, element};
-use crate::{assembly, autolinks, parse};
+use crate::{assembly, autolinks, document_style, parse};
 
 /// Repository-aware classification of a Markdown link or image.
 #[derive(Clone, Debug)]
@@ -33,10 +33,15 @@ pub trait LinkResolver: Send + Sync {
 }
 
 /// Render one Markdown document with its owned template and inline stylesheet.
+///
+/// `route` is the document's route inside the generated namespace, such as
+/// `guides/intro/index.dark.html`. The stylesheet loads the viewer's faces
+/// through a relative address from that route.
 pub fn render(
     body: &str,
     title: &str,
     scheme: ColorScheme,
+    route: &str,
     resolver: &dyn LinkResolver,
 ) -> Result<Vec<Node>> {
     let options =
@@ -163,8 +168,11 @@ pub fn render(
     if let Some(Node::Element(root)) = document.get_mut(1) {
         root.set("lang", "en");
         if let Some(Node::Element(head)) = root.children.first_mut() {
-            head.children
-                .push(element("style", &[], vec![Node::Text(STYLES.into())]));
+            head.children.push(element(
+                "style",
+                &[],
+                vec![Node::Text(document_style::stylesheet(route))],
+            ));
         }
     }
     Ok(document)
@@ -185,5 +193,3 @@ fn table_alignment(nodes: &mut [Node]) {
         }
     }
 }
-
-pub(crate) const STYLES: &str = include_str!("document.css");

@@ -1,0 +1,165 @@
+/* The open account menu and the open More menu, which the application and
+   the viewer drawings both draw: `viewer.css` imports this sheet. Every rule
+   is scoped to the element that carries `data-color-scheme`, the document
+   root in the application and the renderer's wrapper in a drawing, so it
+   outweighs a product sheet's rule for the same element, and styles cloud
+   elements only.
+
+   A desktop drawing opens each menu as a popover in a layer at the viewer's
+   root, as the live menu portals to the document root, because the bar's
+   slots clip their content. The layer's own composition class decides which
+   bar shows it, so no rule here sets its display. */
+[data-color-scheme] .fo-canvas-menu-layer {
+  position: absolute;
+  z-index: 2;
+  /* The trigger's bottom edge, a 30px control centred in the bar, then the
+     menu's 6px gutter. */
+  top: calc((var(--mk-layout-topbar) + 30px) / 2 + 6px);
+}
+[data-color-scheme] .fo-canvas-menu-layer.fo-full-bar-only {
+  inset-inline-end: var(--fo-canvas-bar-end);
+}
+[data-color-scheme] .fo-canvas-menu-layer.fo-compact-bar-only {
+  inset-inline-end: var(--fo-canvas-compact-end);
+}
+
+/* The rows inside the popover's surface, which scroll when the window is
+   shorter than the menu. */
+[data-color-scheme] .fo-canvas-menu-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Who is signed in and the Theme choice, above the account's items, with a
+   hairline beneath. */
+[data-color-scheme] .fo-canvas-menu-head {
+  margin-bottom: var(--mk-space-1);
+  padding: 2px 10px var(--mk-space-2);
+  border-bottom: 1px solid var(--mk-color-border);
+}
+[data-color-scheme] .fo-canvas-menu-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-space-3);
+  padding: var(--mk-space-1) 0 var(--mk-space-3);
+}
+[data-color-scheme] .fo-canvas-menu-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+[data-color-scheme] .fo-canvas-menu-name,
+[data-color-scheme] .fo-canvas-menu-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-color-scheme] .fo-canvas-menu-name {
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+  font-weight: var(--mk-font-semibold);
+}
+[data-color-scheme] .fo-canvas-menu-email {
+  color: var(--mk-color-text-muted);
+  font-size: var(--mk-type-ui-small-size);
+  line-height: var(--mk-type-ui-small-line);
+}
+
+/* The Theme choice: its label, and the two options at their own width. */
+[data-color-scheme] .fo-canvas-menu-theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-space-3);
+  padding-top: var(--mk-space-2);
+  border-top: 1px solid var(--mk-color-border);
+}
+[data-color-scheme] .fo-canvas-menu-label {
+  color: var(--mk-color-text);
+  font-size: var(--mk-type-ui-size);
+  line-height: var(--mk-type-ui-line);
+}
+[data-color-scheme] .fo-canvas-menu-choice {
+  flex: none;
+}
+
+/* One menu's rows, in the package's menu row metrics, so a cloud menu reads
+   as the package's own: a 13px bold label on an 18px line, padded 8px and
+   10px, with a 7px radius. A row is a button for an action and a link for a
+   page of the site, so the rule undoes what each draws by default. */
+[data-color-scheme] .fo-canvas-menu-list {
+  display: flex;
+  flex-direction: column;
+}
+[data-color-scheme] .fo-canvas-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  outline: none;
+  background: none;
+  color: var(--mk-color-text);
+  font-family: var(--mk-font-sans);
+  font-size: var(--mk-type-ui-size);
+  font-weight: var(--mk-font-bold);
+  line-height: 1.125rem;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+[data-color-scheme] .fo-canvas-menu-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The keyboard's row, which a pointer moves too: the package's ring and soft
+   fill, with the label in the accent ink. A drawing marks the row that a
+   popover opens on. */
+[data-color-scheme]
+  .fo-canvas-menu-row:is(:focus, .fo-canvas-menu-row-marked):not(:disabled) {
+  background: var(--mk-color-accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--mk-color-accent-solid);
+  color: var(--mk-color-accent);
+}
+[data-color-scheme] .fo-canvas-menu-row:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+@media (forced-colors: active) {
+  [data-color-scheme] .fo-canvas-menu-row:focus {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+/* A row's leading glyph, muted, in a column of one width. */
+[data-color-scheme] .fo-canvas-menu-glyph {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  color: var(--mk-color-text-muted);
+}
+/* In a phone's sheet each row is a 44px touch target. */
+[data-color-scheme] .fo-canvas-menu-sheet .fo-canvas-menu-row {
+  min-height: var(--mk-layout-control-min);
+}
+
+/* The hairline between More's own rows and the account rows. */
+[data-color-scheme] .fo-canvas-menu-rule {
+  display: block;
+  flex: none;
+  height: 1px;
+  margin: var(--mk-space-1) 0;
+  background: var(--mk-color-border);
+}

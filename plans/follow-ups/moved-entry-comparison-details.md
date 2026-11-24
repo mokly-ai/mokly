@@ -4,10 +4,10 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-10-29, from PR #199 and the completed Rust rebuild plan:
   user item 136, from the first decision of the viewer-103c work.
-- **Location:** `packages/viewer/src/shell/workspace_evidence_data.ts:56-60`,
-  `packages/viewer/src/shell/workspace_evidence.tsx:98` and `:110-114`,
+- **Location:** `packages/viewer/src/shell/workspace_evidence_data.ts:58-62`,
+  `packages/viewer/src/shell/workspace_evidence.tsx:121` and `:94-100`,
   `packages/viewer/src/shell/entry_wording.ts:85` and `:101`, and the design
-  artboard `examples/basic/specs/design/review/outcomes/moved.tsx`.
+  artboard `examples/basic/specs/design/canvas/outcomes/moved.tsx`.
 - **Reason:** On 2026-10-21 the user chose option B as work after the
   merge, not in the rebuild pull request.
 
@@ -16,18 +16,18 @@
 - **Terms:**
   - **Pure move:** an entry that Changes lists only because its file moved,
     with no change to its own content.
-  - **Comparison band:** the strip above a preview that offers a comparison
-    of the current and previous versions.
-  - **Terminal line:** the last line of the Details panel, "No changes to
-    this screen.", for an entry with nothing changed.
+  - **Compare modes:** the mode tiles in the Changes tab of the right panel
+    that offer a comparison of the current and previous versions.
+  - **Terminal line:** the last line of the comparison details, "No changes
+    to this screen.", for an entry with nothing changed.
 - **Background:**
-  - A pure move can still use shared components that changed. Its band then
-    offers the comparison of those components in its views.
-  - Details show the shared-component sentence only when the entry is not
-    in Changes, `data.included === false`, at
-    `workspace_evidence_data.ts:56-60`.
+  - A pure move can still use shared components that changed. Its compare
+    modes then offer the comparison of those components in its views.
+  - The comparison details show the shared-component sentence only when the
+    entry is not in Changes, `data.included === false`, at
+    `workspace_evidence_data.ts:58-62`.
   - Otherwise, an `Unmodified` entry ends with the terminal line, at
-    `workspace_evidence.tsx:110-114`.
+    `workspace_evidence.tsx:94-100`.
   - On 2026-10-21 the user chose a shared-component sentence for each kind
     of entry. For a screen it reads "Changed components that this screen
     uses affect its preview." It
@@ -36,13 +36,13 @@
   - The Moved design artboard shows changed content, so no design shows
     this state.
   - On 2026-10-21 the user chose option B, as work after the merge.
-- **Problem:** For an entry that Changes lists only as a move, Details end
-  with "No changes to this screen." But its band offers the comparison of
-  the changed components that its views use.
+- **Problem:** For an entry that Changes lists only as a move, the
+  comparison details end with "No changes to this screen." But its compare
+  modes offer the comparison of the changed components that its views use.
 - **Impact if no action:** The page offers a comparison and denies any
   change in the same state, which confuses a reviewer.
-- **Root question:** What should Details say for a pure move whose views use
-  changed components?
+- **Root question:** What should the comparison details say for a pure move
+  whose views use changed components?
 - **Options:**
   - **A.** Keep the terminal line. Effort: Small.
   - **B.** For an entry that Changes lists only as a move, show the
@@ -58,8 +58,8 @@
 - **Related:** [affected-component-artboards.md](affected-component-artboards.md)
   adds other missing shared-impact artboards in the same design area. One
   mockup branch can draw both states, but each item has its own state.
-- **Recommendation:** B. It keeps Details and the comparison band
-  consistent.
+- **Recommendation:** B. It keeps the comparison details and the compare
+  modes consistent.
 - **Action:** fix after merge, apply B, because the user chose B on
   2026-10-21 as work after the merge.
 

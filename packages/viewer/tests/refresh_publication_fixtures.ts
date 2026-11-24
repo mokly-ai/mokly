@@ -18,6 +18,7 @@ import { shellContext } from "../src/shell/projection.js";
 import { routeFromUrl } from "../src/shell/routes.js";
 import { defaultSelection } from "../src/shell/selection.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
+import type { ShellState } from "../src/shell/store_state.js";
 
 import { detailFixture, indexFixture } from "./catalogue_v9_fixture.js";
 import { FakeDataSource, flush } from "./data_fakes.js";
@@ -96,10 +97,11 @@ export function initialShellState(
 export function followPublications(t: TestContext, path = HOME_URL) {
   const source = new FakeDataSource(true);
   const initial = initialSnapshot(publication(0));
-  const startingState = {
+  const startingState: ShellState = {
     ...initialShellState(initial, path),
-    detailsOpen: true,
     navScroll: 48,
+    sheet: "panel",
+    sheetExpanded: true,
   };
   let state = startingState;
   const commits: number[] = [];

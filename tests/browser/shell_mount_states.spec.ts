@@ -10,7 +10,12 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { networkFailure, versionFailure } from "./shell_error_allowances.js";
-import { route, titles, WELCOME } from "./shell_route_fixture.js";
+import {
+  CANVAS_FRAMES,
+  route,
+  titles,
+  WELCOME,
+} from "./shell_route_fixture.js";
 
 test("a failed catalogue read shows its failure state, and Try again installs the catalogue", async ({
   page,
@@ -45,7 +50,7 @@ test("a failed catalogue read shows its failure state, and Try again installs th
   release();
   await expect(page.locator("#mb-main h2")).toHaveText(names.get(WELCOME)!);
   await expect(navigation).toBeVisible();
-  await expect(page.locator("#mb-main iframe")).toHaveCount(2);
+  await expect(page.locator("#mb-main iframe")).toHaveCount(CANVAS_FRAMES);
   expect(reads).toBe(2);
 });
 

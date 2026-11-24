@@ -14,14 +14,15 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { build } from "esbuild";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { awaitPaneDocuments } from "./comparison_sections.js";
 import { copiedComparisonDirectory } from "./comparison_test.js";
-import { modeButton } from "./comparison_ui.js";
+import { chooseMode, type DiffMode } from "./comparison_ui.js";
 import { chooseViewport } from "./workspace_actions.js";
 
 /** The origins of one embedded viewer host. */
@@ -114,20 +115,19 @@ export async function comparisonViewerHost(
   }
 }
 
-/** Open an entry in the embedded viewer and load a diff mode. */
+/**
+ * Open an entry in the embedded viewer, choose its viewport, and show a diff
+ * mode until its pane documents load.
+ */
 export async function openEmbeddedComparison(
   page: Page,
   address: string,
   viewport: "desktop" | "mobile",
-  mode: "Difference" | "Overlay" | "Side by side",
+  mode: DiffMode,
 ): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto(address);
   await chooseViewport(page, viewport);
-  await modeButton(page, mode).click();
-  await expect(modeButton(page, mode)).toHaveAttribute("aria-pressed", "true");
-  const frames = page.locator("[data-diff-stage] iframe");
-  await expect(frames).toHaveCount(2);
-  for (const frame of await frames.all())
-    await expect(frame.contentFrame().locator("body")).not.toBeEmpty();
+  await chooseMode(page, mode);
+  await awaitPaneDocuments(page);
 }

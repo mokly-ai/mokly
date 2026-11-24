@@ -1,0 +1,151 @@
+/* The documentation HTML sample fence: a band of canvas across the page
+   frame that sets the sample's code, under the screen's section header,
+   beside the screen it renders, under the viewport and saved-state
+   controls. A green wire ties the lit line to the element it renders.
+   docs-sample-frames.css draws the frames of the Mobile and Desktop
+   views. */
+
+.site-docs-sample {
+  align-items: start;
+  background-color: var(--mk-color-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mk-color-dot) 1px,
+    transparent 1.25px
+  );
+  background-position: -1px -1px;
+  background-size: 24px 24px;
+  box-shadow:
+    inset 0 1px 0 var(--mk-color-border),
+    inset 0 -1px 0 var(--mk-color-border);
+  column-gap: 40px;
+  display: grid;
+  grid-template-areas:
+    "head controls"
+    "code stage";
+  grid-template-columns: minmax(0, 1fr) 266px;
+  margin-bottom: 12px;
+  padding: 44px 32px 6px;
+  row-gap: 40px;
+}
+
+/* The screen's section header: its title as a dark tag and its path */
+
+.site-docs-sample-head {
+  align-items: center;
+  display: flex;
+  gap: var(--mk-space-2);
+  grid-area: head;
+  min-height: 34px;
+}
+
+.site-docs-sample-name {
+  background: var(--mk-color-text);
+  border-radius: 6px;
+  color: var(--mk-color-surface);
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-semibold);
+  letter-spacing: -0.01em;
+  line-height: 24px;
+  padding: 0 9px;
+}
+
+.site-docs-sample-head .site-chip {
+  background: var(--mk-color-surface);
+}
+
+.site-docs-sample-code {
+  grid-area: code;
+}
+
+.site-docs-sample-code .site-code-body {
+  font-size: 0.75rem;
+}
+
+/* The viewport and saved-state controls: native radios drawn as the
+   segments of a track; the chosen segment sits on the canvas tone. A
+   radio is hidden, so its segment draws the focus glow, before the chosen
+   segment's ring. */
+
+.site-docs-sample-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mk-space-2);
+  grid-area: controls;
+  justify-content: center;
+}
+
+.site-docs-sample-control {
+  background: var(--mk-color-surface);
+  border: 0;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: inline-flex;
+  gap: 2px;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 2px;
+}
+
+.site-docs-sample-option {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--mk-color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.78125rem;
+  font-weight: var(--mk-font-medium);
+  gap: 6px;
+  height: 30px;
+  justify-content: center;
+  min-width: 34px;
+  padding: 0 10px;
+  position: relative;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+  white-space: nowrap;
+}
+
+.site-docs-sample-option::before {
+  content: "";
+  inset: -7px 0;
+  position: absolute;
+}
+
+.site-docs-sample-option:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:checked) {
+  background: var(--mk-color-background);
+  box-shadow: inset 0 0 0 1px var(--mk-color-border-strong);
+  color: var(--mk-color-text);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:focus-visible) {
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
+.site-docs-sample-option:has(.site-docs-sample-input:checked:focus-visible) {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent),
+    inset 0 0 0 1px var(--mk-color-border-strong);
+}
+
+.site-docs-sample-option svg {
+  flex: none;
+}
+
+/* The stage of the drawn frames: docs-sample-frames.css draws each frame,
+   and docs-steps.css draws the wire beside it */
+
+.site-docs-sample-stage {
+  grid-area: stage;
+  padding: 0 0 34px 16px;
+  position: relative;
+}

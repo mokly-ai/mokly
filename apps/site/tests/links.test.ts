@@ -72,8 +72,16 @@ test("base href changes relative URL resolution", async (t) => {
   await checkLinks(root, origin);
 });
 
+test("relative and same-origin sign-up links need no site file", async (t) => {
+  const root = await output(t, {
+    "index.html": `<a href="/sign-up">Create an account</a>
+      <a href="${origin}/sign-up">Start a 7-day trial</a>`,
+  });
+  assert.equal(await checkLinks(root, origin), 2);
+});
+
 test("an application link must still resolve in the site output", async (t) => {
-  for (const route of ["/sign-in", "/unknown"]) {
+  for (const route of ["/sign-in", "/unknown", "/sign-up/", "/sign-upx"]) {
     const root = await output(t, {
       "index.html": `<a href="${route}">Application</a>`,
     });
@@ -196,7 +204,7 @@ test("the CLI returns nonzero and names the failing document", async (t) => {
       ["--import", "tsx", "scripts/check-links.mjs", root],
       {
         cwd: path.resolve(import.meta.dirname, ".."),
-        env: { ...process.env, SITE_ORIGIN: origin, SITE_STAGE_PR: "71" },
+        env: { ...process.env, SITE_ORIGIN: origin },
         timeout: 30_000,
       },
     ),

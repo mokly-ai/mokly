@@ -45,7 +45,6 @@ gha-creds-*.json
 /packages/app/.expo/
 /apps/site/.astro/
 /apps/site/public/og/
-/apps/site/public/stage/
 /apps/worker/wrangler.json
 /apps/worker/wrangler.test.json
 

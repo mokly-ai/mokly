@@ -1,9 +1,10 @@
 /**
  * The catalogue navigation column: its head with Collapse all, the All and
  * Changes filter, the status line and the catalogue tree in one scrolling
- * pane, and the separator that resizes the column. The host builds the tree
- * as plain records and receives each choice through a callback, and the rows
- * that it moves focus or scroll to through the tree's refs.
+ * pane, the foot that names the comparison base in Changes, and the
+ * separator that resizes the column. The host builds the tree as plain
+ * records and receives each choice through a callback, and the rows that it
+ * moves focus or scroll to through the tree's refs.
  */
 
 import type { CSSProperties, Ref } from "react";
@@ -13,6 +14,7 @@ import {
   type NavigationSection,
   type NavigationTargets,
 } from "../catalogue-tree/catalogue-tree.js";
+import { CanvasIcon } from "../icons/canvas-icons.js";
 
 import { FilterGroup, StatusLine } from "./navigation-filter.js";
 import type {
@@ -20,6 +22,23 @@ import type {
   NavigationStatus,
 } from "./navigation-records.js";
 import { ResizeHandle } from "./navigation-resize.js";
+
+export { STARTING_WIDTH } from "./navigation-resize.js";
+
+/**
+ * The foot of the Changes filter: `Compared with` and the comparison base in
+ * the mono face, such as `origin/main`.
+ */
+function ChangesBase({ base }: { base: string }) {
+  return (
+    <div className="mbk-nav-foot mbk-reset" data-nav-foot="">
+      <CanvasIcon name="branch" size={14} />
+      <span className="mbk-reset">
+        Compared with <span className="mbk-nav-base mbk-reset">{base}</span>
+      </span>
+    </div>
+  );
+}
 
 export type {
   NavigationChangesStatus,
@@ -29,6 +48,7 @@ export type {
 } from "./navigation-records.js";
 
 export function CatalogueNavigation({
+  base,
   busy,
   currentRowRef,
   filter,
@@ -43,15 +63,23 @@ export function CatalogueNavigation({
   onView,
   onWidth,
   onWidthCommit,
+  onWidthReset,
   operable = true,
   ref,
   resizable,
   scrollRef,
   sections,
+  startingWidth,
   status,
   summaryRef,
   width,
 }: NavigationTargets & {
+  /**
+   * The comparison base, such as `origin/main`, which the foot names while
+   * the Changes filter shows. Without it, or while All shows, the column has
+   * no foot.
+   */
+  base?: string | undefined;
   /** Whether the tree waits for change detection, which `aria-busy` reports. */
   busy: boolean;
   /** The All and Changes filter; absent where the catalogue has no Changes. */
@@ -90,6 +118,12 @@ export function CatalogueNavigation({
   /** Receives the width to keep once a resize ends. */
   onWidthCommit?: ((width: number) => void) | undefined;
   /**
+   * Receives a double click on the separator, which restores the starting
+   * width: the host forgets the chosen width. Without it, the double click
+   * reaches `onWidth` and `onWidthCommit` with `startingWidth`.
+   */
+  onWidthReset?: (() => void) | undefined;
+  /**
    * Whether Collapse all, the filters without an address, and the separator
    * are controls, as they are by default. A static depiction that runs no
    * script sets `false`, which draws Collapse all and such a filter as text
@@ -106,6 +140,12 @@ export function CatalogueNavigation({
   /** The scrolling tree element, for a host that restores and reveals rows. */
   scrollRef?: Ref<HTMLDivElement> | undefined;
   sections: readonly NavigationSection[];
+  /**
+   * The width that a double click on the separator restores, in pixels:
+   * 252px by default, the catalogue's starting width from the 73.75rem panel
+   * step up.
+   */
+  startingWidth?: number | undefined;
   /** The status line at the top of the tree; absent without Changes. */
   status?: NavigationStatus | undefined;
   /** The column width, in pixels. */
@@ -164,10 +204,12 @@ export function CatalogueNavigation({
           summaryRef={summaryRef}
         />
       </div>
+      {filter?.view === "changes" && base ? <ChangesBase base={base} /> : null}
       <ResizeHandle
-        actions={{ onResizing, onWidth, onWidthCommit }}
+        actions={{ onResizing, onWidth, onWidthCommit, onWidthReset }}
         maximum={maximumWidth}
         operable={operable}
+        startingWidth={startingWidth}
         width={width}
       />
     </nav>

@@ -31,14 +31,12 @@ import {
   type ControlDraftField,
   type ControlTarget,
 } from "./control_values.js";
-import type { WorkspaceData } from "./workspace_data.js";
-import { propValues, WorkspaceProps } from "./workspace_props.js";
+import { propValues, UncontrolledProps } from "./workspace_props.js";
 
 export type { ControlsFocus } from "@mokly/ui/controls-panel";
 
 /** The notice of each mode that shows the saved props without fields. */
 const SAVED_NOTICES: Partial<Record<ControlsMode, string>> = {
-  comparison: CONTROLS_COPY.comparison,
   published: CONTROLS_COPY.published,
   removed: CONTROLS_COPY.removed,
   "read-only": CONTROLS_COPY.readonlyProps,
@@ -68,23 +66,19 @@ function controlsAlert(
 
 /** Render the fields with their state, or the saved props with the reason. */
 export function ComponentControlsPanel({
-  data,
   focus,
   mode,
   onChange,
-  onCurrent,
   onReset,
   onRetry,
   onStart,
   state,
   target,
 }: {
-  data: WorkspaceData;
   /** Name an element that a recovery action can focus. */
   focus?: (name: ControlsFocus) => RefCallback<HTMLElement>;
   mode: ControlsMode;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
-  onCurrent(): void;
   onReset(): void;
   onRetry(): void;
   /** Load the live descriptor again after editing could not start. */
@@ -103,13 +97,9 @@ export function ComponentControlsPanel({
     ]);
     return (
       <SavedPropsPanel
-        current={
-          mode === "comparison" ? CONTROLS_COPY.switchToCurrent : undefined
-        }
         focus={focus}
         heading={CONTROLS_COPY.readonlyHeading}
         notice={savedNotice}
-        onCurrent={onCurrent}
         title={target.title}
       >
         {names.size ? (
@@ -131,12 +121,9 @@ export function ComponentControlsPanel({
       dirty={state.dirty}
       extra={
         Object.keys(uncontrolled).length || target.suppliedSlots.length ? (
-          <WorkspaceProps
-            data={data}
-            selection={{
-              props: encodeProps(uncontrolled),
-              slots: target.suppliedSlots,
-            }}
+          <UncontrolledProps
+            props={encodeProps(uncontrolled)}
+            slots={target.suppliedSlots}
           />
         ) : null
       }

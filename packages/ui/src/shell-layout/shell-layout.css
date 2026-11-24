@@ -66,8 +66,10 @@
   pointer-events: none;
 }
 
-/* The main region, which holds the routed view. */
+/* The main region, which holds the routed view. It is the containing block
+   of the parts that float over a view, such as the right panel. */
 .mbk-main {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -75,8 +77,109 @@
   min-height: 0;
 }
 
-/* A workspace's view controls hold the scheme toggle, so the top bar hides
-   its scheme switch while a workspace shows. */
-.mbk:has(.mbk-workspace) .mbk-topbar [data-mokly-schemeswitch] {
-  display: none;
+/* The Canvas layout: the main region is the canvas below the top bar, full
+   bleed under the floating panels, and a view without a section, such as
+   the home, stands on its dot grid too. The canvas's stage keeps clear of
+   the panels through its insets: the start inset is the catalogue's width,
+   its 8px margin and an 8px gap, and the end inset the right panel's width,
+   margin and gap while that panel shows. Below the 73.75rem panel step the
+   panels narrow. Below the layout breakpoint the panels are sheets, the
+   entry bar takes the canvas's top and the dock its bottom. */
+.mbk[data-canvas-layout] > .mbk-body {
+  --mbk-canvas-inset-start: calc(var(--mbk-nav-width, 252px) + 16px);
+  position: relative;
+}
+
+.mbk[data-canvas-layout] .mbk-main {
+  background-color: var(--cv-background);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--cv-dot) 1px,
+    transparent 1.3px
+  );
+  background-size: 24px 24px;
+}
+
+.mbk[data-canvas-layout]
+  .mbk-main:has(.mbk-float[data-floating-panel="right"]) {
+  --mbk-canvas-inset-end: 328px;
+}
+
+/* A state without a canvas, such as the loading state or a removed entry's
+   state, stands in the canvas's stage between the floating panels. */
+.mbk[data-canvas-layout] :is(.mbk-main, .mbk-preview-busy) > .mbk-empty {
+  margin: var(--mbk-canvas-inset-top, 0px) var(--mbk-canvas-inset-end, 0px)
+    var(--mbk-canvas-inset-bottom, 0px) var(--mbk-canvas-inset-start, 0px);
+}
+
+@media (width < 73.75rem) {
+  .mbk[data-canvas-layout] > .mbk-body {
+    --mbk-canvas-inset-start: calc(var(--mbk-nav-width, 224px) + 16px);
+  }
+
+  .mbk[data-canvas-layout]
+    .mbk-main:has(.mbk-float[data-floating-panel="right"]) {
+    --mbk-canvas-inset-end: 300px;
+  }
+}
+
+@media (width < 56.25rem) {
+  .mbk[data-canvas-layout] > .mbk-body {
+    --mbk-canvas-inset-start: 0px;
+    --mbk-canvas-inset-top: 52px;
+    --mbk-canvas-inset-bottom: 76px;
+  }
+
+  .mbk[data-canvas-layout]
+    .mbk-main:has(.mbk-float[data-floating-panel="right"]) {
+    --mbk-canvas-inset-end: 0px;
+  }
+}
+
+/* The catalogue in its floating panel: the column fills the panel, which
+   draws the surface, the edge and the radius; the scrolling tree and the
+   foot keep to the panel's rounded corners, and the separator straddles
+   the panel's edge. In the sheet, the column takes the drawer's place with
+   no drawer place or scrim, and its head keeps clear of the sheet's close
+   control. */
+.mbk-float .mbk-nav {
+  flex: 1;
+  width: auto;
+  min-height: 0;
+  background: transparent;
+  border-right: 0;
+}
+
+.mbk-float > .mbk-float-body > .mbk-nav > .mbk-nav-foot,
+.mbk-float
+  > .mbk-float-body
+  > .mbk-nav
+  > .mbk-nav-scroll:not(:has(+ .mbk-nav-foot)) {
+  border-radius: 0 0 12px 12px;
+}
+
+@media (width < 56.25rem) {
+  .mbk-float .mbk-nav {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    z-index: auto;
+    display: flex;
+    max-width: none;
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  .mbk-float .mbk-nav-head {
+    padding-right: 56px;
+  }
+
+  .mbk-float > .mbk-float-body > .mbk-nav > .mbk-nav-foot,
+  .mbk-float
+    > .mbk-float-body
+    > .mbk-nav
+    > .mbk-nav-scroll:not(:has(+ .mbk-nav-foot)) {
+    border-radius: 0;
+  }
 }

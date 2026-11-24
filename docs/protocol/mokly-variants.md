@@ -17,35 +17,31 @@ Everything that addresses an entry by path addresses a variant the same way,
 including `mock:` links and use-case steps. Variants have no link grammar,
 query parameter, or comparison schema of their own.
 
-Light and dark are not variants. Color scheme is a view axis selected by the
-appearance switch, and a viewport is likewise a view. Per-view change
-evidence is surfaced on the view controls by the
-[runtime contract](./mokly-runtime.md#browse-shell); it never creates
-navigation rows.
+Light and dark are not variants. Color scheme is a view axis under the
+[preview scheme rules](./mokly-shell-device-chrome.md#color-scheme), and a
+viewport is likewise a view. Per-view change
+evidence marks each toggle of the
+[Frames filter](./mokly-shell-canvas-stage.md#frames-filter) that hides a
+changed view; it never creates navigation rows.
 
 ## Authoring
 
-A variant is a props set under the
-[entry props contract](./mokly-entry-props.md): every screen and component is
-a render over props, and each variant declares `slug`, `title`, and `props`
-that replace top-level keys of the parent's props and never deep merge. The
-variant renders the parent's render with the merged props and has no render of
-its own; a state that needs another tree is a separate entry. A story variant
-takes its props only from its own story under the
-[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
-A story variant renders its own story under the
-[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
+An authored `variants` list declares a props set for each variant under the
+[entry props contract](./mokly-entry-props.md). Each variant declares `slug`,
+`title`, and `props`. The variant props replace only top-level keys of the parent's
+props. The variant uses the parent's render with the merged props. A state
+that needs another tree is a separate entry.
+
+A story variant takes its props from its own story and renders that story
+under the [Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
 
 `defineScreen` and `defineComponent` accept an optional `variants` list.
 `.screen.html` and `.component.html` files declare `variants` in front matter
 under the [HTML screens](./mokly-html-screens.md#variants) and
-[HTML components](./mokly-html-components.md#variants) contracts, and a
-stories file gives its variants under the
-[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants).
-A screen variant may also declare `description`, `tags`, `colorSchemes`,
-`address`, `rationale`, `relatedDocs`, `useCasePaths`, and `movedFrom`; a
-component variant may also declare `description`, `tags`, `movedFrom`, and
-`slots`.
+[HTML components](./mokly-html-components.md#variants) contracts. A screen
+variant may also declare `description`, `tags`, `colorSchemes`, `address`,
+`rationale`, `relatedDocs`, `useCasePaths`, and `movedFrom`. A component
+variant may also declare `description`, `tags`, `movedFrom`, and `slots`.
 
 ```tsx
 export default defineScreen({
@@ -69,7 +65,7 @@ path, parent first and then variants in authored order. An export contributes
 exactly one definition under the
 [entry module contract](./mokly-entry-modules.md); the definition carries its
 variants, and the catalogue model flattens them. A component needs no variant:
-its page renders its own props first, then each variant.
+its own props render its own views.
 
 Fresh variant literals in direct calls keep excess-key checks. Generic
 inference can accept extra top-level keys. Registry preparation rejects every
@@ -83,8 +79,8 @@ A variant's `title` is its own. Its `description`, `tags`, `relatedDocs`, and
 `colorSchemes` default to the parent's, and a screen variant's `address` does
 too; a declared list replaces rather than merges the inherited one. A story
 variant takes its tags from its own story under the
-[Storybook stories contract](./mokly-storybook.md#names-tags-and-the-description). A
-component variant's declared slots default to the parent's and its supplied
+[Storybook stories contract](./mokly-storybook.md#names-tags-and-the-description).
+A component variant's declared slots default to the parent's and its supplied
 slots to empty. `useCasePaths` defaults to an empty list and is never
 inherited, because membership is reciprocal with the flow's steps; a flow that
 steps through the variant must be listed by that variant. `slug` is one
@@ -128,11 +124,10 @@ defining module or file.
 
 ## Rendering And Catalogue Model
 
-A variant renders exactly as any entry of its kind: one document per effective
-viewport and color scheme with the merged props, with the same link rewriting,
-fragment validation, resource validation, and composition into the render
-cache. A component parent renders its own props first on its page, then each
-variant.
+A variant renders one document per effective viewport and color scheme.
+It uses the same link rewriting, fragment validation, resource validation,
+and composition into the render cache as any entry of its kind.
+A component parent renders its own views from its own props.
 
 The catalogue model records `variantOf` exactly on variant entries of either
 kind and holds the parent's path. Validation requires the named parent to be a

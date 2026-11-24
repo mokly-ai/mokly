@@ -12,6 +12,18 @@
       "@mokly/mokly": ["../../node_modules/@mokly/mokly/dist/index.d.ts"],
       "@mokly/viewer": ["../../node_modules/@mokly/viewer/dist/index.d.ts"],
       "@mokly/viewer/data": ["../../node_modules/@mokly/viewer/dist/data.d.ts"],
+      "@mokly/ui/canvas-dock": [
+        "../../node_modules/@mokly/ui/dist/canvas-dock/canvas-dock.d.ts"
+      ],
+      "@mokly/ui/canvas-frame": [
+        "../../node_modules/@mokly/ui/dist/canvas-frame/canvas-frame.d.ts"
+      ],
+      "@mokly/ui/canvas-section": [
+        "../../node_modules/@mokly/ui/dist/canvas-section/canvas-section.d.ts"
+      ],
+      "@mokly/ui/canvas-stage": [
+        "../../node_modules/@mokly/ui/dist/canvas-stage/canvas-stage.d.ts"
+      ],
       "@mokly/ui/catalogue-navigation": [
         "../../node_modules/@mokly/ui/dist/catalogue-navigation/catalogue-navigation.d.ts"
       ],
@@ -21,33 +33,38 @@
       "@mokly/ui/change-status": [
         "../../node_modules/@mokly/ui/dist/change-status/change-status.d.ts"
       ],
-      "@mokly/ui/comparison-stage": [
-        "../../node_modules/@mokly/ui/dist/comparison-stage/comparison-stage.d.ts"
-      ],
-      "@mokly/ui/comparison-toolbar": [
-        "../../node_modules/@mokly/ui/dist/comparison-toolbar/comparison-toolbar.d.ts"
-      ],
-      "@mokly/ui/device-frame": [
-        "../../node_modules/@mokly/ui/dist/device-frame/device-frame.d.ts"
+      "@mokly/ui/compare-modes": [
+        "../../node_modules/@mokly/ui/dist/compare-modes/compare-modes.d.ts"
       ],
       "@mokly/ui/embedded-layout": [
         "../../node_modules/@mokly/ui/dist/embedded-layout/embedded-layout.d.ts"
       ],
-      "@mokly/ui/preview-frame": [
-        "../../node_modules/@mokly/ui/dist/preview-frame/preview-frame.d.ts"
+      "@mokly/ui/entry-bar": [
+        "../../node_modules/@mokly/ui/dist/entry-bar/entry-bar.d.ts"
       ],
-      "@mokly/ui/screen-header": [
-        "../../node_modules/@mokly/ui/dist/screen-header/screen-header.d.ts"
+      "@mokly/ui/floating-panel": [
+        "../../node_modules/@mokly/ui/dist/floating-panel/floating-panel.d.ts"
+      ],
+      "@mokly/ui/frames-filter": [
+        "../../node_modules/@mokly/ui/dist/frames-filter/frames-filter.d.ts"
+      ],
+      "@mokly/ui/inspect-panel": [
+        "../../node_modules/@mokly/ui/dist/inspect-panel/inspect-panel.d.ts"
+      ],
+      "@mokly/ui/inspect-selection": [
+        "../../node_modules/@mokly/ui/dist/inspect-selection/inspect-selection.d.ts"
+      ],
+      "@mokly/ui/metadata-row": [
+        "../../node_modules/@mokly/ui/dist/metadata-row/metadata-row.d.ts"
+      ],
+      "@mokly/ui/panel-tabs": [
+        "../../node_modules/@mokly/ui/dist/panel-tabs/panel-tabs.d.ts"
       ],
       "@mokly/ui/shell-layout": [
         "../../node_modules/@mokly/ui/dist/shell-layout/shell-layout.d.ts"
       ],
-      "@mokly/ui/stage": ["../../node_modules/@mokly/ui/dist/stage/stage.d.ts"],
       "@mokly/ui/top-bar": [
         "../../node_modules/@mokly/ui/dist/top-bar/top-bar.d.ts"
-      ],
-      "@mokly/ui/view-controls": [
-        "../../node_modules/@mokly/ui/dist/view-controls/view-controls.d.ts"
       ],
       "@mokly/ui/workspace-layout": [
         "../../node_modules/@mokly/ui/dist/workspace-layout/workspace-layout.d.ts"

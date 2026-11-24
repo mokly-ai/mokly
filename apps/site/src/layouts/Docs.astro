@@ -1,37 +1,65 @@
 ---
 /**
- * The documentation page: the section tree beside the document on a wide
- * screen and a disclosure above it on a narrow one, the ruled document with
- * its location trail, heading and lead, the on-this-page list, and previous
- * and next. Search sits in the site header on these routes.
+ * A documentation page, drawn as a page of a design file. From 1280px the
+ * workspace sets the Layers content, the page frame and the Inspect content
+ * side by side under the tool bar. From 1024px it keeps the Layers content
+ * and the frame, and On this page sits in a disclosure under the lead.
+ * Below 1024px the sub-bar opens the tree sheet and search over the frame.
+ *
+ * The frame, labelled with the page's tracked source, holds the location
+ * trail, the title, the lead, the ruled document and previous and next.
+ * Search indexes only the title, the lead and the document. The search
+ * island, mounted once here, owns the search dialog and its keys, and the
+ * docs scroll spy marks the heading in view.
  */
 import CodeCopy from "../components/docs/CodeCopy.tsx";
-import OnThisPage from "../components/docs/OnThisPage.astro";
+import Inspect from "../components/docs/Inspect.astro";
+import Layers from "../components/docs/Layers.astro";
+import Outline from "../components/docs/Outline.astro";
+import {
+  editUrl,
+  pageFacts,
+  sourceFile,
+  type PageSource,
+} from "../components/docs/page-source.js";
 import Pager from "../components/docs/Pager.astro";
-import Tree from "../components/docs/Tree.astro";
+import { DOCUMENTATION } from "../components/docs/pager-entries.js";
+import Search from "../components/docs/Search.tsx";
+import Subbar from "../components/docs/Subbar.astro";
+import Trail from "../components/docs/Trail.astro";
+import TreeSheet from "../components/docs/TreeSheet.astro";
+import PageFrame from "../components/PageFrame.astro";
 import { onThisPage, type DocsHeading } from "../docs/headings.js";
 import Site from "./Site.astro";
 
 import "../styles/docs-layout.css";
-import "../styles/docs-content.css";
+import "../styles/docs-tree.css";
+import "../styles/docs-document.css";
+import "../styles/docs-pager.css";
+import "../styles/code.css";
+import "../styles/code-tokens.css";
 import "../styles/docs-code.css";
+import "../styles/docs-sample.css";
+import "../styles/docs-sample-frames.css";
+import "../styles/docs-inspect.css";
+import "../styles/docs-sheet.css";
 import "../styles/docs-search.css";
-import "../styles/docs-responsive.css";
 
 interface Props {
   readonly description: string;
   readonly headings: readonly DocsHeading[];
   readonly route: string;
-  /** The section title the location trail and the disclosure name. */
+  /** The section title that the trail, the sub-bar and the facts name. */
   readonly section: string;
+  /** The page's tracked source, which the frame label and Edit name. */
+  readonly source: PageSource;
   readonly title: string;
 }
 
-const { description, headings, route, section, title } = Astro.props;
-const list = onThisPage(headings);
-const trail = ["Documentation", section].filter(
-  (step, index, steps) => steps.indexOf(step) === index,
-);
+const { description, headings, route, section, source, title } = Astro.props;
+const listed = onThisPage(headings);
+const facts = pageFacts(source, section);
+const edit = editUrl(source);
 ---
 
 <Site
@@ -40,57 +68,42 @@ const trail = ["Documentation", section].filter(
   title={`${title} · Mokly`}
   wrapped={false}
 >
+  <Subbar section={section} title={title} />
+  <TreeSheet route={route} />
   <div class="site-docs">
-    <div class="site-docs-side" data-pagefind-ignore>
-      <nav aria-label="Documentation" class="site-doc-tree">
-        <Tree route={route} />
-      </nav>
+    <div class="site-docs-side">
+      <Layers route={route} />
     </div>
-    <details class="site-doc-disclosure" data-pagefind-ignore>
-      <summary>
-        {section}
-        <span aria-hidden="true" class="site-trail-sep">
-          &#8250;
-        </span>
-        {title}
-      </summary>
-      <nav aria-label="Documentation" class="site-doc-tree">
-        <Tree route={route} />
-      </nav>
-    </details>
-    <main
-      class="site-document site-docs-document"
-      data-pagefind-body
-      id="main"
-      tabindex="-1"
-    >
-      <div class="site-document-intro">
-        <nav aria-label="Location" class="site-trail" data-pagefind-ignore>
-          {trail.map((step, index) => (
-            <span class="site-trail-step">
-              {index > 0 && (
-                <span aria-hidden="true" class="site-trail-sep">
-                  &#8250;
-                </span>
-              )}
-              {step}
-            </span>
-          ))}
-        </nav>
-        <h1>{title}</h1>
-        <p class="site-pullquote">{description}</p>
-      </div>
-      {list.length > 1 && <OnThisPage headings={list} />}
-      <div class="site-document-body">
-        <slot />
-      </div>
-      <Pager route={route} />
+    <main class="site-document site-docs-document" id="main" tabindex="-1">
+      <PageFrame
+        class="site-docs-frame"
+        file={source.label}
+        measure="docs-page"
+      >
+        <div class="site-document-intro" data-pagefind-body>
+          <Trail steps={[DOCUMENTATION, section]} />
+          <h1>{title}</h1>
+          <p class="site-pullquote">{description}</p>
+        </div>
+        <Outline edit={edit} facts={facts} headings={listed} />
+        <div class="site-document-body" data-pagefind-body>
+          <slot />
+        </div>
+        <Pager route={route} />
+      </PageFrame>
       <CodeCopy client:idle />
     </main>
-    {list.length > 1 && (
-      <div class="site-docs-rail">
-        <OnThisPage headings={list} />
-      </div>
-    )}
+    <div class="site-docs-rail">
+      <Inspect
+        edit={edit}
+        facts={facts}
+        file={sourceFile(source)}
+        headings={listed}
+      />
+    </div>
   </div>
+  <Search client:idle />
 </Site>
+
+<script src="../components/docs/scroll-spy.ts"></script>
+<script src="../components/docs/sample-island.ts"></script>

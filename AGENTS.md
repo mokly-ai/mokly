@@ -111,6 +111,10 @@ README files and in the cloud protocol docs under `docs/protocol/cloud`.
 - Contract fixtures: `cargo xtask mokly-fixtures` regenerates the cloud
   contract fixtures from the workspace build. Commit its output when a Mokly
   change changes them, because the drift check of the gate fails until then.
+- Palette: `npm run palette:generate` writes the `@mokly/ui` theme and the
+  Markdown document palette from `packages/ui/src/palette/palette.ts`. Run it
+  after a palette change and commit its output, because `npm run
+  palette:check` in the repository suite fails until then.
 - Format: `npm run format` and `cargo fmt --all`.
 - Markdown check: `npm run format:check` and
   `npm test -- tests/markdown_links.test.ts`.

@@ -1,6 +1,6 @@
 ---
 title: Terms of Service
-effective: 2026-09-22
+effective: 2026-11-22
 ---
 
 These Terms of Service govern your access to and use of Mokly Cloud.
@@ -13,8 +13,8 @@ You can contact us at [hello@mokly.ai](mailto:hello@mokly.ai).
 
 ## 1. What Mokly does
 
-Mokly helps teams publish, browse, compare and share React-authored mockups
-connected to Git repositories, branches and pull requests. The hosted service
+Mokly helps teams publish, browse, compare and share mockups connected to Git
+repositories, branches and pull requests. The hosted service
 can receive generated catalogues, control access to them and report publication
 results to connected services such as GitHub.
 

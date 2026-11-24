@@ -178,29 +178,23 @@ test("content without a control follows the fields", () => {
   );
 });
 
-test("saved props that cannot be edited name the reason, and a comparison offers Switch to Current", () => {
+test("saved props that cannot be edited name the reason and offer no action", () => {
   const found = new Map<ControlsFocus, HTMLElement>();
-  let presses = 0;
-  const panel = (current?: string) => (
+  const panel = (
     <SavedPropsPanel
-      current={current}
       focus={recorder(found)}
       heading="Saved props"
-      notice="Comparisons show the saved props."
-      onCurrent={() => (presses += 1)}
+      notice="Removed entries show their saved props."
       title="Default"
     >
       <dl aria-label="Supplied props" />
     </SavedPropsPanel>
   );
   assert.equal(
-    renderToStaticMarkup(panel("Switch to Current")),
-    '<section class="mbk-component-controls mbk-reset"><div class="mbk-controls-heading mbk-reset"><div class="mbk-reset"><h3 class="mbk-reset" tabindex="-1">Saved props</h3><p class="mbk-reset">Default</p></div></div><p class="mbk-controls-notice mbk-reset">Comparisons show the saved props.</p><button class="mbk-text-button mbk-reset" type="button">Switch to Current</button><dl aria-label="Supplied props"></dl></section>',
+    renderToStaticMarkup(panel),
+    '<section class="mbk-component-controls mbk-reset"><div class="mbk-controls-heading mbk-reset"><div class="mbk-reset"><h3 class="mbk-reset" tabindex="-1">Saved props</h3><p class="mbk-reset">Default</p></div></div><p class="mbk-controls-notice mbk-reset">Removed entries show their saved props.</p><dl aria-label="Supplied props"></dl></section>',
   );
-  const { rerender } = render(panel("Switch to Current"));
-  fireEvent.click(screen.getByRole("button", { name: "Switch to Current" }));
-  assert.equal(presses, 1);
+  render(panel);
   assert.deepEqual([...found.keys()], ["heading"]);
-  rerender(panel());
   assertSameElement(screen.queryByRole("button"), null);
 });

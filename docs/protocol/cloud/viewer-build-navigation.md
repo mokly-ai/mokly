@@ -8,29 +8,27 @@ onboarding, and mockup verification.
 
 ## Build Route
 
-`/:workspace/:project/builds/:buildId` resolves the project by its slugs like the
-publication route, then reads the build. The viewer mounts no catalogue: its
+`/:workspace/:project/builds/:buildId` resolves the project by its slugs like
+the publication route, then reads the build. The viewer mounts no catalogue: its
 status is `unpublished` and the build card is the `stageMessage`. The
-publication slot names the build's reference — its branch, or its pull
-request with number, title and author — without a publication SHA, beside the
-state the build's switcher row would read: Publishing now while it is queued
-or running, Published and its day once it is published, Unable to publish once
-it failed or timed out, and Not published once it was superseded or
-cancelled. The published day is the day the build finished. History and the
-switcher open on that reference. Share offers the build's publication once it
-is published; before that the Share trigger is disabled and `panel=share` is
-corrected away, as for any address with nothing published. `panel` and
-`settings` behave as on every viewer route; viewer selection keys do not
-apply, and the route corrects away any it carries. While the first build read
-runs, the slot names
-This build and the stage says Loading build. A `not-found` answer — an unknown
-build, one on another project or one the reader may not see — shows **This
-build is unavailable** with Choose another branch, which opens the switcher,
-and the slot names This build with Build unavailable. Any other failure of the
-first build read shows **This build couldn’t load** with Try again, which
-repeats the read, and the slot names This build with Build couldn’t load.
-UUID permalinks keep the tail, so `/projects/:uuid/builds/:buildId` resolves
-too.
+publication slot names the build's reference — its branch, or its pull request
+with number, title and author — without a publication SHA, beside the state that
+the pill says of a publication: Publishing now while it is queued or running,
+`Ready · {day}` once it is published, Unable to publish once it failed or timed
+out, and Not published once it was superseded or cancelled. The published day is
+the day the build finished. History and the switcher open on that reference.
+Share offers the build's publication once it is published; before that the Share
+trigger is disabled and `panel=share` is corrected away, as for any address with
+nothing published. `panel` and `settings` behave as on every viewer route;
+viewer selection keys do not apply, and the route corrects away any it carries.
+While the first build read runs, the slot names This build and the stage says
+Loading build. A `not-found` answer — an unknown build, one on another project
+or one the reader may not see — shows **This build is unavailable** with Choose
+another branch, which opens the switcher, and the slot names This build with
+Build unavailable. Any other failure of the first build read shows **This build
+couldn’t load** with Try again, which repeats the read, and the slot names This
+build with Build couldn’t load. UUID permalinks keep the tail, so
+`/projects/:uuid/builds/:buildId` resolves too.
 
 ## Request A Build
 

@@ -1,0 +1,271 @@
+/* The note filter: a native radio for all notes and for each main note
+   group, each with its count, and the status of what the page shows. The
+   rules match the filter rules of
+   docs/mockups/styles/site/changelog-timeline.css and
+   changelog-responsive.css; changelog.css says how the site writes the
+   compositions. */
+
+/* The filter: the options of all notes and of each main group, then the
+   status. On mobile the options form rows of two and three 44px targets
+   without icons, over the status. Each row shares its width, and an option
+   is at least as wide as its label and count, which it centres, and 2px on
+   each side, so an option that its row cannot hold moves to a row of its
+   own, at any text size, and an option grows taller with its text. From
+   1100px they share one floating bar with the status, which sticks under
+   the tool bar from 1200px. */
+
+.site-changelog-filterbar {
+  align-items: center;
+  background: none;
+  border-radius: 12px;
+  box-shadow: none;
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  max-width: 100%;
+  padding: 0;
+  position: static;
+  top: calc(60px + 14px);
+  width: 100%;
+  z-index: 20;
+}
+
+.site-changelog-filter {
+  background: var(--mk-color-surface);
+  border: 0;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 3px;
+}
+
+.site-changelog-filter-option {
+  align-items: center;
+  border-radius: 9px;
+  color: var(--mk-color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: var(--mk-font-medium);
+  gap: 7px;
+  justify-content: center;
+  min-height: var(--mk-layout-control-min);
+  padding: 0 2px;
+  position: relative;
+  transition:
+    background var(--mk-motion-fast) var(--mk-motion-easing),
+    color var(--mk-motion-fast) var(--mk-motion-easing);
+  white-space: nowrap;
+}
+
+.site-changelog-filter-option:nth-child(-n + 2) {
+  flex: 1 1 calc(50% - 2px);
+}
+
+.site-changelog-filter-option:nth-child(n + 3) {
+  flex: 1 1 calc(33.33% - 3px);
+}
+
+/* From 768px an option reaches a 44px target through a transparent band */
+
+.site-changelog-filter-option::before {
+  content: none;
+  inset: -5px 0;
+  position: absolute;
+}
+
+.site-changelog-filter-option svg {
+  color: var(--mk-color-text-muted);
+  display: none;
+  flex: none;
+}
+
+.site-changelog-filter-count {
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.71875rem;
+}
+
+.site-changelog-filter-option:hover {
+  background: var(--mk-color-background);
+  color: var(--mk-color-text);
+}
+
+/* The checked option takes the signal fill with its white label */
+
+.site-changelog-filter-option:has(.site-changelog-filter-input:checked) {
+  background: var(--mk-color-signal-fill);
+  color: var(--mk-color-on-signal-fill);
+}
+
+.site-changelog-filter-option:has(.site-changelog-filter-input:checked)
+  :is(svg, .site-changelog-filter-count) {
+  color: var(--mk-color-on-signal-fill);
+}
+
+/* The radio is hidden, so its option draws the focus glow outside the
+   signal fill, on the bar's surface */
+
+.site-changelog-filter-option:has(.site-changelog-filter-input:focus-visible) {
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--mk-color-signal-deep) 75%, transparent);
+}
+
+/* The status, set off from the options by a divider in the floating bar.
+   On mobile it keeps no margin. */
+
+.site-changelog-filter-status {
+  border-left: 0;
+  color: var(--mk-color-text-muted);
+  font-family: var(--mk-font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  margin: 0;
+  padding: 0 0 0 2px;
+  white-space: nowrap;
+}
+
+/* The status of a choice may outgrow the narrowest window, so the mobile
+   line wraps rather than widening the page */
+
+.site-changelog-filterbar > .site-changelog-filter-status {
+  white-space: normal;
+}
+
+/* The desktop composition: one floating bar that sticks under the tool bar,
+   the options with their icons, and the status beside them */
+
+@media (min-width: 768px) {
+  .site-changelog-filterbar {
+    background: var(--mk-color-surface);
+    box-shadow:
+      0 0 0 1px var(--mk-color-border),
+      var(--mk-shadow-small);
+    display: flex;
+    gap: normal;
+    margin-top: 36px;
+    padding: 3px;
+    position: sticky;
+    width: fit-content;
+  }
+
+  .site-changelog-filter {
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+    flex-wrap: nowrap;
+    padding: 0;
+  }
+
+  .site-changelog-filter-option {
+    font-size: 0.84375rem;
+    height: 34px;
+    min-height: auto;
+    padding: 0 11px;
+  }
+
+  .site-changelog-filter-option:nth-child(-n + 2),
+  .site-changelog-filter-option:nth-child(n + 3) {
+    flex: 0 1 auto;
+  }
+
+  .site-changelog-filter-option::before {
+    content: "";
+  }
+
+  .site-changelog-filter-option svg {
+    display: block;
+  }
+
+  .site-changelog-filter-status {
+    border-left: 1px solid var(--mk-color-border);
+    margin: 0 12px 0 8px;
+    padding: 4px 0 4px 14px;
+  }
+
+  .site-changelog-filterbar > .site-changelog-filter-status {
+    white-space: nowrap;
+  }
+}
+
+/* Narrower desktop widths. The filter stops sticking below 1200px and sets
+   its status on a line of its own below 1100px. */
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .site-changelog-filterbar {
+    position: static;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .site-changelog-filterbar {
+    background: none;
+    box-shadow: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0;
+  }
+
+  .site-changelog-filter {
+    background: var(--mk-color-surface);
+    border-radius: 12px;
+    box-shadow:
+      0 0 0 1px var(--mk-color-border),
+      var(--mk-shadow-small);
+    flex-wrap: wrap;
+    padding: 3px;
+  }
+
+  .site-changelog-filter-status {
+    border-left: 0;
+    flex-basis: 100%;
+    margin: 0;
+    padding: 0 0 0 2px;
+  }
+}
+
+/* Forced colours drop the signal fill, and the radio stays hidden, so the
+   checked option takes the system highlight, as the scheme control's chosen
+   segment does, with its count and icon. It keeps these system colours
+   itself, or the browser draws a backplate in the page's colour behind its
+   label. Forced colours also drop the focus glow, so the focused option
+   takes an outline in the system text colour, which stays apart from the
+   highlight. */
+
+@media (forced-colors: active) {
+  .site-changelog-filter-option:has(.site-changelog-filter-input:checked) {
+    background: Highlight;
+    box-shadow: none;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .site-changelog-filter-option:has(.site-changelog-filter-input:checked)
+    :is(svg, .site-changelog-filter-count) {
+    color: HighlightText;
+  }
+
+  .site-changelog-filter-option:has(
+    .site-changelog-filter-input:focus-visible
+  ) {
+    box-shadow: none;
+    outline: 2px solid CanvasText;
+  }
+}
+
+/* The filter needs script, so without script it does not show at any
+   width, and every note shows. This rule follows the steps above. */
+
+@media (scripting: none) {
+  .site-changelog-filterbar {
+    display: none;
+  }
+}

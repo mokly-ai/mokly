@@ -107,6 +107,10 @@ test("the tab's data loads in a status, and a failed load offers Try again", () 
     renderToStaticMarkup(<UsageStatus status="loading" />),
     '<section aria-label="Usage status" class="mbk-reset" data-usage-section="status"><p class="mbk-reset" role="status">Loading usage…</p></section>',
   );
+  assert.equal(
+    renderToStaticMarkup(<UsageStatus status="failed" />),
+    '<section aria-label="Usage status" class="mbk-reset" data-usage-section="status"><p class="mbk-reset" role="alert">Usage couldn’t be loaded.</p><button class="mbk-text-button mbk-reset" type="button">Try again</button></section>',
+  );
   let retries = 0;
   render(<UsageStatus onRetry={() => (retries += 1)} status="failed" />);
   const section = screen.getByRole("region", { name: "Usage status" });
@@ -116,6 +120,15 @@ test("the tab's data loads in a status, and a failed load offers Try again", () 
   );
   fireEvent.click(within(section).getByRole("button", { name: "Try again" }));
   assert.equal(retries, 1);
+});
+
+test("a static depiction's failed load links Try again to its address, with the text button's look", () => {
+  assert.equal(
+    renderToStaticMarkup(
+      <UsageStatus retryHref="../loading/" status="failed" />,
+    ),
+    '<section aria-label="Usage status" class="mbk-reset" data-usage-section="status"><p class="mbk-reset" role="alert">Usage couldn’t be loaded.</p><a class="mbk-text-button mbk-reset" href="../loading/">Try again</a></section>',
+  );
 });
 
 test("an unchecked catalogue says that usage is unavailable until it is checked", () => {

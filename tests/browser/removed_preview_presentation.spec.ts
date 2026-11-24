@@ -51,7 +51,6 @@ async function inspect(page: Page, srcdoc: string) {
         frame.addEventListener("load", () => {
           const doc = frame.contentDocument!;
           resolve({
-            base: doc.querySelector("base")?.getAttribute("href"),
             baseCount: doc.querySelectorAll("base").length,
             baseUri: doc.baseURI,
             bodyText: doc.body.textContent,
@@ -65,6 +64,7 @@ async function inspect(page: Page, srcdoc: string) {
               : null,
             firstHeadNode: doc.head.firstChild?.nodeName.toLowerCase(),
             lang: doc.documentElement.lang,
+            link: doc.querySelector("a")?.href,
             refreshCount: doc.querySelectorAll("meta[http-equiv]").length,
             scriptExecuted:
               (doc.defaultView as Window & { previewExecuted?: boolean })
@@ -121,14 +121,12 @@ test("historical markup becomes one faithful viewer-owned document", async ({
   );
   expect(result.credentials).toBe("omit");
   expect(await inspect(page, result.srcdoc)).toEqual({
-    base: "https://artifact.test/mokly-viewer/diffs/generations/presentation/snapshots/before/assets/",
-    baseCount: 1,
-    baseUri:
-      "https://artifact.test/mokly-viewer/diffs/generations/presentation/snapshots/before/assets/",
+    baseCount: 0,
+    baseUri: `${fixture.url}/`,
     bodyText: "Kept body",
     compatMode: "CSS1Compat",
     doctype: { name: "html", publicId: "", systemId: "" },
-    firstHeadNode: "base",
+    firstHeadNode: "#text",
     lang: "en",
     refreshCount: 0,
     scriptCount: 1,
@@ -156,21 +154,21 @@ test("historical markup becomes one faithful viewer-owned document", async ({
     }),
   );
   expect(await inspect(page, implicit.srcdoc)).toMatchObject({
-    base: result.snapshotAddress,
+    baseCount: 0,
     doctype: null,
-    firstHeadNode: "base",
+    firstHeadNode: undefined,
     lang: "fr",
   });
 
   const invalidBase = await page.evaluate(() =>
     window.loadPreviewPresentation({
-      html: '<base href="http://["><base href="https://ignored.test/"><p>Fallback</p>',
+      html: '<base href="http://["><base href="https://ignored.test/"><a href="?copy=1">Fallback</a>',
     }),
   );
   expect(await inspect(page, invalidBase.srcdoc)).toMatchObject({
-    base: result.snapshotAddress,
-    baseCount: 1,
-    firstHeadNode: "base",
+    baseCount: 0,
+    firstHeadNode: undefined,
+    link: "https://artifact.test/mokly-viewer/diffs/generations/presentation/snapshots/before/archive/page.html?copy=1",
   });
 
   const comments = await page.evaluate(() =>
@@ -184,6 +182,35 @@ test("historical markup becomes one faithful viewer-owned document", async ({
     "element:html",
     "comment: after ",
   ]);
+
+  const assets =
+    "https://artifact.test/mokly-viewer/diffs/generations/presentation/snapshots/before/assets/";
+  expect(await page.evaluate(() => window.inspectPreviewAddresses())).toEqual({
+    baseCount: 0,
+    src: `${assets}dot.svg`,
+    srcset: `${assets}thumb.svg 1x, ${assets}wide.svg 2x`,
+    stylesheet: `${assets}theme.css`,
+    link: `${assets}notes.txt`,
+    fragment: `${assets}#target`,
+    area: `${assets}#target`,
+    poster: `${assets}poster.jpg`,
+    objectData: `${assets}map.svg`,
+    unrelatedData: "keep.txt",
+    svgUse: "#icon",
+    svgXlinkUse: "#other",
+    svgLink: `${assets}#target`,
+    styleAttribute: `mask: url("${assets}mask.svg")`,
+    styleText: `.tile { background: url("${assets}wall.svg"); }`,
+    svgStyle: `.tile { fill: url(#gradient); }<!-- keep -->.tile { stroke: url("${assets}outline.svg"); }`,
+    templateImage: `${assets}shadow.svg`,
+    nestedBases: [
+      { href: null, target: "_blank" },
+      { href: null, target: null },
+    ],
+    nestedImage: `${assets}frame/inner.svg`,
+    deeperImage: `${assets}frame/deep.svg`,
+    unchanged: "<p  title='Raw'>Keep me</p> ",
+  });
 });
 
 test("historical fetches accept only the contracted response", async ({

@@ -3,6 +3,8 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { serveCatalogue } from "./catalogue_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
+import { documentFaces, loadedViewerFaces } from "./document_faces.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof serveCatalogue>>;
 test.beforeEach(({ allowBrowserError }) => {
@@ -190,8 +192,9 @@ function computedParts(root: Locator, selectors: Record<Part, string>) {
 
 async function designParts(page: Page, viewport: "desktop" | "mobile") {
   await page.setViewportSize({ width: 1700, height: 1100 });
-  await page.goto(`/view/design/browse/pages/document/?viewport=${viewport}`);
-  const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
+  await page.goto(`/view/design/canvas/stage/document/?viewport=${viewport}`);
+  // The design screen's Light frame of the chosen viewport on the canvas.
+  const frame = page.frameLocator(canvasFrame(viewport));
   await expect(frame.locator(".mbk-markdown h1")).toHaveText("Payment terms");
   return computedParts(frame.locator("html"), DESIGN);
 }
@@ -217,3 +220,12 @@ for (const [viewport, width] of [
     expect(rendered).toEqual(design);
     expect(design.tableFillsMeasure).toBe(true);
   });
+
+test("a rendered document loads Geist and Geist Mono from the viewer", async ({
+  page,
+}) => {
+  await page.goto(`${fixture.url}/static/mokly-generated/payment/index.html`);
+  await expect
+    .poll(() => documentFaces(page.locator("html")))
+    .toEqual(loadedViewerFaces(`${fixture.url}/mokly-viewer/fonts/`));
+});

@@ -54,6 +54,9 @@ function navigableFrame() {
     addEventListener(type: string, listener: (event: Event) => void) {
       listeners.set(type, listener);
     },
+    removeEventListener(type: string) {
+      listeners.delete(type);
+    },
     fonts: new EventTarget(),
   } as unknown as Document;
   const runtime = probeRuntime(

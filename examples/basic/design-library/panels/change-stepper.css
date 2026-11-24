@@ -1,0 +1,47 @@
+/* The stepper under the right panel's tabs in Changes: a slim row with the
+   entry's place among the branch's changes, then Previous change and Next
+   change as 28px icon controls. A disabled step dims to 42%, as every icon
+   control without a fill or an edge at rest does. */
+.cv-stepper {
+  align-items: center;
+  border-bottom: 1px solid var(--cv-border);
+  display: flex;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 6px 0 14px;
+}
+
+.cv-stepper-count {
+  color: var(--cv-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cv-stepper-steps {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.cv-stepper-step {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  color: var(--cv-text-secondary);
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  padding: 0;
+  width: 28px;
+}
+
+a.cv-stepper-step:hover {
+  background: var(--cv-hover);
+  color: var(--cv-text);
+}
+
+.cv-stepper-step:disabled {
+  color: var(--cv-text-muted);
+  opacity: 0.42;
+}

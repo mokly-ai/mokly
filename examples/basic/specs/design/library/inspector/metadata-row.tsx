@@ -1,9 +1,10 @@
 import { defineComponent, mockLink } from "@mokly/mokly";
 
 import {
-  EntryChip,
   MetadataChips,
+  MetadataLink,
 } from "../../../../../../packages/ui/src/metadata-row/metadata-row.js";
+import { CANVAS_PAGES } from "../../canvas/parts/destinations.js";
 import { tagChip } from "../controls/tag-chip.js";
 import { libraryMetadata } from "../metadata.js";
 import { text, type LibraryProps } from "../schemas.js";
@@ -47,17 +48,17 @@ export const metadataRow = defineComponent({
       slots: { children: <code>Continue</code> },
     },
     {
+      // A related document opens its reading frame, as Inspect's Related
+      // docs row does in the Canvas artboards.
       slug: "linked",
       title: "Linked",
-      props: { label: "Used by", presentation: "metadata" },
+      props: { label: "Related docs", presentation: "metadata" },
       slots: {
         children: (
           <MetadataChips>
-            <EntryChip
-              href={mockLink("design/browse/views/use-case")}
-              kind="use-case"
-              title="Example tour"
-            />
+            <MetadataLink href={mockLink(CANVAS_PAGES.document)}>
+              Payment terms
+            </MetadataLink>
           </MetadataChips>
         ),
       },

@@ -43,10 +43,13 @@ task still calls the wrapper's own methods, so the wrapper's checks stay
 active. A wrapper that checks capture inputs wraps the `ComparisonEncoder` of
 `ComparisonCollector::encoder`, so its checks run on the worker before the
 encoding. It forwards `ComparisonCollector::remaining`, so the waiting views
-keep the same byte bound. `RenderKeys::build_with_workers` also runs one key
-job for each exporting module through `comparison_tasks` on the shared render
-workers. Without the `comparison_tasks` forward, the key calculation runs one
-module at a time.
+keep the same byte bound.
+
+`RenderKeys::build_with_workers` runs one key job for each exporting module
+that gets its own key, through `comparison_tasks` on the shared render workers.
+`RenderKeys::build_reusing_with_workers` runs a job only for each such module
+whose key it does not copy. Without the `comparison_tasks` forward, the key
+calculation runs one module at a time.
 
 `RenderWorkers` wrappers also forward `background` to their inner workers.
 Without that forward, the trait default runs the lookup of a Serve background

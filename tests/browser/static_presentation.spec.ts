@@ -1,9 +1,14 @@
 import { expect } from "@playwright/test";
 
+import { expectCanvasFrames } from "./appearance_assertions.js";
 import { test } from "./browser_test.js";
 import { staticActivationFixture } from "./static_activations_fixture.js";
 import { staticRequests } from "./static_delivery_assertions.js";
-import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
+import {
+  canvasFrame,
+  chooseScheme,
+  expectFrameSource,
+} from "./workspace_actions.js";
 
 let host: Awaited<ReturnType<typeof staticActivationFixture>>;
 test.beforeAll(async () => {
@@ -19,10 +24,7 @@ test("a copied catalogue restores a scheme pin and then its saved appearance", a
     "data-mokly-theme",
     "dark",
   );
-  await expectFrameSource(
-    page.locator(".mbk-frame-mobile iframe"),
-    /index\.mobile\.dark\.html$/,
-  );
+  await expectCanvasFrames(page, "details", true);
   await page.goto(`${host.url}/view/details/`);
   await expect(page.locator("html")).toHaveAttribute(
     "data-mokly-theme",
@@ -34,10 +36,7 @@ test("a copied catalogue restores a scheme pin and then its saved appearance", a
     "data-mokly-theme",
     "dark",
   );
-  await expectFrameSource(
-    page.locator(".mbk-frame-mobile iframe"),
-    /index\.mobile\.dark\.html$/,
-  );
+  await expectCanvasFrames(page, "details", true);
   requests.assert();
 });
 
@@ -46,7 +45,7 @@ test("copied light-only documents keep native light media and controls under Dar
 }) => {
   const requests = staticRequests(page);
   await page.goto(`${host.url}/view/home/`);
-  const frame = page.locator(".mbk-frame-mobile iframe");
+  const frame = page.locator(canvasFrame("mobile"));
   await expect(
     frame.contentFrame().getByRole("textbox", { name: "Native input" }),
   ).toBeVisible();

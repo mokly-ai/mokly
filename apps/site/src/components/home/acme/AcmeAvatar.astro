@@ -1,0 +1,30 @@
+---
+/**
+ * A customer's avatar in the depicted acme/storefront app: initials on a
+ * warm gradient of its hue.
+ *
+ * - `initials`: the letters, such as `JE`.
+ * - `tone`: `terra` (the default), `sage`, `plum` or `cream`.
+ * - `size`: `large` or `small`; the default sits between them.
+ *
+ * Use: `<AcmeAvatar initials="JE" size="small" />`.
+ */
+
+interface Props {
+  readonly initials: string;
+  readonly size?: "large" | "small";
+  readonly tone?: "cream" | "plum" | "sage" | "terra";
+}
+
+const { initials, size, tone = "terra" } = Astro.props;
+---
+
+<span
+  class:list={[
+    "site-acme-avatar",
+    `site-acme-avatar--${tone}`,
+    size && `site-acme-avatar--${size}`,
+  ]}
+>
+  <span>{initials}</span>
+</span>

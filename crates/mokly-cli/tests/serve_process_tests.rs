@@ -55,7 +55,8 @@ async fn start(extra: &[&str]) -> Running {
         "viewer/browser/shell.js",
         "viewer/browser/frame-probe.js",
         "viewer/shell.css",
-        "viewer/assets/fonts/InterVariable.woff2",
+        "viewer/assets/fonts/Geist-Variable.woff2",
+        "viewer/assets/fonts/GeistMono-Variable.woff2",
         "viewer/assets/brand.svg",
     ] {
         write(root.path(), path, "");

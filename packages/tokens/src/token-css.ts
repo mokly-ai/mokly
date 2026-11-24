@@ -1,5 +1,4 @@
-import { paletteColors } from "./palettes";
-import type { PaletteRoles } from "./palettes";
+import { documentPalettes, paletteColors } from "./palettes";
 import { tokens } from "./tokens";
 import type { TokenColorScheme, TokenViewport } from "./tokens";
 
@@ -20,11 +19,6 @@ export function cssVariables(tree: TokenTree, prefix = "--mk"): string {
     .join("");
 }
 
-const scopes: readonly [PaletteRoles, string][] = [
-  ["paper", "paper-scope"],
-  ["folio", "folio-scope"],
-];
-
 function typeVariables(viewport: TokenViewport): string {
   return cssVariables({
     type: Object.fromEntries(
@@ -41,17 +35,14 @@ function typeVariables(viewport: TokenViewport): string {
 }
 
 function scopeCss(scheme: TokenColorScheme, root?: string): string {
-  return scopes
-    .map(
-      ([palette, scope]) =>
-        (root === undefined
-          ? "." + scope
-          : root + "." + scope + "," + root + " ." + scope) +
-        "{" +
-        cssVariables({ color: paletteColors(scheme, palette) }) +
-        "}",
-    )
-    .join("");
+  const { roles, scope } = documentPalettes.paper;
+  const selector =
+    root === undefined
+      ? "." + scope
+      : root + "." + scope + "," + root + " ." + scope;
+  return (
+    selector + "{" + cssVariables({ color: paletteColors(scheme, roles) }) + "}"
+  );
 }
 
 /** Viewport and theme values belong to the document, not duplicated screen trees. */

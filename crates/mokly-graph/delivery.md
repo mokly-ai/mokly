@@ -8,6 +8,9 @@ list names the entry points of these parts.
 
 ## Stylesheet roots
 
+`DeliveryInputs` supplies module CSS roots, the bundle generation, component
+stylesheet lists, and exporting modules from the sidecar adapter.
+
 Configured and declared stylesheet roots and
 links name local stylesheets by `ResolvedConfig::repository_path`. Completed
 JavaScript, stylesheet, PostCSS, and asset inputs populate the prepared
@@ -50,6 +53,9 @@ diagnostic. Explicit cancellation retains the cancelled runtime diagnostic.
 
 `FilePolicy` is the one policy of the public closure contract for one
 generation. `Walker` follows HTML and CSS references and renderer seeds.
+Each walk takes the `ViewerFonts` permission of its document's entry: only a
+Markdown document's own CSS may name the viewer's two faces, which the walk
+skips like external references.
 Each `MemoryReferenceIndex` reads the inline style scans of the walk through
 the style memo that `DeliveryInputs` passes in. The render runtime passes one
 memo to all its generations, so an equal inline style text reuses a scan that

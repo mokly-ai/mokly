@@ -5,6 +5,7 @@ import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { reconcileDisclosures } from "./disclosure_storage.js";
+import { BOTH_SCHEMES } from "./frames_filter.js";
 import {
   catalogueNavSections,
   defaultDisclosures,
@@ -47,29 +48,24 @@ export function createInitialShellState(
       disclosures,
       disclosurePath(sections, route.view.target.entry.path),
     );
-  const componentDefault =
-    route.view.kind === "target" &&
-    route.view.target.entry.kind === "component";
-  const detailsOpen = initial?.detailsOpen ?? componentDefault;
   return {
     announcement: "",
     changesStatus: context.changesStatus,
     comparisonIntent: route.comparison === "side",
-    detailsOpen,
     disclosures,
-    drawerOpen: false,
-    expandedFrame: undefined,
     filterBaseline: undefined,
-    inspectorTab: detailsOpen ? "details" : undefined,
+    frames: BOTH_SCHEMES,
     navigationMaximum: initial?.navigationMaximum ?? 480,
-    navigationWidth: initial?.navigationWidth ?? 248,
+    navigationWidth: initial?.navigationWidth,
     navScroll: 0,
+    panelTab: "inspect",
     query: "",
-    regionScrolls: {},
     revealedFolder: undefined,
     route,
     routeInstallation: 0,
     selection,
+    sheet: undefined,
+    sheetExpanded: false,
     tagPickerIndex: 0,
     tagPickerOpen: false,
   };

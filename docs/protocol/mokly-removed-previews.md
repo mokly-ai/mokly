@@ -5,21 +5,32 @@
 Opening a removed screen, page, or document shows its previous version: the
 entry's views rendered from the base commit's sources under
 [Sides](./mokly-comparison.md#sides), the same commit that produced its
-Changes row. The heading keeps its Removed badge, breadcrumbs keep the textual
-base ancestry, and Details keeps its historical metadata. A quiet label above
-the stage reads “Showing previous version.” No Current selector, comparison
-band, refresh control, Props editing, current inspector bindings, or current
-usage or comment markers appear.
+Changes row. The previous version stands on the
+[canvas](./mokly-shell-canvas-stage.md#section) as the entry's section. The
+section head holds the entry's title tag, its path chip, its Removed status
+and the quiet label `Showing previous version`. In the compact layout, the
+entry bar shows that label on a second line. The entry offers no compare mode,
+not even Current, and no Refresh. No Props editing, current inspector
+bindings, or current usage or comment markers appear. The right panel stays,
+and Inspect keeps the base commit's record. A removed screen's Highlight
+components switch is unavailable, and its reason reads
+`This preview is unavailable.` The
+[Changes tab](./mokly-changes-controls.md#changes-tab) gives its Compared rail.
 
-A removed page or document renders its historical document in the plain
-document pane; a document's Light and Dark choices follow the historical
-schemes that exist, and a page is light only. A removed document without a
-historical dark version keeps its light version under Dark, and its label
-reads `Showing previous version — Light only` when the catalogue has a dark
-axis. A removed screen renders its historical mobile and desktop frames; Light
-and Dark choices follow the historical views that exist. A saved scheme
-without a historical view falls back to Light with the light-only note.
-Removed screens stay outside comparison modes; an incoming comparison URL
+A removed screen's section holds one canvas frame for each historical view,
+as a current screen's section does, light-only views included: Desktop beside
+Mobile, and the Light row above the Dark row, at one zoom. A removed page or
+document opens as one reading frame that holds its historical document. A page
+is light only. A document's reading frame shows its historical version of the
+preview colour scheme. A removed document without a historical dark version
+keeps its light version under Dark, and the head's label then reads
+`Showing previous version — Light only` when the catalogue has a dark axis.
+Decision: the previous version opens as canvas frames in the entry's section,
+not in device frames or a document pane, because one frame model then serves
+every entry kind. It does not stand as the Before side of an empty comparison,
+because a removed screen offers no compare mode.
+
+Removed screens stay outside the compare modes; an incoming comparison URL
 opens the preview instead. A removed component entry has no preview: it
 stays eligible for comparison with an explicit missing current side under
 [variant navigation](./mokly-variant-navigation.md#changes-rows). An entry
@@ -27,16 +38,17 @@ the [move contract](./mokly-moves.md) pairs with a base entry is not removed
 and has no preview; where its kind has a comparison, that comparison uses the
 paired base entry as its before side.
 
-A selected viewport with no historical view shows a note where its frame
-would be, never a blank stage. The note reads “No previous mobile version was
-captured. Switch to Desktop to see it.”, exchanging the two viewport names
-for the desktop case. A preview with no views at all is unavailable instead,
-so the viewport the note names always holds a view. Selecting both viewports
-puts that view on the stage beside the note, so only the first sentence is
-shown there. The note carries the `mbk-preview-note` class and its closing
-sentence the `mbk-preview-switch` class, the classes the design catalogue's
-stage stylesheet owns, and the second sentence is hidden rather than
-rewritten while both viewports are selected.
+A viewport with no historical view draws its note where its frame would
+stand, never a blank space. That place keeps the frame's size and label, with
+no surface, ring, shadow or size tag, and the note keeps its size at every
+zoom. The note reads “No previous mobile version was captured. Switch to
+Desktop to see it.”, exchanging the two viewport names for the desktop case. A
+preview with no views at all is unavailable instead, so the viewport the note
+names always holds a view. The second sentence shows only while no frame of
+the other viewport shows, as in the compact layout or while the Frames filter
+hides that viewport. Otherwise the second sentence is hidden, not rewritten.
+The note carries the `mbk-preview-note` class and its closing sentence the
+`mbk-preview-switch` class.
 
 Historical content is read-only in every host, including a viewer embedded
 across origins. Scrolling, text selection, and same-document anchors work,
@@ -51,11 +63,13 @@ did, without offline copies.
 The shell requests the preview when the removed entry is selected, in Serve
 and in a static build alike. Ordinary browsing, All/Changes filtering,
 search, navigation, and revision updates never request historical bytes.
-While the request runs the stage reads “Loading previous version…”; a failure
-shows “Previous version unavailable” with Retry while the catalogue stays
-usable. Current bytes, current fragments, or invented content never stand in
-for missing history. A build without Changes has no removed entries and
-therefore no previews.
+While the request runs, the canvas holds “Loading previous version…” in place
+of the section. A failure shows “Previous version unavailable” there, with
+“The previous version could not be loaded.” and Retry, which requests the
+preview again. The catalogue, the right panel, and the compact layout's entry
+bar with the Removed status stay usable. Current bytes, current fragments, or
+invented content never stand in for missing history. A build without Changes
+has no removed entries and therefore no previews.
 
 ## Delivery
 
@@ -149,9 +163,9 @@ navigation message exists for them.
 
 Serve, the static build, and embedded viewers with either adapter use one
 presentation path. After the removed entry's detail validates, the viewer
-fetches every historical document needed by the selected viewport and scheme
-before reporting ready. Its URL must be on the configured source origin
-beneath the before-side directory of the generation that the index's
+fetches the historical document of every shown frame before reporting ready.
+Its URL must be on the configured source origin beneath the before-side
+directory of the generation that the index's
 `comparisonUrl` names and the detail's `generation` confirms. The GET carries
 the mount's abort signal and the credential rule of the
 [comparison pane contract](./mokly-comparison-panes.md). Comparison loaders
@@ -171,19 +185,35 @@ Retry. Cancellation after unmount or replacement is silent, and late work
 cannot change the replacement stage.
 
 Parse the body as an inert HTML document. Preserve document-level comments
-before and after the document element in their parsed order. Resolve the
-first `<base href>` in document order against the document address, falling
-back to that address when there is no such element or its value is
-unresolvable. Remove every consumer `<base>` and every `<meta>` whose
-`http-equiv`, after trimming ASCII whitespace, equals `refresh` under ASCII
-case-insensitive comparison. Prepend exactly one `<base href>` for the
-effective base as `head`'s first child, including for an implicit head.
-Serialize the source doctype's name, public identifier, and system identifier
-before the document element, or preserve its absence, so the markup stays
-faithful. A `srcdoc` document always renders in no-quirks mode, so a version
-that relied on quirks or limited-quirks rendering may differ from its original
-presentation; this is accepted. Otherwise serialize parsed nodes without
-mutation; do not rewrite resource attributes, links, text, or styles.
+before and after the document element in their parsed order. The effective base
+is the first `<base href>` in document order, resolved against the document
+address, or that address when there is none or it does not resolve. Remove
+every `<base>` and every `<meta>` whose `http-equiv`, after trimming ASCII
+whitespace, equals `refresh`, ignoring ASCII case. Add no `<base>`. Serialize
+the source doctype's name, public identifier, and system identifier before the
+document element, or preserve its absence. A `srcdoc` document always renders
+in no-quirks mode, so a version that relied on quirks or limited-quirks
+rendering may differ from its original presentation; this is accepted.
+
+Replace each relative address with its absolute form, resolved against the
+effective base: every `src`, `href`, `xlink:href`, and `poster` attribute, the
+`data` of an `<object>`, each `srcset` URL, and, in a `style` attribute or an
+HTML or SVG `<style>` element, each `url()`, each `@import` string, and each
+direct string argument of `image-set()` or `-webkit-image-set()`. An address
+stays unchanged when it has a scheme, is empty after trimming ASCII whitespace,
+or does not resolve. A fragment-only address (`#name`) stays too, except as the
+address of an HTML `<a>` or `<area>` or an SVG `<a>`. This keeps CSS `url(#id)`
+and SVG `<use href="#icon">` same-document references, and lets the guard below
+recognize a same-document link by its resolved URL. The address edits also
+apply in `<template>` contents and, recursively, in each `<iframe srcdoc>`
+document, whose effective base uses the outer effective base in place of the
+document address. Such a document keeps its `<base>` elements without `href`,
+so `<base target>` still applies, and a `srcdoc` value with nothing to edit
+stays byte-identical. Nothing else is rewritten. Decision: the viewer resolves
+the addresses itself, because a host's `base-uri 'none'`, as on the Mokly Cloud
+catalogue origin, blocks every `<base>` in a `srcdoc` document. Requiring hosts
+to allow `base-uri 'self'` was rejected because it relaxes a security header,
+and documenting the limit because relative images and links stay broken.
 
 The viewer assigns that serialization to `srcdoc`, never `src`, on a frame
 with exactly `sandbox="allow-same-origin"`. The presented document therefore
@@ -207,10 +237,10 @@ presentation document, the parent reapplies the accepted `srcdoc` and guard.
 These edits exist only in memory; the generation's bytes stay identical.
 
 Navigation, revision or source replacement, unmount, and viewport or scheme
-changes fence late responses exactly as comparisons do: a preview response
-can never replace another entry's stage. Back/Forward, direct removed-entry
-URLs, stale or unknown snapshot ids, a replaced generation, embedded
-controlled selection, and several viewers on one page follow the
+changes fence late responses: a preview response can never replace another
+entry's stage. Back/Forward, direct removed-entry URLs, stale or unknown
+snapshot ids, a replaced generation, embedded controlled selection, and
+several viewers on one page follow the
 [fences](./mokly-shell-delivery.md#fetch-and-fences) of the shell delivery
 contract and the pane [lifecycle](./mokly-comparison-panes.md#lifecycle).
 Saved viewport and scheme choices are revalidated against the historical

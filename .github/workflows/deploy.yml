@@ -428,6 +428,8 @@ jobs:
         run: |
           npm install --global npm@11.21.0
           npm ci
+      - name: Build UI package for the email tokens
+        run: npm run build --workspace @mokly/ui
       - name: Check committed templates against the mockups
         run: npm run emails:check
       - name: Check dedicated sync identity
@@ -763,6 +765,8 @@ jobs:
         run: |
           npm install --global npm@11.21.0
           npm ci
+      - name: Build UI package for the email tokens
+        run: npm run build --workspace @mokly/ui
       - name: Check committed templates against the mockups
         run: npm run emails:check
       - name: Check dedicated sync identity

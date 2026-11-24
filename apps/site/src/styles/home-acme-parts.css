@@ -1,0 +1,250 @@
+/* The depicted acme/storefront app, continued: the parts that many acme
+   screens share. The coffee bags and their tiles, the fields, the
+   segmented control, the brew chips and the page dots, and the rows of a
+   tile or an icon, a text column and an amount. Each colour comes from
+   the hues and the surfaces of home-acme.css. The rules match
+   docs/mockups/styles/site/home-acme-parts.css. */
+
+/* The coffee bags and their tiles: each part mixes the roast's hue */
+
+.site-acme-tile {
+  background: color-mix(
+    in srgb,
+    currentColor 24%,
+    var(--mk-color-on-signal-fill)
+  );
+  border-radius: 15px;
+  display: grid;
+  flex: none;
+  height: 64px;
+  place-items: center;
+  width: 64px;
+}
+
+.site-acme-tile--medium {
+  border-radius: 13px;
+  height: 58px;
+  width: 58px;
+}
+
+.site-acme-tile--small {
+  border-radius: 11px;
+  height: 42px;
+  width: 42px;
+}
+
+.site-acme-tile .site-acme-bag {
+  width: 58%;
+}
+
+.site-acme-bag {
+  display: block;
+  height: auto;
+}
+
+.site-acme-bag-body {
+  fill: currentColor;
+}
+
+.site-acme-bag-side,
+.site-acme-bag-top {
+  fill: color-mix(in srgb, currentColor 78%, var(--mk-color-on-signal));
+}
+
+.site-acme-bag-side {
+  opacity: 0.5;
+}
+
+.site-acme-bag-shine {
+  fill: var(--mk-color-on-signal-fill);
+  opacity: 0.16;
+}
+
+.site-acme-bag-fold {
+  fill: none;
+  stroke: var(--mk-color-on-signal);
+  stroke-opacity: 0.14;
+  stroke-width: 0.8;
+}
+
+.site-acme-bag-label {
+  fill: color-mix(in srgb, currentColor 5%, var(--mk-color-on-signal-fill));
+}
+
+.site-acme-bag-mark {
+  fill: none;
+  stroke: color-mix(in srgb, currentColor 22%, var(--mk-color-on-signal));
+  stroke-linecap: round;
+  stroke-width: 1.4;
+}
+
+.site-acme-bag-line {
+  fill: color-mix(in srgb, currentColor 22%, var(--mk-color-on-signal));
+  opacity: 0.78;
+}
+
+.site-acme-bag-line--soft {
+  opacity: 0.36;
+}
+
+.site-acme-bag-shadow {
+  fill: var(--mk-color-on-signal);
+  opacity: 0.14;
+}
+
+/* Fields, the segmented control, the brew chips and the page dots */
+
+.site-acme-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 14px;
+  min-width: 0;
+}
+
+.site-acme-field-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.site-acme-input {
+  align-items: center;
+  border-radius: 13px;
+  display: flex;
+  font-size: 15.5px;
+  gap: 10px;
+  height: 50px;
+  padding: 0 14px;
+  position: relative;
+}
+
+.site-acme-input-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-acme-input--focus::after,
+.site-acme-input--error::after {
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  content: "";
+  inset: 0;
+  position: absolute;
+}
+
+.site-acme-input--focus::after {
+  box-shadow:
+    inset 0 0 0 1.5px currentColor,
+    0 0 0 4px color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.site-acme-field-note {
+  font-size: 12.5px;
+}
+
+.site-acme-apply {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.site-acme-pair {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.site-acme-segmented,
+.site-acme-chips,
+.site-acme-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.site-acme-segmented {
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  border-radius: 13px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
+  margin-top: 20px;
+  padding: 4px;
+}
+
+.site-acme-segmented > span {
+  border-radius: 10px;
+  display: grid;
+  font-size: 14px;
+  font-weight: 600;
+  height: 36px;
+  padding: 0 18px;
+  place-items: center;
+}
+
+.site-acme-chips {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 22px;
+}
+
+.site-acme-chips > span {
+  border-radius: 19px;
+  font-size: 14px;
+  font-weight: 550;
+  height: 38px;
+  padding: 0 15px;
+}
+
+.site-acme-chips > span > span {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  height: 100%;
+}
+
+.site-acme-chips .site-acme-chips-on {
+  box-shadow: none;
+}
+
+.site-acme-chips .site-acme-icon {
+  height: 16px;
+  stroke-width: 2.2;
+  width: 16px;
+}
+
+.site-acme-dots {
+  gap: 6px;
+}
+
+.site-acme-dots i {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 3px;
+  height: 6px;
+  width: 6px;
+}
+
+.site-acme-dots .site-acme-dots-on {
+  background: currentColor;
+  width: 22px;
+}
+
+/* Rows of a tile or an icon, a text column and an amount. The order line,
+   which the mockups also list here, keeps all its declarations in
+   home-acme-checkout.css. */
+
+.site-acme-mini-summary,
+.site-acme-line-card,
+.site-acme-profile,
+.site-acme-saved,
+.site-acme-toast {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.site-acme-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}

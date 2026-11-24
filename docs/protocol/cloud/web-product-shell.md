@@ -142,17 +142,17 @@ Share API can represent and never validates package route state. It exchanges
 the catalogue grant with readiness scoped to the exact publication attempt,
 polls for a newer publication on this reference, and returns focus to the
 current trigger of the action that opened an overlay. Every value shown comes
-from the API's
-workspace, project, reference, publication, history, build, build-log,
-screen, share-link and catalogue-grant reads, and the stage's build controls
-write through the API's build request and cancel operations.
+from the API's session, workspace, project, reference, publication, history,
+build, build-log, screen, share-link and catalogue-grant reads, and the stage's
+build controls write through the API's build request and cancel operations.
 
-The route keeps the stage ancestor as one element when a panel or settings
-opens. It has `id="main"` and `role="main"` only without an overlay; its
-heading and cloud skip link follow that same condition. Opening an overlay
-changes the stage's geometry and `aria-hidden` state without remounting the
-package, so its frames are preserved. The hidden ancestor gives up its
-accessible landmark and heading while the overlay owns the document.
+The route keeps the stage ancestor as one element when a panel, settings or
+the **More** sheet of a touch viewport opens. It has `id="main"` and
+`role="main"` only while none of them is open; its heading and cloud skip link
+follow that same condition. Opening one changes the stage's geometry and
+`aria-hidden` state without remounting the package, so its frames are
+preserved. The hidden ancestor gives up its accessible landmark and heading
+while the panel, the dialog or the **More** sheet owns the document.
 
 Query-only Back can reconstruct an Expo route. The browser document keeps one
 active origin/credential source and its version error across that
@@ -161,16 +161,18 @@ clears the error. The source keeps the catalogue index it read, so a
 reconstruction does not read it again. A reload creates a new
 document scope and starts fresh.
 
-The adapter composes the six cloud controls into package `topBarStart` and
-`topBarEnd`; the package keeps its Browse rail and stage. Each slot trigger
-opens exactly one overlay. The settings dialog and the four panels are the same
-overlay position: the address decides which, and the viewer gives up its
-landmark and heading the moment the address says so rather than a frame later.
-Focus returns to the current trigger of the logical action that the press came
-from. Opening an overlay keeps that chrome mounted; a fallback/package handoff,
-a route reconstruction or a change between the full and compact bar can
-replace its controls. Opening a panel pushes one history entry; closing
-undoes it.
+The adapter composes the five cloud actions of [Viewer
+chrome](./viewer-chrome.md#slot-inventory) into package `topBarStart`,
+`topBarCenter` and `topBarEnd`; the package keeps its own catalogue and stage.
+Each panel trigger opens exactly one overlay, and the account trigger and
+**More** open a [menu](./viewer-chrome-account.md#menus) instead. The settings
+dialog and the four panels are the same overlay position: the address decides
+which, and the viewer gives up its landmark and heading the moment the address
+says so rather than a frame later. Focus returns to the current trigger of the
+logical action that the press came from. Opening an overlay keeps that chrome
+mounted; a fallback/package handoff, a route reconstruction or a change between
+the full and compact bar can replace its controls. Opening a panel pushes one
+history entry; closing undoes it.
 
 The viewer also draws its own `main` and skip link. Its public React
 API provides no host control for those elements. The ready state therefore has

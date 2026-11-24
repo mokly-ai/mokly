@@ -1,15 +1,19 @@
 # Public Site
 
 This contract defines the public Mokly website: the marketing home, the
-documentation, the changelog and the legal documents. The site is
-built from this repository and deployed as static files. Mokly Cloud keeps
-only the logged-in application and its sign-in and sign-up routes. The site
-never links to them and never calls the cloud API. Design tokens are in
-[Site design](./site-design.md), the documentation architecture in
-[Site docs](./site-docs.md), and build, tests and deployment in
-[Site delivery](./site-delivery.md). The published policy contract is in
-[Site legal](./site-legal.md). The [architecture doc](../../architecture/cloud.md)
-places the site, the origin router and the app on the one public origin.
+documentation, the changelog, the pricing page and the legal documents. The
+site is built from this repository and deployed as static files. Every page
+reads as a part of one depicted design file, `mokly.ai`: frames on a canvas,
+with the people and agents who work in the file. Mokly Cloud
+keeps only the logged-in application and its sign-in and sign-up routes. The
+site links to one of them, `/sign-up`, and never calls the cloud API. The
+shared header, footer and scheme control are in [Site chrome](./site-chrome.md).
+The look, its tokens and the brand are in [Site design](./site-design.md), the
+documentation architecture in [Site docs](./site-docs.md), and build, tests and
+deployment in [Site delivery](./site-delivery.md). The published policy
+contract is in [Site legal](./site-legal.md). The
+[architecture doc](../../architecture/cloud.md) places the site, the origin
+router and the app on the one public origin.
 
 ## Boundary
 
@@ -19,28 +23,55 @@ places the site, the origin router and the app on the one public origin.
   the exact installed `@mokly/mokly` package. The site locates that package
   through the npm workspace installation and never imports its private code.
 - Output is static HTML, CSS, JavaScript and images. No page calls an API at
-  runtime, sets a cookie or loads a third-party script. Analytics is off; if
-  enabled later it must be a cookie-free, build-time-configurable setting
-  that defaults to disabled.
+  runtime, sets a cookie or loads a script, a font or any other resource from
+  a third-party host. Analytics is off; if enabled later it must be a
+  cookie-free, build-time-configurable setting that defaults to disabled.
+- Every page reads fully without script.
 - The same deployment publishes transparent Mokly lockup and icon assets under
   `/brand/` in SVG and PNG formats. Explicit `-light` and `-dark` variants
   target light and dark surfaces; unsuffixed paths alias the light variants.
   These are stable assets rather than page routes.
-- Every value shown comes from a real source: the installed package, this
-  repository's dogfood catalogue, or checked-in cloud-owned Markdown. No
-  invented customers, testimonials, counts, integrations or dates.
+- Every claim about Mokly comes from a real source: the installed package, this
+  repository, or its checked-in cloud-owned Markdown. No page invents a
+  customer, a testimonial, a count, an integration or a date about Mokly.
+- The site may draw the demo app: the clearly fictional coffee shop
+  `acme/storefront`, with its screens, branches, pull request and counts. It
+  may also draw the people of the design file, Maya and Sam. Both stay as
+  fiction after the production domain goes live.
+- Until go-live, the site may also depict features that the product does not
+  have yet: comments, approvals, agent sessions and presence. Presence inside a
+  depicted Mokly screen counts as such a feature, and so does each named agent,
+  Claude and Codex, wherever the site draws it.
+- The site source marks each drawing of such a feature, and the
+  [site mockups](./site-mockups.md#mockups) mark the same drawing. The mark
+  names the features of its drawing, and no page or mockup renders it. One
+  search finds every mark in both, together with the
+  [ahead pages](#ahead-of-release-pages).
+- Before go-live, the [alignment pass](#ahead-of-release-pages) checks every
+  marked drawing against the deployed product. A drawing of a feature that did
+  not ship is removed, together with the copy that names the feature. The
+  removal changes the site mockups first, because they are the visual source
+  of truth, and then the site. A drawing whose features all shipped loses its
+  mark in both.
+- Decision 2 draws the demo app as static components at build time. A real
+  example catalogue that Mokly renders was rejected, because it turns the
+  redesign into catalogue work. Decision 20 keeps the demo app and the people
+  after go-live and checks only the depicted Mokly features. Ending both at
+  go-live was rejected, because it removes the home spread and the people from
+  every page header.
 
 ## Routes
 
-| Route         | Purpose                                                   | Primary action              |
-| ------------- | --------------------------------------------------------- | --------------------------- |
-| `/`           | Explain Mokly as a design tool for teams; lead to the CLI | Get started → Install guide |
-| `/docs/…`     | Documentation for the CLI, authoring, catalogue and cloud | Read; search                |
-| `/changelog`  | Release notes from the installed package changelog        | Open the release on GitHub  |
-| `/terms`      | Terms of Service for Mokly Cloud                          | Read; open another policy   |
-| `/privacy`    | Privacy Policy for Mokly Cloud                            | Read; open another policy   |
-| `/complaints` | How to make and follow a complaint                        | Read; contact Mokly         |
-| `/security`   | Current service security controls and reporting guidance  | Read; report a concern      |
+| Route         | Purpose                                                   | Primary action                   |
+| ------------- | --------------------------------------------------------- | -------------------------------- |
+| `/`           | Explain Mokly as a design tool for teams; lead to the CLI | Get started → Install guide      |
+| `/docs/…`     | Documentation for the CLI, authoring, catalogue and cloud | Read; search                     |
+| `/changelog`  | Release notes from the installed package changelog        | Open the release on GitHub       |
+| `/pricing`    | The open-source CLI and the plans of Mokly Cloud          | Start a 7-day trial → `/sign-up` |
+| `/terms`      | Terms of Service for Mokly Cloud                          | Read; open another policy        |
+| `/privacy`    | Privacy Policy for Mokly Cloud                            | Read; open another policy        |
+| `/complaints` | How to make and follow a complaint                        | Read; contact Mokly              |
+| `/security`   | Current service security controls and reporting guidance  | Read; report a concern           |
 
 Every route also serves under its trailing-slash form and a `404.html` page
 uses the shared layout. There are no other public routes.
@@ -51,43 +82,40 @@ ownership reaches the origin router and the reserved workspace names.
 
 ## Get Started
 
-**Get started** links to the relative path `/docs/start/install/`, the first
-Getting started guide. The site carries no **Sign in** link and no link to
-an application route, so the launch leads readers to the open-source CLI.
-The site build fails on a link to a path the site does not publish.
+**Get started →** links to the relative path `/docs/start/install/`, the first
+Getting started guide, from every place that shows it: the header, the menu,
+the home and the Open source plan of the pricing page. The home's **Download
+for Mac** opens `https://github.com/mokly-ai/mokly-desktop/releases`, the
+release list of the desktop app. **GitHub** and **View on GitHub** open the
+public `https://github.com/mokly-ai/mokly` repository.
+
+The site links one application route. **Create an account** and **Start a
+7-day trial** on the pricing page link to the relative path `/sign-up`. The
+site has no **Sign in** link. The site build fails on a link to a path that the
+site does not publish, unless [Site delivery](./site-delivery.md) accepts the
+path as an application route. Decision 3 links the plan actions to the app
+now. Sending them to the Plans and billing docs page until the cloud launch
+was rejected, because the cloud features ship before go-live.
 
 The site and the app share the production apex rather than separate hosts;
 the [origin router](./origin-router.md) sends application paths to the app.
-A PR site preview keeps its `pr-N.mokly-site.pages.dev` Pages alias; its bot
-comment gives the reviewer the app address `https://pr-N.preview.D/sign-in`.
-An app preview is `https://<label>.preview.D` and serves no site.
-Main-preview has no site.
+A PR site preview keeps its `pr-N.mokly-site.pages.dev` Pages alias, which
+serves no application route; its bot comment gives the reviewer the app
+address `https://pr-N.preview.D/sign-in`. An app preview is
+`https://<label>.preview.D` and serves no site. Main-preview has no site.
 
 ## Shared Header And Footer
 
-Every page renders the same header and footer around one `main` landmark.
+[Site chrome](./site-chrome.md) defines the header, the menu, the footer and
+the scheme control that every page shares.
 
-- Brand: the Mokly mark beside the lowercase serif wordmark `mokly` with a
-  green period. The brand links Home with the accessible name "Mokly home".
-- Desktop header: brand, **Docs**, **Changelog**, **GitHub**, and a small
-  rounded secondary button **Get started →**. **GitHub** links directly
-  to the public `https://github.com/mokly-ai/mokly` repository.
-- Mobile header (below 768px): the brand and a control named "Menu"; on
-  documentation routes the search control takes the row beneath. The control
-  opens a modal dialog named "Menu" that slides in from the right edge over
-  the dimmed page and lists **Docs**, **Changelog**, **GitHub** and
-  **Get started →**. Its "Close menu" control takes the menu
-  control's place and focus. That control, Escape and a press on the dimmed
-  page close the menu and return focus to the menu control. Widening to the
-  desktop header or leaving the page also closes it.
-- Footer: the brand with the line stating the Mokly CLI is open source under
-  the MIT license, then two link columns in this reading order — Product
-  (**Home**, **Docs**, **Changelog**) and Legal (**Terms**, **Privacy**,
-  **Complaints**, **Security**).
-- A skip link to `#main` is the first focusable element. The current route's
-  header, menu and footer links carry `aria-current="page"`; a docs page marks
-  **Docs**. Every link and control has a visible focus ring and a target of at
-  least 44px. Reading order is header, main, footer on every viewport.
+## Accessibility
+
+- A depiction is a drawing of the design file or of a product that the reader
+  looks at but does not use, such as the file title, the avatars, the cursors,
+  the status bar, the demo app and the depicted Mokly screens. Every depiction
+  is hidden from assistive technology and holds nothing that takes focus.
+- Every animation honours reduced motion and then shows its finished state.
 
 ## Positioning
 
@@ -120,32 +148,22 @@ below.
 
 ## Home Copy
 
-[Site home copy](./site-copy.md) defines the approved hero, real dogfood
-stage, features and closing.
+[Site home copy](./site-copy.md) defines the approved hero, the demo spread,
+the Specs panel, the features and the open foundation.
 
 ## Pricing
 
-The site publishes no pricing page and no plan prices. The launch leads with
-the open-source CLI, and Mokly Cloud pricing returns with the cloud launch.
-`pricing` stays a reserved workspace name through the GitHub-derived policy
-seed.
+[Site pricing](./site-pricing.md) defines `/pricing`: the open-source CLI and
+the Free and Team plans of Mokly Cloud, the comparison and the questions.
+[Billing](./billing.md) stays the one source of every plan fact. `pricing` is a
+reserved workspace name through the GitHub-derived policy seed.
 
 ## Changelog
 
-`/changelog` renders every release in the installed package's `CHANGELOG.md`
-newest first. Each entry shows the version as a **Mokly CLI `<version>`**
-label, the release date from the heading, the grouped notes (breaking changes,
-features, bug fixes, performance) with their links preserved, and one link to
-the GitHub compare or release view from the heading. Entries whose heading has
-no link show no link. If the file has no release headings, the page shows
-**Updates will appear here**. The page also publishes an Atom feed at
-`/changelog.xml`, linked from every page. The parser never guesses a date or
-invents a title: a level-two heading that names a version but not a release
-date fails the build rather than publishing a half-read release, and a
-level-two heading that names no version is prose the file keeps beside its
-releases and is skipped with everything under it. Notes keep their links,
-code spans and the emphasis the release tool writes around a commit scope.
-[Site mockups](./site-mockups.md) owns the depicted release facts.
+[Site changelog](./site-changelog.md) defines `/changelog`: every release in
+the installed package's `CHANGELOG.md`, newest first, as the version history of
+the depicted design file, and the Atom feed. [Site mockups](./site-mockups.md)
+owns the depicted release facts.
 
 ## Legal Documents
 
@@ -169,8 +187,9 @@ The site-specific consequences are:
   whose absence would not change what the reader understands or does.
 - Headline copy uses product nouns; technical detail lives in reference docs
   where it is exact.
-- No invented content: every number, release fact and product claim comes from
-  this repository or the installed package.
+- No invented claims: every number, release fact and product claim about Mokly
+  comes from this repository or the installed package. The demo app is the
+  one exception, under the source rule in [Boundary](#boundary).
 
 ## Ahead-Of-Release Pages
 
@@ -183,13 +202,15 @@ documents it was written from, with multiple paths separated by `, ` and
 relative to this repository's `docs/`, and every cited path exists. A section
 is wholly ahead or wholly shipped. A page keeps the status until its routes,
 fields, labels and behavior match the shipped product, and loses it when they
-do. Before the production domain goes live, every ahead page is compared with
-the deployed product, and text that did not ship is removed or reworded.
+do. Before the production domain goes live, one alignment pass compares every
+ahead page and every [marked drawing](#boundary) with the deployed product, and
+text that did not ship is removed or reworded.
 
 These pages leave out, until they ship: the native iOS, Android and desktop
 surfaces, catalogue isolation and access-grant mechanics, request-level
 concurrency and audit records, and this repository's internal mockup
-fixtures.
+fixtures. The desktop app has one exception outside these pages: the home's
+**Download for Mac** opens its published releases.
 
 The Mokly packages are authoritative for CLI and viewer behavior, and the
 cloud docs are authoritative for cloud behavior. The site may claim that the

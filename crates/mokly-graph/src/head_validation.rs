@@ -15,6 +15,7 @@ use crate::error::Result;
 use crate::head_walks::WalkRecord;
 use crate::policy::PublicFile;
 use crate::public_denial::PublicDenial;
+use crate::viewer_fonts::ViewerFonts;
 use crate::workers::ValidatedView;
 
 /// Inputs observed at the closure walk's read boundaries and by the link checks.
@@ -100,6 +101,7 @@ pub trait HeadValidation: Send + Sync {
         route: &str,
         document: &Composed,
         builder: &dyn ClosureBuilder,
+        fonts: ViewerFonts,
         proof: ClosureProof,
         pass: Option<WalkRecord>,
     ) -> Result<ClosureFacts>;

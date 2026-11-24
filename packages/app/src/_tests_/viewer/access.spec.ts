@@ -208,6 +208,8 @@ test("a private comparison read sends no credentials and covers the stage", asyn
   await expect(
     page.getByRole("heading", { level: 2, name: "Start" }),
   ).toBeVisible();
+  // The compare modes stand in the Changes tab of the right panel.
+  await page.getByRole("tab", { name: "Changes", exact: true }).click();
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
   // The pinned viewer reads comparison documents itself, without the
   // publication host's cookie, so a private comparison is refused.

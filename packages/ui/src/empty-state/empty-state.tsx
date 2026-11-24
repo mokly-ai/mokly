@@ -11,7 +11,7 @@
 import type { ReactNode, Ref } from "react";
 
 import type { Appearance } from "../appearance-selector/appearance-selector.js";
-import type { DataAttribute } from "../segmented-control/segmented-control.js";
+import type { DataAttribute } from "../data-attribute/data-attribute.js";
 
 /**
  * The viewer root that a state takes the place of, the standalone shell's
@@ -187,31 +187,65 @@ export function EmptyLine({ children }: { children: ReactNode }) {
   return <p className="mbk-empty mbk-reset">{children}</p>;
 }
 
+/**
+ * A state that stands on the canvas of the Canvas layout: a card on the dot
+ * grid, centred in the canvas's stage between the floating panels.
+ */
+function OnCanvas({
+  children,
+  canvas,
+}: {
+  children: ReactNode;
+  canvas: boolean;
+}) {
+  return canvas ? (
+    <div className="mbk-empty-canvas mbk-reset" data-empty-canvas="">
+      {children}
+    </div>
+  ) : (
+    children
+  );
+}
+
 /** The catalogue home: how to browse it, and what it holds. */
 export function HomeState({
+  canvas = false,
   summary,
 }: {
+  /** Whether the home stands on the canvas, in a card between the panels. */
+  canvas?: boolean;
   /** What the catalogue holds, such as "3 screens · 2 components". */
   summary?: string | undefined;
 }) {
   return (
-    <EmptyState
-      body="Browse the mockup catalogue: expand folders and choose an item from the navigation."
-      note={summary ? summary : undefined}
-      title="Mokly"
-    />
+    <OnCanvas canvas={canvas}>
+      <EmptyState
+        body="Browse the mockup catalogue: expand folders and choose an item from the navigation."
+        note={summary ? summary : undefined}
+        title="Mokly"
+      />
+    </OnCanvas>
   );
 }
 
 /** A route that matches no entry: the requested path, and a link home. */
-export function MissingRouteState({ requested }: { requested: string }) {
+export function MissingRouteState({
+  canvas = false,
+  requested,
+}: {
+  /** Whether the state stands on the canvas, in a card between the panels. */
+  canvas?: boolean;
+  requested: string;
+}) {
   return (
-    <EmptyState
-      action={{ href: "/", label: "Go to the catalogue home" }}
-      body="Nothing in the catalogue matches"
-      code={requested}
-      title="Item not found"
-    />
+    <OnCanvas canvas={canvas}>
+      <EmptyState
+        action={{ href: "/", label: "Go to the catalogue home" }}
+        body="Nothing in the catalogue matches"
+        code={requested}
+        title="Item not found"
+      />
+    </OnCanvas>
   );
 }
 

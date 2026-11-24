@@ -1,11 +1,11 @@
 ---
 /**
- * The mobile header's menu: the control at the trailing edge of the header
- * row and the panel it opens. The panel is a modal dialog that slides in from
- * the right edge over a dimmed page, so the page is inert until the reader
- * closes it. Its close control sits where the menu control was. Above the
- * breakpoint the header row lists the same destinations and the control is
- * not drawn.
+ * The mobile header's menu: the control at the trailing edge of the tool bar
+ * and the sheet it opens. The sheet is a modal dialog that drops in below
+ * the bar over a dimmed page, so the page is inert until the reader closes
+ * it. Its Close menu control takes the menu control's place in the bar's
+ * top-right corner. Above the breakpoint the tool bar lists the same
+ * destinations and the control is not drawn.
  */
 import {
   EXTERNAL_LINKS,
@@ -15,7 +15,8 @@ import {
   currentPage,
 } from "../navigation.js";
 
-import Glyph from "./Glyph.astro";
+import Button from "./Button.astro";
+import Icon from "./Icon.astro";
 
 interface Props {
   readonly route: string;
@@ -27,6 +28,7 @@ const { route } = Astro.props;
 const pages: ReadonlyArray<readonly [SitePath, string]> = [
   [SITE_PATHS.docs, "Docs"],
   [SITE_PATHS.changelog, "Changelog"],
+  [SITE_PATHS.pricing, "Pricing"],
 ];
 ---
 
@@ -38,13 +40,13 @@ const pages: ReadonlyArray<readonly [SitePath, string]> = [
   class="site-menu-button"
   type="button"
 >
-  <Glyph name="menu" />
+  <Icon name="menu" size={20} />
 </button>
 <dialog aria-label="Menu" class="site-menu" closedby="any" id="site-menu">
   <div class="site-menu-panel">
     <div class="site-menu-head">
       <button aria-label="Close menu" class="site-menu-close" type="button">
-        <Glyph name="close" />
+        <Icon name="close" size={20} />
       </button>
     </div>
     <nav aria-label="Main" class="site-menu-nav">
@@ -62,9 +64,9 @@ const pages: ReadonlyArray<readonly [SitePath, string]> = [
       </a>
     </nav>
     <div class="site-menu-actions">
-      <a class="site-button site-button--primary" href={GET_STARTED_PATH}>
-        Get started <span aria-hidden="true">&#8594;</span>
-      </a>
+      <Button arrow href={GET_STARTED_PATH} kind="primary">
+        Get started
+      </Button>
     </div>
   </div>
 </dialog>

@@ -216,5 +216,7 @@ See [Sidecar Security](./mokly-sidecar-security.md).
 
 ## Related Docs
 
+- [Sidecar head bundle affinity](./mokly-sidecar-head-bundle-affinity.md)
+- [Sidecar restored reuse](./mokly-sidecar-restored-reuse.md)
 - [Entry props and variants](./mokly-entry-props.md), [Rust core architecture](../architecture/rust-core.md)
 - [HTML screens](./mokly-html-screens.md), [Rendering and document assembly](./mokly-rendering.md)

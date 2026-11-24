@@ -84,9 +84,8 @@ boxes produce `hidden`. The container has `pointer-events: none`; marker content
 may opt in with its own pointer-event style. Host interaction remains ordinary
 React interaction and cannot start picking or synthesize instance events.
 
-The marker, mask, and package-label layers remain above an expanded Current
-frame. Their stacking returns to normal after collapse. Marker content remains outside
-the frame and is never injected into consumer HTML.
+Marker content remains outside the frame and is never injected into consumer
+HTML.
 
 ## Refresh And Scheduling
 
@@ -95,8 +94,8 @@ after:
 
 - an authenticated in-frame `geometry` notification;
 - capture-phase scrolling at the viewer root, including outer stage scrolling;
+- a pan or a zoom of the [canvas](./mokly-shell-canvas-stage.md#pan-zoom-and-fit);
 - resize of the viewer root, stage or a mounted frame;
-- frame expansion or collapse;
 - frame mount, replacement or disposal;
 - validated usage/evidence adoption; and
 - a `markers` prop change.
@@ -117,7 +116,7 @@ delay, replace or report against the fresh snapshot.
 
 `highlightInstances(refs)` highlights the exact union of all referenced Current
 frame sessions. Each selected session receives only the keys whose complete
-references match it. References may span Both viewports, schemes and flow steps.
+references match it. References may span viewports, schemes and flow steps.
 Duplicate references have no additional effect.
 
 The operation is atomic. Before changing the current presentation, the viewer

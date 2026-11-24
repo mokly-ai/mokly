@@ -12,6 +12,7 @@ import {
   pullRow,
   summary,
 } from "./viewer/build-fixtures";
+import { publicationReference } from "./viewer/support";
 
 test("a reference with nothing ready shows its running build", async ({
   page,
@@ -106,7 +107,7 @@ test("the standalone entry shows the default branch's first build", async ({
   await expect(
     page.getByRole("heading", { name: "Publishing this branch" }),
   ).toBeVisible();
-  await expect(page.getByTestId("viewer-publication")).toHaveText("main");
+  await expect(publicationReference(page)).toHaveText("main");
   await expect(page.locator('[data-mkc-build-step="checkout"]')).toContainText(
     "Running",
   );

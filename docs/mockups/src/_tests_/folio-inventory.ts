@@ -3,15 +3,8 @@ import type { DocumentPalette } from "@mokly-cloud/tokens/palettes";
 import { variantParent } from "./catalogue-variants";
 import type { InventoryRecord } from "./catalogue-variants";
 
-/** The screens that keep permanent paths and their Product folders after Milestone 11D. */
-export const folioScreens = [
-  {
-    path: "product/viewer/standalone",
-    folder: ["Product", "Viewer", "Standalone"],
-  },
-  { path: "product/viewer/pull-request", folder: ["Product", "Viewer"] },
-  { path: "product/viewer/switcher", folder: ["Product", "Viewer"] },
-  { path: "product/viewer/share", folder: ["Product", "Viewer"] },
+/** The account and settings screens with permanent paths and Product folders. */
+const accountScreens = [
   {
     path: "product/account/sign-up",
     folder: ["Product", "Account", "Sign up"],
@@ -29,6 +22,25 @@ export const folioScreens = [
 ] as const;
 
 /**
+ * The viewer's permanent screens, which keep their paths and Product folders
+ * and render in the Canvas palette.
+ */
+const viewerScreens = [
+  {
+    path: "product/viewer/standalone",
+    folder: ["Product", "Viewer", "Standalone"],
+  },
+  { path: "product/viewer/pull-request", folder: ["Product", "Viewer"] },
+  { path: "product/viewer/switcher", folder: ["Product", "Viewer"] },
+  { path: "product/viewer/share", folder: ["Product", "Viewer"] },
+] as const;
+
+/** Every permanent screen, with the palette its rendered documents carry. */
+export const permanentScreens = [...accountScreens, ...viewerScreens].map(
+  (screen) => ({ ...screen, palette: "default" as const }),
+);
+
+/**
  * Product families the catalogue no longer owns. Explore, the former Marketing
  * family and Review left in Milestone 11C; the public site now has distinct
  * `design-site-*` ownership. Interim workspace pages left in Milestone 11F because the
@@ -39,8 +51,8 @@ export const folioScreens = [
 const retired = ["explore", "marketing", "review", "workspace"] as const;
 
 /**
- * The permanent Folio screens are canonical screens at their permanent paths
- * whose rendered documents carry the Folio palette, and no record of a
+ * The permanent screens are canonical screens at their permanent paths whose
+ * rendered documents carry the default Canvas palette, and no record of a
  * retired family remains. `palette` gives the palette of an entry's rendered
  * documents.
  */
@@ -50,12 +62,12 @@ export function folioInventoryViolations(
 ): string[] {
   const problems: string[] = [];
   const byId = new Map(entries.map((entry) => [entry.path, entry]));
-  for (const { path, folder } of folioScreens) {
+  for (const { path, folder, palette: required } of permanentScreens) {
     const entry = byId.get(path);
     if (entry?.kind !== "screen" || variantParent(entry) !== undefined)
-      problems.push("canonical Folio screen required: " + path);
-    else if (palette(path) !== "folio")
-      problems.push("Folio palette required: " + path);
+      problems.push("canonical permanent screen required: " + path);
+    else if (palette(path) !== required)
+      problems.push(required + " palette required: " + path);
     else if (
       entry.path.split("/").slice(0, 2).join("/") !==
       folder

@@ -58,6 +58,39 @@ test("opening the switcher reads no reference's own history", async ({
 });
 
 /**
+ * The switcher's own composition in `folio-viewer.md`: the reference the
+ * reader is on says Current in place of a destination, and the search leads
+ * the panel in its bar, before Close, while the title stays the document's
+ * one heading for assistive technology.
+ */
+test("the switcher leads with its search and marks the reader's reference Current", async ({
+  page,
+}) => {
+  await signIn(page, freshEmail("switcher-current"));
+  const projectId = await createProject(page, "Switcher Current Org");
+  const token = await createToken(page, projectId);
+  const here = await publish(token, projectId, { branch: "main" });
+  fillHistory(projectId, "topic", 1, 101);
+
+  await open(page, await publicationPathFor(page, projectId, here.id));
+  await publishedViewerReady(page);
+  await page.getByTestId("viewer-publication").click();
+  const panel = page.getByTestId("viewer-panel-switcher");
+  const row = (name: string) =>
+    panel.getByRole("listitem").filter({ hasText: name });
+  await expect(row("topic").getByRole("link", { name: "Open" })).toBeVisible();
+  await expect(row("main")).toContainText("Current");
+  await expect(row("main").getByRole("link")).toHaveCount(0);
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Branches and pull requests",
+  );
+  await panel.getByLabel("Find a branch or pull request").focus();
+  await page.keyboard.press("Tab");
+  await expect(panel.getByTestId("close-switcher")).toBeFocused();
+});
+
+/**
  * A repository with more branches than one page shows every one of them, and a
  * row past the first page says what its own newest attempt did.
  */

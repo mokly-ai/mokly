@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { test } from "./browser_test.js";
 import { staticActivationFixture } from "./static_activations_fixture.js";
 import { staticRequests } from "./static_delivery_assertions.js";
+import { canvasFrame } from "./workspace_actions.js";
 
 let host: Awaited<ReturnType<typeof staticActivationFixture>>;
 test.beforeAll(async () => {
@@ -22,7 +23,7 @@ for (const activation of [
   }) => {
     const requests = staticRequests(page);
     await page.goto(`${host.url}/view/home/`);
-    const frame = page.frameLocator(".mbk-frame-mobile iframe");
+    const frame = page.frameLocator(canvasFrame("mobile"));
     const name =
       activation === "blank"
         ? "New tab"

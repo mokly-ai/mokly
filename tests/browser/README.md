@@ -201,9 +201,12 @@ moves without sharing writable state with another test.
 
 `serve_comparison_ui.ts` holds the shared viewer actions, including the waits
 for a selected comparison request and a held renewal of its generation.
-`expectCardPane` checks one pane of a Card comparison by its heading and by
-the `.accent` colour of its side, because Card's own heading is the same on
-both sides. `serve_changes_emulation.ts` rewrites the index body into a pending,
+`loadComparison` opens the right panel's Changes tab before it presses a mode
+or Refresh. `expectCardPane` checks one pane of the compared Card frame,
+Light unless a spec names Dark, by its heading and by the `.accent` colour of
+its side, because Card's own heading is the same on both sides. While
+several rows of the Card set compare, a spec also names the frame's row, such
+as `Featured`. `serve_changes_emulation.ts` rewrites the index body into a pending,
 preparing, or unavailable Changes state, the shape Serve writes before
 classification completes. Each step still arrives as a real watched
 publication, and Serve keeps no test seam. `serve_generation_removal.ts`
@@ -224,7 +227,9 @@ in `comparison_alignment.spec.ts`, `comparison_alignment_input.spec.ts`, and
 `serve_comparison_alignment_input.spec.ts`, and
 `serve_comparison_scroll_memory.spec.ts`. Checks that each host reaches
 through its own setup are helpers instead. `light_only_band.ts` checks the
-Light only band. `imported_css_panes.ts` checks the panes of the screen that
+Light only note in the label of a document's reading frame.
+`imported_css_panes.ts` checks both versions of the Desktop · Light frame,
+which every mode compares, of the screen that
 `tests/helpers/imported_css_sources.ts` adds. `serve_light_only_band.spec.ts`
 drops Dark through a watched configuration edit.
 

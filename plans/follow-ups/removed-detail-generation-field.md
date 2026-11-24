@@ -35,7 +35,10 @@
   detail carries the field, or it does not.
 - **Wider fix:** None, because the `documentation` skill already covers doc
   drift.
-- **Previous examples:** `plans/follow-ups/viewer-usage-placement-docs.md`.
+- **Previous examples:** The viewer contract and the viewer concepts README
+  placed the Used by list in the Details panel, while the component pages
+  placed it in Usage. Commits `b7d7424ca` and `9d2c7925e` made the two viewer
+  pages agree.
 - **Recommendation:** A. The code, the generated type, and the shell delivery
   page already agree.
 - **Action:** ask the user, because the fix changes the words of a protocol

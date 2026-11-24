@@ -1,0 +1,114 @@
+---
+/**
+ * Frame 03 Edit of the home: one depicted tool window, the root of the
+ * `edit` demo. Its bar names the open screen and the branch, with the agent
+ * tool active and the live session; its canvas sets the module's copy as a
+ * text layer beside the `pricing` artboard, where Claude edits the selected
+ * PriceCard; the Claude chat docks at the right, and below 1280px and on a
+ * phone it follows the canvas. The copy is the page's own text; the bar,
+ * the artboard and the chat are depictions, hidden from assistive
+ * technology.
+ *
+ * The artboard draws the screen before the change, with padding 16 and the
+ * Secondary button, and after it, with padding 24 and the Primary button, as
+ * two layers, each with its PriceCard selection. The demo plays the session
+ * once in view: the prompt and Claude's edit appear in the chat, Claude's
+ * cursor and selection come onto the card, a scan line reveals the after
+ * layer, the answer appears and Publish becomes ready. The built page draws
+ * the finished state: the after layer, every message and Publish ready.
+ * The window's frame is in `src/styles/home-modules.css`; its bar, its
+ * canvas and the artboard's part of the demo are in
+ * `src/styles/home-edit.css`.
+ */
+// status: "ahead" (agent sessions, Claude)
+import Cursor from "../Cursor.astro";
+import Icon from "../Icon.astro";
+import Presence from "../Presence.astro";
+
+import AcmePricingPhone from "./acme/AcmePricingPhone.astro";
+import AgentChat from "./AgentChat.astro";
+import Artboard from "./Artboard.astro";
+import CardSelection from "./CardSelection.astro";
+import ModuleFrame from "./ModuleFrame.astro";
+import ModuleText from "./ModuleText.astro";
+import ViewerBarParts from "./ViewerBarParts.astro";
+
+import "../../styles/home-modules.css";
+import "../../styles/home-edit.css";
+---
+
+<article
+  aria-labelledby="edit-title"
+  class="site-module site-module--edit"
+  id="edit"
+>
+  <ModuleFrame demo="edit" name="03 Edit">
+    <div class="site-detail site-detail--split">
+      <div aria-hidden="true" class="site-home-edit-bar">
+        <ViewerBarParts
+          branch="feat/checkout-v2"
+          crumbs={["acme", "storefront", "pricing"]}
+          crumbsClass="site-home-edit-crumbs"
+        />
+        <span class="site-home-edit-tools">
+          <span class="site-home-edit-tool">
+            <Icon name="move" />
+          </span>
+          {/* status: "ahead" (comments) */}
+          <span class="site-home-edit-tool">
+            <Icon name="comment" />
+          </span>
+          <span class="site-home-edit-tool site-home-edit-tool--active">
+            <Icon name="agent" />
+          </span>
+        </span>
+        {/* status: "ahead" (presence, Claude) */}
+        <Presence class="site-home-viewer-people" people={["sam", "claude"]} />
+        <span class="site-home-edit-live">
+          <span class="site-home-live-dot"></span>
+          Live session
+        </span>
+      </div>
+      <div class="site-home-edit-body">
+        <div class="site-home-edit-canvas">
+          <ModuleText
+            headingId="edit-title"
+            index="03"
+            kicker="Edit"
+            title="Ask for the change beside the screen."
+          >
+            An agent edits the mockup source in a live branch session. Click an
+            element to bring it into the conversation, then publish back to the
+            branch.
+          </ModuleText>
+          <div aria-hidden="true" class="site-home-edit-board">
+            <Artboard device="phone" live name="pricing">
+              <div class="site-home-edit-layer site-home-edit-layer--before">
+                <AcmePricingPhone padding={16} tone="secondary" />
+              </div>
+              <div class="site-home-edit-layer site-home-edit-layer--after">
+                <AcmePricingPhone />
+              </div>
+              <span class="site-home-edit-scan"></span>
+              <span
+                class="site-home-edit-sel site-home-edit-sel--before"
+                slot="overlay"
+              >
+                <CardSelection claude padding="16" />
+              </span>
+              <span
+                class="site-home-edit-sel site-home-edit-sel--after"
+                slot="overlay"
+              >
+                <CardSelection claude padding="24" tall />
+              </span>
+            </Artboard>
+            {/* status: "ahead" (presence, Claude) */}
+            <Cursor class="site-home-edit-claude" person="claude" />
+          </div>
+        </div>
+        <AgentChat />
+      </div>
+    </div>
+  </ModuleFrame>
+</article>

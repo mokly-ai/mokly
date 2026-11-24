@@ -1,0 +1,83 @@
+---
+/**
+ * The PriceCard of the depicted acme/storefront app, the component that the
+ * home's Review and Edit frames discuss: a plan's name, price, line, list
+ * and button. Its padding and its button tone are the two values that the
+ * team changes, from 16 and Secondary to 24 and Primary.
+ *
+ * - `plan`: `taster`, `regular` or `cafe`; `price-card.ts` holds them.
+ * - `padding`: `24` (the default) or `16`.
+ * - `tone`: the button's tone; `secondary` by default.
+ * - `art`: draws the plan's bags above the name, as the desktop page does.
+ * - `target`: marks the card that a selection depicts.
+ *
+ * Use: `<PriceCard padding={16} plan="regular" target tone="secondary" />`.
+ */
+import { roastTone } from "./acme-bag.js";
+import AcmeBadge from "./AcmeBadge.astro";
+import AcmeBag from "./AcmeBag.astro";
+import AcmeButton from "./AcmeButton.astro";
+import AcmeIcon from "./AcmeIcon.astro";
+import {
+  ACME_PLANS,
+  type AcmePlan,
+  type AcmePlanKey,
+  type PriceCardPadding,
+  type PriceCardTone,
+} from "./price-card.js";
+
+interface Props {
+  readonly art?: boolean;
+  readonly padding?: PriceCardPadding;
+  readonly plan: AcmePlanKey;
+  readonly target?: boolean;
+  readonly tone?: PriceCardTone;
+}
+
+const {
+  art = false,
+  padding = 24,
+  plan,
+  target = false,
+  tone = "secondary",
+} = Astro.props;
+const data: AcmePlan = ACME_PLANS[plan];
+const [lead] = data.art;
+---
+
+<div
+  class:list={[
+    "site-acme-price-card",
+    `site-acme-price-card--pad-${padding}`,
+    data.featured && "site-acme-price-card--featured",
+    target && "site-acme-price-card--target",
+  ]}
+>
+  {art && lead !== undefined && (
+    <div class:list={["site-acme-price-card-art", roastTone(lead)]}>
+      {data.art.map((roast) => (
+        <AcmeBag roast={roast} />
+      ))}
+    </div>
+  )}
+  <div class="site-acme-price-card-top">
+    <span class="site-acme-price-card-name">{data.name}</span>
+    {data.badge !== undefined && <AcmeBadge>{data.badge}</AcmeBadge>}
+  </div>
+  <div class="site-acme-price-card-price">
+    <b>${data.price}</b>
+    <span>/ month</span>
+  </div>
+  <div class="site-acme-price-card-line">{data.line}</div>
+  <div class="site-acme-price-card-list">
+    {data.items.map((item) => (
+      <span>
+        <AcmeIcon name="check" />
+        {item}
+      </span>
+    ))}
+  </div>
+  <AcmeButton block class="site-acme-price-card-button" tone={tone}>
+    Choose {data.name}
+  </AcmeButton>
+</div>

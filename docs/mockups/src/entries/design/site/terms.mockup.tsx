@@ -8,7 +8,7 @@ export default defineScreen({
   description:
     "The Terms of Service, with its effective date and legal-document navigation.",
   render: (_props, context) => <SiteTermsScreen viewport={context.viewport} />,
-  tags: ["site", "folio"],
+  tags: ["site", "canvas"],
   title: "Terms of Service",
   useCasePaths: ["design/site/tour"],
 });

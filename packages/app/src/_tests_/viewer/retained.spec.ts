@@ -1,7 +1,13 @@
 import { expect, open, test } from "../harness";
 
 import { retainedFixture } from "./retained-fixture";
-import { makePublic, publishedViewerReady, publishedProject } from "./support";
+import {
+  canvasFrame,
+  makePublic,
+  openSettingsFromAccount,
+  publishedViewerReady,
+  publishedProject,
+} from "./support";
 
 test("a removed entry opens its advertised snapshot in Changes", async ({
   page,
@@ -18,9 +24,11 @@ test("a removed entry opens its advertised snapshot in Changes", async ({
     await page.getByRole("link", { name: /^Retired form/ }).click();
     await expect(page).toHaveURL(/catalogueScreen=product%2Fretired/);
     await expect(page).toHaveURL(/catalogueSnapshot=[a-f0-9]{64}/);
+    // The link from Changes opens one viewport, and its frame shows the
+    // removed screen's previous version.
     await expect(
-      page
-        .frameLocator("iframe[srcdoc]")
+      canvasFrame(page, "Retired form")
+        .contentFrame()
         .getByRole("heading", { name: "Retired form" }),
     ).toBeVisible();
   } finally {
@@ -44,9 +52,10 @@ test("Share copies a nested screen path that another browser can open", async ({
       made.publicationPath + "?catalogueScreen=product%2FStart_here-2",
     );
     await publishedViewerReady(page);
-    const frame = await page
-      .locator('iframe[title="Current form — desktop"]')
-      .elementHandle();
+    const frame = await canvasFrame(
+      page,
+      "Current form — desktop",
+    ).elementHandle();
     expect(frame).not.toBeNull();
     await page.getByTestId("viewer-share").click();
     const link = page.getByLabel("Publication link");
@@ -63,8 +72,8 @@ test("Share copies a nested screen path that another browser can open", async ({
       recipient.getByRole("heading", { level: 2, name: "Current form" }),
     ).toBeVisible();
     await expect(
-      recipient
-        .frameLocator('iframe[title="Current form — desktop"]')
+      canvasFrame(recipient, "Current form — desktop")
+        .contentFrame()
         .getByRole("heading", { name: "Published form" }),
     ).toBeVisible();
     await recipient.close();
@@ -72,11 +81,12 @@ test("Share copies a nested screen path that another browser can open", async ({
     await page.getByTestId("close-share").click();
     await expect(page.getByTestId("viewer-panel-share")).toHaveCount(0);
     await publishedViewerReady(page);
-    const settingsFrame = await page
-      .locator('iframe[title="Current form — desktop"]')
-      .elementHandle();
+    const settingsFrame = await canvasFrame(
+      page,
+      "Current form — desktop",
+    ).elementHandle();
     expect(settingsFrame).not.toBeNull();
-    await page.getByTestId("viewer-settings").click();
+    await openSettingsFromAccount(page);
     const settings = page.getByTestId("settings-dialog");
     await expect(settings).toBeVisible();
     await expect(

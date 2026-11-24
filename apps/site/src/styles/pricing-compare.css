@@ -1,0 +1,95 @@
+/* The pricing compare table: a component's props table in a frame. On
+   desktop its column heads stick under the tool bar, and the Team column
+   carries a signal tint. On mobile each row draws its property line over
+   three cells under the plan heads, and the head row sticks instead.
+   pricing-compare-cells.css holds the heads, the groups and the cells.
+
+   The class names and the rules match
+   docs/mockups/styles/site/pricing-compare.css and the mobile composition
+   of pricing-responsive.css. Each base rule is the mobile composition, and
+   the desktop values and the desktop steps follow under the 768px query, in
+   the mockup's order. */
+
+.site-pricing-compare {
+  padding-top: 104px;
+}
+
+.site-pricing-props-frame {
+  background: var(--mk-color-surface);
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px var(--mk-color-border),
+    var(--mk-shadow-small);
+  margin: 64px -10px 0;
+  position: relative;
+}
+
+.site-pricing-props {
+  border-collapse: separate;
+  border-spacing: 0;
+  display: block;
+  font-size: 0.90625rem;
+  line-height: 1.45;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.site-pricing-props tbody {
+  display: block;
+}
+
+.site-pricing-props thead {
+  background: var(--mk-color-surface);
+  display: block;
+  position: sticky;
+  top: 60px;
+  z-index: 2;
+}
+
+.site-pricing-props tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.3fr);
+}
+
+/* The desktop composition from the breakpoint up: the table lays out as a
+   table again */
+
+@media (min-width: 768px) {
+  .site-pricing-compare {
+    padding-top: 144px;
+  }
+
+  .site-pricing-props-frame {
+    margin: 76px 0 0;
+  }
+
+  .site-pricing-props {
+    display: table;
+  }
+
+  .site-pricing-props tbody {
+    display: table-row-group;
+  }
+
+  .site-pricing-props thead {
+    background: none;
+    display: table-header-group;
+    position: static;
+    top: auto;
+    z-index: auto;
+  }
+
+  .site-pricing-props tr {
+    display: table-row;
+    grid-template-columns: none;
+  }
+}
+
+/* Narrower desktops: the section gap follows the viewport from 1439px
+   down. */
+
+@media (min-width: 768px) and (max-width: 1439px) {
+  .site-pricing-compare {
+    padding-top: clamp(7rem, 10vw, 9.5rem);
+  }
+}

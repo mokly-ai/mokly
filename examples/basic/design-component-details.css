@@ -1,21 +1,14 @@
-/* Component props, usage, and screen instance details in the design
-   catalogue. The instance trees, the supplied props, the usage lists, the text
-   buttons of their states, and the Props tab's form, which every component
-   page edits in place, are the shipped ones, from their @mokly/ui
-   stylesheets, in the package's order. */
+/* Component props and instance details in the design catalogue. The
+   instance trees, the supplied props, and the text buttons of their states
+   are the shipped ones, from their @mokly/ui stylesheets, in the package's
+   order. */
 @import "../../packages/ui/src/instance-tree/instance-tree.css";
 @import "../../packages/ui/src/props-panel/props-panel.css";
-@import "../../packages/ui/src/usage-list/usage-list.css";
 @import "../../packages/ui/src/text-button/text-button.css";
-@import "../../packages/ui/src/controls-panel/controls-panel.css";
 
 /* The code that a @mokly/ui empty state draws keeps its package size. */
 .ce-design code:where(:not(.mbk-empty code)) {
   font-family: var(--mono);
-  font-size: 11px;
-}
-.ce-muted {
-  color: var(--chrome-muted);
   font-size: 11px;
 }
 .ce-empty-copy {

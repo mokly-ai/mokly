@@ -1,0 +1,44 @@
+---
+/**
+ * On this page below 1280px, where the Inspect panel does not show: a native
+ * disclosure under the lead, named On this page with the count of the
+ * page's `h2` sections, closed as each page opens. It holds the On this
+ * page list, the page's facts and Edit on GitHub, so it shows on every page,
+ * and its list shows only on a page with two or more listed headings.
+ * Search does not index it.
+ *
+ * Use: `<Outline edit={…} facts={…} headings={onThisPage(headings)} />`.
+ */
+import type { DocsHeading } from "../../docs/headings.js";
+import Icon from "../Icon.astro";
+
+import Facts from "./Facts.astro";
+import OnThisPage from "./OnThisPage.astro";
+import type { PageFact } from "./page-source.js";
+
+interface Props {
+  readonly edit: string;
+  readonly facts: readonly PageFact[];
+  readonly headings: readonly DocsHeading[];
+}
+
+const { edit, facts, headings } = Astro.props;
+const sections = headings.filter((heading) => heading.depth === 2).length;
+---
+
+<details class="site-docs-outline" data-pagefind-ignore>
+  <summary class="site-docs-outline-summary">
+    <Icon name="outline" size={16} />
+    On this page
+    <span aria-hidden="true" class="site-docs-outline-count">
+      {sections}
+    </span>
+    <Icon class="site-docs-outline-chevron" name="chevronDown" size={16} />
+  </summary>
+  <div class="site-docs-outline-body">
+    <OnThisPage headings={headings} />
+    <div class="site-docs-outline-facts">
+      <Facts edit={edit} facts={facts} />
+    </div>
+  </div>
+</details>

@@ -3,6 +3,8 @@
 import { createContext, useContext, useLayoutEffect, useRef } from "react";
 
 import type { FrameNavigation } from "@mokly/frame";
+import type { FramesToggleName } from "@mokly/ui/frames-filter";
+import type { PanelTab } from "@mokly/ui/panel-tabs";
 
 import type { ViewerSelection } from "../host/types.js";
 
@@ -10,7 +12,7 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import type { ShellClickEvent, ShellKeyEvent } from "./store_browser_routes.js";
-import type { ShellState } from "./store_state.js";
+import type { ShellSheet, ShellState } from "./store_state.js";
 
 /** State and actions consumed by shell-owned interactive components. */
 export interface ShellStore {
@@ -22,10 +24,19 @@ export interface ShellStore {
   collapseAll(): void;
   copy(text: string, announcement?: string): void;
   navigateFrame(href: string, navigation?: FrameNavigation): void;
+  /**
+   * Open another entry with the viewport and scheme that it shows, such as
+   * the picked row of a variant set, as one selection change: an embedded
+   * root proposes the entry and the axes together.
+   */
+  openEntry(
+    path: string,
+    axes: Partial<Pick<ViewerSelection, "colorScheme" | "viewport">>,
+  ): void;
   openFrame(href: string, target: string): void;
   persistNavigationWidth(value?: number): void;
-  /** Collapse the expanded frame only while it is still the frame `key`. */
-  releaseExpandedFrame(key: string): void;
+  /** Forget the chosen catalogue width, so the starting width applies. */
+  resetNavigationWidth(): void;
   /**
    * Expand and focus one section's folder row without changing the content
    * area, clearing only the filters that would hide it.
@@ -33,11 +44,19 @@ export interface ShellStore {
   revealFolder(section: NavSectionNode["id"], path: string): void;
   select(selection: Partial<ViewerSelection>): void;
   selectColorScheme(value: "dark" | "light"): void;
-  selectViewport(value: "both" | "desktop" | "mobile"): void;
-  setDetails(open: boolean, tab?: string): void;
   setDisclosure(key: string, open: boolean): void;
-  setDrawer(open: boolean): void;
-  setExpandedFrame(key: string | undefined): void;
+  /**
+   * Turn one toggle of the screens' Frames filter on or off, while its axis
+   * keeps another toggle on. A scheme toggle stays with the shell. A
+   * viewport toggle writes the selection's viewport, `both` while both are
+   * on, as one selection change, so a controlled host hears a proposal.
+   */
+  toggleFrame(name: FramesToggleName, checked: boolean): void;
+  /** Select a tab of the right panel. */
+  setPanelTab(tab: PanelTab): void;
+  /** Open a sheet of the compact layout, which closes the other, or close it. */
+  setSheet(sheet: ShellSheet | undefined): void;
+  setSheetExpanded(expanded: boolean): void;
   setNavigationWidth(value: number): void;
   setNavigationMaximum(value: number): void;
   setNavScroll(value: number): void;

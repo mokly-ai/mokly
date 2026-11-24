@@ -12,6 +12,7 @@ use crate::head_walks::{PassRecorder, WalkRecord};
 use crate::session::Session;
 use crate::session_lookup::DocumentRead;
 use crate::types::DocumentPlan;
+use crate::viewer_fonts::ViewerFonts;
 use crate::workers::ArtifactWorker;
 use crate::{resource_digests, validation};
 
@@ -31,6 +32,15 @@ impl Session {
             generated: Arc::new(self.clone()),
             index: self.state.reference_index.clone(),
         }
+    }
+
+    /// The viewer-face permission of a planned route's entry; an unplanned route has none.
+    pub(crate) fn viewer_fonts(&self, route: &str) -> ViewerFonts {
+        self.state
+            .plans
+            .get(route)
+            .and_then(|plan| self.state.catalogue.model.entries.get(plan.entry))
+            .map_or(ViewerFonts::Denied, |entry| ViewerFonts::of(&entry.content))
     }
 
     #[tracing::instrument(
@@ -62,10 +72,13 @@ impl Session {
             .document
             .as_ref()
             .expect("rendered document artifacts carry their composed tree");
-        let walked =
-            self.walker()
-                .collect_recorded(route, &document.tree, &document.resources, walk);
-        let closure = match walked {
+        let closure = match self.walker().collect_recorded(
+            route,
+            &document.tree,
+            &document.resources,
+            self.viewer_fonts(route),
+            walk,
+        ) {
             Ok(closure) => closure,
             Err(source) => {
                 return Err(GraphError::Attempt {
@@ -127,8 +140,12 @@ impl ArtifactWorker for Session {
             .document
             .as_ref()
             .expect("rendered document artifacts carry their composed tree");
-        self.walker()
-            .collect(route, &document.tree, &document.resources)
+        self.walker().collect(
+            route,
+            &document.tree,
+            &document.resources,
+            self.viewer_fonts(route),
+        )
     }
     fn artifact(&self, route: &str) -> Result<Arc<Artifact>> {
         let composed = self.raw(route)?;

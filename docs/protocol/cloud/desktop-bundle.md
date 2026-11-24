@@ -71,24 +71,24 @@ callback credential cannot enter the log.
 
 ## Mac Window
 
-On macOS the window has no native title bar. The native close, minimize and
-zoom buttons stay, at the start of the app's own 48px top bar and centred in
-its height. Every top bar of the app starts its content after the buttons:
-the viewer's top bar, as [Viewer chrome](./viewer-chrome.md#slot-inventory)
-places its slots, the account header and the compact settings bar. In full
-screen macOS hides the buttons, and the bars start at their usual padding.
-In a right-to-left locale the buttons sit at the end of the bar, and every
-top bar ends its content before them. The browser app keeps its usual layout.
-Linux keeps the native frame and its title bar.
+On macOS the window has no native title bar. The native close, minimize and zoom
+buttons stay, at the start of the app's own 48px top bar and centred in its
+height. Every top bar of the app starts its content after the buttons: the
+viewer's top bar, whose package mark and cloud slots follow the buttons as
+[Viewer chrome](./viewer-chrome.md#slot-inventory) defines, the account header
+and the compact settings bar. In full screen macOS hides the buttons, and the
+bars start at their usual padding. In a right-to-left locale the buttons sit at
+the end of the bar, and every top bar ends its content before them. The browser
+app keeps its usual layout. Linux keeps the native frame and its title bar.
 
 Every screen has a top area that moves the window when the reader drags it:
 the cloud-owned parts of its top bar, or a 48px band at the top of a screen
 without one. Every control in that area stays clickable, and so does every
 dialog, sheet or menu over it. The area stays active while a dialog or a menu
 is open, so the window still moves. While a surface that the viewer package
-draws, such as its open search or an expanded preview frame, or a focused skip
-link covers part of the area, that part does not move the window, so the
-surface takes presses. The part moves the window again when the surface goes.
+draws, such as its open search, or a focused skip link covers part of the
+area, that part does not move the window, so the surface takes presses. The
+part moves the window again when the surface goes.
 The page title still names the window in the Window menu and in Mission
 Control.
 

@@ -34,7 +34,7 @@ pub(super) fn cloud_commands(suite: VerificationSuite, shard: Option<Shard>) -> 
             "mockups:test",
             "mockups:typecheck",
         ]),
-        VerificationSuite::CloudSite => built(["mockups:build", "site:check"]),
+        VerificationSuite::CloudSite => built(["site:check"]),
         VerificationSuite::CloudOpenapi => vec![cargo(&["xtask", "openapi", "--check"])],
         VerificationSuite::CloudFixtures => task_commands(Task::MoklyFixtures { check: true }),
         VerificationSuite::CloudEmails => task_commands(Task::EmailTemplates { check: true }),

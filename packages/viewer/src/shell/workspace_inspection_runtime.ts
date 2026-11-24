@@ -10,7 +10,6 @@ import type { ShellFrameGeometryController } from "./frame_geometry_controller.j
 import {
   captureFrame,
   currentFrameCapture,
-  frameHasInstance,
   validFrameUsage,
   type ShellFrameCapture,
 } from "./frame_instances.js";
@@ -31,26 +30,16 @@ export interface WorkspaceInspectionContext {
 
 export interface WorkspaceInspectionInput extends WorkspaceInspectionContext {
   workspaceRef: RefObject<HTMLElement | null>;
-  highlightRef: RefObject<HTMLButtonElement | null>;
-  onSelect(
-    key: string,
-    viewport: "desktop" | "mobile",
-    openProps?: boolean,
-  ): void;
-  selectedKey?: string;
+  highlightRef: RefObject<HTMLElement | null>;
+  /** Receives a press of a highlight's label, which names its instance. */
+  onLabel(session: ShellFrameSession, key: string): void;
 }
 
 export interface WorkspaceInspectionResult {
   available: boolean;
   reason?: string;
   highlighting: boolean;
-  select(
-    key: string,
-    viewport: "desktop" | "mobile",
-    openProps?: boolean,
-  ): void;
   toggle(): void;
-  reveal(key: string, viewport: "desktop" | "mobile"): void;
   stop(): void;
   overlay: ReactNode;
 }
@@ -63,19 +52,18 @@ export interface InspectionAvailability {
 interface PresentationInput {
   registry: ShellFrameRegistry;
   sessions: readonly ShellFrameSession[];
-  selectedKey?: string;
 }
 
-/** Explain the exact reason the current visible workspace cannot inspect. */
+/**
+ * Explain the exact reason the current visible workspace cannot inspect. A
+ * shown compare mode gives no reason: Changes shows it, and Inspect, whose
+ * Highlight components would say the reason, is hidden while it does.
+ */
 export function inspectionAvailability(
   input: WorkspaceInspectionContext,
   sessions: readonly ShellFrameSession[],
 ): InspectionAvailability {
-  if (input.comparisonActive)
-    return {
-      available: false,
-      reason: "A comparison is selected. Highlighting is available in Current.",
-    };
+  if (input.comparisonActive) return { available: false };
   if (input.invalidSelection || input.data.removed)
     return { available: false, reason: "This preview is unavailable." };
   if (!input.views.length)
@@ -118,6 +106,14 @@ export function inspectionAvailability(
   return { available: true };
 }
 
+/**
+ * An unavailable inspection ends the highlight, unless the preview is still
+ * loading. A shown compare mode ends it too, although it gives no reason.
+ */
+export function endsHighlight(availability: InspectionAvailability): boolean {
+  return !availability.available && availability.reason !== WAITING_REASON;
+}
+
 /** Serialize one complete mask and geometry presentation. */
 export async function presentWorkspaceInspection(
   input: PresentationInput,
@@ -144,7 +140,7 @@ export async function presentWorkspaceInspection(
     input.sessions.map((session) =>
       selected
         .get(session)!
-        .highlight(workspaceInspectionKeys(session, input.selectedKey), "pick"),
+        .highlight(workspaceInspectionKeys(session), "pick"),
     ),
   );
   checkPresentation(input.registry, captures, current);
@@ -164,40 +160,31 @@ function checkPresentation(
     throw new Error("Inspection superseded.");
 }
 
+/** The instances that a frame's highlight draws: those its view owns. */
 export function workspaceInspectionKeys(
   session: ShellFrameSession,
-  selectedKey: string | undefined,
 ): readonly string[] {
   if (session.usage.status !== "ready") return [];
   return session.usage.instances
-    .filter((instance) =>
-      selectedKey
-        ? instance.key === selectedKey
-        : instance.owner.kind === "entry",
-    )
+    .filter((instance) => instance.owner.kind === "entry")
     .map((instance) => instance.key);
 }
 
+/**
+ * End the highlight when a frame's pick ends or fails. A click on an
+ * instance selects it on the canvas, which the canvas selection hears.
+ */
 export function receiveWorkspaceFrameEvent(
   event: FrameEvent,
-  session: ShellFrameSession,
   highlighting: boolean,
-  select: (key: string, viewport: "desktop" | "mobile") => void,
   stop: () => void,
 ): void {
   if (highlighting && (event.type === "pick-end" || event.type === "error"))
     stop();
-  else if (
-    event.type === "click" &&
-    highlighting &&
-    session.identity.viewport &&
-    frameHasInstance(session, event.key)
-  )
-    select(event.key, session.identity.viewport);
 }
 
 export function focusWorkspaceHighlightControl(
-  toggle: HTMLButtonElement | null,
+  toggle: HTMLElement | null,
 ): void {
   queueMicrotask(() => toggle?.focus({ preventScroll: true }));
 }

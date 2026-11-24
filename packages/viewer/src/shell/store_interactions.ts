@@ -8,42 +8,30 @@ import type { ShellKeyEvent } from "./store_browser_routes.js";
 import type { ShellStore } from "./store_context.js";
 import type { ShellState } from "./store_state.js";
 
-/** Escape closes the picker before the expanded frame. */
+/** Escape closes the tag picker and returns focus to its toggle. */
 export function shellKeyDown(
   event: ShellKeyEvent,
   setState: Dispatch<SetStateAction<ShellState>>,
   state: ShellState,
   elements?: ShellElements,
 ): void {
-  if (event.key !== "Escape") return;
-  if (state.tagPickerOpen) {
-    event.preventDefault();
-    setState((current) => ({ ...current, tagPickerOpen: false }));
-    elements?.tagToggle.current?.focus();
-  } else if (state.expandedFrame) {
-    event.preventDefault();
-    setState((current) => ({ ...current, expandedFrame: undefined }));
-  }
+  if (event.key !== "Escape" || !state.tagPickerOpen) return;
+  event.preventDefault();
+  setState((current) => ({ ...current, tagPickerOpen: false }));
+  elements?.tagToggle.current?.focus();
 }
 
-/** Dismiss overlays on any outside click, including outside an embedded root. */
+/** Dismiss the tag picker on any outside click, including outside an embedded root. */
 function dismissOverlays(
   target: Element,
   elements: ShellElements,
   store: ShellStore,
 ): void {
-  if (elements.inTagPicker(target)) return;
-  if (store.state.tagPickerOpen) {
-    const panel = elements.tagPicker.current;
-    const heldFocus = panel?.contains(panel.ownerDocument.activeElement);
-    store.setTagPicker(false);
-    if (heldFocus) elements.tagToggle.current?.focus();
-  }
-  if (
-    store.state.expandedFrame &&
-    !elements.expandedBrowser.current?.contains(target)
-  )
-    store.setExpandedFrame(undefined);
+  if (elements.inTagPicker(target) || !store.state.tagPickerOpen) return;
+  const panel = elements.tagPicker.current;
+  const heldFocus = panel?.contains(panel.ownerDocument.activeElement);
+  store.setTagPicker(false);
+  if (heldFocus) elements.tagToggle.current?.focus();
 }
 
 /** Observe outside clicks in either delivery and bind standalone native input. */

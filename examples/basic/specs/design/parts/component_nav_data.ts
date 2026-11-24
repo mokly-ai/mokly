@@ -1,12 +1,12 @@
-import { COMPONENT_PAGES } from "../components/parts/destinations.js";
+import { CANVAS_PAGES } from "../canvas/parts/destinations.js";
 import type { CatalogueNavigationProps } from "../library/chrome/catalogue-navigation.js";
 
 type NavigationRow = CatalogueNavigationProps["rows"][number];
 type NavigationRows = CatalogueNavigationProps["rows"];
 
 /** Components depicted in the example catalogue and component explorer. */
-export type ComponentNavigationIdentity =
-  "action" | "toolbar" | "help-hint" | "badge" | "checklist" | "menu";
+type ComponentNavigationIdentity =
+  "action" | "toolbar" | "help-hint" | "badge" | "checklist";
 
 interface ComponentVariantNavigationDefinition {
   id: string;
@@ -23,12 +23,9 @@ interface ComponentNavigationDefinition {
 /**
  * Action and Toolbar mirror the real example registrations. Help hint and Badge
  * are synthetic component-explorer fixtures with the saved Default state their
- * mockups depict. A variant row links to the artboard that shows that variant,
- * as the variant bar does. Badge's Default appears only in the Additions
- * story, a story of its own, so its row here is a depiction. The parent row
- * opens the parent's own page. Menu is a synthetic Storybook stories entry
- * that only the Storybook stories scenario depicts: its first story renders
- * the parent's own page, and its Expanded story is its variant.
+ * mockups depict. A variant row links to the Canvas artboard that shows that
+ * variant, as the variant bar does. No artboard shows the other variants, so
+ * their rows are depictions. The parent row opens the parent's own page.
  */
 export const COMPONENT_NAVIGATION = {
   action: {
@@ -38,12 +35,12 @@ export const COMPONENT_NAVIGATION = {
       {
         id: "example/components/action/default",
         title: "Default",
-        to: COMPONENT_PAGES.affected,
+        to: CANVAS_PAGES.explorerUsage,
       },
       {
         id: "example/components/action/disabled",
         title: "Disabled",
-        to: COMPONENT_PAGES.disabled,
+        to: CANVAS_PAGES.componentSetDisabled,
       },
       { id: "example/components/action/secondary", title: "Secondary" },
     ],
@@ -66,24 +63,7 @@ export const COMPONENT_NAVIGATION = {
   checklist: {
     id: "checklist",
     title: "Checklist",
-    variants: [
-      {
-        id: "checklist-default",
-        title: "Default",
-        to: COMPONENT_PAGES["overlay-tall"],
-      },
-    ],
-  },
-  menu: {
-    id: "example/components/Menu",
-    title: "Menu",
-    variants: [
-      {
-        id: "example/components/Menu/Expanded",
-        title: "Expanded",
-        to: COMPONENT_PAGES["story-failed"],
-      },
-    ],
+    variants: [{ id: "checklist-default", title: "Default" }],
   },
 } as const satisfies Record<
   ComponentNavigationIdentity,

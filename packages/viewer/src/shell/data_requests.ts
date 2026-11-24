@@ -13,8 +13,10 @@ import {
   workspaceDetailRequest,
   type DetailRequest,
 } from "../catalogue/detail_fences.js";
+import { shellCatalogueModel } from "../catalogue/shell_model.js";
 import { MoklyVersionError } from "../catalogue/version_error.js";
 
+import { createCatalogue, type Catalogue } from "./catalogue.js";
 import type { ShellDataSource } from "./data_source.js";
 import type { ShellRoute } from "./routes.js";
 
@@ -31,14 +33,18 @@ export type DetailDelivery =
 
 /**
  * The details a route renders from: the routed entry's own, a current
- * component variant's parent, and each use-case step screen. Only an entry or
- * a removed record that the given index lists has a detail, so a publication
- * that drops or renames the routed entry requests none and installs; the route
- * then shows the missing state.
+ * component variant's parent, each current saved variant of a component's
+ * variant set, whose rows the canvas shows, and each use-case step screen.
+ * Only an entry or a removed record that the given index lists has a detail,
+ * so a publication that drops or renames the routed entry requests none and
+ * installs; the route then shows the missing state. `catalogue` is the
+ * working catalogue of `index`, whose hierarchy lists a parent's variants.
+ * Without it, a component's route builds the catalogue of `index` alone.
  */
 export function routeDetailRequests(
   index: CatalogueReadModel,
   route: ShellRoute,
+  catalogue?: Pick<Catalogue, "hierarchy">,
 ): readonly DetailRequest[] {
   if (route.view.kind !== "target") return [];
   const routed = route.view.target.entry;
@@ -58,14 +64,28 @@ export function routeDetailRequests(
   const requests: DetailRequest[] = [{ path: entry.path }];
   const workspace = workspaceDetailRequest(entry, true);
   if (workspace.path !== entry.path) requests.push(workspace);
+  const listed = (path: string) =>
+    requests.some((request) => request.path === path);
+  // Each row of a component's variant set shows its own views' usage. The
+  // rows are the parent's current variants, as the hierarchy lists them.
+  if (entry.kind === "component") {
+    const { hierarchy } = catalogue ?? indexCatalogue(index);
+    for (const variant of hierarchy.variantsByPath.get(workspace.path) ?? [])
+      if (!listed(variant.path)) requests.push({ path: variant.path });
+  }
   if (entry.kind === "use-case")
     for (const step of entry.steps)
       if (
-        !requests.some((request) => request.path === step.screenPath) &&
+        !listed(step.screenPath) &&
         index.screens.some((screen) => screen.path === step.screenPath)
       )
         requests.push({ path: step.screenPath });
   return requests;
+}
+
+/** The catalogue of an index without its details, for its hierarchy. */
+function indexCatalogue(index: CatalogueReadModel): Catalogue {
+  return createCatalogue(shellCatalogueModel(index, new Map()));
 }
 
 /** The outcome of loading one detail against the installed index. */

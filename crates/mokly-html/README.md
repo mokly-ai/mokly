@@ -154,6 +154,18 @@ document-relative URLs in the final tree. Replacement does not depend on the
 generation's asset membership. Collected style text and attribution records
 receive the same URLs. Comments and tokens with non-portable paths stay unchanged.
 
+Each rendered Markdown document inlines one package-owned stylesheet. It
+starts with one `@font-face` rule for each face that the viewer delivers,
+Geist and Geist Mono, whose address is relative to the document's own route,
+so `markdown::render` takes that route. The two fixed parts follow. The first,
+`src/document_palette.css`, holds the colours and font stacks of the Light and
+Dark documents as custom properties; it is generated from the Canvas palette
+of `@mokly/ui`, which the shell draws in. The second, `src/document.css`,
+holds the hand-kept typography, which reads them. `safety::validate` accepts
+only the stylesheet of the document's own route. The
+[closure contract](../../docs/protocol/mokly-public-closure.md#referenced-closure)
+gives the face rule.
+
 ## Quick Start
 
 ```rust
@@ -182,6 +194,12 @@ cargo test -p mokly-html
 cargo test -p mokly-graph --test render_tests
 cargo clippy -p mokly-html --all-targets -- -D warnings
 ```
+
+Do not edit `src/document_palette.css`. Change the palette in `packages/ui`,
+run `npm run palette:generate` from the repository root, and commit the
+result; `npm run palette:check` fails while the file differs from the
+palette. The Markdown document snapshots of both test commands above show
+each change of either stylesheet part.
 
 Enable `mock` for the unimock fragment and composer boundaries. Unit tests
 mock impure boundaries. Graph integration fixtures exercise complete rendered
@@ -266,6 +284,12 @@ aligned byte must equal its source byte or be an LF from a CR.
   adapts link-control roots.
 - [`src/markdown.rs`](./src/markdown.rs) defines `LinkResolver` and `render`,
   the Markdown renderer with injected link resolution.
+- [`src/document_style.rs`](./src/document_style.rs) builds the stylesheet that
+  `render` inlines for a route: the viewer's face rules at that route's
+  address, then the fixed parts.
+- [`src/document_palette.css`](./src/document_palette.css) and
+  [`src/document.css`](./src/document.css) are the generated colours and font
+  stacks and the hand-kept typography of that stylesheet.
 - [`src/safety.rs`](./src/safety.rs) and [`src/url_safety.rs`](./src/url_safety.rs)
   hold the final Markdown allowlist and the URL policy of composed documents.
 - [`src/error.rs`](./src/error.rs) defines `HtmlError`, the typed composition

@@ -7,7 +7,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 
 import { TopBar } from "../src/top-bar/top-bar.js";
 
-const IDS = { navigationId: "root-mb-nav", searchId: "root-mb-search" };
+const IDS = { searchId: "root-mb-search" };
 
 function bar(container: HTMLElement): HTMLElement {
   const header = container.querySelector("header");
@@ -16,54 +16,22 @@ function bar(container: HTMLElement): HTMLElement {
 }
 
 test("the brand links to its address, and to the catalogue home without one", () => {
-  const { rerender } = render(<TopBar {...IDS} drawerOpen={false} />);
+  const { rerender } = render(<TopBar {...IDS} />);
   assert.equal(
     screen.getByRole("link", { name: "Mokly" }).getAttribute("href"),
     "/",
   );
-  rerender(<TopBar {...IDS} brandHref="../home/" drawerOpen={false} />);
+  rerender(<TopBar {...IDS} brandHref="../home/" />);
   const brand = screen.getByRole("link", { name: "Mokly" });
   assert.equal(brand.getAttribute("href"), "../home/");
   assert.equal(brand.className, "mbk-brand mbk-reset");
   assert.equal(brand.textContent, "mokly.");
 });
 
-test("a menu with an address is a link named for the drawer state it shows", () => {
-  const drawers: boolean[] = [];
-  const { rerender } = render(
-    <TopBar
-      {...IDS}
-      drawerOpen={false}
-      menuHref="../navigation/"
-      onDrawer={(open) => drawers.push(open)}
-    />,
-  );
-  const open = screen.getByRole("link", { name: "Open catalogue navigation" });
-  assert.equal(open.getAttribute("href"), "../navigation/");
-  assert.equal(open.className, "mbk-menu mbk-reset");
-  assert.equal(open.getAttribute("data-mokly-menu"), "");
-  // A link reports no expanded state and controls no element of its own.
-  assert.equal(open.getAttribute("aria-expanded"), null);
-  assert.equal(open.getAttribute("aria-controls"), null);
-  fireEvent.click(open);
-  assert.deepEqual(drawers, []);
-
-  rerender(<TopBar {...IDS} drawerOpen menuHref="../home/" />);
-  const close = screen.getByRole("link", {
-    name: "Close catalogue navigation",
-  });
-  assert.equal(close.getAttribute("href"), "../home/");
-  assert.equal(
-    screen.queryByRole("button", { name: /catalogue navigation/u }),
-    null,
-  );
-});
-
 test("a bar that is not interactive draws its controls as pictures and keeps its search field", () => {
   const { container } = render(
     <TopBar
       {...IDS}
-      drawerOpen
       end={<span data-end="" />}
       interactive={false}
       query="tag:forms"
@@ -71,19 +39,24 @@ test("a bar that is not interactive draws its controls as pictures and keeps its
     />,
   );
   const header = bar(container);
-  // No control in the bar acts without a script.
+  // No control in the bar acts without a script, and the bar draws no menu,
+  // as the shell's bar does. The compact search's toggle is a picture of
+  // itself with the toggle's look, which a narrow bar shows in place of the
+  // field. A static search never opens, so Close search is left out.
   assert.deepEqual(within(header).queryAllByRole("button"), []);
+  const toggle = within(header).getByRole("img", { name: "Search catalogue" });
+  assert.equal(toggle.tagName, "SPAN");
+  assert.equal(toggle.className, "mbk-search-toggle mbk-reset");
+  assert.ok(toggle.querySelector("svg"));
+  assert.equal(toggle.hasAttribute("tabindex"), false);
+  // A press on the picture leaves the search closed.
+  fireEvent.click(toggle);
+  assert.equal(header.getAttribute("data-compact-search"), "closed");
   assert.deepEqual(within(header).queryAllByRole("link"), []);
-  const menu = within(header).getByRole("img", {
-    name: "Close catalogue navigation",
-  });
-  assert.equal(menu.tagName, "SPAN");
-  assert.equal(menu.className, "mbk-menu mbk-reset");
+  assert.equal(header.querySelector("[data-mokly-menu]"), null);
   const brand = within(header).getByRole("img", { name: "Mokly" });
   assert.equal(brand.className, "mbk-brand mbk-reset");
   assert.equal(brand.textContent, "mokly.");
-  // The compact search needs a script, so its toggle and Close search go.
-  assert.equal(header.querySelector(".mbk-search-toggle"), null);
   assert.equal(header.querySelector(".mbk-search-close"), null);
   const field = within(header).getByRole("searchbox", {
     name: "Search catalogue",
@@ -92,28 +65,21 @@ test("a bar that is not interactive draws its controls as pictures and keeps its
   assert.equal(field.value, "tag:forms");
   assert.equal(field.id, "root-mb-search");
   assert.ok(header.querySelector(".mbk-search > [data-picker]"));
-  assert.ok(header.lastElementChild?.hasAttribute("data-end"));
+  // The end control ends the bar's end column, which ends the bar.
+  assert.ok(
+    header.lastElementChild?.lastElementChild?.hasAttribute("data-end"),
+  );
 });
 
-test("a bar that is not interactive keeps the addresses it is given", () => {
-  render(
-    <TopBar
-      {...IDS}
-      brandHref="../home/"
-      drawerOpen={false}
-      interactive={false}
-      menuHref="../navigation/"
-    />,
-  );
+test("a bar that is not interactive keeps the address it is given", () => {
+  render(<TopBar {...IDS} brandHref="../home/" interactive={false} />);
   assert.equal(
     screen.getByRole("link", { name: "Mokly" }).getAttribute("href"),
     "../home/",
   );
-  assert.equal(
-    screen
-      .getByRole("link", { name: "Open catalogue navigation" })
-      .getAttribute("href"),
-    "../navigation/",
+  // The brand is a link, so the bar's one picture is the search toggle.
+  assert.deepEqual(
+    screen.queryAllByRole("img").map((img) => img.getAttribute("aria-label")),
+    ["Search catalogue"],
   );
-  assert.deepEqual(screen.queryAllByRole("img"), []);
 });

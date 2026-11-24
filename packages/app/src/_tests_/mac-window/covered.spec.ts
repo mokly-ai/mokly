@@ -1,7 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { expect, open, test } from "../harness";
-import { publishedProject, publishedViewerReady } from "../viewer/support";
+import {
+  openSettingsFromAccount,
+  publishedProject,
+  publishedViewerReady,
+} from "../viewer/support";
 
 import { countHitTests, drawnTwice } from "./hit-tests";
 import {
@@ -16,9 +20,6 @@ import { scrollToEnd, scrollToStart } from "./scroll";
 /** What a test expects of one part of a top bar. */
 type PartExpectation = (part: Locator, label: string) => Promise<void>;
 
-/** The fixture's screen that the stage shows in a desktop browser frame. */
-const framedScreen = "?catalogueScreen=start";
-
 /** The smallest window that the desktop app opens. Sign-in scrolls in it. */
 const smallestWindow = { width: 640, height: 480 };
 
@@ -28,41 +29,71 @@ const smallestWindow = { width: 640, height: 480 };
  */
 const zoomedNarrowWindow = { width: 533, height: 700 };
 
-/** Expect the same of the cloud's two slots in the viewer's top bar. */
+/**
+ * A narrow window of another size, as when it enters or leaves full screen.
+ * The compact search still covers the whole bar at this width.
+ */
+const resizedNarrowWindow = { width: 520, height: 700 };
+
+/**
+ * Expect the same of the cloud's slots in the viewer's top bar: the start, the
+ * centre and the end slot of the full bar, or the centre and the end slot of
+ * the compact bar, which leaves its start slot empty.
+ */
 async function expectSlots(
   page: Page,
   expectation: PartExpectation,
   when: string,
+  bar: "full" | "compact" = "full",
 ) {
   for (const [label, slot] of [
-    ["the start slot", page.locator(".fo-package-slot-start")],
+    ...(bar === "full"
+      ? ([["the start slot", page.locator(".fo-package-slot-start")]] as const)
+      : []),
+    ["the centre slot", page.locator(".fo-package-slot-center")],
     ["the end slot", page.locator(".fo-package-slot-end")],
   ] as const) {
     await expectation(slot, `${label}, ${when},`);
   }
 }
 
-test("in the Mac window, an expanded preview frame turns off the bar slots that it covers until it collapses", async ({
+test("in the Mac window, the viewer's focused skip link turns off the bar slot that it covers until it loses focus", async ({
   page,
 }) => {
-  await emulateMacWindowAtStart(page, "start");
-  const made = await publishedProject(page, "mac-window-covered-frame");
-  await open(page, made.publicationPath + framedScreen);
+  // With the buttons at the end, the full bar starts its start slot directly
+  // after the package's mark, under the link.
+  await emulateMacWindowAtStart(page, "end");
+  const made = await publishedProject(page, "mac-window-covered-link");
+  await open(page, made.publicationPath);
   await publishedViewerReady(page);
   await expectSlots(page, expectMovesWindow, "at rest");
 
-  await page
-    .getByRole("button", { name: "Expand to a wider viewport" })
-    .click();
-  const collapse = page.getByRole("button", { name: "Collapse viewport" });
-  await expect(collapse).toBeVisible();
-  await expectSlots(page, expectStopsMovingWindow, "under the expanded frame");
+  // The viewer's skip link shows over the bar while it has keyboard focus.
+  // It comes directly before the package's mark in the tab order, so
+  // Shift+Tab from the mark reaches it without the cloud's skip link, which
+  // also covers the start slot.
+  const viewer = page.locator("[data-mokly-shell]");
+  const mark = viewer.getByRole("link", { name: "Mokly", exact: true });
+  const skip = viewer.getByRole("link", { name: "Skip to content" });
+  await mark.focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect(skip).toBeFocused();
+  await expect(skip).toBeInViewport();
+  await expectStopsMovingWindow(
+    page.locator(".fo-package-slot-start"),
+    "the start slot, under the link,",
+  );
+  for (const [label, slot] of [
+    ["the centre slot", page.locator(".fo-package-slot-center")],
+    ["the end slot", page.locator(".fo-package-slot-end")],
+  ] as const) {
+    await expectMovesWindow(slot, `${label}, beside the link,`);
+  }
 
-  await collapse.click();
-  await expect(
-    page.getByRole("button", { name: "Expand to a wider viewport" }),
-  ).toBeVisible();
-  await expectSlots(page, expectMovesWindow, "after the frame collapses");
+  await page.keyboard.press("Tab");
+  await expect(mark).toBeFocused();
+  await expect(skip).not.toBeInViewport();
+  await expectSlots(page, expectMovesWindow, "after the link loses focus");
 });
 
 test("in the Mac window, the open compact search turns off the bar slots of a narrow viewer until it closes", async ({
@@ -73,18 +104,28 @@ test("in the Mac window, the open compact search turns off the bar slots of a na
   await page.setViewportSize(zoomedNarrowWindow);
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
-  await expectSlots(page, expectMovesWindow, "at rest");
+  await expectSlots(page, expectMovesWindow, "at rest", "compact");
 
   const toggle = page.getByRole("button", { name: "Search catalogue" });
   await toggle.click();
   await expect(
     page.getByRole("searchbox", { name: "Search catalogue" }),
   ).toBeFocused();
-  await expectSlots(page, expectStopsMovingWindow, "under the open search");
+  await expectSlots(
+    page,
+    expectStopsMovingWindow,
+    "under the open search",
+    "compact",
+  );
 
   await page.keyboard.press("Escape");
   await expect(toggle).toBeFocused();
-  await expectSlots(page, expectMovesWindow, "after the search closes");
+  await expectSlots(
+    page,
+    expectMovesWindow,
+    "after the search closes",
+    "compact",
+  );
 });
 
 test("in the Mac window, the focused skip link turns off the account header under it until it scrolls away or loses focus", async ({
@@ -128,7 +169,7 @@ test("in the Mac window, an open settings dialog over the bar keeps the bar movi
   await open(page, made.publicationPath);
   await publishedViewerReady(page);
 
-  await page.getByTestId("viewer-settings").click();
+  await openSettingsFromAccount(page);
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect
@@ -149,33 +190,47 @@ test("a browser checks no drag area, and the Mac window checks them only while i
 }) => {
   const hitTests = await countHitTests(page);
   const made = await publishedProject(page, "mac-window-covered-browser");
-  await open(page, made.publicationPath + framedScreen);
+  await page.setViewportSize(zoomedNarrowWindow);
+  await open(page, made.publicationPath);
   await publishedViewerReady(page);
 
   // A browser reports no buttons. A cover, a change of the page, a focus
   // change and a resize ask for no check, so no part stops moving the window.
-  await page
-    .getByRole("button", { name: "Expand to a wider viewport" })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "Collapse viewport" }),
-  ).toBeVisible();
-  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.getByRole("button", { name: "Search catalogue" }).click();
+  const search = page.getByRole("searchbox", { name: "Search catalogue" });
+  await expect(search).toBeFocused();
+  await page.setViewportSize(resizedNarrowWindow);
   await drawnTwice(page);
   // The count only grows, so one read after the frames covers the whole run.
   expect(await hitTests(), "the hit tests in a browser").toBe(0);
-  await expectSlots(page, expectMovesWindow, "under the frame in a browser");
+  await expectSlots(
+    page,
+    expectMovesWindow,
+    "under the open search in a browser",
+    "compact",
+  );
 
   // The window reports its buttons as it leaves full screen, which resizes
-  // it. The check starts, and the frame turns off the slots.
+  // it. The check starts, and the open search turns off the slots.
   await emulateMacWindow(page, "start");
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await expectSlots(page, expectStopsMovingWindow, "under the frame");
+  await page.setViewportSize(zoomedNarrowWindow);
+  await expectSlots(
+    page,
+    expectStopsMovingWindow,
+    "under the open search",
+    "compact",
+  );
   await expect.poll(hitTests, "the hit tests of the check").toBeGreaterThan(0);
 
   // In full screen the window reports no buttons. The check stops, and every
-  // slot moves the window again, with the frame still expanded.
+  // slot moves the window again, with the search still open.
   await clearMacWindow(page);
-  await page.setViewportSize({ width: 1400, height: 900 });
-  await expectSlots(page, expectMovesWindow, "under the frame in full screen");
+  await page.setViewportSize(resizedNarrowWindow);
+  await expect(search).toBeVisible();
+  await expectSlots(
+    page,
+    expectMovesWindow,
+    "under the open search in full screen",
+    "compact",
+  );
 });

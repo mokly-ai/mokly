@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { EntryDetailsBody } from "../src/shell/details.js";
+import { EntryInspectHead } from "../src/shell/inspect_head.js";
 
 import {
   publishedCatalogue,
@@ -41,7 +41,7 @@ test("details omit authoring dependencies for every routed entry kind", () => {
         : {}),
     } as unknown as typeof entry;
     const markup = storeMarkup(
-      <EntryDetailsBody catalogue={catalogue} entry={legacyEntry} />,
+      <EntryInspectHead catalogue={catalogue} entry={legacyEntry} />,
     );
     assert.match(markup, /<span class="mbk-meta-k mbk-reset">Source<\/span>/);
     assert.match(

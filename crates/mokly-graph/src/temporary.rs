@@ -121,9 +121,12 @@ impl ArtifactWorker for PropsJob<'_> {
             .as_ref()
             .expect("temporary document artifacts carry their composed tree");
         validation::links(self.session, &document.links)?;
-        self.session
-            .preview_walker()
-            .collect(route, &document.tree, &document.resources)
+        self.session.preview_walker().collect(
+            route,
+            &document.tree,
+            &document.resources,
+            self.session.viewer_fonts(route),
+        )
     }
 }
 
@@ -143,8 +146,11 @@ impl ArtifactWorker for Rendered<'_> {
             .as_ref()
             .expect("temporary document artifacts carry their composed tree");
         validation::links(self.session, &document.links)?;
-        self.session
-            .preview_walker()
-            .collect(route, &document.tree, &document.resources)
+        self.session.preview_walker().collect(
+            route,
+            &document.tree,
+            &document.resources,
+            self.session.viewer_fonts(route),
+        )
     }
 }

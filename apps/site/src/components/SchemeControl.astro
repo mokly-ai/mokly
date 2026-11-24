@@ -1,0 +1,37 @@
+---
+/**
+ * The light and dark control that the footer of every page carries: a group
+ * of two native radios named Color scheme, Light with a sun and Dark with a
+ * moon, each drawn as one segment of a track. Native radios give the group
+ * its keyboard behaviour. The scheme island, `scheme-island.js`, checks the
+ * radio of the scheme in use before the control first paints, and applies
+ * and keeps a choice. Without script the control does not show and the page
+ * follows the system scheme. The island finds the radios by their name and
+ * reads their values.
+ *
+ * Use: `<SchemeControl />`, in the footer's brand column.
+ */
+import Icon from "./Icon.astro";
+import type { IconName } from "./icons.js";
+
+/** The two options, in reading order: the value, the label and the icon. */
+const SCHEMES: ReadonlyArray<readonly ["light" | "dark", string, IconName]> = [
+  ["light", "Light", "sun"],
+  ["dark", "Dark", "moon"],
+];
+---
+
+<fieldset aria-label="Color scheme" class="site-scheme">
+  {SCHEMES.map(([scheme, label, icon]) => (
+    <label class="site-scheme-option">
+      <input
+        class="site-scheme-input"
+        name="site-scheme"
+        type="radio"
+        value={scheme}
+      />
+      <Icon name={icon} size={15} />
+      {label}
+    </label>
+  ))}
+</fieldset>

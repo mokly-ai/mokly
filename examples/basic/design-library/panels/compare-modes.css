@@ -1,0 +1,213 @@
+/* The compare modes of Changes: a tile for each mode with its icon, its name,
+   and its key, Current across the row above the four comparisons; the
+   compared frame's chips in Side by side; and, in a comparison, the Scroll
+   together switch and Refresh. The shown mode's tile and the compared
+   frame's chip take the soft signal fill and the signal edge. */
+.cv-modes {
+  display: grid;
+  gap: 10px;
+}
+
+.cv-mode-tiles {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cv-mode-tiles > li:first-child {
+  grid-column: 1 / -1;
+}
+
+.cv-mode {
+  align-items: flex-start;
+  border: 1px solid var(--cv-border);
+  border-radius: 9px;
+  color: var(--cv-text-secondary);
+  display: flex;
+  flex-direction: column;
+  font-size: 12.5px;
+  font-weight: 540;
+  gap: 7px;
+  padding: 9px 9px 8px;
+  position: relative;
+  text-decoration: none;
+}
+
+a.cv-mode:hover {
+  background: var(--cv-hover);
+}
+
+.cv-mode-icon {
+  color: var(--cv-text-muted);
+  flex: none;
+}
+
+.cv-mode-key {
+  background: var(--cv-surface-muted);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--cv-border);
+  color: var(--cv-text-muted);
+  font: 500 10.5px/1 var(--cv-mono);
+  padding: 3px 5px;
+  position: absolute;
+  right: 8px;
+  top: 8px;
+}
+
+.cv-mode[aria-current] {
+  background: var(--cv-signal-soft);
+  border-color: var(--cv-signal-deep);
+  box-shadow: inset 0 0 0 0.5px var(--cv-signal-deep);
+  color: var(--cv-text);
+  font-weight: 600;
+}
+
+.cv-mode[aria-current] > .cv-mode-icon {
+  color: var(--cv-signal-deep);
+}
+
+.cv-mode[aria-current] > .cv-mode-key {
+  background: var(--cv-surface);
+}
+
+/* The shown mode's tile draws its own signal edge as a shadow, so its focus
+   repeats the glow over that edge, as a package control does. */
+.cv-mode[aria-current]:focus-visible {
+  box-shadow:
+    var(
+      --mbk-focus-glow,
+      0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+    ),
+    inset 0 0 0 0.5px var(--cv-signal-deep);
+}
+
+/* Side by side compares one frame, which its chip names. */
+.cv-mode-frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cv-mode-frame {
+  align-items: center;
+  border: 1px solid var(--cv-border);
+  border-radius: 13px;
+  color: var(--cv-text-secondary);
+  display: inline-flex;
+  font-size: 12px;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cv-mode-frame[aria-current] {
+  background: var(--cv-signal-soft);
+  border-color: var(--cv-signal-deep);
+  color: var(--cv-text);
+}
+
+.cv-mode-frame[aria-current] > .cv-glyph {
+  color: var(--cv-signal-deep);
+}
+
+/* Scroll together, a drawn track and knob under a transparent native
+   switch, and Refresh at the end of the row. */
+.cv-mode-sync {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  min-height: 30px;
+}
+
+.cv-mode-switch {
+  align-items: center;
+  color: var(--cv-text-secondary);
+  display: flex;
+  flex: 1;
+  font-size: 12.5px;
+  gap: 8px;
+  min-height: 30px;
+  position: relative;
+}
+
+.cv-mode-switch-name {
+  flex: 1;
+}
+
+.cv-mode-switch > input {
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.cv-mode-switch-track {
+  background: var(--cv-surface);
+  border: 1px solid var(--cv-border-strong);
+  border-radius: 999px;
+  flex: none;
+  height: 18px;
+  position: relative;
+  width: 32px;
+}
+
+.cv-mode-switch-track::after {
+  background: var(--cv-border-strong);
+  border-radius: 50%;
+  content: "";
+  height: 12px;
+  left: 2px;
+  position: absolute;
+  top: 2px;
+  width: 12px;
+}
+
+.cv-mode-switch > input:checked + .cv-mode-switch-track {
+  background: var(--cv-signal-deep);
+  border-color: var(--cv-signal-deep);
+}
+
+.cv-mode-switch > input:checked + .cv-mode-switch-track::after {
+  background: var(--cv-surface);
+  transform: translateX(14px);
+}
+
+/* The track draws the focus glow of the transparent switch over it: the
+   package's --mbk-focus-glow, or the same mix of the Canvas signal where no
+   package element passes that property down. Forced colours drop the glow,
+   so there the track takes the system outline. */
+.cv-mode-switch > input:focus-visible + .cv-mode-switch-track {
+  box-shadow: var(
+    --mbk-focus-glow,
+    0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+  );
+}
+
+@media (forced-colors: active) {
+  .cv-mode-switch > input:focus-visible + .cv-mode-switch-track {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+.cv-mode-refresh {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--cv-text-secondary);
+  display: inline-flex;
+  flex: none;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}

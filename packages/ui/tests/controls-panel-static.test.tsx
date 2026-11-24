@@ -5,10 +5,7 @@ import { test } from "node:test";
 
 import { render, screen } from "@testing-library/react";
 
-import {
-  ControlsPanel,
-  SavedPropsPanel,
-} from "../src/controls-panel/controls-panel.js";
+import { ControlsPanel } from "../src/controls-panel/controls-panel.js";
 
 const WORDING = {
   edited: "Edited props",
@@ -77,19 +74,4 @@ test("the alert's action and a failed start's action link to the artboards that 
     screen.getByRole("link", { name: "Try again" }).getAttribute("href"),
     "../preparing/",
   );
-});
-
-test("Switch to Current of the saved props links to the current artboard", () => {
-  render(
-    <SavedPropsPanel
-      current="Switch to Current"
-      currentHref="../default/"
-      heading="Saved props"
-      notice="Comparisons show the saved props."
-      title="Default"
-    />,
-  );
-  const current = screen.getByRole("link", { name: "Switch to Current" });
-  assert.equal(current.getAttribute("href"), "../default/");
-  assert.equal(current.className, "mbk-text-button mbk-reset");
 });

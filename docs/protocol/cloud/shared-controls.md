@@ -46,13 +46,11 @@ Use public subpaths so a button does not load the entire library:
 `/dropdown`, `/segmented`, `/switch`, `/modal`, `/toast`, `/skeleton`,
 `/list`, `/table`, `/typography`, and `/theme`, prefixed with `@firna/ui`.
 Another published subpath may be used when an owning screen needs it;
-document that use first. The public `DropdownMenu` from `/dropdown` carries a
-quiet Firna Button trigger labelled **More** in the viewer's compact cloud
-chrome, where it opens the same panels as the desktop actions. A settings row
-gathers the actions that belong to it behind one icon-only trigger instead, so a
-list of rows carries one control each rather than a line of competing buttons:
-a quiet square Button drawing the lucide `Ellipsis` glyph, named for its row,
-announcing a menu popup and whether it is expanded. It opens a responsive menu.
+document that use first. A settings row gathers the actions that belong to it
+behind one icon-only trigger, so a list of rows carries one control each
+rather than a line of competing buttons: a quiet square Button drawing the
+lucide `Ellipsis` glyph, named for its row, announcing a menu popup and whether
+it is expanded. It opens a responsive menu.
 On a wide surface that is `ResponsiveMenu` from `/popover`, whose web build is
 a non-modal popover anchored 6px below the trigger and aligned to its end edge.
 On a compact surface — the same breakpoint that selects the settings layer —
@@ -62,13 +60,32 @@ the registered panel's bar and dismissed by **Cancel**, exactly as a settings
 confirmation is on that surface. Firna's own `Sheet` is not used there, because
 its web build draws the frame's header with an icon close control rather than
 the panel bar every other compact settings overlay shares. Choosing a row
-closes the menu before anything that row opens appears. This is the one use of
-`/popover`. Never import private implementation files or patch the package.
+closes the menu before anything that row opens appears.
+
+The viewer's account menu and its compact **More** menu each open from a quiet
+Firna Button trigger, as
+[Viewer chrome: account menu](./viewer-chrome-account.md#menus) defines. On a
+pointer viewport each is `Popover` from `/popover`: a 260px non-modal popover
+in the package's menu chrome, anchored 6px below the trigger and aligned to its
+end edge. It takes focus to the menu's first item as it opens, and returns it
+to the trigger when Escape or a press outside closes it. On a touch viewport
+**More** is the registered panel's bottom sheet. In both, the rows are the
+cloud's own: one `menu` for each group of rows, each row a `menuitem` in the
+package's menu row metrics, a link for a page of the site and a button for an
+action. The Theme choice is the registered segmented control above the
+account's items, outside the menus. One keyboard model covers every row of the
+popover or the sheet: ArrowDown and ArrowUp move through the items in order and
+wrap, Home and End reach the first and the last, Enter and Space activate the
+item, and Tab moves between the Theme choice and the menus. Decision: the cloud
+draws these rows rather than using `DropdownMenu` or `ResponsiveMenu`, because
+the package's rows cannot be links and its menu keyboard takes Enter and Space
+from the Theme choice. These are the two documented uses of `/popover`. Never
+import private implementation files or patch the package.
 
 Keep `page-frame`, `header`, `card`, the comment-thread composition and the
 catalogue illustrations local. They arrange shared controls; they do not
 reimplement them. Common UI text uses `/typography`. Marketing editorial
-headings and prose, the serif wordmark, semantic links and developer code
+headings and prose, the wordmark, semantic links and developer code
 blocks use semantic HTML: Firna's theme exposes sans and mono families, with
 no display-serif or italic marketing type role. These are local content and
 layout responsibilities under the registered screens and header, not a second
@@ -86,16 +103,29 @@ registered `quiet` tone is the library's `plain`: neutral ink on no fill, for a
 repeat or dismiss action that must not compete with the primary. Only
 `Label color="primary"` reaches the accent ink, and only where the
 [tokens contract](./design-tokens-color.md) names an exception. In the dark
-theme the library inverts solid fills to light accents with a near-black
-`onSolid`; that inversion is the package's model and is never fought with local
-CSS — the dark `accentSolid` is chosen low enough in chroma to read as a
-material rather than a highlighter. Theme overrides are the only way to change
-a control's geometry or colors: CSS selectors, inline style, label-style and
-input-style props, and custom color props never restyle a Firna control.
+theme the mapping feeds the library the same `accentSolid` fill and white
+`onAccent` label as in light, in place of the dark preset's light accent with
+a near-black `onSolid`, so a filled button reads the same in both schemes, as
+[the accent family](./design-tokens-color.md#the-accent-family) defines
+(decision 4, option A). A primary action renders its Button under a scoped
+theme whose hover fill stays the resting `accentSolid`, so the white label
+keeps 3:1 at rest and on hover in both schemes. A hovering pointer lifts the
+enabled, idle primary action by 1px instead. Decision: the fill does not
+darken on hover, because the library's darker hover fill is the accent ink, on
+which the white dark-scheme label reads 1.62:1. No product screen draws a
+solid Firna badge, because the white dark-scheme label cannot reach 4.5:1 on
+the badge's light dark-scheme fills. Theme overrides are the only way to
+change a control's geometry or colors: CSS selectors, inline style,
+label-style and input-style props, and custom color props never restyle a
+Firna control. The primary action's hover lift is the one state style that a
+product screen passes to a Firna control.
 Typography may select a semantic color role, including inverse text for arrows
 on solid buttons; raw colors are forbidden. External layout containers may
 provide spacing, alignment and width; they must not change a control's own
-rendering. Use the public size and minimum-touch-target props for geometry. The
+rendering. The parts a registered Button draws as its content are the
+screen's own content and take the screen's styles; the Button around them
+keeps the package's geometry, tone and focus. Use the public size and
+minimum-touch-target props for geometry. The
 header pill is the package Button under a scoped theme whose medium radius is
 the pill radius.
 
@@ -130,8 +160,8 @@ without the registered Button, and it is confined to
 catalogue. The brand is the published logo — the mark and wordmark as one
 `img` of the lockup under `apps/site/public/brand/` — rather than the inline SVG
 mark and HTML wordmark the product draws, because mail clients strip inline
-SVG and substitute their own serif. The catalogue frame around an email screen
-stays ordinary Folio markup.
+SVG and substitute a font of their own. The catalogue frame around an email
+screen stays ordinary catalogue markup.
 
 ## Icons
 

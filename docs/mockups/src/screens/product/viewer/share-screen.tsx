@@ -1,12 +1,5 @@
-import { Body } from "@firna/ui/typography";
-import type { ReactNode } from "react";
-
 import type { ColorScheme, Viewport } from "@mokly/mokly";
 
-import { Badge } from "../../../entries/design/badge.mockup";
-import { ContentList } from "../../../entries/design/content-list.mockup";
-import { Input } from "../../../entries/design/input.mockup";
-import { sample } from "../../../fixtures/product";
 import type { ScreenState } from "../../../fixtures/product-states";
 import { failureReference } from "../../../fixtures/product-states";
 import {
@@ -17,62 +10,12 @@ import {
 import type { PublicationScreen } from "../../../fixtures/publication-screens";
 import { useMockupRenderContext } from "../../../render-context";
 import { Action, Pending, StateMessage } from "../page-parts";
-import { TextBar } from "../placeholders";
 
+import { PanelList } from "./panel-rows";
 import { ViewerPanelScreen } from "./screen";
+import { ShareLink } from "./share-link";
 
 const title = "Share";
-
-/**
- * The link, who can open it and Copy link. While the panel reads the link,
- * `hold` is the read's name, and the field is the place that names it: the
- * field keeps its label and its own frame, read only, and holds the name
- * where the link would be. The visibility is the project's, so its badge
- * stays; who can open the link is the read's, so that line is a bar; and Copy
- * link, whose label is known, draws itself disabled.
- */
-function Link(props: { link: string } | { hold: ReactNode }) {
-  const waits = "hold" in props;
-  return (
-    <>
-      <Input
-        moklyInstance="share-link"
-        label="Publication link"
-        name="publication-link"
-        type="text"
-        {...(waits
-          ? { waiting: true, hold: props.hold }
-          : { value: props.link })}
-      />
-      <div className="review-inline">
-        <Badge
-          moklyInstance="share-visibility"
-          label={sample.visibility}
-          tone="neutral"
-        />
-        {/* The line's box measures its content, so its bar takes a length;
-            the line's type is in pixels, so enlarged text keeps the bar
-            inside the narrowest panel. */}
-        <Body color="muted">
-          {waits ? (
-            <TextBar width="16em" />
-          ) : (
-            "Project members can open this link."
-          )}
-        </Body>
-      </div>
-      <div className="fo-panel-foot">
-        <Action
-          instance="share-copy"
-          label="Copy link"
-          tone="primary"
-          size="md"
-          disabled={waits}
-        />
-      </div>
-    </>
-  );
-}
 
 /** One screen that a link can open, with the scheme of the view it opens. */
 interface ScreenOffer {
@@ -107,11 +50,15 @@ const choose = {
   choose: true,
 } as const;
 
+/** The row that the link points at, which says so in place of its choice. */
+const chosen = { current: true, mark: "Selected" } as const;
+
 /**
- * Which screen the link points at: the whole catalogue or one offer. While
- * the screens are read, the whole catalogue keeps its known name, one
- * placeholder row stands for the screens, and which row is selected is the
- * read's, so each row's choice is a placeholder.
+ * Which screen the link points at: the whole catalogue or one offer. The
+ * selected row takes the signal-soft fill and says Selected in place of its
+ * choice. While the screens are read, the whole catalogue keeps its known
+ * name, one placeholder row stands for the screens, and which row is
+ * selected is the read's, so each row's choice is a placeholder.
  */
 function ScreenChoice({
   offers,
@@ -123,8 +70,7 @@ function ScreenChoice({
   waiting?: boolean;
 }) {
   const list = (
-    <ContentList
-      moklyInstance="share-screens"
+    <PanelList
       label="Screens in this publication"
       rows={
         waiting
@@ -141,14 +87,12 @@ function ScreenChoice({
               {
                 id: "whole-catalogue",
                 title: "Whole catalogue",
-                ...(selected === undefined ? { meta: "Selected" } : choose),
+                ...(selected === undefined ? chosen : choose),
               },
               ...offers.map(({ screen }) => ({
                 id: screen.id,
                 title: screen.title,
-                ...(screen === selected?.screen
-                  ? { meta: "Selected" }
-                  : choose),
+                ...(screen === selected?.screen ? chosen : choose),
               })),
             ]
       }
@@ -185,12 +129,13 @@ function SharePage({
   const selected = offers.find(
     (offer) => offer.screen.id === shareSelection.screen,
   );
-  // The address leaves out the desktop viewport and the reader's own scheme,
-  // and so does the link. Only a screen that the light fallback shows names
-  // its scheme, so that the link opens the view the reader sees.
+  // The address names the document's single viewport and leaves out the
+  // reader's own scheme, and so does the link. Only a screen that the light
+  // fallback shows names its scheme, so that the link opens the view the
+  // reader sees.
   const link = publicationLink({
     screen: selected?.screen.id,
-    viewport: viewport === "mobile" ? viewport : undefined,
+    viewport,
     scheme: selected?.scheme === colorScheme ? undefined : selected?.scheme,
   });
   return (
@@ -224,7 +169,7 @@ function SharePage({
           <>
             {state === "loading" ? (
               <Pending label="Preparing the publication link">
-                {(name) => <Link hold={name} />}
+                {(name) => <ShareLink hold={name} />}
               </Pending>
             ) : state === "error" ? (
               <StateMessage
@@ -243,7 +188,7 @@ function SharePage({
                 }
               />
             ) : (
-              <Link link={link} />
+              <ShareLink link={link} />
             )}
             {screens && (
               <ScreenChoice
