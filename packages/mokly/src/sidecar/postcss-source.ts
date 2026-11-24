@@ -7,6 +7,23 @@ import type { Loader, OnLoadResult } from "esbuild";
 import { moduleContext } from "./postcss-context.js";
 import { moduleBytesAsync } from "./postcss-evidence.js";
 
+export const postcssScriptLoaders: Readonly<Record<string, Loader>> = {
+  ".js": "js",
+  ".mjs": "js",
+  ".cjs": "js",
+  ".jsx": "jsx",
+  ".ts": "ts",
+  ".mts": "ts",
+  ".cts": "ts",
+  ".tsx": "tsx",
+};
+
+const defaults: Record<string, Loader> = {
+  ...postcssScriptLoaders,
+  ".json": "json",
+  ".css": "css",
+};
+
 /** Every supported loader receives the raw buffer whose digest was recorded. */
 export async function postcssSource(
   file: string,
@@ -15,18 +32,6 @@ export async function postcssSource(
   const extension = Object.keys(configured)
     .sort((left, right) => right.length - left.length)
     .find((suffix) => file.endsWith(suffix));
-  const defaults: Record<string, Loader> = {
-    ".js": "js",
-    ".mjs": "js",
-    ".cjs": "js",
-    ".jsx": "jsx",
-    ".ts": "ts",
-    ".mts": "ts",
-    ".cts": "ts",
-    ".tsx": "tsx",
-    ".json": "json",
-    ".css": "css",
-  };
   const selected =
     defaults[path.extname(file)] ??
     (extension ? (configured[extension] as Loader) : undefined);

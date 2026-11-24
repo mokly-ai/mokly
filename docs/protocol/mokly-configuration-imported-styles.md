@@ -63,3 +63,10 @@ JavaScript inside selected dependency roots are also allowed under the
 names and no catalogue source attribution.
 Authored public CSS enters a document only through the
 [referenced asset closure](./mokly-public-closure.md).
+
+## Workspace Package Imports
+
+Mokly applies the
+[workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+to CSS `@import` targets after it selects the package export or main field.
+The mapped stylesheet keeps its `.css` extension.

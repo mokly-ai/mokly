@@ -2,10 +2,31 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { ModulePaths } from "./module-paths.js";
-import { inside } from "./path-scope.js";
-import { packageName } from "./specifier.js";
+import { inside, logical } from "./path-scope.js";
+import { bareSpecifier, packageName } from "./specifier.js";
 
 const caches = new WeakMap<ModulePaths, Map<string, Promise<string>>>();
+
+/** Map a bare importer's position into the selected installation repository. */
+export function importerDirectory(
+  paths: ModulePaths,
+  name: string,
+  directory: string,
+): string {
+  if (
+    !paths.dependencyRoot ||
+    !bareSpecifier(name) ||
+    !paths.repositoryOwned(directory) ||
+    Object.keys(paths.settings.aliases).some(
+      (key) => name === key || name.startsWith(key + "/"),
+    )
+  )
+    return directory;
+  return path.resolve(
+    paths.dependencyRoot,
+    logical(paths.sourceRoot, directory),
+  );
+}
 
 /** Resolve from a package scope so a working-tree tsconfig cannot remap a base import. */
 export function packageDirectory(

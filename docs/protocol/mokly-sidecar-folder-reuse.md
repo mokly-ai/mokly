@@ -34,10 +34,10 @@ file that can change the selection: the manifest that defines the mapping, the
 `package.json` candidate of each path that esbuild tries before the selection,
 and each PnP state file that esbuild checks. Each entry records a present file
 with its digest, an absent file, or a link with its target. The table holds no
-directory entries, because directory membership stays in the live checks. A
-marked compilation without such an import keeps an empty table, apart from
-the exceptions of [PnP package roots](#pnp-package-roots). The evidence
-keeps `complete` and `durable` false and the `uncaptured: "serveEdit"` marker.
+directory entries, because directory membership stays in the live checks.
+The table can also hold [PnP package roots](#pnp-package-roots) and
+[workspace lookup files](./mokly-sidecar-modules.md#source-and-dependency-files).
+The evidence keeps `complete` and `durable` false and the `uncaptured: "serveEdit"` marker.
 
 A reuse check compares each entry with the filesystem by the rules of the
 captured reuse evidence. The sidecar makes this check at a `serveEdit`

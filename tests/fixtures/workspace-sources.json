@@ -1,0 +1,157 @@
+{
+  "files": {
+    "packages/plain/package.json": "{\"name\": \"plain\"}",
+    "packages/plain/src/button.tsx": "",
+    "packages/plain/src/button.ts": "",
+    "packages/plain/src/button.js": "",
+    "packages/plain/src/tokens.css": "",
+    "packages/plain/src/tokens.json": "{}",
+    "packages/plain/src/tokens.web.tsx": "",
+    "packages/plain/src/parts/panel.ts": "",
+    "packages/plain/src/feature.ts": "",
+    "packages/plain/src/styles.css": "",
+    "packages/plain/src/no-style.ts": "",
+    "packages/plain/dist/built-only.js": "",
+    "packages/plain/dist/nested/package.json": "{}",
+    "packages/plain/src/nested/entry.ts": "",
+    "packages/configured/package.json": "{\"name\": \"configured\"}",
+    "packages/configured/tsconfig.json": "{\"extends\": [\"./configs/build\", \"./configs/source.json\"]}",
+    "packages/configured/configs/build.json": "{\"compilerOptions\": {\"outDir\": \"../compiled\", \"rootDir\": \"../first\"}}",
+    "packages/configured/configs/source.json": "{/* source layout */ \"compilerOptions\": {\"rootDir\": \"${configDir}/authoring\",},}",
+    "packages/configured/authoring/widget.tsx": "",
+    "packages/configured/authoring/theme.css": "",
+    "packages/configured/first/widget.tsx": "",
+    "packages/configured/src/button.tsx": "",
+    "packages/local-layout/package.json": "{\"name\": \"local-layout\"}",
+    "packages/local-layout/tsconfig.json": "{\"extends\": \"@config/shared/tsconfig.json\", \"compilerOptions\": {\"outDir\": \"compiled\", \"rootDir\": \"authoring\"}}",
+    "packages/local-layout/authoring/theme.css": "",
+    "packages/ordered-layout/package.json": "{\"name\": \"ordered-layout\"}",
+    "packages/ordered-layout/tsconfig.json": "{\"extends\": [\"./earlier.json\", \"./missing.json\", \"/shared/tsconfig.json\", \"./later.json\"], \"compilerOptions\": {\"rootDir\": \"authoring\"}}",
+    "packages/ordered-layout/earlier.json": "{\"compilerOptions\": {\"outDir\": \"earlier\", \"rootDir\": \"first\"}}",
+    "packages/ordered-layout/later.json": "{\"compilerOptions\": {\"outDir\": \"compiled\"}}",
+    "packages/ordered-layout/authoring/widget.ts": "",
+    "packages/reset-layout/package.json": "{\"name\": \"reset-layout\"}",
+    "packages/reset-layout/tsconfig.json": "{\"extends\": [\"./layout.json\", \"../../node_modules/installed/tsconfig.json\"], \"compilerOptions\": {\"rootDir\": \"authoring\"}}",
+    "packages/reset-layout/layout.json": "{\"compilerOptions\": {\"outDir\": \"compiled\", \"rootDir\": \"authoring\"}}",
+    "packages/reset-layout/src/widget.ts": "",
+    "packages/reset-layout/authoring/widget.ts": "",
+    "packages/partial/package.json": "{\"name\": \"partial\"}",
+    "packages/partial/tsconfig.json": "{\"compilerOptions\": {\"rootDir\": \"authoring\"}}",
+    "packages/partial/src/widget.ts": "",
+    "packages/partial/authoring/widget.ts": "",
+    "packages/outside/package.json": "{\"name\": \"outside\"}",
+    "packages/outside/tsconfig.json": "{\"compilerOptions\": {\"outDir\": \"../compiled\", \"rootDir\": \"authoring\"}}",
+    "packages/outside/src/widget.ts": "",
+    "packages/outside/authoring/widget.ts": "",
+    "node_modules/installed/package.json": "{\"name\": \"installed\"}",
+    "node_modules/installed/tsconfig.json": "{\"compilerOptions\": {\"outDir\": \"../../packages/reset-layout/compiled\"}}",
+    "node_modules/installed/src/widget.ts": "",
+    "unpackaged/src/widget.ts": ""
+  },
+  "cases": [
+    {
+      "name": "a source can replace a missing build target",
+      "target": "packages/plain/dist/button.js",
+      "expected": "packages/plain/src/button.tsx"
+    },
+    {
+      "name": "configured extensions determine which source wins",
+      "target": "packages/plain/dist/button.js",
+      "extensions": [".jsx", ".js", ".ts"],
+      "expected": "packages/plain/src/button.js"
+    },
+    {
+      "name": "JavaScript targets try only extensions with a script suffix",
+      "target": "packages/plain/dist/tokens.js",
+      "extensions": [".css", ".json", ".web.tsx"],
+      "expected": "packages/plain/src/tokens.web.tsx"
+    },
+    {
+      "name": "lib keeps nested paths and maps mjs",
+      "target": "packages/plain/lib/parts/panel.mjs",
+      "expected": "packages/plain/src/parts/panel.ts"
+    },
+    {
+      "name": "build maps cjs with the configured extensions",
+      "target": "packages/plain/build/feature.cjs",
+      "extensions": [".tsx", ".ts"],
+      "expected": "packages/plain/src/feature.ts"
+    },
+    {
+      "name": "out keeps the stylesheet name",
+      "target": "packages/plain/out/styles.css",
+      "extensions": [".ts"],
+      "expected": "packages/plain/src/styles.css"
+    },
+    {
+      "name": "a stylesheet tries no alternate extension",
+      "target": "packages/plain/out/no-style.css",
+      "expected": null
+    },
+    {
+      "name": "an absent source leaves the built file",
+      "target": "packages/plain/dist/built-only.js",
+      "expected": null
+    },
+    {
+      "name": "the build folder must be at the top level",
+      "target": "packages/plain/features/dist/button.js",
+      "expected": null
+    },
+    {
+      "name": "the nearest unnamed manifest stops lookup",
+      "target": "packages/plain/dist/nested/entry.js",
+      "expected": null
+    },
+    {
+      "name": "the tsconfig chain declares the layout",
+      "target": "packages/configured/compiled/widget.js",
+      "expected": "packages/configured/authoring/widget.tsx"
+    },
+    {
+      "name": "css uses the same tsconfig layout",
+      "target": "packages/configured/compiled/theme.css",
+      "expected": "packages/configured/authoring/theme.css"
+    },
+    {
+      "name": "local folders survive an unreadable package extends",
+      "target": "packages/local-layout/compiled/theme.css",
+      "expected": "packages/local-layout/authoring/theme.css"
+    },
+    {
+      "name": "later relative and local folders restore an incomplete chain",
+      "target": "packages/ordered-layout/compiled/widget.js",
+      "expected": "packages/ordered-layout/authoring/widget.ts"
+    },
+    {
+      "name": "an unreadable later extends clears earlier inherited folders",
+      "target": "packages/reset-layout/dist/widget.js",
+      "expected": "packages/reset-layout/src/widget.ts"
+    },
+    {
+      "name": "a complete tsconfig layout replaces the convention",
+      "target": "packages/configured/dist/button.js",
+      "expected": null
+    },
+    {
+      "name": "a partial tsconfig layout falls back to the convention",
+      "target": "packages/partial/dist/widget.js",
+      "expected": "packages/partial/src/widget.ts"
+    },
+    {
+      "name": "a tsconfig folder outside the package falls back to the convention",
+      "target": "packages/outside/dist/widget.js",
+      "expected": "packages/outside/src/widget.ts"
+    },
+    {
+      "name": "an installed dependency is outside the rule",
+      "target": "node_modules/installed/dist/widget.js",
+      "expected": null
+    },
+    {
+      "name": "a repository folder without a package is outside the rule",
+      "target": "unpackaged/dist/widget.js",
+      "expected": null
+    }
+  ]
+}

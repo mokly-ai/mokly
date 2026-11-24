@@ -112,6 +112,10 @@ your own React. It also runs your PostCSS module on local stylesheets. A
 catalogue of HTML files without a renderer or a PostCSS module starts no
 sidecar.
 
+When module lookup selects a built file from a workspace package, Mokly
+looks for the matching source in each render's own tree.
+See [workspace package sources](../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
+
 The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
 [module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and
 the [PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md)
