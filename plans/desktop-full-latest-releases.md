@@ -49,7 +49,7 @@ parent workspace "dedicated download page". The options check ran there.
   published release with `releaseType: draft` makes it log "existing type
   not compatible" and return `null`, which the append-only hook turns into a
   job failure. With no match it creates `{tag_name, name: version,
-  draft: true, prerelease: false}`. So the macOS leg creates the draft and the
+draft: true, prerelease: false}`. So the macOS leg creates the draft and the
   Linux leg reuses it. The env values `EP_DRAFT`, `EP_PRE_RELEASE` and
   `EP_PRELEASE` override `releaseType` from the configuration.
 - The two-hour limit no longer applies, because a draft has no
