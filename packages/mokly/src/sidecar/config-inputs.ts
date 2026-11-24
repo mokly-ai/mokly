@@ -11,7 +11,7 @@ export interface PathSettings {
 }
 
 /** Native expansion uses the top-level configuration after inherited settings merge. */
-function configPath(value: string, directory: string): string {
+export function configPath(value: string, directory: string): string {
   return value.startsWith("${configDir}")
     ? path.resolve(directory, "./" + value.slice("${configDir}".length))
     : value;
@@ -21,9 +21,24 @@ function configPath(value: string, directory: string): string {
 export class ConfigInputs {
   readable = true;
   private readonly scopes = new Map<string, PathSettings>();
-  private readonly configs = new Map<string, PathSettings>();
   private readonly manifests = new Set<string>();
   private readonly candidates = new Set<string>();
+  private readonly configs = new ConfigChain(
+    {
+      regular: (file) => this.inputs.file(file, true)?.kind === "file",
+      read: (file, inherited) => {
+        const json = this.inputs.json(
+          file,
+          inherited || path.basename(file) === "jsconfig.json",
+        );
+        if (!json) throw new Error("missing configuration");
+        const canonical = this.inputs.canonicalFile(file);
+        if (!canonical) throw new Error("missing configuration path");
+        return { json, directory: path.dirname(canonical) };
+      },
+    },
+    pathSettings,
+  );
 
   constructor(
     private readonly inputs: PhysicalInputs,
@@ -72,7 +87,7 @@ export class ConfigInputs {
       const file = path.join(directory, name);
       const value = this.inputs.file(file, name === "jsconfig.json");
       if (value?.kind === "file") {
-        const settings = this.config(file, []);
+        const settings = this.configs.read(file);
         return {
           ...settings,
           ...(settings.baseUrl === undefined
@@ -116,8 +131,29 @@ export class ConfigInputs {
     if (parent !== directory && this.inputs.complete)
       this.candidateInputs(parent);
   }
+}
 
-  private config(file: string, chain: string[]): PathSettings {
+interface ConfigFiles {
+  regular(file: string): boolean;
+  read(
+    file: string,
+    inherited: boolean,
+  ): { json: Record<string, unknown>; directory: string };
+}
+
+/** Merge the requested options in the order and scope of a tsconfig chain. */
+export class ConfigChain<T extends object> {
+  private readonly configs = new Map<string, Partial<T>>();
+
+  constructor(
+    private readonly files: ConfigFiles,
+    private readonly options: (
+      values: Record<string, unknown>,
+      directory: string,
+    ) => T,
+  ) {}
+
+  read(file: string, chain: string[] = []): Partial<T> {
     if (chain.includes(file) || chain.length >= 32)
       throw new Error("configuration extends cycle or limit");
     let result = this.configs.get(file);
@@ -128,16 +164,9 @@ export class ConfigInputs {
     return result;
   }
 
-  private readConfig(file: string, chain: string[]): PathSettings {
-    const json = this.inputs.json(
-      file,
-      chain.length > 1 || path.basename(file) === "jsconfig.json",
-    );
-    if (!json) throw new Error("missing configuration");
-    const canonical = this.inputs.canonicalFile(file);
-    if (!canonical) throw new Error("missing configuration path");
-    const directory = path.dirname(canonical);
-    let settings: PathSettings = {};
+  private readConfig(file: string, chain: string[]): Partial<T> {
+    const { json, directory } = this.files.read(file, chain.length > 1);
+    let settings: Partial<T> = {};
     const extensions =
       json.extends === undefined
         ? []
@@ -148,42 +177,50 @@ export class ConfigInputs {
       if (typeof extension !== "string" || !extension.startsWith("."))
         throw new Error("unsupported configuration extends");
       const candidate = path.resolve(directory, extension);
-      const exact = this.inputs.file(candidate, true);
-      const target = exact?.kind === "file" ? candidate : candidate + ".json";
-      this.inputs.file(target, true);
-      settings = { ...settings, ...this.config(target, chain) };
+      const target = this.files.regular(candidate)
+        ? candidate
+        : candidate + ".json";
+      this.files.regular(target);
+      settings = { ...settings, ...this.read(target, chain) };
     }
     if (json.compilerOptions === undefined) return settings;
     if (!jsonObject(json.compilerOptions))
       throw new Error("unsupported compiler options");
-    const options = json.compilerOptions;
-    if (options.baseUrl !== undefined) {
-      if (typeof options.baseUrl !== "string")
-        throw new Error("unsupported baseUrl");
-      settings.baseUrl = options.baseUrl.startsWith("${configDir}")
-        ? options.baseUrl
-        : path.resolve(directory, options.baseUrl);
-    }
-    if (options.paths !== undefined) {
-      if (!jsonObject(options.paths)) throw new Error("unsupported paths");
-      const targets: Record<string, string[]> = {};
-      for (const [pattern, values] of Object.entries(options.paths)) {
-        if (
-          pattern.split("*").length > 2 ||
-          !Array.isArray(values) ||
-          !values.every(
-            (value): value is string =>
-              typeof value === "string" && value.split("*").length <= 2,
-          )
-        )
-          throw new Error("unsupported paths targets");
-        Object.defineProperty(targets, pattern, {
-          value: values,
-          enumerable: true,
-        });
-      }
-      settings.paths = { directory, targets };
-    }
-    return settings;
+    return { ...settings, ...this.options(json.compilerOptions, directory) };
   }
+}
+
+function pathSettings(
+  options: Record<string, unknown>,
+  directory: string,
+): PathSettings {
+  const settings: PathSettings = {};
+  if (options.baseUrl !== undefined) {
+    if (typeof options.baseUrl !== "string")
+      throw new Error("unsupported baseUrl");
+    settings.baseUrl = options.baseUrl.startsWith("${configDir}")
+      ? options.baseUrl
+      : path.resolve(directory, options.baseUrl);
+  }
+  if (options.paths !== undefined) {
+    if (!jsonObject(options.paths)) throw new Error("unsupported paths");
+    const targets: Record<string, string[]> = {};
+    for (const [pattern, values] of Object.entries(options.paths)) {
+      if (
+        pattern.split("*").length > 2 ||
+        !Array.isArray(values) ||
+        !values.every(
+          (value): value is string =>
+            typeof value === "string" && value.split("*").length <= 2,
+        )
+      )
+        throw new Error("unsupported paths targets");
+      Object.defineProperty(targets, pattern, {
+        value: values,
+        enumerable: true,
+      });
+    }
+    settings.paths = { directory, targets };
+  }
+  return settings;
 }

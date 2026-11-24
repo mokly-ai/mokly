@@ -94,13 +94,15 @@ Evidence: `.context/source-packages/m1-format.log` and `.context/source-packages
 
 Depends on: 1
 
-- [ ] Add the case table as a JSON fixture under `tests/fixtures/`: package
+- [x] Add the case table as a JSON fixture under `tests/fixtures/`: package
       layouts, `tsconfig` folders, imported built files, and the expected
       source file or no mapping.
-- [ ] Add the rule to the sidecar as one module beside
+- [x] Add the rule to the sidecar as one module beside
       `packages/mokly/src/sidecar/module-paths.ts`. Read `rootDir` and
       `outDir` with the `extends` handling of `config-inputs.ts`.
-- [ ] Test the module against the table.
+- [x] Test the module against the table.
+
+Evidence: `.context/source-packages/m2-case-table.log` and `.context/source-packages/m2-sidecar-regressions.log`.
 
 ## Milestone 3: JavaScript resolution
 
