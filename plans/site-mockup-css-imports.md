@@ -85,7 +85,13 @@ Each call is the agent's own, made on 2026-11-24. The options check of
    order. So each bundle keeps today's relative order by construction.
    Rejected: `SiteLayout` imports the shared module, because the order then
    depends on import sorting. Rejected: each part imports its own sheet,
-   because the four responsive sheets serve many parts.
+   because the four responsive sheets serve many parts. Added during
+   Milestone 1: a style module is a TypeScript module in
+   `docs/mockups/src/screens/design/site/styles/` that holds only
+   side-effect CSS imports. A screen module imports its style modules
+   before its other imports, so no CSS that a part imports can come first.
+   The installed `import/order` rule of `eslint-plugin-import-x` 4.17.1
+   does not rank side-effect imports, so their authored order stays.
 3. The area groups that the `base.css` header declares give the map from
    pages to sheets. A one-time browser script confirms the map before the
    pixel check. For each site document, it marks a sheet as used when one
@@ -99,7 +105,10 @@ Each call is the agent's own, made on 2026-11-24. The options check of
    screen. The tests of one page read only that page's CSS. The tokens,
    parity, container, chrome, and menu tests still read all site CSS.
    Rejected: reading the bundles from the build output, because
-   `lightningcss` reprints them.
+   `lightningcss` reprints them. Added during Milestone 1: the helper reads
+   the imported sheets from the module graph of each site entry, in the
+   order in which Mokly bundles them: first reach, depth first, in import
+   order, over the relative imports.
 5. The change makes no visible change to a site mockup. When the removal of
    a sheet from a page changes a capture, or drops a rule that the script
    of call 3 matches, the page keeps that sheet. Each kept sheet gets a
@@ -134,18 +143,18 @@ The site screens import their CSS. The site rule keeps only the fonts. The
 built site views look the same as before. The work runs in two commits, so
 that each pixel check has one cause.
 
-- [ ] Build the catalogue on `origin/main` and capture every site view in
+- [x] Build the catalogue on `origin/main` and capture every site view in
       both viewports and both schemes. Save the captures under
       `.context/site-mockup-css-imports/before/`.
-- [ ] First commit: move the whole list into one style module.
-  - [ ] Add one site style module that imports all 49 site sheets in
+- [x] First commit: move the whole list into one style module.
+  - [x] Add one site style module that imports all 49 site sheets in
         today's order. Import it from each site screen module.
-  - [ ] Reduce the `design/site/**/index.html` rule to the two font sheets.
-  - [ ] Change `siteStylesheets()` to return the font sheets, then the
+  - [x] Reduce the `design/site/**/index.html` rule to the two font sheets.
+  - [x] Change `siteStylesheets()` to return the font sheets, then the
         imported sheets.
-  - [ ] Run `npm run mockups:check`, `npm run mockups:test`, and
+  - [x] Run `npm run mockups:check`, `npm run mockups:test`, and
         `npm run mockups:typecheck`.
-  - [ ] Capture again and compare. Expect no changed pixel.
+  - [x] Capture again and compare. Expect no changed pixel.
 - [ ] Second commit: split the module by area.
   - [ ] Run the browser script of design call 3 on the build. Save the map
         under `.context/site-mockup-css-imports/`.
@@ -161,6 +170,9 @@ that each pixel check has one cause.
         a follow-up item for it, as design call 5 says.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the comparison shows.
+
+Evidence: `.context/site-mockup-css-imports/`, with `scripts/`, `before/`,
+`step1/`, `compare-step1.json` and `logs/`.
 
 ## Milestone 2: Documentation
 

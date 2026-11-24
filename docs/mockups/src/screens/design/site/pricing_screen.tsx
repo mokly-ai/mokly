@@ -6,6 +6,8 @@
  * questions are resolved comment threads.
  */
 
+import "./styles/site.js";
+
 import { SiteLayout } from "./parts/chrome.js";
 import { SiteKicker } from "./parts/labels.js";
 import { SITE_SCREENS } from "./parts/links.js";

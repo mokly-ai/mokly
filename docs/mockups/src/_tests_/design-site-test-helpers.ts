@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
@@ -13,6 +13,7 @@ import type {
 import { catalogueEntries, catalogueIndex } from "./catalogue-index";
 import { catalogueRoot, screenFile, screenView } from "./catalogue-paths";
 import type { Scheme, Viewport } from "./catalogue-paths";
+import { importedStylesheets } from "./imported-stylesheets";
 
 type Node = DefaultTreeAdapterMap["node"];
 export type Element = DefaultTreeAdapterMap["element"];
@@ -131,7 +132,7 @@ export function label(node: Node): string {
   return textContent(node).replace(/\s+/g, " ").trim();
 }
 
-/** The configuration rule that gives every site document its stylesheets. */
+/** The configuration rule that links the font sheets to every site document. */
 const siteStylesheetRule = "design/site/**/index.html";
 
 /** Whether a parsed JSON value is an object with named fields. */
@@ -146,12 +147,8 @@ function isStringList(value: unknown): value is string[] {
   );
 }
 
-/**
- * The site stylesheets as repository paths, in link order, read from the one
- * rule of `mokly.config.json` that gives every site document its sheets, so
- * the policy tests read exactly what the documents link.
- */
-export function siteStylesheets(): string[] {
+/** The sheets that the site rule of `mokly.config.json` links, in link order. */
+function siteRuleStylesheets(): string[] {
   const config: unknown = JSON.parse(
     readFileSync(resolve(repositoryRoot, "mokly.config.json"), "utf8"),
   );
@@ -172,8 +169,24 @@ export function siteStylesheets(): string[] {
 }
 
 /**
- * Read all split mockup site styles as one policy input, in the order each
- * generated site document links them.
+ * The site stylesheets as repository paths, in the cascade order of a site
+ * document: the font sheets that the site rule of `mokly.config.json` links,
+ * then the CSS that the site screen modules import, which Mokly bundles
+ * after the configured sheets. The list holds the CSS of every site screen,
+ * each sheet at its first reach in the order of the site tour.
+ */
+export function siteStylesheets(): string[] {
+  const imported = siteScreens.flatMap((screen) =>
+    importedStylesheets(
+      resolve(repositoryRoot, siteEntry(screen).details.sourcePath),
+    ).map((sheet) => relative(repositoryRoot, sheet)),
+  );
+  return [...new Set([...siteRuleStylesheets(), ...imported])];
+}
+
+/**
+ * Read the site styles as one policy input, in the cascade order of a site
+ * document.
  */
 export function siteStyles(): string {
   return siteStylesheets()
