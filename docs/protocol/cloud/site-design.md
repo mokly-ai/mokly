@@ -36,7 +36,8 @@ The site emits the package's responsive token CSS for system light and dark
 and explicit `data-color-scheme` selectors. The output for one scheme stays
 beneath its own selector, so light, dark and explicit-scheme output coexist
 in one static document without leaking into another scope. Site and mockup
-styles consume only the resulting `--mk-*` properties. They declare no token,
+styles consume only the resulting `--mk-*` properties and `--home-zoom`, the
+home's zoom at runtime. They declare no token,
 copied palette, `--site-*` compatibility alias or literal colour. A tint
 mixes two parts in any colour space, and each part is a role, `currentColor`,
 `transparent` or another tint. This is decision 26, option C: nested tints

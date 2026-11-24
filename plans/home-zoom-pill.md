@@ -180,6 +180,27 @@ The Milestone 1 mockups added these calls, also on 2026-11-24:
   start.** Zoom out gives the content more room, as a window wider than
   1440px does, where the panel already sits there.
 
+The redraw for decision 3 added these calls, also on 2026-11-24:
+
+- **The zoomed-in state draws 200%,** so one state shows both decision 3
+  and a button at a range end.
+- **Above 100% the page root grows by the zoom.** `main` keeps
+  `width: 100%`, so it lays out in the window's width and grows. The tool
+  bar and the status bar stick with `left` and keep the window's width.
+  `100vw` was not used, because it includes a classic scrollbar.
+- **The zoomed-in rules read `--home-zoom`,** which the page root carries
+  above 100%. The rule that styles read only `--mk-*` properties protects
+  the one source of tokens. The zoom is runtime state, not a token, and
+  decision 3 needs any zoom value. `site-design.md` and `site-mockups.md`
+  name the property. Inline widths in markup and script were rejected,
+  because the script would then have to know each footer gutter.
+- **After a press above 100%, the window's centre keeps its place.**
+  Decision 3 is option D with a sideways scroll, and D cuts both sides
+  equally. The product's buttons zoom about the stage's centre too.
+- **A button at a range end shows a muted glyph, no hover fill and the
+  default cursor.** The value beside it, 8% or 200%, also shows the range
+  end, so the state does not rely on colour alone.
+
 Contract owners:
 
 - [Site](../docs/protocol/cloud/site.md), its accessibility rules.
@@ -213,10 +234,10 @@ small zoom, so that Cal can review the look first.
       changed pages.
 - [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
-- [ ] Draw the answer to decision 3: redraw the zoomed-in state for it,
+- [x] Draw the answer to decision 3: redraw the zoomed-in state for it,
       and draw a zoom button at a range end, which takes `aria-disabled`.
 
-Evidence: `.context/home-zoom-pill/m1/`, with the captures,
+Evidence: `.context/home-zoom-pill/m1/` and `.context/home-zoom-pill/m1b/`, with the captures,
 `smoke-report.json` and `zoom-measurements.txt`.
 
 ## Milestone 2: Documentation and protocol
@@ -250,6 +271,7 @@ Depends on: 2
       in place, and updates the value and the button states.
 - [ ] Above 100%, keep the layout of 100% and let the page scroll sideways,
       as decision 3 says. The tool bar and the status bar stay in place.
+- [ ] After a press above 100%, keep the window's centre in place.
 - [ ] Keep the Specs panel's sticky offset below the tool bar at every zoom.
 - [ ] Let the measurements island and the Specs spy read the layout again
       after each press.

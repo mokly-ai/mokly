@@ -10,15 +10,16 @@ import { HomeHero } from "./home/hero.js";
 import { HomeWorkspace } from "./home/workspace.js";
 import { SiteLayout } from "./parts/chrome.js";
 import { SITE_SCREENS } from "./parts/links.js";
-import { zoomStyle } from "./parts/zoom-pill.js";
+import { ZOOM_RANGE, zoomStyle } from "./parts/zoom-pill.js";
 
 /**
  * The zooms that the zoom states draw, each one that the pill's steps reach
- * from 100%: four presses of Zoom out, 0.8 to the fourth power, and two
- * presses of Zoom in, 1.25 squared.
+ * from 100%: four presses of Zoom out, 0.8 to the fourth power, and the end
+ * of the range, 200%, which the fourth press of Zoom in reaches, because
+ * 1.25 to the fourth power passes it.
  */
 const ZOOMED_OUT = 0.4096;
-const ZOOMED_IN = 1.5625;
+const ZOOMED_IN = ZOOM_RANGE.max;
 
 function SiteHome({
   menu = false,
@@ -74,7 +75,11 @@ export function SiteHomeZoomedOutScreen({
   return <SiteHome viewport={viewport} zoom={ZOOMED_OUT} />;
 }
 
-/** The home zoomed in to 156%, with the pill showing that zoom. */
+/**
+ * The home zoomed in to 200%, the end of the range, with the pill showing
+ * that zoom and Zoom in at its end. The content keeps its layout of 100%
+ * at the window's width, twice as large, so the page scrolls sideways.
+ */
 export function SiteHomeZoomedInScreen({
   viewport,
 }: {

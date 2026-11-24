@@ -69,6 +69,9 @@ const files = readdirSync(resolve(outputRoot, repositoryFilePath("")), {
   .map((path) => repositoryFilePath(path.split(sep).join("/")))
   .sort();
 
+/** The one drawing that scrolls sideways: the home zoomed in to 200%. */
+const sidewaysDrawing = "design/site/home/zoomed-in";
+
 /** Product states whose controls are drawn disabled on purpose. */
 const disabledStates = new Set(
   inventoryPages()
@@ -187,11 +190,13 @@ for (const { file, path, viewport, scheme } of views) {
     expect(
       (await page.locator("main").innerText()).trim().length,
     ).toBeGreaterThan(5);
+    // No page scrolls sideways, except the home zoomed in to 200%: it keeps
+    // its layout of 100% at twice the size, so it is twice the window wide.
     expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
+      await page.evaluate(() =>
+        Math.max(document.documentElement.scrollWidth / innerWidth, 1),
       ),
-    ).toBe(true);
+    ).toBe(path === sidewaysDrawing ? 2 : 1);
     const targets = await page
       .locator("a[href], link[href], img[src]")
       .evaluateAll((nodes) =>

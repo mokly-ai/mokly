@@ -53,7 +53,8 @@ the shared site parts that the
 
 Controls are plain semantic elements — anchors, buttons, badges, radios and the
 code panel's copy control — styled from the emitted tokens package values. Site
-mockups and implementation reference only `--mk-*`; neither creates another
+mockups and implementation reference only `--mk-*` and the home's runtime
+zoom, `--home-zoom`; neither creates another
 generated token stylesheet. Until their layout sheets are unified, the site and
 mockup sheets are compared rule by rule at both compositions: every selector
 both sides declare must declare the same values. Each difference that the

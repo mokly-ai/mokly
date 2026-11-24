@@ -55,7 +55,7 @@ export default defineScreen({
       slug: "zoomed-in",
       title: "Home · Zoomed in",
       description:
-        "The home at 156 percent, two presses of Zoom in from 100 percent. CSS zoom draws the main content and the footer frame larger, in less room than the window, and the tool bar and the status bar keep their size. The canvas cuts off the parts that pass the window's sides, such as the end of the hero heading. The pill shows 156%.",
+        "The home at 200 percent, the end of the zoom range, which the fourth press of Zoom in from 100 percent reaches. CSS zoom draws the main content and the footer frame twice as large, each in the layout that it has at 100 percent at the window's width. The page scrolls sideways, and the tool bar and the status bar keep their size and their place in the window. The drawing opens at the page's start, as a static document does. Zoom in is at its end of the range: it takes aria-disabled, so it keeps focus, and its glyph is muted with no hover fill. The pill shows 200%.",
       props: { state: "zoomed-in" },
     },
   ],

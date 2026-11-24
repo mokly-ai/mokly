@@ -45,6 +45,18 @@
   color: var(--mk-color-text);
 }
 
+/* A button at an end of the range, Zoom out at 8% and Zoom in at 200%,
+   takes aria-disabled: it keeps focus and the focus glow, and a press does
+   nothing. Its glyph turns muted, and hover neither fills the button nor
+   inks its glyph. */
+
+.site-statusbar-zoom-step[aria-disabled="true"],
+.site-statusbar-zoom-step[aria-disabled="true"]:hover {
+  background: none;
+  color: var(--mk-color-text-muted);
+  cursor: default;
+}
+
 .site-statusbar-zoom-value {
   font-variant-numeric: tabular-nums;
   text-align: center;

@@ -3,8 +3,9 @@
  * home draws the whole bar as a depiction: hidden from assistive technology,
  * with nothing that takes focus. On the home the zoom pill is a control, a
  * group of the Zoom out and Zoom in buttons around the zoom, and the file
- * and the people stay depicted. `design-site-chrome.test.ts` checks the
- * file and the people that every bar depicts.
+ * and the people stay depicted. A button at an end of the zoom range takes
+ * `aria-disabled`, so it keeps focus. `design-site-chrome.test.ts` checks
+ * the file and the people that every bar depicts.
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -23,11 +24,16 @@ import {
 /** The home, whose status bar holds the one control of any status bar. */
 const home = "design/site/home";
 
-/** The zoom that the pill of the home and of each of its zoom states shows. */
-const homeZooms: ReadonlyArray<readonly [string, string]> = [
-  [home, "100%"],
-  ["design/site/home/zoomed-out", "41%"],
-  ["design/site/home/zoomed-in", "156%"],
+/**
+ * The zoom that the pill of the home and of each of its zoom states shows,
+ * and the buttons that stand at an end of the range, 8% or 200%, there.
+ */
+const homeZooms: ReadonlyArray<
+  readonly [string, string, ReadonlyArray<string>]
+> = [
+  [home, "100%", []],
+  ["design/site/home/zoomed-out", "41%", []],
+  ["design/site/home/zoomed-in", "200%", ["Zoom in"]],
 ];
 
 /** Every element inside one node that takes focus or acts on a press. */
@@ -38,6 +44,14 @@ function controls(node: Element): Element[] {
       ["a", "button", "input", "select", "textarea"].includes(child.tagName) ||
       attribute(child, "tabindex") !== undefined,
   );
+}
+
+/**
+ * A control as a failure names it: its tag and its name or its text. A
+ * failed comparison of parsed elements would print the whole document.
+ */
+function describe(node: Element): string {
+  return `${node.tagName} ${attribute(node, "aria-label") ?? label(node)}`;
 }
 
 /** The status bar of one generated document. */
@@ -58,7 +72,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
         "−100%+",
         id,
       );
-      assert.deepEqual(controls(bar), [], `${id}: nothing in the bar acts`);
+      assert.deepEqual(
+        controls(bar).map(describe),
+        [],
+        `${id}: nothing in the bar acts`,
+      );
     }
   });
 
@@ -94,10 +112,36 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ],
         id,
       );
+      const inGroup = controls(group);
       assert.deepEqual(
-        controls(bar),
-        controls(group),
+        controls(bar)
+          .filter((node) => !inGroup.includes(node))
+          .map(describe),
+        [],
         `${id}: the zoom's buttons are the bar's only controls`,
+      );
+    }
+  });
+
+  test(`${viewport}: the zoom button at an end of the range takes aria-disabled and keeps focus`, () => {
+    for (const [id, , atEnd] of homeZooms) {
+      const buttons = elements(
+        statusBar(id, viewport),
+        (node) => node.tagName === "button",
+      );
+      assert.deepEqual(
+        buttons
+          .filter((button) => attribute(button, "aria-disabled") === "true")
+          .map((button) => attribute(button, "aria-label")),
+        atEnd,
+        `${id}: the buttons at an end of the range`,
+      );
+      assert.deepEqual(
+        buttons
+          .filter((button) => attribute(button, "disabled") !== undefined)
+          .map(describe),
+        [],
+        `${id}: every zoom button keeps focus`,
       );
     }
   });

@@ -24,6 +24,7 @@ import {
 } from "./links.js";
 import { SiteMenu, SiteMenuButton } from "./menu.js";
 import { SitePresence } from "./people.js";
+import { zoomRoot } from "./zoom-pill.js";
 
 /** The file title of the design file: the site, the page and the branch. */
 function FileTitle({ active }: { active: SiteScreen }) {
@@ -92,7 +93,8 @@ function SiteHeader({ active, menu }: { active: SiteScreen; menu: boolean }) {
  * file title and the status bar. `menu` draws the mobile menu open over the
  * page; the desktop composition has no menu, so it draws the page as is.
  * `zoom` is the home's zoom, where 1 is 100%: the footer frame takes it,
- * and the home's `main` takes it from the home screen.
+ * and the home's `main` takes it from the home screen. Above 100% the root
+ * takes it too, so the page grows sideways by the zoom.
  */
 export function SiteLayout({
   active,
@@ -109,7 +111,7 @@ export function SiteLayout({
 }) {
   const open = menu && viewport === "mobile";
   return (
-    <div className="site-root" data-site-viewport={viewport}>
+    <div {...zoomRoot(zoom)} data-site-viewport={viewport}>
       <a className="site-skip" href="#main">
         Skip to content
       </a>
