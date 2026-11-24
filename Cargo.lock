@@ -2937,6 +2937,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "mkc-live"
+version = "0.1.0"
+dependencies = [
+ "mkc-domain",
+ "mkc-live-interface",
+ "parking_lot",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "unimock",
+ "uuid",
+]
+
+[[package]]
+name = "mkc-live-interface"
+version = "0.1.0"
+dependencies = [
+ "internal-error",
+ "mkc-domain",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "unimock",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
 name = "mkc-mokly-contract"
 version = "0.1.0"
 dependencies = [

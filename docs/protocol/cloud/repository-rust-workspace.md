@@ -50,6 +50,8 @@ The crates and what each owns:
 - `mkc-publications`: upload attempts, ready publications, branch
   aliases, catalogue grants, the Changes check delivery, retention and
   blob collection, cloud build scheduling and durable build attempts.
+- `mkc-live-interface` defines the live channel messages and relay
+  contract. `mkc-live` runs the hub on each replica. See [Live channel](./live-channel.md).
 - `mkc-file-store-interface`, `mkc-file-store-gcs` and
   `mkc-file-store-local`: the immutable content storage contract and its
   GCS and local-directory adapters.

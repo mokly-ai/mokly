@@ -188,10 +188,10 @@ Depends on: none
 
 Depends on: 1
 
-- [ ] Create `mkc-live-interface` with the message envelope and the
+- [x] Create `mkc-live-interface` with the message envelope and the
       `LiveRelay` trait, and `mkc-live` with the hub, the tick with coalesce
       keys and the limits.
-- [ ] Add the in-memory relay and tests for notices, client events,
+- [x] Add the in-memory relay and tests for notices, client events,
       coalescing, resync and limits.
 
 ## Milestone 3: Live route

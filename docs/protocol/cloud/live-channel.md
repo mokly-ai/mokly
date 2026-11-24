@@ -1,6 +1,6 @@
 # Live Channel
 
-Status: The live channel is not built yet. The [live hub](../../../plans/live-channel-foundation.md#milestone-2-live-hub), [live route](../../../plans/live-channel-foundation.md#milestone-3-live-route), [Postgres relay and notices](../../../plans/live-channel-foundation.md#milestone-4-postgres-relay-and-notices) and [app live client](../../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) milestones build it.
+Status: The live channel is not built yet. The [live route](../../../plans/live-channel-foundation.md#milestone-3-live-route), [Postgres relay and notices](../../../plans/live-channel-foundation.md#milestone-4-postgres-relay-and-notices) and [app live client](../../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) milestones build it.
 
 The live channel pushes changes to the app. The live client of the app, the
 client below, holds one WebSocket for each project that the app shows, on the

@@ -252,6 +252,8 @@ directories and the [architecture doc](../architecture/cloud.md) the components.
 | [mkc-db](../../crates/mkc-db/README.md)                                           | The Diesel migrations, the generated schema and the migration runner                                       |
 | [mkc-auth](../../crates/mkc-auth/README.md)                                       | The magic-link, preview and session authentication policy                                                  |
 | [mkc-publications](../../crates/mkc-publications/README.md)                       | Publication ingest, catalogue access, cloud build scheduling, check delivery and retention                 |
+| [mkc-live-interface](../../crates/mkc-live-interface/README.md)                   | Live channel messages and the relay contract                                                               |
+| [mkc-live](../../crates/mkc-live/README.md)                                       | The project socket hub, tick and limits                                                                    |
 | [mkc-build-interface](../../crates/mkc-build-interface/README.md)                 | The contracts for one cloud build attempt: runner, steps, outcomes, redacted output                        |
 | [mkc-build-sandbox](../../crates/mkc-build-sandbox/README.md)                     | The runner that executes one build in a one-shot sandbox                                                   |
 | [mkc-mokly-contract](../../crates/mkc-mokly-contract/README.md)                   | Validation of the Mokly upload artifacts within fixed limits                                               |
