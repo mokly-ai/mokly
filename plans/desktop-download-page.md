@@ -51,9 +51,13 @@ workspace. Its notes are in `.context/download-page/brainstorm.md`.
    - Rejected: **A**, the version with a "Pre-release" chip. **C**, a line
      that says what the app does not do yet, because it explains more than
      the copy rules permit.
-3. **When desktop 0.2.0 ships.** Open. Release pull request #486 publishes
-   0.2.0, the first release with fixed names. Until it is promoted, every
-   link of the page returns 404, so this pull request merges only after it.
+3. **When desktop 0.2.0 ships.** Chosen by Cal on 2026-11-24: **A**. The
+   orchestrator merges release pull request #486 at once, watches the
+   release, and checks the four download addresses. 0.2.0 is the first
+   release with fixed names. Until it is promoted, every link of the page
+   returns 404, so this pull request merges only after it.
+   - Rejected: **B**, Cal merges #486 later, because an early run of the new
+     release path leaves time to fix it before the page depends on it.
 
 ## Design calls
 
