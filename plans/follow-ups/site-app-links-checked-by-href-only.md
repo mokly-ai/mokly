@@ -56,6 +56,11 @@
 - **Wider fix:** B. It covers the whole handoff, router included.
 - **Previous examples:** The pricing test above checks only the `href`
   since the pricing page got its sign-up actions.
+- **Related:** `plans/follow-ups/preview-hosts-serve-no-marketing-site.md`
+  has the same cause: only production serves the site and the app on one
+  origin. Its option C serves each pull request's site beside its app on
+  `pr-N.preview.mokly.ai`. A reviewer could then press the site's app links
+  against the real app on each preview, but no gate test would run there.
 - **Recommendation:** A. It closes the pricing gap with the press that the
   header and hero tests now use. B best protects the codebase.
 - **Action:** ask the user, because B is a new gate, and A is the part

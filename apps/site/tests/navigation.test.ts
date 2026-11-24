@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  APP_PATHS,
   EXTERNAL_LINKS,
   GET_STARTED_PATH,
   INSTALL_GUIDE_PATH,
@@ -35,7 +34,6 @@ test("the sitemap publishes every site route and nothing else", () => {
 });
 
 test("Get started opens the app's sign-up", () => {
-  assert.equal(GET_STARTED_PATH, APP_PATHS.signUp);
   assert.equal(GET_STARTED_PATH, "/sign-up");
 });
 

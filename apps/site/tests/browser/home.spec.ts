@@ -43,6 +43,10 @@ test("the hero's Get started opens the app's sign-up", async ({ page }) => {
   // The app serves the sign-up route, so the site preview checks that the
   // press reaches the address, not the app's page.
   await page.goto(SITE_PATHS.home);
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Get started" }),
+    "the home holds two Get started actions",
+  ).toHaveCount(2);
   const action = page
     .locator("#hero")
     .getByRole("link", { name: "Get started" });
