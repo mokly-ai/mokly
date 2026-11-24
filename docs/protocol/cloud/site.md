@@ -1,5 +1,7 @@
 # Public Site
 
+Status: On the home, the status bar's zoom pill is still a depiction. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) makes it a control.
+
 This contract defines the public Mokly website: the marketing home, the
 documentation, the changelog, the pricing page and the legal documents. The
 site is built from this repository and deployed as static files. Every page
@@ -116,6 +118,9 @@ the scheme control that every page shares.
   looks at but does not use, such as the file title, the avatars, the cursors,
   the status bar, the demo app and the depicted Mokly screens. Every depiction
   is hidden from assistive technology and holds nothing that takes focus.
+- On the home, the zoom pill of the status bar is a control and not a
+  depiction, as [Site chrome](./site-chrome.md#home-zoom) defines. The rest of
+  the home's status bar stays a depiction.
 - Every animation honours reduced motion and then shows its finished state.
 
 ## Positioning

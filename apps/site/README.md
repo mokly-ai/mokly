@@ -1,5 +1,7 @@
 # Mokly Site
 
+Status: The home's zoom pill is still a depiction, and the home zoom island does not exist yet. The [home zoom island milestone](../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds them.
+
 `@mokly-cloud/site` builds Mokly's public marketing, documentation, changelog
 and legal website as static Astro output. Work here for public-site pages,
 chrome and delivery. Product and account routes remain in `packages/app`.
@@ -44,7 +46,8 @@ one row cannot hold the wordmark at the reader's text size, the brand keeps
 the mark alone and its name "Mokly home". A container query in `chrome.css`,
 which the mockups' `chrome.css` repeats, decides it. At 200% text in a 320px
 window no page scrolls sideways: labels, buttons and footer links wrap or
-break a long word, and parts that sit side by side stack.
+break a long word, and parts that sit side by side stack. The one exception is
+the home while its zoom pill zooms it above 100%.
 
 Each documentation page is a page of the design file. The Layers panel holds
 the docs search and the section tree, the page is a frame on the canvas
@@ -73,11 +76,12 @@ only semantic `--mk-*` properties. There is no second published token
 dependency or copied palette.
 
 Every page reads fully without script. Each script, such as the scheme
-control, the changelog filter, a scroll spy, a home demo or the controls of an
-HTML sample fence, is a small same-origin island. The measurements island
-writes the rendered size, font size or gap into each measured size tag, type
-badge and redline value and follows resizing; without script those values do
-not show. Every animation honours reduced motion and shows its finished state.
+control, the changelog filter, a scroll spy, a home demo, the home's zoom pill
+or the controls of an HTML sample fence, is a small same-origin island. The
+measurements island writes the rendered size, font size or gap into each
+measured size tag, type badge and redline value, in CSS pixels before the
+home's zoom, and follows resizing; without script those values do not show.
+Every animation honours reduced motion and shows its finished state.
 [Site delivery](../../docs/protocol/cloud/site-delivery.md) owns these rules.
 
 The home draws a fictional demo app, the coffee shop `acme/storefront`, as
@@ -88,6 +92,22 @@ home demos island plays each frame's demo once when it comes into view, and
 marks the section in view in the Specs panel. The built page draws each demo
 in its finished state, so a reader without script or with reduced motion
 sees that state.
+
+On the home, the status bar's zoom pill is a control, which
+[Site chrome](../../docs/protocol/cloud/site-chrome.md#home-zoom) defines:
+Zoom out and Zoom in step the zoom between 8% and 200%. The home zoom island
+applies CSS `zoom` to the home's `main` and its footer frame, so the tool bar,
+the status bar and the dot grid keep their size. At 100% and below, the
+content lays out in the wider room that the zoom gives it. Above 100% it keeps
+its layout of 100% and grows, and the home is then the one page that scrolls
+sideways. After each press the island keeps the pill at its place in the
+window, and the measurements island and the Specs scroll spy read the layout
+again. Each page load starts at 100%, and nothing keeps the zoom. Without
+script the home draws the depicted pill of every other page. The site does not
+import `@mokly/ui` for the pill. It repeats the step, the 8% end and the names
+of the product's zoom pill, because that pill is a React component with
+`--cv-*` styles, the home loads no React, and site styles read only `--mk-*`
+roles.
 
 Generated social cards, Astro output and search output are not committed.
 `public/_headers` and the Astro preview configuration both add
@@ -334,7 +354,7 @@ Pages project and attach the domain are in the
 - `src/components/Header.astro` and `src/components/page-name.ts` — the tool bar of every page, and the page name of each route, which its file title shows after `mokly.ai —`.
 - `src/components/Menu.astro` and `src/components/menu-dialog.ts` — the mobile header's menu control and the modal sheet it opens, with `closeOnBackdrop` where the browser lacks `closedby`.
 - `src/components/dialog-backdrop.ts` — `closeOnBackdrop`, which the menu, the tree sheet and docs search share. Each dialog has `closedby="any"`, and where the browser lacks it, `closeOnBackdrop` closes the dialog on a press that starts and ends outside the dialog's box. `tests/browser/menu.spec.ts` checks it in a page without `closedby`.
-- `src/components/Footer.astro`, `SchemeControl.astro` and `StatusBar.astro` — the footer frame of every page, the Light and Dark control in its brand column, and the depicted status bar under the frame.
+- `src/components/Footer.astro`, `SchemeControl.astro` and `StatusBar.astro` — the footer frame of every page, the Light and Dark control in its brand column, and the status bar under the frame. `StatusBar.astro` draws the bar as a depiction, and on the home it also draws the zoom pill's buttons, hidden until the home zoom island shows them.
 - `src/components/scheme-island.js` — the scheme island, a checked classic script that `src/layouts/Site.astro` emits first in every page head: it applies `?scheme=` or the choice kept under `mokly.site.scheme` in `localStorage` before the first paint, and it runs the scheme control. `tests/scheme_island.test.ts` runs this file in `node:vm` against the stub page of `tests/helpers/scheme-island.ts`.
 - The shared Canvas parts, each documented in its own comment: `Icon.astro` with the `icons.ts` drawings, `Mark.astro`, `Brand.astro`, `Button.astro`, `Chip.astro`, `Kicker.astro`, `SectionBox.astro`, `FrameLabel.astro`, `Selection.astro`, `SizeTag.astro`, `Redline.astro`, `PageFrame.astro`, which frames a document with a `FrameLabel` and a `Selection` and, given `measure`, a size tag of the sheet, and `Avatar.astro`, `Presence.astro` and `Cursor.astro` with the people of `people.ts`, all under `src/components/`. A `Selection`, `SizeTag` or `Redline` that measures a part renders `Measurements.astro`, which loads the measurements island: `measurements-island.ts` calls `startMeasurements` of `measurements.ts`, and `tests/measurements.test.ts` runs it against a stub page.
 - `src/components/Panel.astro`, `PanelRow.astro` and `src/styles/panels.css` — the floating panel with its head, body and optional foot, and its 44px rows, which link with `href` and mark the current row with `aria-current`.

@@ -1,5 +1,7 @@
 # Site Delivery Islands
 
+Status: The home zoom island is not built yet. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds it.
+
 This is the script sub-contract of [Site delivery](./site-delivery.md). It
 fixes the small same-origin scripts of the site and the rendering of the HTML
 samples. [Site design pages](./site-design-pages.md),
@@ -22,6 +24,7 @@ state.
 | Menu            | every page                     | Opens and closes the mobile menu                                   |
 | Measurements    | home, docs, changelog, pricing | Shows rendered sizes in size tags, type badges and redlines        |
 | Home demos      | home                           | Plays each demo in view; marks the section in view in Specs        |
+| Home zoom       | home                           | Zooms the home's `main` and footer frame with the zoom pill        |
 | Search          | docs                           | The search dialog and its keys                                     |
 | Copy            | docs                           | The copy control of each code panel                                |
 | Tree            | docs                           | The tree scroll memory and the tree sheet                          |
@@ -40,6 +43,10 @@ state.
   hydration.
 - A home demo plays once when it comes into view and rests in its finished
   state, which the built page draws.
+- The home zoom island runs the zoom pill of
+  [Site chrome](./site-chrome.md#home-zoom). It shows the control in the box
+  of the depicted pill, so the page does not shift. After each press, the
+  measured values and the section in view in Specs follow the new layout.
 - The changelog filter shows only the notes of the chosen group and the
   releases that hold them, and its status line counts them. Without script
   the filter does not show, and every note shows.

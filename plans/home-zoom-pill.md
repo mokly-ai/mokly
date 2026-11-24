@@ -223,15 +223,15 @@ Evidence: `.context/home-zoom-pill/m1/`, with the captures,
 
 Depends on: 1
 
-- [ ] State in `docs/protocol/cloud/site.md`, `site-chrome.md` and
+- [x] State in `docs/protocol/cloud/site.md`, `site-chrome.md` and
       `site-design-components.md` that the home's zoom pill is a control:
       the range, the step, the names, the no-script state and that nothing
       is kept. The rest of the status bar stays a depiction.
-- [ ] Add the zoom to the Home section of `site-design-pages.md` and to the
+- [x] Add the zoom to the Home section of `site-design-pages.md` and to the
       island table of `site-delivery-islands.md`.
-- [ ] Change the no-sideways-scroll rule of `site-design.md` for decision 3:
+- [x] Change the no-sideways-scroll rule of `site-design.md` for decision 3:
       the home zoomed above 100% scrolls sideways, and no other page does.
-- [ ] Update `apps/site/README.md` and `docs/mockups/README.md`.
+- [x] Update `apps/site/README.md` and `docs/mockups/README.md`.
 
 ## Milestone 3: The home zoom island
 
@@ -248,12 +248,16 @@ Depends on: 2
 - [ ] Add a pure zoom model (step, clamp, snap, percent) and a small island
       that applies CSS `zoom` to `main` and the footer frame, keeps the pill
       in place, and updates the value and the button states.
+- [ ] Above 100%, keep the layout of 100% and let the page scroll sideways,
+      as decision 3 says. The tool bar and the status bar stay in place.
 - [ ] Keep the Specs panel's sticky offset below the tool bar at every zoom.
 - [ ] Let the measurements island and the Specs spy read the layout again
       after each press.
 - [ ] Add a stub-page test for the model and the island, like
       `apps/site/tests/home_island.test.ts`, and a home browser spec that
       zooms out to 8% and in to 200%.
+- [ ] Remove the seven status lines that link this milestone, and add the
+      island files to the Key Code list of the site README.
 - [ ] Smoke-test the home at 1440px, 768px and 390px through the site dev
       server, at 8%, 100% and 200%. Save the screenshots in
       `.context/home-zoom-pill/`.

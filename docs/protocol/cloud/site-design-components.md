@@ -1,5 +1,7 @@
 # Site Design Components
 
+Status: The site still draws the home's zoom pill as a depiction. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) draws it as a control.
+
 This is the components sub-contract of [Site design](./site-design.md), which
 owns the roles, the type, the layout and the brand. [Site](./site.md) owns the
 contents and the order of the header, the menu and the footer.
@@ -108,7 +110,17 @@ current page's link is `signalDeep`. On mobile the frame
 stacks the brand column above the two groups, 96px below the content.
 
 The design file's status bar runs on the canvas under the frame: the file
-title, the people in the file and a zoom pill. It is a depiction.
+title, the people in the file and a zoom pill. It is a depiction, except the
+home's zoom pill, which [Site chrome](./site-chrome.md#home-zoom) makes a
+control.
+
+On the home, the pill keeps the box, the fill, the ring and the face of the
+depicted pill at every text size, so the swap to the control moves nothing.
+Each button is drawn 22px wide and 28px tall with a 44px target. The buttons
+draw no boundary and no tooltip, as on the menu control: the glyph names each
+one. Hover fills a button with `background` and turns its glyph `text`. Focus
+draws the glow, which a 5px gap keeps off the zoom. The zoom keeps one width
+from 8% to 200%, so the buttons do not move.
 
 The scheme control is a segmented control of two native radios, Light with a
 sun and Dark with a moon. Its track is `background` with a `border` ring. The
@@ -152,7 +164,7 @@ page.
   tab's text keeps the whole name. This is decision 30, option B: hiding the
   language on mobile was rejected, because the language stays readable.
 - The code is `mono` 13.5px, 12.5px on mobile, on a 1.78 line height. A long
-  line wraps with a hanging indent, so the page never scrolls sideways.
+  line wraps with a hanging indent, so it never scrolls the page sideways.
 - The panel draws line numbers and the `$` prompt of a shell line itself, so
   that the code's text stays exactly what Copy copies. A two-digit line
   number keeps one line at any text size.

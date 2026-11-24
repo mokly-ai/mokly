@@ -19,6 +19,8 @@ sources.
 | --------------------------------------- | -------------------------------------------------------------------------------- |
 | `design/site/home`                      | Home with the hero, the demo spread, the feature frames and the open foundation  |
 | `design/site/home/menu`                 | The home's `menu` state: the mobile menu open over it                            |
+| `design/site/home/zoomed-out`           | The home's `zoomed-out` state: the home zoomed out below 100%                    |
+| `design/site/home/zoomed-in`            | The home's `zoomed-in` state: the home zoomed in above 100%                      |
 | `design/site/docs`                      | The Install guide between the Layers and Inspect panels                          |
 | `design/site/docs/first-screen`         | The Your first screen guide with its HTML sample fence                           |
 | `design/site/docs/first-screen-desktop` | The docs `first-screen-desktop` state: the HTML sample fence on its Desktop view |
@@ -44,8 +46,10 @@ the mobile home as an open dialog in place, with a scrim for the dimmed page,
 because a static document has no top layer; the site draws the same dimming as
 the dialog's backdrop. The docs `layers` state draws the open tree sheet in the
 same way. The desktop views of both states match their screens, whose desktop
-layouts hold the same destinations. Screens compose the shared site parts that
-the [mockup authoring guide](../../mockups/README.md#key-code) names.
+layouts hold the same destinations. The home's zoom states draw the home at a
+zoom that its zoom pill reaches, and the pill shows that zoom. Screens compose
+the shared site parts that the
+[mockup authoring guide](../../mockups/README.md#key-code) names.
 
 Controls are plain semantic elements — anchors, buttons, badges, radios and the
 code panel's copy control — styled from the emitted tokens package values. Site

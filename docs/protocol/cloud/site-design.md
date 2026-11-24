@@ -1,5 +1,7 @@
 # Site Design
 
+Status: The home's zoom pill does not zoom yet, so no page scrolls sideways. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds the zoom.
+
 The public site uses Canvas, the one design language of Mokly. The site reads
 as a live design file: a dot-grid canvas, labelled frames, green selections
 with handles and size tags, Geist type and one signal green. The cloud app
@@ -153,10 +155,11 @@ loses the chosen green.
 - Interactive targets are at least `44px`. A control drawn smaller, such as a
   36px navigation link, reaches 44px through a transparent band above and
   below it.
-- Layouts remain usable at 320px width and 200% text zoom: no page scrolls
-  sideways, and no control overlaps another. A published path or URL wraps
-  rather than widening its column. Inspection viewports are 390px mobile and
-  1440px desktop.
+- Layouts remain usable at 320px width and 200% text zoom: no control
+  overlaps another, and no page scrolls sideways, except the home while its
+  zoom pill zooms it above 100%. A published path or URL wraps rather than
+  widening its column. Inspection viewports are 390px mobile and 1440px
+  desktop.
 - At a large text size, content wraps rather than passing the window. A
   button's label wraps, and the button grows taller. A heading, a link, a
   chip or a label breaks a word that is wider than its column. Parts that sit
@@ -168,6 +171,10 @@ loses the chosen green.
   option C: one pass over every page and the chrome. Wrapping only the
   changelog's parts was rejected, because one pass keeps every page the
   same.
+- On the home, each size of this page holds for the `main` and the footer
+  frame before the zoom of the zoom pill. Above 100% they keep their layout
+  of 100%, and the rules that keep a part inside the window hold for that
+  layout, as [Site design pages](./site-design-pages.md#home) defines.
 
 ## Radius, Elevation, Focus And Motion
 

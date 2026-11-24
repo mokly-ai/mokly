@@ -1,5 +1,7 @@
 # Site Design Pages
 
+Status: The home's zoom is not built yet. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds it.
+
 This is the page sub-contract of [Site design](./site-design.md). It fixes
 the look of the home, the changelog and the pricing page from the parts of
 [Site design components](./site-design-components.md). [Site](./site.md) owns
@@ -57,6 +59,28 @@ owns the islands that make the parts below move.
   controls are drawn, not focusable. The built page draws each demo in its
   finished state: the compare rests in Swipe at 50%, Review waits for
   Approve, and Edit shows the agent's change with Publish ready.
+- Zoom: the zoom pill of [Site chrome](./site-chrome.md#home-zoom) zooms the
+  content of the home, its `main` and its footer frame. The zoom scales the
+  content with its layout, as CSS `zoom` does, so the page height, the sticky
+  Specs panel, in-page links and focus scrolling work at every zoom. A scale
+  transform was rejected, because it keeps the page height of 100%.
+  - The tool bar, the status bar, the dot grid and the gap above the footer
+    frame keep their size. At every zoom the window picks the composition
+    and its steps, and the Specs panel sticks at its place below the tool
+    bar.
+  - At 100% and below, the content lays out in the room that the zoom gives
+    it: the window's width divided by the zoom. So at a small zoom the Specs
+    panel keeps its place at the window's start, as in a window wider than
+    1440px.
+  - Above 100%, the content keeps the layout that it has at 100% in that
+    window, and it grows. The page then scrolls sideways, and the tool bar
+    and the status bar stay in place. A focused part at a side scrolls into
+    view. Cutting off the sides was rejected, because text there goes out of
+    reach while its links still take focus. A layout for the smaller room was
+    rejected, because it changes every part of the home or ends Zoom in early
+    on narrow windows.
+  - A measured size tag, type badge or redline value gives its part's size in
+    CSS pixels before the zoom, as a design tool gives a layer's size.
 
 ## Changelog
 
