@@ -160,6 +160,38 @@
   - The branch `conductor/storybook-support-b-story-reading` met the same
     gap in its own fresh Conductor workspace. That report came on
     2026-11-23.
+  - On 2026-11-25, the primary workspace of the Storybook support plan ran
+    the complete gate on a Conductive cloud computer, a Debian image with
+    a 79 GB disk. It met these gaps, in this order:
+    - The Rust test build filled the disk. `target/debug` held 39 GB, with
+      `debuginfo=2` for each test binary. The link step failed with
+      `ld terminated with signal 7 [Bus error]` and
+      `No space left on device (os error 28)`. Fix: remove `target/debug`,
+      and run the gate with `CARGO_PROFILE_DEV_DEBUG=0`,
+      `CARGO_PROFILE_TEST_DEBUG=0`, and `CARGO_INCREMENTAL=0`. The next
+      run left 31 GB free.
+    - The `xtask` test `rust_tests::test_stage_rejects_a_failing_rust_test`
+      failed with `could not execute process rustdoc ... No such file or
+directory`. `/usr/local/bin` linked `cargo`, `rustc`, and `rustfmt` to
+      the rustup proxies in `/usr/local/cargo/bin`, but not `rustdoc`. Fix:
+      `ln -s /usr/local/cargo/bin/rustdoc /usr/local/bin/rustdoc`.
+    - A repository test needs Git LFS. Fix: install the `git-lfs` package.
+    - `npm run typecheck:ci` stopped with
+      `Bun 1.3.14 does not match the pinned version 1.4.4.` Fix:
+      `npm install -g --allow-scripts=bun bun@1.4.4`, then point
+      `/usr/local/bin/bun` at the installed binary, because the image's own
+      Bun comes first on `PATH`.
+    - The browser part of `cloud-mockups` stopped with
+      `Executable doesn't exist at .../chromium_headless_shell-1228/...`.
+      `apps/mockups` uses Playwright 1.61.1. Fix: run
+      `npx playwright install chromium` in `apps/mockups`.
+    - `cloud-rust`, `cloud-app`, `cloud-desktop`, and `cloud-infrastructure`
+      stopped with `Postgres database setup or cleanup failed; install psql
+and use a test role with CREATEDB permission.` `cloud-openapi`
+      stopped with `rust-lld: error: unable to find library -lpq`.
+      `cloud-toolchain-pins` and `cloud-terraform` stopped because
+      `terraform` is missing, and `cloud-helm` because `helm` is missing.
+      These stayed unfixed.
 - **Problem:** No workspace setup installs every tool that the complete gate
   needs. `.agents/setup` misses every cloud tool, and the Conductor lines
   miss `openssl`, Bun, and Playwright Chromium. The Postgres and BuildKit
