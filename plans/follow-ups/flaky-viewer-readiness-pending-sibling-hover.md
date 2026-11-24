@@ -1,0 +1,31 @@
+# Pending sibling readiness test records a late hover
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-24, from `calummoore/non-overlapping-m1rs` during its local complete gate.
+- **Location:** `tests/browser/viewer_readiness.spec.ts:19-93`, especially the event reset at line 57 and the assertion at line 90.
+- **Reason:** The branch changes only the site home spread and its mockup. It does not touch the viewer or this test, and the source of the flake is not confirmed.
+- **Source:** Implementation.
+- **Category:** Test.
+- **Terms:**
+  - **Pending sibling:** a frame of the same screen at another viewport whose usage data is not ready yet. The viewer must keep its links working but must not start inspection from it.
+  - **Viewer harness:** the test page that mounts the viewer and records each event that the viewer sends to its host in `events`.
+- **Background:** The test highlights an instance in the ready mobile frame, clears the recorded events, then hovers and clicks a button in the pending desktop frame and follows its link. It expects one `navigate` event and no `error`, `hover` or `click` event.
+- **Problem:**
+  - In the complete gate on branch base `50920992a`, both `same-origin pending sibling keeps navigation without automatic inspection` and `postMessage pending sibling keeps navigation without automatic inspection` failed at line 90.
+  - The gate used Node 24.22.1, Chromium and one browser worker. Its browser suite ran the two failures among its other passes.
+  - Both received one extra event: `{ name: "hover", value: { boxes: [], frame: { entryPath: "action" }, instance: null } }`.
+  - A focused rerun of both tests passed: two passes, no failures. No source changed between the failure and the rerun.
+  - Suspected source: the `highlightInstance` call sends a hover update that arrives after the test clears `events`, so the clear races the viewer's own event. The empty boxes and the null instance fit a hover clear, not a hover from the pending frame. This source is not confirmed.
+  - Reproduce: `npm run test:browser -- tests/browser/viewer_readiness.spec.ts -g "pending sibling" --repeat-each=20`.
+- **Impact if no action:** The browser suite of the gate fails now and then for every branch, and a real hover leak from a pending frame looks like this flake.
+- **Root question:** How does the test start its event record only after the viewer has sent every event of the highlight?
+- **Options:**
+  - **A.** Wait for an explicit readiness signal of the highlight, such as its hover event, before the test clears `events`. Effort: Small.
+  - **B.** Record the event count at the reset and assert only on events whose frame is the pending desktop frame. Effort: Small. It would miss a stray hover from another frame.
+  - **C.** Make `highlightInstance` resolve only after its events are sent, so every caller gets a settled state. Effort: Medium. It changes the viewer handle's contract.
+- **Left out:** A retry or a longer wait, because the deterministic-tests rule forbids both.
+- **Wider fix:** C, which removes the race for every caller.
+- **Previous examples:** `plans/follow-ups/flaky-component-design-removed-preview.md`, another viewer browser flake in the local complete gate.
+- **Recommendation:** A. It removes the race in the test with an explicit readiness signal and keeps the full assertion.
+- **Action:** fix after merge, apply A.

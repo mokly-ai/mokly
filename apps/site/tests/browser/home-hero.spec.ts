@@ -7,7 +7,8 @@ import { SITE_PATHS } from "../../src/navigation.js";
  * browser: the layer's size tag, type badge and redline show the rendered
  * values of docs/protocol/cloud/site-design-pages.md and follow the layout,
  * the heading takes one line on the desktop and two on a phone, the spread
- * stays out of the accessibility tree and the focus order, and without
+ * stays out of the accessibility tree and the focus order, no two of its
+ * component sets meet, and without
  * script no measured value shows. The load motion moves only decorations,
  * and reduced motion shows the finished hero at once. The measured parts are
  * depictions with no role, so the spec finds them by their classes.
@@ -161,6 +162,84 @@ test.describe("under reduced motion", DESKTOP, () => {
       .locator("#hero")
       .evaluate((hero) => hero.getAnimations({ subtree: true }).length);
     expect(moving).toBe(0);
+  });
+
+  test("no two component sets of the spread meet", async ({ page }) => {
+    // The Components box bleeds off the right edge at 1440px; a wider
+    // window shows all six sets.
+    await page.setViewportSize({ height: 900, width: 1920 });
+    await openHome(page);
+    const meeting = await spread(page).evaluate((root) => {
+      // What the reader sees of a part: its box grown by the outline that
+      // it paints around it, or nothing when it does not show.
+      const painted = (part: Element): DOMRect | null => {
+        const rect = part.getBoundingClientRect();
+        const shows =
+          rect.width > 0 &&
+          rect.height > 0 &&
+          part.checkVisibility({
+            opacityProperty: true,
+            visibilityProperty: true,
+          });
+        if (!shows) return null;
+        const style = getComputedStyle(part);
+        const outline =
+          style.outlineStyle === "none"
+            ? 0
+            : Math.max(
+                0,
+                parseFloat(style.outlineWidth) +
+                  parseFloat(style.outlineOffset),
+              );
+        return new DOMRect(
+          rect.x - outline,
+          rect.y - outline,
+          rect.width + 2 * outline,
+          rect.height + 2 * outline,
+        );
+      };
+      // A set shows when its label and its box show; it covers its label,
+      // its box and a selection over it.
+      const extents = [...root.querySelectorAll(".site-home-set")].flatMap(
+        (set) => {
+          const label = set.querySelector(".site-home-set-label");
+          const box = set.querySelector(".site-home-set-box");
+          const head = label === null ? null : painted(label);
+          const body = box === null ? null : painted(box);
+          if (head === null || body === null) return [];
+          const parts = [
+            head,
+            body,
+            ...[...set.querySelectorAll(".site-home-set-peer")].flatMap(
+              (peer) => painted(peer) ?? [],
+            ),
+          ];
+          return [
+            {
+              bottom: Math.max(...parts.map((part) => part.bottom)),
+              left: Math.min(...parts.map((part) => part.left)),
+              name: label?.textContent,
+              right: Math.max(...parts.map((part) => part.right)),
+              top: Math.min(...parts.map((part) => part.top)),
+            },
+          ];
+        },
+      );
+      const pairs = extents.flatMap((a, index) =>
+        extents
+          .slice(index + 1)
+          .filter(
+            (b) =>
+              a.left <= b.right &&
+              b.left <= a.right &&
+              a.top <= b.bottom &&
+              b.top <= a.bottom,
+          )
+          .map((b) => `${a.name?.trim()} and ${b.name?.trim()}`),
+      );
+      return { count: extents.length, pairs };
+    });
+    expect(meeting).toEqual({ count: 6, pairs: [] });
   });
 });
 

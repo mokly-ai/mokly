@@ -1,9 +1,10 @@
 /* The home spread: the whole acme/storefront app on the canvas, zoomed out
    to 36 percent. Its canvas starts at the heading's left edge, the Specs and
    Components boxes bleed off the right edge, and the spread clips them so
-   the page never scrolls sideways. Each artboard and component set sits at
-   its own spot. A phone draws three phones at 42 percent, the middle one
-   centred under the copy, in the Specs box without its wash.
+   the page never scrolls sideways. Each artboard sits at its own spot, and
+   the component sets stand in two columns. A phone draws three phones at
+   42 percent, the middle one centred under the copy, in the Specs box
+   without its wash.
 
    The class names and the rules match docs/mockups/styles/site/home-spread.css
    and the spread rules of home-responsive.css, mobile first, as
@@ -127,10 +128,28 @@
   inset: -4px;
 }
 
-/* The component sets at half size, on a light backing in both schemes */
+/* The component sets at half size, on a light backing in both schemes.
+   Two columns stack the sets with a fixed gap, so the size of a set moves
+   its neighbours and never makes two sets overlap. */
+
+.site-home-sets {
+  align-items: flex-start;
+  display: flex;
+  gap: 32px;
+  left: 30px;
+  position: absolute;
+  top: 78px;
+}
+
+.site-home-sets-column {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
 
 .site-home-set {
-  position: absolute;
+  position: relative;
 }
 
 .site-home-set-label {
