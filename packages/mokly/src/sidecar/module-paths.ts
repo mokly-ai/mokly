@@ -4,9 +4,11 @@ import path from "node:path";
 import type { ModuleResolution } from "../generated/sidecar/ModuleResolution.js";
 
 import { DependencyUsage } from "./dependency-usage.js";
+import { missingFile } from "./file-digests.js";
 import { dependencyDirectory } from "./importer-resolution.js";
+import { moduleRoots, moduleRootsSync } from "./module-roots.js";
+import type { ModuleRoots } from "./module-roots.js";
 import { inside, logical } from "./path-scope.js";
-import { resolutionOptions } from "./resolution.js";
 import type { SourceDependencyRoot } from "./source-dependencies.js";
 import {
   INSTALLED_INPUT_PREFIX,
@@ -15,12 +17,19 @@ import {
   sourceDependencyRoots,
   sourceDependencySync,
 } from "./source-dependencies.js";
+import { bareSpecifier } from "./specifier.js";
+import { WorkspaceLookups } from "./workspace-lookups.js";
+import { WorkspaceSources } from "./workspace-sources.js";
 
 export interface ModuleSources {
   sourceRoot: string;
   repositoryRoots: string[];
   moduleResolution: ModuleResolution;
   configurationDirectory?: string;
+  entryFiles?: readonly string[];
+  storiesFiles?: readonly string[];
+  renderer?: string | null;
+  postcss?: string;
 }
 
 /** All filesystem checks share one side's canonical roots and logical names. */
@@ -28,6 +37,10 @@ export class ModulePaths {
   readonly resolvedDependencies = new Set<string>();
   readonly lookupFiles = new Set<string>();
   readonly lookupDirectories = new Set<string>();
+  readonly workspaceLookups = new WorkspaceLookups(this);
+  private readonly workspace: WorkspaceSources;
+  private readonly configured: Set<string>;
+  private canonicalConfigured: Set<string> | undefined;
   private readonly observed = new Set<string>();
 
   private constructor(
@@ -38,66 +51,35 @@ export class ModulePaths {
     readonly sourceDependencyRoots: SourceDependencyRoot[],
     readonly settings: ModuleResolution,
     readonly dependencyUsage: DependencyUsage,
-  ) {}
+    configured: readonly string[],
+  ) {
+    this.configured = new Set(
+      configured.map((file) => path.resolve(sourceRoot, file)),
+    );
+    this.workspace = new WorkspaceSources(
+      sourceRoot,
+      settings.resolveExtensions,
+      this.workspaceLookups,
+    );
+  }
 
   static async create(params: ModuleSources): Promise<ModulePaths> {
-    const root = await fs.promises.realpath(params.sourceRoot);
-    const repositories = await Promise.all(
-      params.repositoryRoots.map((file) => fs.promises.realpath(file)),
-    );
-    const dependencies = await Promise.all(
-      resolutionOptions(root, params.moduleResolution).nodePaths.map((file) =>
-        fs.promises.realpath(file).catch(() => path.resolve(file)),
-      ),
-    );
-    const dependencyRoot =
-      params.moduleResolution.dependencyRoot === undefined
-        ? undefined
-        : await fs.promises.realpath(params.moduleResolution.dependencyRoot);
-    return ModulePaths.fromRoots(
-      params,
-      root,
-      repositories,
-      dependencies,
-      dependencyRoot,
-    );
+    return ModulePaths.fromRoots(params, await moduleRoots(params));
   }
 
   /** Runtime fallback requires initialize filesystem mapping only when used. */
   static createSync(params: ModuleSources): ModulePaths {
-    const root = fs.realpathSync(params.sourceRoot);
-    const repositories = params.repositoryRoots.map((file) =>
-      fs.realpathSync(file),
-    );
-    const dependencies = resolutionOptions(
-      root,
-      params.moduleResolution,
-    ).nodePaths.map((file) => {
-      try {
-        return fs.realpathSync(file);
-      } catch {
-        return path.resolve(file);
-      }
-    });
-    const dependencyRoot =
-      params.moduleResolution.dependencyRoot === undefined
-        ? undefined
-        : fs.realpathSync(params.moduleResolution.dependencyRoot);
-    return ModulePaths.fromRoots(
-      params,
-      root,
-      repositories,
-      dependencies,
-      dependencyRoot,
-    );
+    return ModulePaths.fromRoots(params, moduleRootsSync(params));
   }
 
   private static fromRoots(
     params: ModuleSources,
-    root: string,
-    repositories: string[],
-    dependencies: string[],
-    dependencyRoot: string | undefined,
+    {
+      source: root,
+      repositories,
+      dependencies,
+      installation: dependencyRoot,
+    }: ModuleRoots,
   ): ModulePaths {
     return new ModulePaths(
       root,
@@ -116,6 +98,12 @@ export class ModulePaths {
             : root
           : path.resolve(root, params.configurationDirectory),
       ),
+      [
+        ...(params.entryFiles ?? []),
+        ...(params.storiesFiles ?? []),
+        ...(params.renderer ? [params.renderer] : []),
+        ...(params.postcss ? [params.postcss] : []),
+      ],
     );
   }
 
@@ -126,7 +114,7 @@ export class ModulePaths {
     for (;;) {
       try {
         const real = await fs.promises.realpath(ancestor);
-        return this.candidate(path.join(real, ...suffix)).file;
+        return this.location(path.join(real, ...suffix)).file;
       } catch (error) {
         if (
           !error ||
@@ -180,7 +168,7 @@ export class ModulePaths {
     );
   }
 
-  private candidate(real: string): {
+  location(real: string): {
     file: string;
     mapped: boolean;
     name: string;
@@ -203,6 +191,42 @@ export class ModulePaths {
       }
     }
     return { file: real, mapped: false, name: this.name(real) };
+  }
+
+  addConfigured(file: string): void {
+    this.configured.add(path.resolve(this.sourceRoot, file));
+    this.canonicalConfigured = undefined;
+  }
+
+  configuredFile(file: string): boolean {
+    if (this.configured.has(file)) return true;
+    this.canonicalConfigured ??= new Set(
+      [...this.configured].flatMap((candidate) => {
+        try {
+          return [fs.realpathSync(candidate)];
+        } catch {
+          return [];
+        }
+      }),
+    );
+    return this.canonicalConfigured.has(file);
+  }
+
+  private candidate(real: string, specifier?: string) {
+    const location = this.location(real);
+    const source = this.workspaceSource(location.file, specifier);
+    return source === undefined ? location : { ...location, file: source };
+  }
+
+  workspaceSource(file: string, specifier?: string): string | undefined {
+    if (
+      specifier &&
+      bareSpecifier(specifier) &&
+      !path.isAbsolute(specifier) &&
+      this.repositoryOwned(file) &&
+      !this.configuredFile(file)
+    )
+      return this.workspace.source(file);
   }
 
   private checked(
@@ -230,11 +254,12 @@ export class ModulePaths {
     return new Error(`module ${name} has no source in this side`);
   }
 
-  async resolve(file: string): Promise<string> {
+  async resolve(file: string, specifier?: string): Promise<string> {
     if (!path.isAbsolute(file)) return file;
     const real = await fs.promises.realpath(file);
     const candidate = this.candidate(
       (await sourceDependency(this, real)) ?? real,
+      specifier,
     );
     if (!candidate.mapped) return this.observe(candidate.file);
     try {
@@ -249,16 +274,25 @@ export class ModulePaths {
     }
   }
 
-  resolveSync(file: string): string {
+  /** Node-loaded requires prefer the native target on the selected side. */
+  resolveSync(file: string, specifier?: string): string {
     if (!path.isAbsolute(file)) return file;
     const real = fs.realpathSync(file);
-    const candidate = this.candidate(sourceDependencySync(this, real) ?? real);
-    if (!candidate.mapped) return this.observe(candidate.file);
+    const target = this.location(sourceDependencySync(this, real) ?? real);
+    if (!target.mapped) return this.observe(target.file);
     try {
-      const real = fs.realpathSync(candidate.file);
-      return this.checked(candidate, real, fs.statSync(real).isFile());
-    } catch {
-      throw this.missing(candidate.name);
+      const real = fs.realpathSync(target.file);
+      return this.checked(target, real, fs.statSync(real).isFile());
+    } catch (error) {
+      if (missingFile(error)) {
+        const source = this.workspaceSource(target.file, specifier);
+        if (
+          source !== undefined &&
+          this.workspaceLookups.buildTarget(target.file)
+        )
+          return this.observe(source);
+      }
+      throw this.missing(target.name);
     }
   }
 }

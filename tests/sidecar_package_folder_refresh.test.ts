@@ -104,7 +104,14 @@ test("marked ordinary roots refresh before folder capture and unseen metadata", 
       "serveEdit",
       barrier,
     );
-    assert.deepEqual(first.result.compiled.reuseEvidence.inputs, {}, barrier);
+    assert.deepEqual(
+      first.result.compiled.reuseEvidence.inputs,
+      {
+        [path.join(one, "tsconfig.json")]: { kind: "absent" },
+        [path.join(two, "tsconfig.json")]: { kind: "absent" },
+      },
+      barrier,
+    );
     await write(
       path.join(one, barrier === "folder" ? "lib/value.ts" : "sub/value.ts"),
       'export const value="unused-preferred";',

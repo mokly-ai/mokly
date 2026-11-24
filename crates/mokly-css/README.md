@@ -36,6 +36,8 @@ core supplies configured package roots as ordered logical dependency
 directories. Imports inside a logical dependency root try package-local
 `node_modules`, then siblings at that root, then the mapped authored
 ancestors. This keeps package CSS and JavaScript on the same copy.
+Workspace package stylesheets can resolve to sources in the selected tree.
+See [workspace package sources](../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
 
 The same contract owns the `styles/` and `assets/` delivery routes. URLs keep
 query and fragment suffixes. Public resources never read private CSS inputs by
@@ -169,6 +171,8 @@ also fails when that exception no longer differs.
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and
   `SourceResolver`, which resolve imports through the injected source tree.
+- [`src/workspace_sources.rs`](./src/workspace_sources.rs) checks for a matching
+  source when a package target names a build file.
 - [`src/modules.rs`](./src/modules.rs) provides `scope` and `scoped_name`, the
   CSS Modules renamer.
 - [`src/rule_collection.rs`](./src/rule_collection.rs) and

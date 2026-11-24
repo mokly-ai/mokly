@@ -210,3 +210,8 @@ settings name the ancestor and explicit `node_modules` directories that the
 matching directory, including outside-configuration and nested workspace imports.
 Configuration ancestors and explicit package roots provide fallback lookup.
 An unmappable lookup or a used directory missing from the base installation produces a `base-dependencies` warning naming its directory.
+
+Mokly applies the
+[workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
+automatically after module lookup. For JavaScript targets, the rule keeps
+the `resolveExtensions` order and tries only extensions with a script suffix.

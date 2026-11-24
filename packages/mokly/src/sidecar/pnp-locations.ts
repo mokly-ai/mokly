@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { importerDirectory } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
+import { importerDirectory } from "./package-directory.js";
 import type { CapturedMetadata } from "./physical-input-reader.js";
 import type { PhysicalInputs } from "./physical-inputs.js";
 import { pnpFiles } from "./pnp-files.js";
