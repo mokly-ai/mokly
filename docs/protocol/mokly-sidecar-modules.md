@@ -1,7 +1,5 @@
 # Sidecar Module Sources
 
-Status: Workspace package source lookup is pending for [JavaScript and CSS imports from JavaScript](../../plans/source-packages.md#milestone-3-javascript-resolution).
-
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.

@@ -108,13 +108,15 @@ Evidence: `.context/source-packages/m2-case-table.log` and `.context/source-pack
 
 Depends on: 2
 
-- [ ] Apply the rule in `ModulePaths.candidate`, `resolve` and `resolveSync`,
+- [x] Apply the rule in `ModulePaths.candidate`, `resolve` and `resolveSync`,
       on the side's repository-relative name, before the existence check.
       Record each probe in the lookup evidence.
-- [ ] Add head and base cases to the sidecar tests, modelled on
+- [x] Add head and base cases to the sidecar tests, modelled on
       `tests/sidecar_repository_links.test.ts`: a JavaScript export, a CSS
       import from JavaScript, a package without sources, a `tsconfig`
       layout, and a base tree without `dist`.
+
+Evidence: `.context/source-packages/m3-final-tests.log` and `.context/source-packages/m3-repeat-*.log`.
 
 ## Milestone 4: CSS resolution
 

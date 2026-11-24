@@ -1,7 +1,5 @@
 # Mokly Configuration Contract
 
-Status: Workspace package source lookup is pending for [JavaScript imports](../../plans/source-packages.md#milestone-3-javascript-resolution).
-
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
 resolves, and the validation that rejects an unsafe configuration.
