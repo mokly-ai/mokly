@@ -108,11 +108,15 @@ for (const region of ["banner", "contentinfo"] as const) {
 }
 
 test("Get started opens the app's sign-up", async ({ page }) => {
-  // The app serves the sign-up route, so the site preview checks the href.
+  // The app serves the sign-up route, so the site preview checks that the
+  // press reaches the address, not the app's page.
   await page.goto(SITE_PATHS.home);
-  await expect(
-    page.getByRole("banner").getByRole("link", { name: "Get started" }),
-  ).toHaveAttribute("href", GET_STARTED_PATH);
+  const action = page
+    .getByRole("banner")
+    .getByRole("link", { name: "Get started" });
+  await expect(action).toHaveAttribute("href", GET_STARTED_PATH);
+  await action.click();
+  await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
 });
 
 test("the header composition follows the viewport", async ({ page }) => {
