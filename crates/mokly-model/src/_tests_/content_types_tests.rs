@@ -4,7 +4,21 @@ use crate::namespace::{GENERATED_DIRECTORY, generated};
 use crate::review_affected::ReviewSide;
 use crate::routes::{comparison_generation, comparison_snapshot};
 
-use super::{FILE_LOADER_ONLY_TYPES, IMPORT_ONLY_TYPES, STYLESHEET_TYPES, delivered_content_type};
+use super::{
+    FILE_LOADER_ONLY_TYPES, IMPORT_ONLY_TYPES, STYLESHEET_TYPES, delivered_content_type,
+    stylesheet_content_type,
+};
+
+#[test]
+fn stylesheet_types_use_extensions_of_file_names() {
+    for (path, expected) in [
+        ("png", None),
+        ("dir.png/file", None),
+        ("dir/a.png", Some("image/png")),
+    ] {
+        assert_eq!(stylesheet_content_type(path), expected, "{path}");
+    }
+}
 
 #[test]
 fn delivered_types_follow_file_extensions_on_each_public_path() {

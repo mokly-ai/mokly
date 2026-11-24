@@ -1,6 +1,7 @@
 //! CSS token references handle strings, nested functions, comments, and late imports.
 
-use crate::imported_assets::stylesheet_content_type;
+use mokly_model::content_types::stylesheet_content_type;
+
 use crate::paths;
 use crate::syntax::references;
 

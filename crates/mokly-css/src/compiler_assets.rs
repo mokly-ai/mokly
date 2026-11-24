@@ -1,12 +1,11 @@
 //! Confined CSS assets and physical alias inventory.
 
-use mokly_model::content_types::stylesheet_extensions;
+use mokly_model::content_types::{stylesheet_content_type, stylesheet_extensions};
 use mokly_model::routes;
 use mokly_source_interface::tree::{FileKind, Node};
 
 use crate::compiler::Preparation;
 use crate::error::{AssetFailure, CssError, Result};
-use crate::imported_assets::stylesheet_content_type;
 use crate::paths;
 use crate::types::OpaqueAsset;
 

@@ -48,6 +48,11 @@ these content types under the
 | `.woff`         | `font/woff`                     |
 | `.woff2`        | `font/woff2`                    |
 
+The extension of an asset is the text after the last dot of the last path
+segment. A name without a dot in its last segment has no extension, so it
+fails with the
+[unsupported extension diagnostic](./mokly-imported-styles-errors.md#build-build-invalid).
+
 Assets that JavaScript imports share this delivery and its routes, and they
 can have more types. [JavaScript Asset Imports](./mokly-imported-assets.md)
 gives their rules.

@@ -1,8 +1,6 @@
 //! Imported media types do not broaden CSS url() extension validation.
 
-use mokly_model::content_types::imported_content_type;
-
-use super::stylesheet_content_type;
+use crate::content_types::{imported_content_type, stylesheet_content_type};
 
 #[test]
 fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets() {
@@ -37,7 +35,6 @@ fn imported_asset_content_types_cover_media_without_changing_stylesheet_assets()
         imported_content_type("assets/file.svg"),
         Some("image/svg+xml")
     );
-    assert_eq!(stylesheet_content_type("png"), Some("image/png"));
     for file in [
         "image.PNG",
         "image.png.extra",

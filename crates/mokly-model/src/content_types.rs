@@ -43,15 +43,15 @@ const FILE_LOADER_ONLY_TYPES: &[(&str, &str)] = &[(".txt", "text/plain; charset=
 
 /// Look up the declared type of an imported asset by its case-sensitive file extension.
 pub fn imported_content_type(path: &str) -> Option<&'static str> {
-    let (_, extension) = path.rsplit('/').next()?.rsplit_once('.')?;
-    stylesheet_content_type(extension)
+    let extension = file_extension(path)?;
+    find_content_type(STYLESHEET_TYPES, extension)
         .or_else(|| find_content_type(IMPORT_ONLY_TYPES, extension))
         .or_else(|| find_content_type(FILE_LOADER_ONLY_TYPES, extension))
 }
 
-/// Look up the type of a CSS `url()` target by extension without the leading dot.
-pub fn stylesheet_content_type(extension: &str) -> Option<&'static str> {
-    find_content_type(STYLESHEET_TYPES, extension)
+/// Look up the type of a CSS `url()` target by its case-sensitive file extension.
+pub fn stylesheet_content_type(path: &str) -> Option<&'static str> {
+    find_content_type(STYLESHEET_TYPES, file_extension(path)?)
 }
 
 /// Format the supported CSS asset extensions for an unsupported-extension diagnostic.
@@ -78,6 +78,13 @@ pub fn delivered_content_type(path: &str) -> String {
     }
 }
 
+fn file_extension(path: &str) -> Option<&str> {
+    path.rsplit('/')
+        .next()?
+        .rsplit_once('.')
+        .map(|(_, extension)| extension)
+}
+
 fn find_content_type(types: &[(&str, &'static str)], extension: &str) -> Option<&'static str> {
     types
         .iter()
@@ -87,3 +94,7 @@ fn find_content_type(types: &[(&str, &'static str)], extension: &str) -> Option<
 #[cfg(test)]
 #[path = "_tests_/content_types_tests.rs"]
 mod content_types_tests;
+
+#[cfg(test)]
+#[path = "_tests_/imported_content_types_tests.rs"]
+mod imported_content_types_tests;

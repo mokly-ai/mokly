@@ -136,7 +136,6 @@ A branch from this branch applies each answer and deletes the file.
 - [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
   B. Milestone 32 applies it, because the code with several setups does not
   exist yet.
-- [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): A.
 - [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md): A.
 - [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): B.
 - [design-external-link-check.md](follow-ups/design-external-link-check.md):
