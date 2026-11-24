@@ -133,8 +133,6 @@ A branch from this branch applies each answer and deletes the file.
 
 - [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): A.
   Severity High.
-- [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
-  D. Severity High.
 - [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): E.
 - [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
   B. Milestone 32 applies it, because the code with several setups does not
@@ -165,8 +163,6 @@ branch fixes it as its file says. Fix them before the pull request into
 `main`.
 
 - [storybook-factory-helper-exports-become-stories.md](follow-ups/storybook-factory-helper-exports-become-stories.md):
-  Severity High.
-- [storybook-loaders-read-saved-args.md](follow-ups/storybook-loaders-read-saved-args.md):
   Severity High.
 - [storybook-argtypes-mapping-skipped-in-render.md](follow-ups/storybook-argtypes-mapping-skipped-in-render.md):
   Severity Medium.

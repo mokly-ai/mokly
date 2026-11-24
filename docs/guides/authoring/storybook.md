@@ -176,9 +176,13 @@ you want to show.
 ## Loaders and hooks
 
 Before each story render, Mokly runs the story's loaders and `beforeEach`
-hooks, as Storybook's portable stories do. The render receives the loader
-results through `loaded`. This story uses `Button` and `meta` from the first
-example:
+hooks. They get the same args as the render. These are the story's own
+non-data args and exactly the data props the preview shows. When you edit a
+prop in `mokly serve`, the loaders and hooks see the new value. When you unset
+an optional prop, Mokly leaves it out of the args.
+
+The render receives the loader results through `loaded`. This story uses
+`Button` and `meta` from the first example.
 
 ```tsx
 export const Loaded: StoryObj<typeof meta> = {
@@ -187,8 +191,14 @@ export const Loaded: StoryObj<typeof meta> = {
 };
 ```
 
-A `beforeEach` hook can return a cleanup. Mokly runs it before the next story
-loads. The preview's `beforeAll` hook runs before the first story render of a
+A `beforeEach` hook can return a cleanup function to undo its setup before
+another story or screen renders. Mokly runs the cleanups once each, in reverse
+order, at the end of the story render whose hooks returned them. It runs them
+even if a loader, a hook, or the render fails. A cleanup that throws fails
+only that story's render. Storybook's own preview runs a story's cleanups when
+the next story loads.
+
+The preview's `beforeAll` hook runs before the first story render of a
 build. Each render process keeps one active setup. When rebuilt stories render
 in the same process, Mokly runs the old setup's cleanup before `beforeAll` runs
 again. This can happen in `mokly serve` after an edit.
@@ -196,10 +206,10 @@ again. This can happen in `mokly serve` after an edit.
 Mokly sets `moklyViewport` and `moklyColorScheme` before the loaders and hooks
 run. Loaders and `beforeEach` hooks can read them from `context.globals`.
 
-A loader, hook, cleanup, or render that throws fails that render. If
-`beforeAll` throws, Mokly does not retry it for that build. Each story render
-of that build fails with its error. Mokly runs no `play` function or
-`afterEach` hook.
+A loader, hook, `beforeAll` cleanup, or render that throws fails the current
+render. If `beforeAll` throws, Mokly does not retry it for that build. Each
+story render of that build fails with its error. Mokly runs no `play` function
+or `afterEach` hook.
 
 Loaders and hooks run in Node during the static render. A hook that needs a
 browser API, such as `window` or `document`, does not work.

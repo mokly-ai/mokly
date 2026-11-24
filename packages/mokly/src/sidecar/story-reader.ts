@@ -9,10 +9,18 @@ import { orderedExports } from "./export-order.js";
 
 export type PortableStory = ReturnType<typeof Storybook.composeStory>;
 
+type ProjectAnnotations = ReturnType<typeof Storybook.setProjectAnnotations>;
+type BeforeEach = NonNullable<ProjectAnnotations["beforeEach"]>;
+
 export interface StoredStory {
-  compose: () => PortableStory;
-  beforeAll: ReturnType<typeof Storybook.setProjectAnnotations>["beforeAll"];
+  compose: (cleanups: Csf.CleanupCallback[]) => PortableStory;
+  beforeAll: ProjectAnnotations["beforeAll"];
   dataKeys: readonly string[];
+}
+
+interface RenderComposition {
+  exportName: string;
+  cleanups: Csf.CleanupCallback[];
 }
 
 interface ReadStory {
@@ -48,35 +56,46 @@ export function readStories(
     ? preview.composed
     : record(preview);
   const title = entryTitle(meta, file, factory !== undefined);
-  const projectAnnotations = () =>
-    storybook.setProjectAnnotations([{ tags: ["mokly"] }, annotations]);
-  const project = projectAnnotations();
-
   // Storybook's runtime also accepts factory modules without a default export.
   const composeStories = storybook.composeStories as (
     module: Record<string, unknown>,
   ) => Record<string, PortableStory>;
-  const compose = () => {
+  const compose = (render?: RenderComposition) => {
     // Project annotations are global. Reset them for every composition, also
     // when renders from different generations are interleaved.
-    projectAnnotations();
-    const copied = Object.fromEntries(
-      Object.entries(module).map(([name, value]) => [
-        name,
-        name === "default"
-          ? { ...meta }
-          : csf.isStory(value)
-            ? {
-                _tag: value._tag,
-                input: { ...value.input },
-                meta: { ...value.meta, input: { ...value.meta.input } },
-              }
-            : value,
-      ]),
-    );
-    return composeStories(copied);
+    const project = storybook.setProjectAnnotations([
+      { tags: ["mokly"] },
+      annotations,
+    ]);
+    const { beforeAll, beforeEach } = project;
+    const wrap = (value: unknown) =>
+      render ? wrapStoryHooks(value, render.cleanups) : value;
+    // The combined project hooks include core and addon hooks.
+    if (render && beforeEach)
+      project.beforeEach = wrapBeforeEach(beforeEach, render.cleanups);
+    try {
+      const copied = Object.fromEntries(
+        Object.entries(module).map(([name, value]) => [
+          name,
+          name === "default"
+            ? wrap({ ...meta })
+            : csf.isStory(value)
+              ? {
+                  _tag: value._tag,
+                  input: wrap({ ...value.input }),
+                  meta: { ...value.meta, input: wrap({ ...value.meta.input }) },
+                }
+              : name === render?.exportName
+                ? wrap(value)
+                : value,
+        ]),
+      );
+      return { stories: composeStories(copied), beforeAll };
+    } finally {
+      if (beforeEach) project.beforeEach = beforeEach;
+    }
   };
-  const composed = compose();
+  const { stories: composed, beforeAll } = compose();
   const stories = orderedExports(
     generation.sources.get(file) ?? "",
     composed,
@@ -101,7 +120,8 @@ export function readStories(
           csf.storyNameFromExport(exportName),
         tags: customTags(composed[exportName]!.tags),
         story: composed[exportName]!,
-        compose: () => compose()[exportName]!,
+        compose: (cleanups: Csf.CleanupCallback[]) =>
+          compose({ exportName, cleanups }).stories[exportName]!,
       };
     });
   const docs = record(stories[0]?.story.parameters.docs);
@@ -109,9 +129,60 @@ export function readStories(
   return {
     title,
     description: typeof description === "string" ? description : "",
-    beforeAll: project.beforeAll,
+    beforeAll,
     stories,
   };
+}
+
+interface HookAnnotations {
+  beforeEach?: BeforeEach;
+  story?: Pick<HookAnnotations, "beforeEach">;
+}
+
+function wrapStoryHooks(
+  value: unknown,
+  cleanups: Csf.CleanupCallback[],
+): unknown {
+  if (!isRecord(value)) return value;
+  const { beforeEach, story } = value as HookAnnotations;
+  if (!beforeEach && !story?.beforeEach) return value;
+
+  const overrides = {
+    ...(beforeEach && { beforeEach: wrapBeforeEach(beforeEach, cleanups) }),
+    ...(story?.beforeEach && {
+      story: {
+        ...story,
+        beforeEach: wrapBeforeEach(story.beforeEach, cleanups),
+      },
+    }),
+  };
+  const descriptors = {
+    ...Object.getOwnPropertyDescriptors(value),
+    ...Object.getOwnPropertyDescriptors(overrides),
+  };
+  const prototype = Object.getPrototypeOf(value);
+  if (typeof value !== "function") return Object.create(prototype, descriptors);
+
+  // A CSF 2 story must stay callable and keep its arity for argType inference.
+  const render = value;
+  function copied(this: unknown, ...args: unknown[]): unknown {
+    return Reflect.apply(render, this, args);
+  }
+  return Object.defineProperties(
+    Object.setPrototypeOf(copied, prototype),
+    descriptors,
+  );
+}
+
+function wrapBeforeEach(
+  beforeEach: BeforeEach,
+  cleanups: Csf.CleanupCallback[],
+): BeforeEach {
+  const hooks = Array.isArray(beforeEach) ? beforeEach : [beforeEach];
+  return hooks.map((hook) => async (context) => {
+    const cleanup = await hook(context);
+    if (cleanup) cleanups.push(cleanup);
+  });
 }
 
 const builtInTags = new Set([

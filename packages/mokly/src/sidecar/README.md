@@ -62,7 +62,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It selects
   stories by their tags and keeps Storybook names, tags, descriptions, and the
   preview's composed `beforeAll` hook. It passes the cache from
-  `describeStories` to `orderedExports`.
+  `describeStories` to `orderedExports`. For a render, it wraps the
+  `beforeEach` hooks of the project, the meta, and the story, so that each
+  returned cleanup goes to the cleanup list of that render.
 - [`src/sidecar/stories.ts`](./stories.ts) holds `describeStories`,
   which makes the first included story the parent and the other stories its
   variants. It records each story's data args and control hints, and omits
@@ -71,9 +73,13 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   `setupStories`, which keeps one active `beforeAll` setup, cleans it up before
   a generation switch, and remembers setup failures.
 - [`src/sidecar/render.ts`](./render.ts) holds `render`, which
-  renders entries and the reader's portable stories to static markup. It
-  awaits story setup and `load()`. It passes `undefined` for each story data
-  arg that the request leaves out.
+  renders entries to static markup, and sends each story render to
+  `renderStory`.
+- [`src/sidecar/story-render.ts`](./story-render.ts) holds `renderStory`.
+  It puts the requested data props on a fresh portable story's args and
+  removes each data arg that the request leaves out, before `load()`. It
+  awaits story setup and `load()`, renders the markup, and then runs the
+  render's `beforeEach` cleanups in reverse order in a `finally` block.
 
 ### esbuild Compilation and Reuse
 

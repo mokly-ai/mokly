@@ -135,8 +135,34 @@ own.
 
 Before each story render, the sidecar runs the story's loaders and
 `beforeEach` hooks, as Storybook's portable stories do. The render receives
-the loaded data. A `beforeEach` cleanup runs before the next story loads, as
-in Storybook. Each sidecar keeps at most one active setup from the preview's
+the loaded data. Loaders and `beforeEach` hooks get the same args as
+[the render](#the-entry-and-its-variants). A data arg that the render request
+leaves out is not in their args.
+
+Decision: loaders, `beforeEach` hooks, and the render get the same args, so
+that loaded data and hook state match the props of the render. Running loaders
+and hooks with saved args was rejected, because an edited or unset prop then
+keeps its saved value in what they prepare.
+
+Each story render runs the cleanups that its own `beforeEach` hooks return. The
+sidecar runs them in the reverse order of their hooks, after the markup of the
+render is complete. It runs them also when a loader, a `beforeEach` hook, or
+the render throws. So when one hook throws, the cleanups of the hooks before it
+still run. Each cleanup runs once, also when it or another cleanup throws.
+
+A `beforeEach` cleanup that throws fails its own render. When the render
+already failed, it keeps its own error. No `beforeEach` cleanup runs in a later
+render. So neither the state that such a cleanup undoes nor its error reaches a
+later render of a story, a screen, or a component.
+
+Decision: each story render runs its own `beforeEach` cleanups. A cleanup
+before the next story loads, as in Storybook's own preview, was rejected, also
+with one coordinator that orders `beforeEach` and `beforeAll` cleanups. When
+such a late cleanup throws, it fails the render of the wrong story. Until it
+runs, the state that it undoes stays in later screen and component renders.
+Without the coordinator, such a cleanup can also undo a newer `beforeAll` setup.
+
+Each sidecar keeps at most one active setup from the preview's
 `beforeAll` hook. Before a story of a bundle generation loads, the sidecar
 checks the active setup. When the active setup belongs to another generation,
 the sidecar runs its cleanup first. Then it runs the `beforeAll` hook of the
