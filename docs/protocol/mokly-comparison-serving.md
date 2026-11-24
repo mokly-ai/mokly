@@ -16,12 +16,14 @@ A file of a generation never changes after it is written or captured. Generation
 carry no deployment id and no revision: a removed entry's detail carries its
 `detailId` and `snapshotId` instead, so one comparison gives the same bytes in
 every build and in every Serve process. The generation name hashes the files
-as they are. Every generation route
-answers GET and HEAD with `Cache-Control: no-store` and
+as they are. Every generation route answers GET and HEAD with
 `X-Content-Type-Options: nosniff`; snapshot documents are `text/html`. In
 Serve the generation root, the URL that ends with `<generation>/`, answers GET
-and HEAD with 204 and no body while the generation is retained. A static
-build writes no file for the root, and its shell never requests it.
+and HEAD with 204 and no body while the generation is retained. The files of a
+generation never change, so Serve sends them with
+`Cache-Control: private, max-age=31536000, immutable`. The root's 204 answer
+stays `no-store`. A static build writes no file for the root, and its shell
+never requests it.
 
 The [catalogue index](./mokly-shell-delivery.md#catalogue-index) names the
 generation: `comparisonUrl` is the artifact-root-relative path of its root,

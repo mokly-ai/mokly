@@ -1,5 +1,6 @@
 import { protocol } from "./errors.js";
 import { jsonText } from "./json.js";
+import { takeRecipeEncoding } from "./recipe-encoding.js";
 
 export const FRAME_LIMIT = 64 * 1024 * 1024;
 
@@ -35,8 +36,21 @@ export async function* frames(
   }
 }
 
-export function encodeFrame(frame: unknown, limit = FRAME_LIMIT): string {
-  const json = jsonText(frame);
+export function encodeFrame(
+  frame: unknown,
+  limit = FRAME_LIMIT,
+  replacements?: ReadonlyMap<object, string>,
+): string {
+  const json = jsonText(frame, replacements);
   if (Buffer.byteLength(json) > limit) protocol(`frame exceeds ${limit} bytes`);
   return json + "\n";
+}
+
+export function encodeResponse(
+  id: number,
+  outcome: object,
+  limit = FRAME_LIMIT,
+): string {
+  const frame = { id, ...outcome };
+  return encodeFrame(frame, limit, takeRecipeEncoding(frame));
 }

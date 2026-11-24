@@ -29,6 +29,7 @@ async fn watcher_cancellation_and_idle_shutdown_follow_the_documented_order() {
         PoolMock::shutdown.next_call(matching!()).returns(Ok(())),
     ));
     let lifecycle = ServeLifecycle {
+        eager: None,
         git: Arc::new(mock.clone()),
         watch: Mutex::new(Some(Arc::new(mock.clone()))),
         pool: Arc::new(mock.clone()),

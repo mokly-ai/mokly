@@ -142,6 +142,11 @@
     head processes before its renders. Its recommended next attempt disposes
     the old generation on those processes first, which changes the loaded
     state that this item ranks. Design the two together.
+  - [serve-pass-requested-views-first.md](./serve-pass-requested-views-first.md)
+    keeps the requested-views-first order of the background pass. One of its
+    options changes the Generation Affinity rule, so that requested documents
+    wait for the process that holds the new generation. Design the two
+    together.
 - **Recommendation:** D. One ranking keeps the useful state of both roots,
   where the warm head process rule helps only the first head call after an
   edit. B now covers the choice inside one root only.

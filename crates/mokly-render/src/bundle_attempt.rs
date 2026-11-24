@@ -6,6 +6,7 @@ use std::sync::{Arc, Weak};
 
 use mokly_sidecar::bundle_outcomes::CacheOutcome;
 use mokly_sidecar::methods::{Bundle, BundleCapture, BundleRequest, Call};
+use mokly_sidecar::postcss_preparation::PostcssPreparation;
 use mokly_sidecar::resolution_plan::ResolutionPlan;
 use mokly_sidecar::results;
 
@@ -20,6 +21,7 @@ use crate::runtime::Runtime;
 pub(crate) fn request(
     runtime: &Runtime,
     params: &Bundle,
+    preparation: Option<PostcssPreparation>,
 ) -> Result<(results::Bundle, Arc<BundleLease>)> {
     let span = tracing::info_span!(
         "catalogue.bundle",
@@ -28,6 +30,7 @@ pub(crate) fn request(
     );
     let _scope = span.enter();
     let result = match runtime.pool.request(Call::Bundle(BundleRequest {
+        preparation,
         plan: edit_plan(runtime, params),
         params: params.clone(),
         capture: Some(runtime.bundle_capture),
@@ -157,3 +160,19 @@ mod bundle_plan_bound_tests;
 #[cfg(test)]
 #[path = "_tests_/bundle_plan_candidate_tests.rs"]
 mod bundle_plan_candidate_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_plan_threads_tests.rs"]
+mod bundle_plan_threads_tests;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_preparation_support.rs"]
+mod bundle_preparation_support;
+
+#[cfg(test)]
+#[path = "_tests_/bundle_preparation_tests.rs"]
+mod bundle_preparation_tests;
+
+#[cfg(test)]
+#[path = "_tests_/base_preparation_tests.rs"]
+mod base_preparation_tests;

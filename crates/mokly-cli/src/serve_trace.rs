@@ -234,6 +234,10 @@ mod extraction_trace_tests;
 mod serve_trace_tests;
 
 #[cfg(test)]
+#[path = "_tests_/eager_trace_tests.rs"]
+mod eager_trace_tests;
+
+#[cfg(test)]
 #[path = "_tests_/sidecar_trace_tests.rs"]
 mod sidecar_trace_tests;
 

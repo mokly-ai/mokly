@@ -49,6 +49,7 @@ fn request(pool: &Pool, evaluation: &str) -> results::Bundle {
     let mut settings = params();
     settings.evaluation = Some(evaluation.into());
     pool.request(Call::Bundle(BundleRequest {
+        preparation: None,
         plan: None,
         params: settings,
         capture: None,

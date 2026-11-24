@@ -48,11 +48,11 @@ fn edit_plan_directories_use_candidates_while_missing_selectors_keep_whole_check
         calls.clone(),
     )
     .with_serve_edit_plans();
-    let _ = request(&runtime, &params()).unwrap();
+    let _ = request(&runtime, &params(), None).unwrap();
     runtime.bundle_capture = BundleCapture::ServeEdit;
     for expected in [true, false] {
         current.store(expected, Ordering::Release);
-        let _ = request(&runtime, &params()).unwrap();
+        let _ = request(&runtime, &params(), None).unwrap();
         assert_eq!(
             calls.lock().unwrap().last().unwrap().plan,
             expected.then(|| plan.clone())

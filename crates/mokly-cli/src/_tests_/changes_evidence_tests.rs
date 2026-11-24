@@ -165,6 +165,7 @@ fn prepare(evidence: Evidence) -> (BasePreparationResult, Arc<Calls>) {
         Unimock::new(())
     };
     let provider: &dyn BaseProvider = &NativeBase {
+        validation: None,
         admission: Arc::new(ImmediateBaseRenders),
         runtime: Arc::new(Runtime::new(
             Arc::new(Unimock::new(())),

@@ -76,12 +76,14 @@ interface BundleCaptureState {
   preview?: string | null | undefined;
   plan?: ResolutionPlan;
   editImports?: ServeEditImports;
+  guardedCompile?: typeof build | undefined;
 }
 
 /**
  * Compile directly from a requested edit plan, or start with native resolution.
  * A native result that a resolve callback could not reproduce compiles again
  * from its plan. A failed native compile compiles again on the full path.
+ * `guardedCompile`, when given, runs only the guarded attempt of an edit plan.
  */
 export async function bundle(
   params: BundleParams,
@@ -90,11 +92,13 @@ export async function bundle(
   durability?: CaptureDurability,
   captureMode: BundleCapture = "full",
   requestedPlan?: BundleResult["plan"],
+  guardedCompile?: typeof build,
 ): Promise<Bundled> {
   const capture: BundleCaptureState = {
     started: metadataRuntime.now(),
     mode: captureMode,
     reads: new Map(),
+    guardedCompile,
     ...(captureMode === "full" ? { durability } : {}),
   };
   if (captureMode === "serveEdit" && requestedPlan)
@@ -245,8 +249,9 @@ async function bundleAttempt(
     });
     let compiled: BuildResult<typeof options>;
     try {
+      const run = (relative && capture.guardedCompile) || compile;
       compiled = await measurements.run("sidecar.bundle.compile", () =>
-        compile(options),
+        run(options),
       );
     } catch (error) {
       if (resolution.mode === "native") return {};

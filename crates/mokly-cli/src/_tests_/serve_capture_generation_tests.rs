@@ -41,6 +41,7 @@ fn source(
     terminal: &Unimock,
 ) -> Source {
     Source {
+        preparation: None,
         references: Mutex::new(None),
         staging: Mutex::new(None),
         operation,
@@ -49,6 +50,10 @@ fn source(
         head: Arc::new(Unimock::new(())),
         warnings: scopes(terminal).begin(),
         services: ServeChanges {
+            purge_delay: Arc::new(Unimock::new(())),
+            routing: None,
+            eager: None,
+            diagnostics: Arc::new(Unimock::new(())),
             reuse: Arc::new(mokly_compare::comparison_reuse::MemoryComparisons::new(
                 32 * 1024 * 1024,
             )),
@@ -136,6 +141,7 @@ fn replaced_run_cancels_a_prepared_base_generation_without_cancelling_the_comman
             .answers(&|_, _| Ok(())),
     )));
     let provider = NativeBase {
+        validation: None,
         admission: Arc::new(ImmediateBaseRenders),
         runtime: source.classification_runtime(cancellation.clone()).unwrap(),
         cancellation,

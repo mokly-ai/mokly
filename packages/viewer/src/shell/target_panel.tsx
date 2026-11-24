@@ -11,6 +11,8 @@
  * the head.
  */
 
+import { useMemo } from "react";
+
 import type { CatalogueUseCase } from "@mokly/model";
 import { ChangeStatus, type ChangeStatusValue } from "@mokly/ui/change-status";
 import type { FramesToggleName } from "@mokly/ui/frames-filter";
@@ -30,26 +32,32 @@ import { PageEvidence } from "./page_evidence.js";
 import type { PageComparisonEvidence } from "./page_evidence_data.js";
 import { publicEntryStatus } from "./public_workspace.js";
 import { EntryRightPanel } from "./right_panel.js";
-import { useShellStore } from "./store_context.js";
+import { useLatestShellStore, useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import { TargetEvidence } from "./target_evidence.js";
 
 /** An embedded root's Dark preview control of a document's one scheme. */
 function DarkPreview() {
   const store = useShellStore();
+  const latest = useLatestShellStore(store);
   const dark = store.state.selection.colorScheme === "dark";
-  return (
-    <MetadataRow label="Preview">
-      <IconButton
-        label="Dark preview"
-        mark="data-workspace-scheme"
-        onClick={() => store.selectColorScheme(dark ? "light" : "dark")}
-        pressed={dark}
-        title="Dark preview"
-      >
-        <WorkspaceIcon name="scheme" />
-      </IconButton>
-    </MetadataRow>
+  return useMemo(
+    () => (
+      <MetadataRow label="Preview">
+        <IconButton
+          label="Dark preview"
+          mark="data-workspace-scheme"
+          onClick={() =>
+            latest.current.selectColorScheme(dark ? "light" : "dark")
+          }
+          pressed={dark}
+          title="Dark preview"
+        >
+          <WorkspaceIcon name="scheme" />
+        </IconButton>
+      </MetadataRow>
+    ),
+    [dark, latest],
   );
 }
 

@@ -1,12 +1,13 @@
 /** Catalogue scroll restoration, active-row visibility, and folder reveal. */
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type {
   NavigationRow,
   NavigationSection,
 } from "@mokly/ui/catalogue-tree";
 
+import { routeKey } from "./data_requests.js";
 import { ElementRefs } from "./element_refs.js";
 import { sameNavFilters } from "./nav_reveal.js";
 import type { ShellStore } from "./store_context.js";
@@ -18,23 +19,35 @@ export function useNavigationScroll(
 ) {
   const currentRow = useRef<HTMLAnchorElement>(null);
   const [summaries] = useState(() => new ElementRefs<string, HTMLElement>());
-  const visible = visibleSummaries(sections);
+  const visible = useMemo(() => visibleSummaries(sections), [sections]);
   const scroll = useRef<HTMLDivElement>(null);
   const initialScroll = useRef(store.state.navScroll);
   const mounted = useRef(false);
   const settled = useRef<ShellStore["state"]["revealedFolder"]>(undefined);
   const { interactive } = store;
-  const { revealedFolder: revealed, route, selection } = store.state;
+  const {
+    revealedFolder: revealed,
+    route,
+    routeInstallation,
+    selection,
+  } = store.state;
+  const currentKey = routeKey(route);
+  const entryKind =
+    route.view.kind === "target" ? route.view.target.entry.kind : undefined;
+  const scrolledRoute = useRef(routeInstallation);
   useLayoutEffect(() => {
     const pane = scroll.current;
     if (!interactive || !pane) return;
     if (!mounted.current) {
       mounted.current = true;
+      scrolledRoute.current = routeInstallation;
       pane.scrollTop = initialScroll.current;
       return;
     }
+    if (scrolledRoute.current === routeInstallation) return;
+    scrolledRoute.current = routeInstallation;
     currentRow.current?.scrollIntoView({ block: "nearest" });
-  }, [interactive, route]);
+  }, [interactive, currentKey, entryKind, routeInstallation]);
   useLayoutEffect(() => {
     const pane = scroll.current;
     if (!interactive || !pane || !revealed) return;
@@ -49,11 +62,14 @@ export function useNavigationScroll(
     if (summary || !sameNavFilters(selection, revealed.selection))
       settled.current = revealed;
   }, [interactive, revealed, selection, summaries, visible]);
-  return {
-    scrollRef: scroll,
-    currentRowRef: currentRow,
-    summaryRef: summaries.ref,
-  };
+  return useMemo(
+    () => ({
+      scrollRef: scroll,
+      currentRowRef: currentRow,
+      summaryRef: summaries.ref,
+    }),
+    [summaries],
+  );
 }
 
 /** Filter visibility comes from the same records the package renders. */

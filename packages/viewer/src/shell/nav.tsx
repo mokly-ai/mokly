@@ -6,6 +6,8 @@
  * they read the store or span the shell root.
  */
 
+import { useMemo } from "react";
+
 import { CatalogueNavigation } from "@mokly/ui/catalogue-navigation";
 
 import type { ShellContext } from "./context.js";
@@ -17,47 +19,85 @@ import { navFilter, navStatus } from "./nav_filter.js";
 import { useNavigationResize } from "./nav_resize.js";
 import { navSection } from "./nav_rows.js";
 import { useNavigationScroll } from "./nav_scroll.js";
-import { useShellStore } from "./store_context.js";
+import { useLatestShellStore, useShellStore } from "./store_context.js";
 
 /** The served catalogue navigation column. */
 export function CatalogueNav({ context }: { context: ShellContext }) {
   const store = useShellStore();
+  const latest = useLatestShellStore(store);
   const navigationId = useShellIdentifier("mb-nav");
   const identifier = useShellIdentifierScope();
 
-  const resize = useNavigationResize(store);
-  const changesStatus = context.changedEntries
-    ? "ready"
-    : context.changesStatus;
-  const source = { context, identifier, store };
-  const rows = store.sections.map((section) => navSection(section, source));
-  const scroll = useNavigationScroll(store, rows);
-  return (
-    <CatalogueNavigation
-      base={context.base}
-      busy={
-        store.state.selection.view === "changes" &&
-        (changesStatus === "pending" || changesStatus === "preparing")
-      }
-      filter={navFilter(context, store)}
-      id={navigationId}
-      interactive={store.interactive}
-      maximumWidth={resize.maximumWidth}
-      onCollapseAll={() => store.collapseAll()}
-      onDisclosure={(key, open) => store.setDisclosure(key, open)}
-      onResizing={resize.onResizing}
-      onScroll={(top) => store.setNavScroll(top)}
-      onView={(view) => store.setView(view)}
-      onWidth={resize.onWidth}
-      onWidthCommit={resize.onWidthCommit}
-      onWidthReset={resize.onWidthReset}
-      ref={resize.ref}
-      resizable={resize.resizable}
-      {...scroll}
-      sections={rows}
-      startingWidth={resize.startingWidth}
-      status={navStatus(context, store)}
-      width={resize.width}
-    />
+  const resize = useNavigationResize(store, latest);
+  const { context: runtimeContext, interactive, sections } = store;
+  const {
+    disclosures,
+    filterBaseline,
+    selection: { view, search, tags },
+  } = store.state;
+  const { activeId } = context;
+  const navSelection = useMemo(
+    () => ({ view, search, tags }),
+    [view, search, tags],
   );
+  const rows = useMemo(
+    () =>
+      sections.map((section) =>
+        navSection(section, {
+          activeId,
+          context: runtimeContext,
+          identifier,
+          state: { disclosures, filterBaseline, selection: navSelection },
+        }),
+      ),
+    [
+      activeId,
+      disclosures,
+      filterBaseline,
+      identifier,
+      navSelection,
+      runtimeContext,
+      sections,
+    ],
+  );
+  const scroll = useNavigationScroll(store, rows);
+  const actions = useMemo(
+    () => ({
+      onCollapseAll: () => latest.current.collapseAll(),
+      onDisclosure: (key: string, open: boolean) =>
+        latest.current.setDisclosure(key, open),
+      onScroll: (top: number) => latest.current.setNavScroll(top),
+      onView: (view: "all" | "changes") => latest.current.setView(view),
+    }),
+    [latest],
+  );
+  return useMemo(() => {
+    const filter = navFilter(context, navSelection.view);
+    return (
+      <CatalogueNavigation
+        {...actions}
+        {...resize}
+        {...scroll}
+        base={context.base}
+        busy={
+          navSelection.view === "changes" &&
+          (filter?.status === "pending" || filter?.status === "preparing")
+        }
+        filter={filter}
+        id={navigationId}
+        interactive={interactive}
+        sections={rows}
+        status={navStatus(context, navSelection, rows)}
+      />
+    );
+  }, [
+    actions,
+    context,
+    interactive,
+    navSelection,
+    navigationId,
+    resize,
+    rows,
+    scroll,
+  ]);
 }

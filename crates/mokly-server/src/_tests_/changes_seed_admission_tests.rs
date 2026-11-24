@@ -40,8 +40,8 @@ async fn only_committed_current_uncanceled_completion_admits_seed_outside_commit
     let seeded = observation.clone();
     let source_owner = Unimock::new((
         ChangeSourceMock::classify
-            .each_call(matching!(_, _))
-            .answers_arc(Arc::new(move |_, _, _| {
+            .each_call(matching!(_, _, _))
+            .answers_arc(Arc::new(move |_, _, _, _| {
                 let observed = classified.lock().unwrap().clone().unwrap();
                 if observed.case == Case::Canceled {
                     observed.canceled.store(true, Ordering::SeqCst);

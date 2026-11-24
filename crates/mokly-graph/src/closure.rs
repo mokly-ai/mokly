@@ -1,26 +1,20 @@
 //! One referenced-asset walk for build, Serve, and either comparison side.
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-use mokly_catalogue::diagnostic::{Warning, WarningSubject};
+use mokly_catalogue::diagnostic::Warning;
 use mokly_html::tree::Node;
-use mokly_model::evidence::{EvidenceOwner, ResourceEvidence};
-use mokly_model::namespace;
-use mokly_source_interface::error::SourceError;
+use mokly_model::evidence::ResourceEvidence;
 use mokly_source_interface::tree::SourceTree;
 
 use crate::asset_delivery::AssetRead;
-use crate::closure_prefetch;
-use crate::closure_seeds;
-use crate::error;
-use crate::error::{Result, invalid};
+use crate::closure_walk;
+use crate::error::Result;
+use crate::head_validation::{Unrecorded, ValidationRecorder};
 use crate::policy::PublicPolicy;
-use crate::public_denial::PublicDenial;
 use crate::reference_index::ReferenceIndex;
-use crate::references::{ResourceReference, collect_with};
 use crate::resource_reach::ResourceReach;
-use crate::urls::local_target;
 use crate::viewer_fonts::ViewerFonts;
 
 /// Generation-owned resources are read from plans and cache, never by disk route.
@@ -56,9 +50,12 @@ pub struct Closure {
 }
 
 /// Injected closure traversal boundary.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ClosureBuilderMock))]
 pub trait ClosureBuilder: Send + Sync {
-    /// Follow one composed document and its renderer-declared seeds. `fonts` says
-    /// whether the document's own CSS may load the faces that the viewer delivers.
+    /// Replay one lexical observer call before proving that target's reads.
+    fn observe(&self, _route: &str, _path: &str) {}
+    /// Follow one composed document and its renderer-declared seeds.
+    /// `fonts` sets whether the document's CSS may load the viewer's faces.
     fn collect(
         &self,
         route: &str,
@@ -66,6 +63,18 @@ pub trait ClosureBuilder: Send + Sync {
         seeds: &[String],
         fonts: ViewerFonts,
     ) -> Result<Closure>;
+    /// Record every input at its read boundary, or decline retention.
+    fn collect_recorded(
+        &self,
+        route: &str,
+        tree: &[Node],
+        seeds: &[String],
+        fonts: ViewerFonts,
+        recorder: &dyn ValidationRecorder,
+    ) -> Result<Closure> {
+        recorder.unknown();
+        self.collect(route, tree, seeds, fonts)
+    }
 }
 
 /// Reuses one generation's public policy for every target.
@@ -83,6 +92,11 @@ pub struct Walker {
 }
 
 impl ClosureBuilder for Walker {
+    fn observe(&self, route: &str, path: &str) {
+        if let Some(observer) = &self.observer {
+            observer.observe(route, path);
+        }
+    }
     fn collect(
         &self,
         route: &str,
@@ -90,209 +104,28 @@ impl ClosureBuilder for Walker {
         seeds: &[String],
         fonts: ViewerFonts,
     ) -> Result<Closure> {
-        let mut result = Closure::default();
-        let source = namespace::generated(route);
-        let references = collect_with(tree, &|css| {
-            fonts.followed(&source, self.index.style_references(css))
-        });
-        let mut queue: VecDeque<_> = references
-            .iter()
-            .cloned()
-            .map(|reference| (source.clone(), reference))
-            .collect();
-        let (seeded, warnings) = closure_seeds::queue(route, seeds);
-        queue.extend(seeded);
-        result.warnings.extend(warnings);
-        closure_prefetch::prefetch(self, &source, &references)?;
-        let mut edges: BTreeMap<String, Vec<String>> = BTreeMap::new();
-        let mut visited = BTreeSet::new();
-        let mut evidence = BTreeMap::new();
-        while let Some((source, reference)) = queue.pop_front() {
-            let target = match local_target(&source, &reference.url) {
-                Ok(target) => target,
-                Err(source) => {
-                    return Err(invalid(
-                        route,
-                        format!(
-                            "{route}: invalid resource URL {:?}: {}",
-                            reference.url,
-                            source.reason()
-                        ),
-                    ));
-                }
-            };
-            let Some(target) = target else {
-                continue;
-            };
-            if !target.starts_with(&namespace::generated(""))
-                && let Some(path) = target.strip_prefix("static/")
-                && let Some(observer) = &self.observer
-            {
-                observer.observe(route, path);
-            }
-            if let Some(generated) = target.strip_prefix(&namespace::generated(""))
-                && self.generated.is_document(generated)
-            {
-                continue;
-            }
-            let owner_key = match &reference.owner {
-                EvidenceOwner::Entry => String::new(),
-                EvidenceOwner::Component { path } => path.clone(),
-            };
-            if !reference.ignored {
-                evidence.insert((target.clone(), owner_key.clone()), reference.owner.clone());
-                result.references.push(ResourceReach {
-                    path: target.clone(),
-                    owner: reference.owner.clone(),
-                    instance_key: reference.instance_key.clone(),
-                    source: source.clone(),
-                    url: reference.url.clone(),
-                });
-            }
-            if !visited.insert((
-                target.clone(),
-                owner_key,
-                reference.instance_key.clone(),
-                reference.ignored,
-            )) {
-                continue;
-            }
-            let urls = if let Some(cached) = edges.get(&target) {
-                cached.clone()
-            } else {
-                let bytes: Arc<[u8]> = if let Some(generated) =
-                    target.strip_prefix(&namespace::generated(""))
-                {
-                    if let Some(urls) = self.index.get(&target) {
-                        edges.insert(target.clone(), urls.clone());
-                        for url in urls {
-                            queue.push_back((
-                                target.clone(),
-                                ResourceReference {
-                                    url,
-                                    owner: reference.owner.clone(),
-                                    ignored: reference.ignored,
-                                    instance_key: reference.instance_key.clone(),
-                                },
-                            ));
-                        }
-                        continue;
-                    }
-                    if generated.starts_with("assets/") {
-                        if !self.generated.contains_resource(generated)? {
-                            return Err(missing(route, &reference.url));
-                        }
-                        edges.insert(target.clone(), Vec::new());
-                        continue;
-                    }
-                    self.generated
-                        .resource(generated)?
-                        .ok_or_else(|| missing(route, &reference.url))?
-                        .into()
-                } else {
-                    let path = target
-                        .strip_prefix("static/")
-                        .ok_or_else(|| missing(route, &reference.url))?;
-                    let file = match self.policy.check(path) {
-                        Ok(file) => file,
-                        Err(PublicDenial::Missing) => return Err(missing(route, &reference.url)),
-                        Err(reason) => {
-                            return Err(invalid(
-                                route,
-                                format!(
-                                    "document links and resources are invalid:\n- {route}: protected target {}: {}",
-                                    reference.url,
-                                    reason.reason()
-                                ),
-                            ));
-                        }
-                    };
-                    result.files.insert(path.into());
-                    if let Some(urls) = self.index.get(&target) {
-                        edges.insert(target.clone(), urls.clone());
-                        for url in urls {
-                            queue.push_back((
-                                target.clone(),
-                                ResourceReference {
-                                    url,
-                                    owner: reference.owner.clone(),
-                                    ignored: reference.ignored,
-                                    instance_key: reference.instance_key.clone(),
-                                },
-                            ));
-                        }
-                        continue;
-                    }
-                    if !target.ends_with(".css")
-                        && !target.ends_with(".html")
-                        && !target.ends_with(".htm")
-                    {
-                        match self.tree.digest(&file.absolute) {
-                            Ok(_) => {}
-                            Err(SourceError::Unavailable { message, .. }) => {
-                                result.files.remove(path);
-                                result.warnings.push(Warning {
-                                    code: "base-conversion",
-                                    subject: WarningSubject::Route(target.clone()),
-                                    message,
-                                });
-                                continue;
-                            }
-                            Err(_) => return Err(missing(route, &reference.url)),
-                        }
-                        let urls = self.index.parse(&target, &[])?;
-                        edges.insert(target.clone(), urls);
-                        continue;
-                    }
-                    match self.tree.read_public(&file.absolute) {
-                        Ok(bytes) => bytes.into(),
-                        Err(SourceError::Unavailable { message, .. }) => {
-                            result.files.remove(path);
-                            result.warnings.push(Warning {
-                                code: "base-conversion",
-                                subject: WarningSubject::Route(target.clone()),
-                                message,
-                            });
-                            continue;
-                        }
-                        Err(_) => return Err(missing(route, &reference.url)),
-                    }
-                };
-                let urls = self.index.parse(&target, &bytes)?;
-                closure_prefetch::urls(self, &target, &urls)?;
-                edges.insert(target.clone(), urls.clone());
-                urls
-            };
-            for url in urls {
-                queue.push_back((
-                    target.clone(),
-                    ResourceReference {
-                        url,
-                        owner: reference.owner.clone(),
-                        ignored: reference.ignored,
-                        instance_key: reference.instance_key.clone(),
-                    },
-                ));
-            }
-        }
-        result.edges = edges;
-        result.evidence = evidence
-            .into_iter()
-            .map(|((path, _), owner)| ResourceEvidence { path, owner })
-            .collect();
-        Ok(result)
+        self.collect_recorded(route, tree, seeds, fonts, &Unrecorded)
+    }
+
+    fn collect_recorded(
+        &self,
+        route: &str,
+        tree: &[Node],
+        seeds: &[String],
+        fonts: ViewerFonts,
+        recorder: &dyn ValidationRecorder,
+    ) -> Result<Closure> {
+        closure_walk::collect(self, route, tree, seeds, fonts, recorder)
     }
 }
 
-fn missing(route: &str, reference: &str) -> error::GraphError {
-    invalid(
-        route,
-        format!("document links and resources are invalid:\n- {route}: missing target {reference}"),
-    )
-}
-
 /// A document-scoped record of lexical resources reached during closure validation.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ClosureObserverMock))]
 pub trait ClosureObserver: Send + Sync {
     /// Record before validation so missing and dangling targets can be repaired.
     fn observe(&self, route: &str, path: &str);
 }
+
+#[cfg(test)]
+#[path = "_tests_/validation_walk_tests.rs"]
+mod validation_walk_tests;

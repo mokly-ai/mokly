@@ -18,7 +18,7 @@
   `crates/mokly-render/src/bundle_attempt.rs:112` and line 132,
   `crates/mokly-watch/src/plan.rs:132` and line 147,
   `crates/mokly-watch/src/native_scan.rs:11` and line 17,
-  `packages/mokly/src/sidecar/module-paths.ts:150`,
+  `packages/mokly/src/sidecar/module-paths.ts:151` (`ModulePaths.name`),
   `crates/mokly-render/src/runtime.rs:215`,
   `crates/mokly-render/src/side.rs:160`,
   `crates/mokly-render/src/stylesheet_watch.rs:14`,
@@ -53,9 +53,9 @@
     bundles the JavaScript modules of a catalogue with esbuild. A canonical
     path, or real path, has every symbolic link resolved.
     `ModulePaths.create` resolves each dependency root to its canonical
-    path, at `packages/mokly/src/sidecar/module-paths.ts:47`.
+    path, at `packages/mokly/src/sidecar/module-paths.ts:48`.
   - The sidecar reports each bundled module by its logical path, in
-    `packages/mokly/src/sidecar/module-paths.ts:150`. Its resolution metadata
+    `packages/mokly/src/sidecar/module-paths.ts:151`. Its resolution metadata
     and its consumed-module directories use the same logical names. The
     metadata holds the `package.json` and `tsconfig.json` candidates, also
     the missing ones.

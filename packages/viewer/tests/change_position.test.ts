@@ -89,9 +89,10 @@ function rowHref(key: string): string | undefined {
     undefined,
   );
   const source = {
+    activeId: context.activeId,
     context,
     identifier: (value: string) => value,
-    store: { context, state },
+    state,
   };
   const links = new Map<string, NavigationLink>();
   const visit = (rows: readonly NavigationRow[]): void => {

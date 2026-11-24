@@ -12,7 +12,7 @@
  * catalogue's sheet.
  */
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 
 import {
   TopBar as TopBarView,
@@ -24,7 +24,7 @@ import { AppearanceSelect, type AppearanceState } from "./appearance.js";
 import type { Catalogue } from "./catalogue.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { useSearchKeys, useSearchShortcut } from "./search_keys.js";
-import { useShellStore } from "./store_context.js";
+import { useLatestShellStore, useShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
 
 /** The shared 48px catalogue header keeps search available at every width. */
@@ -34,28 +34,39 @@ export function TopBar(props: {
   host?: TopBarHost;
 }) {
   const store = useShellStore();
+  const latest = useLatestShellStore(store);
   const searchId = useShellIdentifier("mb-search");
   const bar = useRef<TopBarHandle>(null);
   useSearchKeys(bar);
   const searchShortcut = useSearchShortcut();
-  return (
-    <TopBarView
-      end={
-        store.context.embedded ? null : (
-          <AppearanceSelect
-            ready={props.appearance?.ready ?? false}
-            theme={props.appearance?.theme ?? "auto"}
-            onChange={props.appearance?.onChange}
-          />
-        )
-      }
-      host={props.host}
-      onSearch={(query) => store.setSearch(query)}
-      query={store.state.query}
-      ref={bar}
-      searchId={searchId}
-      searchShortcut={searchShortcut}
-      tagPicker={<SearchTagPicker tags={props.catalogue.tags} />}
-    />
+  const { embedded } = store.context;
+  const { query } = store.state;
+  const { host } = props;
+  const { tags } = props.catalogue;
+  const ready = props.appearance?.ready ?? false;
+  const theme = props.appearance?.theme ?? "auto";
+  const onChange = props.appearance?.onChange;
+  const end = useMemo(
+    () =>
+      embedded ? null : (
+        <AppearanceSelect ready={ready} theme={theme} onChange={onChange} />
+      ),
+    [embedded, onChange, ready, theme],
+  );
+  const tagPicker = useMemo(() => <SearchTagPicker tags={tags} />, [tags]);
+  return useMemo(
+    () => (
+      <TopBarView
+        end={end}
+        host={host}
+        onSearch={(query) => latest.current.setSearch(query)}
+        query={query}
+        ref={bar}
+        searchId={searchId}
+        searchShortcut={searchShortcut}
+        tagPicker={tagPicker}
+      />
+    ),
+    [bar, end, host, latest, query, searchId, searchShortcut, tagPicker],
   );
 }

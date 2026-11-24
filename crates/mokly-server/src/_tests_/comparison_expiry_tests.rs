@@ -125,7 +125,7 @@ fn setup(kind: ReviewKind) -> (Router, Arc<MemoryComparisons>, Arc<AtomicU64>) {
     (Arc::new(app).router(watch::channel(false).1), store, now)
 }
 
-async fn request(router: &Router, method: Method, uri: &str) -> Response {
+async fn request(router: &Router, method: Method, uri: &str, cache: &str) -> Response {
     let response = router
         .clone()
         .oneshot(
@@ -138,20 +138,20 @@ async fn request(router: &Router, method: Method, uri: &str) -> Response {
         )
         .await
         .unwrap();
-    assert_eq!(response.headers()["cache-control"], "no-store");
+    assert_eq!(response.headers()["cache-control"], cache);
     assert_eq!(response.headers()["x-content-type-options"], "nosniff");
     response
 }
 
 async fn select(router: &Router) -> String {
-    let response = request(router, Method::GET, SELECTED).await;
+    let response = request(router, Method::GET, SELECTED, "no-store").await;
     assert_eq!(response.status(), StatusCode::FOUND);
     response.headers()["location"].to_str().unwrap().to_owned()
 }
 
 /// Read a selection's root and documents, which must hold its captured bytes.
 async fn read_selection(router: &Router, url: &str) -> Vec<Bytes> {
-    let response = request(router, Method::GET, url).await;
+    let response = request(router, Method::GET, url, "no-store").await;
     assert_eq!(response.status(), StatusCode::NO_CONTENT);
     assert!(
         to_bytes(response.into_body(), usize::MAX)
@@ -174,6 +174,7 @@ async fn read_selection(router: &Router, url: &str) -> Vec<Bytes> {
                 router,
                 Method::GET,
                 &format!("{directory}snapshots/{side}/{path}"),
+                "private, max-age=31536000, immutable",
             )
             .await;
             assert_eq!(response.status(), StatusCode::OK);
@@ -183,7 +184,13 @@ async fn read_selection(router: &Router, url: &str) -> Vec<Bytes> {
         }
     }
     for (_, copy, expected) in FACES {
-        let response = request(router, Method::GET, &format!("{directory}{copy}")).await;
+        let response = request(
+            router,
+            Method::GET,
+            &format!("{directory}{copy}"),
+            "private, max-age=31536000, immutable",
+        )
+        .await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.headers()["content-type"], "font/woff2");
         let bytes = to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -195,7 +202,13 @@ async fn read_selection(router: &Router, url: &str) -> Vec<Bytes> {
 /// Each face copy of a generation that the store does not hold answers 404.
 async fn faces_missing(router: &Router, directory: &str) {
     for (_, copy, _) in FACES {
-        let response = request(router, Method::GET, &format!("{directory}{copy}")).await;
+        let response = request(
+            router,
+            Method::GET,
+            &format!("{directory}{copy}"),
+            "no-store",
+        )
+        .await;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 }
@@ -212,7 +225,7 @@ async fn idle_recovery(kind: ReviewKind) {
     now.store(59_999, Ordering::SeqCst);
     store.collect();
     assert_eq!(store.state.lock().unwrap().bundles.len(), 1);
-    let head = request(&router, Method::HEAD, &original).await;
+    let head = request(&router, Method::HEAD, &original, "no-store").await;
     assert_eq!(head.status(), StatusCode::NO_CONTENT);
     assert!(
         to_bytes(head.into_body(), usize::MAX)
@@ -228,7 +241,7 @@ async fn idle_recovery(kind: ReviewKind) {
     store.collect();
     assert!(store.state.lock().unwrap().bundles.is_empty());
     assert!(store.state.lock().unwrap().selections.is_empty());
-    let expired = request(&router, Method::HEAD, &original).await;
+    let expired = request(&router, Method::HEAD, &original, "no-store").await;
     assert_eq!(expired.status(), StatusCode::NOT_FOUND);
     assert!(
         to_bytes(expired.into_body(), usize::MAX)

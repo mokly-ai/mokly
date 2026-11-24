@@ -73,13 +73,11 @@ export class PlannedRelative {
 
   /** Prove skipped edges before recording their full-path observations. */
   async verify(metafile: Metafile, paths: ModulePaths): Promise<boolean> {
-    const observed: Array<{ name: string; directory: string; file: string }> =
-      [];
+    const observed: string[] = [];
     const targets = new Map<string, ReturnType<typeof classifyNativeTarget>>();
     const directories = new Set<string>();
     for (const [importer, input] of Object.entries(metafile.inputs)) {
       if (!path.isAbsolute(importer)) continue;
-      const directory = path.dirname(importer);
       for (const edge of input.imports) {
         if (edge.external && this.skipped.has(edge.path)) return false;
         if (
@@ -115,17 +113,15 @@ export class PlannedRelative {
           )
             return false;
         }
-        observed.push({ name: edge.original, directory, file: edge.path });
+        observed.push(edge.path);
         directories.add(path.dirname(edge.path));
       }
     }
     for (const directory of directories)
       this.metadata.use(await this.scope.metadata(directory));
     if (!this.metadata.current()) return false;
-    for (const { name, directory, file } of observed) {
-      paths.observe(file);
-      await paths.dependencyUsage.resolved(name, directory, file);
-    }
+    // Every proved name is relative, and dependency usage records only bare names.
+    for (const file of observed) paths.observe(file);
     return true;
   }
 }

@@ -24,7 +24,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::bundle::BundleState;
 use crate::dependency_usage::{DependencyUsage, UsedDependencies};
 use crate::edit_plans::Records;
-use crate::leases::PreparedLease;
+use crate::leases::{ContextLease, PreparedLease};
 use crate::physical_inputs::PhysicalInputs;
 use crate::postcss_cache::CssCache;
 use crate::side;
@@ -65,9 +65,13 @@ pub struct Runtime {
     pub(crate) resources: Arc<dyn ResourceInputs>,
     pub(crate) closures: Arc<dyn ClosureInputs>,
     pub(crate) prepared: Arc<Mutex<BTreeMap<String, Weak<PreparedLease>>>>,
+    /// Weak Serve head contexts, including those retained after local record loss.
+    pub(crate) contexts: Arc<Mutex<Vec<Weak<ContextLease>>>>,
     pub(crate) styles: Arc<Mutex<StylesheetCache>>,
     /// None marks an original head. Some marks a base, including an empty or expired source.
     pub(crate) head_styles: Option<Weak<Mutex<StylesheetCache>>>,
+    /// `for_base` made this base runtime from a Serve head.
+    pub(crate) from_serve_head: bool,
     pub(crate) watch_stylesheets: bool,
     /// One lock shared by every clone. `describe` holds it for the whole attempt, so two
     /// descriptions never interleave their bundle registry checks and sidecar calls.
@@ -153,6 +157,7 @@ impl Runtime {
     /// The runtime of one base preparation over `tree`. It shares the dependency reader, physical
     /// inputs, sidecar pool, render cache, workers, and style memo of this runtime. It starts its
     /// own stores and reads the original head's stylesheet store only through a weak reference.
+    /// It records whether this runtime is a Serve head.
     pub fn for_base(
         &self,
         tree: Arc<dyn SourceTree>,
@@ -171,6 +176,7 @@ impl Runtime {
             self.style_references.clone(),
         );
         runtime.document_store = self.document_store.clone();
+        runtime.from_serve_head = self.serve_head();
         runtime.watch_stylesheets = false;
         runtime.head_styles = Some(match &self.head_styles {
             Some(head) => head.clone(),
@@ -208,12 +214,14 @@ impl Runtime {
             version,
             watch_stylesheets: false,
             head_styles: base.as_ref().map(|_| Weak::new()),
+            from_serve_head: false,
             base,
             dependency_usage: Arc::new(UsedDependencies::default()),
             style_references,
             resources: Arc::new(MemoryResourceInputs::default()),
             closures: Arc::new(MemoryClosureInputs::default()),
             prepared: Arc::new(Mutex::new(BTreeMap::new())),
+            contexts: Arc::new(Mutex::new(Vec::new())),
             styles: Arc::new(Mutex::new(StylesheetCache::default())),
             describing: Arc::new(Mutex::new(())),
             css: Arc::new(Mutex::new(CssCache::default())),

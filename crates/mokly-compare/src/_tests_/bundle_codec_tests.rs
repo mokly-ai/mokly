@@ -11,7 +11,7 @@ use sha2::{Digest, Sha256};
 use crate::bundle_codec::{Codec, HEADER_BYTES, Header, StoredBundle, StoredKind, hex};
 use crate::bundle_fixture::{params, recipe, restore};
 
-fn file(format: u64, version: &str, payload: &[u8]) -> Vec<u8> {
+pub(super) fn file(format: u64, version: &str, payload: &[u8]) -> Vec<u8> {
     let header = Header {
         format_version: format,
         mokly_version: version.into(),
