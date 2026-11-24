@@ -82,8 +82,9 @@ export async function watch(
 ) {
   const page = await context.newPage();
   await observeDelivery(page);
-  await page.goto(`${url}/view/${firstScreen}/`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
+  // The address names the viewport, so the canvas shows the Desktop frames
+  // alone.
+  await page.goto(`${url}/view/${firstScreen}/?viewport=desktop`);
   for (const edit of await fixtureEdits(fixture, WATCH_BROWSER_TIMEOUT_MS)) {
     await edit.verify(page, false);
     const before = await delivered(page, {
