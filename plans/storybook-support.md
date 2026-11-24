@@ -91,12 +91,14 @@ Replaced ways:
 
 The user paused the work on 2026-11-24, after tracks A, B, C, D, and J
 merged into this branch. On 2026-11-25 the user answered most of the open
-decisions and follow-up items. This section tells the next agent what is
+decisions and follow-up items. The same day the user asked to continue, and
+this branch merged `main`, with the Canvas redesign of pull request #488.
+Milestone 1a draws the Storybook mockups again on Canvas. This section tells the next agent what is
 done, what waits for the user, and how to continue.
 
 | Track                    | Pull request | Done                         | Open                                                                                  |
 | ------------------------ | ------------ | ---------------------------- | ------------------------------------------------------------------------------------- |
-| A. Mockups               | #339, merged | Milestone 1, except one TODO | The mockup update for decision 27                                                     |
+| A. Mockups               | #339, merged | Milestone 1, except one TODO | Milestone 1a, which also does the last TODO of Milestone 1                            |
 | B. Story reading         | #492, merged | Milestones 3 to 6            | The B4 TODO of Milestone 2, Milestone 7, and Milestone 8                              |
 | C. Imported assets       | #453, merged | Milestones 9 to 12           | None                                                                                  |
 | D. Vite adapter          | #493, merged | Milestones 13 and 16         | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
@@ -1273,7 +1275,7 @@ track.
 
 | Track                      | Milestones | Starts after                                    |
 | -------------------------- | ---------- | ----------------------------------------------- |
-| A. Mockups                 | 1          | Nothing                                         |
+| A. Mockups                 | 1 and 1a   | Nothing                                         |
 | B. Story reading           | 2 to 8     | Nothing                                         |
 | C. Imported assets         | 9 to 12    | Nothing                                         |
 | D. Vite adapter            | 13 to 17   | Nothing                                         |
@@ -1329,14 +1331,57 @@ Storybook.
       mockup, as design call 32 says, and add it to the frozen design lists
       and to the route table of `docs/protocol/mokly-component-controls-design.md`.
       Branch: `conductor/storybook-support-a-mockups`.
-- [ ] Update the mockups for the answer to decision 27. Branch:
-      `conductor/storybook-support-a-mockups`.
+- [ ] Update the mockups for the answer to decision 27. Milestone 1a does
+      this TODO on the Canvas design, and ticks it.
 - [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
       Branch: `conductor/storybook-support-a-mockups`.
 
 Evidence: `.context/storybook-support/evidence/` holds the mockup check, the
 Serve smoke test, the complete gate, and the screenshots.
+
+## Milestone 1a: Storybook mockups on Canvas
+
+Tags: mockup
+
+Depends on: 1, and the merge of `main` of 2026-11-25
+
+Track A. The merge of `main` on 2026-11-25 brought the Canvas redesign of
+the viewer and the design mockups, pull request #488 into `main`. That
+redesign deleted the old component design mockups under
+`examples/basic/specs/design/components/`, on which Milestone 1 drew the
+Storybook states. The merge dropped those states, as the orchestrator
+decided on 2026-11-25, because the old screens no longer exist on `main`.
+This milestone draws them again on the Canvas design, with the answers of
+2026-11-25. The dropped pieces are listed in
+`.context/storybook-support/merge-main-justifications.md` of the primary
+workspace.
+
+- [ ] Draw the state of a story that could not render on the Canvas
+      component page, desktop and mobile, and in Changes: the error document
+      in Current, and the last successful render in Before. The error
+      document names the story, says that it could not render, gives the
+      reason in a secondary place, and gives the `!mokly` tag. It carries
+      only its own styles, with system colors that follow the view's scheme,
+      as decision 26 says. Draw it in a dark view too.
+- [ ] Draw the Story row of design call 30 and the Storybook link in the
+      Details of a stories entry. The link opens in a new tab, with an icon
+      and a screen-reader label, as decision 27 says. Draw it without an
+      address, because a design link opens a design entry. The page of an
+      added entry in Changes has no Storybook link, as decision 23 says.
+- [ ] Draw the saved-props sentences of design call 29 in the "Render
+      failed" and the "Invalid prop value" controls mockups, and the "Later
+      edit failed" state of design call 32.
+- [ ] Add each new state to the component and controls design inventories,
+      the screen and browser inventories, and the design snapshots.
+- [ ] Follow the copy rules and the forbidden patterns of the `product-ui`
+      skill.
+- [ ] Run the mockup check named in `AGENTS.md`. Smoke-test the changed
+      pages through `npm run dev`.
+- [ ] Update the design and the TODOs of this plan for each problem that the
+      mockups show.
+- [ ] Commit, push, review against this branch, give the findings to the
+      user, apply the fix rule, and open a pull request into this branch.
 
 ## Milestone 2: Story reading documentation
 
