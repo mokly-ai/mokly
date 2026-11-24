@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { relative, resolve } from "node:path";
 import { test } from "node:test";
 
 import { openSource } from "../fixtures/site";
@@ -12,8 +13,14 @@ import {
   label,
   siteDocument,
   siteEntry,
-  siteScreens as screens,
 } from "./design-site-test-helpers";
+import { importedStylesheets } from "./imported-stylesheets";
+import {
+  siteRuleStylesheets,
+  siteScreens as screens,
+  siteStylesheets,
+  type SiteScreenPath,
+} from "./site-stylesheets";
 
 test("every site screen owns its folder, viewports and schemes", () => {
   for (const id of screens) {
@@ -165,3 +172,41 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
   });
 }
+
+/** The style module of each site screen's area. */
+const areaModules: Record<SiteScreenPath, string> = {
+  "design/site/home": "home",
+  "design/site/docs": "docs",
+  "design/site/changelog": "changelog",
+  "design/site/pricing": "pricing",
+  "design/site/terms": "legal",
+  "design/site/privacy": "legal",
+  "design/site/complaints": "legal",
+  "design/site/security": "legal",
+};
+
+/** The sheets that one site style module imports, as repository paths. */
+function styleModuleSheets(name: string): string[] {
+  const root = resolve(import.meta.dirname, "../../../..");
+  const module = resolve(
+    root,
+    `docs/mockups/src/screens/design/site/styles/${name}.ts`,
+  );
+  return importedStylesheets(module).map((sheet) => relative(root, sheet));
+}
+
+// docs/protocol/cloud/mockup-tooling.md: a site page loads the font sheets,
+// then the shared sheets, then its own area's sheets, and no other sheet.
+test("each site screen loads the shared sheets, then only its own area's sheets", () => {
+  const shared = styleModuleSheets("shared");
+  for (const id of screens)
+    assert.deepEqual(
+      siteStylesheets(id),
+      [
+        ...siteRuleStylesheets(),
+        ...shared,
+        ...styleModuleSheets(areaModules[id]),
+      ],
+      id,
+    );
+});
