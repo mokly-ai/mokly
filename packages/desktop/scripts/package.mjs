@@ -6,8 +6,13 @@ import { join, resolve } from "node:path";
 
 import { parse } from "yaml";
 
-import { publishRelease, releaseArtifacts } from "./release-assets.mjs";
-import { AppendOnlyPublisher, githubClient } from "./release-github.mjs";
+import {
+  publishRelease,
+  releaseArtifacts,
+  releaseManifestFilename,
+} from "./release-assets.mjs";
+import { githubClient } from "./release-github.mjs";
+import { AppendOnlyPublisher } from "./release-publisher.mjs";
 
 const desktop = resolve(import.meta.dirname, "..");
 
@@ -66,10 +71,9 @@ if (import.meta.main) {
   const environment = { ...process.env };
   if (!release) environment.CSC_IDENTITY_AUTO_DISCOVERY = "false";
   // An owned output directory prevents stale files from entering the inventory.
-  await mkdir(join(desktop, "release"), { recursive: true });
-  const directory = release
-    ? await mkdtemp(join(desktop, "release/.publish-"))
-    : join(desktop, "release");
+  const output = join(desktop, "release");
+  await mkdir(output, { recursive: true });
+  const directory = release ? await mkdtemp(join(output, ".publish-")) : output;
   const run = async (env) => {
     const result = spawnSync(
       resolve(desktop, "../../node_modules/.bin/electron-builder"),
@@ -94,11 +98,26 @@ if (import.meta.main) {
         version,
         github,
       );
-      await publishRelease(
+      const tag = `v${version}`;
+      const assets = await publishRelease(
         await releaseArtifacts(directory),
         publisher,
         github,
-        `v${version}`,
+        tag,
+      );
+      const { id } = await publisher._release.value;
+      /** @type {import("./release-assets.mjs").ReleaseManifest} */
+      const manifest = {
+        owner: publish.owner,
+        repo: publish.repo,
+        tag,
+        release: id,
+        platform: process.platform === "darwin" ? "macos" : "linux",
+        assets,
+      };
+      await writeFile(
+        join(output, releaseManifestFilename),
+        `${JSON.stringify(manifest, null, 2)}\n`,
       );
     }
     return 0;

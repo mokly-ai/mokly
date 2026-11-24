@@ -10,10 +10,10 @@ import {
 
 test("the packaged smoke finds electron-builder's architecture-specific artifacts", () => {
   const files = [
-    "Mokly-0.1.0-alpha.1-mac-x64.zip",
-    "Mokly-0.1.0-alpha.1-mac-arm64.zip",
-    "Mokly-0.1.0-alpha.1-linux-x86_64.AppImage",
-    "Mokly-0.1.0-alpha.1-linux-amd64.deb",
+    "Mokly-mac-x64.zip",
+    "Mokly-mac-arm64.zip",
+    "Mokly-linux-x86_64.AppImage",
+    "Mokly-linux-amd64.deb",
   ];
   assert.equal(packageArtifact(files, "darwin"), files[1]);
   assert.equal(packageArtifact(files, "linux"), files[2]);

@@ -160,20 +160,20 @@ The protocol docs, the README files, the runbooks and the follow-up items
 state the new release contract: drafts, the promotion, the fixed names and
 the updater that follows the latest release.
 
-- [ ] `docs/protocol/cloud/desktop-distribution.md`: replace the pre-release
+- [x] `docs/protocol/cloud/desktop-distribution.md`: replace the pre-release
       rule with Decision 1, list the fixed asset names, describe the draft,
       the promotion and its check, and the updater that follows the latest
       release.
-- [ ] `docs/protocol/cloud/desktop-app.md`: remove "until then the shell
+- [x] `docs/protocol/cloud/desktop-app.md`: remove "until then the shell
       publishes pre-releases only". Keep the page at 250 lines or fewer.
-- [ ] `docs/protocol/cloud/site.md`: remove the pre-release reason of the
+- [x] `docs/protocol/cloud/site.md`: remove the pre-release reason of the
       current release-list link. Keep the link.
-- [ ] `docs/development/cloud.md`, `packages/desktop/README.md` and
+- [x] `docs/development/cloud.md`, `packages/desktop/README.md` and
       `docs/ops/secrets.md`: describe the draft, the promotion and the token
       use.
-- [ ] `docs/mockups/src/fixtures/site.ts`: remove the pre-release reason
+- [x] `docs/mockups/src/fixtures/site.ts`: remove the pre-release reason
       from the comment.
-- [ ] Update the follow-up items that name pre-releases or the old release
+- [x] Update the follow-up items that name pre-releases or the old release
       flow. Delete
       `plans/follow-ups/desktop-linux-release-runs-after-macos-failure.md`.
 
@@ -184,14 +184,14 @@ Depends on: none
 The packaging configuration, the release scripts, the workflow, the updater
 and their tests implement the design.
 
-- [ ] `packages/desktop/electron-builder.yml`: version-free `artifactName`
+- [x] `packages/desktop/electron-builder.yml`: version-free `artifactName`
       and `releaseType: draft`.
-- [ ] Release scripts: the draft check by id, the manifest, the promotion
+- [x] Release scripts: the draft check by id, the manifest, the promotion
       script and the split of the GitHub client from the publisher.
-- [ ] `.github/workflows/desktop-release.yml`: the manifest upload and the
+- [x] `.github/workflows/desktop-release.yml`: the manifest upload and the
       `promote` job.
-- [ ] `packages/desktop/src/updates.ts`: `allowPrerelease = false`.
-- [ ] Tests next to the changed code, and
+- [x] `packages/desktop/src/updates.ts`: `allowPrerelease = false`.
+- [x] Tests next to the changed code, and
       `xtask/tests/cli/desktop_release_workflow_tests.rs`.
 
 ## Milestone 3: Verification, commit, review, and pull request

@@ -86,9 +86,8 @@ ownership reaches the origin router and the reserved workspace names.
 Getting started guide, from every place that shows it: the header, the menu,
 the home and the Open source plan of the pricing page. The home's **Download
 for Mac** opens `https://github.com/mokly-ai/mokly-desktop/releases`, the
-release list of the desktop app, because every desktop release is still a
-pre-release. **GitHub** and **View on GitHub** open the public
-`https://github.com/mokly-ai/mokly` repository.
+release list of the desktop app. **GitHub** and **View on GitHub** open the
+public `https://github.com/mokly-ai/mokly` repository.
 
 The site links one application route. **Create an account** and **Start a
 7-day trial** on the pricing page link to the relative path `/sign-up`. The

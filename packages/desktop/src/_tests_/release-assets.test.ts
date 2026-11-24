@@ -7,8 +7,16 @@ import {
 } from "../../scripts/release-assets.mjs";
 
 const artifacts = [
-  { name: "Mokly.AppImage", file: "/build/Mokly.AppImage", size: 12 },
-  { name: "Mokly.deb", file: "/build/Mokly.deb", size: 34 },
+  {
+    name: "Mokly-linux-x86_64.AppImage",
+    file: "/build/Mokly-linux-x86_64.AppImage",
+    size: 12,
+  },
+  {
+    name: "Mokly-linux-amd64.deb",
+    file: "/build/Mokly-linux-amd64.deb",
+    size: 34,
+  },
   { name: "latest-linux.yml", file: "/build/latest-linux.yml", size: 56 },
 ];
 const remoteAssets = () =>
@@ -20,12 +28,15 @@ function fixture(
     after?: ReturnType<typeof remoteAssets>;
     skipped?: string[];
     release?: { id: number } | null;
+    remote?: { draft?: boolean; tag_name?: string };
   } = {},
 ) {
   const calls: string[] = [];
   const publisher = {
     _release: {
-      value: Promise.resolve(options.release === null ? null : { id: 7 }),
+      value: Promise.resolve(
+        options.release === undefined ? { id: 7 } : options.release,
+      ),
     },
     uploaded: new Set<string>(),
     async upload({ file }: { file: string }) {
@@ -37,9 +48,15 @@ function fixture(
   };
   let reads = 0;
   const github = {
-    async release(tag: string) {
-      calls.push(`release ${tag}`);
-      return { id: 7 };
+    async release(id: number) {
+      calls.push(`release ${id}`);
+      return {
+        id: 7,
+        draft: true,
+        prerelease: false,
+        tag_name: "v1.2.3",
+        ...options.remote,
+      };
     },
     async assets(id: number) {
       calls.push(`assets ${id}`);
@@ -55,9 +72,9 @@ test("release inventory includes packages, blockmaps and update metadata only", 
   const names = [
     "Mokly-mac-arm64.dmg",
     "Mokly-mac-x64.zip",
-    "Mokly.AppImage",
-    "Mokly.deb",
-    "Mokly.dmg.blockmap",
+    "Mokly-linux-x86_64.AppImage",
+    "Mokly-linux-amd64.deb",
+    "Mokly-mac-arm64.dmg.blockmap",
     "latest-mac.yml",
     "latest-linux.yml",
     "builder-debug.yml",
@@ -92,22 +109,37 @@ test("release inventory includes packages, blockmaps and update metadata only", 
   );
 });
 
-test("a complete release checks every uploaded file after publishing", async () => {
+test("a complete draft is checked by id and returns the verified manifest entries", async () => {
   const { calls, publisher, github } = fixture();
-  await publishRelease(artifacts, publisher, github, "v1.2.3");
+  const entries = await publishRelease(artifacts, publisher, github, "v1.2.3");
   assert.deepEqual(calls, [
     "assets 7",
     ...artifacts.map((asset) => `upload ${asset.file}`),
-    "release v1.2.3",
+    "release 7",
     "assets 7",
   ]);
+  assert.deepEqual(entries, [
+    { name: "Mokly-linux-x86_64.AppImage", size: 12 },
+    { name: "Mokly-linux-amd64.deb", size: 34 },
+    { name: "latest-linux.yml", size: 56 },
+  ]);
+});
+
+test("the final upload check rejects a published release or a different tag", async () => {
+  for (const remote of [{ draft: false }, { tag_name: "v1.2.4" }]) {
+    const { publisher, github } = fixture({ remote });
+    await assert.rejects(
+      publishRelease(artifacts, publisher, github, "v1.2.3"),
+      /Release 7 is not a draft with tag v1\.2\.3/,
+    );
+  }
 });
 
 test("a skipped publisher fails even if matching assets appear remotely", async () => {
   const { publisher, github } = fixture({ skipped: [artifacts[1].name] });
   await assert.rejects(
     publishRelease(artifacts, publisher, github, "v1.2.3"),
-    /Mokly.deb.*new package version/s,
+    /Mokly-linux-amd64\.deb.*new package version/s,
   );
 });
 
@@ -124,16 +156,16 @@ test("a partial, truncated or unfinished release fails", async () => {
     const { publisher, github } = fixture({ after });
     await assert.rejects(
       publishRelease(artifacts, publisher, github, "v1.2.3"),
-      /Mokly.AppImage.*new package version/s,
+      /Mokly-linux-x86_64\.AppImage.*new package version/s,
     );
   }
 });
 
-test("a delayed publisher skip fails before uploads", async () => {
+test("a publisher skip fails before uploads", async () => {
   const { calls, publisher, github } = fixture({ release: null });
   await assert.rejects(
     publishRelease(artifacts, publisher, github, "v1.2.3"),
-    /skipped.*Delayed recovery needs a new package version/s,
+    /skipped.*new package version/s,
   );
   assert.deepEqual(calls, []);
 });

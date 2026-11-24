@@ -71,6 +71,7 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
     assert_eq!(source["permissions"], json!({"contents": "read"}));
     let package = &source["jobs"]["package"];
     let release = &source["jobs"]["release"];
+    let promote = &source["jobs"]["promote"];
     assert_eq!(
         package["if"],
         "vars.MKC_CLOUD_CUTOVER_ENABLED == 'true' && (github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')))"
@@ -82,8 +83,19 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
     assert_eq!(package["env"]["MKC_BUILD_SHA"], "${{ github.sha }}");
     assert_eq!(release["env"]["MKC_BUILD_SHA"], "${{ inputs.ref }}");
     assert_eq!(release["strategy"]["max-parallel"], 1);
-    for job in [package, release] {
+    for job in [package, release, promote] {
         assert_eq!(job["permissions"], json!({"contents": "read"}));
+        for step in steps(job) {
+            if step["uses"]
+                .as_str()
+                .is_some_and(|action| action.contains("checkout@"))
+            {
+                assert_eq!(step["with"]["persist-credentials"], false);
+            }
+            assert!(!step["run"].as_str().unwrap_or_default().contains("${{"));
+        }
+    }
+    for job in [package, release] {
         assert_eq!(job["runs-on"], "${{ matrix.runner }}");
         assert_eq!(job["strategy"]["fail-fast"], false);
         assert_eq!(
@@ -104,15 +116,6 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
             .unwrap();
         assert_eq!(node["with"]["node-version-file"], ".nvmrc");
         assert_eq!(node["with"]["cache-dependency-path"], "package-lock.json");
-        for step in steps(job) {
-            if step["uses"]
-                .as_str()
-                .is_some_and(|action| action.contains("checkout@"))
-            {
-                assert_eq!(step["with"]["persist-credentials"], false);
-            }
-            assert!(!step["run"].as_str().unwrap_or_default().contains("${{"));
-        }
         assert!(
             command_index(job, "npm install --global npm@11.21.0") < command_index(job, "npm ci")
         );
@@ -139,7 +142,7 @@ fn desktop_release_publisher_uses_the_updaters_public_version_tag() {
             "provider": "github",
             "owner": "mokly-ai",
             "repo": "mokly-desktop",
-            "releaseType": "prerelease",
+            "releaseType": "draft",
             "tagNamePrefix": "v"
         })
     );
@@ -211,4 +214,16 @@ fn desktop_preview_smokes_the_packages_before_upload_without_any_secret() {
             "node packages/desktop/scripts/package.mjs release"
         );
     }
+    let promote = &source["jobs"]["promote"];
+    for job in [release, promote] {
+        assert_eq!(job["environment"], "desktop-release");
+    }
+    let promotion = command_index(promote, "scripts/release-promote.mjs");
+    let mut promote = promote.clone();
+    let token = promote["steps"][promotion]["env"]
+        .as_object_mut()
+        .unwrap()
+        .remove("GH_TOKEN");
+    assert_eq!(token, Some(json!("${{ secrets.DESKTOP_RELEASES_TOKEN }}")));
+    assert!(!promote.to_string().contains("secrets."));
 }

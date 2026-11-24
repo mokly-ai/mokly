@@ -13,7 +13,7 @@ browser app.
 - Keep window bounds and the Chromium session across launches.
 - Keep the native Mac window buttons centred in the app's top bar at each
   page zoom.
-- Update release builds from the public pre-release feed.
+- Update release builds from the latest release of the public feed.
 
 ## What This Package Does
 
@@ -22,7 +22,8 @@ addresses and supplies the platform menu. It contains no product screen,
 preload, renderer bridge or viewer implementation. Electron is pinned to
 44.11.3, with Chromium 152 and Node 24.22.2. The package's exact pins are in
 [`package.json`](./package.json). The builder and the updater use the public
-`mokly-ai/mokly-desktop` GitHub feed, including pre-releases.
+`mokly-ai/mokly-desktop` GitHub feed. The updater follows its latest release
+and takes no pre-release or draft.
 Only release builds turn the updater on. Development, local builds and
 pull-request packages keep it off, and their **Check for updates** item is
 disabled. On macOS the ready dialog waits until the macOS update framework
@@ -144,7 +145,10 @@ context excludes the desktop bundle, release output and test runtime.
 
 [The release workflow](../../.github/workflows/desktop-release.yml) packages
 macOS arm64 and x64 as DMG and ZIP, and Linux x64 as AppImage and DEB. It uses
-`electron-builder.yml`; the Linux executable is `mokly`.
+`electron-builder.yml`; the Linux executable is `mokly`. Package names hold no
+version, for example `Mokly-mac-arm64.dmg`.
+[Latest release](../../docs/protocol/cloud/desktop-distribution.md#latest-release)
+lists the fixed names.
 
 The app icon comes from `build/icon.svg`. `build/icons/` holds its renderings
 at the freedesktop sizes from 16 to 512 px and the 1024 px master. macOS
@@ -173,10 +177,11 @@ and `CHANGELOG.md`, and creates the tag `desktop-v<version>` on the merge
 commit. [The release workflow](../../.github/workflows/release.yml) then checks
 that the tag names that commit, and calls `desktop-release.yml` with the tag and
 the commit. That job runs in the `desktop-release` environment, builds for
-production with the updater on, signs and notarizes on macOS, and publishes one
-pre-release to `mokly-ai/mokly-desktop`. That public release uses `v<version>`,
+production with the updater on, signs and notarizes on macOS, and uploads to
+one draft release of `mokly-ai/mokly-desktop`. The draft uses `v<version>`,
 which matches the updater's release-page address. Both platform publishers run
-in sequence. Manual dispatch runs preview packaging only.
+in sequence. The `promote` job then checks the complete draft and makes it the
+latest release. Manual dispatch runs preview packaging only.
 
 When the tag check fails, move the tag to the release commit that the error
 names, then rerun the failed jobs:
@@ -187,14 +192,34 @@ gh run rerun RUN_ID --failed
 ```
 
 Release packaging builds into a fresh directory with publishing off, then
-uses the pinned GitHub publisher through an append-only upload hook. It keeps
-the publisher's two-hour limit. It fails on an existing asset name, a skipped
-upload or any built file missing from the final GitHub asset list. The check
-also requires the uploaded size and completed state. Published assets are
-never replaced or deleted; `EP_GH_IGNORE_TIME` stays disabled. Rerun the failed
-jobs when nothing was uploaded. After a partial upload, release a new version
-through the next release pull request. Do not delete assets or rerun an old
-release to repair it.
+uses the pinned GitHub publisher through an append-only upload hook. The first
+platform creates the draft `v<version>`, and the second reuses it. The
+publisher fails when a release that is not a draft already has the tag. It
+removes `EP_GH_IGNORE_TIME` from its environment. It also removes
+`EP_PRE_RELEASE` and `EP_PRELEASE`, because either would make the draft a
+public pre-release before the check.
+
+A platform job fails on an existing asset name, a skipped upload or any built
+file missing from the asset list of the draft. The check also requires that
+the release is still a draft with that tag, and the uploaded size and
+completed state of each file. Each platform job then uploads a manifest of the
+release, the tag, and the names and sizes that it checked, as the workflow
+artifact `desktop-release-macos` or `desktop-release-linux`. Uploaded assets
+are never replaced or deleted.
+
+The `promote` job needs both platform jobs. It runs in the `desktop-release`
+environment, receives only `DESKTOP_RELEASES_TOKEN` as `GH_TOKEN`, and installs
+no npm package. It reads both manifest artifacts. It then requires one
+release, the tag `v<version>` of `package.json`, exactly the fixed names of
+both platforms, each recorded size and the `uploaded` state. It makes the
+draft a full release marked latest, then checks that GitHub's latest release
+has the same id. When the release is already full, it changes nothing and
+checks the latest mark again.
+
+Rerun the failed jobs when the failed platform uploaded nothing. The rerun also
+runs the skipped `promote` job. After a partial upload, the draft never becomes
+latest. Release a new version through the next release pull request. Do not
+delete assets or rerun an old release to repair it.
 
 Both modes derive origins from `MKC_DOMAIN` and `MKC_CATALOGUE_BASE_DOMAIN`
 repository variables through the deployment domain helpers. The release
@@ -239,11 +264,19 @@ The fallback needs the deployed app's public metadata, but no API or secret.
 - [App icon source](./build/icon.svg) and [icon renderer](./scripts/icon.mjs)
 - [Release inputs](./scripts/release-environment.py), [packaging](./scripts/package.mjs)
   and [packaged launch](./scripts/packaged-smoke.mjs)
-- [Release asset checks](./scripts/release-assets.mjs) and
-  [append-only publisher](./scripts/release-github.mjs)
+- [Release asset checks](./scripts/release-assets.mjs): the check of each
+  platform's built files against the draft.
+- [Append-only publisher](./scripts/release-publisher.mjs): the pinned GitHub
+  publisher with an upload hook that only adds assets.
+- [Promotion check](./scripts/release-promote.mjs): the `promote` job's check
+  of the complete draft, its promotion and the latest check.
+- [GitHub client](./scripts/release-github.mjs): reads, append-only asset
+  uploads and the one release promotion. It imports no npm package, and it
+  has no operation that deletes or changes an asset.
 
 ### Related Docs
 
 - [Desktop contract](../../docs/protocol/cloud/desktop-app.md)
+- [Desktop distribution](../../docs/protocol/cloud/desktop-distribution.md)
 - [App npm workspace](../app/README.md)
 - [Repository verification](../../docs/protocol/cloud/repository-verification.md)

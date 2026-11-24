@@ -1,0 +1,31 @@
+# First latest desktop release is not proven
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Post-merge task.
+- **Added:** 2026-11-24, from the post-merge task of the deleted plan `plans/desktop-full-latest-releases.md`, on the branch `calummoore/desktop-releases-become-latest-releases-clkn`.
+- **Location:** `.github/workflows/desktop-release.yml`, the `release` and `promote` jobs. `packages/desktop/scripts/release-promote.mjs`. `packages/desktop/src/updates.ts`. The sections "Latest Release" and "Drafts And Promotion" of `docs/protocol/cloud/desktop-distribution.md`.
+- **Reason:** Only a real desktop release runs the draft, the promotion and the latest mark, and it runs only after the merge.
+
+- **Terms:**
+  - **Draft:** A GitHub release that only repository collaborators can see. It is not in the release feed and is never GitHub's latest release.
+  - **Promotion:** The `promote` job. It checks the complete assets of both platforms, then makes the draft a full release that GitHub marks as latest.
+  - **Fixed latest address:** `https://github.com/mokly-ai/mokly-desktop/releases/latest/download/{name}`, where `{name}` is an asset name without a version, such as `Mokly-mac-arm64.dmg`.
+- **Background:**
+  - On 2026-11-24 the owner chose full desktop releases. Each release is created as a draft. Both platform jobs fill the same draft. The promotion makes it the latest release only after the complete asset check. A later change adds a download page on mokly.ai that links the fixed latest addresses.
+  - The installer names hold no version since the same change. The fixed names are `Mokly-mac-arm64.dmg`, `Mokly-mac-x64.dmg`, `Mokly-mac-arm64.zip`, `Mokly-mac-x64.zip`, the four matching `.blockmap` files, `latest-mac.yml`, `Mokly-linux-x86_64.AppImage`, `Mokly-linux-amd64.deb` and `latest-linux.yml`.
+  - Unit tests prove the draft check, the promotion check and the GitHub client with test doubles. The pull request packaging job proves the built file names. No test calls GitHub.
+  - electron-publish 26.18.0 returns a matching draft from the release list before any other check. So the Linux job should reuse the draft that the macOS job created. Only a real release proves it.
+  - Before the change every release was a pre-release, and `GET https://api.github.com/repos/mokly-ai/mokly-desktop/releases/latest` returned 404. The newest release was `v0.1.0`, with versioned names such as `Mokly-0.1.0-mac-arm64.dmg`.
+  - New builds set `allowPrerelease = false`. electron-updater then reads `https://github.com/mokly-ai/mokly-desktop/releases/latest`. Installed `0.1.0` apps keep `allowPrerelease = true`. With a version that has no pre-release part, they take the first entry of `releases.atom`. That feed listed the newest published release first on 2026-11-24. A promoted draft gets a new publish time, so it should be the first entry.
+  - electron-updater 6.8.11 builds the old blockmap address from the new file address. It replaces the new version with the old version. From `0.1.0` that address names a file that does not exist, such as `v0.1.0/Mokly-mac-arm64.zip.blockmap`. The 404 makes the updater fall back to a full download.
+  - `DESKTOP_RELEASES_TOKEN` is a fine-grained token with Contents write on `mokly-ai/mokly-desktop` only. GitHub's release update endpoint needs Contents write, so the promotion needs no new scope.
+- **Task:** After the first desktop release with version-free names, check each result below and record it with its date.
+  - The release run passed **Release desktop (macos)**, **Release desktop (linux)** and **Promote desktop release**.
+  - The Linux job reused the draft of the macOS job. One release has the tag, and it holds all twelve fixed names.
+  - `gh api repos/mokly-ai/mokly-desktop/releases/latest --jq .tag_name` returns the new tag.
+  - `curl -sIL https://github.com/mokly-ai/mokly-desktop/releases/latest/download/Mokly-mac-arm64.dmg` ends with HTTP 200. Check each other fixed name the same way.
+  - An installed `0.1.0` on macOS finds the new release with **Check for updates**, downloads it in full and installs it.
+  - When a check fails, record the run, the failed job and its log, and open a fix.
+- **Impact if no action:** A defect in the promotion can leave every release a draft, so the future download page links break. A defect in the updater path can strand installed `0.1.0` apps.
+- **Needs:** The first desktop release after the merge, and a Mac with `0.1.0` installed.
+- **Done when:** Each check of the task has a dated result, and each failure has a fix pull request.

@@ -1,10 +1,32 @@
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
+/** @typedef {{name: string, size: number}} ReleaseAsset */
+/** @typedef {{owner: string, repo: string, tag: string, release: number, platform: "macos" | "linux", assets: ReleaseAsset[]}} ReleaseManifest */
+
+export const releaseManifestFilename = "desktop-release-manifest.json";
+
 /** Every failed publish keeps existing assets and gives the same recovery path. */
 export function releaseFailure(reason) {
   return new Error(
-    `${reason}. Published assets are never replaced or deleted. Delayed recovery needs a new package version.`,
+    `${reason}. Uploaded assets are never replaced or deleted. To recover from a partial upload, use a new package version.`,
+  );
+}
+
+/**
+ * @param {unknown} asset
+ * @returns {asset is ReleaseAsset}
+ */
+export function isReleaseAsset(asset) {
+  return (
+    asset !== null &&
+    typeof asset === "object" &&
+    "name" in asset &&
+    typeof asset.name === "string" &&
+    "size" in asset &&
+    typeof asset.size === "number" &&
+    Number.isSafeInteger(asset.size) &&
+    asset.size >= 0
   );
 }
 
@@ -31,10 +53,11 @@ export async function releaseArtifacts(directory, io = { readdir, stat }) {
 /**
  * Check both the publisher's receipts and GitHub's final inventory. A publisher
  * that resolves without uploading must never turn a partial release green.
- * @param {{name: string, file: string, size: number}[]} artifacts
+ * @param {(ReleaseAsset & {file: string})[]} artifacts
  * @param {{_release: {value: Promise<{id: number} | null>}, uploaded: Set<string>, upload: (task: {file: string, arch: null}) => Promise<unknown>}} publisher
- * @param {{release: (tag: string) => Promise<{id: number}>, assets: (id: number) => Promise<{name: string, size: number, state: string}[]>}} github
+ * @param {{release: (id: number) => Promise<{id: number, draft: boolean, tag_name: string}>, assets: (id: number) => Promise<(ReleaseAsset & {state: string})[]>}} github
  * @param {string} tag
+ * @returns {Promise<ReleaseAsset[]>}
  */
 export async function publishRelease(artifacts, publisher, github, tag) {
   const release = await publisher._release.value;
@@ -52,8 +75,16 @@ export async function publishRelease(artifacts, publisher, github, tag) {
   for (const artifact of artifacts)
     await publisher.upload({ file: artifact.file, arch: null });
 
-  const remote = await github.release(tag);
-  const assets = await github.assets(remote.id);
+  const remote = await github.release(release.id);
+  if (
+    remote.id !== release.id ||
+    remote.draft !== true ||
+    remote.tag_name !== tag
+  )
+    throw releaseFailure(
+      `Release ${release.id} is not a draft with tag ${tag}`,
+    );
+  const assets = await github.assets(release.id);
   const missing = artifacts.filter(
     (file) =>
       !publisher.uploaded.has(file.name) ||
@@ -64,8 +95,9 @@ export async function publishRelease(artifacts, publisher, github, tag) {
           asset.state === "uploaded",
       ),
   );
-  if (remote.id !== release.id || missing.length > 0)
+  if (missing.length > 0)
     throw releaseFailure(
-      `Release upload incomplete: ${missing.map((file) => file.name).join(", ") || tag}`,
+      `Release upload incomplete: ${missing.map((file) => file.name).join(", ")}`,
     );
+  return artifacts.map(({ name, size }) => ({ name, size }));
 }
