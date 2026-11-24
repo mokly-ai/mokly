@@ -14,10 +14,15 @@ use crate::runtime::Runtime;
 use crate::transaction::DatabaseAttempt;
 
 const DEFAULT_POOL_SIZE: u32 = 8;
+/// Sessions an idle pool keeps open, so idle pods leave slots for busy ones.
+const IDLE_POOL_SIZE: u32 = 1;
+/// Time after which a session above the idle size closes.
+const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Composition-root factory for a shared store interface.
 pub trait StoreFactory {
-    /// Connect with a bounded pool and a five-second acquisition timeout.
+    /// Connect with a bounded pool that opens sessions on demand and a
+    /// five-second acquisition timeout.
     fn connect(&self, database_url: &str) -> Result<Arc<dyn Store>>;
 }
 
@@ -36,6 +41,8 @@ impl StoreFactory for PgStoreFactory {
     fn connect(&self, database_url: &str) -> Result<Arc<dyn Store>> {
         let pool = Pool::builder()
             .max_size(DEFAULT_POOL_SIZE)
+            .min_idle(Some(IDLE_POOL_SIZE))
+            .idle_timeout(Some(IDLE_TIMEOUT))
             .connection_timeout(Duration::from_secs(5))
             .build(ConnectionManager::new(database_url))
             .context("connect platform store")?;

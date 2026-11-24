@@ -1,0 +1,33 @@
+# Derive pool sizes from one connection limit
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from branch `calummoore/gcp-project-cost-qz5o`, the wider fix of review finding 1.
+- **Location:** `infra/terraform/modules/sql/main.tf:27`, `infra/helm/mokly-cloud/values.yaml:100`, `crates/mkc-store-pg/src/connection.rs:16`.
+- **Reason:** The fix touches Terraform, the Helm chart, three binaries and the deploy goldens, so it needs its own branch after the tier change.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **`max_connections`:** the PostgreSQL limit on simultaneous client sessions. Cloud SQL sets its default from the instance memory.
+  - **Store pool:** the r2d2 connection pool that `PgStoreFactory::connect` in `crates/mkc-store-pg/src/connection.rs` creates for each API pod, catalogue pod and maintenance job.
+  - **Replica ceiling:** the `scaling.maxReplicas` value in `infra/helm/mokly-cloud/values.yaml`, the highest pod count that the autoscaler reaches.
+- **Background:**
+  - Both stable Cloud SQL instances, production and main-preview, use the tier `db-custom-1-3840`: 1 vCPU and 3.75 GB. The user chose this tier for production on 2026-11-24, to match main-preview and save cost.
+  - For 3.75 GB to 6 GB instances, the Cloud SQL default `max_connections` is 100. PostgreSQL keeps 3 of them for superusers, so the workload roles get about 97. No Terraform sets a `max_connections` flag. Before 2026-11-24, production used `db-custom-2-7680`, whose default limit is 400.
+  - The chart scales `api`, `app` and `catalogue` from 2 to 6 replicas with `maxSurge: 1`. `app` uses no database.
+  - Each store pool has a maximum of 8 connections. Since 2026-11-24, an idle pool keeps 1 connection and closes the others after 60 seconds idle. Each API pod also holds 1 readiness connection in a separate single-connection pool (`crates/mkc-db/src/migration.rs:86`).
+  - Jobs: the migration hook uses 1 connection. `publication-check-status` and `billing-delivery-status` run every 5 minutes, with up to 8 connections each. `auth-prune` runs every hour, and two jobs run each day, up to 8 connections each.
+- **Problem:** When every pool is busy, demand passes the limit. At 6 API and 6 catalogue replicas, the pools and readiness connections reach 102. A rolling update reaches 119, and the two five-minute jobs bring it to about 135. The pool size lives in Rust and the limit follows the Terraform tier, so nothing keeps them in step.
+- **Impact if no action:** Only at high load, with most pods saturated, requests wait up to 5 seconds for a connection and then fail. A later tier change can lower the limit again without notice.
+- **Root question:** How do the connections that the pods and jobs of an environment can hold stay within that environment's database limit, at every replica count that autoscaling and rollouts reach?
+- **Options:**
+  - **A.** Lower the database replica ceilings to about 4. The shared `scaling` block would also limit `app`, which uses no database, unless the chart gets a ceiling for each workload. This reduces peak capacity. Effort: Medium.
+  - **B.** Set a `max_connections` flag of about 150 on both instances, in `infra/terraform/modules/sql/main.tf`. Each idle connection costs about 2 MB to 3 MB of the 3.75 GB. A flag change restarts the instance once. Effort: Small.
+  - **C.** Keep one connection limit for each environment in a checked-in file that Terraform and `infra/helm/render-values.py` both read, as `render-values.py` already reads `infra/toolchains.json`. Terraform sets `max_connections` from it. The chart passes each workload and each job a pool size computed from the limit, the replica ceiling, the surge and a reserve. The three binaries read that pool size. The flag change restarts the instance once. Effort: Large.
+  - **D.** Run PgBouncer in the cluster in transaction mode, with a fixed server pool below the limit. Migrations need a direct session, because they use `pg_advisory_lock`. The catalogue's read-only role needs its own pooler. Effort: Large.
+- **Left out:** A larger tier breaks the user decision of 2026-11-24. Cloud SQL Managed Connection Pooling needs Enterprise Plus, which also breaks that decision. `maxSurge: 0` alone does not reach the goal, because 102 still passes about 97. A check that only detects an overrun is a new gate, and C prevents the case.
+- **Wider fix:** C. A tier change or a ceiling change then resizes the pools, so the mismatch cannot return.
+- **Previous examples:** Main-preview has used this tier with the same ceilings and pools since PR #350, with no recorded incident.
+- **Recommendation:** C. It keeps the decided tier and the ceilings, and it removes the class. B is a Small step that covers the saturated case now, if load grows before C lands.
+- **Action:** fix after merge, apply C, because it reaches Terraform, the chart and three binaries, outside the tier change.

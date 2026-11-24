@@ -15,7 +15,8 @@ transaction isolation and retry policy of the `Store` modes.
 ## What This Crate Does
 
 `PgStoreFactory::connect` opens a bounded connection pool and returns the
-store. `Store::transaction` runs the callback serializable and retries a
+store. The pool opens connections on demand, up to eight, and keeps one open
+when idle. `Store::transaction` runs the callback serializable and retries a
 serialization or uniqueness failure with exponential backoff and jitter;
 `Store::read` runs read-only at READ COMMITTED; `Store::autocommit` runs one
 statement without a transaction envelope. A `Decision::Rollback` commits
@@ -174,7 +175,7 @@ and provider calls stay in the service.
 
 ### Key Code
 
-- [connection.rs](./src/connection.rs) — `PgStoreFactory` and the pool of eight connections with a five-second acquisition wait; it implements the transaction, read and autocommit modes of `Store`.
+- [connection.rs](./src/connection.rs) — `PgStoreFactory` and the on-demand pool of up to eight connections with a five-second acquisition wait; it implements the transaction, read and autocommit modes of `Store`.
 - [transaction.rs](./src/transaction.rs) — one attempt: serializable for writes, READ COMMITTED read-only for reads; a `Decision::Rollback` is not an error, and a query error rolls back with its source kept.
 - [retry.rs](./src/retry.rs) — `Backoff`, eight attempts on serialization and uniqueness failures with base delays 5, 10, 20, 40, 80, 160 and 250 ms plus uniform jitter up to the delay.
 - [runtime.rs](./src/runtime.rs) — `Runtime`, the injected sleep and jitter the retry policy uses, and the native `SystemRuntime`.
