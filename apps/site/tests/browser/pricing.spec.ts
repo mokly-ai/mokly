@@ -1,11 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { PRICING_GROUPS } from "../../src/components/pricing/compare-rows.js";
-import {
-  APP_PATHS,
-  INSTALL_GUIDE_PATH,
-  SITE_PATHS,
-} from "../../src/navigation.js";
+import { APP_PATHS, SITE_PATHS } from "../../src/navigation.js";
 
 import { NARROW_WIDTH, openLargeText, scrollWidth } from "./large-text.js";
 
@@ -26,7 +22,7 @@ test("the plan actions and the docs link open their targets", async ({
   await page.goto(SITE_PATHS.pricing);
   const main = page.getByRole("main");
   for (const [name, href] of [
-    ["Get started", INSTALL_GUIDE_PATH],
+    ["Docs", SITE_PATHS.docs],
     ["Create an account", APP_PATHS.signUp],
     ["Start a 7-day trial", APP_PATHS.signUp],
     ["Read Plans and billing", "/docs/cloud/plans-and-billing/"],
@@ -41,6 +37,19 @@ test("the plan actions and the docs link open their targets", async ({
     page.getByRole("main").getByRole("heading", { level: 1 }),
   ).toHaveText("Plans and billing");
 });
+
+for (const name of ["Create an account", "Start a 7-day trial"]) {
+  test(`${name} opens the app's sign-up`, async ({ page }) => {
+    // The app serves the sign-up route, so the site preview checks that the
+    // press reaches the address, not the app's page.
+    await page.goto(SITE_PATHS.pricing);
+    await page
+      .getByRole("main")
+      .getByRole("link", { exact: true, name })
+      .click();
+    await expect(page).toHaveURL(new RegExp(`${APP_PATHS.signUp}$`));
+  });
+}
 
 test("the compare table keeps its table roles and reads each check and dash", async ({
   page,

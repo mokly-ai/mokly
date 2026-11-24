@@ -68,7 +68,7 @@ motion shows it at once.
 the second line `Your building blocks.`; body `Author locally with the
 open-source Mokly CLI. Keep your screens in Git and host the catalogue
 anywhere. The cloud adds hosting, review and the agent; it never owns the
-source.` Then **Get started →** and **View on GitHub**. The open-foundation
+source.` Then **Docs →** and **View on GitHub**. The open-foundation
 frame wires a demo screen's mockup source to the screen it renders, with the
 build in a terminal under the source. Four facts follow: `@mokly/mokly`,
 `MIT license`, `The CLI runs locally` and `Host the catalogue anywhere`. The

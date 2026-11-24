@@ -19,8 +19,8 @@ chrome and delivery. Product and account routes remain in `packages/app`.
 - Draw the home page's spread and demos of a fictional demo app as static
   components at build time.
 - Link every page's shared header to the public Mokly GitHub repository.
-  Link the main Get started of the header, the menu and the home hero, and
-  the Pricing page's cloud plan actions, to the app's `/sign-up`.
+  Link Get started in the header, the menu and the home hero, and the
+  Pricing page's cloud plan actions, to the app's `/sign-up`.
 - Produce a static site with no runtime API calls, cookies or third-party
   scripts. The footer's scheme control keeps the reader's choice in
   `localStorage`, and each page applies a kept choice before it first
@@ -150,8 +150,9 @@ The origin must be an absolute HTTP(S) origin without credentials, path, query o
 fragment. Explicit empty values fail the build. Get started in the header,
 the menu and the home hero uses the app's relative path `/sign-up`, as do the
 Pricing page's Create an account and Start a 7-day trial. The link check
-accepts that app path. Get started in the home's open foundation and the
-Pricing page's Open source plan uses the relative path `/docs/start/install/`.
+accepts that app path. Docs in the home's open foundation and the Pricing
+page's Open source plan uses the relative path `/docs/`, as the header's Docs
+does.
 [Marketing site](../../docs/protocol/cloud/marketing-site.md) names every link
 from the site to the app.
 
@@ -311,7 +312,7 @@ Pages project and attach the domain are in the
 
 ### Key Code
 
-- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the app's `/sign-up`, which the main Get started opens), `INSTALL_GUIDE_PATH` (the Install guide, which the CLI's Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
+- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the app's `/sign-up`, which Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
 - `scripts/generate-site-segments.ts` — derives the site's first segments from `src/navigation.ts` and writes or checks the Worker's committed `site-segments.ts` module (`site:routes` and `routes:check`).
 - `src/settings.ts` — reads `SITE_ORIGIN` once from the process environment and validates it.
 - `src/mokly-package.ts` — locates the installed `@mokly/mokly`, verifies its name and version, and keeps every package file read inside that root.

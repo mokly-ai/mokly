@@ -15,7 +15,7 @@ import { classNames } from "./class-names.js";
 import { SiteFrameLabel } from "./frame-label.js";
 import { SiteIcon } from "./icons.js";
 import { SiteSectionBox } from "./labels.js";
-import { INSTALL_GUIDE_SCREEN, SIGN_UP_SCREEN } from "./links.js";
+import { SIGN_UP_SCREEN, SITE_SCREENS } from "./links.js";
 import { SiteCursor } from "./people.js";
 import { TEAM_SEATS } from "./pricing-data.js";
 import { SiteSelection } from "./selection.js";
@@ -139,9 +139,9 @@ export function PricingPlans({ viewport }: { viewport: "mobile" | "desktop" }) {
             action={
               <MockLink
                 className="site-button site-button--secondary"
-                to={INSTALL_GUIDE_SCREEN}
+                to={SITE_SCREENS.docs}
               >
-                Get started <Arrow />
+                Docs <Arrow />
               </MockLink>
             }
             features={[

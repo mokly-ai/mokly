@@ -37,14 +37,23 @@
   - **B.** Change nothing. The release heading and the paragraph around each
     link name its target for a reader who reads in order. WCAG 2.4.9 is
     Level AAA. Effort: Small.
+  - **C.** Add a rule to the shared accessibility walk,
+    `apps/site/tests/browser/accessibility.ts`, which
+    `apps/site/tests/browser/pages.spec.ts` runs on every route: links on
+    one page with one accessible name open one target. Add the rule to
+    `docs/protocol/cloud/site-delivery.md`. It is a new gate, which needs
+    Cal's approval. These links fail it first. Effort: Large.
 - **Left out:** Fewer links, because each release needs its own details
   link.
-- **Wider fix:** The page-wide rule in
-  `plans/follow-ups/site-get-started-link-names.md`, option D: links on one
-  page with one accessible name open one target.
-- **Previous examples:** The two **Get started** names in
-  `plans/follow-ups/site-get-started-link-names.md`.
-- **Related:** `plans/follow-ups/site-get-started-link-names.md`, the same
-  class. Its option D would fail on these links first.
-- **Recommendation:** A. It names each target at a small cost.
+- **Wider fix:** C. It fails on every page where one name opens two
+  targets.
+- **Previous examples:** On 2026-11-24 the home and pricing pages had two
+  **Get started** links with different targets. Cal chose to rename the
+  link beside the open-source CLI to **Docs**, which opens the
+  documentation landing, the same page as the header's **Docs**.
+- **Related:** `plans/follow-ups/site-defect-classes-lack-site-wide-checks.md`
+  holds the other site-wide checks. On 2026-11-22 Cal chose to add no new
+  gate in the Canvas redesign, and C would join that list.
+- **Recommendation:** A. It names each target at a small cost. C best
+  protects the codebase.
 - **Action:** fix after merge, apply A.

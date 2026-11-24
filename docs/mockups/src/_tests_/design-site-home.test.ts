@@ -84,12 +84,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
     ]);
   });
 
-  test(`${viewport}: the open foundation closes with Get started, View on GitHub and the steps`, () => {
+  test(`${viewport}: the open foundation closes with Docs, View on GitHub and the steps`, () => {
     const { document } = siteDocument("design/site/home", viewport);
     const closing = only(document, "site-closing");
     assert.equal(attribute(closing, "id"), "foundation");
     assert.deepEqual(links(only(closing, "site-actions")), [
-      ["Get started →", "design/site/docs"],
+      ["Docs →", "design/site/docs"],
       ["View on GitHub", openSource.github],
     ]);
     assert.deepEqual(

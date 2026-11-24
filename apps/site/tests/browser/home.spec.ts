@@ -3,7 +3,6 @@ import { expect, test } from "@playwright/test";
 import {
   EXTERNAL_LINKS,
   GET_STARTED_PATH,
-  INSTALL_GUIDE_PATH,
   SITE_PATHS,
 } from "../../src/navigation.js";
 
@@ -45,8 +44,8 @@ test("the hero's Get started opens the app's sign-up", async ({ page }) => {
   await page.goto(SITE_PATHS.home);
   await expect(
     page.getByRole("main").getByRole("link", { name: "Get started" }),
-    "the home holds two Get started actions",
-  ).toHaveCount(2);
+    "the home holds one Get started action",
+  ).toHaveCount(1);
   const action = page
     .locator("#hero")
     .getByRole("link", { name: "Get started" });
@@ -55,19 +54,19 @@ test("the hero's Get started opens the app's sign-up", async ({ page }) => {
   await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
 });
 
-test("the open foundation's Get started opens the Install guide", async ({
+test("the open foundation's Docs opens the documentation landing", async ({
   page,
 }) => {
   await page.goto(SITE_PATHS.home);
   const action = page
     .locator("#foundation")
-    .getByRole("link", { name: "Get started" });
-  await expect(action).toHaveAttribute("href", INSTALL_GUIDE_PATH);
+    .getByRole("link", { name: "Docs" });
+  await expect(action).toHaveAttribute("href", SITE_PATHS.docs);
   await action.click();
-  await expect(page).toHaveURL(new RegExp(`${INSTALL_GUIDE_PATH}$`));
+  await expect(page).toHaveURL(new RegExp(`${SITE_PATHS.docs}$`));
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText("Install");
+  ).toHaveText("Getting started");
 });
 
 test("Download for Mac opens the desktop releases", async ({ page }) => {

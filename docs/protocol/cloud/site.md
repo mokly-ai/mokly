@@ -84,16 +84,18 @@ ownership reaches the origin router and the reserved workspace names.
 
 **Get started →** in the header, the menu and the home hero links to the app's
 relative path `/sign-up`, the cloud sign-up. Sending it to the Install guide
-was rejected, because the site's main call to action is a cloud account. **Get
-started →** beside the open-source CLI, in the home's open foundation and the
-Open source plan of the pricing page, links to the relative path
-`/docs/start/install/`, the first Getting started guide. The home's **Download
+was rejected, because the site's main call to action is a cloud account.
+**Docs →** beside the open-source CLI, in the home's open foundation and the
+Open source plan of the pricing page, links to the relative path `/docs/`, the
+documentation landing that the header's **Docs** opens. Naming it **Get
+started** was rejected, because each link name opens one destination. The
+home's **Download
 for Mac** opens `https://github.com/mokly-ai/mokly-desktop/releases`, the
 release list of the desktop app, because every desktop release is still a
 pre-release. **GitHub** and **View on GitHub** open the public
 `https://github.com/mokly-ai/mokly` repository.
 
-The site links one application route, `/sign-up`. The main **Get started →**,
+The site links one application route, `/sign-up`. **Get started →**,
 and **Create an account** and **Start a 7-day trial** on the pricing page, link
 to it. The site has no **Sign in** link. The site build fails on a link to a
 path that the site does not publish, unless [Site delivery](./site-delivery.md)

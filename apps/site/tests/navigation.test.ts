@@ -4,7 +4,6 @@ import test from "node:test";
 import {
   EXTERNAL_LINKS,
   GET_STARTED_PATH,
-  INSTALL_GUIDE_PATH,
   SITEMAP_PATHS,
   SITE_PATHS,
   currentPage,
@@ -35,11 +34,6 @@ test("the sitemap publishes every site route and nothing else", () => {
 
 test("Get started opens the app's sign-up", () => {
   assert.equal(GET_STARTED_PATH, "/sign-up");
-});
-
-test("the CLI's Get started opens the first Getting started guide", () => {
-  assert.equal(INSTALL_GUIDE_PATH, "/docs/start/install/");
-  assert.ok(isDocsRoute(INSTALL_GUIDE_PATH));
 });
 
 test("the public source link targets the Mokly repository", () => {

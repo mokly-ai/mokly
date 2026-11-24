@@ -1,18 +1,13 @@
 import { MockLink } from "@mokly/mokly";
 
 import { SiteIcon } from "./icons.js";
-import {
-  EXTERNAL_LINKS,
-  GET_STARTED_SCREEN,
-  INSTALL_GUIDE_SCREEN,
-} from "./links.js";
+import { EXTERNAL_LINKS, GET_STARTED_SCREEN, SITE_SCREENS } from "./links.js";
 
 /**
- * The home's action pair: the filled Get started and a secondary action.
- * The hero's Get started opens sign-up, and its secondary action is
- * Download for Mac, which opens the desktop releases. The open-foundation
- * closing's Get started opens the documentation, and its secondary action
- * is View on GitHub.
+ * The home's action pair: a filled action and a secondary action. The
+ * hero's Get started opens sign-up, and its secondary action is Download
+ * for Mac, which opens the desktop releases. The open-foundation closing's
+ * Docs opens the documentation, and its secondary action is View on GitHub.
  */
 export function SiteActions({
   secondary,
@@ -23,11 +18,9 @@ export function SiteActions({
     <div className="site-actions">
       <MockLink
         className="site-button site-button--primary"
-        to={
-          secondary === "download" ? GET_STARTED_SCREEN : INSTALL_GUIDE_SCREEN
-        }
+        to={secondary === "download" ? GET_STARTED_SCREEN : SITE_SCREENS.docs}
       >
-        Get started{" "}
+        {secondary === "download" ? "Get started" : "Docs"}{" "}
         <span aria-hidden="true" className="site-button-arrow">
           &#8594;
         </span>
