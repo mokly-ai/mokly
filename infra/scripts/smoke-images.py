@@ -105,8 +105,9 @@ def app_smoke(root, config, directory):
     assert "basePath" not in build, build
     prefix = ""
     catalogue = "https://*." + build["catalogueBaseDomain"]
+    api_socket = "wss://" + urlsplit(build["apiOrigin"]).netloc
     csp = (f"default-src 'self'; frame-src 'self' {build['appOrigin']} {build['apiOrigin']} {catalogue}; "
-           f"connect-src 'self' {build['appOrigin']} {build['apiOrigin']} {catalogue}; "
+           f"connect-src 'self' {build['appOrigin']} {build['apiOrigin']} {api_socket} {catalogue}; "
            f"img-src 'self' data: {catalogue}; font-src 'self' {catalogue}; "
            f"style-src 'self' 'unsafe-inline' {catalogue}; frame-ancestors 'none'")
     environment = dict(os.environ, PORT="18083", MKC_EXPECTED_REVISION=build["revision"])

@@ -77,6 +77,21 @@ spec:
     - { name: http, port: 80, targetPort: http }
 
 ---
+# Source: mokly-cloud/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-live
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "api-live"}'
+spec:
+  type: ClusterIP
+  selector: { app.kubernetes.io/name: api }
+  ports:
+    - { name: http, port: 80, targetPort: http }
+
+---
 # Source: mokly-cloud/templates/workloads.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -880,6 +895,12 @@ spec:
     - host: "api.example.invalid"
       http:
         paths:
+          - path: /v1/live/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: api-live
+                port: { name: http }
           - path: /*
             pathType: ImplementationSpecific
             backend:
@@ -955,6 +976,24 @@ spec:
   healthCheck:
     type: HTTP
     requestPath: "/_health"
+    port: 8080
+    checkIntervalSec: 10
+    timeoutSec: 5
+
+---
+# Source: mokly-cloud/templates/services.yaml
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: api-live
+spec:
+  securityPolicy:
+    name: "mkc-production"
+  timeoutSec: 3600
+  connectionDraining: { drainingTimeoutSec: 30 }
+  healthCheck:
+    type: HTTP
+    requestPath: "/v1/health"
     port: 8080
     checkIntervalSec: 10
     timeoutSec: 5

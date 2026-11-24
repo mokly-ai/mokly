@@ -164,7 +164,7 @@ def check(update=False):
                 assert "preview-sign-in" not in rendered
                 assert 'automountServiceAccountToken: true' not in rendered
                 assert 'helm.sh/hook-weight: "0"' in migration
-                for kind, count in (("SecretProviderClass", 2), ("BackendConfig", 3),
+                for kind, count in (("SecretProviderClass", 2), ("BackendConfig", 4),
                                     ("HorizontalPodAutoscaler", 3), ("PodDisruptionBudget", 3), ("Job", 1)):
                     assert rendered.count(f"\nkind: {kind}\n") == count, kind
                 assert 'securityPolicy:' in rendered

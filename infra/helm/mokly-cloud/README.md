@@ -70,6 +70,17 @@ user and group 999 with `fsGroup: 999`; `PGDATA` is a child of the PVC mount,
 and the socket and temporary directories are writable `emptyDir`s, so the
 entrypoint needs neither root nor a recursive chown.
 
+## Live Channel Routing
+
+In stable environments, the GCE Ingress sends `/v1/live/*` on the API host to
+the `api-live` Service. This Service targets the API pods on their `http`
+port. Its BackendConfig sets a 3,600-second timeout. The `api` Service uses
+a 30-second timeout for REST requests.
+
+In PR previews, the `mokly-cloud-live` Ingress sends `/v1/live/` requests on
+the API host to the `api` Service. It uses the `mkc-preview` ingress class and
+sets the read and send timeouts to 3,600 seconds.
+
 ## Preview Values And Origins
 
 `render-values.py preview-pr-N` supplies `environment: preview-pr`, integer
@@ -198,9 +209,10 @@ template change, review every generated diff, then rerun the checks.
 - `templates/postgres.yaml` — the namespace Postgres Service and StatefulSet, whose PVC `data-postgres-0` is retained on deletion and scale-down.
 - `templates/workloads.yaml` — the three Deployments; the namespace-mode API uses `Recreate`.
 - `templates/migration.yaml`, `templates/database-reset.yaml` and `templates/bootstrap.yaml` — the stable migration Job, the reset hook, and the service accounts and CSI classes.
-- `templates/ingress.yaml` and `templates/certificate.yaml` — the GCE Ingress for stable environments, the ingress-nginx hosts for PRs and `Certificate/catalogue-tls`.
+- `templates/ingress.yaml` and `templates/certificate.yaml` — the GCE paths, the PR Ingresses for regular and live requests, and `Certificate/catalogue-tls`.
 - `templates/network-policy.yaml`, `templates/network-preview.yaml` and `templates/_network.tpl` — the default-deny policies and their preview egress rules.
-- `templates/services.yaml`, `templates/scaling.yaml` and `templates/maintenance.yaml` — the Services and BackendConfigs, the stable autoscalers and disruption budgets, and the maintenance CronJobs.
+- `templates/services.yaml` — the Services and BackendConfigs, including `api-live` in stable environments.
+- `templates/scaling.yaml` and `templates/maintenance.yaml` — the stable autoscalers and disruption budgets, and the maintenance CronJobs.
 - `templates/preview-seed.yaml` — the suspended PR-only CronJob `preview-seed`, which uses the API's image, environment and secret volume. `infra/scripts/preview-seed-job.py` creates each seed Job from it.
 - `../tests/check.py` — the Helm lint, golden renders and rejected-input cases.
 - `../tests/build_contract.py` — the build settings, the API-only `e2b-api-key` entry and the rejected build configurations.

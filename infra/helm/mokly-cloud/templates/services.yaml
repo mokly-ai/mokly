@@ -1,22 +1,29 @@
-{{- range $name := list "api" "app" "catalogue" }}
-{{- $workload := index $.Values $name }}
+{{- $cloudsql := eq .Values.database.mode "cloudsql" }}
+{{- $services := list "api" "app" "catalogue" }}
+{{- if $cloudsql }}
+{{- $services = append $services "api-live" }}
+{{- end }}
+{{- range $name := $services }}
+{{- $live := eq $name "api-live" }}
+{{- $workloadName := ternary "api" $name $live }}
+{{- $workload := index $.Values $workloadName }}
 {{- if $workload.enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ $name }}
-  {{- if eq $.Values.database.mode "cloudsql" }}
+  {{- if $cloudsql }}
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
     cloud.google.com/backend-config: '{"default": "{{ $name }}"}'
   {{- end }}
 spec:
   type: ClusterIP
-  selector: { app.kubernetes.io/name: {{ $name }} }
+  selector: { app.kubernetes.io/name: {{ $workloadName }} }
   ports:
     - { name: http, port: {{ ternary $workload.port 80 (eq $.Values.database.mode "namespace") }}, targetPort: http }
-{{- if eq $.Values.database.mode "cloudsql" }}
+{{- if $cloudsql }}
 ---
 apiVersion: cloud.google.com/v1
 kind: BackendConfig
@@ -25,7 +32,7 @@ metadata:
 spec:
   securityPolicy:
     name: {{ printf "mkc-%s" (include "mkc.environment" $) | quote }}
-  timeoutSec: 30
+  timeoutSec: {{ ternary 3600 30 $live }}
   connectionDraining: { drainingTimeoutSec: 30 }
   healthCheck:
     type: HTTP

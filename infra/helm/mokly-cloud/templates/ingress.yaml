@@ -38,6 +38,14 @@ spec:
     - host: {{ printf "%s%s" (ternary "*." "" (eq $name "catalogue")) (include "mkc.host" (dict "root" $ "kind" $name)) | quote }}
       http:
         paths:
+          {{- if and (eq $name "api") (eq $.Values.database.mode "cloudsql") }}
+          - path: /v1/live/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: api-live
+                port: { name: http }
+          {{- end }}
           - path: {{ ternary "/" "/*" (eq $.Values.database.mode "namespace") }}
             pathType: {{ ternary "Prefix" "ImplementationSpecific" (eq $.Values.database.mode "namespace") }}
             backend:
@@ -46,4 +54,26 @@ spec:
                 port: { name: http }
     {{- end }}
     {{- end }}
+{{- if and (eq .Values.database.mode "namespace") .Values.api.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mokly-cloud-live
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: mkc-preview
+  rules:
+    - host: {{ include "mkc.host" (dict "root" . "kind" "api") | quote }}
+      http:
+        paths:
+          - path: /v1/live/
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port: { name: http }
+{{- end }}
 {{- end }}

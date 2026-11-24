@@ -136,8 +136,11 @@ the one below; the desktop shell sets the same policy for its pages, with
 `'self'` as the desktop origin:
 
 ```text
-default-src 'self'; frame-src 'self' <app origin> <API origin> https://*.<catalogue domain>; connect-src 'self' <app origin> <API origin> https://*.<catalogue domain>; img-src 'self' data: https://*.<catalogue domain>; font-src 'self' https://*.<catalogue domain>; style-src 'self' 'unsafe-inline' https://*.<catalogue domain>; frame-ancestors 'none'
+default-src 'self'; frame-src 'self' <app origin> <API origin> https://*.<catalogue domain>; connect-src 'self' <app origin> <API origin> wss://<API host> https://*.<catalogue domain>; img-src 'self' data: https://*.<catalogue domain>; font-src 'self' https://*.<catalogue domain>; style-src 'self' 'unsafe-inline' https://*.<catalogue domain>; frame-ancestors 'none'
 ```
+
+The app's `connect-src` permits the API origin with the `wss:` scheme. See
+[Live channel](./live-channel.md#route).
 
 Catalogue responses restrict their own
 `frame-ancestors` to `'self'`, the exact app origin and, when admitted, the

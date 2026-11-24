@@ -979,6 +979,28 @@ spec:
                 port: { name: http }
 
 ---
+# Source: mokly-cloud/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mokly-cloud-live
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: mkc-preview
+  rules:
+    - host: "pr-42.preview.api.example.invalid"
+      http:
+        paths:
+          - path: /v1/live/
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port: { name: http }
+
+---
 # Source: mokly-cloud/templates/certificate.yaml
 apiVersion: cert-manager.io/v1
 kind: Certificate

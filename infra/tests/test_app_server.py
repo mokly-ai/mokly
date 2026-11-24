@@ -99,7 +99,8 @@ class AppServerTests(unittest.TestCase):
         self.csp = (
             "default-src 'self'; frame-src 'self' https://example.com "
             "https://api.example.com https://*.catalogues.example; connect-src 'self' "
-            "https://example.com https://api.example.com https://*.catalogues.example; "
+            "https://example.com https://api.example.com wss://api.example.com "
+            "https://*.catalogues.example; "
             "img-src 'self' data: https://*.catalogues.example; "
             "font-src 'self' https://*.catalogues.example; "
             "style-src 'self' 'unsafe-inline' https://*.catalogues.example; "

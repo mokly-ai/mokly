@@ -222,13 +222,13 @@ Depends on: 3
 
 Depends on: 3
 
-- [ ] Add the live Service and its `BackendConfig` with `timeoutSec: 3600`,
+- [x] Add the live Service and its `BackendConfig` with `timeoutSec: 3600`,
       and the ingress path `/v1/live/*`.
-- [ ] Add the preview nginx Ingress for `/v1/live/` with 3,600-second
+- [x] Add the preview nginx Ingress for `/v1/live/` with 3,600-second
       timeouts.
-- [ ] Add the `wss://` API origin to `connect-src` in
+- [x] Add the `wss://` API origin to `connect-src` in
       `infra/docker/app-server.mjs`.
-- [ ] Update the Helm golden renders and the chart README.
+- [x] Update the Helm golden renders and the chart README.
 
 ## Milestone 6: App live client and build notices
 

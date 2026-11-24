@@ -35,10 +35,12 @@ await stat(resolve(root, "index.html"));
 // fonts load from the publication's catalogue host, and their generated
 // inline styles need the 'unsafe-inline' the app already allows.
 const catalogueSource = `https://*.${config.catalogueBaseDomain}`;
+const apiWebSocketUrl = new URL(config.apiOrigin);
+apiWebSocketUrl.protocol = "wss:";
 const contentSecurityPolicy = [
   "default-src 'self'",
   `frame-src 'self' ${config.appOrigin} ${config.apiOrigin} ${catalogueSource}`,
-  `connect-src 'self' ${config.appOrigin} ${config.apiOrigin} ${catalogueSource}`,
+  `connect-src 'self' ${config.appOrigin} ${config.apiOrigin} ${apiWebSocketUrl.origin} ${catalogueSource}`,
   `img-src 'self' data: ${catalogueSource}`,
   `font-src 'self' ${catalogueSource}`,
   `style-src 'self' 'unsafe-inline' ${catalogueSource}`,
