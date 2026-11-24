@@ -217,6 +217,299 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Answer:** E, chosen by the user on 2026-11-19, with a spike first in its
   own workspace. Milestone 37 runs the spike. When the spike shows that E
   cannot work, this decision goes back to the user with the evidence.
+- **Spike result:** E works with Vite 8.3.8, as far as the spike of
+  Milestone 37 tested it on 2026-11-19, with an emulation of Storybook's
+  setup. One Vite server for each Storybook folder and one module runner
+  compiled each module once, in the server that owns it, with that setup's
+  aliases, plugins, Vite env values, and mocks. Each module kept one
+  identity and one place in one module graph, also on the base side, in a
+  replay, and after an edit. So a story that renders a module of another
+  folder sees that module as the other folder's setup compiles it. Identity
+  holds for each resolved file: two setups that resolve one import to
+  different files give two modules. One server with an environment for
+  each folder failed, because Vite shares the root, the env files, and the
+  aliases across the environments of one server. Two extra servers added
+  about 40 ms of startup and four added about 70 ms, with 3 to 9 MiB more
+  peak memory and compile times within noise, without Storybook's presets.
+  The spike loaded no real Storybook preset, so two risks stay for
+  Milestone 32: the presets of two folders must load in one process, and
+  Storybook's env preset is process-wide. Design call 18 gives the rules,
+  and decisions 18a to 18d settle the open questions.
+
+### 18a. Files that no Storybook folder owns
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation, from the spike of Milestone 37.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Option E of decision 18 compiles each file with the setup of the
+    Storybook folder whose parent directory holds it.
+  - Some files have no such folder: mockups outside every Storybook
+    package, shared packages without a Storybook folder, installed packages
+    in the root `node_modules` that a setup compiles, and Mokly's virtual
+    entry.
+  - With one Storybook folder, decision 17 compiles every JavaScript entry
+    with that folder's setup.
+  - A root without the `storybook` field uses the `.storybook` folder of the
+    source root, as design call 12 says. When that folder exists, its parent
+    holds every file, so this decision applies only without it.
+  - The spike compiled these files once, with a fallback setup. It tried the
+    app setup of the configuration directory and the setup of the first
+    folder, and both kept one identity for each module.
+- **Problem:** When roots name several Storybook folders, no rule says which
+  setup compiles a file that no folder owns.
+- **Impact if no action:** Milestone 30 cannot state the setup of a shared
+  file, and two implementations can compile it differently.
+- **Root question:** Which setup compiles a file that no Storybook folder
+  owns, so that the file compiles once, with a setup that its importers can
+  use?
+- **Options:**
+  - **A.** The app setup of the configuration directory, as for a catalogue
+    without a Storybook folder. This adds one Vite server. A shared file
+    that needs a plugin that only the Storybook setups have, such as SVGR,
+    fails. The app setup lacks Storybook's resolve conditions, so a shared
+    file can resolve a package to another file than the stories do, and the
+    package then loads twice. Effort: Small.
+  - **B.** The setup of the first root, in configuration order, that names a
+    Storybook folder. This adds no server, and a catalogue with one folder
+    keeps the setup of decision 17 when it adds a second folder. A change of
+    root order changes the setup of these files. Effort: Small.
+  - **C.** The optional file must name the setup of these files when roots
+    name several folders. Without it, the configuration check fails and
+    names the file. Effort: Small.
+  - **D.** B, and an optional field of the `vite` object maps directory globs
+    to Storybook folders. A file that a glob matches compiles with that
+    folder's setup. The field wins over B and over the rules of decisions
+    18b and 18c. It adds a field, its validation, and its docs. Effort:
+    Medium.
+  - **E.** These files compile with one setup merged from the setups of
+    every folder, as option D of decision 18 proposed for the whole
+    catalogue. Plugins with the same name load once, and one alias key
+    keeps one target. A plugin can run at a root that is not its own. This
+    adds one Vite server. Effort: Medium.
+- **Left out:** The setup of the first importer: an unrelated edit could
+  then change the setup, and with it the output, of a shared file. A failure
+  for each file that no folder owns: shared packages without a Storybook
+  folder are common, and C gives the same explicit choice once. A copy of
+  each such file for the setup of each importer: it breaks the one identity
+  that option E of decision 18 requires.
+- **Wider fix:** None, because this is one missing rule.
+- **Previous examples:** Option B of decision 18 used the first root that
+  names a folder as its default.
+- **Related:** Decision 18c can give the files of a root to the folder that
+  the root names, so fewer files need this setup. Decision 18b can move a
+  mocked file away from this setup. Design call 22 runs the optional file
+  once for each setup.
+- **Recommendation:** B. Shared files then compile with a Storybook setup
+  and its resolve conditions, as decision 17 does for one folder, and no
+  extra server starts. D can follow later without a breaking change.
+- **Action:** ask the user, because option E does not settle these files,
+  A and B trade a fixed app setup against continuity with decision 17, and
+  C adds a configuration error.
+
+### 18b. Mocks of modules that another setup owns
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation, from the spike of Milestone 37.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Storybook applies `sb.mock()` in the plugin hooks of the Vite server
+    that loads the mocked module. The mock calls come from that server's
+    preview file.
+  - Under option E of decision 18, the server of the folder that owns a
+    module loads it. So a preview's mock reaches only the modules of its own
+    folder.
+  - In its own Storybook, a preview's mock of a shared file or an installed
+    package reaches every import of that module.
+  - npm and pnpm workspaces usually install packages in the root
+    `node_modules`, which no folder owns.
+  - The spike showed both sides. The app preview's mock of a shared file did
+    not apply. An override that gave the file to the app setup made the mock
+    apply for every importer.
+- **Problem:** A preview's mock of a module that another setup owns has no
+  effect, because one module has one identity for all its importers.
+- **Impact if no action:** Stories that rely on such a mock render the real
+  module, which can differ from their Storybook or fail.
+- **Root question:** Which stories see a preview's `sb.mock()` of a module
+  that another setup compiles, when the module has one version for all its
+  importers? The options check of 2026-11-19 wrote this question, because
+  A and D answer that the mock does not reach the module.
+- **Options:**
+  - **A.** Keep the location rule. A preview's mock applies only to the
+    modules of its folder, and the guide states the limit. Mocks of shared
+    files and of packages in the root `node_modules` then never apply.
+    Effort: Small.
+  - **B.** A module that a preview mocks belongs to the setup of that
+    preview, and it compiles with that whole setup. The mock then applies
+    for every importer, also in the stories of other folders, which their
+    own Storybook renders with the real module. When two previews mock one
+    module, the first root in configuration order wins. Effort: Medium.
+  - **C.** B, and a warning when two previews mock one module. The warning
+    fails `--strict`. Effort: Medium.
+  - **D.** A, and a warning when a preview mocks a module outside its
+    folder. The warning fails `--strict`. Effort: Small.
+  - **E.** B only for a module that no folder owns, such as a shared file or
+    a package in the root `node_modules`. A module that a folder owns stays
+    with that folder, so the mock of another folder has no effect on it, and
+    the owner's own mock applies. When two previews mock a module that no
+    folder owns, the first root in configuration order wins. Effort: Medium.
+- **Left out:** A mocked and a real copy of the module for each folder: each
+  module that imports it would need a copy too, so components would lose
+  one identity. A module graph for each folder: that is option C of
+  decision 18, which the user did not choose. The mocks of every preview in
+  the server that owns the module, without a move: the mocked code would
+  compile with a setup that no Storybook uses for that mock. A move only
+  while every importer is in the mocking folder: an unrelated import could
+  then move the module and change its output.
+- **Wider fix:** B, because one rule covers every mock target, also
+  installed packages.
+- **Previous examples:** None found.
+- **Related:** Decision 18a: B and E move a mocked file away from the setup
+  of 18a. Design call J2 in Milestone 37: an installed package must compile
+  in Vite before any mock reaches it. Design call 18: the redirect file of a
+  moved module can belong to another server, so every server gets each
+  change.
+- **Recommendation:** E, changed from B by the options check of
+  2026-11-19. Mocks let stories render without real services, and E keeps
+  that for shared files and installed packages, which A loses in every
+  monorepo that installs packages at the root. Unlike B, E never compiles a
+  folder's own module with another folder's setup, and root order never
+  replaces a folder's own mock. B reaches the most mock targets.
+- **Action:** ask the user, because B and E change the stories of a folder
+  that did not ask for the mock, and C and D add a warning that fails
+  `--strict`.
+
+### 18c. A root whose Storybook folder lies elsewhere
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review, from the independent check of the spike.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Decision 9 lets each root name its Storybook folder, and Mokly reads
+    `main.*` there.
+  - Some monorepos keep one central Storybook folder, such as
+    `apps/storybook/.storybook`, whose `main.*` lists the stories of other
+    packages.
+  - Option E of decision 18 chooses the setup by location: the deepest
+    Storybook folder whose parent directory holds the file.
+  - So when roots name several folders, the stories of a root whose
+    folder's parent does not hold them get another setup: the setup of
+    another folder, or of decision 18a.
+  - With one folder, decision 17 gives its setup to every file, so the
+    problem needs several folders.
+- **Problem:** The files of a root can compile with another setup than the
+  setup of the folder that the root names.
+- **Impact if no action:** In a monorepo with a central Storybook and a
+  second folder, the central Storybook's stories compile without its
+  aliases, plugins, and mocks, and nothing warns.
+- **Root question:** How do the stories of a root, and the files beside
+  them, get the setup of the folder that the root names, when the parent of
+  that folder does not hold them? The options check of 2026-11-19 wrote
+  this question, because the usual layout, a root `packages/ui/src` with
+  the folder `packages/ui/.storybook`, has no problem.
+- **Options:**
+  - **A.** Keep the location rule of option E. Such files get the setup of
+    the folder that holds them, or of decision 18a, and the guide states the
+    limit. Effort: Small.
+  - **B.** A file inside the directory of a root that names a folder belongs
+    to that folder. When two such roots hold a file, the deepest root
+    decides. The location rule decides only for the other files. Effort:
+    Medium.
+  - **C.** Fail the configuration check when roots name several folders and
+    the directory of a root lies outside its folder's parent. This adds a
+    configuration error. Effort: Small.
+  - **D.** B, but a file that the globs of a root match takes the folder of
+    that root when the root names one. Root discovery already records the
+    root of each matched file. The deepest root decides only for the other
+    files in root directories. A story then compiles with the folder whose
+    preview it gets under decision 9. Effort: Medium.
+- **Left out:** The setup of the first story that imports a file: an
+  unrelated edit could then change the setup of a shared file.
+- **Wider fix:** D, because the field that the root sets then decides for
+  every layout, also for matched files inside a deeper root's directory.
+- **Previous examples:** None found.
+- **Related:** Decision 18a gives the setup of the files that no rule
+  assigns. Decision 20 settles roots without `dir`, which take their files
+  from `main.*`.
+- **Recommendation:** D, changed from B by the options check of
+  2026-11-19. Stories then compile with the folder that their root names,
+  as decision 9 intends, and with the same folder whose preview they get.
+  B can compile a story with one folder's setup and render it with another
+  folder's preview. With a folder in each package, D gives the same setup
+  as the location rule.
+- **Action:** ask the user, because B and D change the ownership rule of
+  option E, which the user chose, and C adds a configuration error.
+
+### 18d. Storybook env values of several folders in one process
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review, from the independent check of the spike.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Storybook's setup defines its `import.meta.env.STORYBOOK_*` values from
+    its `env` preset. These values win over the values that Vite loads.
+  - The preset reads the `.env` files of one app root. It takes the root
+    from the working directory when its module first loads, and it writes
+    the values into the process environment.
+  - A sidecar process keeps the source root as its working directory. Under
+    option E of decision 18, one process loads the presets of every folder.
+  - The spike emulated Storybook without this preset, so its env check
+    passed. The check read the preset's source in Storybook 10.6.2.
+- **Problem:** In one process, every Storybook folder gets the
+  `STORYBOOK_*` values of the source root. A folder's own Storybook, run
+  from its package, reads the `.env` files of the package.
+- **Impact if no action:** A story that reads a `STORYBOOK_*` value can
+  render with another value than in its own Storybook. This also holds for
+  one folder whose parent is not the source root.
+- **Root question:** How do the stories of each folder get the `env`
+  preset values of their own Storybook, when the working directory of the
+  sidecar is not the folder's parent? The options check of 2026-11-19 wrote
+  this question, because the values also come from the shell and from
+  `main.*`, and one folder has the same problem.
+- **Options:**
+  - **A.** One set for the whole process, from the source root, as
+    Storybook's preset gives it. The guide states it. The preset also
+    writes the source root's `.env` values into the process environment,
+    and Vite prefers those, so they replace each folder's `VITE_*` values
+    too. Effort: Small.
+  - **B.** Each folder's values come from the `.env` files of its parent, as
+    Vite loads them for its server. Mokly removes Storybook's env plugin, as
+    design call 20 removes other plugins, and it keeps the process
+    environment as it was before the presets loaded. Mokly sets Storybook's
+    fixed variables, such as `STORYBOOK`, itself. Values that a `main.*`
+    file adds through its `env` preset are lost. Effort: Medium.
+  - **C.** Run the setup and the Vite server of each folder in a child
+    process, with the folder's parent as its working directory. The module
+    runner reaches them across processes. Effort: Large.
+  - **D.** Keep Storybook's env plugin. A Mokly preset after Storybook's core
+    presets replaces the core `STORYBOOK_*` values with the values that Vite
+    loads from the folder's parent. An `env` preset from `main.*` or an
+    addon still adds its values. Mokly restores the process environment
+    after the presets of each folder load. This depends on the preset order
+    of Storybook's loader: core presets first, then `main.*`. Effort:
+    Medium.
+- **Left out:** A new app root for each folder before its presets load: the
+  preset fixes its `.env` path when its module first loads, so a later
+  folder cannot change it. A fresh copy of Storybook's env module for each
+  folder: that module is a private chunk whose name changes with each
+  release, so it fails in the tested range of design call 13. A temporary
+  working directory for each folder: a sidecar keeps one working directory
+  for its whole lifetime, as `docs/protocol/mokly-sidecar-modules.md` says.
+- **Wider fix:** C, because it isolates every process-wide Storybook state.
+- **Previous examples:** None found.
+- **Related:** Design call 20 removes Storybook's browser-only plugins.
+  Milestone 32 first loads the presets of two folders in one process.
+- **Recommendation:** D, changed from B by the options check of
+  2026-11-19. Each folder then gets the values that its own Storybook reads
+  when it runs from its package, and the `env` presets of `main.*` and of
+  addons keep their values, which B removes. C isolates the most state, at
+  a Large cost.
+- **Action:** ask the user, because A, B, and D trade Storybook's own env
+  preset against each folder's own values, and C is Large.
 
 ### 19. Ids of story component uses
 
@@ -717,11 +1010,33 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
 17. A top-level `vite` field turns the adapter on. Its optional `config`
     names the optional `mokly.vite.config.ts`. Reason: the adapter is opt-in,
     and current catalogues keep esbuild.
-18. For a catalogue with one Storybook folder, each sidecar process runs one
-    Vite server for its source root, with Vite's own watcher off. Mokly's
-    watcher invalidates changed modules. With several folders, decision 18
-    chose E: one Vite server for each folder, which feed one module runner.
-    Reason: a sidecar process serves one source root.
+18. Changed on 2026-11-19, after the spike of Milestone 37. Each sidecar
+    process runs one Vite server for each setup of its source root, from
+    the side's own installation, with no HTTP server, watcher, hot module
+    replacement, or pre-transform requests. A catalogue with one Storybook
+    folder or none has one setup. When roots name several folders, each
+    folder gets a server rooted at its parent. A root without the
+    `storybook` field names the `.storybook` folder of the source root when
+    that folder exists, as design call 12 says. A file belongs to the
+    deepest folder whose parent directory holds its real path, as option E
+    says, unless decision 18c or 18a gives it another setup. A file inside a
+    selected dependency root takes its owner from that root's path relative
+    to the source root, so both sides give it one owner. An id with a query
+    belongs to its file. An id that is not a file is a virtual module of the
+    server that resolved it. The setup that owns a package decides, for
+    every importer, whether Vite compiles it or Node loads it. One module
+    runner from the same installation evaluates every module once. An
+    import resolves in the server that compiled its importer, and the module
+    compiles in the server that owns it. Before the runner caches an
+    import, Mokly turns its specifier into a URL that no other module
+    shares. Mokly's watcher sends each changed file to every server, which
+    invalidates it and passes the change to its plugins. Reason: a sidecar
+    process serves one source root, and the spike kept each package's setup
+    and each module's identity this way. A transport that only routed
+    requests let the URLs of two servers collide in the runner's cache.
+    Invalidation in the owner alone missed a file that a plugin of another
+    server read. The first version named one server for each folder without
+    these rules.
 19. Mokly resolves `vite` from the project. A missing `vite` fails `bundle`
     with `bundle-failed`, as decision 22 chose. Reason: Mokly ships no
     private runtime.
@@ -730,11 +1045,16 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     `withoutVitePlugins` helper. Reason: a render does not need them.
 21. Under the adapter, Mokly requests each local stylesheet through the Vite
     setup as an inline module. Reason: plugins such as Tailwind's then run.
-22. The optional file exports `defineMoklyVite` from `@mokly/mokly/vite`. Its
-    `app()` and `storybook()` loaders run only when called. For one
-    Storybook folder it returns one setup. With several folders, the spike
-    of decision 18 settles its shape. Reason: a project can avoid a broken
-    Storybook release.
+22. Changed on 2026-11-19, after the spike of Milestone 37. The optional
+    file exports `defineMoklyVite` from `@mokly/mokly/vite`. Mokly calls its
+    default export once for each setup of design call 18, with the setup's
+    Storybook folder, or with none. The `app()` loader loads the Vite config
+    of the folder's parent, or of the configuration directory without a
+    folder. The `storybook()` loader loads the folder's merged Storybook
+    setup. Each loader runs only when called, and each call returns one
+    setup. Reason: a project can avoid a broken Storybook release in each
+    folder, and a catalogue with one folder keeps one call. The first
+    version left the shape for several folders to the spike.
 23. A static scan of the preview file finds `sb.mock()` calls for the
     `storybook-mock-without-vite` warning. Reason: the preview file does not
     run before the bundle.
@@ -808,18 +1128,18 @@ has merged into this branch, and when the open decisions that block it have
 answers. The ledger of the workspaces is in
 `.context/storybook-support/workspaces.md`.
 
-| Track                      | Milestones | Starts after                            |
-| -------------------------- | ---------- | --------------------------------------- |
-| A. Mockups                 | 1          | Nothing                                 |
-| B. Story reading           | 2 to 8     | Nothing                                 |
-| C. Imported assets         | 9 to 12    | Nothing                                 |
-| D. Vite adapter            | 13 to 17   | Nothing                                 |
-| E. Storybook folders       | 18 to 22   | Track B                                 |
-| F. Failed stories          | 23 to 25   | Tracks A and B, and decision 26         |
-| G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23 and 27 |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                   |
-| I. Story component usage   | 34 to 36   | Tracks B and D                          |
-| J. Spike for decision 18   | 37         | Nothing                                 |
+| Track                      | Milestones | Starts after                                    |
+| -------------------------- | ---------- | ----------------------------------------------- |
+| A. Mockups                 | 1          | Nothing                                         |
+| B. Story reading           | 2 to 8     | Nothing                                         |
+| C. Imported assets         | 9 to 12    | Nothing                                         |
+| D. Vite adapter            | 13 to 17   | Nothing                                         |
+| E. Storybook folders       | 18 to 22   | Track B                                         |
+| F. Failed stories          | 23 to 25   | Tracks A and B, and decision 26                 |
+| G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23 and 27         |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18d |
+| I. Story component usage   | 34 to 36   | Tracks B and D                                  |
+| J. Spike for decision 18   | 37         | Nothing                                         |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -1548,17 +1868,28 @@ Depends on: 26, 27, 28
 
 ## Milestone 30: Storybook setup on Vite documentation
 
-Depends on: 12, 17, 22, 37
+Depends on: 12, 17, 22, 37, and the answers to decisions 18a to 18d
 
 Track H. The protocol states the Storybook setup rules of decision 17, with
 the answer to decision 18, and the `sb.mock()` warning of decision 12.
 
 - [ ] Add the Storybook setup rules to `docs/protocol/mokly-vite-adapter.md`,
-      with the answer to decision 18.
-- [ ] Update `docs/protocol/mokly-configuration.md` for the answer to
-      decision 18.
+      or to a new linked page when that page would pass 250 lines. For
+      several Storybook folders, state option E of decision 18 as design
+      call 18 found it: each file compiles once, with the setup that owns it
+      under the answers to decisions 18a and 18c. Each module keeps one
+      identity and one place in the module graph, with the aliases,
+      plugins, env values, and mocks of the setup that owns it, also when a
+      story of another folder imports it. Identity holds for each resolved
+      file. Add the answers to decisions 18b and 18d and the rules of design
+      calls J1 and J2. State the requirements, not the servers or the
+      transport.
+- [ ] Update `docs/protocol/mokly-configuration.md` for option E of
+      decision 18, the answers to decisions 18a and 18c, and the optional
+      file of design call 22.
 - [ ] Update `docs/protocol/mokly-build-warnings.md` with
-      `storybook-mock-without-vite`.
+      `storybook-mock-without-vite`, and with the warning of decision 18b
+      when its answer adds one.
 - [ ] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
@@ -1574,24 +1905,62 @@ Depends on: 12, 17
 
 Depends on: 30
 
+- [ ] Before the other TODOs of this milestone, load the presets of two
+      Storybook folders in one process with Storybook's preset loader, and
+      check that each folder gets its own merged setup. When it fails, give
+      decision 18 back to the user with the evidence, because option E then
+      needs a process for each folder.
 - [ ] Load Storybook's merged setup with its preset loader, with
-      `viteCorePlugins` and `viteFinal`, for every JavaScript entry when a
-      root names a Storybook folder, as decision 17 says.
-- [ ] Load the base commit's Storybook setup for the base side, so that both
-      sides compile with their own setup.
+      `viteCorePlugins` and `viteFinal`, for each Storybook folder, as
+      decision 17 says. With one folder, that setup compiles every
+      JavaScript entry.
+- [ ] Load the base commit's Storybook setups for the base side, so that
+      both sides compile with their own setups.
 - [ ] Remove Storybook's browser-only plugins, as design call 20 says.
 - [ ] Add the optional file and `@mokly/mokly/vite`, as design call 22 says.
 - [ ] Install the mocker global of design call 24.
-- [ ] Apply the answer to decision 18, and update `config.schema.json` with
-      it.
+- [ ] Apply option E of decision 18, as design call 18 says: one Vite server
+      for each Storybook folder, the owners of decisions 18a and 18c, and one
+      module runner whose evaluator gives each import a URL that is unique
+      across servers. Keep pre-transform requests off in every server. Send
+      every `react` and `react-dom` import of every server, also inside
+      externalized packages, to the one React runtime of Milestone 14. Send
+      each watched change to every server. No configuration field changes.
+- [ ] Read the module graph across servers: each module's imports in order
+      from its transformed code, after every plugin of its setup; its
+      consumed bytes from the code that its load step returns; and the files
+      that plugins register for it as inputs. Store every transport answer
+      in the compiled recipe at bundle time, also the list of Node built-in
+      modules.
+- [ ] Give the server environment the resolve conditions of design call J1.
+- [ ] Compile in Vite each installed package that a preview mocks, as design
+      call J2 says. Apply the answer to decision 18b to the mocks of modules
+      that another setup owns.
+- [ ] Give each folder the `STORYBOOK_*` values that the answer to decision
+      18d chooses.
 - [ ] Add the `storybook-mock-without-vite` warning, as design call 23 says.
 - [ ] Test the supported Storybook range in CI with a `react-vite` fixture
       and a `nextjs-vite` fixture. Add the development packages under the
       dependency rules.
 - [ ] Test that `__mocks__` redirects, automocks, and spies of `sb.mock()`
-      render, that a `viteFinal` plugin applies to stories and mockups, that
+      render, also for a package whose Node entry differs from its browser
+      entry, that a `viteFinal` plugin applies to stories and mockups, that
       the optional file removes a plugin, and that Changes compiles both
-      sides with their own Storybook setup.
+      sides with their own Storybook setup. Storybook resolves the target
+      of a package mock with browser conditions, so record that limit when
+      the mock misses the Node entry.
+- [ ] Test a catalogue with two Storybook folders whose setups differ in an
+      alias, a plugin, an env value, and a mock, with a module that both
+      import, a folder inside another folder's parent, and a root whose
+      folder lies elsewhere. Each file compiles with the setup that owns it,
+      the shared module evaluates once, and files and virtual modules whose
+      URLs collide across servers reach the right module. The module graph
+      lists the imports that plugins add. A Serve edit of a file that a
+      plugin of another server reads, a replay, and Changes work, also with
+      a base side that reads the working installation.
+- [ ] Record the startup time and the memory of two Storybook folders
+      against one, with Storybook's preset loader, under
+      `.context/storybook-support/`.
 - [ ] Update `docs/guides/authoring/vite.md` and
       `docs/guides/authoring/storybook.md`.
 
@@ -1661,20 +2030,43 @@ Track J. Decision 18 chose E, with a spike first. The spike tests whether one
 module runner can run every file once while each file compiles with the
 Vite setup of the Storybook folder that owns it.
 
-- [ ] Build a scratch monorepo with two Storybook folders whose setups differ
+Design calls of track J. These calls are the track J orchestrator's, made on
+2026-11-19 from the spike. They stay in this milestone so that the track
+changes only its own lines of this plan.
+
+- J1. Under the adapter, Vite's server environment also gets the resolve
+  conditions that Storybook's setup adds: `storybook`, `stories`, and
+  `test`. Reason: Storybook's setup gives them to the browser environment
+  only, so a package's `storybook` export would resolve differently from
+  Storybook, which decision 17 rules out.
+- J2. Under the adapter, Mokly compiles in Vite each installed package that
+  a preview's `sb.mock()` names, in place of Node's own loader. With several
+  folders, decision 18b settles which setup compiles it, because a package
+  in the root `node_modules` belongs to no folder. Reason: Vite hands an
+  externalized package to Node without its plugins, so the `sb.mock()` of
+  decision 12 would not reach an installed package.
+
+Evidence: `.context/storybook-support/spike-18/NOTES.md`, and the
+independent check in `.context/storybook-support/spike-18-check/REPORT.md`.
+
+- [x] Build a scratch monorepo with two Storybook folders whose setups differ
       in an alias, a plugin, and an `sb.mock()` call, and a module that both
       packages import.
-- [ ] Prove or refute, with a prototype under `.context/`: each file compiles
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Prove or refute, with a prototype under `.context/`: each file compiles
       with its owner's setup, the shared module loads once, virtual modules
       and ids reach the right server, the module graph and the consumed bytes
       stay complete, and the base side and Serve invalidation can work the
-      same way.
-- [ ] Measure the cost against one setup.
-- [ ] Record the result in decision 18, and update the TODOs of milestones 30
+      same way. Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Measure the cost against one setup.
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Record the result in decision 18, and update the TODOs of milestones 30
       and 32 and design calls 18 and 22. When the spike refutes E, give
       decision 18 back to the user with the evidence.
-- [ ] Commit, push, and open a pull request into this branch. The prototype
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Commit, push, and open a pull request into this branch. The prototype
       stays under `.context/`.
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
 
 ## Milestone 38: Verification, commit, review, and pull request
 
