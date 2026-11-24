@@ -243,7 +243,7 @@
    above its notes. */
 
 @media (min-width: 768px) and (max-width: 1035px),
-  (min-width: 1200px) and (max-width: 1275px) {
+  (min-width: 1200px) and (max-width: 1319px) {
   .site-release-group--breaking {
     grid-template-columns: 154px minmax(0, 1fr);
   }
