@@ -85,6 +85,22 @@ The build fails if Mokly applies `file` to any other type.
 Set `vite` to `true` or `{}` to compile JavaScript with the project's Vite
 setup. See [Vite](/docs/authoring/vite/) for installation and module settings.
 
+### Workspace packages
+
+For bundled imports by workspace package name, Mokly looks for source
+files that match the build targets in the working tree and the Git base.
+If package lookup fails, every declared target for the import must map to
+the same source file. TypeScript declaration files do not count.
+Configured entry and stories files, the renderer, and the PostCSS module
+keep their exact paths.
+It reads `outDir` and `rootDir` from the package's `tsconfig.json` and
+relative `extends` files in the repository outside `node_modules`. Set both
+folders in the package's `tsconfig.json` when it extends an installed
+configuration. Both folders must be inside the package. Otherwise Mokly
+looks for the same path under `src` for targets in `dist`, `lib`, `build`,
+or `out`.
+For example, `dist/button.js` can map to `src/button.tsx`.
+
 ## Review and watch
 
 `review.base` selects the Git base, with `origin/main` as its default.

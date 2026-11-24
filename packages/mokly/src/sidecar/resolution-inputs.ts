@@ -76,6 +76,11 @@ export async function resolutionInputs(
     metadataInputs[paths.metadataName(file)] = inputs[file] =
       await metadataDigest(file, inputs);
   }
+  for (const lookup of [...paths.workspaceLookups.absences].sort()) {
+    const file = await paths.metadata(lookup);
+    if (inputs[file] === undefined)
+      metadataInputs[paths.metadataName(file)] = inputs[file] = null;
+  }
   for (const directory of [...ancestors].sort()) {
     for (const name of ["package.json", "tsconfig.json"]) {
       const file = path.join(directory, name);

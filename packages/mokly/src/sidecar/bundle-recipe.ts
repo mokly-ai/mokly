@@ -59,7 +59,9 @@ export async function bundleRecipe(
 ): Promise<Bundled> {
   const folderEvidence = editImports
     ? measurements.runSync("sidecar.bundle.mapped-lookups", () =>
-        editImports.record(compiled.metafile!, paths),
+        paths.workspaceLookups.marked(
+          editImports.record(compiled.metafile!, paths),
+        ),
       )
     : undefined;
   const resolution = params.moduleResolution;

@@ -124,6 +124,10 @@ The sidecar marks each asset load with `importedAsset` in its module record
 and uses the original bytes for its digest. The core delivers these files
 under the shared generated asset routes.
 
+When module lookup selects a built file from a workspace package, Mokly
+looks for the matching source in each render's own tree.
+See [workspace package sources](../../docs/protocol/mokly-comparison-packages.md#workspace-package-sources).
+
 The [render sidecar contract](../../docs/protocol/mokly-sidecar.md), the
 [module sources contract](../../docs/protocol/mokly-sidecar-modules.md), and
 the [PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md)

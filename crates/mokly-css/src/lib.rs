@@ -25,6 +25,8 @@ mod rename_animations;
 mod rename_output;
 mod rename_selectors;
 mod source_position;
+mod workspace_sources;
+mod workspace_tsconfig;
 
 #[cfg(test)]
 #[path = "_tests_/compiler_tests.rs"]

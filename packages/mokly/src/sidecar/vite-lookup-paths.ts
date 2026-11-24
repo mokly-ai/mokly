@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { missingFile } from "./file-digests.js";
-import { importerDirectory } from "./importer-resolution.js";
 import type { ModulePaths } from "./module-paths.js";
+import { importerDirectory } from "./package-directory.js";
 import { inside } from "./path-scope.js";
 import { bareSpecifier, packageName } from "./specifier.js";
 import { viteFile } from "./vite-urls.js";

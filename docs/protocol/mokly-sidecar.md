@@ -109,16 +109,12 @@ a selected dependency root, a `node_modules` directory, is a dependency on
 both sides. JavaScript and CSS imports from it are allowed and use stable
 logical names relative to that root, such as `node_modules/pkg/style.css`.
 The binary reads them from that dependency root and excludes them from the
-catalogue source inventory. Files outside the source root and all selected
-dependency roots fail closed unless repository mapping supplies a source copy.
+catalogue source inventory.
 
-For a real module inside `repositoryRoots` and outside `node_modules`, the
-sidecar maps its repository-relative path into `sourceRoot`. This rule
-applies to `bundle` and `processCss`, including PostCSS configuration,
-plugins, and presets. Missing or escaping mapped sources fail `bundle-failed`
-with a logical module path and the importing file's location. The
-[module sources contract](./mokly-sidecar-modules.md) defines logical names,
-confinement, attribution, and the CSS Modules evaluation order.
+The [module sources contract](./mokly-sidecar-modules.md#source-and-dependency-files)
+defines repository mapping for `bundle` and `processCss`, including PostCSS
+configuration, plugins, and presets. A mapping failure returns `bundle-failed`
+with the logical module path and the importing file's location.
 
 The head source root is the working repository. The base source root is the
 extracted base commit. Resolution settings select each side's dependency

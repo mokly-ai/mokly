@@ -8,7 +8,7 @@ use mokly_source_interface::tree::{FileKind, SourceTree};
 use crate::error::{CssError, Result};
 use crate::package::Package;
 use crate::resolution::Resolution;
-use crate::{lookup_roots, paths};
+use crate::{lookup_roots, paths, workspace_sources};
 
 /// Shared CSS resolution boundary. Sidecar adapters supply consumer settings.
 #[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ImportResolverMock))]
@@ -43,7 +43,7 @@ impl ImportResolver for SourceResolver {
         };
         if !aliased
             && let Some(relative) = paths::resolve(&relative_source, &specifier)
-            && let Some(path) = self.file(&relative)
+            && let Some(path) = self.file(&relative, None)
         {
             return Ok(path);
         }
@@ -65,16 +65,19 @@ impl ImportResolver for SourceResolver {
             .into_iter()
             .map(|root| format!("{root}/{package}"));
         for base in bases {
-            if let Ok(bytes) = self
+            let package = self
                 .tree
                 .read(&self.repo_root.join(&base).join("package.json"))
-                && let Some(package) = Package::parse(&bytes, &self.settings)
-            {
+                .ok()
+                .and_then(|bytes| Package::parse(&bytes, &self.settings));
+            let workspace_root = package.as_ref().and_then(|_| self.workspace(&base));
+            let workspace = workspace_root.as_deref().map(|root| (base.as_str(), root));
+            if let Some(package) = package {
                 if let Some(exports) = package.exports {
                     if let Some(target) = exports.resolve(&subpath, &self.settings)
                         && target.starts_with("./")
                         && let Some(path) = paths::resolve(&format!("{base}/package.json"), &target)
-                        && let Some(path) = self.file(&path)
+                        && let Some(path) = self.file(&path, workspace)
                     {
                         return Ok(path);
                     }
@@ -83,7 +86,7 @@ impl ImportResolver for SourceResolver {
                 if subpath == "." {
                     for main in package.mains {
                         if let Some(path) = paths::resolve(&format!("{base}/package.json"), &main)
-                            && let Some(path) = self.file(&path)
+                            && let Some(path) = self.file(&path, workspace)
                         {
                             return Ok(path);
                         }
@@ -91,11 +94,11 @@ impl ImportResolver for SourceResolver {
                 }
             }
             let path = if subpath == "." {
-                base
+                base.clone()
             } else {
                 format!("{base}/{}", subpath.trim_start_matches("./"))
             };
-            if let Some(path) = self.file(&path) {
+            if let Some(path) = self.file(&path, workspace) {
                 return Ok(path);
             }
         }
@@ -121,27 +124,36 @@ impl SourceResolver {
         }
         (specifier.into(), false)
     }
-    fn file(&self, path: &str) -> Option<String> {
-        if regular(self.tree.as_ref(), &self.repo_root.join(path)) {
-            return Some(path.into());
-        }
-        let extensions = if self.settings.extensions.is_empty() {
-            vec![".tsx", ".ts", ".jsx", ".js", ".css", ".json"]
-        } else {
-            self.settings
-                .extensions
-                .iter()
-                .map(String::as_str)
-                .collect()
-        };
-        for extension in extensions {
-            let file = format!("{path}{extension}");
-            if regular(self.tree.as_ref(), &self.repo_root.join(&file)) {
-                return Some(file);
-            }
-        }
-        let index = format!("{path}/index.css");
-        regular(self.tree.as_ref(), &self.repo_root.join(&index)).then_some(index)
+    fn workspace(&self, package: &str) -> Option<PathBuf> {
+        let node = self.tree.project(&self.repo_root.join(package)).ok()??;
+        (node.kind == FileKind::Directory
+            && workspace_sources::repository_path(&self.repo_root, &node.identity))
+        .then_some(node.identity)
+    }
+
+    fn file(&self, path: &str, workspace: Option<(&str, &Path)>) -> Option<String> {
+        std::iter::once(path.to_owned())
+            .chain(
+                self.settings
+                    .extension_order()
+                    .map(|extension| format!("{path}{extension}")),
+            )
+            .chain(std::iter::once_with(|| format!("{path}/index.css")))
+            .find_map(|file| {
+                if let Some((base, root)) = workspace
+                    && let Ok(relative) = Path::new(&file).strip_prefix(base)
+                    && let Some(source) = workspace_sources::source(
+                        self.tree.as_ref(),
+                        &self.repo_root,
+                        &root.join(relative),
+                        &self.settings,
+                    )
+                    && let Ok(source) = source.strip_prefix(&self.repo_root)
+                {
+                    return Some(source.to_string_lossy().replace('\\', "/"));
+                }
+                regular(self.tree.as_ref(), &self.repo_root.join(&file)).then_some(file)
+            })
     }
 }
 
