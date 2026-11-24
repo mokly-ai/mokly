@@ -36,7 +36,7 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             .iter()
             .filter(|entry| entry.metadata.variant_of.is_some())
             .count(),
-        69
+        70
     );
     let screens: BTreeSet<_> = entries
         .iter()
@@ -62,14 +62,14 @@ pub fn check(result: &ComparisonResult) -> Scopes {
             .iter()
             .filter(|path| path.starts_with("design/components/"))
             .count(),
-        53
+        57
     );
     assert_eq!(
         screens
             .iter()
             .filter(|path| path.starts_with("design/components/controls/"))
             .count(),
-        20
+        21
     );
     let mut scopes = Scopes::new();
     for entry in entries {

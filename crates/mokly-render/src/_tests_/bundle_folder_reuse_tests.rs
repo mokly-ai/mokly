@@ -82,6 +82,7 @@ fn folder_file_changes_reject_a_retained_marked_generation() {
             definitions: definitions(),
             modules: BTreeMap::from([("entry.ts".into(), vec![])]),
             module_digests: BTreeMap::new(),
+            imported_assets: Default::default(),
             render: render_environment::RenderEnvironment::default(),
             stamp: InputStamp {
                 files: BTreeMap::from([("/repo/entry.ts".into(), Some("source".into()))]),

@@ -5,6 +5,7 @@ use mokly_source_interface::tree::{FileKind, Node};
 
 use crate::compiler::Preparation;
 use crate::error::{AssetFailure, CssError, Result};
+use crate::imported_assets::{stylesheet_content_type, stylesheet_extensions};
 use crate::paths;
 use crate::types::OpaqueAsset;
 
@@ -80,11 +81,12 @@ impl Preparation<'_> {
             ),
         };
         let target = target.ok_or_else(failure)?;
-        if paths::content_type(&target).is_none() {
+        if stylesheet_content_type(&target).is_none() {
+            let extensions = stylesheet_extensions();
             return Err(CssError::Asset {
                 kind: AssetFailure::Extension,
                 message: format!(
-                    "unsupported CSS asset extension in {stylesheet}: {url}; use .avif, .bmp, .gif, .ico, .jpeg, .jpg, .png, .svg, .webp, .eot, .otf, .ttf, .woff or .woff2"
+                    "unsupported CSS asset extension in {stylesheet}: {url}; use {extensions}"
                 ),
             });
         }

@@ -8,7 +8,7 @@ use mokly_model::namespace::generated;
 use crate::asset_streams::{
     AssetOwner, AssetRequest, AssetResult, AssetStreams, AssetVersion, Capture, SharedAsset,
 };
-use crate::assets::content_type;
+use crate::assets::generated_content_type;
 use crate::backend::GraphDocuments;
 use crate::error::{Result, ServerError};
 use crate::validator;
@@ -82,7 +82,7 @@ impl Request {
         };
         let opened = self
             .streams
-            .capture(asset.as_mut(), &content_type(&self.route))?;
+            .capture(asset.as_mut(), &generated_content_type(&self.route))?;
         let digest = match self.generation.resource_digest(&generated(&self.route)) {
             Ok(Some(digest)) => digest,
             Ok(None) => return Err(ServerError::InvalidAssets),

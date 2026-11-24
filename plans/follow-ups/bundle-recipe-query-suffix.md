@@ -55,6 +55,10 @@
   then serves the graph, the digests, and the watch inputs, as `clean`
   already does for the `mokly-css:` namespace.
 - **Previous examples:** None found.
+- **Related:** [attributed-import-module-names.md](attributed-import-module-names.md)
+  has the same cause: a metafile input name that holds more than its path,
+  there an import attribute. One branch can fix both items with option C of
+  each.
 - **Recommendation:** C. It makes a valid esbuild import bundle
   and keeps the digest rule of the bundling contract.
 - **Action:** fix after merge, apply C, because a valid import

@@ -77,7 +77,10 @@ See [styles](/docs/authoring/styles/).
 layout. Mokly supplies no application-specific aliases.
 React and React DOM resolve from the consumer. CSS imports use Mokly's delivery
 rules. Only `empty` can override `.css` and `.module.css` handling.
-A JavaScript `file` loader is invalid because it emits an undelivered file.
+
+A `file` loader in `moduleResolution.loaders` delivers the file and gives your
+code a URL. Use it for `.txt` or the [asset types in the Styles guide](/docs/authoring/styles/#import-images-fonts-and-media).
+The build fails if Mokly applies `file` to any other type.
 
 ## Review and watch
 

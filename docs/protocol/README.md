@@ -65,6 +65,7 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Imported Stylesheet Delivery](./mokly-imported-styles.md)
 - [Imported Stylesheet Diagnostics](./mokly-imported-styles-errors.md)
 - [Imported Stylesheet PostCSS And Dependency Inventory](./mokly-imported-styles-postcss.md)
+- [JavaScript Asset Imports](./mokly-imported-assets.md)
 - [Path-Derived Artifact Paths](./mokly-artifact-paths.md)
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Render Sidecar](./mokly-sidecar.md)

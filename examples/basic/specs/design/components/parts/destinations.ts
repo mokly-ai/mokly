@@ -24,6 +24,10 @@ export const COMPONENT_PAGES = {
   "props-loading": "design/components/states/loading/props-loading",
   "props-failed": "design/components/states/loading/props-failed",
   "shared-impact": "design/components/states/shared-impact/shared-impact",
+  "story-failed": "design/components/states/stories/story-failed",
+  "story-failed-changes":
+    "design/components/states/stories/story-failed-changes",
+  "storybook-link": "design/components/states/stories/storybook-link",
 } as const satisfies Record<ComponentPageState, string>;
 
 /** Screen inspection states remain separate from the existing Browse subjects. */
@@ -58,6 +62,7 @@ export const CONTROLS_PAGES = {
   "preparing-failed": "design/components/controls/states/preparing/failed",
   invalid: "design/components/controls/states/invalid",
   error: "design/components/controls/states/error",
+  "error-later-edit": "design/components/controls/states/error/later-edit",
   comparison: "design/components/controls/states/comparison",
   readonly: "design/components/controls/published/readonly",
   "readonly-variant": "design/components/controls/published/readonly-variant",

@@ -107,8 +107,9 @@ of that panel.
 | `design/components/controls/states/pending`             | Last valid preview while an update is pending         |
 | `design/components/controls/states/preparing`           | Read-only fields while Serve prepares editing         |
 | `design/components/controls/states/preparing/failed`    | Editing could not start, with Try again               |
-| `design/components/controls/states/invalid`             | Field validation with last valid preview              |
-| `design/components/controls/states/error`               | Render failure, retry, and reset                      |
+| `design/components/controls/states/invalid`             | Field validation with saved preview                   |
+| `design/components/controls/states/error`               | Render failure with saved preview, retry, and reset   |
+| `design/components/controls/states/error/later-edit`    | Later edit failure with earlier edit in preview       |
 | `design/components/controls/states/comparison`          | Saved variant comparison and read-only controls       |
 | `design/components/controls/published/readonly`         | Read-only values and available saved variants         |
 | `design/components/controls/published/readonly-variant` | Disabled saved variant with read-only values          |

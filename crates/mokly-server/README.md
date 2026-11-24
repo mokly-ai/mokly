@@ -101,6 +101,10 @@ state, and the write leases of the Changes reference probes.
 The [HTTP delivery](./delivery.md) page holds the guidance for the routes, the
 generated and authored assets, the cache headers, JSON compression, the
 comparison generations, and the temporary previews.
+Browse, edited previews, and comparison resource routes use the
+[JavaScript asset content types](../../docs/protocol/mokly-imported-assets.md#imported-types)
+for generated assets, including media and documents. Authored files retain
+their MIME fallback.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
 Serve attempt. Saved and temporary renders deliver private composition
@@ -303,7 +307,8 @@ immutable generation files and the `no-store` root and selection.
   shutdown hooks.
 - [`src/assets.rs`](./src/assets.rs) defines `ViewerAssets` and
   `PackageAssets`, the built viewer inventory, and `Stylesheet`, a generated
-  stylesheet with its `ETag`. The shell stub comes from
+  stylesheet with its `ETag`. It also supplies the generated asset content-type
+  lookup. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
 
 - [`src/comparison_collector.rs`](./src/comparison_collector.rs) defines `CheckedCollector`, whose worker-side encoder checks frozen document and resource digests before capture.

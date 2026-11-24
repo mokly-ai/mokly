@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use mokly_css::reference_cache::{MemoryReferenceCache, ReferenceCache};
-use mokly_css::types::StylesheetRoot;
+use mokly_css::types::{OpaqueAsset, StylesheetRoot};
 
 use crate::document_store::Persistence;
 use crate::public_inputs::{ClosureInputs, MemoryClosureInputs};
@@ -15,6 +15,15 @@ use crate::resource_inputs::{MemoryResourceInputs, ResourceInputs};
 /// The charge bound of one style memo. A scan with one short reference costs about 350
 /// bytes, so the bound keeps about 12,000 distinct texts.
 pub const STYLE_REFERENCE_BYTES: usize = 4 * 1024 * 1024;
+
+/// One asset-default import with its captured source and deterministic importer.
+#[derive(Clone, Debug)]
+pub struct ImportedAsset {
+    /// Confined source identity and digest captured from the consumed bytes.
+    pub asset: OpaqueAsset,
+    /// Logical importing module used for portability diagnostics.
+    pub module: String,
+}
 
 /// Validated source metadata supplied by a bundle and description adapter, and the stores
 /// that related generations share.
@@ -34,6 +43,8 @@ pub struct DeliveryInputs {
     pub render_keys: Option<Arc<RenderKeys>>,
     /// Renderer and entry-module CSS roots from the module graph.
     pub stylesheet_roots: Vec<StylesheetRoot>,
+    /// Imported assets known before document planning and validation.
+    pub imported_assets: Vec<ImportedAsset>,
     /// Component parent path to config-relative declared public CSS, in authored order.
     pub component_stylesheets: BTreeMap<String, Vec<String>>,
     /// Parent definition path to its exporting entry module, independent of attribution.
@@ -50,6 +61,7 @@ impl Default for DeliveryInputs {
             dependency_aliases: BTreeMap::new(),
             render_keys: None,
             stylesheet_roots: Vec::new(),
+            imported_assets: Vec::new(),
             component_stylesheets: BTreeMap::new(),
             entry_modules: BTreeMap::new(),
         }
