@@ -18,8 +18,9 @@ chrome and delivery. Product and account routes remain in `packages/app`.
 - Render Mokly Cloud and Review documentation from this repository's Markdown.
 - Draw the home page's spread and demos of a fictional demo app as static
   components at build time.
-- Link every page's shared header to the public Mokly GitHub repository, and
-  the Pricing page's plan actions to the app's `/sign-up`.
+- Link every page's shared header to the public Mokly GitHub repository.
+  Link the main Get started of the header, the menu and the home hero, and
+  the Pricing page's cloud plan actions, to the app's `/sign-up`.
 - Produce a static site with no runtime API calls, cookies or third-party
   scripts. The footer's scheme control keeps the reader's choice in
   `localStorage`, and each page applies a kept choice before it first
