@@ -1,6 +1,6 @@
 # Live presence and cursors
 
-Status: Active. Not started. Milestones 1 to 3 can start at once. The other milestones wait for the merge of [live-channel-foundation](./live-channel-foundation.md). No branch or pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. Not started. Milestones 1 to 5 do not need the foundation and can start at once. Milestones 6 to 8 wait for the merge of [live-channel-foundation](./live-channel-foundation.md). No branch or pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The viewer shows nobody else who looks at the same project. The Canvas
 redesign of the site draws avatars in the viewer bar, readers on catalogue
@@ -28,6 +28,18 @@ follow-up item [agent-session-runtime](./follow-ups/agent-session-runtime.md).
     color with their name.
   - Left out: asking everyone to follow one person, because Cal did not
     choose it.
+- **Cursors on a scrolled screen, 2026-11-24, Cal: document coordinates
+  and a scroll report.** The probe sends the pointer as a point in the
+  document, and it reports its own scroll position when that changes. The
+  host turns a remote point into its own viewport and hides a cursor that
+  falls outside it. Following uses the same scroll report. Alternatives:
+  - A point in the frame's viewport. Left out: the cursor drifts when two
+    readers scroll differently.
+  - A point relative to the element under the pointer, by its instance key.
+    Left out: it costs the most probe bytes and a measure request for each
+    move, although it also holds when frame widths differ.
+  - Drawing cursors inside the frame's document. Left out: served documents
+    stay unmodified.
 - **Split, 2026-11-24, Cal.** The shared foundation merges into `main` first.
   This plan builds on it.
 - This plan replaces the follow-up item `viewer-live-presence`, which asked
@@ -44,7 +56,8 @@ My calls, 2026-11-24:
   Readers zoom, pan and filter differently, so canvas coordinates would not
   match. A reader of another publication sees the person in presence but not
   the cursor. A touch pointer sends no cursor. Presence still shows.
-  Decision 11 says how the point handles a scrolled document.
+  The point is in document coordinates, as the decision on scrolled screens
+  says.
 - **Frames forward the pointer.** A frame is a cross-origin document, so the
   host page gets no pointer moves over it. A new canvas input event,
   `canvas-pointer`, forwards the pointer position at most once for each
@@ -79,46 +92,6 @@ My calls, 2026-11-24:
   part of the screen.
 - **Selections use the existing selection box.** The viewer draws each remote
   selection with the `CanvasSelection` part of `packages/ui`.
-
-## Open decisions
-
-### 11. Where a cursor shows on a scrolled screen
-
-- **Severity:** Medium. **Effort:** Medium.
-- **Source:** Design.
-- **Category:** Product bug.
-- **Location:** `docs/protocol/mokly-frame-canvas-input.md`
-- **Background:** Each document scrolls inside its frame, as
-  `docs/protocol/mokly-shell-device-chrome.md` says. Canvas input reports
-  points in the frame's viewport. The host cannot read the scroll position
-  of a cross-origin frame.
-- **Problem:** When two readers scroll the same screen differently, a point
-  in the viewport lands on different content.
-- **Impact if no action:** A cursor can point at the wrong element.
-- **Root question:** How does a remote cursor point at the same content for
-  each reader?
-- **Options:**
-  - **A.** Send the point in viewport coordinates and accept the drift. The
-    cursor is right when both readers have not scrolled. Effort: Small.
-  - **B.** The probe sends the point in document coordinates, and also
-    reports its own scroll position when it changes. The host turns the
-    remote point into its own viewport and hides a cursor that falls outside
-    it. It costs one more event and probe bytes. Effort: Medium.
-  - **C.** The probe sends the point relative to the element under the
-    pointer, by its instance key, and the host places it with the existing
-    box measurement. It works across scrolls and window widths, but costs
-    more probe bytes and a measure request for each move. Effort: Large.
-- **Left out:** Drawing remote cursors inside the frame's document, because
-  served documents stay unmodified.
-- **Wider fix:** C, because it also holds when the frame widths differ.
-- **Previous examples:** None found.
-- **Related:** Decision 10 B, following, also needs the leader's scroll
-  position. Option B reports it, so the same event serves both.
-- **Recommendation:** B. It is exact for the same frame size, the probe
-  budget can hold one small event, and following uses the same scroll
-  report.
-- **Action:** Ask the user, because it sets a frame wire message of the
-  open-source package.
 
 Contract owners:
 
@@ -157,7 +130,7 @@ Depends on: 1
 
 - [ ] Write `docs/protocol/cloud/live-presence.md` with a status line: the
       client event kinds, presence expiry, Go to, Follow and selections.
-- [ ] Add `canvas-pointer`, its coordinates, the scroll report of decision 11
+- [ ] Add `canvas-pointer`, its coordinates, the scroll report
       and the raised subscription cap to the frame canvas input and wire docs.
 - [ ] Add the pointer callback, the remote cursor, reader and selection
       props, and the view controls for following to the viewer API doc.
@@ -169,7 +142,7 @@ Depends on: 2
 
 - [ ] Forward `canvas-pointer` from the probe and the same-origin adapter in
       `packages/frame`, within the probe's 11,264-byte budget, in the
-      coordinates that decision 11 chooses.
+      document coordinates, and add the scroll report.
 - [ ] Raise the subscription cap of ten event names in the probe, in the
       host check and in the wire doc.
 
