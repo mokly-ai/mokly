@@ -30,8 +30,12 @@ module root, `styles/<repository-relative stylesheet path>` for the bundle
 of a configured or component-declared local stylesheet, and `assets/<repository-relative asset
 path>` for an asset. The module extension is kept before `.css`:
 `src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and the
-configured `design/base.css` delivers `styles/design/base.css`; the two
-forms never collide because a module path never ends in `.css`. Under the
+configured `design/base.css` delivers `styles/design/base.css`. The two forms
+can give one route. For example, the stylesheet of the entry module
+`src/a.tsx` delivers at `styles/src/a.tsx.css`. A configured or declared
+stylesheet `src/a.tsx.css` delivers at the same route. Such a pair fails with
+the [route collision diagnostic](./mokly-imported-styles-errors.md#build-build-invalid).
+Under the
 [Vite adapter](./mokly-vite-adapter-styles.md), a configured or declared
 stylesheet whose path does not end in `.css` delivers at its route plus
 `.css`, as a module root does: `design/base.scss` delivers
