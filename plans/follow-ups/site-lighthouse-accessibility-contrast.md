@@ -8,12 +8,11 @@
 - **Location:** `apps/site/src/styles/buttons.css` (the filled `.site-button`),
   `packages/ui/src/palette/palette.ts:104` and `:128` (`signalFill`), the home
   demo depiction's `.site-acme-*` rules under `apps/site/src/styles/`,
-  `apps/site/src/lighthouse.ts:92` (`THRESHOLDS`),
+  `apps/site/src/lighthouse.ts:110` (`SKIPPED_AUDITS`),
   `docs/protocol/mokly-viewer-palette.md:62-70`,
   `docs/protocol/cloud/site-design.md:85-92`
-- **Reason:** The Site Lighthouse job is not part of Required CI, and part of
-  the cause is a user decision, so the Canvas redesign pull request did not
-  change it.
+- **Reason:** Part of the cause is a user decision, and Cal chose on
+  2026-11-24 to keep it open as a follow-up item.
 
 - **Source:** Implementation.
 - **Category:** Accessibility.
@@ -32,20 +31,24 @@
     - The home demo depiction: muted text `#968e89` on white is 3.21:1, and
       `#958a83` on `#2c2622` is 4.43:1, in `.site-acme-lines i` and
       `.site-acme-panel-title`. No decision covers these.
+  - On 2026-11-24, Cal asked for rules that make the budget pass for now. The
+    budget run leaves out the `color-contrast` audit through `SKIPPED_AUDITS`.
+    Every route then scored 1 for accessibility in a local run.
   - The same CI run also missed the performance budget once each on
     `/changelog/` at 390px (0.94) and `/pricing/` at 1440px (0.93). The item
     `flaky-site-lighthouse-performance.md` covers that.
 - **Problem:** The budget and decision 4 disagree about the filled button,
   and the demo depiction draws text below 4.5:1.
-- **Impact if no action:** The Site Lighthouse job fails on every pull
-  request, so it stops being a signal. Readers with low vision read the
+- **Impact if no action:** No site check measures the contrast of rendered
+  text, so a new contrast defect on a page passes unseen. Readers with low vision read the
   button labels and the demo's small muted text with difficulty.
 - **Root question:** Which contrast does a filled button and the home demo
   keep, and does the budget accept decision 4?
 - **Options:**
   - **A.** Darken the demo's muted text to 4.5:1 on its fills, and keep
-    decision 4. Exclude only the filled button pair from the budget's
-    `color-contrast` audit, with the decision named. Effort: Small.
+    decision 4. Keep the Lighthouse audit out, and add an axe contrast rule
+    to the browser check that leaves out only the filled button. Effort:
+    Small.
   - **B.** Darken the demo text, and reverse decision 4: `signalFill` becomes
     `#0a8047` (5.01:1 with white) in the palette, the site, the viewer and
     the cloud. Change the two palette pages. Effort: Small.
@@ -54,8 +57,10 @@
 - **Left out:** Lowering the accessibility threshold, because it would also
   hide new contrast defects.
 - **Wider fix:** B, because one fill then serves every surface at 4.5:1.
-- **Previous examples:** Decision 4 in `plans/canvas-redesign-decisions.md`.
-- **Recommendation:** B. It meets WCAG AA for every button label and keeps a
-  close green. A keeps a known contrast gap in the budget.
-- **Action:** ask the user, because B reverses decision 4 and A changes a
-  budget.
+- **Previous examples:** Decision 4 of the Canvas redesign, which
+  `docs/protocol/mokly-viewer-palette.md` and
+  `docs/protocol/cloud/site-design.md` hold.
+- **Recommendation:** B. It meets WCAG AA for every button label, keeps a
+  close green, and lets the budget run the audit again. A keeps a known
+  contrast gap.
+- **Action:** ask the user, because B reverses decision 4 and A adds a check.

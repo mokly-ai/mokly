@@ -125,8 +125,11 @@ text or are decorative.
 
 ## Performance Budget
 
-Lighthouse thresholds, per page and viewport: performance ≥ 0.95,
-accessibility = 1.0, best practices ≥ 0.95, SEO ≥ 0.95. Pages audited: `/`,
+Lighthouse thresholds, per page and viewport: performance ≥ 0.9,
+accessibility = 1.0, best practices ≥ 0.95, SEO ≥ 0.95. The run leaves out
+Lighthouse's colour contrast audit, because it holds the filled button to
+4.5:1, while [Site design](./site-design.md) keeps that one pair at 3:1. The
+unit tests measure the contrast pairs instead. Pages audited: `/`,
 `/docs`, `/docs/authoring/config`, `/docs/cli/serve`, `/changelog`,
 `/pricing`, `/terms`, which covers every composition the site publishes. The
 390px audit keeps Lighthouse's simulated slow-4G connection; the 1440px audit

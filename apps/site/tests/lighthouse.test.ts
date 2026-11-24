@@ -5,6 +5,7 @@ import { pageAt } from "../src/docs/pages.js";
 import {
   AUDITED,
   CATEGORIES,
+  SKIPPED_AUDITS,
   THRESHOLDS,
   VIEWPORTS,
   budgetTable,
@@ -96,13 +97,17 @@ test("the retry remains a hard gate when its score still fails", async () => {
   assert.deepEqual(shortfalls(measurement), ["accessibility"]);
 });
 
-test("the budget requires perfect accessibility and 0.95 for other scores", () => {
+test("the budget requires perfect accessibility, 0.9 performance and 0.95 for other scores", () => {
   assert.deepEqual(THRESHOLDS, {
     accessibility: 1,
     "best-practices": 0.95,
-    performance: 0.95,
+    performance: 0.9,
     seo: 0.95,
   });
+});
+
+test("the budget leaves out only the colour contrast audit", () => {
+  assert.deepEqual([...SKIPPED_AUDITS], ["color-contrast"]);
 });
 
 test("a score under its threshold is reported, and an equal score is not", () => {
