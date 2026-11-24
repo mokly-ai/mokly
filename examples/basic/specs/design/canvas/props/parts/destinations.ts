@@ -12,6 +12,7 @@ export const PROPS_PAGES = {
   propsInvalid: "design/canvas/props/states/invalid",
   propsInvalidTogether: "design/canvas/props/states/invalid-together",
   propsError: "design/canvas/props/states/error",
+  propsLaterEdit: "design/canvas/props/states/later-edit",
   propsExpired: "design/canvas/props/states/expired",
   propsPreparing: "design/canvas/props/preparing",
   propsPreparingFailed: "design/canvas/props/preparing/failed",

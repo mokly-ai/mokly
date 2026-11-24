@@ -226,7 +226,8 @@
         "design/canvas/outcomes/removed/loading",
         "design/canvas/outcomes/removed/long",
         "design/canvas/outcomes/removed/unavailable",
-        "design/canvas/stage/home"
+        "design/canvas/stage/home",
+        "design/canvas/stories/failed/changes"
       ]
     },
     {
@@ -312,7 +313,8 @@
         "design/canvas/outcomes/removed/unavailable",
         "design/canvas/stage/document",
         "design/canvas/stage/document/light-only",
-        "design/canvas/stage/home"
+        "design/canvas/stage/home",
+        "design/canvas/stories/failed/changes"
       ]
     },
     {

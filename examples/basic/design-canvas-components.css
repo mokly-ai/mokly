@@ -1,10 +1,10 @@
 /* The Canvas viewer's component explorer: a changed component compared on
    its variant set, its Usage with the affected screens, a screen that also
    changed its own props, screen inspection that waits or is unavailable,
-   and a removed saved variant. Each Canvas part keeps its own sheet; this
-   sheet holds only the states of these artboards. Saved props that a
-   comparison shows end with the shipped text button, from its @mokly/ui
-   stylesheet. */
+   a removed saved variant, and the Storybook stories. Each Canvas part
+   keeps its own sheet; this sheet holds only the states of these
+   artboards. Saved props that a comparison shows end with the shipped text
+   button, from its @mokly/ui stylesheet. */
 @import "../../packages/ui/src/text-button/text-button.css";
 
 /* ---- The version before --------------------------------------------- */
@@ -182,5 +182,115 @@
     > .cv-kind-tag {
     font-size: 0;
     gap: 0;
+  }
+}
+
+/* ---- Storybook stories ----------------------------------------------- */
+
+/* The Menu as its stories render it: its button, and, when a story opens
+   it, its list below the button. It reads the frame's screen colours, so
+   its Dark frame draws it dark. */
+.cv-menu {
+  color: var(--mbk-screen-ink);
+  font-size: 13px;
+  padding: 24px;
+}
+
+.cv-menu-trigger {
+  align-items: center;
+  border: 1px solid var(--mbk-screen-border);
+  border-radius: 8px;
+  display: inline-flex;
+  font-weight: 600;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+}
+
+.cv-menu-trigger--disabled {
+  background: var(--mbk-screen-border);
+  color: var(--mbk-screen-muted);
+}
+
+.cv-menu-list {
+  border: 1px solid var(--mbk-screen-border);
+  border-radius: 8px;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 4px 0;
+  width: 132px;
+}
+
+.cv-menu-list > li {
+  line-height: 28px;
+  padding: 0 12px;
+}
+
+/* The error document of a story that could not render. It carries only
+   its own styles, with system colours, so it follows the scheme of its
+   view: the frame's clip sets that scheme. It starts at the top left, where
+   the story would render, and gives the reason last. */
+.cv-story-error {
+  background: Canvas;
+  color: CanvasText;
+  font:
+    14px/1.45 system-ui,
+    sans-serif;
+  inset: 0;
+  padding: 20px 24px;
+  position: absolute;
+}
+
+.cv-story-error > p {
+  margin: 0 0 8px;
+}
+
+.cv-story-error-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.cv-story-error-label {
+  color: GrayText;
+  font-size: 12px;
+  margin-top: 14px;
+}
+
+.cv-story-error code {
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+}
+
+/* The Storybook link in Details: its icon after its words says that it
+   opens in a new tab, and a label that only assistive technology reads says
+   so too. */
+.cv-external-link {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+
+.cv-visually-hidden {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* The Menu's frames join the frames that the compact picker swaps in
+   place: its own example's and Expanded's. Disabled shares the Action's
+   frame ids, whose rules show it. */
+@container cv (width < 56.25rem) {
+  .cv-work:has(option[value="menu-light"]:checked)
+    .cv-frame[data-cv-frame="menu-light"],
+  .cv-work:has(option[value="menu-dark"]:checked)
+    .cv-frame[data-cv-frame="menu-dark"],
+  .cv-work:has(option[value="expanded-light"]:checked)
+    .cv-frame[data-cv-frame="expanded-light"],
+  .cv-work:has(option[value="expanded-dark"]:checked)
+    .cv-frame[data-cv-frame="expanded-dark"] {
+    display: block;
   }
 }

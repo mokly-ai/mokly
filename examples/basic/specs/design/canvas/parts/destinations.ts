@@ -5,6 +5,7 @@ import { LOADING_PAGES } from "../loading/parts/destinations.js";
 import { OUTCOME_PAGES } from "../outcomes/parts/destinations.js";
 import { PROPS_PAGES } from "../props/parts/destinations.js";
 import { SEARCH_PAGES } from "../search/parts/destinations.js";
+import { STORY_PAGES } from "../stories/parts/destinations.js";
 
 /**
  * The stage, Inspect, Changes and added-entry artboards of the Canvas viewer
@@ -58,6 +59,7 @@ export const CANVAS_PAGES = {
   ...PROPS_PAGES,
   ...EVIDENCE_PAGES,
   ...FLOW_PAGES,
+  ...STORY_PAGES,
 } as const;
 
 export type CanvasDestination =

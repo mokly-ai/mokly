@@ -1,5 +1,7 @@
 # Component Controls Design
 
+Status: Before an edit has rendered, the viewer's alerts still name the last valid props, not the saved props. The [Props sentence milestone](../../plans/storybook-support.md#milestone-24a-the-props-sentence-after-a-failed-edit) changes them.
+
 ## Controls Panel
 
 The Props and controls artboards, except the one of a screen without props,
@@ -49,6 +51,12 @@ Pending state keeps the last valid preview visible and shows Updating preview.
 In the compact layout that status is a pill at the top of the shown frame,
 above the open panel sheet.
 Rendering failure also retains that preview, with Try again and Reset actions.
+The alert of a failed render or an invalid value names the props that the
+preview shows. Until an edit has rendered, it names the saved props, and after
+that, the last valid props. `design/canvas/props/states/error` depicts a
+failed first render. `design/canvas/props/states/later-edit` depicts a later
+edit that failed after an earlier edit rendered. Its fields keep the later
+edit, and its frames keep the earlier one.
 Retry leads back through the pending design state. A comparison shows the
 saved variant, and Props edits the current frames that Inspect shows. Published
 saved-variant designs keep values readable and variant links usable; their
@@ -88,7 +96,7 @@ through Serve or make a static preview reactive.
 The `Props and controls` folder of the Canvas family, `design/canvas/props`,
 owns the states of Inspect's Props section. The
 [component design inventory](./mokly-component-design-inventory.md#owning-catalogue)
-lists its five screens and eleven saved variants. Each screen holds one kind
+lists its five screens and twelve saved variants. Each screen holds one kind
 of state: `editing` the edits of Default and their reset, `states` a render in
 flight and its failures, `preparing` the start of editing, `read-only` the
 static build and an entry without props, and `loading` the route's details.
@@ -107,6 +115,7 @@ Other Canvas artboards show the same Props section in their own context:
 | `design/canvas/components/removed`                    | A removed saved variant's saved props, read-only          |
 | `design/canvas/components/usage/loading` and `failed` | Props waiting for the parent's detail, or failing with it |
 | `design/canvas/loading/entry` and `failed`            | Props waiting for the entry's detail, or failing with it  |
+| `design/canvas/stories/failed`                        | Editable props of a story that could not render           |
 
 No artboard draws a component without declared controls, because every
 component of the example declares controls.

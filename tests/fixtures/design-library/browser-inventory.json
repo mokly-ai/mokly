@@ -524,6 +524,12 @@
   },
   {
     "kind": "screen",
+    "path": "design/canvas/props/states/later-edit",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/props/states"
+  },
+  {
+    "kind": "screen",
     "path": "design/canvas/search/tags",
     "colorSchemes": ["light", "dark"]
   },
@@ -605,6 +611,28 @@
     "kind": "screen",
     "path": "design/canvas/stage/zoomed",
     "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stories/failed",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stories/failed/changes",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/stories/failed"
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stories/storybook",
+    "colorSchemes": ["light", "dark"]
+  },
+  {
+    "kind": "screen",
+    "path": "design/canvas/stories/storybook/added",
+    "colorSchemes": ["light", "dark"],
+    "variantOf": "design/canvas/stories/storybook"
   },
   {
     "kind": "component",

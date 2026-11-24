@@ -1,19 +1,23 @@
 # Component Design Inventory
 
 This continues the [component explorer design](./mokly-component-design.md).
-It lists the Component explorer and Props and controls folders of the
-[Canvas design inventory](./mokly-shell-canvas-inventory.md). The columns of
-the [Canvas inventory](./mokly-shell-canvas-inventory.md#inventory) and its
+It lists the Component explorer, Props and controls, and Storybook stories
+folders of the [Canvas design inventory](./mokly-shell-canvas-inventory.md).
+The columns of the
+[Canvas inventory](./mokly-shell-canvas-inventory.md#inventory) and its
 [family rules](./mokly-shell-canvas-inventory.md#family-rules) apply to every
 entry here.
 
 ## Owning Catalogue
 
-Source lives under `examples/basic/specs/design/canvas/components/` and
-`examples/basic/specs/design/canvas/props/`. Mokly renders each artboard as
+Source lives under `examples/basic/specs/design/canvas/components/`,
+`examples/basic/specs/design/canvas/props/`, and
+`examples/basic/specs/design/canvas/stories/`. Mokly renders each artboard as
 its path-derived `index.<viewport>.html` views under the
-[artifact path contract](./mokly-artifact-paths.md). Each folder holds five
-screens, and their saved variants stay under them in authored order.
+[artifact path contract](./mokly-artifact-paths.md). The Component explorer
+and Props and controls folders each hold five screens, and the Storybook
+stories folder holds two. Saved variants stay under their screens in authored
+order.
 
 | Entry                                               | Folder                       | State                                                              | Phone sheet       |
 | --------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------ | ----------------- |
@@ -41,7 +45,8 @@ screens, and their saved variants stay under them in authored order.
 | `design/canvas/props/states`                        | Props and controls           | `Updating preview`: each frame keeps its last valid preview        | Inspect           |
 | `design/canvas/props/states/invalid`                | Props and controls (variant) | Corner radius 40 rejected, with its field error                    | Inspect           |
 | `design/canvas/props/states/invalid-together`       | Props and controls (variant) | Values not valid together: no field marked, Reset the one way back | Inspect           |
-| `design/canvas/props/states/error`                  | Props and controls (variant) | The render failed: the edits stay, with Try again                  | Inspect           |
+| `design/canvas/props/states/error`                  | Props and controls (variant) | The first render failed: the edits stay, with Try again            | Inspect           |
+| `design/canvas/props/states/later-edit`             | Props and controls (variant) | A later edit failed: the frames keep the edit that rendered        | Inspect           |
 | `design/canvas/props/states/expired`                | Props and controls (variant) | The temporary preview expired: the edits stay, with Update preview | Inspect           |
 | `design/canvas/props/preparing`                     | Props and controls           | Read-only fields under `Preparing to edit props…`                  | Inspect           |
 | `design/canvas/props/preparing/failed`              | Props and controls (variant) | `Editing could not start.`, with Try again                         | Inspect           |
@@ -50,6 +55,10 @@ screens, and their saved variants stay under them in authored order.
 | `design/canvas/props/read-only/no-props`            | Props and controls (variant) | Details, a screen without props, with Props unfolded               | Inspect           |
 | `design/canvas/props/loading`                       | Props and controls           | `Loading props…` and no fields while the route's details load      | Inspect           |
 | `design/canvas/props/loading/failed`                | Props and controls (variant) | The route's details failed: the stage, Props and Usage say so      | Inspect           |
+| `design/canvas/stories/failed`                      | Storybook stories            | The failed Expanded story, with the error document in its frames   | None              |
+| `design/canvas/stories/failed/changes`              | Storybook stories (variant)  | Side by side: Expanded's last render beside the error document     | None              |
+| `design/canvas/stories/storybook`                   | Storybook stories            | The Menu's own page from All: Story and Storybook rows in Details  | None              |
+| `design/canvas/stories/storybook/added`             | Storybook stories (variant)  | The added Disabled from Changes: a Story row and no Storybook row  | None              |
 
 ## Component Explorer
 
@@ -95,3 +104,26 @@ The [component controls design](./mokly-component-controls-design.md#owning-cata
 owns the states of Inspect's Props section. Each Props state shows a saved
 variant of the Action on its variant set, except
 `design/canvas/props/read-only/no-props`, which shows Details.
+
+## Storybook Stories
+
+- The Storybook stories states depict the stories branch of the
+  [component explorer design](./mokly-component-design.md#storybook-stories).
+  Each state shows the Menu's variant set: the Menu's own row, which its first
+  story, Collapsed, renders, then the rows of Expanded and Disabled.
+- The states of a story open from the Changes filter. On Inspect, the story's
+  Light frame is selected. The Menu's own page opens from All, with no frame
+  selected, so Props asks for a variant.
+- Expanded's Changes tab, `design/canvas/stories/failed/changes`, is the first
+  of the branch's two changes. Its Side by side has a chip for each of
+  Expanded's frames. No artboard shows Disabled's Changes tab, the pair of
+  Expanded · Dark, or another compare mode. So Disabled's Changes tab,
+  Expanded's Next change, the chip of Expanded · Dark, and the other compare
+  modes are pictures.
+- The Menu's own page is unmodified, but its set shows the changed Expanded
+  row, so its panel has Changes. No artboard shows that tab, so it is a
+  picture.
+- The `Open in Storybook` link of Details has no design entry to open, so the
+  artboards draw it without an address, under the
+  [design links contract](./mokly-design-links.md#link-behavior). It opens
+  nothing and adds no keyboard stop.
