@@ -1,6 +1,6 @@
 # Viewer pane titles test meets a removed window
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-24, from the CI of PR #498, branch `calummoore/ci-fix-site-lighthouse-hn4n`.
 - **Location:** `packages/viewer/tests/comparison_pane_titles.test.tsx:129-187`, the test "a Dark frame that shows its Light view names its own frame in its panes' titles", and its teardown `t.after(() => GlobalRegistrator.unregister())` at `:131`.
@@ -26,10 +26,10 @@
 - **Root question:** How does each viewer test that removes the DOM globals know that React has no more queued work before it removes them?
 - **Options:**
   - **A.** In this test, wait until React has flushed its queued work after the unmount, for example by unmounting inside `act`, before the globals go. Reproduce the failure first with repeated runs, and record the pass counts before and after. Effort: Small.
-  - **B.** Give the viewer tests one teardown helper that unmounts, waits until React's scheduler is idle, and only then removes the DOM globals, and move the 26 tests to it. Reproduce first, as A does. Effort: Medium.
-  - **C.** Register the DOM globals once for the whole viewer test process, and never remove them. It drops the per-test isolation of the globals that the tests rely on. Effort: Small.
+  - **B.** Register the DOM globals once for the whole viewer test process, and never remove them. It drops the per-test isolation of the globals that the tests rely on. Effort: Small.
+  - **C.** Give the viewer tests one teardown helper that unmounts, waits until React's scheduler is idle, and only then removes the DOM globals, and move the 26 tests to it. Reproduce first, as A does. Effort: Medium.
 - **Left out:** A retry, a sleep, or a longer timeout. They fail the goal, because the late callback still runs, and the testing rules forbid them for a flaky test.
-- **Wider fix:** B. Every test that removes the DOM globals then waits for React in the same way.
+- **Wider fix:** C. Every test that removes the DOM globals then waits for React in the same way.
 - **Previous examples:** None found.
-- **Recommendation:** B. One helper removes the race from all 26 tests that share the teardown, after a reproduction confirms the cause.
-- **Action:** fix after merge, apply B, because the test is outside the scope of the change that found it, and one fix in its own branch reaches every open branch.
+- **Recommendation:** C. One helper removes the race from all 26 tests that share the teardown, after a reproduction confirms the cause, and it keeps the per-test isolation that B drops.
+- **Action:** fix after merge, apply C, because the test is outside the scope of the change that found it, and one fix in its own branch reaches every open branch.
