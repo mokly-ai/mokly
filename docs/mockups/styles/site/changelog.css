@@ -14,13 +14,18 @@
   width: 100%;
 }
 
-/* The workspace: Version history, then the frames, up to 1080px and centred */
+/* The workspace: Version history, then the frames, up to 1080px and centred.
+   Version history takes the place and the width of the docs Layers panel:
+   a 252px column 32px beside the frames, in a workspace at most 1680px wide
+   and centred, as docs-tree.css draws it. */
 
 .site-changelog-body {
   align-items: start;
   display: grid;
-  gap: var(--mk-space-10);
-  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 32px;
+  grid-template-columns: 252px minmax(0, 1fr);
+  margin: 0 auto;
+  max-width: 1680px;
   padding: 0 var(--mk-space-20) 0 var(--mk-space-4);
 }
 
@@ -75,11 +80,12 @@
 }
 
 /* Version history: the floating panel, sticky under the tool bar; its list
-   scrolls inside it when the releases outgrow the window */
+   scrolls inside it when the releases outgrow the window. It starts 56px
+   below the tool bar and keeps the height of the docs Layers panel. */
 
 .site-release-index {
-  margin-top: 28px;
-  max-height: calc(100vh - 60px - var(--mk-space-8));
+  margin-top: 56px;
+  max-height: calc(100vh - 128px);
   position: sticky;
   top: calc(60px + var(--mk-space-6));
 }

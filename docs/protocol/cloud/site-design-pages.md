@@ -60,9 +60,11 @@ owns the islands that make the parts below move.
 
 ## Changelog
 
-- Workspace: on desktop, the 200px Version history panel sits 40px beside the
-  frames column, which is at most 1080px wide. Below 1200px the panel does
-  not show. Mobile has no panel.
+- Workspace: on desktop, the Version history panel takes the place and the
+  width of the docs Layers panel: 252px wide, 56px below the tool bar, and
+  32px beside the frames column in a workspace at most 1680px wide. The
+  frames column is at most 1080px wide. Below 1200px the panel does not
+  show. Mobile has no panel.
 - Head: the title is a selected text layer with eight handles, the name tag
   `Heading`, a size tag and, on desktop, a type badge. The lead is at most
   34ch wide.
