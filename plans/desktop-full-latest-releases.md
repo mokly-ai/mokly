@@ -1,6 +1,6 @@
 # Desktop releases become full latest releases
 
-Status: Active. On branch `calummoore/desktop-releases-become-latest-releases-clkn`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/desktop-releases-become-latest-releases-clkn`, no pull request yet. The pull request waits for the owner's answer to the follow-up item `plans/follow-ups/desktop-promotion-can-move-latest-backward.md`. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Every desktop release of `mokly-ai/mokly-desktop` is a GitHub pre-release
 today, and its installer names hold the version, such as
@@ -198,11 +198,11 @@ and their tests implement the design.
 
 Depends on: 1, 2
 
-- [ ] Run the targeted tests, `npm run test --workspace @mokly-cloud/desktop`,
+- [x] Run the targeted tests, `npm run test --workspace @mokly-cloud/desktop`,
       `cargo xtask check --suite repository` and the gate suites that the
       `finish-work` skill names.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
