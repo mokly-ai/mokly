@@ -40,12 +40,15 @@ state.
   hydration.
 - A home demo plays once when it comes into view and rests in its finished
   state, which the built page draws.
-- A reader's pointer over the compared screens of the Browse demo takes the
-  Swipe divider: a mouse or a pen as it moves, and any pointer, a tap
-  included, as it presses. The demo's sweep stops, and the divider and the
-  branch screen's clip follow the pointer and stay where it leaves them. A
-  touch that moves without a press scrolls the page. The divider takes no
-  focus. Without script the divider rests at 50%.
+- A mouse or a pen that moves over the compared screens of the Browse demo
+  pauses its sweep, and the sweep resumes when the pointer leaves. A scroll
+  alone does not pause it.
+- A press grabs the Swipe divider: the divider and the branch screen's clip
+  follow the pointer until the release. A touch grabs it when it moves across
+  the screens, and a tap puts it under the finger. A touch that moves up or
+  down scrolls the page. After a grab the sweep does not play again, and the
+  divider stays where the reader leaves it until the page loads again. The
+  divider takes no focus. Without script the divider rests at 50%.
 - The changelog filter shows only the notes of the chosen group and the
   releases that hold them, and its status line counts them. Without script
   the filter does not show, and every note shows.

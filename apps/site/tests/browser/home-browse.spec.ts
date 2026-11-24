@@ -6,7 +6,7 @@ import { SITE_PATHS } from "../../src/navigation.js";
  * Frame 01 Browse of the home: the depicted Mokly viewer's compare toolbar,
  * the frame as a depiction, and its demo, which plays once in view and
  * rests with the Swipe divider at the middle of the compared screens, and
- * the reader's pointer, which stops the sweep and takes the divider. The
+ * the reader's pointer, which pauses the sweep and grabs the divider. The
  * home spec checks the module's place in the features, and the home island
  * test checks when the island arms and plays a demo.
  *
@@ -108,33 +108,79 @@ test("with motion allowed the Browse demo plays in view and rests with the divid
     .toBeLessThanOrEqual(1);
 });
 
-test("a pointer over the compared screens stops the sweep and moves the divider under it", async ({
+/** The compared screens' box, once the stage is laid out. */
+async function stageBox(browse: Locator): Promise<{
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}> {
+  const box = await browse.locator(".site-stage-frame").boundingBox();
+  if (box === null) throw new Error("The compared screens have no box");
+  return box;
+}
+
+test("a pointer that moves over the compared screens pauses the sweep until it leaves", async ({
   page,
 }) => {
   await page.goto(SITE_PATHS.home);
   const browse = browseModule(page);
   await scrollToStage(page, browse);
-  // Wait until Sam's sweep has the divider left of the middle.
   const poll = { intervals: [100], timeout: 10_000 };
   await expect.poll(() => dividerOffset(browse), poll).toBeLessThan(-40);
 
-  const stage = await browse.locator(".site-stage-frame").boundingBox();
-  if (stage === null) throw new Error("The compared screens have no box");
-  // The pointer moves to 80% of the stage's width: 30% right of the middle.
-  await page.mouse.move(stage.x + stage.width * 0.7, stage.y + 40);
-  await page.mouse.move(stage.x + stage.width * 0.8, stage.y + 40);
-  const expected = stage.width * 0.3;
-  await expect
-    .poll(async () => Math.abs((await dividerOffset(browse)) - expected))
-    .toBeLessThanOrEqual(1);
-  await expect(browse.locator(".site-home-swipe-track")).toHaveCSS(
-    "animation-name",
-    "none",
+  const stage = await stageBox(browse);
+  const track = browse.locator(".site-home-swipe-track");
+  await page.mouse.move(stage.x + stage.width * 0.6, stage.y + 40);
+  await expect(track).toHaveCSS("animation-play-state", "paused");
+  await expect(browse.locator(".site-home-swipe-branch")).toHaveCSS(
+    "animation-play-state",
+    "paused",
   );
+  expect(await dividerOffset(browse)).toBeLessThan(-1);
+
+  // Off the screens, the sweep plays on and rests at the middle.
+  await page.mouse.move(stage.x + stage.width * 0.6, stage.y - 60);
+  await expect(track).toHaveCSS("animation-play-state", "running");
+  await expect.poll(() => dividerOffset(browse), poll).toBeGreaterThan(40);
+  await expect
+    .poll(async () => Math.abs(await dividerOffset(browse)), poll)
+    .toBeLessThanOrEqual(1);
+});
+
+test("a grab slides the divider, which stays where the pointer leaves it", async ({
+  page,
+}) => {
+  await page.goto(SITE_PATHS.home);
+  const browse = browseModule(page);
+  await scrollToStage(page, browse);
+  const poll = { intervals: [100], timeout: 10_000 };
+  await expect.poll(() => dividerOffset(browse), poll).toBeLessThan(-40);
+
+  const stage = await stageBox(browse);
+  const y = stage.y + 40;
+  await page.mouse.move(stage.x + stage.width * 0.7, y);
+  await page.mouse.down();
+  await page.mouse.move(stage.x + stage.width * 0.8, y);
+  // At 80% of the stage's width, the divider is 30% right of the middle.
+  const slid = async (): Promise<number> =>
+    Math.abs((await dividerOffset(browse)) - stage.width * 0.3);
+  await expect.poll(slid).toBeLessThanOrEqual(1);
+  await page.mouse.up();
+
+  // Off the screens, the sweep stays off and the divider stays put.
+  await page.mouse.move(stage.x + stage.width * 0.8, stage.y - 60);
+  for (const part of [".site-home-swipe-track", ".site-home-swipe-branch"]) {
+    await expect(browse.locator(part), part).toHaveCSS(
+      "animation-name",
+      "none",
+    );
+  }
   await expect(browse.locator(".site-home-swipe-branch")).toHaveCSS(
     "clip-path",
     "inset(0px 0px 0px 80%)",
   );
+  expect(await slid()).toBeLessThanOrEqual(1);
 });
 
 test("under reduced motion the Browse demo rests in its finished state at once", async ({

@@ -8,8 +8,9 @@
    branch screen's clip follows the divider. Only clip-path and transform
    move, and each animation fills backwards only, so the demo rests where the
    base rules draw it. Under reduced motion the island sets no state, and
-   home.css stops every animation of a demo. Once the reader's pointer takes
-   the divider, the sweep stops and the divider follows the pointer. */
+   home.css stops every animation of a demo. A reader's pointer that moves
+   over the compared screens pauses the sweep, and a grab slides the
+   divider and ends the sweep. */
 
 /* The connector, wiped in from View changes: right to left on the desktop
    layouts and top to bottom on a phone, each wipe across its own layout's
@@ -121,22 +122,34 @@
   }
 }
 
-/* The reader's hold, which the Swipe control of
-   src/components/home/swipe-control.ts sets: the reader's pointer takes the
-   divider, so the sweep stops, and the divider's track and the branch
-   screen's clip follow --swipe-share, the divider's share of the
-   stage's width. A ready stage shows a resize pointer. */
+/* The reader's pointer, which the Swipe control of
+   src/components/home/swipe-control.ts runs. A pointer that moves over the
+   compared screens pauses the sweep where it is. A grab stops the sweep for
+   good: the divider's track and the branch screen's clip follow
+   --swipe-share, the divider's share of the stage's width, and rest there.
+   A touch that moves up or down scrolls the page. */
 
 .site-stage-frame[data-home-swipe-state] {
-  cursor: ew-resize;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
 }
 
-.site-stage-frame[data-home-swipe-state="held"] .site-home-swipe-track {
+.site-stage-frame[data-home-swipe-state="drag"] {
+  cursor: grabbing;
+}
+
+.site-stage-frame[data-home-swipe-state="hover"]
+  :is(.site-home-swipe-track, .site-home-swipe-branch) {
+  animation-play-state: paused;
+}
+
+.site-stage-frame[data-home-swipe-placed] .site-home-swipe-track {
   animation: none;
   transform: translateX(calc(var(--swipe-share) - 50%));
 }
 
-.site-stage-frame[data-home-swipe-state="held"] .site-home-swipe-branch {
+.site-stage-frame[data-home-swipe-placed] .site-home-swipe-branch {
   animation: none;
   clip-path: inset(0 0 0 var(--swipe-share));
 }
