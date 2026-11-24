@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="https://mokly.ai/brand/mokly-logo.svg" alt="Mokly" width="360">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://mokly.ai/brand/mokly-logo-dark.svg">
+    <img src="https://mokly.ai/brand/mokly-logo-light.svg" alt="Mokly" width="360">
+  </picture>
 </p>
 
 <p align="center">
@@ -20,6 +23,10 @@
   <a href="#authoring">Authoring</a> ·
   <a href="./packages/viewer/README.md">React viewer</a> ·
   <a href="./docs/protocol/README.md">Protocols</a>
+</p>
+
+<p align="center">
+  <img src="./docs/assets/mokly-viewer.png" alt="The Mokly viewer. The catalogue tree is on the left. The Team members screen shows its desktop and mobile frames in light and dark. The Inspect panel on the right shows its path, source, tags, related docs, and variants." width="900">
 </p>
 
 Mokly is an open-source toolkit for turning product screens into a searchable

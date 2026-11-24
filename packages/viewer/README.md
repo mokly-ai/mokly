@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="https://mokly.ai/brand/mokly-logo.svg" alt="Mokly" width="360">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://mokly.ai/brand/mokly-logo-dark.svg">
+    <img src="https://mokly.ai/brand/mokly-logo-light.svg" alt="Mokly" width="360">
+  </picture>
 </p>
 
 <p align="center">
