@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import type { Build, Project, Session } from "../../api/types";
+import { liveClient } from "../../data/live-client";
 import { useBuildWatch } from "../../viewer/build-watch";
 import type { BuildWatch } from "../../viewer/build-watch";
 import type { ViewerEntry } from "../../viewer/entry";
@@ -48,9 +49,14 @@ export function useViewerBuild(
   projectId: string,
   entry: ViewerEntry,
   reload: () => void,
+  member: boolean,
 ): ViewerBuild {
+  useEffect(
+    () => (member ? liveClient.subscribe(projectId, {}) : undefined),
+    [member, projectId],
+  );
   const buildId = entry.kind === "build" ? entry.buildId : undefined;
-  const { watch, retry, apply } = useBuildWatch(projectId, buildId);
+  const { watch, retry, apply } = useBuildWatch(projectId, buildId, member);
   const build = watch.status === "ready" ? watch.build : undefined;
   const route = entry.kind === "build" && entry.route;
   const aliasPublished =

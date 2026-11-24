@@ -239,11 +239,11 @@ Depends on: 3
 
 Depends on: 4
 
-- [ ] Add the live client to `packages/app`: one socket for each open
+- [x] Add the live client to `packages/app`: one socket for each open
       project, reconnect with backoff, resync, and subscribe by kind.
-- [ ] Add the build and build log triggers in a migration with its
+- [x] Add the build and build log triggers in a migration with its
       `down.sql`.
-- [ ] Make the build card read on each build notice, with the 3-second poll
+- [x] Make the build card read on each build notice, with the 3-second poll
       while the socket is down and the 30-second poll while it is up.
 
 ## Milestone 7: Verification, commit, review, and pull request

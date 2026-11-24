@@ -1,7 +1,5 @@
 # Live Channel
 
-Status: The app client and build triggers are planned in the [app live client and build notices](../../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) milestone.
-
 The live channel pushes changes to the app. The live client of the app, the
 client below, holds one WebSocket for each project that the app shows, on the
 API origin. A socket carries two kinds of traffic. A notice tells the socket

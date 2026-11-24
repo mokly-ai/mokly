@@ -88,7 +88,8 @@ export function ViewerScreen({
   );
   const publication =
     entry.kind === "publication" ? entry.publication : undefined;
-  const build = useViewerBuild(project.id, entry, reload);
+  const member = memberAccess(session, project);
+  const build = useViewerBuild(project.id, entry, reload, member);
   const address = useViewerAddressState(entry, publication, build.published);
   const { pathname, search, state, corrected, defaults, panel } = address;
   // The package draws its own chrome around the cloud's slots, so it takes the
@@ -191,7 +192,7 @@ export function ViewerScreen({
     catalogue: catalogue.state,
     isPullRequest: publicationRef?.kind === "pull-request",
     named: publicationId !== undefined,
-    member: memberAccess(session, project),
+    member,
     build: build.watch,
     actions: {
       onChoose: () => openPanel("switcher"),

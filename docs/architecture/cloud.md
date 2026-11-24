@@ -1,7 +1,5 @@
 # Architecture
 
-Status: The app client and build triggers are planned in the [app live client and build notices](../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) milestone.
-
 Mokly Cloud is the hosted companion to the open-source `@mokly/mokly` mockup
 catalogue CLI. Teams author React mockups in their own repository; the cloud
 publishes each branch's exported catalogue, hosts the viewer, posts a GitHub

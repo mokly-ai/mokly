@@ -75,6 +75,11 @@ export function projectPermalinkPath(projectId: string): string {
   return `/projects/${segment(projectId)}`;
 }
 
+/** The API path for one project's live channel. */
+export function liveProjectPath(projectId: string): string {
+  return `/v1/live/projects/${segment(projectId)}`;
+}
+
 /** The project-created publishing step. */
 export function projectSetupPath(
   workspaceSlug: string,

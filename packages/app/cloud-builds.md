@@ -5,14 +5,20 @@ This is the cloud builds guide for the [App package](./README.md).
 `/:workspace/:project/builds/:buildId` shows one build's card in the viewer
 stage, as [Viewer builds](../../docs/protocol/cloud/viewer-builds.md) defines.
 `src/data/builds.ts` holds the five build operations. `useBuildWatch` follows
-the build through `build-follow.ts`: the first read, then the build and its log
-every three seconds while the build works or its log is incomplete and the tab
-is visible; a failed poll changes nothing on screen. A build read applies only
-if it started after the last write answer the card applied, such as Cancel's,
-and neither a read nor a write answer moves a finished build back to queued or
-running. `build-log.ts` keeps the windows it has read, replaces an older
-attempt's output, keeps no more output after the head than Mokly keeps, and
-turns chunks into output lines.
+the build through `build-follow.ts`. After the first read, the card reads the
+build and its log while the build works or its log is incomplete. For a
+reader with member access, `src/data/live-client.ts` shares a socket among
+the project's subscribers. The card reads
+on each `build` or `build-log` notice for its build, on each socket open, and
+on `resync`. It also polls every three seconds with the socket down and every
+30 seconds with it up. A hidden tab pauses reads and reads at once when it
+becomes visible again. A failed poll keeps the current card and output.
+
+A build read applies only if it started after the last write answer the card
+applied, such as Cancel's, and neither a read nor a write answer moves a
+finished build back to queued or running. `build-log.ts` keeps the windows it
+has read, replaces an older attempt's output, keeps no more output after the
+head than Mokly keeps, and turns chunks into output lines.
 
 A reference with no ready publication chooses its stage in the order
 `reference-stage.ts` gives: a queued or running build for every plan, then a
@@ -92,9 +98,10 @@ for one project, with bodies typed by the generated client:
 it as the worker would, `build-answers.ts` answers each operation from it, and
 `build-routes.ts` routes one project's requests to those answers. Every other
 read and write reaches the real API, and a project that cannot build is
-tested against it unchanged. Tests change the double between polls and the
-card follows on its next read, and `holdBuildReads` keeps a build read waiting
-so it can answer after a write. `src/_tests_/build-refusals.ts` drives a
+tested against it unchanged. The fixture closes the project's socket before
+it opens, so the card reads changes to the double on its three-second poll.
+`holdBuildReads` keeps a build read waiting so it can answer after a write.
+`src/_tests_/build-refusals.ts` drives a
 refused Try again and measures, in the page, where the refusal, the control,
 the guide and Details sit in the build card or the publishing card and what
 outline a focused title draws, for the desktop specs and the 390px, 320px and

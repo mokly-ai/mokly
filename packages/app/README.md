@@ -179,6 +179,11 @@ It builds the web app before the shard runs.
 
 ### Cloud Builds
 
+The app shares one WebSocket per open project with member access. Build
+cards read on notices for their build and when the socket opens or recovers
+from a gap. The card polls every three seconds with the socket down and
+every 30 seconds with it up.
+
 See the [cloud builds guide](./cloud-builds.md) for how the viewer draws and
 follows cloud builds in its stage, and how the tests cover them.
 
@@ -263,7 +268,8 @@ follows cloud builds in its stage, and how the tests cover them.
 - `src/viewer/build-card.tsx`, `src/viewer/build-stage.tsx` and `src/viewer/publish-card.tsx` — the build card and its one action, the owner's action as a placeholder while a plan refusal's workspace read runs (`awaitsOwnerAction`), the build address's read, unknown and unreadable states, and the publishing card; `build-copy.ts` holds every sentence they say.
 - `src/viewer/build-action.ts` and `src/viewer/build-state.ts` — the pure choice of the build card's one action, and the pure step and row rules.
 - `src/viewer/reference-stage.ts` — the stage order of a reference with nothing ready; `stage-view-decision.ts` gives a plan-refused open pull request the Team card a branch gets.
-- `src/viewer/build-log.ts`, `src/viewer/build-follow.ts` and `src/viewer/build-watch.ts` — the log windows, the reads and their order, and the polling hook.
+- `src/data/live-client.ts` shares a socket by project and delivers notices, connection state and resync to subscribers.
+- `src/viewer/build-log.ts` keeps the log windows and `src/viewer/build-follow.ts` orders reads and writes. `src/viewer/build-watch.ts` attaches the card to the project live client. `src/viewer/build-poll.ts` schedules reads from notices, resync, polling and tab visibility.
 - `src/viewer/build-request.ts` and `src/viewer/build-target.ts` — the request that opens the build it starts, and where its answer leads.
 - `src/viewer/request-controls.ts` — every control that sends a build request, with its label after a refusal.
 - `src/viewer/switcher-row.ts` — where a switcher row leads.
@@ -291,6 +297,7 @@ follows cloud builds in its stage, and how the tests cover them.
 - [Web application](../../docs/protocol/cloud/web-app.md), [Web API client](../../docs/protocol/cloud/web-api-client.md), [Web product shell](../../docs/protocol/cloud/web-product-shell.md), [Settings dialog](../../docs/protocol/cloud/settings-dialog.md), [Product navigation](../../docs/protocol/cloud/product-navigation.md) and [Product accounts and roles](../../docs/protocol/cloud/product-accounts-and-roles.md).
 - [Viewer](../../docs/protocol/cloud/viewer.md), [Viewer host](../../docs/protocol/cloud/viewer-host.md), [Viewer chrome](../../docs/protocol/cloud/viewer-chrome.md), [Viewer address state](../../docs/protocol/cloud/viewer-address-state.md), [Viewer catalogue](../../docs/protocol/cloud/viewer-catalogue.md) and [Viewer read model](../../docs/protocol/cloud/viewer-read-model.md).
 - [Viewer builds](../../docs/protocol/cloud/viewer-builds.md), [Viewer build navigation](../../docs/protocol/cloud/viewer-build-navigation.md), [Cloud builds](../../docs/protocol/cloud/cloud-builds.md) and [Cloud build API](../../docs/protocol/cloud/cloud-build-api.md).
+- [Live channel](../../docs/protocol/cloud/live-channel.md)
 - [Authentication callbacks](../../docs/protocol/cloud/auth-callbacks.md), [Authentication and sessions](../../docs/protocol/cloud/auth-sessions.md) and [GitHub sign-in](../../docs/protocol/cloud/github-sign-in.md).
 - [Desktop application](../../docs/protocol/cloud/desktop-app.md), [Desktop sign-in](../../docs/protocol/cloud/desktop-sign-in.md) and the [desktop shell](../desktop/README.md), which serves this export from its own origin.
 - [Billing](../../docs/protocol/cloud/billing.md), [plan gates](../../docs/protocol/cloud/billing-plan-gates.md) and [subscriptions](../../docs/protocol/cloud/billing-subscriptions.md).

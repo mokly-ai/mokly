@@ -47,3 +47,5 @@ fnv1a64:29e0bd3b9bf9d753 crates/mkc-db/migrations/202611061200_desktop_grants/do
 fnv1a64:36d4036b3e7897ed crates/mkc-db/migrations/202611061200_desktop_grants/up.sql
 fnv1a64:0245f1b63ad806b3 crates/mkc-db/migrations/202611251200_live_notice/down.sql
 fnv1a64:f62ecdfedf70adef crates/mkc-db/migrations/202611251200_live_notice/up.sql
+fnv1a64:7b762888d89404cf crates/mkc-db/migrations/202611251201_build_live_notices/down.sql
+fnv1a64:8a9bc0df48cbed25 crates/mkc-db/migrations/202611251201_build_live_notices/up.sql

@@ -76,6 +76,10 @@ export type BuildLog = Schemas["BuildLog"];
 export type BuildLogChunk = Schemas["BuildLogChunk"];
 /** Where retained output was dropped, and how many bytes went. */
 export type BuildLogElision = Schemas["BuildLogElision"];
+/** A notice or resync signal sent on a project socket. */
+export type LiveSignal = Schemas["ServerSignal"];
+/** A stored record changed in the socket's project. */
+export type LiveNotice = Extract<LiveSignal, { type: "notice" }>;
 /** One entry of a reference's history: a publication or a build. */
 export type HistoryEntry = Schemas["HistoryEntry"];
 /** The result of issuing a sign-in link. */

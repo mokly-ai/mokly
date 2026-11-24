@@ -23,6 +23,9 @@ use tokio::task::JoinHandle;
 use tokio_postgres::{Client, NoTls, Transaction};
 use uuid::Uuid;
 
+#[path = "postgres/build_notices.rs"]
+mod build_notices;
+
 const TEST_KIND: &str = "test-event";
 
 #[tokio::test(start_paused = true)]

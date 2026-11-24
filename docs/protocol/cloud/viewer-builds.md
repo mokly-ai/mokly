@@ -1,7 +1,5 @@
 # Viewer Builds
 
-Status: The reads on each build notice and the 30-second poll while a live socket is open are not built yet. The [app live client and build notices milestone](../../../plans/live-channel-foundation.md#milestone-6-app-live-client-and-build-notices) builds them.
-
 How the viewer shows [cloud builds](./cloud-builds.md): the build route, the
 build card in the stage, references that have a build but no ready
 publication, builds in history and the switcher, and the Automatic builds

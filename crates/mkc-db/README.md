@@ -36,7 +36,9 @@ applied, use a fresh disposable database.
 
 `mkc_live_notice(project, kind, id, sequence)` lets a trigger send a live
 notice in its write transaction. Postgres delivers the notice after commit.
-See [Live channel](../../docs/protocol/cloud/live-channel.md#notices).
+Build triggers call it on build and log chunk inserts. A build update calls
+it when a field of the build view or the stored log completion flag changes.
+See [Build notices](../../docs/protocol/cloud/cloud-build-api.md#live-notices).
 
 ## Quick Start
 
@@ -100,6 +102,7 @@ the existing rows are preserved.
 - [desktop grant schema](./src/schema/desktop_grant.rs) — the independent `desktop_grants` group, generated with the separate `diesel print-schema` command above.
 - [migrations/202611061200_desktop_grants](./migrations/202611061200_desktop_grants/) — desktop sign-in digests, verifier challenges, destinations, inherited session deadlines and retained consumption times, with expiry and user indexes and a reversing table drop.
 - Creates and drops the shared `mkc_live_notice` function. [Live notice migration](./migrations/202611251200_live_notice/)
+- Adds the build and build-log notice triggers and their rollback. [Build notices migration](./migrations/202611251201_build_live_notices/)
 - [build schema](./src/schema/build.rs) and [build output schema](./src/schema/build_output.rs) — `builds`, and the `build_upload_grants`, `build_log_chunks` and `build_checks` rows that cascade with their build.
 - [publication schema](./src/schema/publication.rs), [publication event schema](./src/schema/publication_events.rs) and [screen selection schema](./src/schema/publication_screens.rs) — `publications`, `publication_files`, `blobs`, `publication_events`, `catalogue_grants`, `publication_branch_aliases` and `publication_screen_views`; expiry keeps the publication row and `publication_events` and deletes the files, grants and screen views that reference the publication.
 - [slug schema](./src/schema/slug.rs) — the workspace and project slug claim registries.

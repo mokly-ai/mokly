@@ -1,6 +1,7 @@
 import type { Page, Route } from "@playwright/test";
 
 import type { Project } from "../api/types";
+import { liveProjectUrl } from "../data/live-client";
 
 import {
   answerBuilds,
@@ -55,6 +56,12 @@ export async function routeBuilds(
   projectId: string,
   double: BuildDouble,
 ): Promise<void> {
+  // The double has no database writes to notify the socket. Use the card's
+  // polling path when a browser spec changes the double.
+  await page.routeWebSocket(
+    liveProjectUrl(apiOrigin, projectId).href,
+    (socket) => socket.close(),
+  );
   await page.route(
     (url) =>
       url.origin === apiOrigin &&
