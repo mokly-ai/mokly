@@ -3,8 +3,8 @@
  * An artboard of the depicted acme/storefront app: one screen at its native
  * size, scaled into a framed box and labelled with its path, its device
  * and, for a dark screen, the moon. The spread and the feature frames place
- * artboards: the place's rule sets the box size and the screen's scale, and
- * the spread passes each artboard's spot on its canvas. The label and the
+ * artboards: the place's rule sets the box size, the screen's scale and,
+ * on a canvas, the artboard's spot. The label and the
  * screen are depictions; the place that draws an artboard hides it from
  * assistive technology.
  *
@@ -12,7 +12,6 @@
  * - `name`: the screen's path, such as `checkout/payment`.
  * - `dark`: the label adds the moon, for a dark screen.
  * - `live`: the label adds the Live tag, for a live session.
- * - `at`: the spot on the place's canvas; `artboard.ts` holds `spotStyle`.
  * - `class`: the place's class.
  *
  * Use: `<Artboard device="phone" name="pricing"><AcmePricingPhone /><CardSelection slot="overlay" tall /></Artboard>`.
@@ -21,12 +20,9 @@
  */
 import Icon from "../Icon.astro";
 
-import { spotStyle, type CanvasSpot } from "./artboard.js";
-
 import "../../styles/home-board.css";
 
 interface Props {
-  readonly at?: CanvasSpot | undefined;
   readonly class?: string;
   readonly dark?: boolean | undefined;
   readonly device: "desktop" | "phone";
@@ -35,7 +31,6 @@ interface Props {
 }
 
 const {
-  at,
   class: className,
   dark = false,
   device,
@@ -46,7 +41,6 @@ const {
 
 <figure
   class:list={["site-home-board", `site-home-board--${device}`, className]}
-  style={spotStyle(at)}
 >
   <figcaption class="site-home-board-label">
     <Icon name={device} size={12} />

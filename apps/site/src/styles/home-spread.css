@@ -2,8 +2,9 @@
    to 36 percent. Its canvas starts at the heading's left edge, the Specs and
    Components boxes bleed off the right edge, and the spread clips them so
    the page never scrolls sideways. Each artboard sits at its own spot, and
-   the component sets stand in two columns. A phone draws three phones at 42 percent, the middle one
-   centred under the copy, in the Specs box without its wash.
+   the component sets stand in two columns. A phone draws three phones at
+   42 percent, the middle one centred under the copy, in the Specs box
+   without its wash.
 
    The class names and the rules match docs/mockups/styles/site/home-spread.css
    and the spread rules of home-responsive.css, mobile first, as

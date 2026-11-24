@@ -7,7 +7,8 @@ import { SITE_PATHS } from "../../src/navigation.js";
  * browser: the layer's size tag, type badge and redline show the rendered
  * values of docs/protocol/cloud/site-design-pages.md and follow the layout,
  * the heading takes one line on the desktop and two on a phone, the spread
- * stays out of the accessibility tree and the focus order, and without
+ * stays out of the accessibility tree and the focus order, no two of its
+ * component sets meet, and without
  * script no measured value shows. The load motion moves only decorations,
  * and reduced motion shows the finished hero at once. The measured parts are
  * depictions with no role, so the spec finds them by their classes.
@@ -161,6 +162,60 @@ test.describe("under reduced motion", DESKTOP, () => {
       .locator("#hero")
       .evaluate((hero) => hero.getAnimations({ subtree: true }).length);
     expect(moving).toBe(0);
+  });
+
+  test("no two component sets of the spread meet", async ({ page }) => {
+    // The Components box bleeds off the right edge at 1440px; a wider
+    // window shows all six sets.
+    await page.setViewportSize({ height: 900, width: 1920 });
+    await openHome(page);
+    const meeting = await spread(page).evaluate((root) => {
+      // What the reader sees of a set: its label, its box with the dashed
+      // outline around it, and a selection over it.
+      const OUTLINE = 4;
+      const extents = [...root.querySelectorAll(".site-home-set")].map(
+        (set) => {
+          const parts = [
+            ...set.querySelectorAll(
+              ".site-home-set-label, .site-home-set-peer",
+            ),
+          ].map((part) => part.getBoundingClientRect());
+          const box = set
+            .querySelector(".site-home-set-box")
+            ?.getBoundingClientRect();
+          if (box !== undefined)
+            parts.push(
+              new DOMRect(
+                box.x - OUTLINE,
+                box.y - OUTLINE,
+                box.width + 2 * OUTLINE,
+                box.height + 2 * OUTLINE,
+              ),
+            );
+          return {
+            bottom: Math.max(...parts.map((part) => part.bottom)),
+            left: Math.min(...parts.map((part) => part.left)),
+            name: set.querySelector(".site-home-set-label")?.textContent,
+            right: Math.max(...parts.map((part) => part.right)),
+            top: Math.min(...parts.map((part) => part.top)),
+          };
+        },
+      );
+      const pairs = extents.flatMap((a, index) =>
+        extents
+          .slice(index + 1)
+          .filter(
+            (b) =>
+              a.left <= b.right &&
+              b.left <= a.right &&
+              a.top <= b.bottom &&
+              b.top <= a.bottom,
+          )
+          .map((b) => `${a.name?.trim()} and ${b.name?.trim()}`),
+      );
+      return { count: extents.length, pairs };
+    });
+    expect(meeting).toEqual({ count: 6, pairs: [] });
   });
 });
 
