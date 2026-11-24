@@ -20,3 +20,16 @@ pub struct Resolution {
     /// Extension lookup order, or the consumer bundler defaults.
     pub extensions: Vec<String>,
 }
+
+impl Resolution {
+    /// Extensions in the consumer's lookup order.
+    pub(crate) fn extension_order(&self) -> impl Iterator<Item = &str> {
+        let defaults = [".tsx", ".ts", ".jsx", ".js", ".css", ".json"];
+        self.extensions
+            .is_empty()
+            .then_some(defaults)
+            .into_iter()
+            .flatten()
+            .chain(self.extensions.iter().map(String::as_str))
+    }
+}

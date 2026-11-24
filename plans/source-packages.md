@@ -122,11 +122,13 @@ Evidence: `.context/source-packages/m3-final-tests.log` and `.context/source-pac
 
 Depends on: 2
 
-- [ ] Apply the same rule in `crates/mokly-css/src/resolver.rs` after the
+- [x] Apply the same rule in `crates/mokly-css/src/resolver.rs` after the
       package target and main-field lookup, and read the package
       `tsconfig.json` folders there.
-- [ ] Test the Rust rule against the same table, and add resolver cases to
+- [x] Test the Rust rule against the same table, and add resolver cases to
       `crates/mokly-css/src/_tests_/resolver_tests.rs`.
+
+Evidence: `.context/source-packages/m4-css-tests.log` and `.context/source-packages/m4-clippy-final.log`.
 
 ## Milestone 5: End-to-end test and this repository
 

@@ -1,7 +1,5 @@
 # Comparison Package Selection
 
-Status: Workspace package source lookup is pending for [CSS imports](../../plans/source-packages.md#milestone-4-css-resolution).
-
 This page defines where the [comparison sides](./mokly-comparison.md#sides)
 resolve JavaScript and CSS packages. The [dependency contract](./mokly-base-dependencies.md)
 defines dependency identities, installs, and fallback reasons.

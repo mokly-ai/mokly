@@ -1,7 +1,7 @@
 //! Alias lookup keeps the configuration base and package fallback order.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
@@ -11,25 +11,49 @@ use crate::resolution::Resolution;
 use crate::resolver::{ImportResolver, SourceResolver};
 
 fn resolver(files: &[&str]) -> SourceResolver {
+    resolver_with_files(
+        &files.iter().map(|file| (*file, "{}")).collect::<Vec<_>>(),
+        None,
+    )
+}
+
+fn resolver_with_files(files: &[(&str, &str)], link: Option<(&str, &str)>) -> SourceResolver {
+    let root = Path::new("/repo");
     let files: BTreeMap<_, _> = files
         .iter()
-        .map(|file| (PathBuf::from("/repo").join(file), b"{}".to_vec()))
+        .map(|(file, contents)| (root.join(file), contents.as_bytes().to_vec()))
         .collect();
     let projection = files.clone();
+    let link = link.map(|(written, target)| (root.join(written), root.join(target)));
+    let projected_link = link.clone();
     let tree = Arc::new(Unimock::new((
         SourceTreeMock::project
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                Ok(projection.contains_key(path).then(|| Node {
-                    identity: path.into(),
-                    lexical_kind: FileKind::File,
-                    kind: FileKind::File,
-                }))
+                let identity = linked(path, projected_link.as_ref());
+                let link = projected_link
+                    .as_ref()
+                    .is_some_and(|(written, _)| written == path);
+                let kind = if link {
+                    FileKind::Directory
+                } else {
+                    FileKind::File
+                };
+                Ok(
+                    (link || projection.contains_key(&identity)).then_some(Node {
+                        identity,
+                        lexical_kind: if link { FileKind::Symlink } else { kind },
+                        kind,
+                    }),
+                )
             })),
         SourceTreeMock::read
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, path| {
-                Ok(files.get(path).cloned().unwrap_or_default())
+                Ok(files
+                    .get(&linked(path, link.as_ref()))
+                    .cloned()
+                    .unwrap_or_default())
             })),
     )));
     SourceResolver {
@@ -45,6 +69,62 @@ fn resolver(files: &[&str]) -> SourceResolver {
             ..Default::default()
         },
     }
+}
+
+fn linked(path: &Path, link: Option<&(PathBuf, PathBuf)>) -> PathBuf {
+    if let Some((written, target)) = link
+        && let Ok(suffix) = path.strip_prefix(written)
+    {
+        return target.join(suffix);
+    }
+    path.to_owned()
+}
+
+#[test]
+fn workspace_style_exports_prefer_source_even_when_the_built_file_exists() {
+    let resolver = resolver_with_files(
+        &[
+            (
+                "packages/theme/package.json",
+                r#"{"name":"theme","exports":{"./colors":"./dist/skin.css"}}"#,
+            ),
+            ("packages/theme/dist/skin.css", ".built {}"),
+            ("packages/theme/src/skin.css", ".source {}"),
+        ],
+        Some(("node_modules/theme", "packages/theme")),
+    );
+    assert_eq!(
+        resolver
+            .resolve("styles/entry.css", "theme/colors")
+            .unwrap(),
+        "packages/theme/src/skin.css"
+    );
+}
+
+#[test]
+fn a_workspace_style_field_resolves_when_only_the_configured_sources_exist() {
+    let resolver = resolver_with_files(
+        &[
+            (
+                "packages/theme/package.json",
+                r#"{"name":"theme","style":"./compiled/skin.css"}"#,
+            ),
+            (
+                "packages/theme/tsconfig.json",
+                r#"{"extends":"./layout.json"}"#,
+            ),
+            (
+                "packages/theme/layout.json",
+                r#"{"compilerOptions":{"outDir":"compiled","rootDir":"authored"}}"#,
+            ),
+            ("packages/theme/authored/skin.css", ".source {}"),
+        ],
+        Some(("node_modules/theme", "packages/theme")),
+    );
+    assert_eq!(
+        resolver.resolve("styles/entry.css", "theme-alias").unwrap(),
+        "packages/theme/authored/skin.css"
+    );
 }
 
 #[test]

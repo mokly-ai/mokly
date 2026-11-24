@@ -1,7 +1,5 @@
 # Imported CSS Configuration
 
-Status: Workspace package source lookup is pending for [CSS imports](../../plans/source-packages.md#milestone-4-css-resolution).
-
 Continuation of [Mokly Configuration](./mokly-configuration.md). The
 [imported stylesheet contract](./mokly-imported-styles.md) owns delivery and
 the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.
