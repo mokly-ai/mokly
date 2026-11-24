@@ -58,6 +58,22 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   passes. `describe` keeps one bounded cache for the process and passes it to
   `orderedExports` and `describeStories`. Each call reads the current
   namespace values.
+- [`src/sidecar/story-reader.ts`](./story-reader.ts) holds
+  `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It selects
+  stories by their tags and keeps Storybook names, tags, descriptions, and the
+  preview's composed `beforeAll` hook. It passes the cache from
+  `describeStories` to `orderedExports`.
+- [`src/sidecar/stories.ts`](./stories.ts) holds `describeStories`,
+  which makes the first included story the parent and the other stories its
+  variants. It records each story's data args and control hints, and omits
+  function and React element args without warnings.
+- [`src/sidecar/story-setup.ts`](./story-setup.ts) holds
+  `setupStories`, which keeps one active `beforeAll` setup, cleans it up before
+  a generation switch, and remembers setup failures.
+- [`src/sidecar/render.ts`](./render.ts) holds `render`, which
+  renders entries and the reader's portable stories to static markup. It
+  awaits story setup and `load()`. It passes `undefined` for each story data
+  arg that the request leaves out.
 
 ### esbuild Compilation and Reuse
 

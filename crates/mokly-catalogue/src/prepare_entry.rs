@@ -10,7 +10,7 @@ use serde_json::Value;
 
 use crate::config_types::ResolvedRoot;
 use crate::diagnostic::{Code, Issue, Warning};
-use crate::discovery::SourceFile;
+use crate::discovery::{SourceFile, SourceKind};
 use crate::identity::{derive, segment};
 use crate::input::ParsedEntry;
 use crate::parsing::issue;
@@ -69,8 +69,15 @@ pub(crate) fn prepare(
         });
     }
     let candidates = variants::parse(parsed, kind, &file.path, &path);
-    let prepared_parent =
-        prepare_parent::prepare(parsed, kind, &source, configured_schemes, &candidates);
+    let story = file.kind == SourceKind::Stories;
+    let prepared_parent = prepare_parent::prepare(
+        parsed,
+        kind,
+        &source,
+        configured_schemes,
+        &candidates,
+        story,
+    );
     let validator = prepared_parent.validator;
     let failed = validator.is_none();
     let schema = prepared_parent.visual.prop_schema.clone();
@@ -110,7 +117,11 @@ pub(crate) fn prepare(
             issues.push(issue);
             continue;
         }
-        let complete = merge_props(&input.props, &variant.props);
+        let complete = if story {
+            variant.props
+        } else {
+            merge_props(&input.props, &variant.props)
+        };
         if let Some(validator) = &validator
             && let Err(issue) = props::validate(
                 validator,

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { type TestContext } from "node:test";
 
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
+import type { Definitions } from "../packages/mokly/src/generated/sidecar/Definitions.js";
 import type { RenderResult } from "../packages/mokly/src/generated/sidecar/RenderResult.js";
 
 import {
@@ -10,99 +11,258 @@ import {
   startSidecar,
 } from "./helpers/sidecar.js";
 
-test("portable stories and parent views receive viewport and color globals", async (context) => {
+async function describeFixture(
+  context: TestContext,
+  storiesFiles: string[],
+  directory = "",
+) {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
-  const bundled = await sidecar.call<BundleResult>(
+  const { generation } = await sidecar.call<BundleResult>(
     "bundle",
     bundleParams({
+      sourceRoot: new URL(`./fixtures/sidecar/${directory}`, import.meta.url)
+        .pathname,
       entryFiles: [],
       renderer: null,
-      storiesFiles: ["globals.stories.tsx"],
+      storiesFiles,
     }),
   );
-  await sidecar.call("cssModules", {
-    generation: bundled.generation,
-    classMaps: {},
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  const definitions = await sidecar.call<Definitions>("describe", {
+    generation,
   });
-  await installBindings(sidecar, bundled.generation);
-  for (const [method, target] of [
-    ["renderStory", { storyId: "globals.stories.tsx#Primary" }],
-    [
-      "renderComponent",
-      {
-        handle: "globals.stories.tsx#default",
-        entry: { path: "globals", title: "Globals" },
-        slots: {},
-        ignoreScope: "enabled",
-      },
-    ],
-  ] as const) {
-    const rendered = await sidecar.call<RenderResult>(method, {
-      generation: bundled.generation,
-      props: { label: "Overlay" },
-      viewport: "mobile",
-      colorScheme: "dark",
-      ...target,
-    });
-    assert.equal(
-      rendered.html,
-      '<section data-viewport="mobile" data-scheme="dark"><button>Overlay</button></section>',
-    );
-  }
-  await sidecar.call("shutdown");
+  return { sidecar, generation, definitions };
+}
+
+test("renderStory does not restore a data arg that the request omits", async (context) => {
+  const { sidecar, generation } = await describeFixture(
+    context,
+    ["Button.stories.tsx"],
+    "storybook-template",
+  );
+  await installBindings(sidecar, generation);
+  const story = await sidecar.call<RenderResult>("renderStory", {
+    generation,
+    storyId: "Button.stories.tsx#Primary",
+    props: { label: "Requested" },
+    viewport: "mobile",
+    colorScheme: "light",
+  });
+  assert.equal(
+    story.html,
+    '<button type="button" class="storybook-button storybook-button--medium storybook-button--secondary">Requested</button>',
+  );
 });
 
-test("preview decorators apply once and stay isolated between interleaved generations", async (context) => {
-  const sidecar = startSidecar(context);
-  await sidecar.call("hello");
-  const generations: string[] = [];
-  for (const name of ["a", "b"]) {
-    const { generation } = await sidecar.call<BundleResult>(
-      "bundle",
-      bundleParams({
-        sourceRoot: new URL(
-          `./fixtures/sidecar/preview-${name}`,
-          import.meta.url,
-        ).pathname,
-        entryFiles: [],
-        renderer: null,
-        storiesFiles: ["entry.stories.tsx"],
-      }),
-    );
-    await sidecar.call("cssModules", { generation, classMaps: {} });
-    await installBindings(sidecar, generation);
-    generations.push(generation);
-  }
-  for (const index of [0, 1, 0]) {
-    const generation = generations[index]!;
-    const expected = `<div data-preview="${index === 0 ? "a" : "b"}"><button>Story</button></div>`;
-    const axes = {
-      generation,
-      props: {},
-      viewport: "mobile",
-      colorScheme: "light",
-    };
-    assert.equal(
-      (
-        await sidecar.call<RenderResult>("renderStory", {
-          ...axes,
-          storyId: "entry.stories.tsx#Primary",
-        })
-      ).html,
-      expected,
-    );
-    assert.equal(
-      (
-        await sidecar.call<RenderResult>("renderComponent", {
-          ...axes,
-          entry: { path: "entry", title: "Preview" },
-          handle: "entry.stories.tsx#default",
-          slots: {},
-          ignoreScope: "enabled",
-        })
-      ).html,
-      expected,
-    );
-  }
+test("CSF Factories render the first story as the parent with its decorators", async (context) => {
+  const { sidecar, generation, definitions } = await describeFixture(
+    context,
+    ["button.stories.tsx"],
+    "factories",
+  );
+  assert.deepEqual(definitions.diagnostics, []);
+  const entry = definitions.components[0];
+  assert.equal(entry?.title, "Factory Button");
+  assert.deepEqual(entry.props, { label: "Primary" });
+  assert.deepEqual(
+    entry.variants.map(({ slug }) => slug),
+    ["Secondary"],
+  );
+  assert.deepEqual(
+    definitions.stories.map(({ id, props }) => ({ id, props })),
+    [
+      { id: "button.stories.tsx#Primary", props: { label: "Primary" } },
+      { id: "button.stories.tsx#Secondary", props: { label: "Secondary" } },
+    ],
+  );
+  await installBindings(sidecar, generation);
+  const axes = {
+    generation,
+    props: entry.props,
+    viewport: "mobile",
+    colorScheme: "light",
+  };
+  const story = await sidecar.call<RenderResult>("renderStory", {
+    ...axes,
+    storyId: "button.stories.tsx#Primary",
+  });
+  const parent = await sidecar.call<RenderResult>("renderComponent", {
+    ...axes,
+    handle: "button.stories.tsx#default",
+    entry: { path: "button", title: "Factory Button" },
+    slots: {},
+    ignoreScope: "enabled",
+  });
+  assert.equal(
+    parent.html,
+    '<section data-preview="factory"><strong><button>Primary</button></strong></section>',
+  );
+  assert.equal(story.html, parent.html);
+});
+
+test("untitled stories keep the component display name, component name, or file name", async (context) => {
+  const { definitions } = await describeFixture(context, [
+    "untitled-display.stories.tsx",
+    "untitled-name.stories.tsx",
+    "untitled-file.stories.tsx",
+    "factories/untitled.stories.tsx",
+  ]);
+  assert.deepEqual(
+    definitions.components.map(({ handle, title }) => ({ handle, title })),
+    [
+      {
+        handle: "untitled-display.stories.tsx#default",
+        title: "Display Button",
+      },
+      { handle: "untitled-name.stories.tsx#default", title: "NamedButton" },
+      { handle: "untitled-file.stories.tsx#default", title: "untitled-file" },
+      {
+        handle: "factories/untitled.stories.tsx#default",
+        title: "Untitled Factory Button",
+      },
+    ],
+  );
+});
+
+test("stories retain composed control options for entry props they do not set", async (context) => {
+  const { definitions } = await describeFixture(context, [
+    "story-controls.stories.tsx",
+  ]);
+  assert.deepEqual(definitions.components[0]?.argTypes?.size?.options, [
+    "small",
+    "large",
+  ]);
+  assert.deepEqual(
+    definitions.stories.map(({ id, argTypes }) => ({
+      id,
+      options: argTypes.size?.options,
+    })),
+    [
+      {
+        id: "story-controls.stories.tsx#WithSize",
+        options: ["small", "large"],
+      },
+      {
+        id: "story-controls.stories.tsx#WithoutSize",
+        options: ["small", "large"],
+      },
+    ],
+  );
+  assert.equal(definitions.stories[1]?.argTypes.size?.name, "Optional size");
+  assert.deepEqual(definitions.stories[1]?.props, { label: "Without size" });
+});
+
+test("story names follow object names, legacy storyName, and Storybook start case", async (context) => {
+  const { definitions } = await describeFixture(context, [
+    "story-names.stories.tsx",
+    "factories/untitled.stories.tsx",
+  ]);
+  assert.deepEqual(
+    definitions.stories.map(({ title }) => title),
+    [
+      "Explicit Sidebar",
+      "Legacy Sidebar",
+      "Object Sidebar",
+      "Large Button",
+      "Function Button",
+      "Large Button",
+      "Named Factory",
+    ],
+  );
+  assert.deepEqual(
+    definitions.components.flatMap(({ variants }) =>
+      variants.map(({ title }) => title),
+    ),
+    [
+      "Legacy Sidebar",
+      "Object Sidebar",
+      "Large Button",
+      "Function Button",
+      "Named Factory",
+    ],
+  );
+});
+
+test("included stories keep custom tags and the first included component description", async (context) => {
+  const { definitions } = await describeFixture(
+    context,
+    ["button.stories.tsx"],
+    "story-metadata",
+  );
+  assert.deepEqual(definitions.diagnostics, []);
+  assert.deepEqual(
+    definitions.stories.map(({ id }) => id),
+    [
+      "button.stories.tsx#FirstIncluded",
+      "button.stories.tsx#InheritedTags",
+      "button.stories.tsx#EmptyTags",
+    ],
+  );
+  const entry = definitions.components[0]!;
+  assert.deepEqual(entry.tags, ["preview-tag", "first-tag"]);
+  assert.equal(entry.description, "Included component description");
+  assert.deepEqual(
+    entry.variants.map(({ slug, tags, description }) => ({
+      slug,
+      tags,
+      description,
+    })),
+    [
+      {
+        slug: "InheritedTags",
+        tags: ["preview-tag", "meta-tag"],
+        description: undefined,
+      },
+      { slug: "EmptyTags", tags: [], description: undefined },
+    ],
+  );
+});
+
+test("stories files without an included story give no entry and no warning", async (context) => {
+  const { definitions } = await describeFixture(context, [
+    "no-included.stories.tsx",
+    "no-exports.stories.tsx",
+  ]);
+  assert.deepEqual(definitions.components, []);
+  assert.deepEqual(definitions.stories, []);
+  assert.deepEqual(definitions.diagnostics, []);
+});
+
+test("composed function and React element args stay out of data props without exclusions", async (context) => {
+  const { sidecar, generation, definitions } = await describeFixture(context, [
+    "story-args.stories.tsx",
+    "story-non-data.stories.tsx",
+  ]);
+  assert.deepEqual(definitions.components[0]?.props, {
+    label: "Story",
+    empty: [],
+  });
+  assert.deepEqual(definitions.components[0]?.excludedProps, []);
+  assert.deepEqual(definitions.stories[0]?.props, {
+    label: "Story",
+    empty: [],
+  });
+  assert.deepEqual(Object.keys(definitions.stories[0]!.argTypes).sort(), [
+    "empty",
+    "label",
+  ]);
+  assert.deepEqual(definitions.components[0]?.controlOrder, ["label", "empty"]);
+  assert.deepEqual(definitions.stories[1]?.props, {});
+  assert.deepEqual(definitions.components[1]?.excludedProps, [
+    "value",
+    "mixed",
+  ]);
+  await installBindings(sidecar, generation);
+  const rendered = await sidecar.call<RenderResult>("renderStory", {
+    generation,
+    storyId: "story-args.stories.tsx#DataOnly",
+    props: { label: "Edited" },
+    viewport: "mobile",
+    colorScheme: "light",
+  });
+  assert.equal(
+    rendered.html,
+    "<button>Edited<span>Icon</span><i>Array icon</i> callback</button>",
+  );
 });

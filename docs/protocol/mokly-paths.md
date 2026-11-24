@@ -34,8 +34,9 @@ directories Mokly scans. Each root has:
 A matched `.md` file is a document; a matched `.screen.html`,
 `.component.html`, `.page.html`, or `.use-case.yaml` file is an HTML or YAML
 entry of the [HTML screens contract](./mokly-html-screens.md); a
-`.stories.{ts,tsx,js,jsx}` file is a Storybook component entry of the
-[render sidecar](./mokly-sidecar.md#storybook); every other matched file is an
+`.stories.{ts,tsx,js,jsx}` file gives its entry under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants);
+every other matched file is an
 entry module. A root that does not exist, or whose globs match no file, fails with
 `config-invalid`. Several roots merge into one catalogue; the same path from two distinct files
 is a [duplicate path](#diagnostics). Each matched file belongs to exactly one

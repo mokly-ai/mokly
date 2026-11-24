@@ -643,7 +643,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   resolver resolved without a plugin report to the logical path of its direct
   importer.
 - [`src/definitions.rs`](./src/definitions.rs) defines `Definitions`, the
-  inventory that `describe` returns.
+  inventory that `describe` returns. It lists each included story, including
+  the story that supplies the component parent.
 - [`src/error.rs`](./src/error.rs) defines `Error`, the fail-closed error
   categories.
 - [`src/typescript.rs`](./src/typescript.rs) provides `generate`, which

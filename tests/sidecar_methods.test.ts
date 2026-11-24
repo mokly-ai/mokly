@@ -43,12 +43,11 @@ test("sidecar bundles, describes and renders every entry kind", async (context) 
   assert.equal(definitions.components[0]?.sourcePath, "component.mockup.tsx");
   assert.equal(definitions.stories[0]?.props.action, undefined);
   assert.equal(definitions.stories[0]?.argTypes.label?.name, "Button label");
-  assert.equal(
-    definitions.components.find(
-      (component) => component.handle === "button.stories.tsx#default",
-    )?.argTypes?.label?.name,
-    "Button label",
+  const parent = definitions.components.find(
+    (component) => component.handle === "button.stories.tsx#default",
   );
+  assert.deepEqual(parent?.props, { label: "Primary" });
+  assert.equal(parent?.argTypes?.label?.name, "Button label");
   await installBindings(sidecar, bundle.generation);
   const axes = {
     generation: bundle.generation,
@@ -148,4 +147,128 @@ test("definition links created during evaluation resolve in page attributes", as
   assert.match(page.html, /href="mock:destination#résumé"/);
   assert.ok(!page.html.includes("mokly-reference"));
   await sidecar.call("shutdown");
+});
+
+test("stories left out by tags cannot render", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const { generation } = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: [],
+      renderer: null,
+      storiesFiles: ["no-included.stories.tsx"],
+    }),
+  );
+  await sidecar.call("cssModules", { generation, classMaps: {} });
+  await installBindings(sidecar, generation);
+  for (const exportName of ["HiddenDev", "HiddenMokly"]) {
+    await assert.rejects(
+      sidecar.call("renderStory", {
+        generation,
+        storyId: `no-included.stories.tsx#${exportName}`,
+        props: {},
+        viewport: "mobile",
+        colorScheme: "light",
+      }),
+      { code: "render-failed" },
+    );
+  }
+});
+
+test("portable stories and parent views receive viewport and color globals", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const bundled = await sidecar.call<BundleResult>(
+    "bundle",
+    bundleParams({
+      entryFiles: [],
+      renderer: null,
+      storiesFiles: ["globals.stories.tsx"],
+    }),
+  );
+  await sidecar.call("cssModules", {
+    generation: bundled.generation,
+    classMaps: {},
+  });
+  await installBindings(sidecar, bundled.generation);
+  for (const [method, target] of [
+    ["renderStory", { storyId: "globals.stories.tsx#Primary" }],
+    [
+      "renderComponent",
+      {
+        handle: "globals.stories.tsx#default",
+        entry: { path: "globals", title: "Globals" },
+        slots: {},
+        ignoreScope: "enabled",
+      },
+    ],
+  ] as const) {
+    const rendered = await sidecar.call<RenderResult>(method, {
+      generation: bundled.generation,
+      props: { label: "Overlay" },
+      viewport: "mobile",
+      colorScheme: "dark",
+      ...target,
+    });
+    assert.equal(
+      rendered.html,
+      '<section data-viewport="mobile" data-scheme="dark"><button>Overlay</button></section>',
+    );
+  }
+  await sidecar.call("shutdown");
+});
+
+test("preview decorators apply once and stay isolated between interleaved generations", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const generations: string[] = [];
+  for (const name of ["a", "b"]) {
+    const { generation } = await sidecar.call<BundleResult>(
+      "bundle",
+      bundleParams({
+        sourceRoot: new URL(
+          `./fixtures/sidecar/preview-${name}`,
+          import.meta.url,
+        ).pathname,
+        entryFiles: [],
+        renderer: null,
+        storiesFiles: ["entry.stories.tsx"],
+      }),
+    );
+    await sidecar.call("cssModules", { generation, classMaps: {} });
+    await installBindings(sidecar, generation);
+    generations.push(generation);
+  }
+  for (const index of [0, 1, 0]) {
+    const generation = generations[index]!;
+    const expected = `<div data-preview="${index === 0 ? "a" : "b"}"><button>Story</button></div>`;
+    const axes = {
+      generation,
+      props: {},
+      viewport: "mobile",
+      colorScheme: "light",
+    };
+    assert.equal(
+      (
+        await sidecar.call<RenderResult>("renderStory", {
+          ...axes,
+          storyId: "entry.stories.tsx#Primary",
+        })
+      ).html,
+      expected,
+    );
+    assert.equal(
+      (
+        await sidecar.call<RenderResult>("renderComponent", {
+          ...axes,
+          entry: { path: "entry", title: "Preview" },
+          handle: "entry.stories.tsx#default",
+          slots: {},
+          ignoreScope: "enabled",
+        })
+      ).html,
+      expected,
+    );
+  }
 });

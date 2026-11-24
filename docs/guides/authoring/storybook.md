@@ -19,37 +19,143 @@ import { Button } from "./button.js";
 const meta = {
   title: "Controls/Button",
   component: Button,
-  args: { label: "Continue", disabled: false },
+  tags: ["forms"],
+  parameters: {
+    docs: { description: { component: "Buttons trigger actions." } },
+  },
+  args: { label: "Continue" },
   argTypes: {
     label: { name: "Button label", options: ["Continue", "Save"] },
   },
 } satisfies Meta<typeof Button>;
 
 export default meta;
+export const Default: StoryObj<typeof meta> = { args: { label: "Save" } };
 export const Disabled: StoryObj<typeof meta> = {
+  name: "Disabled button",
   args: { disabled: true },
 };
 ```
 
-The file supplies one component entry. Its own props come from the meta's
-`args`. Each story supplies a variant whose slug is its export name.
-The example has paths `components/Button` and `components/Button/Disabled`
-under the default `specs` root. The meta title supplies the display title's
-last segment. It does not change the path.
+The first included story in source order becomes the component entry's parent
+page. Its data args supply the entry's props. Each other included story
+renders as a variant at the entry path plus its export name. Under the default
+`specs` root, `Default` renders at `components/Button`. `Disabled` renders at
+`components/Button/Disabled`. Mokly does not repeat `Default` as a variant.
+
+Mokly does not render a page for the meta itself, so the meta's `args` do not
+need to be complete. The last segment of the meta's `title` gives the entry's
+display title. It does not change the path. If the meta omits `title`, Mokly
+uses the component's `displayName`, else its `name`, else the file name
+without the stories extension.
+
+Each variant's title is its story's `name`, else its `storyName`, else
+Storybook's start case of the export name. For example, `LargeButton` shows as
+`Large Button`. Its slug stays `LargeButton`.
+
+## Story formats
+
+Mokly reads three forms of Storybook's Component Story Format, or CSF:
+
+- **CSF 2:** A default-export meta and function stories with static `args`.
+- **CSF 3:** A default-export meta and story objects, as in the example above.
+- **CSF Factories:** A meta from `preview.meta()` and stories from
+  `meta.story()`, without a default export.
+
+In a factories project, `.storybook/preview` uses `definePreview` from your
+Storybook framework package, such as `@storybook/react-vite`:
+
+```ts
+// .storybook/preview.ts
+import { definePreview } from "@storybook/react-vite";
+
+export default definePreview({});
+```
+
+The same component entry can use CSF Factories:
+
+```tsx
+// specs/components/Button.stories.tsx
+import preview from "../../.storybook/preview";
+import { Button } from "./button.js";
+
+const meta = preview.meta({
+  title: "Controls/Button",
+  component: Button,
+  args: { label: "Continue" },
+});
+
+export const Default = meta.story({ args: { label: "Save" } });
+export const Disabled = meta.story({ args: { disabled: true } });
+```
+
+Mokly gets the meta and preview of a factories file from its stories.
+The preview's decorators wrap each story. An untitled factories meta uses the
+same component and file name fallback.
+
+## Tags and descriptions
+
+Mokly adds its default tag, `mokly`, to Storybook's default `dev` and `test`
+tags. Tags combine from the preview, the meta, and the story, in that order.
+Mokly includes a story when its combined tags keep both `dev` and `mokly`.
+
+`!dev` hides a story from both Storybook's sidebar and Mokly. Use `!mokly` to
+leave it out of Mokly only:
+
+```tsx
+export const StorybookOnly: StoryObj<typeof meta> = {
+  tags: ["!mokly"],
+  args: { label: "Preview only" },
+};
+```
+
+Put either exclusion tag on the preview, meta, or story. A later tag can add
+a removed tag again. Storybook's `includeStories` and `excludeStories` filters
+also apply. A file with no included stories gives no entry and no warning.
+
+Custom tags use lowercase kebab-case, such as `forms` or `empty-state`.
+The entry gets the custom tags of its first included story in source order.
+Each variant gets the custom tags of its own story. Search for `tag:forms` in
+the catalogue to filter by that tag. See [Folders and tags](/docs/authoring/collections-and-tags/).
+
+Mokly drops its own `mokly` tag and Storybook's built-in tags, such as `dev`,
+`test`, `autodocs`, and `play-fn`. It also drops tags that do not match the tag
+grammar, without a warning.
+
+Set `parameters.docs.description.component` to a string for the entry's
+description, as in the first example. Mokly uses the value from the first
+included story. Each variant keeps that description.
 
 ## Props and controls
 
-Mokly infers the schema from data args. `argTypes` supplies control hints:
-options, number bounds and step, a label, and help text. It does not supply a
-schema or change validation.
+Each story starts with the data args that Storybook composes for it, including
+shared args from the meta. A variant does not inherit props from the parent
+page. In the example, `Default` sets `label` to `"Save"`. `Disabled` keeps
+`"Continue"` from the meta.
+
+Mokly infers one prop schema from all included stories. A top-level prop is
+required only when every included story sets it. In the example, `label` is
+required and `disabled` is optional.
+
+`argTypes` supplies control hints: options, number bounds and step, a label,
+and help text. It does not supply a schema or change validation.
+
+Each story keeps the meta's select choices and number bounds, even for an
+entry prop that the story does not set. A story's own `argTypes` can override
+these hints.
+
+Mokly uses the story's composed `argTypes`, including the types Storybook
+infers from arg values. A callback such as `onClick: fn()` stays outside the
+data props and schema without a warning. It needs no annotation.
 
 An arg with `control: false`, `table.disable: true`, an `action`, or a
-function type stays outside the data props and schema. Its file value remains
-available to the story. Use these annotations for callbacks.
-A function arg without an annotation is excluded with a `props-not-data`
-warning.
+function type also stays outside the data props and schema without a warning.
+React element args and arrays of React elements do too. Their file values
+remain available to the story. Other non-data args, such as a `Map`, still
+give a `props-not-data` warning.
 
-Saved states use Storybook's composed args. Live data props overlay those args.
+Mokly renders each story with exactly the data props it shows for that story.
+If you unset an optional prop in `mokly serve`, the story renders without it.
 Non-data args keep the values the file defines.
 
 ## Decorators and themes
@@ -66,3 +172,34 @@ viewports and enabled color schemes.
 Consumer JavaScript runs during static rendering. It does not enter the
 catalogue's browser frames. Use data args and static component output for the
 states you want to show.
+
+## Loaders and hooks
+
+Before each story render, Mokly runs the story's loaders and `beforeEach`
+hooks, as Storybook's portable stories do. The render receives the loader
+results through `loaded`. This story uses `Button` and `meta` from the first
+example:
+
+```tsx
+export const Loaded: StoryObj<typeof meta> = {
+  loaders: [async () => ({ label: "Ready" })],
+  render: (args, { loaded }) => <Button {...args} label={loaded.label} />,
+};
+```
+
+A `beforeEach` hook can return a cleanup. Mokly runs it before the next story
+loads. The preview's `beforeAll` hook runs before the first story render of a
+build. Each render process keeps one active setup. When rebuilt stories render
+in the same process, Mokly runs the old setup's cleanup before `beforeAll` runs
+again. This can happen in `mokly serve` after an edit.
+
+Mokly sets `moklyViewport` and `moklyColorScheme` before the loaders and hooks
+run. Loaders and `beforeEach` hooks can read them from `context.globals`.
+
+A loader, hook, cleanup, or render that throws fails that render. If
+`beforeAll` throws, Mokly does not retry it for that build. Each story render
+of that build fails with its error. Mokly runs no `play` function or
+`afterEach` hook.
+
+Loaders and hooks run in Node during the static render. A hook that needs a
+browser API, such as `window` or `document`, does not work.

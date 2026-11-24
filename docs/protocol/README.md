@@ -49,6 +49,7 @@ How a catalogue is written: paths and roots, entry modules, HTML screens and com
 - [Paths, Roots, And Identity](./mokly-paths.md)
 - [Registered Components](./mokly-components.md)
 - [Root Discovery And Source Membership](./mokly-root-discovery.md)
+- [Storybook Stories](./mokly-storybook.md)
 - [Styled Catalogue Link Controls](./mokly-link-controls.md)
 - [Variants](./mokly-variants.md)
 

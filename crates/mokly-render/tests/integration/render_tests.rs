@@ -118,6 +118,12 @@ fn mixed_catalogue_renders_react_html_stories_pages_and_saved_slots() {
     assert!(html.contains("data-entry=\"components/chip/emphasis\""));
     assert!(html.contains("data-title=\"Emphasis\""));
     assert!(html.contains("data-scheme=\"dark\""));
+    let parent_story = generation.render("story/index.mobile.html").unwrap();
+    assert!(
+        String::from_utf8(parent_story.bytes.clone())
+            .unwrap()
+            .contains("Story: 6")
+    );
     let story = generation
         .render("story/Alternate/index.mobile.html")
         .unwrap();

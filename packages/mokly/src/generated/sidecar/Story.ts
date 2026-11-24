@@ -14,7 +14,7 @@ id: string,
  */
 title: string,
 /**
- * Serializable merged args.
+ * Data args of this composed story.
  */
 props: { [key in string]: JsonValue },
 /**

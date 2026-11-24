@@ -86,9 +86,8 @@ test(
     const root = await consumer(context, {
       "specs/number.stories.tsx": `import React from 'react';
 const count=1000000000000000100;
-export default {title:'Number',component:({count})=>React.createElement('p',null,count),
-  args:{count},argTypes:{count:{control:{type:'number',min:count,max:count}}}};
-export const Saved={};`,
+export default {title:'Number',component:({count})=>React.createElement('p',null,count)};
+export const Saved={args:{count},argTypes:{count:{control:{type:'number',min:count,max:count}}}};`,
     });
     const server = await serve(context, root);
     const url = await server.ready();

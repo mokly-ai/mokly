@@ -138,10 +138,10 @@ helper need not match a root.
 The configured [roots](./mokly-paths.md#roots) define which files Mokly
 reads. A matched `.md` file is a document; a matched `.screen.html`,
 `.component.html`, `.page.html`, or `.use-case.yaml` file is an HTML or YAML
-kind; a matched stories file is a component entry under the
-[sidecar contract](./mokly-sidecar.md#storybook); every other matched file is
-an entry module whose exports are collected under the
-[entry module contract](./mokly-entry-modules.md). `.mockup.ts` and
+kind; a matched stories file gives its entry under the
+[Storybook stories contract](./mokly-storybook.md#the-entry-and-its-variants);
+every other matched file is an entry module whose exports are collected under
+the [entry module contract](./mokly-entry-modules.md). `.mockup.ts` and
 `.mockup.tsx` are the recommended module names because the default root
 pattern selects them; a root may select another shape.
 

@@ -1,11 +1,14 @@
 # Storybook Support
 
-Status: Active. On branch `calummoore/mokly-storybook-integration`, no pull
-request yet. Each track runs in its own Conductor workspace in the "mokly
-storybook" section and opens a pull request into this branch, as design
-calls 1 and 25 say. Pull requests from this branch into `main` land at slice
-boundaries. Each earlier one keeps this plan, and the last one deletes it, as
-the `plans` skill says.
+Status: Active, paused by the user on 2026-11-24. On branch
+`calummoore/mokly-storybook-integration`, with no pull request into `main`
+yet. Tracks A, B, C, D, and J are merged into this branch. Tracks E to I have
+not started. The section [Where the work stands](#where-the-work-stands)
+gives what is done, what waits for the user, and how to continue. Each track
+works on its own branch from this branch and opens a pull request into this
+branch, as design calls 1 and 25 say. Pull requests from this branch into
+`main` land at slice boundaries. Each earlier one keeps this plan, and the
+last one deletes it, as the `plans` skill says.
 
 Mokly reads each `*.stories.*` file that a root matches as one component
 entry. It composes the stories with `composeStories` from `@storybook/react`,
@@ -16,16 +19,20 @@ small projects found that many of them fail the build or render wrong:
 CSF Factories, a meta without complete args, `fn()` callbacks under
 `--strict`, CSS that the preview file imports, theme globals, a `.storybook`
 folder inside a package, loaders, `sb.mock()`, portals, and imported images.
-The test matrix and a rerun script are in `.context/storybook/`.
+Milestone 38 lists that test matrix, so that a new set of small projects can
+check each pattern again.
 
 This plan makes Mokly read and render the Storybook files that projects write
 today. It keeps one failing story from stopping a build. It compiles with the
 project's own Vite setup when the configuration asks for it. It connects
 story components to the screens that render them and to the published
-Storybook. The brainstorm ran from 2026-11-03 to 2026-11-06 in this
-workspace, and its notes are in `.context/storybook/` and
-`.context/bundler/`. Evidence goes under `.context/storybook-support/`, which
-also holds the report of the options check.
+Storybook. The brainstorm ran from 2026-11-03 to 2026-11-06. Its results are
+the decisions and design calls below. The `.context/` paths that this plan
+names were scratch files of the first workspaces, and this branch does not
+hold them. This plan, the protocol docs, and the follow-up items under
+`plans/follow-ups/` hold every fact that the remaining work needs. New
+evidence goes under `.context/storybook-support/` in the workspace that makes
+it.
 
 Out of scope, from the decisions below: browser capture of stories,
 decision 1; Storybook `staticDirs`, decision 6; composition with a framework
@@ -79,6 +86,88 @@ Replaced ways:
   loader error in `packages/mokly/src/sidecar/plugins.ts`, and its row in
   `docs/protocol/mokly-imported-styles-errors.md`. Moved in Milestone 10.
   Deleted in Milestone 10.
+
+## Where the work stands
+
+The user paused the work on 2026-11-24, after tracks A, B, C, and J merged
+into this branch. Track D's pull request is open. This section tells the next
+agent what is done, what waits for the user, and how to continue.
+
+| Track                    | Pull request | Done                         | Open                                                                                  |
+| ------------------------ | ------------ | ---------------------------- | ------------------------------------------------------------------------------------- |
+| A. Mockups               | #339, merged | Milestone 1, except one TODO | The mockup update for decision 27                                                     |
+| B. Story reading         | #492, merged | Milestones 3 to 6            | The B4 TODO of Milestone 2, Milestone 7, and Milestone 8                              |
+| C. Imported assets       | #453, merged | Milestones 9 to 12           | None                                                                                  |
+| D. Vite adapter          | #493, open   | Milestones 13 and 16         | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
+| J. Spike for decision 18 | #349, merged | Milestone 37                 | None                                                                                  |
+| E to I                   | None         | Nothing                      | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| All                      | None         | Nothing                      | Milestone 38, which ends with the pull request into `main`                            |
+
+### Decisions that wait for the user
+
+Each decision is in full in this plan, with its options and a recommended
+option. None has an answer yet, so no option applies.
+
+- [Decisions 18a to 18d](#18a-files-that-no-storybook-folder-owns): the
+  rules for catalogues with several Storybook folders. They block
+  Milestones 30 and 32.
+- [Decision 23](#23-a-new-story-has-no-published-storybook-page) and
+  [decision 27](#27-the-storybook-link-leaves-the-catalogue): where the
+  Storybook link shows and where it opens. They block Milestones 26 to 28 and
+  the last TODO of Milestone 1.
+- [Decision 26](#26-error-document-styles-in-dark-views): the styles of the
+  error document of a failed story. It blocks Milestone 23.
+- [B4](#b4-malformed-mokly-parameter-values): malformed `mokly` parameter
+  values. It blocks Milestone 7 and the last TODO of Milestone 2.
+- Track D decisions 2 and 3: the files that the Vite setup reads outside the
+  module graph, and untracked env files on the base side. They block one
+  TODO of Milestone 15.
+- Track D decision 4: settings that the Vite setup replaces. It blocks one
+  TODO of Milestone 14.
+
+### Follow-up items that wait for the user
+
+These items block no milestone. Each file holds the full item and its
+recommended option.
+
+- [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): a
+  base URL can redirect imported asset URLs. Severity High.
+- [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
+  which attributes count as resource references.
+- [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): one
+  content type rule for every delivery path. It also holds the question of a
+  host duty in the static delivery contract.
+- [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
+  two Vite setups can load one module twice.
+- [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): a
+  stylesheet asset name without an extension passes.
+- [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md):
+  the value of a `.css` import with `type: "css"`.
+- [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): the
+  `data:` URL error does not name its fix.
+- [design-external-link-check.md](follow-ups/design-external-link-check.md):
+  the design checks pass unmarked external links.
+
+The other follow-up items that this plan added need no decision. A later
+branch fixes each one as its file says.
+
+### How to continue
+
+1. Bring the decisions and the follow-up items above to the user, with their
+   recommended options. Ask for all of them in one message.
+2. Apply each answer in the milestone that waits for it, and record the
+   answer in this plan with its date.
+3. Run the reviews that did not run: the review TODO of Milestone 8 for
+   track B, and the review TODO of Milestone 17 for track D. Run each against
+   this branch with the `implementation-review` skill.
+4. Merge `main` into this branch before a track starts. Only this branch
+   merges `main`. Each track branch merges this branch.
+5. Start tracks E to I in the order of the [Tracks](#tracks) table. Each
+   track works on a branch from this branch and opens a pull request into
+   this branch.
+6. At a slice boundary, open the pull request from this branch into `main`,
+   as design call 1 says. Ask the user before it merges, because a push to
+   `main` deploys Mokly Cloud.
 
 ## Decisions
 
@@ -217,6 +306,299 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Answer:** E, chosen by the user on 2026-11-19, with a spike first in its
   own workspace. Milestone 37 runs the spike. When the spike shows that E
   cannot work, this decision goes back to the user with the evidence.
+- **Spike result:** E works with Vite 8.3.8, as far as the spike of
+  Milestone 37 tested it on 2026-11-19, with an emulation of Storybook's
+  setup. One Vite server for each Storybook folder and one module runner
+  compiled each module once, in the server that owns it, with that setup's
+  aliases, plugins, Vite env values, and mocks. Each module kept one
+  identity and one place in one module graph, also on the base side, in a
+  replay, and after an edit. So a story that renders a module of another
+  folder sees that module as the other folder's setup compiles it. Identity
+  holds for each resolved file: two setups that resolve one import to
+  different files give two modules. One server with an environment for
+  each folder failed, because Vite shares the root, the env files, and the
+  aliases across the environments of one server. Two extra servers added
+  about 40 ms of startup and four added about 70 ms, with 3 to 9 MiB more
+  peak memory and compile times within noise, without Storybook's presets.
+  The spike loaded no real Storybook preset, so two risks stay for
+  Milestone 32: the presets of two folders must load in one process, and
+  Storybook's env preset is process-wide. Design call 18 gives the rules,
+  and decisions 18a to 18d settle the open questions.
+
+### 18a. Files that no Storybook folder owns
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation, from the spike of Milestone 37.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Option E of decision 18 compiles each file with the setup of the
+    Storybook folder whose parent directory holds it.
+  - Some files have no such folder: mockups outside every Storybook
+    package, shared packages without a Storybook folder, installed packages
+    in the root `node_modules` that a setup compiles, and Mokly's virtual
+    entry.
+  - With one Storybook folder, decision 17 compiles every JavaScript entry
+    with that folder's setup.
+  - A root without the `storybook` field uses the `.storybook` folder of the
+    source root, as design call 12 says. When that folder exists, its parent
+    holds every file, so this decision applies only without it.
+  - The spike compiled these files once, with a fallback setup. It tried the
+    app setup of the configuration directory and the setup of the first
+    folder, and both kept one identity for each module.
+- **Problem:** When roots name several Storybook folders, no rule says which
+  setup compiles a file that no folder owns.
+- **Impact if no action:** Milestone 30 cannot state the setup of a shared
+  file, and two implementations can compile it differently.
+- **Root question:** Which setup compiles a file that no Storybook folder
+  owns, so that the file compiles once, with a setup that its importers can
+  use?
+- **Options:**
+  - **A.** The app setup of the configuration directory, as for a catalogue
+    without a Storybook folder. This adds one Vite server. A shared file
+    that needs a plugin that only the Storybook setups have, such as SVGR,
+    fails. The app setup lacks Storybook's resolve conditions, so a shared
+    file can resolve a package to another file than the stories do, and the
+    package then loads twice. Effort: Small.
+  - **B.** The setup of the first root, in configuration order, that names a
+    Storybook folder. This adds no server, and a catalogue with one folder
+    keeps the setup of decision 17 when it adds a second folder. A change of
+    root order changes the setup of these files. Effort: Small.
+  - **C.** The optional file must name the setup of these files when roots
+    name several folders. Without it, the configuration check fails and
+    names the file. Effort: Small.
+  - **D.** B, and an optional field of the `vite` object maps directory globs
+    to Storybook folders. A file that a glob matches compiles with that
+    folder's setup. The field wins over B and over the rules of decisions
+    18b and 18c. It adds a field, its validation, and its docs. Effort:
+    Medium.
+  - **E.** These files compile with one setup merged from the setups of
+    every folder, as option D of decision 18 proposed for the whole
+    catalogue. Plugins with the same name load once, and one alias key
+    keeps one target. A plugin can run at a root that is not its own. This
+    adds one Vite server. Effort: Medium.
+- **Left out:** The setup of the first importer: an unrelated edit could
+  then change the setup, and with it the output, of a shared file. A failure
+  for each file that no folder owns: shared packages without a Storybook
+  folder are common, and C gives the same explicit choice once. A copy of
+  each such file for the setup of each importer: it breaks the one identity
+  that option E of decision 18 requires.
+- **Wider fix:** None, because this is one missing rule.
+- **Previous examples:** Option B of decision 18 used the first root that
+  names a folder as its default.
+- **Related:** Decision 18c can give the files of a root to the folder that
+  the root names, so fewer files need this setup. Decision 18b can move a
+  mocked file away from this setup. Design call 22 runs the optional file
+  once for each setup.
+- **Recommendation:** B. Shared files then compile with a Storybook setup
+  and its resolve conditions, as decision 17 does for one folder, and no
+  extra server starts. D can follow later without a breaking change.
+- **Action:** ask the user, because option E does not settle these files,
+  A and B trade a fixed app setup against continuity with decision 17, and
+  C adds a configuration error.
+
+### 18b. Mocks of modules that another setup owns
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation, from the spike of Milestone 37.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Storybook applies `sb.mock()` in the plugin hooks of the Vite server
+    that loads the mocked module. The mock calls come from that server's
+    preview file.
+  - Under option E of decision 18, the server of the folder that owns a
+    module loads it. So a preview's mock reaches only the modules of its own
+    folder.
+  - In its own Storybook, a preview's mock of a shared file or an installed
+    package reaches every import of that module.
+  - npm and pnpm workspaces usually install packages in the root
+    `node_modules`, which no folder owns.
+  - The spike showed both sides. The app preview's mock of a shared file did
+    not apply. An override that gave the file to the app setup made the mock
+    apply for every importer.
+- **Problem:** A preview's mock of a module that another setup owns has no
+  effect, because one module has one identity for all its importers.
+- **Impact if no action:** Stories that rely on such a mock render the real
+  module, which can differ from their Storybook or fail.
+- **Root question:** Which stories see a preview's `sb.mock()` of a module
+  that another setup compiles, when the module has one version for all its
+  importers? The options check of 2026-11-19 wrote this question, because
+  A and D answer that the mock does not reach the module.
+- **Options:**
+  - **A.** Keep the location rule. A preview's mock applies only to the
+    modules of its folder, and the guide states the limit. Mocks of shared
+    files and of packages in the root `node_modules` then never apply.
+    Effort: Small.
+  - **B.** A module that a preview mocks belongs to the setup of that
+    preview, and it compiles with that whole setup. The mock then applies
+    for every importer, also in the stories of other folders, which their
+    own Storybook renders with the real module. When two previews mock one
+    module, the first root in configuration order wins. Effort: Medium.
+  - **C.** B, and a warning when two previews mock one module. The warning
+    fails `--strict`. Effort: Medium.
+  - **D.** A, and a warning when a preview mocks a module outside its
+    folder. The warning fails `--strict`. Effort: Small.
+  - **E.** B only for a module that no folder owns, such as a shared file or
+    a package in the root `node_modules`. A module that a folder owns stays
+    with that folder, so the mock of another folder has no effect on it, and
+    the owner's own mock applies. When two previews mock a module that no
+    folder owns, the first root in configuration order wins. Effort: Medium.
+- **Left out:** A mocked and a real copy of the module for each folder: each
+  module that imports it would need a copy too, so components would lose
+  one identity. A module graph for each folder: that is option C of
+  decision 18, which the user did not choose. The mocks of every preview in
+  the server that owns the module, without a move: the mocked code would
+  compile with a setup that no Storybook uses for that mock. A move only
+  while every importer is in the mocking folder: an unrelated import could
+  then move the module and change its output.
+- **Wider fix:** B, because one rule covers every mock target, also
+  installed packages.
+- **Previous examples:** None found.
+- **Related:** Decision 18a: B and E move a mocked file away from the setup
+  of 18a. Design call J2 in Milestone 37: an installed package must compile
+  in Vite before any mock reaches it. Design call 18: the redirect file of a
+  moved module can belong to another server, so every server gets each
+  change.
+- **Recommendation:** E, changed from B by the options check of
+  2026-11-19. Mocks let stories render without real services, and E keeps
+  that for shared files and installed packages, which A loses in every
+  monorepo that installs packages at the root. Unlike B, E never compiles a
+  folder's own module with another folder's setup, and root order never
+  replaces a folder's own mock. B reaches the most mock targets.
+- **Action:** ask the user, because B and E change the stories of a folder
+  that did not ask for the mock, and C and D add a warning that fails
+  `--strict`.
+
+### 18c. A root whose Storybook folder lies elsewhere
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review, from the independent check of the spike.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Decision 9 lets each root name its Storybook folder, and Mokly reads
+    `main.*` there.
+  - Some monorepos keep one central Storybook folder, such as
+    `apps/storybook/.storybook`, whose `main.*` lists the stories of other
+    packages.
+  - Option E of decision 18 chooses the setup by location: the deepest
+    Storybook folder whose parent directory holds the file.
+  - So when roots name several folders, the stories of a root whose
+    folder's parent does not hold them get another setup: the setup of
+    another folder, or of decision 18a.
+  - With one folder, decision 17 gives its setup to every file, so the
+    problem needs several folders.
+- **Problem:** The files of a root can compile with another setup than the
+  setup of the folder that the root names.
+- **Impact if no action:** In a monorepo with a central Storybook and a
+  second folder, the central Storybook's stories compile without its
+  aliases, plugins, and mocks, and nothing warns.
+- **Root question:** How do the stories of a root, and the files beside
+  them, get the setup of the folder that the root names, when the parent of
+  that folder does not hold them? The options check of 2026-11-19 wrote
+  this question, because the usual layout, a root `packages/ui/src` with
+  the folder `packages/ui/.storybook`, has no problem.
+- **Options:**
+  - **A.** Keep the location rule of option E. Such files get the setup of
+    the folder that holds them, or of decision 18a, and the guide states the
+    limit. Effort: Small.
+  - **B.** A file inside the directory of a root that names a folder belongs
+    to that folder. When two such roots hold a file, the deepest root
+    decides. The location rule decides only for the other files. Effort:
+    Medium.
+  - **C.** Fail the configuration check when roots name several folders and
+    the directory of a root lies outside its folder's parent. This adds a
+    configuration error. Effort: Small.
+  - **D.** B, but a file that the globs of a root match takes the folder of
+    that root when the root names one. Root discovery already records the
+    root of each matched file. The deepest root decides only for the other
+    files in root directories. A story then compiles with the folder whose
+    preview it gets under decision 9. Effort: Medium.
+- **Left out:** The setup of the first story that imports a file: an
+  unrelated edit could then change the setup of a shared file.
+- **Wider fix:** D, because the field that the root sets then decides for
+  every layout, also for matched files inside a deeper root's directory.
+- **Previous examples:** None found.
+- **Related:** Decision 18a gives the setup of the files that no rule
+  assigns. Decision 20 settles roots without `dir`, which take their files
+  from `main.*`.
+- **Recommendation:** D, changed from B by the options check of
+  2026-11-19. Stories then compile with the folder that their root names,
+  as decision 9 intends, and with the same folder whose preview they get.
+  B can compile a story with one folder's setup and render it with another
+  folder's preview. With a folder in each package, D gives the same setup
+  as the location rule.
+- **Action:** ask the user, because B and D change the ownership rule of
+  option E, which the user chose, and C adds a configuration error.
+
+### 18d. Storybook env values of several folders in one process
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review, from the independent check of the spike.
+- **Category:** Docs or spec.
+- **Location:** None.
+- **Background:**
+  - Storybook's setup defines its `import.meta.env.STORYBOOK_*` values from
+    its `env` preset. These values win over the values that Vite loads.
+  - The preset reads the `.env` files of one app root. It takes the root
+    from the working directory when its module first loads, and it writes
+    the values into the process environment.
+  - A sidecar process keeps the source root as its working directory. Under
+    option E of decision 18, one process loads the presets of every folder.
+  - The spike emulated Storybook without this preset, so its env check
+    passed. The check read the preset's source in Storybook 10.6.2.
+- **Problem:** In one process, every Storybook folder gets the
+  `STORYBOOK_*` values of the source root. A folder's own Storybook, run
+  from its package, reads the `.env` files of the package.
+- **Impact if no action:** A story that reads a `STORYBOOK_*` value can
+  render with another value than in its own Storybook. This also holds for
+  one folder whose parent is not the source root.
+- **Root question:** How do the stories of each folder get the `env`
+  preset values of their own Storybook, when the working directory of the
+  sidecar is not the folder's parent? The options check of 2026-11-19 wrote
+  this question, because the values also come from the shell and from
+  `main.*`, and one folder has the same problem.
+- **Options:**
+  - **A.** One set for the whole process, from the source root, as
+    Storybook's preset gives it. The guide states it. The preset also
+    writes the source root's `.env` values into the process environment,
+    and Vite prefers those, so they replace each folder's `VITE_*` values
+    too. Effort: Small.
+  - **B.** Each folder's values come from the `.env` files of its parent, as
+    Vite loads them for its server. Mokly removes Storybook's env plugin, as
+    design call 20 removes other plugins, and it keeps the process
+    environment as it was before the presets loaded. Mokly sets Storybook's
+    fixed variables, such as `STORYBOOK`, itself. Values that a `main.*`
+    file adds through its `env` preset are lost. Effort: Medium.
+  - **C.** Run the setup and the Vite server of each folder in a child
+    process, with the folder's parent as its working directory. The module
+    runner reaches them across processes. Effort: Large.
+  - **D.** Keep Storybook's env plugin. A Mokly preset after Storybook's core
+    presets replaces the core `STORYBOOK_*` values with the values that Vite
+    loads from the folder's parent. An `env` preset from `main.*` or an
+    addon still adds its values. Mokly restores the process environment
+    after the presets of each folder load. This depends on the preset order
+    of Storybook's loader: core presets first, then `main.*`. Effort:
+    Medium.
+- **Left out:** A new app root for each folder before its presets load: the
+  preset fixes its `.env` path when its module first loads, so a later
+  folder cannot change it. A fresh copy of Storybook's env module for each
+  folder: that module is a private chunk whose name changes with each
+  release, so it fails in the tested range of design call 13. A temporary
+  working directory for each folder: a sidecar keeps one working directory
+  for its whole lifetime, as `docs/protocol/mokly-sidecar-modules.md` says.
+- **Wider fix:** C, because it isolates every process-wide Storybook state.
+- **Previous examples:** None found.
+- **Related:** Design call 20 removes Storybook's browser-only plugins.
+  Milestone 32 first loads the presets of two folders in one process.
+- **Recommendation:** D, changed from B by the options check of
+  2026-11-19. Each folder then gets the values that its own Storybook reads
+  when it runs from its package, and the `env` presets of `main.*` and of
+  addons keep their values, which B removes. C isolates the most state, at
+  a Large cost.
+- **Action:** ask the user, because A, B, and D trade Storybook's own env
+  preset against each folder's own values, and C is Large.
 
 ### 19. Ids of story component uses
 
@@ -717,11 +1099,33 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
 17. A top-level `vite` field turns the adapter on. Its optional `config`
     names the optional `mokly.vite.config.ts`. Reason: the adapter is opt-in,
     and current catalogues keep esbuild.
-18. For a catalogue with one Storybook folder, each sidecar process runs one
-    Vite server for its source root, with Vite's own watcher off. Mokly's
-    watcher invalidates changed modules. With several folders, decision 18
-    chose E: one Vite server for each folder, which feed one module runner.
-    Reason: a sidecar process serves one source root.
+18. Changed on 2026-11-19, after the spike of Milestone 37. Each sidecar
+    process runs one Vite server for each setup of its source root, from
+    the side's own installation, with no HTTP server, watcher, hot module
+    replacement, or pre-transform requests. A catalogue with one Storybook
+    folder or none has one setup. When roots name several folders, each
+    folder gets a server rooted at its parent. A root without the
+    `storybook` field names the `.storybook` folder of the source root when
+    that folder exists, as design call 12 says. A file belongs to the
+    deepest folder whose parent directory holds its real path, as option E
+    says, unless decision 18c or 18a gives it another setup. A file inside a
+    selected dependency root takes its owner from that root's path relative
+    to the source root, so both sides give it one owner. An id with a query
+    belongs to its file. An id that is not a file is a virtual module of the
+    server that resolved it. The setup that owns a package decides, for
+    every importer, whether Vite compiles it or Node loads it. One module
+    runner from the same installation evaluates every module once. An
+    import resolves in the server that compiled its importer, and the module
+    compiles in the server that owns it. Before the runner caches an
+    import, Mokly turns its specifier into a URL that no other module
+    shares. Mokly's watcher sends each changed file to every server, which
+    invalidates it and passes the change to its plugins. Reason: a sidecar
+    process serves one source root, and the spike kept each package's setup
+    and each module's identity this way. A transport that only routed
+    requests let the URLs of two servers collide in the runner's cache.
+    Invalidation in the owner alone missed a file that a plugin of another
+    server read. The first version named one server for each folder without
+    these rules.
 19. Mokly resolves `vite` from the project. A missing `vite` fails `bundle`
     with `bundle-failed`, as decision 22 chose. Reason: Mokly ships no
     private runtime.
@@ -730,11 +1134,16 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     `withoutVitePlugins` helper. Reason: a render does not need them.
 21. Under the adapter, Mokly requests each local stylesheet through the Vite
     setup as an inline module. Reason: plugins such as Tailwind's then run.
-22. The optional file exports `defineMoklyVite` from `@mokly/mokly/vite`. Its
-    `app()` and `storybook()` loaders run only when called. For one
-    Storybook folder it returns one setup. With several folders, the spike
-    of decision 18 settles its shape. Reason: a project can avoid a broken
-    Storybook release.
+22. Changed on 2026-11-19, after the spike of Milestone 37. The optional
+    file exports `defineMoklyVite` from `@mokly/mokly/vite`. Mokly calls its
+    default export once for each setup of design call 18, with the setup's
+    Storybook folder, or with none. The `app()` loader loads the Vite config
+    of the folder's parent, or of the configuration directory without a
+    folder. The `storybook()` loader loads the folder's merged Storybook
+    setup. Each loader runs only when called, and each call returns one
+    setup. Reason: a project can avoid a broken Storybook release in each
+    folder, and a catalogue with one folder keeps one call. The first
+    version left the shape for several folders to the spike.
 23. A static scan of the preview file finds `sb.mock()` calls for the
     `storybook-mock-without-vite` warning. Reason: the preview file does not
     run before the bundle.
@@ -802,24 +1211,26 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
 
 ## Tracks
 
-Each track runs in its own workspace, as design calls 1 and 25 say. A track
-starts when each milestone on the `Depends on:` lines of its first milestones
-has merged into this branch, and when the open decisions that block it have
-answers. The ledger of the workspaces is in
-`.context/storybook-support/workspaces.md`.
+Each track runs in its own workspace, on its own branch from this branch, as
+design calls 1 and 25 say. A track starts when each milestone on the
+`Depends on:` lines of its first milestones has merged into this branch, and
+when the open decisions that block it have answers. A merged track that still
+has open TODOs continues on a new branch from this branch. The section
+[Where the work stands](#where-the-work-stands) gives the state of each
+track.
 
-| Track                      | Milestones | Starts after                            |
-| -------------------------- | ---------- | --------------------------------------- |
-| A. Mockups                 | 1          | Nothing                                 |
-| B. Story reading           | 2 to 8     | Nothing                                 |
-| C. Imported assets         | 9 to 12    | Nothing                                 |
-| D. Vite adapter            | 13 to 17   | Nothing                                 |
-| E. Storybook folders       | 18 to 22   | Track B                                 |
-| F. Failed stories          | 23 to 25   | Tracks A and B, and decision 26         |
-| G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23 and 27 |
-| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J                   |
-| I. Story component usage   | 34 to 36   | Tracks B and D                          |
-| J. Spike for decision 18   | 37         | Nothing                                 |
+| Track                      | Milestones | Starts after                                    |
+| -------------------------- | ---------- | ----------------------------------------------- |
+| A. Mockups                 | 1          | Nothing                                         |
+| B. Story reading           | 2 to 8     | Nothing                                         |
+| C. Imported assets         | 9 to 12    | Nothing                                         |
+| D. Vite adapter            | 13 to 17   | Nothing                                         |
+| E. Storybook folders       | 18 to 22   | Track B                                         |
+| F. Failed stories          | 23 to 25   | Tracks A and B, and decision 26                 |
+| G. Storybook links         | 26 to 29   | Tracks A and E, and decisions 23 and 27         |
+| H. Storybook setup on Vite | 30 to 33   | Tracks C, D, E, and J, and decisions 18a to 18d |
+| I. Story component usage   | 34 to 36   | Tracks B and D                                  |
+| J. Spike for decision 18   | 37         | Nothing                                         |
 
 The last milestone of each track runs the targeted tests and the complete
 gate, commits, pushes, and runs the `implementation-review` skill against
@@ -882,16 +1293,329 @@ Depends on: none
 Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 14, and of findings 2, 10, and 11.
 
-- [ ] Move the Storybook section of `docs/protocol/mokly-sidecar.md` to a new
+- [x] Move the Storybook section of `docs/protocol/mokly-sidecar.md` to a new
       page, `docs/protocol/mokly-storybook.md`, and link it from the sidecar
       page and `docs/protocol/README.md`.
-- [ ] Write there the rules for CSF 2, CSF 3, and CSF Factories files; the
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Write there the rules for CSF 2, CSF 3, and CSF Factories files; the
       first story as the parent; args and their classification; names, tags,
       and the description; the `dev` and `!mokly` filters; `story.load()`
       and `beforeAll`; and the `mokly` parameter. Add the status line that
       `AGENTS.md` asks for.
-- [ ] Run `npm run format:check` and
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B3, option C, to the other protocol
+      pages: replace each stale Storybook sentence with a link to
+      `docs/protocol/mokly-storybook.md`, and keep only the exceptions that a
+      page needs. The proposed edits are in
+      `.context/storybook-support/b-out-of-scope-doc-edits.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Link each missing behaviour in the status line of
+      `docs/protocol/mokly-storybook.md` to the heading of the milestone
+      that owns it, as the `documentation` skill now asks.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B2 to the `beforeAll` rule of
+      `docs/protocol/mokly-storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
+      `docs/protocol/mokly-entry-props.md`, and `docs/protocol/mokly-variants.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [ ] Apply the answer to decision B4 to the protocol pages.
+      Branch: `conductor/storybook-support-b-story-reading`.
+
+Track B raised four decisions on 2026-11-18, while it wrote these docs. The
+orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
+call, B2 on 2026-11-20 with option D, and B1 on 2026-11-23 with option C. B4
+is open. It blocks the rule for malformed `mokly` parameter values in
+Milestone 7.
+
+### B1. Stories inherit the first story's args
+
+Answered on 2026-11-23: C. The orchestrator of this plan made this design
+call, because the user's decisions 3 and 7 already require that each story
+renders as in Storybook. A story variant's props are only its own data args,
+and the core does not lay them over the parent's props. A key is required
+only when every included story sets it. Each story renders with its own
+non-data args and exactly the requested data props, and the sidecar sets each
+data arg that the request leaves out to `undefined`.
+
+- **Severity:** High. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `crates/mokly-catalogue/src/prepare_parent.rs:31-36`,
+  `crates/mokly-catalogue/src/prepare_entry.rs:113`,
+  `packages/mokly/src/sidecar/render.ts:43-49`,
+  `docs/protocol/mokly-entry-props.md:15-18` and `:105-110`.
+- **Background:**
+  - Decision 3 makes the first included story the parent page of a stories
+    entry, and the other stories its variants.
+  - Under the entry props contract, a variant's props replace only the keys
+    that they name. Every other key comes from the parent's props.
+  - The inferred schema marks each key of the parent's own props as
+    required.
+  - Today the parent's props are the meta's args. Every story's composed
+    args already hold them, so the inheritance never shows.
+  - A story render lays the requested props over the story's own args. A
+    data arg that the request leaves out keeps the story's value.
+- **Problem:** With the first story as the parent, each later story takes
+  every arg that the first story sets and it does not. In Storybook's Button
+  template, `Primary` sets `primary: true`, so `Secondary`, `Large`, and
+  `Small` render as primary buttons. Also, "unset" of an optional prop in
+  Serve does not change a story's render, because the story keeps its own
+  value.
+- **Impact if no action:** Most stories files show wrong variants after
+  Milestone 6, with no warning, in Browse and in Changes.
+- **Root question:** How do the props that Mokly shows, compares, and edits
+  for each story stay exactly the args that the story renders with?
+- **Options:**
+  - **A.** A story variant's props are its own data args, whole. The core
+    does not lay them over the parent's props. The schema marks a key as
+    required only when every included story sets it. This changes two rules
+    of the entry props contract, for stories files only. "Unset" still has
+    no effect. Effort: Medium.
+  - **B.** Keep inheritance. Give the parent only the args that every
+    included story sets, with the first story's values. Each variant sets
+    those keys itself, so nothing leaks, and the contract stays as it is.
+    An arg that only the first story sets, such as `primary`, then has no
+    control and is missing from the read model, while the parent's views
+    still show it. Effort: Small.
+  - **C.** Do A, and render each story with its own non-data args and
+    exactly the requested data props. The sidecar sets each data arg that
+    the request leaves out to `undefined`. "Unset" then works on every story
+    page. The render rule of `docs/protocol/mokly-storybook.md` changes.
+    Effort: Medium.
+  - **D.** Give each story its own inferred schema and controls, from its
+    own data args. Each story requires the args that it sets. A story then
+    has no control for an arg that only other stories set, and the core,
+    the variants contract, and the controls contract change. Effort: Large.
+- **Left out:** No change: it renders wrong variants. A `null` for each
+  inherited key: `null` is a value, so a default parameter of the component
+  does not apply. A list of keys that the sidecar tells the core to drop: it
+  gives the same result as A with one more transport field. One entry for
+  each story, with no parent: it breaks decision 3. A render that ignores
+  inherited keys: the read model and the controls would then show values
+  that the render does not use.
+- **Wider fix:** C. Each story's render then equals its shown props, for
+  inherited keys and for unset keys.
+- **Previous examples:** None found.
+- **Related:** B3, work that waits for the answer: this answer changes the
+  merge and required-key sentences of `mokly-entry-props.md` and
+  `mokly-variants.md`.
+- **Recommendation:** C. Each story then shows, edits, compares, and renders
+  exactly its Storybook args. The first pass recommended A, which keeps the
+  "unset" defect.
+- **Action:** ask the user, because C changes the variant merge rule and the
+  required-key rule of the entry props contract for stories files, and no
+  recorded decision covers that change.
+
+### B2. Old `beforeAll` setups stack in a sidecar
+
+Answered on 2026-11-20: D. The orchestrator of this plan made this call,
+because design call 10 is its own design call. D changes design call 10: each
+sidecar process keeps at most one active `beforeAll` setup. Before a story of
+another generation renders, the cleanup of the old setup runs, and then the
+new generation's `beforeAll` runs. A hook that threw does not run again for
+its generation. The release of a generation no longer runs a cleanup.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `packages/mokly/src/sidecar/session.ts:176-192`,
+  `docs/protocol/mokly-storybook.md`, section "Setup Before Render".
+- **Background:**
+  - Design call 10 runs the preview's `beforeAll` once for each bundle
+    generation, and its cleanup when the sidecar releases the generation.
+  - A setup changes state that the whole process shares, such as `fetch`,
+    timers, and `Date`, because the bundle runs in the main realm.
+  - A sidecar process serves one source root and handles one request at a
+    time. In Serve, an old and a new generation of the same root can both
+    stay loaded until the old one is disposed.
+  - Only the request dispatcher in `session.ts` sees the `dispose` and
+    `shutdown` requests. The track brief forbids changes to `session.ts`,
+    because tracks C, D, and E change it.
+- **Problem:** This track cannot run the cleanup at release without a change
+  to `session.ts`. Even with that change, two loaded generations keep two
+  setups active on the same globals.
+- **Impact if no action:** In Serve, each rebuild runs `beforeAll` again
+  while the old setup stays. A setup such as a mock server or a fake clock
+  then stacks until the sidecar recycles.
+- **Root question:** How does Mokly keep the `beforeAll` setup of an earlier
+  generation from staying active in a long-lived sidecar process?
+- **Options:**
+  - **A.** Allow this track a small change to `session.ts`: `dispose`,
+    `shutdown`, and the end of the input stream call a release function of
+    the story reader. A track that also edits that file may get a small
+    merge conflict. Two loaded generations still keep two setups.
+    Effort: Small.
+  - **B.** The story reader keeps each cleanup and exports the release
+    function, and this track leaves `session.ts` alone. A follow-up item
+    adds the calls on the primary branch after the tracks merge. Until then,
+    no cleanup runs. Effort: Small.
+  - **C.** Run no `beforeAll` cleanup, and change design call 10 to say so.
+    Effort: Small.
+  - **D.** Keep at most one active setup in each sidecar process. Before a
+    story renders, if the active setup belongs to another generation, its
+    cleanup runs, and then this generation's `beforeAll` runs. A hook that
+    threw does not run again for its generation. Storybook's own preview
+    does the same on a reload. Only the reader and the story path of
+    `render.ts` change. Design calls 10 and B-b and the page's cleanup rule
+    change. Renders that alternate between two generations run the hooks
+    again at each switch, and the last setup gets no cleanup when the
+    process exits. Effort: Small.
+- **Left out:** A process exit hook: it misses `dispose`, so setups still
+  stack in Serve. A garbage collection hook: it can run while another render
+  waits for a loader. A setup and a cleanup around each story render: a hook
+  that returns no cleanup would run again for each view, and its setup would
+  stack. A worker or a separate realm for each generation: it needs a new
+  evaluation design in `evaluate.ts`, which other tracks change.
+- **Wider fix:** D. It needs no release call, and it also serves a
+  generation with several preview files, which track E brings.
+- **Previous examples:** None found.
+- **Recommendation:** D. It never keeps two setups on the shared globals, it
+  matches Storybook's own preview, and it needs no change outside this
+  track. The first pass recommended A.
+- **Action:** ask the user, because D changes design call 10, which the user
+  approved for this track, and A needs a change to `session.ts`, which the
+  track brief forbids.
+
+### B3. Other protocol pages restate old Storybook rules
+
+Answered on 2026-11-20: C. The orchestrator of this plan made this scope
+call, because no other active track edits these eight pages.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** 16 sentences in 8 pages: `docs/protocol/mokly-entry-props.md`,
+  `mokly-variants.md`, `mokly-entry-modules.md`,
+  `mokly-sidecar-definitions.md`, `mokly-paths.md`, `mokly-authoring.md`,
+  `mokly-component-controls.md`, and `mokly-sidecar-render-records.md`. The
+  list is in `.context/storybook-support/b-out-of-scope-doc-edits.md`.
+- **Background:**
+  - Milestone 2 moves the Storybook rules to the new page
+    `docs/protocol/mokly-storybook.md`. Tracks E, F, and G add more rules to
+    it later.
+  - Some other protocol pages restate Storybook rules. For example, the
+    entry props page says that the meta's args are the props, and that
+    every story is a variant.
+  - The track brief allows doc changes only on the sidecar page, the new
+    page, and the protocol index. No other track edits these eight pages.
+- **Problem:** After this track, those sentences contradict the new
+  Storybook page.
+- **Impact if no action:** Readers and agents find two requirements that
+  disagree. A later change can bring back the old rule.
+- **Root question:** Which page holds each Storybook rule, so that the other
+  pages link to it and restate none of it?
+- **Options:**
+  - **A.** Allow this track to replace each stale sentence with a short
+    statement of the new rule and a link. Six of the pages then state
+    behaviour that is not implemented yet, so each needs a status line until
+    Milestone 8. Effort: Small.
+  - **B.** Leave those pages. A follow-up item fixes them on the primary
+    branch after the tracks merge. The contradiction stays until then, and
+    the answer to B1 still changes two of the pages in Milestone 6.
+    Effort: Small.
+  - **C.** Allow this track to replace each stale sentence with a pointer to
+    the new page. Where a general rule does not apply to stories, the page
+    gets only the exception and the link. These pages then say less on
+    their own, and they need no status line. Effort: Small.
+- **Left out:** A note on the Storybook page that it wins over the other
+  pages: two texts that disagree still stay, against the rule that each fact
+  lives in one place.
+- **Wider fix:** C. It removes the restated rules, so a later Storybook rule
+  change cannot leave another page stale.
+- **Previous examples:** None found.
+- **Related:** B1, work that waits for the answer: B1 changes the merge and
+  required-key sentences of `mokly-entry-props.md` and `mokly-variants.md`,
+  so answer the two together.
+- **Recommendation:** C. Each Storybook rule then lives on one page, with no
+  status lines on other pages. The first pass recommended A.
+- **Action:** ask the user, because the track brief limits the doc files of
+  this track, and only the user can widen that scope.
+
+### B4. Malformed `mokly` parameter values
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-storybook.md`, section "Globals For
+  Views".
+- **Background:**
+  - Decision 8 adds a `mokly` parameter with the fields `colorSchemes` and
+    `viewports`. Each maps a Mokly view name to an object of Storybook
+    globals.
+  - Storybook parameters are open objects. Storybook ignores the keys that
+    no addon reads.
+  - Mokly's own authoring inputs reject unknown fields. For example, a
+    variant with an unknown key fails with a diagnostic.
+  - The always-on rules say: when input is recoverable, warn and continue.
+    They also say that a new warning or error needs the user's approval.
+- **Problem:** No rule says what Mokly does with a `mokly` parameter that is
+  not an object, an unknown field such as `colourSchemes`, a mapped value
+  that is not an object, or a view name such as `tablet`.
+- **Impact if no action:** The code picks a behaviour that no review can
+  check. A typo can show the wrong theme with no hint.
+- **Root question:** How does Mokly treat a `mokly` parameter value that
+  matches no rule?
+- **Options:**
+  - **A.** Ignore it without a warning. A typo then shows only as a wrong
+    theme or layout in the views. Effort: Small.
+  - **B.** Ignore it, and give a new build warning that names the story and
+    the value. `--strict` then fails for such a file. The warning needs a
+    new code in the build warnings contract, which the track brief does not
+    include, and a new field in the `describe` result. Effort: Medium.
+  - **C.** Fail the story render with `render-failed`. A typo then stops the
+    build. After track F, the story shows an error document instead.
+    Effort: Small.
+  - **D.** Do A, and export a `MoklyParameter` type from `@mokly/mokly`.
+    TypeScript then reports a typo where the author applies the type with
+    `satisfies`. Storybook's own parameter type accepts any key, so other
+    files get no help. Effort: Small.
+  - **E.** Fail the stories file at describe time with the existing
+    `invalid-field` diagnostic, as for an unknown variant field. One typo
+    then makes the whole build invalid. Effort: Small.
+- **Left out:** None.
+- **Wider fix:** None, because this is one new input, and B covers every
+  malformed shape of it.
+- **Previous examples:** An unknown variant field fails with a diagnostic in
+  `crates/mokly-catalogue/src/variants.rs:60-80`.
+- **Recommendation:** B. The always-on rules ask for a warning when input is
+  recoverable, and the parameter belongs to Mokly. D is a cheap addition to
+  B. The first pass recommended A.
+- **Action:** ask the user, because B adds a new build warning, which needs
+  the user's approval.
+
+The options check of 2026-11-18 added options B1 C and D, B2 D, B3 C, and B4
+D and E, and it changed the recommendations of all four items. Its report is
+`.context/storybook-support/reports/b-options-check-full.md`.
+
+Design calls of track B, made on 2026-11-18:
+
+- B-a. When the preview's `beforeAll` hook throws, it does not run again for
+  that generation, and each story render of that generation fails with its
+  error. Reason: design call 10 runs the hook once, and a story without its
+  setup would render wrong output.
+- B-b. Each sidecar process runs `beforeAll` for each generation whose
+  stories it renders, and again after another generation's setup replaced
+  it. Reason: sidecar processes share no state, so one run cannot serve them
+  all. Changed on 2026-11-20 by the answer to B2.
+- B-c. The globals of the `mokly` parameter win over a story's own
+  `globals`. Reason: design call 11 applies them over the composed globals,
+  and a Chromatic mode's viewport also wins over a story's own viewport
+  global.
+- B-d. The meta's `includeStories` and `excludeStories` filters apply, as in
+  Storybook. Reason: Storybook's composition applies them already.
+- B-e. Made on 2026-11-20. A CSF Factories meta whose title is Storybook's
+  placeholder `ComposedStory` counts as untitled. Reason: Storybook's
+  `meta.story()` writes that placeholder into an untitled factory meta while
+  the stories file evaluates, before the reader runs. Only an authored title
+  of exactly `ComposedStory` loses, in favour of the fallback title.
+- B-f. Made on 2026-11-23. When a requested data prop has the key of a
+  non-data arg of the same story, the requested value renders. Reason: the
+  answer to B1 renders exactly the requested data props, and Storybook lays
+  extra args over a story's own args.
 
 ## Milestone 3: Story reader
 
@@ -900,17 +1624,22 @@ Depends on: 2
 One reader turns CSF 2, CSF 3, and CSF Factories files into one shape, as
 design call 2 says. It fixes findings 2, 10, and 11.
 
-- [ ] Add the reader beside `packages/mokly/src/sidecar/stories.ts`. It
+- [x] Add the reader beside `packages/mokly/src/sidecar/stories.ts`. It
       composes from a copy of the meta, passes a module without a default
       export to `composeStories` unchanged, and takes a factory's meta and
       preview from its stories.
-- [ ] Move `describeStories` onto the reader. The title fallback then never
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Move `describeStories` onto the reader. The title fallback then never
       reads "ComposedStory", which fixes finding 10.
-- [ ] Take each variant's control hints from its composed argTypes, which
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Take each variant's control hints from its composed argTypes, which
       fixes finding 11.
-- [ ] Add a factories fixture, an untitled file, and a variant that does not
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Add a factories fixture, an untitled file, and a variant that does not
       set an arg with options to `tests/sidecar_storybook.test.ts`.
-- [ ] Update `docs/guides/authoring/storybook.md` for CSF Factories.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md` for CSF Factories.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 4: Story args, names, tags, and descriptions
 
@@ -920,16 +1649,27 @@ Stories keep Storybook's names, tags, and description, and the standard
 Storybook files pass `--strict`. Decisions 7 and 14, and the `!mokly` tag of
 decision 5.
 
-- [ ] Leave out of the props, without a warning, each arg that the composed
+- [x] Leave out of the props, without a warning, each arg that the composed
       argTypes type as a function, and each React element arg, as design
       call 4 says.
-- [ ] Name each story as design call 6 says.
-- [ ] Map tags as design call 5 says, and the description as design call 7
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Name each story as design call 6 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Map tags as design call 5 says, and the description as design call 7
       says.
-- [ ] Include stories as design call 8 says.
-- [ ] Test that Storybook's Button template passes `--strict`, and test the
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Include stories as design call 8 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] In the commit that builds story tags, add to
+      `docs/protocol/mokly-entry-props.md` and `docs/protocol/mokly-variants.md`
+      that a story variant takes its tags from its own story, with a link to
+      `docs/protocol/mokly-storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that Storybook's Button template passes `--strict`, and test the
       names, the tags, the description, and the skipped stories.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 5: Story setup before render
 
@@ -937,12 +1677,16 @@ Depends on: 3
 
 Loaders and `beforeEach` run before each story render, as decision 12 says.
 
-- [ ] Await `story.load()` before each story render, and run its cleanups as
+- [x] Await `story.load()` before each story render, and run its cleanups as
       Storybook does.
-- [ ] Run `beforeAll` as design call 10 says.
-- [ ] Test that a loader story and a `beforeEach` story render their prepared
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Run `beforeAll` as the answer to decision B2 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that a loader story and a `beforeEach` story render their prepared
       data.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 6: The first story as the parent page
 
@@ -950,18 +1694,33 @@ Depends on: 4
 
 The first included story becomes the parent page, as decision 3 says.
 
-- [ ] Render the first included story in source order as the parent page,
+- [x] Render the first included story in source order as the parent page,
       with its composed args as the parent's props.
-- [ ] Make the other included stories the parent's variants.
-- [ ] Give a file without an included story no entry, as design call 3 says.
-- [ ] Delete the meta-only composition and move each consumer that "Replaced
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Make the other included stories the parent's variants.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B1: a story variant's props are only its
+      own data args, a key is required only when every included story sets
+      it, and a story renders with exactly the requested data props, each
+      left-out data arg `undefined`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that the variants of Storybook's Button template keep exactly
+      their own args, and that unset of an optional prop renders the story
+      without it.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Give a file without an included story no entry, as design call 3 says.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Delete the meta-only composition and move each consumer that "Replaced
       ways" lists.
-- [ ] Test that a meta without args builds, and that no base state repeats.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Test that a meta without args builds, and that no base state repeats.
+      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `conductor/storybook-support-b-story-reading`.
 
 ## Milestone 7: Globals from the `mokly` parameter
 
-Depends on: 3
+Depends on: 3, and the answer to decision B4 for malformed values
 
 Existing theme decorators follow Mokly's views, as decision 8 says.
 
@@ -977,10 +1736,17 @@ Depends on: 2, 3, 4, 5, 6, 7
 
 - [ ] Remove each status line whose page this track completes.
 - [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Rerun `.context/storybook/reproduce.sh` from the primary workspace and
-      save the result under `.context/storybook-support/`.
+- [ ] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
+      7 build, in new small projects, and save the result under
+      `.context/storybook-support/`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+
+Pull request #492 merged Milestones 2 to 6 into this branch on 2026-11-24,
+before Milestone 7, at the user's request. Its description holds the
+justifications of the track B merges of this branch. Its first review round
+ran, and the user paused the work before the fix round. The review TODO
+above runs the review again on the merged code.
 
 ## Milestone 9: Imported assets documentation
 
@@ -1917,6 +2683,9 @@ The CSS that a preview file imports reaches its stories, as decision 4 says.
       the renderer.
 - [ ] Test that a preview that imports global CSS styles its stories, and
       that Changes shows an edit of that CSS.
+- [ ] Decide whether a story's stylesheet chain drops the stylesheets that
+      its preview file already delivers, as an entry's chain drops the
+      renderer's stylesheets. Track D raised this question on 2026-11-23.
 - [ ] Update `docs/guides/authoring/storybook.md`.
 
 ## Milestone 22: Storybook folders verification, review, and pull request
@@ -2053,17 +2822,31 @@ Depends on: 26, 27, 28
 
 ## Milestone 30: Storybook setup on Vite documentation
 
-Depends on: 12, 17, 22, 37
+Depends on: 12, 17, 22, 37, and the answers to decisions 18a to 18d
 
 Track H. The protocol states the Storybook setup rules of decision 17, with
 the answer to decision 18, and the `sb.mock()` warning of decision 12.
 
 - [ ] Add the Storybook setup rules to `docs/protocol/mokly-vite-adapter.md`,
-      with the answer to decision 18.
-- [ ] Update `docs/protocol/mokly-configuration.md` for the answer to
-      decision 18.
+      or to a new linked page when that page would pass 250 lines. For
+      several Storybook folders, state option E of decision 18 as design
+      call 18 found it: each file compiles once, with the setup that owns it
+      under the answers to decisions 18a and 18c. Each module keeps one
+      identity and one place in the module graph, with the aliases,
+      plugins, env values, and mocks of the setup that owns it, also when a
+      story of another folder imports it. Identity holds for each resolved
+      file. Add the answers to decisions 18b and 18d and the rules of design
+      calls J1 and J2. State the requirements, not the servers or the
+      transport.
+- [ ] Update `docs/protocol/mokly-configuration.md` for option E of
+      decision 18, the answers to decisions 18a and 18c, and the optional
+      file of design call 22.
 - [ ] Update `docs/protocol/mokly-build-warnings.md` with
-      `storybook-mock-without-vite`.
+      `storybook-mock-without-vite`, and with the warning of decision 18b
+      when its answer adds one.
+- [ ] Decide whether the default `.storybook` folder in the source root turns
+      on Storybook's setup under the Vite adapter, or only a root's
+      `storybook` field does. Track D raised this question on 2026-11-23.
 - [ ] Add the status lines, and run `npm run format:check` and
       `npm test -- tests/markdown_links.test.ts`.
 
@@ -2079,24 +2862,65 @@ Depends on: 12, 17
 
 Depends on: 30
 
+- [ ] Before the other TODOs of this milestone, load the presets of two
+      Storybook folders in one process with Storybook's preset loader, and
+      check that each folder gets its own merged setup. When it fails, give
+      decision 18 back to the user with the evidence, because option E then
+      needs a process for each folder.
 - [ ] Load Storybook's merged setup with its preset loader, with
-      `viteCorePlugins` and `viteFinal`, for every JavaScript entry when a
-      root names a Storybook folder, as decision 17 says.
-- [ ] Load the base commit's Storybook setup for the base side, so that both
-      sides compile with their own setup.
+      `viteCorePlugins` and `viteFinal`, for each Storybook folder, as
+      decision 17 says. With one folder, that setup compiles every
+      JavaScript entry.
+- [ ] Load the base commit's Storybook setups for the base side, so that
+      both sides compile with their own setups.
 - [ ] Remove Storybook's browser-only plugins, as design call 20 says.
 - [ ] Add the optional file and `@mokly/mokly/vite`, as design call 22 says.
 - [ ] Install the mocker global of design call 24.
-- [ ] Apply the answer to decision 18, and update `config.schema.json` with
-      it.
+- [ ] Apply option E of decision 18, as design call 18 says: one Vite server
+      for each Storybook folder, the owners of decisions 18a and 18c, and one
+      module runner whose evaluator gives each import a URL that is unique
+      across servers. Keep pre-transform requests off in every server. Send
+      every `react` and `react-dom` import of every server, also inside
+      externalized packages, to the one React runtime of Milestone 14. Send
+      each watched change to every server. No configuration field changes.
+- [ ] Read the module graph across servers: each module's imports in order
+      from its transformed code, after every plugin of its setup; its
+      consumed bytes from the code that its load step returns; and the files
+      that plugins register for it as inputs. Store every transport answer
+      in the compiled recipe at bundle time, also the list of Node built-in
+      modules.
+- [ ] Give the server environment the resolve conditions of design call J1.
+- [ ] Compile in Vite each installed package that a preview mocks, as design
+      call J2 says. Apply the answer to decision 18b to the mocks of modules
+      that another setup owns.
+- [ ] Give each folder the `STORYBOOK_*` values that the answer to decision
+      18d chooses.
 - [ ] Add the `storybook-mock-without-vite` warning, as design call 23 says.
 - [ ] Test the supported Storybook range in CI with a `react-vite` fixture
       and a `nextjs-vite` fixture. Add the development packages under the
       dependency rules.
 - [ ] Test that `__mocks__` redirects, automocks, and spies of `sb.mock()`
-      render, that a `viteFinal` plugin applies to stories and mockups, that
+      render, also for a package whose Node entry differs from its browser
+      entry, that a `viteFinal` plugin applies to stories and mockups, that
       the optional file removes a plugin, and that Changes compiles both
-      sides with their own Storybook setup.
+      sides with their own Storybook setup. Storybook resolves the target
+      of a package mock with browser conditions, so record that limit when
+      the mock misses the Node entry.
+- [ ] Test a catalogue with two Storybook folders whose setups differ in an
+      alias, a plugin, an env value, and a mock, with a module that both
+      import, a folder inside another folder's parent, and a root whose
+      folder lies elsewhere. Each file compiles with the setup that owns it,
+      the shared module evaluates once, and files and virtual modules whose
+      URLs collide across servers reach the right module. The module graph
+      lists the imports that plugins add. A Serve edit of a file that a
+      plugin of another server reads, a replay, and Changes work, also with
+      a base side that reads the working installation.
+- [ ] Record the startup time and the memory of two Storybook folders
+      against one, with Storybook's preset loader, under
+      `.context/storybook-support/`.
+- [ ] Make the `.env` files that Storybook's setup reads inputs of a Vite
+      compile, as the env files of the project's own Vite setup already are.
+      Track D raised this on 2026-11-23.
 - [ ] Update `docs/guides/authoring/vite.md` and
       `docs/guides/authoring/storybook.md`.
 
@@ -2166,20 +2990,43 @@ Track J. Decision 18 chose E, with a spike first. The spike tests whether one
 module runner can run every file once while each file compiles with the
 Vite setup of the Storybook folder that owns it.
 
-- [ ] Build a scratch monorepo with two Storybook folders whose setups differ
+Design calls of track J. These calls are the track J orchestrator's, made on
+2026-11-19 from the spike. They stay in this milestone so that the track
+changes only its own lines of this plan.
+
+- J1. Under the adapter, Vite's server environment also gets the resolve
+  conditions that Storybook's setup adds: `storybook`, `stories`, and
+  `test`. Reason: Storybook's setup gives them to the browser environment
+  only, so a package's `storybook` export would resolve differently from
+  Storybook, which decision 17 rules out.
+- J2. Under the adapter, Mokly compiles in Vite each installed package that
+  a preview's `sb.mock()` names, in place of Node's own loader. With several
+  folders, decision 18b settles which setup compiles it, because a package
+  in the root `node_modules` belongs to no folder. Reason: Vite hands an
+  externalized package to Node without its plugins, so the `sb.mock()` of
+  decision 12 would not reach an installed package.
+
+Evidence: `.context/storybook-support/spike-18/NOTES.md`, and the
+independent check in `.context/storybook-support/spike-18-check/REPORT.md`.
+
+- [x] Build a scratch monorepo with two Storybook folders whose setups differ
       in an alias, a plugin, and an `sb.mock()` call, and a module that both
       packages import.
-- [ ] Prove or refute, with a prototype under `.context/`: each file compiles
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Prove or refute, with a prototype under `.context/`: each file compiles
       with its owner's setup, the shared module loads once, virtual modules
       and ids reach the right server, the module graph and the consumed bytes
       stay complete, and the base side and Serve invalidation can work the
-      same way.
-- [ ] Measure the cost against one setup.
-- [ ] Record the result in decision 18, and update the TODOs of milestones 30
+      same way. Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Measure the cost against one setup.
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Record the result in decision 18, and update the TODOs of milestones 30
       and 32 and design calls 18 and 22. When the spike refutes E, give
       decision 18 back to the user with the evidence.
-- [ ] Commit, push, and open a pull request into this branch. The prototype
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
+- [x] Commit, push, and open a pull request into this branch. The prototype
       stays under `.context/`.
+      Branch: `conductor/storybook-support-j-spike-for-decision-18`.
 
 ## Milestone 38: Verification, commit, review, and pull request
 
@@ -2187,6 +3034,9 @@ Depends on: every other milestone
 
 - [ ] Remove the last status lines that this plan owns.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Check every row of the test matrix below in new small projects with
+      Storybook 10.6.2, `@storybook/react` 10.6.2, and React 19, and save
+      the result under `.context/storybook-support/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
@@ -2198,6 +3048,26 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+The test matrix of 2026-11-03 found each gap below in Mokly at `f08d02df`.
+Each row gives a pattern of a small Storybook project, the result that this
+plan gives, and the milestones that build it.
+
+| Pattern                                                                        | Expected result                                                                      | Milestones          |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------- |
+| A CSF 3 `Button` stories file with `args: { onClick: fn() }`, under `--strict` | The build passes with no warning                                                     | 4                   |
+| `import "../src/global.css"` in `.storybook/preview.tsx`                       | Each story document links `global.css`                                               | 21                  |
+| A preview decorator that reads `globals.theme`                                 | A dark view gets the dark theme through the `mokly` parameter                        | 7                   |
+| `argTypes.size.options` on the meta                                            | Every story shows a select for `size`                                                | 4                   |
+| An export `LargeButton`, a story tagged `!dev`, and a docs description         | The title is "Large Button", the `!dev` story is left out, and the description shows | 4                   |
+| A meta without args and a required `user` prop                                 | The first story is the parent page, and the build passes                             | 6                   |
+| `loaders` whose result a story reads from `loaded`                             | The loader runs before the render                                                    | 5                   |
+| `createPortal(..., document.body)` in a story                                  | A warning and an error document in place of the story, and the build goes on         | 23 to 25            |
+| `excludeStories: /.*Data$/` and no title                                       | The exclusion works, and no title says "ComposedStory"                               | 3 and 4             |
+| `import logo from "./logo.png"`                                                | Mokly delivers the image, and the document links it                                  | 9 to 12             |
+| A CSF Factories file with `preview.meta` and `meta.story`                      | Every story and the parent page build                                                | 3                   |
+| A monorepo with `packages/ui/.storybook/preview.tsx`                           | That root's preview applies, and the title is right                                  | 18 to 22            |
+| `sb.mock(import("../src/lib/session.ts"))` with a `__mocks__` file             | The mock applies under the Vite adapter, and a warning names it without the adapter  | 32, and decision 12 |
 
 ## Post-merge follow-up (non-blocking)
 

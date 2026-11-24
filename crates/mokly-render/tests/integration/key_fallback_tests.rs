@@ -54,7 +54,7 @@ fn an_edit_to_a_linked_preview_moves_only_the_story_keys() {
     link_directory(&root.join("storybook"), &root.join(".storybook"));
     let before = keys(&consumer);
     consumer.replace(".storybook/preview.tsx", "\"one\"", "\"two\"");
-    let expected: BTreeSet<_> = ["label", "label/Primary"]
+    let expected: BTreeSet<_> = ["label", "label/Secondary"]
         .into_iter()
         .map(str::to_owned)
         .collect();
