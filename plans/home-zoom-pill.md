@@ -144,7 +144,8 @@ Each call is my call, made on 2026-11-24.
 - **CSS `zoom`, not a scale transform.** The page height, the sticky parts,
   in-page links and focus scrolling then follow without a script. A transform
   keeps the old page height. No media query changes, so no hidden demo
-  replays. The home already uses CSS `zoom` in `home-spread.css`.
+  replays. The home already uses CSS `zoom` in `home-spread.css`. Decision
+  4 replaces this call with a scale transform.
 - **Steps.** Each press multiplies the zoom by 1.25 or by 0.8, the product's
   step in `packages/ui/src/canvas-stage/canvas-view.ts`. The zoom snaps to
   100% when a step lands within half a step of it. The pill shows whole
@@ -165,6 +166,8 @@ Each call is my call, made on 2026-11-24.
 - **Without script, the home draws the depiction of every other page.** The
   island swaps in the buttons in the same box, so the page does not shift.
 - **The zoom never animates.** Reduced motion then needs no rule.
+  Milestone 6 adds one: reduced motion's 1ms transitions would ease the
+  scale and the heights after a press.
 - **The zoom works at every width**, phones included.
 - **The zoom is not kept.** Each page load starts at 100%. A kept zoom would
   add a storage item to the privacy policy.
@@ -191,7 +194,9 @@ The Milestone 1 mockups added these calls, also on 2026-11-24:
   the frame, and the gap is the footer's padding around it.
 - **At small zooms the Specs panel keeps its place at the window's
   start.** Zoom out gives the content more room, as a window wider than
-  1440px does, where the panel already sits there.
+  1440px does, where the panel already sits there. Decision 4 keeps the
+  place for another reason: the panel keeps its size and its place at
+  every zoom.
 
 The redraw for decision 3 added these calls, also on 2026-11-24:
 
@@ -200,7 +205,8 @@ The redraw for decision 3 added these calls, also on 2026-11-24:
 - **Above 100% the page root grows by the zoom.** `main` keeps
   `width: 100%`, so it lays out in the window's width and grows. The tool
   bar and the status bar stick with `left` and keep the window's width.
-  `100vw` was not used, because it includes a classic scrollbar.
+  `100vw` was not used, because it includes a classic scrollbar. The
+  Milestone 4 calls replace `main` with the three scaled parts.
 - **The zoomed-in rules read `--home-zoom`,** which the page root carries
   above 100%. The rule that styles read only `--mk-*` properties protects
   the one source of tokens. The zoom is runtime state, not a token, and
@@ -220,6 +226,8 @@ Milestone 3 added this call, also on 2026-11-24:
   The Specs panel's sticky offset divides by it, so the panel sticks below
   the tool bar at every zoom. Only the zoomed-in class waits for a zoom
   above 100%. The static mockups need the property above 100% only.
+  Milestone 6 replaces this call: the Specs panel no longer sits in a scaled
+  part.
 
 Decision 4 added these calls, also on 2026-11-24:
 
@@ -233,6 +241,55 @@ Decision 4 added these calls, also on 2026-11-24:
   part also does not stick inside a transform.
 - **Below 100% the scaled content sits at the centre of the window's
   width,** and the page starts at its top.
+
+The Milestone 4 mockups added these calls, also on 2026-11-24:
+
+- **The zoom scales three parts: the hero, the workspace and the footer
+  frame.** A transform on `main` would also scale the Specs panel, which
+  sits in the workspace.
+- **A stage holds the Specs panel over the workspace.** The panel leaves
+  the workspace and floats over it in one grid cell, the stage, and the
+  workspace keeps its first column free. The panel stays between the hero
+  and the frames in the reading order. A panel before or after `main` was
+  rejected, because it changes the Tab order at 100%.
+- **The panel's offset below the workspace's top keeps its size, 120px,**
+  as the gap above the footer frame does. The panel sticks 72px below the
+  window's top. Above 100% it also sticks 16px from the window's start
+  while the page scrolls sideways, and it draws over the zoomed workspace,
+  as the viewer's panels draw over its canvas.
+- **Each part scales from its top centre.** Each part keeps its width of
+  100% and sits at the centre of the page root, which is the window's
+  width up to 100% and the zoom times wider above it. One origin then
+  gives the centred picture below 100% and the picture that grows from the
+  page's start above it.
+- **The drawings scale with CSS `zoom`, not with a transform.** A static
+  drawing runs no script, so it cannot give a transformed part its scaled
+  height. CSS `zoom` scales the height too. Each drawn part keeps its width
+  of 100%, and geometric precision keeps the glyphs' widths in scale, so
+  the lines break as at 100%. In Chromium the drawings then match the
+  site's transform to within 0.3% of the page height. WebKit draws no text
+  smaller than 9px under CSS `zoom`, so the 41% drawing overlaps in Safari.
+  The site does not.
+
+Milestone 6 added these calls, also on 2026-11-24:
+
+- **The script sets only the height that each part takes.** Each part's
+  bottom margin is its own height times the zoom less one. The island reads
+  the own height from the part's computed height, which no transform
+  changes. A resize observer sets the margins again when a part's own
+  height changes, as on a new window width. The page root's width and each
+  part's width above 100% follow `--home-zoom` in CSS.
+- **The page root carries `--home-zoom` above 100% only, again.** Only the
+  zoomed-in widths read it.
+- **The body and the scaled parts take no transition.** The site's
+  reduced-motion rule gives every element a 1ms transition. It eased the
+  scale and the margins after a press while the island read the layout, so
+  the pill missed its place.
+- **A measured value divides by the `scale` that draws its target:** the
+  product of the `scale` of the target and of its ancestors.
+- **In-page links and focus scrolling need no code.** Each engine scrolls a
+  scaled target into view by its drawn box, and an anchor lands where it
+  lands at 100%.
 
 Contract owners:
 
@@ -338,23 +395,36 @@ Tags: mockup
 
 Depends on: 3
 
-- [ ] Redraw the `zoomed-out` home state as the 100% layout, scaled to 41%
+- [x] Redraw the `zoomed-out` home state as the 100% layout, scaled to 41%
       and centred, with the Specs panel at its own size and place.
-- [ ] Redraw the `zoomed-in` state with the same mechanism, if the
+- [x] Redraw the `zoomed-in` state with the same mechanism, if the
       mechanism changes its rules, and keep the site parity checks green.
-- [ ] Run the mockup check in `docs/mockups/README.md`. Smoke-test the
+      The parity checks pass with the site sheets of Milestone 6.
+- [x] Run the mockup check in `docs/mockups/README.md`. Smoke-test the
       changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+- The mockups and a prototype of the site showed three problems, each now
+  a Milestone 6 TODO. The parity test compares the drawings' sheets with
+  the site's, so the redrawn sheets pass only with the site sheets of
+  Milestone 6. The drawings' zoomed-in footer frame takes a CSS `zoom`
+  width, which the site's transform cannot share. Reduced motion gives
+  every element a 1ms transition, which eases the scale and the heights
+  after a press while the island reads the layout.
+
+Evidence: `.context/home-zoom-pill/m4/`, with the prototype of the site in
+`proto/` (`scripts/proto.mjs`), the captures, `smoke-report.json` and the
+check logs.
 
 ## Milestone 5: Documentation for decision 4
 
 Depends on: 4
 
-- [ ] Replace "at or below 100% the content lays out in the room that it
+- [x] Replace "at or below 100% the content lays out in the room that it
       gets" in `site-design-pages.md`, and every other doc that says it,
       with the pure scale of decision 4. Name the Specs panel's place.
-- [ ] Update `apps/site/README.md` and `docs/mockups/README.md`.
+- [x] Update `apps/site/README.md` and `docs/mockups/README.md`. The site
+      README's Key Code entries change with the code in Milestone 6.
 
 ## Milestone 6: The home zoom as a scale
 
@@ -362,18 +432,28 @@ Tags: ui
 
 Depends on: 5
 
-- [ ] Apply the zoom as a scale transform of the 100% layout at every zoom,
+- [x] Apply the zoom as a scale transform of the 100% layout at every zoom,
       with the page's scroll size set to the scaled size.
-- [ ] Keep the Specs panel at its own size and place at every zoom.
-- [ ] Keep the pill in place after each press, and the window's centre
+- [x] Keep the Specs panel at its own size and place at every zoom.
+- [x] Keep the pill in place after each press, and the window's centre
       above 100%.
-- [ ] Keep the measured values in the page's own CSS px.
-- [ ] Update the unit tests and the browser spec, and run the spec in
+- [x] Keep the measured values in the page's own CSS px.
+- [x] Update the unit tests and the browser spec, and run the spec in
       Chromium, Firefox and WebKit.
-- [ ] Remove CSS and code that only the CSS `zoom` approach needed.
-- [ ] Smoke-test the home at 1440px, 1280px, 768px and 390px at 8%, 41%,
+- [x] Remove CSS and code that only the CSS `zoom` approach needed.
+- [x] Mirror the stage and the Specs panel rules of the mockups in the site
+      sheets. Record the zoomed-in footer frame rule as a parity
+      difference, because the drawings give it a CSS `zoom` width.
+- [x] Keep the zoom from easing under reduced motion: the page root and
+      the scaled parts take no transition.
+- [x] Smoke-test the home at 1440px, 1280px, 768px and 390px at 8%, 41%,
       100% and 200%, in Chromium and WebKit. Save the screenshots in
       `.context/home-zoom-pill/m6/`.
+
+Evidence: `.context/home-zoom-pill/m6/`, with the repeat runs
+(`repeat-summary.txt`), the broken-code runs (`mutations.txt` and
+`mutations-browser.txt`), `test-cost.txt`, the check logs and the smoke in
+`smoke/` with `smoke-report.json`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

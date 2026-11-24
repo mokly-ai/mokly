@@ -1,10 +1,9 @@
 /**
  * Runs the measurements island of `src/components/measurements.ts` against a
  * stub page: the targets' layouts in their own CSS pixels, drawn inside a
- * `main` at a CSS zoom, with or without `currentCSSZoom`, which WebKit does
- * not give; the measured elements; a resize observer; the window's resize
- * and home zoom events; the fonts; and the animation frames. A test opens
- * one stub page for each page load.
+ * part that the home's zoom scales; the measured elements; a resize
+ * observer; the window's resize and home zoom events; the fonts; and the
+ * animation frames. A test opens one stub page for each page load.
  */
 
 import { HOME_ZOOM_EVENT } from "../../src/components/home/zoom.js";
@@ -28,26 +27,24 @@ export interface Layout {
 const UNREAD: Layout = { height: 0, left: 0, top: 0, width: 0 };
 
 /**
- * How the stub browser draws the targets: inside a `main` with CSS `zoom`,
- * and with or without `currentCSSZoom`, which WebKit does not give.
+ * How the stub browser draws the targets: inside a part whose `scale` is
+ * the home's zoom, which is `none` at 100%.
  */
 export interface Drawing {
-  readonly currentCSSZoom: boolean;
-  readonly zoom: number;
+  readonly scale: number;
 }
 
-/** The page as it loads: at 100%, in an engine that gives the zoom. */
-const UNZOOMED: Drawing = { currentCSSZoom: true, zoom: 1 };
+/** The page as it loads: at 100%. */
+const UNZOOMED: Drawing = { scale: 1 };
 
 /**
  * One element of the stub page: a target, a measured element or a `b`. Its
- * box is its layout drawn at the zoom of its `main`, and its own computed
- * zoom is 1.
+ * box is its layout drawn at the scale of its part, and its own computed
+ * `scale` is `none`.
  */
 class StubElement {
   readonly attributes: Map<string, string>;
-  readonly currentCSSZoom?: number;
-  ownZoom = "1";
+  ownScale = "none";
   parentElement: StubElement | null = null;
   constructor(
     attributes: MeasureAttributes = {},
@@ -57,7 +54,6 @@ class StubElement {
     readonly drawing: Drawing = UNZOOMED,
   ) {
     this.attributes = new Map(Object.entries(attributes));
-    if (drawing.currentCSSZoom) this.currentCSSZoom = drawing.zoom;
   }
   getAttribute(name: string): string | null {
     return this.attributes.get(name) ?? null;
@@ -69,15 +65,15 @@ class StubElement {
     return selectors === "b" ? this.b : null;
   }
   getBoundingClientRect(): Box {
-    const { zoom } = this.drawing;
+    const { scale } = this.drawing;
     const { height, left, top, width } = this.layout;
     return {
-      bottom: (top + height) * zoom,
-      height: height * zoom,
-      left: left * zoom,
-      right: (left + width) * zoom,
-      top: top * zoom,
-      width: width * zoom,
+      bottom: (top + height) * scale,
+      height: height * scale,
+      left: left * scale,
+      right: (left + width) * scale,
+      top: top * scale,
+      width: width * scale,
     };
   }
 }
@@ -125,12 +121,15 @@ export function openPage(
       errors.push(error);
     }
   };
+  // The part that the home's zoom scales sits inside the page's `main`.
   const main = new StubElement();
-  main.ownZoom = String(drawing.zoom);
+  const part = new StubElement();
+  part.parentElement = main;
+  if (drawing.scale !== 1) part.ownScale = String(drawing.scale);
   const targets = new Map(
     Object.entries(layouts).map(([id, layout]) => {
       const target = new StubElement({}, layout, "", null, drawing);
-      target.parentElement = main;
+      target.parentElement = part;
       return [id, target];
     }),
   );
@@ -174,7 +173,7 @@ export function openPage(
       void events.set(type, [...(events.get(type) ?? []), listener]),
     getComputedStyle: (element: StubElement) => ({
       fontSize: element.layout.fontSize ?? "16px",
-      zoom: element.ownZoom,
+      scale: element.ownScale,
     }),
     requestAnimationFrame: (callback: () => void) => frames.push(callback),
   };

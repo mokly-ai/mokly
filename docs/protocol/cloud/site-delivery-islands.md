@@ -22,7 +22,7 @@ state.
 | Menu            | every page                     | Opens and closes the mobile menu                                   |
 | Measurements    | home, docs, changelog, pricing | Shows rendered sizes in size tags, type badges and redlines        |
 | Home demos      | home                           | Plays each demo in view; marks the section in view in Specs        |
-| Home zoom       | home                           | Zooms the home's `main` and footer frame with the zoom pill        |
+| Home zoom       | home                           | Scales the home's content and footer frame with the zoom pill      |
 | Search          | docs                           | The search dialog and its keys                                     |
 | Copy            | docs                           | The copy control of each code panel                                |
 | Tree            | docs                           | The tree scroll memory and the tree sheet                          |

@@ -1,18 +1,23 @@
-/* The home zoomed in above 100%. Zoom in scales the home's main and its
-   footer frame with CSS zoom, and each keeps the layout that it has at
-   100% at the window's width, only larger. The page then scrolls
-   sideways; no other page or state does. The tool bar, the status bar,
-   the dot grid and the gap above the footer frame keep their size, and
-   the tool bar and the status bar stay in place in the window.
+/* The home zoomed in above 100%. At every zoom the home's hero, its
+   workspace and its footer frame keep the layout that they have at 100% at
+   the window's width, and the zoom only scales them. Above 100% the page
+   then scrolls sideways; no other page or state does. The tool bar, the
+   Specs panel, the status bar, the dot grid and the gap above the footer
+   frame keep their size, and the tool bar and the status bar stay in place
+   in the window.
 
-   The page root carries the zoomed-in class and the zoom as --home-zoom.
-   Inside a part with CSS zoom, px, rem and vw lengths grow with the zoom,
-   so the window's composition and its vw steps draw the layout of 100%.
-   A percentage resolves against the drawn width of the parent, though, so
-   a zoomed part lays out in its parent's width divided by the zoom. The
-   root therefore grows to the window's width times the zoom, and main, at
-   100% of the root, lays out in the window's width. The root still clips
-   what a part draws past its sides, as at 100%. */
+   The site scales the parts with a transform and sets the height that
+   each takes by script. A static drawing runs no script, so the drawings
+   scale each part with CSS zoom, which also scales its height; the parts'
+   inline styles come from zoomStyle in parts/zoom-pill.tsx. The page root
+   carries the zoomed-in class and the zoom as --home-zoom. Inside a part
+   with CSS zoom, px, rem and vw lengths grow with the zoom, so the
+   window's composition and its vw steps draw the layout of 100%. A
+   percentage resolves against the drawn width of the parent, though, so a
+   zoomed part lays out in its parent's width divided by the zoom. The root
+   therefore grows to the window's width times the zoom, and a part at 100%
+   of its parent lays out in the window's width. The root still clips what
+   a part draws past its sides, as at 100%. */
 
 .site-root--zoomed-in {
   width: calc(100% * var(--home-zoom));

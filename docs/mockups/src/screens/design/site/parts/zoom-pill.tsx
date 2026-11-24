@@ -3,9 +3,11 @@
  * page but the home draws it as a depiction inside the hidden status bar.
  * On the home it is a control: a group named Zoom with the Zoom out and Zoom
  * in buttons, the product's names, and the zoom between them as a whole
- * percentage. The home's zoom applies CSS `zoom` to its `main` and its
- * footer frame, so the tool bar and the status bar keep their size. Above
- * 100% the page grows sideways by the zoom, as `home-zoom.css` draws it.
+ * percentage. The home's zoom scales the hero, the workspace and the footer
+ * frame, each in its layout of 100%, so nothing reflows, and the tool bar,
+ * the Specs panel and the status bar keep their size. Below 100% the scaled
+ * parts sit at the centre of the window's width. Above 100% the page grows
+ * sideways by the zoom, as `home-zoom.css` draws it.
  */
 
 import type { CSSProperties } from "react";
@@ -19,11 +21,29 @@ export function zoomPercent(zoom: number): string {
 }
 
 /**
- * The inline style that draws a part at `zoom`, where 1 is 100%. A part at
- * 100% takes no style, as the site's page does before the first press.
+ * The inline style that draws a scaled part at `zoom`, where 1 is 100%. A
+ * part at 100% takes no style, as the site's page does before the first
+ * press.
+ *
+ * The site scales each part with a transform and a script that sets the
+ * height the part takes. A static drawing runs no script, so it draws the
+ * same scale with CSS `zoom`, which also scales the height. Under CSS
+ * `zoom` a part's percentages resolve against its parent's width divided by
+ * the zoom, so below 100% the part takes the zoom times its parent's width:
+ * its own width is then its width of 100%, and it sits at the centre. Above
+ * 100% the page root grows by the zoom, as `home-zoom.css` draws it, and a
+ * part's own width of 100% is again the window's width.
+ *
+ * CSS `zoom` also sets the text at the zoomed size, where hinted glyphs do
+ * not scale exactly and a line can break elsewhere. Geometric precision
+ * keeps the glyphs' widths in scale, so the lines break as at 100%.
  */
 export function zoomStyle(zoom: number): CSSProperties | undefined {
-  return zoom === 1 ? undefined : { zoom };
+  if (zoom === 1) return undefined;
+  const scaled = { textRendering: "geometricPrecision", zoom } as const;
+  return zoom > 1
+    ? scaled
+    : { ...scaled, marginInline: "auto", width: `calc(100% * ${zoom})` };
 }
 
 /** The style of a page root zoomed in: the zoom that `home-zoom.css` reads. */

@@ -8,33 +8,41 @@
  * home demos island, `home-island.ts`, which marks the section in view in
  * Specs and plays each demo once in view. The rules are in
  * `src/styles/home.css`.
+ *
+ * The stage holds the Specs panel over the workspace, whose first column
+ * stays free for it. The home's zoom scales the workspace, which carries
+ * the mark of a zoomed part, and the panel keeps its size and its place.
+ * The panel stays before the frames in the reading order.
  */
 import BrowseModule from "./BrowseModule.astro";
 import EditModule from "./EditModule.astro";
 import Foundation from "./Foundation.astro";
 import ReviewModule from "./ReviewModule.astro";
 import SpecsPanel from "./SpecsPanel.astro";
+import { ZOOM_MARKS } from "./zoom-marks.js";
 ---
 
-<div class="site-home-workspace">
+<div class="site-home-stage">
   <SpecsPanel />
-  <div class="site-home-frames">
-    <section aria-labelledby="features-title" class="site-modules">
-      <div class="site-section-head" id="features">
-        <h2 id="features-title">
-          Browse, review, edit.
-          <br />
-          <span>One place for all of it.</span>
-        </h2>
-        <p>Every branch becomes a catalogue your whole team can open.</p>
-      </div>
-      <div class="site-module-grid">
-        <BrowseModule />
-        <ReviewModule />
-        <EditModule />
-      </div>
-    </section>
-    <Foundation />
+  <div class="site-home-workspace" {...ZOOM_MARKS.part}>
+    <div class="site-home-frames">
+      <section aria-labelledby="features-title" class="site-modules">
+        <div class="site-section-head" id="features">
+          <h2 id="features-title">
+            Browse, review, edit.
+            <br />
+            <span>One place for all of it.</span>
+          </h2>
+          <p>Every branch becomes a catalogue your whole team can open.</p>
+        </div>
+        <div class="site-module-grid">
+          <BrowseModule />
+          <ReviewModule />
+          <EditModule />
+        </div>
+      </section>
+      <Foundation />
+    </div>
   </div>
 </div>
 

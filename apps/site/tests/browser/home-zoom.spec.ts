@@ -2,6 +2,7 @@ import { type Locator, type Page, expect, test } from "@playwright/test";
 
 import { SITE_PATHS } from "../../src/navigation.js";
 
+import { DESKTOP, stepThrough, windowWidth, zoomPill } from "./home-zoom.js";
 import { scrollWidth } from "./large-text.js";
 
 /**
@@ -10,41 +11,12 @@ import { scrollWidth } from "./large-text.js";
  * docs/protocol/cloud/site-design-pages.md fix it: the group and its
  * buttons, the steps from 8% to 200%, a button at its end that keeps focus,
  * the sideways scroll above 100% with the bars in place, the pill's place
- * after each press, the Specs panel and the measured values at every zoom,
- * and the depicted pill without script. `tests/home_zoom.test.ts` and
- * `tests/home_zoom_island.test.ts` check the steps and the island's
- * decisions against a stub page.
+ * after each press, also with reduced motion, the measured values at every
+ * zoom, and the depicted pill without script. `home-zoom-scale.spec.ts`
+ * checks the scaled layout and the Specs panel, and
+ * `tests/home_zoom.test.ts` and `tests/home_zoom_island.test.ts` check the
+ * steps and the island's decisions against a stub page.
  */
-
-/** Runs a test in the desktop projects only. */
-const DESKTOP = { tag: "@desktop" };
-
-/** The zoom pill of the home's status bar and its two buttons. */
-function zoomPill(page: Page): Record<"group" | "zoomIn" | "zoomOut", Locator> {
-  const group = page.getByRole("group", { name: "Zoom" });
-  return {
-    group,
-    zoomIn: group.getByRole("button", { name: "Zoom in" }),
-    zoomOut: group.getByRole("button", { name: "Zoom out" }),
-  };
-}
-
-/** Press `button` from the keyboard once for each zoom of `shown`. */
-async function stepThrough(
-  pill: Locator,
-  button: Locator,
-  shown: readonly string[],
-): Promise<void> {
-  for (const zoom of shown) {
-    await button.press("Enter");
-    await expect(pill).toHaveText(`−${zoom}+`);
-  }
-}
-
-/** The page's width without its scrollbar, which a zoom never changes. */
-function windowWidth(page: Page): Promise<number> {
-  return page.evaluate(() => document.documentElement.clientWidth);
-}
 
 test("the zoom pill steps the home down to 8% and up to 200%, and a button at its end keeps focus", async ({
   page,
@@ -110,9 +82,8 @@ test("above 100% the home scrolls sideways while the tool bar and the status bar
   await expect.poll(() => page.evaluate(() => window.scrollX)).toBe(0);
 });
 
-test("after each press the zoom pill keeps its place in the window", async ({
-  page,
-}) => {
+/** Press through 41% and up to 200%; the pill stays at its place. */
+async function pillKeepsItsPlace(page: Page): Promise<void> {
   await page.goto(SITE_PATHS.home);
   const { group, zoomIn, zoomOut } = zoomPill(page);
   await zoomOut.focus();
@@ -128,34 +99,25 @@ test("after each press the zoom pill keeps its place in the window", async ({
     const top = (await group.boundingBox())?.y ?? Number.NaN;
     expect(Math.abs(top - place), `at ${zoom}`).toBeLessThanOrEqual(1);
   }
+}
+
+test("after each press the zoom pill keeps its place in the window", async ({
+  page,
+}) => {
+  await pillKeepsItsPlace(page);
 });
 
-test(
-  "the Specs panel sticks below the tool bar at every zoom",
-  DESKTOP,
-  async ({ page }) => {
-    await page.goto(SITE_PATHS.home);
-    const { group, zoomIn, zoomOut } = zoomPill(page);
-    const specs = page.getByRole("navigation", { name: "Page sections" });
-    const review = page.getByRole("article", { name: "Sticky comments." });
-    const steps: ReadonlyArray<readonly [Locator, readonly string[]]> = [
-      [zoomOut, []],
-      [zoomOut, ["80%", "64%", "51%", "41%"]],
-      [zoomIn, ["51%", "64%", "80%", "100%", "125%", "156%", "195%", "200%"]],
-    ];
-    for (const [button, shown] of steps) {
-      await stepThrough(group, button, shown);
-      // The reader scrolls back to the Review module, mid-way down the frames.
-      await review.scrollIntoViewIfNeeded();
-      await expect
-        .poll(
-          async () => (await specs.boundingBox())?.y,
-          shown.at(-1) ?? "100%",
-        )
-        .toBeCloseTo(72, 0);
-    }
-  },
-);
+test.describe("with reduced motion", () => {
+  // Reduced motion gives every element of the site a 1ms transition. One on
+  // the zoom would still ease the page's heights after a press, while the
+  // island reads the pill's place.
+  test("after each press the zoom pill keeps its place in the window, as nothing eases the zoom", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await pillKeepsItsPlace(page);
+  });
+});
 
 test(
   "the heading layer's measured values give its own size at every zoom",

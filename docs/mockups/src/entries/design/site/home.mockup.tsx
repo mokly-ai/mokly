@@ -48,14 +48,14 @@ export default defineScreen({
       slug: "zoomed-out",
       title: "Home · Zoomed out",
       description:
-        "The home at 41 percent, four presses of Zoom out from 100 percent. CSS zoom draws the main content and the footer frame smaller, and the tool bar and the status bar keep their size. The content lays out in the wider room that the zoom gives it, so the Specs panel stays at the window's start, as on a wide window. The pill shows 41%.",
+        "The home at 41 percent, four presses of Zoom out from 100 percent. The hero, the workspace and the footer frame keep their layout of 100 percent at the window's width, and the zoom only scales them, so nothing reflows. The scaled content sits at the centre of the window's width, and the page starts at its top and ends where the scaled content ends. The tool bar, the status bar and the Specs panel keep their size. The panel keeps its place at the window's start, 120 pixels below the workspace's top. The site scales with a transform. This static drawing scales with CSS zoom, which Chromium draws the same way. The pill shows 41%.",
       props: { state: "zoomed-out" },
     },
     {
       slug: "zoomed-in",
       title: "Home · Zoomed in",
       description:
-        "The home at 200 percent, the end of the zoom range, which the fourth press of Zoom in from 100 percent reaches. CSS zoom draws the main content and the footer frame twice as large, each in the layout that it has at 100 percent at the window's width. The page scrolls sideways, and the tool bar and the status bar keep their size and their place in the window. The drawing opens at the page's start, as a static document does. Zoom in is at its end of the range: it takes aria-disabled, so it keeps focus, and its glyph is muted with no hover fill. The pill shows 200%.",
+        "The home at 200 percent, the end of the zoom range, which the fourth press of Zoom in from 100 percent reaches. The hero, the workspace and the footer frame are twice as large, each in the layout that it has at 100 percent at the window's width. The page scrolls sideways, and the tool bar, the status bar and the Specs panel keep their size and their place in the window. The drawing opens at the page's start, as a static document does. Zoom in is at its end of the range: it takes aria-disabled, so it keeps focus, and its glyph is muted with no hover fill. The pill shows 200%.",
       props: { state: "zoomed-in" },
     },
   ],

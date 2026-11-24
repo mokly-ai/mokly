@@ -5,12 +5,15 @@
  * handle; then the lead and the two actions, and the spread of the
  * acme/storefront app. The measurements are the rendered ones of each
  * composition: the heading runs at 162px on one line on the desktop and at
- * 82px on two lines on a phone, where the type badge leaves the layer.
+ * 82px on two lines on a phone, where the type badge leaves the layer. The
+ * home's zoom scales the hero as one part, and the measurements keep their
+ * values of 100%.
  */
 
 import { SiteActions } from "../parts/actions.js";
 import { SiteCursor } from "../parts/people.js";
 import { SiteRedline, SiteSelection } from "../parts/selection.js";
+import { zoomStyle } from "../parts/zoom-pill.js";
 
 import { Spread } from "./spread.js";
 
@@ -20,11 +23,25 @@ const LAYER = {
   mobile: { gap: "52", size: "350 × 157", type: undefined },
 } as const;
 
-/** The hero section, with the spread under its copy. */
-export function HomeHero({ viewport }: { viewport: "mobile" | "desktop" }) {
+/**
+ * The hero section, with the spread under its copy. `zoom` is the home's
+ * zoom, where 1 is 100%.
+ */
+export function HomeHero({
+  viewport,
+  zoom,
+}: {
+  viewport: "mobile" | "desktop";
+  zoom: number;
+}) {
   const layer = LAYER[viewport];
   return (
-    <section aria-labelledby="home-title" className="site-hero" id="hero">
+    <section
+      aria-labelledby="home-title"
+      className="site-hero"
+      id="hero"
+      style={zoomStyle(zoom)}
+    >
       <div className="site-home-hero-inner">
         <div className="site-home-title-layer">
           <h1 id="home-title">{"Design in\u00a0code."}</h1>

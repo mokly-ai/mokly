@@ -8,8 +8,8 @@
  * A part makes an element measured with the attributes of `measureSize`,
  * `measureType` or `measureGap`: the kind of value it shows and the ids of
  * the elements it reads. Every value is in the CSS pixels of its part before
- * any CSS zoom draws it, as the home's zoom pill does, rounded to the nearest
- * whole pixel. A size reads `W × H`. A type badge's value goes into its `b`,
+ * any scale draws it, as the home's zoom pill scales its parts, rounded to
+ * the nearest whole pixel. A size reads `W × H`. A type badge's value goes into its `b`,
  * after the face and the weight. A vertical gap is the top of `to` minus the
  * bottom of `from`, and a horizontal gap the left of `to` minus the right of
  * `from`, in the pixels of `from`.
@@ -87,8 +87,6 @@ export interface Box {
 
 /** An element that a measured element reads, or one of its ancestors. */
 export interface MeasureTarget {
-  /** The zoom that draws the element, which WebKit does not give. */
-  readonly currentCSSZoom?: number;
   readonly parentElement: MeasureTarget | null;
   getBoundingClientRect(): Box;
 }
@@ -123,7 +121,7 @@ export interface MeasureWindow<Target extends MeasureTarget> {
   ): void;
   getComputedStyle(element: MeasureTarget): {
     readonly fontSize: string;
-    readonly zoom: string;
+    readonly scale: string;
   };
   requestAnimationFrame(callback: () => void): unknown;
 }
@@ -142,26 +140,25 @@ function pixels(length: number): string | undefined {
 }
 
 /**
- * The zoom that draws `target`, by which its drawn box is larger than its
- * own. WebKit gives no `currentCSSZoom`, and every engine computes `zoom` as
- * an element's own, so the zoom of the element and of its ancestors
- * multiply.
+ * The scale that draws `target`, by which its drawn box is larger than its
+ * own: the `scale` of the element and of each of its ancestors, which
+ * multiply. The home's zoom pill sets it on the home's scaled parts. A
+ * `scale` of `none` draws at 1.
  */
-function zoomOf<Target extends MeasureTarget>(
+function scaleOf<Target extends MeasureTarget>(
   target: MeasureTarget,
   window: MeasureWindow<Target>,
 ): number {
-  if (target.currentCSSZoom !== undefined) return target.currentCSSZoom;
-  let zoom = 1;
+  let scale = 1;
   for (let node: MeasureTarget | null = target; node; node = node.parentElement)
-    zoom *= Number.parseFloat(window.getComputedStyle(node).zoom) || 1;
-  return zoom;
+    scale *= Number.parseFloat(window.getComputedStyle(node).scale) || 1;
+  return scale;
 }
 
-/** The size of a box that `zoom` draws, such as `1033 × 156`. */
-function size(box: Box, zoom: number): string | undefined {
-  const width = pixels(box.width / zoom);
-  const height = pixels(box.height / zoom);
+/** The size of a box that `scale` draws, such as `1033 × 156`. */
+function size(box: Box, scale: number): string | undefined {
+  const width = pixels(box.width / scale);
+  const height = pixels(box.height / scale);
   return width === undefined || height === undefined
     ? undefined
     : `${width} × ${height}`;
@@ -182,7 +179,7 @@ function reading<Target extends MeasureTarget>(
       const target = byId(TARGET);
       if (target === undefined) return undefined;
       const read = () =>
-        size(target.getBoundingClientRect(), zoomOf(target, window));
+        size(target.getBoundingClientRect(), scaleOf(target, window));
       return { element, into: element, read, targets: [target] };
     }
     case "type": {
@@ -204,7 +201,7 @@ function reading<Target extends MeasureTarget>(
         const gap = horizontal
           ? end.left - start.right
           : end.top - start.bottom;
-        return pixels(gap / zoomOf(from, window));
+        return pixels(gap / scaleOf(from, window));
       };
       return { element, into: element, read, targets: [from, to] };
     }

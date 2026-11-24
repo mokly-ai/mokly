@@ -1,15 +1,19 @@
 /**
  * Runs the home zoom island of `src/components/home/zoom-pill.ts` against a
  * stub home: the depicted pill, the control with its two buttons and its
- * zoom, the zoomed parts, the page root, and the window's scroll position
- * and events. The stub lays the page out each time script reads the layout,
- * as a browser does: in a window 1000px wide and 900px tall, the content is
- * 6000px tall at 100% and grows with the zoom, the footer adds 300px that
- * keep their size, and the pill's top sits 100px above the page's end. The
- * browser clamps the scroll position to the page. Where it anchors, it keeps
- * the point at the window's top in place, and where it scrolls in whole
- * pixels, it drops the fraction; WebKit does both. The stub finds each part
- * by the marks of `zoom-marks.ts`, which the site's markup takes too.
+ * zoom, the scaled parts, the page root, and the window's scroll position,
+ * events and resize observer. The stub lays the page out each time script
+ * reads the layout, as a browser does, in a window 1000px wide and 900px
+ * tall. Its three scaled parts, the hero, the workspace and the footer
+ * frame, are 1000px, 5000px and 100px tall in their own layout. As with a
+ * transform, each part takes its own height in the page plus the bottom
+ * margin that the island gives it. Between `main` and the frame the footer
+ * keeps a 100px gap, and after the frame the 100px status bar holds the
+ * pill, so the page is 6300px tall at 100%. The browser clamps the scroll
+ * position to the page. Where it anchors, it keeps the point at the
+ * window's top in place, and where it scrolls in whole pixels, it drops the
+ * fraction; WebKit does both. The stub finds each part by the marks of
+ * `zoom-marks.ts`, which the site's markup takes too.
  */
 
 import {
@@ -23,9 +27,9 @@ import type { ZoomStep } from "../../src/components/home/zoom.js";
 
 /** The window, and the page's layout at 100%, in CSS pixels. */
 const WINDOW = { height: 900, width: 1000 } as const;
-const CONTENT = 6000;
-const FOOTER = 300;
-const PILL_ABOVE_END = 100;
+const HEIGHTS = { frame: 100, hero: 1000, workspace: 5000 } as const;
+const FOOTER_GAP = 100;
+const STATUS_BAR = 100;
 
 /** Whether `attributes` hold the one mark that `selectors` names. */
 function marked(
@@ -87,7 +91,6 @@ function find(
 
 /** An inline style, as the island sets it. */
 class StubStyle {
-  zoom = "";
   readonly properties = new Map<string, string>();
   removeProperty(property: string): string {
     const value = this.properties.get(property) ?? "";
@@ -99,11 +102,23 @@ class StubStyle {
   }
 }
 
+/** A part that the zoom scales, with its own height in its layout. */
+class StubPart {
+  readonly attributes = new Map(Object.entries(ZOOM_MARKS.part));
+  readonly style = new StubStyle();
+  constructor(public height: number) {}
+  /** The height that the part takes in the page: its own and its margin. */
+  taken(): number {
+    const margin = this.style.properties.get("margin-bottom") ?? "0px";
+    return this.height + Number.parseFloat(margin);
+  }
+}
+
 /** Where the reader starts, and how the stub browser treats the scroll. */
 export interface ZoomSetting {
   /** Whether the browser anchors the scroll on a zoom change, as WebKit. */
   readonly anchors?: boolean;
-  /** Whether the page leaves the mark off its zoomed parts. */
+  /** Whether the page leaves the mark off its scaled parts. */
   readonly unmarked?: boolean;
   /** Whether the browser scrolls in whole pixels, as WebKit. */
   readonly wholePixels?: boolean;
@@ -113,10 +128,14 @@ export interface ZoomSetting {
 
 /** The stub home after the island started on it, and what a reader does. */
 export interface ZoomStub {
-  /** The zoom on each zoomed part, and the page root's property and class. */
+  /**
+   * The scale and the bottom margin of the hero, the workspace and the
+   * footer frame, and the page root's property and class.
+   */
   drawn(): {
-    readonly parts: readonly string[];
+    readonly margins: ReadonlyArray<string | undefined>;
     readonly property: string | undefined;
+    readonly scales: ReadonlyArray<string | undefined>;
     readonly zoomedIn: boolean;
   };
   /** What the window did, in order: each scroll and each event. */
@@ -125,6 +144,11 @@ export interface ZoomStub {
   place(): { readonly pill: number; readonly x: number; readonly y: number };
   /** The reader presses the button of `step`, `times` times. */
   press(step: ZoomStep, times?: number): void;
+  /**
+   * The workspace lays out `height` tall in its own layout, as a new window
+   * width does, and the browser tells the resize observers.
+   */
+  resizeWorkspace(height: number): void;
   /** The reader scrolls the page sideways to `x`. */
   scrollSideways(x: number): void;
   /** Which pill shows, the zoom, and the buttons with `aria-disabled`. */
@@ -139,10 +163,10 @@ export interface ZoomStub {
 /** Open the stub home in `setting`, and start the island on it. */
 export function openZoom(setting: ZoomSetting): ZoomStub {
   const log: string[] = [];
-  const parts = [0, 1].map(() => ({
-    attributes: new Map(Object.entries(ZOOM_MARKS.part)),
-    style: new StubStyle(),
-  }));
+  const hero = new StubPart(HEIGHTS.hero);
+  const workspace = new StubPart(HEIGHTS.workspace);
+  const frame = new StubPart(HEIGHTS.frame);
+  const parts = [hero, workspace, frame];
   const classes = new Set<string>();
   const root = {
     classList: {
@@ -156,17 +180,21 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
   };
   let x = 0;
   let y = setting.y;
-  let laidOut = 1;
-  /** Lay the page out at the parts' zoom, as a read of the layout does. */
+  /** The height of `main` and the zoom, as the page was last laid out. */
+  let laidOut = { main: HEIGHTS.hero + HEIGHTS.workspace, zoom: 1 };
+  /** Lay the page out as its parts now stand, as a read of the layout does. */
   const layout = () => {
-    const zoom = Number(parts[0]?.style.zoom || "1");
-    if (zoom !== laidOut && setting.anchors === true)
+    const zoom = Number(hero.style.properties.get("scale") ?? "1");
+    const main = hero.taken() + workspace.taken();
+    if (zoom !== laidOut.zoom && setting.anchors === true)
       y =
-        y < CONTENT * laidOut
-          ? (y / laidOut) * zoom
-          : y + CONTENT * (zoom - laidOut);
-    laidOut = zoom;
-    y = Math.min(Math.max(0, y), CONTENT * zoom + FOOTER - WINDOW.height);
+        y < laidOut.main
+          ? (y / laidOut.zoom) * zoom
+          : y + (main - laidOut.main);
+    laidOut = { main, zoom };
+    const page = main + FOOTER_GAP + frame.taken() + STATUS_BAR;
+    y = Math.min(Math.max(0, y), page - WINDOW.height);
+    return page;
   };
   const buttons: Readonly<Record<ZoomStep, StubElement>> = {
     in: new StubElement(zoomStepMark("in")),
@@ -177,12 +205,10 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
     { ...ZOOM_MARKS.control, hidden: "" },
     null,
     [buttons.out, value, buttons.in],
-    () => {
-      layout();
-      return CONTENT * laidOut + FOOTER - PILL_ABOVE_END - y;
-    },
+    () => layout() - STATUS_BAR - y,
   );
   const depiction = new StubElement(ZOOM_MARKS.depiction);
+  const observers: Array<() => void> = [];
   const document = {
     body: root,
     documentElement: { clientWidth: WINDOW.width },
@@ -193,6 +219,12 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
         : parts.filter((part) => marked(part.attributes, selectors)),
   };
   const window = {
+    ResizeObserver: class {
+      constructor(readonly notify: () => void) {}
+      observe(): void {
+        observers.push(this.notify);
+      }
+    },
     get scrollX() {
       layout();
       return x;
@@ -205,6 +237,7 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
       log.push(`event ${event.type}`);
       return true;
     },
+    getComputedStyle: (part: StubPart) => ({ height: `${part.height}px` }),
     scrollTo: (options: { readonly left: number; readonly top: number }) => {
       log.push(`scroll ${options.left} ${options.top}`);
       const whole = setting.wholePixels === true ? Math.floor : Number;
@@ -216,8 +249,9 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
   startZoomPill(document, window);
   return {
     drawn: () => ({
-      parts: parts.map((part) => part.style.zoom),
+      margins: parts.map((part) => part.style.properties.get("margin-bottom")),
       property: root.style.properties.get(ZOOM_PROPERTY),
+      scales: parts.map((part) => part.style.properties.get("scale")),
       zoomedIn: classes.has(ZOOMED_IN_CLASS),
     }),
     log,
@@ -225,6 +259,12 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
     press: (step, times = 1) => {
       for (let press = 0; press < times; press += 1)
         for (const click of buttons[step].clicks) click();
+    },
+    resizeWorkspace: (height) => {
+      workspace.height = height;
+      // A browser reports each observed part once per frame; the island
+      // sets every part's margin on any report.
+      for (const notify of new Set(observers)) notify();
     },
     scrollSideways: (next) => {
       x = next;

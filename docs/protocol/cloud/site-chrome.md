@@ -87,9 +87,9 @@ focused link.
 - A press applies the zoom at once, and the zoom never animates. After a
   press the pill keeps its place in the window, so repeated presses land on
   it. The zoom works at every window width.
-- The zoom scales the home's `main` and its footer frame.
-  [Site design pages](./site-design-pages.md#home) defines the layout at each
-  zoom.
+- The zoom scales the home's `main`, except the Specs panel, and its footer
+  frame. [Site design pages](./site-design-pages.md#home) defines the layout
+  at each zoom.
 - The pill has no Fit, and the page has no zoom keys and no zoom gestures.
   ⌘ or Ctrl with + or −, the wheel and a pinch stay the browser's zoom. A
   canvas that zooms on the wheel and on a pinch was rejected, because it takes

@@ -58,25 +58,32 @@ owns the islands that make the parts below move.
   finished state: the compare rests in Swipe at 50%, Review waits for
   Approve, and Edit shows the agent's change with Publish ready.
 - Zoom: the zoom pill of [Site chrome](./site-chrome.md#home-zoom) zooms the
-  content of the home, its `main` and its footer frame. The zoom scales the
-  content with its layout, as CSS `zoom` does, so the page height, the sticky
-  Specs panel, in-page links and focus scrolling work at every zoom. A scale
-  transform was rejected, because it keeps the page height of 100%.
+  content of the home's `main`, except the Specs panel, and its footer frame.
+  At every zoom this content keeps the layout that it has at 100% in that
+  window, and the zoom only scales it, as the viewer scales its frames.
+  Nothing reflows, and the text scales with it in every browser. A layout for
+  the room that the zoom gives was rejected, because the spread then moves to
+  the window's start on windows from 768px to 1439px. Text set at the zoomed
+  size was rejected, because Safari draws no text smaller than 9px, so the
+  zoomed-out text overlaps.
   - The tool bar, the status bar, the dot grid and the gap above the footer
     frame keep their size. At every zoom the window picks the composition
-    and its steps, and the Specs panel sticks at its place below the tool
-    bar.
-  - At 100% and below, the content lays out in the room that the zoom gives
-    it: the window's width divided by the zoom. So at a small zoom the Specs
-    panel keeps its place at the window's start, as in a window wider than
-    1440px.
-  - Above 100%, the content keeps the layout that it has at 100% in that
-    window, and it grows. The page then scrolls sideways, and the tool bar
-    and the status bar stay in place. A focused part at a side scrolls into
-    view. Cutting off the sides was rejected, because text there goes out of
-    reach while its links still take focus. A layout for the smaller room was
-    rejected, because it changes every part of the home or ends Zoom in early
-    on narrow windows.
+    and its steps.
+  - The Specs panel keeps its size and its place at every zoom, as the
+    viewer's panels do: 16px from the window's start and 120px below the top
+    of the workspace, and it sticks 72px below the window's top. It draws
+    over the zoomed content, and its row of the section in view is current.
+  - Below 100%, the zoomed content sits at the centre of the window's width,
+    and the page starts at its top. The page's height follows the zoomed
+    content, so no empty canvas stays below the status bar.
+  - Above 100%, the zoomed content grows from the page's start, and the page
+    then scrolls sideways. The tool bar, the status bar and the Specs panel
+    stay in place. A focused part at a side scrolls into view. Cutting off
+    the sides was rejected, because text there goes out of reach while its
+    links still take focus. A layout for the smaller room was rejected,
+    because it changes every part of the home or ends Zoom in early on
+    narrow windows.
+  - At every zoom an in-page link and focus scroll their target into view.
   - A measured size tag, type badge or redline value gives its part's size in
     CSS pixels before the zoom, as a design tool gives a layer's size.
 

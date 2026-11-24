@@ -8,12 +8,16 @@
  *   box, at 100%. Without script, or without one of its parts, the depicted
  *   pill stays.
  * - A press of Zoom out or Zoom in steps the zoom of `zoom.ts` and applies
- *   it at once, with no animation: CSS `zoom` on each marked part, the
- *   home's `main` and its footer frame, and `--home-zoom` on the page root
- *   at every zoom but 100%, which the Specs panel's sticky offset reads.
- *   Above 100% the root also takes the zoomed-in class, so
- *   `src/styles/home-zoom.css` keeps the layout of 100% and the page scrolls
- *   sideways.
+ *   it at once, with no animation. Each marked part, the hero, the workspace
+ *   and the footer frame, keeps its layout of 100% and takes the zoom as its
+ *   `scale`, which `src/styles/home-zoom.css` grows from the part's top
+ *   centre. A transform leaves the part's height in the page as it was, so
+ *   the part also takes a bottom margin of its own height times the zoom
+ *   less one, and the page ends where the scaled content ends. A resize
+ *   observer sets the margins again when a part's own height changes.
+ *   Above 100% the page root takes the zoomed-in class and the zoom as
+ *   `--home-zoom`, so `home-zoom.css` keeps each part's width of 100% and
+ *   the page scrolls sideways.
  * - After a press the pill keeps its place in the window, so repeated
  *   presses land on it, and above 100% the point of the content at the
  *   window's centre stays there. The island reads the pill again after the
@@ -61,7 +65,6 @@ export interface PillElement {
 /** An element whose inline style the zoom sets. */
 export interface ZoomedElement {
   readonly style: {
-    zoom: string;
     removeProperty(property: string): string;
     setProperty(property: string, value: string): void;
   };
@@ -72,19 +75,27 @@ export interface ZoomRoot extends ZoomedElement {
   readonly classList: { toggle(token: string, force: boolean): boolean };
 }
 
-/** The page, as the island reads it. */
-export interface ZoomPage {
+/** The page, as the island reads it, whose scaled parts are of `Part`. */
+export interface ZoomPage<Part extends ZoomedElement> {
   readonly body: ZoomRoot;
   readonly documentElement: { readonly clientWidth: number };
   querySelector(selectors: string): PillElement | null;
-  querySelectorAll(selectors: string): Iterable<ZoomedElement>;
+  querySelectorAll(selectors: string): Iterable<Part>;
 }
 
 /** The window, as the island uses it. */
-export interface ZoomWindow {
+export interface ZoomWindow<Part extends ZoomedElement> {
+  readonly ResizeObserver?: new (callback: () => void) => {
+    observe(target: Part): void;
+  };
   readonly scrollX: number;
   readonly scrollY: number;
   dispatchEvent(event: Event): boolean;
+  /**
+   * A part's computed `height` is its own height, which no transform
+   * changes, because the site sizes every box by its border box.
+   */
+  getComputedStyle(element: Part): { readonly height: string };
   scrollTo(options: {
     readonly behavior: "instant";
     readonly left: number;
@@ -108,7 +119,10 @@ interface Run {
  * island's one entry, which `zoom-island.ts` calls with the page's
  * `document` and `window`.
  */
-export function startZoomPill(document: ZoomPage, window: ZoomWindow): void {
+export function startZoomPill<Part extends ZoomedElement>(
+  document: ZoomPage<Part>,
+  window: ZoomWindow<Part>,
+): void {
   const control = document.querySelector(`[${CONTROL}]`);
   const depiction = document.querySelector(`[${DEPICTION}]`);
   const value = control?.querySelector(`[${VALUE}]`);
@@ -141,13 +155,36 @@ export function startZoomPill(document: ZoomPage, window: ZoomWindow): void {
     }
   };
 
-  /** Draw the zoomed parts and the page root at `next`. */
+  /**
+   * Give each part the height that it takes in the page at the zoom: its own
+   * height, which its transform leaves as it was, scaled by the zoom.
+   */
+  const take = () => {
+    // Every height is read before any margin is set, so the page lays out
+    // once.
+    const heights = parts.map((part) =>
+      Number.parseFloat(window.getComputedStyle(part).height),
+    );
+    parts.forEach((part, index) => {
+      const height = heights[index] ?? Number.NaN;
+      if (zoom === 1 || !Number.isFinite(height))
+        part.style.removeProperty("margin-bottom");
+      else
+        part.style.setProperty("margin-bottom", `${zoom * height - height}px`);
+    });
+  };
+
+  /** Draw the scaled parts and the page root at `next`. */
   const apply = (next: number) => {
-    const style = next === 1 ? "" : String(next);
-    for (const part of parts) part.style.zoom = style;
-    if (next === 1) root.style.removeProperty(ZOOM_PROPERTY);
-    else root.style.setProperty(ZOOM_PROPERTY, String(next));
+    zoom = next;
+    if (next > 1) root.style.setProperty(ZOOM_PROPERTY, String(next));
+    else root.style.removeProperty(ZOOM_PROPERTY);
     root.classList.toggle(ZOOMED_IN_CLASS, next > 1);
+    for (const part of parts) {
+      if (next === 1) part.style.removeProperty("scale");
+      else part.style.setProperty("scale", String(next));
+    }
+    take();
   };
 
   /**
@@ -176,7 +213,6 @@ export function startZoomPill(document: ZoomPage, window: ZoomWindow): void {
     if (next === zoom) return;
     const kept = places();
     apply(next);
-    zoom = next;
     show();
     // Reading the pill lays the page out at the new zoom.
     const moved = control.getBoundingClientRect().top - kept.top;
@@ -190,6 +226,16 @@ export function startZoomPill(document: ZoomPage, window: ZoomWindow): void {
     window.dispatchEvent(new Event(HOME_ZOOM_EVENT));
   };
 
+  // A part's own height changes with the window's width, the fonts, the
+  // reader's text size and a demo. A transform fires no observer entry, and
+  // a margin is outside the box that the observer watches.
+  const Observer = window.ResizeObserver;
+  if (Observer !== undefined) {
+    const observer = new Observer(() => {
+      if (zoom !== 1) take();
+    });
+    for (const part of parts) observer.observe(part);
+  }
   for (const step of STEPS)
     buttons[step].addEventListener("click", () => press(step));
   show();

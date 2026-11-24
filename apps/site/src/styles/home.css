@@ -12,6 +12,19 @@
    and the desktop steps follow under the 768px query, in the mockup's
    order. */
 
+/* The stage holds the Specs panel over the workspace in one cell. The
+   home's zoom scales the workspace, and the panel keeps its size and its
+   place, as the viewer's panels do over its canvas. */
+
+.site-home-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.site-home-stage > * {
+  grid-area: 1 / 1;
+}
+
 .site-home-workspace {
   display: block;
   gap: 40px;
@@ -19,27 +32,33 @@
   padding: 0 20px;
 }
 
-/* The Specs panel sticks 72px below the window's top, under the tool bar.
-   Inside the zoomed main a sticky offset grows with the zoom, so the panel
-   divides it by the home's zoom, which the page root holds while it is not
-   100%. */
+/* The Specs panel lies over the workspace's first column, 16px from the
+   window's start and 120px below the workspace's top, and sticks 72px
+   below the window's top, under the tool bar. Above 100% it also sticks at
+   the window's start while the page scrolls sideways. It draws over the
+   zoomed workspace. */
 
 .site-home-specs {
   align-self: start;
-  margin-top: 120px;
+  justify-self: start;
+  left: 16px;
+  margin: 120px 0 0 16px;
   position: sticky;
-  top: calc(72px / var(--home-zoom, 1));
+  top: 72px;
+  width: 200px;
+  z-index: 1;
 }
 
 /* The site sends one page to every width, and a phone draws no Specs
-   panel, which the mockups' mobile document leaves out. The workspace hides
+   panel, which the mockups' mobile document leaves out. The stage hides
    the panel there with a selector that outweighs the panel's own display. */
 
-.site-home-workspace > .site-home-specs {
+.site-home-stage > .site-home-specs {
   display: none;
 }
 
 .site-home-frames {
+  grid-column: 2;
   margin: 0 auto;
   max-width: 1080px;
   min-width: 0;
@@ -131,7 +150,7 @@
     padding: 0 78px 0 16px;
   }
 
-  .site-home-workspace > .site-home-specs {
+  .site-home-stage > .site-home-specs {
     display: flex;
   }
 
@@ -206,7 +225,7 @@
   }
 
   .site-home-specs,
-  .site-home-workspace > .site-home-specs {
+  .site-home-stage > .site-home-specs {
     display: none;
   }
 }

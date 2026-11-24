@@ -10,6 +10,19 @@
   width: 100%;
 }
 
+/* The stage holds the Specs panel over the workspace in one cell. The
+   home's zoom scales the workspace, and the panel keeps its size and its
+   place, as the viewer's panels do over its canvas. */
+
+.site-home-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.site-home-stage > * {
+  grid-area: 1 / 1;
+}
+
 .site-home-workspace {
   display: grid;
   gap: 40px;
@@ -17,18 +30,25 @@
   padding: 0 78px 0 16px;
 }
 
-/* The Specs panel sticks 72px below the window's top, under the tool bar.
-   Inside the zoomed main a sticky offset grows with the zoom, so the panel
-   divides it by the home's zoom, where the page root holds one. */
+/* The Specs panel lies over the workspace's first column, 16px from the
+   window's start and 120px below the workspace's top, and sticks 72px
+   below the window's top, under the tool bar. Above 100% it also sticks at
+   the window's start while the page scrolls sideways. It draws over the
+   zoomed workspace. */
 
 .site-home-specs {
   align-self: start;
-  margin-top: 120px;
+  justify-self: start;
+  left: 16px;
+  margin: 120px 0 0 16px;
   position: sticky;
-  top: calc(72px / var(--home-zoom, 1));
+  top: 72px;
+  width: 200px;
+  z-index: 1;
 }
 
 .site-home-frames {
+  grid-column: 2;
   margin: 0 auto;
   max-width: 1080px;
   min-width: 0;

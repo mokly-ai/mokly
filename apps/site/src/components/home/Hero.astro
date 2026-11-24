@@ -16,6 +16,8 @@
  * heading, the lead and the actions stay readable. When motion is allowed,
  * the selection draws on load and the spread's artboards settle, once. The
  * rules, the load motion included, are in `src/styles/home-hero.css`.
+ *
+ * The hero carries the mark of a part that the home's zoom scales.
  */
 import { HOME_HERO } from "../../home.js";
 import Actions from "../Actions.astro";
@@ -24,6 +26,7 @@ import Redline from "../Redline.astro";
 import Selection from "../Selection.astro";
 
 import Spread from "./Spread.astro";
+import { ZOOM_MARKS } from "./zoom-marks.js";
 
 import "../../styles/home-hero.css";
 
@@ -31,7 +34,12 @@ import "../../styles/home-hero.css";
 const heading = HOME_HERO.heading.replace(/ (?=\S+$)/, "\u00a0");
 ---
 
-<section aria-labelledby="home-title" class="site-hero" id="hero">
+<section
+  aria-labelledby="home-title"
+  class="site-hero"
+  id="hero"
+  {...ZOOM_MARKS.part}
+>
   <div class="site-home-hero-inner">
     <div class="site-home-title-layer">
       <h1 id="home-title">{heading}</h1>

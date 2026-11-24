@@ -108,12 +108,8 @@ test("a resize of a target or of the window, a change of the home's zoom or the 
   }
 });
 
-test("at any zoom each part shows its target's own CSS pixels, also where the browser does not give the zoom", () => {
-  const drawings: readonly Drawing[] = [
-    { currentCSSZoom: true, zoom: 2 },
-    { currentCSSZoom: true, zoom: 0.4096 },
-    { currentCSSZoom: false, zoom: 2 },
-  ];
+test("at any zoom of the home each part shows its target's own CSS pixels, not the scaled ones", () => {
+  const drawings: readonly Drawing[] = [{ scale: 2 }, { scale: 0.4096 }];
   for (const drawing of drawings) {
     const page = openPage(
       TARGETS,

@@ -171,9 +171,9 @@ loses the chosen green.
   changelog's parts was rejected, because one pass keeps every page the
   same.
 - On the home, each size of this page holds for the `main` and the footer
-  frame before the zoom of the zoom pill. Above 100% they keep their layout
-  of 100%, and the rules that keep a part inside the window hold for that
-  layout, as [Site design pages](./site-design-pages.md#home) defines.
+  frame before the zoom of the zoom pill. At every zoom they keep their
+  layout of 100%, and the rules that keep a part inside the window hold for
+  that layout, as [Site design pages](./site-design-pages.md#home) defines.
 
 ## Radius, Elevation, Focus And Motion
 
