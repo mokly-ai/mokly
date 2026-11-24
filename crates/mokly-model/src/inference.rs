@@ -1,16 +1,14 @@
-//! Schema inference over the entry props and every merged variant.
+//! Schema inference from complete prop sets.
 
 use std::collections::BTreeSet;
 
 use crate::data::{DataValue, Props};
 use crate::prop_schema::{JsonType, PropSchema, Types};
 
-/// Infer a closed root object. Own keys are required; variant-only keys are optional.
-pub fn infer(own: &Props, merged_variants: &[Props]) -> PropSchema {
-    let values: Vec<_> = std::iter::once(own).chain(merged_variants).collect();
-    let mut schema = objects(&values);
-    schema.required = Some(own.keys().cloned().collect());
-    schema
+/// Infer a closed root object from complete prop sets.
+/// A top-level key is required when every set contains it.
+pub fn infer(complete_props: &[&Props]) -> PropSchema {
+    objects(complete_props)
 }
 
 fn objects(values: &[&Props]) -> PropSchema {

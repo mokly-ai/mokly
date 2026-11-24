@@ -81,7 +81,7 @@ pub(super) fn prepared(warnings: Vec<Warning>) -> PreparedCatalogue {
                 visual: VisualEntry {
                     control_order: Vec::new(),
                     color_schemes: vec![ColorScheme::Light],
-                    prop_schema: infer(&Props::new(), &[]),
+                    prop_schema: infer(&[&Props::new()]),
                     props: Props::new(),
                     controls: BTreeMap::new(),
                 },

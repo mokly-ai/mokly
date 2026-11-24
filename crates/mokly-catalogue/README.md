@@ -243,9 +243,12 @@ The property test of the source maps over the vendored HTML corpus lives in
   `Builder`, which prepare one validated `PreparedCatalogue` per pass, with
   its shared `prop_validators`.
 - [`src/prepare_entry.rs`](./src/prepare_entry.rs) prepares parent and
-  variant props. It keeps a story variant's props separate from the parent's.
+  variant props. Inference and validation use the same
+  [complete props](../../docs/protocol/mokly-entry-props.md#one-model) of the
+  parent and of each variant, resolved once.
 - [`src/prepare_parent.rs`](./src/prepare_parent.rs) prepares the shared
-  schema. It requires only the props that every included story sets.
+  schema. It infers the schema from those complete props, or it compiles the
+  declared schema and validates those props against it.
 - [`src/definition_provider.rs`](./src/definition_provider.rs) defines
   `DefinitionProvider`, the boundary that describes JavaScript definitions.
 - [`src/working_tree.rs`](./src/working_tree.rs) defines `WorkingTree`, the

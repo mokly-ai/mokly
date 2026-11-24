@@ -1,5 +1,7 @@
 //! Prepare one parent and its variants before catalogue-wide relationship checks.
 
+use std::iter::once;
+
 use mokly_model::axes::{ColorScheme, EntryKind};
 use mokly_model::catalogue::{
     EntryContent, EntryMetadata, ModelEntry, SourceLocation, VisualEntry,
@@ -68,16 +70,18 @@ pub(crate) fn prepare(
             failed: !parsed.issues.is_empty(),
         });
     }
-    let candidates = variants::parse(parsed, kind, &file.path, &path);
-    let story = file.kind == SourceKind::Stories;
-    let prepared_parent = prepare_parent::prepare(
-        parsed,
-        kind,
-        &source,
-        configured_schemes,
-        &candidates,
-        story,
-    );
+    let mut candidates = variants::parse(parsed, kind, &file.path, &path);
+    if file.kind != SourceKind::Stories {
+        for variant in candidates.iter_mut().flatten() {
+            variant.props = merge_props(&input.props, &variant.props);
+        }
+    }
+    let prepared_parent = {
+        let complete_props: Vec<_> = once(&input.props)
+            .chain(candidates.iter().flatten().map(|variant| &variant.props))
+            .collect();
+        prepare_parent::prepare(parsed, kind, &source, configured_schemes, &complete_props)
+    };
     let validator = prepared_parent.validator;
     let failed = validator.is_none();
     let schema = prepared_parent.visual.prop_schema.clone();
@@ -117,11 +121,7 @@ pub(crate) fn prepare(
             issues.push(issue);
             continue;
         }
-        let complete = if story {
-            variant.props
-        } else {
-            merge_props(&input.props, &variant.props)
-        };
+        let complete = variant.props;
         if let Some(validator) = &validator
             && let Err(issue) = props::validate(
                 validator,

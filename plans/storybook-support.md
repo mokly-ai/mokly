@@ -164,8 +164,6 @@ branch fixes it as its file says. Fix them before the pull request into
 
 - [storybook-factory-helper-exports-become-stories.md](follow-ups/storybook-factory-helper-exports-become-stories.md):
   Severity High.
-- [story-required-keys-derived-twice.md](follow-ups/story-required-keys-derived-twice.md):
-  Severity Low.
 - [describe-failure-names-every-file.md](follow-ups/describe-failure-names-every-file.md):
   Severity Low.
 
