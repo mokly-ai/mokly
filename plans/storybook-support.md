@@ -2,8 +2,8 @@
 
 Status: Active, paused by the user on 2026-11-24. On branch
 `calummoore/mokly-storybook-integration`, with no pull request into `main`
-yet. Tracks A, B, C, D, and J are merged into this branch. Tracks E to I have
-not started. The section [Where the work stands](#where-the-work-stands)
+yet. Tracks A, B, C, and J are merged into this branch, and the pull request
+of track D is open. Tracks E to I have not started. The section [Where the work stands](#where-the-work-stands)
 gives what is done, what waits for the user, and how to continue. Each track
 works on its own branch from this branch and opens a pull request into this
 branch, as design calls 1 and 25 say. Pull requests from this branch into
@@ -147,6 +147,29 @@ recommended option.
   `data:` URL error does not name its fix.
 - [design-external-link-check.md](follow-ups/design-external-link-check.md):
   the design checks pass unmarked external links.
+- [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
+  the cleanups of a story's setup outlive its render. Severity High. It came
+  from the first review of track B.
+
+### Defects in merged code
+
+The first review of track B found these defects in the code that pull
+request #492 merged. Each one needs no decision, and a branch from this
+branch fixes it as its file says. Fix them before the pull request into
+`main`.
+
+- [storybook-factory-helper-exports-become-stories.md](follow-ups/storybook-factory-helper-exports-become-stories.md):
+  Severity High.
+- [storybook-loaders-read-saved-args.md](follow-ups/storybook-loaders-read-saved-args.md):
+  Severity High.
+- [storybook-argtypes-mapping-skipped-in-render.md](follow-ups/storybook-argtypes-mapping-skipped-in-render.md):
+  Severity Medium.
+- [variant-props-docs-say-merged.md](follow-ups/variant-props-docs-say-merged.md):
+  Severity Medium.
+- [story-required-keys-derived-twice.md](follow-ups/story-required-keys-derived-twice.md):
+  Severity Low.
+- [describe-failure-names-every-file.md](follow-ups/describe-failure-names-every-file.md):
+  Severity Low.
 
 The other follow-up items that this plan added need no decision. A later
 branch fixes each one as its file says.
@@ -157,9 +180,10 @@ branch fixes each one as its file says.
    recommended options. Ask for all of them in one message.
 2. Apply each answer in the milestone that waits for it, and record the
    answer in this plan with its date.
-3. Run the reviews that did not run: the review TODO of Milestone 8 for
-   track B, and the review TODO of Milestone 17 for track D. Run each against
-   this branch with the `implementation-review` skill.
+3. Fix the defects in merged code above. Then run the reviews that did not
+   finish: the review TODO of Milestone 8 for track B, and the review TODO of
+   Milestone 17 for track D. Run each against this branch with the
+   `implementation-review` skill.
 4. Merge `main` into this branch before a track starts. Only this branch
    merges `main`. Each track branch merges this branch.
 5. Start tracks E to I in the order of the [Tracks](#tracks) table. Each
