@@ -43,7 +43,9 @@ Failure is `build-invalid` with
 
 - `element <tag> is not allowed`;
 - `attribute <name> on <tag> is not allowed`;
-- `<attribute> on <tag> is not an allowed URL: <JSON-quoted URL>`;
+- `<attribute> on <tag> is not an allowed URL: <JSON-quoted URL>`, which for
+  a `data:` URL ends with
+  `; remove the dataurl loader from moduleResolution.loaders so that Mokly delivers the imported file`;
 - `<input> must be disabled` or `<input> must have checkbox type`;
 - `the template must contain one owned stylesheet`.
 

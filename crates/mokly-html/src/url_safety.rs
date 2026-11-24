@@ -17,11 +17,7 @@ pub fn validate(nodes: &[Node], fallback: &SourceLocation) -> Result<()> {
                 {
                     return Err(invalid(
                         Code::BuildInvalid,
-                        format!(
-                            "unsafe rendered document: {name} on <{}> is not an allowed URL: {}",
-                            element.name,
-                            Value::String(url.into())
-                        ),
+                        rejection_reason(name, &element.name, url),
                     )
                     .at(element.source.clone().unwrap_or_else(|| fallback.clone())));
                 }
@@ -29,6 +25,20 @@ pub fn validate(nodes: &[Node], fallback: &SourceLocation) -> Result<()> {
         }
     }
     Ok(())
+}
+
+/// Build the diagnostic for a URL rejected by the document policy.
+pub(crate) fn rejection_reason(name: &str, tag: &str, url: &str) -> String {
+    let mut message = format!(
+        "unsafe rendered document: {name} on <{tag}> is not an allowed URL: {}",
+        Value::String(url.into())
+    );
+    if scheme(url).is_some_and(|name| name.eq_ignore_ascii_case("data")) {
+        message.push_str(
+            "; remove the dataurl loader from moduleResolution.loaders so that Mokly delivers the imported file",
+        );
+    }
+    message
 }
 
 /// Check document URL syntax; the public closure separately checks local paths.
@@ -40,16 +50,19 @@ pub(crate) fn allowed(url: &str) -> bool {
     {
         return false;
     }
+    scheme(url).is_none_or(|name| {
+        ["http", "https", "mailto"]
+            .iter()
+            .any(|allowed| name.eq_ignore_ascii_case(allowed))
+    })
+}
+
+fn scheme(url: &str) -> Option<&str> {
     let prefix = url.split(['/', '?', '#']).next().unwrap_or(url);
-    let scheme = prefix.split_once(':').map(|(name, _)| name).filter(|name| {
+    prefix.split_once(':').map(|(name, _)| name).filter(|name| {
         name.starts_with(|c: char| c.is_ascii_alphabetic())
             && name
                 .bytes()
                 .all(|c| c.is_ascii_alphanumeric() || b"+-.".contains(&c))
-    });
-    scheme.is_none_or(|name| {
-        ["http", "https", "mailto"]
-            .iter()
-            .any(|allowed| name.eq_ignore_ascii_case(allowed))
     })
 }
