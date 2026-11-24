@@ -8,6 +8,7 @@ use mokly_graph::asset_delivery::{AssetRead, AssetReadMock};
 use mokly_graph::cache::Artifact;
 use mokly_graph::closure::GeneratedResourcesMock;
 use mokly_graph::types::{RenderGenerationMock, TemporaryDocument};
+use mokly_model::namespace::generated;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::backend::{Documents, GraphDocuments};
@@ -181,4 +182,52 @@ fn preview_asset_capacity_is_checked_before_copying_any_payload() {
         documents.preview("home/index.html", &Default::default()),
         Err(ServerError::PreviewCapacity)
     ));
+}
+
+#[test]
+fn preview_pjp_asset_uses_the_generated_content_type() {
+    const PAYLOAD: &[u8] = b"image";
+    let asset_route = generated("assets/logo.pjp");
+    let mut rendered = TemporaryDocument {
+        artifact: Arc::new(Artifact {
+            bytes: b"<p>Home</p>".to_vec(),
+            content_type: "text/html".into(),
+            document: None,
+            fragment: None,
+        }),
+        closure: Default::default(),
+    };
+    rendered.closure.edges.insert(asset_route.clone(), vec![]);
+    let generation = Unimock::new((
+        RenderGenerationMock::plans
+            .next_call(matching!())
+            .returns(BTreeMap::new()),
+        RenderGenerationMock::render_props
+            .next_call(matching!("home/index.html", _))
+            .returns(Ok(rendered)),
+        GeneratedResourcesMock::open_asset
+            .next_call(matching!("assets/logo.pjp"))
+            .answers(&|_, _| {
+                Ok(Some(Box::new(Unimock::new((
+                    AssetReadMock::length
+                        .next_call(matching!())
+                        .returns(PAYLOAD.len() as u64),
+                    AssetReadMock::read_bytes
+                        .next_call(matching!())
+                        .returns(Ok(PAYLOAD.to_vec())),
+                ))) as Box<dyn AssetRead>))
+            }),
+    ));
+    let documents = GraphDocuments::new(
+        Arc::new(generation),
+        Arc::new(Unimock::new(())),
+        Arc::new(TracingWarnings),
+        Arc::new(Unimock::new(())),
+    );
+    let preview = documents
+        .preview("home/index.html", &Default::default())
+        .expect("preview with a generated image");
+    let asset = &preview.files[&asset_route];
+    assert_eq!(asset.bytes.as_ref(), PAYLOAD);
+    assert_eq!(asset.content_type, "image/jpeg");
 }

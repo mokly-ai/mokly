@@ -109,6 +109,7 @@ fn a_short_reply_keeps_the_shared_disk_recipe_graph_and_pool_metadata() {
                 path: "entry.ts".into(),
                 digest: Some("entry-digest".into()),
                 imports: vec!["shared.ts".into()],
+                imported_asset: None,
             }]
             .into(),
             Arc::new(compiled),

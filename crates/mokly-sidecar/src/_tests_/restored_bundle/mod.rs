@@ -142,11 +142,13 @@ fn restore(id: u64, generation: &str, identity: &str) -> Request {
                     digest: Some(format!("digest:{identity}")),
                     path: "entry.ts".into(),
                     imports: vec!["theme.module.css".into(), "shared.ts".into()],
+                    imported_asset: None,
                 },
                 results::Module {
                     digest: Some("shared-digest".into()),
                     path: "shared.ts".into(),
                     imports: vec![],
+                    imported_asset: None,
                 },
             ]
             .into(),

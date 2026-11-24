@@ -89,6 +89,9 @@ Graph leases retain old maps, bindings, and used PostCSS contexts until the fina
 request releases them. The one exception is a Serve head context that its
 successful graph preparation already ended. Final drops enqueue epoch-specific pool release and
 cache cleanup without waiting for worker requests or the PostCSS cache lock.
+The graph adapter delivers modules marked `importedAsset` with their captured
+digests. It selects the importing module by sorted logical path. The selected
+side's source reader supplies the confined file identity and any source alias.
 Failed candidates release their own contexts. Bundle metadata stamps include
 resolved React manifests, ancestor package and tsconfig candidates, absent
 Storybook previews, and file membership in consumed-module directories.
@@ -416,12 +419,15 @@ view after the edit and counts real process starts and hello calls.
 - [`src/error.rs`](./src/error.rs) defines `RenderError`, which keeps the
   source of each subsystem failure.
 - [`src/graph.rs`](./src/graph.rs) resolves bindings before both sides use the
-  same composition path. It gives the `Fragments` of each side that side's own
-  source root, so a base graph records nothing as head, also with an equal
-  generation id. `JavaScriptGraph::graph` builds each graph on the
-  `StylesheetAttempt` of its attempt, also for a catalogue without JavaScript.
-  After a successful `graph.prepare` of a Serve head,
-  `JavaScriptGraph::prepare` calls `StylesheetAttempt::retire_used`.
+  same composition path and initializes their `DeliveryInputs` metadata.
+  It gives `Fragments` the source root of its side. A base graph therefore
+  records nothing as head, even when the generation ids are equal.
+  `JavaScriptGraph::graph` builds each graph on the `StylesheetAttempt` of
+  its attempt, also for a catalogue without JavaScript. After a successful
+  `graph.prepare` of a Serve head, `JavaScriptGraph::prepare` calls
+  `StylesheetAttempt::retire_used`.
+- [`src/imported_assets.rs`](./src/imported_assets.rs) selects the asset source,
+  digest, and importer for each flagged module.
 - [`src/render_keys.rs`](./src/render_keys.rs) builds the render input keys of
   each graph. With the Serve head reference, it calls
   `RenderKeys::build_unseeded_with_workers` in the `Full` mode and passes the

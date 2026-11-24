@@ -76,6 +76,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
                                 path: "renderer.ts".into(),
                                 imports: vec!["theme.module.css".into()],
                                 digest: None,
+                                imported_asset: None,
                             }]
                             .into();
                             MethodResult::Bundle(Box::new(reply))
@@ -164,6 +165,7 @@ fn css_before_bundle_and_second_evaluation_never_add_another_preparation() {
             definitions: definitions(),
             modules: BTreeMap::from([("renderer.ts".into(), vec!["theme.module.css".into()])]),
             module_digests: BTreeMap::new(),
+            imported_assets: Default::default(),
             render: render_environment::RenderEnvironment::default(),
             stamp: InputStamp {
                 files: if css_before_bundle {

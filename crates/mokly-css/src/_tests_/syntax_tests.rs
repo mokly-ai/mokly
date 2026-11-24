@@ -1,5 +1,6 @@
 //! CSS token references handle strings, nested functions, comments, and late imports.
 
+use crate::imported_assets::stylesheet_content_type;
 use crate::paths;
 use crate::syntax::references;
 
@@ -39,11 +40,12 @@ fn asset_route_grammar_keeps_scopes_and_rejects_device_names_and_escapes() {
         "images/.hidden.png",
         "images/_private.png",
         "node_modules/@scope/nul.woff2",
+        "node_modules/.mokly-roots//image.png",
     ] {
         assert!(!paths::portable(path, true), "{path}");
     }
     assert!(paths::portable("styles/_root.css", false));
-    assert!(paths::content_type("a.PNG").is_none());
+    assert!(stylesheet_content_type("a.PNG").is_none());
     assert!(paths::external("DATA:image/png;base64,AA"));
 }
 

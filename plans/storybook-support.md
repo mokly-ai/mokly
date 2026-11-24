@@ -45,6 +45,9 @@ Contract owners:
 - [Imported CSS Configuration](../docs/protocol/mokly-configuration-imported-styles.md)
   and [Imported Stylesheet Assets](../docs/protocol/mokly-imported-styles-assets.md):
   stylesheet transforms and asset delivery.
+- [JavaScript Asset Imports](../docs/protocol/mokly-imported-assets.md): the
+  files that JavaScript imports as assets, their tokens, their URLs in
+  documents, and their delivery.
 - [Mokly Build Warnings](../docs/protocol/mokly-build-warnings.md): the new
   warnings.
 - [Component Instance Identity](../docs/protocol/mokly-instances.md) and
@@ -985,47 +988,284 @@ Depends on: none
 
 Track C. The protocol states the asset rules of decision 6.
 
-- [ ] Add the delivery of imported assets to
+Track C design calls, made on 2026-11-18. They are mine. The orchestrator can
+move them to "Design calls" at the merge.
+
+1. The rules of imported assets get their own page,
+   `docs/protocol/mokly-imported-assets.md`. Reason: the stylesheet asset page
+   would come near its 250-line cap, and the status line then covers only the
+   new rules.
+2. JavaScript imports deliver Vite's known asset types by default, except
+   `.txt`, which keeps its text loader. The match is case-sensitive, as for
+   stylesheet assets. A consumer loader or an import attribute `type` wins
+   over the default, and decision C2 settles which of the two wins. A
+   consumer loader key matches the longest configured suffix, as in esbuild.
+   Reason: current `.txt` imports keep their value, an explicit choice wins,
+   and a key such as `.icon.png` fails today.
+3. Stylesheet `url()` keeps its extension list. Reason: decision 6 covers
+   JavaScript imports, and a wider stylesheet list would change a requirement
+   in force.
+4. An asset import gives a token string that depends only on the asset's
+   logical path. Code can append a query or a fragment. Records that carry
+   props keep the token. Reason: documents and records stay deterministic,
+   and an edit to the bytes changes no prop.
+5. The core replaces each token in the attribute values, the text, and the
+   collected styles of a composed document. Only the reference positions of
+   the comparison contract count as resource references. Reason: no output
+   shows a token, and no new error is necessary. Changed on 2026-11-20: the
+   replacement does not depend on the assets of the generation, and a
+   reference to an undelivered path fails as a missing target. Reason: with
+   the asset list in each document key, one new import rendered every view
+   again, and the two sides of a comparison shared no cached view.
+6. Each imported asset, the file of an import that gives a token, is
+   delivered with its generation, also when no document references it. A
+   stylesheet asset at the same path shares its route. Reason: this is the
+   stylesheet asset rule, and a token in any position then resolves.
+7. An asset path that is not portable fails the build, as a stylesheet asset
+   path does, with a message that names the importing module. Reason: one
+   route rule stays, and such an import fails today with "No loader is
+   configured".
+8. Imported assets follow the stylesheet asset rules for location, digest
+   checks, Serve, `build`, publish, the base side, watch, and Changes
+   evidence. Reason: decision 6 reuses that pipeline.
+9. A token in an HTML comment stays. Reason: a browser loads no URL from a
+   comment, and the replacement then cannot touch Mokly's marker comments.
+10. A document that links the authored path of an imported asset fails with
+    the existing protected-target reason. No new row names the importing
+    module. Reason: the failure already exists, and a new message can come
+    later. Changed on 2026-11-20: the failure uses the existing row of an
+    imported stylesheet asset, which names the importing module. Reason: the
+    implementation showed that this row applies with no new message, and it
+    tells the author the fix.
+
+### C1. A `file` loader on an asset import
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `packages/mokly/src/sidecar/plugins.ts:45-50`,
+  `docs/protocol/mokly-imported-styles-errors.md:52`,
+  `docs/protocol/mokly-imported-styles-modules.md:113-115`,
+  `docs/protocol/mokly-configuration-imported-styles.md:54-55`,
+  `docs/guides/authoring/config.md:80`.
+- **Terms:**
+  - **Loader:** the esbuild rule that turns an imported file into a
+    JavaScript value. `moduleResolution.loaders` in `mokly.config.json` sets
+    one for each extension.
+- **Background:**
+  - Today a consumer `file` loader fails the build. The message advises a
+    `dataurl` or `binary` loader.
+  - In esbuild, the `file` loader copies the file to the output and gives its
+    URL. Decision 6 makes Mokly do the same for images, fonts, and media.
+  - Design call 16 says that a consumer loader still wins over that default.
+  - Many esbuild setups set `file` for images.
+- **Problem:** No rule says what a `file` loader does when Mokly can deliver
+  the file. The `dataurl` advice is wrong, because the document URL policy
+  rejects `data:` URLs in `src`.
+- **Impact if no action:** A project that sets `file` for `.png` fails, and
+  the advice leads to a second failure.
+- **Root question:** What does a configured `file` loader do, now that Mokly
+  delivers imported files itself?
+- **Options:**
+  - **A.** Keep the failure for each `file` loader. Its advice tells the user
+    to remove the loader, or to use `binary` or `text` for data. A project
+    that sets `file` must delete the entry. Effort: Small.
+  - **B.** A `file` loader on a type that Mokly delivers by default means
+    that delivery. A `file` loader on another type keeps the failure, with
+    new advice. Three docs outside the scope of track C change one sentence
+    each: `mokly-imported-styles-modules.md`,
+    `mokly-configuration-imported-styles.md`, and
+    `docs/guides/authoring/config.md`. Effort: Small.
+  - **C.** A `file` loader delivers a file of any type. A type outside the
+    content type table gets `application/octet-stream`. The same three docs
+    change. Mokly documents run no scripts, so such a file is useful only as
+    a link target. A static host picks its own content types, so Serve and
+    the static output can differ. Effort: Small.
+  - **D.** B, with one key rule for every load. A loader key matches the
+    longest configured suffix, as in esbuild. The bundle's own loader table
+    drops `file` keys, as it drops `.css` and `.module.css`, so esbuild never
+    writes a file. A `file` key can deliver each of Vite's types, also
+    `.txt` as `text/plain`. Today a key such as `.icon.png` fails with
+    "Bundled source bytes were not recorded". Effort: Small.
+  - **E.** D, and an import attribute `type` wins over a `file` key, as in
+    esbuild. Effort: Small.
+- **Left out:**
+  - Let esbuild emit its own output file for the `file` loader: esbuild gives
+    one URL for the whole bundle, which is root-absolute or wrong for
+    documents at other depths.
+  - Reject each `file` key in the configuration check: it fails a
+    configuration that builds today with correct output.
+  - Give a type outside the set an empty value and a warning: the document
+    then holds a missing URL, and a new warning code is necessary.
+- **Wider fix:** D. A key rule for every load keeps `file` away from esbuild
+  for each key shape.
+- **Previous examples:** None found.
+- **Related:** C2 decides whether an import attribute wins over each
+  configured loader. E is its case for `file` keys.
+- **Recommendation:** D, changed from B by the options check of 2026-11-18.
+  The loader keeps its esbuild meaning for each key shape, and an unknown
+  type still fails with clear advice.
+- **Action:** ask the user, because D changes the requirement that a consumer
+  `file` loader fails the build, and it changes three docs outside the scope
+  of track C.
+- **Answer:** E, an orchestrator design call of 2026-11-23. A `file` key
+  gives Mokly's delivery for the default types and for `.txt`, one
+  longest-suffix key rule covers every load, esbuild never gets a `file` key,
+  and an import attribute wins over a `file` key, as C2 says. Reason: the
+  user's decision 6 chose this delivery, and the change only removes a
+  failure.
+
+### C2. An import attribute against a configured loader
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small.
+- **Source:** Design, found by the options check of C1.
+- **Category:** Product bug.
+- **Location:** `packages/mokly/src/sidecar/plugins.ts:51-56`.
+- **Background:**
+  - An import can carry an attribute, such as `with { type: "text" }`. The
+    types are `json`, `text`, and `bytes`.
+  - In esbuild, the attribute wins over the loader of the extension.
+  - Mokly's sidecar tries the consumer loader and its own source loaders
+    first. No protocol doc states this order.
+- **Problem:** `import data from "./data.json" with { type: "text" }` gives
+  parsed JSON in Mokly and text in esbuild.
+- **Impact if no action:** Such an import gets a different value in Mokly
+  than in the product's own build.
+- **Root question:** When an import names its type, which decides its value
+  in each esbuild compile of Mokly: that type, or a rule for its file
+  extension? The options check of 2026-11-18 wrote this question, because
+  the CSS route and the PostCSS module compile have the same gap.
+- **Options:**
+  - **A.** Keep the order of today: the consumer loader, then Mokly's source
+    loaders, then the attribute. The asset page states it. Effort: Small.
+  - **B.** The attribute wins over every loader, as in esbuild. The value of
+    an existing import with an attribute and a loader changes. A `.css`
+    import stays a stylesheet, and the page names it as the exception.
+    Effort: Small.
+  - **C.** The attribute wins over Mokly's own defaults: JavaScript,
+    TypeScript, JSON, `.txt`, and the asset default. A consumer loader still
+    wins over the attribute. Such an import can still get another value
+    than in esbuild. Effort: Small.
+  - **D.** B, and a `.css` or `.module.css` import with a `json`, `text`, or
+    `bytes` attribute gets that value and no stylesheet, as in esbuild. It
+    changes the rule that Mokly owns `.css` handling, a generated type, and
+    Rust code outside track C. Effort: Medium.
+  - **E.** D, and one owner for the attribute rule in each esbuild compile.
+    The bundle hooks and the PostCSS module compile ask it before any rule
+    by extension. The PostCSS files are outside track C. Effort: Large.
+- **Left out:**
+  - Warn when both apply: with A, the import keeps a value that esbuild does
+    not give. With B, the warning only fails `--strict` for a correct import.
+  - Let esbuild apply the attribute itself: esbuild ignores the attribute
+    when a hook returns the contents, and a hook that returns nothing loses
+    the digest of the compiled bytes.
+  - A configuration switch to another order: B is better on every point, and
+    it adds no configuration field.
+  - Fail the bundle when an attribute meets a loader: esbuild accepts the
+    import, and it is a new build error.
+- **Wider fix:** E, changed from "None" by the options check. It decides the
+  attribute before every rule by extension, in each esbuild compile.
+- **Previous examples:** None found.
+- **Related:** C1, option E, is the case of B for `file` keys.
+- **Recommendation:** B. The import then gets the value that esbuild and the
+  language standard give it. Vite reads only `json` today, so B does not
+  match Vite for `text` and `bytes`. E protects the codebase best, but it is
+  Large and outside track C.
+- **Action:** ask the user, because B changes the value that existing imports
+  get today.
+- **Answer:** B, an orchestrator design call of 2026-11-23. The attribute
+  wins over every loader, as in esbuild and the language standard. A `.css`
+  import stays a stylesheet, and the asset page names that exception.
+  Reason: today's order differs from esbuild by accident, and no page states
+  it.
+
+The options check reports of C1 and C2 are in
+`.context/storybook-support/track-c/reports/`.
+
+On 2026-11-20 the orchestrator answered the scope question of track C with
+option A. Track C edits the sentences outside its file list that the asset
+delivery makes stale: in `docs/protocol/mokly-configuration.md`,
+`docs/protocol/mokly-artifact-paths.md`, and, after decision C1, the
+sentences about the `file` loader. Only the stale sentences change, because
+track D edits the same configuration pages.
+
+- [x] Add the delivery of imported assets to
       `docs/protocol/mokly-imported-styles-assets.md`, or to a new linked
       page when that page would pass 250 lines. Add the status line.
-- [ ] Update the `file` loader row of
-      `docs/protocol/mokly-imported-styles-errors.md`.
-- [ ] Run `npm run format:check` and
-      `npm test -- tests/markdown_links.test.ts`.
+      Branch: conductor/storybook-support-c-imported-assets
+- [x] Update the `file` loader row of
+      `docs/protocol/mokly-imported-styles-errors.md` with the answer to
+      decision C1. Branch: conductor/storybook-support-c-imported-assets
+- [x] State the answer to decision C2 in
+      `docs/protocol/mokly-imported-assets.md`. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Run `npm run format:check` and
+      `npm test -- tests/markdown_links.test.ts`. Branch:
+      conductor/storybook-support-c-imported-assets
 
 ## Milestone 10: Imported assets in documents
 
 Depends on: 9
 
-Components that import images render them, as decision 6 says.
+Components that import images render them, as decision 6 says. The
+delegate reports, the watch smoke test, and the gate logs are in
+`.context/storybook-support/track-c/reports/`.
 
-- [ ] Load the asset types of design call 16 as delivered files.
-- [ ] Give each asset import a token. The core rewrites it to a
-      document-relative URL in `src`, `srcset`, `href`, `poster`, and `style`
-      attributes, and it delivers the file under the generated assets route.
-- [ ] Add asset bytes to the watch inputs and the render keys.
-- [ ] Replace the `file` loader error and the `dataurl` advice, as "Replaced
-      ways" says.
-- [ ] Test that a component that imports a PNG and an SVG renders them in
-      Serve and `build`, and that Changes shows an edited image.
-- [ ] Update `docs/guides/authoring/styles.md`.
+- [x] Load the asset types of design call 16 as delivered files. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Give each asset import a token. The core replaces it with a
+      document-relative URL in each attribute value and in the text of a
+      composed document, as track C design call 5 says. The core delivers
+      the file under the generated assets route. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Add asset bytes to the watch inputs and the render keys. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Replace the `file` loader error and the `dataurl` advice, as "Replaced
+      ways" says, with the answer to decision C1. Also update the `file`
+      loader sentences of `docs/protocol/mokly-imported-styles-modules.md`,
+      `docs/protocol/mokly-configuration-imported-styles.md`,
+      `docs/guides/authoring/config.md`, and
+      `docs/guides/authoring/styles.md`. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Name the asset delivery default in
+      `docs/protocol/mokly-configuration.md`, and the imported assets under
+      `static/mokly-generated/` in `docs/protocol/mokly-artifact-paths.md`.
+      Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Apply the answer to decision C2 to the loader choice of the bundle.
+      Branch: conductor/storybook-support-c-imported-assets
+- [x] Test that a component that imports a PNG and an SVG renders them in
+      Serve and `build`, and that Changes shows an edited image. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Update `docs/guides/authoring/styles.md`. Branch:
+      conductor/storybook-support-c-imported-assets
 
 ## Milestone 11: Imported assets in collected styles
 
 Depends on: 10
 
-- [ ] Rewrite asset tokens in the CSS-in-JS styles that the sidecar collects,
-      such as Emotion and styled-components `url()` values.
-- [ ] Test an Emotion style with an imported background image.
+- [x] Rewrite asset tokens in the CSS-in-JS styles that the sidecar collects,
+      such as Emotion and styled-components `url()` values. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Test an Emotion style with an imported background image. Branch:
+      conductor/storybook-support-c-imported-assets
 
 ## Milestone 12: Imported assets verification, review, and pull request
 
 Depends on: 9, 10, 11
 
-- [ ] Remove each status line whose page this track completes.
-- [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Commit, push, review against this branch, give the findings to the
+The merge justifications of track C are in
+`.context/storybook-support/track-c/merge-justifications.md`. The findings
+file and the review reports are in
+`.context/reviews/conductor/storybook-support-c-imported-assets/`.
+
+- [x] Remove each status line whose page this track completes. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Run the targeted tests and `cargo xtask check`. Branch:
+      conductor/storybook-support-c-imported-assets
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: conductor/storybook-support-c-imported-assets
 
 ## Milestone 13: Vite adapter documentation
 
