@@ -8,6 +8,10 @@ under [follow-ups](./follow-ups/).
 
 ## Active Plans
 
+- [Desktop releases become full latest releases](./desktop-full-latest-releases.md) —
+  publish each desktop release as a draft, promote it to GitHub's latest
+  release after its complete asset check, and drop the version from the
+  installer names.
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
