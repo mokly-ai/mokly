@@ -86,21 +86,30 @@ export function readStories(
         wrapStoryArgs(project, decorate, csf.includeConditionalArg);
       }
       const copied = Object.fromEntries(
-        Object.entries(module).map(([name, value]) => [
-          name,
-          name === "default"
-            ? wrap({ ...meta })
-            : csf.isStory(value)
-              ? {
-                  _tag: value._tag,
-                  input: wrap({ ...value.input }),
-                  meta: { ...value.meta, input: wrap({ ...value.meta.input }) },
-                }
-              : name === render?.exportName
-                ? wrap(value)
-                : value,
-        ]),
+        Object.entries(module)
+          .filter(
+            ([name, value]) =>
+              !factory || name === "default" || csf.isStory(value),
+          )
+          .map(([name, value]) => [
+            name,
+            name === "default"
+              ? wrap({ ...meta })
+              : csf.isStory(value)
+                ? {
+                    _tag: value._tag,
+                    input: wrap({ ...value.input }),
+                    meta: {
+                      ...value.meta,
+                      input: wrap({ ...value.meta.input }),
+                    },
+                  }
+                : name === render?.exportName
+                  ? wrap(value)
+                  : value,
+          ]),
       );
+      if (!factory && !Object.hasOwn(copied, "default")) copied.default = {};
       return { stories: composeStories(copied), beforeAll };
     } finally {
       if (render)

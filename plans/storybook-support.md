@@ -162,8 +162,6 @@ request #492 merged. Each one needs no decision, and a branch from this
 branch fixes it as its file says. Fix them before the pull request into
 `main`.
 
-- [storybook-factory-helper-exports-become-stories.md](follow-ups/storybook-factory-helper-exports-become-stories.md):
-  Severity High.
 - [describe-failure-names-every-file.md](follow-ups/describe-failure-names-every-file.md):
   Severity Low.
 
