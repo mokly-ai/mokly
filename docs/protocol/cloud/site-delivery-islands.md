@@ -1,7 +1,5 @@
 # Site Delivery Islands
 
-Status: The home zoom island is not built yet. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds it.
-
 This is the script sub-contract of [Site delivery](./site-delivery.md). It
 fixes the small same-origin scripts of the site and the rendering of the HTML
 samples. [Site design pages](./site-design-pages.md),

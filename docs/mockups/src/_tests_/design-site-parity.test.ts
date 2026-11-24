@@ -115,12 +115,17 @@ function declare(into: Map<string, string>, declaration: string): void {
   });
 }
 
-/** Drop the pinned composition and the mockup's root wrapper from a part. */
+/**
+ * Drop the pinned composition and the mockup's root wrapper from a part. A
+ * state of the root, such as the home's `.site-root--zoomed-in`, keeps its
+ * class and drops only its pin, as the site writes it inside a width query.
+ */
 function normalize(part: string): string {
   return part
     .trim()
     .replace(/^\[data-site-viewport="(?:mobile|desktop)"\] /, "")
     .replace(/^\.site-root\[data-site-viewport="[a-z]+"\] /, "")
+    .replace(/^(\.site-root--[\w-]+)\[data-site-viewport="[a-z]+"\] /, "$1 ")
     .replace(/^\.site-root /, "")
     .replace(/\s+/g, " ");
 }

@@ -201,6 +201,13 @@ The redraw for decision 3 added these calls, also on 2026-11-24:
   default cursor.** The value beside it, 8% or 200%, also shows the range
   end, so the state does not rely on colour alone.
 
+Milestone 3 added this call, also on 2026-11-24:
+
+- **The site's page root carries `--home-zoom` at every zoom but 100%.**
+  The Specs panel's sticky offset divides by it, so the panel sticks below
+  the tool bar at every zoom. Only the zoomed-in class waits for a zoom
+  above 100%. The static mockups need the property above 100% only.
+
 Contract owners:
 
 - [Site](../docs/protocol/cloud/site.md), its accessibility rules.
@@ -260,29 +267,42 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Check first, in Chromium, WebKit and Gecko, how `vw` sizes, sticky
+- [x] Check first, in Chromium, WebKit and Gecko, how `vw` sizes, sticky
       offsets, `getBoundingClientRect()` and `ResizeObserver` behave under
       CSS `zoom`. Record the result in `.context/home-zoom-pill/`.
-- [ ] Draw the buttons on the home route in
+- [x] Draw the buttons on the home route in
       `apps/site/src/components/StatusBar.astro`, hidden until the island
       runs. Add their styles beside the status bar styles.
-- [ ] Add a pure zoom model (step, clamp, snap, percent) and a small island
+- [x] Add a pure zoom model (step, clamp, snap, percent) and a small island
       that applies CSS `zoom` to `main` and the footer frame, keeps the pill
       in place, and updates the value and the button states.
-- [ ] Above 100%, keep the layout of 100% and let the page scroll sideways,
+- [x] Above 100%, keep the layout of 100% and let the page scroll sideways,
       as decision 3 says. The tool bar and the status bar stay in place.
-- [ ] After a press above 100%, keep the window's centre in place.
-- [ ] Keep the Specs panel's sticky offset below the tool bar at every zoom.
-- [ ] Let the measurements island and the Specs spy read the layout again
+- [x] After a press above 100%, keep the window's centre in place.
+- [x] Keep the Specs panel's sticky offset below the tool bar at every zoom.
+- [x] Let the measurements island and the Specs spy read the layout again
       after each press.
-- [ ] Add a stub-page test for the model and the island, like
+- [x] Add a stub-page test for the model and the island, like
       `apps/site/tests/home_island.test.ts`, and a home browser spec that
       zooms out to 8% and in to 200%.
-- [ ] Remove the seven status lines that link this milestone, and add the
+- [x] Remove the seven status lines that link this milestone, and add the
       island files to the Key Code list of the site README.
-- [ ] Smoke-test the home at 1440px, 768px and 390px through the site dev
+- [ ] Get Cal's answer to the WebKit finding of the engine check. Under CSS
+      `zoom`, WebKit draws no text smaller than 9px, so from 64% down the
+      zoomed-out home overlaps in WebKit, and at 8% it is a tall, garbled
+      column. Chromium and Gecko scale the text. A scale transform was
+      measured as the alternative: the sticky Specs panel does not stick
+      inside it in any of the three engines. Evidence:
+      `.context/home-zoom-pill/m3/zoom-engines.md` and `m3/engines/`.
+- [ ] Get Cal's answer to the spread's place on windows from 768px to
+      1439px when zoomed out. The desktop steps start the hero's spread at
+      the window's gutter, so in the wider room of a zoom below 100% the
+      spread sits at the window's left while the hero copy is centred.
+      Evidence: `.context/home-zoom-pill/m3/smoke/home-1280-41-start.png`.
+- [x] Smoke-test the home at 1440px, 768px and 390px through the site dev
       server, at 8%, 100% and 200%. Save the screenshots in
-      `.context/home-zoom-pill/`.
+      `.context/home-zoom-pill/`. The smoke ran on the preview of a build,
+      which serves the production policy, in `m3/smoke/`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

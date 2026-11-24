@@ -1,7 +1,5 @@
 # Site Chrome
 
-Status: The home's zoom pill is still a depiction, and it does not zoom the home. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds the [home zoom](#home-zoom).
-
 This is the chrome sub-contract of [Site](./site.md): the header, the menu,
 the footer and the scheme control that every page shares, and the zoom pill
 of the home. The header is the tool bar of the depicted design file, and the

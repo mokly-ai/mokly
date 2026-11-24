@@ -17,11 +17,15 @@
   padding: 0 78px 0 16px;
 }
 
+/* The Specs panel sticks 72px below the window's top, under the tool bar.
+   Inside the zoomed main a sticky offset grows with the zoom, so the panel
+   divides it by the home's zoom, where the page root holds one. */
+
 .site-home-specs {
   align-self: start;
   margin-top: 120px;
   position: sticky;
-  top: 72px;
+  top: calc(72px / var(--home-zoom, 1));
 }
 
 .site-home-frames {

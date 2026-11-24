@@ -74,7 +74,7 @@ test("at the end of the page the Footer row is current", () => {
   });
 });
 
-test("the spy reads the layout again on scroll and resize, once a frame", () => {
+test("the spy reads the layout again on scroll, resize and a zoom change, once a frame", () => {
   const top: Tops = {
     hero: 0,
     features: 1100,
@@ -106,6 +106,21 @@ test("the spy reads the layout again on scroll and resize, once a frame", () => 
   page.resize(600);
   assert.equal(page.frame(), 1);
   assert.deepEqual(page.current(), { attribute: ["hero"], class: ["hero"] });
+
+  // A press of the zoom pill moves the sections with no scroll and no
+  // resize: Zoom in moves Features below the window's 45% line, and Zoom
+  // out brings Browse above it.
+  page.resize(1000);
+  page.frame();
+  page.zoom({ ...below, features: 600, browse: 1400 });
+  assert.equal(page.frame(), 1);
+  assert.deepEqual(page.current(), { attribute: ["hero"], class: ["hero"] });
+  page.zoom({ ...below, features: 200, browse: 300 });
+  assert.equal(page.frame(), 1);
+  assert.deepEqual(page.current(), {
+    attribute: ["browse"],
+    class: ["browse"],
+  });
 });
 
 test("a demo out of view waits armed and plays once it comes into view", () => {

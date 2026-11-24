@@ -1,7 +1,5 @@
 # Site Design
 
-Status: The home's zoom pill does not zoom yet, so no page scrolls sideways. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds the zoom.
-
 The public site uses Canvas, the one design language of Mokly. The site reads
 as a live design file: a dot-grid canvas, labelled frames, green selections
 with handles and size tags, Geist type and one signal green. The cloud app

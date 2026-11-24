@@ -7,20 +7,22 @@
  *
  * A part makes an element measured with the attributes of `measureSize`,
  * `measureType` or `measureGap`: the kind of value it shows and the ids of
- * the elements it reads. Every value is in CSS pixels, rounded to the
- * nearest whole pixel. A size reads `W × H`. A type badge's value goes into
- * its `b`, after the face and the weight. A vertical gap is the top of `to`
- * minus the bottom of `from`, and a horizontal gap the left of `to` minus
- * the right of `from`.
+ * the elements it reads. Every value is in the CSS pixels of its part before
+ * any CSS zoom draws it, as the home's zoom pill does, rounded to the nearest
+ * whole pixel. A size reads `W × H`. A type badge's value goes into its `b`,
+ * after the face and the weight. A vertical gap is the top of `to` minus the
+ * bottom of `from`, and a horizontal gap the left of `to` minus the right of
+ * `from`, in the pixels of `from`.
  *
  * Once it has written an element's value, the island marks the element with
  * `MEASURED`, and a rule in `src/styles/canvas-tags.css` hides every element
  * that is not marked: without script, or without its targets, a measured
  * value does not show. The values follow the layout: a resize of a target or
- * of the window, and the loaded fonts, measure every element again in one
- * animation frame. The island writes text only and animates nothing, so
- * nothing moves, with or without reduced motion.
+ * of the window, a change of the home's zoom and the loaded fonts measure
+ * every element again in one animation frame. The island writes text only
+ * and animates nothing, so nothing moves, with or without reduced motion.
  */
+import { HOME_ZOOM_EVENT } from "./home/zoom.js";
 
 /** The attributes that make an element a measured part, by name. */
 export type MeasureAttributes = Readonly<
@@ -73,7 +75,7 @@ export function measureGap(
   };
 }
 
-/** A box as `getBoundingClientRect()` gives it, in CSS pixels. */
+/** A box as `getBoundingClientRect()` gives it, in drawn CSS pixels. */
 export interface Box {
   readonly bottom: number;
   readonly height: number;
@@ -83,8 +85,11 @@ export interface Box {
   readonly width: number;
 }
 
-/** An element that a measured element reads. */
+/** An element that a measured element reads, or one of its ancestors. */
 export interface MeasureTarget {
+  /** The zoom that draws the element, which WebKit does not give. */
+  readonly currentCSSZoom?: number;
+  readonly parentElement: MeasureTarget | null;
   getBoundingClientRect(): Box;
 }
 
@@ -112,8 +117,14 @@ export interface MeasureWindow<Target extends MeasureTarget> {
   readonly ResizeObserver?: new (callback: () => void) => {
     observe(target: Target): void;
   };
-  addEventListener(type: "resize", listener: () => void): void;
-  getComputedStyle(element: Target): { readonly fontSize: string };
+  addEventListener(
+    type: "resize" | typeof HOME_ZOOM_EVENT,
+    listener: () => void,
+  ): void;
+  getComputedStyle(element: MeasureTarget): {
+    readonly fontSize: string;
+    readonly zoom: string;
+  };
   requestAnimationFrame(callback: () => void): unknown;
 }
 
@@ -130,10 +141,27 @@ function pixels(length: number): string | undefined {
   return Number.isFinite(length) ? String(Math.round(length)) : undefined;
 }
 
-/** The size of a box, such as `1033 × 156`. */
-function size(box: Box): string | undefined {
-  const width = pixels(box.width);
-  const height = pixels(box.height);
+/**
+ * The zoom that draws `target`, by which its drawn box is larger than its
+ * own. WebKit gives no `currentCSSZoom`, and every engine computes `zoom` as
+ * an element's own, so the zoom of the element and of its ancestors
+ * multiply.
+ */
+function zoomOf<Target extends MeasureTarget>(
+  target: MeasureTarget,
+  window: MeasureWindow<Target>,
+): number {
+  if (target.currentCSSZoom !== undefined) return target.currentCSSZoom;
+  let zoom = 1;
+  for (let node: MeasureTarget | null = target; node; node = node.parentElement)
+    zoom *= Number.parseFloat(window.getComputedStyle(node).zoom) || 1;
+  return zoom;
+}
+
+/** The size of a box that `zoom` draws, such as `1033 × 156`. */
+function size(box: Box, zoom: number): string | undefined {
+  const width = pixels(box.width / zoom);
+  const height = pixels(box.height / zoom);
   return width === undefined || height === undefined
     ? undefined
     : `${width} × ${height}`;
@@ -153,7 +181,8 @@ function reading<Target extends MeasureTarget>(
     case "size": {
       const target = byId(TARGET);
       if (target === undefined) return undefined;
-      const read = () => size(target.getBoundingClientRect());
+      const read = () =>
+        size(target.getBoundingClientRect(), zoomOf(target, window));
       return { element, into: element, read, targets: [target] };
     }
     case "type": {
@@ -172,9 +201,10 @@ function reading<Target extends MeasureTarget>(
       const read = () => {
         const start = from.getBoundingClientRect();
         const end = to.getBoundingClientRect();
-        return pixels(
-          horizontal ? end.left - start.right : end.top - start.bottom,
-        );
+        const gap = horizontal
+          ? end.left - start.right
+          : end.top - start.bottom;
+        return pixels(gap / zoomOf(from, window));
       };
       return { element, into: element, read, targets: [from, to] };
     }
@@ -224,6 +254,7 @@ export function startMeasurements<Target extends MeasureTarget>(
       observer.observe(target);
   }
   window.addEventListener("resize", schedule);
+  window.addEventListener(HOME_ZOOM_EVENT, schedule);
   void document.fonts?.ready.then(schedule);
   schedule();
 }

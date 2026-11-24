@@ -1,7 +1,5 @@
 # Site Design Components
 
-Status: The site still draws the home's zoom pill as a depiction. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) draws it as a control.
-
 This is the components sub-contract of [Site design](./site-design.md), which
 owns the roles, the type, the layout and the brand. [Site](./site.md) owns the
 contents and the order of the header, the menu and the footer.

@@ -277,4 +277,8 @@ test("every header and footer target is at least 44px tall", async ({
   await assertTargets(page.getByRole("banner"));
   await assertTargets(page.getByRole("contentinfo"));
   if (narrow(page)) await assertTargets(await openMenu(page));
+  // The home's footer also holds the zoom pill's two buttons.
+  await page.goto(SITE_PATHS.home);
+  await expect(page.getByRole("group", { name: "Zoom" })).toBeVisible();
+  await assertTargets(page.getByRole("contentinfo"));
 });

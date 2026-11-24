@@ -7,6 +7,9 @@
  * its own landmark inside a wider composition, as the documentation does
  * beside its section tree, renders unwrapped and owns that element.
  *
+ * On the home, `main` carries the mark of a part that the home's zoom
+ * scales.
+ *
  * The scheme island leads the head as a classic, blocking script, before
  * any stylesheet, so the reader's scheme applies before the first paint.
  * The layout emits its source, and the build moves it into a content-hashed
@@ -15,6 +18,7 @@
 import { FEED_PATH } from "../changelog/feed.js";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import { ZOOM_MARKS } from "../components/home/zoom-marks.js";
 import schemeIsland from "../components/scheme-island.js?raw";
 import SkipLink from "../components/SkipLink.astro";
 import {
@@ -23,6 +27,7 @@ import {
   canonicalUrl,
   socialImageUrl,
 } from "../metadata.js";
+import { SITE_PATHS } from "../navigation.js";
 import { settings } from "../settings.js";
 import { SITE_TOKEN_CSS } from "../styles/token-styles.js";
 
@@ -38,6 +43,7 @@ import "../styles/chrome.css";
 import "../styles/menu.css";
 import "../styles/layout.css";
 import "../styles/footer.css";
+import "../styles/footer-zoom.css";
 import "../styles/scheme.css";
 
 interface Props {
@@ -57,6 +63,9 @@ const {
   main = "site-main",
   wrapped = true,
 } = Astro.props;
+
+/** The mark of the home's `main`, which the home's zoom scales. */
+const zoomed = route === SITE_PATHS.home ? ZOOM_MARKS.part : {};
 
 const canonical = canonicalUrl(route, settings.origin);
 const image = socialImageUrl(
@@ -99,7 +108,7 @@ const image = socialImageUrl(
     <SkipLink />
     <Header route={route} />
     {wrapped ? (
-      <main class={main} id="main" tabindex="-1">
+      <main class={main} id="main" tabindex="-1" {...zoomed}>
         <slot />
       </main>
     ) : (

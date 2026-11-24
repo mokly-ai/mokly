@@ -2,8 +2,8 @@
  * Runs the home demos island's two parts against a stub page. `openSpy`
  * starts the Specs scroll spy of `src/components/home/specs-spy.ts` on the
  * seven rows of the Specs panel, with the sections' places, the window's
- * height, its scroll position, its `scroll` and `resize` events and its
- * animation frames. `openDemos` starts the demos of
+ * height, its scroll position, its `scroll`, `resize` and home zoom events
+ * and its animation frames. `openDemos` starts the demos of
  * `src/components/home/demos.ts` on demo roots, with the window, its
  * intersection observer and its reduced motion query. A test opens one stub
  * page for each page load.
@@ -17,6 +17,7 @@ import {
   startDemos,
 } from "../../src/components/home/demos.js";
 import { startSpecsSpy } from "../../src/components/home/specs-spy.js";
+import { HOME_ZOOM_EVENT } from "../../src/components/home/zoom.js";
 
 /** The sections that the Specs panel links, in its order. */
 const SECTIONS = [
@@ -82,13 +83,19 @@ export interface SpyStub {
   scroll(tops: Tops, scrollY: number): void;
   /** The window takes a new height and fires `resize`. */
   resize(innerHeight: number): void;
+  /** The home's zoom pill zooms the page: the sections move, and it says so. */
+  zoom(tops: Tops): void;
 }
 
 /** Open a stub home in `layout`, and start the Specs scroll spy on it. */
 export function openSpy(layout: SpyLayout): SpyStub {
   let { innerHeight, scrollY, tops } = layout;
   const links = SECTIONS.map((section) => new StubLink(section));
-  const listeners: Record<"resize" | "scroll", Array<() => void>> = {
+  const listeners: Record<
+    "resize" | "scroll" | typeof HOME_ZOOM_EVENT,
+    Array<() => void>
+  > = {
+    [HOME_ZOOM_EVENT]: [],
     resize: [],
     scroll: [],
   };
@@ -108,7 +115,10 @@ export function openSpy(layout: SpyLayout): SpyStub {
     get scrollY() {
       return scrollY;
     },
-    addEventListener: (type: "resize" | "scroll", listener: () => void) => {
+    addEventListener: (
+      type: "resize" | "scroll" | typeof HOME_ZOOM_EVENT,
+      listener: () => void,
+    ) => {
       listeners[type].push(listener);
     },
     requestAnimationFrame: (callback: () => void) => {
@@ -140,6 +150,10 @@ export function openSpy(layout: SpyLayout): SpyStub {
     resize: (next) => {
       innerHeight = next;
       for (const listener of listeners.resize) listener();
+    },
+    zoom: (next) => {
+      tops = next;
+      for (const listener of listeners[HOME_ZOOM_EVENT]) listener();
     },
   };
 }

@@ -1,7 +1,5 @@
 # Public Site
 
-Status: On the home, the status bar's zoom pill is still a depiction. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) makes it a control.
-
 This contract defines the public Mokly website: the marketing home, the
 documentation, the changelog, the pricing page and the legal documents. The
 site is built from this repository and deployed as static files. Every page

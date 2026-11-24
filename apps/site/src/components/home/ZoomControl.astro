@@ -1,0 +1,50 @@
+---
+/**
+ * The home's zoom pill as a control: a group named Zoom with the Zoom out
+ * and Zoom in buttons, the product's names, around the zoom, a polite live
+ * region. It draws hidden, after the depicted pill at the end of the home's
+ * status bar, and the home zoom island, `zoom-island.ts`, which this part
+ * loads, shows it in the depicted pill's box. Without script the depicted
+ * pill stays. `src/styles/footer-zoom.css` draws the control, and
+ * `src/styles/home-zoom.css`, which the home page loads, draws the home
+ * zoomed in above 100%.
+ *
+ * Use: `<ZoomControl />`, at the end of the home's status bar.
+ */
+import { zoomPercent } from "./zoom.js";
+import { ZOOM_MARKS, zoomStepMark } from "./zoom-marks.js";
+---
+
+<div
+  aria-label="Zoom"
+  class="site-statusbar-zoom site-statusbar-zoom--control"
+  hidden
+  role="group"
+  {...ZOOM_MARKS.control}
+>
+  <button
+    aria-label="Zoom out"
+    class="site-statusbar-zoom-step"
+    type="button"
+    {...zoomStepMark("out")}
+  >
+    −
+  </button>
+  <span
+    aria-live="polite"
+    class="site-statusbar-zoom-value"
+    {...ZOOM_MARKS.value}
+  >
+    {zoomPercent(1)}
+  </span>
+  <button
+    aria-label="Zoom in"
+    class="site-statusbar-zoom-step"
+    type="button"
+    {...zoomStepMark("in")}
+  >
+    +
+  </button>
+</div>
+
+<script src="./zoom-island.ts"></script>

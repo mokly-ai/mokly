@@ -5,9 +5,11 @@
  * section whose top has passed 45% of the window's height, or the last
  * link, Footer, once the page is scrolled to its end. It moves
  * `aria-current` and the current class from row to row, and it never moves
- * focus. It reads the layout again on scroll and on resize, at most once in
- * an animation frame. `home-island.ts` starts it on the home.
+ * focus. It reads the layout again on scroll, on resize and after a press
+ * of the home's zoom pill, at most once in an animation frame.
+ * `home-island.ts` starts it on the home.
  */
+import { HOME_ZOOM_EVENT } from "./zoom.js";
 
 /** The panel's links: each one leads to the section that its hash names. */
 const LINKS = ".site-home-specs a[href^='#']";
@@ -49,7 +51,7 @@ export interface SpyWindow {
   readonly innerHeight: number;
   readonly scrollY: number;
   addEventListener(
-    type: "resize" | "scroll",
+    type: "resize" | "scroll" | typeof HOME_ZOOM_EVENT,
     listener: () => void,
     options?: { readonly passive: boolean },
   ): void;
@@ -110,5 +112,6 @@ export function startSpecsSpy(document: SpyPage, window: SpyWindow): void {
 
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", schedule);
+  window.addEventListener(HOME_ZOOM_EVENT, schedule);
   schedule();
 }

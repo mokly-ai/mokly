@@ -19,11 +19,16 @@
   padding: 0 20px;
 }
 
+/* The Specs panel sticks 72px below the window's top, under the tool bar.
+   Inside the zoomed main a sticky offset grows with the zoom, so the panel
+   divides it by the home's zoom, which the page root holds while it is not
+   100%. */
+
 .site-home-specs {
   align-self: start;
   margin-top: 120px;
   position: sticky;
-  top: 72px;
+  top: calc(72px / var(--home-zoom, 1));
 }
 
 /* The site sends one page to every width, and a phone draws no Specs

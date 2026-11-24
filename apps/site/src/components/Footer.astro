@@ -6,13 +6,15 @@
  * on the canvas under the frame. The frame label and the status bar are
  * depictions, hidden from assistive technology. Below the breakpoint the
  * frame stacks the brand column above the two groups. The `footer` id lets
- * a page link to the footer.
+ * a page link to the footer. On the home the frame carries the mark of a
+ * part that the home's zoom scales.
  */
 import { POLICIES } from "../legal.js";
 import { SITE_PATHS, type SitePath, currentPage } from "../navigation.js";
 
 import Brand from "./Brand.astro";
 import FrameLabel from "./FrameLabel.astro";
+import { ZOOM_MARKS } from "./home/zoom-marks.js";
 import SchemeControl from "./SchemeControl.astro";
 import StatusBar from "./StatusBar.astro";
 
@@ -39,10 +41,13 @@ const groups: ReadonlyArray<readonly [string, Links]> = [
   ["Product", product],
   ["Legal", legal],
 ];
+
+/** The mark of the home's footer frame, which the home's zoom scales. */
+const zoomed = route === SITE_PATHS.home ? ZOOM_MARKS.part : {};
 ---
 
 <footer class="site-footer" id="footer">
-  <div class="site-footer-inner">
+  <div class="site-footer-inner" {...zoomed}>
     <FrameLabel name="Footer" />
     <div class="site-footer-brand">
       <Brand route={route} />

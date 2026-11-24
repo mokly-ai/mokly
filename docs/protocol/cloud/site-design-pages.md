@@ -1,7 +1,5 @@
 # Site Design Pages
 
-Status: The home's zoom is not built yet. The [home zoom island milestone](../../../plans/home-zoom-pill.md#milestone-3-the-home-zoom-island) builds it.
-
 This is the page sub-contract of [Site design](./site-design.md). It fixes
 the look of the home, the changelog and the pricing page from the parts of
 [Site design components](./site-design-components.md). [Site](./site.md) owns
