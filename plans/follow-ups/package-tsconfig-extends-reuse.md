@@ -279,6 +279,9 @@
   mapped target folders of readable configurations in the marked live
   checks, from the absolute paths fix of 2026-11-18.
 - **Related:**
+  - [Workspace layout extensions](./package-tsconfig-layout-extends.md)
+    can share package configuration lookup with this item. It uses the
+    inherited `rootDir` and `outDir` in the JavaScript and CSS layout rules.
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): an
     extends target that F or G records still has the watch and render-key
     gap of that item. That item also records the missing base files in the

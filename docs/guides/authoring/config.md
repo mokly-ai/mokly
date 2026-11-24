@@ -83,9 +83,12 @@ A JavaScript `file` loader is invalid because it emits an undelivered file.
 
 Changes can render a Git base without building its workspace packages.
 Mokly checks each side for source files that match the package targets.
-It uses `outDir` and `rootDir` from the package's `tsconfig.json` if both
-directories are inside the package. Otherwise it looks for the same path
-under `src` for targets in `dist`, `lib`, `build`, or `out`.
+It reads `outDir` and `rootDir` from the package's `tsconfig.json` and
+relative `extends` files in the repository outside `node_modules`. Set both
+folders in the package's `tsconfig.json` when it extends an installed
+configuration. Both folders must be inside the package. Otherwise Mokly
+looks for the same path under `src` for targets in `dist`, `lib`, `build`,
+or `out`.
 For example, `dist/button.js` can map to `src/button.tsx`.
 
 ## Review and watch

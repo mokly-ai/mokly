@@ -19,6 +19,19 @@
     "packages/configured/authoring/theme.css": "",
     "packages/configured/first/widget.tsx": "",
     "packages/configured/src/button.tsx": "",
+    "packages/local-layout/package.json": "{\"name\": \"local-layout\"}",
+    "packages/local-layout/tsconfig.json": "{\"extends\": \"@config/shared/tsconfig.json\", \"compilerOptions\": {\"outDir\": \"compiled\", \"rootDir\": \"authoring\"}}",
+    "packages/local-layout/authoring/theme.css": "",
+    "packages/ordered-layout/package.json": "{\"name\": \"ordered-layout\"}",
+    "packages/ordered-layout/tsconfig.json": "{\"extends\": [\"./earlier.json\", \"./missing.json\", \"/shared/tsconfig.json\", \"./later.json\"], \"compilerOptions\": {\"rootDir\": \"authoring\"}}",
+    "packages/ordered-layout/earlier.json": "{\"compilerOptions\": {\"outDir\": \"earlier\", \"rootDir\": \"first\"}}",
+    "packages/ordered-layout/later.json": "{\"compilerOptions\": {\"outDir\": \"compiled\"}}",
+    "packages/ordered-layout/authoring/widget.ts": "",
+    "packages/reset-layout/package.json": "{\"name\": \"reset-layout\"}",
+    "packages/reset-layout/tsconfig.json": "{\"extends\": [\"./layout.json\", \"../../node_modules/installed/tsconfig.json\"], \"compilerOptions\": {\"rootDir\": \"authoring\"}}",
+    "packages/reset-layout/layout.json": "{\"compilerOptions\": {\"outDir\": \"compiled\", \"rootDir\": \"authoring\"}}",
+    "packages/reset-layout/src/widget.ts": "",
+    "packages/reset-layout/authoring/widget.ts": "",
     "packages/partial/package.json": "{\"name\": \"partial\"}",
     "packages/partial/tsconfig.json": "{\"compilerOptions\": {\"rootDir\": \"authoring\"}}",
     "packages/partial/src/widget.ts": "",
@@ -28,6 +41,7 @@
     "packages/outside/src/widget.ts": "",
     "packages/outside/authoring/widget.ts": "",
     "node_modules/installed/package.json": "{\"name\": \"installed\"}",
+    "node_modules/installed/tsconfig.json": "{\"compilerOptions\": {\"outDir\": \"../../packages/reset-layout/compiled\"}}",
     "node_modules/installed/src/widget.ts": "",
     "unpackaged/src/widget.ts": ""
   },
@@ -89,6 +103,21 @@
       "name": "css uses the same tsconfig layout",
       "target": "packages/configured/compiled/theme.css",
       "expected": "packages/configured/authoring/theme.css"
+    },
+    {
+      "name": "local folders survive an unreadable package extends",
+      "target": "packages/local-layout/compiled/theme.css",
+      "expected": "packages/local-layout/authoring/theme.css"
+    },
+    {
+      "name": "later relative and local folders restore an incomplete chain",
+      "target": "packages/ordered-layout/compiled/widget.js",
+      "expected": "packages/ordered-layout/authoring/widget.ts"
+    },
+    {
+      "name": "an unreadable later extends clears earlier inherited folders",
+      "target": "packages/reset-layout/dist/widget.js",
+      "expected": "packages/reset-layout/src/widget.ts"
     },
     {
       "name": "a complete tsconfig layout replaces the convention",

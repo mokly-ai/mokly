@@ -32,11 +32,13 @@ The rule:
    `package.json` above it, inside the repository, must have a `name`. That
    directory is the package root. A configured file keeps its exact path,
    including when a package import reaches that file.
-2. The build folder and the source folder of the package come from the
-   `outDir` and `rootDir` of the package root's `tsconfig.json`, with its
-   `extends` chain, when both are set and both are inside the package root.
-   Otherwise a top-level `dist`, `lib`, `build` or `out` folder is a build
-   folder, and `src` is the source folder.
+2. Read `outDir` and `rootDir` from the package root's `tsconfig.json` and
+   its relative `extends` files in the repository outside `node_modules`.
+   An unreadable reference makes both inherited settings unknown. Later
+   references and local compiler options can supply them. Use the settings
+   when both are known and both are inside the package root. Otherwise a
+   top-level `dist`, `lib`, `build` or `out` folder is a build folder, and
+   `src` is the source folder.
 3. A file under the build folder maps to the same relative path under the
    source folder. A `.js`, `.mjs` or `.cjs` file tries the configured resolve
    extensions in order. Any other file, such as `.css`, keeps its name.
@@ -55,6 +57,9 @@ Design calls, mine, 2026-11-24:
   project is not in production, so the repository rules allow this.
 - `tsconfig` folders win over the convention, because they state the
   package's own layout.
+- Keep local layout settings when an `extends` reference cannot be read.
+  This lets a package declare its own folders when it shares a TypeScript
+  configuration.
 - Package source lookup applies to bare package specifiers. It serves imports
   of package build targets and keeps relative paths and configured files exact.
 - One table of cases, shared as a test fixture, holds the rule. The

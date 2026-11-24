@@ -36,11 +36,14 @@ when a package import reaches it.
 1. The target must be a repository path outside `node_modules`. The nearest
    `package.json` above the target, within the repository, must have a
    `name`. Its directory is the package root.
-2. Use `outDir` as the build directory and `rootDir` as the source directory
-   when the package root's `tsconfig.json` and its `extends` chain set both.
-   Both directories must stay inside the package root. Otherwise, use
-   `dist`, `lib`, `build` or `out` directly under the package root as the
-   build directory and `src` as the source directory.
+2. Read `outDir` and `rootDir` from the package root's `tsconfig.json` and
+   its relative `extends` files in the repository outside `node_modules`.
+   An unreadable reference makes both inherited folders unknown. Later
+   references and local compiler options can supply them. Use `outDir` as
+   the build directory and `rootDir` as the source directory when both are
+   known and both stay inside the package root. Otherwise, use `dist`,
+   `lib`, `build` or `out` directly under the package root as the build
+   directory and `src` as the source directory.
 3. For a target under the build directory, try the same relative path under
    the source directory. For a `.js`, `.mjs` or `.cjs` target, replace the
    extension with each resolve extension in order. For other targets, keep

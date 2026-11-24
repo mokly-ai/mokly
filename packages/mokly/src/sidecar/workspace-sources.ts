@@ -134,6 +134,7 @@ export class WorkspaceSources {
   private configuredLayout(root: string, inputs: Set<string>): LayoutOptions {
     const config = path.join(root, "tsconfig.json");
     const candidate = (file: string) => {
+      if (!this.repositoryFile(file)) return undefined;
       inputs.add(file);
       return this.file(file);
     };
@@ -151,6 +152,7 @@ export class WorkspaceSources {
         },
       },
       layoutOptions,
+      { rootDir: undefined, outDir: undefined },
     );
     try {
       const options = configs.read(config);

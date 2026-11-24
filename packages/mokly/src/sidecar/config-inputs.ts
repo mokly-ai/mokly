@@ -151,6 +151,7 @@ export class ConfigChain<T extends object> {
       values: Record<string, unknown>,
       directory: string,
     ) => T,
+    private readonly unreadableOptions?: Partial<T>,
   ) {}
 
   read(file: string, chain: string[] = []): Partial<T> {
@@ -174,6 +175,23 @@ export class ConfigChain<T extends object> {
           ? json.extends
           : [json.extends];
     for (const extension of extensions) {
+      settings = {
+        ...settings,
+        ...this.inherited(extension, directory, chain),
+      };
+    }
+    if (json.compilerOptions === undefined) return settings;
+    if (!jsonObject(json.compilerOptions))
+      throw new Error("unsupported compiler options");
+    return { ...settings, ...this.options(json.compilerOptions, directory) };
+  }
+
+  private inherited(
+    extension: unknown,
+    directory: string,
+    chain: string[],
+  ): Partial<T> {
+    try {
       if (typeof extension !== "string" || !extension.startsWith("."))
         throw new Error("unsupported configuration extends");
       const candidate = path.resolve(directory, extension);
@@ -181,12 +199,11 @@ export class ConfigChain<T extends object> {
         ? candidate
         : candidate + ".json";
       this.files.regular(target);
-      settings = { ...settings, ...this.read(target, chain) };
+      return this.read(target, chain);
+    } catch (error) {
+      if (this.unreadableOptions !== undefined) return this.unreadableOptions;
+      throw error;
     }
-    if (json.compilerOptions === undefined) return settings;
-    if (!jsonObject(json.compilerOptions))
-      throw new Error("unsupported compiler options");
-    return { ...settings, ...this.options(json.compilerOptions, directory) };
   }
 }
 
