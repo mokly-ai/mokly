@@ -37,7 +37,7 @@ The web target is a single-page build. Its document carries
 `<meta name="robots" content="noindex">` and links the product chrome
 stylesheets before the application's own stylesheet. It links the adaptive
 brand favicon from its own origin, so a browser tab shows the Mokly mark in the
-reader's colour scheme on production and preview hosts. The product chrome
+browser's light or dark colour scheme on production and preview hosts. The product chrome
 stylesheets have one source of truth, `docs/mockups/styles`. Each catalogue
 build bundles it and links the bundled copy. The application copies it before
 every start, build and test, so the product and the catalogue can never drift.
