@@ -1,16 +1,15 @@
 # Use one content type rule for delivered assets
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-21, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan: the wider fix of review finding 2 of round 1.
-- **Location:** `crates/mokly-server/src/assets.rs:118-142`,
+- **Location:** `crates/mokly-server/src/assets.rs:136-155`,
   `crates/mkc-publications/src/reservation/reserve.rs:204`, and
   `crates/mokly-css/src/imported_assets.rs:43-67`.
-- **Reason:** The fix changes the content types of authored files in Serve
-  and adds a dependency of a Mokly Cloud crate on a `mokly-*` crate, which
-  needs the user and the orchestrator of the primary branch.
+- **Reason:** The fix changes a Mokly Cloud crate and the types that Serve sends
+  for authored files, so it needs its own branch and review.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -86,9 +85,11 @@
   this item chooses.
 - **Recommendation:** E. One rule then gives every delivery path the same type,
   also for authored files and published catalogues.
-- **Action:** ask the user, because E changes the types that Serve sends for
-  authored files, and it changes a Mokly Cloud crate outside the scope of the
-  branch that found it.
+- **Answer:** The user chose option E on 2026-11-25. One rule by file extension,
+  the asset tables first and then `mime_guess`, gives the content type on every
+  delivery path, and the Mokly Cloud reservation calls the same exported table.
+- **Action:** fix after merge, apply E, because the user approved the change to
+  Serve and to Mokly Cloud on 2026-11-25.
 - **Done when:** the status lines of `docs/protocol/mokly-imported-assets.md`
   and `docs/protocol/mokly-imported-styles-assets.md` are gone, because Mokly
   Cloud sends the content types of the asset tables and of a delivered

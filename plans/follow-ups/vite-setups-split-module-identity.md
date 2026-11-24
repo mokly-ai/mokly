@@ -1,14 +1,14 @@
 # Two Vite setups can load one module twice
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from the spike for decision 18 of the Storybook
   support plan, on branch `conductor/storybook-support-j-spike-for-decision-18`,
   pull request #349, item 8 of its report.
 - **Location:** None. The Vite adapter is not built yet.
-- **Reason:** Each fix needs the user's choice: a warning fails `--strict`,
-  and one resolution for each workspace package removes the per-package
-  aliases that each setup keeps.
+- **Reason:** The code that compiles with several Vite setups does not exist
+  yet. The milestone of the Storybook support plan that adds that code applies
+  this answer.
 
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -83,5 +83,8 @@
   `resolve.dedupe`, and it keeps the resolution of each setup. C is the
   structural fix for workspace packages, but it overrides a setup's own
   alias.
-- **Action:** ask the user, because B adds a warning that fails `--strict`,
-  and C removes the per-package aliases that each setup keeps.
+- **Answer:** The user chose option B on 2026-11-25. Mokly warns when two setups
+  resolve one import specifier to different files. The warning names the
+  specifier, both files, and both setups, and it fails `--strict`.
+- **Action:** fix after merge, apply B, because the user approved the new
+  warning on 2026-11-25, and the code that it checks does not exist yet.

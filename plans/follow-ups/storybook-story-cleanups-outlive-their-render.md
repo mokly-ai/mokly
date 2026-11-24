@@ -1,7 +1,7 @@
 # Story cleanups outlive their own render
 
 - **Severity:** High. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-24, from the implementation review of pull request
   #492, branch `conductor/storybook-support-b-story-reading`, findings 3
   and 4 of round 1, merged because they share one cause and one fix.
@@ -12,8 +12,8 @@
   section of `docs/protocol/mokly-storybook.md`, the "Loaders and hooks"
   section of `docs/guides/authoring/storybook.md`, and the cleanup tests of
   `tests/sidecar_storybook_setup.test.ts`.
-- **Reason:** The recommended option changes the documented cleanup timing,
-  which no recorded decision covers, so the fix waits for the user.
+- **Reason:** The fix waits for a branch from the Storybook integration branch,
+  because it changes the story render code that the integration branch added.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -110,6 +110,9 @@
 - **Recommendation:** D. It removes the late queue that causes all five
   failures, and it names the story whose cleanup threw, for the same effort
   as B. If the user keeps the documented timing, choose B.
-- **Action:** ask the user, because D changes the documented rule that a
-  `beforeEach` cleanup runs before the next story loads, and no recorded
-  decision covers that change.
+- **Answer:** The user chose option D on 2026-11-25. Each story render releases
+  its own `beforeEach` setup in a `finally` block after its markup, and the
+  documented rule that a cleanup runs before the next story loads changes with
+  it.
+- **Action:** fix after merge, apply D, because the user approved the new
+  cleanup timing on 2026-11-25.

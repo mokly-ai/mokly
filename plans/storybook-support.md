@@ -90,8 +90,9 @@ Replaced ways:
 ## Where the work stands
 
 The user paused the work on 2026-11-24, after tracks A, B, C, D, and J
-merged into this branch. This section tells the next
-agent what is done, what waits for the user, and how to continue.
+merged into this branch. On 2026-11-25 the user answered most of the open
+decisions and follow-up items. This section tells the next agent what is
+done, what waits for the user, and how to continue.
 
 | Track                    | Pull request | Done                         | Open                                                                                  |
 | ------------------------ | ------------ | ---------------------------- | ------------------------------------------------------------------------------------- |
@@ -103,56 +104,65 @@ agent what is done, what waits for the user, and how to continue.
 | E to I                   | None         | Nothing                      | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
 | All                      | None         | Nothing                      | Milestone 38, which ends with the pull request into `main`                            |
 
+### Answers of 2026-11-25
+
+The user answered these decisions. Each decision gives its answer in full.
+Apply each answer in the milestone that waits for it.
+
+- [Decision 18a](#18a-files-that-no-storybook-folder-owns): B.
+- [Decision 18d](#18d-storybook-env-values-of-several-folders-in-one-process): D.
+- [Decision 23](#23-a-new-story-has-no-published-storybook-page): B. It
+  unblocks Milestones 26 to 28 together with decision 27.
+- [Decision 26](#26-error-document-styles-in-dark-views): A. It unblocks
+  Milestone 23.
+- [Decision 27](#27-the-storybook-link-leaves-the-catalogue): B. It unblocks
+  the last TODO of Milestone 1.
+- [B4](#b4-malformed-mokly-parameter-values): B. It unblocks Milestone 7 and
+  the last TODO of Milestone 2.
+- [Track D decision 2](#track-d-decision-2-files-that-the-setup-reads-outside-the-graph):
+  D, and
+  [track D decision 3](#track-d-decision-3-untracked-env-files-on-the-base-side):
+  C. They unblock one TODO of Milestone 15.
+- [Track D decision 4](#track-d-decision-4-replaced-settings-stay-silent-under-vite):
+  B. It unblocks one TODO of Milestone 14.
+
+The user also answered these follow-up items. Each file records its answer.
+A branch from this branch applies each answer and deletes the file.
+
+- [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): A.
+  Severity High.
+- [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
+  D. Severity High.
+- [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): E.
+- [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
+  B. Milestone 32 applies it, because the code with several setups does not
+  exist yet.
+- [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): A.
+- [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md): A.
+- [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): B.
+
 ### Decisions that wait for the user
 
 Each decision is in full in this plan, with its options and a recommended
 option. None has an answer yet, so no option applies.
 
-- [Decisions 18a to 18d](#18a-files-that-no-storybook-folder-owns): the
-  rules for catalogues with several Storybook folders. They block
-  Milestones 30 and 32.
-- [Decision 23](#23-a-new-story-has-no-published-storybook-page) and
-  [decision 27](#27-the-storybook-link-leaves-the-catalogue): where the
-  Storybook link shows and where it opens. They block Milestones 26 to 28 and
-  the last TODO of Milestone 1.
-- [Decision 26](#26-error-document-styles-in-dark-views): the styles of the
-  error document of a failed story. It blocks Milestone 23.
-- [B4](#b4-malformed-mokly-parameter-values): malformed `mokly` parameter
-  values. It blocks Milestone 7 and the last TODO of Milestone 2.
-- [Track D decision 2](#track-d-decision-2-files-that-the-setup-reads-outside-the-graph)
-  and [track D decision 3](#track-d-decision-3-untracked-env-files-on-the-base-side):
-  the files that the Vite setup reads outside the
-  module graph, and untracked env files on the base side. They block one
-  TODO of Milestone 15.
-- [Track D decision 4](#track-d-decision-4-replaced-settings-stay-silent-under-vite):
-  settings that the Vite setup replaces. It blocks one
-  TODO of Milestone 14.
+- [Decision 18b](#18b-mocks-of-modules-that-another-setup-owns) and
+  [decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere): mocks of
+  modules that another setup owns, and roots whose Storybook folder lies
+  elsewhere. They block Milestones 30 and 32.
 
 ### Follow-up items that wait for the user
 
 These items block no milestone. Each file holds the full item and its
 recommended option.
 
-- [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): a
-  base URL can redirect imported asset URLs. Severity High.
 - [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
-  which attributes count as resource references.
-- [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): one
-  content type rule for every delivery path. It also holds the question of a
-  host duty in the static delivery contract.
-- [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
-  two Vite setups can load one module twice.
-- [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): a
-  stylesheet asset name without an extension passes.
-- [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md):
-  the value of a `.css` import with `type: "css"`.
-- [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): the
-  `data:` URL error does not name its fix.
+  which attributes count as resource references. The user answered "D" on
+  2026-11-25, but the item has no option D, so the answer waits for a
+  clarification.
 - [design-external-link-check.md](follow-ups/design-external-link-check.md):
-  the design checks pass unmarked external links.
-- [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
-  the cleanups of a story's setup outlive its render. Severity High. It came
-  from the first review of track B.
+  the design checks pass unmarked external links. The user asked on
+  2026-11-25 why the rule exists, before an answer.
 
 ### Defects in merged code
 
@@ -431,6 +441,9 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
 - **Action:** ask the user, because option E does not settle these files,
   A and B trade a fixed app setup against continuity with decision 17, and
   C adds a configuration error.
+- **Answer:** B, chosen by the user on 2026-11-25. A file that no Storybook
+  folder owns compiles with the setup of the first root, in configuration order,
+  that names a Storybook folder.
 
 ### 18b. Mocks of modules that another setup owns
 
@@ -634,6 +647,10 @@ and 19, added options E and F to each, and raised decisions 20, 21, and 22.
   a Large cost.
 - **Action:** ask the user, because A, B, and D trade Storybook's own env
   preset against each folder's own values, and C is Large.
+- **Answer:** D, chosen by the user on 2026-11-25. Storybook's env plugin stays,
+  a Mokly preset after the core presets replaces the core `STORYBOOK_*`
+  values with the values that Vite loads from the folder's parent, and Mokly
+  restores the process environment after the presets of each folder load.
 
 ### 19. Ids of story component uses
 
@@ -853,7 +870,8 @@ and 27, added option F to decision 23, option E to decisions 24 and 25, and
 options C and D to decision 27. It also showed that rules in force settle two
 more questions, which became design calls 26 and 27. On 2026-11-23 the
 orchestrator settled decisions 24 and 25 with design calls 29 and 30.
-Decisions 23, 26, and 27 stay open with the user.
+On 2026-11-25 the user answered decision 23 with option B, decision 26 with
+option A, and decision 27 with option B.
 
 ### 23. A new story has no published Storybook page
 
@@ -901,6 +919,9 @@ Decisions 23, 26, and 27 stay open with the user.
   without Changes, at Medium effort.
 - **Action:** ask the user, because the option narrows decision 15, a
   decision in force, and no user decision covers that change.
+- **Answer:** B, chosen by the user on 2026-11-25. The page of an added entry
+  has no Storybook link. A changed story keeps its link. While Changes is not
+  ready, and in a build without Changes, every story page shows its link.
 
 ### 24. Failed edits claim the last valid props
 
@@ -1031,6 +1052,8 @@ Decisions 23, 26, and 27 stay open with the user.
   matches its frame, and stays out of Changes when project CSS changes.
 - **Action:** ask the user, because the option makes the stylesheet rules
   skip a failed view, and no decision covers that.
+- **Answer:** A, chosen by the user on 2026-11-25. The error document carries
+  only its own styles, with system colors that follow the view's scheme.
 
 ### 27. The Storybook link leaves the catalogue
 
@@ -1070,6 +1093,9 @@ Decisions 23, 26, and 27 stay open with the user.
   with the smallest change.
 - **Action:** ask the user, because the option adds link behaviour that no
   requirement covers.
+- **Answer:** B, chosen by the user on 2026-11-25. The Storybook link opens in a
+  new tab, with `rel="noreferrer"`, and with an icon and a screen-reader
+  label that say so.
 
 ## Design calls
 
@@ -1362,9 +1388,9 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 
 Track B raised four decisions on 2026-11-18, while it wrote these docs. The
 orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
-call, B2 on 2026-11-20 with option D, and B1 on 2026-11-23 with option C. B4
-is open. It blocks the rule for malformed `mokly` parameter values in
-Milestone 7.
+call, B2 on 2026-11-20 with option D, and B1 on 2026-11-23 with option C. The
+user answered B4 on 2026-11-25 with option B. That answer sets the rule for
+malformed `mokly` parameter values in Milestone 7.
 
 ### B1. Stories inherit the first story's args
 
@@ -1621,6 +1647,8 @@ call, because no other active track edits these eight pages.
   B. The first pass recommended A.
 - **Action:** ask the user, because B adds a new build warning, which needs
   the user's approval.
+- **Answer:** B, chosen by the user on 2026-11-25. Mokly ignores a malformed
+  value and gives a new build warning that names the story and the value.
 
 The options check of 2026-11-18 added options B1 C and D, B2 D, B3 C, and B4
 D and E, and it changed the recommendations of all four items. Its report is
@@ -2348,6 +2376,10 @@ wait for the user.
   route that the project controls, at the same effort.
 - **Action:** ask the user, because every option states a limit or an input
   rule at the watch boundary, and no page states one today.
+- **Answer:** D, chosen by the user on 2026-11-25. The PostCSS config candidates
+  that Vite looks up are inputs, present or absent. A `watch.rules` entry with
+  the `rebuild` action makes any other file an input, and under the adapter a
+  change to such a path reloads the setup.
 
 #### Track D decision 3: Untracked env files on the base side
 
@@ -2397,6 +2429,9 @@ wait for the user.
   edit of a tracked env file visible.
 - **Action:** ask the user, because C reads working-tree files on the base
   side, which no rule covers.
+- **Answer:** C, chosen by the user on 2026-11-25. The base side reads the
+  tracked env files from the base commit and the untracked env files from the
+  working tree.
 
 #### Track D decision 4: Replaced settings stay silent under Vite
 
@@ -2449,6 +2484,9 @@ wait for the user.
   matches the warnings contract's case of an ignored input, and the user
   fixes it with a one-line change.
 - **Action:** ask the user, because B adds a warning that fails `--strict`.
+- **Answer:** B, chosen by the user on 2026-11-25. Each replaced field that the
+  configuration sets gives a configuration warning that names the field and
+  the adapter.
 
 #### Track D decision 5: Vite CSS Modules options under the adapter
 

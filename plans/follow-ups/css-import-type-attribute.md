@@ -1,15 +1,14 @@
 # Decide the value of a CSS import with type css
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan. The options check of its decision C2 found the problem on
   2026-11-18.
-- **Location:** `packages/mokly/src/sidecar/plugins.ts:159-178`.
-- **Reason:** The CSS route of the bundle is outside the asset loading part
-  that track C may change, and each fix adds a requirement or an error for
-  the user to review.
+- **Location:** `packages/mokly/src/sidecar/plugins.ts:164-185`.
+- **Reason:** The CSS route of the bundle is outside the asset work of the
+  Storybook integration branch, so a separate branch states the rule.
 
 - **Source:** Design.
 - **Category:** Product bug.
@@ -21,7 +20,7 @@
     the head of each document that renders the importing entry, under
     `docs/protocol/mokly-imported-styles.md`.
 - **Background:**
-  - The resolve hook at `plugins.ts:159-178` sends each import that ends in
+  - The resolve hook at `plugins.ts:164-185` sends each import that ends in
     `.css` to Mokly's stylesheet pipeline. It does not read the import
     attributes.
   - A plain `.css` import gives an empty default export, and its CSS
@@ -59,5 +58,8 @@
   `type: "css"`.
 - **Recommendation:** A. The styles still show, the build does not fail,
   and the protocol tells authors what the value is.
-- **Action:** ask the user, because A adds a requirement that no protocol
-  doc states, and B adds a build error.
+- **Answer:** The user chose option A on 2026-11-25. Mokly keeps the behaviour,
+  and `docs/protocol/mokly-imported-styles.md` states it: the CSS reaches the
+  document as a document stylesheet, and the value is an empty object.
+- **Action:** fix after merge, apply A, because the user approved the new
+  requirement on 2026-11-25.

@@ -1,15 +1,15 @@
 # Reject a stylesheet asset name without an extension
 
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-21, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan. The check of review finding 8 of round 2 found it.
 - **Location:** `stylesheet_content_type` at
-  `crates/mokly-css/src/imported_assets.rs:50-52`, and
+  `crates/mokly-css/src/imported_assets.rs:53-54`, and
   `crates/mokly-css/src/compiler_assets.rs:84`.
-- **Reason:** The lines existed before that branch, and the fix adds a
-  rejection.
+- **Reason:** The lines existed before the Storybook integration branch, so a
+  separate branch fixes them.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -40,4 +40,8 @@
 - **Wider fix:** A. One extension rule for both lookups removes the case.
 - **Previous examples:** None found.
 - **Recommendation:** A. The check then matches the contract.
-- **Action:** ask the user, because A rejects a path that builds today.
+- **Answer:** The user chose option A on 2026-11-25. The stylesheet check reads
+  an extension only after a dot in the last path segment, so a name without a
+  dot fails with the existing message.
+- **Action:** fix after merge, apply A, because the user approved the new
+  rejection on 2026-11-25.

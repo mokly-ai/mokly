@@ -1,15 +1,15 @@
 # Keep asset URLs right under a base URL
 
 - **Severity:** High. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-21, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan: review finding 4 of round 2.
 - **Location:** `crates/mokly-graph/src/asset_tokens.rs:46`,
   `crates/mokly-graph/src/references.rs:179`, and
   `crates/mokly-html/src/links.rs:61`.
-- **Reason:** Each option adds a rejection or a warning, and the wider fix
-  changes pages and code outside the files of that branch.
+- **Reason:** The fix waits for a branch from the Storybook integration branch,
+  because it changes the asset pages that the integration branch added.
 
 - **Source:** Review.
 - **Category:** Product bug.
@@ -76,5 +76,8 @@
 - **Recommendation:** A. It is the smallest change that stops a successful
   build with a broken asset URL, and no released catalogue has imported
   assets yet. D protects the codebase best, at a wider cost.
-- **Action:** ask the user, because A adds a new rejection, and D changes a
-  decision in force in the navigation contract.
+- **Answer:** The user chose option A on 2026-11-25. Mokly fails a composed
+  document whose base URL would redirect an imported asset, with a diagnostic
+  that tells the author to remove the base.
+- **Action:** fix after merge, apply A, because the user approved the new
+  rejection on 2026-11-25.

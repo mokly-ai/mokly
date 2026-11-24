@@ -1,16 +1,15 @@
 # Name the dataurl loader in the data URL error
 
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Outside the scope.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan. The options check of its decision C1 found the problem on
   2026-11-18.
 - **Location:** `crates/mokly-html/src/url_safety.rs:18-24` and
   `docs/protocol/mokly-document-safety.md:41-48`.
-- **Reason:** The URL policy is outside the files that track C may change,
-  and the fix changes an exact message that the document safety contract
-  states.
+- **Reason:** The URL policy is outside the asset work of the Storybook
+  integration branch, so a separate branch changes the message.
 
 - **Source:** Design.
 - **Category:** UX wording.
@@ -57,5 +56,8 @@
   change a `dataurl` loader, so it does not cover this problem.
 - **Recommendation:** B. The failure then names its fix where the author
   sees it.
-- **Action:** ask the user, because B changes an exact message that the
-  document safety contract states.
+- **Answer:** The user chose option B on 2026-11-25. The `data:` case of the URL
+  policy failure adds advice to remove a `dataurl` loader, and the exact reason
+  text in `docs/protocol/mokly-document-safety.md` changes with it.
+- **Action:** fix after merge, apply B, because the user approved the message
+  change on 2026-11-25.
