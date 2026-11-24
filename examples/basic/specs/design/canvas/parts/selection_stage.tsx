@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
+import type { ArtboardViewport } from "../../parts/artboards.js";
 import type { DepictedView } from "../../parts/depicted_view.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
 
 import type { CatalogueView } from "./catalogue.js";
 import type { CanvasEntry } from "./entries.js";

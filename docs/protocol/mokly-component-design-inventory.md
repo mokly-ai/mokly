@@ -21,7 +21,7 @@ screens, and their saved variants stay under them in authored order.
 | `design/canvas/components/compare/current`          | Component explorer (variant) | Default's Changes tab in Current                                   | Changes           |
 | `design/canvas/components/compare/side-by-side`     | Component explorer (variant) | Default · Light's two versions side by side, a chip for each frame | None              |
 | `design/canvas/components/compare/difference`       | Component explorer (variant) | Difference on every frame of the set                               | None              |
-| `design/canvas/components/compare/props`            | Component explorer (variant) | Inspect while Overlay stays on: the saved props read-only          | Inspect           |
+| `design/canvas/components/compare/props`            | Component explorer (variant) | Inspect while Overlay stays chosen: current frames, editable Props | Inspect           |
 | `design/canvas/components/usage`                    | Component explorer           | Default in Current: Used by and the affected screens               | Inspect, expanded |
 | `design/canvas/components/usage/loading`            | Component explorer (variant) | The parent's detail loads: the stage, Props and Usage wait         | Inspect           |
 | `design/canvas/components/usage/failed`             | Component explorer (variant) | The parent's detail failed: the stage, Props and Usage say so      | Inspect           |
@@ -59,12 +59,14 @@ screens, and their saved variants stay under them in authored order.
   and `design/canvas/components/removed` and its variants depict the removal
   branch. Screen inspection depicts Details on the canonical branch.
 - A saved variant opens its parent's variant set with its Light frame
-  selected. A changed component compares on its variant set, its own
-  example's frames included. Each frame holds both versions of its view at
-  one size, the larger width and the larger height of the two. On the Action
+  selected. A changed component compares on its variant set row by row, and a
+  row that does not compare keeps its current frames. On the Action branch
+  every row changed, so every frame of the set compares, its own example's
+  frames included. Each compared frame holds both versions of its view at one
+  size, the larger width and the larger height of the two. On the Action
   branch, no version before is larger than its current version, so each frame
   keeps the size of its current version. In Side by side, a chip names each
-  frame of the set as the frame's label does, the own example's frames
+  frame of a compared row as the frame's label does, the own example's frames
   first.
 - The changed Default's compare modes link Current to
   `design/canvas/components/compare/current`, Side by side to

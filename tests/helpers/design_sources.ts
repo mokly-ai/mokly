@@ -4,25 +4,19 @@ import path from "node:path";
 import { repositoryRoot } from "./fixture.js";
 
 /**
- * The class tokens that draw each library component's root, and the device
- * frame's caption. A design module outside the library that names all
- * tokens of one entry in a `className` redraws that part.
+ * The class tokens that draw each library component's root. A design module
+ * outside the library that names all tokens of one entry in a `className`
+ * redraws that part.
  */
 const LIBRARY_ROOTS: readonly (readonly string[])[] = [
   ["mbk-topbar"],
   ["mbk-nav-head"],
-  ["mbk-screen-head"],
   ["mbk-appearance"],
-  ["mbk-view-tools"],
   ["mbk-tag-picker"],
   ["mbk-chip", "tag"],
   ["mbk-entry-status"],
-  ["mbk-inspector"],
   ["mbk-meta-row"],
   ["mbk-control-field"],
-  ["phone-frame"],
-  ["browser-frame"],
-  ["mbk-frame-label"],
   ["mbk-empty"],
   ["cv-frame"],
   ["cv-zoom"],

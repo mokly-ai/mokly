@@ -134,6 +134,35 @@ as unavailable with the diagnostics.
 The [changelog](/changelog/) entry of the Rust core release lists every export
 that the release removes.
 
+## Update @mokly/ui imports
+
+The canvas parts, such as `@mokly/ui/canvas-stage` and
+`@mokly/ui/canvas-frame`, and the right panel replace the one-frame stage
+with its device chrome and its inspector. Remove each import of these
+subpaths and exports:
+
+- The subpaths `@mokly/ui/browser-bar`, `@mokly/ui/comparison-toolbar`,
+  `@mokly/ui/details-panel`, `@mokly/ui/device-frame`, `@mokly/ui/flow-step`,
+  `@mokly/ui/inspector`, `@mokly/ui/previous-version`,
+  `@mokly/ui/scheme-fallback`, `@mokly/ui/screen-header`,
+  `@mokly/ui/segmented-control`, `@mokly/ui/stage`, `@mokly/ui/variant-bar`,
+  and `@mokly/ui/view-controls`.
+- `PreviewFrame`, `DocumentFrame`, `FramePlacement`, and `FrameViewport` of
+  `@mokly/ui/preview-frame`. `PreviewIframe` stays.
+- `PreviewLoading` and `PreviewUnavailable` of `@mokly/ui/preview-state`.
+- `IconSelect`, `IconSwitch`, and `IconSelectOption` of
+  `@mokly/ui/icon-control`. `IconButton` stays.
+- `ComparisonStage`, `ComparisonSection`, and `ComparisonUnavailable` of
+  `@mokly/ui/comparison-stage`. `ComparisonPanes` and `ComparisonFailure`
+  stay.
+- `CopyIcon`, `ExpandIcon`, and `CollapseIcon` of `@mokly/ui/icons`, and the
+  `WorkspaceIcon` names `details`, `props`, `usage`, `viewport`, and `close`.
+  `WorkspaceIcon` keeps `components`, `highlight`, and `scheme`.
+- `WorkspaceLayout` no longer takes `header`, `variantBar`, `inspector`, or
+  `panesRef`.
+- `SavedPropsPanel` of `@mokly/ui/controls-panel` no longer takes `current`,
+  `currentHref`, or `onCurrent`, and it draws no Switch to Current action.
+
 ## Republish hosted catalogues
 
 Rebuild and republish every hosted catalogue with the matching viewer and

@@ -1,9 +1,11 @@
 import { expect } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
+import { chooseMode } from "./comparison_ui.js";
+import { inspectTitle } from "./inspect_head.js";
 import { historicalFrame } from "./previous_version.js";
 import { staticRequests } from "./static_delivery_assertions.js";
-import { chooseScheme } from "./workspace_actions.js";
+import { chooseScheme, setFrames } from "./workspace_actions.js";
 
 const removed = [
   [
@@ -31,6 +33,9 @@ const removed = [
 for (const viewport of ["mobile", "desktop"] as const) {
   for (const scheme of ["light", "dark"] as const) {
     for (const [entryPath, title, content, kind] of removed) {
+      // A component's frames show its desktop views, so a removed component
+      // compares its desktop views alone.
+      if (kind === "component" && viewport === "mobile") continue;
       test(`${viewport}/${scheme}: copied history retains ${entryPath} without a current document`, async ({
         page,
         request,
@@ -48,9 +53,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
         await page.goto(
           `/view/${entryPath}/?snapshot=${record.snapshotId}&viewport=${viewport}`,
         );
-        // The head band, which the right panel holds after the stage, names
-        // the entry.
-        await expect(page.locator(".mbk-screen-head h2")).toHaveText(title);
+        // Inspect's head names the entry.
+        await expect(inspectTitle(page)).toHaveText(title);
         await chooseScheme(page, scheme);
         const comparison = kind === "component";
         if (comparison) {
@@ -65,9 +69,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
               exact: true,
             }),
           ).toBeVisible();
-          await page
-            .getByRole("button", { name: "Side by side", exact: true })
-            .click();
+          // The Frames filter shows the frame of the chosen scheme, which
+          // Side by side compares.
+          await setFrames(page, {
+            light: scheme === "light",
+            dark: scheme === "dark",
+          });
+          await chooseMode(page, "Side by side");
           await expect(page.locator(".mb-pane--after iframe")).toHaveCount(0);
           await expect(
             page.locator(".mb-pane--after .mb-pane-missing"),

@@ -165,7 +165,7 @@ function anchoredStart(
  * labels stay sharp. The view keeps the exact position, so slow drags and
  * scrolls add up.
  */
-export function drawnPosition(view: CanvasView): CanvasPoint {
+export function drawnPosition(view: Pick<CanvasView, "x" | "y">): CanvasPoint {
   return { x: Math.round(view.x), y: Math.round(view.y) };
 }
 

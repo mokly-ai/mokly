@@ -5,8 +5,10 @@ import {
   removedReadingView,
   removedScreenAddresses,
   removedScreenFrames,
+  removedSectionAxes,
   type RemovedFramePlan,
 } from "../src/shell/canvas_removed_frames.js";
+import { BOTH_SCHEMES } from "../src/shell/frames_filter.js";
 
 type Viewport = "desktop" | "mobile";
 type Scheme = "dark" | "light";
@@ -194,5 +196,27 @@ test("a removed document's reading frame shows its version of the preview scheme
   assert.deepEqual(
     removedReadingView({ kind: "page", url: "handbook.html" }, "dark"),
     { colorScheme: "light", url: "handbook.html" },
+  );
+});
+
+test("a removed screen's section shows the selection's viewport, and its compact frame a scheme that the Frames filter shows", () => {
+  const selection = { colorScheme: "light", viewport: "desktop" } as const;
+  assert.deepEqual(removedSectionAxes(BOTH_SCHEMES, selection, false), {
+    colorScheme: "light",
+    viewport: "desktop",
+  });
+  assert.deepEqual(
+    removedSectionAxes({ dark: true, light: false }, selection, false),
+    { colorScheme: "dark", viewport: "desktop" },
+  );
+  // The wide canvas shows the columns of the selection's viewport.
+  assert.equal(
+    removedSectionAxes(BOTH_SCHEMES, selection, true).viewport,
+    "desktop",
+  );
+  assert.equal(
+    removedSectionAxes(BOTH_SCHEMES, { ...selection, viewport: "both" }, true)
+      .viewport,
+    "both",
   );
 });

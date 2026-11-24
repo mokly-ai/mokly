@@ -9,10 +9,10 @@
 - **Source:** Implementation.
 - **Category:** Product bug.
 - **Terms:**
-  - **Highlight components toggle:** the header control that turns the
-    component mask over a preview on and off. When highlighting is
-    unavailable, the toggle is disabled and shows a reason as its tooltip and
-    as its screen reader description.
+  - **Highlight components toggle:** the switch of the Frames filter, in
+    Inspect, that turns the component mask over the frames on and off. When
+    highlighting is unavailable, the toggle is disabled and shows a reason as
+    its tooltip and as its screen reader description.
   - **Entry details:** the per-entry JSON that the shell loads before it can
     list a preview's component instances.
 - **Background:**
@@ -37,8 +37,8 @@
   - **C.** B, and derive every disabled reason from the route's delivery
     state in one function, so a new delivery state cannot leave a stale
     reason. Effort: Medium.
-- **Left out:** Hiding the toggle after a failure, because the header keeps
-  its controls in every state.
+- **Left out:** Hiding the toggle after a failure, because the Frames filter
+  keeps its controls in every state.
 - **Wider fix:** C.
 - **Previous examples:** None found.
 - **Recommendation:** C. One delivery-state owner gives every disabled reason

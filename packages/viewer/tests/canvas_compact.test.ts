@@ -10,10 +10,9 @@ import {
   pickedAlone,
   pickedFrameKey,
   pickedScreenFrame,
-  pickedSetFrame,
   pickerFrames,
 } from "../src/shell/canvas_compact.js";
-import { workspaceFrames } from "../src/shell/canvas_frames.js";
+import { EVERY_FRAME, workspaceFrames } from "../src/shell/canvas_frames.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { publicWorkspace } from "../src/shell/public_workspace.js";
 
@@ -39,7 +38,7 @@ function frames(path: string, dark: boolean) {
   const entry = catalogue.byPath.get(path) as ShellCatalogueRoutedEntry;
   assert.ok(entry.kind === "screen" || entry.kind === "component", path);
   const data = publicWorkspace(catalogue, model, entry);
-  return workspaceFrames(data, "both", data.views);
+  return workspaceFrames(data, EVERY_FRAME, data.views);
 }
 
 test("the picker lists a screen's frames Mobile first, Light before Dark, and a set's in its order", () => {
@@ -97,6 +96,15 @@ test("frames keyed by viewport and scheme, as a removed screen's, pick the same 
     pickedFrameKey(removed, { colorScheme: "dark", viewport: "both" }),
     "mobile-light",
   );
+  // While the filter hides the selection's scheme, the viewport's other
+  // frame shows, so the viewport toggles keep naming the picked frame.
+  assert.equal(
+    pickedFrameKey([{ key: "mobile-dark" }, { key: "desktop-dark" }], {
+      colorScheme: "light",
+      viewport: "desktop",
+    }),
+    "desktop-dark",
+  );
   assert.equal(
     pickedFrameKey([{ key: "desktop-light" }], {
       colorScheme: "light",
@@ -136,20 +144,6 @@ test("a picker lists frames in their order, and a pick stands alone in the first
       ["step-0", 0, true],
       ["step-1", 0, false],
     ],
-  );
-});
-
-test("a variant set shows its whole set until a routed saved variant picks its frame", () => {
-  const set = frames("components/action/default", true);
-  assert.equal(pickedSetFrame(set, undefined, "light"), undefined);
-  assert.equal(
-    pickedSetFrame(set, "components/action/default", "dark"),
-    "components/action/default:dark",
-  );
-  const light = frames("components/action/default", false);
-  assert.equal(
-    pickedSetFrame(light, "components/action/default", "dark"),
-    "components/action/default:light",
   );
 });
 

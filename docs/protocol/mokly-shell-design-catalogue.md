@@ -157,10 +157,6 @@ itself:
 - On a branch of its own, a row or a control opens an artboard of that branch,
   and every other row or control is a picture.
 
-The kept tag picker screen links into the Canvas family too. A control opens
-the Canvas artboard of the entry that it names, and a control that names an
-entry that no artboard shows is a picture.
-
 ## Related Docs
 
 - [Shell design inventory](./mokly-shell-design-inventory.md)

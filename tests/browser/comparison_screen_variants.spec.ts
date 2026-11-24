@@ -17,6 +17,7 @@ import {
   chooseFilter,
   navRow,
 } from "./comparison_ui.js";
+import { inspectHead } from "./inspect_head.js";
 import { previousVersionLabel } from "./previous_version.js";
 
 const LIST = `[data-nav-disclosure="variants:${comparisonPaths.screenParent}"]`;
@@ -46,8 +47,12 @@ test("Changes opens the first changed variant of an unmodified screen parent", a
 
   await parent.click();
 
+  // The landing's address names the first changed view's Mobile viewport.
   await expect(page).toHaveURL(
-    new RegExp(`/view/${comparisonPaths.screenVariant}/$`, "u"),
+    new RegExp(
+      `/view/${comparisonPaths.screenVariant}/\\?viewport=mobile$`,
+      "u",
+    ),
   );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Save failed");
   await expect(navRow(page, comparisonPaths.screenVariant)).toHaveAttribute(
@@ -128,10 +133,12 @@ test("a removed screen variant keeps a Removed row under its surviving parent", 
   await expect(
     page.frameLocator("[data-mokly-preview] iframe").first().locator("h1"),
   ).toHaveText("Workspace deleted");
+  // Inspect's head names the surviving parent in its Variant of row.
   await expect(
-    page
-      .getByLabel("Catalogue location")
-      .getByRole("link", { name: "Workspace screen", exact: true }),
+    inspectHead(page).getByRole("link", {
+      name: "Workspace screen",
+      exact: true,
+    }),
   ).toHaveAttribute("href", `/view/${comparisonPaths.screenParent}/`);
 
   await chooseFilter(page, "all");

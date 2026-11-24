@@ -2,13 +2,15 @@
  * Folder indexes and related documents on the copied comparison output,
  * under the folder and document contracts. In Changes, an unmodified screen
  * index stays an undotted container and opens its first changed member. A
- * related document in Details opens its entry, labelled with its title.
+ * related document in Inspect's head opens its entry, labelled with its
+ * title.
  */
 
 import { expect } from "@playwright/test";
 
 import { comparisonPaths, test } from "./comparison_test.js";
 import { changedDot, chooseFilter, navRow } from "./comparison_ui.js";
+import { inspectHead } from "./inspect_head.js";
 
 test("an unmodified index row stays an undotted container and opens its first changed member", async ({
   page,
@@ -30,8 +32,12 @@ test("an unmodified index row stays an undotted container and opens its first ch
 
   await index.click();
 
+  // The landing's address names the first changed view's Mobile viewport.
   await expect(page).toHaveURL(
-    new RegExp(`/view/${comparisonPaths.folderChanged}/$`, "u"),
+    new RegExp(
+      `/view/${comparisonPaths.folderChanged}/\\?viewport=mobile$`,
+      "u",
+    ),
   );
   await expect(page.locator("#mb-main h2").first()).toHaveText("Security");
   await expect(navRow(page, comparisonPaths.folderChanged)).toHaveAttribute(
@@ -49,11 +55,11 @@ test("a related document opens its entry, labelled with its title", async ({
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(`/view/${comparisonPaths.folderIndex}/`);
-  const tab = page.getByRole("tab", { name: "Details", exact: true });
-  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-  const related = page
-    .getByRole("tabpanel", { name: "Details" })
-    .getByRole("link", { name: "Payment terms", exact: true });
+  // Inspect's head lists the entry's related documents.
+  const related = inspectHead(page).getByRole("link", {
+    name: "Payment terms",
+    exact: true,
+  });
   await expect(related).toHaveAttribute(
     "href",
     `/view/${comparisonPaths.currentDocument}/`,

@@ -4,14 +4,14 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { viewsUsingComponents } from "../review/shared_impact.js";
 
+import { useCanvasLayout } from "./canvas_layout.js";
+import { workspaceShownAxes } from "./frames_filter.js";
 import { useShellStore } from "./store_context.js";
 import {
   useWorkspaceData,
   type WorkspaceDataState,
 } from "./use_workspace_data.js";
-import { viewMarks, type ViewMarks } from "./view_marks.js";
 import type { EntryStatus } from "./view_status.js";
-import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import {
   selectedVariant,
   type WorkspaceVariantSelection,
@@ -20,13 +20,11 @@ import {
   resolveWorkspaceView,
   type ResolvedWorkspaceView,
 } from "./workspace_views.js";
-import { selectedChangedViews } from "./workspace_views_data.js";
 
-/** The status, eligibility and change marks the routed workspace shows. */
+/** The status and eligibility of the views that the routed workspace shows. */
 export interface WorkspacePresentation {
   status: EntryStatus | undefined;
   comparisonEligible: boolean;
-  marks: ViewMarks;
   /**
    * The axes keys of the selected views whose usage holds a changed
    * component that the routed entry's detail names.
@@ -35,7 +33,6 @@ export interface WorkspacePresentation {
 }
 
 interface ActiveWorkspace extends WorkspaceDataState {
-  marks: ViewMarks;
   presentation: WorkspacePresentation;
   selection: WorkspaceVariantSelection;
   resolvedView: ResolvedWorkspaceView;
@@ -43,9 +40,14 @@ interface ActiveWorkspace extends WorkspaceDataState {
 
 const WorkspaceContext = createContext<ActiveWorkspace | undefined>(undefined);
 
-/** Share evidence loading and effective-view resolution across the shell. */
+/**
+ * Share evidence loading and effective-view resolution across the shell.
+ * The views that the Frames filter shows, or the compact layout's picked
+ * frame, decide the status and the comparison eligibility.
+ */
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const store = useShellStore();
+  const wide = useCanvasLayout();
   const route = store.state.route;
   const target = route.view.kind === "target" ? route.view.target : undefined;
   const entry =
@@ -57,14 +59,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const data = workspace?.data;
   const selection = data ? selectedVariant(data) : undefined;
   const variant = selection?.variant;
-  const { viewport, colorScheme } = store.state.selection;
+  const hasDark = Boolean(
+    data?.views.some((view) => view.colorScheme === "dark"),
+  );
+  const axes = workspaceShownAxes(
+    data?.entry.kind === "component",
+    store.state.frames,
+    hasDark,
+    wide,
+    store.state.selection,
+  );
+  const axesKey = `${axes.viewport}/${axes.schemes.join(",")}`;
   const resolvedView = useMemo(
     () =>
       data && selection
-        ? resolveWorkspaceView(data, selection, viewport, colorScheme)
+        ? resolveWorkspaceView(data, selection, axes.viewport, axes.schemes)
         : undefined,
     [
-      colorScheme,
+      axesKey,
       data,
       data?.affectedComparison,
       data?.status,
@@ -73,7 +85,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       selection?.comparisonEligible,
       variant?.status,
       variant?.value.path,
-      viewport,
     ],
   );
   const usingChanged = useMemo(
@@ -86,31 +97,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       ),
     [data?.relatedComponents, data?.views, variant?.value.path],
   );
-  const presentation: WorkspacePresentation | undefined =
-    workspace && resolvedView
-      ? {
-          status: resolvedView.status,
-          comparisonEligible: resolvedView.comparisonEligible,
-          usingChanged,
-          marks: viewMarks(
-            selectedChangedViews(
-              workspaceEvidenceEntry(workspace.data),
-              workspace.data.changedViews,
-              variant?.value.path,
-            ),
-            viewport,
-            resolvedView.colorScheme,
-          ),
-        }
-      : undefined;
   const value =
-    workspace && selection && resolvedView && presentation
+    workspace && selection && resolvedView
       ? {
           ...workspace,
           selection,
           resolvedView,
-          presentation,
-          marks: presentation.marks,
+          presentation: {
+            status: resolvedView.status,
+            comparisonEligible: resolvedView.comparisonEligible,
+            usingChanged,
+          },
         }
       : undefined;
   return <WorkspaceContext value={value}>{children}</WorkspaceContext>;

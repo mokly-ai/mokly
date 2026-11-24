@@ -1,7 +1,7 @@
 // Route-owned main-region rendering for the persistent Mokly shell: the
 // home, missing-route, and target views on the canvas, plus the title and
 // active-route helpers the document scaffold and progressive navigation use.
-// A target view's head and Details stand in the right panel, and the compact
+// A target view's Inspect stands in the right panel, and the compact
 // layout's entry bar names its entry over the canvas.
 
 import { ChangeStatus } from "@mokly/ui/change-status";
@@ -13,29 +13,24 @@ import {
 import { EntryBar } from "@mokly/ui/entry-bar";
 import { MainRegion } from "@mokly/ui/shell-layout";
 
+import { useCanvasLayout } from "./canvas_layout.js";
 import { usePreviousVersionLabel } from "./canvas_removed_section.js";
 import { useUseCasePick } from "./canvas_use_case_pick.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { DetailsPanel } from "./details.js";
-import {
-  SchemeSwitch,
-  ScreenHead,
-  targetHead,
-  ViewportSwitch,
-} from "./head.js";
+import { targetHead } from "./head.js";
 import { homeSummary } from "./home_summary.js";
 import { useShellIdentifier } from "./identifier_context.js";
-import { PageEvidence } from "./page_evidence.js";
 import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { publicEntryStatus } from "./public_workspace.js";
 import { useRetryContent } from "./retry_focus.js";
 import { useShellRoot } from "./root_context.js";
-import { RightPanel } from "./sheets.js";
 import { TargetStage } from "./stages.js";
 import { useShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
+import { TargetPanel } from "./target_panel.js";
+import { useUseCaseChoice } from "./use_case_choice.js";
 import { ComponentWorkspace } from "./workspace.js";
 import { workspaceKey } from "./workspace_entry.js";
 
@@ -44,29 +39,6 @@ export type ShellView =
   | { kind: "home" }
   | { kind: "missing"; requested: string }
   | { kind: "target"; target: RouteTarget };
-
-/**
- * Head-band controls for a routed catalogue entry: the viewport switch for
- * screens, and, in an embedded root of a catalogue with dark previews, the
- * preview scheme switch, which the head band shows at every width.
- */
-function HeadActions(props: {
-  catalogue: Catalogue;
-  embedded?: boolean;
-  target: RouteTarget;
-}) {
-  if (props.target.entry.kind === "page") {
-    return null;
-  }
-  return (
-    <>
-      {props.target.entry.kind === "screen" ? <ViewportSwitch /> : null}
-      {props.embedded && props.catalogue.hasDarkFragments ? (
-        <SchemeSwitch />
-      ) : null}
-    </>
-  );
-}
 
 function TargetView(props: {
   catalogue: Catalogue;
@@ -90,11 +62,17 @@ function TargetView(props: {
       : undefined;
   const status = removed ? "Removed" : page?.status;
   const colorScheme = useShellStore().state.selection.colorScheme;
-  // The compact layout shows one step of a use case, which the entry bar's
-  // picker picks, and names a removed entry's previous version while it shows.
+  // A use case keeps its own Frames choice. The compact layout shows one
+  // step of a use case, which the entry bar's picker picks, and names a
+  // removed entry's previous version while it shows.
+  const [choice, choose] = useUseCaseChoice(
+    target.entry.kind === "use-case" ? target.entry.path : undefined,
+    useCanvasLayout(),
+  );
   const useCase = useUseCasePick(
     props.catalogue,
     removed ? undefined : target.entry,
+    choice,
   );
   const previous = usePreviousVersionLabel(preview, colorScheme);
   // The entry bar stands for the canvas section's head, which names a use
@@ -112,6 +90,7 @@ function TargetView(props: {
       catalogue={props.catalogue}
       {...(props.fragment ? { fragment: props.fragment } : {})}
       target={props.target}
+      useCaseChoice={choice}
       useCaseStep={useCase?.picked}
     />
   );
@@ -124,26 +103,14 @@ function TargetView(props: {
         title={head.title}
       />
       {stage}
-      <RightPanel>
-        <ScreenHead
-          action={
-            <HeadActions
-              catalogue={props.catalogue}
-              embedded={props.context.embedded ?? false}
-              target={props.target}
-            />
-          }
-          crumbs={head.crumbs}
-          heading={head.title}
-          path={head.path}
-          status={status ? <ChangeStatus status={status} /> : undefined}
-        />
-        <DetailsPanel catalogue={props.catalogue} target={props.target}>
-          {page ? (
-            <PageEvidence base={props.context.base} evidence={page} />
-          ) : null}
-        </DetailsPanel>
-      </RightPanel>
+      <TargetPanel
+        catalogue={props.catalogue}
+        context={props.context}
+        page={page}
+        status={barStatus}
+        target={props.target}
+        useCase={removed ? undefined : { choice, choose }}
+      />
     </>
   );
 }

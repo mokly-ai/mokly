@@ -59,23 +59,30 @@ Tags: ui
 
 Depends on: 10, 11
 
-- [ ] Move the inspector to the right panel with Inspect and Changes. Show
-      Changes only on changed entries, and let the tab set what a click does.
-- [ ] Build Inspect: description, path, source, variants, the frames filter,
+- [x] Move the inspector to the right panel with Inspect and Changes. Show
+      Changes only on changed entries, and let the tab set what a click does. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Build Inspect: description, path, source, variants, the frames filter,
       the selected instance's props and size, and the box model. Keep Usage
-      and the component tree as sections.
-- [ ] Draw the selection with handles, name and size tags, and the padding
-      redline.
-- [ ] Build Changes: counts, base and head, the compare modes, next and
-      previous change, and a slot for the cloud's check.
-- [ ] Add the Swipe mode with one divider on every frame. Keep Overlay.
-- [ ] List the Example tour as a change in the depicted branch, as
+      and the component tree as sections. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Draw the selection with handles, name and size tags, and the padding
+      redline. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Build Changes: counts, base and head, the compare modes, next and
+      previous change, and a slot for the cloud's check. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Add the Swipe mode with one divider on every frame. Keep Overlay. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] List the Example tour as a change in the depicted branch, as
       `mokly-changes.md` requires: Changes counts 11, and the tour gets a
       Changed status and a Changes tab with the stepper and the comparison
-      details but no compare modes. Milestone 24 draws the artboards.
-- [ ] Give `ComparisonEvidence` the changed-step lines of a listed use case
+      details but no compare modes. Milestone 24 draws the artboards. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Give `ComparisonEvidence` the changed-step lines of a listed use case
       ("Changed step: Welcome"), each a link to that screen on its Changes
-      tab, as Milestone 24 draws them.
+      tab, as Milestone 24 draws them. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
 - [x] Milestone 24: add the own-example row to the other Canvas artboards that draw a
       variant set: the Toolbar's `component-set/toolbar*` variants and the
       Action's sets on `canvas/props/**`, `canvas/components/**` and
@@ -86,53 +93,63 @@ Depends on: 10, 11
       item 9): for example the Action's own example at 148 × 86 and the
       Toolbar at 401 × 155, in `canvas/parts/set_sketches.tsx`. Branch:
       `calummoore/canvas-redesign-m24-mockups-for-708g`.
-- [ ] Put comparison panes on the canvas input: `comparison_frame.tsx` gives
+- [x] Put comparison panes on the canvas input: `comparison_frame.tsx` gives
       each pane's `SnapshotFrame` the `canvasInput` prop, its listener calls
       `routeFrameInput(control, event, frame.current)` with `control` from
       `CanvasControlContext`, the pane's `focusVisible` follows `canvas-focus`
-      and `canvas-blur`, and the panes render inside the canvas providers.
-- [ ] Update the guides that describe the old stage:
+      and `canvas-blur`, and the panes render inside the canvas providers. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Update the guides that describe the old stage:
       `docs/guides/catalogue/browse.md` ("Look at a screen", the drawer,
       "Details"), `docs/guides/catalogue/changes.md:196-206`,
       `docs/guides/authoring/screens.md:189` and
-      `docs/guides/authoring/storybook.md:67`.
-- [ ] Comparison panes measure each version with
+      `docs/guides/authoring/storybook.md:67`. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Comparison panes measure each version with
       `measureContentBox(doc)` from `@mokly/frame/internal` (Milestone 23),
-      for decision 23 below.
-- [ ] Size a component's frame during a compare at the larger width and
+      for decision 23 below. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Size a component's frame during a compare at the larger width and
       height of its two versions, measured once when both load (decision 23,
       option A). Change the measurement rule for component frames in
       `mokly-shell-device-chrome.md`, `mokly-comparison-panes.md` and
-      `mokly-comparison-scrolling.md`.
-- [ ] Delete the old inspector layout and the one-frame stage.
-- [ ] Fix the race that opens Props when a third nested disclosure of the
+      `mokly-comparison-scrolling.md`. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Delete the old inspector layout and the one-frame stage. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Fix the race that opens Props when a third nested disclosure of the
       Components tab opens (4 in 72 rounds under load on a Canvas screen),
       likely in `workspace_instance_selection.ts`. Then move the runtime test
       of `tests/browser/design_library_runtime_cases.ts` to a Canvas screen
       and delete `design/browse/views/screen/tag-picker`, the one older
       design screen that Milestone 18 kept for it, with the library parts
       that only it uses: the device frame, the screen header, the view
-      controls and the inspector parts.
-- [ ] When the device frame leaves `@mokly/ui`, remove the device artwork
+      controls and the inspector parts. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] When the device frame leaves `@mokly/ui`, remove the device artwork
       sentences and tokens from `mokly-viewer-appearance.md`,
       `mokly-viewer-palette.md` and `mokly-viewer-palette-preview.md`, and
       rewrite the use-case stage paragraph of `packages/viewer/src/shell/README.md`.
       Redraw the cloud viewer drawings that show their sample screen in a
       device frame: `cloud/viewer-chrome.md:208-209`,
       `cloud/product-mockups-viewer.md:47-48` and `:164-165`, and
-      `cloud/mockups.md:152-154`.
-- [ ] List an ignored-only entry's ignored ids in Current too, as
+      `cloud/mockups.md:152-154`. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] List an ignored-only entry's ignored ids in Current too, as
       `mokly-css-evidence-presentation.md` requires. Today
       `workspace_evidence.tsx` lists them only while a comparison is loaded.
-      Add a unit test.
-- [ ] Give every fixed-size tag on a frame one rule at a small zoom: the
+      Add a unit test. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Give every fixed-size tag on a frame one rule at a small zoom: the
       Highlight components labels, which cover frame content at fit (Milestone
       11, item 10), and the selection's name and size tags. Write the rule in
-      `mokly-viewer-selection-canvas.md`.
-- [ ] Draw the focus glow in the three mockup sheets that still draw an
+      `mokly-viewer-selection-canvas.md`. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
+- [x] Draw the focus glow in the three mockup sheets that still draw an
       outline: `examples/basic/design-components.css`,
       `design-library/inspector/frames-filter.css` and
-      `design-library/panels/compare-modes.css`.
+      `design-library/panels/compare-modes.css`. Branch:
+      `calummoore/canvas-redesign-m12-right-panel-and-fo8u`.
 
 ## Milestone 13: Cloud viewer chrome
 

@@ -4,7 +4,10 @@
  * the zoom and the position of the section, itself: an entry opens fitted,
  * and the reader pans and zooms with the pointer, the wheel, a pinch and the
  * pill. A host reaches Fit and the zoom steps through the handle that `ref`
- * receives, such as from its keys, and hears of each change of the view.
+ * receives, such as from its keys, and hears of each change of the view. A
+ * host that runs no script, such as a static mockup, cannot measure the
+ * stage, so it gives the view that the canvas draws, and its zoom pill's
+ * controls are pictures of themselves.
  */
 
 import {
@@ -36,12 +39,14 @@ export { canvasKeyCommand, type CanvasCommand } from "./canvas-keys.js";
 export { wheelPixels } from "./canvas-gestures.js";
 export type { CanvasKeyEvent } from "./canvas-keys.js";
 export {
+  fitView,
   wheelZoom,
   ZOOM_MAX,
   ZOOM_MIN,
   type CanvasExtent,
   type CanvasRect,
   type CanvasView,
+  type FitAlign,
 } from "./canvas-view.js";
 export type { CanvasStageHandle } from "./use-canvas-view.js";
 
@@ -54,6 +59,23 @@ export type CanvasStageSection = Omit<
 /** The pitch of the dot grid, which moves with the section when it pans. */
 const GRID_PITCH = 24;
 
+/**
+ * The smallest zoom at which the canvas shows the fixed-size tags on its
+ * frames, such as a highlight's labels and the selection's name and size
+ * tags. Below it, a tag would cover more of a frame than it names, so the
+ * tags hide; the marks that they name stay.
+ */
+export const CANVAS_TAG_ZOOM = 0.6;
+
+/**
+ * Whether the fixed-size tags on a frame show at a frame's scale, which
+ * counts in whole percent as the zoom pill shows it, so a pill that reads
+ * 60% shows the tags.
+ */
+export function canvasTagsShown(scale: number): boolean {
+  return Math.round(scale * 100) >= Math.round(CANVAS_TAG_ZOOM * 100);
+}
+
 /** Whether a press on a target belongs to a control, not to the canvas. */
 function onControl(target: EventTarget | null): boolean {
   return (
@@ -65,14 +87,27 @@ function onControl(target: EventTarget | null): boolean {
   );
 }
 
+/** Whether a click lands on the empty canvas: on no frame and no control. */
+function onEmptyCanvas(target: EventTarget | null): boolean {
+  return (
+    target !== null &&
+    "closest" in target &&
+    !onControl(target) &&
+    (target as Element).closest(".mbk-canvas-frame, .mbk-canvas-pill") === null
+  );
+}
+
 export function CanvasStage({
   canvasRef,
   fitKey = "",
+  interactive = true,
+  onEmptyClick,
   onViewChange,
   ref,
   routed = false,
   section,
   stageRef,
+  view: given,
 }: {
   /** Receives the canvas, which clips the frames and their highlights. */
   canvasRef?: Ref<HTMLDivElement> | undefined;
@@ -81,6 +116,17 @@ export function CanvasStage({
    * another entry opens or the shown frames change.
    */
   fitKey?: string | undefined;
+  /**
+   * Whether the zoom pill's controls are buttons, as they are by default. A
+   * static depiction that runs no script sets `false`, which draws each
+   * control as a picture of itself.
+   */
+  interactive?: boolean;
+  /**
+   * Hears of each click on the empty canvas, around the frames and away
+   * from every control, that no drag made, such as to clear a selection.
+   */
+  onEmptyClick?: (() => void) | undefined;
   /** Hears of each pan, zoom and Fit, such as to measure frames again. */
   onViewChange?: ((view: CanvasView) => void) | undefined;
   /** Receives the handle with Fit and the zoom steps. */
@@ -94,6 +140,13 @@ export function CanvasStage({
    * panels and above the zoom pill, to which a host clips its markers.
    */
   stageRef?: Ref<HTMLDivElement> | undefined;
+  /**
+   * The view of a canvas that runs no script, such as a static mockup's,
+   * which cannot measure its stage: the zoom and the canvas position of the
+   * section's top left, such as the view that `fitView` gives on the stage
+   * that the host knows. The canvas draws it in place of its own view.
+   */
+  view?: Pick<CanvasView, "x" | "y" | "zoom"> | undefined;
 }) {
   const canvas = useRef<HTMLDivElement>(null);
   const stageBox = useRef<HTMLDivElement>(null);
@@ -104,6 +157,7 @@ export function CanvasStage({
     section,
     fitKey,
   );
+  const shown = given ?? view;
   useImperativeHandle(ref, () => handle, [handle]);
 
   const viewChange = useRef(onViewChange);
@@ -111,6 +165,21 @@ export function CanvasStage({
   useEffect(() => {
     viewChange.current?.(view);
   }, [view]);
+
+  // A drag swallows the click that its release makes, so a click that
+  // reaches the canvas is a press without movement.
+  const emptyClick = useRef(onEmptyClick);
+  emptyClick.current = onEmptyClick;
+  useEffect(() => {
+    const element = canvas.current;
+    if (!element) return;
+    const click = (event: MouseEvent) => {
+      if (!event.defaultPrevented && onEmptyCanvas(event.target))
+        emptyClick.current?.();
+    };
+    element.addEventListener("click", click);
+    return () => element.removeEventListener("click", click);
+  }, []);
 
   const holds = section !== undefined;
   useEffect(() => {
@@ -141,11 +210,12 @@ export function CanvasStage({
   );
   const canvasElement = useMergedRef(canvas, canvasRef);
   const stageElement = useMergedRef(stageBox, stageRef);
-  const drawn = drawnPosition(view);
+  const drawn = drawnPosition(shown);
   return (
     <div
       className="mbk-canvas mbk-reset"
       data-canvas-panning={panning ? "" : undefined}
+      data-canvas-tags={canvasTagsShown(shown.zoom) ? undefined : "hidden"}
       data-mokly-stage={routed ? "" : undefined}
       ref={canvasElement}
       style={{
@@ -163,7 +233,7 @@ export function CanvasStage({
             className="mbk-canvas-world mbk-reset"
             style={
               {
-                "--mbk-canvas-zoom": view.zoom,
+                "--mbk-canvas-zoom": shown.zoom,
                 transform: `translate(${drawn.x}px, ${drawn.y}px)`,
               } as CSSProperties
             }
@@ -172,10 +242,11 @@ export function CanvasStage({
           </div>
           <div className="mbk-canvas-pill mbk-reset" ref={pill}>
             <CanvasZoomPill
+              interactive={interactive}
               onFit={handle.fit}
               onZoomIn={handle.zoomIn}
               onZoomOut={handle.zoomOut}
-              zoom={view.zoom}
+              zoom={shown.zoom}
             />
           </div>
         </>

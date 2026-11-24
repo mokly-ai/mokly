@@ -43,10 +43,8 @@ test("MockLink navigation reveals the destination and preserves shell state", as
   await chooseScheme(page, "dark");
   const mobile = page.locator(canvasFrame("mobile", "dark"));
   await expect(mobile).toHaveAttribute("data-mokly-frame-state", "ready");
-  const detailsPanel = page.locator("[data-workspace-inspector]");
-  if ((await detailsPanel.getAttribute("data-open")) === "true") {
-    await page.getByRole("tab", { name: "Details", exact: true }).click();
-  }
+  const inspect = page.getByRole("tab", { name: "Inspect", exact: true });
+  await expect(inspect).toHaveAttribute("aria-selected", "true");
   const other = page.locator('details[data-nav-folder="folder:other"]');
   await other.evaluate((element: HTMLDetailsElement) => {
     element.open = true;
@@ -62,11 +60,14 @@ test("MockLink navigation reveals the destination and preserves shell state", as
     .locator("#mock-link")
     .click();
 
+  // The destination's address names the kept Mobile viewport.
   await expect(page).toHaveURL(
-    /\/view\/fixture\/nested\/details\/\?fragment=section$/,
+    /\/view\/fixture\/nested\/details\/\?fragment=section&viewport=mobile$/,
   );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  await expect(page.locator(".mbk-crumbs")).toContainText("Nested");
+  await expect(page.locator("[data-inspect-path] code")).toHaveText(
+    "fixture/nested/details",
+  );
   await expect(detailsRow).toHaveAttribute("aria-current", "page");
   await expect(detailsRow).toBeVisible();
   await expect(page.locator("[data-mokly-search]")).toHaveValue("");
@@ -80,8 +81,8 @@ test("MockLink navigation reveals the destination and preserves shell state", as
     .all()) {
     await expect(ancestor).toHaveAttribute("open", "");
   }
-  await expect(detailsPanel).not.toHaveAttribute("data-open", "true");
-  // The viewport choice keeps the Mobile column alone on the canvas.
+  await expect(inspect).toHaveAttribute("aria-selected", "true");
+  // The Frames filter keeps the Mobile column alone on the canvas.
   await expect(page.locator(canvasFrame("desktop", "dark"))).toBeHidden();
   await expect(mobile).toBeVisible();
   await expect(page.locator(shellRoot)).toHaveAttribute(

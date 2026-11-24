@@ -1,7 +1,5 @@
 # Component Pages And Screen Inspection
 
-Status: Inspect with its Frames filter, the canvas selection and compare on every shown frame are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Catalogue And Component Pages
 
 Components are a distinct entry kind in a dedicated collapsible Components
@@ -49,24 +47,24 @@ Each component variant is an entry, nav, search and Changes row, and `mock:`
 target under the [variant contract](./mokly-variants.md). A variant's page is
 addressed by its own path, so URLs and Back/Forward need no query parameter.
 
-Compare modes apply to the shown entry and to the views of its shown frames.
+In a compare mode, each shown frame of a compared row compares its own view, and
+a row that does not compare, such as an Added one, keeps its current frames.
 Sibling-mode retention, read-only Props, disabled highlighting, and response
 fencing follow [variant navigation](./mokly-variant-navigation.md). A removed
-component variant stays eligible with a missing current side; Added stays in
-Current.
+component variant stays eligible with a missing current side.
 
-Only offer the compare modes other than Current when the shown status is
-Changed or when a component variant entry's shown status is Removed. A known
-selection shows Added, Changed, Removed, or Unmodified beside its title from
-the shown views; several shown views follow the aggregation rule of the
-[Changes screen controls](./mokly-changes-controls.md#screen-controls). A
-removed variant is its own Removed entry and does not mark its surviving
-parent Removed; the parent's status describes the parent only. Added and
-Unmodified show only their current preview. Missing per-view evidence keeps
-entry-level status and eligibility rather than implying Unmodified. Affected
-consumers can stay eligible without entering Changes; temporary control edits
-never establish comparison eligibility. Do not eagerly generate screenshots to
-decide whether the compare modes are available.
+Only offer the compare modes other than Current while a shown row compares: when
+its shown status is Changed, or when a component variant entry's shown status is
+Removed. A known selection shows Added, Changed, Removed, or Unmodified beside
+its title from the shown views; several shown views follow the aggregation rule
+of the [Changes screen controls](./mokly-changes-controls.md#screen-controls). A
+removed variant is its own Removed entry and does not mark its surviving parent
+Removed; the parent's status describes the parent only. Added and Unmodified
+show only their current preview. Missing per-view evidence keeps entry-level
+status and eligibility rather than implying Unmodified. Affected consumers can
+stay eligible without entering Changes; temporary control edits never establish
+comparison eligibility. Do not eagerly generate screenshots to decide whether
+the compare modes are available.
 
 A logical link can target a component parent or any of its variant entries by
 path under the [navigation contract](./mokly-navigation.md). A link to the

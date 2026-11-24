@@ -1,45 +1,40 @@
-import type { ColorScheme, Viewport } from "@mokly/mokly";
-import { BrowserFrame, PhoneFrame } from "@mokly/ui/device-frame";
-import { PreviewFrame } from "@mokly/ui/preview-frame";
+import { CanvasFrame } from "@mokly/ui/canvas-frame";
+import type { CanvasSectionFrame } from "@mokly/ui/canvas-section";
 
-import { currentScreen } from "../../../fixtures/viewer-catalogue";
-
-import { shownView } from "./published-view";
+import { frameSizes } from "./published-frames";
+import type { ScreenFrame } from "./published-frames";
 import { SampleScreen } from "./sample-screen";
 
 /**
- * One viewport's frame on the stage: the package's preview frame around the
- * phone or the browser window, which holds the sample screen in the scheme of
- * the view that the frame shows, as `StageFrame` in the pinned
- * `@mokly/viewer` chooses it. `shownView` holds that choice and the frame's
- * Light only mark.
+ * One frame of the current screen on the canvas: the package's bare frame at
+ * its viewport's nominal size, with its label and size tag, holding the
+ * sample screen in the frame's own scheme, whatever the document's scheme
+ * is, as a frame of the viewer shows its own view.
  */
-export function PublishedFrame({
-  viewport,
-  colorScheme,
-}: {
-  viewport: Viewport;
-  /** The scheme that the reader asked for, the document's own. */
-  colorScheme: ColorScheme;
-}) {
-  const view = shownView(viewport, colorScheme);
-  const screen = <SampleScreen viewport={viewport} scheme={view.scheme} />;
+export function PublishedFrame({ frame }: { frame: ScreenFrame }) {
+  const { width, height } = frameSizes[frame.viewport];
   return (
-    <PreviewFrame
-      fallback={view.fallback}
-      placement={{ kind: "frame", viewport }}
-      scheme={view.scheme}
+    <CanvasFrame
+      height={height}
+      kind={frame.viewport}
+      label={frame.label}
+      scheme={frame.scheme}
+      width={width}
     >
-      {viewport === "mobile" ? (
-        <PhoneFrame>{screen}</PhoneFrame>
-      ) : (
-        <BrowserFrame
-          address={currentScreen.path + "/index.html"}
-          interactive={false}
-        >
-          {screen}
-        </BrowserFrame>
-      )}
-    </PreviewFrame>
+      <SampleScreen viewport={frame.viewport} scheme={frame.scheme} />
+    </CanvasFrame>
   );
+}
+
+/** The frames of the section, each in its cell at its nominal size. */
+export function sectionFrames(
+  frames: readonly ScreenFrame[],
+): CanvasSectionFrame[] {
+  return frames.map((frame) => ({
+    column: frame.column,
+    row: frame.row,
+    key: frame.key,
+    ...frameSizes[frame.viewport],
+    node: <PublishedFrame frame={frame} />,
+  }));
 }

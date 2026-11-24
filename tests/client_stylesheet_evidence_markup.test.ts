@@ -211,7 +211,7 @@ function screenWorkspace(
   return {
     base: "main",
     status: "Changed",
-    entry: { path: "home", kind: "screen", title: "Home" },
+    entry: { path: "home", kind: "screen", title: "Home", views: [] },
     resourceEvidence,
     components: [],
     comparisonEligible: true,
@@ -238,7 +238,7 @@ function componentWorkspace(
   return {
     base: "main",
     status,
-    entry: { path: id, kind: "component", title: id },
+    entry: { path: id, kind: "component", title: id, views: [] },
     component: { path: id, title: id, kind: "component" },
     reasons: [{ kind: "dependency", path: RULES }],
     resourceEvidence: [evidence("mobile", "light", rules)],

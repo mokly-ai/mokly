@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 
 import { test } from "./browser_test.js";
 import { serveChanges } from "./serve_changes_fixture.js";
+import { openPanelTab } from "./workspace_actions.js";
 
 test("native CSS evidence shares the published base and selected generations reject unsafe routes", async ({
   page,
@@ -84,10 +85,11 @@ test("native CSS evidence shares the published base and selected generations rej
         )
       ).status(),
     ).toBe(404);
+    // The changed screen's Changes tab holds its comparison details.
     await page.goto(`${fixture.url}/view/sample/`);
-    await page.getByRole("tab", { name: "Details", exact: true }).click();
+    await openPanelTab(page, "Changes");
     await expect(
-      page.getByRole("tabpanel", { name: "Details", exact: true }),
+      page.getByRole("tabpanel", { name: "Changes", exact: true }),
     ).toContainText("theme.css");
   } finally {
     await fixture.close();

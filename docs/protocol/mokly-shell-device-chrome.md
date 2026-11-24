@@ -1,7 +1,5 @@
 # Shell Canvas Frames, Preview Scheme And Compact Layout
 
-Status: The Frames filter, the selection with its pill above the dock, the Changes tab that the dock names, and compare on every frame with the Side by side tags are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Canvas Frames
 
 Every view on the canvas stands in a frame. The
@@ -46,10 +44,21 @@ side by side, at one zoom.
   accessible name names that screen. The step's description reads muted below
   the label, and a description too long for the frame ends in an ellipsis. No
   slug leads a step frame's name, also in the compact layout.
-- **Comparison** — in a comparison, a frame holds both versions as its compare
-  mode draws them. In Side by side, each of the compared frame's two versions
+- **Comparison** — in a comparison, each frame of a
+  [compared row](./mokly-selected-comparisons.md) holds both versions as its
+  compare mode draws them, and a frame whose row does not compare keeps its
+  current version. In Side by side, each of the compared frame's two versions
   stands in its own frame, whose label starts with a `Before` or a `Current`
-  tag. The [comparison panes](./mokly-comparison-panes.md) fix each mode.
+  tag. The [comparison panes](./mokly-comparison-panes.md) fix each mode. A
+  screen's frame keeps its nominal size. A component's frame takes the larger
+  width and the larger height of its two versions' documents, each measured
+  once when both documents load, and both versions share that size. Until
+  then, the frame holds the desktop size, at which each document lays out for
+  its measurement. Decision: the larger width and height of the two versions,
+  not the desktop width with the larger height, which gives a narrow
+  component a wide frame, and not each version at its own size, which makes
+  Swipe's divider cross a size edge, because one frame then fits both
+  versions with one measurement.
 
 ## Color Scheme
 
@@ -110,13 +119,21 @@ frame at a time:
   the canvas stays visible above the expanded sheet.
 - An entry bar over the top of the canvas names the entry: its title tag, its
   `Component` kind tag, and its change status. A frame picker, a native select
-  named `Frame`, stands at the bar's end and lists the entry's shown frames.
-  A use case's picker lists its steps by number and title, such as
-  `1 · Welcome`. The bar and its picker stay while the selected entry's
+  named `Frame`, stands at the bar's end and lists the entry's shown frames:
+  for a screen, the frames of both viewports in the schemes that the Frames
+  filter shows. A use case's picker lists its steps by number and title, such
+  as `1 · Welcome`. The bar and its picker stay while the selected entry's
   preview loads or failed.
-- The canvas shows the picked frame alone, large enough to read. A screen
-  opens on its Mobile · Light frame, or on its first shown frame while the
-  Frames filter hides that one. A use case opens on its first step. A variant
+- The canvas shows the picked frame alone, large enough to read. The
+  selection's viewport and scheme name a screen's picked frame, and a pick
+  sets them. A screen opens on its frame of the selection's viewport, Mobile
+  for Both, in the
+  [preview scheme](./mokly-viewer-appearance.md#interface-appearance-and-frame-schemes),
+  which standalone Browse takes from the effective appearance: with Both,
+  Mobile · Light in a Light appearance and Mobile · Dark in a Dark appearance.
+  While the Frames filter hides that scheme, the screen opens on that
+  viewport's other frame, and while the screen has no frame of that viewport,
+  on its first shown frame. A use case opens on its first step. A variant
   set shows the whole set until a selection picks a frame, and then shows that
   frame alone with the picker. A reading frame has no picker. It takes the
   canvas width and reflows its document instead of scaling it.

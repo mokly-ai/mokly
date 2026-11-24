@@ -1,7 +1,5 @@
 # Standalone Appearance Control
 
-Status: The Frames filter, which an Appearance choice leaves alone, is not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
-
 This continues the [viewer appearance contract](./mokly-viewer-appearance.md):
 the one appearance control of Serve and the static build.
 

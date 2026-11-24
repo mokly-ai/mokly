@@ -8,6 +8,7 @@ import { attribute, textContent, type HtmlElement } from "./html.js";
 import type { ServedCatalogue, ServedView } from "./served_design.js";
 
 const VIEWPORTS = ["mobile", "desktop"] as const;
+const SCHEMES = ["light", "dark"] as const;
 
 const classes = (element: HtmlElement) =>
   (attribute(element, "class") ?? "").split(/\s+/u);
@@ -50,7 +51,8 @@ export function expectationViolations(catalogue: ServedCatalogue): string[] {
     const views = catalogue.views.filter(
       (view) =>
         view.path === expectation.source &&
-        (expectation.viewports ?? VIEWPORTS).includes(view.viewport),
+        (expectation.viewports ?? VIEWPORTS).includes(view.viewport) &&
+        (expectation.colorSchemes ?? SCHEMES).includes(view.colorScheme),
     );
     if (views.length === 0) violations.push(`${expectation.source}: no view`);
     for (const view of views) {

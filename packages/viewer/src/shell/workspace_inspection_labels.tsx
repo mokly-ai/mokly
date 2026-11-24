@@ -1,6 +1,7 @@
 /** React masks and labels for registry-backed workspace highlights. */
 
 import type { InstanceBoundary } from "@mokly/frame";
+import { canvasTagsShown } from "@mokly/ui/canvas-stage";
 import { HighlightLabel, LabelLayer } from "@mokly/ui/highlight-label";
 import { HighlightMask } from "@mokly/ui/highlight-mask";
 
@@ -13,12 +14,17 @@ export interface WorkspaceHighlightLabel {
   id: string;
   key: string;
   left: number;
+  /** The frame whose highlight the label names. */
+  session: ShellFrameSession;
   text: string;
   top: number;
-  viewport: "desktop" | "mobile";
 }
 
-/** Translate authenticated inner-frame boxes into outer viewport labels. */
+/**
+ * Translate authenticated inner-frame boxes into outer viewport labels. A
+ * frame drawn below the canvas's tag zoom draws no label, under the one rule
+ * for the fixed-size tags on a frame: its highlight's outlines stay.
+ */
 export function workspaceHighlightLabels(
   data: WorkspaceData,
   measured: readonly {
@@ -43,6 +49,7 @@ export function workspaceHighlightLabels(
     const rectangle = frame.getBoundingClientRect();
     const scaleX = rectangle.width / frame.offsetWidth;
     const scaleY = rectangle.height / frame.offsetHeight;
+    if (!canvasTagsShown(scaleX)) return [];
     return keys.flatMap((key) => {
       const boundary = boundaries.find((item) => item.key === key);
       const box = boundary?.ranges.flatMap((range) => range.boxes)[0];
@@ -65,9 +72,9 @@ export function workspaceHighlightLabels(
           id: JSON.stringify([session.generation, key]),
           key,
           left: Math.max(0, left),
+          session,
           text: `${component?.title ?? "Component"} · ${instance.id}`,
           top: Math.max(0, top - 22),
-          viewport,
         },
       ];
     });
@@ -86,7 +93,7 @@ export function WorkspaceInspectionOverlay({
     keys: readonly string[];
     session: ShellFrameSession;
   }[];
-  onSelect(key: string, viewport: "desktop" | "mobile"): void;
+  onSelect(label: WorkspaceHighlightLabel): void;
 }) {
   const masks = measured.flatMap(({ session, boundaries, keys }) => {
     const mask = frameInspectionMask(session, boundaries, keys);
@@ -101,7 +108,7 @@ export function WorkspaceInspectionOverlay({
             instanceKey={label.key}
             key={label.id}
             left={label.left}
-            onSelect={() => onSelect(label.key, label.viewport)}
+            onSelect={() => onSelect(label)}
             text={label.text}
             top={label.top}
           />

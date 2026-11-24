@@ -1,4 +1,7 @@
-/** Shared comparison mode for the toolbar, inspection, and host markers. */
+/**
+ * The chosen comparison mode, which `useComparison` owns, and the mode that
+ * the canvas shows, which host markers and the host's pick follow.
+ */
 
 import { createContext, useContext, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
@@ -20,7 +23,11 @@ interface SharedMode {
 
 const ModeContext = createContext<SharedMode | undefined>(undefined);
 
-/** Reset the visible mode when the routed owner or index revision changes. */
+/**
+ * Reset the chosen mode when the routed owner or index revision changes. The
+ * canvas shows the chosen mode only while Changes is the selected tab, and
+ * the current frames while Inspect is.
+ */
 export function ComparisonModeProvider({ children }: { children: ReactNode }) {
   const store = useShellStore();
   const view = store.state.route.view;
@@ -32,12 +39,13 @@ export function ComparisonModeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ModeState>({ mode: "current", ownerKey });
   // Discard a departed workspace's mode before another route can reuse it.
   if (state.ownerKey !== ownerKey) setState({ mode: "current", ownerKey });
+  const chosen = state.ownerKey === ownerKey ? state.mode : "current";
   return (
     <ModeContext
       value={{
         state,
         setState,
-        mode: state.ownerKey === ownerKey ? state.mode : "current",
+        mode: store.state.panelTab === "changes" ? chosen : "current",
       }}
     >
       {children}
@@ -52,7 +60,7 @@ export function useComparisonModeState(ownerKey: string) {
   return [shared?.state ?? local, shared?.setState ?? setLocal] as const;
 }
 
-/** Read the current shell mode without reading toolbar markup. */
+/** The mode that the canvas shows, without reading the panel's markup. */
 export function useShellComparisonMode(): ComparisonMode {
   return useContext(ModeContext)?.mode ?? "current";
 }

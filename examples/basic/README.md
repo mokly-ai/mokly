@@ -194,12 +194,6 @@ design route. The
 [design library stylesheets README](./design-library/README.md) gives their
 order.
 
-One older screen stays outside the family:
-`design/browse/views/screen/tag-picker` draws the shipped tag picker over
-Welcome in the shipped shell, because the design library's runtime browser
-test opens it. It is the one screen that renders the device frame, the
-screen header, the view controls and the inspector of the design library.
-
 `tests/design_catalogue.test.ts` serves this configuration once with
 `--no-watch` and the unresolved base `refs/mokly/browser-suite-no-base`, so
 Changes stays unavailable. It checks the design catalogue against the

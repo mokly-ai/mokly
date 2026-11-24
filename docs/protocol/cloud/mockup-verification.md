@@ -172,7 +172,9 @@ The disk smoke opens every generated HTML document at 390px or 1440px, waits
 for documents, fonts and images, and rejects browser errors, missing
 resources, blank content and horizontal overflow, including frames.
 HTTP checks open the settings panes through the dialog rail, account entry and
-every flow through Browse, with keyboard focus and the Appearance control.
+every flow through Browse, and check keyboard focus in account entry. They read
+the canvas frames by their labels, check a settings pane in its Light and Dark
+frames, and choose Light and Dark for each flow with the flow's Frames filter.
 Control checks verify that each registered wrapper renders the real Firna
 component with the mapped theme, atomic styles, accessible fields, focus
 fallback, disabled states and the control-style policy.

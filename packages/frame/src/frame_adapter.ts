@@ -65,7 +65,10 @@ export type FrameEvent =
       y: number;
     }
   | { type: "canvas-pinch"; scale: number; x: number; y: number }
-  | { type: "canvas-key"; key: "zoom-in" | "zoom-out" | "zoom-100" | "fit" }
+  | {
+      type: "canvas-key";
+      key: "zoom-in" | "zoom-out" | "zoom-100" | "fit" | "escape" | "search";
+    }
   | { type: "canvas-focus"; visible: boolean }
   | { type: "canvas-blur" }
   | { type: "error"; code: FrameErrorCode };

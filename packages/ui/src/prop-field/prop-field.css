@@ -1,4 +1,4 @@
-/* A field of the Props tab: a row with the name in a label column, then the
+/* A field of the Props section: a row with the name in a label column, then the
    control, the help, and the error. A control frames its surface, its border,
    and its invalid state. Below the breakpoint, the label column narrows. */
 .mbk-control-field {

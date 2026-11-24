@@ -19,11 +19,12 @@ import type {
 import type { CanvasDestination } from "../../parts/destinations.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
 import { InspectSection } from "../../parts/inspect.js";
+import { useOpeningFrame } from "../../parts/picked_frames.js";
 import { actionSetFrames } from "../../parts/set_sketches.js";
 
 import { BRANCH_CHANGES } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
-import { compactFrames } from "./sketches.js";
+import { compactFrames, screenFramePicks } from "./sketches.js";
 
 /** The modes that the changed Default variant's artboards show. */
 export type DefaultMode = Extract<
@@ -96,14 +97,22 @@ export function changedAction(): EvidenceLink[] {
 /**
  * The Changes tab of the Action's saved variant Default, the second of the
  * Action branch's four changes: the stepper, Compared, the compare modes in
- * the shown mode, and the comparison details, which name the saved variant
- * and its unchanged saved props. Side by side offers a chip for each frame
- * of the set, the own example's first, and compares Default · Light. No artboard shows the Action's
- * own changes or Disabled's, so Previous change and Next change are
- * pictures, and no artboard shows the set in Swipe or another frame's pair,
- * so that tile and those chips are pictures too.
+ * the shown mode, and the comparison details, which list each compared
+ * frame's outcome in a loaded comparison and name the saved variant and its
+ * unchanged saved props. Side by side offers a chip for each frame of the
+ * set, the own example's first, and compares Default · Light. No artboard
+ * shows the Action's own changes or Disabled's, so Previous change and Next
+ * change are pictures, and no artboard shows the set in Swipe or another
+ * frame's pair, so that tile and those chips are pictures too.
  */
-export function DefaultChanges({ mode }: { mode: DefaultMode }) {
+export function DefaultChanges({
+  mode,
+  outcomes,
+}: {
+  mode: DefaultMode;
+  /** The outcome line of each compared frame, in a mode other than Current. */
+  outcomes?: readonly string[] | undefined;
+}) {
   return (
     <>
       <changeStepper.Component
@@ -129,6 +138,7 @@ export function DefaultChanges({ mode }: { mode: DefaultMode }) {
         />
       </InspectSection>
       <ChangesDetails
+        outcomes={outcomes}
         reasons={reasonEvidence(["material"])}
         savedVariant={{ savedPropsUnchanged: true, title: "Default" }}
       />
@@ -139,18 +149,21 @@ export function DefaultChanges({ mode }: { mode: DefaultMode }) {
 /**
  * The Changes tab of a screen that the changed Action affects. The Changes
  * filter does not list it, so it has no stepper. Side by side compares the
- * frame that the artboard shows, and the comparison details name the changed
- * Action, which opens its Changes tab, and end with the shared-impact
- * sentence. No artboard shows the screen in another mode, so the other
- * tiles are pictures.
+ * frame that the artboard shows, and the comparison details list each
+ * compared frame's outcome, name the changed Action, which opens its Changes
+ * tab, and end with the shared-impact sentence. No artboard shows the screen
+ * in another mode, so the other tiles are pictures.
  */
 export function AffectedChanges({
   design,
   frame,
+  outcomes,
 }: {
   /** The artboard that renders the tab. */
   design: CanvasDestination;
   frame: CompareFrame;
+  /** The outcome line of each compared frame. */
+  outcomes: readonly string[];
 }) {
   return (
     <>
@@ -168,6 +181,7 @@ export function AffectedChanges({
       </InspectSection>
       <ChangesDetails
         changedComponents={changedAction()}
+        outcomes={outcomes}
         sharedImpact={SCREEN_STYLE_COPY.sharedImpact}
       />
     </>
@@ -180,11 +194,17 @@ export function AffectedChanges({
  * component variant stays eligible for comparison with a missing current
  * side, so the rail names both versions and every mode is offered, and its
  * comparison falls back to Side by side. Only Compact's frames compare, so
- * Side by side offers their chips and compares Compact · Light. No artboard
- * shows this tab in Current, Compact · Dark's pair, or another mode, which
- * falls back to Side by side, so those tiles and that chip are pictures.
+ * Side by side offers their chips and compares Compact · Light, and the
+ * comparison details list the outcome of each. No artboard shows this tab
+ * in Current, Compact · Dark's pair, or another mode, which falls back to
+ * Side by side, so those tiles and that chip are pictures.
  */
-export function RemovedChanges() {
+export function RemovedChanges({
+  outcomes,
+}: {
+  /** The outcome line of each of Compact's compared frames. */
+  outcomes: readonly string[];
+}) {
   return (
     <>
       <changeStepper.Component
@@ -207,6 +227,7 @@ export function RemovedChanges() {
         />
       </InspectSection>
       <ChangesDetails
+        outcomes={outcomes}
         reasons={reasonEvidence(["removed"])}
         savedVariant={{ savedPropsUnchanged: false, title: "Compact" }}
       />
@@ -214,7 +235,12 @@ export function RemovedChanges() {
   );
 }
 
-/** The frame that an affected screen's Side by side compares in a viewport. */
-export function affectedFrame(viewport: "desktop" | "mobile"): CompareFrame {
-  return viewport === "desktop" ? "desktop-light" : "mobile-light";
+/**
+ * The frame that an affected screen's Side by side compares in a viewport:
+ * Desktop · Light on a desktop, and on a phone the frame that the phone
+ * opens the screen on.
+ */
+export function useAffectedFrame(viewport: "desktop" | "mobile"): CompareFrame {
+  const opening = useOpeningFrame(screenFramePicks());
+  return viewport === "desktop" ? "desktop-light" : opening;
 }

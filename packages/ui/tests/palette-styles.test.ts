@@ -137,11 +137,14 @@ test("the preview tokens keep their fixed values in a block that no appearance c
   const preview = declared(theme, ROOT, 1);
   assert.equal(preview.get("--mbk-screen-bg"), "#ffffff");
   assert.equal(preview.get("--mbk-dark-screen-bg"), "#121514");
-  assert.equal(preview.get("--mbk-device-home"), "rgba(20, 24, 20, 0.4)");
+  assert.equal(
+    preview.get("--mbk-highlight-scrim"),
+    "rgba(244, 246, 244, 0.72)",
+  );
   for (const selector of [AUTO_DARK, EXPLICIT_DARK])
     assert.deepEqual(
       [...declared(theme, selector).keys()].filter((role) =>
-        /^--mbk-(?:screen|dark-screen|device|highlight)-/u.test(role),
+        /^--mbk-(?:screen|dark-screen|highlight)-/u.test(role),
       ),
       [],
       selector,

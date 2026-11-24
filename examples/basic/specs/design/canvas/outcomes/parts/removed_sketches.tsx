@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { PreviewNotCaptured } from "../../../../../../../packages/ui/src/preview-state/preview-state.js";
 import { ExampleDocument } from "../../../../document.js";
+import type { ArtboardViewport } from "../../../parts/artboards.js";
 import { canvasScope } from "../../../parts/canvas_palette.js";
 import { RemovedFieldGuide } from "../../../parts/removed_documents.js";
 import {
@@ -10,7 +11,6 @@ import {
   MiniSurvey,
   MiniTimeline,
 } from "../../../parts/removed_shots.js";
-import type { ArtboardViewport } from "../../../parts/shell.js";
 import { PaymentTerms } from "../../../parts/spec_documents.js";
 import { readingFrame, screenFrames } from "../../parts/frames.js";
 

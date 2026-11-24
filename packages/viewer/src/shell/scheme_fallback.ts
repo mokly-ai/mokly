@@ -1,6 +1,7 @@
 /**
- * The Light-only fallback of whole documents, which have no frame label.
- * `@mokly/ui/scheme-fallback` draws the band and the note.
+ * The Light-only fallback of a preview that keeps its light render under
+ * Dark. A current document's reading frame names it in its label, which
+ * `@mokly/ui/canvas-frame` draws.
  */
 
 import type { ColorScheme } from "@mokly/model";

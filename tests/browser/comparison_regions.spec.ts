@@ -1,14 +1,17 @@
 import { expect } from "@playwright/test";
 
 import {
-  comparisonSection,
   expectRegionsAt,
-  expectStackAt,
-  openComparison,
-  paneFrame,
   regionRange,
   wheelOverRegion,
-} from "./comparison_scroll.js";
+} from "./comparison_region_offsets.js";
+import { expectStackAt } from "./comparison_scroll.js";
+import {
+  comparisonSection,
+  frameModes,
+  openComparison,
+  paneFrame,
+} from "./comparison_sections.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { modeButton } from "./comparison_ui.js";
 
@@ -26,7 +29,7 @@ test("Overlay and Difference move every version's panels together", async ({
   await expectStackAt(desktop, 0);
 
   await modeButton(page, "Difference").click();
-  await expect(desktop.locator(".mb-panes")).toHaveAttribute(
+  await expect(frameModes(desktop)).toHaveAttribute(
     "data-compare-mode",
     "difference",
   );

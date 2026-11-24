@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 
 import { defineScreen } from "@mokly/mokly";
 
-import { artboardStates } from "../../parts/artboards.js";
-import type { ArtboardViewport } from "../../parts/shell.js";
+import {
+  artboardStates,
+  type ArtboardViewport,
+} from "../../parts/artboards.js";
 import type { CatalogueView } from "../parts/catalogue.js";
 import {
   COMPARISON_VIEW,
@@ -11,6 +13,7 @@ import {
 } from "../parts/changes_sketches.js";
 import type { CanvasDestination } from "../parts/destinations.js";
 import { CANVAS_ENTRIES, type CanvasEntry } from "../parts/entries.js";
+import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
 import type { CanvasFrameSpec } from "../parts/frames.js";
 import { CanvasShell, type CanvasSheet } from "../parts/shell.js";
 import { FITS } from "../parts/sketches.js";
@@ -21,7 +24,7 @@ import {
   DIRECT_CHANGES,
   actionBranchAll,
 } from "./parts/branch.js";
-import { AffectedChanges, affectedFrame } from "./parts/changes.js";
+import { AffectedChanges, useAffectedFrame } from "./parts/changes.js";
 import { EXPLORER_PAGES as E } from "./parts/destinations.js";
 import { DirectChanges, directFrames } from "./parts/direct.js";
 import { explorerChangesMetadata, explorerState } from "./parts/metadata.js";
@@ -39,9 +42,9 @@ const AFFECTED_PAGES = {
 
 /**
  * A screen on its Changes tab in Side by side, which compares the frame that
- * the artboard shows: Desktop · Light on a desktop, and Mobile · Light on a
- * phone, where the stage shows the compared frame's pair. A comparison
- * cannot be highlighted.
+ * the artboard shows: Desktop · Light on a desktop, and on a phone the frame
+ * that the phone opens on, where the stage shows the compared frame's pair.
+ * A comparison cannot be highlighted.
  */
 function SideBySideScreen({
   catalogue,
@@ -93,7 +96,9 @@ function SideBySideScreen({
  * A screen that the changed Action affects, opened from the Action's Usage:
  * unmodified and outside Changes, so the catalogue in All selects it, yet
  * its Changes tab compares it in Side by side, where only its Actions
- * differ. On a phone, the compared frame's pair.
+ * differ. Each compared frame renders the Action, so its outcome reads that
+ * the components that the screen uses changed. On a phone, the compared
+ * frame's pair.
  */
 function Affected({
   screen,
@@ -103,7 +108,12 @@ function Affected({
   viewport: ArtboardViewport;
 }) {
   const design = AFFECTED_PAGES[screen];
-  const frame = affectedFrame(viewport);
+  const frame = useAffectedFrame(viewport);
+  const outcomes = frameOutcomes(
+    screenFramePicks(),
+    VIEW_OUTCOMES.screenComponents,
+    { picked: frame, viewport },
+  );
   return (
     <SideBySideScreen
       catalogue={actionBranchAll(screen)}
@@ -111,7 +121,9 @@ function Affected({
       entry={AFFECTED_ENTRIES[screen]}
       frame={frame}
       frames={affectedFrames(screen)}
-      panel={<AffectedChanges design={design} frame={frame} />}
+      panel={
+        <AffectedChanges design={design} frame={frame} outcomes={outcomes} />
+      }
       viewport={viewport}
     />
   );
@@ -126,7 +138,12 @@ function Affected({
  * phone shows the Changes sheet open.
  */
 function DirectChange({ viewport }: { viewport: ArtboardViewport }) {
-  const frame = affectedFrame(viewport);
+  const frame = useAffectedFrame(viewport);
+  const outcomes = frameOutcomes(
+    screenFramePicks(),
+    VIEW_OUTCOMES.screenChanged,
+    { picked: frame, viewport },
+  );
   return (
     <SideBySideScreen
       catalogue={DIRECT_CHANGES}
@@ -134,7 +151,7 @@ function DirectChange({ viewport }: { viewport: ArtboardViewport }) {
       entry={CANVAS_ENTRIES.welcome}
       frame={frame}
       frames={directFrames()}
-      panel={<DirectChanges frame={frame} />}
+      panel={<DirectChanges frame={frame} outcomes={outcomes} />}
       sheet="panel"
       viewport={viewport}
     />

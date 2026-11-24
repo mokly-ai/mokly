@@ -1,89 +1,62 @@
 /**
- * Factual comparison evidence rendered only in the Details inspector panel.
- * This container projects the evidence, words each reason, and decides which
+ * Factual comparison evidence of a screen or a component, in the right
+ * panel: in its Changes tab, or in Inspect while it has no Changes tab. This
+ * container projects the evidence, words each reason, and decides which
  * facts show. `@mokly/ui/comparison-evidence` renders them in the designs'
  * order.
  */
 
-import {
-  ComparisonEvidence,
-  type EvidenceReason,
-} from "@mokly/ui/comparison-evidence";
+import { ComparisonEvidence } from "@mokly/ui/comparison-evidence";
 
 import { isComponentVariant } from "../catalogue/variants.js";
 import { decodeProps } from "../components/codec.js";
 import { viewHref } from "../navigation/routes.js";
-import type { ChangeReason } from "../review/types.js";
 
 import { entryWording } from "./entry_wording.js";
 import { stylesheetDetails } from "./evidence_details.js";
+import { reasonSentences } from "./reason_sentences.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
 
 /**
- * Each reason's sentence from the component workspace design's table. A
- * `dependency` reads only through the changed files, and a `screen` reason,
- * which only a use case carries, has no sentence.
- */
-const REASON_SENTENCES = {
-  added: "Added to this branch.",
-  removed: "Removed on this branch.",
-  material: "Rendered content changed.",
-  implementation: "Rendered content changed where this component is used.",
-  inputs: "Supplied props or slots changed.",
-  structure: "Component instances changed.",
-  metadata: "Page details or saved examples changed.",
-} as const;
-
-/** The sentence of each reason that has one, keyed as the list was. */
-function reasonSentences(reasons: readonly ChangeReason[]): EvidenceReason[] {
-  return reasons.flatMap((reason, index) =>
-    reason.kind === "dependency" || reason.kind === "screen"
-      ? []
-      : [
-          {
-            key: `${reasonKey(reason)}/${index}`,
-            text: REASON_SENTENCES[reason.kind],
-          },
-        ],
-  );
-}
-
-function reasonKey(reason: ChangeReason): string {
-  return reason.kind === "dependency"
-    ? `${reason.kind}/${reason.path}`
-    : reason.kind === "screen"
-      ? `${reason.kind}/${reason.screenPath}`
-      : reason.kind;
-}
-
-/**
  * Comparison facts for the current entry and, once a comparison loads, its
- * compared views, in the designs' order: the branch point and, for a moved entry, the path its
+ * compared views, in the designs' order: the branch point, the outcome line
+ * of each compared frame and, for a moved entry, the path its
  * earlier side comes from; one sentence per reason; the changed and excluded
  * stylesheets; the paired prop values; then the changed components used here.
  * An entry that only changed components affect ends with their explanation in
  * place of the no-changes line.
  */
 export function WorkspaceEvidence({
+  base,
   compared = false,
   data,
+  outcomes,
   previousPath,
   variantPath,
 }: {
+  /**
+   * The branch point's name that the details give, the index's by default.
+   * The Changes tab gives an empty name, because its Compared rail names the
+   * branch point in place of the details' sentence.
+   */
+  base?: string;
   /** A comparison of the routed entry is loaded. */
   compared?: boolean;
   data: WorkspaceData;
+  /** The outcome line of each compared frame, which the Changes tab lists. */
+  outcomes?: readonly string[];
   previousPath?: string;
   variantPath?: string;
 }) {
   const evidence = workspaceComparisonEvidence(data, compared);
   const hidden = data.status === undefined && !evidence.comparison;
+  const branchPoint = base ?? data.base;
   if (hidden)
     return (
       <ComparisonEvidence
-        base={data.base}
+        base={branchPoint}
         hidden
         mark="data-workspace-evidence"
       />
@@ -98,18 +71,14 @@ export function WorkspaceEvidence({
     JSON.stringify(savedProps.before) !== JSON.stringify(savedProps.after);
   return (
     <ComparisonEvidence
-      base={data.base}
+      base={branchPoint}
       changedComponents={data.relatedComponents.map((component) => ({
         href: viewHref(component.path),
         key: component.path,
         title: component.title,
       }))}
       hidden={false}
-      ignored={
-        evidence.comparison
-          ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
-          : []
-      }
+      ignored={evidence.ignoredIds}
       inputChanges={data.inputChanges
         .filter((item) => item.variantPath === variantPath)
         .map((change) => ({
@@ -129,6 +98,7 @@ export function WorkspaceEvidence({
           ? wording.noChanges
           : undefined
       }
+      outcomes={outcomes}
       previousPath={previousPath}
       reasons={reasonSentences(evidence.reasons)}
       savedProps={

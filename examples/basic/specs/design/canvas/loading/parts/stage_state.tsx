@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 
+import { useRenderedAppearance } from "../../../parts/appearance.js";
 import { EmptyState, LoadingState } from "../../../parts/stage_content.js";
 import type { CanvasEntry, CanvasEntryKind } from "../../parts/entries.js";
 import type { CanvasFrameSpec } from "../../parts/frames.js";
+import { openingFrame, pickerFrames } from "../../parts/picked_frames.js";
 import { EntryStatus, FramePicker, KindTag } from "../../parts/stage.js";
 
 import type { PendingDetails } from "./details.js";
@@ -15,8 +17,8 @@ interface StageEntry {
   entry: CanvasEntry;
   frames: readonly CanvasFrameSpec[];
   /**
-   * The frame that the picker shows: a screen's Mobile · Light by default,
-   * or the selected frame of a variant set.
+   * The frame that the picker shows: the selected frame of a variant set,
+   * or by default the frame that a screen opens on.
    */
   picked?: string | undefined;
 }
@@ -24,11 +26,12 @@ interface StageEntry {
 /**
  * The compact entry bar of an entry whose stage holds no section: its title
  * tag, a component's kind tag and its change status, as the stage draws
- * them, and the stage's frame picker, which lists the entry's frames and
- * opens on the picked frame. The catalogue index names the entry's views, so
- * the picker lists them before the entry's detail arrives.
+ * them, and the stage's frame picker, which lists the entry's frames in the
+ * shell's order and opens on the picked frame. The catalogue index names the
+ * entry's views, so the picker lists them before the entry's detail arrives.
  */
-function EntryBar({ entry, frames, picked = "mobile-light" }: StageEntry) {
+function EntryBar({ entry, frames, picked }: StageEntry) {
+  const scheme = useRenderedAppearance();
   return (
     <div className="cv-entry-bar">
       <span className="cv-entry-title">
@@ -36,7 +39,11 @@ function EntryBar({ entry, frames, picked = "mobile-light" }: StageEntry) {
         <KindTag entry={entry} />
         <EntryStatus entry={entry} name="entry-status" />
       </span>
-      <FramePicker frames={frames} kind={entry.kind} picked={picked} />
+      <FramePicker
+        frames={pickerFrames(frames)}
+        kind={entry.kind}
+        picked={picked ?? openingFrame(frames, scheme)}
+      />
     </div>
   );
 }

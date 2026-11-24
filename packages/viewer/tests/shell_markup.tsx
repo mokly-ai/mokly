@@ -70,8 +70,8 @@ export interface ShellStoreFixtureOptions {
 
 /**
  * Supply the store of a non-interactive shell, as every mounted shell does.
- * On the home route, Details stay closed, both viewports show, and previews
- * use the Light scheme.
+ * On the home route, the selection shows both viewports, and previews use
+ * the Light scheme.
  */
 export function ShellStoreFixture({
   children,

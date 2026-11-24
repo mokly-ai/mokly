@@ -9,7 +9,11 @@ import {
   navRow,
   showMode,
 } from "./comparison_ui.js";
-import { chooseViewport, openCatalogueSheet } from "./workspace_actions.js";
+import {
+  chooseViewport,
+  openCatalogueSheet,
+  openInspectFold,
+} from "./workspace_actions.js";
 
 /** Visible catalogue rows, by entry path. */
 function visibleRows(page: Page): Promise<string[]> {
@@ -136,8 +140,8 @@ test("an affected consumer stays out of Changes while its changed component list
   page,
 }) => {
   await page.goto(`/view/${comparisonPaths.component}/`);
-  await page.getByRole("tab", { name: "Usage" }).click();
-  const affected = page.locator('[data-usage-section="affected"]');
+  const usage = await openInspectFold(page, "usage");
+  const affected = usage.locator('[data-usage-section="affected"]');
   await expect(affected.getByRole("heading")).toHaveText(
     "Affected screens and components",
   );
@@ -251,7 +255,9 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
     .toBeCloseTo(start + 64, 0);
   expect(reviews).toEqual([]);
 
-  await showMode(page, "Overlay");
+  // Overlay compares the Desktop frame of each scheme, Light and Dark, so
+  // their two stacks hold four versions.
+  await showMode(page, "Overlay", 4);
   await expect(handle).toHaveAttribute("aria-valuenow", String(start + 64));
   await handle.focus();
   await page.keyboard.press("ArrowLeft");

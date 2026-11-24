@@ -1,5 +1,3 @@
-import { mockLink } from "@mokly/mokly";
-
 import { SavedPropsPanel } from "../../../../../../../packages/ui/src/controls-panel/controls-panel.js";
 import {
   PropValues,
@@ -12,8 +10,6 @@ import {
   actionFields,
   type ActionValues,
 } from "../../parts/component_props.js";
-
-import { EXPLORER_PAGES as E } from "./destinations.js";
 
 /** The Action's props in the order that its controls declare them. */
 const ACTION_PROPS = ["label", "disabled", "radius", "tone", "hint"] as const;
@@ -35,7 +31,7 @@ const DEFAULT_FIELDS = actionFields(ACTION_SAVED.default);
 /** The number of fields that Props counts while it edits Default. */
 export const DEFAULT_FIELD_COUNT = DEFAULT_FIELDS.length;
 
-/** The edit form of the Action's saved variant Default, in Current. */
+/** The edit form of the Action's saved variant Default on Inspect. */
 export function DefaultControls() {
   return (
     <VariantControls
@@ -43,25 +39,6 @@ export function DefaultControls() {
       id="action-default"
       title="Default"
     />
-  );
-}
-
-/**
- * Default's saved props while a compare mode is on: read-only, with the
- * reason, and Switch to Current, which opens Default in Current on Inspect,
- * where Props edits it again.
- */
-export function DefaultSavedProps() {
-  return (
-    <SavedPropsPanel
-      current={CONTROLS_COPY.switchToCurrent}
-      currentHref={mockLink(E.explorerUsage)}
-      heading={CONTROLS_COPY.readonlyHeading}
-      notice={CONTROLS_COPY.comparison}
-      title="Default"
-    >
-      <PropValues values={savedValues(ACTION_SAVED.default)} />
-    </SavedPropsPanel>
   );
 }
 

@@ -82,8 +82,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
         }
       }
 
+      // The scheme choices keep the address, which names the chosen viewport.
       await expect(row).toHaveAttribute("aria-current", "page");
-      await expect(page).toHaveURL(`/view/${entryPath}/`);
+      await expect(page).toHaveURL(`/view/${entryPath}/?viewport=${viewport}`);
     });
   }
 

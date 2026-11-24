@@ -1,8 +1,6 @@
 # Component Workspace Design
 
-Status: The right panel's tabs, its Nested components section and its Frames filter are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
-## View Controls
+## Frames Filter And Highlighting
 
 The [Frames filter](./mokly-shell-canvas-stage.md#frames-filter) in Inspect
 replaces the viewport choice and holds the Highlight components switch. The
@@ -90,8 +88,12 @@ while it shows
 Unmodified when its entry detail marks it comparison-eligible, because changed
 components affect it. Missing or nonmatching evidence keeps status and
 independently supplied eligibility; never derive one from the other. Axis,
-entry, and evidence updates recompute the decision. Any other Unmodified entry
-offers no compare modes and uses control marks plus `Changed views` for
+entry, and evidence updates recompute the decision. An Unmodified entry offers
+no compare modes, unless a changed component affects it or another shown row
+of its variant set compares under the
+[screen controls](./mokly-changes-controls.md#screen-controls). When only
+another row compares, the entry's own row keeps its current frames while a
+mode shows. An Unmodified entry uses control marks plus `Changed views` for
 changes elsewhere. Removed screens show their badge
 without modes over their previous version under
 [removed previews](./mokly-removed-previews.md). Temporary prop
@@ -104,7 +106,8 @@ component variant keeps before/current presentation; a Removed screen shows
 its previous version.
 Missing inspection metadata is distinct from comparison availability.
 
-The runtime uses actual comparison eligibility for the selected saved example.
+The runtime uses the actual comparison eligibility of each shown row of a
+variant set, not of the selected saved example alone.
 Missing, pending, or nonmatching per-view evidence uses the entry-level status
 fallback without changing that eligibility and cannot trigger eager screenshot
 work merely to decide whether to offer compare modes. The same rule gates

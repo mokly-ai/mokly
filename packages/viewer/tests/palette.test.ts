@@ -20,8 +20,8 @@ const PACKAGE_SOURCE = fileURLToPath(new URL("../../ui/src/", import.meta.url));
 
 /**
  * The stylesheet that defines the palette, where a literal is the definition:
- * the theme declares the Light half with the fixed preview and device colours,
- * and the Dark half.
+ * the theme declares the Light half with the fixed preview colours, and the
+ * Dark half.
  */
 const PALETTE_SOURCES = new Set(["ui/src/theme/theme.css"]);
 
@@ -200,7 +200,7 @@ test("every painted token pair meets its criterion in both appearances", () => {
   assert.deepEqual(failures, []);
 });
 
-test("every status and device token value is covered by a painted pair", () => {
+test("every status token value is covered by a painted pair", () => {
   const paired = new Set(
     PALETTE_PAIRS.flatMap(([, foreground, background]) => [
       foreground,
@@ -209,7 +209,6 @@ test("every status and device token value is covered by a painted pair", () => {
   );
   const required = [...LIGHT.keys()].filter(
     (role) =>
-      role.startsWith("--mbk-device-") ||
       role.startsWith("--mbk-status-") ||
       role.startsWith("--mbk-danger-") ||
       [
@@ -218,9 +217,11 @@ test("every status and device token value is covered by a painted pair", () => {
         "--mbk-accent-surface",
       ].includes(role),
   );
+  // The three accent roles, and the bg, edge and ink of the Changed and
+  // Removed statuses and of the danger state.
   assert.ok(
-    required.length > 15,
-    `only ${required.length} status/device roles found`,
+    required.length >= 12,
+    `only ${required.length} status roles found`,
   );
   assert.deepEqual(
     required.filter((role) => !paired.has(role)),

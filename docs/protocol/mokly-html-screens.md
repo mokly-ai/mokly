@@ -34,7 +34,7 @@ is required because `title` is required; a missing block fails with
 | `movedFrom`    | string           | previous complete path for the [move contract](./mokly-moves.md)                                  |
 | `rationale`    | string           | design rationale shown in Details                                                                 |
 | `relatedDocs`  | string list      | related document links                                                                            |
-| `address`      | string           | screens: the address-bar label                                                                    |
+| `address`      | string           | screens: the address that the Address row of Inspect's Details shows                              |
 | `useCasePaths` | string list      | screens: use cases the screen belongs to                                                          |
 | `colorSchemes` | string list      | screens and components: non-empty subset including `light`                                        |
 | `propSchema`   | map              | a JSON Schema object under the prop schema profile; optional for screens, required for components |

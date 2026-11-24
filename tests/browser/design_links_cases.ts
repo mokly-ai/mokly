@@ -52,6 +52,9 @@ export function registerDesignLinks(
       page,
     }) => {
       const links = CATALOGUE_LINKS[viewport];
+      // Each destination's address names the kept viewport.
+      const at = (path: string) =>
+        new RegExp(`/view/${path}/\\?viewport=${viewport}$`);
       await page.setViewportSize({ width: 1600, height: 1000 });
       await page.goto("/view/design/canvas/stage/home/");
       await chooseViewport(page, viewport);
@@ -59,7 +62,7 @@ export function registerDesignLinks(
       await frame
         .getByRole("link", { name: "Open the first screen", exact: true })
         .click();
-      await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
+      await expect(page).toHaveURL(at("design/canvas/overview"));
       await expectFrameRoute(page, viewport, "design/canvas/overview");
       const catalogue = frame.getByRole("link", {
         name: links.open,
@@ -71,9 +74,7 @@ export function registerDesignLinks(
       await expect(catalogue).toHaveCSS("outline-style", "none");
       await expect(catalogue).not.toHaveCSS("box-shadow", "none");
       await page.keyboard.press("Enter");
-      await expect(page).toHaveURL(
-        /\/view\/design\/canvas\/stage\/catalogue\/$/,
-      );
+      await expect(page).toHaveURL(at("design/canvas/stage/catalogue"));
       await expectFrameRoute(page, viewport, "design/canvas/stage/catalogue");
       const row = page.locator(
         'a[data-nav-row][data-route="design/canvas/stage/catalogue/index.html"]',
@@ -82,14 +83,14 @@ export function registerDesignLinks(
       await expect(row).toBeVisible();
       await expectCanvasViewport(page, viewport);
       await page.goBack();
-      await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
+      await expect(page).toHaveURL(at("design/canvas/overview"));
       await expectFrameRoute(page, viewport, "design/canvas/overview");
       await expect(catalogue).toBeVisible();
       await page.goForward();
       await expect(row).toHaveAttribute("aria-current", "page");
       await expectFrameRoute(page, viewport, "design/canvas/stage/catalogue");
       await frame.getByRole("link", { name: links.close, exact: true }).click();
-      await expect(page).toHaveURL(/\/view\/design\/canvas\/overview\/$/);
+      await expect(page).toHaveURL(at("design/canvas/overview"));
       await expect(frame.locator(unexpectedDesignScripts())).toHaveCount(0);
       const iframe = page.locator(canvasFrame(viewport));
       expect(

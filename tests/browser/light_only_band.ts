@@ -9,7 +9,7 @@ import { expect, type Page } from "@playwright/test";
 /**
  * Expect the reading frame's label to name the source file alone under
  * Light, and the fallback after it under Dark, while the frame keeps the
- * light document and no band shows.
+ * light document and nothing else on the stage names the fallback.
  */
 export async function expectLightOnlyDocumentLabel(
   page: Page,
@@ -20,7 +20,9 @@ export async function expectLightOnlyDocumentLabel(
   await expect(label).toHaveText(file);
   await page.locator("[data-mokly-appearance-select]").selectOption("dark");
   await expect(label).toHaveText(`${file} · Light only`);
-  await expect(page.locator(".mbk-scheme-fallback")).toHaveCount(0);
+  await expect(
+    page.locator("[data-mokly-stage]").getByText("Light only"),
+  ).toHaveCount(1);
   await expect(page.locator("[data-mokly-fragment-frame]")).toHaveAttribute(
     "src",
     new RegExp(`/static/mokly-generated/${documentPath}/index\\.html$`, "u"),

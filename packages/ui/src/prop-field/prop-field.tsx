@@ -1,5 +1,5 @@
 /**
- * The fields of the Props tab: one row for each control, its name in a label
+ * The fields of the Props section: one row for each control, its name in a label
  * column and then its value, its help, and its error. An optional field has a
  * check box that supplies it, and says when it is not set. The field names
  * only its visible help or error as its control's description. A static

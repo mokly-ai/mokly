@@ -1,39 +1,8 @@
 {
   "families": {
-    "browse": "^design/browse/views/",
     "canvas": "^design/canvas/"
   },
   "parts": [
-    {
-      "family": "browse",
-      "component": "inspector/inspector",
-      "reason": "The tag picker's Welcome keeps its Details inspector.",
-      "except": []
-    },
-    {
-      "family": "browse",
-      "component": "preview/device-frame",
-      "reason": "The tag picker frames Welcome's previews.",
-      "except": []
-    },
-    {
-      "family": "browse",
-      "component": "controls/view-controls",
-      "reason": "The tag picker's header holds the view controls.",
-      "except": []
-    },
-    {
-      "family": "browse",
-      "component": "controls/tag-chip",
-      "reason": "The tag picker's chips and Welcome's tags draw tag chips.",
-      "except": []
-    },
-    {
-      "family": "browse",
-      "component": "controls/tag-picker",
-      "reason": "The states with the tag picker open.",
-      "only": ["design/browse/views/screen/tag-picker"]
-    },
     {
       "family": "canvas",
       "component": "canvas/canvas-frame",

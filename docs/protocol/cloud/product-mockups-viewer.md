@@ -46,10 +46,16 @@ compositions](./folio-viewer.md#compositions), in the ready drawing and in the
 cloud's own bar alike: the project switcher led by its workspace in muted ink,
 the publication pill, History with its history glyph, Share, the avatar, and
 More with its chevron. The layout also holds the catalogue navigation and the
-workspace layout, with its screen header and view controls. The stage holds the
-phone and browser frames, and a sample screen is the children of each frame. The
+workspace on the canvas. A desktop drawing's canvas shows the current screen's
+section with its frames, Desktop beside Mobile and Light above Dark, the zoom
+pill, and the right panel with Inspect and Changes. A phone drawing shows the
+compact layout: the entry bar, the one frame of the document's scheme and the
+dock. A sample screen fills each frame in the frame's own scheme. The
 navigation rows and the sample screen come from cloud fixtures, never from a
-fixture file of an installed package.
+fixture file of an installed package. A static document cannot measure its
+canvas, so the drawing keeps the view that Fit gives in a document of the size
+of Mokly's canvas frame, where every frame stands clear of the right panel and
+the floating controls.
 
 The parts draw their controls through the package's static props, so the
 drawing runs no script, and the layout states the drawing's color scheme as
@@ -166,8 +172,9 @@ The disk browser smoke opens each viewer drawing from the build output, and it
 fails on every browser error and on every request outside that output. The
 one exception is Mokly's frame probe script: Mokly links it from the site root,
 so the smoke serves that file from the output.
-Both device frames must hold the sample screen, and the selected
-viewport must be visible.
+Every frame on the canvas must hold the sample screen and show it: each frame
+of a desktop drawing, and the one frame of a phone drawing, of its own
+viewport.
 
 Share offers the screen the link points at, beneath the link itself: the whole
 catalogue or one of the publication's own current screens, narrowed to the ones

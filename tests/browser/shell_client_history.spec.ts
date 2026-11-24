@@ -62,13 +62,12 @@ test("saved-variant routes and fragment history keep separate entries", async ({
   page,
 }) => {
   await page.goto(route(ACTION));
-  const variants = page.getByRole("navigation", { name: "Saved variants" });
-  const base = variants.getByRole("link", { name: "Action", exact: true });
-  const disabled = variants.getByRole("link", {
-    name: "Disabled",
-    exact: true,
-  });
+  // The catalogue's rows open the set and its saved variant in the shell.
+  const base = navLink(page, ACTION);
+  const disabled = navLink(page, `${ACTION}/disabled`);
   await expect(base).toHaveAttribute("aria-current", "page");
+  if (!(await disabled.isVisible()))
+    await page.getByRole("button", { name: "Show variants of Action" }).click();
   await expect(page.locator("#mb-main iframe").first()).toBeVisible();
   const reads = readsOf(page);
   const loads = loadsOf(page);

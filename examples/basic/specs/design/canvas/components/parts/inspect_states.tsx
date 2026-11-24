@@ -11,6 +11,7 @@ import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
 import { SUBJECTS } from "../../../parts/subjects.js";
 import { COMPONENT_IDENTITIES } from "../../parts/component_identity.js";
 import { CANVAS_ENTRIES } from "../../parts/entries.js";
+import type { CanvasFrameSpec } from "../../parts/frames.js";
 import {
   InspectFold,
   InspectFrames,
@@ -23,12 +24,10 @@ import { ScreenUsage, actionUsedBy } from "../../parts/inspect_folds.js";
 import { InspectFrameSelected } from "../../parts/inspect_selection.js";
 import { ComponentHead, SET_FILTER } from "../../parts/inspect_sets.js";
 import { InspectVariants } from "../../parts/inspect_variants.js";
-import { frameOf } from "../../parts/set_sketches.js";
 
 import { REMOVED_COMPACT } from "./branch.js";
 import { EXPLORER_PAGES as E } from "./destinations.js";
 import { CompactSavedProps } from "./props.js";
-import { removedSetFrames } from "./sketches.js";
 
 /**
  * Farewell, a former consumer of the Action that the removal branch removed,
@@ -51,15 +50,21 @@ function removedConsumer(): UsageRow {
 
 /**
  * Inspect for the removed Compact on its parent's variant set, with its
- * Light frame selected: the Action's head with Compact's path and its
- * Removed status, the Action itself and its current variants with Compact
- * checked after them, the ten frames, and the selected frame. Props shows Compact's saved props
- * read-only. A removed variant keeps its own lists: the consumers of the
- * Action, and the screens that the change affects, which keep Farewell, a
- * removed former consumer. Removing a saved variant changes no current
- * consumer's render, so Welcome and Details stay out of that list.
+ * frame selected: the Action's head with Compact's path and its Removed
+ * status, the Action itself and its current variants with Compact checked
+ * after them, the ten frames, and the selected frame. Props shows Compact's
+ * saved props read-only. A removed variant keeps its own lists: the
+ * consumers of the Action, and the screens that the change affects, which
+ * keep Farewell, a removed former consumer. Removing a saved variant changes
+ * no current consumer's render, so Welcome and Details stay out of that
+ * list.
  */
-export function RemovedInspect() {
+export function RemovedInspect({
+  frame,
+}: {
+  /** Compact's selected frame. */
+  frame: CanvasFrameSpec;
+}) {
   return (
     <>
       <ComponentHead
@@ -83,11 +88,7 @@ export function RemovedInspect() {
         count={10}
         filter={{ ...SET_FILTER, unavailable: "empty" }}
       />
-      <InspectFrameSelected
-        frame={frameOf(removedSetFrames(), "compact-light")}
-        initial
-        variant="Compact"
-      />
+      <InspectFrameSelected frame={frame} initial variant="Compact" />
       <InspectFold name="props" title="Props">
         <CompactSavedProps />
       </InspectFold>

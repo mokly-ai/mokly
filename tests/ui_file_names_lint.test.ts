@@ -23,7 +23,7 @@ test("UI package sources and tests accept kebab-case names", async () => {
   for (const filePath of [
     "packages/ui/src/top-bar/top-bar.tsx",
     "packages/ui/src/icons/icons.ts",
-    "packages/ui/src/comparison-toolbar/comparison-toolbar.tsx",
+    "packages/ui/src/compare-modes/compare-modes.tsx",
     "packages/ui/src/menu2/menu2.mts",
     "packages/ui/tests/dom.ts",
     "packages/ui/tests/top-bar.test.tsx",

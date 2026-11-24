@@ -1,7 +1,5 @@
 # Viewer Semantic Palette
 
-Status: The canvas selection and the Changes tab, whose parts read this palette, are not built yet. [Milestone 12](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 The shell draws in Canvas, the look of a design file: a dot-grid canvas,
 white frames and panels with hairlines, near-black ink, one signal green, and
 Geist with Geist Mono. Dark uses neutral graphite with a lighter signal green.
@@ -108,7 +106,6 @@ their values from the Canvas roles. Names below are the theme's role names.
 | `--mbk-accent-edge`                        | `signal` at 45% opacity                             |
 | `--mbk-guide`                              | `border`                                            |
 | `--mbk-dot`                                | `dot`                                               |
-| `--mbk-browser-bar`                        | `surfaceMuted`                                      |
 | `--chrome-count-bg`                        | `text` at 8% opacity                                |
 | `--chrome-scrim`                           | the shade at 40% opacity                            |
 
@@ -198,30 +195,29 @@ validation alert are labels rather than controls: each names its own state in
 information and is held to the decorative hairline standard. The badges draw
 `--chrome-border`, and the alert draws `--mbk-danger-edge`.
 
-Eight controls keep a hairline boundary. The segmented control group, such as
-the All/Changes filter, and the compare-mode tiles of the Changes tab draw
-`--chrome-border`, and the resting resize grip on the floating catalogue's
-edge draws `--chrome-border-strong`. A pressed icon control, such as the
-pressed Highlight components toggle, draws `--chrome-border`, and so do a
-resting tag chip and a selected instance of the component tree. The address
-pill and the expand toggle of a browser frame's bar draw `--chrome-border`,
-and the toggle draws `--chrome-border-strong` on hover. The group shows its
-value through the filled selected segment, a tile shows the selected mode with
-a `--mbk-accent-deep` edge, and the grip draws the accent while hovered, focused
-or dragged. A pressed icon control fills with the accent tint and draws its
-glyph in the accent, a selected instance fills with the accent tint and draws
-its text in the accent, and a selected tag chip fills with the accent. On
-hover, the address pill draws its copy glyph in the accent, and the toggle
-draws its glyph in the accent. Decision: the shipped hairlines, not the
+Seven controls keep a hairline boundary. These draw `--chrome-border`: the
+segmented control group of the All/Changes filter; the compare-mode tiles and
+frame chips of the Changes tab; a pressed icon control, such as an embedded
+document's Dark preview toggle; a resting tag chip; and a selected instance of
+the component tree. The resting resize grip on the floating catalogue's edge
+draws `--chrome-border-strong`. The group fills its selected segment, a
+selected tile and a chosen frame chip draw a `--mbk-accent-deep` edge, the chip
+also fills with `signalSoft`, and the grip draws the accent while hovered,
+focused or dragged. A pressed icon control and a selected instance fill with
+the accent tint and draw their glyph or text in the accent, and a selected tag
+chip fills with the accent. Decision: the shipped hairlines, not the
 control edge, because each control already shows its state through a fill or
-the accent, and the design mockups render these shipped controls. No other
-boundary may claim these exceptions; a control state that draws a boundary
-must reach 3:1 against its own fill or the surface around it.
+the accent, a frame chip's label also names its frame, and the design mockups
+render them. No other boundary may claim these exceptions; a control state that
+draws a boundary must reach 3:1 against its own fill or the surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`
 rather than a dimmed copy of the enabled colours, so a disabled control reads
-the same way in both appearances.
+the same way in both appearances. An icon control without a fill or an edge at
+rest, such as Previous change or Next change, dims to 42% opacity instead, also
+while it is pressed. Decision: dimming, not the disabled
+tokens, because on such a control the disabled ink reads almost as enabled.
 
 ## Role Use
 
@@ -229,8 +225,9 @@ the same way in both appearances.
   heads, counts and field hints as normal text.
 - `--chrome-control-edge` draws the boundary of the appearance control, the
   mobile sheet grabber and native fields, including the prop field's input
-  border. The view controls draw no boundary at rest.
-  `--chrome-border-strong` keeps the device and pane frames.
+  border. The icon controls, such as Previous change and Next change, draw no
+  boundary at rest.
+  `--chrome-border-strong` keeps the pane frames.
 - The invalid-field border uses `--mbk-danger-ink`, matching the message it
   accompanies.
 
@@ -238,8 +235,8 @@ the same way in both appearances.
 
 The [preview palette](./mokly-viewer-palette-preview.md) holds the preview
 tokens: the colours of what a frame shows, which never change with the
-interface appearance. It also holds the fixed device artwork, the highlight
-mask and the component explorer's preview tokens.
+interface appearance. It also holds the highlight mask and the component
+explorer's preview tokens.
 
 ## Related Docs
 

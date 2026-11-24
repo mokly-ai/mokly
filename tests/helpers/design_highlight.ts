@@ -20,9 +20,6 @@ function unavailable(title: string): HighlightSwitch {
   return { disabled: true, title, description: title };
 }
 
-const COMPARISON = unavailable(
-  "A comparison is selected. Highlighting is available in Current.",
-);
 const REMOVED = unavailable("This preview is unavailable.");
 const LOADING = unavailable("Waiting for the component preview.");
 const EMPTY = unavailable("No registered components are used in this view.");
@@ -82,9 +79,10 @@ const SHELL_STATES: Readonly<
   "design/canvas/components/inspection/unavailable": unavailable(
     "Component inspection is unavailable for this view.",
   ),
-  // A comparison of the Action, whose read-only props a desktop and a
-  // phone's open panel sheet show.
-  "design/canvas/components/compare/props": COMPARISON,
+  // Inspect of the Action's Default while Overlay stays chosen in Changes
+  // shows the current frames, so the Action, a leaf, renders no registered
+  // component, on a desktop and in a phone's open panel sheet.
+  "design/canvas/components/compare/props": EMPTY,
   // An entry whose detail loads, and one whose detail failed, which mounts
   // no frame, so the shell keeps waiting for the preview. A phone whose
   // panel sheet is closed draws no switch.

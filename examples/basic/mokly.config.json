@@ -38,13 +38,12 @@
       "match": "design/library/**/index*.html",
       "stylesheets": [
         "design.css",
-        "design-stage.css",
+        "design-preview.css",
+        "design-shots.css",
         "design-canvas.css",
         "$componentStylesheets",
         "design-components.css",
         "design-component-details.css",
-        "design-component-inspector.css",
-        "design-component-workspace.css",
         "design-library.css"
       ]
     },
@@ -69,17 +68,6 @@
         "$componentStylesheets",
         "design-canvas-shell.css",
         "design-canvas-compact.css"
-      ]
-    },
-    {
-      "match": "design/**/index*.html",
-      "stylesheets": [
-        "design.css",
-        "design-stage.css",
-        "design-documents.css",
-        "$componentStylesheets",
-        "design-component-inspector.css",
-        "design-component-workspace.css"
       ]
     },
     {

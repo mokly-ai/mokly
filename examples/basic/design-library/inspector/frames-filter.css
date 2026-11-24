@@ -62,9 +62,22 @@
   text-decoration: none;
 }
 
+/* A toggle draws the focus glow of the transparent checkbox over it: the
+   package's --mbk-focus-glow, or the same mix of the Canvas signal where no
+   package element passes that property down. Forced colours drop the glow,
+   so there the toggle takes the system outline. */
 .cv-ff:has(> input:focus-visible) {
-  outline: 2px solid var(--cv-signal-deep);
-  outline-offset: 2px;
+  box-shadow: var(
+    --mbk-focus-glow,
+    0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+  );
+}
+
+@media (forced-colors: active) {
+  .cv-ff:has(> input:focus-visible) {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 /* A toggle without frames to show, such as Dark for a light-only screen,
@@ -134,9 +147,21 @@
   transform: translateX(14px);
 }
 
+/* The track draws the focus glow of the transparent switch over it, as the
+   toggles do. Forced colours drop the glow, so there the track takes the
+   system outline. */
 .cv-switch > input:focus-visible + .cv-switch-track {
-  outline: 2px solid var(--cv-signal-deep);
-  outline-offset: 2px;
+  box-shadow: var(
+    --mbk-focus-glow,
+    0 0 0 4px color-mix(in srgb, var(--cv-signal-deep) 75%, transparent)
+  );
+}
+
+@media (forced-colors: active) {
+  .cv-switch > input:focus-visible + .cv-switch-track {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 .cv-switch:has(> input:disabled) {

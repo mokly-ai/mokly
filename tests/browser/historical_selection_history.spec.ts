@@ -14,6 +14,7 @@ import { expect, type Page } from "@playwright/test";
 
 import { similarTextPageBase } from "../helpers/comparison_evidence_groups.js";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -22,6 +23,7 @@ import {
   navRow,
   snapshotOf,
 } from "./comparison_ui.js";
+import { inspectTitle } from "./inspect_head.js";
 import {
   historicalFrame,
   previousVersionLabel,
@@ -62,9 +64,7 @@ const CASES: readonly HistoryCase[] = [
 
 /** The removed entry's previous version, current in the navigation. */
 async function expectHistorical(page: Page, entry: HistoryCase) {
-  await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
-    entry.previousTitle,
-  );
+  await expect(inspectTitle(page)).toHaveText(entry.previousTitle);
   await expect(previousVersionLabel(page)).toHaveText(
     "Showing previous version",
   );
@@ -73,7 +73,7 @@ async function expectHistorical(page: Page, entry: HistoryCase) {
     "page",
   );
   await awaitRoutedDetail(page, entry.previousPath);
-  await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
+  await expectNoComparison(page);
   await expect(page.locator("iframe[data-workspace-frame]")).toHaveCount(0);
   await expect(page.locator("#mb-main .mbk-empty")).toHaveCount(0);
   if (entry.kind === "page") {
@@ -135,9 +135,7 @@ for (const entry of CASES)
     await chooseFilter(page, "changed");
     await navRow(page, entry.currentPath).click();
     await expect(page).toHaveURL(currentUrl);
-    await expect(page.locator("#mb-main .mbk-screen-head h2")).toHaveText(
-      entry.currentTitle,
-    );
+    await expect(inspectTitle(page)).toHaveText(entry.currentTitle);
     await expect(page.locator("[data-mokly-preview]")).toHaveCount(0);
     await page.goBack();
     await expect(page).toHaveURL(previousUrl);

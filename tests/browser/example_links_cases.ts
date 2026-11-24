@@ -74,8 +74,11 @@ export function registerExampleLinks(
         await expect(next).toBeFocused();
         await expect(next).toHaveCSS("outline-width", "2px");
         await page.keyboard.press("Enter");
+        // Each destination's address names the kept viewport.
         await expect(page).toHaveURL(
-          /\/view\/example\/screens\/details\/\?fragment=details$/,
+          new RegExp(
+            `/view/example/screens/details/\\?fragment=details&viewport=${viewport}$`,
+          ),
         );
         await expectFrameSource(
           page.locator(canvasFrame(viewport, scheme)),
@@ -87,7 +90,9 @@ export function registerExampleLinks(
           .locator('a[data-mokly-link-control="button"]')
           .filter({ hasText: "Return to welcome" })
           .click();
-        await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
+        await expect(page).toHaveURL(
+          new RegExp(`/view/example/screens/welcome/\\?viewport=${viewport}$`),
+        );
 
         await page.goto(
           designFileUrl(

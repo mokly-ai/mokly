@@ -29,8 +29,8 @@ Action's Default variant opens `design/canvas/components/compare/current`,
 compared frame opens its own artboard, and the other chips are depictions.
 The Inspect tab of a Changes artboard opens the same entry on Inspect:
 Welcome's opens `design/canvas/overview`, and the Default variant's in Overlay
-opens `design/canvas/components/compare/props`, where Props stays read-only
-and Switch to Current opens `design/canvas/components/usage`. The stepper's
+opens `design/canvas/components/compare/props`, where Inspect shows the
+current frames and Props edits them while Overlay stays chosen. The stepper's
 Previous change and Next change open the Changes artboard of the neighbouring
 change in the order of the Changes filter, and a change without one is a
 depiction.
@@ -97,8 +97,7 @@ with its saved variants.
 
 The query, chips, filtered rows, and picker visibility must agree. Selection
 closes the picker; opening it must not invent a query. Use the same mapping for
-Inspect's Tags chips in Welcome's search states, and for the picker button and
-chips of `design/browse/views/screen/tag-picker`. A filtered state keeps its
+Inspect's Tags chips in Welcome's search states. A filtered state keeps its
 query: its Fit opens the same filter with the picker closed, and its Changes
 filter, Changes tab and Zoom in are depictions, because no artboard shows the
 query with them. Other subjects, other branches, and comparison states keep

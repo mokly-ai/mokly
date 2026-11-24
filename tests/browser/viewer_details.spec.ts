@@ -19,7 +19,9 @@ import {
   VARIANT_EXCLUDED_LEAD,
   VARIANT_TERMINAL,
   expectExcludedOnly,
+  openChangesEvidence,
   openEvidence,
+  type DetailsTab,
 } from "./comparison_evidence_page.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import { navRow } from "./comparison_ui.js";
@@ -27,6 +29,7 @@ import {
   comparisonViewerHost,
   type ComparisonViewerHost,
 } from "./comparison_viewer_host.js";
+import { inspectTitle } from "./inspect_head.js";
 import { openCatalogueSheet } from "./workspace_actions.js";
 
 let host: ComparisonViewerHost;
@@ -38,14 +41,22 @@ test.afterAll(async () => {
 });
 
 /**
- * Mount the viewer over an index without `base` and open its Details, which
- * have no branch-point sentence.
+ * Mount the viewer over an index without `base` and open its Details in
+ * `tab`, which have no branch-point sentence: Inspect for an entry without a
+ * Changes tab, and Changes for a set that offers it, whose Compared rail then
+ * names the branch point alone.
  */
-async function embeddedDetails(page: Page, entry: string): Promise<Locator> {
+async function embeddedDetails(
+  page: Page,
+  entry: string,
+  tab: DetailsTab,
+): Promise<Locator> {
   await page.goto(
     `${host.url}/viewer.html?adapter=same-origin&base=none&responsive=1&entry=${entry}`,
   );
-  return openEvidence(page, null);
+  return tab === "Changes"
+    ? openChangesEvidence(page, null)
+    : openEvidence(page, null);
 }
 
 /** The excluded stylesheet of screens/stable, without the base sentence. */
@@ -65,7 +76,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       page,
     }) => {
       await expectScreenDetails(
-        await embeddedDetails(page, comparisonPaths.unchanged),
+        await embeddedDetails(page, comparisonPaths.unchanged, "Inspect"),
       );
       // The same viewer over the index with its base shows the sentence.
       await page.goto(
@@ -78,7 +89,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
       page,
     }) => {
       await expectExcludedOnly(
-        await embeddedDetails(page, comparisonPaths.quietParent),
+        await embeddedDetails(page, comparisonPaths.quietParent, "Changes"),
         [VARIANT_EXCLUDED_LEAD, EXAMINED_LEAD, VARIANT_TERMINAL],
         [sheets.theme],
       );
@@ -87,10 +98,10 @@ for (const [name, size] of INSPECTOR_VIEWPORTS)
     test("an embedded screen reached by navigation stays without the branch-point sentence", async ({
       page,
     }) => {
-      await embeddedDetails(page, comparisonPaths.quietParent);
+      await embeddedDetails(page, comparisonPaths.quietParent, "Changes");
       if (name === "mobile") await openCatalogueSheet(page);
       await navRow(page, comparisonPaths.unchanged).click();
-      await expect(page.locator("#viewer .mbk-screen-head h2")).toHaveText(
+      await expect(inspectTitle(page.locator("#viewer"))).toHaveText(
         "Stable screen",
       );
       await expectScreenDetails(await openEvidence(page, null));

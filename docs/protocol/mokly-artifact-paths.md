@@ -170,12 +170,14 @@ or an embedding application's URL. An adapter validates a current
 document's path under `/static/mokly-generated/`, strips that fixed prefix
 once, resolves the logical route through the path functions, and keeps a
 valid fragment separately; authored closure URLs are resources, not entry
-routes. Comparison snapshots and removed previews resolve from the generation
-that the index's `comparisonUrl` names; their `snapshots/before/` and
-`snapshots/after/` paths are generation-local, never current `/static/`
-paths, and use their own adapters, as do transient renders under
-`mokly-viewer/components/renders/` of the
-[component controls contract](./mokly-component-controls.md). A
+routes. In Serve, the comparison snapshots of a current
+[compared row](./mokly-selected-comparisons.md) resolve from the generation of
+the row's own selection. Every other comparison snapshot, a removed entry's
+included, and every removed preview resolve from the generation that the
+index's `comparisonUrl` names. Their `snapshots/before/` and `snapshots/after/`
+paths are generation-local, never current `/static/` paths, and use their own
+adapters, as do transient renders under `mokly-viewer/components/renders/` of
+the [component controls contract](./mokly-component-controls.md). A
 provider-normalized extensionless URL identifies the same document through
 `providerNormalizedHtmlPath`.
 

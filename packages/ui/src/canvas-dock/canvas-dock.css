@@ -67,8 +67,14 @@
   padding: 0;
 }
 
-.mbk-dock-control:hover {
+button.mbk-dock-control:hover {
   background: var(--chrome-hover);
+}
+
+/* The picture of a control in a static depiction acts on nothing, so it
+   keeps its resting look and the default pointer. */
+span.mbk-dock-control {
+  cursor: default;
 }
 
 .mbk-dock-rule {

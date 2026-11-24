@@ -15,6 +15,7 @@ import { readCatalogueIndex, readEntryDetail } from "@mokly/viewer";
 
 import { accentColor } from "../helpers/comparison_catalogue.js";
 
+import { expectNoComparison } from "./comparison_absence.js";
 import { comparisonPaths, test } from "./comparison_test.js";
 import {
   awaitRoutedDetail,
@@ -56,11 +57,7 @@ async function openRemoved(
   ).toBeVisible();
   await expect(page.locator("#mb-main")).not.toContainText("was removed");
   await awaitRoutedDetail(page, entryPath);
-  await expect(
-    page.locator(
-      "[data-diff-stage], [data-diff-mode], [data-diff-refresh], .mbk-diff-toolbar",
-    ),
-  ).toHaveCount(0);
+  await expectNoComparison(page);
 }
 
 /** The historical document of a removed screen's Light frame of a viewport. */
@@ -106,17 +103,18 @@ for (const width of [390, 1280])
         await comparisonIndex(request, baseURL),
         comparisonPaths.removedScreen,
       );
-      // Bare canvas frames, with no device chrome, show the historical views.
-      await expect(
-        page.locator(`${STAGE} :is(.phone-frame, .browser-frame)`),
-      ).toHaveCount(0);
-      // Each frame shows its own viewport's previous document. The compact
-      // layout shows one frame at a time, which the entry bar's picker picks.
+      // Each frame, a bare canvas frame of its viewport, shows its own
+      // viewport's previous document. The compact layout shows one frame at
+      // a time, which the entry bar's picker picks.
       for (const viewport of ["mobile", "desktop"] as const) {
         if (width < 900)
           await page.getByRole("combobox", { name: "Frame" }).selectOption({
             label: `${viewport === "desktop" ? "Desktop" : "Mobile"} · Light`,
           });
+        await expect(historicalFrame(page, viewport)).toHaveAttribute(
+          "data-canvas-frame",
+          viewport,
+        );
         await expect(screenFrame(page, viewport).locator("h1")).toHaveText(
           "Historical screen",
         );
@@ -163,8 +161,8 @@ for (const width of [390, 1280])
         page.frameLocator(`${STAGE} iframe`).locator("h1"),
       ).toHaveText("Historical page");
       await openRemoved(page, index, comparisonPaths.removedScreen);
-      // The compact layout shows the Mobile frame alone; the preview still
-      // reads the document of each frame of the selected viewports.
+      // The compact layout shows the Mobile frame alone, and the preview
+      // reads the documents of the Mobile column's frames.
       const shown =
         width < 900 ? (["mobile"] as const) : (["desktop", "mobile"] as const);
       for (const viewport of shown)
@@ -182,14 +180,17 @@ for (const width of [390, 1280])
         ).toHaveLength(reads);
       // Each previous document is read once, from the generation's Before
       // side: the page's, and one for each frame of the screen's section,
-      // whose Light row stands above its Dark row.
+      // whose Light row stands above its Dark row: both columns on the wide
+      // canvas, and the Mobile column in the compact layout.
       const before = `${generation}snapshots/before/mokly-generated`;
+      const screen = (file: string) =>
+        `${before}/${comparisonPaths.removedScreen}/${file}`;
+      const desktop = ["index.desktop.dark.html", "index.desktop.html"];
       expect(paths.filter((path) => path.endsWith(".html")).sort()).toEqual([
         `${before}/${comparisonPaths.removedPage}/index.html`,
-        `${before}/${comparisonPaths.removedScreen}/index.desktop.dark.html`,
-        `${before}/${comparisonPaths.removedScreen}/index.desktop.html`,
-        `${before}/${comparisonPaths.removedScreen}/index.mobile.dark.html`,
-        `${before}/${comparisonPaths.removedScreen}/index.mobile.html`,
+        ...(width < 900 ? [] : desktop.map(screen)),
+        screen("index.mobile.dark.html"),
+        screen("index.mobile.html"),
       ]);
     });
   });

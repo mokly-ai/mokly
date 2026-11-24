@@ -1,11 +1,12 @@
 /**
  * The compact layout's frames: one frame at a time on the canvas, and the
  * frame picker of the entry bar, which lists the shown frames of the canvas
- * frames model. A screen shows the frame that the selection's viewport and
- * scheme name, where `both` reads as Mobile, as does a removed screen's
- * previous version. A variant set shows its whole set until a selection
- * picks a frame: the routed saved variant's frame in the selection's scheme.
- * A use case shows one step frame, which `canvas_use_case_pick.ts` picks.
+ * frames model, a screen's frames of both viewports in the schemes that the
+ * Frames filter shows. A screen shows the frame that the selection's
+ * viewport and scheme name, where `both` reads as Mobile, as does a removed
+ * screen's previous version. A variant set shows its whole set until a
+ * selection picks a frame, which the workspace's canvas selection holds. A
+ * use case shows one step frame, which `canvas_use_case_pick.ts` picks.
  */
 
 import type { EntryBarFrame } from "@mokly/ui/entry-bar";
@@ -62,8 +63,8 @@ export function pickerFrames(
  * The key of the frame that the compact layout shows of a screen's frames,
  * which their viewport and scheme name, such as `mobile-light`: the frame of
  * the selection's viewport and scheme, with `both` read as Mobile; else that
- * viewport's Light frame, as a screen without a dark view keeps; else the
- * first frame.
+ * viewport's Light frame, as a screen without a dark view keeps; else its
+ * Dark frame, while the Frames filter hides Light; else the first frame.
  */
 export function pickedFrameKey(
   frames: readonly { key: string }[],
@@ -73,7 +74,12 @@ export function pickedFrameKey(
     selection.viewport === "both" ? "mobile" : selection.viewport;
   const named = (scheme: CanvasScheme) =>
     frames.find((frame) => frame.key === `${viewport}-${scheme}`);
-  return (named(selection.colorScheme) ?? named("light") ?? frames[0])?.key;
+  return (
+    named(selection.colorScheme) ??
+    named("light") ??
+    named("dark") ??
+    frames[0]
+  )?.key;
 }
 
 /**
@@ -86,24 +92,6 @@ export function pickedScreenFrame(
 ): string | undefined {
   const order = pickerFrames(frames).map(({ value }) => ({ key: value }));
   return pickedFrameKey(order, selection);
-}
-
-/**
- * The frame that the compact layout shows of a variant set: the routed saved
- * variant's frame in the selection's scheme, or its Light frame without one.
- * The set's own route selects no frame, so the whole set shows.
- */
-export function pickedSetFrame(
-  frames: readonly CanvasFramePlan[],
-  variantPath: string | undefined,
-  scheme: CanvasScheme,
-): string | undefined {
-  if (variantPath === undefined) return undefined;
-  const row = frames.filter((frame) => frame.variantPath === variantPath);
-  return (
-    row.find((frame) => frame.scheme === scheme) ??
-    row.find((frame) => frame.scheme === "light")
-  )?.key;
 }
 
 /**

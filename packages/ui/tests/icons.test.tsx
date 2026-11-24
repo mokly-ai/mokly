@@ -10,11 +10,8 @@ import {
   BrandIcon,
   ChevronDownIcon,
   ChevronIcon,
-  CollapseIcon,
   ComponentVariantIcon,
-  CopyIcon,
   DocumentIcon,
-  ExpandIcon,
   FlowIcon,
   FolderIcon,
   FolderOpenIcon,
@@ -33,11 +30,8 @@ const GLYPHS: readonly [string, ComponentType<{ size?: number }>, number][] = [
   ["BrandIcon", BrandIcon, 22],
   ["ChevronDownIcon", ChevronDownIcon, 13],
   ["ChevronIcon", ChevronIcon, 13],
-  ["CollapseIcon", CollapseIcon, 13],
   ["ComponentVariantIcon", ComponentVariantIcon, 15],
-  ["CopyIcon", CopyIcon, 13],
   ["DocumentIcon", DocumentIcon, 13],
-  ["ExpandIcon", ExpandIcon, 13],
   ["FlowIcon", FlowIcon, 13],
   ["FolderIcon", FolderIcon, 13],
   ["FolderOpenIcon", FolderOpenIcon, 13],
@@ -49,14 +43,9 @@ const GLYPHS: readonly [string, ComponentType<{ size?: number }>, number][] = [
 ];
 
 const WORKSPACE_ICONS: readonly WorkspaceIconName[] = [
-  "details",
   "components",
-  "props",
-  "usage",
   "highlight",
   "scheme",
-  "viewport",
-  "close",
 ];
 
 /** The one svg a render draws. */
@@ -152,7 +141,7 @@ test("each workspace icon draws its own shape in the 18px frame", () => {
     unmount();
   }
   assert.equal(shapes.size, WORKSPACE_ICONS.length);
-  const { container } = render(<WorkspaceIcon name="close" size={12} />);
+  const { container } = render(<WorkspaceIcon name="scheme" size={12} />);
   assert.equal(drawn(container).getAttribute("width"), "12");
 });
 

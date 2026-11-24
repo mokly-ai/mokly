@@ -64,6 +64,15 @@
   width: 312px;
 }
 
+.mbk-float-head {
+  display: flex;
+  flex: none;
+  align-items: stretch;
+  height: 44px;
+  padding: 0 6px 0 4px;
+  border-bottom: 1px solid var(--cv-border);
+}
+
 .mbk-float-body {
   display: flex;
   flex: 1;
@@ -132,6 +141,12 @@
     border-radius: 0;
   }
 
+  /* The sheet's head takes the close control at its end. */
+  .mbk-float-head {
+    height: 46px;
+    padding-right: 52px;
+  }
+
   /* The grabber: a wide target at the sheet's top centre that draws the
      grip in the control edge, which keeps 3:1 on the surface. */
   .mbk-float-grab {
@@ -176,8 +191,15 @@
     cursor: pointer;
   }
 
-  .mbk-float-close:hover {
+  button.mbk-float-close:hover {
     background: var(--chrome-hover);
     color: var(--cv-text);
+  }
+
+  /* The pictures of the grabber and the close control in a static
+     depiction act on nothing, so they keep their resting look and the
+     default pointer. */
+  span:is(.mbk-float-grab, .mbk-float-close) {
+    cursor: default;
   }
 }

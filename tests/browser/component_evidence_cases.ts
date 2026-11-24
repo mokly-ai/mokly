@@ -9,15 +9,13 @@ import { copiedDesignFileUrl } from "./static_test.js";
 type Viewport = "desktop" | "mobile";
 
 /**
- * Artboards whose frames draw highlight chips: Welcome with Highlight
- * components on, and the Toolbar's nested Actions once a reader checks it.
- * A phone draws the switch only in an open panel sheet.
+ * Artboards whose frames draw highlight chips: the Toolbar's nested Actions
+ * once a reader checks Highlight components, and Welcome's phone frame with
+ * it on. A phone draws the switch only in an open panel sheet. Welcome's
+ * desktop stage stands at 42%, where the frames draw no chips.
  */
 const CHIPS: Record<Viewport, readonly (readonly [string, boolean])[]> = {
-  desktop: [
-    ["design/canvas/inspect/frames", false],
-    ["design/canvas/stage/component-set/toolbar", true],
-  ],
+  desktop: [["design/canvas/stage/component-set/toolbar", true]],
   mobile: [["design/canvas/inspect/frames", false]],
 };
 

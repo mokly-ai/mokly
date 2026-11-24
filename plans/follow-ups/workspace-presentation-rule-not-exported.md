@@ -3,18 +3,18 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-17, from the gap list `plans/follow-ups/mokly-upstream-gaps-to-file.md`, which the Mokly 0.18.0 upgrade of the cloud wrote on 2026-11-02 on the branch `calummoore/mokly-cli-upgrade`. The move of Mokly Cloud into this repository split that list into items.
-- **Location:** `docs/mockups/src/screens/product/viewer/published-view.ts:9-30` and `docs/protocol/mokly-changes-controls.md:7-21`.
+- **Location:** `docs/mockups/src/screens/product/viewer/published-frames.ts:35-129`, `published-workspace.tsx:94` and `published-inspect.tsx:36-49` in the same folder, and `docs/protocol/mokly-changes-controls.md:7-21`.
 - **Reason:** A fix adds a public export to a Mokly package, which the user decides.
 
 - **Source:** Review.
 - **Category:** Mockup.
 - **Background:**
-  - The workspace of the Browse shell shows, for each frame, a view and its fallback, the change status, the comparison band, and the change marks of the view controls. `docs/protocol/mokly-changes-controls.md:7-21` states these rules.
+  - The workspace of the Browse shell shows, for each frame, a view and its fallback, the change status, the compare modes, and the change marks of the Frames filter's toggles. `docs/protocol/mokly-changes-controls.md:7-21` states these rules.
   - No public export of `@mokly/viewer`, `@mokly/model` or `@mokly/ui` gives this presentation for a static depiction.
-  - So the cloud mockups restate the rule in `ShownView` of `docs/mockups/src/screens/product/viewer/published-view.ts:9-30`: the scheme, the fallback, the status, `eligible`, and the marks.
+  - So the cloud mockups restate the rule. `docs/mockups/src/screens/product/viewer/published-frames.ts:35-129` gives the scheme of each frame, the Light fallback, the status of the shown frames, and the `Changed views` row. `published-workspace.tsx:94` sets `eligible` of the compare modes from that status. `published-inspect.tsx:36-49` gives the `Light only` note and the marks of the Frames filter's toggles.
   - The review of the cloud mockup work for the Mokly 0.18.0 upgrade found this on 2026-11-02.
 - **Problem:** Static mockups restate a rule of the Browse shell, and their copy can drift from it.
-- **Impact if no action:** A mockup can show a status, a band or a mark that the shell does not show, and no check finds it.
+- **Impact if no action:** A mockup can show a status, a compare mode or a mark that the shell does not show, and no check finds it.
 - **Root question:** How does a static mockup get the workspace presentation of the shell?
 - **Options:**
   - **A.** Keep the restated rule in the mockups. Effort: Small.

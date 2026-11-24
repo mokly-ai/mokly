@@ -1,0 +1,107 @@
+/* The right panel's tab strip: text tabs that stand on the panel head's
+   hairline. The selected tab is ink at 600 over a 2px signal rule, and each
+   label reserves the width of its bold form, so no tab shifts. */
+.mbk-panel-tabs {
+  display: flex;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.mbk-panel-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--cv-text-muted);
+  font: 500 13px/1 var(--cv-sans);
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+button.mbk-panel-tab:hover {
+  color: var(--cv-text);
+}
+
+/* The picture of a tab in a static depiction acts on nothing, so it keeps
+   its resting look and the default pointer. Its current mark draws the
+   selected tab's look. */
+span.mbk-panel-tab {
+  cursor: default;
+}
+
+.mbk-panel-tab:is([aria-selected="true"], [aria-current="true"]) {
+  color: var(--cv-text);
+  font-weight: 600;
+}
+
+/* The rule lies on the head's hairline, under the selected tab's label. */
+.mbk-panel-tab:is([aria-selected="true"], [aria-current="true"])::after {
+  position: absolute;
+  right: 10px;
+  bottom: -1px;
+  left: 10px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--cv-signal);
+  content: "";
+}
+
+/* The head clips what stands outside it, so the focus glow stands inside
+   the tab. */
+.mbk-panel-tab:focus-visible {
+  box-shadow: var(--mbk-focus-glow-inset);
+}
+
+/* The label keeps the width of its bold form, so no tab shifts. */
+.mbk-panel-tab-label {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.mbk-panel-tab-label::after {
+  height: 0;
+  overflow: hidden;
+  font-weight: 600;
+  content: attr(data-text);
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.mbk-panel-tab-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mbk-panel-tab-body[hidden] {
+  display: none;
+}
+
+/* A narrowed panel takes narrower tabs, and a sheet larger ones. */
+@media (width < 73.75rem) {
+  .mbk-panel-tab {
+    padding: 0 8px;
+    font-size: 12.5px;
+  }
+
+  .mbk-panel-tab:is([aria-selected="true"], [aria-current="true"])::after {
+    right: 8px;
+    left: 8px;
+  }
+}
+
+@media (width < 56.25rem) {
+  .mbk-panel-tab {
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .mbk-panel-tab:is([aria-selected="true"], [aria-current="true"])::after {
+    right: 12px;
+    left: 12px;
+  }
+}

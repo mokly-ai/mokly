@@ -12,8 +12,7 @@ canonical states in both viewport variants.
 
 The `Design` navigation group holds the approved mockups for Mokly's own
 catalogue shell and Changes controls: the Canvas viewer family under
-`specs/design/canvas/`, and the one older screen that it keeps under
-`specs/design/browse/`. Implementation notes for those mockups live here and
+`specs/design/canvas/`. Implementation notes for those mockups live here and
 in each entry's description and rationale, never inside the rendered
 screens:
 
@@ -32,9 +31,6 @@ screens:
   keyboard stops. Unsupported subject/scheme/comparison combinations have no
   link; they cannot silently open a different comparison scenario. Existing
   native comparison-details disclosures still open locally.
-- The kept older artboard draws one visible navigation split grip in its
-  resting state. Pointer, keyboard, bounds, and persistence behavior are
-  specified in the runtime protocol.
 - A saved variant of a design screen, such as a tag search state of
   `design/canvas/search/tags`, has its own file-derived screen path and stays
   grouped below its parent screen in navigation.
@@ -72,8 +68,7 @@ screens:
   field, and an open picker drops as a sheet under the bar. No other sheet
   opens, so the depicted state stays readable.
 - One Appearance selector sits in the top bar on both wide and narrow
-  artboards. The screen head of the kept older artboard carries no separate
-  scheme control.
+  artboards.
 - The Changes tab holds the five compare modes: Current, Side by side, Overlay,
   Difference, and Swipe. Viewport and scheme selections stay in the Frames
   filter and the top bar. Every entry starts in Current, and diff snapshots
@@ -104,9 +99,6 @@ intentional:
   follow the folder ordering contract.
 - Live Browse always shows All/Changes. It reports unavailable Changes when
   Git evidence cannot be prepared; artboards depict explicit fixture states.
-- The kept older artboard draws a small-phone variant so a full 390×844 phone
-  fits the depicted narrow shell; the served shell always uses the full-size
-  phone frame and scales it below the responsive breakpoint.
 - The served tag chips and tag control are buttons that announce their state —
   a pressed chip for the entered tag, an expanded control for the open panel —
   and the panel is hidden until it is opened. The artboards instead use native

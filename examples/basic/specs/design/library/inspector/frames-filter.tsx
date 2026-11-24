@@ -19,14 +19,7 @@ const propSchema = {
     single: flag,
     highlight: flag,
     unavailable: {
-      enum: [
-        "empty",
-        "unavailable",
-        "loading",
-        "failed",
-        "comparison",
-        "removed",
-      ],
+      enum: ["empty", "unavailable", "loading", "failed", "removed"],
     },
   },
 } as const;

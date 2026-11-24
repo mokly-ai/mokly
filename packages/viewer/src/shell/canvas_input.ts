@@ -2,9 +2,12 @@
  * The canvas input that a frame's document forwards, under the
  * [frame canvas input contract](../../../../docs/protocol/mokly-frame-canvas-input.md):
  * ⌘ or Ctrl with the wheel and a pinch zoom the canvas about their point,
- * and the canvas keys run their commands. A point arrives in CSS pixels of
+ * and the zoom keys run their commands. A point arrives in CSS pixels of
  * the frame's visible viewport, before the canvas scales the frame, so it
- * maps to the page through the frame's box on screen.
+ * maps to the page through the frame's box on screen. The keys of the shell,
+ * Escape and the search keys, leave the frame as a bubbling DOM event, so
+ * the shell hears them where it hears its own keys: on the document of a
+ * standalone shell, and on the root of an embedded one.
  */
 
 import type { RefObject } from "react";
@@ -24,11 +27,20 @@ export type CanvasInputListener = (
   frame: HTMLIFrameElement,
 ) => void;
 
-/** The input that moves the canvas: a wheel, a pinch, or a key. */
-export type CanvasGestureEvent = Exclude<
-  CanvasInputEvent,
-  { type: "canvas-blur" | "canvas-focus" }
->;
+type CanvasKey = Extract<CanvasInputEvent, { type: "canvas-key" }>["key"];
+
+const SHELL_KEYS = ["escape", "search"] as const satisfies readonly CanvasKey[];
+
+/**
+ * A key of the shell that a frame's document forwards: Escape, or one of the
+ * search keys `/`, ⌘K and Ctrl+K.
+ */
+export type ShellKey = (typeof SHELL_KEYS)[number];
+
+/** The input that moves the canvas: a wheel, a pinch, or a zoom key. */
+export type CanvasGestureEvent =
+  | Extract<CanvasInputEvent, { type: "canvas-pinch" | "canvas-wheel" }>
+  | { type: "canvas-key"; key: Exclude<CanvasKey, ShellKey> };
 
 /** What the route reads of the canvas: the canvas, its handle, its zoom. */
 export interface CanvasInputTarget {
@@ -50,14 +62,45 @@ export function isCanvasInput(event: FrameEvent): event is CanvasInputEvent {
   return CANVAS_INPUT.has(event.type);
 }
 
-/** The canvas command of each forwarded key. */
+/** Whether a value names a key of the shell. */
+export function isShellKey(value: unknown): value is ShellKey {
+  return SHELL_KEYS.some((key) => key === value);
+}
+
+/** The type of the DOM event that carries a key of the shell. */
+const SHELL_KEY_EVENT = "mokly-shell-key";
+
+/**
+ * Send a key of the shell from an element, such as the frame whose document
+ * forwarded it, as a DOM event that bubbles to the shell.
+ */
+export function sendShellKey(from: Element, key: ShellKey): void {
+  from.dispatchEvent(
+    new CustomEvent(SHELL_KEY_EVENT, { bubbles: true, detail: key }),
+  );
+}
+
+/** Hear the keys of the shell that reach `target`, until the cleanup runs. */
+export function listenForShellKeys(
+  target: EventTarget,
+  listener: (key: ShellKey) => void,
+): () => void {
+  const receive = (event: Event) => {
+    const key: unknown = event instanceof CustomEvent ? event.detail : null;
+    if (isShellKey(key)) listener(key);
+  };
+  target.addEventListener(SHELL_KEY_EVENT, receive);
+  return () => target.removeEventListener(SHELL_KEY_EVENT, receive);
+}
+
+/** The canvas command of each zoom key. */
 const KEY_COMMANDS = {
   fit: "fit",
   "zoom-100": "actual-size",
   "zoom-in": "zoom-in",
   "zoom-out": "zoom-out",
 } as const satisfies Record<
-  Extract<CanvasInputEvent, { type: "canvas-key" }>["key"],
+  Extract<CanvasGestureEvent, { type: "canvas-key" }>["key"],
   CanvasCommand
 >;
 
@@ -79,7 +122,7 @@ export function framePagePoint(
 }
 
 /**
- * Move the canvas for one forwarded input of a frame. A key runs its
+ * Move the canvas for one forwarded input of a frame. A zoom key runs its
  * command. A wheel, whose lines and pages count as the canvas's own wheel
  * counts them, and a pinch zoom by their factor about their point in
  * `frame`, or about the stage's centre without a frame.

@@ -30,12 +30,12 @@ const CHANGED_PAGE = {
   changes: { status: "ready", kind: "changed", included: true },
 } as const;
 
-test("a changed document shows its status and each stylesheet once in Details", () => {
+test("a changed document shows its status and each stylesheet once in the right panel", () => {
   const markup = renderPage(createCatalogue(published(CHANGED_PAGE, CHANGED)));
-  // The entry bar, the section on the canvas and the head band in the right
+  // The entry bar, the section on the canvas and Inspect's head in the right
   // panel each name the page.
   assert.deepEqual(status(markup), ["Changed", "Changed", "Changed"]);
-  assert.ok(markup.includes(`${CHANGED_SECTION}</details>`), markup);
+  assert.equal(markup.split(CHANGED_SECTION).length, 2, markup);
   assert.doesNotMatch(
     markup,
     /Changed component|Shared component changes|this screen|saved view|this variant|1{64}/,
@@ -129,12 +129,15 @@ test("a removed document keeps its Removed badge and no comparison details", () 
   assert.equal(section(markup), undefined);
 });
 
-test("the standalone shell renders the page evidence of the held detail", () => {
+test("the standalone shell renders the page evidence of the held detail in the Changes tab, without the branch-point sentence", () => {
   const html = standaloneMarkup({
     index: publishedIndex(CHANGED_PAGE),
     details: publishedDetails(CHANGED, CHANGED_REASONS),
     path: "/view/guide/",
   });
   assert.deepEqual(status(html), ["Changed", "Changed", "Changed"]);
-  assert.ok(html.includes(`${CHANGED_SECTION}</details>`));
+  // The Changes filter lists the page, so its Changes tab holds the
+  // evidence, and the Compared rail names the branch point in its place.
+  const sentence = `<p class="mbk-reset">Compared with the branch point on ${BASE}.</p>`;
+  assert.equal(html.split(CHANGED_SECTION.replace(sentence, "")).length, 2);
 });

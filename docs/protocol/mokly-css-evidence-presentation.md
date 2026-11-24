@@ -1,7 +1,5 @@
 # CSS Evidence Presentation
 
-Status: The Compared rail of the Changes tab in place of the branch-point sentence is not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds it.
-
 ## Shell Derivation
 
 The entry detail of the [shell delivery contract](./mokly-shell-delivery.md)
@@ -31,7 +29,11 @@ variant, so Current shows the same files and sentences as a loaded
 comparison. Records merge by stylesheet and selector, with sorted selector
 unions and unresolved precedence. Keep each rule's owner. A retained file
 suppresses its exclusion across all selected views; rendered-resource and
-ignored-content details remain available. Loaded evidence is selection-scoped
+ignored-content details remain available. The ignored-content details name,
+once each, the paired ignore ids of every selected view whose state is not
+`unchanged`, in Current and in a loaded comparison alike. An `unchanged` view
+names none, because its ignored content did not change, and naming it would
+repeat the line on every screen that renders the region. Loaded evidence is selection-scoped
 and clears on classification invalidation. Component change facts come from
 the review entries of the components and the rules they own. Do not infer them
 from a consumer's matches, file owners or the loaded comparison subset. A
@@ -44,10 +46,13 @@ excluded files, so no view merge applies. The grouping is
 the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
 
-Each compared view of a loaded comparison has one view heading: “Mobile” or
-“Desktop”, then “ · ” and the view's label, for example “Desktop · Screen
-changed”. A Light view that stands in for a Dark selection adds “ · Light
-only”.
+Each compared frame of a loaded comparison has one view heading, a line of
+the comparison details in the Changes tab: the frame's viewport, or its
+variant in a variant set, then “ · ” and its scheme, then “ · ” and its view's
+label, for example “Desktop · Light · Screen changed”. A Light view that
+stands in for the frame's Dark view adds “ · Light only”. Decision: the
+heading names the frame's scheme, not its viewport alone, because the canvas
+shows both schemes at once.
 
 `ReviewState` has no resource-only variant. A view says “Styles this screen uses
 changed” when its state is `changed`, its review entry has a reason, every
@@ -173,7 +178,7 @@ and selector. Union page selectors separately from component-only and
 unresolved selectors. Never merge away the stylesheet-to-selector relationship.
 The excluded files are the sorted union of excluded files minus any retained
 file. Use singular or
-plural excluded copy by file count. The view controls do not change the
+plural excluded copy by file count. The Frames filter does not change the
 comparison details, which hold the same facts for every viewport and scheme. Loaded comparisons and
 classification evidence merge once, without duplicate paragraphs or files.
 

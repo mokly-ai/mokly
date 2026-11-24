@@ -198,8 +198,10 @@ portal. The exact geometry is the viewer top bar and panel compositions in
 The ready canvas is a static depiction composed of the workspace `@mokly/ui`
 parts that the viewer renders its shell from, drawn with `interactive={false}`:
 the cloud controls sit in the embedded layout's host slots, and a sample screen
-fills the phone and browser frames. The package top bar draws no theme toggle,
-and its search field ends with the `⌘K` hint. Non-ready cloud states stay
+fills each frame on the canvas. A desktop drawing shows the current screen's
+frames with the zoom pill and the right panel, and a phone drawing the compact
+layout's one frame with the entry bar and the dock. The package top bar draws
+no theme toggle, and its search field ends with the `⌘K` hint. Non-ready cloud states stay
 cloud-owned. The six entries adopt `product/viewer/standalone`,
 `product/viewer/pull-request`, `product/viewer/projects`,
 `product/viewer/switcher`, `product/viewer/history` and `product/viewer/share`.

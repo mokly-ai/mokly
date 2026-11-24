@@ -8,6 +8,7 @@ import {
   chooseFilter,
   navRow,
 } from "./comparison_ui.js";
+import { inspectHead, inspectTitle } from "./inspect_head.js";
 
 const CARD_LIST = `[data-nav-disclosure="variants:${comparisonPaths.component}"]`;
 const TAG_LIST = `[data-nav-disclosure="variants:${comparisonPaths.quietParent}"]`;
@@ -51,8 +52,9 @@ test("Changes opens the first changed variant of an unmodified parent", async ({
 
   await tag.click();
 
+  // The landing's address names the first changed view's Mobile viewport.
   await expect(page).toHaveURL(
-    new RegExp(`/view/${comparisonPaths.quietVariant}/$`),
+    new RegExp(`/view/${comparisonPaths.quietVariant}/\\?viewport=mobile$`),
   );
   await expect(navRow(page, comparisonPaths.quietVariant)).toHaveAttribute(
     "aria-current",
@@ -121,9 +123,8 @@ test("a removed variant keeps a Removed row under its surviving parent", async (
   await expect(page).toHaveURL(
     new RegExp(`/view/${comparisonPaths.removedVariant}/`),
   );
-  // The head band, which the right panel holds after the stage, names the
-  // surviving parent.
-  await expect(page.locator(".mbk-screen-head h2")).toHaveText("Card");
+  // Inspect's head names the surviving parent.
+  await expect(inspectTitle(page)).toHaveText("Card");
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
   // The surviving parent keeps its own status, so the stage names the variant.
   await expect(
@@ -132,15 +133,10 @@ test("a removed variant keeps a Removed row under its surviving parent", async (
       exact: true,
     }),
   ).toBeVisible();
-  // The variant bar and Details link back to the surviving parent.
-  for (const region of ["Saved variants", "Details"])
-    await expect(
-      page
-        .getByRole(region === "Details" ? "tabpanel" : "navigation", {
-          name: region,
-        })
-        .getByRole("link", { name: "Card", exact: true }),
-    ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
+  // Inspect's head links back to the surviving parent in its Variant of row.
+  await expect(
+    inspectHead(page).getByRole("link", { name: "Card", exact: true }),
+  ).toHaveAttribute("href", `/view/${comparisonPaths.component}/`);
 
   await chooseFilter(page, "all");
   await expect(removed).toBeHidden();

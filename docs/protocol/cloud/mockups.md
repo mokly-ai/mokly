@@ -150,7 +150,7 @@ policy metadata, not a package API.
 Notes and fixture explanations stay outside it. Catalogue-only links below
 an artboard use the shared catalogue-links navigation and base styles.
 Mokly supplies the frame around each view. Nested chrome belongs only to
-registered illustration material and to the device frames of the viewer
+registered illustration material and to the canvas frames of the viewer
 drawings; never duplicate the owning screen chrome.
 
 Every product screen has mobile and desktop plus light and dark output. A

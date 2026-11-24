@@ -1,7 +1,5 @@
 # Removed Content Previews
 
-Status: Inspect, the Changes tab with its Compared rail, and the Frames filter that this page names are not built yet. The [right panel and compare milestone](../../plans/canvas-redesign-milestones-viewer.md#milestone-12-right-panel-and-compare) builds them.
-
 ## Behavior
 
 Opening a removed screen, page, or document shows its previous version: the
@@ -238,10 +236,10 @@ presentation document, the parent reapplies the accepted `srcdoc` and guard.
 These edits exist only in memory; the generation's bytes stay identical.
 
 Navigation, revision or source replacement, unmount, and viewport or scheme
-changes fence late responses exactly as comparisons do: a preview response
-can never replace another entry's stage. Back/Forward, direct removed-entry
-URLs, stale or unknown snapshot ids, a replaced generation, embedded
-controlled selection, and several viewers on one page follow the
+changes fence late responses: a preview response can never replace another
+entry's stage. Back/Forward, direct removed-entry URLs, stale or unknown
+snapshot ids, a replaced generation, embedded controlled selection, and
+several viewers on one page follow the
 [fences](./mokly-shell-delivery.md#fetch-and-fences) of the shell delivery
 contract and the pane [lifecycle](./mokly-comparison-panes.md#lifecycle).
 Saved viewport and scheme choices are revalidated against the historical
