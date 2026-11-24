@@ -33,6 +33,9 @@ export const siteScreens = [
   "design/site/security",
 ] as const;
 
+/** The entry path of one canonical site screen. */
+export type SiteScreenPath = (typeof siteScreens)[number];
+
 /** Find one current entry's record in the catalogue index. */
 export function siteEntry(id: string): CatalogueRecord {
   const entry = catalogueEntries().find((candidate) => candidate.path === id);
@@ -169,27 +172,37 @@ function siteRuleStylesheets(): string[] {
 }
 
 /**
+ * The order in which all site CSS reads the site screens: a legal document
+ * first, so that the legal sheet follows the shared sheets, as the header of
+ * `docs/mockups/styles/site/base.css` orders the areas, then every site
+ * screen in the order of the site tour.
+ */
+const styleOrder = [...new Set(["design/site/terms", ...siteScreens] as const)];
+
+/**
  * The site stylesheets as repository paths, in the cascade order of a site
  * document: the font sheets that the site rule of `mokly.config.json` links,
- * then the CSS that the site screen modules import, which Mokly bundles
- * after the configured sheets. The list holds the CSS of every site screen,
- * each sheet at its first reach in the order of the site tour.
+ * then the CSS that the screen's entry module reaches through its imports,
+ * which Mokly bundles after the configured sheets. Without a screen, the
+ * list holds the CSS of every site screen, each sheet at its first reach in
+ * `styleOrder`.
  */
-export function siteStylesheets(): string[] {
-  const imported = siteScreens.flatMap((screen) =>
-    importedStylesheets(
-      resolve(repositoryRoot, siteEntry(screen).details.sourcePath),
-    ).map((sheet) => relative(repositoryRoot, sheet)),
+export function siteStylesheets(screen?: SiteScreenPath): string[] {
+  const imported = (screen === undefined ? styleOrder : [screen]).flatMap(
+    (path) =>
+      importedStylesheets(
+        resolve(repositoryRoot, siteEntry(path).details.sourcePath),
+      ).map((sheet) => relative(repositoryRoot, sheet)),
   );
   return [...new Set([...siteRuleStylesheets(), ...imported])];
 }
 
 /**
  * Read the site styles as one policy input, in the cascade order of a site
- * document.
+ * document: the CSS of one screen, or without a screen of every site screen.
  */
-export function siteStyles(): string {
-  return siteStylesheets()
+export function siteStyles(screen?: SiteScreenPath): string {
+  return siteStylesheets(screen)
     .map((path) => readFileSync(resolve(repositoryRoot, path), "utf8"))
     .join("\n");
 }
@@ -211,13 +224,15 @@ export function cssRules(source: string): CssRule[] {
 }
 
 /**
- * Assert that each named class has a hover rule in the site styles, and that
- * one of its hover rules changes more than the colour.
+ * Assert that each named class has a hover rule in the site styles, or in
+ * the styles of one screen, and that one of its hover rules changes more
+ * than the colour.
  */
 export function assertHoverChangesMoreThanColor(
   classNames: readonly string[],
+  screen?: SiteScreenPath,
 ): void {
-  const parsed = cssRules(siteStyles());
+  const parsed = cssRules(siteStyles(screen));
   for (const className of classNames) {
     const matching = parsed.filter((rule) =>
       rule.selector.includes(`.${className}:hover`),
@@ -235,11 +250,15 @@ export function assertHoverChangesMoreThanColor(
 }
 
 /**
- * Assert that each selector has a rule of its own in the site styles whose
- * declarations use the strong border role, the boundary of a control.
+ * Assert that each selector has a rule of its own in the site styles, or in
+ * the styles of one screen, whose declarations use the strong border role,
+ * the boundary of a control.
  */
-export function assertStrongBoundaries(selectors: readonly string[]): void {
-  const parsed = cssRules(siteStyles());
+export function assertStrongBoundaries(
+  selectors: readonly string[],
+  screen?: SiteScreenPath,
+): void {
+  const parsed = cssRules(siteStyles(screen));
   for (const selector of selectors) {
     const rule = parsed.find((candidate) =>
       candidate.selector.split(",").some((part) => part.trim() === selector),

@@ -99,7 +99,10 @@ Each call is the agent's own, made on 2026-11-24. The options check of
    and media conditions ignored. When two areas use one sheet, both area
    modules import it, in today's order. Rejected: the class-name scan,
    because general classes inside another page's selectors give false
-   matches.
+   matches. Added during Milestone 1: the script ran on the build from
+   before the change, where each sheet is its own link, and confirmed the
+   map. No page matches a rule of another area's sheet, so no area module
+   imports a sheet of another area.
 4. `siteStylesheets()` returns the site rule's font sheets first, then the
    imported sheets, in today's order. `siteStyles()` takes an optional
    screen. The tests of one page read only that page's CSS. The tokens,
@@ -108,7 +111,9 @@ Each call is the agent's own, made on 2026-11-24. The options check of
    `lightningcss` reprints them. Added during Milestone 1: the helper reads
    the imported sheets from the module graph of each site entry, in the
    order in which Mokly bundles them: first reach, depth first, in import
-   order, over the relative imports.
+   order, over the relative imports. Without a screen, it reads a legal
+   document first and then the site tour, so `policy.css` keeps its place
+   after the shared block and all site CSS keeps today's order.
 5. The change makes no visible change to a site mockup. When the removal of
    a sheet from a page changes a capture, or drops a rule that the script
    of call 3 matches, the page keeps that sheet. Each kept sheet gets a
@@ -155,24 +160,25 @@ that each pixel check has one cause.
   - [x] Run `npm run mockups:check`, `npm run mockups:test`, and
         `npm run mockups:typecheck`.
   - [x] Capture again and compare. Expect no changed pixel.
-- [ ] Second commit: split the module by area.
-  - [ ] Run the browser script of design call 3 on the build. Save the map
+- [x] Second commit: split the module by area.
+  - [x] Run the browser script of design call 3 on the build. Save the map
         under `.context/site-mockup-css-imports/`.
-  - [ ] Split the module into the shared module and one area module for
+  - [x] Split the module into the shared module and one area module for
         home, docs, changelog, pricing, and the legal pages, as design
         call 2 says.
-  - [ ] Add the optional screen to `siteStyles()`. Pass it from the tests
+  - [x] Add the optional screen to `siteStyles()`. Pass it from the tests
         of one page.
-  - [ ] Update the header of `docs/mockups/styles/site/base.css`.
-  - [ ] Run the three mockup commands again.
-  - [ ] Capture again under `.context/site-mockup-css-imports/after/` and
+  - [x] Update the header of `docs/mockups/styles/site/base.css`.
+  - [x] Run the three mockup commands again.
+  - [x] Capture again under `.context/site-mockup-css-imports/after/` and
         compare. Keep each sheet whose removal changes a pixel, and record
         a follow-up item for it, as design call 5 says.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the comparison shows.
 
 Evidence: `.context/site-mockup-css-imports/`, with `scripts/`, `before/`,
-`step1/`, `compare-step1.json` and `logs/`.
+`step1/`, `after/`, `compare-step1.json`, `compare-after.json`,
+`sheet-usage-map.json` and `logs/`.
 
 ## Milestone 2: Documentation
 

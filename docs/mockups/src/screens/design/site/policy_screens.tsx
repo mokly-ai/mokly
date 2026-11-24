@@ -4,7 +4,8 @@
  * date, the ruled body and the links to the other legal documents.
  */
 
-import "./styles/site.js";
+import "./styles/shared.js";
+import "./styles/legal.js";
 
 import { MockLink } from "@mokly/mokly";
 
