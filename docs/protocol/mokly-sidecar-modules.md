@@ -104,8 +104,10 @@ After lookup of a bare package specifier and repository mapping, Mokly applies t
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
 before it tests the original target. This includes CSS imports from
 JavaScript. Missing files and escaping symlinks fail closed. Reuse evidence
-includes the package manifests, TypeScript configurations, and candidate
-sources the rule checks, including absent files and their directories.
+includes the package manifests and TypeScript configurations used for build
+targets. Source candidate probes retain absent paths as watch inputs.
+Selected source contents enter through the module graph and stylesheet
+inputs.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected

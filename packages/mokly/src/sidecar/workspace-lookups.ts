@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -10,11 +11,18 @@ import { EVIDENCE_LIMIT } from "./physical-input-reader.js";
 import { PhysicalInputs } from "./physical-inputs.js";
 import type { WorkspaceSourceFiles } from "./workspace-sources.js";
 
+type Probe =
+  { kind: "file"; real: string } | { kind: "absent" } | { kind: "unavailable" };
+
 /** Keep file probes on the selected side and observe them before resolving. */
 export class WorkspaceLookups implements WorkspaceSourceFiles {
+  readonly absences = new Set<string>();
   private capture = new PhysicalInputs();
-  private readonly probed = new Map<string, string | null>();
+  private readonly probed = new Map<string, Probe>();
   private readonly directories = new Map<string, boolean>();
+  private readonly digests = new Map<string, string>();
+  private readonly observed = new Set<string>();
+  private readonly metadataFiles = new Set<string>();
 
   constructor(private readonly paths: ModulePaths) {}
 
@@ -23,38 +31,66 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   }
 
   regular(file: string): string | undefined {
-    const previous = this.probed.get(file);
-    if (previous !== undefined) return previous ?? undefined;
-    const real = this.probe(file);
-    this.probed.set(file, real ?? null);
-    return real;
+    const result = this.probe(file);
+    return result.kind === "file" ? result.real : undefined;
   }
 
-  private probe(file: string): string | undefined {
-    const directory = path.dirname(file);
-    if (!this.confined(directory)) {
-      this.capture.complete = false;
-      return;
-    }
-    this.paths.lookupDirectories.add(directory);
-    let real: string | undefined;
+  private probe(file: string): Probe {
+    const previous = this.probed.get(file);
+    if (previous !== undefined) return previous;
+    const result = this.check(file);
+    this.probed.set(file, result);
+    return result;
+  }
+
+  private check(file: string): Probe {
+    if (!this.confined(path.dirname(file))) return { kind: "unavailable" };
     try {
-      real = fs.realpathSync.native(file);
-      if (!this.paths.repositoryOwned(real) || !fs.statSync(real).isFile()) {
-        this.capture.complete = false;
-        return;
-      }
+      const real = fs.realpathSync.native(file);
+      return this.paths.repositoryOwned(real) && fs.statSync(real).isFile()
+        ? { kind: "file", real }
+        : { kind: "unavailable" };
     } catch (error) {
-      if (!missingFile(error)) {
-        this.capture.complete = false;
-        return;
-      }
-      real = undefined;
+      return { kind: missingFile(error) ? "absent" : "unavailable" };
     }
-    this.paths.lookupFiles.add(file);
-    if (this.capture.canonicalFile(file) !== real)
+  }
+
+  private observe(file: string): Probe {
+    const result = this.probe(file);
+    if (result.kind === "unavailable") {
       this.capture.complete = false;
-    return real;
+      return result;
+    }
+    if (this.observed.has(file)) return result;
+    this.observed.add(file);
+    const expected = result.kind === "file" ? result.real : undefined;
+    if (this.capture.canonicalFile(file) !== expected)
+      this.capture.complete = false;
+    return result;
+  }
+
+  metadata(file: string): void {
+    if (this.metadataFiles.has(file)) return;
+    this.metadataFiles.add(file);
+    const result = this.observe(file);
+    if (result.kind === "unavailable") return;
+    this.paths.lookupFiles.add(file);
+    if (result.kind !== "file") return;
+    const observed = this.capture.file(result.real, true);
+    const digest = this.digests.get(result.real);
+    if (
+      observed?.kind !== "file" ||
+      (digest !== undefined && observed.digest !== digest)
+    )
+      this.capture.complete = false;
+  }
+
+  candidate(file: string): string | undefined {
+    const result = this.observe(file);
+    if (result.kind === "unavailable") return;
+    this.paths.lookupDirectories.add(path.dirname(file));
+    if (result.kind === "absent") this.absences.add(file);
+    else return result.real;
   }
 
   private confined(directory: string): boolean {
@@ -73,18 +109,19 @@ export class WorkspaceLookups implements WorkspaceSourceFiles {
   }
 
   read(file: string): string {
-    if (this.capture.file(file, true)?.kind === "file") {
-      const snapshot = this.capture.inspectMetadata(file)?.bytes;
-      if (snapshot) return snapshot.toString("utf8");
-    }
-    this.capture.complete = false;
-    return fs.readFileSync(file, "utf8");
+    const bytes = fs.readFileSync(file);
+    const digest = createHash("sha256").update(bytes).digest("hex");
+    const previous = this.digests.get(file);
+    if (previous !== undefined && previous !== digest)
+      this.capture.complete = false;
+    this.digests.set(file, digest);
+    return bytes.toString("utf8");
   }
 
   marked(evidence: ReuseEvidence | undefined): ReuseEvidence | undefined {
     if (!evidence || !this.capture.complete) return undefined;
-    if (!this.probed.size) return evidence;
-    const workspace = markedFileEvidence(this.capture, this.probed.keys());
+    if (!this.observed.size) return evidence;
+    const workspace = markedFileEvidence(this.capture, this.observed);
     if (!workspace) return undefined;
     const combined = {
       ...evidence,

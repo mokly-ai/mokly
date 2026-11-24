@@ -24,8 +24,11 @@ test("workspace package targets follow the shared source lookup cases", () => {
       return [path.resolve(root, file), text];
     }),
   );
+  const regular = (file: string) => (contents.has(file) ? file : undefined);
   const files = {
-    regular: (file: string) => (contents.has(file) ? file : undefined),
+    regular,
+    candidate: regular,
+    metadata: () => {},
     read: (file: string) => {
       const text = contents.get(file);
       assert(text !== undefined, file);

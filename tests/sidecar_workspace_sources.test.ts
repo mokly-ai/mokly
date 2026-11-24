@@ -91,7 +91,7 @@ export const page = definePage({title:"Local",description:"",relatedDocs:[],rend
   for (const [side, text, sources] of sides) {
     const sidecar = startSidecar(context);
     await sidecar.call("hello");
-    const { generation, modules } = await sidecar.call<BundleResult>(
+    const { generation, modules, compiled } = await sidecar.call<BundleResult>(
       "bundle",
       params(side),
     );
@@ -100,6 +100,14 @@ export const page = definePage({title:"Local",description:"",relatedDocs:[],rend
       `packages/local/${sources}/page.ts`,
       `packages/local/${sources}/theme.css`,
     ]);
+    for (const file of ["page.ts", "theme.css"])
+      assert.equal(
+        Object.hasOwn(
+          compiled.metadataInputs,
+          `packages/local/${sources}/${file}`,
+        ),
+        false,
+      );
     await sidecar.call("cssModules", { generation, classMaps: {} });
     await installBindings(sidecar, generation);
     const result = await sidecar.call<PageResult>("renderPage", {

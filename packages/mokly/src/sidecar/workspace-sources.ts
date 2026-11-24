@@ -7,11 +7,18 @@ import { inside, logical } from "./path-scope.js";
 export interface WorkspaceSourceFiles {
   regular(file: string): string | undefined;
   read(file: string): string;
+  metadata(file: string): void;
+  candidate(file: string): string | undefined;
 }
 
 interface LayoutOptions {
   outDir?: string | undefined;
   rootDir?: string | undefined;
+}
+
+interface PackageLayout {
+  options: LayoutOptions;
+  inputs: Set<string>;
 }
 
 const buildFolders = new Set(["dist", "lib", "build", "out"]);
@@ -21,21 +28,7 @@ const defaultExtensions = [".tsx", ".ts", ".jsx", ".js", ".css", ".json"];
 /** Resolve built targets against the package layout on one source side. */
 export class WorkspaceSources {
   private readonly packages = new Map<string, string | null>();
-  private readonly layouts = new Map<string, LayoutOptions>();
-  private readonly configs = new ConfigChain(
-    {
-      regular: (file) => this.file(file) !== undefined,
-      read: (file) => {
-        const real = this.file(file);
-        if (!real) throw new Error("missing workspace configuration");
-        const json = parseJson(this.files.read(real));
-        if (!jsonObject(json))
-          throw new Error("invalid workspace configuration");
-        return { json, directory: path.dirname(real) };
-      },
-    },
-    layoutOptions,
-  );
+  private readonly layouts = new Map<string, PackageLayout>();
 
   constructor(
     private readonly root: string,
@@ -45,30 +38,45 @@ export class WorkspaceSources {
 
   source(file: string): string | undefined {
     if (!this.repositoryFile(file)) return undefined;
-    const root = this.packageRoot(path.dirname(file));
+    const directory = path.dirname(file);
+    const root = this.packageRoot(directory);
     if (root === null) return undefined;
 
-    const { rootDir, outDir } = this.layout(root);
+    const layout = this.layout(root);
+    const { rootDir, outDir } = layout.options;
     const top = logical(root, file).split("/")[0];
-    const build =
-      outDir ??
-      (top && buildFolders.has(top) ? path.join(root, top) : undefined);
+    const convention =
+      top && buildFolders.has(top) ? path.join(root, top) : undefined;
+    const build = outDir ?? convention;
+    if (convention || (outDir && inside(outDir, file) && file !== outDir)) {
+      for (let current = directory; ; current = path.dirname(current)) {
+        this.files.metadata(path.join(current, "package.json"));
+        if (current === root) break;
+      }
+      for (const input of layout.inputs) this.files.metadata(input);
+    }
     if (!build || file === build || !inside(build, file)) return undefined;
     const source = path.join(
       rootDir ?? path.join(root, "src"),
       path.relative(build, file),
     );
     const extension = path.extname(source);
-    if (!javascript.has(extension)) return this.file(source);
+    if (!javascript.has(extension)) return this.candidate(source);
 
     const stem = source.slice(0, -extension.length);
     const extensions = this.extensions.length
       ? this.extensions
       : defaultExtensions;
     for (const extension of extensions) {
-      const candidate = this.file(stem + extension);
+      const candidate = this.candidate(stem + extension);
       if (candidate !== undefined) return candidate;
     }
+  }
+
+  private candidate(file: string): string | undefined {
+    if (!this.repositoryFile(file)) return undefined;
+    const real = this.files.candidate(file);
+    return real !== undefined && this.repositoryFile(real) ? real : undefined;
   }
 
   private file(file: string): string | undefined {
@@ -114,19 +122,38 @@ export class WorkspaceSources {
     }
   }
 
-  private layout(root: string): LayoutOptions {
+  private layout(root: string): PackageLayout {
     const cached = this.layouts.get(root);
     if (cached !== undefined) return cached;
-    const options = this.configuredLayout(root);
-    this.layouts.set(root, options);
-    return options;
+    const inputs = new Set<string>();
+    const layout = { options: this.configuredLayout(root, inputs), inputs };
+    this.layouts.set(root, layout);
+    return layout;
   }
 
-  private configuredLayout(root: string): LayoutOptions {
+  private configuredLayout(root: string, inputs: Set<string>): LayoutOptions {
     const config = path.join(root, "tsconfig.json");
-    if (!this.file(config)) return {};
+    const candidate = (file: string) => {
+      inputs.add(file);
+      return this.file(file);
+    };
+    if (!candidate(config)) return {};
+    const configs = new ConfigChain(
+      {
+        regular: (file) => candidate(file) !== undefined,
+        read: (file) => {
+          const real = candidate(file);
+          if (!real) throw new Error("missing workspace configuration");
+          const json = parseJson(this.files.read(real));
+          if (!jsonObject(json))
+            throw new Error("invalid workspace configuration");
+          return { json, directory: path.dirname(real) };
+        },
+      },
+      layoutOptions,
+    );
     try {
-      const options = this.configs.read(config);
+      const options = configs.read(config);
       if (options.rootDir === undefined || options.outDir === undefined)
         return {};
       const rootDir = configPath(options.rootDir, root);
