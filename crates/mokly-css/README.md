@@ -191,9 +191,8 @@ also fails when that exception no longer differs.
   delivers the transformed stylesheets of one root.
 - [`src/types.rs`](./src/types.rs) defines the `StylesheetBundler` and
   `CssProcessor` boundaries and the `StylesheetRoot` and `Bundle` records.
-- [`src/imported_assets.rs`](./src/imported_assets.rs) defines case-sensitive
-  content type tables for stylesheet assets, additional default imports, and
-  imports that require a `file` loader.
+- The stylesheet asset types and the unsupported-extension list come from
+  `content_types` in [`mokly-model`](../mokly-model/src/content_types.rs).
 - [`src/paths.rs`](./src/paths.rs) supplies the shared portable path rule
   for stylesheet routes, asset delivery, and document asset tokens.
 - [`src/resolver.rs`](./src/resolver.rs) defines `ImportResolver` and

@@ -101,10 +101,9 @@ state, and the write leases of the Changes reference probes.
 The [HTTP delivery](./delivery.md) page holds the guidance for the routes, the
 generated and authored assets, the cache headers, JSON compression, the
 comparison generations, and the temporary previews.
-Browse, edited previews, and comparison resource routes use the
-[JavaScript asset content types](../../docs/protocol/mokly-imported-assets.md#imported-types)
-for generated assets, including media and documents. Authored files retain
-their MIME fallback.
+Every route that sends a file, generated or authored, gives it the type of the
+[content type rule](../../docs/protocol/mokly-imported-assets.md#content-types),
+through `delivered_content_type` in `mokly-model`.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning
 Serve attempt. Saved and temporary renders deliver private composition

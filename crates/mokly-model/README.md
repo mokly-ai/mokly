@@ -238,6 +238,10 @@ cargo xtask generate-types
   `cargo xtask generate-types` writes.
 - [`src/shell.rs`](./src/shell.rs) provides `html`, the data-free shell stub
   that Serve and the static writer share.
+- [`src/content_types.rs`](./src/content_types.rs) holds the case-sensitive
+  asset type tables and `delivered_content_type`, the one rule by file
+  extension that Serve and the Mokly Cloud reservation share. The stylesheet
+  check, the asset plans, and the sidecar table test read the same tables.
 
 ### Related Docs
 
