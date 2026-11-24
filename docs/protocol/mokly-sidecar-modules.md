@@ -106,9 +106,9 @@ imports of CSS. It also covers missing build targets for requires that Node
 loads. Both bundle capture modes keep workspace
 layout probes in private reuse evidence, including when no source matches.
 Layout files and package manifests used for build targets also enter the
-bundle metadata. Build and source candidate probes retain absent paths as watch
-inputs. Selected source contents enter through the module graph and stylesheet
-inputs.
+bundle metadata. The bundle keeps absent build and source candidates as
+watch inputs. Selected source contents enter through the module graph and
+stylesheet inputs.
 
 Each bundle starts from a virtual entry. The virtual entry imports each
 configured entry module, stories file, and renderer, and the selected
