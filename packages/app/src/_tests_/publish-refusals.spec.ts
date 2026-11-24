@@ -108,12 +108,18 @@ test("the publishing card at rest sets its guide beside the control", async ({
     1,
   );
   await expect(action.locator(".fo-write-failure, details")).toHaveCount(0);
-  // The row is centred like the card around it.
+  // The row is centred like the card around it. A part that draws no box,
+  // such as the theme provider's `display: contents` wrapper, is measured
+  // through to the parts it holds.
   const centred = await row.evaluate((node) => {
     const box = node.getBoundingClientRect();
-    const parts = [...node.children].map((child) =>
-      child.getBoundingClientRect(),
-    );
+    const drawn = (element: Element): Element[] =>
+      getComputedStyle(element).display === "contents"
+        ? [...element.children].flatMap(drawn)
+        : [element];
+    const parts = [...node.children]
+      .flatMap(drawn)
+      .map((child) => child.getBoundingClientRect());
     const left = Math.min(...parts.map((part) => part.left)) - box.left;
     const right = box.right - Math.max(...parts.map((part) => part.right));
     return Math.abs(left - right) <= 1;
