@@ -134,13 +134,19 @@ Evidence: `.context/source-packages/m4-css-tests.log` and `.context/source-packa
 
 Depends on: 3, 4
 
-- [ ] Add a CLI test with a Git base whose workspace package holds only
+- [x] Add a CLI test with a Git base whose workspace package holds only
       `src` and whose working tree holds a built `dist`, modelled on
       `crates/mokly-cli/tests/changes_ancestor_tests.rs`. Changes must be
       available.
-- [ ] Build the cloud mockups against a base commit, and check that no
+- [x] Build the cloud mockups against a base commit, and check that no
       `base` diagnostic prints and that the output holds the comparison. Run
       the cloud mockup check and suite, and the example mockup check.
+
+Evidence: `.context/source-packages/before-reproduction.log`,
+`.context/source-packages/after-reproduction.log`,
+`.context/source-packages/m5-cli-tests.log`,
+`.context/source-packages/m5-mockups-test.log`, and
+`.context/source-packages/example-serve.png`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 
