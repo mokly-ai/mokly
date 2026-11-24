@@ -1,0 +1,33 @@
+# The app's favicon copies token colours
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from the review of the branch `calummoore/favicons-app-icons-new-logo-jbsc`, finding 2.
+- **Location:** `packages/app/public/favicon.svg`, `packages/app/src/_tests_/favicon.test.ts`, `docs/protocol/cloud/design-tokens.md` (section "Ownership And Application"), `packages/tokens/README.md` ("No consumer copies a value"), `docs/protocol/cloud/repository-typescript.md` (the `packages/tokens` bullet, "none keeps a copy").
+- **Reason:** Each option either changes the token ownership requirement or replaces the user's choice to commit the icon, and no recorded user decision covers either.
+- **Category:** Docs or spec.
+
+- **Terms:**
+  - **Design tokens:** The shared light and dark colours and other design values that the private npm package `@mokly-cloud/tokens` (`packages/tokens`) owns.
+  - **Favicon:** The icon that a browser shows on a tab.
+  - **Preview host:** A per-branch cloud host where the origin router sends every path, `/favicon.svg` included, to the app's static export.
+- **Background:** The cloud web app (`packages/app`) links `/favicon.svg` from `packages/app/public/index.html`. On the production apex the origin router sends `/favicon.svg` to the marketing site, whose route `apps/site/src/pages/favicon.svg.ts` builds the adaptive Mokly mark from `tokens.color.light` and `tokens.color.dark` (`text`, `signal`, `onSignal`) with a `prefers-color-scheme: dark` rule. On preview hosts the app serves its own `packages/app/public/favicon.svg`. On 2026-11-24 the user chose to commit a copy of the mark into the app's public directory. That file is the exact output of the site route, and `packages/app/src/_tests_/favicon.test.ts` asserts byte equality with it. No command in the repository writes the file; it was written once by hand from the route's output. The open-source viewer ships a byte-identical third copy, `packages/viewer/src/shell/assets/brand.svg`. `packages/app/scripts/sync-styles.mjs` already copies shared files into git-ignored public folders (`public/folio`, `public/mokly-viewer`) before every start, build and test.
+- **Problem:** `docs/protocol/cloud/design-tokens.md` says that the catalogue, the application and the site import the token package and none keeps a copy. `packages/tokens/README.md` and `docs/protocol/cloud/repository-typescript.md` say the same. The committed app favicon holds six literal token colours, so the code contradicts the contract. When the palette changes, the equality test fails with no message and names no command to refresh the copy.
+- **Impact if no action:** The contract and the code disagree. A palette change fails the app's favicon test, and the contributor must find out by hand how to regenerate the file.
+- **Root question:** Where does the app's tab icon get the shared palette's colours, so that the code and the token ownership contract agree?
+- **Options:**
+  - **A.** Record the committed favicon as a narrow exception in `design-tokens.md`, `packages/tokens/README.md` and `repository-typescript.md`: generated output that a test ties to the site's token-built route. Effort: Small.
+  - **D.** Apply A. Also add an app package script that writes the site route's output to `public/favicon.svg`, and make the equality assertion's message name that script. The email templates under `crates/mkc-email-templates/templates/` and their byte check, which names its write command, are the precedent. Effort: Small.
+  - **E.** State the scope of the rule instead of one exception. Extend the Email section of `design-tokens.md` to every output that cannot read custom properties: the emails, the favicon, and the site's brand files under `apps/site/public/brand/`. Each holds literal token values, and a check ties it to the token tables. Align the README and `repository-typescript.md`. This also covers `plans/follow-ups/site-brand-files-copy-token-colours.md`. Effort: Small.
+  - **B.** Move the renderer to a shared module, for example a token package entry point that the site route also calls. Generate the app's icon into a git-ignored public path in the sync step, and check it in `packages/app/scripts/verify-web-build.mjs`. The sync step is plain Node, so it must load the TypeScript renderer. This replaces the committed copy. Effort: Medium.
+  - **C.** Ship one generated SVG in a shared workspace package that both builds copy. Palette changes still require refreshing that asset. Effort: Medium.
+  - **F.** Emit the icon at runtime: the theme provider (`packages/app/src/theme/provider.tsx`) sets a `data:image/svg+xml` icon link from the token import, and the static file and link go. The tab has no icon until the bundle runs. Effort: Medium.
+  - **G.** Make the open-source viewer the owner: generate `brand.svg` from `@mokly/ui/palette` in the viewer build, export it, and copy it into the app in the sync step. This adds a public export to a published package and changes the rule that the app uses only the viewer's root entry and stylesheet (`repository-typescript.md`). Effort: Large.
+- **Left out:**
+  - Link preview tabs to the production site's icon. A branch that changes the palette would show production's icon, and the app's content security policy (`infra/docker/app-server.mjs`) admits no site host for images.
+  - Draw the mark with system colours. The `signal` green is part of the brand and has no system colour.
+- **Wider fix:** E states the class rule for every committed output that cannot read custom properties.
+- **Previous examples:** The email templates hold literal token colours with a byte check that names its write command. The site's brand SVGs hold literal token colours with a colour check in `apps/site/tests/brand_assets.test.ts`.
+- **Related:** `plans/follow-ups/site-brand-files-copy-token-colours.md`, the same rule broken by the site's brand files; E answers both. `plans/follow-ups/viewer-brand-icon-colours-untested.md`, the viewer's copy of the same mark; G answers both.
+- **Recommendation:** D. It keeps the user's committed copy, makes the contract say what the code does, and gives a contributor one command to refresh the file after a palette change. B, C, F and G each replace the user's packaging choice.
+- **Action:** ask the user, because the recommended option changes the token ownership requirement in a protocol doc, and no recorded user decision covers that change.
