@@ -121,6 +121,19 @@ a reset or a Fit control, and it does not keep the zoom across visits.
     of site design for the zoomed home only.
   - The options check ran on 2026-11-24. Its report is
     `.context/home-zoom-pill/options-check-decision-3.md`.
+- **2026-11-24, decision 4, the layout at every zoom: a pure scale.** The
+  Milestone 3 site showed two problems below 100%. WebKit draws no text
+  smaller than 9px under CSS `zoom`, so the zoomed-out home overlaps in
+  Safari. On windows from 768px to 1439px the spread sits at the left in
+  the wider room. Cal asked: "can we not just do what we do in the viewer,
+  and make everything stay the same, but zoomed in?". The orchestrator
+  reads it as: at every zoom the home keeps its layout of 100% at the
+  window's width, and the zoom only scales it, as the viewer scales its
+  frames. Nothing reflows. This replaces "at or below 100% the content
+  lays out in the room that it gets". Above 100% the page still scrolls
+  sideways, as decision 3 says. The options that this answer replaces:
+  stop zoom out at 80% in WebKit, a transform in WebKit only, and a
+  centred spread in a wide room.
 
 ## Design calls
 
@@ -208,6 +221,19 @@ Milestone 3 added this call, also on 2026-11-24:
   the tool bar at every zoom. Only the zoomed-in class waits for a zoom
   above 100%. The static mockups need the property above 100% only.
 
+Decision 4 added these calls, also on 2026-11-24:
+
+- **The zoom is a scale transform of the 100% layout,** not CSS `zoom`.
+  A transform also scales the text in WebKit. A script sets the height and
+  the width that the scaled parts take in the page, so the page scrolls to
+  the scaled size.
+- **The Specs panel keeps its size and its place at every zoom,** like the
+  tool bar and the status bar. The viewer's panels keep their size at
+  every zoom, as `docs/protocol/mokly-shell-canvas-stage.md` says. A sticky
+  part also does not stick inside a transform.
+- **Below 100% the scaled content sits at the centre of the window's
+  width,** and the page starts at its top.
+
 Contract owners:
 
 - [Site](../docs/protocol/cloud/site.md), its accessibility rules.
@@ -287,26 +313,71 @@ Depends on: 2
       zooms out to 8% and in to 200%.
 - [x] Remove the seven status lines that link this milestone, and add the
       island files to the Key Code list of the site README.
-- [ ] Get Cal's answer to the WebKit finding of the engine check. Under CSS
+- [x] Get Cal's answer to the WebKit finding of the engine check. Under CSS
       `zoom`, WebKit draws no text smaller than 9px, so from 64% down the
       zoomed-out home overlaps in WebKit, and at 8% it is a tall, garbled
       column. Chromium and Gecko scale the text. A scale transform was
       measured as the alternative: the sticky Specs panel does not stick
       inside it in any of the three engines. Evidence:
       `.context/home-zoom-pill/m3/zoom-engines.md` and `m3/engines/`.
-- [ ] Get Cal's answer to the spread's place on windows from 768px to
+- [x] Get Cal's answer to the spread's place on windows from 768px to
       1439px when zoomed out. The desktop steps start the hero's spread at
       the window's gutter, so in the wider room of a zoom below 100% the
       spread sits at the window's left while the hero copy is centred.
       Evidence: `.context/home-zoom-pill/m3/smoke/home-1280-41-start.png`.
+- Both answers: decision 4 replaces the layout below 100%, so neither
+  finding remains. Milestones 4 to 6 build it.
 - [x] Smoke-test the home at 1440px, 768px and 390px through the site dev
       server, at 8%, 100% and 200%. Save the screenshots in
       `.context/home-zoom-pill/`. The smoke ran on the preview of a build,
       which serves the production policy, in `m3/smoke/`.
 
-## Milestone 4: Verification, commit, review, and pull request
+## Milestone 4: Mockups for decision 4
 
-Depends on: 1, 2, 3
+Tags: mockup
+
+Depends on: 3
+
+- [ ] Redraw the `zoomed-out` home state as the 100% layout, scaled to 41%
+      and centred, with the Specs panel at its own size and place.
+- [ ] Redraw the `zoomed-in` state with the same mechanism, if the
+      mechanism changes its rules, and keep the site parity checks green.
+- [ ] Run the mockup check in `docs/mockups/README.md`. Smoke-test the
+      changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that the
+      mockups show.
+
+## Milestone 5: Documentation for decision 4
+
+Depends on: 4
+
+- [ ] Replace "at or below 100% the content lays out in the room that it
+      gets" in `site-design-pages.md`, and every other doc that says it,
+      with the pure scale of decision 4. Name the Specs panel's place.
+- [ ] Update `apps/site/README.md` and `docs/mockups/README.md`.
+
+## Milestone 6: The home zoom as a scale
+
+Tags: ui
+
+Depends on: 5
+
+- [ ] Apply the zoom as a scale transform of the 100% layout at every zoom,
+      with the page's scroll size set to the scaled size.
+- [ ] Keep the Specs panel at its own size and place at every zoom.
+- [ ] Keep the pill in place after each press, and the window's centre
+      above 100%.
+- [ ] Keep the measured values in the page's own CSS px.
+- [ ] Update the unit tests and the browser spec, and run the spec in
+      Chromium, Firefox and WebKit.
+- [ ] Remove CSS and code that only the CSS `zoom` approach needed.
+- [ ] Smoke-test the home at 1440px, 1280px, 768px and 390px at 8%, 41%,
+      100% and 200%, in Chromium and WebKit. Save the screenshots in
+      `.context/home-zoom-pill/m6/`.
+
+## Milestone 7: Verification, commit, review, and pull request
+
+Depends on: 1, 2, 3, 4, 5, 6
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
