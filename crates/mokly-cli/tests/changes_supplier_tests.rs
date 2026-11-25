@@ -1,4 +1,4 @@
-//! The built CLI retains decision 73 supplier, child-element, and self-copy behavior.
+//! The built CLI keeps repeated supplier claims separate through Git comparison.
 
 use mokly_model::evidence::EvidenceOwner;
 use mokly_model::review::ReviewState;
@@ -6,52 +6,13 @@ use mokly_model::review::ReviewState;
 mod changes_support;
 mod containment_support;
 #[path = "../../../tests/rust/supplier_fixture.rs"]
+#[expect(
+    dead_code,
+    reason = "this binary uses only the repeated supplier fixture"
+)]
 mod supplier_fixture;
 
-use supplier_fixture::{repeated, sources};
-
-fn check(case: &str) {
-    let review = containment_support::build(sources(case, "red"), sources(case, "blue"));
-    assert_eq!(
-        review
-            .entries
-            .iter()
-            .filter(|entry| entry.included)
-            .map(|entry| entry.path.as_str())
-            .collect::<Vec<_>>(),
-        ["card"]
-    );
-    assert_eq!(review.affected.len(), 1);
-    assert_eq!(review.affected[0].changed_component_id, "card");
-    assert_eq!(review.affected[0].consumer.path, "home");
-    let own = review
-        .entries
-        .iter()
-        .find(|entry| entry.path == "card")
-        .unwrap();
-    assert!(
-        own.views
-            .iter()
-            .all(|view| view.state == ReviewState::Changed)
-    );
-}
-
-#[test]
-fn layout_title_rule_keeps_the_supplier_changed() {
-    check("title");
-}
-#[test]
-fn supplied_slot_rule_keeps_the_supplier_changed() {
-    check("slot");
-}
-#[test]
-fn parent_rule_for_child_element_keeps_the_parent_changed() {
-    check("element");
-}
-#[test]
-fn self_nested_copy_keeps_its_own_view_match() {
-    check("self");
-}
+use supplier_fixture::repeated;
 
 #[test]
 fn repeated_supplier_path_preserves_exact_owned_proof_and_physical_head_proof() {

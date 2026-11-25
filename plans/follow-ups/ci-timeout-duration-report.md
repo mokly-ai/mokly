@@ -18,7 +18,7 @@
     - `plans/follow-ups/remote-testbox-timeout.md` records a healthy Testbox run that its 30-minute guard stopped.
     - After the move to GitHub-hosted runners on 2026-11-18, the CI native jobs took 22.5 and 28.2 minutes against a 60-minute guard. `plans/follow-ups/native-ci-timeout-headroom.md` holds that case.
     - The `darwin-x64` release rows on `macos-26-intel` took 14.5 to 27.3 minutes in eight release-check and native bootstrap runs, with a median of about 22.7 minutes. Their 60-minute guard gives about 2.65 times that.
-  - `tests/ci_timing_policy.test.ts` copies the guard values of `ci.yml` and reads no duration, so it cannot find this class.
+  - No test reads job durations. A test that copied the guard values of `ci.yml` could not find this class, so a later branch removed it.
 - **Problem:** Job guards fall below three times their typical duration without notice, and each case needs a manual audit.
 - **Impact if no action:** A slow but healthy job can hit its guard and fail a required check. Each case needs a rerun and a manual fix.
 - **Root question:** How do we keep every job guard at three times its typical duration as runners and suites change?

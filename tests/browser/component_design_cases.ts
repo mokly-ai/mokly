@@ -1,10 +1,10 @@
 import { expect } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
 import { designCases } from "./design_catalogue.js";
+import { builtCatalogueDelivery } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 /** Every screen of the Canvas design family, from the frozen inventory. */
 const CANVAS_SCREENS = designCases
@@ -38,21 +38,15 @@ const DIRECT_ROWS = {
 } as const;
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComponentDesign(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComponentDesign() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   // A document's width does not depend on its delivery, so Serve alone
   // checks that each Canvas artboard fits its viewport.
-  if (mode === "serve")
+  if (!builtCatalogueDelivery())
     for (const route of CANVAS_SCREENS)
       test(`${route}: both artboards fit their viewport's width`, async ({
         page,
