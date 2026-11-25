@@ -1,24 +1,34 @@
+import { join } from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
+import {
+  discoverSpecFiles,
+  parseAppShard,
+  readShardWeights,
+  selectShardFiles,
+} from "./src/_tests_/browser-shards";
 import { appOrigin, appServerCommand } from "./src/_tests_/origins";
 
-function appShard() {
-  const value = process.env.MKC_APP_SHARD;
-  if (!value) return undefined;
-  const match = /^([0-9]+)\/([0-9]+)$/.exec(value);
-  const current = Number(match?.[1]);
-  const total = Number(match?.[2]);
-  if (
-    match?.[0] !== value ||
-    !Number.isInteger(current) ||
-    !Number.isInteger(total) ||
-    current < 1 ||
-    current > total ||
-    total > 0xffff_ffff
-  ) {
-    throw new Error("MKC_APP_SHARD must be <n>/<total>, where 1 <= n <= total");
-  }
-  return { current, total };
+const shard = parseAppShard(process.env.MKC_APP_SHARD);
+const shardFiles =
+  shard &&
+  selectShardFiles(
+    discoverSpecFiles(__dirname),
+    readShardWeights(__dirname),
+    shard,
+  );
+
+/** Exact patterns for the shard's files of one project. */
+function shardMatch(mobile: boolean): RegExp[] | undefined {
+  return shardFiles
+    ?.filter((file) => file.endsWith("-mobile.spec.ts") === mobile)
+    .map(
+      (file) =>
+        new RegExp(
+          `^${join(__dirname, file).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        ),
+    );
 }
 
 /**
@@ -35,7 +45,6 @@ function appShard() {
 export default defineConfig({
   testDir: "src/_tests_",
   testMatch: "**/*.spec.ts",
-  shard: appShard(),
   fullyParallel: false,
   workers: 1,
   // One retry: these tests drive a real API and a real browser, and a shared
@@ -56,6 +65,7 @@ export default defineConfig({
     {
       name: "desktop",
       testIgnore: "**/*-mobile.spec.ts",
+      testMatch: shardMatch(false) ?? "**/*.spec.ts",
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1440, height: 900 },
@@ -63,7 +73,7 @@ export default defineConfig({
     },
     {
       name: "mobile",
-      testMatch: "**/*-mobile.spec.ts",
+      testMatch: shardMatch(true) ?? "**/*-mobile.spec.ts",
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 390, height: 844 },

@@ -24,7 +24,7 @@ cargo xtask check --suite browser
 cargo xtask check --suite browser --shard 1/4
 ```
 
-`--shard INDEX/TOTAL` is valid with `browser` and `cloud-app`. Both values are one-based
+`--shard INDEX/TOTAL` is valid with `browser`, `cloud-app`, `cloud-mockups`, and `cloud-site`. Both values are one-based
 positive integers no larger than JavaScript's maximum safe integer, and
 `INDEX` must not exceed `TOTAL`. A Mokly browser shard runs one weighted whole-file
 partition under the [shard balance rule](./ci-suite-evidence.md#browser-shard-balance),
@@ -123,7 +123,8 @@ Cloud Rust, app, and desktop create a database per invocation (role: `CREATEDB`)
 `cloud-app --shard INDEX/TOTAL` builds an independent web export and runs
 that browser shard. Shard 1 also runs app logic tests. Without `--shard`, it
 runs all logic and browser tests. An inherited app shard cannot restrict an
-unsharded run.
+unsharded run. [Cloud shards](./cloud/repository-verification.md#app-shards)
+define the app, mockup, and site shard contents.
 
 The fixtures suite compares bytes from the workspace Mokly build;
 `cargo xtask mokly-fixtures` regenerates them. Fixed placeholder versions keep
