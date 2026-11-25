@@ -79,9 +79,10 @@ binary shares one cache, the cloud mockup and site partitions included. The
 cloud partitions that also build `mkc-` crates, the image job, the Repository
 checks shard, the Repository test shards, and the test shards of each native
 host keep their own cache. The app shards share one cache. The native
-lint shard of each host caches the Cargo registry alone. A Clippy build entry
-for each host was rejected, because it would bring the total close to the
-10 GB limit, and the lint shard is not the slowest shard. The two Stripe catalogue jobs of the deploy workflow share one cache.
+lint shard of each host restores the entry of the test shards of its host
+and never saves, so Clippy reuses their build scripts and procedural macros.
+A Clippy build entry for each host was rejected, because the cache is already
+at the 10 GB limit. The two Stripe catalogue jobs of the deploy workflow share one cache.
 A separate cache for the mockup and site partitions was rejected: they held
 the same build as the Mokly jobs, and the total passed the 10 GB limit.
 

@@ -174,6 +174,17 @@ measured duration to the shard with the least estimated work.
 measured duration of each file in milliseconds. A new file uses the median
 weight. The selected files keep their discovery order.
 
+## Rust test weights
+
+[`rust-test-weights.json`](./rust-test-weights.json) holds the weight of each
+Rust test unit, such as `--test cli`, in seconds: its compile CPU time from
+`cargo test --no-run --timings` times 1.5, plus its mean nextest test time
+on the three CI hosts. `xtask` embeds the file and assigns the units of the
+repository and native test shards by these weights, as the
+[test unit rule](../../docs/protocol/ci-verification-repository.md#test-units)
+says. A unit that the file does not name gets `defaultSeconds`. A stale
+weight changes only the balance of the shards, never the set of tests.
+
 ## Shard totals and weight refresh
 
 [`ci-shards.json`](./ci-shards.json) holds the viewer and browser shard

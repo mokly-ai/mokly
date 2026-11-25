@@ -92,9 +92,10 @@ runs the checks and each later shard runs Rust tests:
   preflight, the builds of item 10, and the Rust tests of item 11.
 - Native shard 1 checks Rust formatting and runs Clippy.
 - Each later shard runs the cargo-nextest preflight and the builds of item 10.
-  Then it runs nextest partition `slice:{INDEX-1}/{TOTAL-1}` of the Mokly
-  Rust tests. The first test shard, shard 2, also runs the doc tests. A
-  repository test shard first installs the root npm lockfile.
+  Then it runs its share of the Mokly Rust test units under the
+  [test unit rule](#test-units). The first test shard, shard 2, also runs
+  the doc tests. A repository test shard first installs the root npm
+  lockfile.
 
 The shards of a suite together run every check and every test of the
 complete suite exactly once. Only the npm install, the preflight, and the
@@ -106,13 +107,37 @@ Rejected: one test build per platform in a `cargo nextest archive` that the
 test shards download. The test shards would start only after that build job,
 so the build, the upload, and the download all stay on the critical path.
 
+### Test Units
+
+A test unit is one Cargo target selection: `--lib` for the unit tests of
+every library, `--bin {name}`, or `--test {name}`. A unit holds every
+selected target with that kind and name. The units cover each target of
+`mokly-*` and `xtask` that the complete nextest run selects: each target
+with tests whose required features the default features enable. The test
+shards read the targets from `cargo metadata`, so a new crate or a new test
+lands on a shard without an edit.
+
+The units go to the test shards by weight, the heaviest first, each to the
+shard with the least weight so far. `scripts/verification/rust-test-weights.json`
+holds the measured compile and test seconds of each unit, a default for a
+unit that it does not name, and the doc test weight of the first test shard.
+Every host computes the same partition. A weight changes only the balance,
+never the set of tests. A shard without units runs no nextest command.
+
+Each test shard selects `-p "mokly-*" -p xtask` and adds the target
+arguments of its units, so it compiles only the test binaries of its units.
+Decision: shard by test target, not by `--partition`, because every
+partition shard compiled every test binary. Rejected: one `-p` crate set
+for each shard. It changed the resolved features of up to 27 crates.io
+dependencies, so the shards could not share one Rust build cache.
+
 ## Rust Test Runner
 
 The Repository, Native, and cloud Rust suites run their Rust tests with
 [cargo-nextest](https://nexte.st). Nextest runs each test in its own process
 and runs the test binaries of all selected crates in parallel. Then
 `cargo test --doc` runs the doc tests of the same crates, because nextest
-does not run doc tests. A test shard runs one nextest partition under the
+does not run doc tests. A test shard runs its test units under the
 [shard rule](#suite-shards). Native passes `--no-fail-fast` to both commands.
 Cloud Rust sets `CI=1` for both and rejects their reported skips.
 

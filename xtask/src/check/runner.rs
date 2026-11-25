@@ -9,11 +9,13 @@ use crate::rust_file_length::RustFileLengthAuditor;
 
 use super::commands::{Step, browser_test_command, commands_for, steps_for};
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
-use super::rust_commands::RustPart;
+use super::rust_commands::{RustPart, cargo_metadata, nextest};
+use super::rust_partition::{Weights, shard_units};
+use super::rust_targets::test_units;
 use super::tasks::{Task, task_commands};
 
 /// Runs complete or selected repository verification.
-#[cfg_attr(test, unimock::unimock(api = [CheckRunnerRunMock, CheckRunnerTaskMock, CheckRunnerSourceFileLengthMock]))]
+#[cfg_attr(test, unimock::unimock(api = [CheckRunnerRunMock, CheckRunnerTaskMock, CheckRunnerSourceFileLengthMock, CheckRunnerRustTestShardMock]))]
 pub(crate) trait CheckRunner: Send + Sync {
     /// Execute the validated request in dependency order.
     fn run(&self, request: CheckRequest) -> Result<()>;
@@ -21,6 +23,8 @@ pub(crate) trait CheckRunner: Send + Sync {
     fn task(&self, task: Task) -> Result<()>;
     /// Audit changed source/protocol files or every scoped file.
     fn source_file_length(&self, all: bool) -> Result<()>;
+    /// Run the Mokly Rust test units of one weighted test shard.
+    fn rust_test_shard(&self, partition: Shard, no_fail_fast: bool) -> Result<()>;
 }
 
 /// Verification implementation backed by injected side-effect boundaries.
@@ -122,6 +126,21 @@ impl CheckRunner for DefaultCheckRunner {
             self.run_command(command)?;
         }
         Ok(())
+    }
+
+    /// Reads the test units from Cargo metadata, selects the units of the
+    /// shard, and runs them with nextest. A shard without units runs nothing.
+    fn rust_test_shard(&self, partition: Shard, no_fail_fast: bool) -> Result<()> {
+        let metadata = self
+            .command_runner
+            .output(&cargo_metadata().in_directory(self.workspace.clone()))?;
+        let units = shard_units(&test_units(&metadata)?, &Weights::embedded()?, partition);
+        if units.is_empty() {
+            eprintln!("Rust test shard {partition} has no test units");
+            return Ok(());
+        }
+        let targets: Vec<String> = units.iter().flat_map(|unit| unit.args()).collect();
+        self.run_command(nextest(&targets, no_fail_fast))
     }
 
     fn source_file_length(&self, all: bool) -> Result<()> {

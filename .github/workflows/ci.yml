@@ -88,8 +88,8 @@ jobs:
       fail-fast: false
       matrix:
         # Shard 1 runs every check except the Mokly Rust tests. Shards 2 to 5
-        # each run one nextest partition of those tests, and shard 2 also runs
-        # the doc tests.
+        # each build and run one weighted share of the Rust test targets, and
+        # shard 2 also runs the doc tests.
         shard: [1/5, 2/5, 3/5, 4/5, 5/5]
     steps:
       - name: Check out repository
@@ -126,8 +126,6 @@ jobs:
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
-      - name: Build native artifacts
-        run: cargo xtask build-native
       - name: Run repository verification
         env:
           DEPENDENCY_AUDIT: |-
@@ -287,9 +285,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Shard 1 checks formatting and Clippy. Each later shard runs one
-        # nextest partition of the Rust tests: four on macOS and six on
-        # Windows. Shard 2 also runs the doc tests.
+        # Shard 1 checks formatting and Clippy. Each later shard builds and
+        # runs one weighted share of the Rust test targets: four on macOS and
+        # six on Windows. Shard 2 also runs the doc tests.
         include:
           - runner: macos-26
             shard: 1/5
@@ -330,15 +328,14 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
-      # The lint shard keeps a separate entry of the Cargo registry alone, so
-      # it never replaces the test build entry and adds little to the cache.
+      # The lint shard restores the test build entry and never saves it: Clippy
+      # reuses its build scripts and procedural macros, and the cache holds no
+      # second entry for each host.
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: ${{ startsWith(matrix.shard, '1/') && 'lint' || '' }}
-          cache-targets: ${{ !startsWith(matrix.shard, '1/') }}
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: ${{ github.ref == 'refs/heads/main' && !startsWith(matrix.shard, '1/') }}
       - name: Install cargo-nextest
         uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
         with:
