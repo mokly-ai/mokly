@@ -1402,7 +1402,7 @@ workspace.
 - [x] Update the design and the TODOs of this plan for each problem that the
       mockups show. Branch:
       `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
-- [ ] Commit, push, review against this branch, give the findings to the
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
       Branch: `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
 
