@@ -146,6 +146,15 @@ Specs go in order of their larger share of the total estimated cost or of
 the total test count. Specs with many tests therefore take their places
 before the count cap fills.
 
+[`browser-host-needs.mjs`](./browser-host-needs.mjs) marks the specs whose
+static relative import graph reaches `tests/browser/static_test.ts`, the only
+reader of the copied static example. For each count of copy shards, placement
+puts the marked specs on those shards first, each charged
+`COPIED_HOST_SETUP_MS` once, then the other specs on all shards. It keeps the
+count with the shortest longest shard. A shard without a marked spec passes
+`MOKLY_PLAYWRIGHT_COPIED_HOST=skip`, so global setup skips that build. Removed
+specs leave the weights unused, and new specs take the median weight.
+
 The scheduler multiplies each weight by the current discovered test count.
 New specs use the median known per-test weight. Removed specs cannot enter
 the assignment because discovery owns membership. File names break ties in

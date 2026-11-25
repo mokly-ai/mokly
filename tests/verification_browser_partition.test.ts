@@ -192,3 +192,28 @@ test("specs go by their larger cost or test share, so a many-test spec is placed
     ],
   );
 });
+
+test("copied-host specs share the fewest shards and only those shards build the copy", () => {
+  // One copy shard costs 60 + 20 + 20 s, so the longest shard is a + f at
+  // 110 s. Two copy shards would put b beside a copy: 60 + 20 + 90 s.
+  const full = inventory({ a: 1, b: 1, c: 1, d: 1, e: 1, f: 1 });
+  const weights = {
+    a: 100_000,
+    b: 90_000,
+    c: 20_000,
+    d: 20_000,
+    e: 10_000,
+    f: 10_000,
+  };
+  const parts = [1, 2, 3].map((index) =>
+    selectBrowserShard(full, { index, total: 3 }, weights, new Set(["c", "d"])),
+  );
+  assert.deepEqual(
+    parts.map((part) => [part.files, part.copiedHost]),
+    [
+      [["c", "d"], true],
+      [["a", "f"], false],
+      [["b", "e"], false],
+    ],
+  );
+});

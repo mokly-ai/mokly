@@ -84,7 +84,9 @@ existing server. Each server keeps its own render cache.
 Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`: setup
 rejects a worker count above the number of servers.
 
-Global setup starts Serve readiness and both copied builds concurrently under
+A strict browser shard builds the copied example only when one of its specs
+imports its accessor module, directly or through helpers. Global setup starts
+Serve readiness and both copied builds concurrently under
 one cancellation signal and setup budget. It builds the example with
 `mokly build --no-changes`. It builds native Changes from a separate temporary
 Git repository with two commits, independent of checkout depth. It copies only
@@ -196,7 +198,10 @@ exceeds that limit, with this message:
 browser shard <index>/<total> holds <count> of <inventory> tests, above the limit of <limit>; split a large spec into smaller spec files
 ```
 
-Scheduling keeps this count bound while balancing estimated work. Every
+Scheduling keeps this count bound while balancing estimated work. It places
+the specs that need the copied example on the fewest shards that keep the
+longest shard shortest, and it charges that build once to each such shard.
+The other shards skip the build. Every
 discovered test must run, including tests without a prior duration sample.
 Rebalancing targets shard durations within 15 percent of each other.
 Durations stay observations, not passing conditions for tests.
