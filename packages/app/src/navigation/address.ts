@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { noteRoutedEntry, onQueryOnlyTraversal } from "./traversal";
+
 /**
  * Who owns the address.
  *
@@ -60,6 +62,7 @@ function observeHistory(): void {
   const replace = history.replaceState.bind(history);
   history.pushState = (...given: Parameters<History["pushState"]>) => {
     push(...given);
+    noteRoutedEntry();
     announce();
   };
   history.replaceState = (...given: Parameters<History["replaceState"]>) => {
@@ -70,11 +73,21 @@ function observeHistory(): void {
     } else {
       replace(...given);
     }
+    noteRoutedEntry();
     announce();
   };
+  noteRoutedEntry();
 }
 
 observeHistory();
+
+// A step that changes only this application's query never reaches the router,
+// so nor does it reach the `popstate` listener below. It is still a traversal
+// the reader made, so it is heard here as that listener would hear it.
+onQueryOnlyTraversal(() => {
+  pushed = 0;
+  announce();
+});
 
 /**
  * The address the reader is at, however it came to be the address: the
@@ -223,52 +236,6 @@ export function replaceAddress(router: AddressRouter, href: string): void {
   restoreExactAddress(replacement, history, 3);
 }
 
-function queryKey(pair: string): string | undefined {
-  const separator = pair.indexOf("=");
-  const raw = separator === -1 ? pair : pair.slice(0, separator);
-  try {
-    return decodeURIComponent(raw.replace(/\+/g, " "));
-  } catch {
-    return undefined;
-  }
-}
-
-function queryPairs(search: string): string[] {
-  const query = search.startsWith("?") ? search.slice(1) : search;
-  return query.length === 0 ? [] : query.split("&");
-}
-
-/** Remove named query pairs without decoding or serializing every other pair. */
-export function removeQueryKeys(search: string, removed: ReadonlySet<string>) {
-  return queryPairs(search)
-    .filter((pair) => {
-      const key = queryKey(pair);
-      return key === undefined || !removed.has(key);
-    })
-    .join("&");
-}
-
-/** Set one query value in place while retaining every unrelated pair exactly. */
-export function setQueryValue(
-  search: string,
-  key: string,
-  value: string,
-): string {
-  const pair = `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
-  const result: string[] = [];
-  let replaced = false;
-  for (const current of queryPairs(search)) {
-    if (queryKey(current) !== key) {
-      result.push(current);
-      continue;
-    }
-    if (!replaced) result.push(pair);
-    replaced = true;
-  }
-  if (!replaced) result.push(pair);
-  return result.join("&");
-}
-
 /**
  * Undo the entry this application pushed, rather than writing another over it.
  * A surface that pushed one entry and then replaced it leaves the stack a step
@@ -280,18 +247,4 @@ export function undoAddress(): boolean {
   pushed -= 1;
   window.history.back();
   return true;
-}
-
-/** One route's query, where a repeated key is the array it was written as. */
-export type Query = Record<string, string | string[] | undefined>;
-
-/** The address bar's query keys, keeping a repeated key as the array it is. */
-export function readQuery(search: string): Query {
-  const parameters = new URLSearchParams(search);
-  const query: Query = {};
-  for (const key of parameters.keys()) {
-    const values = parameters.getAll(key);
-    query[key] = values.length > 1 ? values : values[0];
-  }
-  return query;
 }
