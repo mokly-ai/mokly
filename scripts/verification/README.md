@@ -26,7 +26,10 @@ Public test commands and strict evidence rules live in the
   exact version in [`.bun-version`](../../.bun-version). The required check,
   the fast fallback hint, and the Testbox wrapper use it.
 - [`browser-developer.mjs`](./browser-developer.mjs) runs the selected
-  Playwright specs of `npm run test:browser` after it checks the build.
+  Playwright specs of `npm run test:browser` after it checks the build. When
+  [`browser-developer-selection.mjs`](./browser-developer-selection.mjs) finds
+  that the arguments only filter specs and titles, it lists the selected specs
+  and skips the copied example when none of them reads it.
 - [`run-browser.mjs`](./run-browser.mjs) runs the strict browser suite, or one
   shard of it, and writes its report.
 - [`static-delivery.mjs`](./static-delivery.mjs) runs the static HTTP and

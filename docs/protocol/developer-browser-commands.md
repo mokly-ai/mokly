@@ -17,7 +17,8 @@ browser suite sets `forbidOnly`. Use paths and `-g` to select tests; never use
 
 The shared example servers, the copied current-only example, and the
 two-commit comparison fixture follow
-[CI suite evidence](./ci-suite-evidence.md#test-concurrency). The
+[CI suite evidence](./ci-suite-evidence.md#test-concurrency). A selected run
+builds the copied example only when a selected spec reads it. The
 [fixture guide](../../tests/browser/README.md) lists the specs that use each
 fixture. To supply current-only output, set `MOKLY_PLAYWRIGHT_STATIC_DIR`. For
 example:
