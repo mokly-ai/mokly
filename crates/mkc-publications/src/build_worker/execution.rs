@@ -13,6 +13,7 @@ use mkc_github_interface::error::Error as ProviderError;
 use crate::error::{Error, ErrorResultExt, Result};
 
 use super::finalize::{AttemptFinalizer, AttemptResult, Finalizer};
+use super::reason::{self, log};
 use super::service::{ClaimedBuild, DatabaseBuildWorker};
 use super::sink::AttemptSink;
 
@@ -54,9 +55,10 @@ impl DatabaseBuildWorker {
             Ok(token) => {
                 let request = match self.request(attempt, token.expose()) {
                     Ok(request) => request,
-                    Err(_) => {
+                    Err(error) => {
+                        let reason = reason::request(&error);
                         return self
-                            .finalize_attempt(attempt, AttemptResult::Infrastructure)
+                            .finalize_attempt(attempt, AttemptResult::Infrastructure(reason))
                             .await;
                     }
                 };
@@ -72,7 +74,7 @@ impl DatabaseBuildWorker {
             Err(ProviderError::Forbidden | ProviderError::NotFound) => {
                 AttemptResult::RepositoryUnavailable
             }
-            Err(_) => AttemptResult::Infrastructure,
+            Err(error) => AttemptResult::Infrastructure(reason::mint(&error)),
         };
         self.finalize_attempt(attempt, result).await
     }
@@ -83,9 +85,13 @@ impl DatabaseBuildWorker {
             runtime: self.runtime.clone(),
         });
         let build = attempt.build.clone();
-        tokio::task::spawn_blocking(move || finalizer.finish(&build, result))
+        let warning = tokio::task::spawn_blocking(move || finalizer.finish(&build, result))
             .await
-            .context("join build finalization")?
+            .context("join build finalization")??;
+        if let Some(warning) = warning {
+            log(attempt.build.id, &warning);
+        }
+        Ok(())
     }
 
     fn request(&self, attempt: &ClaimedBuild, installation_token: &str) -> Result<BuildRequest> {
