@@ -82,8 +82,8 @@ function observeHistory(): void {
 observeHistory();
 
 // A step that changes only this application's query never reaches the router,
-// so nor does it reach the `popstate` listener below. It is still a traversal
-// the reader made, so it is heard here as that listener would hear it.
+// so nor does it reach the `popstate` listener of `useAddress`. It is still a
+// traversal the reader made, so it is heard here as that listener hears it.
 onQueryOnlyTraversal(() => {
   pushed = 0;
   announce();
@@ -112,6 +112,9 @@ export function useAddress(): { pathname: string; search: string } {
     };
     sync();
     listeners.add(sync);
+    // This listener is added after the router's, so a step the router acts on
+    // reaches the screens only once the router has started to replace them.
+    // A screen that heard the new address first could correct it back.
     window.addEventListener("popstate", traversed);
     return () => {
       listeners.delete(sync);

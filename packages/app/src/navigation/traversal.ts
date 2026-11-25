@@ -32,7 +32,7 @@ interface RoutedEntry {
 
 const gates: TraversalGate[] = [];
 let routed: RoutedEntry | undefined;
-let onQueryStep: (() => void) | undefined;
+const listeners = new Set<() => void>();
 // Set while a `history.go` the router made has not yet been answered. The
 // router records the entry it lands on right after, which clears it.
 let routerTraversing = false;
@@ -68,11 +68,11 @@ export function gateTraversal(gate: TraversalGate): void {
 }
 
 /**
- * Say what to do once a query-only step is kept from the router, because the
- * listeners that would have heard the `popstate` no longer hear it.
+ * Hear each query-only step that this listener keeps from the router. The
+ * `popstate` listeners after this one no longer hear it, so they hear it here.
  */
-export function onQueryOnlyTraversal(callback: () => void): void {
-  onQueryStep = callback;
+export function onQueryOnlyTraversal(listener: () => void): void {
+  listeners.add(listener);
 }
 
 function sameRoutedEntry(): boolean {
@@ -95,7 +95,7 @@ function onPopState(event: PopStateEvent): void {
   }
   if (!routerTraversing && sameRoutedEntry()) {
     event.stopImmediatePropagation();
-    onQueryStep?.();
+    for (const listener of listeners) listener();
     return;
   }
   noteRoutedEntry();

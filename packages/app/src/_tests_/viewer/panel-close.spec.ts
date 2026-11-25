@@ -4,7 +4,11 @@ import { projectAddress } from "../addresses";
 import { expect, freshEmail, open, signIn, test } from "../harness";
 import { createProject } from "../project-setup";
 
-import { publishedProject, publishedViewerReady } from "./support";
+import {
+  openSettingsFromAccount,
+  publishedProject,
+  publishedViewerReady,
+} from "./support";
 
 /**
  * Mark the viewer screen's root element, so a later check can tell whether
@@ -61,5 +65,24 @@ test("closing a panel keeps an unpublished project's viewer", async ({
   await expect(page.getByTestId("viewer-panel-projects")).toBeVisible();
   await page.getByTestId("close-projects").click();
   await expect(page.getByTestId("viewer-panel-projects")).toHaveCount(0);
+  await expectViewerKept(page);
+});
+
+test("closing the settings dialog keeps the viewer beneath it", async ({
+  page,
+}) => {
+  const made = await publishedProject(page, "settings-close");
+  await open(page, made.publicationPath);
+  await publishedViewerReady(page);
+  await markViewer(page);
+
+  await openSettingsFromAccount(page);
+  await page.getByTestId("close-settings").click();
+  await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
+  await expectViewerKept(page);
+
+  await openSettingsFromAccount(page);
+  await page.goBack();
+  await expect(page.getByTestId("settings-dialog")).toHaveCount(0);
   await expectViewerKept(page);
 });
