@@ -37,6 +37,8 @@ export function describeStoryFile(
           .map(([key, value]) => [key, storyHints(value)]),
       );
       const stored: StoredStory = {
+        id,
+        name: title,
         compose,
         beforeAll: read.beforeAll,
         dataKeys: Object.keys(props),

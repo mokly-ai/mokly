@@ -154,6 +154,10 @@ fn worker(
                         modules: Default::default(),
                         unmapped_dependency_directories: None,
                     })),
+                    Call::RenderPage(_) => MethodResult::Page(results::Page {
+                        html: "<!doctype html><p>Ready</p>".into(),
+                        resources: vec![],
+                    }),
                     _ => MethodResult::Empty,
                 })
             })),

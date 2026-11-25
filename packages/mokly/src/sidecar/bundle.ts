@@ -11,8 +11,8 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
-import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
+import type { BundleCaptureState } from "./bundle-capture.js";
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
@@ -32,6 +32,7 @@ import { PlannedRelative } from "./planned-relative.js";
 import { ResolutionEvidence } from "./resolution-evidence.js";
 import { PlanLookup } from "./resolution-plan.js";
 import { ServeEditImports } from "./serve-edit-imports.js";
+import type { StoredStory } from "./story-reader.js";
 
 export interface Generation {
   modules: Module[];
@@ -52,7 +53,7 @@ export interface Generation {
   registrations: Map<object, { handle: string; path?: string }>;
   savedSlots: Map<string, unknown>;
   sources: Map<string, string>;
-  stories: Map<string, unknown>;
+  stories: Map<string, StoredStory>;
   require: NodeJS.Require;
 }
 export interface BundleExports {
@@ -66,18 +67,6 @@ export interface BundleExports {
 export interface Bundled {
   generation: Generation;
   result: BundleResult;
-}
-
-interface BundleCaptureState {
-  started: bigint;
-  mode: BundleCapture;
-  reads: Map<string, Uint8Array>;
-  durability?: CaptureDurability | undefined;
-  evidence?: ResolutionEvidence;
-  preview?: string | null | undefined;
-  plan?: ResolutionPlan;
-  editImports?: ServeEditImports;
-  guardedCompile?: typeof build | undefined;
 }
 
 /**

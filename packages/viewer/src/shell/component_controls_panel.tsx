@@ -1,8 +1,9 @@
 /**
  * The Props inspector surface: the shown entry's fields, or its saved props.
- * These containers map the controls state to the notices, the alerts, and the
- * wording of `component_controls_copy.ts`. `@mokly/ui/controls-panel` renders
- * the panels, `@mokly/ui/props-panel` the saved props, and
+ * These containers map the controls state and the props that the preview
+ * shows to the notices, the alerts, and the wording of
+ * `component_controls_copy.ts`. `@mokly/ui/controls-panel` renders the
+ * panels, `@mokly/ui/props-panel` the saved props, and
  * `@mokly/ui/edit-status` the status of an edit's render.
  */
 
@@ -25,6 +26,7 @@ import type {
   ComponentEditorState,
   ControlsMode,
   ControlsNotice,
+  ShownProps,
 } from "./component_controls_state.js";
 import {
   controlEntries,
@@ -42,17 +44,23 @@ const SAVED_NOTICES: Partial<Record<ControlsMode, string>> = {
   "read-only": CONTROLS_COPY.readonlyProps,
 };
 
-/** One alert per failed edit: what failed, and one action when one exists. */
+/**
+ * One alert per failed edit: what failed, and one action when one exists. A
+ * failed render and an invalid value name the props that the preview shows.
+ */
 function controlsAlert(
   notice: ControlsNotice | undefined,
+  preview: ShownProps,
 ): ControlsAlert | undefined {
-  if (notice === "invalid") return { text: CONTROLS_COPY.invalid };
+  const saved = preview === "saved";
+  if (notice === "invalid")
+    return { text: saved ? CONTROLS_COPY.invalidSaved : CONTROLS_COPY.invalid };
   if (notice === "invalid-together")
     return { text: CONTROLS_COPY.invalidTogether };
   if (notice === "failed")
     return {
       action: CONTROLS_COPY.retry,
-      body: CONTROLS_COPY.failedBody,
+      body: saved ? CONTROLS_COPY.failedSavedBody : CONTROLS_COPY.failedBody,
       title: CONTROLS_COPY.failedTitle,
     };
   if (notice === "expired")
@@ -72,6 +80,7 @@ export function ComponentControlsPanel({
   onReset,
   onRetry,
   onStart,
+  preview,
   state,
   target,
 }: {
@@ -83,6 +92,8 @@ export function ComponentControlsPanel({
   onRetry(): void;
   /** Load the live descriptor again after editing could not start. */
   onStart?: (() => void) | undefined;
+  /** The props that the entry's shown frames show, which the alerts name. */
+  preview: ShownProps;
   state: ComponentEditorState;
   target: ControlTarget;
 }) {
@@ -117,7 +128,7 @@ export function ComponentControlsPanel({
   );
   return (
     <ControlsPanel
-      alert={controlsAlert(state.notice)}
+      alert={controlsAlert(state.notice, preview)}
       dirty={state.dirty}
       extra={
         Object.keys(uncontrolled).length || target.suppliedSlots.length ? (

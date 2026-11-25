@@ -2,10 +2,7 @@ import { mockLink } from "@mokly/mokly";
 
 import { SavedPropsPanel } from "../../../../../../../packages/ui/src/controls-panel/controls-panel.js";
 import { PropValues } from "../../../../../../../packages/ui/src/props-panel/props-panel.js";
-import {
-  CONTROLS_COPY,
-  SAVED_PREVIEW_COPY,
-} from "../../../components/controls/parts/copy.js";
+import { CONTROLS_COPY } from "../../../components/controls/parts/copy.js";
 import {
   actionFields,
   VariantControls,
@@ -51,7 +48,7 @@ function editOf(state: EditState): VariantEdit {
     case "restored":
       return { restored: CONTROLS_COPY.restored };
     case "invalid":
-      return { ...edited, alert: { text: SAVED_PREVIEW_COPY.invalid } };
+      return { ...edited, alert: { text: CONTROLS_COPY.invalidSaved } };
     case "together":
       return { ...edited, alert: { text: CONTROLS_COPY.invalidTogether } };
     case "failed":
@@ -59,7 +56,7 @@ function editOf(state: EditState): VariantEdit {
         ...rerender,
         alert: {
           action: CONTROLS_COPY.retry,
-          body: SAVED_PREVIEW_COPY.failedBody,
+          body: CONTROLS_COPY.failedSavedBody,
           title: CONTROLS_COPY.failedTitle,
         },
       };

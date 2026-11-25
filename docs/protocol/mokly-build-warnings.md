@@ -3,13 +3,13 @@
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is
-validated or rendered. It reports an ignored input or a structure that
-builds and works but degrades accessibility or conformance, so the author
-can decide whether to change it. A warning never alters document bytes, the
-catalogue index, an entry detail, an HTTP response, or a timing record. This
-contract defines the record, who produces it, which command reports it, and
-the `--strict` option, including the exact warning lines. The broader
-terminal rules are in the
+validated or rendered. It reports an ignored input, a story that could not
+render, or a structure that builds and works but degrades accessibility or
+conformance, so the author can decide whether to change it. A warning never
+alters document bytes, the catalogue index, an entry detail, an HTTP
+response, or a timing record. This contract defines the record, who produces
+it, which command reports it, and the `--strict` option, including the exact
+warning lines. The broader terminal rules are in the
 [terminal output contract](./mokly-terminal-output.md).
 
 ## Record
@@ -60,6 +60,7 @@ order, the operating system, or the absolute checkout path.
 | `props-not-data`                 | A non-data prop value excluded from an inferred schema ([entry props](./mokly-entry-props.md#schema-inference))                                                                                                                                     |
 | `props-unsafe-integer`           | An unsafe integer in props, schema keywords, or authored control metadata ([entry props](./mokly-entry-props.md#schema-inference))                                                                                                                  |
 | `props-control-bounds`           | A saved prop or story arg outside its editing bounds ([component controls](./mokly-component-controls.md))                                                                                                                                          |
+| `story-render-failed`            | A saved view whose story could not render ([Storybook story failures](./mokly-storybook-failures.md#the-warning))                                                                                                                                   |
 | `storybook-parameter-ignored`    | A malformed value of a story's `mokly` parameter that Mokly ignores ([Storybook stories](./mokly-storybook-setup.md#globals-for-views))                                                                                                             |
 | `stylesheet-extglob`             | A configuration stylesheet matcher with unsupported extglob syntax ([configuration](./mokly-configuration.md#shape))                                                                                                                                |
 | `stylesheet-owner`               | A renderer `resources` seed that names a stylesheet ([rendering](./mokly-rendering.md#renderer-module))                                                                                                                                             |

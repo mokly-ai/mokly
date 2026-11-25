@@ -33,13 +33,19 @@ impl Session {
             && let ReadOutcome::Hit(artifact) | ReadOutcome::HitWithStoreFault(artifact) =
                 persistence.store.load(key)
         {
-            self.state
-                .composer
-                .record_served(&document_composition::request(
-                    self,
-                    plan,
-                    &self.state.catalogue.model.entries[plan.entry],
-                ));
+            if artifact
+                .document
+                .as_ref()
+                .is_none_or(|document| document.story_render_failure().is_none())
+            {
+                self.state
+                    .composer
+                    .record_served(&document_composition::request(
+                        self,
+                        plan,
+                        &self.state.catalogue.model.entries[plan.entry],
+                    ));
+            }
             return Ok(DocumentRead::Hit(artifact));
         }
         Ok(DocumentRead::Miss(key))

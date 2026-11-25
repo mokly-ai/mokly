@@ -171,7 +171,7 @@ impl Pool {
                 tracing::warn!(%error, "sidecar context preparation failed before its bundle");
                 Ok(())
             }
-            outcome => outcome,
+            outcome => outcome.map(|_| ()),
         }
     }
 }

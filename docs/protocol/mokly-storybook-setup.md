@@ -43,11 +43,11 @@ cleanup first. Then it runs the `beforeAll` hook of the story's generation, and
 that setup becomes the active one. So a sidecar runs the hook once for each
 generation, and again only after the setup of another generation replaced it.
 The last setup gets no cleanup when the sidecar exits. A loader, a hook, a
-cleanup, or a render that throws fails the render with
-[`render-failed`](./mokly-sidecar.md#fail-closed-rules). When the `beforeAll`
-hook throws, it does not run again for that generation, and each story render of
-that generation fails with its error. Mokly runs no `play` function and no
-`afterEach` hook.
+cleanup, or a render that throws fails the story render under the
+[story failure rules](./mokly-storybook-failures.md#failed-views). When the
+`beforeAll` hook throws, it does not run again for that generation, and each
+story render of that generation fails with its error under the same rules.
+Mokly runs no `play` function and no `afterEach` hook.
 
 Decision: Mokly also runs the preview's `beforeAll` hook, as Storybook's test
 runners do. Running only the loaders and the `beforeEach` hooks was rejected.
@@ -114,6 +114,7 @@ time was rejected, because one typo then fails the whole build.
 ## Related Docs
 
 - [Storybook stories](./mokly-storybook.md)
+- [Storybook story failures](./mokly-storybook-failures.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Build warnings](./mokly-build-warnings.md)
 - [Sidecar definition transport](./mokly-sidecar-definitions.md)

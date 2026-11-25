@@ -66,6 +66,7 @@ mod relative_links;
 mod root_inputs;
 mod slots;
 mod source_locations;
+mod story_failure;
 mod text_mode;
 mod tree_debug;
 mod tree_equality;

@@ -5,15 +5,23 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::compiled_fixture::compiled;
-use crate::methods::Call;
+use crate::methods::{Call, RenderStory};
 use crate::results;
 use crate::wire::MethodResult;
 use crate::workers::{ControlMock, WorkerMock};
 
 use super::support::{Event, Hook, Journal};
 
+/// A story can fail independently in a foreground render or in a replay.
+pub(super) type StoryFails = fn(&RenderStory, bool) -> bool;
+
 /// Each call, quiet flag, kill, and reap reaches the journal; the hook can fail a call or a reap.
-pub(super) fn process(id: usize, events: &Arc<Journal>, hook: Hook) -> Unimock {
+pub(super) fn process(
+    id: usize,
+    events: &Arc<Journal>,
+    hook: Hook,
+    story_fails: StoryFails,
+) -> Unimock {
     let calls = events.clone();
     let kills = events.clone();
     let reaps = events.clone();
@@ -47,6 +55,29 @@ pub(super) fn process(id: usize, events: &Arc<Journal>, hook: Hook) -> Unimock {
                         modules: Default::default(),
                         unmapped_dependency_directories: None,
                     })),
+                    Call::RenderPage(_) => MethodResult::Page(results::Page {
+                        html: "<!doctype html><p>Ready</p>".into(),
+                        resources: vec![],
+                    }),
+                    Call::RenderStory(params) => {
+                        let story = if story_fails(params, request.quiet) {
+                            results::StoryRender::Failed {
+                                story_id: params.story_id.clone(),
+                                name: "Menu".into(),
+                                reason: "document is not defined".into(),
+                            }
+                        } else {
+                            results::StoryRender::Rendered(results::Render {
+                                html: "<p>Ready</p>".into(),
+                                styles: vec![],
+                                markers: vec![],
+                                resources: vec![],
+                                instances: vec![],
+                                slots: vec![],
+                            })
+                        };
+                        MethodResult::StoryRender(story)
+                    }
                     _ => MethodResult::Empty,
                 })
             })),

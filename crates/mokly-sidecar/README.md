@@ -143,8 +143,9 @@ remains, as in a one-slot pool, the pool stops. The
 owns these rules.
 
 The pool keeps the last 30 successful render requests of the newest head
-generation, and no replay. `SidecarPool::record_served_render` also adds a
-store-served request without a call, when its source root is the launch
+generation. Replays and failed stories stay out of the window.
+`SidecarPool::record_served_render` also adds a request for a stored successful
+render without a call, when its source root is the launch
 repository and its generation is the newest head generation. An equal
 store-origin request already in the window adds no copy, and normal renders
 keep their order and their duplicates. The window and every warm-up share each
@@ -155,7 +156,9 @@ render or replay of the newest generation's epoch, with one attempt for each
 epoch. A warm-up sends the
 missing `restoreGeneration`, `cssModules`, `describe`, and `bindings` calls,
 then replays the recorded renders, one call at a time, and discards each
-result. Each warm-up call sets `Request::quiet`, so the sidecar drops the
+result. A failed story replay leaves the process available and the warm-up
+continues. Only a replay that returns markup can prove the worker warm.
+Each warm-up call sets `Request::quiet`, so the sidecar drops the
 console and output writes of the code that the call runs, and its timing
 records still appear. `Request::quiet` has no default, so each request builder
 chooses it. A request takes the worker after the call in flight, and the warm-up
@@ -606,7 +609,9 @@ spawn the built sidecar and render a component, screen, story, and page. The
   16 KiB of buffer capacity.
 - [`src/methods.rs`](./src/methods.rs), [`src/results.rs`](./src/results.rs),
   and [`src/wire.rs`](./src/wire.rs) define the request payloads, the result
-  payloads, and the envelopes of the wire protocol. `BundleRequest` flattens
+  payloads, and the envelopes of the wire protocol. `StoryRender` carries
+  the rendered fragment or the story's export ID, display name, and failure reason.
+  `BundleRequest` flattens
   the persisted `Bundle` settings and adds the optional request-only
   `BundleCapture`, `Full` by default or `ServeEdit`, the optional
   request-only `plan` of a Serve edit, and the optional request-only

@@ -13,7 +13,7 @@ use crate::pool_options::{Launch, PoolOptions};
 use crate::workers::{ClockMock, FactoryMock, Spawned};
 
 use super::calls::{bindings, bundle, css, maps, render};
-use super::process::process;
+use super::process::{StoryFails, process};
 
 /// The polling allowance for an expected state; it guards hangs and is not a speed contract.
 const ALLOWANCE: Duration = Duration::from_secs(10);
@@ -116,6 +116,10 @@ pub(super) struct Harness {
 impl Harness {
     /// A pool of `size` slots whose factory starts journaled processes on demand.
     pub(super) fn new(size: usize, hook: Hook) -> Self {
+        Self::with_story_failures(size, hook, |_, _| false)
+    }
+
+    pub(super) fn with_story_failures(size: usize, hook: Hook, story_fails: StoryFails) -> Self {
         let events = Arc::new(Journal::default());
         let journal = events.clone();
         let started = AtomicUsize::new(0);
@@ -126,7 +130,7 @@ impl Harness {
                     let id = started.fetch_add(1, Ordering::SeqCst);
                     let root = launch.repository.to_string_lossy().into_owned();
                     journal.emit(Event::Spawn(id, root));
-                    let process = process(id, &journal, hook.clone());
+                    let process = process(id, &journal, hook.clone(), story_fails);
                     Ok(Spawned {
                         worker: Box::new(process.clone()),
                         control: Arc::new(process),
