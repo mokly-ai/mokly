@@ -41,6 +41,12 @@
     (received 2 within 5000 ms) and 508 other tests passed. The one rerun of
     the job passed (attempt 2, job 137190782856). That branch did not change
     `apps/site` or `packages/`.
+  - 2026-11-24, the `Site checks` job of the CI of PR #495 at `6c1d2ea9e`
+    (run 45449917789, step "Verify the partition"):
+    "`/docs/authoring/viewports-and-color-schemes/` meets the deterministic
+    accessibility contract" at `390-dark`, with the same failure text. The one
+    rerun of the job passed. That branch did not change `apps/site` or
+    `packages/`.
 - **Impact if no action:** The cloud-site suite of the gate fails now and then
   without a site defect.
 - **Root question:** How does the check wait for the islands of a docs page to

@@ -284,8 +284,9 @@ delete their prefix only together with the namespace database. Browser and
 integration harnesses create a fresh local store and isolated database schema
 for each run, then remove both during teardown.
 
-The API application pool has eight Postgres connections with a five-second
-acquisition timeout. Each admitted upload serializes its short marker batches
+The API application pool has at most eight Postgres connections with a
+five-second acquisition timeout. The pool opens a connection only when a call
+needs one and closes each connection at most 90 seconds after its last call. Each admitted upload serializes its short marker batches
 through at most one connection regardless of worker count; object I/O remains
 parallel and outside transactions. The health reader keeps its separate
 single-connection pool.
