@@ -212,8 +212,8 @@ before this wrapper. It refreshes every regular copied path that differs from
 the warmup base, so the first Cargo build cannot reuse a stale native binary.
 
 No browser command also runs delivery. The remote plan gives static delivery
-its own seventh Testbox and requires its exit result. Browser and viewer
-reports retain the existing five-report aggregate. The delivery parent
+its own Testbox and requires its exit result. Its reports stay out of the
+viewer and browser report aggregate. The delivery parent
 validates its own HTTP and file reports before returning success.
 
 ### Testbox workflow reference

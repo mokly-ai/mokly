@@ -20,7 +20,7 @@ treated as proof. The client uses these endpoints:
 - `actions/workflows/ci.yml/runs` for successful push and pull-request runs;
 - `commits/{sha}/pulls` for merged pull requests associated with the tag commit;
 - `actions/runs/{id}/jobs` for the exact `Required CI` job result;
-- `actions/runs/{id}/artifacts` and `actions/artifacts/{id}/zip` for the ten
+- `actions/runs/{id}/artifacts` and `actions/artifacts/{id}/zip` for the
   dual-runtime Release Please `verification-*` reports; and
 - `git/commits/{sha}` for the tree named by an evidence commit.
 
@@ -45,9 +45,10 @@ browser reports of [both runtimes](./ci-workflow.md#required-ci).
 
 The release checkout supplies the tagged commit and its tree. The downloaded
 artifact names
-must match the CI verification namespace, be unexpired, and yield exactly ten
-reports across `node-22.15.0` and `node-24`. All reports must name one full
-commit SHA. The ordinary five-report profile is complete ordinary CI evidence,
+must match the CI verification namespace, be unexpired, and yield exactly one
+report per viewer and browser shard on each of `node-22.15.0` and `node-24`.
+All reports must name one full
+commit SHA. The ordinary single-runtime profile is complete ordinary CI evidence,
 but it is not release evidence and therefore classifies as absent here.
 
 The evidence commit is applicable when it is the tagged commit or when

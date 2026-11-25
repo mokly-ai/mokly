@@ -238,7 +238,7 @@ within that event's runtime profile; individual reports are partial evidence.
 Release publication accepts only the dual-runtime Release Please profile, then
 applies the additional tree, live Node test inventory, and live Playwright
 inventory checks in the [release evidence contract](./npm-release-evidence.md).
-The ordinary five-report profile cannot authorize publication. Reports stay
+The ordinary single-runtime profile cannot authorize publication. Reports stay
 available for 14 days. Missing or expired evidence stops release preparation.
 Re-run qualifying CI on the release commit, then retry the release.
 
