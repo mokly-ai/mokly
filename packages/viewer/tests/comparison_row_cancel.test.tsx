@@ -21,12 +21,13 @@ import {
   renderComparison,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 const HOME = "product/browse/home";
 
 test("Current aborts every row's request, and a late response changes nothing", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   const view = renderComparison(host.environment, {
     eligible: true,
@@ -64,7 +65,7 @@ test("Current aborts every row's request, and a late response changes nothing", 
 
 test("navigation in the variant set and a scheme change keep every row, and another workspace aborts every row", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   const props: ComparisonOptions = {
     eligible: true,

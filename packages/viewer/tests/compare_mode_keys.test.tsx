@@ -16,10 +16,11 @@ import { shellStore } from "../src/shell/store_actions.js";
 import { ShellStoreBoundary } from "../src/shell/store_context.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 
+import { unregisterDom } from "./dom_teardown.js";
 import { catalogue, context } from "./shell_state_fixture.js";
 
 before(() => GlobalRegistrator.register());
-after(() => GlobalRegistrator.unregister());
+after(unregisterDom);
 
 /** The compare modes in key order: Current is 1 and Swipe is 5. */
 const MODES = ["current", "side", "overlay", "difference", "swipe"] as const;

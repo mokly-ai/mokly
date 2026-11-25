@@ -6,9 +6,11 @@ import { act, renderHook } from "@testing-library/react";
 
 import { useCanvasFrameInput } from "../src/shell/canvas_frame_input.js";
 
+import { unregisterDom } from "./dom_teardown.js";
+
 test("a frame with two documents keeps its focus glow while either shows keyboard focus", (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const { result, unmount } = renderHook(() => useCanvasFrameInput());
   try {
     const before = document.createElement("iframe");
