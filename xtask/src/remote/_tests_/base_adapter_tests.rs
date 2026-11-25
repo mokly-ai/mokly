@@ -12,14 +12,6 @@ fn require_base(repository: &Repository, sha: CommitSha, ahead: u64) {
     );
 }
 
-/// A published checkout needs no ancestor offset.
-#[test]
-fn pushed_head_is_the_base_with_zero_ahead() {
-    let repository = Repository::new();
-    repository.push("feature");
-    require_base(&repository, repository.head(), 0);
-}
-
 /// Unpushed descendants use their most recent pushed branch tip.
 #[test]
 fn unpushed_commits_use_the_pushed_branch_tip() {

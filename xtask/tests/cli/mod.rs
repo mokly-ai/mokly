@@ -16,6 +16,7 @@ mod desktop_release_input_tests;
 mod desktop_release_workflow_tests;
 mod desktop_workflow_tests;
 mod email_template_tests;
+mod fixture_support;
 mod fixture_tests;
 mod github_fixture_tests;
 mod javascript_tests;
