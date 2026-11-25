@@ -83,7 +83,7 @@ Use that name for its report and log.
 
 `scripts/verification/ci-shards.json` holds the viewer total `V` and the browser
 total `B` that CI also uses. Each `INDEX` from 1 to its total runs on its own
-box with `--shard`, also for a total of 1. Its 2 viewer and 10 browser shards give 21 commands.
+box with `--shard`, also for a total of 1. Its 2 viewer and 14 browser shards give 25 commands.
 
 The wrapper accepts the suite and shard forms from
 [CI verification](./ci-verification.md#verification-boundary), plus the

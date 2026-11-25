@@ -266,8 +266,53 @@ jobs:
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      # The packages of `playwright install-deps` follow the Playwright version
+      # and the Ubuntu release of the image.
+      - &chromium-packages-key
+        name: Name the Chromium package cache
+        id: chromium-packages
+        run: |
+          playwright=$(jq --raw-output --exit-status '.packages["node_modules/playwright-core"].version' package-lock.json)
+          echo "key=chromium-packages-$RUNNER_OS-$RUNNER_ARCH-$ImageOS-playwright-$playwright" >> "$GITHUB_OUTPUT"
+          echo "path=$HOME/.cache/mokly-chromium-packages" >> "$GITHUB_OUTPUT"
+      - &chromium-packages-restore
+        name: Restore Chromium package downloads
+        id: chromium-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.chromium-packages.outputs.path }}
+          key: ${{ steps.chromium-packages.outputs.key }}
+      # apt adds only the packages that the image lacks and upgrades none, so
+      # the downloads are one set on every image. It takes a restored package
+      # from its archive folder instead of the mirror.
+      - &chromium-install
+        name: Install Chromium
+        env:
+          PACKAGES: ${{ steps.chromium-packages.outputs.path }}
+        run: |
+          echo 'APT::Get::Upgrade "false";' | sudo tee /etc/apt/apt.conf.d/90-mokly-no-upgrade > /dev/null
+          if compgen -G "$PACKAGES/*.deb" > /dev/null; then
+            sudo cp "$PACKAGES"/*.deb /var/cache/apt/archives/
+          fi
+          npx playwright install --with-deps chromium
+      - name: Collect Chromium package downloads
+        id: chromium-downloads
+        if: github.ref == 'refs/heads/main' && matrix.shard == 1 && matrix.node == '22.15.0' && steps.chromium-cache.outputs.cache-hit != 'true'
+        env:
+          PACKAGES: ${{ steps.chromium-packages.outputs.path }}
+        run: |
+          if compgen -G "/var/cache/apt/archives/*.deb" > /dev/null; then
+            mkdir -p "$PACKAGES"
+            cp /var/cache/apt/archives/*.deb "$PACKAGES"/
+            du -sh "$PACKAGES"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Save Chromium package downloads
+        if: steps.chromium-downloads.outputs.found == 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.chromium-packages.outputs.path }}
+          key: ${{ steps.chromium-packages.outputs.key }}
       - name: Run browser shard
         env:
           BROWSER_SHARD: ${{ matrix.shard }}/${{ needs.profile.outputs.browser-shard-total }}
@@ -393,7 +438,7 @@ jobs:
           NATIVE_SHARD: ${{ matrix.shard }}
         run: cargo xtask check --suite native --shard "$NATIVE_SHARD"
   static-delivery:
-    name: Static delivery (Node ${{ matrix.node }})
+    name: Static delivery (Node ${{ matrix.node }}, ${{ matrix.mode }})
     needs: [profile]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -401,6 +446,8 @@ jobs:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        # Each delivery mode runs in its own job on its own fresh build.
+        mode: [static-http, file]
     env:
       PLAYWRIGHT_CHANNEL: chromium
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
@@ -434,17 +481,21 @@ jobs:
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      # The browser job defines these steps, so both jobs use one cache key.
+      - *chromium-packages-key
+      - *chromium-packages-restore
+      - *chromium-install
       - name: Build native and JavaScript packages
         run: npm run build
-      - name: Check example static HTTP and file delivery
-        run: npm run test:delivery:prepared
+      - name: Check example delivery
+        env:
+          DELIVERY_MODE: ${{ matrix.mode }}
+        run: npm run test:delivery:prepared -- --mode "$DELIVERY_MODE"
       - name: Retain static delivery evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: static-delivery-node-${{ matrix.node }}
+          name: static-delivery-node-${{ matrix.node }}-${{ matrix.mode }}
           path: .context/static-delivery/*.json
           if-no-files-found: error
           include-hidden-files: true
@@ -454,7 +505,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: static-delivery-failures-node-${{ matrix.node }}-attempt-${{ github.run_attempt }}
+          name: static-delivery-failures-node-${{ matrix.node }}-${{ matrix.mode }}-attempt-${{ github.run_attempt }}
           path: .context/playwright-results/
           include-hidden-files: true
           retention-days: 14

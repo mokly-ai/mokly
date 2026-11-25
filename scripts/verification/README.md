@@ -33,7 +33,9 @@ Public test commands and strict evidence rules live in the
 - [`run-browser.mjs`](./run-browser.mjs) runs the strict browser suite, or one
   shard of it, and writes its report.
 - [`static-delivery.mjs`](./static-delivery.mjs) runs the static HTTP and
-  `file://` delivery checks of `npm run test:delivery:prepared`.
+  `file://` delivery checks of `npm run test:delivery:prepared`. With
+  `--mode static-http` or `--mode file`, it runs one of them, as each CI
+  delivery job does.
 - [`dependency-audit.mjs`](./dependency-audit.mjs) and
   [`audit-rust.mjs`](./audit-rust.mjs) run the npm and Rust dependency audits.
 - [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks

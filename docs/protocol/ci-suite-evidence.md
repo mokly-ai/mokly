@@ -73,7 +73,9 @@ tests start. Both runners print the value they use.
 
 Each Playwright worker owns one example server. Global setup starts and readies
 the workers concurrently. It starts the shim
-with `--base refs/mokly/browser-suite-no-base --no-watch --port 0 --sidecars 1`.
+with `--base refs/mokly/browser-suite-no-base --no-watch --port 0 --sidecars 2`.
+Decision: two sidecars, because they cut the cold readiness of the example
+from about 40 to about 27 seconds. More sidecars saved less than 5 more seconds.
 The shared example does not test Changes. Its intentionally unresolved base
 produces `unavailable` and one `git-failed` diagnostic. Real Changes specs
 own separate Git fixtures. Serve binds a free loopback port and
@@ -111,7 +113,10 @@ explicit directory is also the input of the suite's isolated current-only copy.
 Its index must have `changesStatus: "disabled"`; otherwise setup rejects it with
 an instruction to build with `--no-changes`. The comparison fixture always
 owns a fresh build. CI and the complete local gate check both static HTTP and
-direct `file://` delivery against a fresh example build. Remote verification
+direct `file://` delivery against a fresh example build. CI checks each mode in
+its own job, against that job's own build. Decision: one job per mode, because
+both modes in one job took about 8 minutes, above the
+[browser shard target](#shard-totals). Remote verification
 runs these checks as its separate
 [static-delivery command](./remote-verification-testbox.md#remote-commands).
 The sharded browser inventory stays unchanged. Selected delivery reports cannot
@@ -176,10 +181,10 @@ identify the expected failure. No sleep synchronizes an assertion.
 totals. The runtime profile job reads this file and publishes the shard matrices.
 The report aggregate and [remote verification](./remote-verification.md) read
 the same file, so a shard count change is one edit. Decision: shard the viewer
-and browser suites until each job takes about 7 to 9 minutes, including
-setup. GitHub-hosted runners for this public repository cost nothing, so a
-shard adds no cost; each shard repeats about 4 minutes of setup, build, and
-browser global setup. The [worker count](#test-concurrency)
+suite until each job takes about 7 to 9 minutes, and the browser suite until
+each job takes about 7 minutes or less, including setup. GitHub-hosted
+runners for this public repository cost nothing, so a shard adds no cost;
+each shard repeats about 4 minutes of setup, build, and browser global setup. The [worker count](#test-concurrency)
 of a shard does not change.
 
 ## Browser Shard Balance
