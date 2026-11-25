@@ -35,10 +35,11 @@ workflows, other events, or unsuccessful runs are excluded. Candidate order is:
 Each candidate must also contain exactly one successful job named `Required CI`.
 An absent or unsuccessful job makes that candidate unavailable. An unavailable
 candidate is skipped so an older valid run for the same tree can still apply.
-Ordinary `main` push CI contains only the five-report Node 22.15 profile, so its
+Ordinary `main` push CI contains only the Node 22.15 profile, so its
 otherwise successful tag-commit run is unavailable for publishing. The usual
 applicable candidate is the associated Release Please pull-request run, whose
-trusted same-repository profile adds Node 24 and produces all ten reports.
+trusted same-repository profile adds Node 24 and produces the viewer and
+browser reports of [both runtimes](./ci-workflow.md#required-ci).
 
 ## Identity And Completeness Proof
 

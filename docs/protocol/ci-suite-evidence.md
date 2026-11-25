@@ -2,7 +2,7 @@
 
 This document supplements the [CI verification contract](./ci-verification.md)
 with process ownership, test concurrency, failure cleanup, browser errors, and
-browser shard balance for the viewer and browser suites. Test timing follows
+shard balance for the viewer and browser suites. Test timing follows
 [CI Test Timing](./ci-test-timing.md).
 
 ## Fixture Lifetime And Cleanup
@@ -89,7 +89,7 @@ one cancellation signal and setup budget. It builds the example with
 `mokly build --no-changes`. It builds native Changes from a separate temporary
 Git repository with two commits, independent of checkout depth. It copies only
 build output, removes the original build and fixture sources, and serves each
-copy through an exact-file host inside the same four shards. A shard shares
+copy through an exact-file host inside each browser shard. A shard shares
 its immutable copies; different runs own different directories. A setup
 failure cancels sibling work, waits for every task to settle, then drains all
 created hosts before removing output. Teardown attempts every cleanup and
@@ -109,7 +109,7 @@ owns a fresh build. CI and the complete local gate check both static HTTP and
 direct `file://` delivery against a fresh example build. Remote verification
 runs these checks as its separate
 [static-delivery command](./remote-verification-testbox.md#remote-commands).
-The four-shard inventory stays unchanged. Selected delivery reports cannot
+The sharded browser inventory stays unchanged. Selected delivery reports cannot
 replace complete browser evidence. Each mode requires a nonempty inventory and
 exactly one passing result per assigned test.
 Fixtures that test private inputs still own their own hosts.
@@ -167,8 +167,11 @@ identify the expected failure. No sleep synchronizes an assertion.
 
 ## Browser Shard Balance
 
-Hosted CI and remote verification assign whole spec files to four `chromium`
-shards using measured per-test costs. The evidence aggregate requires file
+Hosted CI and remote verification assign whole spec files to the
+[browser shard total](./ci-workflow.md#runtime-profiles) of `chromium`
+shards using measured per-test costs. A spec's per-test cost includes the
+hooks and fixtures that run before its tests, because they take a large part
+of a shard's time. The evidence aggregate requires file
 assignments to be pairwise disjoint; every browser spec therefore stays whole,
 and no spec uses parallel mode.
 
@@ -191,6 +194,19 @@ evidence validation, where a shard above the limit makes the evidence invalid
 and stops the publish. The local sequential gate runs unsharded and does not
 apply it. The [verification script reference](../../scripts/verification/README.md#browser-partitioning)
 describes the scheduling inputs and discovery boundary.
+
+## Viewer Shard Balance
+
+Hosted CI and remote verification assign whole Node test files to the
+[viewer shard total](./ci-workflow.md#runtime-profiles) of shards using
+measured per-file durations. The aggregate requires the file assignments of
+the viewer shards to be pairwise disjoint and their union to equal
+independent discovery. A file without a duration sample also runs. Each
+shard runs its files with the same
+[file concurrency](#test-concurrency) as an unsharded run. Only shard 1 runs
+the [required type check](./developer-type-checks.md#required-type-check),
+so each runtime type checks once. The viewer suite has no test-count bound.
+Rebalancing targets shard durations within 15 percent of each other.
 
 Coverage, assertion deadlines, worker limits, audits, and zero-retry behavior
 are never relaxed to meet a timing target. Job hang guards follow the

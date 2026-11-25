@@ -39,15 +39,25 @@ directory from another job.
 
 For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
-- one viewer job on Node 22.15.0;
-- four browser shards on Node 22.15.0;
+- two viewer shards on Node 22.15.0;
+- ten browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
 - native jobs on macOS and Windows at Node 22.15.0.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
 
-For a same-repository Release Please pull request, the viewer job and every
-browser shard and static-delivery job also run on Node 24. A release pull request selects this profile
+`scripts/verification/ci-shards.json` holds the viewer and browser shard
+totals. The `Shard plan` job reads this file and publishes the shard matrices.
+The report aggregate and [remote verification](./remote-verification.md) read
+the same file, so a shard count change is one edit. Decision: shard the viewer
+and browser suites until each job takes about 7 to 9 minutes, including
+setup. GitHub-hosted runners for this public repository cost nothing, so a
+shard adds no cost; each shard repeats about 4 minutes of setup, build, and
+browser global setup. The [worker count](./ci-suite-evidence.md#test-concurrency)
+of a shard does not change.
+
+For a same-repository Release Please pull request, every viewer and browser
+shard and the static-delivery job also run on Node 24. A release pull request selects this profile
 only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
@@ -144,11 +154,11 @@ row keeps native Intel build and execution coverage. It has no npm publishing
 permission.
 
 In the CI workflow, the repository job has a 75-minute timeout and each viewer
-job has a 40-minute timeout. Browser shards, static-delivery jobs, and native
+shard has a 40-minute timeout. Browser shards, static-delivery jobs, and native
 jobs have a 60-minute timeout. `Required CI` has a 30-minute timeout. Job
 timeouts are hang guards, not speed requirements. Each limit must allow at
 least three times the job's typical duration, including setup and builds. The
-longer limits preserve the four browser shards without reducing test coverage.
+longer limits preserve the browser shards without reducing test coverage.
 
 Action revisions are immutable 40-character lowercase commit hashes with
 reviewed version comments, in every workflow and composite action. Runtime
@@ -161,9 +171,9 @@ workflows contain no `${{` expression.
 
 The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
-aggregate against the runtime profile job's selection: five
-viewer and browser reports for ordinary events and ten for a Release Please
-pull request. Every cloud verification partition is also required. The
+aggregate against the runtime profile job's selection: one report per viewer
+and browser shard on each selected runtime, which is twelve reports for
+ordinary events and twenty-four for a Release Please pull request. Every cloud verification partition is also required. The
 [cloud plan result](./ci-workflow-cloud.md#provider-plan) requires the real
 provider plan only when its trusted main-push guard permits it.
 
@@ -171,7 +181,7 @@ Static delivery is also required. It builds the example with Changes disabled
 and checks portable design journeys through static HTTP and `file://`.
 Both modes require every assigned test to pass once. Empty discovery, skips,
 duplicate results, missing results, and reporter errors fail the job.
-Its reports stay separate from the five- or ten-report suite aggregate.
+Its reports stay separate from the viewer and browser suite aggregate.
 
 Required CI is a report aggregator. It checks out the validator and installs
 Node. It needs no npm dependencies or Rust build.

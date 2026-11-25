@@ -24,3 +24,7 @@ mod cloud_tests;
 #[cfg(test)]
 #[path = "_tests_/ported_stage_tests.rs"]
 mod ported_stage_tests;
+
+#[cfg(test)]
+#[path = "_tests_/shard_tests.rs"]
+mod shard_tests;

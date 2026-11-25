@@ -19,30 +19,31 @@ cargo xtask check
 cargo xtask check --dependency-audit strict
 cargo xtask check --suite repository
 cargo xtask check --suite viewer
+cargo xtask check --suite viewer --shard 1/2
 cargo xtask check --suite native
 cargo xtask check --suite browser
-cargo xtask check --suite browser --shard 1/4
+cargo xtask check --suite browser --shard 1/10
 ```
 
-`--shard INDEX/TOTAL` is valid with `browser` and `cloud-app`. Both values are one-based
+`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, and `cloud-app`. Both values are one-based
 positive integers no larger than JavaScript's maximum safe integer, and
-`INDEX` must not exceed `TOTAL`. A Mokly browser shard runs one weighted whole-file
-partition under the [shard balance rule](./ci-suite-evidence.md#browser-shard-balance),
+`INDEX` must not exceed `TOTAL`. A Mokly viewer or browser shard runs one weighted whole-file
+partition under the [viewer](./ci-suite-evidence.md#viewer-shard-balance) or [browser](./ci-suite-evidence.md#browser-shard-balance) shard balance rule,
 not Playwright's count-based `--shard` selection. Omitting `--shard` runs the
 complete selected suite. Unknown suites, malformed shards, missing values, and
-attempts to shard the repository or viewer suite fail before any subprocess
+attempts to shard the repository or native suite fail before any subprocess
 starts.
 
 ## Gate Ownership
 
-| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                      |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order, and the [boundary check](./repository-layout.md#boundary).                                                                                                                                                                  |
-| Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the frame probe size test of the [frame probe contract](./mokly-frame-probe.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. The suite has no shard. |
-| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                               |
-| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests, for the `mokly-*` crates and `xtask` only.                                                                                                                                                                  |
-| Cloud suites     | The cloud checks that no Mokly suite runs, under [Cloud Suites](#cloud-suites).                                                                                                                                                                                                                                                                  |
-| Required CI      | Evaluate the results of the runtime profile job, the repository job, the viewer job, every browser shard, and the static-delivery job on each runtime selected for the event, of both native platforms, and of every cloud job. Validate the viewer and browser report evidence.                                                                 |
+| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository       | Every check of the [repository gate list](./ci-verification-repository.md#repository-boundary), in the listed order, and the [boundary check](./repository-layout.md#boundary).                                                                                                                                                                                                                   |
+| Viewer           | The [required type check](./developer-type-checks.md#required-type-check) of every project, then every discovered Node test file, including the frame probe size test of the [frame probe contract](./mokly-frame-probe.md), with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition; only shard 1 runs the type check. |
+| Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                                                                |
+| Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests, for the `mokly-*` crates and `xtask` only.                                                                                                                                                                                                                   |
+| Cloud suites     | The cloud checks that no Mokly suite runs, under [Cloud Suites](#cloud-suites).                                                                                                                                                                                                                                                                                                                   |
+| Required CI      | Evaluate the results of the runtime profile job, the repository job, the shard plan job, every viewer and browser shard, and the static-delivery job on each runtime selected for the event, of both native platforms, and of every cloud job. Validate the viewer and browser report evidence.                                                                                                   |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.
@@ -211,12 +212,12 @@ check of the Viewer suite adds no report, report field, runtime, or inventory
 entry.
 
 For an unsharded report for a complete suite, the observed file set must equal
-independent discovery exactly. For the sharded browser suite, the aggregate
-requires all four reports for each runtime, proves assignments are non-empty
-and pairwise disjoint, and compares their union and observed execution against
-a separately discovered complete suite inventory. Browser evidence also
-requires the observed test IDs across the four shards to equal independent
-unsharded discovery exactly once. Each runtime requires one viewer report. A
+independent discovery exactly. For each sharded suite, the aggregate requires
+one report per shard of the [CI shard totals](./ci-workflow.md#runtime-profiles)
+for each runtime, proves assignments are non-empty and pairwise disjoint, and
+compares their union and observed execution against a separately discovered
+complete suite inventory. Browser evidence also requires the observed test IDs
+across the browser shards to equal independent unsharded discovery exactly once. A
 missing file or test, duplicate assignment or observed test, unexpected file or
 test, skipped or cancelled test, browser shard above the
 [share limit](./ci-suite-evidence.md#browser-shard-balance), non-zero exit,

@@ -5,6 +5,8 @@ import { BROWSER_SHARD_SHARE_LIMIT } from "./shard-balance.mjs";
  * Assign the discovered whole specs by measured cost, subject to the existing
  * test-count cap. Measurements guide placement only; discovery owns coverage.
  * New specs use the median per-test cost until a later measurement covers them.
+ * Specs go in order of their larger share of the total cost or of the total
+ * test count, so the specs that fill the count cap first are placed early.
  */
 export function selectBrowserShard(inventory, shard, costs = weights) {
   const groups = new Map(
@@ -18,8 +20,12 @@ export function selectBrowserShard(inventory, shard, costs = weights) {
     ...group,
     cost: (costs[group.file] ?? fallback) * group.tests.length,
   }));
+  const totalCost = specs.reduce((sum, spec) => sum + spec.cost, 0) || 1;
+  const share = (spec) =>
+    Math.max(spec.cost / totalCost, spec.tests.length / inventory.tests.length);
   specs.sort(
     (left, right) =>
+      share(right) - share(left) ||
       right.cost - left.cost ||
       right.tests.length - left.tests.length ||
       compareFiles(left.file, right.file),

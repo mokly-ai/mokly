@@ -127,16 +127,17 @@ If no complete nonempty assignment fits, every spec still executes and the
 aggregate reports its existing count-limit failure.
 
 [`browser-shard-weights.json`](./browser-shard-weights.json) holds scheduling
-inputs in estimated milliseconds per test. They use the median per-test cost
-of complete, successful hosted browser runs.
+inputs in estimated milliseconds per test. The Playwright reporter records a
+`wallMs` for each observed test: the time that its worker slot spent since
+the previous test ended. That time includes the hooks, fixtures, and worker
+restarts before the test. For each report and `specFile`, the weight sums
+`wallMs` and divides by the observed test count. The committed weight is the
+median of these per-test costs over the reports, rounded to three decimal
+places.
 
-For each sample and `specFile`, sum `observedTests.durationMs` and divide by
-its observed test count. Take the median of the available per-test sample
-costs for each file and round to three decimal places. A file absent from an
-older sample uses the available samples. Refresh from complete, successful
-browser report sets and retain the source reports and calculations under
-`.context/`.
-Report fixture and whole-job durations separately to check the actual balance.
+Specs go in order of their larger share of the total estimated cost or of
+the total test count. Specs with many tests therefore take their places
+before the count cap fills.
 
 The scheduler multiplies each weight by the current discovered test count.
 New specs use the median known per-test weight. Removed specs cannot enter
@@ -148,6 +149,34 @@ of its count-based `--shard` selection. The reporter must observe the same
 test IDs as independent discovery. Unsharded strict runs and developer
 Playwright selection keep their complete or requested inventories.
 
+## Viewer partitioning
+
+A strict viewer run with `--shard INDEX/TOTAL` discovers every Node test file
+and runs only the files of its shard. It assigns whole files by descending
+measured duration to the shard with the least estimated work.
+[`viewer-shard-weights.json`](./viewer-shard-weights.json) holds the median
+measured duration of each file in milliseconds. A new file uses the median
+weight. The selected files keep their discovery order.
+
+## Shard totals and weight refresh
+
+[`ci-shards.json`](./ci-shards.json) holds the viewer and browser shard
+totals. The CI matrices, [`aggregate.mjs`](./aggregate.mjs), and remote
+verification read it, so a shard count change is one edit.
+
+Refresh both weight files from passed CI reports:
+
+```bash
+gh run download {run} -R mokly-ai/mokly -p 'verification-*' -D .context/shard-reports/{run}
+node scripts/verification/shard-weights.mjs --reports .context/shard-reports
+```
+
+Download several runs into separate directories. The script reads every
+report under the directory, skips reports that did not pass, and writes both
+weight files. Compare the shard durations of the next CI run with the
+targets of the
+[shard balance rules](../../docs/protocol/ci-suite-evidence.md#viewer-shard-balance).
+
 ### Key code
 
 - [`browser-partition.mjs`](./browser-partition.mjs) selects weighted whole-file
@@ -158,6 +187,10 @@ Playwright selection keep their complete or requested inventories.
   its observed test IDs against independent discovery.
 - [`shard-balance.mjs`](./shard-balance.mjs) enforces the existing test-count
   share limit when evidence is aggregated.
+- [`viewer-partition.mjs`](./viewer-partition.mjs) selects weighted whole-file
+  viewer partitions.
+- [`shard-weights.mjs`](./shard-weights.mjs) computes both weight files from
+  downloaded reports.
 
 ## Remote delivery
 

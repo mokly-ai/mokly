@@ -176,3 +176,19 @@ test("file filters escape metacharacters and select only the exact spec", () => 
   ])
     assert.equal(matches.test(file), false, file);
 });
+
+test("specs go by their larger cost or test share, so a many-test spec is placed early", () => {
+  // Cost-first order would end at shard costs 17 and 14 here.
+  const full = inventory({ a: 1, b: 1, c: 1, d: 2, e: 1 });
+  const weights = { a: 6, b: 9, c: 7, d: 2, e: 5 };
+  const parts = [1, 2].map((index) =>
+    selectBrowserShard(full, { index, total: 2 }, weights),
+  );
+  assert.deepEqual(
+    parts.map((part) => part.files),
+    [
+      ["c", "d", "e"],
+      ["a", "b"],
+    ],
+  );
+});

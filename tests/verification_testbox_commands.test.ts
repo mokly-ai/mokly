@@ -16,6 +16,7 @@ import {
 const commands = [
   { suite: "repository", name: "repository", shard: undefined },
   { suite: "viewer", name: "viewer", shard: undefined },
+  { suite: "viewer", name: "viewer-1-of-2", shard: "1/2" },
   ...[1, 2, 3, 4].map((index) => ({
     suite: "browser",
     name: `browser-${index}-of-4`,
@@ -23,7 +24,7 @@ const commands = [
   })),
 ];
 
-test("six commands derive exact cargo arguments, report names and streamed output", async () => {
+test("seven commands derive exact cargo arguments, report names and streamed output", async () => {
   for (const { suite, name, shard } of commands) {
     const harness = testboxHarness();
     const args = ["--expect", TESTBOX_FINGERPRINT, "--suite", suite];

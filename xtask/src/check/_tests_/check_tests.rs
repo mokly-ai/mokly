@@ -1,7 +1,6 @@
 //! Verification ordering, selection, and fail-closed subprocess coverage.
 
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
@@ -10,8 +9,7 @@ use crate::command::{CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
-use super::commands::commands_for;
-use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
+use super::request::{CheckRequest, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
@@ -203,69 +201,6 @@ fn subprocess_failure_is_propagated_from_a_selected_suite() {
         Err(Error::CommandFailed { command, status })
             if command == "npm run build" && status == "9"
     ));
-}
-
-#[test]
-fn malformed_and_out_of_range_shards_fail() {
-    for value in [
-        "",
-        "1",
-        "1/",
-        "/4",
-        "0/4",
-        "5/4",
-        "1/0",
-        "1/2/3",
-        "1/9007199254740992",
-        "9007199254740992/9007199254740992",
-    ] {
-        assert!(
-            matches!(Shard::from_str(value), Err(Error::InvalidShard { shard }) if shard == value),
-            "{value:?} should fail",
-        );
-    }
-    assert!(Shard::from_str("1/9007199254740991").is_ok());
-}
-
-#[test]
-fn shard_requires_a_supported_selected_suite() {
-    let shard = Shard::from_str("1/4").expect("valid shard");
-    assert!(matches!(
-        CheckRequest::new(None, Some(shard), None),
-        Err(Error::ShardRequiresSuite)
-    ));
-    for suite in [
-        Some(VerificationSuite::Repository),
-        Some(VerificationSuite::Viewer),
-        Some(VerificationSuite::Native),
-    ] {
-        assert!(matches!(
-            CheckRequest::new(suite, Some(shard), None),
-            Err(Error::UnsupportedShard { .. })
-        ));
-    }
-}
-
-#[test]
-fn browser_selection_builds_and_forwards_only_validated_shards() {
-    let shard = Shard::from_str("2/4").expect("valid shard");
-    CheckRequest::new(Some(VerificationSuite::Browser), Some(shard), None)
-        .expect("browser supports shards");
-    let commands = commands_for(
-        VerificationSuite::Browser,
-        Some(shard),
-        DependencyAudit::Baseline,
-    );
-    assert_eq!(
-        commands
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>(),
-        [
-            "npm run build",
-            "npm run test:browser:prepared -- --shard 2/4"
-        ]
-    );
 }
 
 fn workspace() -> PathBuf {
