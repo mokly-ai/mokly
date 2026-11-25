@@ -11,6 +11,9 @@ under [follow-ups](./follow-ups/).
 - [Loading states match their content](./loading-states-match-content.md) —
   draw each wait of the app in the layout that it waits for, and show each
   write's wait on its own control.
+- [MiniJinja templates in Mokly HTML](./mokly-html-minijinja-templates.md) —
+  render each HTML screen, component, and page body as a MiniJinja template
+  before the HTML parse, so that bodies can loop, branch, and compute.
 
 ## Completed Plans
 
