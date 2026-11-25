@@ -37,7 +37,7 @@ fn shard_requires_a_supported_selected_suite() {
         Err(Error::ShardRequiresSuite)
     ));
     assert!(matches!(
-        CheckRequest::new(Some(VerificationSuite::Repository), Some(shard), None),
+        CheckRequest::new(Some(VerificationSuite::CloudRust), Some(shard), None),
         Err(Error::UnsupportedShard { .. })
     ));
 }

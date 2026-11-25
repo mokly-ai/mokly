@@ -84,7 +84,7 @@ pub(crate) enum Error {
     },
     /// Sharding was requested without selecting a suite.
     #[error(
-        "[xtask/check] --shard is valid only for the viewer, browser, native, cloud-app, cloud-mockups, and cloud-site suites"
+        "[xtask/check] --shard needs --suite; `cargo xtask check --help` lists the suites that accept it"
     )]
     ShardRequiresSuite,
     /// Sharding was requested for an unsupported suite.

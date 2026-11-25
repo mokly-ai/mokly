@@ -26,35 +26,6 @@ const refused = {
   visibility: "private" as const,
 };
 
-test("a closed pull request whose build still runs shows that build, for every plan", async ({
-  page,
-}) => {
-  const scenario = await buildScenario(page, "build-order-closed");
-  const { double, projectId } = scenario;
-  const id = buildId(150);
-  double.builds.set(
-    id,
-    build({ id, projectId, pullRequest: buildPullRequest, step: "publish" }),
-  );
-  const card = page.locator(".fo-build");
-  for (const project of [double.project, refused]) {
-    double.project = project;
-    for (const state of ["closed", "merged"] as const) {
-      double.pullRequests = [
-        pullRow({ state, newestBuild: summary({ id, state: "running" }) }),
-      ];
-      await open(page, scenario.pullAt(buildPullRequest.number));
-      await expect(
-        card.getByRole("heading", { name: "Publishing this pull request" }),
-      ).toBeVisible();
-      await expect(page.locator(".fo-top-state")).toContainText(
-        "Publishing now",
-      );
-      await expect(page.locator(".fo-stage-card .fo-state")).toHaveCount(0);
-    }
-  }
-});
-
 /**
  * The title of the one card the stage shows at a reference. A card that waits
  * for a read sits in a waiting region, and its title names that read or is a

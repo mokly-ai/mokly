@@ -79,11 +79,18 @@ jobs:
         id: node-version
         run: echo "value=$(node --print 'process.versions.node')" >> "$GITHUB_OUTPUT"
   repository:
-    name: Repository
+    name: Repository (shard ${{ matrix.shard }})
     needs:
       - profile
     runs-on: ubuntu-24.04
     timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        # Shard 1 runs every check except the Mokly Rust tests. Shards 2 to 5
+        # each run one nextest partition of those tests, and shard 2 also runs
+        # the doc tests.
+        shard: [1/5, 2/5, 3/5, 4/5, 5/5]
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -102,7 +109,9 @@ jobs:
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          key: audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
+          # The checks shard and the test shards build different artifacts, so
+          # each keeps its own entry. Only the checks shard installs the tool.
+          key: ${{ startsWith(matrix.shard, '1/') && 'checks' || 'tests' }}-audit-tool-${{ hashFiles('.cargo/audit-tool/Cargo.lock', 'scripts/verification/rust-audit-tool.mjs') }}
           cache-directories: .context/rust-audit-tool
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -132,7 +141,8 @@ jobs:
                 contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
               ) && 'strict' || 'baseline'
             }}
-        run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
+          REPOSITORY_SHARD: ${{ matrix.shard }}
+        run: cargo xtask check --suite repository --shard "$REPOSITORY_SHARD" --dependency-audit "$DEPENDENCY_AUDIT"
   viewer:
     name: Viewer (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.profile.outputs.viewer-shard-total }})
     needs:
@@ -269,7 +279,7 @@ jobs:
           include-hidden-files: true
           retention-days: 14
   native:
-    name: Native (${{ matrix.runner }}${{ matrix.shard && format(', shard {0}', matrix.shard) || '' }})
+    name: Native (${{ matrix.runner }}, shard ${{ matrix.shard }})
     needs:
       - profile
     runs-on: ${{ matrix.runner }}
@@ -277,21 +287,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macOS runs its Rust tests in two nextest partitions and Windows in
-        # four. Shard 1 also checks formatting and Clippy and runs the doc tests.
+        # Shard 1 checks formatting and Clippy. Each later shard runs one
+        # nextest partition of the Rust tests: four on macOS and six on
+        # Windows. Shard 2 also runs the doc tests.
         include:
           - runner: macos-26
-            shard: 1/2
+            shard: 1/5
           - runner: macos-26
-            shard: 2/2
+            shard: 2/5
+          - runner: macos-26
+            shard: 3/5
+          - runner: macos-26
+            shard: 4/5
+          - runner: macos-26
+            shard: 5/5
           - runner: windows-2025
-            shard: 1/4
+            shard: 1/7
           - runner: windows-2025
-            shard: 2/4
+            shard: 2/7
           - runner: windows-2025
-            shard: 3/4
+            shard: 3/7
           - runner: windows-2025
-            shard: 4/4
+            shard: 4/7
+          - runner: windows-2025
+            shard: 5/7
+          - runner: windows-2025
+            shard: 6/7
+          - runner: windows-2025
+            shard: 7/7
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -307,9 +330,13 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      # The lint shard keeps a separate entry of the Cargo registry alone, so
+      # it never replaces the test build entry and adds little to the cache.
       - name: Restore Rust build cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
+          key: ${{ startsWith(matrix.shard, '1/') && 'lint' || '' }}
+          cache-targets: ${{ !startsWith(matrix.shard, '1/') }}
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Install cargo-nextest
@@ -350,10 +377,7 @@ jobs:
         shell: bash
         env:
           NATIVE_SHARD: ${{ matrix.shard }}
-        run: |
-          shard=()
-          [[ -z "$NATIVE_SHARD" ]] || shard=(--shard "$NATIVE_SHARD")
-          cargo xtask check --suite native "${shard[@]}"
+        run: cargo xtask check --suite native --shard "$NATIVE_SHARD"
   static-delivery:
     name: Static delivery (Node ${{ matrix.node }})
     needs: [profile]

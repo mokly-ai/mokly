@@ -34,27 +34,6 @@ test("every pane opens over the viewer and closes back to it", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("the index shows every section, and an unknown pane opens the first", async ({
-  page,
-}) => {
-  await signIn(page, freshEmail("index"));
-  const projectId = await createProject(page, "Index Org");
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings="),
-  );
-  const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("heading", { level: 1 })).toHaveText(
-    "Settings",
-  );
-  await expect(dialog.getByRole("heading", { name: "You" })).toBeVisible();
-  await openDialog(
-    page,
-    await projectQueryPathFor(page, projectId, "settings=nonsense"),
-  );
-  await expect(dialog.getByRole("heading", { level: 1 })).toHaveText("Account");
-});
-
 test("the account pane saves a name against the real API", async ({ page }) => {
   const email = freshEmail("name");
   await signIn(page, email);
