@@ -182,9 +182,9 @@ totals. The runtime profile job reads this file and publishes the shard matrices
 The report aggregate and [remote verification](./remote-verification.md) read
 the same file, so a shard count change is one edit. Decision: shard the viewer
 suite until each job takes about 7 to 9 minutes, and the browser suite until
-each job takes about 7 minutes or less, including setup. GitHub-hosted runners for this public repository cost nothing, so a
-shard adds no cost; each shard repeats about 4 minutes of setup, build, and
-browser global setup. The [worker count](#test-concurrency)
+each job takes about 7 minutes or less, including setup. GitHub-hosted
+runners for this public repository cost nothing, so a shard adds no cost;
+each shard repeats about 4 minutes of setup, build, and browser global setup. The [worker count](#test-concurrency)
 of a shard does not change.
 
 ## Browser Shard Balance
