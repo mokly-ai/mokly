@@ -570,8 +570,10 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   esbuild for the config and local imports without writing a file. It runs the
   result as ESM or CommonJS by config type. Installed packages stay external and
   resolve through `ViteLookup`. [`vite-config-resolution.ts`](./vite-config-resolution.ts)
-  routes native config imports through that lookup. It records local files
-  resolved during setup and the digests of the source bytes that Node exposes.
+  routes native config imports through that lookup. Its resolve hook records
+  each local file that Node resolves during setup, with the digest of the file
+  bytes at that moment. It adds no `load` hook, because a process-wide `load`
+  hook breaks some CommonJS imports on Node 22.
   [`vite-config-source.ts`](./vite-config-source.ts) records the bytes of each
   bundled file and sets each script's values for `__dirname`, `__filename`, and
   `import.meta`.

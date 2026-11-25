@@ -1,9 +1,11 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
+import fs from "node:fs";
 import { createRequire, isBuiltin, registerHooks } from "node:module";
-import type { ModuleSource, ResolveHookSync } from "node:module";
+import type { ResolveHookSync } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { missingFile } from "./file-digests.js";
 import { bareSpecifier } from "./specifier.js";
 import type { ViteLookup } from "./vite-resolution.js";
 import type { ConfigReads } from "./vite-setup-input.js";
@@ -36,7 +38,7 @@ export function withViteConfigResolution<T>(
   return active.run({ lookup }, run);
 }
 
-/** Observe native files resolved during setup, with their load-time bytes. */
+/** Record native setup file digests when Node resolves them. */
 export async function recordViteConfigResolution<T>(
   lookup: ViteLookup,
   reads: ConfigReads,
@@ -57,11 +59,6 @@ function installHooks(): void {
     resolve(specifier, context, nextResolve) {
       const result = resolveConfigModule(specifier, context, nextResolve);
       recordLocalModule(result.url);
-      return result;
-    },
-    load(url, context, nextLoad) {
-      const result = nextLoad(url, context);
-      recordLocalModule(url, result.shortCircuit ? undefined : result.source);
       return result;
     },
   });
@@ -107,25 +104,22 @@ const resolveConfigModule: ResolveHookSync = (
   return { url, shortCircuit: true };
 };
 
-function recordLocalModule(url: string, source?: ModuleSource): void {
+function recordLocalModule(url: string): void {
   const scope = active.getStore();
   if (!scope?.reads || !url.startsWith("file:")) return;
   const file = fileURLToPath(url);
-  if (scope.lookup.paths.repositoryOwned(file))
-    scope.reads.record(file, sourceDigest(source));
-}
+  if (!scope.lookup.paths.repositoryOwned(file)) return;
 
-function sourceDigest(source: ModuleSource | undefined): string | undefined {
-  if (typeof source === "string") {
-    // Node reads CommonJS as UTF-8. A replacement character can hide the original bytes.
-    if (!source.includes("\uFFFD"))
-      return createHash("sha256").update(source).digest("hex");
-    return;
+  let digest: string | undefined;
+  try {
+    if (fs.statSync(file, { throwIfNoEntry: false })?.isFile()) {
+      const bytes = fs.readFileSync(file, {
+        flag: fs.constants.O_RDONLY | fs.constants.O_NONBLOCK,
+      });
+      digest = createHash("sha256").update(bytes).digest("hex");
+    }
+  } catch (error) {
+    if (!missingFile(error)) throw error;
   }
-  const bytes = ArrayBuffer.isView(source)
-    ? new Uint8Array(source.buffer, source.byteOffset, source.byteLength)
-    : source instanceof ArrayBuffer
-      ? new Uint8Array(source)
-      : undefined;
-  if (bytes) return createHash("sha256").update(bytes).digest("hex");
+  scope.reads.record(file, digest);
 }
