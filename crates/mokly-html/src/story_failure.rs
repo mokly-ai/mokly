@@ -11,13 +11,19 @@ use crate::tree::{Node, element};
 use crate::{assembly, component_root, regions};
 
 const STYLE: &str = r#"
-.mokly-story-error {
+html {
   background: Canvas;
   color: CanvasText;
+}
+body {
+  margin: 0;
+}
+.mokly-story-error {
+  box-sizing: border-box;
   font: 14px/1.45 system-ui, sans-serif;
-  inset: 0;
+  overflow-wrap: anywhere;
   padding: 20px 24px;
-  position: absolute;
+  width: 360px;
 }
 .mokly-story-error > p {
   margin: 0 0 8px;
@@ -36,7 +42,6 @@ const STYLE: &str = r#"
   font-size: 13px;
 }
 .mokly-story-error-reason {
-  overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 "#;

@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { Page } from "@playwright/test";
 
 import type { CatalogueUsage } from "@mokly/model";
@@ -7,8 +9,31 @@ import type {
   FrameEvent,
   MountedFrame,
 } from "../../packages/frame/src/frame_adapter.js";
-import { crossOriginFixture } from "../../packages/viewer/tests/standalone_fixture.js";
-export { crossOriginFixture };
+import { crossOriginFixture as standaloneFixture } from "../../packages/viewer/tests/standalone_fixture.js";
+import { buildFailedStoryCatalogue } from "../helpers/build_site.js";
+
+type FrameFixtureOptions = NonNullable<
+  Parameters<typeof standaloneFixture>[0]
+> & {
+  failedStory?: boolean;
+};
+
+export async function crossOriginFixture({
+  failedStory,
+  ...options
+}: FrameFixtureOptions = {}) {
+  const fixture = await standaloneFixture(options);
+  return {
+    ...fixture,
+    failedStory: failedStory
+      ? await buildFailedStoryCatalogue(
+          path.dirname(fixture.root),
+          fixture.root,
+        )
+      : undefined,
+  };
+}
+
 export interface FrameTestWindow extends Window {
   mounted: MountedFrame;
   frameEvents: FrameEvent[];

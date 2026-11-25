@@ -1303,10 +1303,14 @@ These calls are mine, made on 2026-11-25 in track F, on the branch
   reads as its logical name, such as `node_modules/pkg/index.js`. Each other
   absolute path or `file:` URL becomes `…`. Reason: design call 26.
   Changed on 2026-11-25 by review fix round 1: a path under the home or
-  temp folder also becomes `…`, wherever it starts in the message. When
-  the value, its message, or its name cannot become text, the reason is
-  `Unknown error`. Each lone surrogate becomes U+FFFD. Reason: delimiters
-  vary, and one unreadable value must not stop the build.
+  temp folder also becomes `…`. When the value, its message, or its name
+  cannot become text, the reason is `Unknown error`. Each lone surrogate
+  becomes U+FFFD. Changed on 2026-11-25 by review fix round 2: a known root
+  starts a path only after a character that is not a letter, a digit, `_`,
+  `.`, `-`, `/`, or `\`, or right after the `@fs` route or the empty
+  authority of a URL. Mokly changes each path once. Reason: delimiters
+  vary, relative paths and web links must keep their text, and one
+  unreadable value must not stop the build.
 - F5. The warning message gives the JSON-quoted story id, then "could not
   render; add the "!mokly" tag to leave it out:", then the reason, with the
   line breaks of the reason joined by spaces. The failure page gives the
@@ -1330,12 +1334,28 @@ These calls are mine, made on 2026-11-25 in track F, on the branch
   covers, the alert names the saved props. Reason: the alert names what is
   on screen. Changed on 2026-11-25 by review fix round 1, which corrected
   the compact-layout example.
-- F9. Made in review fix round 1. An error that Mokly raises with its own
-  code while a story renders, such as `component-props`, keeps that code
-  and stops the build. Mokly's own checks of the rendered output, such as
-  the check of reserved markers, keep the fatal `render-failed`. Reason:
-  these errors ask for a fix in the catalogue or protect Mokly's records,
-  so the `!mokly` hint of an error document would point at the wrong fix.
+- F9. Made in review fix round 1, and widened in review fix round 2. Every
+  error of Mokly's own components and helpers while a story renders stops
+  the build. An error with a Mokly code, such as `component-props`, keeps
+  that code. Every other error of Mokly's own code, such as a duplicate
+  instance id, fails with `render-failed`, and so do Mokly's own checks of
+  the rendered output. Reason: these errors ask for a fix in the catalogue
+  or protect Mokly's records, so the `!mokly` hint of an error document
+  would point at the wrong fix. Round 2 replaced my earlier call to keep
+  plain errors of Mokly's helpers as failed views, because that call broke
+  the duplicate-id and props rules inside stories.
+
+- F10. Made in review fix round 2. A failed story view is not a successful
+  render for the warm-up of Serve. It is not recorded, it does not move the
+  warm head, it does not prove that a process is warm, and its replay does
+  not end the warm-up. A render store hit of a failed view records nothing.
+  Reason: the warm-up gains most from replayed renders that succeed, and a
+  failed view leaves the process in use. Recording every reply was rejected,
+  because failures would push out the successful requests.
+- F11. Made in review fix round 2. A URL in a reason keeps its text, except
+  the path after an `@fs` route or an empty URL authority. Reason: links
+  such as the links of React's minified errors carry the message.
+  Replacing each URL with `…` was rejected for that reason.
 
 ## Tracks
 

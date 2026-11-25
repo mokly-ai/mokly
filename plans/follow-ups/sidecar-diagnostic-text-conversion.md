@@ -7,7 +7,8 @@
   wider fixes that the agent split off findings 1 and 5. It also holds two
   problems outside the scope that the checks of those findings found. The
   problem of a root with a space in Vite diagnostics was found while this
-  item was written.
+  item was written. Round 2 of the same review added the wider fix that the
+  agent split off finding 10, with the start rule of its finding check.
 - **Location:**
   - `packages/mokly/src/sidecar/errors.ts:14-16`, `detail`, which turns a
     thrown value into text for about 25 calls in
@@ -40,8 +41,14 @@
     which its error document shows.
   - **Logical name:** the name of a file relative to its source root or its
     dependency root, such as `src/a.ts` or `node_modules/pkg/index.js`.
-  - **Known-root pass:** a pass over the text that replaces each copy of a
-    known folder, longest first, such as the source root or the home folder.
+  - **Known-root pass:** one pass over the original text that changes each
+    path that starts with a known folder, such as the source root or the
+    home folder, longest folder first. A known folder starts a path only at
+    one of these places:
+    - At the start of the text, or after a character that is not a letter, a
+      digit, `_`, `.`, `-`, `/`, or `\`.
+    - Right after an `@fs` route, or right after the empty authority of a
+      URL, as in `local:///tmp/x.json`.
 - **Background:**
   - Three producers turn a thrown value into diagnostic text. Each has its
     own conversion and its own path rules:
@@ -53,6 +60,12 @@
     gives the rules of the reason. A path inside the source root reads
     relative to it. A path inside a dependency root reads as its logical
     name. Each other absolute path or `file:` URL becomes `…`.
+  - The same section gives the start rule of the known-root pass. The known
+    folders are the source root, the dependency roots, the home folder, and
+    the temporary folder. The path after an `@fs` route follows the rules
+    above, so `http://localhost:6006/@fs/opt/tooling/input.json` reads
+    `http://localhost:6006/@fs/…`. Every other URL keeps its text. Each path
+    changes once, and text that is already shortened does not change again.
   - The same section says that the reason is `Unknown error` when the
     thrown value, its message, or its name cannot become text. Each lone
     surrogate becomes U+FFFD, so the text is well-formed.
@@ -72,6 +85,19 @@
     guards the whole conversion and adds the known-root pass over the source
     root, the dependency roots, the home folder, and the temporary folder. It
     ends with `toWellFormed()`, and it keeps a closing tag such as `</div>`.
+  - Round 2 of the same review found these problems in that known-root pass,
+    which had no start rule then:
+    - It ran over the output of the first pass, so it changed text that the
+      first pass had shortened. On a machine whose temporary folder is
+      `/tmp`, `src/tmp/input.json` became `src…`.
+    - It found a known folder after any character. So `./tmp/x.json` became
+      `.…`, and `https://example.com/tmp/x` became `https://example.com/…`.
+    - It found only known folders, and the first pass keeps each URL that is
+      not a `file:` URL. So `http://localhost:6006/@fs/opt/tooling/input.json`
+      kept its absolute path, because `/opt` is outside every known folder.
+  - The review fix of round 2 changes `story-reason.ts` only. It reads the
+    paths of the original reason once, and it applies the start rule. It gives
+    the path after an `@fs` route its relative path, its logical name, or `…`.
   - Section "Module Graph" of `docs/protocol/mokly-vite-adapter.md` says
     that no Vite diagnostic shows an absolute path or a virtual module.
     `viteDetail` gives a path its logical name, or its base name when the
@@ -114,9 +140,12 @@
     replaces `detail` and the conversion of `storyReason`. Each producer
     keeps its own path rules, so the two Vite problems stay. Effort: Small.
   - **B.** One sidecar module for diagnostic text. It holds the conversion of
-    A and one path tokenizer with the known-root pass. The tokenizer finds
-    quoted, bracketed, and bare paths, `file:` URLs, and paths inside other
-    URLs. Each caller keeps its own replacement rules. The story reason gives
+    A and one path tokenizer with the known-root pass and its start rule. The
+    tokenizer reads the original text once. It finds quoted, bracketed, and
+    bare paths, `file:` URLs, and paths inside other URLs. Without the start
+    rule, the shared tokenizer would carry the defects of the known-root pass
+    above into Vite diagnostics, and change relative paths and web links
+    there. Each caller keeps its own replacement rules. The story reason gives
     a relative path, a logical name, or `…`. Vite diagnostics give the
     logical name or the base name. `storyReason`, `viteDetail`, and each
     caller of `detail` use the module. Effort: Medium.
@@ -132,8 +161,8 @@
 - **Wider fix:** B. One module gives every producer the same safe conversion
   and the same path boundaries.
 - **Previous examples:**
-  - The problems of the reason of a failed story that the review of
-    2026-11-25 found, above.
+  - The problems of the reason of a failed story that both rounds of the
+    review of 2026-11-25 found, above.
   - Commit `59cc768f6`, "feat(sidecar): apply mokly parameter globals and
     warn on bad values", made the paths of the `mokly` parameter well-formed
     with `toWellFormed()` in `packages/mokly/src/sidecar/story-parameters.ts`.

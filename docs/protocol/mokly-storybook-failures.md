@@ -40,13 +40,20 @@ a crash replaces the sidecar process. A failed view for a timeout was
 rejected, because a story that hangs would then cost the deadline twice for
 each of its views.
 
-An error that Mokly raises with its own code while the story renders is not
-the story's own work. It keeps that code and its outcome. Examples are
-`component-props`, for props that fail the schema of a registered component,
-and `unknown-link-definition`, for a link to a definition that no entry
-module exports. A failure of Mokly's own checks of the rendered output, such
-as the check of [reserved markers](./mokly-link-validation.md#document-checks),
-also keeps the fatal `render-failed`.
+An error of Mokly's own code is not the story's own work either, and it stops
+the build. Mokly's own code includes the `Component` wrapper of a registered
+component, `MockLink`, and `ReviewIgnore`. The `render` function of a
+registered component is the story's own work. An error with a Mokly code keeps
+that code. Examples are `component-props`, for props that fail the schema of a
+registered component, and `unknown-link-definition`, for a link to a
+definition that no entry module exports.
+
+Each other error of Mokly's own code fails with `render-failed`, such as a
+duplicate instance id or a failed check of
+[reserved markers](./mokly-link-validation.md#document-checks) in the rendered
+output. So the [duplicate id rule](./mokly-instances.md#stability-rule) and the
+[plain data rule](./mokly-component-props.md#plain-data) of registered
+components stay in force inside a story.
 
 Decision: these errors stop the build, because the author fixes them in the
 catalogue, or because they protect Mokly's records. A failed view for them was
@@ -124,11 +131,26 @@ The reason holds no absolute path. Mokly changes each absolute path and each
   `node_modules/pkg/index.js`.
 - Each other absolute path or `file:` URL becomes `…`.
 
-So one failure gives the same reason on both sides of Changes and on every
-machine.
+The known roots are the side's source root, the selected dependency roots, the
+home folder, and the temporary folder. A known root starts a path only at one
+of these places:
 
-Decision: the reason holds no absolute path, because the checkout folder is
-not an input, and identical inputs give identical bytes.
+- Outside a URL, at the start of the reason, or after a character that is not an ASCII
+  letter, an ASCII digit, `_`, `.`, `-`, `/`, or `\`.
+- Right after an `@fs` route, as in `/@fs/` or `http://localhost:6006/@fs/`.
+- Right after the empty authority of a URL, as in `local:///tmp/x.json`.
+
+The path after an `@fs` route follows the rules above, so
+`http://localhost:6006/@fs/opt/tooling/input.json` reads
+`http://localhost:6006/@fs/…`. Every other URL keeps its text. Mokly changes
+each path of the original reason once, and it never changes text that it
+already shortened. These rules keep the text of a relative path, such as
+`src/tmp/input.json` or `./tmp/cache.json`.
+
+Decision: the reason holds no absolute path, so one failure gives the same
+reason on both sides of Changes and on every machine. The checkout folder is
+not an input, and identical inputs give identical bytes. Rejected: `…` for
+each URL, because it also removes ordinary web links from the reason.
 
 ## The Error Document
 

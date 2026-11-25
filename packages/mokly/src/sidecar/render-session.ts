@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 
+import { withAuthoringErrors } from "../authoring/errors.js";
 import { validateDestination } from "../authoring/links.js";
 import { definitionData } from "../authoring/runtime.js";
 import type { RenderSession } from "../authoring/runtime.js";
@@ -60,22 +61,24 @@ export function renderSession(
       });
     },
     link(target, fragment) {
-      validateDestination(target, fragment);
-      const registered =
-        typeof target === "object" && target !== null
-          ? generation.registrations.get(target)
-          : undefined;
-      if (!registered)
-        throw new SidecarError(
-          "unknown-link-definition",
-          `${location}: referenced definition ${definitionData(target)?.input.title ?? "unknown"} from ${definitionData(target)?.source ?? "unknown module"} is not exported by an entry module`,
-        );
-      if (!registered.path)
-        throw new Error(
-          `definition ${registered.handle} requires its resolved catalogue path`,
-        );
-      validateDestination(registered.path);
-      return `mock:${registered.path}${fragment ? `#${fragment}` : ""}`;
+      return withAuthoringErrors(() => {
+        validateDestination(target, fragment);
+        const registered =
+          typeof target === "object" && target !== null
+            ? generation.registrations.get(target)
+            : undefined;
+        if (!registered)
+          throw new SidecarError(
+            "unknown-link-definition",
+            `${location}: referenced definition ${definitionData(target)?.input.title ?? "unknown"} from ${definitionData(target)?.source ?? "unknown module"} is not exported by an entry module`,
+          );
+        if (!registered.path)
+          throw new Error(
+            `definition ${registered.handle} requires its resolved catalogue path`,
+          );
+        validateDestination(registered.path);
+        return `mock:${registered.path}${fragment ? `#${fragment}` : ""}`;
+      });
     },
     logicalLink(value) {
       const deferred = generation.runtime.links.get(value);

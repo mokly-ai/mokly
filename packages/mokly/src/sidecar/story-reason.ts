@@ -9,14 +9,18 @@ import { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import { resolutionOptions } from "./resolution.js";
 
-const pathStart = /(?:file:|[a-z]:[\\/]|\\\\|\/)/;
-const otherUrl = /\b(?!file:)[a-z][a-z\d+.-]+:\/\/[^\s"'`<>),;]+/;
-const fileUrlStart = /file:(?=\/|[a-z]:[\\/])/;
-const barePathBoundary = /(?:(?<![\w@./\\<-])|(?<=<)(?!\/[a-z][\w:-]*\s*>))/;
-const barePathTail = /[^\s"'`<>[\]«»),;]*/;
+const pathStart = /(?:file:(?=\/|[a-z]:[\\/])|[a-z]:[\\/]|\\\\|\/)/;
+const absolutePath = new RegExp(`^${pathStart.source}`, "iu");
+const urlStart = /\b(?!file:)[a-z][a-z\d+.-]*:\/\//;
+const urlAuthority = /[^/?#\s"'`<>«»),;]*/;
+const urlTail = /[^\s"'`<>«»),;]*/;
+const pathBoundary = /(?<![\w./\\-])(?!(?<=<)\/[a-z][\w:-]*\s*>)/;
+const vitePrefix = `(?:${urlStart.source}${urlAuthority.source}|${pathBoundary.source})\\/@fs\\/`;
+const viteRoute = new RegExp(`^${vitePrefix}`, "iu");
+const pathCharacter = /[^\s"'`<>[\]«»),;]/;
 const rootEnd = /(?=$|[\s"'`<>[\]«»),;:?#])/;
-const pathInReason = pathMatcher([]);
-const webUrls = new RegExp(otherUrl.source, "giu");
+const authorityDrive = /\/(?=[a-z]:[\\/]|\\\\)/;
+const leadingAuthorityDrive = new RegExp(`^${authorityDrive.source}`, "iu");
 const names = new WeakMap<Generation, ModulePaths>();
 
 interface KnownRoot {
@@ -29,41 +33,44 @@ interface KnownRoot {
 export function storyReason(generation: Generation, error: unknown): string {
   const text = thrownText(error);
   const roots = knownRoots(generation);
-  const spellings = orderedPatterns([...roots.keys()]);
-  const root = `(?:${spellings.join("|") || "(?!)"})`;
+  const spellings = [...roots.keys()];
+  const root = rootPattern(spellings);
   const leadingRoot = new RegExp(`^${root}(?=$|[\\\\/])`, "iu");
-  const knownPath = `${root}(?:[\\\\/]${barePathTail.source}|${rootEnd.source})`;
-  const pathsAnywhere = new RegExp(knownPath, "giu");
-  const rootsWithSpaces = [...roots.keys()].filter((root) =>
-    /[^\S\r\n]/u.test(root),
-  );
-  const matcher = rootsWithSpaces.length
-    ? pathMatcher(rootsWithSpaces)
-    : pathInReason;
-
-  const message = text.replace(
-    matcher,
-    (value, quote?: string, quotedPath?: string, url?: string) => {
-      if (quote && quotedPath) return quote + namePath(quotedPath) + quote;
-      return url ? value : nameLocation(value);
-    },
-  );
-  const urls = message.matchAll(webUrls);
-  let url = urls.next().value;
-  return message
-    .replace(pathsAnywhere, (file, offset: number) => {
-      while (url && offset >= url.index + url[0].length)
-        url = urls.next().value;
-      if (url && offset >= url.index) {
-        const authority = url.index + url[0].indexOf("://") + 3;
-        if (offset < authority) return file;
-        // The absolute path can also supply the URL's path separator.
-        if (file.startsWith("/") && message[offset - 1] !== "/")
-          return "/" + nameLocation(file);
-      }
-      return nameLocation(file);
-    })
+  return text
+    .replace(
+      pathMatcher(spellings, root),
+      (
+        value,
+        quote?: string,
+        quotedPath?: string,
+        route?: string,
+        vitePath?: string,
+        authority?: string,
+        authorityPath?: string,
+        url?: string,
+      ) => {
+        if (quote && quotedPath) {
+          const prefix = viteRoute.exec(quotedPath)?.[0];
+          const name = prefix
+            ? nameVitePath(prefix, quotedPath.slice(prefix.length))
+            : namePath(quotedPath);
+          return quote + name + quote;
+        }
+        if (route && vitePath) return nameVitePath(route, vitePath);
+        if (authority && authorityPath) {
+          const file = authorityPath.replace(leadingAuthorityDrive, "");
+          return `${authority}/${nameLocation(file)}`;
+        }
+        return url ? value : nameLocation(value);
+      },
+    )
     .toWellFormed();
+
+  function nameVitePath(prefix: string, value: string): string {
+    if (!value) return prefix;
+    const file = absolutePath.test(value) ? value : `/${value}`;
+    return prefix + nameLocation(file);
+  }
 
   function nameLocation(value: string): string {
     const position = /:\d+(?::\d+)?$/u.exec(value);
@@ -154,18 +161,31 @@ function realPath(file: string): string {
   }
 }
 
-function orderedPatterns(roots: string[]): string[] {
-  return roots
+function rootPattern(roots: string[]): string {
+  const spellings = roots
     .toSorted((a, b) => b.length - a.length)
     .map((root) => root.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"));
+  return `(?:${spellings.join("|") || "(?!)"})`;
 }
 
-function pathMatcher(roots: string[]): RegExp {
-  const starts = orderedPatterns(roots);
-  starts.push(pathStart.source);
-  const quoted = /(["'`])((?:file:|[a-z]:[\\/]|\\\\|\/)[^"'`\r\n]*)\1/;
-  const bare = `(?:${fileUrlStart.source}|${barePathBoundary.source}(?:${starts.join("|")}))${barePathTail.source}`;
-  return new RegExp(`${quoted.source}|(${otherUrl.source})|${bare}`, "giu");
+function pathMatcher(roots: string[], root: string): RegExp {
+  const tail = `${pathCharacter.source}*`;
+  const suffix = `(?:[\\\\/]${tail}|${rootEnd.source})`;
+  const known = `${root}${suffix}`;
+  const viteRoots = rootPattern(
+    roots.flatMap((root) =>
+      root.startsWith("/") ? [root, root.slice(1)] : [root],
+    ),
+  );
+  const quoted = `(["'\x60])((?:${pathStart.source}|${vitePrefix})[^"'\x60\\r\\n]*)\\1`;
+  const vite = `(${vitePrefix})(${viteRoots}${suffix}|${pathCharacter.source}+)`;
+  const emptyAuthority = `(${urlStart.source})(?=/)((?:${authorityDrive.source})?${known})`;
+  const otherUrl = `(${urlStart.source}${urlTail.source})`;
+  const bare = `${pathBoundary.source}(?:${known}|${pathStart.source}${tail})`;
+  return new RegExp(
+    [quoted, vite, emptyAuthority, otherUrl, bare].join("|"),
+    "giu",
+  );
 }
 
 function logicalPath(

@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use mokly_catalogue::diagnostic::{STORY_RENDER_FAILED, Warning, WarningSubject};
 use mokly_model::data::DataValue;
 use mokly_model::usage::{CatalogueUsage, ComponentInputOwner, ComponentInstanceRecord};
 use mokly_model::wire_props;
@@ -13,7 +14,13 @@ use crate::document_error::{CodecError, CodecInternalError};
 #[test]
 fn persistent_records_restore_all_metadata_and_exact_bytes() {
     let mut input = artifact(Vec::new());
-    input.document.as_mut().unwrap().warnings[0].code = "html-foster-parented";
+    let warnings = &mut input.document.as_mut().unwrap().warnings;
+    warnings[0].code = "html-foster-parented";
+    warnings.push(Warning {
+        code: STORY_RENDER_FAILED,
+        subject: WarningSubject::Route("menu/index.mobile.html".into()),
+        message: "story \"menu.stories.tsx#Open\" could not render: document is not defined".into(),
+    });
     let (encoded, identity) = EncodedView::encode_identified(&input).unwrap();
     let bytes = stored(&encoded);
     assert!(

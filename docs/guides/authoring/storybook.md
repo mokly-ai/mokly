@@ -281,8 +281,9 @@ warning:
 ```
 
 `mokly build --strict` and `mokly publish --strict` fail on this warning. A
-render timeout or crash stops the build. An error that Mokly reports with its
-own code, such as invalid props for a Mokly component, still stops the build.
+render timeout or crash stops the build. An error in Mokly's own components
+and helpers, such as invalid props for a registered component or a duplicate
+instance ID, still stops the build.
 
 Use code that can render on the server without browser APIs such as `window`
 or `document`.

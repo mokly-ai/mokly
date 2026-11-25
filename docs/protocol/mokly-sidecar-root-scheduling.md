@@ -17,7 +17,8 @@ last successful `bundle` in the head root. The warm head process is the
 process that bundled that generation. After a successful render request of
 that generation, the warm head process is the process that rendered it last. A
 [warm-up](./mokly-sidecar-return-warmup.md#warm-up-steps) replay does not move
-it.
+it, and neither does a request that gives a
+[failed story view](./mokly-sidecar-return-warmup.md#failed-story-views).
 
 A base request takes the warm head process only when no other idle process
 and no empty slot is available to it. So base work still uses every slot

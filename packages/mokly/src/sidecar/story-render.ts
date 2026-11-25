@@ -6,6 +6,7 @@ import type {
   StoryContext,
 } from "storybook/internal/csf";
 
+import { AuthoringError } from "../authoring/errors.js";
 import type { RenderSession } from "../authoring/runtime.js";
 import type { RenderResult } from "../generated/sidecar/RenderResult.js";
 import type { RenderStoryParams } from "../generated/sidecar/RenderStoryParams.js";
@@ -46,16 +47,18 @@ export function renderStory(
       } catch (error) {
         if (!(error instanceof StoryWorkError)) throw error;
         const cause: unknown = error.cause;
-        if (isCodedError(cause)) throw cause;
+        if (isFatalRenderError(cause)) throw cause;
         return { storyId, name, reason: storyReason(generation, cause) };
       }
     },
   );
 }
 
-function isCodedError(error: unknown): error is SidecarError {
+function isFatalRenderError(
+  error: unknown,
+): error is SidecarError | AuthoringError {
   try {
-    return error instanceof SidecarError;
+    return error instanceof SidecarError || error instanceof AuthoringError;
   } catch {
     return false;
   }

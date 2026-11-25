@@ -23,10 +23,10 @@ use crate::types::RenderGeneration;
 
 use super::support::{catalogue, session};
 
-const ROUTE: &str = "caller/index.mobile.html";
+pub(super) const ROUTE: &str = "caller/index.mobile.html";
 const WARNING: &str = "story \"caller.stories.tsx#Default\" could not render; add the \"!mokly\" tag to leave it out: document is not defined";
 
-fn story_catalogue() -> PreparedCatalogue {
+pub(super) fn story_catalogue() -> PreparedCatalogue {
     let mut catalogue = catalogue();
     catalogue.model.entries.truncate(1);
     let entry = &mut catalogue.model.entries[0];
@@ -67,7 +67,7 @@ fn story_catalogue() -> PreparedCatalogue {
     catalogue
 }
 
-fn failed_fragment() -> Fragment {
+pub(super) fn failed_fragment() -> Fragment {
     Fragment {
         story_failure: Some(Box::new(StoryRenderFailure {
             story_id: "caller.stories.tsx#Default".into(),

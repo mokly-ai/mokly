@@ -83,12 +83,13 @@ impl Pool {
                 | Call::RenderComponent(_)
                 | Call::RenderStory(_)
                 | Call::RenderPage(_),
-                _,
-            ) if state
-                .head
-                .warm
-                .as_ref()
-                .is_some_and(|warm| generation(call) == Some(warm.generation.as_str()))
+                result,
+            ) if result.is_successful_render()
+                && state
+                    .head
+                    .warm
+                    .as_ref()
+                    .is_some_and(|warm| generation(call) == Some(warm.generation.as_str()))
                 && state.source_roots.get(&index) == Some(&self.launch.repository) =>
             {
                 if let Some(warm) = &mut state.head.warm {

@@ -104,8 +104,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   function keeps the portable story call. Then it runs the render's
   `beforeEach` cleanups in reverse order in a `finally` block. A story error
   result carries the export ID, display name, and reason in logical source
-  space. Mokly's coded errors and errors from its output checks fail the
-  request.
+  space. Mokly's authoring errors, coded errors, and errors from its output
+  checks fail the request.
 
 ### esbuild Compilation and Reuse
 

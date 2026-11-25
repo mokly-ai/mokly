@@ -119,6 +119,24 @@ pub enum MethodResult {
     Empty,
 }
 
+impl MethodResult {
+    /// Whether the reply contains rendered markup.
+    pub(crate) fn is_successful_render(&self) -> bool {
+        match self {
+            Self::Render(_)
+            | Self::StoryRender(results::StoryRender::Rendered(_))
+            | Self::Page(_) => true,
+            Self::Hello(_)
+            | Self::Bundle(_)
+            | Self::Definitions(_)
+            | Self::StoryRender(results::StoryRender::Failed { .. })
+            | Self::Css(_)
+            | Self::ViteCss(_)
+            | Self::Empty => false,
+        }
+    }
+}
+
 impl Response {
     fn payload(self) -> Result<Box<RawValue>> {
         match self {

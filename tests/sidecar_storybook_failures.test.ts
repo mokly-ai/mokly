@@ -23,6 +23,43 @@ test("reserved story markers and Mokly-coded render errors stay fatal", async (c
   });
 });
 
+test("a duplicate registered component instance stops a story render", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const generation = await prepare(sidecar, directory, [
+    "component.mockup.tsx",
+  ]);
+  await assert.rejects(callStory(sidecar, generation, "DuplicateInstance"), {
+    code: "render-failed",
+    message: /duplicate instance same/u,
+  });
+});
+
+test("a non-data prop of a registered component stops a story render", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const generation = await prepare(sidecar, directory, [
+    "component.mockup.tsx",
+  ]);
+  await assert.rejects(callStory(sidecar, generation, "NonDataProp"), {
+    code: "render-failed",
+    message: /\/label: value is not plain data/u,
+  });
+});
+
+test("an error from a registered component's render gives a failed story result", async (context) => {
+  const sidecar = startSidecar(context);
+  await sidecar.call("hello");
+  const generation = await prepare(sidecar, directory, [
+    "component.mockup.tsx",
+  ]);
+  assert.deepEqual(await callStory(sidecar, generation, "ComponentError"), {
+    storyId: "entry.stories.tsx#ComponentError",
+    name: "Component Error",
+    reason: "Badge render failed",
+  });
+});
+
 test("renderComponent rejects a Storybook story handle", async (context) => {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");
@@ -73,6 +110,7 @@ test("story reasons remove absolute paths and retain their delimiters", async (c
     ...process.env,
     HOME: home,
     USERPROFILE: home,
+    TMPDIR: "/tmp",
   });
   await sidecar.call("hello");
   const generation = await prepare(sidecar, directory);
@@ -96,6 +134,15 @@ test("story reasons remove absolute paths and retain their delimiters", async (c
       `Could not open ${vite}${pathToFileURL(source).href}`,
       `Could not open ${vite}src/data.json`,
     ],
+    [`Could not open ${vite}opt/tooling/input.json`, `Could not open ${vite}…`],
+    ["Could not open /@fs/opt/tooling/input.json", "Could not open /@fs/…"],
+    [
+      `Could not open ${path.join(path.dirname(source), "tmp", "x.json")}`,
+      "Could not open src/tmp/x.json",
+    ],
+    ["open './tmp/cache.json'", "open './tmp/cache.json'"],
+    ["https://example.com/tmp/x", "https://example.com/tmp/x"],
+    ["Could not open local:///tmp/x.json", "Could not open local:///…"],
     [`Could not open @${source}`, "Could not open @src/data.json"],
     [`Could not open @${pathToFileURL(outside).href}`, "Could not open @…"],
     [`Could not open ${homeFile}`, "Could not open …"],

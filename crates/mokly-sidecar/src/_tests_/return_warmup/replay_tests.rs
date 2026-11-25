@@ -1,8 +1,12 @@
 //! Replays count toward the render limit and leave the warm head process where requests put it.
 
-use crate::pool::SidecarPool;
+use std::sync::Arc;
 
-use super::calls::{css, render, views};
+use crate::pool::SidecarPool;
+use crate::results::StoryRender;
+use crate::wire::MethodResult;
+
+use super::calls::{css, render, story, views};
 use super::support::{Event, Harness};
 
 #[test]
@@ -84,5 +88,65 @@ fn a_replay_does_not_move_the_warm_head_process() {
         killed,
         [Event::Kill(2)],
         "the base call replaces the warmed process and keeps the bundling process"
+    );
+}
+
+#[test]
+fn failed_story_requests_and_replays_do_not_contribute_to_warm_up() {
+    let harness = Harness::with_story_failures(1, Arc::new(|_| Ok(())), |story, quiet| {
+        quiet || story.story_id.ends_with("#Broken")
+    });
+    let needs_render = || {
+        let state = harness.pool.lock();
+        state
+            .head
+            .warmups
+            .needs_render(0, &state.controls[&0], state.epochs["g"])
+    };
+    let warm_head = || {
+        let state = harness.pool.lock();
+        state.head.warm.as_ref().unwrap().control.clone()
+    };
+    harness.head("g", &[]);
+    for name in ["First", "Second"] {
+        harness.pool.request(story("g", name)).unwrap();
+    }
+    harness.base();
+    harness.returned();
+
+    let before = warm_head();
+    let broken = harness.pool.request(story("g", "Broken")).unwrap();
+    let head_unchanged = before.ptr_eq(&warm_head());
+    let cold_after_request = needs_render();
+    let steps = harness.maintain();
+    let cold_after_replay = needs_render();
+    let replays = harness.events.quiet(2);
+    let next = harness.pool.request(story("g", "Next")).unwrap();
+    let final_calls = harness.events.calls(2);
+    harness.pool.abort().unwrap();
+
+    assert!(matches!(
+        broken,
+        MethodResult::StoryRender(StoryRender::Failed { story_id, .. })
+            if story_id == "menu.stories.tsx#Broken"
+    ));
+    assert!(head_unchanged, "a failed story request moved the warm head");
+    assert!(cold_after_request, "a failed story request proved warmth");
+    assert_eq!(steps, 1);
+    assert_eq!(
+        replays,
+        [
+            "menu.stories.tsx export First (desktop, light)",
+            "menu.stories.tsx export Second (desktop, light)",
+        ],
+    );
+    assert!(cold_after_replay, "failed replays proved warmth");
+    assert!(matches!(
+        next,
+        MethodResult::StoryRender(StoryRender::Rendered(render)) if render.html == "<p>Ready</p>"
+    ));
+    assert_eq!(
+        final_calls.last().map(String::as_str),
+        Some("menu.stories.tsx export Next (desktop, light)"),
     );
 }
