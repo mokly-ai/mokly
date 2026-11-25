@@ -108,8 +108,9 @@ export default async function setup(
           : ready.map((host) => host.url);
       }),
     );
-    // A strict shard whose specs never import `static_test.ts` skips the
-    // copied example build; `copiedStaticUrl()` then fails loudly.
+    // A strict shard or a selected developer run whose specs never import
+    // `static_test.ts` skips the copied example build; `copiedStaticUrl()`
+    // then fails loudly.
     const copy =
       process.env["MOKLY_PLAYWRIGHT_COPIED_HOST"] === "skip"
         ? Promise.resolve(undefined)

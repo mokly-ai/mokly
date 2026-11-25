@@ -85,7 +85,10 @@ Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`: setup
 rejects a worker count above the number of servers.
 
 A strict browser shard builds the copied example only when one of its specs
-imports its accessor module, directly or through helpers. Global setup starts
+imports its accessor module, directly or through helpers. A developer browser
+run follows the same rule when spec filters select its specs and its other
+arguments are only title filters; Playwright's own list of the selection names
+the specs. Any other developer run builds the copied example. Global setup starts
 Serve readiness and both copied builds concurrently under
 one cancellation signal and setup budget. It builds the example with
 `mokly build --no-changes`. It builds native Changes from a separate temporary
