@@ -133,8 +133,6 @@ A branch from this branch applies each answer and deletes the file.
 
 - [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): A.
   Severity High.
-- [storybook-story-cleanups-outlive-their-render.md](follow-ups/storybook-story-cleanups-outlive-their-render.md):
-  D. Severity High.
 - [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): E.
 - [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
   B. Milestone 32 applies it, because the code with several setups does not
@@ -163,19 +161,6 @@ The first review of track B found these defects in the code that pull
 request #492 merged. Each one needs no decision, and a branch from this
 branch fixes it as its file says. Fix them before the pull request into
 `main`.
-
-- [storybook-factory-helper-exports-become-stories.md](follow-ups/storybook-factory-helper-exports-become-stories.md):
-  Severity High.
-- [storybook-loaders-read-saved-args.md](follow-ups/storybook-loaders-read-saved-args.md):
-  Severity High.
-- [storybook-argtypes-mapping-skipped-in-render.md](follow-ups/storybook-argtypes-mapping-skipped-in-render.md):
-  Severity Medium.
-- [variant-props-docs-say-merged.md](follow-ups/variant-props-docs-say-merged.md):
-  Severity Medium.
-- [story-required-keys-derived-twice.md](follow-ups/story-required-keys-derived-twice.md):
-  Severity Low.
-- [describe-failure-names-every-file.md](follow-ups/describe-failure-names-every-file.md):
-  Severity Low.
 
 - [crate-topic-pages-skip-link-check.md](follow-ups/crate-topic-pages-skip-link-check.md):
   the Markdown link check does not read crate topic pages.
@@ -1442,8 +1427,8 @@ Track B. The protocol states the reading rules of decisions 3, 7, 8, 12, and
 - [x] Apply the answer to decision B1 to `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-entry-props.md`, and `docs/protocol/mokly-variants.md`.
       Branch: `conductor/storybook-support-b-story-reading`.
-- [ ] Apply the answer to decision B4 to the protocol pages.
-      Branch: `conductor/storybook-support-b-story-reading`.
+- [x] Apply the answer to decision B4 to the protocol pages.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 
 Track B raised four decisions on 2026-11-18, while it wrote these docs. The
 orchestrator of this plan answered B3 on 2026-11-20 with option C, as a scope
@@ -1738,6 +1723,20 @@ Design calls of track B, made on 2026-11-18:
   non-data arg of the same story, the requested value renders. Reason: the
   answer to B1 renders exactly the requested data props, and Storybook lays
   extra args over a story's own args.
+- B-g. Made on 2026-11-25 by the orchestrator of the track B finish, for the
+  answer to B4. The warning code is `storybook-parameter-ignored`. Its
+  subject is the entry of the story's page, and its message is
+  `parameter {path} is ignored: {reason}`, with the JSON-quoted path of the
+  malformed value, such as `"mokly.viewports.tablet"`. Reason: the subject
+  already names the story's page, the record rule forbids a message that
+  repeats it, and JSON quotes escape the control characters of an authored
+  name, as the `prop` messages do.
+- B-h. Made on 2026-11-25 by the same orchestrator. The `describe` result
+  carries the malformed values in an optional `ignoredParameters` list on
+  each definition and variant, as `excludedProps` carries the keys of
+  `props-not-data`. A value that the preview sets gives a warning on each
+  story page that composes it. Reason: the core derives the final entry
+  path, and each story page composes its own parameters.
 
 ## Milestone 3: Story reader
 
@@ -1846,23 +1845,34 @@ Depends on: 3, and the answer to decision B4 for malformed values
 
 Existing theme decorators follow Mokly's views, as decision 8 says.
 
-- [ ] Set the globals of the `mokly` parameter for each view before render,
+- [x] Set the globals of the `mokly` parameter for each view before render,
       as design call 11 says.
-- [ ] Test that a theme decorator that reads a `theme` global renders the
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Test that a theme decorator that reads a `theme` global renders the
       dark theme in dark views when the parameter maps it.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
 
 ## Milestone 8: Story reading verification, review, and pull request
 
 Depends on: 2, 3, 4, 5, 6, 7
 
-- [ ] Remove each status line whose page this track completes.
-- [ ] Run the targeted tests and `cargo xtask check`.
-- [ ] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Check the rows of the test matrix in Milestone 38 that Milestones 3 to
       7 build, in new small projects, and save the result under
       `.context/storybook-support/`.
-- [ ] Commit, push, review against this branch, give the findings to the
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-track-b-finish-ekj1`.
+
+Evidence: `.context/storybook-support/track-b-matrix.md` in the workspace of
+`calummoore/storybook-track-b-finish-ekj1` holds the matrix check of
+2026-11-25.
 
 Pull request #492 merged Milestones 2 to 6 into this branch on 2026-11-24,
 before Milestone 7, at the user's request. Its description holds the

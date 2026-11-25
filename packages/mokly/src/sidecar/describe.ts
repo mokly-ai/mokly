@@ -10,7 +10,7 @@ import { SidecarError, detail } from "./errors.js";
 import { evaluate } from "./evaluate.js";
 import { ExportNameCache } from "./export-name-cache.js";
 import { orderedExports } from "./export-order.js";
-import { describeStories } from "./stories.js";
+import { describeStoryFile } from "./stories.js";
 
 /** One bounded cache of parsed export names lasts for the sidecar process. */
 const exportNameCache = new ExportNameCache();
@@ -27,151 +27,173 @@ export async function describe(
   generation: Generation,
   cache: ExportNameCache = exportNameCache,
 ): Promise<Definitions> {
-  try {
-    return await collect(generation, cache);
-  } catch (error) {
-    if (error instanceof SidecarError) throw error;
-    throw new SidecarError(
-      "bundle-failed",
-      `${generation.params.entryFiles.concat(generation.params.storiesFiles).join(", ")}: ${detail(error)}`,
-    );
-  }
-}
-
-async function collect(
-  generation: Generation,
-  cache: ExportNameCache,
-): Promise<Definitions> {
   if (generation.definitions) return generation.definitions;
-  const exports = evaluate(generation);
-  const result: Definitions = {
-    screens: [],
-    components: [],
-    pages: [],
-    useCases: [],
-    folders: [],
-    stories: [],
-    diagnostics: [],
-  };
-  const collected: {
-    value: object;
-    data: DefinitionData;
-    module: string;
-    exportName: string;
-  }[] = [];
-  const seen = new Map<object, string>();
-  for (const [module, values] of Object.entries(exports.entries).sort(
-    ([a], [b]) => (a < b ? -1 : 1),
-  )) {
-    let count = 0;
-    for (const [exportName, value] of orderedExports(
-      generation.sources.get(module) ?? "",
-      values,
-      module,
-      cache,
-    )) {
-      const location = `${module} export ${exportName}`;
-      if (containsDefinition(value)) {
-        result.diagnostics.push({
-          code: "array-export",
-          module,
-          exportName,
-          message: `${location}: export ${exportName} is an array; export one definition per export`,
-        });
-        continue;
-      }
-      const data = definitionData(value);
-      if (!data) {
-        if (
-          value &&
-          (typeof value === "object" || typeof value === "function") &&
-          brand in value
-        )
-          result.diagnostics.push({
-            code: "invalid-definition",
-            module,
-            exportName,
-            message: `${location}: export ${exportName} is not a Mokly definition`,
-          });
-        continue;
-      }
-      count += 1;
-      if (seen.has(value as object)) {
-        const previous = seen.get(value as object)!;
-        if (!previous.startsWith(`${module} export `))
-          result.diagnostics.push({
-            code: "duplicate-export",
-            module,
-            exportName,
-            message: `definition ${data.input.title} is exported by two entry modules:\n${[
-              previous,
-              location,
-            ]
-              .sort()
-              .map((item) => `  ${item}`)
-              .join("\n")}`,
-          });
-        continue;
-      }
-      seen.set(value as object, location);
-      const handle = `${module}#${exportName}`;
-      generation.handles.set(handle, value as object);
-      generation.registrations.set(value as object, {
-        handle,
-      });
-      collected.push({ value: value as object, data, module, exportName });
-    }
-    if (!count)
-      result.diagnostics.push({
-        code: "empty-module",
-        module,
-        message: `${module} exports no Mokly definition`,
-      });
-  }
-  for (const { value, data, module, exportName } of collected) {
-    const diagnostics = validateFields(data, module, exportName);
-    result.diagnostics.push(...diagnostics);
-    if (
-      diagnostics.some(
-        (diagnostic) =>
-          diagnostic.code !== "invalid-field" &&
-          !(
-            diagnostic.code === "invalid-variants" &&
-            diagnostic.message === "a variant cannot declare variants"
-          ),
-      )
-    )
-      continue;
+
+  function withSource<T>(source: string | undefined, run: () => T): T {
     try {
-      const record = serialize(generation, value, data, diagnostics.length > 0);
-      result[groups[data.kind as keyof typeof groups]].push(record);
+      return run();
     } catch (error) {
-      result.diagnostics.push({
-        code:
-          error instanceof SidecarError
-            ? (error.code as "component-props")
-            : "component-props",
-        module,
-        exportName,
-        message: detail(error),
-      });
+      if (error instanceof SidecarError) throw error;
+      const location =
+        source ??
+        generation.params.entryFiles
+          .concat(generation.params.storiesFiles)
+          .join(", ");
+      throw new SidecarError("bundle-failed", `${location}: ${detail(error)}`);
     }
   }
-  for (const deferred of generation.runtime.links.values()) {
-    if (
-      typeof deferred.target !== "object" ||
-      !deferred.target ||
-      generation.registrations.has(deferred.target)
-    )
-      continue;
-    const target = definitionData(deferred.target);
-    result.diagnostics.push({
-      code: "unknown-link-definition",
-      module: deferred.source ?? "unknown module",
-      message: `${deferred.source ?? "unknown module"}: referenced definition ${target?.input.title ?? "unknown"} from ${target?.source ?? "unknown module"} is not exported by an entry module`,
-    });
-  }
-  await describeStories(generation, exports, result, cache);
-  generation.sources.clear();
-  return (generation.definitions = result);
+
+  return withSource(undefined, () => {
+    const exports = evaluate(generation);
+    const result: Definitions = {
+      screens: [],
+      components: [],
+      pages: [],
+      useCases: [],
+      folders: [],
+      stories: [],
+      diagnostics: [],
+    };
+    const collected: {
+      value: object;
+      data: DefinitionData;
+      module: string;
+      exportName: string;
+    }[] = [];
+    const seen = new Map<object, string>();
+    for (const [module, values] of Object.entries(exports.entries).sort(
+      ([a], [b]) => (a < b ? -1 : 1),
+    )) {
+      withSource(module, () => {
+        let count = 0;
+        for (const [exportName, value] of orderedExports(
+          generation.sources.get(module) ?? "",
+          values,
+          module,
+          cache,
+        )) {
+          const location = `${module} export ${exportName}`;
+          if (containsDefinition(value)) {
+            result.diagnostics.push({
+              code: "array-export",
+              module,
+              exportName,
+              message: `${location}: export ${exportName} is an array; export one definition per export`,
+            });
+            continue;
+          }
+          const data = definitionData(value);
+          if (!data) {
+            if (
+              value &&
+              (typeof value === "object" || typeof value === "function") &&
+              brand in value
+            )
+              result.diagnostics.push({
+                code: "invalid-definition",
+                module,
+                exportName,
+                message: `${location}: export ${exportName} is not a Mokly definition`,
+              });
+            continue;
+          }
+          count += 1;
+          if (seen.has(value as object)) {
+            const previous = seen.get(value as object)!;
+            if (!previous.startsWith(`${module} export `))
+              result.diagnostics.push({
+                code: "duplicate-export",
+                module,
+                exportName,
+                message: `definition ${data.input.title} is exported by two entry modules:\n${[
+                  previous,
+                  location,
+                ]
+                  .sort()
+                  .map((item) => `  ${item}`)
+                  .join("\n")}`,
+              });
+            continue;
+          }
+          seen.set(value as object, location);
+          const handle = `${module}#${exportName}`;
+          generation.handles.set(handle, value as object);
+          generation.registrations.set(value as object, { handle });
+          collected.push({ value: value as object, data, module, exportName });
+        }
+        if (!count)
+          result.diagnostics.push({
+            code: "empty-module",
+            module,
+            message: `${module} exports no Mokly definition`,
+          });
+      });
+    }
+    for (const { value, data, module, exportName } of collected) {
+      withSource(module, () => {
+        const diagnostics = validateFields(data, module, exportName);
+        result.diagnostics.push(...diagnostics);
+        if (
+          diagnostics.some(
+            (diagnostic) =>
+              diagnostic.code !== "invalid-field" &&
+              !(
+                diagnostic.code === "invalid-variants" &&
+                diagnostic.message === "a variant cannot declare variants"
+              ),
+          )
+        )
+          return;
+        try {
+          const record = serialize(
+            generation,
+            value,
+            data,
+            diagnostics.length > 0,
+          );
+          result[groups[data.kind as keyof typeof groups]].push(record);
+        } catch (error) {
+          result.diagnostics.push({
+            code:
+              error instanceof SidecarError
+                ? (error.code as "component-props")
+                : "component-props",
+            module,
+            exportName,
+            message: detail(error),
+          });
+        }
+      });
+    }
+    for (const deferred of generation.runtime.links.values()) {
+      withSource(deferred.source, () => {
+        if (
+          typeof deferred.target !== "object" ||
+          !deferred.target ||
+          generation.registrations.has(deferred.target)
+        )
+          return;
+        const target = definitionData(deferred.target);
+        result.diagnostics.push({
+          code: "unknown-link-definition",
+          module: deferred.source ?? "unknown module",
+          message: `${deferred.source ?? "unknown module"}: referenced definition ${target?.input.title ?? "unknown"} from ${target?.source ?? "unknown module"} is not exported by an entry module`,
+        });
+      });
+    }
+    for (const [file, module] of Object.entries(exports.stories)) {
+      withSource(file, () =>
+        describeStoryFile(
+          generation,
+          file,
+          module,
+          exports.preview,
+          result,
+          cache,
+        ),
+      );
+    }
+    generation.sources.clear();
+    return (generation.definitions = result);
+  });
 }

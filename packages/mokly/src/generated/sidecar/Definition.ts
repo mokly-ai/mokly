@@ -3,6 +3,7 @@
 import type { ColorScheme } from "./ColorScheme.js";
 import type { Control } from "./Control.js";
 import type { EntryReference } from "./EntryReference.js";
+import type { IgnoredParameter } from "./IgnoredParameter.js";
 import type { JsonValue } from "./JsonValue.js";
 import type { StoryHints } from "./StoryHints.js";
 import type { UseCaseStep } from "./UseCaseStep.js";
@@ -14,6 +15,10 @@ export type Definition = {
  * Non-data inference exclusions, before catalogue path derivation.
  */
 excludedProps?: Array<string>,
+/**
+ * Invalid Storybook parameter values, before catalogue path derivation.
+ */
+ignoredParameters?: Array<IgnoredParameter>,
 /**
  * Repository-relative module and export name.
  */

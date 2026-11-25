@@ -130,7 +130,9 @@ actual-instance `implementation` reason does not alter own view states.
 `routes` owns Rust artifact routes and portable relative URL operations,
 including comparison generation, snapshot-side, and removed-preview paths.
 
-`inference::infer` builds closed schemas from own and merged variant props.
+`inference::infer` builds a closed schema from one list of
+[complete prop sets](../../docs/protocol/mokly-entry-props.md#one-model). A
+top-level key is required when every set contains it.
 `data::merge_props` replaces top-level keys only. `wire_props` and `wire_decode`
 encode and decode tagged public props, including negative zero. Derived controls
 use the same binary64 values as the core. Plain prop decoding rounds integers

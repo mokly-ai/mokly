@@ -7,10 +7,14 @@ use mokly_model::controls::{ControlInput, ControlOption};
 use mokly_model::prop_schema::Primitive;
 
 use crate::declared_controls;
-use crate::diagnostic::{Code, Issue, Warning, WarningSubject};
+use crate::diagnostic::{Code, Issue, Warning, WarningSubject, json_quoted};
 use crate::numeric_warnings;
 use crate::preparation::PreparedCatalogue;
 use crate::render_sources::{EntryReference, ProvidedRendering, ResolvedDefinition};
+
+#[cfg(test)]
+#[path = "_tests_/provided_entries_tests.rs"]
+mod provided_entries_tests;
 
 pub(crate) fn attach(
     prepared: &mut PreparedCatalogue,
@@ -40,6 +44,19 @@ pub(crate) fn attach(
                 .javascript
                 .entries
                 .insert(entry.metadata.path.clone(), source.clone());
+        }
+        if let Some(parameters) = rendering.ignored_parameters.get(slug) {
+            prepared
+                .warnings
+                .extend(parameters.iter().map(|parameter| Warning {
+                    code: "storybook-parameter-ignored",
+                    subject: WarningSubject::Entry(entry.metadata.path.clone()),
+                    message: format!(
+                        "parameter {} is ignored: {}",
+                        json_quoted(&parameter.path),
+                        parameter.reason
+                    ),
+                }));
         }
         if let Some(hints) = rendering.story_hints.get(slug) {
             let visual = match &mut entry.content {

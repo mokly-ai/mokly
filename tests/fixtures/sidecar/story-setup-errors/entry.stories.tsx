@@ -1,8 +1,14 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryFn, StoryObj } from "@storybook/react";
+
+import { events, setup } from "./state.js";
 
 const meta = {
   title: "Setup/Errors",
-  render: () => <button>Ready</button>,
+  beforeEach: () => setup("meta"),
+  render: () => {
+    events.push("render");
+    return <button>Ready</button>;
+  },
 } satisfies Meta;
 
 export default meta;
@@ -22,15 +28,16 @@ export const BeforeEachFailure: Story = {
     throw new Error("beforeEach failed");
   },
 };
-export const RenderFailure: Story = {
-  render: () => {
-    throw new Error("render failed");
-  },
+export const RenderFailure: StoryFn = () => {
+  throw new Error("render failed");
+};
+RenderFailure.story = {
+  beforeEach: () => setup("legacy", "cleanup failed after markup"),
 };
 export const CleanupFailure: Story = {
-  beforeEach: () => async () => {
-    await Promise.resolve();
-    throw new Error("beforeEach cleanup failed");
-  },
+  beforeEach: [
+    () => setup("earlier", "earlier cleanup failed"),
+    () => setup("later", "beforeEach cleanup failed"),
+  ],
 };
 export const Prepared: Story = {};

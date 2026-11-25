@@ -11,6 +11,29 @@ use crate::definition_metadata::{EntryMetadata, EntryReference, UseCaseStep};
 use crate::diagnostics::DefinitionDiagnostic;
 use crate::methods::ColorScheme;
 
+/// One malformed value of a story's composed `mokly` parameter.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+pub struct IgnoredParameter {
+    /// Dotted parameter path.
+    pub path: String,
+    /// Reason the value does not apply.
+    pub reason: IgnoredParameterReason,
+}
+
+/// Validation outcome for a malformed Storybook mapping.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "kebab-case")]
+pub enum IgnoredParameterReason {
+    /// Expected a plain object.
+    NotAnObject,
+    /// Unknown field of `mokly`.
+    UnknownField,
+    /// Unknown key in `colorSchemes`.
+    UnknownColorScheme,
+    /// Unknown key in `viewports`.
+    UnknownViewport,
+}
+
 /// A saved props set with typed metadata overrides.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -19,6 +42,10 @@ pub struct Variant {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub excluded_props: Option<Vec<String>>,
+    /// Invalid Storybook parameter values, before catalogue path derivation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub ignored_parameters: Option<Vec<IgnoredParameter>>,
     /// Authored final path segment.
     pub slug: String,
     /// Display title.
@@ -70,6 +97,10 @@ pub struct Definition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub excluded_props: Option<Vec<String>>,
+    /// Invalid Storybook parameter values, before catalogue path derivation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub ignored_parameters: Option<Vec<IgnoredParameter>>,
     /// Repository-relative module and export name.
     pub handle: String,
     /// Module that created the definition; it can differ from the exporting module.
