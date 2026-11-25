@@ -212,6 +212,10 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   trimmed password is empty, as Continue with email is while the address is
   empty. Reason: an empty password cannot match, and the page already uses
   this rule.
+- **Debug build speed, my call, 2026-11-25.** `scrypt` and the hash crates
+  it uses build optimized in debug builds too. Reason: the tests and the
+  local stack check passwords with production parameters, and one
+  unoptimized check took 4.75 s against 0.48 s optimized.
 - **Deploy.** The release job reads the verifier with
   `gcloud secrets versions access` into a private mode-0600 runner-temporary
   file, as it reads the DNS token. It writes Secret `preview-sign-in` when the
@@ -759,7 +763,27 @@ The app draws the section as the mockups show and sends the password.
 
 The check logs and screenshots are in `.context/preview-password-sign-in/m6/`.
 
-## Milestone 7: Verification, commit, review, and pull request
+## Milestone 7: Empty password mockup
+
+Tags: mockup
+
+Depends on: 6
+
+Milestone 6 found that no drawing shows the section before the reader types:
+an empty Password field with **Continue as preview@mokly.ai** disabled. Every
+reviewer sees this state first. The email form's empty state has its own
+drawing, `product/account/sign-in/empty`.
+
+- [ ] Add an `empty` variant to the page
+      `product/account/sign-in/preview-password`, with its screen component,
+      owner entry and inventory rows. The page then draws four screens.
+- [ ] Change the related doc of the section's pages from `auth-sessions.md`
+      to `docs/protocol/cloud/preview-sign-in.md`.
+- [ ] Run the mockup check that `docs/mockups/README.md` gives, and compare
+      the new page with the app's empty section in
+      `.context/preview-password-sign-in/m6/sign-in-desktop.png`.
+
+## Milestone 8: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
