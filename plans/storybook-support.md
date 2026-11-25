@@ -94,19 +94,22 @@ merged into this branch. On 2026-11-25 the user answered most of the open
 decisions and follow-up items. The same day the user asked to continue, and
 this branch merged `main`, with the Canvas redesign of pull request #488.
 Milestone 1a draws the Storybook mockups again on Canvas. Pull request #506
-merged Milestone 1a, and pull request #508 finished track B. This section
+merged Milestone 1a, pull request #508 finished track B, pull request #509
+applied the asset follow-up answers, and pull request #511 finished track D.
+Tracks E and F run on their own branches. This section
 tells the next agent what is done, what waits for the user, and how to
 continue.
 
-| Track                    | Pull request          | Done                 | Open                                                                                  |
-| ------------------------ | --------------------- | -------------------- | ------------------------------------------------------------------------------------- |
-| A. Mockups               | #339 and #506, merged | Milestones 1 and 1a  | None                                                                                  |
-| B. Story reading         | #492 and #508, merged | Milestones 2 to 8    | None                                                                                  |
-| C. Imported assets       | #453, merged          | Milestones 9 to 12   | None                                                                                  |
-| D. Vite adapter          | #493, merged          | Milestones 13 and 16 | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
-| J. Spike for decision 18 | #349, merged          | Milestone 37         | None                                                                                  |
-| E to I                   | None                  | Nothing              | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
-| All                      | None                  | Nothing              | Milestone 38, which ends with the pull request into `main`                            |
+| Track                    | Pull request          | Done                | Open                                                                                  |
+| ------------------------ | --------------------- | ------------------- | ------------------------------------------------------------------------------------- |
+| A. Mockups               | #339 and #506, merged | Milestones 1 and 1a | None                                                                                  |
+| B. Story reading         | #492 and #508, merged | Milestones 2 to 8   | None                                                                                  |
+| C. Imported assets       | #453, merged          | Milestones 9 to 12  | None                                                                                  |
+| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Track D decision 6                                                                    |
+| J. Spike for decision 18 | #349, merged          | Milestone 37        | None                                                                                  |
+| E and F                  | Not yet               | In progress         | Milestones 18 to 25                                                                   |
+| G to I                   | None                  | Nothing             | Milestones 26 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| All                      | None                  | Nothing             | Milestone 38, which ends with the pull request into `main`                            |
 
 ### Answers of 2026-11-25
 
@@ -153,8 +156,8 @@ option. None has an answer yet, so no option applies.
   modules that another setup owns, and roots whose Storybook folder lies
   elsewhere. They block Milestones 30 and 32.
 - [Track D decision 6](#track-d-decision-6-workspace-package-sources-under-vite):
-  workspace package sources under Vite, raised on 2026-11-25. Its answer
-  goes into the branch `calummoore/storybook-track-d-finish-nkpi`.
+  workspace package sources under Vite, raised on 2026-11-25. A branch from
+  this branch applies its answer.
 
 ### Follow-up items that wait for the user
 
@@ -165,6 +168,21 @@ holds the full item and its recommended option. They block no milestone.
   a lone surrogate in authored text stops the whole build.
 - [screen-renders-skip-story-setup.md](follow-ups/screen-renders-skip-story-setup.md):
   a screen render depends on an earlier story render.
+
+The review of track D found these problems in the Vite adapter. Each file
+holds the full item and its recommended option. They block no milestone.
+
+- [vite-env-link-target-watch.md](follow-ups/vite-env-link-target-watch.md)
+- [vite-replay-computed-imports.md](follow-ups/vite-replay-computed-imports.md)
+- [vite-sass-outside-root-reads.md](follow-ups/vite-sass-outside-root-reads.md)
+- [vite-renderer-pruning-css-modules.md](follow-ups/vite-renderer-pruning-css-modules.md)
+- [vite-composed-stylesheet-assets.md](follow-ups/vite-composed-stylesheet-assets.md)
+- [vite-tailwind-scan-scopes.md](follow-ups/vite-tailwind-scan-scopes.md)
+- [vite-css-url-resolution.md](follow-ups/vite-css-url-resolution.md)
+- [vite-static-build-input-evidence.md](follow-ups/vite-static-build-input-evidence.md)
+- [vite-outside-env-directory.md](follow-ups/vite-outside-env-directory.md)
+- [base-extraction-committed-links.md](follow-ups/base-extraction-committed-links.md)
+- [vite-lazy-css-order.md](follow-ups/vite-lazy-css-order.md)
 
 ### Defects in merged code
 
