@@ -101,6 +101,7 @@ design/library/chrome/top-bar -> design/canvas/props/states/expired
 design/library/chrome/top-bar -> design/canvas/props/states/invalid
 design/library/chrome/top-bar -> design/canvas/props/states/invalid-together
 design/library/chrome/top-bar -> design/canvas/props/states/later-edit
+design/library/chrome/top-bar -> design/canvas/props/states/later-pending
 design/library/chrome/top-bar -> design/canvas/search/tags
 design/library/chrome/top-bar -> design/canvas/search/tags/forms
 design/library/chrome/top-bar -> design/canvas/search/tags/forms-picker

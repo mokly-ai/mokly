@@ -94,6 +94,7 @@
     "design/canvas/props/states/invalid",
     "design/canvas/props/states/invalid-together",
     "design/canvas/props/states/later-edit",
+    "design/canvas/props/states/later-pending",
     "design/canvas/search/tags",
     "design/canvas/search/tags/forms",
     "design/canvas/search/tags/forms-picker",

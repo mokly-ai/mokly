@@ -93,7 +93,9 @@
 .cv-frames[data-cv-chosen="default-light"]
   .cv-frame:not([data-cv-frame="default-light"]),
 .cv-frames[data-cv-chosen="compact-light"]
-  .cv-frame:not([data-cv-frame="compact-light"]) {
+  .cv-frame:not([data-cv-frame="compact-light"]),
+.cv-frames[data-cv-chosen="expanded-light"]
+  .cv-frame:not([data-cv-frame="expanded-light"]) {
   display: none;
 }
 

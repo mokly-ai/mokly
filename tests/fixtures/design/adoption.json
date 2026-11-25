@@ -111,7 +111,10 @@
         "design/canvas/props/states/invalid-together",
         "design/canvas/stage/catalogue",
         "design/canvas/stage/component-set/disabled",
-        "design/canvas/stage/home"
+        "design/canvas/stage/home",
+        "design/canvas/stories/failed",
+        "design/canvas/stories/storybook",
+        "design/canvas/stories/storybook/added"
       ]
     },
     {
@@ -185,7 +188,10 @@
         "design/canvas/props/states/expired",
         "design/canvas/props/states/invalid",
         "design/canvas/props/states/invalid-together",
-        "design/canvas/stage/component-set/disabled"
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stories/failed",
+        "design/canvas/stories/storybook",
+        "design/canvas/stories/storybook/added"
       ]
     },
     {
@@ -268,7 +274,10 @@
         "design/canvas/props/states/expired",
         "design/canvas/props/states/invalid",
         "design/canvas/props/states/invalid-together",
-        "design/canvas/stage/component-set/disabled"
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stories/failed",
+        "design/canvas/stories/storybook",
+        "design/canvas/stories/storybook/added"
       ]
     },
     {
@@ -354,7 +363,10 @@
         "design/canvas/props/states/expired",
         "design/canvas/props/states/invalid",
         "design/canvas/props/states/invalid-together",
-        "design/canvas/stage/component-set/disabled"
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stories/failed",
+        "design/canvas/stories/storybook",
+        "design/canvas/stories/storybook/added"
       ]
     },
     {
@@ -699,7 +711,9 @@
         "design/canvas/props/states/expired",
         "design/canvas/props/states/invalid",
         "design/canvas/props/states/invalid-together",
-        "design/canvas/stage/component-set/disabled"
+        "design/canvas/stage/component-set/disabled",
+        "design/canvas/stories/failed",
+        "design/canvas/stories/storybook/added"
       ]
     },
     {

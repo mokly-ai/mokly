@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { DesignInstances } from "../../../library/composition.js";
+import { sidePairs } from "../../components/parts/sketches.js";
 import { componentFrames, type CanvasFrameSpec } from "../../parts/frames.js";
 import type { SetFit } from "../../parts/sketches.js";
 
@@ -143,17 +143,5 @@ export function expandedFrames(): CanvasFrameSpec[] {
  * share the frame's size, the larger of the two.
  */
 export function expandedSideFrames(): CanvasFrameSpec[] {
-  return expandedFrames().flatMap((frame) => [
-    {
-      ...frame,
-      id: `${frame.id}-before`,
-      side: "before" as const,
-      content: (
-        <DesignInstances name={`${frame.id}-before`}>
-          <MenuExample open />
-        </DesignInstances>
-      ),
-    },
-    { ...frame, id: `${frame.id}-after`, side: "after" as const },
-  ]);
+  return sidePairs(expandedFrames(), () => <MenuExample open />);
 }

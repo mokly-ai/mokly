@@ -9,8 +9,8 @@ import {
   explorerState,
 } from "../components/parts/metadata.js";
 import { useChosenFrame } from "../parts/picked_frames.js";
-import { VariantSetArtboard } from "../parts/set_stage.js";
 
+import { StoryInspectArtboard } from "./parts/artboard.js";
 import {
   MENU_STORIES,
   STORY_KEYS,
@@ -18,8 +18,7 @@ import {
   storyChanges,
 } from "./parts/branch.js";
 import { STORY_PAGES as S } from "./parts/destinations.js";
-import { MenuInspect } from "./parts/inspect.js";
-import { MENU_FITS, menuSetFrames } from "./parts/sketches.js";
+import { menuSetFrames } from "./parts/sketches.js";
 
 /**
  * The Menu's own page from All, which its first story, Collapsed, renders:
@@ -28,13 +27,11 @@ import { MENU_FITS, menuSetFrames } from "./parts/sketches.js";
  */
 function MenuPage({ viewport }: { viewport: ArtboardViewport }) {
   return (
-    <VariantSetArtboard
+    <StoryInspectArtboard
       catalogue={storyAll(STORY_KEYS.menu)}
       design={S.storybookLink}
-      entry={MENU_STORIES.menu.entry}
-      fit={MENU_FITS.set}
       frames={menuSetFrames()}
-      panel={<MenuInspect story={MENU_STORIES.menu} />}
+      story={MENU_STORIES.menu}
       viewport={viewport}
     />
   );
@@ -43,21 +40,20 @@ function MenuPage({ viewport }: { viewport: ArtboardViewport }) {
 /**
  * The added Disabled story on Inspect, opened from the Changes filter, with
  * its Light frame selected, and on a phone its frame of the appearance's
- * scheme alone. Details name the story, with no Storybook link.
+ * scheme alone. Details name the story, with no Storybook link. On a phone,
+ * both states open the Inspect sheet.
  */
 function AddedStory({ viewport }: { viewport: ArtboardViewport }) {
   const frames = menuSetFrames();
   const story = MENU_STORIES.disabled;
   const frame = useChosenFrame(frames, story.slug, viewport);
   return (
-    <VariantSetArtboard
+    <StoryInspectArtboard
       catalogue={storyChanges(STORY_KEYS.disabled, "inspect")}
       design={S.storyAdded}
-      entry={story.entry}
-      fit={MENU_FITS.set}
+      frame={frame}
       frames={frames}
-      panel={<MenuInspect frame={frame} story={story} />}
-      selection={{ frame }}
+      story={story}
       viewport={viewport}
     />
   );

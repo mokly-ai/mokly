@@ -84,7 +84,7 @@ export function actionCompareFrames(compare: FrameCompare): CanvasFrameSpec[] {
  * before beside the current version, both at the frame's size and named by
  * its saved variant and scheme. The stage shows the compared frame's pair.
  */
-function sidePairs(
+export function sidePairs(
   frames: readonly CanvasFrameSpec[],
   before: (frame: CanvasFrameSpec) => ReactNode,
 ): CanvasFrameSpec[] {

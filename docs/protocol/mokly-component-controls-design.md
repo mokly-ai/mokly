@@ -57,7 +57,9 @@ that, the last valid props. `design/canvas/props/states/error` depicts a
 failed first render. `design/canvas/props/states/later-edit` depicts a later
 edit that failed after an earlier edit rendered. Its fields keep the later
 edit, and its frames keep the earlier one.
-Retry leads back through the pending design state. A comparison shows the
+Retry leads back through the pending design state of the same edit:
+`design/canvas/props/states/later-pending` keeps the later edit in the fields
+and the earlier edit in the frames. A comparison shows the
 saved variant, and Props edits the current frames that Inspect shows. Published
 saved-variant designs keep values readable and variant links usable; their
 secondary guidance is Open this catalogue locally to edit props. Switching
@@ -96,7 +98,7 @@ through Serve or make a static preview reactive.
 The `Props and controls` folder of the Canvas family, `design/canvas/props`,
 owns the states of Inspect's Props section. The
 [component design inventory](./mokly-component-design-inventory.md#owning-catalogue)
-lists its five screens and twelve saved variants. Each screen holds one kind
+lists its five screens and thirteen saved variants. Each screen holds one kind
 of state: `editing` the edits of Default and their reset, `states` a render in
 flight and its failures, `preparing` the start of editing, `read-only` the
 static build and an entry without props, and `loading` the route's details.

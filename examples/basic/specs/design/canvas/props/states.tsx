@@ -44,6 +44,18 @@ const FAILED: DefaultState = {
 };
 
 /**
+ * Try again of the later edit: its render is in flight, and the frames keep
+ * the earlier edit while the fields keep the later one.
+ */
+const LATER_PENDING: DefaultState = {
+  design: P.propsLaterPending,
+  form: "pending-later",
+  values: DEFAULT_EDITS.later,
+  preview: DEFAULT_EDITS.edited,
+  pending: true,
+};
+
+/**
  * A later edit after the edited props rendered, whose render failed: the
  * frames keep the earlier edit, the last valid props.
  */
@@ -104,6 +116,14 @@ export const canvasPropsStatesScreen = defineScreen({
         "The edited props rendered, then a later edit of the label failed: the fields keep the later edit, and the frames keep the earlier edit, the last valid props, as the alert says.",
         (viewport) => (
           <DefaultStateArtboard state={LATER} viewport={viewport} />
+        ),
+      ),
+      propsState(
+        "later-pending",
+        "Updating the later edit",
+        "Try again of the later edit: the later edit renders again, so Updating preview stands at the top of each Default frame, which keeps the earlier edit, the last valid props, and the fields keep the later edit.",
+        (viewport) => (
+          <DefaultStateArtboard state={LATER_PENDING} viewport={viewport} />
         ),
       ),
       propsState(

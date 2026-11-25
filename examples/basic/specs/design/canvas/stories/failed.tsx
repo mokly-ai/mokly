@@ -10,14 +10,13 @@ import {
 } from "../components/parts/metadata.js";
 import { VIEW_OUTCOMES, frameOutcomes } from "../parts/frame_outcomes.js";
 import { useChosenFrame } from "../parts/picked_frames.js";
-import { VariantSetArtboard } from "../parts/set_stage.js";
 import { CanvasShell } from "../parts/shell.js";
 import { CanvasStage } from "../parts/stage.js";
 
+import { StoryInspectArtboard } from "./parts/artboard.js";
 import { MENU_STORIES, STORY_KEYS, storyChanges } from "./parts/branch.js";
 import { EXPANDED_FRAME, ExpandedChanges } from "./parts/changes.js";
 import { STORY_PAGES as S } from "./parts/destinations.js";
-import { MenuInspect } from "./parts/inspect.js";
 import {
   MENU_FITS,
   expandedFrames,
@@ -31,20 +30,19 @@ const EXPANDED = MENU_STORIES.expanded;
  * The failed Expanded story on Inspect, opened from the Changes filter: the
  * Menu's variant set, with Expanded's Light frame selected, and on a phone
  * its frame of the appearance's scheme alone. Each of Expanded's frames
- * holds the error document in its own scheme.
+ * holds the error document in its own scheme. A phone opens the Inspect
+ * sheet over the frame.
  */
 function FailedOnInspect({ viewport }: { viewport: ArtboardViewport }) {
   const frames = menuSetFrames();
   const frame = useChosenFrame(frames, EXPANDED.slug, viewport);
   return (
-    <VariantSetArtboard
+    <StoryInspectArtboard
       catalogue={storyChanges(STORY_KEYS.expanded, "inspect")}
       design={S.storyFailed}
-      entry={EXPANDED.entry}
-      fit={MENU_FITS.set}
+      frame={frame}
       frames={frames}
-      panel={<MenuInspect frame={frame} story={EXPANDED} />}
-      selection={{ frame }}
+      story={EXPANDED}
       viewport={viewport}
     />
   );

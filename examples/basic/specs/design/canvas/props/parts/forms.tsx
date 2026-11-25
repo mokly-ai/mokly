@@ -24,6 +24,7 @@ export type EditState =
   | "together"
   | "failed"
   | "failed-later"
+  | "pending-later"
   | "expired"
   | "preparing"
   | "preparing-failed";
@@ -33,7 +34,9 @@ export type EditState =
  * Props controls. Edited props draw their badge, and Reset opens the
  * restored state. An invalid value and a failed render name the props that
  * the preview shows: the saved props until an edit has rendered, and the
- * last valid props after one has. The action of a failed or an expired render renders the
+ * last valid props after one has. Try again of a later edit renders that
+ * edit again beside the earlier edit that rendered, so it opens its own
+ * pending state. The action of a failed or an expired render renders the
  * edits again, through the pending state, and Try again of a failed start
  * asks Serve again, through the preparing state.
  */
@@ -60,9 +63,12 @@ function editOf(state: EditState): VariantEdit {
           title: CONTROLS_COPY.failedTitle,
         },
       };
+    case "pending-later":
+      return edited;
     case "failed-later":
       return {
-        ...rerender,
+        ...edited,
+        retryHref: mockLink(PROPS_PAGES.propsLaterPending),
         alert: {
           action: CONTROLS_COPY.retry,
           body: CONTROLS_COPY.failedBody,

@@ -29,6 +29,7 @@ export const PROPS_NAVIGATION_STATES = {
   [P.propsInvalidTogether]: fitted(P.propsInvalidTogether),
   [P.propsError]: fitted(P.propsError),
   [P.propsLaterEdit]: fitted(P.propsLaterEdit),
+  [P.propsLaterPending]: fitted(P.propsLaterPending),
   [P.propsExpired]: fitted(P.propsExpired),
   [P.propsPreparing]: fitted(P.propsPreparing),
   [P.propsPreparingFailed]: fitted(P.propsPreparingFailed),

@@ -164,29 +164,59 @@ function allRows(): NavNode[] {
   ];
 }
 
-/** The artboards that the Menu's rows open, by the right panel's tab. */
-const TARGETS: Readonly<
-  Record<PanelTab, Readonly<Record<string, CanvasDestination>>>
+/** The artboard of each story's row, by the right panel's tab. */
+const STORY_TARGETS: Readonly<
+  Record<PanelTab, Readonly<Record<MenuStory["slug"], CanvasDestination>>>
 > = {
   inspect: {
-    [STORY_KEYS.menu]: S.storybookLink,
-    [STORY_KEYS.expanded]: S.storyFailed,
-    [STORY_KEYS.disabled]: S.storyAdded,
+    menu: S.storybookLink,
+    expanded: S.storyFailed,
+    disabled: S.storyAdded,
   },
   changes: {
-    [STORY_KEYS.menu]: S.storybookLink,
-    [STORY_KEYS.expanded]: S.storyFailedChanges,
-    [STORY_KEYS.disabled]: S.storyAdded,
+    menu: S.storybookLink,
+    expanded: S.storyFailedChanges,
+    disabled: S.storyAdded,
   },
 };
 
-/** The branch's catalogue in the Changes filter, with one row selected. */
+/** The Menu's first changed story in source order, which its row opens in Changes. */
+const FIRST_CHANGED = (
+  Object.values(MENU_STORIES) as readonly MenuStory[]
+).find((story) => story.entry.status !== undefined);
+
+/** The rows of the Menu's stories, by their keys. */
+function rowTargets(tab: PanelTab): Record<string, CanvasDestination> {
+  const targets = STORY_TARGETS[tab];
+  return {
+    [STORY_KEYS.menu]: targets.menu,
+    [STORY_KEYS.expanded]: targets.expanded,
+    [STORY_KEYS.disabled]: targets.disabled,
+  };
+}
+
+/**
+ * The branch's catalogue in the Changes filter, with one row selected. The
+ * Menu's own row there opens its first changed story, Expanded, on the same
+ * tab, as an aggregate row in Changes does. Where Expanded is the selected
+ * row, that artboard is the shown one, so the Menu's row is a picture.
+ */
 export function storyChanges(activeKey: string, tab: PanelTab): CatalogueView {
+  if (FIRST_CHANGED === undefined)
+    throw new Error("The stories branch changes a story of the Menu.");
+  const first = STORY_KEYS[FIRST_CHANGED.slug];
+  const { [STORY_KEYS.menu]: _own, ...targets } = rowTargets(tab);
   return {
     filter: "changes",
     activeKey,
     rows: CHANGES_ROWS,
-    targets: TARGETS[tab],
+    targets:
+      activeKey === first
+        ? targets
+        : {
+            ...targets,
+            [STORY_KEYS.menu]: STORY_TARGETS[tab][FIRST_CHANGED.slug],
+          },
     changedCount: STORY_CHANGES.total,
   };
 }
@@ -197,7 +227,7 @@ export function storyAll(activeKey: string): CatalogueView {
     filter: "all",
     activeKey,
     rows: allRows(),
-    targets: TARGETS.inspect,
+    targets: rowTargets("inspect"),
     changedCount: STORY_CHANGES.total,
   };
 }
