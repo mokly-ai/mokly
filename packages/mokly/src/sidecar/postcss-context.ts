@@ -34,7 +34,7 @@ function analyzable(value: unknown): boolean {
 export function moduleContext(
   source: string,
   file: string,
-  root = false,
+  { root = false, vite }: { root?: boolean; vite?: "esm" | "cjs" } = {},
 ): string {
   const ast = parse(source, {
     sourceType: "unambiguous",
@@ -78,6 +78,23 @@ export function moduleContext(
             text: `${binding}.import(`,
           });
         },
+        MemberExpression({ node }) {
+          if (!vite || node.object.type !== "MetaProperty") return;
+          const { meta, property } = node.object;
+          if (meta.name !== "import" || property.name !== "meta") return;
+          if (
+            node.computed
+              ? node.property.type !== "StringLiteral" ||
+                node.property.value !== "resolve"
+              : node.property.type !== "Identifier" ||
+                node.property.name !== "resolve"
+          )
+            return;
+          replacements.set(node.start!, {
+            end: node.end!,
+            text: `${binding}.resolve`,
+          });
+        },
       });
       program.stop();
     },
@@ -94,6 +111,6 @@ export function moduleContext(
       source.slice(0, start) + replacement.text + source.slice(replacement.end);
   const initializer = root
     ? `\nimport { context as ${factory} } from ${JSON.stringify(new URL("./postcss-resolution.js", import.meta.url).href)}; const ${binding} = ${factory}(${JSON.stringify(file)});\n`
-    : `\nconst ${binding} = require("mokly:postcss-context").context(${JSON.stringify(file)});\n`;
+    : `\nconst ${binding} = require("mokly:postcss-context").context(${JSON.stringify(file)}${vite ? `, ${JSON.stringify(vite)}` : ""});\n`;
   return source.slice(0, at) + initializer + source.slice(at);
 }

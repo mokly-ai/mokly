@@ -104,6 +104,10 @@ for (const side of ["head", "base"] as const) {
         );
         assert.equal(typeof first.compiled.metadataInputs[helper], "string");
         await fixture.write(helper, config.helper.replace("before", "after"));
+        await assert.rejects(fixture.compile(), {
+          code: "fresh-worker-required",
+        });
+        await fixture.replaceWorker();
         const second = await fixture.compile();
         assert.equal(
           (await fixture.render(second)).html,
@@ -140,3 +144,54 @@ for (const location of ["vite.config.ts", "config/failing.ts"]) {
     await fixture.sidecar.call("shutdown");
   });
 }
+
+test("Vite base config import failures name the config with logical paths", async (context) => {
+  const fixture = await reviewFixture(context, "base");
+  const [head] = fixture.params.repositoryRoots;
+  assert.ok(head);
+  const modules = path.join(head, "node_modules");
+  const workspace = path.join(head, "packages/local");
+  const manifest = '{"name":"workspace-local","exports":"./dist/value.js"}';
+  await fs.unlink(modules);
+  await fs.mkdir(modules);
+  await fs.mkdir(path.join(workspace, "dist"), { recursive: true });
+  await fs.writeFile(path.join(workspace, "package.json"), manifest);
+  await fs.writeFile(
+    path.join(workspace, "dist/value.js"),
+    "export default 1;",
+  );
+  await fs.symlink(
+    workspace,
+    path.join(modules, "workspace-local"),
+    "junction",
+  );
+  await fixture.write("packages/local/package.json", manifest);
+  await fixture.write("src/review.mockup.ts", reviewPage('"entry"'));
+  await fixture.write(
+    "vite.config.mjs",
+    'import "workspace-local"; export default {};',
+  );
+
+  await assert.rejects(
+    fixture.compile(),
+    (error: Error & { code?: string }) => {
+      assert.equal(error.code, "bundle-failed");
+      assert.match(error.message, /^vite\.config\.mjs:/);
+      assert.match(
+        error.message,
+        /module packages\/local\/dist\/value\.js has no source in this side/,
+      );
+      assert.doesNotMatch(
+        error.message,
+        /(?:^|[\s'"`])(?:file:\/\/|[A-Za-z]:[\\/]|\/)/,
+      );
+      assert.doesNotMatch(
+        error.message,
+        /\.\.[\\/]|esbuild[\\/]lib[\\/]main\.js/,
+      );
+      assert.doesNotMatch(error.message, /\0|\/@id\/|\b(?:virtual|mokly):/);
+      return true;
+    },
+  );
+  await fixture.sidecar.call("shutdown");
+});

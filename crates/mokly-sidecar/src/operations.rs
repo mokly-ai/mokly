@@ -18,6 +18,14 @@ pub enum Operation {
 }
 
 impl Operation {
+    /// Whether this event marks a catalogue compilation.
+    pub(crate) fn is_compile(self) -> bool {
+        match self {
+            Self::Esbuild | Self::Vite => true,
+            Self::PostcssStart | Self::PostcssStop => false,
+        }
+    }
+
     /// Stable diagnostic name.
     pub fn label(self) -> &'static str {
         match self {

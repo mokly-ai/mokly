@@ -46,7 +46,7 @@ export async function walkVite(
 
 /** Query variants share one physical source; virtual imports retain their file edges. */
 export function viteGraph(
-  recipe: ViteRecipe,
+  recipe: Pick<ViteRecipe, "modules">,
   children: ReadonlyMap<string, string[]>,
   paths: ModulePaths,
   files: ReadonlyMap<string, Uint8Array>,

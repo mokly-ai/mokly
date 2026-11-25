@@ -109,6 +109,7 @@ pub(super) fn inputs(html: bool) -> PreparationInputs {
         },
         installations: Default::default(),
         installed_modules: Default::default(),
+        vite_env: None,
     }
 }
 

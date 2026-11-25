@@ -58,6 +58,8 @@ pub struct Bundle {
     pub assets: BTreeMap<String, OpaqueAsset>,
     /// Path-scoped class exports, supplied to the sidecar before evaluation.
     pub css_modules: BTreeMap<String, BTreeMap<String, String>>,
+    /// Native named CSS Module bindings, present for Vite modules.
+    pub css_module_named_exports: BTreeMap<String, BTreeMap<String, String>>,
     /// Parsed CSS source bytes used by the graph key, keyed by logical path.
     pub inputs: BTreeMap<String, Vec<u8>>,
     /// Importing stylesheet for each protected source and asset.

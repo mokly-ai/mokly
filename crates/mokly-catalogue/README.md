@@ -28,7 +28,8 @@ fails its check, and the `config-invalid` message names the symlink.
 Config-relative parent segments are accepted when their normalized lexical
 paths and physical targets stay inside the resolved `repoRoot`. PostCSS path,
 suffix, and regular-file checks use the catalogued `config-invalid` diagnostics
-before a sidecar starts. Git root validation belongs to the Git boundary.
+before a sidecar starts. Under the Vite adapter, only the lexical `postcss`
+checks run, and the field resolves no module. Git root validation belongs to the Git boundary.
 The [configuration contract](../../docs/protocol/mokly-configuration.md)
 owns the accepted fields, the path rules, and the stylesheet matcher warnings.
 

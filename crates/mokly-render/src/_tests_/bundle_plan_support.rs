@@ -18,6 +18,7 @@ use crate::runtime::Runtime;
 pub(super) fn params() -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec!["entry.ts".into()],
         renderer: None,

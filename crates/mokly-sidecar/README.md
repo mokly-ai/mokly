@@ -257,7 +257,7 @@ before the request. The pool reads the store at most
 once for each call, also when the call runs again after a crash or a timeout.
 A failed restore invalidates that publication, and the result reports
 `damaged`, or `unavailable` when that removal finds the store unusable. A
-worker records the count of `esbuild` operation events of each `bundle`
+worker records the count of `esbuild` and `vite` events of each `bundle`
 request in a result field that never crosses the wire. After a successful
 `bundle` call, the pool uses that count to set the `cache` field of the
 result, which also never crosses the wire. A count of zero gives `hit` when
@@ -284,8 +284,12 @@ lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
 identity includes its module edges, loader inputs, and evaluation digest.
 PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and retries once under the
-[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). Other
-transport failures replace the process without a fallback render. A process
+[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). The internal
+`fresh-worker-required` outcome uses the same replacement and retry path.
+Vite sends it before reloading a changed setup or evaluating a generation
+whose native dependency inputs conflict with those of the worker. The pool
+restores live generations on demand. Other transport failures replace the
+process without a fallback render. A process
 recycles under the render-count and resident-memory rules of the
 [memory sampling contract](../../docs/protocol/mokly-sidecar-memory.md).
 PostCSS timeout diagnostics include phase timings for child spawn,
@@ -528,8 +532,8 @@ spawn the built sidecar and render a component, screen, story, and page. The
   seed, sets the `cache` outcome of its result, and offers the served recipe
   of each `Full` call to the store. The provenance keeps the loaded recipe of
   a restored stored compilation, with its runtime key and plan. A result with
-  that runtime key carries that plan. It reports `hit` when its count of
-  `esbuild` events is zero. `BundleAttempt` also holds the request pins of the
+  that runtime key carries that plan. It reports `hit` when the compile event
+  count is zero. `BundleAttempt` also holds the request pins of the
   live slot generations and the restored seeds. `install_live` and `install_released`
   pin each live or released seed before they restore it in the slot.
 - [`src/bundle_store.rs`](./src/bundle_store.rs) defines `BundleStore` with
@@ -633,6 +637,14 @@ spawn the built sidecar and render a component, screen, story, and page. The
   `ViteRecipe` in `CompiledGeneration::vite`: the Vite version, the entry URL,
   and one `ViteModuleFetch` for each module fetch. Each `ViteFetchResult` is
   transformed code or an external module with its `ViteExternalType`.
+- [`src/bundle_params.rs`](./src/bundle_params.rs) defines `Bundle`, the
+  settings of one bundle, which the generated types name `BundleParams`. Under
+  the Vite adapter, its `ViteSetupInputs` carry the files of `rebuild` watch
+  rules. For the base, `ViteBaseEnv` also carries the working-tree root, index
+  membership, and the pinned tree entries for dotenv selection.
+- [`src/vite_env.rs`](./src/vite_env.rs) defines `ViteEnvInput`, the shared
+  bundle and stylesheet record for a logical dotenv name, its consumed digest,
+  and its physical read route.
 - [`src/vite_css.rs`](./src/vite_css.rs) defines `TransformViteCss`, the
   params of a `transformViteCss` call: the side's `Bundle` settings without
   entries, the logical stylesheet path, and the selected physical file. Its

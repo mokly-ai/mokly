@@ -40,7 +40,7 @@ fn operation(operation: Operation) -> Frame {
 }
 
 #[test]
-fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
+fn bundle_compile_counts_reset_and_include_each_compiler_event() {
     let frames = Mutex::new(VecDeque::from([
         operation(Operation::Esbuild),
         operation(Operation::PostcssStart),
@@ -53,6 +53,9 @@ fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
         response(2),
         operation(Operation::Esbuild),
         response(3),
+        operation(Operation::Vite),
+        response(4),
+        response(5),
     ]));
     let forwarded = Arc::new(Mutex::new(Vec::new()));
     let observed = forwarded.clone();
@@ -99,7 +102,7 @@ fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
         compile_count,
     };
     let mut counts = Vec::new();
-    for id in 1..=3 {
+    for id in 1..=5 {
         let bundle = worker
             .request(
                 &Request {
@@ -109,7 +112,8 @@ fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
                         preparation: None,
                         plan: None,
                         params: Bundle {
-                            vite: false,
+                            vite: id >= 4,
+                            vite_inputs: None,
                             evaluation: None,
                             entry_files: vec!["entry.ts".into()],
                             renderer: None,
@@ -128,7 +132,7 @@ fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
             .into_bundle();
         counts.push(bundle.compile_count);
     }
-    assert_eq!(counts, [2, 0, 1]);
+    assert_eq!(counts, [2, 0, 1, 1, 0]);
     assert_eq!(
         *forwarded.lock().unwrap(),
         [
@@ -136,7 +140,8 @@ fn bundle_compile_counts_reset_and_include_each_esbuild_event() {
             Operation::PostcssStart,
             Operation::Esbuild,
             Operation::PostcssStop,
-            Operation::Esbuild
+            Operation::Esbuild,
+            Operation::Vite,
         ]
     );
 }

@@ -12,15 +12,21 @@ import type { ViteCssResult } from "../generated/sidecar/ViteCssResult.js";
 import { entryModule } from "./bundle-entry.js";
 import type { Bundled } from "./bundle.js";
 import { bundleResult, restore } from "./compiled.js";
+import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { ViteContext, viteModulePaths } from "./vite-context.js";
-import { viteFailure, viteStylesheetFailure } from "./vite-errors.js";
+import {
+  FreshViteWorker,
+  viteFailure,
+  viteStylesheetFailure,
+} from "./vite-errors.js";
 import { createViteFetch } from "./vite-fetch.js";
 import { viteGraph, walkVite } from "./vite-graph.js";
 import { verifyViteInputs } from "./vite-inputs.js";
 import { snapshotViteInputs } from "./vite-invalidation.js";
 import { viteMetadata } from "./vite-metadata.js";
 import { loadVite, withVitePeers } from "./vite-peers.js";
-import { setupStamp } from "./vite-setup.js";
+import { verifySetup } from "./vite-setup-snapshot.js";
+import { excludeRebuildFiles } from "./vite-setup.js";
 import { viteToolchain } from "./vite-toolchain.js";
 import { viteEntry, viteUrl } from "./vite-urls.js";
 
@@ -46,6 +52,7 @@ export class ViteCompiler {
         const vite = await loadVite(require);
         version = vite.api.version;
         const entry = await entryModule(params, undefined, capture);
+        if (entry.preview) paths.addConfigured(entry.preview);
         const { setup, input, directory } = await this.context.open(
           vite.api,
           require,
@@ -59,13 +66,12 @@ export class ViteCompiler {
           input,
           imports,
           version,
+          setup.pluginReports,
           setup.snapshot?.files,
         );
-        const { recipe, children } = await walkVite(
-          viteUrl(viteEntry),
-          fetch,
-          imports,
-          version,
+        const { recipe, children } = await withViteConfigResolution(
+          input.lookup,
+          () => walkVite(viteUrl(viteEntry), fetch, imports, vite.api.version),
         );
         const { modules, physical } = viteGraph(
           recipe,
@@ -74,15 +80,19 @@ export class ViteCompiler {
           input.files,
         );
         await verifyViteInputs(input);
-        if (setup.stamp !== (await setupStamp(setup.files, directory)))
-          throw new Error("Vite setup changed during compilation");
+        await verifySetup(setup, directory, paths);
+        excludeRebuildFiles(setup, new Set(physical.keys()));
         const graphFiles = new Set(physical.values());
-        const metadata = await viteMetadata(input, setup.files, graphFiles);
-        setup.snapshot = await snapshotViteInputs(input, metadata);
+        const metadata = await viteMetadata(input, setup.state, graphFiles);
+        setup.snapshot = await snapshotViteInputs(input, metadata, setup.state);
         const toolchain = await viteToolchain(version, vite.root);
         const compiled: CompiledGeneration = {
           code: "",
-          vite: recipe,
+          vite: {
+            ...recipe,
+            setupDigest: setup.state.digest,
+            envInputs: setup.state.envInputs,
+          },
           identity: createHash("sha256")
             .update(
               JSON.stringify([
@@ -122,6 +132,7 @@ export class ViteCompiler {
         return { generation, result: bundleResult(generation) };
       });
     } catch (error) {
+      if (error instanceof FreshViteWorker) throw error;
       await this.dispose();
       throw viteFailure(
         error,
@@ -149,19 +160,22 @@ export class ViteCompiler {
           params,
           paths,
         );
-        const { result, reports } = await this.context.css.run(
-          setup.server,
-          setup.files,
-          input,
-          request.stylesheet,
-          request.file,
+        const { result, snapshot } = await withViteConfigResolution(
+          input.lookup,
+          () =>
+            this.context.css.run(
+              setup,
+              input,
+              request.stylesheet,
+              request.file,
+            ),
         );
-        if (setup.stamp !== (await setupStamp(setup.files, directory)))
-          throw new Error("Vite setup changed during compilation");
-        setup.stylesheetReports.set(request.file, reports);
+        await verifySetup(setup, directory, paths);
+        setup.stylesheets.set(request.file, snapshot);
         return result;
       });
     } catch (error) {
+      if (error instanceof FreshViteWorker) throw error;
       await this.dispose();
       throw viteStylesheetFailure(error, paths, request.stylesheet);
     }

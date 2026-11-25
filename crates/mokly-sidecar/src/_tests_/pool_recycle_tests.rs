@@ -64,6 +64,7 @@ fn seed(pool: &Pool, worker: Unimock) {
         "g".into(),
         Bundle {
             vite: false,
+            vite_inputs: None,
             evaluation: None,
             entry_files: Vec::new(),
             renderer: None,

@@ -35,10 +35,7 @@ export class ViteStyles {
       source: string,
       importer?: string,
     ) => Promise<string | undefined>,
-  ): Promise<string | StyleModule | undefined> {
-    if (source.startsWith("mokly:style-source:")) {
-      return this.original(source, importer);
-    }
+  ): Promise<string | undefined> {
     const library =
       /^(styled-components|react-native-web|@emotion\/react)(?:\/|$)/.exec(
         source,

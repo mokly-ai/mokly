@@ -53,6 +53,7 @@ fn plain_forks_defer_real_dependency_reads_on_success_and_partial_failure() {
                 configuration_directory: ".".into(),
                 context: "test".into(),
                 dependency_aliases: Default::default(),
+                vite_inputs: None,
                 dependency_roots: vec![],
             },
             deferred_sources: Some(sources),

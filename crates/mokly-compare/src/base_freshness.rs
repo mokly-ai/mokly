@@ -5,12 +5,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_catalogue::preparation::PreparedCatalogue;
+use mokly_catalogue::working_tree::WorkingTree;
 use mokly_git::identity::RepoPath;
 use mokly_git::source_key::CheckoutIdentity;
 use mokly_git::tree::Limits;
 use mokly_graph::types::RenderGeneration;
 
 use crate::base_selection::PinnedBase;
+use crate::base_vite_env::ViteEnvInputs;
 use crate::error::{Error, GitResult, Result};
 use crate::inputs::Inputs;
 use crate::working_inputs::WorkingInputs;
@@ -40,6 +42,8 @@ pub struct PreparationInputs {
     pub installations: BTreeMap<PathBuf, String>,
     /// Installed modules of a base that reads the working install.
     pub installed_modules: BTreeMap<String, Option<String>>,
+    /// Working dotenv files used by a Vite base.
+    pub vite_env: Option<ViteEnvInputs>,
 }
 
 /// Current classification inputs supplied without preparing the base again.
@@ -126,6 +130,7 @@ impl Freshness for FreshnessChecks {
             selection,
             installations,
             installed_modules,
+            vite_env: None,
         }))
     }
 
@@ -137,6 +142,11 @@ impl Freshness for FreshnessChecks {
             return Ok(false);
         }
         let repository = request.selected.repository.as_ref();
+        if let Some(inputs) = &inputs.vite_env
+            && !inputs.current(repository, &WorkingTree)?
+        {
+            return Ok(false);
+        }
         let checkout = repository
             .checkout_identity(&request.selected.commit)
             .base()?;

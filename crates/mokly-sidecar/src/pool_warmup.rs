@@ -68,7 +68,9 @@ impl Pool {
             };
             sent = true;
             if let Err(error) = outcome {
-                tracing::warn!(%error, slot = index, "sidecar warm-up failed");
+                if !error.fresh_worker_required() {
+                    tracing::warn!(%error, slot = index, "sidecar warm-up failed");
+                }
                 if reusable(&error) {
                     break (true, true);
                 }

@@ -43,6 +43,7 @@ export interface Generation {
   runtimeKey: string;
   bindings?: Record<string, EntryBinding>;
   maps?: Record<string, Record<string, string>>;
+  viteNamedExports?: Generation["maps"];
   cssModules: Set<string>;
   runtime: AuthoringRuntime;
   exports?: BundleExports;

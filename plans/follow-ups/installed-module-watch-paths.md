@@ -12,18 +12,25 @@
   of that review, at commit `079b465e1`, added option E. E joins option D
   with the wider fix B of finding 2, as one class. Option F and the outside
   JavaScript case come from finding 2 and its check. Finding 3 added the
-  advisory rule and the Serve-only rule.
-- **Location:** `crates/mokly-render/src/bundle.rs:199` and line 209,
+  advisory rule and the Serve-only rule. On 2026-11-25, round 2 of the
+  implementation review of the branch
+  `calummoore/storybook-track-d-finish-nkpi` added the Vite case, from
+  finding 138 and its check. Finding 105 of that round named the same gap,
+  and its check removed it as outside the scope. The final call of finding
+  138 chose E for the Vite case.
+- **Location:** `crates/mokly-render/src/bundle_finish.rs:49` and line 67,
   `crates/mokly-cli/src/serve_watch_plan.rs:53` and line 112,
-  `crates/mokly-render/src/bundle_attempt.rs:112` and line 132,
+  `crates/mokly-render/src/bundle_attempt.rs:115` and line 142,
   `crates/mokly-watch/src/plan.rs:132` and line 147,
   `crates/mokly-watch/src/native_scan.rs:11` and line 17,
   `packages/mokly/src/sidecar/module-paths.ts:151` (`ModulePaths.name`),
   `crates/mokly-render/src/runtime.rs:215`,
   `crates/mokly-render/src/side.rs:160`,
   `crates/mokly-render/src/stylesheet_watch.rs:14`,
-  `crates/mokly-css/src/watch_inputs.rs:8`, and
-  `crates/mokly-watch/src/stylesheet_inputs.rs:6`.
+  `crates/mokly-css/src/watch_inputs.rs:8`,
+  `crates/mokly-watch/src/stylesheet_inputs.rs:6`,
+  `packages/mokly/src/sidecar/vite-graph.ts:48`, and
+  `crates/mokly-cli/tests/serve_js/watch_tests.rs:60`.
 - **Reason:** The stylesheet resolution fix of 2026-11-20 changes only CSS
   watch inputs, and this work changes JavaScript watch inputs outside its
   diff.
@@ -59,11 +66,11 @@
     and its consumed-module directories use the same logical names. The
     metadata holds the `package.json` and `tsconfig.json` candidates, also
     the missing ones.
-  - `stamp` in `crates/mokly-render/src/bundle_attempt.rs:112` joins each
-    logical path to the repository root. Line 132 leaves out `.css` modules.
-  - `finish` in `crates/mokly-render/src/bundle.rs:173` strips the
-    repository root again. It builds the resolution files at line 199 and
-    the resolution directories at line 209. So both keep logical names, such
+  - `stamp` in `crates/mokly-render/src/bundle_attempt.rs:115` joins each
+    logical path to the repository root. Line 142 leaves out `.css` modules.
+  - `finish` in `crates/mokly-render/src/bundle_finish.rs:16` strips the
+    repository root again. It builds the resolution files at line 49 and
+    the resolution directories at line 67. So both keep logical names, such
     as `node_modules/.mokly-roots/1/pkg/package.json`.
   - `PlanInputs::of` reads both at
     `crates/mokly-cli/src/serve_watch_plan.rs:53`. `PlanRecord::new` gives
@@ -166,12 +173,54 @@
     exact required file. They confine an exact input in a selected dependency
     root or a nested `node_modules` directory to that directory, also outside
     the repository.
+  - The Vite adapter names an installed module in the same way. `viteGraph`,
+    at `packages/mokly/src/sidecar/vite-graph.ts:48`, names the child of a
+    package in a configured package root
+    `node_modules/.mokly-roots/1/fixture-native/child.mjs`. `stamp` and
+    `finish` keep that name, and `Plan::resolution` joins it to the
+    repository root, at `crates/mokly-watch/src/plan.rs:138`. No such file
+    exists, and `Plan::classify` drops the real event, because `node_modules`
+    is a denied name, at `plan.rs:209` to line 219. So a watch-only edit of
+    that child starts no rebuild.
+  - The Serve test
+    `vite_rebuild_evaluates_an_edited_native_child_behind_an_unchanged_entry`,
+    at `crates/mokly-cli/tests/serve_js/watch_tests.rs:60`, edits a child
+    under `installed/node_modules` and then presses `r`. So it checks the
+    replacement of Node's module cache, not the watch. Keep this manual test:
+    it is the regression of the worker replacement for a changed native
+    dependency, and of the fresh-worker path of a setup reload. Each fix must
+    keep its assertion that the edited child renders `After` from a fresh
+    worker.
+  - The screen of that test imports the edited child directly, at
+    `watch_tests.rs:64`. The sidecar records only the modules that Vite
+    fetches (`packages/mokly/src/sidecar/vite-fetch.ts:40` and line 93). A
+    child that only `index.mjs` imports natively gets no record, no input
+    check, and no watch, while `plans/follow-ups/worker-native-load-versions.md`
+    stays open. So a regression for the watch must import the child
+    directly.
+  - The fixture links its default `node_modules` to the workspace, outside
+    the temporary repository, at
+    `crates/mokly-cli/tests/serve_js/fixture.rs:33`. That is the second shape
+    of the gap: an installation outside the repository gets no registration.
+  - A manifest edit is no proof of a fix. `ViteLookup.updatePaths` copies the
+    lookups of the JavaScript request into the later stylesheet request, at
+    `packages/mokly/src/sidecar/vite-resolution.ts:43`. The stylesheet
+    mapping then watches `installed/node_modules/fixture-native/package.json`
+    at its real path. The rebuild line of the first manual run on 2026-11-25
+    named that manifest, not `child.mjs`.
+  - A watch-only test needs no new ready signal before its first edit.
+    `crates/mokly-cli/src/serve_preparation.rs:69` adopts the watch candidate
+    before the first publication, and `Serve::ready` waits for that
+    publication, at `crates/mokly-cli/tests/serve_js/support.rs:184`. Both
+    CSS-only watch tests edit right after `ready()`, at
+    `crates/mokly-cli/tests/serve_js/stylesheet_resolution_tests.rs:40`.
 - **Problem:** Serve watches JavaScript resolution files and directories at
   their logical paths, and it registers no directory of an installation
   outside the repository. When the first dependency root is not
   `{repository}/node_modules`, or a module comes from a later root, that
   path names the wrong file or no file. An edit, an install, or a retarget
-  of an authored alias there then starts no rebuild.
+  of an authored alias there then starts no rebuild. This holds on both
+  compile paths.
 - **Impact if no action:** This holds for a configuration in a nested
   package, with configured package roots, or with an installation outside the
   repository. Previews then stay stale after an edit, an install, or a link
@@ -241,6 +290,17 @@
     - Add a Serve case with the JavaScript package in a temporary directory
       outside the repository, beside
       `external_css_only_package_style_edit_publishes_the_new_stylesheet`.
+    - For the Vite case, add one render integration case, like
+      `stylesheet_watch_alias_tests.rs`. It asserts the real
+      `installed/node_modules/fixture-native/child.mjs`, each alias, and no
+      `.mokly-roots` name, on a fresh compile and on reuse.
+    - Add two watch-only Vite Serve cases with no `r`: one for the configured
+      `installed` root, and one for an installation outside the repository.
+      Each case edits the directly imported child, waits with `ready()`, and
+      checks `After`. Keep the package in a selected dependency root, so that
+      the case tests the watch alone. Write these cases first, and record
+      that they fail before the change. Each case adds about 1.4 s.
+    - Keep the manual test with `r` for the worker replacement.
   - **F.** Poll each exact input that no registered directory covers, with a
     full file identity, on a timer. `PlanRecord::unobserved` in
     `crates/mokly-cli/src/serve_watch_plan.rs` already lists them. It also
@@ -288,6 +348,18 @@
     head bundle's. So they rely on the head watcher seeing install changes.
   - [jsconfig-resolution-input.md](./jsconfig-resolution-input.md): another
     gap in the watched resolution inputs.
+  - `plans/follow-ups/vite-env-link-target-watch.md`: the same function
+    `finish` and a shared mapping. Its option C maps the env inputs of the
+    JavaScript generation there. Build both fixes on one JavaScript
+    `WatchInputs` mapping, not on two mappers.
+  - `plans/follow-ups/vite-stylesheet-keys-copy-lookups.md`: its fix removes
+    the lookup copy that gives Serve the manifest watch of an installed
+    JavaScript package today. Land it with or after E.
+  - `plans/follow-ups/vite-outside-env-directory.md`: the same JavaScript
+    watch plan. Its watch of an env file outside the repository needs the
+    physical route that the mapping of E carries.
+  - `plans/follow-ups/worker-native-load-versions.md`: a child that only
+    Node loads gets no record and no watch until that item lands.
 - **Recommendation:** E. It gives JavaScript inputs the alias-aware mapping,
   the advisory rule, the Serve-only rule, and the per-path admitting
   directory of stylesheet inputs. So one rule covers both kinds. It replaces
@@ -295,4 +367,5 @@
   alias, and D leaves an installation outside the repository unregistered.
 - **Action:** fix after merge, apply E, because E changes JavaScript
   watch-input producers outside the diff of the CSS-only stylesheet
-  resolution fix of 2026-11-20.
+  resolution fix of 2026-11-20. The Vite case of 2026-11-25 waits for the
+  same change.

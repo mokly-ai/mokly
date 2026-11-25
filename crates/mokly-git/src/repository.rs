@@ -35,6 +35,8 @@ pub trait Repository: Send + Sync {
     fn digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String>;
     /// Read an exact regular file after Git checkout conversion.
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>>;
+    /// Read an exact symlink blob from previously listed tree metadata without checkout conversion.
+    fn read_link(&self, entry: &Entry, limit: usize) -> Result<Vec<u8>>;
     /// Read regular commit files after checkout conversion.
     fn read_many(
         &self,
@@ -64,6 +66,8 @@ pub trait Repository: Send + Sync {
     ) -> Result<String>;
     /// Enumerate tracked and nonignored untracked working paths without recursion into submodules.
     fn working_paths(&self) -> Result<Vec<RepoPath>>;
+    /// List index entries matching trusted Git glob pathspecs, including paths absent on disk.
+    fn indexed_paths(&self, pathspecs: &[&str]) -> Result<Vec<RepoPath>>;
     /// Read regular working bytes and their Git-clean object identity.
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>>;
     /// Read confined regular working bytes without starting Git.

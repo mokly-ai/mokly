@@ -8,8 +8,14 @@ for (const side of ["head", "base"] as const) {
     test(`Vite ${side} loads the server Node entry for ${specifier}`, async (context) => {
       const fixture = await reviewFixture(context, side);
       await fixture.write(
+        "aliases.mjs",
+        'export default { "react-native": "react-native-web" };',
+      );
+      await fixture.write(
         "vite.config.ts",
-        'export default { resolve: { alias: { "react-native": "react-native-web" } } };',
+        `const helper = './aliases.mjs';
+const { default: alias } = await import(helper);
+export default { resolve: { alias } };`,
       );
       await fixture.write(
         "src/review.mockup.ts",

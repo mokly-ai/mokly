@@ -7,15 +7,16 @@ use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::config_postcss;
-use crate::config_types::{Config, ResolvedConfig};
+use crate::config_types::{Config, ResolvedConfig, ViteConfig};
 use crate::config_validation;
 use crate::diagnostic::Code;
 use crate::error::CatalogueError;
 
-fn config(path: &str) -> ResolvedConfig {
+fn config(path: &str, vite: bool) -> ResolvedConfig {
     ResolvedConfig {
         input: Config {
             postcss: Some(path.into()),
+            vite: Some(ViteConfig::Flag(vite)),
             ..Default::default()
         },
         file: "/repo/nested/mokly.config.json".into(),
@@ -48,15 +49,19 @@ fn empty_and_non_string_postcss_values_use_the_path_diagnostic() {
             .as_str()
             .map(str::to_owned)
             .unwrap_or_else(|| value.to_string());
-        let error =
-            config_validation::parse(&json!({"postcss":value}).to_string(), "mokly.config.json")
-                .unwrap_err();
-        assert_message(
-            error,
-            format!(
-                "postcss must name a config-relative module inside repoRoot: {display}; choose an existing .ts, .mts, .js, .mjs or .cjs file"
-            ),
-        );
+        for vite in [false, true] {
+            let error = config_validation::parse(
+                &json!({"postcss": value, "vite": vite}).to_string(),
+                "mokly.config.json",
+            )
+            .unwrap_err();
+            assert_message(
+                error,
+                format!(
+                    "postcss must name a config-relative module inside repoRoot: {display}; choose an existing .ts, .mts, .js, .mjs or .cjs file"
+                ),
+            );
+        }
     }
 }
 
@@ -71,15 +76,19 @@ fn escaping_paths_and_unsupported_suffixes_fail_without_source_access() {
         "bad\\path.mjs",
         "file:config.mjs",
     ] {
-        let error = config_postcss::validate(&Unimock::new(()), &config(path)).unwrap_err();
-        assert_message(
-            error,
-            format!(
-                "postcss must name a config-relative module inside repoRoot: {path}; choose an existing .ts, .mts, .js, .mjs or .cjs file"
-            ),
-        );
+        for vite in [false, true] {
+            let error =
+                config_postcss::validate(&Unimock::new(()), &config(path, vite)).unwrap_err();
+            assert_message(
+                error,
+                format!(
+                    "postcss must name a config-relative module inside repoRoot: {path}; choose an existing .ts, .mts, .js, .mjs or .cjs file"
+                ),
+            );
+        }
     }
-    let error = config_postcss::validate(&Unimock::new(()), &config("postcss.json")).unwrap_err();
+    let error =
+        config_postcss::validate(&Unimock::new(()), &config("postcss.json", false)).unwrap_err();
     assert_message(error, "postcss module must be an existing regular .ts, .mts, .js, .mjs or .cjs file inside repoRoot: postcss.json".into());
 }
 
@@ -109,7 +118,7 @@ fn missing_non_file_and_physical_escape_have_the_catalogued_diagnostics() {
                 .next_call(matching!((path) if *path == Path::new("/repo/postcss.mjs")))
                 .returns(Ok(node)),
         );
-        let error = config_postcss::validate(&tree, &config("../postcss.mjs")).unwrap_err();
+        let error = config_postcss::validate(&tree, &config("../postcss.mjs", false)).unwrap_err();
         assert_message(error, if escaped {
             "postcss must name a config-relative module inside repoRoot: ../postcss.mjs; choose an existing .ts, .mts, .js, .mjs or .cjs file"
         } else {
@@ -131,7 +140,7 @@ fn every_supported_suffix_keeps_both_logical_and_physical_inputs() {
                 }))
             },
         ));
-        let module = config_postcss::validate(&tree, &config(&path))
+        let module = config_postcss::validate(&tree, &config(&path, false))
             .unwrap()
             .unwrap();
         assert_eq!(

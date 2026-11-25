@@ -70,6 +70,7 @@ pub(crate) fn attempt(
     if config.vite() {
         settings.push_str(":vite:");
         settings.push_str(&side.source_root.to_string_lossy());
+        settings.push_str(&format!(":{:?}", side.vite_inputs));
     }
     let postcss = config.postcss().filter(|_| !config.vite()).map(|module| {
         let released = {
@@ -121,16 +122,19 @@ pub(crate) fn attempt(
     } else {
         Arc::new(base)
     };
-    let compiler = Arc::new(
-        CachedStylesheets::new(
-            compiler,
-            tree,
-            config.repo_root.clone(),
-            settings,
-            runtime.styles.clone(),
-        )
-        .with_head(runtime.head_styles.clone().unwrap_or_default()),
-    );
+    let compiler = CachedStylesheets::new(
+        compiler,
+        tree,
+        config.repo_root.clone(),
+        settings,
+        runtime.styles.clone(),
+    )
+    .with_head(runtime.head_styles.clone().unwrap_or_default());
+    let compiler = Arc::new(if config.vite() {
+        compiler.with_vite_env(runtime)
+    } else {
+        compiler
+    });
     StylesheetAttempt { compiler, context }
 }
 

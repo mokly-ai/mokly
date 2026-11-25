@@ -14,6 +14,7 @@ fn side() -> SideInputs {
         configuration_directory: String::new(),
         context: "head".into(),
         dependency_aliases: Default::default(),
+        vite_inputs: None,
         dependency_roots: Vec::new(),
     }
 }

@@ -17,15 +17,16 @@ use crate::stylesheets;
 #[derive(Default)]
 pub(crate) struct BundleStyles {
     pub(crate) maps: ClassMaps,
+    pub(crate) named_exports: ClassMaps,
     pub(crate) inputs: BTreeMap<String, String>,
 }
 
 impl BundleStyles {
     pub(crate) fn fingerprint(&self) -> String {
-        let bytes = if self.inputs.is_empty() {
+        let bytes = if self.inputs.is_empty() && self.named_exports.is_empty() {
             serde_json::to_vec(&self.maps)
         } else {
-            serde_json::to_vec(&(&self.maps, &self.inputs))
+            serde_json::to_vec(&(&self.maps, &self.named_exports, &self.inputs))
         }
         .expect("CSS Modules maps and input digests contain only strings and string-keyed maps");
         digest(&bytes)
@@ -33,6 +34,7 @@ impl BundleStyles {
 
     fn add(&mut self, bundle: CssBundle, vite: bool) {
         self.maps.extend(bundle.css_modules);
+        self.named_exports.extend(bundle.css_module_named_exports);
         if vite {
             self.inputs.extend(
                 bundle

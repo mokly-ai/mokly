@@ -1,10 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { createRequire, isBuiltin, Module } from "node:module";
-import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { build } from "esbuild";
+import type { OnResolveArgs } from "esbuild";
 
+import { detail } from "./errors.js";
 import { bareSpecifier } from "./specifier.js";
 import { context } from "./vite-config-context.js";
 import { viteConfigError, viteConfigMap } from "./vite-config-errors.js";
@@ -22,11 +23,13 @@ export async function bundleViteConfig(
   directory: string,
   file: string,
   lookup: ViteLookup,
+  record: (file: string, digest: string) => void,
 ) {
   const config = await vite.resolveConfig(
     {
       configFile: false,
       envDir: false,
+      css: { postcss: {} },
       root: directory,
       logLevel: "silent",
       cacheDir: directory,
@@ -55,6 +58,8 @@ export async function bundleViteConfig(
   try {
     compiled = await build({
       absWorkingDir: directory,
+      // Vite's diagnostic formatter maps absolute locations to logical names.
+      absPaths: ["log"],
       entryPoints: [file],
       outfile: "mokly-vite-config.js",
       bundle: true,
@@ -64,7 +69,6 @@ export async function bundleViteConfig(
       format,
       mainFields: ["main"],
       conditions: ["node"],
-      metafile: true,
       sourcemap: "external",
       logLevel: "silent",
       keepNames: true,
@@ -76,7 +80,7 @@ export async function bundleViteConfig(
               path: runtime,
               external: true,
             }));
-            builder.onResolve({ filter: /.*/ }, async (args) => {
+            const resolve = async (args: OnResolveArgs) => {
               if (args.kind === "entry-point" || args.pluginData === "resolved")
                 return;
               if (isBuiltin(args.path))
@@ -114,9 +118,14 @@ export async function bundleViteConfig(
               return lookup.paths.repositoryOwned(target)
                 ? { path: target }
                 : { path: pathToFileURL(target).href, external: true };
-            });
-            builder.onLoad({ filter: /.*/ }, (args) =>
-              viteConfigSource(args.path),
+            };
+            builder.onResolve({ filter: /.*/ }, (args) =>
+              resolve(args).catch((error: unknown) => ({
+                errors: [{ text: detail(error) }],
+              })),
+            );
+            builder.onLoad({ filter: /.*/, namespace: "file" }, (args) =>
+              viteConfigSource(args.path, record, format),
             );
           },
         },
@@ -135,7 +144,7 @@ export async function bundleViteConfig(
   );
   const prefix =
     format === "esm"
-      ? `import { context as __moklyViteContext } from ${JSON.stringify(runtime)}; const require = __moklyViteContext(${JSON.stringify(file)}).require;\n`
+      ? `import { context as __moklyViteContext } from ${JSON.stringify(runtime)}; const require = __moklyViteContext(${JSON.stringify(file)}, "esm").require;\n`
       : "";
   const code =
     prefix +
@@ -153,7 +162,7 @@ export async function bundleViteConfig(
     } else {
       const module = new ConfigModule(file);
       module.filename = file;
-      module.require = context(file).require;
+      module.require = context(file, "cjs").require;
       module._compile(code, file);
       const value: unknown = module.exports;
       exported =
@@ -168,11 +177,5 @@ export async function bundleViteConfig(
   } catch (error) {
     throw locate(error);
   }
-  return {
-    exported,
-    locate,
-    dependencies: Object.keys(compiled.metafile!.inputs).map((input) =>
-      path.resolve(directory, input),
-    ),
-  };
+  return { exported, locate };
 }

@@ -4,10 +4,53 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import type { Generation } from "./bundle.js";
 import { dependencyDirectory } from "./importer-resolution.js";
-import { inside } from "./path-scope.js";
+import { inside, repositoryOwned } from "./path-scope.js";
+import { FreshViteWorker } from "./vite-errors.js";
 
 const active = new AsyncLocalStorage<Generation | undefined>();
+const loadedFiles = new Map<string, string | null>();
+const loadedDirectories = new Map<string, string>();
+let loadedPeers: string | undefined;
 let installed = false;
+
+/** Admit a generation before it can populate the process-wide Node caches. */
+export function retainViteNodeInputs(
+  generation: Generation,
+  sourceRoot: string,
+): void {
+  const { peers, inputs, inputDirectories } = generation.compiled;
+  const selectedPeers = JSON.stringify(Object.entries(peers).sort());
+  if (loadedPeers !== undefined && loadedPeers !== selectedPeers)
+    throw new FreshViteWorker();
+
+  const nodeInput = ([file]: [string, unknown]) =>
+    !repositoryOwned(sourceRoot, generation.dependencyRoots, file);
+  const files = Object.entries(inputs).filter(nodeInput);
+  const directories = Object.entries(inputDirectories)
+    .filter(nodeInput)
+    .map(([directory, names]) => [directory, JSON.stringify(names)] as const);
+  if (
+    files.some(([file, digest]) => conflicts(loadedFiles, file, digest)) ||
+    directories.some(([file, names]) =>
+      conflicts(loadedDirectories, file, names),
+    )
+  )
+    throw new FreshViteWorker();
+
+  loadedPeers = selectedPeers;
+  for (const [file, digest] of files) loadedFiles.set(file, digest);
+  for (const [directory, names] of directories)
+    loadedDirectories.set(directory, names);
+}
+
+function conflicts(
+  loaded: ReadonlyMap<string, string | null>,
+  file: string,
+  current: string | null,
+): boolean {
+  const prior = loaded.get(file);
+  return prior !== undefined && prior !== current;
+}
 
 /** Native dependency imports and lazy requires share this generation's peers. */
 export function withViteNodePeers<T>(

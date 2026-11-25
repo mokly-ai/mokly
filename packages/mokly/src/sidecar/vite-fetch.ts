@@ -7,10 +7,11 @@ import type { ViteFetchResult } from "../generated/sidecar/ViteFetchResult.js";
 import { viteFailure } from "./vite-errors.js";
 import { externalType, viteExternalFile } from "./vite-external.js";
 import { recordViteInput } from "./vite-inputs.js";
-import { recordVitePluginInputs } from "./vite-plugin-inputs.js";
+import type { VitePluginReports } from "./vite-plugin-inputs.js";
+import { resolveViteLibrary } from "./vite-plugin.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { fetchViteImport } from "./vite-resolution.js";
-import { viteFile, viteId, viteJsx, viteUrl } from "./vite-urls.js";
+import { viteEntry, viteFile, viteId, viteUrl } from "./vite-urls.js";
 
 export type ViteFetch = (
   url: string,
@@ -23,6 +24,7 @@ export function createViteFetch(
   input: ViteInputs,
   imports: Map<string, string[]>,
   version: string,
+  reports: VitePluginReports,
   retainedFiles: ReadonlyMap<string, Uint8Array> = new Map(),
 ): ViteFetch {
   const environment = server.environments.ssr!;
@@ -31,7 +33,8 @@ export function createViteFetch(
       const id = viteId(url);
       if (id.startsWith(input.runtimeKey))
         return { externalize: id, type: "module" };
-      const external = viteExternalFile(id);
+      const library = await resolveViteLibrary(input, id, importer);
+      const external = viteExternalFile(library ?? id);
       if (external) {
         const file = await input.paths.resolve(external);
         await recordViteInput(input, file);
@@ -40,28 +43,7 @@ export function createViteFetch(
           type: await externalType(file),
         };
       }
-      if (
-        /^(react|react-dom)(?:\/|$)/.test(id) &&
-        id !== "react/jsx-dev-runtime"
-      ) {
-        const file = await input.paths.resolve(input.peers[id]!);
-        await recordViteInput(input, file);
-        return {
-          externalize: pathToFileURL(file).href,
-          type: file.endsWith(".mjs") ? "module" : "commonjs",
-        };
-      }
-      let requested =
-        id === "react/jsx-dev-runtime" ? viteUrl(viteJsx) : viteUrl(url);
-      if (id === "@mokly/mokly") {
-        const facade = await environment.pluginContainer.resolveId(
-          id,
-          importer,
-        );
-        if (!facade)
-          throw new Error("could not resolve @mokly/mokly authoring facade");
-        requested = viteUrl(facade.id);
-      }
+      let requested = viteUrl(library ?? url);
       const original = input.styles.original(id, importer);
       if (original) {
         const file = await input.paths.resolve(original.id);
@@ -73,17 +55,9 @@ export function createViteFetch(
           };
         }
         requested = viteUrl(file);
-      } else {
-        const style = await input.styles.resolve(
-          id,
-          importer,
-          input.lookup,
-          input.external,
-        );
-        if (typeof style === "string") requested = viteUrl(style);
       }
       const native =
-        requested === viteUrl(url)
+        requested === viteUrl(url) && importer !== viteEntry
           ? await input.external(id, importer)
           : undefined;
       let result = native
@@ -136,12 +110,9 @@ export function createViteFetch(
           ...(transformed?.deps ?? []),
           ...(transformed?.dynamicDeps ?? []),
         ]);
-        await recordVitePluginInputs(
-          input,
-          environment,
-          result.id,
-          imports.get(result.id)!,
-        );
+        for (const [file, digest] of reports.forModule(environment, result.id))
+          if (!input.pluginInputs.has(file))
+            input.pluginInputs.set(file, digest);
         if (
           file &&
           physical &&

@@ -9,7 +9,7 @@ use crate::extracted::ExtractedFiles;
 use crate::identity::{ObjectId, RepoPath};
 use crate::repository::{GitRepository, Repository};
 use crate::source_key::CheckoutIdentity;
-use crate::tree::{self, Entry, Limits};
+use crate::tree::{self, Entry, Limits, Mode};
 
 impl Repository for GitRepository {
     fn merge_base(&self, base: &str) -> Result<ObjectId> {
@@ -91,6 +91,20 @@ impl Repository for GitRepository {
         self.checkout_read(commit, entries, limits)
     }
 
+    fn read_link(&self, entry: &Entry, limit: usize) -> Result<Vec<u8>> {
+        if entry.mode != Mode::Symlink {
+            return Err(Error::NotRegular {
+                path: entry.path.to_string(),
+            });
+        }
+        if entry.size > limit {
+            return Err(Error::ByteLimit { limit });
+        }
+        let mut request = self.tree_request(&["cat-file", "blob", entry.object.as_str()]);
+        request.output_limit = limit;
+        Ok(self.runner.run(&request)?.stdout)
+    }
+
     fn fingerprint_extracted(&self, root: &Path, entries: &[Entry]) -> Result<ExtractedFiles> {
         self.extracted_fingerprints(root, entries)
     }
@@ -116,6 +130,10 @@ impl Repository for GitRepository {
 
     fn working_paths(&self) -> Result<Vec<RepoPath>> {
         self.candidates()
+    }
+
+    fn indexed_paths(&self, pathspecs: &[&str]) -> Result<Vec<RepoPath>> {
+        self.index_paths(pathspecs)
     }
 
     fn working(&self, path: &RepoPath, limit: usize) -> Result<Option<WorkingFile>> {

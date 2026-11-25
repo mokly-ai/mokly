@@ -17,6 +17,7 @@ pub(super) fn bundle(generation: &str) -> Call {
         plan: None,
         params: Bundle {
             vite: false,
+            vite_inputs: None,
             source_root: "/head".into(),
             configuration_directory: ".".into(),
             entry_files: vec![generation.into()],
@@ -33,6 +34,7 @@ pub(super) fn bundle(generation: &str) -> Call {
 pub(super) fn maps(generation: &str) -> Call {
     Call::CssModules(CssModules {
         generation: generation.into(),
+        named_exports: None,
         class_maps: BTreeMap::new(),
     })
 }

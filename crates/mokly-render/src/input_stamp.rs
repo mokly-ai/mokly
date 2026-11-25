@@ -4,12 +4,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use mokly_css::dependencies::DirectoryDependency;
+use mokly_sidecar::vite_env::ViteEnvInput;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::postcss_scan::{Scan, glob};
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub(crate) struct InputStamp {
+    pub(crate) vite_env: BTreeSet<ViteEnvInput>,
     pub(crate) memberships: BTreeMap<PathBuf, Option<BTreeSet<PathBuf>>>,
     pub(crate) files: BTreeMap<PathBuf, Option<String>>,
     pub(crate) unretained: BTreeMap<PathBuf, Option<String>>,
@@ -84,7 +86,17 @@ impl InputStamp {
                         .map_or(0, |node| node.identity.capacity())
             })
             .sum();
-        (files + directories + memberships + assets + projections).saturating_mul(2)
+        let vite_env: usize = self
+            .vite_env
+            .iter()
+            .map(|input| {
+                size_of_val(input)
+                    + input.name.capacity()
+                    + input.file.as_ref().map_or(0, String::capacity)
+                    + input.digest.as_ref().map_or(0, String::capacity)
+            })
+            .sum();
+        (files + directories + memberships + assets + projections + vite_env).saturating_mul(2)
     }
 
     pub(crate) fn file(&mut self, tree: &dyn SourceTree, path: PathBuf) {
@@ -131,6 +143,7 @@ impl InputStamp {
             assets,
             identities,
             directories,
+            vite_env: _,
         } = self;
         let file = |(path, digest): (&PathBuf, &Option<String>)| file_digest(tree, path) == *digest;
         let mut scan = Scan::default();

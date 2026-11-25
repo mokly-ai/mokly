@@ -52,3 +52,45 @@ fn nested_watch_input_hashes_have_the_same_posix_keys_on_every_host() {
         (digest(format!("{expected:?}").as_bytes()), digest(b"{}"))
     );
 }
+
+#[test]
+fn rebuild_files_leaves_known_sources_out_of_the_setup() {
+    let tree = Unimock::new(
+        SourceTreeMock::children
+            .some_call(matching!((path) if *path == Path::new("/repo")))
+            .returns(Ok(["helper.ts", "site.css", "copy.json", "ignored.json"]
+                .into_iter()
+                .map(|name| Child {
+                    name: name.into(),
+                    kind: FileKind::File,
+                })
+                .collect())),
+    );
+    let config = ResolvedConfig {
+        input: Config {
+            watch: Some(WatchConfig {
+                debounce_ms: None,
+                rules: Some(vec![
+                    WatchRule {
+                        action: WatchAction::Ignore,
+                        paths: vec!["ignored.json".into()],
+                    },
+                    WatchRule {
+                        action: WatchAction::Rebuild,
+                        paths: vec!["**".into()],
+                    },
+                ]),
+            }),
+            ..Default::default()
+        },
+        file: "/repo/mokly.config.json".into(),
+        repo_root: "/repo".into(),
+        modules: Default::default(),
+        authored_inputs: Vec::new(),
+        roots: Vec::new(),
+    };
+    assert_eq!(
+        watch_rules::rebuild_files(&config, &tree, &["helper.ts".into(), "site.css".into()]),
+        ["copy.json"]
+    );
+}

@@ -102,6 +102,19 @@ fn option_display(value: &Option<String>) -> String {
         .map_or_else(String::new, |value| format!("; {value}"))
 }
 
+impl Error {
+    /// A request needs a process with empty native module caches.
+    pub(crate) fn fresh_worker_required(&self) -> bool {
+        matches!(
+            self,
+            Self::Remote {
+                code: RemoteCode::Request(RequestCode::FreshWorkerRequired),
+                ..
+            }
+        )
+    }
+}
+
 /// Error category retained after a sidecar crashes twice.
 #[derive(Debug)]
 pub enum FailureKind {
@@ -181,11 +194,14 @@ pub enum RemoteCode {
 impl RemoteCode {
     /// Whether a valid error reply leaves this session reusable.
     pub fn reusable(self) -> bool {
-        !matches!(self, Self::Request(RequestCode::SidecarProtocol))
+        !matches!(
+            self,
+            Self::Request(RequestCode::SidecarProtocol | RequestCode::FreshWorkerRequired)
+        )
     }
 }
 
-/// Execution errors a Node sidecar may send; deadlines belong to the binary.
+/// Request outcomes a Node sidecar sends in the error envelope.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, Error, TS)]
 #[serde(rename_all = "kebab-case")]
 pub enum RequestCode {
@@ -198,6 +214,9 @@ pub enum RequestCode {
     /// The peer rejected the protocol.
     #[error("sidecar-protocol")]
     SidecarProtocol,
+    /// Retry the request on a fresh process before loading native modules.
+    #[error("fresh-worker-required")]
+    FreshWorkerRequired,
 }
 
 /// Transport source failures.

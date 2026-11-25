@@ -76,6 +76,7 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
             plan: None,
             params: Bundle {
                 vite: false,
+                vite_inputs: None,
                 evaluation: None,
                 entry_files: vec![
                     "component.mockup.tsx".into(),
@@ -106,6 +107,7 @@ fn bundles_describes_and_renders_component_screen_story_and_page() {
     let generation = bundled.generation;
     pool.request(Call::CssModules(CssModules {
         generation: generation.clone(),
+        named_exports: None,
         class_maps: BTreeMap::from([(
             "control.module.css".into(),
             BTreeMap::from([("control".into(), "smoke-control".into())]),
