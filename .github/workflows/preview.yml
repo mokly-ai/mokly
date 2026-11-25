@@ -156,6 +156,8 @@ jobs:
           PREVIEW_BRANCH: ${{ steps.deploy.outputs.branch }}
           PREVIEW_URL: ${{ steps.deploy.outputs.url }}
         with:
+          # Retry GitHub API server errors; 4xx answers still fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -222,6 +224,8 @@ jobs:
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
+          # Retry GitHub API server errors; 4xx answers still fail at once.
+          retries: 3
           script: |
             const account = process.env.CLOUDFLARE_ACCOUNT_ID;
             const token = process.env.CLOUDFLARE_API_TOKEN;
@@ -268,6 +272,8 @@ jobs:
           CLEANUP_STATUS: ${{ steps.cleanup.outputs.status }}
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
         with:
+          # Retry GitHub API server errors; 4xx answers still fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -466,6 +472,8 @@ jobs:
         if: env.PREVIEW_ACTION == 'deploy'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
+          # Retry GitHub API server errors; 4xx answers still fail at once.
+          retries: 3
           script: |
             const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
             const marker = '<!-- mokly-preview -->';
@@ -608,6 +616,8 @@ jobs:
         if: ${{ always() && steps.comment-body.outcome == 'success' }}
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
+          # Retry GitHub API server errors; 4xx answers still fail at once.
+          retries: 3
           script: |
             const body = require('fs').readFileSync('.context/preview-comment.md', 'utf8');
             const marker = '<!-- mokly-preview -->';

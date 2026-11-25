@@ -148,6 +148,8 @@ jobs:
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
           PREVIEW_URL: ${{ env.SITE_ORIGIN }}
         with:
+          # Retry GitHub API server errors; 4xx answers still fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
@@ -219,6 +221,8 @@ jobs:
           CLEANUP_STATUS: ${{ steps.cleanup.outputs.status }}
           PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
         with:
+          # Retry GitHub API server errors; 4xx answers still fail at once.
+          retries: 3
           script: |
             const marker = process.env.MOKLY_COMMENT_MARKER;
             const lines = [
