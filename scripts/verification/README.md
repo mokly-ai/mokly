@@ -44,6 +44,8 @@ Public test commands and strict evidence rules live in the
   [`ci-timing-cache.mjs`](./ci-timing-cache.mjs) reads and reports the cache
   list. Run the report locally on saved API responses with
   `node scripts/verification/ci-timing.mjs --jobs-file {file} --caches-file {file} --reports {directory}`.
+  Save the complete cache list with
+  `gh api --paginate --slurp "repos/{owner}/{repo}/actions/caches?per_page=100"`.
   Without `--caches-file`, a local run does not read the cache.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
   `runRepositoryRatchets`, which runs every maintainability ratchet of the

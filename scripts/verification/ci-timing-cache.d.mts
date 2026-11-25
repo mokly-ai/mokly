@@ -17,8 +17,12 @@ export interface CacheEntry {
 
 /** The cache usage of the repository against its budget. */
 export interface CacheReport {
+  /** False when the report could not read every entry; totals are then lower bounds. */
+  complete: boolean;
   totalBytes: number;
   count: number;
+  /** The number of entries that GitHub lists, or null when unknown. */
+  listed: number | null;
   budgetGigabytes: number;
   /** Bytes above the budget, or null when within it. */
   overBytes: number | null;
@@ -27,11 +31,11 @@ export interface CacheReport {
   issues: string[];
 }
 
-export const SAVING_REF: "refs/heads/main";
-
 export function parseCacheBudget(value: unknown): CacheBudget;
 
 export function fetchCaches(request: GitHubRequest): Promise<unknown>;
+
+export function savedCaches(value: unknown): unknown;
 
 export function evaluateCache(body: unknown, budget: CacheBudget): CacheReport;
 

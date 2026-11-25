@@ -85,11 +85,21 @@ sizes of the listed entries.
 - A total above the budget adds one warning. Entries from other refs add one
   more warning, with their number and their total size.
 
-The cache budget stays below the 10 GB limit of GitHub, so the warning comes
-before GitHub evicts an entry that a job restores. A cache warning never fails
-the step, also in `fail` mode. A failing cache check needs the user's
-approval, because a new failing gate needs it. A cache list that cannot be
-read adds a note, and the rest of the report still runs.
+When the report cannot read every entry, it says how many it read and adds a
+note. Its total is then a lower bound. It still warns about an overrun or an
+entry from another ref that the entries it read prove. It never says that the
+cache is within budget, or that every entry comes from `main`.
+
+The report reads the list after the other jobs of the run, so the section
+shows the cache after their saves. One run can save many new entries, for
+example after a lockfile change. The total can then pass the budget and the
+10 GB limit before the report reads the list, and GitHub can evict entries
+before the warning shows.
+
+A cache warning never fails the step, also in `fail` mode. A failing cache
+check needs the user's approval, because a new failing gate needs it. A
+`cache` field that is missing or does not parse, and a cache list that
+cannot be read, add a note, and the rest of the report still runs.
 
 ## Reruns
 

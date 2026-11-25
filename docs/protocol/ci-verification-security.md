@@ -96,8 +96,11 @@ separate saved entry for a reader was rejected, because it adds the size of
 its builds to the total and saves no build time. One entry for the app shards
 and the cloud Rust partition was rejected, because they resolve different
 features of shared dependencies, so most of their dependency builds differ.
-One entry for the Repository checks and test shards was rejected, because
-Clippy builds dependency metadata only, so the two share no dependency build.
+One entry for the Repository checks and test shards was rejected, because the
+checks shard adds Clippy dependency metadata and the audit tool, and the test
+shards add full test builds, so neither entry holds the builds of the other.
+Both entries also hold the builds of `xtask` and the native binary, which every
+Repository shard runs.
 
 The entries that `main` saves stay below the cache budget of the
 [CI timing report](./ci-duration-budgets.md#actions-cache), which keeps

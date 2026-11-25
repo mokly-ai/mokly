@@ -4,7 +4,12 @@ import { parseArgs } from "node:util";
 
 import { readReports } from "./aggregate.mjs";
 import { evaluateJobs, parseBudgets } from "./ci-timing-budgets.mjs";
-import { evaluateCache, fetchCaches } from "./ci-timing-cache.mjs";
+import {
+  evaluateCache,
+  fetchCaches,
+  parseCacheBudget,
+  savedCaches,
+} from "./ci-timing-cache.mjs";
 import { fetchRunJobs, parseJobs } from "./ci-timing-jobs.mjs";
 import { criticalPath } from "./ci-timing-path.mjs";
 import { annotationLines, renderSummary } from "./ci-timing-summary.mjs";
@@ -36,7 +41,7 @@ export async function runCiTiming({ argv, env, fetch, write }) {
     // A saved jobs response runs offline, so it reads the cache only from a
     // saved cache list.
     const loadCaches = options.cachesFile
-      ? () => readJson(options.cachesFile)
+      ? async () => savedCaches(await readJson(options.cachesFile))
       : options.jobsFile
         ? null
         : () => fetchCaches(apiOptions(env, fetch));
@@ -105,9 +110,20 @@ async function buildReport(entries, budgets, options, env, loadCaches) {
   };
 }
 
-/** The cache usage, or null. A cache that cannot be read adds an issue only. */
-async function readCache(loadCaches, budget, issues) {
+/**
+ * The cache usage, or null. A cache budget that does not parse, or a cache
+ * list that cannot be read, adds an issue only.
+ */
+async function readCache(loadCaches, source, issues) {
   if (!loadCaches) return null;
+  let budget;
+  try {
+    budget = parseCacheBudget(source);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    issues.push(`The Actions cache was not checked: ${message}`);
+    return null;
+  }
   try {
     const cache = evaluateCache(await loadCaches(), budget);
     issues.push(...cache.issues);

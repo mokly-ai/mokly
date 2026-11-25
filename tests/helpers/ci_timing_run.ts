@@ -20,6 +20,10 @@ export interface TimingScenario {
   caches?: unknown[];
   /** The HTTP status of the cache API. */
   cacheStatus?: number;
+  /** Read the jobs fixture from `--jobs-file` instead of the API. */
+  savedJobs?: boolean;
+  /** A saved cache list that `--caches-file` reads. */
+  savedCaches?: unknown;
 }
 
 /** One cache entry of the API, saved from `main` unless `ref` says otherwise. */
@@ -85,6 +89,14 @@ export async function runTiming(
         ];
     return new Response(JSON.stringify(response), { status: status ?? 200 });
   };
+  const saved: string[] = [];
+  if (scenario.savedJobs)
+    saved.push("--jobs-file", path.join(FIXTURES, "jobs-first-attempt.json"));
+  if (scenario.savedCaches !== undefined) {
+    const file = path.join(directory, "caches.json");
+    await fs.writeFile(file, JSON.stringify(scenario.savedCaches));
+    saved.push("--caches-file", file);
+  }
   const summary = path.join(directory, "summary.md");
   let stdout = "";
   const status = await runCiTiming({
@@ -95,6 +107,7 @@ export async function runTiming(
       path.dirname(reports),
       "--self",
       "CI timing",
+      ...saved,
     ],
     env: {
       GITHUB_TOKEN: "token-value",
