@@ -138,7 +138,7 @@ impl VerificationSuite {
     fn supports_shards(self) -> bool {
         matches!(
             self,
-            Self::Browser | Self::CloudApp | Self::CloudMockups | Self::CloudSite
+            Self::Browser | Self::Native | Self::CloudApp | Self::CloudMockups | Self::CloudSite
         )
     }
 }
@@ -149,7 +149,7 @@ impl fmt::Display for VerificationSuite {
     }
 }
 
-/// One-based whole-file shard selection.
+/// One-based shard selection.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct Shard {
     index: u64,
@@ -157,7 +157,7 @@ pub(crate) struct Shard {
 }
 
 impl Shard {
-    /// Whether this shard owns non-browser logic tests.
+    /// Whether this shard owns the checks that run once per sharded suite.
     pub(super) fn is_first(self) -> bool {
         self.index == 1
     }
@@ -222,7 +222,7 @@ impl FromStr for Shard {
 pub(crate) struct CheckRequest {
     /// Selected suite, or every suite when omitted.
     pub(super) suite: Option<VerificationSuite>,
-    /// Optional browser, cloud application, mockup, or site shard.
+    /// Optional browser, native, cloud application, mockup, or site shard.
     pub(super) shard: Option<Shard>,
     /// Resolved audit mode; omission selects baseline.
     pub(super) dependency_audit: DependencyAudit,

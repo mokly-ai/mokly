@@ -108,9 +108,11 @@ fn cloud_rust_builds_the_workspace_cli_before_publication_smokes() {
             .collect::<Vec<_>>(),
         [
             "node xtask/scripts/strict-command.mjs node xtask/scripts/require-postgres.mjs",
+            "node xtask/scripts/strict-command.mjs node xtask/scripts/require-nextest.mjs",
             "node xtask/scripts/strict-command.mjs cargo clippy --locked -p \"mkc-*\" --all-targets -- -D warnings",
             "node xtask/scripts/strict-command.mjs npm run build",
-            "node xtask/scripts/strict-command.mjs cargo test --locked -p \"mkc-*\"",
+            "node xtask/scripts/strict-command.mjs cargo nextest run --locked -p \"mkc-*\"",
+            "node xtask/scripts/strict-command.mjs cargo test --locked -p \"mkc-*\" --doc",
         ]
     );
 }
