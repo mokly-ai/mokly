@@ -61,6 +61,15 @@ A test that publishes only to reach the upload step uses
 loopback receiver answers each request with 404, which is not retryable, so the
 publish fails at once with `upload-failed` and spends no retries or backoff.
 
+A test whose cases start independent `mokly` processes runs them through
+`each()` in [`process_support/parallel.rs`](./process_support/parallel.rs).
+It runs at most one case for each available core at a time, on a thread named
+after the case. A failed case does not stop the other cases, and the test then
+fails with the names of the failed cases. The cases must share no file that
+one of them writes. For example, a `build` without `--out` writes its output
+reservation into the repository, so it runs after the publishes of the same
+repository.
+
 Some `mokly-cli` Rust tests use debug-only hooks, such as the allocator probe
 and `MOKLY_TEST_STATIC_COLUMNS`, so they need the dev profile and fail under
 `cargo test --release`.
