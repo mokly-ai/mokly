@@ -17,6 +17,7 @@ pub(super) struct Pins {
     pub(super) tar: String,
     pub(super) terraform: String,
     pub(super) helm: String,
+    pub(super) nextest: String,
 }
 
 #[derive(Deserialize)]
@@ -41,7 +42,15 @@ struct PackagePin {
 pub(super) fn protocol(text: &str) -> result::Result<Pins, Vec<Violation>> {
     let mut versions = Vec::new();
     let mut violations = Vec::new();
-    for tool in ["Rust", "Node", "npm", "tar", "Terraform", "Helm"] {
+    for tool in [
+        "Rust",
+        "Node",
+        "npm",
+        "tar",
+        "Terraform",
+        "Helm",
+        "cargo-nextest",
+    ] {
         let rows: Vec<_> = text
             .lines()
             .filter_map(|line| {
@@ -69,7 +78,78 @@ pub(super) fn protocol(text: &str) -> result::Result<Pins, Vec<Violation>> {
         tar: versions[3].clone(),
         terraform: versions[4].clone(),
         helm: versions[5].clone(),
+        nextest: versions[6].clone(),
     })
+}
+
+#[derive(Deserialize)]
+struct NextestConfig {
+    #[serde(rename = "nextest-version")]
+    version: NextestVersion,
+}
+
+#[derive(Deserialize)]
+struct NextestVersion {
+    required: String,
+}
+
+/// The nextest configuration requires exactly the pinned version.
+pub(super) fn nextest_config(text: &str, pins: &Pins) -> Result<Vec<Violation>> {
+    let config: NextestConfig = toml::from_str(text).context("parse .config/nextest.toml")?;
+    Ok(compare(
+        ".config/nextest.toml",
+        "nextest-version.required",
+        &pins.nextest,
+        &config.version.required,
+    ))
+}
+
+#[derive(Deserialize)]
+struct Workflow {
+    #[serde(default)]
+    jobs: BTreeMap<String, WorkflowJob>,
+}
+
+#[derive(Deserialize)]
+struct WorkflowJob {
+    #[serde(default)]
+    steps: Vec<WorkflowStep>,
+}
+
+#[derive(Deserialize)]
+struct WorkflowStep {
+    #[serde(default)]
+    with: Option<StepInputs>,
+}
+
+#[derive(Deserialize)]
+struct StepInputs {
+    tool: Option<String>,
+}
+
+/// Every `cargo-nextest` tool input of a workflow names exactly the pinned version.
+pub(super) fn nextest_installs(path: &str, text: &str, pins: &Pins) -> Result<Vec<Violation>> {
+    let workflow: Workflow =
+        serde_saphyr::from_str(text).context("parse a cargo-nextest workflow")?;
+    Ok(workflow
+        .jobs
+        .into_values()
+        .flat_map(|job| job.steps)
+        .filter_map(|step| step.with.and_then(|inputs| inputs.tool))
+        .flat_map(|tools| {
+            tools
+                .split(',')
+                .map(|tool| tool.trim().to_owned())
+                .collect::<Vec<_>>()
+        })
+        .filter(|tool| tool.split('@').next() == Some("cargo-nextest"))
+        .flat_map(|tool| {
+            let version = tool
+                .split_once('@')
+                .map_or("floating", |(_, version)| version);
+            compare(path, "cargo-nextest install", &pins.nextest, version)
+        })
+        .collect())
 }
 
 #[derive(Deserialize)]

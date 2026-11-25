@@ -15,12 +15,13 @@ fn pins() -> Pins {
         tar: "7.5.22".into(),
         terraform: "1.16.2".into(),
         helm: "4.3.0".into(),
+        nextest: "0.9.152".into(),
     }
 }
 
 #[test]
 fn protocol_requires_one_row_per_version() {
-    let table = "| Rust | 1.98.1 | file |\n| Node | 24.14.1 | file |\n| npm | 11.11.0 | file |\n| tar | 7.5.22 | file |\n| Terraform | 1.16.2 | file |\n| Helm | 4.3.0 | file |\n";
+    let table = "| Rust | 1.98.1 | file |\n| Node | 24.14.1 | file |\n| npm | 11.11.0 | file |\n| tar | 7.5.22 | file |\n| Terraform | 1.16.2 | file |\n| Helm | 4.3.0 | file |\n| cargo-nextest | 0.9.152 | file |\n";
     assert_eq!(protocol(table).ok().unwrap().node, "24.14.1");
     assert!(protocol(&table.replace("| npm |", "| missing |")).is_err());
     assert!(protocol(&format!("{table}| Rust | 1.98.1 | extra |\n")).is_err());

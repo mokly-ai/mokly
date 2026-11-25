@@ -43,7 +43,9 @@ impl DefaultCheckRunner {
         }
     }
 
-    /// Runs the suite's steps in order. The repository suite then runs the
+    /// Runs the suite's steps in order. A failed command stops the suite
+    /// unless it keeps going; the suite then fails with the first failure
+    /// after its later steps ran. The repository suite then runs the
     /// Rust file-length audit in this process, not as a subprocess; a failed
     /// audit fails the suite like a failed command.
     fn run_suite(
@@ -66,11 +68,28 @@ impl DefaultCheckRunner {
         } else {
             steps_for(suite, shard, dependency_audit)
         };
+        let mut first_failure = None;
         for step in steps {
             match step {
-                Step::Run(command) => self.run_command(command)?,
-                Step::Concurrent(lanes) => self.run_lanes(lanes)?,
+                Step::Run(command) => {
+                    let keep_going = command.keeps_going();
+                    match self.run_command(command) {
+                        Err(error) if keep_going => {
+                            first_failure.get_or_insert(error);
+                        }
+                        Err(error) => return Err(first_failure.unwrap_or(error)),
+                        Ok(()) => {}
+                    }
+                }
+                Step::Concurrent(lanes) => {
+                    if let Err(error) = self.run_lanes(lanes) {
+                        return Err(first_failure.unwrap_or(error));
+                    }
+                }
             }
+        }
+        if let Some(error) = first_failure {
+            return Err(error);
         }
         if suite == VerificationSuite::Repository {
             self.rust_file_length_auditor.run(&self.workspace)?;

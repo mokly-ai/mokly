@@ -57,25 +57,26 @@ The API contract pins are `utoipa` 6.0.0 in the Cargo workspace,
 `openapi-typescript` 7.13.0 and `openapi-fetch` 0.17.0 in the app npm workspace.
 The [API contract guide](../../api/README.md) documents regeneration.
 
-| Tool                | Version                                                                                                           | Pin                                                                                                      |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Rust                | 1.98.1                                                                                                            | `rust-toolchain.toml` (`channel = "1.98.1"`, components `rustfmt`, `clippy`)                             |
-| Node                | 24.21.0                                                                                                           | `.nvmrc`; `engines.node` in `apps/site` and `apps/worker` is `>=24.21.0 <25`; the root range includes it |
-| npm                 | 11.21.0                                                                                                           | `packageManager = "npm@11.21.0"` in the root `package.json`                                              |
-| tar                 | 7.5.22                                                                                                            | Fixture packer in `package.json` `devDependencies` and the npm lockfile                                  |
-| Terraform           | 1.16.2                                                                                                            | `infra/toolchains.json`; every Terraform root/module requires this version                               |
-| Helm                | 4.3.0                                                                                                             | `infra/toolchains.json`; native golden tests, no plugin                                                  |
-| ingress-nginx chart | 4.15.1                                                                                                            | `infra/toolchains.json` → `ingress_nginx_chart`                                                          |
-| cert-manager chart  | v1.21.2                                                                                                           | `infra/toolchains.json` → `cert_manager_chart`                                                           |
-| Postgres image      | docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67 | `infra/toolchains.json` → `postgres_image`                                                               |
-| Chromium            | —                                                                                                                 | Installed once at the Playwright version pinned by the root npm lockfile                                 |
-| Electron            | 44.11.3                                                                                                           | `packages/desktop/package.json`; bundles Node 24.22.2 and Chromium 152                                   |
+| Tool                | Version                                                                                                           | Pin                                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Rust                | 1.98.1                                                                                                            | `rust-toolchain.toml` (`channel = "1.98.1"`, components `rustfmt`, `clippy`)                                              |
+| Node                | 24.21.0                                                                                                           | `.nvmrc`; `engines.node` in `apps/site` and `apps/worker` is `>=24.21.0 <25`; the root range includes it                  |
+| npm                 | 11.21.0                                                                                                           | `packageManager = "npm@11.21.0"` in the root `package.json`                                                               |
+| tar                 | 7.5.22                                                                                                            | Fixture packer in `package.json` `devDependencies` and the npm lockfile                                                   |
+| Terraform           | 1.16.2                                                                                                            | `infra/toolchains.json`; every Terraform root/module requires this version                                                |
+| Helm                | 4.3.0                                                                                                             | `infra/toolchains.json`; native golden tests, no plugin                                                                   |
+| cargo-nextest       | 0.9.152                                                                                                           | `.config/nextest.toml` `nextest-version.required`; the `cargo-nextest@` installs of `ci.yml` and `blacksmith-testbox.yml` |
+| ingress-nginx chart | 4.15.1                                                                                                            | `infra/toolchains.json` → `ingress_nginx_chart`                                                                           |
+| cert-manager chart  | v1.21.2                                                                                                           | `infra/toolchains.json` → `cert_manager_chart`                                                                            |
+| Postgres image      | docker.io/library/postgres:16.15-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67 | `infra/toolchains.json` → `postgres_image`                                                                                |
+| Chromium            | —                                                                                                                 | Installed once at the Playwright version pinned by the root npm lockfile                                                  |
+| Electron            | 44.11.3                                                                                                           | `packages/desktop/package.json`; bundles Node 24.22.2 and Chromium 152                                                    |
 
 CI installs the active toolchains at exactly these versions; local development
 should match them. The table is the source of truth; update matching pin files
 in the same change. The `cloud-toolchain-pins` suite rejects disagreement between the
-Rust, Node, npm, tar, Terraform and Helm rows, their pin files and the
-installed tools. The chart and image rows must equal the matching
+Rust, Node, npm, tar, Terraform, Helm and cargo-nextest rows, their pin files
+and the installed tools. The chart and image rows must equal the matching
 `infra/toolchains.json` values, which the preview platform scripts and the
 Helm tests read; no floating image or chart tag is permitted. Image digests
 are the registry manifest-list SHA-256 values for `linux/amd64`. Git and a

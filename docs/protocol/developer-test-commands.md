@@ -11,7 +11,8 @@
   and the frame package tests under `packages/frame/tests/`.
 - `cargo test -p <crate>` runs one crate's Rust tests, and
   `cargo test --workspace` runs the default targets. The Repository suite runs `mokly-*` and `xtask`. The cloud Rust suite runs
-  `mkc-*`; a selected crate is partial verification. Sidecar integration tests
+  `mkc-*`; a selected crate is partial verification. The suites run these
+  tests with the [Rust test runner](./ci-verification-repository.md#rust-test-runner). Sidecar integration tests
   require `npm run build --workspace @mokly/ui`, then
   `npm run build --workspace @mokly/model`, then
   `npm run build --workspace @mokly/frame`, then
@@ -99,7 +100,7 @@ build check, or test execution. Forward every pattern unchanged and in argument
 order to Node; Node applies repeated patterns as alternatives.
 
 Reject `--shard` with or without a value, including the equals form: Node tests
-have no shards. Its error names `cargo xtask check --suite browser --shard` for Mokly browser shards. Cloud app shards use `cargo xtask check --suite cloud-app --shard`. Every other flag fails with the usage text, preceded by
+have no shards. Its error names `cargo xtask check --suite browser --shard` for Mokly browser shards. Cloud app, mockup, and site shards use `cargo xtask check --suite cloud-app --shard`, with `cloud-mockups` or `cloud-site` in place of `cloud-app`. Every other flag fails with the usage text, preceded by
 `unknown option <flag>`.
 
 ### Developer Failure Reports
@@ -170,8 +171,8 @@ Each cloud project under `apps/`, and `packages/app/`, `packages/desktop/`, and
 a selected crate test, is partial verification. The
 [cloud suites](./ci-verification.md#cloud-suites) run every cloud check in the
 complete gate. Run one cloud suite with `cargo xtask check --suite cloud-app`,
-for example. `--shard INDEX/TOTAL` selects one app browser shard and runs logic
-tests on shard 1. Every cloud suite rejects missing tools and reported skips.
+for example. `--shard INDEX/TOTAL` selects one app, mockup, or site shard, as
+the [cloud shards](./cloud/repository-verification.md#app-shards) define. Every cloud suite rejects missing tools and reported skips.
 Cloud Rust, app, and desktop suite invocations each get a disposable database.
 The configured Postgres role needs `CREATEDB` permission.
 
