@@ -8,11 +8,12 @@ use axum::http::HeaderValue;
 use mokly_catalogue::diagnostic::Warning;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::RenderGeneration;
+use mokly_model::content_types::delivered_content_type;
 use mokly_model::data::Props;
 use mokly_model::usage::CatalogueUsage;
 
 use crate::asset_streams::{AssetRequest, AssetStreams, Capture};
-use crate::assets::{File, Stylesheet, content_type};
+use crate::assets::{File, Stylesheet};
 use crate::authored_assets::AuthoredAssets;
 pub use crate::authored_assets::AuthoredRequest;
 use crate::backend_preview::ArtifactBytes;
@@ -247,7 +248,7 @@ impl GraphDocuments {
         match self.generation.resource(route) {
             Ok(bytes) => Ok(bytes.map(|bytes| File {
                 bytes: bytes.into(),
-                content_type: content_type(route),
+                content_type: delivered_content_type(route),
             })),
             Err(source) => Err(ServerError::Render { source }),
         }

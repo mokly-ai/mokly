@@ -41,6 +41,17 @@
     that reads `Blob::content_type`. `BlobRow` maps the column, and test
     fixtures in about twelve files set the field or copy it into a
     `PublicationFile`.
+  - Since 2026-11-25, the reservation test
+    `crates/mkc-publications/src/_tests_/reservation_content_type_tests.rs`
+    gives two paths one hash: `static/mokly-generated/assets/photo.pjp` and
+    `static/notice.txt`. It answers the store with fixed mock answers. It
+    asserts the type of each path when the reservation inserts the file row
+    of that path: `image/jpeg` and `text/plain; charset=utf-8`. So the test
+    fails when a reservation change gives one path the type of another path.
+  - Removing `content_type` from the `Blob` struct, and from the `blobs`
+    table, also removes the value that a reservation change could copy from
+    the first path of a shared hash to another path. Option B removes it from
+    the struct, and option C from both.
   - The doc comment of the field says: "Original indexed MIME; serving uses
     each path's MIME."
   - `docs/protocol/cloud/retention.md#reference-accounting` says that files

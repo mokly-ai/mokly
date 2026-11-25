@@ -6,10 +6,11 @@ use std::sync::Arc;
 use axum::body::Bytes;
 use mokly_graph::cache::Artifact;
 use mokly_graph::types::TemporaryDocument;
+use mokly_model::content_types::delivered_content_type;
 use mokly_model::namespace::{GENERATED_DIRECTORY, generated};
 use mokly_model::usage::CatalogueUsage;
 
-use crate::assets::{File, content_type};
+use crate::assets::File;
 use crate::backend::{GraphDocuments, PreviewDocument};
 use crate::error::{Result, ServerError};
 use crate::preview::MAX_BYTES;
@@ -62,7 +63,7 @@ impl GraphDocuments {
                         generated(resource),
                         File {
                             bytes: bytes.into(),
-                            content_type: content_type(resource),
+                            content_type: delivered_content_type(resource),
                         },
                     );
                 }

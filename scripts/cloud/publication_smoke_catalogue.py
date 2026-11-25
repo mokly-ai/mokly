@@ -18,7 +18,7 @@ def private_access(api, catalogue, owner, project, publication, fixture_files):
         body, headers = catalogue.fetch(publication, route, cookie=cookie, expected=status)
         assert body == fixture_files[owned]
         assert headers["cache-control"] == "no-store"
-        assert headers["content-type"] == "text/html"
+        assert headers["content-type"] == "text/html; charset=utf-8"
         head, metadata = catalogue.fetch(publication, route, method="HEAD", cookie=cookie, expected=status)
         assert head == b"" and int(metadata["content-length"]) == len(body)
     for route in ["/mokly-upload.json", "/.mokly-export-artifact"]:

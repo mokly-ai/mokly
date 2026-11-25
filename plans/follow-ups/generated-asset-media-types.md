@@ -9,8 +9,7 @@
   `calummoore/storybook-asset-follow-ups-cibm`, whose content type rule fixed
   the media types that this item first named.
 - **Location:** `crates/mokly-server/src/backend_assets.rs` (`Request::verify`),
-  `crates/mokly-server/src/assets.rs` (`content_type`),
-  `crates/mokly-model/src/content_types.rs`,
+  `crates/mokly-model/src/content_types.rs` (`delivered_content_type`),
   `crates/mokly-css/src/types.rs` (`OpaqueAsset`),
   `crates/mokly-graph/src/asset_delivery.rs` (`AssetRead`), and
   `crates/mokly-compare/src/base_reader.rs` (`ReaderAsset`).
@@ -38,9 +37,10 @@
     assets, which no supported route could reach. Only authored JSON has a
     gzip path now.
   - `Request::verify` in `crates/mokly-server/src/backend_assets.rs` still
-    takes the type of a generated asset as a string, from the URL, through
-    `content_type` in `crates/mokly-server/src/assets.rs`. The string can hold
-    any type that `mime_guess` gives, JSON included.
+    takes the type of a generated asset as a string, from the URL. It calls
+    `delivered_content_type` directly, because Serve has no content type
+    lookup of its own. The string can hold any type that `mime_guess` gives,
+    JSON included.
 - **Problem:** The delivery code of generated assets holds an open string type.
   Nothing in the types stops a later change from adding a gzip or charset
   branch for a generated JSON asset again.

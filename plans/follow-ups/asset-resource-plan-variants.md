@@ -38,9 +38,9 @@
     publication, records the type of each path, and sends that recorded
     type. The rule is `delivered_content_type` in
     `crates/mokly-model/src/content_types.rs`, and
-    `docs/protocol/mokly-content-types.md` states it. Serve calls it through
-    `content_type` in `crates/mokly-server/src/assets.rs`. The Cloud
-    reservation calls it in
+    `docs/protocol/mokly-content-types.md` states it. Each Serve route that
+    sends a file calls it directly. Serve has no content type lookup of its
+    own. The Cloud reservation calls it in
     `crates/mkc-publications/src/reservation/reserve.rs`. The content type of
     an asset plan, which `register` sets with `imported_content_type` from the
     same file, is not read for delivery.

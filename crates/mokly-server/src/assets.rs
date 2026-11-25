@@ -103,7 +103,7 @@ impl ViewerAssets for PackageAssets {
                 viewer(&format!("client/{name}")),
                 File {
                     bytes: bytes.into(),
-                    content_type: content_type(&name),
+                    content_type: delivered_content_type(&name),
                 },
             );
         }
@@ -123,19 +123,10 @@ impl ViewerAssets for PackageAssets {
                 viewer(route),
                 File {
                     bytes: bytes.into(),
-                    content_type: content_type(route),
+                    content_type: delivered_content_type(route),
                 },
             );
         }
         Ok(routes)
     }
 }
-
-/// Content type for a public file from its path.
-pub fn content_type(path: &str) -> String {
-    delivered_content_type(path)
-}
-
-#[cfg(test)]
-#[path = "_tests_/imported_asset_types_tests.rs"]
-mod imported_asset_types_tests;

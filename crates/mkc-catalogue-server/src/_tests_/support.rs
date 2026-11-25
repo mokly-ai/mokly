@@ -132,12 +132,13 @@ pub(crate) fn catalogue_with_clear_cookie(
                         hash: BlobHash::digest(bytes),
                         incarnation: Uuid::from_u128(9),
                     },
-                    content_type: match path.rsplit('.').next() {
-                        Some("html" | "htm") => "text/html",
-                        Some("css") => "text/css",
-                        Some("js") => "text/javascript",
-                        Some("woff2") => "font/woff2",
-                        Some("json") => "application/json",
+                    content_type: match (path, path.rsplit('.').next()) {
+                        ("view/legacy.htm", _) => "text/html",
+                        (_, Some("html" | "htm")) => "text/html; charset=utf-8",
+                        (_, Some("css")) => "text/css; charset=utf-8",
+                        (_, Some("js")) => "text/javascript; charset=utf-8",
+                        (_, Some("woff2")) => "font/woff2",
+                        (_, Some("json")) => "application/json",
                         _ => "application/octet-stream",
                     }
                     .into(),

@@ -114,8 +114,10 @@ The [crate README](./README.md) describes the public entry points and usage.
   shutdown hooks.
 - [`src/assets.rs`](./src/assets.rs) defines `ViewerAssets` and
   `PackageAssets`, the built viewer inventory, and `Stylesheet`, a generated
-  stylesheet with its `ETag`. It also supplies the generated asset content-type
-  lookup. The shell stub comes from
+  stylesheet with its `ETag`. It gives each viewer file the type of
+  `delivered_content_type` in
+  [`mokly-model`](../mokly-model/src/content_types.rs). Serve has no content
+  type lookup of its own. The shell stub comes from
   [`mokly-model`](../mokly-model/src/shell.rs).
 
 - [`src/comparison_collector.rs`](./src/comparison_collector.rs) defines `CheckedCollector`, whose worker-side encoder checks frozen document and resource digests before capture.

@@ -5,11 +5,12 @@ use std::sync::Arc;
 
 use mokly_graph::types::RenderGeneration;
 use mokly_model::axes::EntryKind;
+use mokly_model::content_types::delivered_content_type;
 use mokly_model::review::{ReviewEntry, ReviewKind};
 use mokly_model::review_affected::ReviewSide;
 use mokly_model::{namespace, routes};
 
-use crate::assets::{File, content_type};
+use crate::assets::File;
 use crate::changes::{Accepted, ChangeCancellation};
 use crate::error::{Result, ServerError};
 
@@ -198,7 +199,7 @@ fn capture_side(
                 target,
                 File {
                     bytes: bytes.into(),
-                    content_type: content_type(route),
+                    content_type: delivered_content_type(route),
                 },
             )?;
         }
