@@ -1,6 +1,6 @@
 /**
- * The open foundation: the closing copy with Get started and View on
- * GitHub, then the frame where `pricing.mockup.tsx` in the dark code panel
+ * The open foundation: the closing copy with Docs and View on GitHub,
+ * then the frame where `pricing.mockup.tsx` in the dark code panel
  * is wired to the rendered `pricing` artboard, the build in the terminal,
  * the four facts of the open-source CLI and the three steps as a flow of
  * frames. Cal asked for no outer selection on this frame, so it carries

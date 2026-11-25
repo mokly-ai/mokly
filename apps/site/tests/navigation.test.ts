@@ -32,9 +32,8 @@ test("the sitemap publishes every site route and nothing else", () => {
   assert.ok(Object.isFrozen(SITEMAP_PATHS));
 });
 
-test("Get started opens the first Getting started guide", () => {
-  assert.equal(GET_STARTED_PATH, "/docs/start/install/");
-  assert.ok(isDocsRoute(GET_STARTED_PATH));
+test("Get started opens the app's sign-up", () => {
+  assert.equal(GET_STARTED_PATH, "/sign-up");
 });
 
 test("the public source link targets the Mokly repository", () => {

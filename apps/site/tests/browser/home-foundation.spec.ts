@@ -40,7 +40,7 @@ test("the open foundation reads as its copy, its actions, its facts and its step
     - paragraph: An open foundation
     - heading "Your screens. Your building blocks." [level=2]
     - paragraph: Author locally with the open-source Mokly CLI. Keep your screens in Git and host the catalogue anywhere. The cloud adds hosting, review and the agent; it never owns the source.
-    - link "Get started"
+    - link "Docs"
     - link "View on GitHub"
     - list:
       - listitem: "@mokly/mokly"

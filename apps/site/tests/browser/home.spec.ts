@@ -38,20 +38,35 @@ test("the home description and its social metadata repeat the hero lead", async 
     await expect(page.locator(selector)).toHaveAttribute("content", LEAD);
 });
 
-test("both Get started actions open the Install guide", async ({ page }) => {
+test("the hero's Get started opens the app's sign-up", async ({ page }) => {
+  // The app serves the sign-up route, so the site preview checks that the
+  // press reaches the address, not the app's page.
   await page.goto(SITE_PATHS.home);
-  const actions = page
-    .getByRole("main")
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Get started" }),
+    "the home holds one Get started action",
+  ).toHaveCount(1);
+  const action = page
+    .locator("#hero")
     .getByRole("link", { name: "Get started" });
-  await expect(actions).toHaveCount(2);
-  for (const action of await actions.all()) {
-    await expect(action).toHaveAttribute("href", GET_STARTED_PATH);
-  }
-  await actions.first().click();
+  await expect(action).toHaveAttribute("href", GET_STARTED_PATH);
+  await action.click();
   await expect(page).toHaveURL(new RegExp(`${GET_STARTED_PATH}$`));
+});
+
+test("the open foundation's Docs opens the documentation landing", async ({
+  page,
+}) => {
+  await page.goto(SITE_PATHS.home);
+  const action = page
+    .locator("#foundation")
+    .getByRole("link", { name: "Docs" });
+  await expect(action).toHaveAttribute("href", SITE_PATHS.docs);
+  await action.click();
+  await expect(page).toHaveURL(new RegExp(`${SITE_PATHS.docs}$`));
   await expect(
     page.getByRole("main").getByRole("heading", { level: 1 }),
-  ).toHaveText("Install");
+  ).toHaveText("Getting started");
 });
 
 test("Download for Mac opens the desktop releases", async ({ page }) => {
