@@ -1,7 +1,5 @@
 # Storybook Story Setup
 
-Status: A loader, a hook, a cleanup, or a render that throws still fails the story render with `render-failed`, also in a saved view. The [story render failures milestone](../../plans/storybook-support.md#milestone-24-story-render-failures) makes such a saved view a failed view.
-
 This page continues the [Storybook stories contract](./mokly-storybook.md). It
 defines how the sidecar sets up each story render, and the globals that each
 view gives a story.

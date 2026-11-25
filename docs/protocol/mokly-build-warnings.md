@@ -1,7 +1,5 @@
 # Build Warnings
 
-Status: Mokly does not give the `story-render-failed` warning yet. The [story render failures milestone](../../plans/storybook-support.md#milestone-24-story-render-failures) adds it.
-
 ## Scope
 
 A build warning is a non-fatal diagnostic raised while a catalogue is

@@ -1,7 +1,5 @@
 # Render Sidecar
 
-Status: A story render that throws still fails with `render-failed`, also in a saved view. The [story render failures milestone](../../plans/storybook-support.md#milestone-24-story-render-failures) adds the failed story views.
-
 ## Purpose And Boundary
 
 The sidecar runs JavaScript bundles, React, page and Storybook renders, and

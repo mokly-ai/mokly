@@ -1,6 +1,6 @@
 # Component Explorer Design
 
-Status: A story that cannot render still stops the build, and the shell shows no Story or Storybook row yet. The [story render failures milestone](../../plans/storybook-support.md#milestone-24-story-render-failures) adds the error document, and the [Storybook link milestone](../../plans/storybook-support.md#milestone-28-the-storybook-link-in-the-shell) adds the rows.
+Status: The shell shows no Story or Storybook row yet. The [Storybook link milestone](../../plans/storybook-support.md#milestone-28-the-storybook-link-in-the-shell) adds the rows.
 
 ## Owning Catalogue
 

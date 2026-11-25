@@ -1,7 +1,5 @@
 # Storybook Story Failures
 
-Status: A story that cannot render still stops the build, and Mokly writes no error document yet. The [story render failures milestone](../../plans/storybook-support.md#milestone-24-story-render-failures) adds the failed views, their warning, and their error document.
-
 This page continues the [Storybook stories contract](./mokly-storybook.md). It
 defines what Mokly does when a story cannot render.
 

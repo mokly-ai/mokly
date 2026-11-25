@@ -2903,7 +2903,8 @@ The CSS that a preview file imports reaches its stories, as decision 4 says.
 
 Depends on: 18, 19, 20, 21
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
@@ -2944,16 +2945,21 @@ Depends on: 23
 
 A story that cannot render no longer stops the build, as decision 5 says.
 
-- [ ] Turn a story render failure into the warning of design call 9. Keep
+- [x] Turn a story render failure into the warning of design call 9. Keep
       `--strict` failing on it.
-- [ ] Write the error document of Milestone 1 in place of each failed view,
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Write the error document of Milestone 1 in place of each failed view,
       so that the catalogue shows the story and the reason.
-- [ ] Test that a portal story gives the warning and the error document, that
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Test that a portal story gives the warning and the error document, that
       the other stories render, and that `--strict` fails.
-- [ ] Test that a reason with a path in the repository gives the same error
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Test that a reason with a path in the repository gives the same error
       document on both sides, and that a failed story keeps every Used by
       and Affected list, as design calls 26 and 27 say.
-- [ ] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Update `docs/guides/authoring/storybook.md`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 24a: The Props sentence after a failed edit
 
@@ -2983,7 +2989,8 @@ invalid edit, as design call 29 says.
 
 Depends on: 23, 24, 24a
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
@@ -3041,7 +3048,8 @@ Depends on: 27
 
 Depends on: 26, 27, 28
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
@@ -3154,7 +3162,8 @@ Depends on: 30
 
 Depends on: 30, 31, 32
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
@@ -3203,7 +3212,8 @@ Screens that render a story component record its use, as decision 13 says.
 
 Depends on: 34, 35
 
-- [ ] Remove each status line whose page this track completes.
+- [x] Remove each status line whose page this track completes.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
