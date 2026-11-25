@@ -1,4 +1,4 @@
-/** Validate the strict runner's sole optional argument before execution. */
+/** Validate a strict runner's sole optional argument before execution. */
 export function parseShardArgument(args) {
   if (args.length === 0) return undefined;
   const value =
@@ -13,6 +13,6 @@ export function parseShardArgument(args) {
     index < 1 ||
     total < index
   )
-    throw new Error(`invalid browser shard ${value}`);
+    throw new Error(`invalid shard ${value}`);
   return { index, total };
 }

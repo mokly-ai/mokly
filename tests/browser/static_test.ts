@@ -2,7 +2,10 @@ import { test as base } from "./browser_test.js";
 
 export function copiedStaticUrl(): string {
   const url = process.env["MOKLY_PLAYWRIGHT_COPIED_URL"];
-  if (!url) throw new Error("Copied static catalogue is not ready");
+  if (!url)
+    throw new Error(
+      "Copied static catalogue is not ready; a strict shard builds it only when an assigned spec imports static_test.ts",
+    );
   return url;
 }
 export function copiedStaticDirectory(): string {

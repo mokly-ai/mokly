@@ -20,7 +20,7 @@ treated as proof. The client uses these endpoints:
 - `actions/workflows/ci.yml/runs` for successful push and pull-request runs;
 - `commits/{sha}/pulls` for merged pull requests associated with the tag commit;
 - `actions/runs/{id}/jobs` for the exact `Required CI` job result;
-- `actions/runs/{id}/artifacts` and `actions/artifacts/{id}/zip` for the ten
+- `actions/runs/{id}/artifacts` and `actions/artifacts/{id}/zip` for the
   dual-runtime Release Please `verification-*` reports; and
 - `git/commits/{sha}` for the tree named by an evidence commit.
 
@@ -35,18 +35,20 @@ workflows, other events, or unsuccessful runs are excluded. Candidate order is:
 Each candidate must also contain exactly one successful job named `Required CI`.
 An absent or unsuccessful job makes that candidate unavailable. An unavailable
 candidate is skipped so an older valid run for the same tree can still apply.
-Ordinary `main` push CI contains only the five-report Node 22.15 profile, so its
+Ordinary `main` push CI contains only the Node 22.15 profile, so its
 otherwise successful tag-commit run is unavailable for publishing. The usual
 applicable candidate is the associated Release Please pull-request run, whose
-trusted same-repository profile adds Node 24 and produces all ten reports.
+trusted same-repository profile adds Node 24 and produces the viewer and
+browser reports of [both runtimes](./ci-workflow.md#required-ci).
 
 ## Identity And Completeness Proof
 
 The release checkout supplies the tagged commit and its tree. The downloaded
 artifact names
-must match the CI verification namespace, be unexpired, and yield exactly ten
-reports across `node-22.15.0` and `node-24`. All reports must name one full
-commit SHA. The ordinary five-report profile is complete ordinary CI evidence,
+must match the CI verification namespace, be unexpired, and yield exactly one
+report per viewer and browser shard on each of `node-22.15.0` and `node-24`.
+All reports must name one full
+commit SHA. The ordinary single-runtime profile is complete ordinary CI evidence,
 but it is not release evidence and therefore classifies as absent here.
 
 The evidence commit is applicable when it is the tagged commit or when

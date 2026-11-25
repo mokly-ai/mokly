@@ -103,6 +103,48 @@ for (const fails of [false, true]) {
   });
 }
 
+test("a shard told to skip the copied example starts no copy and leaves its address unset", async () => {
+  const before = process.env["MOKLY_PLAYWRIGHT_COPIED_URL"];
+  delete process.env["MOKLY_PLAYWRIGHT_COPIED_URL"];
+  process.env["MOKLY_PLAYWRIGHT_COPIED_HOST"] = "skip";
+  const started: string[] = [];
+  const host = (name: string) => ({
+    url: `http://${name}`,
+    directory: `/${name}`,
+    close: async () => {},
+  });
+  try {
+    const close = await setup({ workers: 1 } as FullConfig, {
+      start: async () => {
+        started.push("serve");
+        return [host("serve")];
+      },
+      staticHost: async () => {
+        started.push("copy");
+        return host("copy");
+      },
+      comparisonHost: async () => {
+        started.push("comparison");
+        return host("comparison");
+      },
+      host: async () => {
+        throw new Error("Unexpected manual host");
+      },
+    });
+    assert.deepEqual(started, ["serve", "comparison"]);
+    assert.equal(process.env["MOKLY_PLAYWRIGHT_COPIED_URL"], undefined);
+    assert.equal(
+      process.env["MOKLY_PLAYWRIGHT_COMPARISON_URL"],
+      "http://comparison",
+    );
+    await close();
+  } finally {
+    delete process.env["MOKLY_PLAYWRIGHT_COPIED_HOST"];
+    if (before !== undefined)
+      process.env["MOKLY_PLAYWRIGHT_COPIED_URL"] = before;
+  }
+});
+
 test("a supplied static copy requires disabled Changes and explains the build flag", () => {
   requireCurrentOnlyIndex({ changesStatus: "disabled" }, "/site");
   for (const index of [

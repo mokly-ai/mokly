@@ -50,7 +50,7 @@ for (const [args, message] of [
   ],
   [
     ["--shard", "1/4"],
-    /does not accept --shard.*cargo xtask check --suite browser --shard/u,
+    /does not accept --shard.*cargo xtask check --suite viewer --shard/u,
   ],
   [
     ["helper.test.ts"],
