@@ -1,15 +1,20 @@
 /** The CI host of a Rust test job name, or null for another job. */
 export function testHost(jobName: string): "linux" | "macos" | "windows" | null;
 
-/** The summed nextest test seconds of each unit in one job log. */
-export function logUnitSeconds(log: string): Map<string, number>;
+/** One passed test of a job log. */
+export interface LoggedTest {
+  unit: string;
+  test: string;
+  seconds: number;
+}
 
-/** One job's summed test seconds of one unit. */
-export interface TestSample {
+/** The passed tests of one job log with their nextest seconds. */
+export function logTests(log: string): LoggedTest[];
+
+/** One passed test of one job of one run. */
+export interface TestSample extends LoggedTest {
   run: string;
   host: string;
-  unit: string;
-  seconds: number;
 }
 
 /** The rounded test seconds of each unit, keyed by unit. */

@@ -1,17 +1,18 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
 
 import { fetchRunJobs } from "./ci-timing-jobs.mjs";
 
+const ROOT = path.resolve(import.meta.dirname, "../..");
 const WEIGHTS = path.join(import.meta.dirname, "rust-test-weights.json");
-const USAGE =
-  "usage: rust-test-weights.mjs [--run {id}]... [--timings {cargo-timing.html}]";
+const USAGE = "usage: rust-test-weights.mjs [--run {id}]... [--compile]";
 // A unit's compile weight is its build time in the timing report times this
 // factor, as the verification README defines.
 const COMPILE_FACTOR = 1.5;
 const RESULT_LINE =
-  /\s(?:PASS|LEAK|LEAK-PASS)\s+\[\s*(\d+(?:\.\d+)?)s\]\s+(?:\(\s*\d+\/\d+\)\s+)?(\S+)\s/u;
+  /\s(?:PASS|LEAK|LEAK-PASS)\s+\[\s*(\d+(?:\.\d+)?)s\]\s+(?:\(\s*\d+\/\d+\)\s+)?(\S+)\s+(\S+)/u;
 
 /**
  * The CI host of a Rust test job, from its job name, or null for a job that
@@ -38,45 +39,49 @@ function unitOfBinary(binaryId) {
     : `--test ${target}`;
 }
 
-/** The summed nextest test seconds of each unit in one job log. */
-export function logUnitSeconds(log) {
-  const seconds = new Map();
+/**
+ * The passed tests of one job log: the unit, the test identity (its binary
+ * ID and name), and its nextest seconds.
+ */
+export function logTests(log) {
+  const tests = [];
   for (const line of log.split("\n")) {
     const match = RESULT_LINE.exec(line);
     if (!match) continue;
-    const unit = unitOfBinary(match[2]);
-    seconds.set(unit, (seconds.get(unit) ?? 0) + Number(match[1]));
+    tests.push({
+      unit: unitOfBinary(match[2]),
+      test: `${match[2]} ${match[3]}`,
+      seconds: Number(match[1]),
+    });
   }
-  return seconds;
+  return tests;
 }
 
 /**
- * The test seconds of each unit from samples of `{ run, host, unit, seconds }`
- * with one sample for each job: the sum over the jobs of a run and host, the
- * median over the runs of a host, then the mean over the hosts, rounded.
+ * The test seconds of each unit from samples of
+ * `{ run, host, unit, test, seconds }`: the median of each test over the runs
+ * of a host that observed it, the sum over the tests of a unit and host, then
+ * the mean over the hosts, rounded. A run that lacks a job, such as a failed
+ * or unfinished test shard, only lowers the sample count of that job's tests.
  */
 export function testSeconds(samples) {
-  const sums = new Map();
-  for (const { run, host, unit, seconds } of samples) {
-    const key = JSON.stringify([unit, host, run]);
-    sums.set(key, (sums.get(key) ?? 0) + seconds);
-  }
-  const byHost = new Map();
-  for (const [key, seconds] of sums) {
-    const [unit, host] = JSON.parse(key);
-    const hostKey = JSON.stringify([unit, host]);
-    byHost.set(hostKey, [...(byHost.get(hostKey) ?? []), seconds]);
+  const runs = new Map();
+  for (const { host, unit, test, seconds } of samples) {
+    const key = JSON.stringify([unit, host, test]);
+    runs.set(key, [...(runs.get(key) ?? []), seconds]);
   }
   const hosts = new Map();
-  for (const [key, values] of byHost) {
-    const [unit] = JSON.parse(key);
-    hosts.set(unit, [...(hosts.get(unit) ?? []), median(values)]);
+  for (const [key, values] of runs) {
+    const [unit, host] = JSON.parse(key);
+    const hostKey = JSON.stringify([unit, host]);
+    hosts.set(hostKey, (hosts.get(hostKey) ?? 0) + median(values));
   }
-  return Object.fromEntries(
-    [...hosts]
-      .sort(([left], [right]) => compare(left, right))
-      .map(([unit, values]) => [unit, Math.round(mean(values))]),
-  );
+  const units = new Map();
+  for (const [key, seconds] of hosts) {
+    const [unit] = JSON.parse(key);
+    units.set(unit, [...(units.get(unit) ?? []), seconds]);
+  }
+  return sortedObject(units, (values) => Math.round(mean(values)));
 }
 
 /**
@@ -92,11 +97,9 @@ export function compileSeconds(html) {
     const key = timingUnit(unit.target);
     if (key) seconds.set(key, (seconds.get(key) ?? 0) + unit.duration);
   }
-  return Object.fromEntries(
-    [...seconds]
-      .sort(([left], [right]) => compare(left, right))
-      .map(([unit, value]) => [unit, Math.round(value * COMPILE_FACTOR)]),
-  );
+  if (seconds.size === 0)
+    throw new Error("the cargo timing report built no test target");
+  return sortedObject(seconds, (value) => Math.round(value * COMPILE_FACTOR));
 }
 
 // Cargo names each test build ` {target} "{kind}" (test)`: kind `lib` for the
@@ -109,18 +112,62 @@ function timingUnit(target) {
   return kind === "lib" ? "--lib" : `--${kind} ${name}`;
 }
 
+// Cargo leaves a build that it reuses out of its timing report, so the
+// measurement builds every test target in a target directory of its own.
+async function measureCompile() {
+  const target = await fs.mkdtemp(
+    path.join(ROOT, ".context", "rust-test-weights-"),
+  );
+  try {
+    const build = spawnSync(
+      "cargo",
+      [
+        "test",
+        "--locked",
+        "--no-run",
+        "--timings",
+        "-p",
+        "mokly-*",
+        "-p",
+        "xtask",
+        "--target-dir",
+        target,
+      ],
+      {
+        cwd: ROOT,
+        stdio: "inherit",
+        env: {
+          ...process.env,
+          CARGO_INCREMENTAL: "0",
+          CARGO_PROFILE_DEV_DEBUG: "0",
+          CARGO_PROFILE_TEST_DEBUG: "0",
+        },
+      },
+    );
+    if (build.status !== 0)
+      throw new Error(`cargo test --no-run failed with ${build.status}`);
+    return compileSeconds(
+      await fs.readFile(
+        path.join(target, "cargo-timings", "cargo-timing.html"),
+        "utf8",
+      ),
+    );
+  } finally {
+    await fs.rm(target, { recursive: true, force: true });
+  }
+}
+
 async function runSamples(request) {
   const samples = [];
-  const jobs = await fetchRunJobs(request);
-  for (const job of jobs) {
+  for (const job of await fetchRunJobs(request)) {
     const host = testHost(job.name);
     if (!host || job.conclusion !== "success") continue;
     const log = await githubText(
       request,
       `/repos/${request.repository}/actions/jobs/${job.id}/logs`,
     );
-    for (const [unit, seconds] of logUnitSeconds(log))
-      samples.push({ run: request.runId, host, unit, seconds });
+    for (const test of logTests(log))
+      samples.push({ run: request.runId, host, ...test });
   }
   return samples;
 }
@@ -138,6 +185,14 @@ async function githubText({ fetch, apiUrl, token }, requestPath) {
   return await response.text();
 }
 
+function sortedObject(map, value) {
+  return Object.fromEntries(
+    [...map]
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([key, entry]) => [key, value(entry)]),
+  );
+}
+
 function median(values) {
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
@@ -150,10 +205,6 @@ function mean(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function compare(left, right) {
-  return left < right ? -1 : left > right ? 1 : 0;
-}
-
 if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(import.meta.filename)
@@ -161,15 +212,11 @@ if (
   const { values } = parseArgs({
     options: {
       run: { type: "string", multiple: true, default: [] },
-      timings: { type: "string" },
+      compile: { type: "boolean", default: false },
     },
   });
-  if (values.run.length === 0 && !values.timings) throw new Error(USAGE);
+  if (values.run.length === 0 && !values.compile) throw new Error(USAGE);
   const weights = JSON.parse(await fs.readFile(WEIGHTS, "utf8"));
-  if (values.timings)
-    weights.compileSeconds = compileSeconds(
-      await fs.readFile(values.timings, "utf8"),
-    );
   if (values.run.length > 0) {
     const token = process.env.GITHUB_TOKEN;
     if (!token) throw new Error(`GITHUB_TOKEN is not set. ${USAGE}`);
@@ -188,6 +235,7 @@ if (
       throw new Error("the runs have no passed Rust test shard logs");
     weights.testSeconds = testSeconds(samples);
   }
+  if (values.compile) weights.compileSeconds = await measureCompile();
   await fs.writeFile(WEIGHTS, `${JSON.stringify(weights, null, 2)}\n`);
   for (const part of ["compileSeconds", "testSeconds"])
     process.stdout.write(
