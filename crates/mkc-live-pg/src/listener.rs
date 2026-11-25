@@ -1,7 +1,6 @@
 //! Subscribe to both live channels and report a gap after reconnecting.
 
 use std::future::poll_fn;
-use std::time::Duration;
 
 use mkc_live_interface::error::{Error, ErrorResultExt, Result};
 use mkc_live_interface::relay::InboundEvent;
@@ -9,12 +8,11 @@ use tokio::sync::broadcast;
 use tokio::time::sleep;
 use tokio_postgres::{AsyncMessage, Client, Config, NoTls};
 
+use crate::backoff::Backoff;
 use crate::payload::decode;
 use crate::relay::{Failure, PgConnection};
 
 const SUBSCRIBE: &str = "LISTEN mkc_live_notice; LISTEN mkc_live_relay";
-const FIRST_BACKOFF: Duration = Duration::from_millis(500);
-const MAX_BACKOFF: Duration = Duration::from_secs(15);
 
 pub(super) struct Listener {
     /// Keep the client alive while polling the driver for notifications.
@@ -71,14 +69,13 @@ impl Listener {
 }
 
 async fn reconnect(config: &Config, inbound: &broadcast::Sender<InboundEvent>) -> Listener {
-    let mut backoff = FIRST_BACKOFF;
+    let mut backoff = Backoff::default();
     loop {
-        sleep(backoff).await;
+        sleep(backoff.next_delay()).await;
         match Listener::connect(config, inbound).await {
             Ok(listener) => return listener,
             Err(error) => tracing::warn!(%error, "live listener could not reconnect"),
         }
-        backoff = (backoff * 2).min(MAX_BACKOFF);
     }
 }
 

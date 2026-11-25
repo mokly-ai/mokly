@@ -2,6 +2,7 @@
 
 #![warn(unreachable_pub)]
 
+mod backoff;
 mod listener;
 mod payload;
 pub mod relay;

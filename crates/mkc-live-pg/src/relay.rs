@@ -87,3 +87,7 @@ impl Drop for PostgresRelay {
         self.sender.abort();
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/relay_tests.rs"]
+mod tests;

@@ -19,6 +19,12 @@ whose own payload would reach 7,900 bytes. One warning per affected tick
 records the project and serialized size of the largest dropped event.
 Publishing hands the tick to the sender without waiting for Postgres.
 
+After a send fails, the sender drops incoming ticks until its next connection
+attempt is due. The delay starts at 500 milliseconds and doubles up to
+15 seconds. The sender logs one warning for the connection loss. Its first
+successful send logs the number of ticks lost during the outage and resets
+the delay.
+
 The subscription stays open when the listener loses its database connection.
 The listener reports a gap after it reconnects and subscribes again. The hub
 uses the gap to tell its sockets to read again.
@@ -53,7 +59,8 @@ replica IDs because Postgres notification channels span the database.
 
 - Creates `PostgresRelay` and owns the two connection tasks. [relay.rs](./src/relay.rs)
 - Subscribes to both channels and reports a gap after reconnecting. [listener.rs](./src/listener.rs)
-- Sends all messages of one tick in one transaction. [sender.rs](./src/sender.rs)
+- Sends all messages of one tick in one transaction and manages sender recovery. [sender.rs](./src/sender.rs)
+- Gives each worker the same bounded reconnect delays. [backoff.rs](./src/backoff.rs)
 - Splits and decodes notification payloads. [payload.rs](./src/payload.rs)
 
 ### Related Docs
