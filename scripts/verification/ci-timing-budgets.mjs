@@ -29,7 +29,15 @@ export function parseBudgets(value) {
       minutes: positive(budget.minutes, `jobs[${index}].minutes`),
     };
   });
-  return { mode: value.mode, wallClockMinutes, slowestTests, jobs };
+  // The cache report checks its own budget, so a bad cache field never stops
+  // the duration report.
+  return {
+    mode: value.mode,
+    wallClockMinutes,
+    slowestTests,
+    jobs,
+    cache: value.cache,
+  };
 }
 
 /** The first budget whose pattern matches the whole job name, or null. */

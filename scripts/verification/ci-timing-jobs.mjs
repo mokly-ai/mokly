@@ -6,29 +6,11 @@ const PAGE_LIMIT = 10;
  * `filter=latest` lists each job once. After a rerun of failed jobs, it lists
  * the jobs that did not rerun under the new attempt with their old times.
  */
-export async function fetchRunJobs({
-  fetch,
-  apiUrl,
-  repository,
-  runId,
-  token,
-}) {
+export async function fetchRunJobs(request) {
   const entries = [];
   for (let page = 1; page <= PAGE_LIMIT; page += 1) {
-    const path = `/repos/${repository}/actions/runs/${runId}/jobs?filter=latest&per_page=${PAGE_SIZE}&page=${page}`;
-    const response = await fetch(`${apiUrl}${path}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "mokly-ci-timing",
-      },
-    });
-    if (!response.ok)
-      throw new Error(
-        `GitHub GET ${path} failed (${response.status}); the job needs actions: read`,
-      );
-    const body = await response.json();
+    const path = `/repos/${request.repository}/actions/runs/${request.runId}/jobs?filter=latest&per_page=${PAGE_SIZE}&page=${page}`;
+    const body = await githubJson(request, path);
     const jobs = isRecord(body) && Array.isArray(body.jobs) ? body.jobs : null;
     if (!jobs) throw new Error(`GitHub GET ${path} returned no jobs array`);
     entries.push(...jobs);
@@ -36,6 +18,23 @@ export async function fetchRunJobs({
     if (jobs.length < PAGE_SIZE || entries.length >= total) break;
   }
   return entries;
+}
+
+/** GET one path of the GitHub REST API with the run token; resolve to its body. */
+export async function githubJson({ fetch, apiUrl, token }, path) {
+  const response = await fetch(`${apiUrl}${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "mokly-ci-timing",
+    },
+  });
+  if (!response.ok)
+    throw new Error(
+      `GitHub GET ${path} failed (${response.status}); the job needs actions: read`,
+    );
+  return await response.json();
 }
 
 /**

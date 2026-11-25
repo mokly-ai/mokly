@@ -13,6 +13,8 @@ export interface Budgets {
   wallClockMinutes: number;
   slowestTests: number;
   jobs: JobBudget[];
+  /** The unchecked `cache` field; the cache report narrows it. */
+  cache: unknown;
 }
 
 export type BudgetState = "within" | "over" | "no-budget" | "not-run";
