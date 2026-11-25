@@ -470,9 +470,8 @@ jobs:
           # The workspace suites run in three rows, grouped by what they need:
           # the cloud Rust tests with Postgres, the suites that use the
           # workspace build, and the infrastructure and policy suites. A row
-          # with rust_cache_key restores the entry of a job that builds a
-          # superset of its crates and never saves it, so the row adds no
-          # cache entry.
+          # with rust_cache_key restores the entry of that key and never saves
+          # it, so the row adds no cache entry.
           - name: Workspace checks (Rust)
             command: cloud-rust
             install_dependencies: true

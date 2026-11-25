@@ -85,18 +85,19 @@ because a smaller shard would save an entry that lacks dependencies of the
 others. A Clippy build entry for each native host was rejected, because it
 would add one more entry for each host to a total near the 10 GB limit.
 
-A job whose dependency builds are all in the entry of an owner restores that
-entry and never saves. Every other Linux CI job that builds only `xtask` and
+A reader restores the entry of an owner that holds some or all of its
+dependency builds, and never saves. Every other Linux CI job that builds only `xtask` and
 the native binary restores the Repository test entry, the cloud mockup, site,
 and Workspace checks (infrastructure) partitions included. The desktop
-partition and the image job restore the app entry. The Workspace checks
-(contracts) partition restores the cloud Rust entry. The native lint shard of
-each host restores the test entry of its host, so Clippy reuses its build
-scripts and procedural macros. Only the owner saves its entry: a cache key
-cannot change after its first save, so an entry that a reader saved first
-would lack the builds of the owner until the key changes. A separate saved
-entry for a reader was rejected, because it adds the size of its builds to the
-total and saves no build time. One entry for the app
+partition and the image job restore the app entry. These readers need no
+dependency build that their entry lacks. The Workspace checks (contracts)
+partition restores the cloud Rust entry, which lacks some of its dependency
+builds. The native lint shard of each host restores the test entry of its
+host, so Clippy reuses its build scripts and procedural macros. Only the owner
+saves its entry: a cache key cannot change after its first save, so an entry
+that a reader saved first would lack the builds of the owner until the key
+changes. A separate saved entry for a reader was rejected, because it adds its
+builds to a total near the 10 GB limit. One entry for the app
 shards and the cloud Rust partition was rejected, because they resolve
 different features of shared dependencies, so most of their dependency builds
 differ. One entry for the Repository checks and test shards was rejected,

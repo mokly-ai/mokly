@@ -21,5 +21,6 @@
 - **Left out:** A higher workflow timeout gives a stalled read more time and fails the goal. A timer race without an abort leaves the socket open, so the step still waits.
 - **Wider fix:** C. One deadline parameter on the shared helper bounds every GitHub read of the report, also reads added later.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/ci-timing-cache-list-snapshot.md` rebuilds the same cache reader. Do both in one branch, so that a cancelled read keeps the pages that it read.
 - **Recommendation:** C. It bounds both reads with one small change, and the jobs read has the same hang today.
 - **Action:** fix after merge, apply C, because the hang is rare, Node's limits end a full stall, and the job is report-only.

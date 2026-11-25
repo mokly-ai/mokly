@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from branch `calummoore/ci-speed-actions-cache-headroom-and-gi6l`, review finding 4.
 - **Location:** `.github/workflows/ci.yml` (the Rust and npm cache steps and the `CI timing` job), `docs/protocol/ci-verification-security.md#dependency-cache-and-security`, `docs/protocol/ci-duration-budgets.md#actions-cache`.
-- **Reason:** The fix gives one CI job `actions: write`, which the cache security rules do not allow today, so the user must approve it.
+- **Reason:** Each fix either gives a CI job `actions: write`, which the cache security rules do not allow today, or changes the repository cache limit, so the user must choose.
 
 - **Terms:**
   - **Actions cache:** GitHub's cache store of the repository. It holds at most 10 GB. Above that, GitHub evicts the least recently used entries.
@@ -18,9 +18,11 @@
   - **A.** Change nothing. The old set stops being used, so least-recently-used eviction usually removes it first. A live entry that no run touched since the old set was last used, such as `stripe-catalogue` when no deploy ran, can still go. Effort: Small.
   - **B.** Report the usage at the start and at the end of CI. This shows the pressure before the run, but the saves of one run can still cross both thresholds between the samples. Effort: Medium.
   - **C.** In the timing report, add a projected total: the current total plus the size of the largest group of keys that one lockfile change replaces. Warn when that projection passes 10 GB. This is a heuristic that depends on the key shapes. Effort: Medium.
-  - **D.** Add a step on `main` that runs after the saves. It deletes each entry that a newer entry with the same key prefix replaces, such as the old Rust set after a lockfile change. The step needs `actions: write`, the security doc changes, and the delete logic needs tests. Effort: Medium.
-- **Left out:** Stopping cache saves at the budget lets every cache go stale after a lockfile change, and D is better on every point. A lower fixed budget would warn on every run, because the normal total is already near it.
-- **Wider fix:** D. It keeps only the newest entry of each key prefix, whatever the size of the change.
+  - **D.** Add a step on `main` that runs after the saves. It deletes each entry that a newer entry with the same key prefix replaces, such as the old Rust set after a lockfile change. This frees space for later runs only. GitHub starts to evict as soon as a save passes the limit, so the replacement run itself can still evict a live entry before the step starts. The step needs `actions: write`, the security doc changes, and the delete logic needs tests. Effort: Medium.
+  - **E.** Raise the repository cache limit, an Actions setting that an administrator can change, to a value that holds one replacement set beside the live set, for example 16 GB. The replacement run then evicts nothing, and the old set expires after 7 days without use. GitHub bills the storage above 10 GB, about $2.80 a month at 50 GB in 2026. It needs a payment method and a budget above $0 for the Actions cache storage SKU, because with a $0 budget the cache becomes read-only above 10 GB. The 10 GB statement in `docs/protocol/ci-verification-security.md` and the cache budget change with it. Effort: Small.
+  - **F.** Let each saving job delete, by its exact key, the old entry that it restored through a partial key match, just before it saves the new entry. This frees space before each upload. Every saving job then needs `actions: write`, which widens the permission more than D. When the save then fails, the job has also lost the old entry. Effort: Medium.
+- **Left out:** Stopping cache saves at the budget lets every cache go stale after a lockfile change. A lower fixed budget would warn on every run, because the normal total is already near it. Coordinating the saves of all owners so that each set fits before it uploads needs workflow changes in every saving job and write permission, and E gives the same headroom for less work.
+- **Wider fix:** E. Headroom larger than one replacement set prevents the eviction whatever the source of the new set.
 - **Previous examples:** Commit `ba015c2df` recorded the eviction of the macOS and Repository Rust entries of `main` and Repository runs about 8 minutes slower.
-- **Recommendation:** D. It removes the cause, and the deleted entries are ones that no job restores again.
-- **Action:** ask the user, because D gives a CI job `actions: write`, and the cache security rules allow no job to write to the cache store except through a `main` save.
+- **Recommendation:** E. It is the only option that protects live entries during the replacement run itself, and it needs no new write permission. D then only reclaims space early.
+- **Action:** ask the user, because E changes a billed repository setting and the 10 GB limit that the protocol states, and D and F give CI jobs `actions: write`, which the cache security rules do not allow.
