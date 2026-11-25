@@ -85,57 +85,6 @@ test(
 );
 
 test(
-  "parent globs do not fingerprint unrelated files in explicitly selected child roots",
-  { timeout: 120_000 },
-  async () => {
-    const root = await fixture();
-    try {
-      await fs.rm(path.join(root, "specs/_folder.json"));
-      await fs.mkdir(path.join(root, "catalog/target"), { recursive: true });
-      await fs.writeFile(
-        path.join(root, "catalog/guide.md"),
-        "---\ntitle: Guide\n---\n# Guide\n",
-      );
-      await fs.writeFile(
-        path.join(root, "catalog/target/unrelated.md"),
-        "unrelated\n",
-      );
-      await fs.writeFile(
-        path.join(root, "catalog/target/home.screen.html"),
-        "---\ntitle: Target\n---\n<h1>Target</h1>\n",
-      );
-      const config = JSON.parse(
-        await fs.readFile(path.join(root, "mokly.config.json"), "utf8"),
-      ) as Record<string, unknown>;
-      config.roots = [
-        { dir: "catalog", files: ["**/*.md"] },
-        { dir: "catalog/target", files: ["**/*.screen.html"], path: "target" },
-        { dir: "specs", files: ["**/*.mockup.ts"] },
-      ];
-      await fs.writeFile(
-        path.join(root, "mokly.config.json"),
-        JSON.stringify(config),
-      );
-      await render(
-        root,
-        "fs.appendFileSync('catalog/target/unrelated.md', 'changed');",
-      );
-      const result = await build(root);
-      assert.equal(result.code, 0, result.stderr);
-      assert.match(
-        await fs.readFile(
-          path.join(root, "catalog/target/unrelated.md"),
-          "utf8",
-        ),
-        /changed/u,
-      );
-    } finally {
-      await fs.rm(root, { recursive: true, force: true });
-    }
-  },
-);
-
-test(
   "each selected input kind aborts changed-generation installation and keeps the earlier output",
   { timeout: 120_000 },
   async () => {

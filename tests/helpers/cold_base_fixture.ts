@@ -88,10 +88,15 @@ export const page = definePage({title: '${title}', description: '', relatedDocs:
   render: () => '<!doctype html><html><head><title>${title}</title></head><body><h1>' + ${value} + '</h1></body></html>'});`;
 }
 
-/** A real Git base and npm install, with an empty external Mokly cache. */
+/**
+ * A real Git base and npm install, with an empty external Mokly cache. A
+ * caller that installs with another package manager passes
+ * `{ install: false }`, which skips the npm install that it would delete.
+ */
 export async function coldBaseFixture(
   tier: DependencyTier,
   context: TestContext,
+  { install = true }: { install?: boolean } = {},
 ) {
   const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-cold-"));
   context.after(() => fs.rm(temporary, { recursive: true, force: true }));
@@ -156,7 +161,7 @@ export async function coldBaseFixture(
     npm_config_ignore_scripts: "false",
     npm_config_cache: path.join(root, ".context/npm-cache"),
   };
-  await runNpm(["ci", "--ignore-scripts"], { cwd: root, env });
+  if (install) await runNpm(["ci", "--ignore-scripts"], { cwd: root, env });
   await write(
     root,
     "specs/source-value.ts",
