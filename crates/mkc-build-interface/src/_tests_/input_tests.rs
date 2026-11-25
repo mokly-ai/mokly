@@ -87,12 +87,43 @@ fn credential_validation_never_echoes_its_value() {
     for value in [
         "",
         "secret\ncredential",
-        "a:b",
-        "a@b",
-        "a\0b",
+        "secret:credential",
+        "secret@credential",
+        "secret/credential",
+        "secret\0credential",
+        "secret\x1bcredential",
         "padded secret",
+        "tabbed\tsecret",
+        "secret\u{e9}credential",
     ] {
         let error = Secret::new(value).unwrap_err();
+        assert!(
+            matches!(
+                error,
+                Error::InvalidRequest {
+                    field: RequestField::Credential
+                }
+            ),
+            "{value:?} gave {error:?}"
+        );
         assert!(!format!("{error:?}").contains("secret"));
     }
+}
+
+#[test]
+fn accepts_dotted_github_installation_token() {
+    let token = [
+        "ghs_",
+        &"Ab3dE_fG7h-".repeat(12),
+        ".",
+        &"kL9mN-oP1q_".repeat(12),
+        ".",
+        &"rS5tU_vW2x-".repeat(11),
+    ]
+    .concat();
+    assert_eq!(token.len(), 391);
+    let accepted = Secret::new(token.clone())
+        .map(|secret| secret.expose().to_owned())
+        .map_err(|error| error.to_string());
+    assert_eq!(accepted, Ok(token));
 }
