@@ -3,7 +3,10 @@ import type { BudgetRow } from "./ci-timing-budgets.mjs";
 /** One shard group of the budget file. */
 export interface ShardGroup {
   name: string;
-  /** Job-name patterns; a job that matches one of them is a shard of the group. */
+  /**
+   * Job-name patterns. A job that matches one of them and none of `exclude`
+   * is a shard of the group.
+   */
   patterns: string[];
   /** Patterns of matching jobs that run other work, such as a lint shard. */
   exclude: string[];

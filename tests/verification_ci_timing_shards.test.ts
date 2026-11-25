@@ -126,6 +126,27 @@ test("a shard group field that does not parse adds a note and the report still r
       shardGroups: [{ name: "App", patterns: ["App *"], spreadMinutes: 0 }],
       note: "shardGroups[0].spreadMinutes must be a positive number",
     },
+    {
+      shardGroups: [{ patterns: ["App *"], spreadMinutes: 2 }],
+      note: "shardGroups[0] needs a name",
+    },
+    {
+      shardGroups: [
+        {
+          name: "Mockup",
+          patterns: ["Mockup *"],
+          exclude: "Mockup checks 1/*",
+          spreadMinutes: 2,
+        },
+      ],
+      note: "shardGroups[0].exclude must list job-name patterns",
+    },
+    {
+      shardGroups: [
+        { name: "App", patterns: ["App *"], spreadMinutes: 2, weighted: "yes" },
+      ],
+      note: "shardGroups[0].weighted must be true or false",
+    },
   ];
   for (const { shardGroups, note } of cases) {
     const result = await runTiming(context, {
