@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
@@ -202,6 +202,12 @@ fn every_unit_runs_on_exactly_one_shard_for_every_total() {
     }
 }
 
+/// Fixed weights of the metadata units: `--lib` outweighs every other unit
+/// together, so it runs alone on the first of two shards, and
+/// `integration_tests` runs as three slices.
+const FIXTURE_WEIGHTS: &str = r#"{"defaultSeconds": 1, "docSeconds": 0, "compileSeconds": {"--lib": 100}, "testSeconds": {"--test integration_tests": 30}, "splits": {"--test integration_tests": 3}}"#;
+
+/// A check runner over the metadata units, placed by the fixture weights.
 fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
     let output = CommandRunnerOutputMock
         .next_call(
@@ -213,34 +219,22 @@ fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
         Arc::new(Unimock::new(())),
         PathBuf::from("/workspace"),
     )
+    .with_rust_test_weights(Weights::parse(FIXTURE_WEIGHTS).unwrap())
 }
 
 const NEXTEST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
 
 /// The first of two shards starts with `--lib`, and the second never runs
-/// it, so each populated shard adds only its own targets to nextest. The
-/// embedded weights decide whether the first shard also runs a slice of a
-/// split unit, so the test does not fix its number of commands.
+/// it, so each populated shard adds only its own targets to nextest.
 #[test]
 fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
-    let commands = Arc::new(Mutex::new(Vec::new()));
-    let recorded = Arc::clone(&commands);
     runner(
         CommandRunnerRunMock
-            .each_call(matching!((spec) if spec.display().starts_with(NEXTEST) && spec.working_directory() == Some(Path::new("/workspace"))))
-            .answers_arc(Arc::new(move |_, spec| {
-                recorded.lock().unwrap().push(spec.display());
-                Ok(())
-            }))
-            .at_least_times(1),
+            .next_call(matching!((spec) if spec.display().starts_with(&format!("{NEXTEST} --lib")) && spec.working_directory() == Some(Path::new("/workspace"))))
+            .returns(Ok(())),
     )
     .rust_test_shard(Shard::from_str("1/2").unwrap(), true)
     .unwrap();
-    let first = commands.lock().unwrap();
-    assert!(
-        first[0].starts_with(&format!("{NEXTEST} --lib")),
-        "{first:?}"
-    );
     runner(
         CommandRunnerRunMock
             .each_call(matching!((spec) if spec.display().starts_with(NEXTEST) && !spec.display().contains("--lib")))
@@ -251,7 +245,7 @@ fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
     .unwrap();
 }
 
-/// The embedded weights split `integration_tests` in three. One shard runs
+/// The fixture weights split `integration_tests` in three. One shard runs
 /// its whole units in one command and each slice in its own command, and a
 /// failed slice does not stop the next ones when the shard reports every
 /// failure.
