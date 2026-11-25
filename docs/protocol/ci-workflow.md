@@ -44,8 +44,7 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 - one static-delivery job on Node 22.15.0; and
 - one native job on macOS and four Windows native shards at Node 22.15.0.
   Each Windows shard runs one quarter of the Rust tests. Shard 1 also checks
-  formatting and Clippy and runs the doc tests. The Windows shards keep their
-  temporary files on a trusted ReFS Dev Drive.
+  formatting and Clippy and runs the doc tests.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
 

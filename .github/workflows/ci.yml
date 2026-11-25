@@ -257,22 +257,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      # Windows tests write many temporary files. A trusted ReFS Dev Drive
-      # avoids the real-time scan and the NTFS cost of the default disk.
-      - name: Put temporary files on a Dev Drive
-        if: runner.os == 'Windows'
-        uses: samypr100/setup-dev-drive@562171fe8df7401fdf582d766cd3b6ab80d5b1a0 # v4.1.0
-        with:
-          drive-size: 20GB
-          drive-format: ReFS
-          drive-type: Dynamic
-          trusted-dev-drive: true
-          env-mapping: |
-            TMP,{{ DEV_DRIVE }}\tmp
-            TEMP,{{ DEV_DRIVE }}\tmp
-      - name: Create the temporary directory
-        if: runner.os == 'Windows'
-        run: New-Item -ItemType Directory -Force -Path "$env:TMP"
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
