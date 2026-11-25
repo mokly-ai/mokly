@@ -164,7 +164,8 @@ incremental `npm run build`. It uses the Postgres server that answers on the
 service. It builds the API and the catalogue server, starts both, and starts
 the app on `:8081` once both answer their health checks. Each output line
 carries the `[api]`, `[catalogue]` or `[app]` prefix. Ctrl+C stops the API,
-the catalogue server and the app, and a second Ctrl+C forces them to stop.
+the catalogue server and the app, and a second Ctrl+C forces them to stop and
+ends the command.
 When one of them exits, the command stops the others and fails. A Compose
 Postgres that the command started keeps running with its data, and
 `docker compose stop postgres` stops it. The command needs Bash, so it runs

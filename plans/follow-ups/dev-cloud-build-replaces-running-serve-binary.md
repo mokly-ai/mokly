@@ -1,6 +1,6 @@
 # Dev cloud build fails while Serve runs
 
-- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-25, from the review of branch `calummoore/testing-locally-dev-jkf5` (finding 3).
 - **Location:** `xtask/src/artifacts.rs:42`, `packages/app/scripts/dev.mjs`, `docs/protocol/mokly-watch.md:216`.

@@ -1,6 +1,6 @@
 # Dev cloud ignores a stop while it prepares
 
-- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-25, from the review of branch `calummoore/testing-locally-dev-jkf5` (finding 4).
 - **Location:** `packages/app/scripts/dev-stack.mjs` (`runStack`, `step`), `packages/app/scripts/dev-processes.mjs` (`runCommand`), `packages/app/scripts/dev.mjs` (`prepare`).

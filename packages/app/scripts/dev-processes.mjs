@@ -5,28 +5,39 @@ import { setTimeout as delay } from "node:timers/promises";
 
 /** How long a stopped service group may take to exit before it gets SIGKILL. */
 const STOP_GRACE_MS = 10_000;
+/** How long the stop waits after SIGKILL before it gives up on the group. */
+const KILL_WAIT_MS = 2_000;
 /** The wait between two checks of whether a stopped group still has a process. */
 const GROUP_POLL_MS = 50;
 
 /** The process group of every service that has not stopped yet. */
 const liveGroups = new Set();
 
+/**
+ * Whether a signal error means that no process of the group can take signals:
+ * ESRCH for a group that has gone, and EPERM on macOS for a group that holds
+ * only processes that have exited.
+ */
+function groupGone(error) {
+  return error.code === "ESRCH" || error.code === "EPERM";
+}
+
 /** Send the signal to the process group, and ignore a group that has gone. */
 function signalGroup(group, kind) {
   try {
     process.kill(-group, kind);
   } catch (error) {
-    if (error.code !== "ESRCH") throw error;
+    if (!groupGone(error)) throw error;
   }
 }
 
-/** Whether any process of the group still runs. */
+/** Whether the group still holds a process that can take signals. */
 function groupExists(group) {
   try {
     process.kill(-group, 0);
     return true;
   } catch (error) {
-    if (error.code === "ESRCH") return false;
+    if (groupGone(error)) return false;
     throw error;
   }
 }
@@ -77,14 +88,22 @@ export function startService(
   if (group !== undefined) liveGroups.add(group);
 
   // Stop the whole group, and keep the grace period after the leader exits,
-  // so that no process that the service started outlives the launcher.
+  // so that no process that the service started outlives the launcher. The
+  // wait ends a short time after SIGKILL: on Linux, a group that holds only
+  // exited processes that nobody collects still exists.
   const stop = async () => {
     if (group === undefined) return void (await exited);
     signalGroup(group, "SIGTERM");
     const timer = setTimeout(() => signalGroup(group, "SIGKILL"), graceMs);
     await exited;
-    while (groupExists(group)) await delay(GROUP_POLL_MS);
+    const deadline = Date.now() + graceMs + KILL_WAIT_MS;
+    while (groupExists(group) && Date.now() < deadline)
+      await delay(GROUP_POLL_MS);
     clearTimeout(timer);
+    if (groupExists(group)) {
+      signalGroup(group, "SIGKILL");
+      console.error(`[${name}] some processes did not exit after SIGKILL.`);
+    }
     liveGroups.delete(group);
   };
   return { name, pid: group, exited, stop };
@@ -125,7 +144,8 @@ export async function answers(url) {
 /**
  * Settle on the first SIGINT, SIGTERM or SIGHUP that the launcher gets, so the
  * stack stops its services in order. A second signal sends SIGKILL to every
- * service group that has not stopped, so the user can always end the stop.
+ * service group that has not stopped and ends the launcher, so the user can
+ * always end the stop.
  */
 export function interruption() {
   return new Promise((resolve) => {
@@ -134,6 +154,7 @@ export function interruption() {
       received += 1;
       if (received === 1) return resolve();
       for (const group of liveGroups) signalGroup(group, "SIGKILL");
+      process.exit(1);
     };
     for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"])
       process.on(signal, handle);

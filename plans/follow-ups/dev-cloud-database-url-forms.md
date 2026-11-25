@@ -1,6 +1,6 @@
 # Dev cloud misreads some database URLs
 
-- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-25, from the finding checks of branch `calummoore/testing-locally-dev-jkf5` (checks of findings 1, 6 and 7).
 - **Location:** `packages/app/scripts/dev-stack.mjs` (`ensurePostgres`), `packages/app/scripts/dev-settings.mjs`.
