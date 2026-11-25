@@ -2,53 +2,63 @@
 
 Status: Active. On branch `calummoore/mokly-source-package-override-jkum`, no
 pull request yet. The pull request that completes the work deletes this plan,
-as the `plans` skill says. Implementation starts only after the automatic
-source detection of `plans/source-packages.md`, on the branch
-`calummoore/mokly-website-redesign-plan-v2-xnnj`, merges into `main`, or when
-Cal says otherwise.
+as the `plans` skill says. The automatic source detection merged into `main`
+in #501 on 2026-11-24. Implementation starts when Cal approves this plan.
 
 A comparison renders the head from the working tree and the base from the
 base commit's Git files. Git does not hold a package's built files, so a base
 cannot load a workspace package whose `exports` point only to them. On
-2026-11-24 Cal chose automatic source detection for this. A built file inside
-a workspace package maps to the matching source file in both renders. The
-folders come from the package `tsconfig.json` `outDir` and `rootDir`, or from
-the convention that a top-level `dist`, `lib`, `build` or `out` folder maps to
-`src`. When the side has no source file, Mokly resolves as before.
+2026-11-24 Cal chose automatic source detection for this, and #501 built it.
+Its rule lives in `docs/protocol/mokly-comparison-packages.md`:
 
-On the same day Cal asked for this change, in its own workspace: a
+1. It applies to a target that a bare package import reaches, inside a
+   workspace package, outside `node_modules`. A configured file keeps its
+   exact path.
+2. The build and source folders come from `outDir` and `rootDir` in the
+   package's `tsconfig.json` and its `extends` files. Otherwise a top-level
+   `dist`, `lib`, `build` or `out` folder maps to `src`.
+3. A file under the build folder maps to the same relative path under the
+   source folder. A `.js`, `.mjs` or `.cjs` file tries the configured script
+   extensions. Any other file keeps its name. When the build file is missing,
+   Mokly recovers the source from the export targets of the subpath, only
+   when every target names the same source file.
+4. Bundled imports load the first matching source file. A Node-loaded
+   `require` keeps an existing built file and loads the source only after
+   `MODULE_NOT_FOUND`. When no source matches, the original target stays.
+
+On 2026-11-24 Cal also asked for this change, in its own workspace: a
 configuration override, `moduleResolution.sourcePackages`, for what the
 convention cannot guess. It does two things for one named workspace package:
 
 - It names the build and source folders, for example `esm/` built from
   `source/` with no `tsconfig` `outDir`.
-- It turns the detection off, for example for a package whose build changes
-  its code.
+- It turns the detection off with `false`, for example for a package whose
+  build changes its code.
 
-This plan does not cover the detection rule itself, or a command that builds
-the base. The "Mokly base prepare command" workspace plans that command,
-`review.basePrepare`, in `plans/base-prepare-command.md` on the branch
-`calummoore/mokly-base-prepare-command-7jlm`.
+On 2026-11-25 Cal answered the four decisions below:
+
+- Decision 1, E: the base tries its own entry, then the working entry, then
+  the detection, file by file.
+- Decision 2, B: an entry maps each build folder to its source folder, such
+  as `{ "esm": "source", "cjs": "source" }`.
+- Decision 3, A: an invalid entry fails with `config-invalid`.
+- Decision 4, C: the base failure message names the override, and a warning
+  reports each file that the head loads and Git ignores.
+
+This plan does not change the detection rule outside the override, and it does
+not build the base. The "Mokly base prepare command" workspace plans that
+command, `review.basePrepare`, in `plans/base-prepare-command.md` on the
+branch `calummoore/mokly-base-prepare-command-7jlm`.
 
 Design calls, mine, 2026-11-24:
 
-- An entry replaces the detected folders of its package. It does not merge
-  with the `tsconfig` folders or the convention. The user then reads the whole
-  layout of the package in one place.
 - An entry applies to the workspace package whose `package.json` `name`
   equals the key. The package root is the one that the detection rule finds.
   Each `package.json` that the lookup reads enters the reuse evidence, as the
   detection's reads do. Reason: a name key reads like `aliases`, and it still
-  fits after a pull request moves the package folder. Under decision 1 D, it
-  also matches the same package on both sides. A directory key, as
-  `packageRoots` uses, would fail at load on a typo. Decision 4 covers that
-  gap.
-- The rest of the detection rule stays: the same relative path under the
-  source folder, the configured resolve extensions for `.js`, `.mjs` and
-  `.cjs`, the name kept for other files, and the earlier resolution when the
-  side has no source file. An override adds no fallback and no warning of its
-  own, so a file resolves the same way whether its folders came from an
-  entry or from the detection.
+  fits after a pull request moves the package folder. It also matches the same
+  package on both sides. A directory key, as `packageRoots` uses, would fail
+  at load on a typo. Decision 4 covers that gap.
 - `false` turns the detection off for that package in the renders that the
   entry reaches. Those renders then load the files that the export names. A
   base has those files only when Git tracks them or when a base prepare
@@ -58,36 +68,62 @@ Design calls, mine, 2026-11-24:
   package under `node_modules` ships its built files, and the detection rule
   does not read it.
 - An entry for a package that the side does not have has no effect and gives
-  no warning. Under decision 1 options A, C and D, the base can get an entry
-  for a package that it does not hold yet.
+  no warning. Under decision 1 E, the base can get an entry for a package that
+  it does not hold yet.
 - Folder values are package-relative POSIX paths, such as `esm` or
   `dist/esm`. Mokly reads `./esm` and `esm/` as `esm`. A source folder can be
   `.`, for sources at the package root. A build folder cannot be `.`, because
   it would then hold every file of the package. When two build folders of one
   entry nest, the longest match wins.
-- The two copies of the rule share one case table, as the detection plan
-  says. This change adds its override cases to that table, so the sidecar and
-  the Rust CSS resolver cannot drift.
+- The two copies of the rule share the case table
+  `tests/fixtures/workspace-sources.json`. This change adds its override cases
+  to that table, so the sidecar and the Rust CSS resolver cannot drift.
 - Serve's kept-base key already hashes the working configuration
   (`crates/mokly-cli/src/serve_base_key.rs`). A changed working entry then
-  prepares the base again under each option of decision 1. No key change is
-  needed.
+  prepares the base again. No key change is needed.
+
+Design calls, mine, 2026-11-25:
+
+- Each render tries a list of layouts for a package, in order. The base tries
+  the base entry, the working entry, and then the detection. The head tries the
+  working entry and then the detection. The first layout that gives a source
+  file wins. Reason: decision 1 E sets this order for the base. The head uses
+  the same order without the base entry, so a file resolves the same way in
+  both renders when both configurations agree.
+- An entry is one layout. Mokly does not mix its folders with the `tsconfig`
+  folders or the convention. Reason: the user reads the whole layout of the
+  entry in one place.
+- `false` ends the list at its place, and the render keeps the export target.
+  So a base with its own `false` keeps its built files, also when the working
+  entry has folders. Reason: decision 1 E puts the base's own entry first.
+- The list replaces the folder step of the detection rule only. The other
+  steps stay: bare package imports only, the extension rule, the recovery of a
+  missing build from the export targets, and a Node-loaded `require` that
+  keeps an existing built file. Each try enters the reuse evidence.
+- The warning of decision 4 has the code `ignored-module`. It covers bundled
+  imports and CSS imports. It skips a Node-loaded `require`, because the base
+  recovers its source after `MODULE_NOT_FOUND`. It runs only when Changes runs,
+  because only a comparison needs the base. It uses the Git listing of tracked
+  and unignored files in `crates/mokly-compare/src/working_inputs.rs`, so a new
+  file that is not committed yet gives no warning.
+- The warning ignores the files that a base prepare command makes. That change
+  is not on `main` yet. The change that merges second adds this exception.
 
 Contract owners:
 
 - [Configuration](../docs/protocol/mokly-configuration.md), sections
   Validation and Module Resolution.
 - [Comparison packages](../docs/protocol/mokly-comparison-packages.md), which
-  holds the detection rule after the detection change.
+  holds the detection rule.
 - [Imported styles](../docs/protocol/mokly-configuration-imported-styles.md),
   for CSS `@import`.
 - [Sidecar modules](../docs/protocol/mokly-sidecar-modules.md), which owns
   the lookup records that the `package.json` reads add to.
 - [Mockup baselines](../docs/protocol/cloud/mockup-baselines.md), which says
   that the base renders through the base commit's own `mokly.config.json`.
-  Decision 1 options A, C, D and E change that sentence.
-- [Build warnings](../docs/protocol/mokly-build-warnings.md), when decision 4
-  adds a warning.
+  Decision 1 E changes that sentence.
+- [Build warnings](../docs/protocol/mokly-build-warnings.md), for the
+  `ignored-module` warning.
 - The [configuration guide](../docs/guides/authoring/config.md).
 - The [@mokly/mokly README](../packages/mokly/README.md), the
   [sidecar README](../packages/mokly/src/sidecar/README.md), the
@@ -96,43 +132,47 @@ Contract owners:
 
 ## Milestone 1: Documentation and protocol
 
-Depends on: none. The milestone starts after the detection change merges.
+Depends on: none
 
-State the option, its value shape, its validation, which configuration gives
-it to the base render, and how an author learns of a missing entry, as
-decisions 1 to 4 settle them.
+State the option, its value shape, its validation, the order of layouts in
+each render, and the `ignored-module` warning, as decisions 1 to 4 settle
+them.
 
-- [ ] Merge `origin/main` with the detection change into this branch, as the
+- [x] Merge `origin/main` with the detection change into this branch, as the
       `git-merge` skill says. Update the design calls above where the merged
       rule differs from `plans/source-packages.md` of 2026-11-24.
 - [ ] Update `docs/protocol/mokly-configuration.md`: the field list, the
       Module Resolution section, and the Validation list under decision 3.
-- [ ] Update `docs/protocol/mokly-comparison-packages.md`: the override in
-      the folder step of the detection rule, `false`, and the base rule of
-      decision 1.
+- [ ] Update `docs/protocol/mokly-comparison-packages.md`: the order of
+      layouts in the folder step of the detection rule, and `false`.
 - [ ] Update `docs/protocol/mokly-configuration-imported-styles.md` for CSS
       `@import` of an overridden package.
 - [ ] Update `docs/protocol/mokly-sidecar-modules.md` for the `package.json`
-      reads in the lookup records.
-- [ ] Update `docs/protocol/cloud/mockup-baselines.md` when decision 1 lets
-      the working configuration reach the base.
-- [ ] Update `docs/protocol/mokly-build-warnings.md` and the base failure
-      message rule, as decision 4 says.
+      reads and the tries in the lookup records.
+- [ ] Update `docs/protocol/cloud/mockup-baselines.md`: the base also reads
+      the working `sourcePackages` entries.
+- [ ] Add the `ignored-module` warning to
+      `docs/protocol/mokly-build-warnings.md`, and the override hint to the
+      base failure message rule.
 - [ ] Update `docs/guides/authoring/config.md` with the option, one example
-      of each value, and the note that `false` needs built files in the base.
+      of each value, the order of layouts, and the note that `false` needs
+      built files in the base.
 
 ## Milestone 2: Configuration type and validation
 
 Depends on: 1
 
 - [ ] Add `sourcePackages` to `ModuleResolution` in
-      `crates/mokly-catalogue/src/config_types.rs`, in the shape of decision
-      2, to `packages/mokly/config.schema.json`, and to the authoring type in
+      `crates/mokly-catalogue/src/config_types.rs`, as a map from a package
+      name to `false` or to a map from build folder to source folder. Add it
+      to `packages/mokly/config.schema.json`, with the key and folder
+      patterns, and to the authoring type in
       `packages/mokly/src/authoring/config.ts`.
-- [ ] Validate the keys and the folders in
-      `crates/mokly-catalogue/src/config_validation.rs` under decision 3:
-      bare package names, and non-empty package-relative folders without
-      `..`, an absolute path or `node_modules`.
+- [ ] Reject invalid entries with `config-invalid` in
+      `crates/mokly-catalogue/src/config_validation.rs`: a key that is not a
+      bare package name, an empty folder map, a build folder `.`, and a folder
+      that is empty, absolute, or holds `..` or `node_modules`. Normalise
+      `./esm` and `esm/` to `esm`.
 - [ ] Add accepted and rejected examples to
       `crates/mokly-catalogue/src/_tests_/config_tests.rs`.
 
@@ -141,40 +181,47 @@ Depends on: 1
 Depends on: 2
 
 - [ ] Add the field to the sidecar's `ModuleResolution` in
-      `crates/mokly-sidecar/src/methods.rs`, and run
-      `cargo xtask generate-types`. The file has 288 lines, so split it if it
-      passes 300.
-- [ ] Fill the field for the head in `crates/mokly-render/src/side.rs` and
-      for the base in `crates/mokly-cli/src/base_dependency_selection.rs`.
-- [ ] Add the field to the CSS `Resolution` in
+      `crates/mokly-sidecar/src/methods.rs` as an ordered list of entry maps,
+      and run `cargo xtask generate-types`. Split the file if it passes 300
+      lines.
+- [ ] Fill the list for the head, with the working map, in
+      `crates/mokly-render/src/side.rs`. Fill it for the base, with the base
+      map and then the working map, in
+      `crates/mokly-cli/src/base_dependency_selection.rs`.
+- [ ] Add the same list to the CSS `Resolution` in
       `crates/mokly-css/src/resolution.rs`, filled in
       `crates/mokly-render/src/stylesheets.rs`.
-- [ ] Apply decision 1 where the base configuration loads, in
+- [ ] Keep the working map beside the base configuration where it loads, in
       `crates/mokly-cli/src/changes_base_sources.rs`, so that a base without a
-      sidecar, which still resolves CSS, gets the same value. Under option E,
-      pass the base map and the working map to the base resolvers in their
-      order. Add a unit test for each case of the rule.
+      sidecar, which still resolves CSS, gets the same list. Add a unit test
+      for each order.
 
 ## Milestone 4: JavaScript resolution
 
 Depends on: 3
 
-- [ ] Read the entry of the package before the `tsconfig` folders and the
-      convention, in the detection module beside
-      `packages/mokly/src/sidecar/module-paths.ts`.
-- [ ] Add the override cases to the shared case table: other folder names,
-      nested build folders, two build folders, `false`, an entry for a missing
-      package, and a missing source file.
+- [ ] Try the layouts in order in the folder step of
+      `packages/mokly/src/sidecar/workspace-sources.ts` and
+      `workspace-lookups.ts`: each entry, then the detection. Apply the same
+      order to the recovery of a missing build and to a Node-loaded `require`.
+      Record each try in the lookup evidence. Split a file if it passes 300
+      lines.
+- [ ] Add the override cases to `tests/fixtures/workspace-sources.json`:
+      other folder names, nested build folders, two build folders, `false`,
+      an entry for a missing package, a base entry before a working entry, a
+      working entry after a base entry that finds no file, and a missing
+      source file.
 - [ ] Add head and base cases to the sidecar tests, modelled on
-      `tests/sidecar_repository_links.test.ts`: an `esm/` export from
-      `source/`, a CSS import from JavaScript, and `false`.
+      `tests/sidecar_workspace_sources.test.ts`: an `esm/` export from
+      `source/`, a CSS import from JavaScript, a Node-loaded `require`, and
+      `false`.
 
 ## Milestone 5: CSS resolution
 
 Depends on: 3
 
-- [ ] Read the same entry in `crates/mokly-css/src/resolver.rs`, before the
-      `tsconfig` folders and the convention.
+- [ ] Try the same layouts in order in
+      `crates/mokly-css/src/workspace_sources.rs`.
 - [ ] Run the Rust copy of the rule against the shared case table, and add
       resolver cases to `crates/mokly-css/src/_tests_/resolver_tests.rs`.
 
@@ -182,23 +229,17 @@ Depends on: 3
 
 Depends on: 4, 5
 
-Build what decision 4 chooses. Under decision 4 A, this milestone has no
-TODOs and closes.
-
-- [ ] Under options B, C and D: name `moduleResolution.sourcePackages` in
-      the `module {path} has no source in this side` message of
+- [ ] Name `moduleResolution.sourcePackages` in the
+      `module {path} has no source in this side` message of
       `packages/mokly/src/sidecar/module-paths.ts` when the file is inside a
       workspace package, and in the matching Rust CSS message. Test both.
-- [ ] Under option C: give a warning when Changes runs and the head loads a
-      repository file outside `node_modules` that Git ignores. Use the file
-      listing in `crates/mokly-compare/src/working_inputs.rs`. Add its code
-      and message to `docs/protocol/mokly-build-warnings.md`, and test it in
-      `build` and in Serve.
-- [ ] Under option D: give a warning after each head render for each folder
-      entry that loaded no source file. Both copies of the rule report the
-      entries that they used. Test it in `build` and in Serve.
-- [ ] Under option C or D: run `build --strict` over the example catalogue
-      and the cloud mockups. Fix or record each new warning.
+- [ ] Give the `ignored-module` warning when Changes runs and a bundled or CSS
+      import of the head loads a repository file outside `node_modules` that
+      Git ignores. Name the file and the override in the message. Use the file
+      listing in `crates/mokly-compare/src/working_inputs.rs`. Test it in
+      `build`, in `build --strict` and in Serve.
+- [ ] Run `build --strict` over the example catalogue and the cloud mockups.
+      Fix or record each new warning.
 
 ## Milestone 7: End-to-end test and README files
 
@@ -209,8 +250,8 @@ Depends on: 6
       `crates/mokly-cli/tests/changes_ancestor_tests.rs`. With the entry in
       both configurations, Changes must be available.
 - [ ] Add the cases of decision 1 to the same test: an entry only in the
-      working configuration, and a package whose source folder the head
-      renames.
+      working configuration, a package whose source folder the head renames,
+      and a wrong base entry that the working entry corrects.
 - [ ] Run the example mockup check and the cloud mockup check named in
       `AGENTS.md`. This repository's configuration needs no entry, because
       the detection covers its packages.
@@ -238,7 +279,7 @@ Depends on: every other milestone
 
 ## Decisions
 
-Each decision waits for Cal. An options check of 2026-11-24 added options to
+Cal answered each decision on 2026-11-25. An options check of 2026-11-24 added options to
 decisions 1, 2 and 3. Its summary is in `.context/source-package-override/`.
 It proposed a head warning in decisions 1 and 3. The warning answers a
 different question, so it is decision 4 here.
@@ -339,6 +380,8 @@ different question, so it is decision 4 here.
   request for each entry, so the margin is small.
 - **Action:** ask the user, because D changes the rule that the base reads
   its own configuration, and Cal asked to settle this question.
+- **Decision:** Cal chose E on 2026-11-25, over the recommended D. E also
+  passes a pull request that corrects a wrong base entry.
 
 ### 2. What shape does an entry have?
 
@@ -395,6 +438,7 @@ different question, so it is decision 4 here.
   shortest text, and it reads in the same direction as `aliases`.
 - **Action:** ask the user, because the shape is new public configuration,
   and the options trade clear role names against more layouts and less text.
+- **Decision:** Cal chose B on 2026-11-25.
 
 ### 3. What does Mokly do with an invalid entry?
 
@@ -443,6 +487,7 @@ different question, so it is decision 4 here.
   not only wrong.
 - **Action:** ask the user, because the repository rules reserve each new
   rejection for the user.
+- **Decision:** Cal chose A on 2026-11-25.
 
 ### 4. How does an author learn of a missing entry?
 
@@ -498,3 +543,4 @@ different question, so it is decision 4 here.
   it, which is the only point before Changes is lost.
 - **Action:** ask the user, because C and D add a warning that `--strict`
   counts, and the repository rules reserve each new gate for the user.
+- **Decision:** Cal chose C on 2026-11-25.
