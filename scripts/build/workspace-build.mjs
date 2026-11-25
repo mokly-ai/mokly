@@ -6,6 +6,8 @@ import { PACKAGE_STEPS, SHARED_INPUTS } from "./build-steps.mjs";
 
 /** The records of the last successful build of each package step. */
 export const BUILD_RECORDS = "node_modules/.cache/mokly-build";
+/** Written again after each build in which every step succeeds. */
+export const BUILD_COMPLETE = `${BUILD_RECORDS}/complete.json`;
 const RECORD_SCHEMA = 1;
 
 /**
@@ -16,8 +18,9 @@ const RECORD_SCHEMA = 1;
  * outputs that it reads from earlier steps, directly or through the outputs
  * of another earlier step, and of the manifests of those steps. Steps without
  * a dependency between them run at the same time. A failed step starts no
- * step that reads its outputs, and the other steps still run. Resolve the
- * names of the failed steps.
+ * step that reads its outputs, and the other steps still run. A build in
+ * which every step succeeds, also when it skips every package step, writes
+ * the completion record again. Resolve the names of the failed steps.
  */
 export async function runWorkspaceBuild(repositoryRoot, { run, report }) {
   const steps = PACKAGE_STEPS;
@@ -63,6 +66,14 @@ export async function runWorkspaceBuild(repositoryRoot, { run, report }) {
     return started.get(step.name);
   };
   await Promise.all([native, ...steps.map(start)]);
+  if (!failed.length) {
+    const complete = path.join(repositoryRoot, BUILD_COMPLETE);
+    await fs.mkdir(path.dirname(complete), { recursive: true });
+    await fs.writeFile(
+      complete,
+      `${JSON.stringify({ schema: RECORD_SCHEMA })}\n`,
+    );
+  }
   return failed;
 }
 

@@ -1,6 +1,9 @@
 /** The directory of the records of the last successful package builds. */
 export const BUILD_RECORDS: string;
 
+/** The record that each build in which every step succeeds writes again. */
+export const BUILD_COMPLETE: string;
+
 /** The process and output boundary of the workspace build. */
 export interface WorkspaceBuild {
   /** Run one command, its program first, at the repository root; resolve its exit status. */

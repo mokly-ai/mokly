@@ -6,6 +6,7 @@ import path from "node:path";
 import test, { type TestContext } from "node:test";
 
 import {
+  BUILD_COMPLETE,
   BUILD_RECORDS,
   runWorkspaceBuild,
 } from "../scripts/build/workspace-build.mjs";
@@ -247,4 +248,32 @@ test("a failed native build fails the build", async (t) => {
       command[0] === "cargo" ? Promise.resolve(101) : build.run(command),
   });
   assert.deepEqual(result, ["native"]);
+});
+
+test("a build that skips every package step records a complete build", async (t) => {
+  const root = await checkout(t);
+  assert.deepEqual(await runWorkspaceBuild(root, builder(root).build), []);
+  await fs.rm(path.join(root, BUILD_COMPLETE));
+  const { events, build } = builder(root);
+  assert.deepEqual(await runWorkspaceBuild(root, build), []);
+  assert.deepEqual(built(events), []);
+  assert.equal(await read(root, BUILD_COMPLETE), '{"schema":1}\n');
+});
+
+test("a step whose command throws fails alone and records no complete build", async (t) => {
+  const root = await checkout(t);
+  const { events, reports, build } = builder(root);
+  const result = await runWorkspaceBuild(root, {
+    ...build,
+    run: (command) =>
+      command.at(-1) === "@mokly/model"
+        ? Promise.reject(new Error("spawn npm ENOENT"))
+        : build.run(command),
+  });
+  assert.deepEqual(result, ["@mokly/model"]);
+  assert.deepEqual(built(events), ["@mokly/ui"]);
+  assert.ok(reports.includes("@mokly/model failed: spawn npm ENOENT"));
+  await assert.rejects(fs.access(path.join(root, BUILD_COMPLETE)), {
+    code: "ENOENT",
+  });
 });
