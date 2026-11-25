@@ -18,8 +18,12 @@ out the `mkc-` crates, under the
 
 The workspace partition runs cloud Rust, migrations, type checks, OpenAPI,
 fixtures, email templates, Terraform contracts, origin-router checks, Helm,
-and toolchain pins. Desktop, mockups, and site each have a partition. Four
-app partitions pass their shard to `cloud-app`. The image job runs
+and toolchain pins. Desktop has a partition. Eight app partitions, six mockup
+partitions, and two site partitions pass their shard to `cloud-app`,
+`cloud-mockups`, and `cloud-site`, as the
+[cloud shards](./cloud/repository-verification.md#app-shards) define. Only
+partitions that run database tests start Postgres, and only partitions that
+run a browser install Chromium. The image job runs
 `cloud-infrastructure`. Each partition uses the shared `cargo xtask check
 --suite` entry point. No workflow runs the removed cloud stage runner.
 

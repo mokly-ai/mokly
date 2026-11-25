@@ -111,11 +111,16 @@ and the typed client, and `cargo xtask openapi --check` and the
 
 `MKC_APP_SHARD=<n>/<total>` runs only shard `n` of the browser suite. Without
 it, or with an empty value, the suite runs every test. A malformed value fails
-the run. CI runs the suite as four shards, each in its own job with its own
+the run. CI runs the suite as eight shards, each in its own job with its own
 API and database, as
 [App shards](../../docs/protocol/cloud/repository-verification.md#app-shards)
-defines. To repeat one shard, run
-`cargo xtask check --suite cloud-app --shard 2/4` from the repository root.
+defines. A shard holds whole spec files, balanced by the measured seconds in
+`src/_tests_/browser-shard-weights.json`. After a large change to the suite's
+durations, save the logs of every App checks job of one CI run, for example
+with `gh run view --log --job {job}`, then run
+`npx tsx src/_tests_/update-browser-shard-weights.ts {log}...` from this
+package and commit the new weights. To repeat one shard, run
+`cargo xtask check --suite cloud-app --shard 2/8` from the repository root.
 It builds the web app before the shard runs.
 `cargo xtask check --suite cloud-app` without `--shard` runs the whole suite.
 
@@ -284,7 +289,7 @@ follows cloud builds in its stage, and how the tests cover them.
 - `src/_tests_/data/resource-key.spec.ts` — the real React probe for the resource hook. It imports the `esbuild` API, which this package declares as an exact dev dependency.
 - `scripts/build-web.mjs` and `scripts/serve-dist.mjs` — the verified export and the local static server; `sync-styles.mjs` copies the stylesheets and `verify-web-build.mjs` proves the stylesheet, font and bundle bytes.
 - `metro.config.js` — Expo's resolver with the two npm workspace module roots and hierarchical lookup disabled.
-- `playwright.config.ts` — the browser suite's one worker, ports, servers and global setup, and the shard that `MKC_APP_SHARD` selects; `src/_tests_/api-server.ts` is the shared app and desktop harness entry point, with `catalogue-server.ts`, `publication-runtime.ts` and `server-process.ts` for the catalogue process, the isolated database and blobs, and process shutdown.
+- `playwright.config.ts` — the browser suite's one worker, ports, servers and global setup, and the shard that `MKC_APP_SHARD` selects; `src/_tests_/browser-shards.ts` places the spec files on shards by their measured seconds; `src/_tests_/api-server.ts` is the shared app and desktop harness entry point, with `catalogue-server.ts`, `publication-runtime.ts` and `server-process.ts` for the catalogue process, the isolated database and blobs, and process shutdown.
 
 ### Related Docs
 
