@@ -1,9 +1,9 @@
 # Storybook Support
 
-Status: Active, paused by the user on 2026-11-24. On branch
-`calummoore/mokly-storybook-integration`, with no pull request into `main`
-yet. Tracks A, B, C, D, and J are merged into this branch. Tracks E to I
-have not started. The section [Where the work stands](#where-the-work-stands)
+Status: Active. On branch `calummoore/mokly-storybook-integration`, with no
+pull request into `main` yet. Tracks A, B, C, and J are complete and merged
+into this branch. Track D is merged, and its last milestones run on a track
+branch. Tracks E to I have not started. The section [Where the work stands](#where-the-work-stands)
 gives what is done, what waits for the user, and how to continue. Each track
 works on its own branch from this branch and opens a pull request into this
 branch, as design calls 1 and 25 say. Pull requests from this branch into
@@ -93,18 +93,20 @@ The user paused the work on 2026-11-24, after tracks A, B, C, D, and J
 merged into this branch. On 2026-11-25 the user answered most of the open
 decisions and follow-up items. The same day the user asked to continue, and
 this branch merged `main`, with the Canvas redesign of pull request #488.
-Milestone 1a draws the Storybook mockups again on Canvas. This section tells the next agent what is
-done, what waits for the user, and how to continue.
+Milestone 1a draws the Storybook mockups again on Canvas. Pull request #506
+merged Milestone 1a, and pull request #508 finished track B. This section
+tells the next agent what is done, what waits for the user, and how to
+continue.
 
-| Track                    | Pull request | Done                         | Open                                                                                  |
-| ------------------------ | ------------ | ---------------------------- | ------------------------------------------------------------------------------------- |
-| A. Mockups               | #339, merged | Milestone 1, except one TODO | Milestone 1a, which also does the last TODO of Milestone 1                            |
-| B. Story reading         | #492, merged | Milestones 3 to 6            | The B4 TODO of Milestone 2, Milestone 7, and Milestone 8                              |
-| C. Imported assets       | #453, merged | Milestones 9 to 12           | None                                                                                  |
-| D. Vite adapter          | #493, merged | Milestones 13 and 16         | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
-| J. Spike for decision 18 | #349, merged | Milestone 37                 | None                                                                                  |
-| E to I                   | None         | Nothing                      | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
-| All                      | None         | Nothing                      | Milestone 38, which ends with the pull request into `main`                            |
+| Track                    | Pull request          | Done                 | Open                                                                                  |
+| ------------------------ | --------------------- | -------------------- | ------------------------------------------------------------------------------------- |
+| A. Mockups               | #339 and #506, merged | Milestones 1 and 1a  | None                                                                                  |
+| B. Story reading         | #492 and #508, merged | Milestones 2 to 8    | None                                                                                  |
+| C. Imported assets       | #453, merged          | Milestones 9 to 12   | None                                                                                  |
+| D. Vite adapter          | #493, merged          | Milestones 13 and 16 | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
+| J. Spike for decision 18 | #349, merged          | Milestone 37         | None                                                                                  |
+| E to I                   | None                  | Nothing              | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| All                      | None                  | Nothing              | Milestone 38, which ends with the pull request into `main`                            |
 
 ### Answers of 2026-11-25
 
@@ -155,12 +157,22 @@ option. None has an answer yet, so no option applies.
   modules that another setup owns, and roots whose Storybook folder lies
   elsewhere. They block Milestones 30 and 32.
 
+### Follow-up items that wait for the user
+
+The review of track B found these problems outside its scope. Each file
+holds the full item and its recommended option. They block no milestone.
+
+- [sidecar-transport-rejects-lone-surrogates.md](follow-ups/sidecar-transport-rejects-lone-surrogates.md):
+  a lone surrogate in authored text stops the whole build.
+- [screen-renders-skip-story-setup.md](follow-ups/screen-renders-skip-story-setup.md):
+  a screen render depends on an earlier story render.
+
 ### Defects in merged code
 
-The first review of track B found these defects in the code that pull
-request #492 merged. Each one needs no decision, and a branch from this
-branch fixes it as its file says. Fix them before the pull request into
-`main`.
+The first review of track B found defects in the code that pull request
+#492 merged. Pull request #508 fixed them. This item remains. It needs no
+decision, and a branch from this branch fixes it as its file says. Fix it
+before the pull request into `main`.
 
 - [crate-topic-pages-skip-link-check.md](follow-ups/crate-topic-pages-skip-link-check.md):
   the Markdown link check does not read crate topic pages.
@@ -179,10 +191,9 @@ branch fixes each one as its file says.
    recommended options. Ask for all of them in one message.
 2. Apply each answer in the milestone that waits for it, and record the
    answer in this plan with its date.
-3. Fix the defects in merged code above. Then run the reviews that did not
-   finish: the review TODO of Milestone 8 for track B, and the review TODO of
-   Milestone 17 for track D. Run each against this branch with the
-   `implementation-review` skill.
+3. Fix the defect in merged code above. Finish track D: Milestones 14, 15,
+   and 17 run on its track branch, with the review of Milestone 17 against
+   this branch.
 4. Merge `main` into this branch before a track starts. Only this branch
    merges `main`. Each track branch merges this branch.
 5. Start tracks E to I in the order of the [Tracks](#tracks) table. Each
@@ -1290,6 +1301,12 @@ gate, commits, pushes, and runs the `implementation-review` skill against
 this branch. The track's workspace gives the findings and the decisions to
 the user in its own session, applies the fix rule, and opens a pull request
 into this branch. The orchestrator merges it.
+
+Design call 34, made on 2026-11-25: the orchestrator updates
+[Where the work stands](#where-the-work-stands) at each merge of a track
+branch, and a track branch lists those changes in its pull request
+description. Reason: a track branch edits only its own TODO lines, so the
+status section goes stale when each track edits it.
 
 ## Milestone 1: Mockups
 
