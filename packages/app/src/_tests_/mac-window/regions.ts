@@ -6,8 +6,8 @@ import { expect } from "../harness";
  * The computed property that Electron reads to find the parts of the page that
  * move the window. A browser ignores it, but Chromium still computes it, and
  * `toHaveCSS` reads it through `getComputedStyle`, so a browser test reads what
- * the Mac app's window does at an element: `drag` moves the window, `no-drag`
- * takes the click.
+ * the Mac app's window does at an element that sets it: `drag` moves the
+ * window, `no-drag` takes the click. `regionAt` reads a point.
  */
 const appRegion = "-webkit-app-region";
 
@@ -149,8 +149,8 @@ export async function expectTakesClicksThroughout(
 
 /**
  * What the page draws in the free space after a part, inside the slot that
- * holds it: the space's width, and the computed region of the element at its
- * middle, which says whether that space moves the Mac window.
+ * holds it: the space's width, and the region at its middle, which says
+ * whether that space moves the Mac window.
  */
 export async function spaceAfter(
   page: Page,
@@ -164,14 +164,10 @@ export async function spaceAfter(
   if (box === null || room === null) return { width: 0, region: "missing" };
   const start = box.x + box.width;
   const width = room.x + room.width - start;
-  const region = await page.evaluate(
-    ([x, y, property]) => {
-      const element = document.elementFromPoint(x, y);
-      return element === null
-        ? "nothing"
-        : getComputedStyle(element).getPropertyValue(property);
-    },
-    [start + width / 2, box.y + box.height / 2, appRegion] as const,
+  const region = await regionAt(
+    page,
+    start + width / 2,
+    box.y + box.height / 2,
   );
   return { width, region };
 }
