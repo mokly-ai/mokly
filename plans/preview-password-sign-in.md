@@ -134,10 +134,17 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
 - **Bounded hashing, my call.** One API process checks at most two passwords
   at once. Further attempts wait. Reason: each check uses about 16 MiB with
   the chosen parameters, and the API's memory limit is 1 GiB.
-- **Field discovery.** `GET /v1/auth/methods` answers whether this API accepts
-  a password, and for which account (decision 4, C, and decision 8, D). Sign
-  in waits for the answer in its waiting form, so the panel does not move.
-  When the read fails, Sign in draws email and GitHub sign-in only.
+- **Configuration answer.** A public endpoint, `GET /v1/configuration`, says
+  which optional configuration this API has (decision 4, F). It answers a
+  typed object with one field for each optional configuration that the API's
+  operation gate knows: today GitHub, billing and the preview password, for
+  example `{"github": false, "billing": false, "previewPassword":
+{"account": "preview@mokly.ai"}}`. The API builds the answer from the same
+  list that its gate uses, so the answer and the gate cannot disagree, and a
+  new optional configuration adds a field. Nothing secret goes in it. Sign in
+  reads only `previewPassword` in this change (decision 8, D). It waits for
+  the answer in its waiting form, so the panel does not move. When the read
+  fails, Sign in draws email and GitHub sign-in only.
 - **Screens, my call.** The section shows on Sign in only. Sign up and the
   desktop window do not draw it. Reason: the password signs in the shared
   account, which already exists, and the desktop window signs in through the
@@ -162,7 +169,7 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   annotation on the workflow run, and the deploy writes no verifier (decision
   5, D). An existing verifier in Secret `preview-sign-in` is then deleted, so
   that a preview never keeps a verifier that the store no longer holds.
-  Reason, my call: the store is the one source of the verifier. The discovery
+  Reason, my call: the store is the one source of the verifier. The configuration
   answer then says that no password is accepted, and Sign in draws no section.
 - **Rotation.** An operator makes a new verifier from a new password and adds
   it as a new version. Each preview picks it up on its next deploy. A running
@@ -210,7 +217,8 @@ recommended option:
 3. The credential: **E**, password only. The random link value, the Open
    preview link and the `{secret}` body go. This deletes functionality on
    `origin/main`, which Cal approved in the words above.
-4. Field discovery: **C**, `GET /v1/auth/methods`.
+4. Field discovery: **F**, a typed `GET /v1/configuration`, which Cal
+   proposed on 2026-11-25 in place of C.
 5. A missing or malformed verifier: **D**, warn and accept no password.
 6. Email link and log reader: **A**, both stay for every address.
 7. Same derivation: **C**, one fixture file for both test suites.
@@ -307,12 +315,13 @@ the first draft and added options. Its report is in
   - **C.** A new public endpoint `GET /v1/auth/methods`, with `Cache-Control: no-store`. It answers an object with one field for each sign-in method that configuration controls, today only the preview password. Sign in waits for the answer in its waiting form. It adds an endpoint, its OpenAPI entry and generated types. Effort: Medium.
   - **D.** A page of its own, for example `/auth/preview`, which the PR comment links. No discovery is needed, and Sign in stays the same in every environment. A reviewer whom the app sends from a deep link to Sign in must go back to the comment. The comment contract changes, and the page needs its own mockups. Effort: Medium.
   - **E.** On load, Sign in sends `POST /v1/auth/preview` with an empty body, and draws the field on 400 and not on 503. The protocol fixes the order of these checks, and the attempt uses no admission. Every production Sign in then sends a write that the API answers with 503. Effort: Small.
-- **Left out:** A check of the host name, because it fails in local development. A field that always shows, because it draws a dead field in production. A flag that the app server serves, because C is better on every point.
+  - **F.** Added on 2026-11-25 from Cal's question about a more generic feature flag or configuration. A public endpoint `GET /v1/configuration` answers a typed object with one field for each optional configuration of the API's operation gate: GitHub, billing and the preview password. The answer comes from the same list as the gate. The GitHub sign-in notice, the App install screen and the Billing pane can later read it in place of a refused request. Effort: Medium.
+- **Left out:** A check of the host name, because it fails in local development. A field that always shows, because it draws a dead field in production. A flag that the app server serves, because C is better on every point. A feature-flag service with runtime toggles or rollout by user, because nothing needs a toggle that differs from the deployment's configuration, and it adds a store. An untyped map of flag names, because the generated types then cannot check a name, and the app would compare strings.
 - **Wider fix:** C, because its object takes a later method as a new field. A field for GitHub sign-in would fix the notice that shows only after a press, and it is a follow-up item.
 - **Previous examples:** The GitHub notice in `entry-screen.tsx`, which shows only after a press.
 - **Related:** Decision 8: its option D reads the account address from this answer.
-- **Recommendation:** C. The API that checks the password is the one source of the answer, and production pays one cheap read.
-- **Action:** ask the user, because Cal asked how the app learns to show the field, and option C adds a public endpoint that no requirement covers.
+- **Recommendation:** F, changed from C after Cal's question of 2026-11-25. It costs about the same as C, its answer comes from the gate itself, and it serves the three features that today learn their state from a refused request.
+- **Action:** Decided F on 2026-11-25.
 
 ### 5. What deploy does without a usable verifier
 
@@ -328,7 +337,7 @@ the first draft and added options. Its report is in
   - **A.** Fail the deploy with a message that names the store or the minimum of 20 characters. Every labelled PR stays undeployed until an operator acts. It adds a new deploy failure. Effort: Small.
   - **B.** Warn and continue with a random value in Secret `preview-sign-in`, as today. The field then shows and refuses every password until an operator acts. Effort: Small.
   - **C.** Warn on a missing value, as in B, and fail on a short password, as in A. It adds a new deploy failure for the length only. Effort: Small.
-  - **D.** Warn with an annotation on the workflow run, and write no verifier. A malformed value gets the same treatment, with its own warning. The discovery answer is then false, and Sign in draws no field. The log reader keeps working, and the link too under option D of decision 3. The runbook command of decision 1 warns on a password shorter than 20 characters. It needs option D or E of decision 3. Effort: Small.
+  - **D.** Warn with an annotation on the workflow run, and write no verifier. A malformed value gets the same treatment, with its own warning. The configuration answer then names no account, and Sign in draws no field. The log reader keeps working, and the link too under option D of decision 3. The runbook command of decision 1 warns on a password shorter than 20 characters. It needs option D or E of decision 3. Effort: Small.
 - **Left out:** A check in the API, because the API never sees the password before a reviewer types it.
 - **Wider fix:** None, because this is a rule for one input.
 - **Previous examples:** None found.
@@ -394,7 +403,7 @@ the first draft and added options. Its report is in
   - **A.** "Preview password", with the action "Continue with password". It says which password to type. It needs the protocol line changed. Effort: Small.
   - **B.** "Password", with the action "Continue with password". No environment name. A reader can think that Mokly accounts have passwords. Effort: Small.
   - **C.** "Team password", with the same action. "Team" is also the name of a plan, so the label can read as a plan's password. Effort: Small.
-  - **D.** "Password", with the action "Continue as preview@mokly.ai". The address comes from the discovery answer of decision 4. It names the one account that the password opens, with configured data and no environment name. Effort: Small.
+  - **D.** "Password", with the action "Continue as preview@mokly.ai". The address comes from the configuration answer of decision 4. It names the one account that the password opens, with configured data and no environment name. Effort: Small.
 - **Left out:** Helper text under the field, because the copy rules remove text that does not change what the reader does.
 - **Wider fix:** None, because this is one text.
 - **Previous examples:** None found.
@@ -461,14 +470,14 @@ below. History stays in this plan.
 
 - [ ] Create `docs/protocol/cloud/preview-sign-in.md` from the Preview
       Sign-In section of `auth-sessions.md`. Add the verifier, its setting
-      and its bounds, the exchange of decision 9, the discovery answer of
+      and its bounds, the exchange of decision 9, the configuration answer of
       decision 4, the security statement, and rotation. Remove the `{secret}`
       exchange and its setting. Leave a short section with a link in
       `auth-sessions.md`.
 - [ ] Narrow the sentence "Human passwords are not accepted" in
       `auth-sessions.md` to name the preview password as the one exception.
 - [ ] Update `rest-api.md` and `rest-api-surface.md` for the exchange body and
-      the discovery endpoint.
+      the configuration endpoint.
 - [ ] Remove the preview callback from `auth-callbacks.md`,
       `product-navigation.md`, `web-app.md` and `web-api-client.md`.
 - [ ] Update `preview-seed.md`: the Secret rows, the verifier format in
@@ -528,16 +537,19 @@ exchange and its setting go.
         and uses no admission. A wrong password uses admission, and the 21st
         attempt in the window is refused.
 
-## Milestone 4: Field discovery
+## Milestone 4: Configuration answer
 
 Depends on: 3
 
-The API tells the app whether it accepts a password, and for which account.
+The API tells the app which optional configuration it has, the preview
+password and its account included.
 
-- [ ] Add `GET /v1/auth/methods` and its contract. Regenerate the OpenAPI
-      document and the generated types.
-- [ ] Tests: the answer names the account with a verifier configured, and
-      says that no password is accepted without one.
+- [ ] Add `GET /v1/configuration` and its contract, built from the list of
+      the operation gate. Regenerate the OpenAPI document and the generated
+      types.
+- [ ] Tests: each field follows its configuration, the preview password
+      answer names the account only with a verifier, and production settings
+      give no preview password.
 
 ## Milestone 5: Store, deploy, comment and local stack
 
@@ -580,14 +592,14 @@ Depends on: 1, 4
 
 The app draws the section as the mockups show and sends the password.
 
-- [ ] Add the password call and the discovery read to
+- [ ] Add the password call and the configuration read to
       `packages/app/src/data/auth.ts`, and remove `verifyPreviewSignIn`.
 - [ ] Remove the page `/auth/preview/callback`, its route and input code, and
       its cases in `preview-callback.spec.ts` and `callback-address.spec.ts`.
 - [ ] Draw the section in `packages/app/src/screens/account/entry-screen.tsx`
       from the `@firna/ui` and app components, as the mockups show. Keep the
       file under 300 lines.
-- [ ] Tests: the section shows only when the discovery answer names an
+- [ ] Tests: the section shows only when the configuration answer names an
       account, the trimmed password goes to the API with the page's
       `returnTo`, a refused password marks the field, and a success leaves
       for the answer's `returnTo`.
@@ -606,8 +618,9 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Add a follow-up item for a GitHub field in the discovery answer, so
-      that Sign in can say that GitHub sign-in opens soon before a press.
+- [ ] Add a follow-up item: the GitHub sign-in notice, the App install
+      screen and the Billing pane read `GET /v1/configuration` before a
+      press, in place of a refused request.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
