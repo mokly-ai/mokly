@@ -10,9 +10,9 @@
   `Object.entries` before they check its name.
   `packages/mokly/src/sidecar/stories.ts:46`, where `describe` reads the
   `mokly` parameter of each story before any `beforeAll` setup runs.
-  `docs/protocol/mokly-storybook.md:215-224`, the table of malformed values in
-  "Globals For Views". `tests/storybook_strict_build.test.ts:117`, the strict
-  build test of malformed parameters.
+  `docs/protocol/mokly-storybook-setup.md:86-95`, the table of malformed
+  values in "Globals For Views". `tests/storybook_strict_build.test.ts:117`,
+  the strict build test of malformed parameters.
 - **Reason:** The failure names the stories file, so the author can remove
   the setting and build again, and the fix costs the same after the merge.
 
@@ -32,7 +32,7 @@
     the `mokly` parameter with a `storybook-parameter-ignored` warning, and
     uses the valid rest. The name alone decides whether a field or a view
     name is supported. "Globals For Views" of
-    `docs/protocol/mokly-storybook.md` holds the rule.
+    `docs/protocol/mokly-storybook-setup.md` holds the rule.
   - `readStoryParameters` walks the fields and then the view names with
     `Object.entries`. That call reads each value, so an authored getter runs
     before the name check.

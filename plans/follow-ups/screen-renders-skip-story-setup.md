@@ -8,8 +8,8 @@
   story render reaches `renderStory`, which makes the setup active.
   `packages/mokly/src/sidecar/story-setup.ts`, `setupStories`, which keeps the
   one active `beforeAll` setup of the process. The section "Setup Before
-  Render" of `docs/protocol/mokly-storybook.md`, which states the setup rules
-  for story renders only.
+  Render" of `docs/protocol/mokly-storybook-setup.md`, which states the setup
+  rules for story renders only.
 - **Reason:** The base branch behaves the same, and the fix needs a rule that
   no requirement states yet.
 
@@ -32,8 +32,8 @@
     the setup active.
   - The core spreads renders over the sidecar pool, so the order of the
     renders in one process depends on scheduling.
-  - "Setup Before Render" of `docs/protocol/mokly-storybook.md` states the
-    setup rules for story renders only. No rule says what a screen or a
+  - "Setup Before Render" of `docs/protocol/mokly-storybook-setup.md` states
+    the setup rules for story renders only. No rule says what a screen or a
     component render sees.
 - **Problem:** A screen or component render sees the setup's state only when a
   story render of the same generation ran earlier in the same process. So its

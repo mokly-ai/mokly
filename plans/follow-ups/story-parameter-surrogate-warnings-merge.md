@@ -30,8 +30,8 @@
     message is `parameter {path} is ignored: {reason}`, with the JSON-quoted
     path, for example
     `parameter "mokly.viewports.tablet" is ignored: unknown viewport`. The
-    section "Globals For Views" of `docs/protocol/mokly-storybook.md` holds
-    the rule.
+    section "Globals For Views" of `docs/protocol/mokly-storybook-setup.md`
+    holds the rule.
   - `readStoryParameters` in the sidecar builds each path from the keys of
     the parameter. It calls `toWellFormed()` on each key, because a lone
     surrogate in a string of the describe result stops the build with
