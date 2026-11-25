@@ -100,7 +100,7 @@ def main():
         verify(arguments.node_version)
     except TemplateAssertionError as error:
         parser.exit(1, f"FAIL build template: {error}\n")
-    print("PASS build template: tools, user, workspace, credentials and merged environment")
+    print("PASS build template: tools, user, workspace, credentials, HOME, PATH tools and added entry")
 
 
 if __name__ == "__main__":

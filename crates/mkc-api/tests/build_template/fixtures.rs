@@ -15,7 +15,7 @@ use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
 pub(super) const SUCCESS: &[u8] =
-    b"PASS build template: tools, user, workspace, credentials and merged environment\n";
+    b"PASS build template: tools, user, workspace, credentials, HOME, PATH tools and added entry\n";
 
 pub(super) fn sandbox() -> BackendSandbox {
     BackendSandbox {

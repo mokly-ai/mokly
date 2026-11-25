@@ -86,14 +86,11 @@ template satisfies the CLI's engines. The CLI is a native binary
 with no musl build and no JavaScript fallback. The template
 therefore runs Linux x64 with glibc 2.28 or newer, and the candidate assertion
 checks that floor. `docs/ops/build-template.md`
-records its release procedure. The template sets `HOME=/home/user`, and E2B
-sets the process `PATH`. The candidate assertion runs as `user` through
-`stream_process` with only `MKC_TEMPLATE_PROBE=stream-process-added-env` added
-to its environment. It requires that entry, the exact template `HOME` and
-every template tool on the process `PATH`, so a replaced, rather than merged,
-environment fails verification. It does not compare the exact `PATH`
-(decided 2026-11-24): E2B's order of `/usr/local/sbin` and `/usr/local/bin`
-failed that match without harm.
+records its release procedure and its live probe. The template sets
+`HOME=/home/user`, and E2B sets the process `PATH`. A build command gets the
+template environment with its own entries added, not replaced. The probe
+checks the added entry, `HOME` and the tools on `PATH`, not the exact `PATH`
+(decided 2026-11-24), because E2B sets its own `PATH` order.
 
 ## Steps
 

@@ -99,9 +99,10 @@ python3 /workspace/assert_build_template.py --node-version <.nvmrc release>
 
 The process has exactly one added environment entry:
 `MKC_TEMPLATE_PROBE=stream-process-added-env`. The caller does not supply
-`PATH` or `HOME`. The script requires the added entry, the template `HOME`
-and each tool on the process `PATH`, so an environment replacement fails. It
-does not compare the exact `PATH` value. It also checks the tools,
+`PATH` or `HOME`. The script requires the added entry, `HOME=/home/user` and
+each tool on the process `PATH`. It does not compare the exact `PATH` value.
+E2B's process service supplies `HOME` and `PATH` itself, so a pass does not
+prove that a value set only by the template reaches the process. It also checks the tools,
 `/bin/sh`, user identity, `/workspace` ownership and writes, known credential
 environment names and credential files, and absence of cloud secret mounts.
 It also requires glibc 2.28 or newer.
@@ -263,8 +264,11 @@ lifetimes bound remaining sandboxes. CI publication remains available.
 ### Template Releases
 
 - `mokly-build-v1`, template ID `agmlidt65d7s6oo23rkb`, E2B team `firna`,
-  built 2026-11-06T11:01:33Z. It failed the probe on 2026-11-24 on the exact
-  `PATH` check, which the contract no longer has. It is not a release.
+  built 2026-11-06T11:01:33Z with the deprecated `@e2b/cli@2.7.0` build
+  system. It failed the probe on 2026-11-24 on the exact `PATH` check, which
+  the contract no longer has: the process had `/usr/local/sbin` before
+  `/usr/local/bin`, unlike the template's `ENV PATH`. The cause is unknown. It
+  is not a release.
 - `mokly-build-v2`, build reference
   `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374` (template ID
   `f1x5cj2fgwv20p42qxnn`, build ID `2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`),
