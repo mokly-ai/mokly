@@ -14,6 +14,7 @@ import {
   runCommand,
   startService,
 } from "./dev-processes.mjs";
+import { DEFAULT_DATABASE_URL, databaseEndpoint } from "./dev-settings.mjs";
 import { runStack } from "./dev-stack.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../../..");
@@ -22,10 +23,6 @@ const run = (command, args) => runCommand(command, args, options);
 const report = (message) => console.error(message);
 
 // The defaults match `scripts/cloud/dev-publication-env.sh` and `dev-api.sh`.
-const database = new URL(
-  process.env.MKC_DATABASE_URL ??
-    "postgres://postgres:postgres@localhost/mkc_test",
-);
 const apiOrigin = process.env.MKC_API_ORIGIN ?? "http://localhost:8080";
 const catalogueBind = process.env.MKC_CATALOGUE_BIND ?? "127.0.0.1:8082";
 const appOrigin = `http://localhost:${process.env.MKC_APP_PORT ?? 8081}`;
@@ -50,13 +47,13 @@ async function prepare() {
     throw new Error("npm run dev:cloud stopped, because npm run build failed.");
 }
 
+let status = 1;
 try {
-  process.exitCode = await runStack({
+  status = await runStack({
     origins: {
-      database: {
-        host: database.hostname,
-        port: Number(database.port || 5432),
-      },
+      database: databaseEndpoint(
+        process.env.MKC_DATABASE_URL ?? DEFAULT_DATABASE_URL,
+      ),
       apiHealth: `${apiOrigin}/v1/health`,
       catalogueHealth: `http://${catalogueBind}/_health`,
       app: appOrigin,
@@ -72,5 +69,7 @@ try {
   });
 } catch (error) {
   report(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
 }
+// Exit at once: a process that escaped its group can still hold an output
+// pipe, and it must not keep the launcher open after its servers stopped.
+process.exit(status);

@@ -48,24 +48,32 @@ export class StackFailure extends Error {}
  * @returns {Promise<number>}
  */
 export async function runStack(deps) {
+  let startedPostgres = false;
   try {
     await deps.prepare();
-    await ensurePostgres(deps);
+    startedPostgres = await ensurePostgres(deps);
     for (const crate of CRATES)
       await step(deps, "cargo", ["build", "--locked", "-p", crate]);
   } catch (error) {
     if (!(error instanceof StackFailure)) throw error;
     deps.report(error.message);
+    reportPostgres(deps, startedPostgres);
     return 1;
   }
-  return serve(deps);
+  const status = await serve(deps);
+  reportPostgres(deps, startedPostgres);
+  return status;
 }
 
+/**
+ * Use the Postgres server that answers, or start the Compose service. Resolve
+ * with whether this run started it.
+ */
 async function ensurePostgres(deps) {
   const { host, port } = deps.origins.database;
   if (await deps.listening(host, port)) {
     deps.report(`Using the Postgres server on ${host}:${port}.`);
-    return;
+    return false;
   }
   deps.report(
     `Starting Postgres with Docker, because nothing answers on ${host}:${port}.`,
@@ -77,6 +85,15 @@ async function ensurePostgres(deps) {
     "--wait",
     "postgres",
   ]);
+  return true;
+}
+
+/** The Compose container keeps its data and its port after the stack stops. */
+function reportPostgres(deps, startedPostgres) {
+  if (startedPostgres)
+    deps.report(
+      "Postgres keeps running in Docker. Stop it with docker compose stop postgres.",
+    );
 }
 
 async function step(deps, command, args) {

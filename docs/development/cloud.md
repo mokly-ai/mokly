@@ -163,10 +163,12 @@ incremental `npm run build`. It uses the Postgres server that answers on the
 `MKC_DATABASE_URL` host and port, and otherwise starts the Compose `postgres`
 service. It builds the API and the catalogue server, starts both, and starts
 the app on `:8081` once both answer their health checks. Each output line
-carries the `[api]`, `[catalogue]` or `[app]` prefix. Ctrl+C stops every
-server, and when one server exits, the command stops the others and fails. It
-needs Bash, so it runs on Linux and macOS. The steps below start the same
-servers one at a time.
+carries the `[api]`, `[catalogue]` or `[app]` prefix. Ctrl+C stops the API,
+the catalogue server and the app, and a second Ctrl+C forces them to stop.
+When one of them exits, the command stops the others and fails. A Compose
+Postgres that the command started keeps running with its data, and
+`docker compose stop postgres` stops it. The command needs Bash, so it runs
+on Linux and macOS. The steps below start the same servers one at a time.
 
 `docker compose up -d` starts Postgres 16 with the `mkc_test` database and an
 optional Mailpit. With a native Postgres 16, use a cluster with the UTF8

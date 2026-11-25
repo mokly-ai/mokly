@@ -15,7 +15,8 @@ const origins = {
  * A stack whose every process and probe is recorded in `events`. Each URL in
  * `readyAfter` answers from the given probe on, counted from 1. A service
  * named in `exits` exits on its own with that status when it starts. With
- * `interrupt`, the user stops the stack once it reports that it runs.
+ * `interrupt`, the user stops the stack once it reports that it runs. A
+ * service named in `exitsWhenRunning` exits with that status at that moment.
  */
 function fakeStack({
   postgres = true,
@@ -23,8 +24,11 @@ function fakeStack({
   readyAfter = {},
   exits = {},
   interrupt = false,
+  exitsWhenRunning = {},
 } = {}) {
   const events = [];
+  /** @type {Map<string, (status: number | null) => void>} */
+  const exitOf = new Map();
   const probes = new Map();
   /** @type {() => void} */
   let interruptNow = () => {};
@@ -38,10 +42,11 @@ function fakeStack({
       events.push(`run ${line}`);
       return line === failing ? 1 : 0;
     },
-    start: (name) => {
-      events.push(`start ${name}`);
+    start: (name, command, args) => {
+      events.push(`start ${name}: ${[command, ...args].join(" ")}`);
       let exit = () => {};
       const exited = new Promise((resolve) => (exit = resolve));
+      exitOf.set(name, exit);
       if (name in exits) exit(exits[name]);
       return {
         name,
@@ -63,8 +68,11 @@ function fakeStack({
     interrupted,
     report: (message) => {
       events.push(`report ${message}`);
+      if (!message.startsWith("Mokly Cloud runs")) return;
       // The user presses Ctrl+C once the stack says that it runs.
-      if (interrupt && message.startsWith("Mokly Cloud runs")) interruptNow();
+      if (interrupt) interruptNow();
+      for (const [name, status] of Object.entries(exitsWhenRunning))
+        exitOf.get(name)?.(status);
     },
   };
   return { deps, events };
@@ -83,11 +91,11 @@ test("starts the app only after the API and the catalogue answer, and stops ever
     "report Using the Postgres server on localhost:5432.",
     "run cargo build --locked -p mkc-api",
     "run cargo build --locked -p mkc-catalogue-server",
-    "start api",
-    "start catalogue",
+    "start api: scripts/cloud/dev-api.sh",
+    "start catalogue: scripts/cloud/dev-catalogue.sh",
     "ready http://api.test/health",
     "ready http://catalogue.test/health",
-    "start app",
+    "start app: npm run start --workspace @mokly-cloud/app",
     "ready http://app.test",
     "report Mokly Cloud runs. Open http://app.test/sign-up. The [api] log prints the sign-in link. Press Ctrl+C to stop.",
     "stop api",
@@ -96,7 +104,7 @@ test("starts the app only after the API and the catalogue answer, and stops ever
   ]);
 });
 
-test("starts Postgres with Docker when nothing answers on the database port", async () => {
+test("starts Postgres with Docker when nothing answers on the database port, and says that it keeps running", async () => {
   const { deps, events } = fakeStack({ postgres: false, interrupt: true });
 
   assert.equal(await runStack(deps), 0);
@@ -105,6 +113,10 @@ test("starts Postgres with Docker when nothing answers on the database port", as
     "report Starting Postgres with Docker, because nothing answers on localhost:5432.",
     "run docker compose up --detach --wait postgres",
   ]);
+  assert.equal(
+    events.at(-1),
+    "report Postgres keeps running in Docker. Stop it with docker compose stop postgres.",
+  );
 });
 
 test("starts no server when a preparation step fails", async () => {
@@ -130,10 +142,26 @@ test("stops the other servers and fails when a server exits before the app start
 
   assert.equal(await runStack(deps), 1);
 
-  assert.equal(events.includes("start app"), false);
+  assert.equal(
+    events.some((event) => event.startsWith("start app")),
+    false,
+  );
   assert.deepEqual(events.slice(-3), [
     "report [catalogue] exited with status 101. Stopping the other servers.",
     "stop api",
     "stop catalogue",
+  ]);
+});
+
+test("stops the other servers and fails when the app exits after the stack runs", async () => {
+  const { deps, events } = fakeStack({ exitsWhenRunning: { app: 0 } });
+
+  assert.equal(await runStack(deps), 1);
+
+  assert.deepEqual(events.slice(-4), [
+    "report [app] exited with status 0. Stopping the other servers.",
+    "stop api",
+    "stop catalogue",
+    "stop app",
   ]);
 });

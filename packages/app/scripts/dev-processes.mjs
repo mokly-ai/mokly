@@ -1,9 +1,35 @@
 import { spawn } from "node:child_process";
 import { connect } from "node:net";
 import { createInterface } from "node:readline";
+import { setTimeout as delay } from "node:timers/promises";
 
-/** How long a stopped service may take to exit before it gets SIGKILL. */
+/** How long a stopped service group may take to exit before it gets SIGKILL. */
 const STOP_GRACE_MS = 10_000;
+/** The wait between two checks of whether a stopped group still has a process. */
+const GROUP_POLL_MS = 50;
+
+/** The process group of every service that has not stopped yet. */
+const liveGroups = new Set();
+
+/** Send the signal to the process group, and ignore a group that has gone. */
+function signalGroup(group, kind) {
+  try {
+    process.kill(-group, kind);
+  } catch (error) {
+    if (error.code !== "ESRCH") throw error;
+  }
+}
+
+/** Whether any process of the group still runs. */
+function groupExists(group) {
+  try {
+    process.kill(-group, 0);
+    return true;
+  } catch (error) {
+    if (error.code === "ESRCH") return false;
+    throw error;
+  }
+}
 
 /**
  * Run a one-shot command with the terminal's streams and resolve with its exit
@@ -25,7 +51,12 @@ export function runCommand(command, args, { cwd, env }) {
  * of its output with a `[name]` prefix. Its own group lets `stop` reach the
  * processes that the service starts, such as the binary under `cargo run`.
  */
-export function startService(name, command, args, { cwd, env }) {
+export function startService(
+  name,
+  command,
+  args,
+  { cwd, env, graceMs = STOP_GRACE_MS },
+) {
   const child = spawn(command, args, {
     cwd,
     env,
@@ -42,23 +73,21 @@ export function startService(name, command, args, { cwd, env }) {
   prefix(child.stdout, process.stdout, name);
   prefix(child.stderr, process.stderr, name);
 
-  // Signal the whole group even after the leader exited, so no process that
-  // it started outlives the launcher.
-  const signal = (kind) => {
-    if (child.pid === undefined) return;
-    try {
-      process.kill(-child.pid, kind);
-    } catch (error) {
-      if (error.code !== "ESRCH") throw error;
-    }
-  };
+  const group = child.pid;
+  if (group !== undefined) liveGroups.add(group);
+
+  // Stop the whole group, and keep the grace period after the leader exits,
+  // so that no process that the service started outlives the launcher.
   const stop = async () => {
-    signal("SIGTERM");
-    const timer = setTimeout(() => signal("SIGKILL"), STOP_GRACE_MS);
+    if (group === undefined) return void (await exited);
+    signalGroup(group, "SIGTERM");
+    const timer = setTimeout(() => signalGroup(group, "SIGKILL"), graceMs);
     await exited;
+    while (groupExists(group)) await delay(GROUP_POLL_MS);
     clearTimeout(timer);
+    liveGroups.delete(group);
   };
-  return { name, exited, stop };
+  return { name, pid: group, exited, stop };
 }
 
 function prefix(input, output, name) {
@@ -94,13 +123,19 @@ export async function answers(url) {
 }
 
 /**
- * Settle on the first SIGINT, SIGTERM or SIGHUP that the launcher gets. The
- * listeners stay, so a second Ctrl+C does not end the launcher before it has
- * stopped its services.
+ * Settle on the first SIGINT, SIGTERM or SIGHUP that the launcher gets, so the
+ * stack stops its services in order. A second signal sends SIGKILL to every
+ * service group that has not stopped, so the user can always end the stop.
  */
 export function interruption() {
   return new Promise((resolve) => {
+    let received = 0;
+    const handle = () => {
+      received += 1;
+      if (received === 1) return resolve();
+      for (const group of liveGroups) signalGroup(group, "SIGKILL");
+    };
     for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"])
-      process.on(signal, () => resolve());
+      process.on(signal, handle);
   });
 }
