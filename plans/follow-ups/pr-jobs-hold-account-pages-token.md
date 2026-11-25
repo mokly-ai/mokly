@@ -26,5 +26,6 @@
 - **Left out:** A token with less than account scope does not exist for Pages, as far as the Cloudflare docs show.
 - **Wider fix:** C. No PR job then holds a deploy credential.
 - **Previous examples:** None found.
+- **Related:** `plans/app-on-cloudflare.md`, Milestone 3, applies option A to the site, the Mokly preview and the app preview deploys. When it lands, this item keeps only option C.
 - **Recommendation:** A now as a quick step, then C. A removes the direct exposure to PR code at low cost.
 - **Action:** ask the user, because the options trade a quick partial guard against a second account or a new workflow, and the token is an operator credential.
