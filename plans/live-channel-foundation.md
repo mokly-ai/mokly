@@ -98,7 +98,8 @@ My calls, 2026-11-24:
 - **One relay transaction for each tick.** Each `NOTIFY` transaction uses a
   transaction ID and takes a lock that serializes every notifying commit. So
   each replica sends all client events of a tick in one transaction.
-  Production Cloud SQL has 2 vCPUs.
+  Both stable Cloud SQL instances, production and `main-preview`, use the
+  1 vCPU `db-custom-1-3840` tier.
 - **Two channels.** Triggers notify on `mkc_live_notice`. Replicas relay
   client events on `mkc_live_relay`. A notice holds the project, the kind, the
   ID and the sequence. A relay message holds the replica ID, the project and

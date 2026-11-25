@@ -289,7 +289,10 @@ five-second acquisition timeout. The pool opens a connection only when a call
 needs one and closes each connection at most 90 seconds after its last call. Each admitted upload serializes its short marker batches
 through at most one connection regardless of worker count; object I/O remains
 parallel and outside transactions. The health reader keeps its separate
-single-connection pool.
+single-connection pool. The live relay holds two more dedicated sessions on
+`MKC_DATABASE_URL` for the whole life of the API pod, one for `LISTEN` and one
+for `NOTIFY`. These are all the database sessions of a serving API pod.
+
 `MKC_CATALOGUE_HOT_CACHE_BYTES` accepts a nonnegative integer byte count;
 empty, negative, fractional, overflowing or otherwise non-integer values fail
 with the typed configuration-key error and prevent API or catalogue startup.

@@ -50,8 +50,9 @@ failures (5xx) at error, each correlated with the echoed `X-Request-ID`.
 `GET /v1/live/projects/{projectId}` opens a project WebSocket for an authorized
 member. The API starts one hub with the Postgres relay when it begins serving.
 Each replica opens two dedicated relay connections on `MKC_DATABASE_URL`, one
-to listen and one to send. The replica also has eight query connections and
-one migration readiness connection. Tests can inject an in-memory relay.
+to listen and one to send.
+[Environments](../../docs/ops/environment.md#workload-settings) counts every
+database session of an API pod. Tests can inject an in-memory relay.
 On SIGTERM or Ctrl-C, the hub signals close code 1001. The server waits for
 the upgraded sockets to finish during graceful shutdown.
 [Live channel](../../docs/protocol/cloud/live-channel.md)
