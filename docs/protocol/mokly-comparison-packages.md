@@ -1,6 +1,6 @@
 # Comparison Package Selection
 
-Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports.
+Status: Package imports can still select a source for a configured stylesheet. The [configured stylesheet follow-up](../../plans/follow-ups/configured-stylesheet-package-imports.md) covers exact paths for these imports. Mokly does not try the entries of `moduleResolution.sourcePackages` yet. The [JavaScript resolution milestone](../../plans/source-package-override.md#milestone-4-javascript-resolution) adds them for JavaScript, and the [CSS resolution milestone](../../plans/source-package-override.md#milestone-5-css-resolution) adds them for CSS. The [missing entry messages milestone](../../plans/source-package-override.md#milestone-6-missing-entry-messages) adds the `moduleResolution.sourcePackages` hint of the failure message and the `ignored-module` warning.
 
 This page defines where the [comparison sides](./mokly-comparison.md#sides)
 resolve JavaScript and CSS packages. The [dependency contract](./mokly-base-dependencies.md)
@@ -39,30 +39,87 @@ the configuration.
 1. The target must be a repository path outside `node_modules`. The nearest
    `package.json` above the target, within the repository, must have a
    `name`. Its directory is the package root.
-2. Read `outDir` and `rootDir` from the package root's `tsconfig.json` and
-   its relative `extends` files in the repository outside `node_modules`.
-   An unreadable reference makes both inherited folders unknown. Later
-   references and local compiler options can supply them. Use `outDir` as
-   the build directory and `rootDir` as the source directory when both are
-   known and both stay inside the package root. Otherwise, use `dist`,
-   `lib`, `build` or `out` directly under the package root as the build
-   directory and `src` as the source directory.
-3. For a target under the build directory, try the same relative path under
-   the source directory. For a `.js`, `.mjs` or `.cjs` target, replace the
-   extension with each resolve extension that ends in `.tsx`, `.ts`, `.jsx`,
-   `.js`, `.mts`, `.cts`, `.mjs`, or `.cjs`, in the configured order.
-   For other targets, keep the file name.
-4. Load the first matching regular source file on that side. If none exists,
-   keep the original target. When Node selects a target for a restored
-   runtime require or a synchronous PostCSS require, keep an existing build
-   file on the selected side. Use the source rule if that side lacks the
-   build file. A missing repository-mapped JavaScript target fails with
-   `module {path} has no source in this side`.
+2. Try the layouts of the package in the [layout order](#layout-order). A
+   layout maps build folders to source folders inside the package root.
+3. For a target under a build folder of a layout, try the same relative path
+   under its source folder. When build folders of one layout nest, use the
+   longest one that holds the target. For a `.js`, `.mjs` or `.cjs` target,
+   replace the extension with each resolve extension that ends in `.tsx`,
+   `.ts`, `.jsx`, `.js`, `.mts`, `.cts`, `.mjs`, or `.cjs`, in the
+   configured order. For other targets, keep the file name.
+4. Load the first matching regular source file on that side. If no layout
+   gives one, keep the original target. When Node selects a target for a
+   restored runtime require or a synchronous PostCSS require, keep an
+   existing build file on the selected side. Use the source rule if that
+   side lacks the build file. A missing repository-mapped JavaScript target
+   fails with `module {path} has no source in this side`. When a package
+   root holds the target, the message also names
+   `moduleResolution.sourcePackages`.
 
 When lookup for a bundled JavaScript import fails, Mokly tries each target
 of the matched export key. For a package without `exports`, it tries the
 declared main fields for an import of the package root. It skips TypeScript
-declaration targets. The lookup succeeds when all remaining targets map to
-the same source file. Otherwise Mokly keeps the native error. For requires
-loaded by Node, a native lookup invokes this recovery only after
-`MODULE_NOT_FOUND`.
+declaration targets. The lookup succeeds when the layout order maps all
+remaining targets to the same source file. Otherwise Mokly keeps the native
+error. For requires loaded by Node, a native lookup invokes this recovery
+only after `MODULE_NOT_FOUND`.
+
+## Layout Order
+
+The working configuration is the `mokly.config.json` of the working tree,
+and the base configuration is the same file in the base commit. An entry of
+[`moduleResolution.sourcePackages`](./mokly-configuration.md#source-packages)
+applies to the package whose `package.json` `name` equals its key. A side
+that holds no such package outside `node_modules` ignores the entry and gives
+no warning. Decision: a key is a package name. A folder key was rejected,
+because it stops matching the base when a pull request moves the package
+folder.
+
+Each side tries the layouts of a package in this order:
+
+- The base tries the entry of the base configuration, then the entry of the
+  working configuration, then the detected layout.
+- The head tries the entry of the working configuration, then the detected
+  layout.
+
+A configuration without an entry for the package adds no layout. The first
+layout that gives a source file wins. An entry `false` ends the order where
+it stands, and the side keeps the original target. So a base whose own entry
+is `false` keeps its build files, also when the working entry names folders.
+An entry with folders is one complete layout, and Mokly adds no detected
+folder to it, so the entry shows the whole layout in one place.
+
+Decision: the base tries its own entry, then the working entry, for each
+file. Only the base's own entries were rejected, because the pull request
+that adds an entry would then lose Changes when its base already imports the
+package. One entry for each package was rejected, because a pull request
+could then not correct a wrong entry of its base.
+
+The detected layout reads `outDir` and `rootDir` from the package root's
+`tsconfig.json` and its relative `extends` files in the repository outside
+`node_modules`. An unreadable reference makes both inherited folders unknown.
+Later references and local compiler options can supply them. When both are
+known and both stay inside the package root, `outDir` is the build folder and
+`rootDir` is its source folder. Otherwise `dist`, `lib`, `build` and `out`
+directly under the package root are build folders, each with the source
+folder `src`.
+
+## Ignored Modules
+
+When Changes runs, Mokly gives one `ignored-module` configuration warning for
+each repository file outside `node_modules` that Git ignores and that a
+bundled import or a CSS `@import` of the head loads. Changes runs in `build`
+and `publish` without `--no-changes`, and in Serve when it classifies
+Changes. A later base renders from the files that Git tracks, so it cannot
+load such a file. The message names the repository-relative path of the file.
+When a workspace package holds the file, the message also names
+`moduleResolution.sourcePackages`, because no entry can fix any other file. A file that Git neither tracks nor
+ignores gives no warning, because a commit can still add it. A file that Node
+loads for a require gives no warning, because the base recovers its source
+after `MODULE_NOT_FOUND`. [Strict mode](./mokly-build-warnings.md#strict-mode)
+counts the warning.
+
+Decision: Mokly warns about each ignored file that the head loads, so the
+author learns of a missing entry before the merge. A warning for each entry
+that loads no source file was rejected, because it misses an entry that the
+author forgot.

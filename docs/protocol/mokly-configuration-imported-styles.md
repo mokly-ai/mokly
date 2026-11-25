@@ -1,5 +1,7 @@
 # Imported CSS Configuration
 
+Status: CSS `@import` does not try the entries of `moduleResolution.sourcePackages` yet. The [CSS resolution milestone](../../plans/source-package-override.md#milestone-5-css-resolution) adds them.
+
 Continuation of [Mokly Configuration](./mokly-configuration.md). The
 [imported stylesheet contract](./mokly-imported-styles.md) owns delivery and
 the [error catalogue](./mokly-imported-styles-errors.md) owns diagnostics.
@@ -69,4 +71,7 @@ Authored public CSS enters a document only through the
 Mokly applies the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
 to CSS `@import` targets after it selects the package export or main field.
-The mapped stylesheet keeps its `.css` extension.
+CSS tries the same [layout order](./mokly-comparison-packages.md#layout-order)
+as JavaScript, with the entries of `moduleResolution.sourcePackages`. A base
+that starts no sidecar uses the same order. The mapped stylesheet keeps its
+`.css` extension.

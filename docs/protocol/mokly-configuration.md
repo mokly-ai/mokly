@@ -1,5 +1,7 @@
 # Mokly Configuration Contract
 
+Status: Mokly does not accept `moduleResolution.sourcePackages` yet. The [configuration type milestone](../../plans/source-package-override.md#milestone-2-configuration-type-and-validation) adds the field and its validation. The [JavaScript resolution milestone](../../plans/source-package-override.md#milestone-4-javascript-resolution) and the [CSS resolution milestone](../../plans/source-package-override.md#milestone-5-css-resolution) apply its entries.
+
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path
 resolves, and the validation that rejects an unsafe configuration.
@@ -30,8 +32,9 @@ following contract:
   renders with the product's providers;
 - `stylesheets`: declarative route-to-stylesheet rules;
 - `postcss` and `moduleResolution`: the consumer's PostCSS module and the
-  package roots, aliases, conditions, fields, extensions, and loaders that the
-  [sidecar](./mokly-sidecar.md) bundles with;
+  package roots, aliases, conditions, fields, extensions, loaders, and
+  workspace package layouts that the [sidecar](./mokly-sidecar.md) bundles
+  with;
 - `review.base`: the Git ref whose merge base with `HEAD` is the comparison
   base, defaulting to `origin/main`;
 - `review.baseInstallScripts`: whether base dependency installs run lifecycle
@@ -127,11 +130,16 @@ naming the setting and the path:
   token in a scheme-specific list or more than once;
 - a watch path that cannot be classified safely;
 - a `moduleResolution` value outside the
-  [module resolution rules](#module-resolution) below.
+  [module resolution rules](#module-resolution) below, including an invalid
+  [source package](#source-packages) entry.
 
 Path traversal uses one limit for every field. A second limit at the lexical
 path of `repoRoot` was rejected, because a directory could then pass for one
 field and fail for another.
+
+An invalid source package entry fails as every other `moduleResolution` value
+does. A warning that skips the entry was rejected, because a folder outside
+the package root is unsafe, not only wrong.
 
 Additional watch rules cannot override the package-owned classifications: the
 rebuild of configured sources and modules, the reload for configured and
@@ -215,3 +223,20 @@ Mokly applies the
 [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
 automatically after module lookup. For JavaScript targets, the rule keeps
 the `resolveExtensions` order and tries only extensions with a script suffix.
+
+### Source Packages
+
+`sourcePackages` adds layouts to the
+[layout order](./mokly-comparison-packages.md#layout-order) of the workspace
+package source rule.
+Each key is a bare package name, such as `@acme/ui`. Each entry is `false`,
+which ends the layout order with the original target, or a map from build
+folder to source folder, such as `{ "esm": "source", "cjs": "source" }`.
+Folders are POSIX paths relative to the package root, such as `esm` or
+`dist/esm`. Mokly reads `./esm` and `esm/` as `esm`. A source folder can be
+`.`, for sources at the package root. Validation rejects a key that is not a
+bare package name, an empty map, and a build folder `.`, which would hold
+every file of the package. It also rejects a folder that is empty or
+absolute, or that has a `..` or `node_modules` segment. One pair with role
+names, such as `{ "dist": "esm", "src": "source" }`, was rejected, because it
+cannot state a second build folder.

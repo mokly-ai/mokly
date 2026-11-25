@@ -1,12 +1,15 @@
 # Imported Stylesheet Diagnostics
 
+Status: Mokly does not name `moduleResolution.sourcePackages` in the two workspace package rows yet. The [missing entry messages milestone](../../plans/source-package-override.md#milestone-6-missing-entry-messages) adds it.
+
 Every failure in this catalogue names the authored file, delivery root, or
 module. A message never shows a virtual module, a sidecar path, or a working
 directory. `{stylesheet}`, `{root}`, `{module}`, `{file}`, and `{directory}`
 are repository-relative POSIX paths; `{line}` and `{column}` refer to the CSS
 that the scoper or the bundler received, after PostCSS, never to a source-map
 origin. `{config-path}` is the `postcss` value as the configuration spells
-it. Only `{detail}` may carry raw tool text.
+it. `{package}` is the `package.json` `name` of the workspace package that
+holds the target. Only `{detail}` may carry raw tool text.
 
 ## Configuration (`config-invalid`)
 
@@ -52,6 +55,7 @@ stylesheet path, without PostCSS's physical-path or plugin framing.
 | Non-JavaScript output from the bundle, including `file` | `consumer graph emitted an undelivered file: {file}; use a dataurl or binary loader for JavaScript assets instead of file`                                                                                                |
 | JavaScript reaches CSS outside the side's allowed roots | `module {logical-module} is outside sourceRoot and selected dependency roots`, at the importing source location                                                                                                           |
 | Missing mapped repository source                        | `module {logical-module} has no source in this side`, at the importing source location                                                                                                                                    |
+| Missing mapped source in a workspace package            | `module {logical-module} has no source in this side; set moduleResolution.sourcePackages for {package}`, at the importing source location                                                                                 |
 | Late local CSS `@import`                                | `CSS @import must come before style rules in {stylesheet}: {specifier}; move the import before other rules`                                                                                                               |
 | Quoted local string URL in `image-set()`                | `image-set() string URL is unsupported in {stylesheet}: {url}; wrap the URL in url() so Mokly can validate and deliver the asset`                                                                                         |
 | Root-absolute CSS URL                                   | `root-absolute CSS url() is not portable in {stylesheet}: {url}; use a path relative to the stylesheet`                                                                                                                   |
@@ -59,6 +63,7 @@ stylesheet path, without PostCSS's physical-path or plugin framing.
 | Relative CSS URL with an unsupported extension          | `unsupported CSS asset extension in {stylesheet}: {url}; use .avif, .bmp, .gif, .ico, .jpeg, .jpg, .png, .svg, .webp, .eot, .otf, .ttf, .woff or .woff2`                                                                  |
 | Non-portable asset route                                | `CSS asset route is not portable: {file}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; @scope only after node_modules; no spaces or device names)`                        |
 | Missing or invalid local CSS `@import`                  | `could not resolve CSS @import in {stylesheet}: {specifier}; use an existing stylesheet inside repoRoot`                                                                                                                  |
+| Missing CSS `@import` source in a workspace package     | `could not resolve CSS @import in {stylesheet}: {specifier}; set moduleResolution.sourcePackages for {package}`                                                                                                           |
 | `lightningcss` bundle failure                           | `could not bundle CSS {root}: {detail}; fix the stylesheet and rebuild`                                                                                                                                                   |
 | PostCSS plugin throws                                   | `PostCSS plugin {plugin} failed for {stylesheet}: {detail}; fix the plugin configuration or stylesheet`                                                                                                                   |
 | Plugin reports a nested renderer-owned import           | `PostCSS plugin {plugin} reached renderer-owned CSS in {stylesheet}: {excluded} via {intermediate}; import it only from the renderer, import it directly so Mokly can prune it, or use Tailwind @reference`               |

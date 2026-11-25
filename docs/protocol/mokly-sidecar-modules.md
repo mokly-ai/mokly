@@ -1,5 +1,7 @@
 # Sidecar Module Sources
 
+Status: The sidecar does not try the entries of `moduleResolution.sourcePackages` yet. The [JavaScript resolution milestone](../../plans/source-package-override.md#milestone-4-javascript-resolution) adds the entries and their records in the reuse evidence.
+
 This page expands the [sidecar bundling contract](./mokly-sidecar.md#bundling).
 The source root and dependency roots identify one comparison side. All roots
 are resolved to real filesystem paths before identity and confinement checks.
@@ -103,10 +105,13 @@ same logical name.
 The [workspace package source rule](./mokly-comparison-packages.md#workspace-package-sources)
 applies to bundled imports of bare package specifiers, including JavaScript
 imports of CSS. It also covers missing build targets for requires that Node
-loads. Both bundle capture modes keep workspace
-layout probes in private reuse evidence, including when no source matches.
-Layout files and package manifests used for build targets also enter the
-bundle metadata. The bundle keeps absent build and source candidates as
+loads. Both bundle capture modes keep the workspace layout probes of every
+layout that the rule tries in private reuse evidence, including when no
+source matches. Each `package.json` that the rule reads to find a package
+root and its `name` enters the same evidence, because an entry of
+`moduleResolution.sourcePackages` applies by that `name`. Layout files and
+package manifests used for build targets also enter the bundle metadata. The
+bundle keeps the absent build and source candidates of every tried layout as
 watch inputs. Selected source contents enter through the module graph and
 stylesheet inputs.
 

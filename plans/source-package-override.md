@@ -108,6 +108,20 @@ Design calls, mine, 2026-11-25:
   file that is not committed yet gives no warning.
 - The warning ignores the files that a base prepare command makes. That change
   is not on `main` yet. The change that merges second adds this exception.
+- The warning names `moduleResolution.sourcePackages` only when a workspace
+  package holds the file. Reason: no entry can fix any other file, and the
+  warning still reports every ignored file. Raised by the docs implementor.
+- An entry that names one build folder twice after normalisation, such as
+  `esm` and `./esm`, fails with `config-invalid`. Reason: decision 3 A covers
+  invalid entries, and the configuration already rejects duplicate stylesheet
+  `match` values and duplicate watch paths. Raised by the docs implementor.
+- `ignored-module` is a configuration warning, as `stylesheet-extglob` is,
+  because the fix is in the configuration and no single page causes it. The
+  rule lives in the comparison packages page, and the warnings page holds its
+  row. Docs implementor's call.
+- The exact failure messages live in
+  `docs/protocol/mokly-imported-styles-errors.md`, with two new rows for a
+  target inside a workspace package.
 
 Contract owners:
 
@@ -124,6 +138,8 @@ Contract owners:
   Decision 1 E changes that sentence.
 - [Build warnings](../docs/protocol/mokly-build-warnings.md), for the
   `ignored-module` warning.
+- [Imported styles errors](../docs/protocol/mokly-imported-styles-errors.md),
+  for the exact failure messages.
 - The [configuration guide](../docs/guides/authoring/config.md).
 - The [@mokly/mokly README](../packages/mokly/README.md), the
   [sidecar README](../packages/mokly/src/sidecar/README.md), the
@@ -141,20 +157,21 @@ them.
 - [x] Merge `origin/main` with the detection change into this branch, as the
       `git-merge` skill says. Update the design calls above where the merged
       rule differs from `plans/source-packages.md` of 2026-11-24.
-- [ ] Update `docs/protocol/mokly-configuration.md`: the field list, the
+- [x] Update `docs/protocol/mokly-configuration.md`: the field list, the
       Module Resolution section, and the Validation list under decision 3.
-- [ ] Update `docs/protocol/mokly-comparison-packages.md`: the order of
+- [x] Update `docs/protocol/mokly-comparison-packages.md`: the order of
       layouts in the folder step of the detection rule, and `false`.
-- [ ] Update `docs/protocol/mokly-configuration-imported-styles.md` for CSS
+- [x] Update `docs/protocol/mokly-configuration-imported-styles.md` for CSS
       `@import` of an overridden package.
-- [ ] Update `docs/protocol/mokly-sidecar-modules.md` for the `package.json`
+- [x] Update `docs/protocol/mokly-sidecar-modules.md` for the `package.json`
       reads and the tries in the lookup records.
-- [ ] Update `docs/protocol/cloud/mockup-baselines.md`: the base also reads
+- [x] Update `docs/protocol/cloud/mockup-baselines.md`: the base also reads
       the working `sourcePackages` entries.
-- [ ] Add the `ignored-module` warning to
+- [x] Add the `ignored-module` warning to
       `docs/protocol/mokly-build-warnings.md`, and the override hint to the
-      base failure message rule.
-- [ ] Update `docs/guides/authoring/config.md` with the option, one example
+      base failure message rule and to
+      `docs/protocol/mokly-imported-styles-errors.md`.
+- [x] Update `docs/guides/authoring/config.md` with the option, one example
       of each value, the order of layouts, and the note that `false` needs
       built files in the base.
 
@@ -170,9 +187,10 @@ Depends on: 1
       `packages/mokly/src/authoring/config.ts`.
 - [ ] Reject invalid entries with `config-invalid` in
       `crates/mokly-catalogue/src/config_validation.rs`: a key that is not a
-      bare package name, an empty folder map, a build folder `.`, and a folder
-      that is empty, absolute, or holds `..` or `node_modules`. Normalise
-      `./esm` and `esm/` to `esm`.
+      bare package name, an empty folder map, a build folder `.`, a folder
+      that is empty, absolute, or holds `..` or `node_modules`, and a build
+      folder named twice after normalisation. Normalise `./esm` and `esm/` to
+      `esm`.
 - [ ] Add accepted and rejected examples to
       `crates/mokly-catalogue/src/_tests_/config_tests.rs`.
 

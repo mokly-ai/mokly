@@ -1,5 +1,7 @@
 # Mockup Comparison Base
 
+Status: The base does not try the working tree's `moduleResolution.sourcePackages` entries yet. The [JavaScript resolution milestone](../../../plans/source-package-override.md#milestone-4-javascript-resolution) and the [CSS resolution milestone](../../../plans/source-package-override.md#milestone-5-css-resolution) add them.
+
 This is the comparison sub-contract of [Mockup tooling](./mockup-tooling.md).
 Mokly's [comparison](../mokly-comparison.md),
 [base preparation](../mokly-base-preparation.md),
@@ -17,7 +19,10 @@ command.
 
 Mokly renders the base side from the base commit's sources with the installed
 release, through the base commit's own `mokly.config.json`, renderer and
-module resolution. The configuration names no rebuild recipe,
+module resolution. For a workspace package, the base also tries the working
+tree's `moduleResolution.sourcePackages` entry after its own entry, under the
+[layout order](../mokly-comparison-packages.md#layout-order). The
+configuration names no rebuild recipe,
 no command installs or runs an earlier Mokly release, and no comparison reads
 a committed generated tree. A Mokly upgrade alone therefore
 lists no change.
