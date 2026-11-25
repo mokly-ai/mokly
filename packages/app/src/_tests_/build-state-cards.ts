@@ -1,3 +1,4 @@
+import { installPollClock, nextPoll } from "./build-clock";
 import { advance, write } from "./build-double";
 import {
   buildCard,
@@ -38,6 +39,7 @@ export const follow: BuildStateRow = {
       step: null,
       startedAt: null,
     });
+    await installPollClock(page);
     await open(page, scenario.branchAt("topic"));
     const stage = page.locator(".fo-stage-card");
     await expect(
@@ -71,6 +73,7 @@ export const follow: BuildStateRow = {
       { text: "$ npm ci\n", stream: "system", step: "install" },
       { text: "added 412 packages\n", step: "install" },
     ]);
+    await nextPoll(page);
     await expect(page.getByTestId("build-output")).toContainText(
       "added 412 packages",
     );

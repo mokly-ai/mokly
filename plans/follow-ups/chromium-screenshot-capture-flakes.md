@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Low. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`, the cloud flaky-test work of the CI speed task.
-- **Location:** `docs/mockups/src/_tests_/disk.spec.ts:238-242`, the full-page capture of each disk test. `packages/desktop/src/_tests_/shell.ts:84-86`, the `screenshot` helper, and its first caller `packages/desktop/src/_tests_/global-setup.ts:34`.
+- **Location:** `packages/desktop/src/_tests_/shell.ts:84-86`, the `screenshot` helper, and its first caller `packages/desktop/src/_tests_/global-setup.ts:34`. The full-page capture of each disk test in `docs/mockups/src/_tests_/disk.spec.ts` runs only on request since pull request #528.
 - **Reason:** The source is not known after a code reading and 200 local repeats, so the next step needs diagnostics in CI or a removal, and both need the user.
 
 - **Category:** Test.
@@ -22,14 +22,14 @@
   - The two pages ran 100 times each with `--repeat-each 100`, beside another browser suite. All 200 passed.
 - **Problem:** A screenshot that no check reads fails a required CI job at random. The source is not known.
 - **Impact if no action:** In 300 CI runs between 2026-11-20 and 2026-11-25, this error failed Mockup checks twice and Desktop checks once. Each failure needed a rerun.
-- **Root question:** How do the mockup and desktop suites keep their captures without a random failure?
+- **Root question:** How does the desktop suite keep its captures without a random failure?
 - **Options:**
-  - **A.** Collect evidence first. Launch the browser of the two suites with its standard error in the job log, for example with `DEBUG=pw:browser`, and read the next failure for a GPU process exit or a lost context. Then fix the source that the log names. It changes the Playwright launch of two suites. Effort: Medium.
-  - **B.** Stop saving the captures in CI, and keep them for local runs. CI then cannot fail on them. The design sheets come from local runs, as `docs/mockups/README.md` describes. Effort: Small.
-  - **C.** Remove the captures from both suites. The documented design-sheet input then goes away. Effort: Small.
+  - **A.** Collect evidence first. Launch the Electron shell of the desktop suite with its standard error in the job log, for example with `DEBUG=pw:browser`, and read the next failure for a GPU process exit or a lost context. Then fix the source that the log names. It changes the Playwright launch of the suite. Effort: Medium.
+  - **B.** Stop saving the desktop captures in CI, and keep them for local runs, as pull request #528 does for the mockup disk captures. CI then cannot fail on them. Effort: Small.
+  - **C.** Remove the desktop captures. Effort: Small.
 - **Left out:** A retry of the capture, a sleep before it, or a longer time limit. Each hides the source, and the testing rules forbid each.
 - **Wider fix:** None. The source is not known.
 - **Previous examples:** None found.
-- **Related:** The branch `calummoore/ci-speed-cloud-test-value-audit-fnzd`, the cloud test value audit, applies option B to the mockup disk suite. Its capture runs only when `MKC_MOCKUP_CAPTURES=1` is set, and CI does not set it. When that branch merges, this item keeps only the desktop captures of `packages/desktop/src/_tests_/shell.ts`.
+- **Related:** Pull request #528, the cloud test value audit, applied option B to the mockup disk suite: its capture runs only when `MKC_MOCKUP_CAPTURES=1` is set, and CI does not set it. This item now covers only the desktop captures of `packages/desktop/src/_tests_/shell.ts`.
 - **Recommendation:** A. The failure is rare and costs only a rerun, and A can name the source before anything goes.
-- **Action:** ask the user, because the source is unknown after a reproduction attempt, and each option changes a suite launch or removes a documented capture.
+- **Action:** ask the user, because the source is unknown after a reproduction attempt, and each option changes the suite launch or removes a capture.

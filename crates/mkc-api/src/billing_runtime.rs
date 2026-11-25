@@ -12,6 +12,7 @@ use crate::github_runtime::WorkerLoop;
 
 pub(crate) struct BillingWorkerLoop {
     pub(crate) worker: Option<Arc<dyn BillingDeliveryWorker>>,
+    pub(crate) interval: Duration,
 }
 
 impl WorkerLoop for BillingWorkerLoop {
@@ -30,7 +31,7 @@ impl WorkerLoop for BillingWorkerLoop {
                         tracing::error!(?error, "billing delivery worker task failed");
                     }
                 }
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                tokio::time::sleep(self.interval).await;
             }
         })
     }

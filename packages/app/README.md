@@ -269,7 +269,7 @@ follows cloud builds in its stage, and how the tests cover them.
 - `src/viewer/build-card.tsx`, `src/viewer/build-stage.tsx` and `src/viewer/publish-card.tsx` — the build card and its one action, the owner's action as a placeholder while a plan refusal's workspace read runs (`awaitsOwnerAction`), the build address's read, unknown and unreadable states, and the publishing card; `build-copy.ts` holds every sentence they say.
 - `src/viewer/build-action.ts` and `src/viewer/build-state.ts` — the pure choice of the build card's one action, and the pure step and row rules.
 - `src/viewer/reference-stage.ts` — the stage order of a reference with nothing ready; `stage-view-decision.ts` gives a plan-refused open pull request the Team card a branch gets.
-- `src/viewer/build-log.ts`, `src/viewer/build-follow.ts` and `src/viewer/build-watch.ts` — the log windows, the reads and their order, and the polling hook.
+- `src/viewer/build-log.ts`, `src/viewer/build-follow.ts`, `src/viewer/build-watch.ts` and `src/viewer/build-poll.ts` — the log windows, the reads and their order, the polling hook, and its poll interval.
 - `src/viewer/build-request.ts` and `src/viewer/build-target.ts` — the request that opens the build it starts, and where its answer leads.
 - `src/viewer/request-controls.ts` — every control that sends a build request, with its label after a refusal.
 - `src/viewer/switcher-row.ts` — where a switcher row leads.
