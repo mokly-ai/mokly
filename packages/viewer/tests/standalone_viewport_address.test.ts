@@ -23,6 +23,7 @@ import {
   initialState,
   shellCatalogue,
 } from "./disclosure_evidence_fixture.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 const ORIGIN = "https://example.test";
 const HOME = "/view/product/browse/home/";
@@ -62,9 +63,9 @@ function standalone(t: TestContext, address: string) {
       }),
     { initialProps: { state } },
   );
-  t.after(() => {
+  t.after(async () => {
     hook.unmount();
-    GlobalRegistrator.unregister();
+    await unregisterDom();
   });
   const step = async (change: () => void | Promise<void>) => {
     await act(async () => {

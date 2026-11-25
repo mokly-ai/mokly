@@ -17,6 +17,7 @@ import {
   renderComparison,
 } from "./comparison_lifecycle_harness.js";
 import { flush } from "./data_fakes.js";
+import { unregisterDom } from "./dom_teardown.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
 /** The routed screen whose comparison the workspace requests. */
@@ -24,7 +25,7 @@ const HOME = "product/browse/home";
 
 test("a comparison network failure keeps browser text out of its details in every host", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   for (const embedded of [false, true]) {
     const reported: unknown[] = [];
     const error = new TypeError("Failed to fetch");
@@ -70,7 +71,7 @@ test("a comparison network failure keeps browser text out of its details in ever
 
 test("a failed row reports its own failure while the other rows still compare", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const host = heldHost();
   const props = {
     eligible: true,
