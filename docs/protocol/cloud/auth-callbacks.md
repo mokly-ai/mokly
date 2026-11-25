@@ -1,7 +1,5 @@
 # Authentication Callback Landings
 
-Status: The app still serves the preview landing at `/auth/preview/callback`. [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) removes it.
-
 Email, the desktop grant, GitHub identity authorization and GitHub App setup
 return to separate application routes. A
 landing never guesses its provider from a shared query,

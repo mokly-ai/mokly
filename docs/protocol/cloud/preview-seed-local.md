@@ -1,6 +1,6 @@
 # Local Preview Seed
 
-Status: The local stack still creates a random sign-in value in place of a local password, and Sign in draws no password section yet. [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) builds the local password, and [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) the section.
+Status: [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) adds the password section to Sign in.
 
 This sub-contract of [Preview seed](./preview-seed.md) defines the local
 preview account and the local capture and seed commands.

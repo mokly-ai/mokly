@@ -68,7 +68,7 @@ fn dispatcher(operation: Operation, client: ClientOrigin) -> ApiDispatcher {
                 .returns(true),
             origin,
             AuthenticatorMock::preview
-                .next_call(matching!("secret", Some("old"), _))
+                .next_call(matching!("preview password", Some("old"), _))
                 .answers(&|_, _, _, _| Ok(issued())),
         ))),
         Operation::VerifyGitHubSignIn => Arc::new(Unimock::new((
@@ -143,7 +143,7 @@ fn dispatcher(operation: Operation, client: ClientOrigin) -> ApiDispatcher {
 fn request(operation: Operation, origin: &str) -> Request {
     let body = match operation {
         Operation::VerifyMagicLink => br#"{"token":"token"}"#.to_vec(),
-        Operation::VerifyPreviewSignIn => br#"{"secret":"secret"}"#.to_vec(),
+        Operation::VerifyPreviewSignIn => br#"{"password":"preview password"}"#.to_vec(),
         Operation::VerifyGitHubSignIn => {
             br#"{"code":"code","state":"state","codeVerifier":"verifier"}"#.to_vec()
         }

@@ -1,7 +1,5 @@
 # REST API
 
-Status: The preview exchange does not check a password yet. [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds it.
-
 The REST API serves the [OpenAPI 3.1 operations](../../api/openapi.json) under `/v1`.
 The application and published catalogues are served by other origins; this
 API never serves publication HTML.

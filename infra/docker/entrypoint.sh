@@ -5,8 +5,8 @@ if [ -f /var/run/mokly-secrets/catalogue-signing-key ]; then
   export MKC_CATALOGUE_SIGNING_KEY
 fi
 if [ -f /var/run/mokly-secrets/preview-sign-in ]; then
-  MKC_PREVIEW_SIGN_IN_SECRET=$(cat /var/run/mokly-secrets/preview-sign-in)
-  export MKC_PREVIEW_SIGN_IN_SECRET
+  MKC_PREVIEW_SIGN_IN_VERIFIER=$(cat /var/run/mokly-secrets/preview-sign-in)
+  export MKC_PREVIEW_SIGN_IN_VERIFIER
 fi
 if [ -f /var/run/mokly-secrets/postmark-token ]; then
   POSTMARK_SERVER_TOKEN=$(cat /var/run/mokly-secrets/postmark-token)

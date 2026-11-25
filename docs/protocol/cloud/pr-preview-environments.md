@@ -1,6 +1,6 @@
 # PR Preview Environments
 
-Status: The API reads no verifier yet, and the deploy still generates a random `preview-sign-in` value in place of copying the verifier. [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds the setting, and [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) the store, the copy and the mount.
+Status: [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) adds the verifier store, the deploy copy, and the optional mount.
 
 This contract defines the environment that every labelled pull request gets:
 its namespace, data, hosts, TLS, identity and network boundaries. The

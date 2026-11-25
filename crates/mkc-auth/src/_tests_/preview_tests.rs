@@ -11,36 +11,41 @@ use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
 use crate::error::Error;
+use crate::preview_verifier::PreviewVerifier;
 use crate::runtime::{RuntimeMock, hash};
 use crate::service::{AuthService, Authenticator, PreviewSignIn};
 
-use super::support::{identity, now, pure, service};
+use super::support::{identity, now, preview_fixture, pure, service};
 
-const SECRET: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const EMAIL: &str = "preview@example.com";
 
-fn configured(mut auth: AuthService) -> AuthService {
-    auth.preview_sign_in = Some(PreviewSignIn::new(SECRET, EMAIL.to_owned()));
+fn configured(mut auth: AuthService, verifier: Option<&str>) -> AuthService {
+    let verifier = verifier.map(|value| PreviewVerifier::parse(value).unwrap());
+    auth.preview_sign_in = Some(PreviewSignIn::new(EMAIL.to_owned(), verifier));
     auth
 }
 
 #[test]
 fn availability_reflects_validated_configuration() {
     assert!(!pure().preview_sign_in_available());
-    assert!(configured(pure()).preview_sign_in_available());
+    assert!(configured(pure(), None).preview_sign_in_available());
 }
 
 #[test]
 fn absent_configuration_is_unavailable_before_dependencies_are_used() {
     assert!(matches!(
-        pure().preview(SECRET, None, "127.0.0.1"),
+        pure().preview("preview password", None, "127.0.0.1"),
         Err(Error::PreviewSignInUnavailable)
     ));
 }
 
 #[test]
-fn malformed_and_wrong_credentials_commit_their_admission_count() {
-    for secret in ["bad".to_owned(), "b".repeat(64)] {
+fn wrong_password_and_missing_verifier_commit_their_admission_count() {
+    let (password, verifier) = preview_fixture();
+    for (verifier, supplied) in [
+        (Some(verifier), format!("{password} ")),
+        (None, password.to_owned()),
+    ] {
         let queries = Unimock::new((
             RateLimitsMock::rate_limit
                 .next_call(matching!(_))
@@ -59,13 +64,13 @@ fn malformed_and_wrong_credentials_commit_their_admission_count() {
                 Ok(())
             }),
         ));
-        let mut auth = configured(pure());
+        let mut auth = configured(pure(), verifier);
         auth.store = Arc::new(store);
         auth.runtime = Arc::new(Unimock::new(
             RuntimeMock::now.next_call(matching!()).returns(now()),
         ));
         assert!(matches!(
-            auth.preview(&secret, None, "127.0.0.1"),
+            auth.preview(&supplied, None, "127.0.0.1"),
             Err(Error::InvalidLink)
         ));
     }
@@ -73,6 +78,7 @@ fn malformed_and_wrong_credentials_commit_their_admission_count() {
 
 #[test]
 fn exhausted_admission_returns_a_positive_retry_without_verifying() {
+    let (password, verifier) = preview_fixture();
     let queries = Unimock::new(
         RateLimitsMock::rate_limit
             .next_call(matching!(_))
@@ -82,19 +88,20 @@ fn exhausted_admission_returns_a_positive_retry_without_verifying() {
                 resets_at: now() + Duration::seconds(19),
             }))),
     );
-    let auth = configured(service(
+    let auth = service(
         queries,
         Arc::new(Unimock::new(())),
         Unimock::new(RuntimeMock::now.next_call(matching!()).returns(now())),
-    ));
+    );
     assert!(matches!(
-        auth.preview(SECRET, None, "127.0.0.1"),
+        configured(auth, Some(verifier)).preview(password, None, "127.0.0.1"),
         Err(Error::RateLimited(19))
     ));
 }
 
 #[test]
 fn existing_account_replaces_a_supplied_session() {
+    let (password, verifier) = preview_fixture();
     let original = identity();
     let user = original.user.clone();
     let user_id = user.id;
@@ -127,8 +134,9 @@ fn existing_account_replaces_a_supplied_session() {
             .next_call(matching!())
             .returns(Uuid::from_u128(8)),
     ));
-    let result = configured(service(queries, Arc::new(Unimock::new(())), runtime))
-        .preview(SECRET, Some("old"), "127.0.0.1")
+    let auth = service(queries, Arc::new(Unimock::new(())), runtime);
+    let result = configured(auth, Some(verifier))
+        .preview(password, Some("old"), "127.0.0.1")
         .unwrap();
     assert_eq!(result.credential, "new");
     assert_eq!(result.identity.user.id, user_id);
@@ -136,6 +144,7 @@ fn existing_account_replaces_a_supplied_session() {
 
 #[test]
 fn absent_account_is_created_without_a_previous_session() {
+    let (password, verifier) = preview_fixture();
     let queries = Unimock::new((
         RateLimitsMock::rate_limit
             .next_call(matching!(_))
@@ -165,8 +174,9 @@ fn absent_account_is_created_without_a_previous_session() {
             .next_call(matching!())
             .returns(Uuid::from_u128(9)),
     ));
-    let result = configured(service(queries, Arc::new(Unimock::new(())), runtime))
-        .preview(SECRET, None, "127.0.0.1")
+    let auth = service(queries, Arc::new(Unimock::new(())), runtime);
+    let result = configured(auth, Some(verifier))
+        .preview(password, None, "127.0.0.1")
         .unwrap();
     assert_eq!(result.identity.user.email, EMAIL);
 }

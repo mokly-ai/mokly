@@ -1,7 +1,5 @@
 # Product Navigation
 
-Status: The app still serves the preview landing at `/auth/preview/callback`. [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) removes it.
-
 The product's routes, their resolution and fallbacks, and the navigation shell
 around the hosted viewer. Accounts, onboarding, roles and settings are in
 [Product accounts and roles](./product-accounts-and-roles.md). See

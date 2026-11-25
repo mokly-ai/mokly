@@ -60,6 +60,9 @@ pub(crate) fn action(
         Operation::SendMagicLink => return Ok(Endpoint::SendMagicLink(body(bytes)?)),
         Operation::VerifyMagicLink => return Ok(Endpoint::VerifyMagicLink(body(bytes)?)),
         Operation::VerifyPreviewSignIn => {
+            if bytes.iter().find(|byte| !byte.is_ascii_whitespace()) != Some(&b'{') {
+                return Err(Error::InvalidInput);
+            }
             return Ok(Endpoint::VerifyPreviewSignIn(body(bytes)?));
         }
         Operation::GetSession => return Ok(Endpoint::GetSession),

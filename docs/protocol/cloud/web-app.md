@@ -1,7 +1,5 @@
 # Web Application
 
-Status: The app still serves the preview landing at `/auth/preview/callback`. [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) removes it.
-
 `packages/app` is the Expo application that serves Mokly Cloud's account entry and
 its logged-in product. It targets the web. The account and settings surfaces
 are DOM compositions over `@firna/ui` controls, so they render in a browser and

@@ -1,6 +1,6 @@
 # Preview Sign-In
 
-Status: The API accepts no preview password and gives no configuration answer yet, no deploy copies a verifier, and Sign in draws no password section. [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds the password exchange, [Milestone 4](../../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) the configuration answer, [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) the store and the deploy, and [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) the section.
+Status: [Milestone 4](../../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) adds the configuration endpoint. [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) adds the verifier store and deploy steps. [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) adds the password section to Sign in.
 
 A [PR preview](./pr-preview-environments.md) signs in one shared account with
 one shared password, the preview password. The same password works in every

@@ -40,17 +40,6 @@ export function verifyMagicLink(token: string): Promise<SessionIssued> {
   );
 }
 
-/** Exchange the configured preview credential for an ordinary session. */
-export function verifyPreviewSignIn(secret: string): Promise<SessionIssued> {
-  return expectBody((id) =>
-    api.POST("/v1/auth/preview", {
-      params: { header: originHeader() },
-      headers: correlationHeader(id),
-      body: { secret },
-    }),
-  );
-}
-
 /**
  * Ask for a one-use grant that signs the desktop app in to this browser's
  * account, bound to the challenge of the window's verifier.

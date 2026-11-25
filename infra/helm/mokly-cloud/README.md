@@ -1,6 +1,6 @@
 # Mokly Cloud Helm Chart
 
-Status: The chart still mounts `preview-sign-in` as required, the entrypoint still exports it as a random link value, and the preview plan setting still needs that value. [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) builds the optional mount and the verifier export, and [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) the email-only plan rule.
+Status: [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) makes the chart's `preview-sign-in` mount optional.
 
 This chart deploys the API, isolated catalogue server and Expo app as release
 `mokly-cloud` in `mkc-<environment>`. Use reviewed immutable images and derived

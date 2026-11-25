@@ -1,7 +1,5 @@
 # Authentication And Sessions
 
-Status: The API accepts no preview password yet. [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds it.
-
 Email sign-in and sign-up share one flow. [GitHub sign-in](./github-sign-in.md)
 links by verified primary email and uses the same session policy. Previews add
 one [shared password](./preview-sign-in.md). The desktop app signs in with a

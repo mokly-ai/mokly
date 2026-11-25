@@ -11,7 +11,7 @@ under [Related Docs](#related-docs).
 
 ## Responsibilities
 
-- Account entry, the magic-link, preview, desktop and GitHub landings, the
+- Account entry, the magic-link, desktop and GitHub landings, the
   page that signs the desktop app in from the browser, invitation acceptance
   and onboarding, as the only full pages outside the viewer.
 - The viewer route: resolving a readable address to one publication or build,

@@ -1,7 +1,6 @@
-//! Persistent admission and credential verification for preview sign-in.
+//! Persistent admission and session issuance for preview sign-in.
 
 use mkc_store_interface::user::User;
-use subtle::ConstantTimeEq;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::links::admit;
@@ -25,10 +24,10 @@ impl AuthService {
         output.ok_or(Error::Unauthenticated)
     }
 
-    /// Commit peer admission before validating the reusable preview credential.
+    /// Commit peer admission before checking the preview password against its verifier.
     pub(crate) fn preview_sign_in(
         &self,
-        secret: &str,
+        password: &str,
         previous: Option<&str>,
         peer: &str,
     ) -> Result<SessionIssued> {
@@ -40,18 +39,8 @@ impl AuthService {
         self.transact(false, &mut |queries| {
             admit(queries, &hash(&format!("preview:{peer}")), now, 20)
         })?;
-        let supplied_hash = hash(secret);
-        let well_formed = secret.len() == 64
-            && secret
-                .bytes()
-                .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase());
-        let matches = bool::from(
-            configured
-                .secret_hash
-                .as_bytes()
-                .ct_eq(supplied_hash.as_bytes()),
-        );
-        if !well_formed || !matches {
+        let verifier = configured.verifier.as_ref().ok_or(Error::InvalidLink)?;
+        if !verifier.matches(password) {
             return Err(Error::InvalidLink);
         }
         let credential = self.runtime.secret().context("generate credential")?;

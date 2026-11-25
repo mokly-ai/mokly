@@ -1,7 +1,6 @@
 import type { Page } from "@playwright/test";
 
 import { recordAddresses, recordedAddresses } from "./address-log";
-import { previewSignInSecret } from "./api-server";
 import {
   callbackUrl,
   flowKeys,
@@ -9,7 +8,6 @@ import {
   otherState,
   seedFlow,
 } from "./auth-callbacks";
-import { stateDocumentViolations } from "./document-policy";
 import { expect, freshEmail, open, signIn, test } from "./harness";
 
 /**
@@ -51,31 +49,6 @@ test("a refused email token never returns to the address", async ({ page }) => {
 
   const addresses = await landingAddresses(page);
   expect(addresses.first).toContain("#token=");
-  for (const address of addresses.later) {
-    expect(new URL(address).hash).toBe("");
-    expect(new URL(address).search).toBe("?source=test");
-  }
-});
-
-test("a refused preview secret never returns to the address", async ({
-  page,
-}) => {
-  await recordAddresses(page);
-  await page.route("**/v1/auth/preview", (route) => {
-    if (route.request().method() !== "POST") return route.continue();
-    return route.abort();
-  });
-  await page.goto(
-    `/auth/preview/callback?source=test#secret=${previewSignInSecret}`,
-  );
-  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
-  await expect(page.getByRole("alert")).toContainText(
-    "We couldn’t sign you in",
-  );
-  expect(await page.evaluate(stateDocumentViolations)).toEqual([]);
-
-  const addresses = await landingAddresses(page);
-  expect(addresses.first).toContain("#secret=");
   for (const address of addresses.later) {
     expect(new URL(address).hash).toBe("");
     expect(new URL(address).search).toBe("?source=test");

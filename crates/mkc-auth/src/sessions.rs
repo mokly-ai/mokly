@@ -39,8 +39,8 @@ impl Authenticator for AuthService {
         self.configured_preview_account()
     }
 
-    fn preview(&self, secret: &str, previous: Option<&str>, peer: &str) -> Result<SessionIssued> {
-        self.preview_sign_in(secret, previous, peer)
+    fn preview(&self, password: &str, previous: Option<&str>, peer: &str) -> Result<SessionIssued> {
+        self.preview_sign_in(password, previous, peer)
     }
 
     fn issue_desktop_grant(

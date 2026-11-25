@@ -584,58 +584,61 @@ building and passing. Reason, my call of 2026-11-25: the regenerated app
 types drop `secret`, so the preview callback page and the test servers stop
 compiling unless they move together.
 
-- [ ] Add `MKC_PREVIEW_SIGN_IN_VERIFIER` to `mkc-config`, with the email,
+- [x] Add `MKC_PREVIEW_SIGN_IN_VERIFIER` to `mkc-config`, with the email,
       capability and bound rules of the design. Remove
       `MKC_PREVIEW_SIGN_IN_SECRET`, and let the email alone configure the
       shared account and the seed.
-- [ ] Add the `scrypt` crate to `mkc-auth` with `cargo add`, on the `digest`
+- [x] Add the `scrypt` crate to `mkc-auth` with `cargo add`, on the `digest`
       generation of the locked `sha2` and `hmac` crates.
-- [ ] Accept `{password, returnTo}` in `POST /v1/auth/preview`, with bounded
+- [x] Accept `{password, returnTo}` in `POST /v1/auth/preview`, with bounded
       hashing, and remove the `{secret}` body and its check. Keep the order of the gate, Origin, body and admission
       checks.
-- [ ] Regenerate `docs/api/openapi.json` and
+- [x] Regenerate `docs/api/openapi.json` and
       `packages/app/src/api/generated/schema.ts`.
-- [ ] Add the `preview-verifier` command to
+- [x] Add the `preview-verifier` command to
       `infra/scripts/preview-lifecycle.py`, with Python's `hashlib`. It trims
       the password, as Sign in does.
-- [ ] Add the shared fixture under `infra/tests/fixtures/`: a fixed password
+- [x] Add the shared fixture under `infra/tests/fixtures/`: a fixed password
       and a verifier made from it by hand with `hashlib.scrypt`.
-- [ ] Map Secret `preview-sign-in` to `MKC_PREVIEW_SIGN_IN_VERIFIER` in
+- [x] Map Secret `preview-sign-in` to `MKC_PREVIEW_SIGN_IN_VERIFIER` in
       `infra/docker/entrypoint.sh`, and update
       `infra/e2b/tests/assert_build_template.py` and
       `infra/tests/test_preview_runtime.py`.
-- [ ] Change `scripts/cloud/dev-api.sh` to the local password of the design.
+- [x] Change `scripts/cloud/dev-api.sh` to the local password of the design.
       Change `smoke_api.py`, `smoke_desktop_origins.py` and
       `smoke_preview_plan.py` to sign in with a known test password and its
       verifier.
-- [ ] Change the app's test API server, `packages/app/src/_tests_/api-server.ts`
+- [x] Change the app's test API server, `packages/app/src/_tests_/api-server.ts`
       and `publication-runtime.ts`, to a known test password and its
       verifier.
-- [ ] Remove the page `/auth/preview/callback`, its route and input code,
+- [x] Remove the page `/auth/preview/callback`, its route and input code,
       `verifyPreviewSignIn` in `packages/app/src/data/auth.ts`, and its
       cases in `preview-callback.spec.ts`, `callback-address.spec.ts` and
       `callback-input.test.ts`.
-- [ ] Remove `preview-callback.spec.ts` from the test list of the active plan
+- [x] Remove `preview-callback.spec.ts` from the test list of the active plan
       `plans/loading-states-match-content.md` when the spec goes.
-- [ ] Remove or narrow each status line that links this milestone: search
+- [x] Remove or narrow each status line that links this milestone: search
       `docs/` and every `README.md` for `#milestone-3-api-password-exchange`.
       Also narrow the status lines that name the preview callback page, which
       this milestone removes.
-- [ ] Tests, each at the lowest level that fails without the change:
-  - [ ] Configuration: a verifier without the email, without the capability,
+- [x] Tests, each at the lowest level that fails without the change:
+  - [x] Configuration: a verifier without the email, without the capability,
         malformed, or outside the bounds fails startup with a typed error
         that names the key.
-  - [ ] The shared fixture: its password matches its verifier in Rust and in
+  - [x] The shared fixture: its password matches its verifier in Rust and in
         Python, and another password does not.
-  - [ ] The Python command makes a verifier that the Rust check accepts for
+  - [x] The Python command makes a verifier that the Rust check accepts for
         the trimmed password, and it warns on a short password.
-  - [ ] The exchange signs in with the right password, refuses a wrong one
+  - [x] The exchange signs in with the right password, refuses a wrong one
         with `magic-link-invalid`, and refuses a password without a
         verifier.
-  - [ ] A body without a password, with a `secret`, or with a password over
+  - [x] A body without a password, with a `secret`, or with a password over
         1024 bytes fails with `validation-failed`
         and uses no admission. A wrong password uses admission, and the 21st
         attempt in the window is refused.
+
+The report is in `.context/preview-password-sign-in/m3-api-report.md`.
+The check logs are in `.context/preview-password-sign-in/m3-checks/`.
 
 ## Milestone 4: Configuration answer
 

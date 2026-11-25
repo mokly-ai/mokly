@@ -149,7 +149,7 @@ fn send_magic_link() {}
     path = "/v1/auth/preview",
     operation_id = "verifyPreviewSignIn",
     tag = "Account",
-    summary = "Exchange a configured preview credential for a session cookie.",
+    summary = "Exchange the preview password for a session cookie.",
     params(
         Origin,
     ),

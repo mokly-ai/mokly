@@ -3,6 +3,7 @@
 
 import base64
 import binascii
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -87,6 +88,20 @@ def generate_preview(directory):
     write_private(Path(directory) / "preview-sign-in", secrets.token_hex(32))
 
 
+def preview_verifier():
+    try:
+        password = sys.stdin.buffer.read().decode("utf-8").strip()
+    except UnicodeDecodeError:
+        raise ValueError("preview password must be UTF-8") from None
+    if len(password) < 20:
+        print("Warning: preview password has fewer than 20 characters.", file=sys.stderr)
+    salt = secrets.token_bytes(16)
+    digest = hashlib.scrypt(password.encode("utf-8"), salt=salt, n=2**14, r=8, p=5, dklen=32)
+    encoded_salt = base64.b64encode(salt).decode("ascii").rstrip("=")
+    encoded_hash = base64.b64encode(digest).decode("ascii").rstrip("=")
+    sys.stdout.write(f"$scrypt$ln=14,r=8,p=5${encoded_salt}${encoded_hash}")
+
+
 def extract_preview(path):
     write_private(Path(path), preview_secret())
 
@@ -121,6 +136,8 @@ def run(arguments):
         generate_signing(values[0])
     elif command == "generate-preview" and len(values) == 1:
         generate_preview(values[0])
+    elif command == "preview-verifier" and not values:
+        preview_verifier()
     elif command == "extract-preview" and len(values) == 1:
         extract_preview(values[0])
     elif command == "helm-revision" and not values:

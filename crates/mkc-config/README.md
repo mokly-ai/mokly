@@ -1,7 +1,5 @@
 # mkc-config
 
-Status: `MKC_PREVIEW_SIGN_IN_VERIFIER` is not read yet, and the email does not configure preview sign-in alone yet. [Milestone 3](../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds both.
-
 Typed environment configuration for the Mokly Cloud API and catalogue
 binaries. `EnvironmentConfig` reads the process environment through
 `dyn Environment`, validates every value and returns typed settings that the
@@ -137,7 +135,7 @@ check compares the documented and the rendered settings in both directions.
 
 - [settings.rs](./src/settings.rs) — `Environment` and `ProcessEnvironment`, the environment seam; `EnvironmentConfig` and `ConfigProvider::load`, which return `Settings` with its `Mail` selection; `Error`, whose `Invalid` variant names only the key; and `validate_origin`, the exact-origin rule.
 - [capabilities.rs](./src/capabilities.rs) — the `MKC_ENV` modes and the named capabilities each one grants.
-- [preview.rs](./src/preview.rs) — `PreviewSignInSettings`, the shared account's email with its optional verifier, their malformed, partial and disallowed failures, and the initial `plan` of the organizations its email creates.
+- [preview.rs](./src/preview.rs) — `PreviewSignInSettings` loads the shared account's email, its optional `mkc-auth` verifier, and its initial workspace plan under the `preview_sign_in` capability.
 - [desktop.rs](./src/desktop.rs) — `DesktopConfig`, the strict `MKC_DESKTOP_CLIENT` flag that both `Settings` and `CatalogueSettings` read.
 - [github.rs](./src/github.rs) — `GitHubSettings`, `GitHubConfigProvider` and `GitHubEnvironmentConfig`, the all-or-none App integration.
 - [billing.rs](./src/billing.rs) — `BillingSettings`, `BillingConfigProvider` and `BillingEnvironmentConfig`, the explicit Stripe selection and origin rule.

@@ -1,6 +1,6 @@
 # Preview Seed
 
-Status: The seed still needs a random sign-in value beside the email, the deploy still writes that value in place of the verifier, and a private repository's comment still carries an Open preview link. [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds the password settings, and [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) the verifier copy and the comment.
+Status: [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) adds the verifier copy and removes the Open preview link from private repositories' comments.
 
 This sub-contract of [PR preview environments](./pr-preview-environments.md)
 gives every labelled PR a shared account and a sample project holding the PR's

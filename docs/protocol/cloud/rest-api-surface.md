@@ -1,6 +1,6 @@
 # REST API Surface
 
-Status: The API gives no configuration answer yet, and the preview exchange does not check a password yet. [Milestone 4](../../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) builds the answer, and [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) the password exchange.
+Status: [Milestone 4](../../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) adds the configuration endpoint.
 
 This is the operation and response sub-contract of [REST API](./rest-api.md).
 

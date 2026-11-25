@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Mokly Cloud product API",
-    "description": "Platform API with explicit 503 responses for deferred publication and review operations. Browser credentials land at /auth/email/callback, /auth/preview/callback, /auth/desktop/callback, /auth/github/callback or /auth/github/install; the /v1 callback operations below remain on the API origin. See the REST and authentication protocols. Screen selections use entry paths with the Mokly segment grammar.",
+    "description": "Platform API with explicit 503 responses for deferred publication and review operations. Browser credentials land at /auth/email/callback, /auth/desktop/callback, /auth/github/callback or /auth/github/install; the /v1 callback operations below remain on the API origin. See the REST and authentication protocols. Screen selections use entry paths with the Mokly segment grammar.",
     "license": {
       "name": "Proprietary",
       "identifier": "LicenseRef-Proprietary"
@@ -328,7 +328,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Exchange a configured preview credential for a session cookie.",
+        "summary": "Exchange the preview password for a session cookie.",
         "operationId": "verifyPreviewSignIn",
         "parameters": [
           {
@@ -7420,12 +7420,18 @@
       "PreviewSignIn": {
         "type": "object",
         "required": [
-          "secret"
+          "password"
         ],
         "properties": {
-          "secret": {
+          "password": {
             "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
+            "format": "password",
+            "description": "Preview password, from 1 to 1024 UTF-8 bytes.",
+            "maxLength": 1024,
+            "minLength": 1
+          },
+          "returnTo": {
+            "type": "string"
           }
         },
         "additionalProperties": false

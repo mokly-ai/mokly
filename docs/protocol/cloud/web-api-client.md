@@ -1,6 +1,6 @@
 # Web API Client
 
-Status: The app sends no preview password yet and still exchanges a preview link at `/auth/preview/callback`. [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) builds the password section and removes that landing.
+Status: [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) adds the app's password exchange.
 
 This is the session and API client sub-contract of
 [Web application](./web-app.md). The API boundary follows

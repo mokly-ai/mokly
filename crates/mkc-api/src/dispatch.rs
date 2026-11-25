@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use mkc_auth::service::{Authenticator, Identity};
-use mkc_domain::app_paths;
 use mkc_domain::client_origins::ClientOrigin;
+use mkc_domain::validation;
 use mkc_publications::access::CatalogueAccess;
 use mkc_publications::error;
 use thiserror::Error;
@@ -130,8 +130,11 @@ impl Dispatcher for ApiDispatcher {
                 })
             }
             Endpoint::VerifyPreviewSignIn(input) => {
+                if !(1..=1024).contains(&input.password.len()) {
+                    return Err(ApiError::ValidationFailed);
+                }
                 let result = self.auth.preview(
-                    &input.secret,
+                    &input.password,
                     request.credential.as_deref(),
                     &request.peer,
                 )?;
@@ -140,7 +143,7 @@ impl Dispatcher for ApiDispatcher {
                     status: 200,
                     payload: Payload::SessionIssued(SessionIssuedView {
                         session,
-                        return_to: app_paths::DASHBOARD.to_owned(),
+                        return_to: validation::return_to(input.return_to.as_deref()),
                     }),
                     cookie: Some(cookie(
                         &result.credential,

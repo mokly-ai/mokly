@@ -66,7 +66,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Exchange a configured preview credential for a session cookie. */
+        /** Exchange the preview password for a session cookie. */
         post: operations["verifyPreviewSignIn"];
         delete?: never;
         options?: never;
@@ -1619,7 +1619,12 @@ export interface components {
             url: string;
         };
         PreviewSignIn: {
-            secret: string;
+            /**
+             * Format: password
+             * @description Preview password, from 1 to 1024 UTF-8 bytes.
+             */
+            password: string;
+            returnTo?: string;
         };
         Project: {
             /**

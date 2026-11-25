@@ -13,6 +13,7 @@ use mkc_domain::client_origins::ClientOrigin;
 use mkc_domain::ids::UserId;
 use mkc_store_interface::session::Session;
 use mkc_store_interface::user::User;
+use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
@@ -89,6 +90,38 @@ fn configured_preview_checks_origin_before_decoding_the_body() {
         )),
         Err(ApiError::ValidationFailed)
     ));
+}
+
+#[test]
+fn configured_preview_passes_password_at_the_utf8_limit_unchanged() {
+    let password = format!(" {} ", "é".repeat(511));
+    let body = serde_json::to_vec(&json!({"password": password})).unwrap();
+    let auth = Unimock::new((
+        AuthenticatorMock::preview_sign_in_available
+            .each_call(matching!())
+            .returns(true),
+        AuthenticatorMock::origin
+            .each_call(matching!(Some(APP_ORIGIN)))
+            .answers(&|_, _| Ok(ClientOrigin::App)),
+        AuthenticatorMock::preview
+            .each_call(matching!(_, Some("session"), "127.0.0.1"))
+            .answers_arc(Arc::new(move |_, supplied, _, _| {
+                assert_eq!(supplied, password);
+                Err(Error::InvalidLink)
+            })),
+    ));
+    let dispatcher = dispatcher(Arc::new(auth), None);
+    let result = dispatcher.dispatch(request(
+        Operation::VerifyPreviewSignIn,
+        body,
+        Some(APP_ORIGIN),
+        None,
+    ));
+    assert!(
+        matches!(result, Err(ApiError::MagicLinkInvalid)),
+        "{:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -218,7 +251,7 @@ fn identity() -> Identity {
 
 fn valid_body(operation: Operation) -> Vec<u8> {
     match operation {
-        Operation::VerifyPreviewSignIn => br#"{"secret":"aaaaaaaa"}"#.to_vec(),
+        Operation::VerifyPreviewSignIn => br#"{"password":"preview password"}"#.to_vec(),
         Operation::ConnectGitHub | Operation::StartGitHubSignIn => b"{}".to_vec(),
         Operation::VerifyGitHubSignIn => {
             br#"{"code":"code","state":"state","codeVerifier":"verifier"}"#.to_vec()

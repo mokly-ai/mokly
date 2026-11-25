@@ -1,6 +1,6 @@
 # mkc-api
 
-Status: `POST /v1/auth/preview` does not check a password yet, and `GET /v1/configuration` does not exist yet. [Milestone 3](../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds the password exchange, and [Milestone 4](../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) the configuration answer.
+Status: [Milestone 4](../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) adds `GET /v1/configuration`.
 
 The Mokly Cloud platform REST API: the `mkc-api` binary and the application
 factory behind it. The crate is the composition root of the platform. It wires
@@ -360,7 +360,7 @@ setting or test detection that selects the fake runner. The
 - [contract/parameters.rs](./src/contract/parameters.rs) — shared header and pagination parameters for the operation stubs.
 - [contract/responses.rs](./src/contract/responses.rs) — the shared `ErrorResponse` component for standard operation failures.
 - [contract/session_cookie.rs](./src/contract/session_cookie.rs) — `SessionCookie`, which points every declared `Set-Cookie` response header at one shared component that states the Origin-dependent `SameSite` rule.
-- [contract/account.rs](./src/contract/account.rs) and [account/desktop_grant.rs](./src/contract/account/desktop_grant.rs) — account contracts, including authenticated desktop grant issue and public grant exchange with the inherited session deadline.
+- [contract/account.rs](./src/contract/account.rs) and [account/desktop_grant.rs](./src/contract/account/desktop_grant.rs) — account contracts, including the preview password exchange, authenticated desktop grant issue and public grant exchange with the inherited session deadline.
 - [contract/metadata.rs](./src/contract/metadata.rs) — derives deferred operation markers from `Operation::implemented()` after the area merges.
 - [contract/builds.rs](./src/contract/builds.rs) — the five cloud build contracts, including member-only reads with anonymous `not-found` transport.
 - `src/contract/deferred/` — request and response types for comment and approval operations that return 503 until implemented.
