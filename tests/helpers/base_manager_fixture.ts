@@ -20,11 +20,10 @@ export async function baseManagerFixture(
   mode: "installed" | "missing" | "paths" | "constraints" = "installed",
   originalPath?: string,
 ) {
-  const fixture = await coldBaseFixture(2, context);
+  const fixture = await coldBaseFixture(2, context, { install: false });
   const { root } = fixture;
   await git(root, "checkout", "HEAD", "--", "specs/source-value.ts");
   await fs.rm(path.join(root, "package-lock.json"));
-  await fs.rm(path.join(root, "node_modules"), { recursive: true });
   await write(
     root,
     ".gitignore",

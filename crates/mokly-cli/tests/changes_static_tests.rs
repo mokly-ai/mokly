@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 
 mod changes_support;
+mod publish_support;
 use changes_support::{base, git, run, write};
 
 fn commit(root: &Path) {
@@ -79,6 +80,7 @@ fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
         "---\ntitle: Home\n---\n<p>After</p>",
     );
     commit(root.path());
+    let endpoint = publish_support::rejecting_endpoint();
     for (verb, strict) in [("build", true), ("publish", true), ("publish", false)] {
         let mut args = vec![verb, "--base", "base-point"];
         if strict {
@@ -91,7 +93,7 @@ fn base_dependency_fallbacks_print_but_pass_strict_static_builds_and_publish() {
                 "--repository",
                 "example.test/team/catalogue",
                 "--endpoint",
-                "http://127.0.0.1:1/plan",
+                &endpoint,
                 "--token",
                 "fixture-token",
             ]);

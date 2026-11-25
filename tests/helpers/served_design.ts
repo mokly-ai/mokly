@@ -75,7 +75,7 @@ export async function serveExample(
       "--port",
       "0",
       "--sidecars",
-      "1",
+      "2",
     ],
     { cwd: repositoryRoot },
   );
