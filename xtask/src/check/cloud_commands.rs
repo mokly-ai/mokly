@@ -4,6 +4,7 @@ use std::iter;
 
 use crate::command::CommandSpec;
 
+use super::commands::require_nextest;
 use super::request::{Shard, VerificationSuite};
 use super::tasks::{Task, task_commands};
 
@@ -11,6 +12,7 @@ pub(super) fn cloud_commands(suite: VerificationSuite, shard: Option<Shard>) -> 
     let commands = match suite {
         VerificationSuite::CloudRust => vec![
             CommandSpec::new("node").args(["xtask/scripts/require-postgres.mjs"]),
+            require_nextest(),
             cargo(&[
                 "clippy",
                 "--locked",
@@ -22,7 +24,8 @@ pub(super) fn cloud_commands(suite: VerificationSuite, shard: Option<Shard>) -> 
                 "warnings",
             ]),
             npm(&["run", "build"]),
-            cargo(&["test", "--locked", "-p", "mkc-*"]).with_environment("CI", Some("1")),
+            cargo(&["nextest", "run", "--locked", "-p", "mkc-*"]).with_environment("CI", Some("1")),
+            cargo(&["test", "--locked", "-p", "mkc-*", "--doc"]).with_environment("CI", Some("1")),
         ],
         VerificationSuite::CloudMigrations => vec![cargo(&["xtask", "migration-immutability"])],
         VerificationSuite::CloudToolchainPins => vec![cargo(&["xtask", "toolchain-pins"])],

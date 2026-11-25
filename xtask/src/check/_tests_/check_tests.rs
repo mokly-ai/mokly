@@ -48,7 +48,8 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         .unwrap();
     let commands = observed.lock().unwrap();
     for required in [
-        "cargo test --locked -p \"mokly-*\" -p xtask",
+        "cargo nextest run --locked -p \"mokly-*\" -p xtask",
+        "cargo test --locked -p \"mokly-*\" -p xtask --doc",
         "npm run test:viewer:prepared",
         "npm run test:browser:prepared",
         "npm run test:delivery:prepared",
@@ -195,7 +196,6 @@ fn shard_requires_a_supported_selected_suite() {
     for suite in [
         Some(VerificationSuite::Repository),
         Some(VerificationSuite::Viewer),
-        Some(VerificationSuite::Native),
     ] {
         assert!(matches!(
             CheckRequest::new(suite, Some(shard), None),
