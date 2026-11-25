@@ -173,13 +173,49 @@ Cal's answers can change any of them.
   The slow hash keeps a long random password hard to recover from it. A
   leaked Open preview link opens only its own preview until a label cycle.
 
+## Removals under option E of decision 3
+
+This section applies only when Cal confirms option E of decision 3. Then the
+plan gets a `Replaced ways` list with these consumers, and the milestones get
+a TODO for each. Nothing is removed before that answer.
+
+- The random link value → the password verifier. Consumers:
+  - Configuration and API: `MKC_PREVIEW_SIGN_IN_SECRET` in `mkc-config`, the
+    `{secret}` body and its check in `mkc-auth` and `mkc-api`, their tests,
+    `docs/api/openapi.json`, and the generated app types.
+  - Deploy: Secret `preview-sign-in` in `preview-lifecycle.py`,
+    `preview-common.sh`, `preview-deploy.sh`, the chart's PR mount,
+    `infra/docker/entrypoint.sh`, the Helm golden file, and their tests.
+  - Comment: the Open preview link, `--secret-file` and the
+    `repository_private` input that only the link uses, in
+    `preview-comment.py`, `preview-event.py`, `preview.yml`, and their tests.
+  - App: the page `/auth/preview/callback`, its route and input code, and
+    `preview-callback.spec.ts` and `callback-address.spec.ts`.
+  - Mockups: `product/account/callback/preview-invalid` and its callback
+    landing tests.
+  - Local and smoke: `scripts/cloud/dev-api.sh`, `smoke_api.py`,
+    `smoke_desktop_origins.py` and `smoke_preview_plan.py`, which then make a
+    verifier from a known test password.
+  - Docs: `auth-callbacks.md`, `preview-seed.md`, `preview-scripts.md`,
+    `pr-preview-environments.md`, `preview-seed-local.md`,
+    `product-navigation.md`, `web-app.md`, `web-api-client.md`,
+    `docs/ops/preview.md`, `docs/development/cloud.md`, and the crate and
+    chart READMEs.
+
 ## Decisions
 
 Each decision waits for Cal. The options check of 2026-11-24 ran over the
 first draft and added options. Its report is in
 `.context/preview-password-sign-in/options-check-report.md`. The decisions
 were then numbered by severity again. The recommended options of decisions 1,
-2 and 5 need option D of decision 3.
+2 and 5 need option D or E of decision 3.
+
+On 2026-11-24, in a side thread about decision 3, Cal said: "I don't care
+about backwards compat". After the password-only option, now option E of
+decision 3, and an explanation of Secret Manager and the verifier, Cal said:
+"ok, sounds good - pass this back to the main thread". Option E deletes
+functionality on `origin/main`, so decision 3 stays open until Cal confirms E
+in so many words.
 
 ### 1. Where the preview password lives
 
@@ -195,12 +231,12 @@ were then numbered by severity again. The recommended options of decisions 1,
   - **A.** A GitHub Actions secret on environment `preview`, given to the release job as a private file. No Terraform change. A branch's own workflow job that uses environment `preview` can read it, unless that environment allows only `main`, which no doc records. Effort: Small.
   - **B.** A new Secret Manager ID `mkc-preview-sign-in-password` that holds the password, with read access for the deploy identity only. The release job reads it as it reads the DNS token and derives a value for each preview. It needs a foundation apply, and then an operator adds the first value. Effort: Medium.
   - **C.** A Kubernetes Secret in namespace `mkc-preview-system`, which an operator writes with `kubectl`. No Terraform change. It adds a second model for operator values, and every cluster administrator can read it. Effort: Small.
-  - **D.** The Secret Manager ID of B holds a verifier, not the password. A verifier checks a typed password and opens nothing by itself. An operator makes it once with a runbook command, and the release job copies it into each preview. The password then stays only in the team's password manager. Every preview holds the same verifier, which changes the words "derived from the password and its own name" of Cal's decision. It needs option D of decision 3. Effort: Medium.
+  - **D.** The Secret Manager ID of B holds a verifier, not the password. A verifier checks a typed password and opens nothing by itself. An operator makes it once with a runbook command, and the release job copies it into each preview. The password then stays only in the team's password manager. Every preview holds the same verifier, which changes the words "derived from the password and its own name" of Cal's decision. It needs option D or E of decision 3. Effort: Medium.
 - **Left out:** An encrypted file in the repository, because it needs a key that the release job must read from a store anyway. A store that the API reads at runtime, because it gives PR code access to it. A repository-level GitHub secret, because A is better on every point. A password manager's CI integration, because its own token needs the home of A or B.
 - **Wider fix:** None, because this is a choice of a new home, not a class of defect.
 - **Previous examples:** `mkc-catalogue-dns-token` and `mkc-cloudflare-worker-token`. `docs/ops/secrets.md` put the second one in Secret Manager because its provider accepts only the `main` workflow.
-- **Related:** Decision 3: option D here needs its option D. Decision 5: the check of a short password moves into the runbook command under D.
-- **Recommendation:** D, changed from B by the options check. No machine store then holds the password, and a leaked stored value opens nothing. B stays best if decision 3 keeps A.
+- **Related:** Decision 3: option D here needs its option D or E. Decision 5: the check of a short password moves into the runbook command under D.
+- **Recommendation:** D, changed from B by the options check. No machine store then holds the password, and a leaked stored value opens nothing. B stays best if decision 3 takes A.
 - **Action:** ask the user, because Cal asked to settle where the password lives, and option D changes one sentence of his decision.
 
 ### 2. Which slow hash makes the verifier
@@ -218,12 +254,12 @@ were then numbered by severity again. The recommended options of decisions 1,
   - **B.** scrypt with N = 2^14, r = 8, p = 5, as 64 hex digits, with a fixed salt. Python has it, and Rust uses the `scrypt` crate. It uses about 16 MiB for each attempt. The parameters are constants on both sides. Effort: Small.
   - **C.** Argon2id with 19 MiB, two passes and one lane. Rust uses the `argon2` crate. Python needs the `argon2-cffi` package, the first third-party package in the trusted release job. Effort: Medium.
   - **D.** HMAC-SHA256 keyed by the password, as 64 hex digits. It needs no new crate and no memory. It protects only a long random password, so it needs a length failure. It drops the slow hash of Cal's decision. Effort: Small.
-  - **E.** scrypt as in B, stored as a standard self-describing string, `$scrypt$ln=14,r=8,p=5$<salt>$<hash>`, with a random salt. The API reads the parameters and the salt from the value, within a memory bound. The parameters can rise later without a change to the API. It needs option D of decision 3, because an older image refuses a value that is not 64 hex digits. Effort: Medium.
+  - **E.** scrypt as in B, stored as a standard self-describing string, `$scrypt$ln=14,r=8,p=5$<salt>$<hash>`, with a random salt. The API reads the parameters and the salt from the value, within a memory bound. The parameters can rise later without a change to the API. It needs option D or E of decision 3, because the setting of today's link value accepts only 64 hex digits. Effort: Medium.
 - **Left out:** None. The fast hash, left out in the first draft, came back as D.
 - **Wider fix:** E, because the value then carries everything that both sides must agree on.
 - **Previous examples:** None found.
-- **Related:** Decision 7: E is the wider fix of that item. Decision 3: E needs its option D.
-- **Recommendation:** E, changed from B by the plan after the options check. It is memory-hard, needs no new Python package, and removes most ways for the two sides to disagree. B, with the parameters above, stays best if decision 3 keeps A.
+- **Related:** Decision 7: E is the wider fix of that item. Decision 3: E needs its option D or E.
+- **Recommendation:** E, changed from B by the plan after the options check. It is memory-hard, needs no new Python package, and removes most ways for the two sides to disagree. B, with the parameters above, stays best if decision 3 takes A.
 - **Action:** ask the user, because Cal asked to settle the hash and its parameters.
 
 ### 3. Which credential the one-click link carries
@@ -232,7 +268,7 @@ were then numbered by severity again. The recommended options of decisions 1,
 - **Source:** Design.
 - **Category:** Security.
 - **Location:** `infra/scripts/preview-comment.py`, `crates/mkc-config/src/preview.rs`, `docs/protocol/cloud/preview-seed.md`.
-- **Background:** In a private repository, the PR comment carries an Open preview link with a random value in its fragment. The page `/auth/preview/callback` sends that value to `POST /v1/auth/preview` as `{secret}`. When a link leaks, the runbook says to remove and add the `preview` label, which creates a new random value. This repository is public, so its comment has no link. Smoke scripts, two browser specs and the local sign-in steps use the same `{secret}` exchange.
+- **Background:** In a private repository, the PR comment carries an Open preview link with a random value in its fragment. The page `/auth/preview/callback` sends that value to `POST /v1/auth/preview` as `{secret}`. When a link leaks, the runbook says to remove and add the `preview` label, which creates a new random value. This repository is public, so its comment has no link. Smoke scripts, two browser specs and the local sign-in steps use the same `{secret}` exchange. The smoke scripts start their own local API with their own value, for example `scripts/cloud/smoke_preview_plan.py:35`. Cal said on 2026-11-24 that backward compatibility does not matter.
 - **Problem:** Cal's option C puts a derived value in place of the random value. A derived value is the same after every label cycle.
 - **Impact if no action:** A leaked link can no longer be retired by a label cycle, or the link breaks.
 - **Root question:** Which credential does a private repository's one-click link carry, so that a leaked link can still be retired?
@@ -241,12 +277,13 @@ were then numbered by severity again. The recommended options of decisions 1,
   - **B.** A second Secret holds a new random value for the link, and the derived value takes the place of today's value. The API holds two credentials. Older images then read the derived value as the link value. Effort: Medium.
   - **C.** Remove the link, the page `/auth/preview/callback`, the `{secret}` body and the link logic of the comment script. It deletes functionality on `origin/main`, and it breaks the smoke scripts, two browser specs and the local sign-in steps. Effort: Medium.
   - **D.** Keep the link, Secret `preview-sign-in`, its random value and `MKC_PREVIEW_SIGN_IN_SECRET` as they are. Add the verifier in a new optional Secret and setting, for example `MKC_PREVIEW_SIGN_IN_VERIFIER`. The API compares the verifier only with a typed password. Older images ignore the new setting. A label cycle still retires a leaked link, and a leaked verifier opens nothing. It changes "in place of today's random value" of Cal's decision. Effort: Medium.
+  - **E.** Password only. Each preview holds only the verifier of decision 1, option D. Remove the random value, Secret `preview-sign-in`, `MKC_PREVIEW_SIGN_IN_SECRET`, the Open preview link of the comment, the page `/auth/preview/callback` with its mockup, and the `{secret}` body. Tests and smoke scripts make their own verifier from a known test password. People and tests sign in only with a password. It deletes functionality on `origin/main`, and private repositories lose the one-click link. Effort: Medium.
 - **Left out:** A link that carries the password, because a PR comment would then hold the password of every preview.
 - **Wider fix:** None, because this is a choice about one credential.
 - **Previous examples:** None found.
-- **Related:** Decisions 1, 2 and 5: their recommended options need D here.
-- **Recommendation:** D, changed from A by the options check. It keeps today's link and its recovery, keeps the verifier useless by itself, and changes nothing that older images and tests read.
-- **Action:** ask the user, because option D changes one sentence of Cal's decision, and option C deletes functionality on `origin/main`.
+- **Related:** Decisions 1, 2 and 5: their recommended options need D or E here. Decision 9: under E, its body loses the `secret` field. Follow-up `plans/follow-ups/preview-sample-project-needs-log-access.md`: under E, its option B, a link from Secret `preview-sign-in`, goes.
+- **Recommendation:** E, changed from D after Cal's note of 2026-11-24. With no need for backward compatibility and no link in this public repository, one credential is simpler and safer than two. D stays best if private repositories must keep the one-click link.
+- **Action:** ask the user, because options C and E delete functionality on `origin/main`, which needs Cal's explicit approval.
 
 ### 4. How Sign in knows to show the field
 
@@ -285,12 +322,12 @@ were then numbered by severity again. The recommended options of decisions 1,
   - **A.** Fail the deploy with a message that names the store or the minimum of 20 characters. Every labelled PR stays undeployed until an operator acts. It adds a new deploy failure. Effort: Small.
   - **B.** Warn and continue with a random value in Secret `preview-sign-in`, as today. The field then shows and refuses every password until an operator acts. Effort: Small.
   - **C.** Warn on a missing value, as in B, and fail on a short password, as in A. It adds a new deploy failure for the length only. Effort: Small.
-  - **D.** Warn with an annotation on the workflow run, and write no verifier. A malformed value gets the same treatment, with its own warning. The discovery answer is then false, and Sign in draws no field. The link and the log reader keep working. The runbook command of decision 1 warns on a password shorter than 20 characters. It needs option D of decision 3. Effort: Small.
+  - **D.** Warn with an annotation on the workflow run, and write no verifier. A malformed value gets the same treatment, with its own warning. The discovery answer is then false, and Sign in draws no field. The log reader keeps working, and the link too under option D of decision 3. The runbook command of decision 1 warns on a password shorter than 20 characters. It needs option D or E of decision 3. Effort: Small.
 - **Left out:** A check in the API, because the API never sees the password before a reviewer types it.
 - **Wider fix:** None, because this is a rule for one input.
 - **Previous examples:** None found.
-- **Related:** Decision 3: D needs its option D. Rollout: the Secret Manager ID should hold a value before the deploy change runs, so that the permission-error window does not occur.
-- **Recommendation:** D, changed from B by the options check. It keeps the rollout graceful and never shows a field that calls the right password wrong. B stays best if decision 3 keeps A.
+- **Related:** Decision 3: D needs its option D or E. Rollout: the Secret Manager ID should hold a value before the deploy change runs, so that the permission-error window does not occur.
+- **Recommendation:** D, changed from B by the options check. It keeps the rollout graceful and never shows a field that calls the right password wrong. B stays best if decision 3 takes A.
 - **Action:** ask the user, because options A and C add a new deploy failure, which the always-on rules leave to the user.
 
 ### 6. Whether the email link and log reader stay
@@ -377,6 +414,7 @@ were then numbered by severity again. The recommended options of decisions 1,
 - **Left out:** None.
 - **Wider fix:** None, because this is one request contract.
 - **Previous examples:** Request bodies with one of several shapes exist, such as `CreateProject` and `RequestBuild`.
+- **Related:** Decision 3: under its option E, the body holds only `password` and the optional `returnTo`, and the `secret` field goes.
 - **Recommendation:** A. It follows Cal's endpoint, reuses the reason that already covers a preview credential, and returns the reviewer to the page that they asked for.
 - **Action:** ask the user, because the body, its limit and its destination are new behaviour at the boundary that no requirement covers.
 
@@ -438,6 +476,10 @@ below. History stays in this plan.
       `infra/terraform/README.md` for the store and the verifier.
 - [ ] Update `crates/mkc-config/README.md` and `crates/mkc-api/README.md`.
 - [ ] Check every changed protocol page against the 250-line cap.
+- [ ] Update `plans/follow-ups/preview-sample-project-needs-log-access.md`:
+      the password removes its need for log access to sign in, and its
+      private Changes limit stays. Under option E of decision 3, drop its
+      option B.
 
 ## Milestone 3: API password exchange
 
