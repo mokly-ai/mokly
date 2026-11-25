@@ -186,16 +186,36 @@ weight. The selected files keep their discovery order.
 
 ## Rust test weights
 
-[`rust-test-weights.json`](./rust-test-weights.json) holds the weight of each
-Rust test unit, such as `--test cli`, in seconds: its compile CPU time from
-`cargo test --no-run --timings` times 1.5, plus its mean nextest test time
-on the three CI hosts. `xtask` embeds the file and assigns the units of the
-repository and native test shards by these weights, as the
+[`rust-test-weights.json`](./rust-test-weights.json) holds two parts of the
+weight of each Rust test unit, such as `--test cli`, in seconds.
+`compileSeconds` is the build time of the unit's test targets in the report
+of `cargo test --no-run --timings`, times 1.5. `testSeconds` is the nextest
+time of the unit on the CI hosts: the median of each test over the runs that
+passed it, the sum over the tests of the unit on one host, then the mean over
+the Linux, macOS, and Windows hosts. The weight of a unit is the sum of its
+two parts. `xtask` embeds the file and assigns the units of the repository
+and native test shards by these weights, as the
 [test unit rule](../../docs/protocol/ci-verification-repository.md#test-units)
-says. A unit that the file does not name gets `defaultSeconds`. `splits` runs
+says. A unit that neither part names gets `defaultSeconds`. `splits` runs
 a heavy unit, such as the render integration tests, as nextest slices on
 separate shards. A stale
 weight changes only the balance of the shards, never the set of tests.
+
+[`rust-test-weights.mjs`](./rust-test-weights.mjs) refreshes each part:
+
+```bash
+GITHUB_TOKEN=$(gh auth token) node scripts/verification/rust-test-weights.mjs --run {run} --run {run}
+node scripts/verification/rust-test-weights.mjs --compile
+```
+
+`--run` reads the logs of the passed Repository and native jobs of each CI
+run and replaces `testSeconds`. Give the newest `main` runs. A run with a
+failed or unfinished test shard gives fewer samples of that shard's tests.
+When no given run passed a shard, its tests are missing from their unit on
+that host, so give runs in which every test shard passed. `--compile` builds every Rust test target in a new target directory
+under `.context/`, so that Cargo reuses no build, and replaces
+`compileSeconds` from its timing report. Cargo leaves a reused build out of
+the report. The compile part changes only when the build of a unit changes.
 
 ## Shard totals and weight refresh
 
@@ -230,6 +250,8 @@ targets of the
   viewer partitions.
 - [`shard-weights.mjs`](./shard-weights.mjs) computes both weight files from
   downloaded reports.
+- [`rust-test-weights.mjs`](./rust-test-weights.mjs) computes the Rust test
+  weights from CI job logs and a cargo timing report.
 
 ## Remote delivery
 
