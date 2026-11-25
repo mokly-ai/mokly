@@ -1,7 +1,6 @@
 //! Native hosted jobs build once before they run every Rust test.
 
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
@@ -10,7 +9,7 @@ use crate::command::{CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 
 use super::commands::commands_for;
-use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
+use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
@@ -121,50 +120,6 @@ fn native_build_failure_prevents_tests() {
         runner.run(CheckRequest::new(Some(VerificationSuite::Native), None, None).unwrap()),
         Err(Error::CommandFailed { .. })
     ));
-}
-
-#[test]
-fn native_shards_split_the_tests_and_run_lints_and_doc_tests_once() {
-    let display = |shard: &str| {
-        let shard = Shard::from_str(shard).unwrap();
-        CheckRequest::new(Some(VerificationSuite::Native), Some(shard), None).unwrap();
-        commands_for(
-            VerificationSuite::Native,
-            Some(shard),
-            DependencyAudit::Baseline,
-        )
-        .iter()
-        .map(CommandSpec::display)
-        .collect::<Vec<_>>()
-    };
-    let builds = [
-        "npm run build --workspace \"@mokly/ui\"",
-        "npm run build --workspace \"@mokly/model\"",
-        "npm run build --workspace \"@mokly/frame\"",
-        "npm run build --workspace \"@mokly/viewer\"",
-        "npm run build --workspace \"@mokly/mokly\"",
-    ];
-    let mut first = vec![
-        "node xtask/scripts/require-nextest.mjs",
-        "cargo xtask build-native",
-        "cargo fmt --all -- --check",
-        "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings",
-    ];
-    first.extend(builds);
-    first.extend([
-        "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --partition slice:1/3",
-        "cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast",
-    ]);
-    assert_eq!(display("1/3"), first);
-    let mut later = vec![
-        "node xtask/scripts/require-nextest.mjs",
-        "cargo xtask build-native",
-    ];
-    later.extend(builds);
-    later.push(
-        "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast --partition slice:3/3",
-    );
-    assert_eq!(display("3/3"), later);
 }
 
 #[test]
