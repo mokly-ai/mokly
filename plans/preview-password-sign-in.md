@@ -671,27 +671,33 @@ its link. A branch that has not merged this change gets a verifier that its
 older API refuses at startup, so it must merge `main` to deploy. Cal accepted
 this on 2026-11-24: "I don't care about backwards compat".
 
-- [ ] Declare the Secret Manager ID `mkc-preview-sign-in-password` in
+- [x] Declare the Secret Manager ID `mkc-preview-sign-in-password` in
       `infra/terraform/foundation/preview.tf`, with read access for the
       deploy identity, and update its contract test.
-- [ ] Change `preview-common.sh` and `preview-deploy.sh`: read the verifier
+- [x] Change `preview-common.sh` and `preview-deploy.sh`: read the verifier
       privately, validate it, write or delete the verifier in Secret
       `preview-sign-in`, restart the API only when Helm did not roll it, and
       warn on a missing or malformed verifier. Remove the random value.
-- [ ] Mount Secret `preview-sign-in` as optional in the chart's PR overlay.
+- [x] Mount Secret `preview-sign-in` as optional in the chart's PR overlay.
       Update the Helm golden file.
-- [ ] Remove the Open preview link, `--secret-file` and the
+- [x] Remove the Open preview link, `--secret-file` and the
       `repository_private` input from `preview-comment.py`,
       `preview-event.py` and `preview.yml`, with their tests.
-- [ ] Tests: shell tests in
+- [x] Tests: shell tests in
       `infra/tests/` cover the write, the unchanged value, the restart rule,
       the deletion, and the missing and malformed verifier.
-- [ ] Build and test the two rules that the Deploy and Password And Rotation
+- [x] Build and test the two rules that the Deploy and Password And Rotation
       sections of `docs/protocol/cloud/preview-sign-in.md` add: a read that fails for a cause other than a missing version
       warns and leaves Secret `preview-sign-in` unchanged.
-- [ ] Remove or narrow each status line that links this milestone: search
+- [x] Remove or narrow each status line that links this milestone: search
       `docs/` and every `README.md` for
       `#milestone-5-store-deploy-comment-and-local-stack`.
+
+**My call on 2026-11-25.** Keep the previous API pod UID on the Secret when
+the verifier key changes. A rerun can finish a restart if the same pod still
+runs after a failed deploy.
+
+The check logs are in `.context/preview-password-sign-in/m5-checks/`.
 
 ## Milestone 6: Sign-in password section
 

@@ -1,7 +1,5 @@
 # Mokly Cloud Helm Chart
 
-Status: [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) makes the chart's `preview-sign-in` mount optional.
-
 This chart deploys the API, isolated catalogue server and Expo app as release
 `mokly-cloud` in `mkc-<environment>`. Use reviewed immutable images and derived
 origins from the release renderer. Publication HTML is served only on the
@@ -124,9 +122,9 @@ the [preview seed Job](../../../docs/protocol/cloud/preview-seed-job.md). It nev
 runs on its schedule. For each workflow run attempt, the trusted release script
 `preview-seed-job.py` creates one Job from it and adds `--run <run>` to the
 arguments. The template pod has one `api` container with the API image,
-`args: [preview-seed]`, and the API's environment and secret volume. The pod
-uses the `api` service account. Its `maintenance` label gives it the network
-access of the maintenance pods.
+`args: [preview-seed]`, the API's environment and a read-only catalogue signing
+key. The pod uses the `api` service account. Its `maintenance` label gives it
+the network access of the maintenance pods.
 
 ## Publication Runtime Tuning
 
@@ -204,7 +202,7 @@ template change, review every generated diff, then rerun the checks.
 - `templates/ingress.yaml` and `templates/certificate.yaml` — the GCE Ingress for stable environments, the ingress-nginx hosts for PRs and `Certificate/catalogue-tls`.
 - `templates/network-policy.yaml`, `templates/network-preview.yaml` and `templates/_network.tpl` — the default-deny policies and their preview egress rules.
 - `templates/services.yaml`, `templates/scaling.yaml` and `templates/maintenance.yaml` — the Services and BackendConfigs, the stable autoscalers and disruption budgets, and the maintenance CronJobs.
-- `templates/preview-seed.yaml` — the suspended PR-only CronJob `preview-seed`, which uses the API's image, environment and secret volume. `infra/scripts/preview-seed-job.py` creates each seed Job from it.
+- `templates/preview-seed.yaml` — the suspended PR-only CronJob `preview-seed`, which uses the API's image, environment and catalogue signing key. `infra/scripts/preview-seed-job.py` creates each seed Job from it.
 - `../tests/check.py` — the Helm lint, golden renders and rejected-input cases.
 - `../tests/build_contract.py` — the build settings, the API-only `e2b-api-key` entry and the rejected build configurations.
 

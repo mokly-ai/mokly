@@ -16,6 +16,13 @@ from preview_lifecycle_core import CommandFailure, preview_parts
 from preview_lifecycle_gcp import change_iam, delete_objects
 
 
+PREVIEW_SECRET = "preview-sign-in"
+PREVIOUS_API_POD_UID = "mokly.ai/preview-sign-in-previous-pod"
+PREVIEW_VERIFIER = re.compile(
+    rb"\$scrypt\$ln=(?:[1-9]|1[0-6]),r=8,p=[1-8]\$([A-Za-z0-9+/]{22})\$([A-Za-z0-9+/]{43})"
+)
+
+
 def load_stdin():
     value = json.load(sys.stdin)
     if not isinstance(value, dict):
@@ -55,18 +62,6 @@ def validate_signing_secret():
         raise ValueError("Secret/catalogue-signing-key must contain 64 lowercase hex characters")
 
 
-def preview_secret():
-    secret = load_stdin()
-    value = secret_value(secret, "preview-sign-in", "preview-sign-in")
-    if not re.fullmatch(r"[a-f0-9]{64}", value):
-        raise ValueError("Secret/preview-sign-in must contain 64 lowercase hex characters")
-    return value
-
-
-def validate_preview_secret():
-    preview_secret()
-
-
 def write_private(path, value):
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(descriptor, "w") as output:
@@ -84,10 +79,6 @@ def generate_signing(directory):
     write_private(Path(directory) / "catalogue-signing-key", secrets.token_hex(32))
 
 
-def generate_preview(directory):
-    write_private(Path(directory) / "preview-sign-in", secrets.token_hex(32))
-
-
 def preview_verifier():
     try:
         password = sys.stdin.buffer.read().decode("utf-8").strip()
@@ -102,8 +93,49 @@ def preview_verifier():
     sys.stdout.write(f"$scrypt$ln=14,r=8,p=5${encoded_salt}${encoded_hash}")
 
 
-def extract_preview(path):
-    write_private(Path(path), preview_secret())
+def valid_preview_verifier(value):
+    match = PREVIEW_VERIFIER.fullmatch(value)
+    if match is None:
+        return False
+    for field in match.groups():
+        decoded = base64.b64decode(field + b"=" * (-len(field) % 4), validate=True)
+        if base64.b64encode(decoded).rstrip(b"=") != field:
+            return False
+    return True
+
+
+def prepare_preview_secret(store_result, verifier_path, manifest_path, api_pod_uid):
+    current = sys.stdin.read()
+    secret = json.loads(current) if current else {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {"name": PREVIEW_SECRET},
+        "type": "Opaque",
+    }
+    if secret.get("kind") != "Secret" or secret["metadata"].get("name") != PREVIEW_SECRET:
+        raise ValueError(f"expected Secret/{PREVIEW_SECRET}")
+    annotations = secret["metadata"].setdefault("annotations", {})
+    if store_result == "unavailable":
+        print(annotations.get(PREVIOUS_API_POD_UID, ""))
+        return
+
+    desired = None
+    if store_result == "read":
+        verifier = Path(verifier_path).read_bytes()
+        if valid_preview_verifier(verifier):
+            desired = base64.b64encode(verifier).decode("ascii")
+        else:
+            print("::warning::mkc-preview-sign-in-password contains an invalid preview verifier.", file=sys.stderr)
+    data = secret.setdefault("data", {})
+    if data.get(PREVIEW_SECRET) != desired:
+        if desired is None:
+            del data[PREVIEW_SECRET]
+        else:
+            data[PREVIEW_SECRET] = desired
+        # Keep the pod UID with the Secret update so a rerun can complete the restart.
+        annotations[PREVIOUS_API_POD_UID] = api_pod_uid
+        write_private(Path(manifest_path), json.dumps(secret))
+    print(annotations.get(PREVIOUS_API_POD_UID, ""))
 
 
 def helm_revision():
@@ -128,18 +160,14 @@ def run(arguments):
         validate_postgres_secret()
     elif command == "validate-signing-secret" and not values:
         validate_signing_secret()
-    elif command == "validate-preview-secret" and not values:
-        validate_preview_secret()
     elif command == "generate-postgres" and len(values) == 1:
         generate_postgres(values[0])
     elif command == "generate-signing" and len(values) == 1:
         generate_signing(values[0])
-    elif command == "generate-preview" and len(values) == 1:
-        generate_preview(values[0])
     elif command == "preview-verifier" and not values:
         preview_verifier()
-    elif command == "extract-preview" and len(values) == 1:
-        extract_preview(values[0])
+    elif command == "prepare-preview-secret" and len(values) == 4 and values[0] in ("read", "missing", "unavailable"):
+        prepare_preview_secret(*values)
     elif command == "helm-revision" and not values:
         helm_revision()
     elif command == "dns-upsert" and len(values) == 2:

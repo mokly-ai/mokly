@@ -1,7 +1,5 @@
 # Preview Script Interfaces
 
-Status: [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) adds the verifier copy and removes the Open preview link and its inputs.
-
 These scripts implement [PR previews](./pr-preview-environments.md).
 `capture-catalogue.py` runs from the PR checkout in the unprivileged capture
 job. All other scripts run from trusted `main`.

@@ -1,7 +1,5 @@
 # PR Preview Environments
 
-Status: [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) adds the verifier store, the deploy copy, and the optional mount.
-
 This contract defines the environment that every labelled pull request gets:
 its namespace, data, hosts, TLS, identity and network boundaries. The
 [reviewer runbook](../../ops/preview.md) describes its operation. Stable

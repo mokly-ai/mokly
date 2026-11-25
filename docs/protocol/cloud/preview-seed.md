@@ -1,7 +1,5 @@
 # Preview Seed
 
-Status: [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) adds the verifier copy and removes the Open preview link from private repositories' comments.
-
 This sub-contract of [PR preview environments](./pr-preview-environments.md)
 gives every labelled PR a shared account and a sample project holding the PR's
 own mockups and comparison against `main`. The

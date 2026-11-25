@@ -390,12 +390,8 @@ class ReleaseTests(unittest.TestCase):
         self.assertNotIn("secrets.", capture)
         self.assertIn("name: seed-catalogue", release)
         self.assertIn("path: .context/seed/catalogue\n", release)
-        self.assertIn("extract-preview", release)
-        self.assertIn("::add-mask::", release)
         self.assertIn(".context/seed-status.json", release)
         self.assertIn(".context/seed-proof.json", release)
-        self.assertIn("repository_private", text)
-        self.assertNotIn("cat $PREVIEW_SECRET_FILE", release)
         for command in ("preview-deploy.sh", "preview-destroy.sh"):
             self.assertIn(command, release)
         for name in ("MKC_PREVIEW_INGRESS_IP", "MKC_PREVIEW_BLOBS_BUCKET",

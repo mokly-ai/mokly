@@ -313,7 +313,7 @@ deploy identity. Create an RBAC or dedicated-project boundary before adding
 a second cluster. Deploy gains `roles/storage.admin` on only
 `mokly-508518-preview-blobs`, including IAM updates for the two conditional PR
 object grants and prefix cleanup. It also gains `roles/secretmanager.secretAccessor`
-on the dedicated Worker token and the three shared preview IDs above. It gains
+on the dedicated Worker token and the four shared preview IDs above. It gains
 the same role on each stable environment's `stripe-catalogue-key` and no other
 API credential. It has no Terraform state access; only plan/apply access the
 state bucket. Deploy cannot administer project IAM,

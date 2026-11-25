@@ -1,9 +1,10 @@
 """End-to-end shell ordering, rollback and retry behavior for PR previews."""
 
+from pathlib import Path
 import tempfile
 import unittest
 
-from preview_lifecycle_support import LifecycleDouble
+from preview_lifecycle_support import LifecycleDouble, VERIFIER
 
 
 class DeployShellTests(unittest.TestCase):
@@ -26,7 +27,6 @@ class DeployShellTests(unittest.TestCase):
         self.assertEqual(calls.count("platform-ready"), 2)
         self.assertEqual(calls.count("create secret generic postgres-credentials"), 1)
         self.assertEqual(calls.count("create secret generic catalogue-signing-key"), 1)
-        self.assertEqual(calls.count("create secret generic preview-sign-in"), 1)
         self.assertIn("smoke timeout=900 desktop=false", calls)
         self.assertIn("smoke timeout=60 desktop=false", calls)
         self.assertEqual(calls.count("lifecycle dns-upsert"), 2)
@@ -59,15 +59,113 @@ class DeployShellTests(unittest.TestCase):
             self.assertNotIn("lifecycle dns-upsert", calls)
             self.assertNotIn("helm upgrade", calls)
 
-    def test_missing_preview_secret_is_regenerated_beside_a_retained_pvc(self):
+    def test_verifier_is_copied_privately_before_helm_and_only_once(self):
         with tempfile.TemporaryDirectory() as temporary:
             double = LifecycleDouble(temporary)
-            double.prime("namespace", "pvc", "postgres-secret", "signing-secret", "release")
-            result = double.run("preview-deploy.sh")
+            first = double.run("preview-deploy.sh")
+            second = double.run("preview-deploy.sh")
             calls = double.calls()
+            self.assertEqual(first.returncode, 0, first.stderr)
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertEqual(double.stored_verifier(), VERIFIER)
+            fetches = [
+                line for line in calls.splitlines()
+                if line.startswith("gcloud secrets versions access latest")
+                and "--secret=mkc-preview-sign-in-password" in line
+            ]
+            self.assertEqual(len(fetches), 2)
+            for fetch in fetches:
+                file = Path(fetch.split("--out-file=", 1)[1])
+                self.assertTrue(file.is_relative_to(Path(temporary)))
+                self.assertFalse(file.exists())
+        self.assertEqual(calls.count("verifier file mode=600"), 2)
+        self.assertEqual(calls.count("create -f "), 1)
+        self.assertNotIn("replace -f ", calls)
+        self.assertLess(calls.index("create -f "), calls.index("helm upgrade --install"))
+        self.assertNotIn("rollout restart", calls)
+        self.assertNotIn(VERIFIER.decode(), calls + first.stdout + first.stderr + second.stdout + second.stderr)
+
+    def test_changed_verifier_restarts_only_when_helm_kept_the_api_pod(self):
+        for helm_rolled in ("false", "true"):
+            with self.subTest(helm_rolled=helm_rolled), tempfile.TemporaryDirectory() as temporary:
+                double = LifecycleDouble(temporary)
+                double.prime("namespace", "pvc", "postgres-secret", "signing-secret", "release", "preview-secret")
+                result = double.run("preview-deploy.sh", HELM_ROLLS_API=helm_rolled)
+                calls = double.calls()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(double.stored_verifier(), VERIFIER)
+                self.assertEqual(calls.count("replace -f "), 1)
+                steps = ["replace -f ", "helm upgrade --install"]
+                if helm_rolled == "false":
+                    self.assertEqual(calls.count("rollout restart deployment/api"), 1)
+                    steps.extend(["rollout restart deployment/api", "rollout status deployment/api"])
+                else:
+                    self.assertNotIn("rollout restart", calls)
+                    self.assertNotIn("rollout status", calls)
+                steps.extend(["certificate/catalogue-tls", "smoke timeout=60"])
+                positions = [calls.index(step) for step in steps]
+                self.assertEqual(positions, sorted(positions))
+
+    def test_retry_restarts_the_old_pod_after_the_secret_changed_before_helm_failed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            double = LifecycleDouble(temporary)
+            double.prime("namespace", "pvc", "postgres-secret", "signing-secret", "release", "preview-secret")
+            failed = double.run("preview-deploy.sh", HELM_UPGRADE_STATUS="7")
+            result = double.run("preview-deploy.sh")
+            self.assertEqual(double.stored_verifier(), VERIFIER)
+            calls = double.calls()
+        self.assertEqual(failed.returncode, 7, failed.stderr)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(calls.count("create secret generic preview-sign-in"), 1)
-        self.assertIn("helm upgrade --install", calls)
+        self.assertEqual(calls.count("replace -f "), 1)
+        self.assertEqual(calls.count("rollout restart deployment/api"), 1)
+        self.assertLess(calls.rindex("helm upgrade --install"), calls.index("rollout restart deployment/api"))
+
+    def test_missing_or_invalid_verifier_warns_and_removes_the_key(self):
+        missing = "mkc-preview-sign-in-password has no versions"
+        invalid = "mkc-preview-sign-in-password contains an invalid preview verifier"
+        cases = (
+            ("empty store", "no-versions", VERIFIER, missing),
+            ("empty store in Actions", "no-versions-ci", VERIFIER, missing),
+            ("malformed", "success", b"malformed-verifier-marker", invalid),
+            ("ln out of bounds", "success", VERIFIER.replace(b"ln=14", b"ln=17"), invalid),
+            ("wrong r", "success", VERIFIER.replace(b"r=8", b"r=7"), invalid),
+            ("p out of bounds", "success", VERIFIER.replace(b"p=5", b"p=9"), invalid),
+            ("trailing newline", "success", VERIFIER + b"\n", invalid),
+            ("noncanonical base64", "success", VERIFIER[:-1] + b"x", invalid),
+        )
+        for case, outcome, value, message in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                double = LifecycleDouble(temporary)
+                double.prime("namespace", "pvc", "postgres-secret", "signing-secret", "release", "preview-secret")
+                result = double.run("preview-deploy.sh", verifier=value, VERIFIER_STORE_RESULT=outcome)
+                calls = double.calls()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIsNone(double.stored_verifier())
+                self.assertEqual(result.stderr.count("::warning::"), 1)
+                self.assertIn(f"::warning::{message}", result.stderr)
+                self.assertNotIn(value.rstrip().decode(), calls + result.stdout + result.stderr)
+                self.assertEqual(calls.count("replace -f "), 1)
+                self.assertEqual(calls.count("rollout restart deployment/api"), 1)
+                self.assertLess(calls.index("replace -f "), calls.index("helm upgrade --install"))
+                self.assertIn("smoke timeout=60", calls)
+
+    def test_other_store_read_failures_warn_without_changing_the_secret(self):
+        for outcome in ("permission", "transport", "other-not-found", "nonstandard-exit"):
+            with self.subTest(outcome=outcome), tempfile.TemporaryDirectory() as temporary:
+                double = LifecycleDouble(temporary)
+                installed = double.run("preview-deploy.sh")
+                self.assertEqual(installed.returncode, 0, installed.stderr)
+                double.log.unlink()
+                result = double.run("preview-deploy.sh", VERIFIER_STORE_RESULT=outcome)
+                calls = double.calls()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(double.stored_verifier(), VERIFIER)
+                self.assertEqual(result.stderr.count("::warning::"), 1)
+                self.assertIn("::warning::Could not read mkc-preview-sign-in-password", result.stderr)
+                self.assertNotIn("create -f ", calls)
+                self.assertNotIn("replace -f ", calls)
+                self.assertNotIn("rollout restart", calls)
+                self.assertIn("smoke timeout=60", calls)
 
     def test_each_post_change_failure_rolls_back_a_previous_revision(self):
         cases = (

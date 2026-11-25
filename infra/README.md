@@ -1,7 +1,5 @@
 # Infrastructure
 
-Status: Foundation does not declare `mkc-preview-sign-in-password` yet, and the deploy does not copy the preview verifier yet. [Milestone 5](../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) builds both.
-
 Mokly Cloud's infrastructure targets GCP project `mokly-508518`: regional GKE
 Autopilot, stable private Cloud SQL Postgres, namespace Postgres for PRs, GCS blobs, Secret Manager and GitHub
 workload identity. Cloudflare owns DNS/TLS transport for the shared public
@@ -214,11 +212,12 @@ Terraform/rollout wrappers reject PR inputs. The main deploy runs
 `preview-platform.sh` and `preview-platform-ready.sh` with the checked-in
 platform values before planning main-preview; the installer inventories and
 authorizes every cluster-scoped chart object before its idempotent upgrades.
-`preview-deploy.sh` creates and validates generated Secrets, copies the
-preview verifier, reconciles DNS/IAM, installs Helm, waits for TLS and
-smokes; `preview-destroy.sh` deletes the namespace before external state;
-`preview-link.py` reads exact-address
-links from API logs. The parallel, credential-free capture job checks out the
+`preview-deploy.sh` creates and validates generated Secrets and reconciles
+DNS and IAM. It copies the preview verifier before Helm and restarts the API
+when its running pod still uses the previous configuration. It waits for TLS
+and runs smoke checks. `preview-destroy.sh` deletes the namespace before
+external state. `preview-link.py` reads exact-address links from API logs.
+The parallel, credential-free capture job checks out the
 PR with full history and runs the PR's own `capture-catalogue.py`,
 which installs the PR's locked packages, runs the PR's workspace Mokly
 `mokly publish --strict` on the clean committed checkout, receives its upload
@@ -271,13 +270,13 @@ the PR comment, evidence, costs and cleanup.
 - `scripts/preview-platform-helper.py` — validates the platform inputs, reads the Cloudflare CIDR list from the workload chart, inventories the rendered cluster-scoped objects and checks the Origin CA SANs. Its `tls-secret` command decodes the cluster TLS Secret into private files for the shared validator.
 - `helm/platform/cert-manager-values.yaml`, `helm/platform/ingress-nginx-values.yaml` and `helm/platform/cluster-issuer.yaml` — the static platform chart values and the issuer template with its one catalogue-domain placeholder.
 - `scripts/preview-common.sh`, `scripts/preview-deploy.sh` and `scripts/preview-destroy.sh` — the PR shell helpers for generated Secrets, the DNS token and the preview verifier, and the deploy and cleanup entry points.
-- `scripts/preview-lifecycle.py` — the namespace Secret validation, the cloud lifecycle commands and `preview-verifier`, which makes the preview password's verifier; `preview_lifecycle_core.py` holds `preview_parts()` and `PreviewInputError`, `preview_lifecycle_cloud.py` the Cloudflare record upsert and delete, and `preview_lifecycle_gcp.py` the conditional bucket IAM with etag retries and the batched object removal.
+- `scripts/preview-lifecycle.py` — namespace Secret validation and cloud lifecycle commands. `preview-verifier` generates the verifier. `prepare-preview-secret` validates it and stages changes to the namespace Secret. `preview_lifecycle_core.py` holds `preview_parts()` and `PreviewInputError`. `preview_lifecycle_cloud.py` updates and deletes the Cloudflare record. `preview_lifecycle_gcp.py` manages conditional bucket IAM with etag retries and removes objects in batches.
 - `scripts/preview-link.py` and `scripts/preview_link_sources.py` — the sign-in log reader and its kubectl pod-log source.
 - `scripts/capture-catalogue.py` — the unprivileged catalogue capture; `catalogue_capture_endpoint.py` is the loopback receiver, `catalogue_capture_plan.py` the gzip framing check and bounded plan reader, and `catalogue_capture_state.py` the exchange state.
 - `scripts/record-catalogue-capture.py` — rebuilds the isolated smoke fixture and records the real workspace CLI outcomes. Its `--check` mode compares raw streams while reading variable paths and timing values separately. `catalogue_recording_cases.py` owns the real receiver cases, and `catalogue_recording_streams.py` owns the comparison.
 - `scripts/preview-seed-job.py` — the trusted PR seed runner and its `--validate-evidence` check, which reuses the evidence validation in `preview_seed_types.py`. `preview_seed_job_run.py` creates the Job from the `preview-seed` CronJob, waits for it, and runs the log, collection and cleanup steps after any outcome. `preview_seed_job_storage.py` stages the request and the unopened catalogue, downloads the status and the proof, and removes earlier runs. `preview_seed_job_cluster.py` validates the common inputs and selects the cluster with the preview shell helpers.
-- `scripts/preview_seed_types.py` — the shared preview settings, JSON reader and atomic writer, private credential reader, and seed evidence validation.
-- `scripts/preview-comment.py` and `scripts/preview-event.py` — the validated PR comment renderer and the pure event policy.
+- `scripts/preview_seed_types.py` — the shared preview settings, JSON reader and atomic writer, and seed evidence validation.
+- `scripts/preview-comment.py` and `scripts/preview-event.py` — the credential-free PR comment renderer and the pure event policy.
 - [`../scripts/cloud/site/cleanup.sh`](../scripts/cloud/site/cleanup.sh) — the site workflow's Pages cleanup: lists every deployment page, deletes only the closed pull request's `pr-<number>` deployments, and reports every failure as retained.
 - [scripts/sync-postmark-templates.mjs](./scripts/sync-postmark-templates.mjs) and `scripts/sync-postmark-environment.sh` — the trusted deploy job that reads each managed Postmark alias, validates and creates or updates a changed template, and verifies the read-back, and the shell wrapper that runs it for one stable environment.
 - `scripts/install-tools.sh`, `scripts/install-build-tools.sh`, `scripts/check-terraform.sh` and `scripts/run-infrastructure-tests.py` — the pinned tool installers, the Terraform format, validate and test runner, and the Python test partition runner.

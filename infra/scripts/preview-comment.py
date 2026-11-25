@@ -7,15 +7,7 @@ import sys
 from pathlib import Path
 
 from preview_lifecycle_core import preview_parts
-from preview_seed_types import SeedError, read_json, read_private_secret
-
-
-def repository_flag(value):
-    if value == "true" or value is True:
-        return True
-    if value == "false" or value is False:
-        return False
-    raise ValueError("repository privacy must be true or false")
+from preview_seed_types import SeedError, read_json
 
 
 def seed_outcome(path, environment, revision):
@@ -53,8 +45,6 @@ def comment(
     domain,
     catalogue,
     run_url,
-    repository_private,
-    secret_file=None,
     seed_status=None,
     seed_proof=None,
 ):
@@ -77,36 +67,21 @@ def comment(
     }
     if state not in messages:
         raise ValueError("invalid preview comment state")
-    private = repository_flag(repository_private)
     status = seed_outcome(seed_status, environment, revision)
     has_proof = proof_present(seed_proof)
-    if state in ("running", "removed", "cleanup-failed") and (
-        secret_file is not None or status is not None or has_proof
-    ):
+    if state in ("running", "removed", "cleanup-failed") and (status is not None or has_proof):
         raise ValueError("this comment state cannot carry seed inputs")
     if state == "success" and (
         status is None
         or status["signIn"] != "accepted"
         or status["project"] != "seeded"
         or not has_proof
-        or secret_file is None
     ):
         raise ValueError("successful comments require accepted seed evidence")
-    open_preview = (
-        state in ("failed", "success")
-        and status is not None
-        and status["signIn"] == "accepted"
-        and private
-    )
-    if open_preview and secret_file is None:
-        raise ValueError("Open preview requires its secret file")
     lines = ["<!-- mokly-preview -->", "### Mokly preview", "", f"Status: **{messages[state]}**",
              f"- Commit: `{revision}`", f"- App: {app}/sign-in", f"- API: {api}",
              f"- Catalogue: `https://p-<publication-id>.pr-{number}.preview.{catalogue}`",
              f"- Workflow evidence: {run_url}"]
-    if open_preview:
-        secret = read_private_secret(secret_file)
-        lines.append(f"- Open preview: {app}/auth/preview/callback#secret={secret}")
     if state == "success" and has_proof:
         lines.append(
             f"- Sample project: {app}/mokly-ai/mokly/pull-requests/{number}"
@@ -122,14 +97,11 @@ def main():
     parser.add_argument("--domain", required=True)
     parser.add_argument("--catalogue-domain", required=True)
     parser.add_argument("--run-url", required=True)
-    parser.add_argument("--repository-private", required=True, choices=("true", "false"))
-    parser.add_argument("--secret-file")
     parser.add_argument("--seed-status")
     parser.add_argument("--seed-proof")
     args = parser.parse_args()
     print(comment(args.state, args.environment, args.revision, args.domain,
-                  args.catalogue_domain, args.run_url, args.repository_private,
-                  args.secret_file, args.seed_status, args.seed_proof), end="")
+                  args.catalogue_domain, args.run_url, args.seed_status, args.seed_proof), end="")
 
 
 if __name__ == "__main__":
