@@ -1,0 +1,170 @@
+{
+  "total_count": 5,
+  "jobs": [
+    {
+      "id": 139021449952,
+      "run_id": 45555984990,
+      "run_attempt": 2,
+      "name": "Runtime profile",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-25T06:22:15Z",
+      "started_at": "2026-11-25T05:47:57Z",
+      "completed_at": "2026-11-25T05:48:02Z",
+      "html_url": "https://github.com/mokly-ai/mokly/actions/runs/45555984990/job/139021449952",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-25T05:47:58Z",
+          "completed_at": "2026-11-25T05:47:58Z"
+        },
+        {
+          "name": "Select Node verification profile",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-25T05:47:58Z",
+          "completed_at": "2026-11-25T05:47:59Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-25T05:47:59Z",
+          "completed_at": "2026-11-25T05:47:59Z"
+        }
+      ]
+    },
+    {
+      "id": 139021446948,
+      "run_id": 45555984990,
+      "run_attempt": 2,
+      "name": "Credential-gated infrastructure plan",
+      "status": "completed",
+      "conclusion": "skipped",
+      "created_at": "2026-11-25T06:22:15Z",
+      "started_at": "2026-11-25T06:22:15Z",
+      "completed_at": "2026-11-25T05:47:56Z",
+      "html_url": "https://github.com/mokly-ai/mokly/actions/runs/45555984990/job/139021446948",
+      "steps": []
+    },
+    {
+      "id": 139021394510,
+      "run_id": 45555984990,
+      "run_attempt": 2,
+      "name": "Viewer (Node 22.15.0)",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-25T06:22:07Z",
+      "started_at": "2026-11-25T06:22:09Z",
+      "completed_at": "2026-11-25T06:33:11Z",
+      "html_url": "https://github.com/mokly-ai/mokly/actions/runs/45555984990/job/139021394510",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-25T06:22:10Z",
+          "completed_at": "2026-11-25T06:22:11Z"
+        },
+        {
+          "name": "Run viewer verification",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-25T06:23:04Z",
+          "completed_at": "2026-11-25T06:33:06Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-25T06:33:08Z",
+          "completed_at": "2026-11-25T06:33:08Z"
+        }
+      ]
+    },
+    {
+      "id": 139021397119,
+      "run_id": 45555984990,
+      "run_attempt": 2,
+      "name": "Native (windows-2025)",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-25T06:22:08Z",
+      "started_at": "2026-11-25T05:48:05Z",
+      "completed_at": "2026-11-25T06:18:16Z",
+      "html_url": "https://github.com/mokly-ai/mokly/actions/runs/45555984990/job/139021397119",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-25T05:48:06Z",
+          "completed_at": "2026-11-25T05:48:07Z"
+        },
+        {
+          "name": "Run native verification",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-25T05:51:38Z",
+          "completed_at": "2026-11-25T06:17:32Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-11-25T06:18:14Z",
+          "completed_at": "2026-11-25T06:18:14Z"
+        }
+      ]
+    },
+    {
+      "id": 139025868874,
+      "run_id": 45555984990,
+      "run_attempt": 2,
+      "name": "Required CI",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-25T06:33:11Z",
+      "started_at": "2026-11-25T06:33:13Z",
+      "completed_at": "2026-11-25T06:33:24Z",
+      "html_url": "https://github.com/mokly-ai/mokly/actions/runs/45555984990/job/139025868874",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-25T06:33:14Z",
+          "completed_at": "2026-11-25T06:33:15Z"
+        },
+        {
+          "name": "Check out report validator",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-25T06:33:15Z",
+          "completed_at": "2026-11-25T06:33:20Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-25T06:33:22Z",
+          "completed_at": "2026-11-25T06:33:22Z"
+        }
+      ]
+    }
+  ]
+}
