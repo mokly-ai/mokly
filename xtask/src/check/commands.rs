@@ -50,24 +50,34 @@ pub(super) fn commands_for(
             .into_iter()
             .flat_map(Step::commands)
             .collect(),
-        VerificationSuite::Viewer => vec![
-            npm(&["run", "build"]),
-            npm(&["run", "typecheck:ci"]),
-            npm(&["run", "test:viewer:prepared"]),
-        ],
+        VerificationSuite::Viewer => viewer_commands(shard),
         VerificationSuite::Browser => vec![npm(&["run", "build"]), browser_test_command(shard)],
         VerificationSuite::Native => native_commands(shard),
         cloud => cloud_commands(cloud, shard),
     }
 }
 
+/// Build, then type check once per suite: unsharded or on shard 1 only.
+fn viewer_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let mut commands = vec![npm(&["run", "build"])];
+    if shard.is_none_or(Shard::is_first) {
+        commands.push(npm(&["run", "typecheck:ci"]));
+    }
+    commands.push(sharded(npm(&["run", "test:viewer:prepared"]), shard));
+    commands
+}
+
 /// Run the already-built browser suite, optionally selecting one shard.
 pub(super) fn browser_test_command(shard: Option<Shard>) -> CommandSpec {
-    let mut test = npm(&["run", "test:browser:prepared"]);
-    if let Some(shard) = shard {
-        test = test.args(["--".to_owned(), "--shard".to_owned(), shard.to_string()]);
+    sharded(npm(&["run", "test:browser:prepared"]), shard)
+}
+
+/// Forward one validated shard to a strict runner.
+fn sharded(test: CommandSpec, shard: Option<Shard>) -> CommandSpec {
+    match shard {
+        Some(shard) => test.args(["--".to_owned(), "--shard".to_owned(), shard.to_string()]),
+        None => test,
     }
-    test
 }
 
 /// Build the host binary, then run the Rust tests or one nextest partition of

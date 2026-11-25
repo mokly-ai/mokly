@@ -6,6 +6,7 @@ export default class VerificationReporter {
     this.assignedTests = [];
     this.errors = [];
     this.observedTests = [];
+    this.slotEnds = new Map();
   }
 
   onBegin(config, suite) {
@@ -20,6 +21,7 @@ export default class VerificationReporter {
     this.observedTests.push({
       ...testIdentity,
       durationMs: result.duration,
+      wallMs: this.wallTime(result),
       status: result.status,
       errors: result.errors.map((error) => errorEvidence(error)),
     });
@@ -29,6 +31,20 @@ export default class VerificationReporter {
       process.stderr.write(
         `${error.stack ?? error.message ?? String(error)}\n`,
       );
+  }
+
+  /**
+   * Time that the worker slot spent since its previous test ended: the test
+   * plus the hooks, fixtures, and worker restarts before it. Shard weights
+   * read it. The first test of a slot has only its own duration.
+   */
+  wallTime(result) {
+    const ended = result.startTime.getTime() + result.duration;
+    const previous = this.slotEnds.get(result.parallelIndex);
+    this.slotEnds.set(result.parallelIndex, ended);
+    return previous === undefined
+      ? result.duration
+      : Math.max(result.duration, ended - previous);
   }
 
   onError(error) {

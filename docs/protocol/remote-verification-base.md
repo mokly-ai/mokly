@@ -86,7 +86,7 @@ Do not add special handling for this case.
 
 ## Sync Source And Probe
 
-Run each probe and all fourteen commands with the snapshot directory as the
+Run each probe and every remote command with the snapshot directory as the
 local working directory. The Blacksmith CLI fetches its `HEAD`, which is the
 base, then copies its non-ignored source differences to the box.
 Before any build, each remote command gives every regular copied path that
@@ -101,7 +101,7 @@ The [Testbox probe](./remote-verification-testbox.md#readiness-and-sync-probe)
 defines the command, readiness bound, parsing and all-box barrier.
 The wrapper stages the synced tree under the [box index rule](#box-index).
 Suite reports therefore name the box `HEAD`, which is the base.
-Run the aggregate with that same base and exactly five downloaded reports.
+Run the aggregate with that same base and every downloaded viewer and browser report.
 The final fingerprint check reads the checkout, so it detects local edits
 made during remote execution.
 

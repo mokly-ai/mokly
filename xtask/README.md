@@ -23,8 +23,8 @@ internal task runner and is not published to npm or crates.io.
   against release tags.
 - Keep local gate coverage equal to CI checks on the host platform. Every
   Native command has local coverage; `npm run build` covers the host build.
-- Run explicit and automatic remote checks on fourteen Testboxes with complete
-  shard evidence.
+- Run explicit and automatic remote checks on one Testbox per command with
+  complete shard evidence.
 - Stop warmed boxes on success, failure, SIGINT, SIGTERM, and SIGHUP.
 
 ## What This Crate Does
@@ -57,12 +57,12 @@ Arguments remain separate from the program name.
 
 ### Suites
 
-| Suite      | Content                                                                                                                                                                                                                                   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository | Every check of the [repository gate list](../docs/protocol/ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                       |
-| Viewer     | The required Bun type check of every project, then every discovered Node test file under `tests/`, `packages/viewer/tests/`, `packages/ui/tests/`, `packages/model/tests/`, and `packages/frame/tests/`. The suite has no shard.          |
-| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. CI and remote runs use four shards; the local gate runs the suite unsharded. |
-| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of `mokly-*` and `xtask`. Hosted CI runs `--suite native` on macOS and Windows runners.                                                           |
+| Suite      | Content                                                                                                                                                                                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository | Every check of the [repository gate list](../docs/protocol/ci-verification-repository.md#repository-boundary), in the listed order.                                                                                                                                         |
+| Viewer     | The required Bun type check of every project, then every discovered Node test file under `tests/`, `packages/viewer/tests/`, `packages/ui/tests/`, `packages/model/tests/`, and `packages/frame/tests/`. `--shard` runs one whole-file partition; only shard 1 type checks. |
+| Browser    | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with zero retries. `--shard INDEX/TOTAL` runs one whole-file partition. Remote runs use the CI shard total; the local gate runs the suite unsharded.                                   |
+| Native     | Build the `mokly` binary once, check Rust formatting and Clippy, and run the Rust tests of `mokly-*` and `xtask`. Hosted CI runs `--suite native` on macOS and Windows runners.                                                                                             |
 
 A selected suite is partial verification. The unqualified command is the
 complete gate. A local run stops at the first failed suite. A remote run
@@ -70,7 +70,7 @@ reports every failed suite. Rerun one failed suite with `--suite <name>`.
 The complete local gate also runs `npm run test:delivery:prepared` after the
 browser suite. It builds the example and checks portable design specs through
 static HTTP and file URLs. Remote verification runs this command on a
-separate seventh Testbox after building the source. Hosted CI has a separate
+separate Testbox after building the source. Hosted CI has a separate
 required static-delivery job.
 The local gate gets native build coverage from Viewer and Rust checks from
 Repository. It does not repeat them in Native. Hosted native jobs repeat that
@@ -83,7 +83,7 @@ fail when the build output is missing. Native builds the host binary through
 sources into the render cache, and the tests read nothing back from the
 repository. Every suite rejects skips and todos.
 
-`--shard INDEX/TOTAL` is valid with `browser`, `native`, `cloud-app`,
+`--shard INDEX/TOTAL` is valid with `viewer`, `browser`, `native`, `cloud-app`,
 `cloud-mockups`, and `cloud-site`. It uses one-based integers with
 `INDEX <= TOTAL`. An unknown suite, a malformed shard, or a
 shard with another suite fails before any subprocess starts.
@@ -234,7 +234,7 @@ executor selection and child environments.
 ### Remote Runs
 
 The [remote verification reference](./remote/README.md#remote-runs) describes
-snapshots, fourteen-box execution, reports, and cleanup.
+snapshots, one-box-per-command execution, reports, and cleanup.
 
 ## Quick Start
 
@@ -248,7 +248,8 @@ cargo xtask check --suite repository
 cargo xtask check --suite viewer
 cargo xtask check --suite native
 cargo xtask check --suite browser
-cargo xtask check --suite browser --shard 1/4
+cargo xtask check --suite viewer --shard 1/2
+cargo xtask check --suite browser --shard 1/10
 cargo xtask check --suite cloud-rust
 cargo xtask check --suite cloud-app --shard 1/4
 cargo xtask check --suite cloud-fixtures

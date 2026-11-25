@@ -62,29 +62,35 @@ Chromium, then attempts all its assigned suites. Each failed suite is named
 in its log. App shards use separate boxes. Desktop needs Xvfb and reuses the
 cloud Rust build for its API harness. Infrastructure includes the storage
 probe and workload image builds. The cloud workers add no Viewer or Browser
-evidence reports. The five existing reports remain required. The Testbox
+evidence reports. The viewer and browser reports remain required. The Testbox
 workflow lifetime stays at 30 minutes.
 
-Xtask warms up fourteen boxes in parallel with a 30-minute idle timeout, probes
+Xtask warms up one box per command in parallel with a 30-minute idle timeout, probes
 every box within the 10-minute readiness bound, and reports the successful
 probe count from that box list. A failed probe emits no success count.
 It then starts the
 [Mokly commands](../../docs/protocol/remote-verification-testbox.md#remote-commands)
-in parallel, one per box: `repository`, `viewer`, and `browser-1-of-4` to
-`browser-4-of-4`, plus `static-delivery`. The delivery command builds the source
+in parallel, one per box: `repository`, one `viewer-INDEX-of-TOTAL` command per
+viewer shard, one `browser-INDEX-of-TOTAL` command per browser shard, plus
+`static-delivery`. Each shard command passes `--shard INDEX/TOTAL`, also when
+the total is 1.
+[`ci-shards.json`](../../scripts/verification/ci-shards.json) holds both
+totals, which CI also uses: 2 viewer and 10 browser shards now, so a complete
+run has 21 commands and 12 reports. An invalid file makes remote verification
+unavailable before any box warms up. The delivery command builds the source
 and checks both HTTP and file delivery. The suite wrapper stages the synced tree after its
 fingerprint check, so index readers see the same tree as a committed
 checkout. Every command refreshes copied changed-file modification times
-before its first build, so Cargo rebuilds changed crates after warmup. The
+before its first build, so Cargo rebuilds changed crates after warmup. Each
 viewer command installs the synced Bun pin on its box before its suite, so a
 warmup image without Bun still runs the required type check. When a
 command ends, its worker downloads its report and cleans up
-its box at once. Only the viewer command and the four browser shards produce
+its box at once. Only the viewer and browser shard commands produce
 suite reports; repository and delivery outcomes use their exit codes. After all commands end,
-xtask cleans up the remaining boxes, runs the local aggregate over the five
+xtask cleans up the remaining boxes, runs the local aggregate over the downloaded
 reports with the base commit and `node-22.15.0`, computes the local
-fingerprint again, and removes the snapshot. A successful check needs fourteen
-commands that exit 0, five downloads, a valid aggregate, and the same local
+fingerprint again, and removes the snapshot. A successful check needs every
+command to exit 0, every report download, a valid aggregate, and the same local
 fingerprint as before the run.
 
 Each check creates new report and log directories under `.context/`. Their
@@ -124,7 +130,8 @@ workflow before it merges. It changes neither the fingerprint nor the base.
   [`policy.rs`](../src/remote/policy.rs) own the ordered availability checks.
   [`runner.rs`](../src/remote/runner.rs) owns the remote phase order,
   [`verdict.rs`](../src/remote/verdict.rs) attaches the final cleanup count,
-  [`plan.rs`](../src/remote/plan.rs) owns the fourteen-command inventory,
+  [`plan.rs`](../src/remote/plan.rs) owns the command inventory from the
+  embedded shard totals,
   [`phases.rs`](../src/remote/phases.rs) parallel warmup and the all-probes
   barrier, and [`suites.rs`](../src/remote/suites.rs) concurrent suite
   execution and report downloads.

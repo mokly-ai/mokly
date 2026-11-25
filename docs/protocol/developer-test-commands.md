@@ -111,8 +111,8 @@ not apply JSON escaping. Validation happens before inventory discovery, the
 build check, or test execution. Forward every pattern unchanged and in argument
 order to Node; Node applies repeated patterns as alternatives.
 
-Reject `--shard` with or without a value, including the equals form: Node tests
-have no shards. Its error names `cargo xtask check --suite browser --shard` for Mokly browser shards. Cloud app, mockup, and site shards use `cargo xtask check --suite cloud-app --shard`, with `cloud-mockups` or `cloud-site` in place of `cloud-app`. Every other flag fails with the usage text, preceded by
+Reject `--shard` with or without a value, including the equals form: developer
+runs take files and patterns. Its error names `cargo xtask check --suite viewer --shard` and `--suite browser --shard` for Mokly shards. Cloud app, mockup, and site shards use `cargo xtask check --suite cloud-app --shard`, with `cloud-mockups` or `cloud-site` in place of `cloud-app`. Every other flag fails with the usage text, preceded by
 `unknown option <flag>`.
 
 ### Developer Failure Reports
