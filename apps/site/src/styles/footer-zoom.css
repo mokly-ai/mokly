@@ -5,13 +5,15 @@
    buttons in: the pill's padding and gaps give up what each button's
    padding adds.
 
-   Each button is drawn 22px wide and 28px tall at the 16px base and
-   reaches a 44px target through a transparent band around it. Hover
-   fills it with the canvas and turns its glyph to ink, and keyboard focus
-   draws the shared focus glow of base.css, which the 5px gap keeps off the
-   zoom. The buttons draw no boundary of their own, as the menu control
-   does: the glyph names each one. The zoom keeps the width of four
-   figures, so the buttons do not move between 8% and 200%.
+   Each button is drawn 22px wide and 28px tall at the 16px base. A
+   transparent band centred on it reaches the 44px target in both axes,
+   whatever width the glyph takes, and keeps the button's own size where
+   that is larger, as at 200% text. Hover fills a button with the canvas
+   and turns its glyph to ink, and keyboard focus draws the shared focus
+   glow of base.css, which the 5px gap keeps off the zoom. The buttons draw
+   no boundary of their own, as the menu control does: the glyph names
+   each one. The zoom keeps the width of four figures, so the buttons do
+   not move between 8% and 200%.
 
    The class names and the rules match docs/mockups/styles/site/footer-zoom.css.
    The rules after them are the site's own: the 44px minimum height of
@@ -41,8 +43,12 @@
 
 .site-statusbar-zoom-step::before {
   content: "";
-  inset: -8px -11px;
+  height: max(100%, var(--mk-layout-control-min));
+  left: 50%;
   position: absolute;
+  top: 50%;
+  translate: -50% -50%;
+  width: max(100%, var(--mk-layout-control-min));
 }
 
 .site-statusbar-zoom-step:hover {

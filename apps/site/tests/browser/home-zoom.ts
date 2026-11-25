@@ -4,9 +4,10 @@ import { PART } from "../../src/components/home/zoom-marks.js";
 
 /**
  * The home's zoom pill in a browser spec: its group and buttons, a run of
- * presses, the layout once it settles after a press, and the places that a
- * spec compares before and after a zoom. `home-zoom.spec.ts`,
- * `home-zoom-scale.spec.ts` and `home-zoom-scrollbar.spec.ts` share them.
+ * presses, the layout once it settles after a press, the reader's place
+ * above the page's end, and the places that a spec compares before and
+ * after a zoom. `home-zoom.spec.ts`, `home-zoom-scale.spec.ts` and
+ * `home-zoom-scrollbar.spec.ts` share them.
  */
 
 /** Runs a test in the desktop projects only. */
@@ -95,6 +96,17 @@ export function settled(pill: Locator): Promise<Settled> {
 /** The page's width without its scrollbar, which a zoom never changes. */
 export function windowWidth(page: Page): Promise<number> {
   return page.evaluate(() => document.documentElement.clientWidth);
+}
+
+/**
+ * Arrange the reader `above` CSS pixels above the page's end. A wheel
+ * scrolls by the browser's own step, so the spec sets the exact place.
+ */
+export async function scrollAboveEnd(page: Page, above: number): Promise<void> {
+  await page.evaluate((rest) => {
+    const root = document.documentElement;
+    window.scrollTo(0, root.scrollHeight - root.clientHeight - rest);
+  }, above);
 }
 
 /**

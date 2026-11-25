@@ -173,7 +173,10 @@ for documents, fonts and images, and rejects browser errors, missing
 resources, blank content and horizontal overflow, including frames. The one
 exception is the home's `zoomed-in` state: it keeps the home's layout of 100%
 at 200%, so the smoke requires it to be exactly twice the page's width without
-its scrollbar.
+its scrollbar. In a 390px phone window and a 1280px desktop window, the smoke
+also requires that state's footer frame to be twice as wide as the home's
+frame at 100% in the same window, and twice as far from the page's start,
+within a pixel.
 HTTP checks open the settings panes through the dialog rail, account entry and
 every flow through Browse, and check keyboard focus in account entry. They read
 the canvas frames by their labels, check a settings pane in its Light and Dark

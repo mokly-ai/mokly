@@ -8,11 +8,13 @@
  * A part makes an element measured with the attributes of `measureSize`,
  * `measureType` or `measureGap`: the kind of value it shows and the ids of
  * the elements it reads. Every value is in the CSS pixels of its part before
- * any scale draws it, as the home's zoom pill scales its parts, rounded to
- * the nearest whole pixel. A size reads `W × H`. A type badge's value goes into its `b`,
- * after the face and the weight. A vertical gap is the top of `to` minus the
- * bottom of `from`, and a horizontal gap the left of `to` minus the right of
- * `from`, in the pixels of `from`.
+ * any scale draws it, as the home's zoom pill scales its parts, in whole
+ * pixels. A size reads `W × H`: the target's offset width and height, its
+ * own size, which the browser rounds and no scale changes. A type badge's
+ * value goes into its `b`, after the face and the weight, rounded to the
+ * nearest whole pixel. A vertical gap is the top of `to` minus the bottom of
+ * `from`, and a horizontal gap the left of `to` minus the right of `from`,
+ * in the pixels of `from`, rounded too.
  *
  * Once it has written an element's value, the island marks the element with
  * `MEASURED`, and a rule in `src/styles/canvas-tags.css` hides every element
@@ -86,9 +88,16 @@ export interface Box {
 }
 
 /** An element that a measured element reads, or one of its ancestors. */
-export interface MeasureTarget {
-  readonly parentElement: MeasureTarget | null;
+export interface MeasureNode {
+  readonly parentElement: MeasureNode | null;
   getBoundingClientRect(): Box;
+}
+
+/** An element that a measured element reads, with its own size. */
+export interface MeasureTarget extends MeasureNode {
+  /** Its own height and width in whole CSS pixels, which no scale changes. */
+  readonly offsetHeight: number;
+  readonly offsetWidth: number;
 }
 
 /** An element whose text the island writes. */
@@ -119,7 +128,7 @@ export interface MeasureWindow<Target extends MeasureTarget> {
     type: "resize" | typeof HOME_ZOOM_EVENT,
     listener: () => void,
   ): void;
-  getComputedStyle(element: MeasureTarget): {
+  getComputedStyle(element: MeasureNode): {
     readonly fontSize: string;
     readonly scale: string;
   };
@@ -146,19 +155,24 @@ function pixels(length: number): string | undefined {
  * `scale` of `none` draws at 1.
  */
 function scaleOf<Target extends MeasureTarget>(
-  target: MeasureTarget,
+  target: MeasureNode,
   window: MeasureWindow<Target>,
 ): number {
   let scale = 1;
-  for (let node: MeasureTarget | null = target; node; node = node.parentElement)
+  for (let node: MeasureNode | null = target; node; node = node.parentElement)
     scale *= Number.parseFloat(window.getComputedStyle(node).scale) || 1;
   return scale;
 }
 
-/** The size of a box that `scale` draws, such as `1033 × 156`. */
-function size(box: Box, scale: number): string | undefined {
-  const width = pixels(box.width / scale);
-  const height = pixels(box.height / scale);
+/**
+ * The own size of `target`, such as `1033 × 156`. A browser draws a scaled
+ * box in single precision, so its drawn box divided by the scale can round
+ * a size half a pixel from whole ones to the other side, and the size would
+ * change with the zoom.
+ */
+function size(target: MeasureTarget): string | undefined {
+  const width = pixels(target.offsetWidth);
+  const height = pixels(target.offsetHeight);
   return width === undefined || height === undefined
     ? undefined
     : `${width} × ${height}`;
@@ -178,8 +192,7 @@ function reading<Target extends MeasureTarget>(
     case "size": {
       const target = byId(TARGET);
       if (target === undefined) return undefined;
-      const read = () =>
-        size(target.getBoundingClientRect(), scaleOf(target, window));
+      const read = () => size(target);
       return { element, into: element, read, targets: [target] };
     }
     case "type": {

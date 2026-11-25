@@ -4,7 +4,8 @@
    then scrolls sideways; no other page or state does. The tool bar, the
    Specs panel, the status bar, the dot grid and the gap above the footer
    frame keep their size, and the tool bar and the status bar stay in place
-   in the window.
+   in the window. On the site the status bar's clearance gives up the
+   height of a classic sideways scrollbar above 100%.
 
    The site scales the parts with a transform and sets the height that
    each takes by script. A static drawing runs no script, so the drawings
@@ -38,12 +39,15 @@
    zoom) of its zoomed pixels. Centred in the footer, it then sits where
    the layout of 100% puts it, only larger.
 
-   The status bar keeps its size and its place of 100% in the window, so
+   The status bar keeps its width and its place of 100% in the window, so
    the pill stays under a pointer that presses it: the window less the
    gutters, at most 1240px, centred. It sticks at that place while the page
    scrolls sideways, and a sticky offset in percent is a share of the
    window. Each composition repeats the gutter that footer.css gives the
-   footer: 78px, 5.4% of the window below 1440px, and 20px on a phone. */
+   footer: 78px, 5.4% of the window below 1440px, and 20px on a phone. On
+   the site its 28px clearance below the pill gives up the height of a
+   classic sideways scrollbar, which the site's script sets as
+   --home-scrollbar-height. A drawing sets none, so it keeps 28px. */
 
 .site-root--zoomed-in .site-footer-inner {
   width: calc(100% - 156px * (1 - 1 / var(--home-zoom)));
@@ -52,6 +56,7 @@
 .site-root--zoomed-in .site-statusbar {
   left: max(78px, (100% - 1240px) / 2);
   margin-left: 0;
+  padding-bottom: calc(28px - var(--home-scrollbar-height, 0px));
   position: sticky;
   width: calc((100% + 156px) / var(--home-zoom) - 156px);
 }

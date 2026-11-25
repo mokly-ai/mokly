@@ -7,6 +7,7 @@ import {
   DOWN_TO_END,
   UP_FROM_END,
   expectNear,
+  scrollAboveEnd,
   settled,
   stepThrough,
   windowWidth,
@@ -20,8 +21,9 @@ import { scrollWidth } from "./large-text.js";
  * docs/protocol/cloud/site-design-pages.md fix it: the group and its
  * buttons, the steps from 8% to 200%, a button at its end that keeps focus,
  * the sideways scroll above 100% with the bars in place, the pill's place
- * once the layout settles after each press, also with reduced motion, the
- * measured values at every zoom, and the depicted pill without script.
+ * once the layout settles after each press, also with reduced motion and
+ * under a pointer that stays put, the measured values at every zoom, and
+ * the depicted pill without script.
  * `home-zoom-scale.spec.ts` checks the scaled layout and the Specs panel,
  * `home-zoom-scrollbar.spec.ts` the layout with classic scrollbars, and
  * `tests/home_zoom.test.ts` and `tests/home_zoom_island.test.ts` check the
@@ -93,16 +95,19 @@ test("above 100% the home scrolls sideways while the tool bar and the status bar
 });
 
 /**
- * Press down to 8% and up to 200%. Once the layout settles after each
- * press, the pill stays at its place, and no part that the zoom scales
- * changes its own height. On a desktop the Specs panel and the workspace
- * share a row, and at 9% and 8% the panel is taller than the scaled
- * workspace, so it must not stretch the workspace.
+ * Press down to 8% and up to 200%, from 20px above the page's end, where
+ * the whole pill shows. Once the layout settles after each press, the pill
+ * stays at its place, and no part that the zoom scales changes its own
+ * height. On a desktop the Specs panel and the workspace share a row, and
+ * at 9% and 8% the panel is taller than the scaled workspace, so it must
+ * not stretch the workspace. There the page's content is also shorter than
+ * the window, so the page grows to keep the pill in its place.
  */
 async function pillKeepsItsPlace(page: Page): Promise<void> {
   await page.goto(SITE_PATHS.home);
   const { group, zoomIn, zoomOut } = zoomPill(page);
   await zoomOut.focus();
+  await scrollAboveEnd(page, 20);
   const start = await settled(group);
   const presses: ReadonlyArray<readonly [Locator, string]> = [
     ...DOWN_TO_END.map((zoom) => [zoomOut, zoom] as const),
@@ -122,6 +127,30 @@ test("after each press the zoom pill keeps its place in the window", async ({
 }) => {
   await pillKeepsItsPlace(page);
 });
+
+// The desktop home's content gets shorter than a 900px window from 9%; the
+// taller phone home does not.
+test(
+  "repeated clicks at one point press Zoom out down to 8%, also once the page is shorter than the window",
+  DESKTOP,
+  async ({ page }) => {
+    await page.goto(SITE_PATHS.home);
+    const { group, zoomOut } = zoomPill(page);
+    // The reader stops 38px above the page's end, where the window shows
+    // the upper part of the pill, and leaves the pointer on Zoom out.
+    await scrollAboveEnd(page, 38);
+    const start = await settled(group);
+    const box = await zoomOut.boundingBox();
+    if (box === null) throw new Error("Zoom out is not drawn");
+    const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+    for (const zoom of DOWN_TO_END) {
+      await page.mouse.click(x, y);
+      await expect(group).toHaveText(`−${zoom}+`);
+      const now = await settled(group);
+      expectNear(now.y, start.y, `at ${zoom}, the pill's top`);
+    }
+  },
+);
 
 test.describe("with reduced motion", () => {
   // Reduced motion gives every element of the site a 1ms transition. One on

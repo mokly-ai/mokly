@@ -1,7 +1,7 @@
 /**
  * The marks of the home's zoom pill: the attributes that the site's markup
  * puts on the parts that the home zoom island finds, and the page root's
- * class and property that the island sets for `src/styles/home-zoom.css`.
+ * class and properties that the island sets for `src/styles/home-zoom.css`.
  * `ZoomControl.astro`, `StatusBar.astro`, `Hero.astro`, `Workspace.astro`
  * and `Footer.astro` mark the parts, and `zoom-pill.ts` reads them.
  */
@@ -30,6 +30,12 @@ export const ZOOMED_IN_CLASS = "site-root--zoomed-in";
 
 /** The page root's property that holds the zoom above 100%. */
 export const ZOOM_PROPERTY = "--home-zoom";
+
+/**
+ * The page root's property that holds the height of the window's sideways
+ * scrollbar above 100%, which the status bar's clearance gives up.
+ */
+export const SCROLLBAR_PROPERTY = "--home-scrollbar-height";
 
 /** The attributes that mark the parts that the island finds. */
 export const ZOOM_MARKS = {

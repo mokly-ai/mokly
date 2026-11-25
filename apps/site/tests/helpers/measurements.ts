@@ -39,8 +39,9 @@ const UNZOOMED: Drawing = { scale: 1 };
 
 /**
  * One element of the stub page: a target, a measured element or a `b`. Its
- * box is its layout drawn at the scale of its part, and its own computed
- * `scale` is `none`.
+ * box is its layout drawn at the scale of its part, in single precision, as
+ * a browser draws a box, and its own computed `scale` is `none`. Its offset
+ * size is its layout in whole pixels, which no scale changes.
  */
 class StubElement {
   readonly attributes: Map<string, string>;
@@ -64,16 +65,22 @@ class StubElement {
   querySelector(selectors: "b"): StubElement | null {
     return selectors === "b" ? this.b : null;
   }
+  get offsetHeight(): number {
+    return Math.round(this.layout.height);
+  }
+  get offsetWidth(): number {
+    return Math.round(this.layout.width);
+  }
   getBoundingClientRect(): Box {
-    const { scale } = this.drawing;
+    const drawn = (length: number) => Math.fround(length * this.drawing.scale);
     const { height, left, top, width } = this.layout;
     return {
-      bottom: (top + height) * scale,
-      height: height * scale,
-      left: left * scale,
-      right: (left + width) * scale,
-      top: top * scale,
-      width: width * scale,
+      bottom: drawn(top + height),
+      height: drawn(height),
+      left: drawn(left),
+      right: drawn(left + width),
+      top: drawn(top),
+      width: drawn(width),
     };
   }
 }

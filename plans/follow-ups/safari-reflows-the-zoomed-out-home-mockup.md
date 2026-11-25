@@ -1,0 +1,38 @@
+# Safari reflows the zoomed-out home mockup
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-24, from the branch `calummoore/homepage-functionality-vjxs`, review round 2, finding 8.
+- **Location:** `docs/mockups/src/screens/design/site/parts/zoom-pill.tsx:41`, `docs/mockups/src/entries/design/site/home.mockup.tsx:48`, `docs/protocol/cloud/site-mockups.md:12`
+- **Reason:** No decision covers how the drawing looks in Safari, and option D is Large.
+
+- **Source:** Review.
+- **Category:** Mockup.
+- **Terms:**
+  - **WebKit:** the browser engine of Safari.
+  - **Site mockup:** a static page in the Mokly catalogue under `Design › Site`. It is the visual reference for the public site under `apps/site`.
+  - **Zoomed-out state:** the mockup entry `design/site/home/zoomed-out`. It draws the home at 41%, a zoom that the home's zoom pill reaches.
+  - **CSS `zoom`:** a CSS property that scales an element and its layout height. Under it, WebKit draws no text smaller than 9px.
+  - **Mokly local frame:** the frame in which Mokly's catalogue preview shows a drawing. It does not let a drawing run a script.
+- **Background:**
+  - The home's zoom pill zooms the home from 8% to 200%. On 2026-11-24 Cal chose a pure scale of the home's layout of 100%: nothing reflows at any zoom.
+  - The site scales the hero, the workspace and the footer frame with a transform, and a script gives each part its scaled height in the page. The site uses no CSS `zoom` for this, because WebKit then drew the zoomed-out site with overlapping text at its 9px floor.
+  - A static drawing runs no script. So `zoomStyle` in `docs/mockups/src/screens/design/site/parts/zoom-pill.tsx` scales the same parts with CSS `zoom`, which also scales their height in the page.
+  - The drawing also sets geometric precision, which keeps the glyphs' widths in scale, so that the lines break as at 100% in Chromium.
+- **Problem:** WebKit changes the line breaks of the static drawing at 41%. At 390px the Open foundation paragraph wraps into six lines, up from five at 100%. The workspace draws about 3,905px high, while a pure scale of the 100% WebKit workspace gives about 3,047px. At 1280px WebKit draws 2,533px against 1,945px and clips controls. Chromium and Firefox stay within 0.3% of a pure scale.
+- **Impact if no action:** Safari users who review the catalogue see a taller layout and other line breaks than the site they review.
+- **Root question:** What should the zoomed-out visual reference show across browsers and preview widths?
+- **Options:**
+  - **A.** Keep the current drawing. Name Chromium as the reference for the zoomed-out state in `docs/protocol/cloud/site-mockups.md`, and record the WebKit limit there. Effort: Small.
+  - **B.** Draw the two reference states with the real scale and measured layout heights at 390px and 1440px, as static drawings. Other preview widths show a reference drawing at its authored layout. Effort: Large.
+  - **C.** Share the site's scaling and height script with the catalogue preview, so that the drawing follows the preview width. The drawing is static today, and Mokly's local frames do not let it run a script, so this cannot run there. Effort: Large.
+  - **D.** Draw the zoomed-out state with the site's transform and committed heights at Mokly's frame widths, 390px and 1280px, and add a WebKit check. Effort: Large.
+  - **E.** A, and a Chromium geometry check in the mockup disk smoke, `docs/mockups/src/_tests_/disk.spec.ts`, at 390px and 1280px. It pins the drawn height of each scaled part within 0.5% or 2px of 0.4096 times its height at 100%. Effort: Small.
+- **Left out:** A larger example zoom would stop the state from showing the chosen 41% layout.
+- **Wider fix:** D. The drawing then scales as the site does in every engine. C would follow every width, but it cannot run in Mokly's local frames.
+- **Previous examples:** The site's own zoom used CSS `zoom` first. WebKit drew the zoomed-out site with overlapping text, so on 2026-11-24 the site moved to a transform.
+- **Related:**
+  - In the same zoomed drawings, Chromium's CSS `zoom` also changes some line breaks at 1280px and 1440px.
+  - `plans/follow-ups/zoomed-footer-width-rules-repeat-each-gutter.md` waits for this decision, because the options change how the drawing scales its footer frame.
+- **Recommendation:** E. It keeps the static drawing, names the engine that the reference holds for, and pins the Chromium geometry with a small check. D, if Cal reviews the catalogue in Safari.
+- **Action:** ask the user, because no decision covers how the drawing looks in Safari, and option D is Large.

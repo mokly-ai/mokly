@@ -33,39 +33,49 @@ test("on start the control replaces the depicted pill, at 100%", () => {
     zoom: "100%",
   });
   assert.deepEqual(home.drawn(), {
+    grown: undefined,
     margins: UNSET,
     property: undefined,
     scales: UNSET,
+    scrollbar: undefined,
     zoomedIn: false,
   });
   assert.deepEqual(home.log, [], "nothing moves at start");
 });
 
-test("each press scales the hero, the workspace and the footer frame at once and gives each its scaled height, and above 100% the root grows the page", () => {
-  const home = openZoom({ y: END });
+test("each press scales the hero, the workspace and the footer frame at once and gives each its scaled height, and above 100% the root grows the page and carries the sideways scrollbar's height", () => {
+  // A classic sideways scrollbar 15px tall shows while the page scrolls
+  // sideways, above 100%.
+  const home = openZoom({ scrollbar: 15, y: END });
   home.press("out");
   assert.equal(home.shown().zoom, "80%");
   // The parts are 1000px, 5000px and 100px tall in their own layout.
   assert.deepEqual(home.drawn(), {
+    grown: undefined,
     margins: ["-200px", "-1000px", "-20px"],
     property: undefined,
     scales: ["0.8", "0.8", "0.8"],
+    scrollbar: undefined,
     zoomedIn: false,
   });
   home.press("in");
   assert.equal(home.shown().zoom, "100%");
   assert.deepEqual(home.drawn(), {
+    grown: undefined,
     margins: UNSET,
     property: undefined,
     scales: UNSET,
+    scrollbar: undefined,
     zoomedIn: false,
   });
   home.press("in");
   assert.equal(home.shown().zoom, "125%");
   assert.deepEqual(home.drawn(), {
+    grown: undefined,
     margins: ["250px", "1250px", "25px"],
     property: "1.25",
     scales: ["1.25", "1.25", "1.25"],
+    scrollbar: "15px",
     zoomedIn: true,
   });
 });
@@ -119,6 +129,44 @@ test("after each press the pill keeps its place in the window, also where the br
   assert.deepEqual(anchored.place(), { pill: 1600, x: 125, y: 6125 });
   anchored.press("out");
   assert.deepEqual(anchored.place(), { pill: 1600, x: 0, y: 4600 });
+});
+
+test("where a zoom out leaves the page too short to scroll, the page grows so that the pill keeps its place while it shows in the window", () => {
+  /** The pill's top after each of the twelve presses from 100% to 8%. */
+  const down = (home: ReturnType<typeof openZoom>) =>
+    Array.from({ length: 12 }, () => {
+      home.press("out");
+      return home.place().pill;
+    });
+
+  // From 50px above the page's end, the pill's top lies 850px down the
+  // window. From 10.7% the page's content is shorter than the window, and
+  // the footer would end the page with the pill at 800px. So the page grows
+  // to 950px, and the page's top keeps the pill at 850px.
+  const short = openZoom({ y: 5350 });
+  assert.deepEqual(
+    down(short),
+    Array.from({ length: 12 }, () => 850),
+  );
+  assert.deepEqual(short.place(), { pill: 850, x: 0, y: 0 });
+  assert.equal(short.drawn().grown, "max(100vh, 950px)");
+  // The reader scrolls to the page's end, where the pill's top is 800px
+  // down, and Zoom in starts a run that keeps that place: the page grows no
+  // more than its content needs.
+  short.scrollDown(50);
+  short.press("in");
+  assert.deepEqual(short.place(), { pill: 800, x: 0, y: 0 });
+  assert.equal(short.drawn().grown, undefined);
+
+  // A pill below the window, which only the keyboard presses, and a pill
+  // less than a pixel from where the page can keep it leave the page as
+  // its content ends.
+  for (const y of [5250, 5399.5]) {
+    const home = openZoom({ y });
+    down(home);
+    assert.deepEqual(home.place(), { pill: 800, x: 0, y: 0 }, String(y));
+    assert.equal(home.drawn().grown, undefined, String(y));
+  }
 });
 
 test("where the browser scrolls in whole pixels, a run of presses keeps the pill and the window's centre within a pixel of their places", () => {

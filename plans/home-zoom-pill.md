@@ -301,6 +301,26 @@ The review of 2026-11-24 added this call:
   is an empty track on classic-scrollbar platforms while the zoomed-out
   page fits the window.
 
+The second review of 2026-11-24 added these calls:
+
+- **A page that a press leaves too short grows while the pill shows.** The
+  page root takes a minimum height, which the footer's flexible top margin
+  takes, so the pill keeps its place at the page's top scroll limit. Each
+  press sets it anew from the pill's place. A pill below the window, which
+  only the keyboard presses, and a shortfall under a pixel leave the page
+  where its content ends, so the page never grows far past the window.
+- **Above 100% the status bar's clearance gives up a classic sideways
+  scrollbar's height,** which the island measures and gives the page root
+  as `--home-scrollbar-height`, a second runtime property. The drawings
+  set none, so the mirrored rule keeps 28px there.
+- **The status bar wraps.** The people take the room that the row leaves,
+  down to their narrowest, so the pill takes a second row only where the
+  row cannot hold both. Each zoom button's band is centred on it and at
+  least 44px in both axes, whatever width its glyph takes.
+- **A size tag reads its target's offset size,** which no transform
+  changes, so a size half a pixel from whole ones keeps its value at every
+  zoom.
+
 Contract owners:
 
 - [Site](../docs/protocol/cloud/site.md), its accessibility rules.

@@ -67,7 +67,10 @@ function StatusBar({ active, zoom }: { active: SiteScreen; zoom: number }) {
         mokly.ai — {SITE_PAGE_NAMES[active]}
       </span>
       {/* status: "ahead" (Claude, Codex) */}
-      <span aria-hidden={depicted} className="site-statusbar-item">
+      <span
+        aria-hidden={depicted}
+        className="site-statusbar-item site-statusbar-people"
+      >
         <SitePresence small />
         {SITE_PEOPLE.length} in this file
       </span>

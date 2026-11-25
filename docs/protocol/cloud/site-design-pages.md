@@ -67,15 +67,21 @@ owns the islands that make the parts below move.
   size was rejected, because Safari draws no text smaller than 9px, so the
   zoomed-out text overlaps.
   - The tool bar, the status bar, the dot grid and the gap above the footer
-    frame keep their size. At every zoom the window picks the composition
-    and its steps.
+    frame keep their size. Above 100% the status bar's space below the pill
+    gives up the height of a classic sideways scrollbar, so the pill keeps
+    its place when a press at the page's end removes that scrollbar. At
+    every zoom the window picks the composition and its steps.
   - The Specs panel keeps its size and its place at every zoom, as the
     viewer's panels do: 16px from the window's start and 120px below the top
     of the workspace, and it sticks 72px below the window's top. It draws
     over the zoomed content, and its row of the section in view is current.
   - Below 100%, the zoomed content sits at the centre of the window's width,
     and the page starts at its top. The page's height follows the zoomed
-    content, so no empty canvas stays below the status bar.
+    content, so no empty canvas stays below the status bar. Where a press
+    leaves the page too short to keep the pill in its place in the window,
+    the page grows, and the canvas above the footer takes the growth. A
+    pill that moves at the page's scroll limits was rejected, because the
+    reader would then aim again during a run of presses.
   - Above 100%, the zoomed content grows from the page's start, and the page
     then scrolls sideways. The tool bar, the status bar and the Specs panel
     stay in place. A focused part at a side scrolls into view. Cutting off

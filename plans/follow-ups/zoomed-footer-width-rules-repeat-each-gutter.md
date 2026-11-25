@@ -1,0 +1,31 @@
+# Zoomed footer width rules repeat each gutter
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-24, from the branch `calummoore/homepage-functionality-vjxs`, review round 2, the wider fix of finding 10.
+- **Location:** `docs/mockups/styles/site/home-zoom.css:52`, `apps/site/src/styles/home-zoom.css:108`, `docs/mockups/src/_tests_/design-site-parity-home.ts:23`
+- **Reason:** The fix changes footer rules of both builds, and it waits for the decision of `plans/follow-ups/safari-reflows-the-zoomed-out-home-mockup.md`, whose options change how the drawing scales.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Footer frame:** the box that holds the site's footer links above the status bar, `.site-footer-inner`.
+  - **Gutter:** the canvas beside the footer frame: 20px on a phone, 78px from the 768px breakpoint, and 5.4% of the window below 1440px.
+  - **Parity test:** `docs/mockups/src/_tests_/design-site-parity.test.ts`. It compares each CSS rule that the site sheets under `apps/site/src/styles/` and the site mockup sheets under `docs/mockups/styles/site/` both declare.
+  - **Property exception:** an entry of `HOME_PROPERTY_DIFFERENCES` in `docs/mockups/src/_tests_/design-site-parity-home.ts`. It lets one property of a shared rule differ.
+- **Background:**
+  - Above 100% the home's zoomed-in state keeps the footer frame's width of 100% and scales it by the zoom. The site scales the frame with a transform. The drawings scale it with CSS `zoom`, under which a percentage resolves against the parent's width divided by the zoom.
+  - So the two sheets give `.site-root--zoomed-in .site-footer-inner` different `width` formulas, and a property exception lets that `width` differ. Each formula repeats the gutter of each composition.
+  - The mockup disk smoke checks the drawn frame: `expectFooterFrameScaled` in `docs/mockups/src/_tests_/disk-zoom.ts`. In a 390px phone window and a 1280px desktop window, the 200% frame is twice as wide as the home's frame at 100%, and twice as far from the page's start.
+- **Problem:** The two width formulas stay separate copies of each gutter. The disk smoke checks the drawn frame at two windows only, and the parity test skips the `width`.
+- **Impact if no action:** A gutter change must update both formulas in both sheets. A missed formula shows only in a drawing at a window that the smoke does not open.
+- **Root question:** How do the site and the drawings take the zoomed footer frame's width from one rule?
+- **Options:**
+  - **G.** Scale the footer's gutters with the zoom in rules that both sheets share, so that the frame's width of 100% resolves the same way under CSS `zoom` and under a transform. Remove the `width` property exception. Effort: Medium.
+  - **C.** Take the frame's unscaled width from one source, and let each renderer apply its scale to that width. This changes the layout input of both builds. Effort: Large.
+- **Left out:** Asserting the text of each width formula keeps the formulas without a check of what the browser draws.
+- **Wider fix:** G.
+- **Previous examples:** `plans/follow-ups/site-parity-exceptions-exempt-whole-rules.md` records a `max-width` change that an earlier whole-rule exception passed.
+- **Related:** `plans/follow-ups/safari-reflows-the-zoomed-out-home-mockup.md`. Its option D draws the zoomed-out state with the site's transform, which changes the drawing's width rules too. This item waits for that answer.
+- **Recommendation:** G. One shared rule leaves no second copy of the gutters, and the parity test then compares the whole rule.
+- **Action:** fix after merge, apply G, after the decision of `plans/follow-ups/safari-reflows-the-zoomed-out-home-mockup.md`.

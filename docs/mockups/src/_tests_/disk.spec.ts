@@ -23,6 +23,7 @@ import {
 } from "./controls-document-policy";
 import { checkDiskOverlay } from "./disk-overlay-policy";
 import { serveOutput } from "./disk-requests";
+import { FRAME_WINDOWS, expectFooterFrameScaled } from "./disk-zoom";
 import { documentViolations } from "./document-policy";
 import { focusPolicyViolations } from "./focus-policy";
 import { inventoryPages } from "./product-inventory";
@@ -252,6 +253,14 @@ for (const { file, path, viewport, scheme } of views) {
     expect(await focusPolicyViolations(page, scheme)).toEqual([]);
   });
 }
+
+test("the zoomed-in home draws its footer frame at twice its size of 100%", async ({
+  page,
+}) => {
+  await page.route("**/*", serveOutput);
+  for (const [viewport, width] of FRAME_WINDOWS)
+    await expectFooterFrameScaled(page, viewport, width);
+});
 
 test("rendered policy rejects invalid screen structure and state copy", async ({
   page,

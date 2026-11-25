@@ -109,12 +109,21 @@ test("a resize of a target or of the window, a change of the home's zoom or the 
 });
 
 test("at any zoom of the home each part shows its target's own CSS pixels, not the scaled ones", () => {
-  const drawings: readonly Drawing[] = [{ scale: 2 }, { scale: 0.4096 }];
+  // A heading half a pixel from whole ones, 879.5px by 131.5px, shows
+  // 880 × 132 at every zoom. At 80% a browser draws its width as
+  // 703.5999755859375px, which is less than 879.5px times 0.8.
+  const heading: Layout = { height: 131.5, left: 78, top: 86.25, width: 879.5 };
+  const drawings: readonly Drawing[] = [
+    { scale: 2 },
+    { scale: 0.8 },
+    { scale: 0.4096 },
+  ];
   for (const drawing of drawings) {
     const page = openPage(
-      TARGETS,
+      { ...TARGETS, heading },
       [
         { attributes: measureSize("title") },
+        { attributes: measureSize("heading") },
         { attributes: measureType("title"), badge: "Geist Semibold " },
         { attributes: measureGap("vertical", "title", "lead") },
         { attributes: measureGap("horizontal", "start", "download") },
@@ -124,7 +133,7 @@ test("at any zoom of the home each part shows its target's own CSS pixels, not t
     page.frame();
     assert.deepEqual(
       page.shown(),
-      ["1033 × 156", "Geist Semibold 162", "60", "12"],
+      ["1033 × 156", "880 × 132", "Geist Semibold 162", "60", "12"],
       JSON.stringify(drawing),
     );
     assert.deepEqual(page.errors, [], JSON.stringify(drawing));

@@ -166,12 +166,16 @@
 }
 
 /* The status bar: the file, the people in it and the zoom; a depiction.
-   footer-zoom.css draws the home's zoom pill, which is a control. */
+   footer-zoom.css draws the home's zoom pill, which is a control. The
+   people take the room that the row leaves, down to their narrowest, and
+   the zoom takes a second row only where the row cannot hold both, as at
+   200% text in a 320px window. */
 
 .site-statusbar {
   align-items: center;
   color: var(--mk-color-text-muted);
   display: flex;
+  flex-wrap: wrap;
   font-size: 0.78125rem;
   gap: 24px;
   margin: 0 auto;
@@ -183,6 +187,10 @@
   align-items: center;
   display: inline-flex;
   gap: 8px;
+}
+
+.site-statusbar-people {
+  flex: 1 1 min-content;
 }
 
 .site-statusbar .site-avatar {

@@ -9,16 +9,20 @@
  * transform, each part takes its own height in the page plus the bottom
  * margin that the island gives it. Between `main` and the frame the footer
  * keeps a 100px gap, and after the frame the 100px status bar holds the
- * pill, so the page is 6300px tall at 100%. Above 100% the page is the zoom
- * times the window's width, and up to 100% it is the window's width. The
+ * pill, so the page is 6300px tall at 100%. The page is at least the
+ * window's height and the page root's minimum height, and a shorter content
+ * leaves the footer at the page's end. Above 100% the page is the zoom
+ * times the window's width, and up to 100% it is the window's width; a
+ * classic sideways scrollbar then takes its height from the window. The
  * browser clamps the scroll position to the page, down and sideways. Where
  * it anchors, it keeps the point at the window's top in place, and where it
  * scrolls in whole pixels, it drops the fraction; WebKit does both. The stub
  * finds each part by the marks of `zoom-marks.ts`, which the site's markup
- * takes too.
+ * takes too, and `home-zoom-elements.ts` holds its elements.
  */
 
 import {
+  SCROLLBAR_PROPERTY,
   ZOOMED_IN_CLASS,
   ZOOM_MARKS,
   ZOOM_PROPERTY,
@@ -27,99 +31,26 @@ import {
 import { startZoomPill } from "../../src/components/home/zoom-pill.js";
 import type { ZoomStep } from "../../src/components/home/zoom.js";
 
+import {
+  StubElement,
+  StubPart,
+  StubStyle,
+  find,
+  marked,
+} from "./home-zoom-elements.js";
+
 /** The window, and the page's layout at 100%, in CSS pixels. */
 const WINDOW = { height: 900, width: 1000 } as const;
 const HEIGHTS = { frame: 100, hero: 1000, workspace: 5000 } as const;
 const FOOTER_GAP = 100;
 const STATUS_BAR = 100;
 
-/** Whether `attributes` hold the one mark that `selectors` names. */
-function marked(
-  attributes: ReadonlyMap<string, string>,
-  selectors: string,
-): boolean {
-  const [, name, value] = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(selectors) ?? [];
-  if (name === undefined) throw new Error(`The stub has no ${selectors}`);
-  const own = attributes.get(name);
-  return own !== undefined && (value === undefined || own === value);
-}
-
-/** An element of the stub pill, with the attributes the island reads. */
-class StubElement {
-  readonly attributes: Map<string, string>;
-  readonly clicks: Array<() => void> = [];
-  constructor(
-    attributes: Readonly<Record<string, string>>,
-    public textContent: string | null = null,
-    readonly children: readonly StubElement[] = [],
-    readonly top: () => number = () => 0,
-  ) {
-    this.attributes = new Map(Object.entries(attributes));
-  }
-  addEventListener(_type: "click", listener: () => void): void {
-    this.clicks.push(listener);
-  }
-  getBoundingClientRect(): { readonly top: number } {
-    return { top: this.top() };
-  }
-  querySelector(selectors: string): StubElement | null {
-    return find(this.children, selectors);
-  }
-  removeAttribute(name: string): void {
-    this.attributes.delete(name);
-  }
-  setAttribute(name: string, value: string): void {
-    this.attributes.set(name, value);
-  }
-  toggleAttribute(name: string, force: boolean): boolean {
-    if (force) this.attributes.set(name, "");
-    else this.attributes.delete(name);
-    return force;
-  }
-}
-
-/** The first of `elements`, or of their children, that `selectors` names. */
-function find(
-  elements: readonly StubElement[],
-  selectors: string,
-): StubElement | null {
-  for (const element of elements) {
-    if (marked(element.attributes, selectors)) return element;
-    const inside = find(element.children, selectors);
-    if (inside !== null) return inside;
-  }
-  return null;
-}
-
-/** An inline style, as the island sets it. */
-class StubStyle {
-  readonly properties = new Map<string, string>();
-  removeProperty(property: string): string {
-    const value = this.properties.get(property) ?? "";
-    this.properties.delete(property);
-    return value;
-  }
-  setProperty(property: string, value: string): void {
-    this.properties.set(property, value);
-  }
-}
-
-/** A part that the zoom scales, with its own height in its layout. */
-class StubPart {
-  readonly attributes = new Map(Object.entries(ZOOM_MARKS.part));
-  readonly style = new StubStyle();
-  constructor(public height: number) {}
-  /** The height that the part takes in the page: its own and its margin. */
-  taken(): number {
-    const margin = this.style.properties.get("margin-bottom") ?? "0px";
-    return this.height + Number.parseFloat(margin);
-  }
-}
-
 /** Where the reader starts, and how the stub browser treats the scroll. */
 export interface ZoomSetting {
   /** Whether the browser anchors the scroll on a zoom change, as WebKit. */
   readonly anchors?: boolean;
+  /** The height of a classic sideways scrollbar; none by default. */
+  readonly scrollbar?: number;
   /** Whether the page leaves the mark off its scaled parts. */
   readonly unmarked?: boolean;
   /** Whether the browser scrolls in whole pixels, as WebKit. */
@@ -132,12 +63,14 @@ export interface ZoomSetting {
 export interface ZoomStub {
   /**
    * The scale and the bottom margin of the hero, the workspace and the
-   * footer frame, and the page root's property and class.
+   * footer frame, and the page root's minimum height, properties and class.
    */
   drawn(): {
+    readonly grown: string | undefined;
     readonly margins: ReadonlyArray<string | undefined>;
     readonly property: string | undefined;
     readonly scales: ReadonlyArray<string | undefined>;
+    readonly scrollbar: string | undefined;
     readonly zoomedIn: boolean;
   };
   /** What the window did, in order: each scroll and each event. */
@@ -153,6 +86,8 @@ export interface ZoomStub {
   resizeWorkspace(height: number): void;
   /** The reader scrolls the page sideways to `x`, or to the page's side. */
   scrollSideways(x: number): void;
+  /** The reader scrolls the page down to `y`, or to the page's end. */
+  scrollDown(y: number): void;
   /** Which pill shows, the zoom, and the buttons with `aria-disabled`. */
   shown(): {
     readonly atEnd: readonly ZoomStep[];
@@ -178,10 +113,18 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
         return force;
       },
     },
+    getBoundingClientRect: () => ({ height: layout() }),
     style: new StubStyle(),
+  };
+  /** The root's minimum height of `max(100vh, …px)`, or none. */
+  const grown = () => {
+    const minimum = root.style.properties.get("min-height") ?? "";
+    return Number(/^max\(100vh, ([\d.]+)px\)$/.exec(minimum)?.[1] ?? 0);
   };
   let x = 0;
   let y = setting.y;
+  /** The window's height less a sideways scrollbar, as last laid out. */
+  let visible: number = WINDOW.height;
   /** The height of `main` and the zoom, as the page was last laid out. */
   let laidOut = { main: HEIGHTS.hero + HEIGHTS.workspace, zoom: 1 };
   /** Lay the page out as its parts now stand, as a read of the layout does. */
@@ -194,10 +137,12 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
           ? (y / laidOut.zoom) * zoom
           : y + (main - laidOut.main);
     laidOut = { main, zoom };
-    const page = main + FOOTER_GAP + frame.taken() + STATUS_BAR;
+    const content = main + FOOTER_GAP + frame.taken() + STATUS_BAR;
+    const page = Math.max(content, WINDOW.height, grown());
     const width = WINDOW.width * Math.max(zoom, 1);
+    visible = WINDOW.height - (zoom > 1 ? (setting.scrollbar ?? 0) : 0);
     x = Math.min(Math.max(0, x), width - WINDOW.width);
-    y = Math.min(Math.max(0, y), page - WINDOW.height);
+    y = Math.min(Math.max(0, y), page - visible);
     return page;
   };
   const buttons: Readonly<Record<ZoomStep, StubElement>> = {
@@ -215,7 +160,13 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
   const observers: Array<() => void> = [];
   const document = {
     body: root,
-    documentElement: { clientWidth: WINDOW.width },
+    documentElement: {
+      get clientHeight() {
+        layout();
+        return visible;
+      },
+      clientWidth: WINDOW.width,
+    },
     querySelector: (selectors: string) => find([control, depiction], selectors),
     querySelectorAll: (selectors: string) =>
       setting.unmarked === true
@@ -229,6 +180,7 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
         observers.push(this.notify);
       }
     },
+    innerHeight: WINDOW.height,
     get scrollX() {
       layout();
       return x;
@@ -253,9 +205,11 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
   startZoomPill(document, window);
   return {
     drawn: () => ({
+      grown: root.style.properties.get("min-height"),
       margins: parts.map((part) => part.style.properties.get("margin-bottom")),
       property: root.style.properties.get(ZOOM_PROPERTY),
       scales: parts.map((part) => part.style.properties.get("scale")),
+      scrollbar: root.style.properties.get(SCROLLBAR_PROPERTY),
       zoomedIn: classes.has(ZOOMED_IN_CLASS),
     }),
     log,
@@ -272,6 +226,10 @@ export function openZoom(setting: ZoomSetting): ZoomStub {
     },
     scrollSideways: (next) => {
       x = next;
+      layout();
+    },
+    scrollDown: (next) => {
+      y = next;
       layout();
     },
     shown: () => ({

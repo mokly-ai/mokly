@@ -15,14 +15,20 @@
  *   the part also takes a bottom margin of its own height times the zoom
  *   less one, and the page ends where the scaled content ends. A resize
  *   observer sets the margins again when a part's own height changes.
- *   Above 100% the page root takes the zoomed-in class and the zoom as
- *   `--home-zoom`, so `home-zoom.css` keeps each part's width of 100% and
- *   the page scrolls sideways.
+ *   Above 100% the page root takes the zoomed-in class, the zoom as
+ *   `--home-zoom` and the height of the window's sideways scrollbar as
+ *   `--home-scrollbar-height`, so `home-zoom.css` keeps each part's width
+ *   of 100% and the page scrolls sideways, and the status bar's clearance
+ *   gives up the room that a classic scrollbar takes, so the page's end
+ *   lies as far below the pill as at 100%.
  * - After a press the pill keeps its place in the window, so repeated
  *   presses land on it, and above 100% the point of the content at the
  *   window's centre stays there. The island reads the pill again after the
  *   zoom applies, so the correction also takes in any scroll anchoring that
- *   the browser did, as WebKit does.
+ *   the browser did, as WebKit does. Where the zoom leaves the page too
+ *   short to scroll that far, the page root takes a minimum height that
+ *   keeps the pill in its place while the pill shows in the window, and the
+ *   footer's flexible top margin takes the room. Each press sets it anew.
  * - The window then fires `HOME_ZOOM_EVENT`, and the measurements island and
  *   the Specs spy read the layout again.
  * - A button at its end of the range takes `aria-disabled`, so it keeps
@@ -35,6 +41,7 @@ import {
   CONTROL,
   DEPICTION,
   PART,
+  SCROLLBAR_PROPERTY,
   STEP,
   VALUE,
   ZOOMED_IN_CLASS,
@@ -70,15 +77,23 @@ export interface ZoomedElement {
   };
 }
 
-/** The page root, which carries the zoom and the zoomed-in class. */
+/**
+ * The page root, which carries the zoom and the zoomed-in class, and whose
+ * height, from the page's top, is the page's.
+ */
 export interface ZoomRoot extends ZoomedElement {
   readonly classList: { toggle(token: string, force: boolean): boolean };
+  getBoundingClientRect(): { readonly height: number };
 }
 
 /** The page, as the island reads it, whose scaled parts are of `Part`. */
 export interface ZoomPage<Part extends ZoomedElement> {
   readonly body: ZoomRoot;
-  readonly documentElement: { readonly clientWidth: number };
+  /** The window less its scrollbars. */
+  readonly documentElement: {
+    readonly clientHeight: number;
+    readonly clientWidth: number;
+  };
   querySelector(selectors: string): PillElement | null;
   querySelectorAll(selectors: string): Iterable<Part>;
 }
@@ -88,6 +103,7 @@ export interface ZoomWindow<Part extends ZoomedElement> {
   readonly ResizeObserver?: new (callback: () => void) => {
     observe(target: Part): void;
   };
+  readonly innerHeight: number;
   readonly scrollX: number;
   readonly scrollY: number;
   dispatchEvent(event: Event): boolean;
@@ -157,14 +173,16 @@ export function startZoomPill<Part extends ZoomedElement>(
 
   /**
    * Give each part the height that it takes in the page at the zoom: its own
-   * height, which its transform leaves as it was, scaled by the zoom.
+   * height, which its transform leaves as it was, scaled by the zoom. Above
+   * 100% give the page root the height of the window's sideways scrollbar,
+   * which only a classic scrollbar has.
    */
   const take = () => {
-    // Every height is read before any margin is set, so the page lays out
-    // once.
+    // Every height is read before any is set, so the page lays out once.
     const heights = parts.map((part) =>
       Number.parseFloat(window.getComputedStyle(part).height),
     );
+    const scrollbar = window.innerHeight - page.clientHeight;
     parts.forEach((part, index) => {
       const height = heights[index] ?? Number.NaN;
       if (zoom === 1 || !Number.isFinite(height))
@@ -172,6 +190,8 @@ export function startZoomPill<Part extends ZoomedElement>(
       else
         part.style.setProperty("margin-bottom", `${zoom * height - height}px`);
     });
+    if (zoom > 1) root.style.setProperty(SCROLLBAR_PROPERTY, `${scrollbar}px`);
+    else root.style.removeProperty(SCROLLBAR_PROPERTY);
   };
 
   /** Draw the scaled parts and the page root at `next`. */
@@ -214,10 +234,27 @@ export function startZoomPill<Part extends ZoomedElement>(
     return { after: top, centre, top: kept };
   };
 
+  /**
+   * The scroll that keeps the pill at `kept` in the window, where `top` is
+   * the scroll that it needs. Where the zoom left the page too short to
+   * scroll there, the page root takes a minimum height of its own height
+   * and the rest, which the footer's flexible top margin takes, so the pill
+   * moves down by the rest and the page's top keeps it in place. It does so
+   * while the pill's top shows in the window, where a pointer can press it,
+   * and when the rest reaches a pixel, as a scroll stops on whole pixels.
+   */
+  const reach = (top: number, kept: number): number => {
+    if (top > -1 || kept >= page.clientHeight) return Math.max(top, 0);
+    const height = root.getBoundingClientRect().height - top;
+    root.style.setProperty("min-height", `max(100vh, ${height}px)`);
+    return 0;
+  };
+
   const press = (step: ZoomStep) => {
     const next = stepZoom(zoom, step);
     if (next === zoom) return;
     const kept = places();
+    root.style.removeProperty("min-height");
     apply(next);
     show();
     // Reading the pill lays the page out at the new zoom.
@@ -225,7 +262,7 @@ export function startZoomPill<Part extends ZoomedElement>(
     window.scrollTo({
       behavior: "instant",
       left: next > 1 ? kept.centre * next - page.clientWidth / 2 : 0,
-      top: window.scrollY + moved,
+      top: reach(window.scrollY + moved, kept.top),
     });
     run = { ...kept, after: control.getBoundingClientRect().top };
     window.dispatchEvent(new Event(HOME_ZOOM_EVENT));

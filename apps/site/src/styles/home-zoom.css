@@ -7,7 +7,8 @@
    scrolls sideways; no other page or state does. The tool bar, the Specs
    panel, the status bar, the dot grid and the gap above the footer frame
    keep their size, and the tool bar and the status bar stay in place in
-   the window.
+   the window. Above 100% the status bar's clearance gives up the height
+   of a classic sideways scrollbar.
 
    The class names and the zoomed-in rules match
    docs/mockups/styles/site/home-zoom.css, except the footer frame's width:
@@ -93,12 +94,16 @@ body,
    gutters, divided by the zoom, less the gutters. Centred in the footer,
    the frame then grows to its place of 100%, scaled from the page's start.
 
-   The status bar keeps its size and its place of 100% in the window, so
+   The status bar keeps its width and its place of 100% in the window, so
    the pill stays under a pointer that presses it. It sticks at that place
    while the page scrolls sideways, and a sticky offset in percent is a
    share of the window. Each composition repeats the gutter that
    footer.css gives the footer: 20px on a phone, 78px from the breakpoint,
-   and 5.4% of the window below 1440px. */
+   and 5.4% of the window below 1440px. Its 28px clearance below the pill
+   gives up the height of a classic sideways scrollbar, which the island
+   gives the root as --home-scrollbar-height. At the page's end the pill
+   then lies where it lies at 100%, and the press back to 100%, which
+   removes the scrollbar, does not move it. */
 
 .site-root--zoomed-in .site-footer-inner {
   width: calc((100% + 40px) / var(--home-zoom) - 40px);
@@ -107,6 +112,7 @@ body,
 .site-root--zoomed-in .site-statusbar {
   left: max(20px, (100% - 1240px) / 2);
   margin-left: 0;
+  padding-bottom: calc(28px - var(--home-scrollbar-height, 0px));
   position: sticky;
   width: calc((100% + 40px) / var(--home-zoom) - 40px);
 }
