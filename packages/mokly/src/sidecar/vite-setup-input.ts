@@ -9,9 +9,15 @@ export interface SetupInput {
   digest: string | null;
 }
 
-export interface ConfigReads {
-  files: { file: string; digest: string }[];
-  probes: Map<string, boolean>;
+export class ConfigReads {
+  readonly files = new Map<string, Set<string>>();
+  readonly probes = new Map<string, boolean>();
+
+  record(file: string, digest?: string): void {
+    const digests = this.files.get(file) ?? new Set<string>();
+    if (digest !== undefined) digests.add(digest);
+    this.files.set(file, digests);
+  }
 }
 
 export function setupChanged(name: string): never {

@@ -155,3 +155,23 @@ export default async () => {
     );
   });
 }
+
+test("Vite checks the bytes Node read before a native config helper edit", async (context) => {
+  const fixture = await reviewFixture(context);
+  const gate = await setupGate(context);
+  await fixture.write("src/review.mockup.ts", reviewPage("__COPY__"));
+  const file = "copy.cjs";
+  await fixture.write(file, 'module.exports = "before";');
+  await fixture.write(
+    "vite.config.mjs",
+    `export default async () => {
+  const file = './copy.cjs';
+  const value = require(file);
+  ${gate.wait};
+  return { define: { __COPY__: JSON.stringify(value) } };
+};`,
+  );
+  await rejectSetupEdit(fixture, gate, file, () =>
+    fixture.write(file, 'module.exports = "after";'),
+  );
+});

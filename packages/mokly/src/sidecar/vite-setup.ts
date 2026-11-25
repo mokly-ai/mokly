@@ -4,6 +4,7 @@ import type { InlineConfig, Plugin, UserConfig } from "vite";
 
 import type { ViteSetupInputs } from "../generated/sidecar/ViteSetupInputs.js";
 
+import { recordViteConfigResolution } from "./vite-config-resolution.js";
 import { loadViteConfig } from "./vite-config.js";
 import { configureViteCss, hookViteCss } from "./vite-css-hooks.js";
 import type { ViteCssTransform } from "./vite-css-transform.js";
@@ -13,7 +14,7 @@ import { moklyViteFirstPlugin, moklyVitePlugin } from "./vite-plugin.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { VitePostcssLookup } from "./vite-postcss-lookup.js";
 import type { ViteLookup } from "./vite-resolution.js";
-import type { ConfigReads } from "./vite-setup-input.js";
+import { ConfigReads } from "./vite-setup-input.js";
 import {
   rebuildInputs,
   setupEvidence,
@@ -36,6 +37,7 @@ export async function viteSetup(
   css: ViteCssTransform,
   inputs: ViteSetupInputs | undefined,
   diagnostic: (line: string) => void,
+  configuration = new ConfigReads(),
 ) {
   const paths = lookup.paths;
   const rebuild = inputs?.rebuildFiles ?? [];
@@ -49,15 +51,18 @@ export async function viteSetup(
     configureServer: watchEvents.capture,
   };
   const setup = await env.run(() =>
-    loadSetup(
-      vite,
-      directory,
-      [first, moklyVitePlugin(current, css)],
-      lookup,
-      css,
-      postcss,
-      env,
-      rebuild,
+    recordViteConfigResolution(lookup, configuration, () =>
+      loadSetup(
+        vite,
+        directory,
+        [first, moklyVitePlugin(current, css)],
+        lookup,
+        css,
+        postcss,
+        env,
+        rebuild,
+        configuration,
+      ),
     ),
   );
   try {
@@ -89,8 +94,8 @@ async function loadSetup(
   postcss: VitePostcssLookup,
   env: ViteEnv,
   rebuild: string[],
+  configuration: ConfigReads,
 ) {
-  const configuration: ConfigReads = { files: [], probes: new Map() };
   const config =
     (await loadViteConfig(vite, directory, lookup, configuration)) ?? {};
   const inline: InlineConfig = {

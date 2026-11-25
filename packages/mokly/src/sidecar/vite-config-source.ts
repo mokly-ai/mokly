@@ -11,6 +11,7 @@ import { moduleContext } from "./postcss-context.js";
 export async function viteConfigSource(
   file: string,
   record: (file: string, digest: string) => void,
+  format: "esm" | "cjs",
 ): Promise<OnLoadResult> {
   const bytes = await fs.readFile(file);
   record(file, createHash("sha256").update(bytes).digest("hex"));
@@ -35,5 +36,8 @@ export async function viteConfigSource(
       "import.meta.url": JSON.stringify(pathToFileURL(file).href),
     },
   });
-  return { contents: moduleContext(output.code, file), loader: "js" };
+  return {
+    contents: moduleContext(output.code, file, { vite: format }),
+    loader: "js",
+  };
 }

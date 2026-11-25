@@ -51,6 +51,7 @@ impl Error {
                     RemoteCode::Request(RequestCode::BundleFailed) => RuntimeCode::Bundle,
                     RemoteCode::Request(RequestCode::RenderFailed) => RuntimeCode::Render,
                     RemoteCode::Request(RequestCode::SidecarProtocol) => RuntimeCode::Protocol,
+                    RemoteCode::Request(RequestCode::FreshWorkerRequired) => return None,
                     RemoteCode::Definition(_) => RuntimeCode::Build,
                 },
                 match code {

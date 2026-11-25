@@ -125,7 +125,7 @@ export async function bundleViteConfig(
               })),
             );
             builder.onLoad({ filter: /.*/, namespace: "file" }, (args) =>
-              viteConfigSource(args.path, record),
+              viteConfigSource(args.path, record, format),
             );
           },
         },
@@ -144,7 +144,7 @@ export async function bundleViteConfig(
   );
   const prefix =
     format === "esm"
-      ? `import { context as __moklyViteContext } from ${JSON.stringify(runtime)}; const require = __moklyViteContext(${JSON.stringify(file)}).require;\n`
+      ? `import { context as __moklyViteContext } from ${JSON.stringify(runtime)}; const require = __moklyViteContext(${JSON.stringify(file)}, "esm").require;\n`
       : "";
   const code =
     prefix +
@@ -162,7 +162,7 @@ export async function bundleViteConfig(
     } else {
       const module = new ConfigModule(file);
       module.filename = file;
-      module.require = context(file).require;
+      module.require = context(file, "cjs").require;
       module._compile(code, file);
       const value: unknown = module.exports;
       exported =

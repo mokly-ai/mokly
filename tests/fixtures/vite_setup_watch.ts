@@ -62,9 +62,17 @@ export function setups(root: string) {
   return fs.readFile(path.join(root, "setups.log"), "utf8");
 }
 
-export function postcssFixture(context: TestContext) {
+export function postcssFixture(
+  context: TestContext,
+  rebuildFiles: string[] = [],
+) {
   return consumer(context, {
-    "mokly.config.json": stylesheetConfig(["styles/site.css"]),
+    "mokly.config.json": stylesheetConfig(
+      ["styles/site.css"],
+      rebuildFiles.length
+        ? { watch: { rules: [{ action: "rebuild", paths: rebuildFiles }] } }
+        : undefined,
+    ),
     "vite.config.ts": `import { join } from 'node:path';
 export default { root: 'app', css: { postcss: join(import.meta.dirname, 'tools/css') } };`,
     "package.json": '{"private":true,"workspaces":["app"]}',
@@ -76,9 +84,13 @@ export default { root: 'app', css: { postcss: join(import.meta.dirname, 'tools/c
 }
 
 export function postcssConfig(color: string) {
-  return `module.exports = { plugins: [{ postcssPlugin: 'color', Once(root) {
-    root.walkDecls('color', decl => { decl.value = ${JSON.stringify(color)}; });
-  } }] };`;
+  return `module.exports = ${postcssPlugins(JSON.stringify(color))};`;
+}
+
+export function postcssPlugins(colorExpression: string) {
+  return `{ plugins: [{ postcssPlugin: 'color', Once(root) {
+    root.walkDecls('color', decl => { decl.value = ${colorExpression}; });
+  } }] }`;
 }
 
 export async function withSetupWatch(

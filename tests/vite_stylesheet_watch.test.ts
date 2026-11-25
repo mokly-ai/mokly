@@ -44,7 +44,9 @@ test("Vite watches composition files and renders again when their contents chang
 test("a Vite input reported by configured CSS rerenders JavaScript without a CSS change", async (context) => {
   const root = await consumer(context, {
     "mokly.config.json": stylesheetConfig(["styles/site.css"]),
-    "vite.config.ts": `import { resolve } from 'node:path';
+    "vite.config.ts": `import { appendFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+appendFileSync(new URL('./.context/worker-pids', import.meta.url), process.pid + '\\n');
 export default { plugins: [{ name: 'report-copy', transform: { order: 'pre', handler(_code, id) {
   if (id.endsWith('/styles/site.css?inline')) this.addWatchFile(resolve('data/copy.txt'));
 } } }] };`,
@@ -54,13 +56,19 @@ export default { plugins: [{ name: 'report-copy', transform: { order: 'pre', han
     ),
     "styles/site.css": ".card { color: teal }",
     "data/copy.txt": "Before",
+    ".context/worker-pids": "",
   });
   await watch(root, context.signal, async ({ render, publish, stylesheet }) => {
+    const pids = () =>
+      fs.readFile(path.join(root, ".context/worker-pids"), "utf8");
     assert.match(await render(), />Before<\/p>/);
     const before = await stylesheet("styles/site.css");
+    const initial = await pids();
+    assert.match(initial, /^\d+\n$/);
     await publish(() => write(root, "data/copy.txt", "After"));
     assert.match(await render(), />After<\/p>/);
     assert.equal(await stylesheet("styles/site.css"), before);
+    assert.equal(await pids(), initial.repeat(2));
   });
 });
 

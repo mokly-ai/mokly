@@ -284,8 +284,12 @@ lifetimes. CSS source text belongs to stylesheet nodes. JavaScript bundle
 identity includes its module edges, loader inputs, and evaluation digest.
 PostCSS contexts have explicit source and resolution inputs and independent
 disposal. A timeout or crash kills the process and retries once under the
-[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). Other
-transport failures replace the process without a fallback render. A process
+[timeout rules](../../docs/protocol/mokly-sidecar-lifecycle.md). The internal
+`fresh-worker-required` outcome uses the same replacement and retry path.
+Vite sends it before reloading a changed setup or evaluating a generation
+whose native dependency inputs conflict with those of the worker. The pool
+restores live generations on demand. Other transport failures replace the
+process without a fallback render. A process
 recycles under the render-count and resident-memory rules of the
 [memory sampling contract](../../docs/protocol/mokly-sidecar-memory.md).
 PostCSS timeout diagnostics include phase timings for child spawn,

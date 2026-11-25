@@ -5,6 +5,7 @@ import {
   broadRebuildFixture,
   postcssConfig,
   postcssFixture,
+  postcssPlugins,
   rebuildFixture,
   setups,
   withSetupWatch,
@@ -107,3 +108,27 @@ test("Vite picks up an added, edited, and removed PostCSS config in one Serve pr
     },
   );
 });
+
+for (const extension of ["cjs", "mjs"] as const) {
+  test(`Vite Serve reloads a declared ${extension} PostCSS helper`, async (context) => {
+    const helper = `tools/color.${extension}`;
+    const root = await postcssFixture(context, [helper]);
+    const prefix = extension === "cjs" ? "module.exports =" : "export default";
+    const load =
+      extension === "cjs"
+        ? 'const color = require("./color.cjs");'
+        : 'import color from "./color.mjs";';
+    await write(root, helper, `${prefix} 'maroon';`);
+    await write(
+      root,
+      `tools/postcss.config.${extension}`,
+      `${load}\n${prefix} ${postcssPlugins("color")};`,
+    );
+    await withSetupWatch(context, root, async ({ publish, read, write }) => {
+      const stylesheet = () => read("styles/styles/site.css");
+      assert.match(await stylesheet(), /color:\s*maroon/);
+      await publish(() => write(helper, `${prefix} 'indigo';`));
+      assert.match(await stylesheet(), /color:\s*indigo/);
+    });
+  });
+}

@@ -72,7 +72,9 @@ export async function importPostcssModule(
       },
     ],
   });
-  const code = moduleContext(compiled.outputFiles![0]!.text, file, true);
+  const code = moduleContext(compiled.outputFiles![0]!.text, file, {
+    root: true,
+  });
   const module = await import(
     `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`
   );

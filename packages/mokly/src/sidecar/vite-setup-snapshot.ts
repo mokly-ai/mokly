@@ -29,7 +29,7 @@ export async function setupSnapshot(
   const configuration = await confinedInputs(
     [
       ...viteConfigFiles.map((file) => path.join(directory, file)),
-      ...files.configuration.files.map(({ file }) => file),
+      ...files.configuration.files.keys(),
     ],
     paths,
   );
@@ -143,10 +143,11 @@ export function verifyConfigReads(
   for (const [file, present] of reads.probes)
     if (state.probes.get(file) !== present)
       setupChanged(logical(paths.sourceRoot, file));
-  for (const { file, digest } of reads.files) {
+  for (const [file, digests] of reads.files) {
     const input = state.configuration.get(file);
-    if (input?.digest !== digest)
-      setupChanged(input?.name ?? logical(paths.sourceRoot, file));
+    for (const digest of digests)
+      if (input?.digest !== digest)
+        setupChanged(input?.name ?? logical(paths.sourceRoot, file));
   }
 }
 

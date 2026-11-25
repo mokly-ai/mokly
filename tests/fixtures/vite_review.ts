@@ -5,16 +5,17 @@ import type { TestContext } from "node:test";
 import type { BundleParams } from "../../packages/mokly/src/generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { PageResult } from "../../packages/mokly/src/generated/sidecar/PageResult.js";
-import { installBindings, startSidecar } from "../helpers/sidecar.js";
+import { installBindings } from "../helpers/sidecar.js";
 
-import { viteFixture } from "./vite/support.js";
+import { viteFixture, viteFixtureWorker } from "./vite/support.js";
 
 export interface ReviewFixture {
   root: string;
   parent: string;
   output: string;
   params: BundleParams;
-  sidecar: ReturnType<typeof startSidecar>;
+  sidecar: Awaited<ReturnType<typeof viteFixtureWorker>>["sidecar"];
+  replaceWorker(): Promise<void>;
   write(file: string, text: string): Promise<void>;
   compile(): Promise<BundleResult>;
   render(bundle: BundleResult, file?: string): Promise<PageResult>;
@@ -49,17 +50,28 @@ export async function reviewFixture(
       ...(side === "base" ? { dependencyRoot: fixture.root } : {}),
     },
   };
-  const sidecar = startSidecar(context, root);
-  await sidecar.call("hello");
-  const compile = () => sidecar.call<BundleResult>("bundle", params);
+  const worker = await viteFixtureWorker(context, root);
+  const compile = () => worker.sidecar.call<BundleResult>("bundle", params);
   const render = async (bundle: BundleResult, file = params.entryFiles[0]!) => {
+    const { sidecar } = worker;
     await installBindings(sidecar, bundle.generation);
     return sidecar.call<PageResult>("renderPage", {
       generation: bundle.generation,
       handle: `${file}#page`,
     });
   };
-  return { ...fixture, root, params, sidecar, write, compile, render };
+  return {
+    ...fixture,
+    root,
+    params,
+    get sidecar() {
+      return worker.sidecar;
+    },
+    replaceWorker: worker.replaceWorker,
+    write,
+    compile,
+    render,
+  };
 }
 
 export function reviewPage(expression: string, imports = ""): string {

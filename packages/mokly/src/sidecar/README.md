@@ -523,9 +523,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`vite-compiler.ts`](./vite-compiler.ts) compiles `vite` requests into a
   `ViteRecipe` with empty, incomplete reuse evidence.
   [`vite-context.ts`](./vite-context.ts) defines `ViteContext`, which keeps one
-  Vite server for the JavaScript and stylesheet requests of a side. It replaces
-  the server when roots, peers, the setup stamp, or metadata change. A change
-  to a file that a stylesheet transform reported also replaces it.
+  Vite server for the JavaScript and stylesheet requests of a side. It sends
+  `fresh-worker-required` when a setup reload needs empty Node module caches.
+  A stylesheet dependency edit can replace the server in the same process.
   [`vite-setup.ts`](./vite-setup.ts) loads `vite.config.*` and starts Vite without
   HTTP, file watching, hot reload, or dependency pre-bundling.
   [`vite-setup-snapshot.ts`](./vite-setup-snapshot.ts) checks setup observations
@@ -542,12 +542,14 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   esbuild for the config and local imports without writing a file. It runs the
   result as ESM or CommonJS by config type. Installed packages stay external and
   resolve through `ViteLookup`. [`vite-config-resolution.ts`](./vite-config-resolution.ts)
-  routes Node's bare imports through that lookup while the config loads.
+  routes native config imports through that lookup. It records local files
+  resolved during setup and the digests of the source bytes that Node exposes.
   [`vite-config-source.ts`](./vite-config-source.ts) records the bytes of each
   bundled file and sets each script's values for `__dirname`, `__filename`, and
   `import.meta`.
   [`vite-config-context.ts`](./vite-config-context.ts) resolves dynamic `require`
-  and `import()` from their own module. [`vite-config-errors.ts`](./vite-config-errors.ts)
+  and `import()` from their own module and binds `import.meta.resolve` to that
+  module's URL. [`vite-config-errors.ts`](./vite-config-errors.ts)
   names a failing config file or import from the esbuild location or source map.
 - [`vite-resolution.ts`](./vite-resolution.ts) owns the shared `ViteLookup`.
   Setup loads, the Mokly plugin, runner fetches, stylesheet imports, React
@@ -563,6 +565,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   peers other than React, then loads Vite and finds its real package path.
   [`vite-node-peers.ts`](./vite-node-peers.ts) scopes Node's resolve hook to each
   request so dependencies of a Vite generation load one React runtime.
+  It keeps the peer paths and recorded dependency-root inputs of evaluated
+  generations. A conflict returns `fresh-worker-required` before evaluation.
   [`vite-react-peers.ts`](./vite-react-peers.ts) builds that table after setup
   using the setup's aliases. Mokly's first resolver claims React imports and
   uses the table to serve them and the JSX development shim.

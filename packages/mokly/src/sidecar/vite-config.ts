@@ -6,7 +6,6 @@ import type { ConfigEnv, UserConfig } from "vite";
 import { missingFile } from "./file-digests.js";
 import { bundleViteConfig } from "./vite-config-bundle.js";
 import { viteConfigError } from "./vite-config-errors.js";
-import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { viteFailure } from "./vite-errors.js";
 import type { loadVite } from "./vite-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
@@ -29,32 +28,28 @@ export async function loadViteConfig(
     isSsrBuild: false,
     isPreview: false,
   };
-  return withViteConfigResolution(lookup, async () => {
-    const file = await configFile(directory, reads.probes);
-    if (!file) return null;
-    let locate = (error: unknown) => viteConfigError(error, file);
-    try {
-      const loaded = await bundleViteConfig(
-        vite,
-        directory,
-        file,
-        lookup,
-        (file, digest) => {
-          reads.files.push({ file, digest });
-        },
-      );
-      locate = loaded.locate;
-      const exported = loaded.exported;
-      const config: unknown = await (typeof exported === "function"
-        ? exported(environment)
-        : exported);
-      if (!isConfig(config))
-        throw new Error("config must export or return an object.");
-      return config;
-    } catch (error) {
-      throw viteFailure(locate(error), lookup.paths, file, vite.version);
-    }
-  });
+  const file = await configFile(directory, reads.probes);
+  if (!file) return null;
+  let locate = (error: unknown) => viteConfigError(error, file);
+  try {
+    const loaded = await bundleViteConfig(
+      vite,
+      directory,
+      file,
+      lookup,
+      (file, digest) => reads.record(file, digest),
+    );
+    locate = loaded.locate;
+    const exported = loaded.exported;
+    const config: unknown = await (typeof exported === "function"
+      ? exported(environment)
+      : exported);
+    if (!isConfig(config))
+      throw new Error("config must export or return an object.");
+    return config;
+  } catch (error) {
+    throw viteFailure(locate(error), lookup.paths, file, vite.version);
+  }
 }
 
 function isConfig(value: unknown): value is UserConfig {

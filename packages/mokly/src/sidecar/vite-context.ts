@@ -5,8 +5,10 @@ import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { ModulePaths } from "./module-paths.js";
 import type { ConsumerRequire } from "./paths.js";
+import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { ViteCssTransform } from "./vite-css-transform.js";
 import type { ViteStylesheetSnapshot } from "./vite-css-transform.js";
+import { FreshViteWorker } from "./vite-errors.js";
 import { viteExternalResolver } from "./vite-external.js";
 import {
   changedViteInputs,
@@ -47,6 +49,7 @@ export class ViteContext {
   readonly css = new ViteCssTransform();
   private setup: Setup | undefined;
   private input: ViteInputs | undefined;
+  private setupStarted = false;
 
   constructor(private readonly diagnostic: (line: string) => void) {}
 
@@ -100,22 +103,18 @@ export class ViteContext {
       previous?.stylesheets.values() ?? [],
       previous?.observed ?? new Map(),
     );
-    if (
-      this.setup &&
-      (!previous ||
-        changed.metadata ||
-        previous.state.stamp !==
-          (
-            await setupSnapshot(
-              { ...previous.files, rebuild },
-              directory,
-              paths,
-            )
-          ).stamp ||
-        (await changedStylesheets(previous.stylesheets)))
-    )
+    const reloadSetup =
+      !previous ||
+      changed.metadata ||
+      previous.state.stamp !==
+        (await setupSnapshot({ ...previous.files, rebuild }, directory, paths))
+          .stamp;
+    if (this.setupStarted && reloadSetup) throw new FreshViteWorker();
+    if (previous && (await changedStylesheets(previous.stylesheets)))
       await this.dispose();
     if (!this.setup) {
+      this.setupStarted = true;
+      // Node can reuse config helpers without running either module hook.
       const setup = await viteSetup(
         vite,
         directory,
@@ -124,6 +123,7 @@ export class ViteContext {
         this.css,
         { ...params.viteInputs, rebuildFiles: rebuild },
         this.diagnostic,
+        previous?.files.configuration,
       );
       this.setup = {
         ...setup,
@@ -145,7 +145,9 @@ export class ViteContext {
       input.peers = await captureReactPeers(input.lookup);
     }
     if (setup === previous) {
-      await setup.watchEvents.dispatch(setup.server, changed.events);
+      await withViteConfigResolution(setup.lookup, () =>
+        setup.watchEvents.dispatch(setup.server, changed.events),
+      );
       for (const [file, digest] of changed.files)
         setup.observed.set(file, digest);
       if (entry !== undefined || changed.files.size || changed.directories.size)
@@ -169,7 +171,8 @@ export class ViteContext {
   async dispose(): Promise<void> {
     const setup = this.setup;
     this.setup = undefined;
-    await setup?.server.close();
+    if (setup)
+      await withViteConfigResolution(setup.lookup, () => setup.server.close());
   }
 }
 

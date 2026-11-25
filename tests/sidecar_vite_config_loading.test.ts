@@ -104,6 +104,10 @@ for (const side of ["head", "base"] as const) {
         );
         assert.equal(typeof first.compiled.metadataInputs[helper], "string");
         await fixture.write(helper, config.helper.replace("before", "after"));
+        await assert.rejects(fixture.compile(), {
+          code: "fresh-worker-required",
+        });
+        await fixture.replaceWorker();
         const second = await fixture.compile();
         assert.equal(
           (await fixture.render(second)).html,

@@ -140,16 +140,28 @@ test("Vite Serve reloads config files, their imports, and env files", async (con
       );
       await fixture.clear();
       await fixture.write("vite.config.ts", incrementalConfig("-config"));
+      await assert.rejects(fixture.compile(), {
+        code: "fresh-worker-required",
+      });
+      await fixture.replaceWorker();
       assert.match(
         (await fixture.render(await fixture.compile())).html,
         /\|setup-config\|env-before/,
       );
       await fixture.write("vite-label.ts", 'export const label = "imported";');
+      await assert.rejects(fixture.compile(), {
+        code: "fresh-worker-required",
+      });
+      await fixture.replaceWorker();
       assert.match(
         (await fixture.render(await fixture.compile())).html,
         /\|imported-config\|env-before/,
       );
       await fixture.write(".env.development", "VITE_LIVE=env-after\n");
+      await assert.rejects(fixture.compile(), {
+        code: "fresh-worker-required",
+      });
+      await fixture.replaceWorker();
       assert.match(
         (await fixture.render(await fixture.compile())).html,
         /\|imported-config\|env-after/,
@@ -192,6 +204,10 @@ test("Vite Serve invalidates the full graph when a new file changes resolution o
       ]);
       await fixture.clear();
       await fixture.write("package.json", '{"type":"module","name":"updated"}');
+      await assert.rejects(fixture.compile(), {
+        code: "fresh-worker-required",
+      });
+      await fixture.replaceWorker();
       assert.match(
         (await fixture.render(await fixture.compile())).html,
         /preferred\|/,
@@ -227,6 +243,8 @@ export default { define: { __COPY__: JSON.stringify(copy) } };`,
 
   await fixture.write("src/review.mockup.ts", reviewPage("__COPY__"));
   await fixture.write("copy.json", '{"copy":"after"}');
+  await assert.rejects(fixture.compile(), { code: "fresh-worker-required" });
+  await fixture.replaceWorker();
   const next = await fixture.compile();
   assert.match((await fixture.render(next)).html, /<body>after<\/body>/);
   await fixture.sidecar.call("shutdown");

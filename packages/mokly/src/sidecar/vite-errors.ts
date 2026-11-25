@@ -6,6 +6,13 @@ import type { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import { viteFile, viteName } from "./vite-urls.js";
 
+/** Ask the pool to start the request with empty Node module caches. */
+export class FreshViteWorker extends SidecarError {
+  constructor() {
+    super("fresh-worker-required", "Vite needs a fresh worker process");
+  }
+}
+
 /** Keep plugin diagnostics in logical source space, including their embedded paths. */
 export function viteFailure(
   error: unknown,

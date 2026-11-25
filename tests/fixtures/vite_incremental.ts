@@ -5,9 +5,9 @@ import type { TestContext } from "node:test";
 import type { BundleParams } from "../../packages/mokly/src/generated/sidecar/BundleParams.js";
 import type { BundleResult } from "../../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { PageResult } from "../../packages/mokly/src/generated/sidecar/PageResult.js";
-import { installBindings, startSidecar } from "../helpers/sidecar.js";
+import { installBindings } from "../helpers/sidecar.js";
 
-import { viteFixture } from "./vite/support.js";
+import { viteFixture, viteFixtureWorker } from "./vite/support.js";
 
 export function incrementalConfig(suffix = ""): string {
   return `
@@ -38,11 +38,12 @@ interface IncrementalFixture {
   params: BundleParams;
   write(file: string, text: string): Promise<void>;
   compile(): Promise<BundleResult>;
+  replaceWorker(): Promise<void>;
   render(bundle: BundleResult): Promise<PageResult>;
   transforms(): Promise<string[]>;
   setups(): Promise<string[]>;
   clear(): Promise<void>;
-  sidecar: ReturnType<typeof startSidecar>;
+  sidecar: Awaited<ReturnType<typeof viteFixtureWorker>>["sidecar"];
 }
 
 export async function incrementalFixture(
@@ -72,16 +73,16 @@ export async function incrementalFixture(
       });
     `,
   );
-  const sidecar = startSidecar(context, fixture.root);
-  await sidecar.call("hello");
+  const worker = await viteFixtureWorker(context, fixture.root);
   const params = {
     ...fixture.params,
     entryFiles: ["src/live.mockup.ts"],
     renderer: null,
     capture: "serveEdit",
   };
-  const compile = () => sidecar.call<BundleResult>("bundle", params);
+  const compile = () => worker.sidecar.call<BundleResult>("bundle", params);
   const render = async (bundle: BundleResult) => {
+    const { sidecar } = worker;
     await installBindings(sidecar, bundle.generation);
     return sidecar.call<PageResult>("renderPage", {
       generation: bundle.generation,
@@ -120,6 +121,9 @@ export async function incrementalFixture(
     transforms,
     setups,
     clear,
-    sidecar,
+    get sidecar() {
+      return worker.sidecar;
+    },
+    replaceWorker: worker.replaceWorker,
   };
 }

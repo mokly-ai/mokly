@@ -76,6 +76,8 @@ for (const {
       "setup\n",
     );
     await fixture.write("src/plugin-input.ts", 'export const value = "after";');
+    await assert.rejects(compile(), { code: "fresh-worker-required" });
+    await fixture.replaceWorker();
     const after = await compile();
     assert.equal(
       (await fixture.render(after)).html,
@@ -85,6 +87,10 @@ for (const {
       await fs.readFile(path.join(fixture.root, ".context/setups"), "utf8"),
       "setup\nsetup\n",
     );
+    await fixture.sidecar.call("restoreGeneration", {
+      ...before,
+      params: fixture.params,
+    });
     assert.equal(
       (await fixture.render(before)).html,
       `<html><head></head><body>${sameImporter ? "before|" : ""}export const value = "before";</body></html>`,
@@ -118,6 +124,8 @@ test("Vite records a plugin input before an edit made after the report", async (
     createHash("sha256").update("before").digest("hex"),
   );
   assert.match((await fixture.render(first)).html, /<body>before<\/body>/);
+  await assert.rejects(fixture.compile(), { code: "fresh-worker-required" });
+  await fixture.replaceWorker();
   assert.match(
     (await fixture.render(await fixture.compile())).html,
     /<body>after<\/body>/,
@@ -232,6 +240,8 @@ test("Vite directory watch reports keep valid transforms working", async (contex
     /plugin input src .*Serve does not watch.*watch\.rules.*rebuild/,
   );
   await fs.mkdir(path.join(fixture.root, "src/optional.txt"));
+  await assert.rejects(fixture.compile(), { code: "fresh-worker-required" });
+  await fixture.replaceWorker();
   const changed = await fixture.compile();
   assert.equal(changed.compiled.metadataInputs["src/optional.txt"], undefined);
   assert.match(

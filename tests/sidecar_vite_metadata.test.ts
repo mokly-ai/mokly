@@ -7,9 +7,9 @@ import test from "node:test";
 import type { BundleResult } from "../packages/mokly/src/generated/sidecar/BundleResult.js";
 import type { PageResult } from "../packages/mokly/src/generated/sidecar/PageResult.js";
 
-import { viteFixture } from "./fixtures/vite/support.js";
+import { viteFixture, viteFixtureWorker } from "./fixtures/vite/support.js";
 import { reportDuration } from "./helpers/durations.js";
-import { installBindings, startSidecar } from "./helpers/sidecar.js";
+import { installBindings } from "./helpers/sidecar.js";
 
 test("Vite shared metadata retains plugin-loaded files beside the per-module input digests", async (context) => {
   await reportDuration(
@@ -45,13 +45,14 @@ test("Vite shared metadata retains plugin-loaded files beside the per-module inp
       });
     `,
       );
-      const sidecar = startSidecar(context, fixture.root);
-      await sidecar.call("hello");
-      const bundle = await sidecar.call<BundleResult>("bundle", {
+      const worker = await viteFixtureWorker(context, fixture.root);
+      const params = {
         ...fixture.params,
         renderer: null,
         entryFiles: ["src/metadata.mockup.ts"],
-      });
+      };
+      const compile = () => worker.sidecar.call<BundleResult>("bundle", params);
+      const bundle = await compile();
       const digest = createHash("sha256").update(sideInput).digest("hex");
       assert.equal(bundle.compiled.metadataInputs["src/side-input.ts"], digest);
       assert.equal(
@@ -72,8 +73,8 @@ test("Vite shared metadata retains plugin-loaded files beside the per-module inp
         ],
         "string",
       );
-      await installBindings(sidecar, bundle.generation);
-      const page = await sidecar.call<PageResult>("renderPage", {
+      await installBindings(worker.sidecar, bundle.generation);
+      const page = await worker.sidecar.call<PageResult>("renderPage", {
         generation: bundle.generation,
         handle: "src/metadata.mockup.ts#page",
       });
@@ -81,28 +82,22 @@ test("Vite shared metadata retains plugin-loaded files beside the per-module inp
         page.html,
         '<html><head></head><body>export const value = "loaded";</body></html>',
       );
-      const next = await sidecar.call<BundleResult>("bundle", {
-        ...fixture.params,
-        renderer: null,
-        entryFiles: ["src/metadata.mockup.ts"],
-      });
+      const next = await compile();
       assert.equal(next.compiled.metadataInputs["src/side-input.ts"], digest);
       const updatedSource = 'export const value = "updated";';
       await fs.writeFile(
         path.join(fixture.root, "src/side-input.ts"),
         updatedSource,
       );
-      const updated = await sidecar.call<BundleResult>("bundle", {
-        ...fixture.params,
-        renderer: null,
-        entryFiles: ["src/metadata.mockup.ts"],
-      });
+      await assert.rejects(compile(), { code: "fresh-worker-required" });
+      await worker.replaceWorker();
+      const updated = await compile();
       assert.equal(
         updated.compiled.metadataInputs["src/side-input.ts"],
         createHash("sha256").update(updatedSource).digest("hex"),
       );
-      await installBindings(sidecar, updated.generation);
-      const updatedPage = await sidecar.call<PageResult>("renderPage", {
+      await installBindings(worker.sidecar, updated.generation);
+      const updatedPage = await worker.sidecar.call<PageResult>("renderPage", {
         generation: updated.generation,
         handle: "src/metadata.mockup.ts#page",
       });
@@ -110,7 +105,7 @@ test("Vite shared metadata retains plugin-loaded files beside the per-module inp
         updatedPage.html,
         '<html><head></head><body>export const value = "updated";</body></html>',
       );
-      await sidecar.call("shutdown");
+      await worker.sidecar.call("shutdown");
     },
   );
 });

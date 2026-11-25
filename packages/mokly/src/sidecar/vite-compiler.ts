@@ -12,8 +12,13 @@ import type { ViteCssResult } from "../generated/sidecar/ViteCssResult.js";
 import { entryModule } from "./bundle-entry.js";
 import type { Bundled } from "./bundle.js";
 import { bundleResult, restore } from "./compiled.js";
+import { withViteConfigResolution } from "./vite-config-resolution.js";
 import { ViteContext, viteModulePaths } from "./vite-context.js";
-import { viteFailure, viteStylesheetFailure } from "./vite-errors.js";
+import {
+  FreshViteWorker,
+  viteFailure,
+  viteStylesheetFailure,
+} from "./vite-errors.js";
 import { createViteFetch } from "./vite-fetch.js";
 import { viteGraph, walkVite } from "./vite-graph.js";
 import { verifyViteInputs } from "./vite-inputs.js";
@@ -64,11 +69,9 @@ export class ViteCompiler {
           setup.pluginReports,
           setup.snapshot?.files,
         );
-        const { recipe, children } = await walkVite(
-          viteUrl(viteEntry),
-          fetch,
-          imports,
-          version,
+        const { recipe, children } = await withViteConfigResolution(
+          input.lookup,
+          () => walkVite(viteUrl(viteEntry), fetch, imports, vite.api.version),
         );
         const { modules, physical } = viteGraph(
           recipe,
@@ -129,6 +132,7 @@ export class ViteCompiler {
         return { generation, result: bundleResult(generation) };
       });
     } catch (error) {
+      if (error instanceof FreshViteWorker) throw error;
       await this.dispose();
       throw viteFailure(
         error,
@@ -156,17 +160,22 @@ export class ViteCompiler {
           params,
           paths,
         );
-        const { result, snapshot } = await this.context.css.run(
-          setup,
-          input,
-          request.stylesheet,
-          request.file,
+        const { result, snapshot } = await withViteConfigResolution(
+          input.lookup,
+          () =>
+            this.context.css.run(
+              setup,
+              input,
+              request.stylesheet,
+              request.file,
+            ),
         );
         await verifySetup(setup, directory, paths);
         setup.stylesheets.set(request.file, snapshot);
         return result;
       });
     } catch (error) {
+      if (error instanceof FreshViteWorker) throw error;
       await this.dispose();
       throw viteStylesheetFailure(error, paths, request.stylesheet);
     }

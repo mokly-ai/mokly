@@ -199,7 +199,8 @@ export class ViteLookup {
       try {
         const url = resolve(source, pathToFileURL(candidate).href);
         if (!url.startsWith("file:")) return url;
-        const file = fileURLToPath(url);
+        const target = new URL(url);
+        const file = fileURLToPath(target);
         if (
           index === 0 &&
           candidates.length > 1 &&
@@ -208,7 +209,10 @@ export class ViteLookup {
           !viteSourceResolution(this.paths, file)
         )
           continue;
-        return pathToFileURL(this.paths.resolveSync(file)).href;
+        const confined = pathToFileURL(this.paths.resolveSync(file));
+        confined.search = target.search;
+        confined.hash = target.hash;
+        return confined.href;
       } catch (error) {
         if (!viteMissingImport(error)) throw error;
         failure = error;

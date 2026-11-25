@@ -12,6 +12,7 @@ import { cssModulePrefix } from "./css-modules.js";
 import { SidecarError } from "./errors.js";
 import { inside, logical } from "./path-scope.js";
 import { viteFailure } from "./vite-errors.js";
+import { retainViteNodeInputs } from "./vite-node-peers.js";
 import { fetchKey, viteFile } from "./vite-urls.js";
 
 const pending = new WeakMap<Generation, Promise<void>>();
@@ -21,6 +22,7 @@ export async function evaluateVite(generation: Generation): Promise<void> {
   if (!generation.compiled.vite || generation.exports) return;
   let evaluation = pending.get(generation);
   if (!evaluation) {
+    retainViteNodeInputs(generation);
     evaluation = replay(generation);
     pending.set(generation, evaluation);
   }
