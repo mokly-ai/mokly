@@ -77,7 +77,12 @@ the audit tool lockfile and installer. Jobs that build the same artifacts
 share one cache. Every Linux CI job that builds only `xtask` and the native
 binary shares one cache, the cloud mockup and site partitions included. The
 cloud partitions that also build `mkc-` crates, the image job, the Repository
-job, and each native host keep their own cache. The four app shards share one
+job, and each native host keep their own cache. The Workspace checks
+(contracts) partition restores the cache of the cloud Rust partition and never
+saves it, and the Workspace checks (infrastructure) partition does the same
+with the Linux `xtask` cache. Only the partition that owns a cache saves it. A
+separate saved cache for these two partitions was rejected, because the total
+already passes the 10 GB limit. The four app shards share one
 cache. The two Stripe catalogue jobs of the deploy workflow share one cache.
 A separate cache for the mockup and site partitions was rejected: they held
 the same build as the Mokly jobs, and the total passed the 10 GB limit.
