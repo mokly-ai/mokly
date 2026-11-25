@@ -660,9 +660,14 @@ jobs:
         if: matrix.command == 'cloud-desktop'
         run: sudo apt-get install -y xvfb
       # A partition that builds mkc- crates without database tests needs only
-      # libpq; a partition with database tests also starts the server.
-      - name: Install Postgres 16 and libpq
-        if: matrix.postgres || matrix.libpq
+      # libpq. The runner image ships it; install it only when it is missing.
+      - name: Install libpq
+        if: matrix.libpq
+        run: |
+          dpkg-query --show --showformat='${db:Status-Status}' libpq-dev 2>/dev/null |
+            grep -qx installed || { sudo apt-get update && sudo apt-get install -y libpq-dev; }
+      - name: Start Postgres 16 for integration tests
+        if: matrix.postgres
         run: |
           # The runner image ships these packages. Install only the missing ones.
           missing=()
@@ -674,9 +679,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y "${missing[@]}"
           fi
-      - name: Start Postgres 16 for integration tests
-        if: matrix.postgres
-        run: |
           sudo systemctl start postgresql
           sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres'"
           sudo -u postgres createdb mkc_test

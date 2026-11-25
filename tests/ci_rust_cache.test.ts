@@ -16,8 +16,13 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const CI_WORKFLOW = ".github/workflows/ci.yml";
 /** The action that restores and saves Cargo's dependency builds. */
 const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
-/** Only runs on `main` may write what CI and pull requests restore. */
-const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
+/**
+ * Only runs on `main` may write what CI and pull requests restore. A job may
+ * narrow the rule with more `&&` terms, as a restore-only matrix row does,
+ * but it may not widen it with `||`.
+ */
+const MAIN_ONLY =
+  /^\$\{\{ github\.ref == 'refs\/heads\/main'(?: && [^|}]+)? \}\}$/u;
 /** Testboxes run unreviewed local trees on `main`, so they never save. */
 const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
 /** The installer whose pinned release is part of the audit tool identity. */
@@ -63,8 +68,8 @@ test("Rust build caches save only from main, and Testboxes never save", async ()
           `${file} must never save its Rust build cache`,
         );
       else
-        assert.equal(
-          step.with?.["save-if"],
+        assert.match(
+          String(step.with?.["save-if"]),
           MAIN_ONLY,
           `${file} must save its Rust build cache only from main`,
         );

@@ -94,8 +94,9 @@ The repository, native, and Testbox jobs, and the Workspace checks
 partitions that run cloud Rust or the toolchain pins, install the
 pinned nextest version as a prebuilt binary with `taiki-e/install-action`,
 right after the Rust build cache restore.
-`.config/nextest.toml` requires at least that version. Each suite that runs
-Rust tests runs `xtask/scripts/require-nextest.mjs` before its Rust builds. When
+`.config/nextest.toml` requires at least that version. The Repository, Native,
+and cloud Rust suites run `xtask/scripts/require-nextest.mjs` before their Rust
+builds. When
 `cargo nextest` is missing or older than the requirement, the preflight fails
 and prints `cargo install cargo-nextest --locked --version {version}` and the
 prebuilt binary page. In Native, the doc tests also run after failed nextest
