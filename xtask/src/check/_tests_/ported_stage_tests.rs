@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::{CommandRunnerRunMock, CommandSpec};
+use crate::command::{CommandRunnerRunConcurrentlyMock, CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 
 use super::commands::commands_for;
@@ -13,27 +13,50 @@ use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 use super::tasks::Task;
 
+/// Fail the target command and return the commands that ran. The failure must
+/// end the suite: the target is in the last step, a command or a lane group.
 fn reject(suite: VerificationSuite, target: &str) -> Vec<String> {
-    let commands = Arc::new(Mutex::new(Vec::new()));
-    let captured = commands.clone();
+    reject_after_lanes(suite, target, false)
+}
+
+/// Fail the target after the suite reaches its concurrent lanes, or in them.
+fn reject_grouped(suite: VerificationSuite, target: &str) -> Vec<String> {
+    reject_after_lanes(suite, target, true)
+}
+
+fn reject_after_lanes(suite: VerificationSuite, target: &str, grouped: bool) -> Vec<String> {
+    let steps = Arc::new(Mutex::new(Vec::<Vec<String>>::new()));
+    let ran = steps.clone();
+    let grouped_steps = steps.clone();
     let rejected = target.to_owned();
+    let lane_rejected = target.to_owned();
+    let run = CommandRunnerRunMock
+        .each_call(matching!(_))
+        .answers_arc(Arc::new(move |_, command: &CommandSpec| {
+            let command = command.display();
+            ran.lock().unwrap().push(vec![command.clone()]);
+            outcome(command, &rejected)
+        }));
+    let lanes = CommandRunnerRunConcurrentlyMock
+        .each_call(matching!(_))
+        .answers_arc(Arc::new(move |_, lanes: &[Vec<CommandSpec>]| {
+            let commands: Vec<_> = lanes.iter().flatten().map(CommandSpec::display).collect();
+            grouped_steps.lock().unwrap().push(commands.clone());
+            match commands
+                .into_iter()
+                .find(|command| *command == lane_rejected)
+            {
+                Some(command) => outcome(command, &lane_rejected),
+                None => Ok(()),
+            }
+        }));
+    let mock = if grouped {
+        Unimock::new((run, lanes))
+    } else {
+        Unimock::new(run)
+    };
     let runner = DefaultCheckRunner::new(
-        Arc::new(Unimock::new(
-            CommandRunnerRunMock
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, command: &CommandSpec| {
-                    let command = command.display();
-                    captured.lock().unwrap().push(command.clone());
-                    if command == rejected {
-                        Err(Error::CommandFailed {
-                            command,
-                            status: "7".into(),
-                        })
-                    } else {
-                        Ok(())
-                    }
-                })),
-        )),
+        Arc::new(mock),
         Arc::new(Unimock::new(())),
         PathBuf::from("/workspace"),
     );
@@ -43,9 +66,25 @@ fn reject(suite: VerificationSuite, target: &str) -> Vec<String> {
         runner.run(request),
         Err(Error::CommandFailed { command, status }) if command == target && status == "7"
     ));
-    let commands = commands.lock().unwrap().clone();
-    assert_eq!(commands.last().map(String::as_str), Some(target));
-    commands
+    let steps = steps.lock().unwrap().clone();
+    assert!(
+        steps
+            .last()
+            .is_some_and(|step| step.iter().any(|command| command == target)),
+        "{target} must end the suite: {steps:?}"
+    );
+    steps.into_iter().flatten().collect()
+}
+
+fn outcome(command: String, rejected: &str) -> Result<(), Error> {
+    if command == rejected {
+        Err(Error::CommandFailed {
+            command,
+            status: "7".into(),
+        })
+    } else {
+        Ok(())
+    }
 }
 
 #[test]
@@ -55,22 +94,22 @@ fn npm_ci_stage_rejects_manifest_lock_disagreement() {
 
 #[test]
 fn prettier_stage_rejects_unformatted_markdown() {
-    reject(VerificationSuite::Repository, "npm run format:check");
+    reject_grouped(VerificationSuite::Repository, "npm run format:check");
 }
 
 #[test]
 fn eslint_stage_rejects_unused_typescript() {
-    reject(VerificationSuite::Repository, "npm run lint");
+    reject_grouped(VerificationSuite::Repository, "npm run lint");
 }
 
 #[test]
 fn rust_format_stage_rejects_unformatted_source() {
-    reject(VerificationSuite::Repository, "cargo fmt --all -- --check");
+    reject_grouped(VerificationSuite::Repository, "cargo fmt --all -- --check");
 }
 
 #[test]
 fn clippy_stage_rejects_a_real_warning() {
-    reject(
+    reject_grouped(
         VerificationSuite::Repository,
         "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings",
     );
@@ -78,7 +117,7 @@ fn clippy_stage_rejects_a_real_warning() {
 
 #[test]
 fn test_stage_rejects_a_failing_rust_test() {
-    reject(
+    reject_grouped(
         VerificationSuite::Repository,
         "cargo test --locked -p \"mokly-*\" -p xtask",
     );

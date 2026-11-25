@@ -12,7 +12,9 @@ this crate at the composition root to construct a `dyn BuildRunner`.
 ## What This Crate Does
 
 `SandboxBuildRunner` implements `mkc-build-interface::runner::BuildRunner`.
-It accepts `Arc<dyn SandboxBackend>` and `Arc<dyn BuildClock>`. It selects the
+It accepts `BuildSandboxCapabilities` and `Arc<dyn BuildClock>`. The
+capabilities are the `SandboxLifecycle`, `SandboxFiles`, and
+`SandboxProcesses` trait objects, usually clones of one backend. It selects the
 `build` profile with public egress and a one-shot lifetime. The caller uses
 `policy::denied_destinations` to configure that profile before constructing
 the runner. The helper adds ranges the pinned adapter omits, including IPv6
@@ -60,15 +62,21 @@ Reconciliation and the one-shot lifetime remove the sandbox.
 use std::sync::Arc;
 use mkc_build_interface::runner::BuildRunner;
 use mkc_build_sandbox::clock::{BuildClock, SystemBuildClock};
-use mkc_build_sandbox::runner::SandboxBuildRunner;
-use sandbox_interface::SandboxBackend;
+use mkc_build_sandbox::runner::{BuildSandboxCapabilities, SandboxBuildRunner};
+use sandbox_interface::{SandboxFiles, SandboxLifecycle, SandboxProcesses};
 
-fn runner(backend: Arc<dyn SandboxBackend>)
-    -> mkc_build_interface::error::Result<Arc<dyn BuildRunner>>
+fn runner<B>(backend: Arc<B>) -> mkc_build_interface::error::Result<Arc<dyn BuildRunner>>
+where
+    B: SandboxLifecycle + SandboxFiles + SandboxProcesses + 'static,
 {
+    let sandbox = BuildSandboxCapabilities {
+        lifecycle: backend.clone(),
+        files: backend.clone(),
+        processes: backend,
+    };
     let clock: Arc<dyn BuildClock> = Arc::new(SystemBuildClock);
     Ok(Arc::new(SandboxBuildRunner::new(
-        backend, clock, "production-builds".into(),
+        sandbox, clock, "production-builds".into(),
     )?))
 }
 ```
@@ -84,7 +92,9 @@ cargo check -p mkc-build-sandbox
 cargo xtask toolchain-pins
 ```
 
-Tests use `SandboxBackendMock`, `BuildClockMock`, and `BuildLogSinkMock`.
+Tests use `SandboxLifecycleMock`, `SandboxFilesMock`, `SandboxProcessesMock`,
+`BuildClockMock`, and `BuildLogSinkMock`. One `Unimock` value serves all three
+capabilities.
 They cover exact requests, failure classes, output bounds, and cancellation.
 They make no E2B requests. The live template proof belongs to the
 [build template runbook](../../docs/ops/build-template.md).
@@ -93,8 +103,10 @@ They make no E2B requests. The live template proof belongs to the
 
 The [Cargo workspace manifest](../../Cargo.toml) pins `sandbox-interface` and
 `sandbox-e2b` from the public [sandbox repository](https://github.com/futex-ai/sandbox)
-to revision `86d82340715ed443b596565f3509ced58c299fc2`.
-That revision carries `cwd` and `envs` on streaming process requests.
+to revision `5d856dbc03956a622a04d43e83198e519b390c84`.
+That revision carries `cwd` and `envs` on streaming process requests. Its
+one-shot create leaves `autoPauseMemory` out of the request body, because E2B
+rejects `autoPauseMemory: false` when `autoPause` is `false`.
 `mkc-build-sandbox` uses the interface for execution; `mkc-publications` uses
 it for reconciliation. Only `mkc-api` depends on `sandbox-e2b` and constructs
 its backend.

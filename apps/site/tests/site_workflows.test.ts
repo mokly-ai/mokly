@@ -33,6 +33,8 @@ test("site and CI actions use immutable reviewed pins and isolate secrets", () =
     "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd",
     "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
     "actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830",
+    "actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830",
+    "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830",
     "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
     "dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87",
     "Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6",
@@ -125,8 +127,9 @@ test("deployments derive origins and build the site without mockups", () => {
       ".nvmrc",
     );
     assert.equal(
-      workflowStep(job, "Set up Node.js").with?.["cache-dependency-path"],
-      "package-lock.json",
+      workflowStep(job, "Set up Node.js").with?.["package-manager-cache"],
+      false,
+      "credentialed deploy jobs restore no npm cache",
     );
     assert.equal(
       workflowStep(job, "Set up npm").run,

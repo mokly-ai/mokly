@@ -24,6 +24,5 @@ RUN apt-get update \
     && test ! -e /home/user/.mokly-git-credentials
 
 ENV HOME=/home/user
-ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 WORKDIR /workspace
 USER user

@@ -1,0 +1,34 @@
+# Build deny rules that E2B rejects stop every build
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from review finding 8 of branch `calummoore/e2b-build-enabling-vbbo`.
+- **Location:** `crates/mkc-build-sandbox/src/policy.rs:15`, `crates/mkc-api/src/build_providers.rs:35`, `infra/scripts/build_values.py:53`, `crates/mkc-config/src/builds.rs:88`, `crates/mkc-api/tests/build_template/live_tests.rs:24`, and in `futex-ai/sandbox` the `sandbox-e2b` functions `canonical_ip_destination`, `normalize_profiles` (`config.rs`) and `validate_control_create` (`network.rs`).
+- **Reason:** Every recommended option adds a new rejection of configuration that the release checks accept today, and the always-on rules reserve that choice for the user.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Deny rule:** an IP address or CIDR network that a build sandbox must not reach. The build profile adds its own rules, and operators add more through `deniedDestinations`, rendered as `MKC_E2B_DENIED_DESTINATIONS`.
+  - **E2B:** the sandbox provider that runs each cloud build in a one-shot sandbox.
+  - **Canonical form:** the form that `sandbox-interface` gives a rule before it reaches E2B. It masks host bits and rewrites IPv4-mapped IPv6 to IPv4, so `0.1.2.3/8` becomes `0.0.0.0/8`.
+- **Background:**
+  - E2B accepts a denied range whose address is unspecified (`0.0.0.0` or `::`) only as the exact string `0.0.0.0/0`. It rejects every other such rule, and the whole sandbox create fails. The check is `IsSpecifiedIPOrCIDR` in `packages/shared/pkg/sandbox-network/firewall.go` lines 94-115 of `e2b-dev/infra` at commit `30723eda`, called from `packages/api/internal/handlers/sandbox_create.go` lines 922-933.
+  - The rejected set after canonicalization includes bare `0.0.0.0` and `::`, every `::/N`, every `0.0.0.0/N` except `/0`, masked inputs such as `0.1.2.3/8`, and mapped inputs such as `::ffff:0.0.0.0/104`.
+  - The change of this branch removed the default `0.0.0.0/8` rule for that reason (decided 2026-11-24, recorded in `docs/protocol/cloud/cloud-build-sandbox.md`).
+  - The release renderer (`infra/scripts/build_values.py:53-63`) and `mkc-config` still accept such a rule from an operator. `mkc-build-sandbox::policy::denied_destinations` passes it to the adapter, and the adapter sends it to E2B.
+  - The live template probe passes an empty operator list (`live_tests.rs:24`), so it does not catch this.
+- **Problem:** An operator rule such as `0.0.0.0/8` passes release validation and API startup. Then E2B rejects every sandbox create, so every build fails.
+- **Impact if no action:** A deployment looks healthy while no build can start.
+- **Root question:** How does each accepted deny-rule set always become a sandbox create that E2B accepts, with no weaker policy?
+- **Options:**
+  - **A.** Document the rejected forms in `docs/ops/build-template.md` and run the live template probe with the target environment's real `deniedDestinations`. It depends on the operator running the probe. Effort: Small.
+  - **B.** Reject the forms that E2B rejects, after canonicalization, in the Python renderer and in `mkc-config`. Add a regression for each. This places a copy of E2B's rule in Mokly. Effort: Medium.
+  - **C.** Translate a rejected range into narrower ranges that E2B accepts. It cannot express a bare `0.0.0.0` or `::`, so it still needs B or D for those, and it reopens the 2026-11-24 decision that rejected 22 narrower ranges. Effort: Large.
+  - **D.** In `futex-ai/sandbox`, make `canonical_ip_destination` reject a deny rule whose canonical address is unspecified, except `0.0.0.0/0`, with an adapter test, and bump the Mokly pin. `E2bAdapterConfig::new` then fails, so `SystemBuildProviderFactory::create` and API startup fail (`application.rs:221`), and a rollout stops at readiness while the old replicas keep serving. This follows the interface contract that an adapter rejects a policy it cannot enforce before provider mutation (`sandbox-interface/src/network.rs:90-96`). The error appears at rollout, not at render. Effort: Medium.
+- **Left out:** Silently dropping a configured rule, because it weakens the operator's policy.
+- **Wider fix:** The probe half of A. Only a live probe with the deployed rule list catches a later change of E2B's accepted forms.
+- **Previous examples:** The adapter already rejects unsupported allowlist forms before provider mutation (`futex-ai/sandbox` commit `9c5e42c`).
+- **Related:** Review finding 10 of the same branch, fixed there, rewrote the protocol sentence about the omitted `0.0.0.0/8` range. Any rejection message should use the same words.
+- **Recommendation:** D, plus the probe half of A. D keeps E2B's grammar in the one component that talks to E2B and covers both default and operator rules. The live probe catches the rest.
+- **Action:** ask the user, because every option except A adds a new configuration rejection.

@@ -228,7 +228,7 @@ rendered setting cannot go undocumented.
 | `MKC_PREVIEW_SIGN_IN_PLAN`                                         | `env:api@preview-pr`                                               | `team` for PRs; optional `free` (default) or `team`; requires preview sign-in pair and capability                                             |
 | `MKC_TRUSTED_PROXY_HOPS`, `MKC_TRUSTED_PROXY_CIDRS`                | `env:api@all`                                                      | Stable supplies 3 hops, PR 2; explicit allowlist                                                                                              |
 | `MKC_GITHUB_APP_ID`, `MKC_GITHUB_CLIENT_ID`, `MKC_GITHUB_APP_SLUG` | `env:api@production,main-preview`                                  | Rendered when stable `github.enabled` is true; PR GitHub configuration is disabled                                                            |
-| `MKC_E2B_BUILD_TEMPLATE`, `MKC_E2B_DEPLOYMENT_ID`                  | `env:api@production,main-preview`                                  | Released template ID and exclusive deployment inventory namespace; rendered when `builds.enabled`                                             |
+| `MKC_E2B_BUILD_TEMPLATE`, `MKC_E2B_DEPLOYMENT_ID`                  | `env:api@production,main-preview`                                  | Verified template build reference and exclusive deployment inventory namespace; rendered when `builds.enabled`                                |
 | `MKC_BUILDS_PER_PROCESS`                                           | `env:api@production,main-preview`                                  | Build attempt ceiling per API process; integer 1–16, default 4; rendered when `builds.enabled`                                                |
 | `MKC_E2B_DENIED_DESTINATIONS`                                      | `env:api@production,main-preview`                                  | Optional comma-separated IPs or CIDRs, at most 32; rendered only for an enabled build group with a nonempty list                              |
 | `EXPO_PUBLIC_MKC_API_ORIGIN`, `EXPO_PUBLIC_MKC_APP_ORIGIN`         | `env:app@all`                                                      | Required app image build arguments; runtime asserts the same values                                                                           |
@@ -284,8 +284,9 @@ delete their prefix only together with the namespace database. Browser and
 integration harnesses create a fresh local store and isolated database schema
 for each run, then remove both during teardown.
 
-The API application pool has eight Postgres connections with a five-second
-acquisition timeout. Each admitted upload serializes its short marker batches
+The API application pool has at most eight Postgres connections with a
+five-second acquisition timeout. The pool opens a connection only when a call
+needs one and closes each connection at most 90 seconds after its last call. Each admitted upload serializes its short marker batches
 through at most one connection regardless of worker count; object I/O remains
 parallel and outside transactions. The health reader keeps its separate
 single-connection pool.
@@ -410,8 +411,10 @@ The tables above define the [cloud build](../protocol/cloud/cloud-builds.md) set
 
 The environment's `MKC_MAIN_PREVIEW_APP_CONFIG` or `MKC_PRODUCTION_APP_CONFIG`
 JSON carries `builds`. Omit it or use exactly `{ "enabled": false }` before
-provisioning. To enable it, supply `enabled: true`, `template` (the released
-template ID, nonempty without surrounding whitespace) and `deploymentId`
+provisioning. To enable it, supply `enabled: true`, `template` (the verified
+build reference `TEMPLATE_ID:BUILD_ID` from the
+[template runbook](./build-template.md), nonempty without surrounding
+whitespace) and `deploymentId`
 (1–63 lowercase letters, digits or hyphens). The ID belongs only to builds and
 must differ across environments. Optional `perProcess` is an integer from
 1 through 16, default 4. Optional `deniedDestinations` is an array of up to
