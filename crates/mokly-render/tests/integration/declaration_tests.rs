@@ -10,6 +10,7 @@ use super::support::Consumer;
 #[test]
 fn component_declarations_keep_typed_schema_prop_slot_control_and_element_errors() {
     let schema = "propSchema: {type:'object',additionalProperties:false,properties:{label:{type:'string'}}},";
+    let consumer = Consumer::new();
     for (fields, code) in [
         ("", Code::ComponentSchema),
         (
@@ -45,14 +46,12 @@ fn component_declarations_keep_typed_schema_prop_slot_control_and_element_errors
             Code::ComponentControls,
         ),
     ] {
-        let consumer = Consumer::new();
         fs::write(consumer.root().join("specs/extra.mockup.ts"), format!("import {{defineComponent}} from '@mokly/mokly'; export default defineComponent({{title:'Extra',description:'',relatedDocs:[],render:()=>null,{fields}}});")).unwrap();
         let CatalogueError::Invalid { issues, .. } = consumer.prepare().unwrap_err() else {
             panic!("expected {code:?}")
         };
         assert!(issues.iter().any(|issue| issue.code == code), "{issues:?}");
     }
-    let consumer = Consumer::new();
     fs::write(consumer.root().join("specs/extra.mockup.ts"), format!("import {{defineComponent}} from '@mokly/mokly'; export default defineComponent({{title:'Extra',description:'',relatedDocs:[],render:()=>null,{schema} props:{{label:'Saved'}},slots:['label'] }});")).unwrap();
     let CatalogueError::Invalid { issues, .. } = consumer.prepare().unwrap_err() else {
         panic!("slots")

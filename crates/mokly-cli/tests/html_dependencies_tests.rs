@@ -7,6 +7,7 @@ use std::process::{Command, Output};
 use serde_json::Value;
 use tempfile::TempDir;
 
+mod publish_support;
 #[path = "html_dependencies/scoped_tests.rs"]
 mod scoped_tests;
 #[path = "html_dependencies/strict_tests.rs"]

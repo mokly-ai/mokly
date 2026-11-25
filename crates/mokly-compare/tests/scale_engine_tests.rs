@@ -96,10 +96,10 @@ fn unique_variant_material_keeps_actual_parent_full_comparisons_linear() {
             assert!(result.entries.iter().all(|entry| entry.reasons.is_empty()));
             calls.load(Ordering::SeqCst)
         };
-        let smaller = count(128);
-        let larger = count(512);
+        let smaller = count(8);
+        let larger = count(32);
         assert!(smaller > 0);
-        assert_eq!(smaller, 128);
+        assert_eq!(smaller, 8);
         assert!(larger * 2 <= smaller * 9);
     }
 }

@@ -1,9 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designDocumentFixture } from "./component_design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 /** The Props section of a Canvas artboard's Inspect panel. */
 function propsSection(page: Page) {
@@ -23,17 +22,11 @@ function variantLink(page: Page, name: string) {
 }
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerComponentControls(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerComponentControls() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const { designDocumentUrl } = designDocumentFixture(
-    test,
-    mode === "static" ? copiedDesignFileUrl : undefined,
-  );
+  const { designDocumentUrl } = designDocumentFixture();
 
   for (const viewport of ["desktop", "mobile"] as const) {
     test(`${viewport}: component controls show saved, edited, reset, and error states`, async ({
