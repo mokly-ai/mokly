@@ -2850,7 +2850,8 @@ track D merges of this branch. No review has read Milestone 16 or the last
 merges. The review TODO below reviews the merged code.
 
 - [x] Remove each status line whose page this track completes. Branch: `conductor/storybook-support-d-vite-adapter`.
-- [ ] Run the targeted tests and `cargo xtask check`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -2935,7 +2936,8 @@ Depends on: 18, 19, 20, 21
 
 - [x] Remove each status line whose page this track completes.
       Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [ ] Run the targeted tests and `cargo xtask check`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -3021,7 +3023,8 @@ Depends on: 23, 24, 24a
 
 - [x] Remove each status line whose page this track completes.
       Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [ ] Run the targeted tests and `cargo xtask check`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -3080,7 +3083,8 @@ Depends on: 26, 27, 28
 
 - [x] Remove each status line whose page this track completes.
       Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [ ] Run the targeted tests and `cargo xtask check`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -3194,7 +3198,8 @@ Depends on: 30, 31, 32
 
 - [x] Remove each status line whose page this track completes.
       Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [ ] Run the targeted tests and `cargo xtask check`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -3244,7 +3249,8 @@ Depends on: 34, 35
 
 - [x] Remove each status line whose page this track completes.
       Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [ ] Run the targeted tests and `cargo xtask check`.
+- [x] Run the targeted tests and `cargo xtask check`.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
