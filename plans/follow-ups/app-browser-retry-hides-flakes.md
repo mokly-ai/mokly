@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`, the cloud flaky-test work of the CI speed task.
-- **Location:** `packages/app/playwright.config.ts:43-45`, the `retries: 1` setting and its comment.
+- **Location:** `packages/app/playwright.config.ts:41-43`, the `retries: 1` setting and its comment.
 - **Reason:** The brief of the flaky-test work forbids a change to this setting without the user's approval.
 
 - **Category:** Test.
@@ -25,6 +25,6 @@
   - **C.** Set `retries: 0` in CI only, through `process.env.CI`, and keep one retry for local runs. Effort: Small.
 - **Left out:** Raising the time limits. It hides the cause in the same way as the retry, and the testing rules forbid it.
 - **Wider fix:** B. It makes every flaky test visible on the first failure.
-- **Previous examples:** `plans/follow-ups/connect-refusal-way-back-flakes.md`, deleted by the branch of this item. There, the retry passed in the gate of 2026-11-03 and hid the same flake for three weeks.
+- **Previous examples:** The same test failed once in the complete gate of 2026-11-03 and passed on its retry, so that gate passed. A follow-up item recorded the flake on 2026-11-04, and it stayed unfixed until the branch of this item. In that time the retry kept the flake from failing a job, except when both tries failed, as in the two CI runs above.
 - **Recommendation:** B. The suite then follows the testing rules and the other suites, and the time limits already cover a stalled step.
 - **Action:** ask the user, because the option removes a setting that `main` has, and the brief of the flaky-test work reserves this change for the user.

@@ -1,6 +1,7 @@
 """Published consumers install npm latest without resolving the workspace."""
 
 import contextlib
+from datetime import datetime, timezone
 import io
 import json
 from pathlib import Path
@@ -15,13 +16,15 @@ import publication_smoke_consumer as consumer
 
 
 class ConsumerInstallationTests(unittest.TestCase):
-    def install(self, workspace, mutate=lambda _package, _shim: None):
+    def install(self, workspace, mutate=lambda _package, _shim: None, now=None, lookup=None):
+        release = json.dumps({
+            "version": "9.8.7",
+            "time": {"9.8.6": "2026-01-01T00:00:00.000Z", "9.8.7": "2026-02-03T04:05:06.789Z"},
+        })
+
         def npm(command, **_options):
             if command[:2] == ["npm", "view"]:
-                return subprocess.CompletedProcess(command, 0, json.dumps({
-                    "version": "9.8.7",
-                    "time": {"9.8.6": "2026-01-01T00:00:00.000Z", "9.8.7": "2026-02-03T04:05:06.789Z"},
-                }), "")
+                return subprocess.CompletedProcess(command, 0, release if lookup is None else lookup, "")
             prefix = Path(command[command.index("--prefix") + 1])
             package = prefix / "node_modules/@mokly/mokly"
             shim = package / "bin/mokly.mjs"
@@ -34,7 +37,8 @@ class ConsumerInstallationTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0, "", "")
 
         with patch("subprocess.run", side_effect=npm) as run:
-            installed = consumer.install_published_cli(workspace)
+            installed = consumer.install_published_cli(
+                workspace, now or datetime(2026, 2, 3, 4, 30, tzinfo=timezone.utc))
         return installed, run
 
     def test_latest_install_has_its_own_prefix_resolves_as_of_its_release_and_records_the_version(self):
@@ -47,7 +51,10 @@ class ConsumerInstallationTests(unittest.TestCase):
             self.assertNotEqual(installed.installation, workspace)
             commands = [call.args[0] for call in run.call_args_list]
             self.assertEqual([command[:2] for command in commands], [["npm", "view"], ["npm", "install"]])
-            self.assertIn("@mokly/mokly@latest", commands[0])
+            self.assertEqual(commands[0], [
+                "npm", "view", "--registry=https://registry.npmjs.org", "--json",
+                "@mokly/mokly@latest", "version", "time",
+            ])
             command = commands[1]
             self.assertEqual(command[command.index("--prefix") + 1], str(installed.installation))
             self.assertIn("@mokly/mokly@9.8.7", command)
@@ -57,6 +64,18 @@ class ConsumerInstallationTests(unittest.TestCase):
             self.assertTrue(installed.executable.is_relative_to(installed.installation))
             self.assertFalse(installed.executable.is_symlink())
             self.assertEqual(output.getvalue(), "Published CLI installed: @mokly/mokly@9.8.7\n")
+
+    def test_an_older_release_admits_dependencies_published_until_an_hour_ago(self):
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()):
+            _, run = self.install(Path(directory), now=datetime(2026, 5, 6, 7, 8, 9, 10_000, tzinfo=timezone.utc))
+        self.assertIn("--before=2026-05-06T06:08:09.010Z", run.call_args.args[0])
+
+    def test_a_lookup_without_the_release_time_names_the_npm_answer(self):
+        for answer in ["", "[]", json.dumps({"version": "9.8.7", "time": {}})]:
+            with self.subTest(answer=answer), tempfile.TemporaryDirectory() as directory:
+                with self.assertRaisesRegex(AssertionError, "^Published CLI lookup returned no publish time:\n") as raised:
+                    self.install(Path(directory), lookup=answer)
+                self.assertIn("stdout:\n" + answer, str(raised.exception))
 
     def test_linked_packages_and_executables_or_paths_outside_the_prefix_are_rejected(self):
         def package_link(package, _shim):

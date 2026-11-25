@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`. It replaces the deleted item `connect-refusal-way-back-flakes.md`, whose flaky test that branch fixed.
-- **Location:** `packages/app/src/screens/account/github-callback-screen.tsx:32-38` (`recoveryHref`), `packages/app/src/screens/app/workspace-route.tsx:41-48` (`loadWorkspace`), `packages/app/src/screens/account/install-screen.tsx:243`, and `docs/protocol/cloud/auth-callbacks.md:189-191` and `:222-223`.
+- **Location:** `packages/app/src/screens/account/github-callback-screen.tsx:33-38` (`recoveryHref`), `packages/app/src/screens/app/workspace-route.tsx:40-48` (`loadWorkspace`), `packages/app/src/screens/account/install-screen.tsx:243`, and `docs/protocol/cloud/auth-callbacks.md:189-191` and `:222-223`.
 - **Reason:** The fix changes the recovery destination that the protocol doc sets, so the user must choose it.
 
 - **Category:** Product bug.

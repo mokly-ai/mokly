@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Low. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`, the cloud flaky-test work of the CI speed task.
-- **Location:** `docs/mockups/src/_tests_/disk.spec.ts:239-243`, the full-page capture of each disk test. `packages/desktop/src/_tests_/shell.ts:84-86`, the `screenshot` helper, and its first caller `packages/desktop/src/_tests_/global-setup.ts:34`.
+- **Location:** `docs/mockups/src/_tests_/disk.spec.ts:238-242`, the full-page capture of each disk test. `packages/desktop/src/_tests_/shell.ts:84-86`, the `screenshot` helper, and its first caller `packages/desktop/src/_tests_/global-setup.ts:34`.
 - **Reason:** The source is not known after a code reading and 200 local repeats, so the next step needs diagnostics in CI or a removal, and both need the user.
 
 - **Category:** Test.
@@ -14,7 +14,8 @@
   - The `Mockup checks` job runs 2076 disk tests. The `Desktop checks` job saves screenshots of the Electron shell under `.context/m5`. No check reads either set of images. `docs/mockups/README.md` documents the mockup captures for people who compose design sheets from them.
   - Three CI runs failed with `page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot`. Mockup checks run 45017138714, attempt 1, at the disk test of `product/viewer/standalone/publish-refused/index.desktop.html`. Mockup checks run 45212667020, attempt 1, at `product/account/choose-repository/slug-taken/index.mobile.html`. Desktop checks run 44782121767, attempt 1, at `global-setup.ts:34`, the first screenshot after the shell window opens offline.
   - In each run the call log reached `fonts loaded`, and the failed disk tests took about 0.5 seconds. The tests before and after them were fast, so the machine was not slow.
-  - Chromium 149, which Playwright 1.61.1 uses, sends this error when its surface copy returns an empty image. Playwright turns on the feature `CDPScreenshotNewSurface`. In that path Chromium asks for a repaint and retries an empty copy 5 times at once (`content/browser/renderer_host/render_widget_host_impl.cc`, `OnSnapshotFromSurfaceReceived`).
+  - The mockup suite uses Chromium 149, from Playwright 1.61.1. The desktop suite uses Electron 44.11.3, which is Chromium 152. The Chromium 149 source sends this error when its surface copy returns an empty image. Playwright turns on the feature `CDPScreenshotNewSurface`. In that path Chromium asks for a repaint and retries an empty copy 5 times at once (`content/browser/renderer_host/render_widget_host_impl.cc`, `OnSnapshotFromSurfaceReceived`).
+  - The source reading covers Chromium 149 only. It does not prove the path of the Electron failure.
   - A copy is dropped at once when the page has no valid surface (`content/browser/renderer_host/delegated_frame_host.cc`, `CanCopyFromCompositingSurface`). That is the case between the start of a main-frame navigation commit and the first frame of the new document.
 - **Checked:**
   - The two mockup pages measure 1440 by 900 and 390 by 1035 pixels. They hold no frame. Neither navigates after `load`. The 1440 by 900 page fits its viewport, so its capture did not resize the view.
