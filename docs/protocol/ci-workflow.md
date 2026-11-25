@@ -101,8 +101,6 @@ before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
 in the checkout. No CI job installs Rust a second way, such as with a
 toolchain action.
-Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
-failing test binary.
 
 Jobs that need Postgres 16, `libpq`, or e2fsprogs use the packages of the
 runner image. They refresh the package index and install a package only when
@@ -200,11 +198,10 @@ the dual-runtime aggregate can prove an immutable release tree.
 
 ## CI Timing Report
 
-The `CI timing` job reports each job's run time against its budget, the
-critical path, and the slowest tests in the job summary of every run. It runs
-after every other job and is not a prerequisite of `Required CI`. The
-[CI duration budgets](./ci-duration-budgets.md) contract defines its budgets,
-its warnings, and its failing mode.
+The `CI timing` job reports job run times against budgets, the critical path,
+and the slowest tests in every run. It runs after every other job and is not a
+prerequisite of `Required CI`. [CI duration budgets](./ci-duration-budgets.md)
+defines its budgets, its warnings, and its failing mode.
 
 ## Cloud Jobs And Workflows
 
@@ -244,7 +241,6 @@ hosted CI graph and its release profile keep their required jobs.
 
 - [Protocol index](./README.md)
 - [CI verification](./ci-verification.md)
-- [CI duration budgets](./ci-duration-budgets.md)
 - [CI workflow: cloud jobs](./ci-workflow-cloud.md)
 - [Repository layout](./repository-layout.md)
 - [Remote verification](./remote-verification.md)
