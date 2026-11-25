@@ -5,7 +5,7 @@
 - **Added:** 2026-10-30, from the post-merge notes of the deleted `plans/cloud-builds.md`, on the branch `calummoore/plans-skill-update`.
 - **Location:** `docs/ops/build-template.md`, section "Live Evidence", and `infra/e2b/build/`.
 - **Reason:** The proof needs an E2B account, a published template and the installed App, which no repository check uses.
-- **Checked:** 2026-11-24. The template `mokly-build-v2` (ID `f1x5cj2fgwv20p42qxnn`) passed the live probe, and the "Live Evidence" section of `docs/ops/build-template.md` records it. The API deployments of main-preview and production had no build settings, so builds were off in both. The main-preview Secret Manager secret `mkc-main-preview-e2b-api-key` had one enabled version. The production secret had no version. The agent token could not read or write the GitHub Actions variables, because GitHub answered HTTP 403.
+- **Checked:** 2026-11-24. The template `mokly-build-v2` (build reference `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`) passed the live probe, and the "Live Evidence" section of `docs/ops/build-template.md` records it. The API deployments of main-preview and production had no build settings, so builds were off in both. The main-preview Secret Manager secret `mkc-main-preview-e2b-api-key` had one enabled version. The production secret had no version. The agent token could not read or write the GitHub Actions variables, because GitHub answered HTTP 403.
 
 - **Terms:**
   - **E2B:** The sandbox provider that runs each cloud build attempt in a one-shot sandbox.
@@ -17,7 +17,7 @@
   - The repository cannot show whether a resource, a key or a live build exists outside it.
   - Builds default to off, and PR previews cannot enable them. The preview seed of PR #81 starts no background worker, so a preview seed proves no sandbox build.
 - **Task:** Prove cloud builds live, first on `main-preview`, then on production.
-  - Enable builds on `main-preview`: add the `builds` group with the `mokly-build-v2` template ID `f1x5cj2fgwv20p42qxnn` to the `MKC_MAIN_PREVIEW_APP_CONFIG` GitHub variable, as `docs/ops/build-template.md` says, and deploy.
+  - Enable builds on `main-preview`: add the `builds` group with the `mokly-build-v2` build reference `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374` to the `MKC_MAIN_PREVIEW_APP_CONFIG` GitHub variable, as `docs/ops/build-template.md` says, and deploy.
   - With the installed App and a test repository, push to the default branch and open a pull request.
   - Watch the check move from queued to a Changes result, and press Re-run.
   - Record the result in the "Live Evidence" section of `docs/ops/build-template.md`.

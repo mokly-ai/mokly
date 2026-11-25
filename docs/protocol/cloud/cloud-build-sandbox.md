@@ -21,9 +21,11 @@ canonicalizes those to IPv4, so `::ffff:0:0/96` would deny all IPv4 egress,
 and the IPv4 entries already cover mapped destinations.
 It also lists no `0.0.0.0/8` range (decided 2026-11-24). E2B rejects every
 denied range that starts at `0.0.0.0`, except `0.0.0.0/0`, so a create that
-lists one fails. Linux does not route this range out of the sandbox. The
-rejected alternative was 22 narrower ranges that cover `0.0.0.1` to
-`0.255.255.255`.
+lists one fails. So no deny rule covers `0.0.0.1` to `0.255.255.255`: E2B's
+own default deny list leaves the range out too, because its firewall cannot
+encode it. Whether a build can reach an address in the range depends on
+routing outside the sandbox. The rejected alternative was 22 narrower ranges
+that cover `0.0.0.1` to `0.255.255.255`.
 The pinned adapter's built-in multicast rule covers IPv4 only; the build
 profile adds `ff00::/8` for IPv6. `mkc-build-sandbox::policy::denied_destinations`
 returns the profile rules as canonical, sorted, unique IPs and CIDRs. The

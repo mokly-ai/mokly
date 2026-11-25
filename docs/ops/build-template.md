@@ -10,7 +10,11 @@ PR previews always keep builds disabled. The contract is
 Use an authorized operator shell. Install the repository's Node and npm pins.
 This procedure uses the `e2b@2.64.0` SDK through
 `infra/e2b/build/build-template.mjs`. E2B builds the Dockerfile remotely, so
-the shell needs no Docker. The SDK build needs only the team key. The
+the shell needs no Docker. The SDK build needs only the team key. The script
+sends that key only to `https://api.e2b.dev`, the API base of the runtime. It
+ignores the SDK's `E2B_API_URL`, `E2B_SANDBOX_URL`, `E2B_DOMAIN` and
+`E2B_DEBUG` settings, so a shell set up for another E2B host cannot redirect
+the key. The
 `@e2b/cli` Dockerfile build uses E2B's deprecated build system and also needs
 a personal access token, so this procedure does not use it.
 Keep the team key in a mode-0600 file outside the checkout, such as
@@ -46,8 +50,11 @@ reject an unpinned base before release.
 ## Build And Publish A Candidate
 
 For a new release, increment `template_name` in the checked-in definition.
-Use a new candidate directory. Never rebuild a template ID that a deployed
-environment uses; a rebuild would change what that ID starts.
+Use a new candidate directory. A build of an existing name keeps its
+template ID, and a bare template ID starts the newest ready build of that
+name. So a release is always deployed, verified and rolled back by its build
+reference, `TEMPLATE_ID:BUILD_ID`, which starts only the build that passed
+verification.
 
 Run from the repository root:
 
@@ -68,11 +75,13 @@ node infra/e2b/build/build-template.mjs "$TEMPLATE_DIRECTORY/sdk" \
 unset E2B_API_KEY
 ```
 
-The command must exit zero and report the candidate ready. Read `template_id`
-from the generated `$TEMPLATE_DIRECTORY/e2b.toml`. Record the release name,
-template ID, E2B team, source commit, Node version, checksum, CPU, memory and
-UTC time in the deployment change. Keep the generated provider configuration
-under `.context/`; put only the verified template ID in environment app-config.
+The command must exit zero and report the candidate ready with its build
+reference. Read `build_reference` from the generated
+`$TEMPLATE_DIRECTORY/e2b.toml`. Record the release name, build reference,
+template ID, build ID, E2B team, source commit, Node version, checksum, CPU,
+memory and UTC time in the deployment change. Keep the generated provider
+configuration under `.context/`; put only the verified build reference in
+environment app-config.
 Include the base-image digest in that release record.
 
 ## Verify The Streaming Boundary
@@ -98,14 +107,14 @@ environment names and credential files, and absence of cloud secret mounts.
 It also requires glibc 2.28 or newer.
 The E2B team key stays in the operator process.
 
-Set the candidate ID from the generated configuration:
+Set the candidate build reference from the generated configuration:
 
 ```sh
 set -eu
-CANDIDATE_TEMPLATE_ID=$(sed -n 's/^template_id = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
-test -n "$CANDIDATE_TEMPLATE_ID"
+CANDIDATE_REFERENCE=$(sed -n 's/^build_reference = "\(.*\)"$/\1/p' "$TEMPLATE_DIRECTORY/e2b.toml")
+test -n "$CANDIDATE_REFERENCE"
 export MKC_E2B_API_KEY="$(cat /secure/e2b-api-key)"
-export MKC_E2B_BUILD_TEMPLATE="$CANDIDATE_TEMPLATE_ID"
+export MKC_E2B_BUILD_TEMPLATE="$CANDIDATE_REFERENCE"
 cargo test -p mkc-api --features live-build-template \
   --test build_template_tests live_template -- --nocapture
 unset MKC_E2B_API_KEY MKC_E2B_BUILD_TEMPLATE
@@ -153,13 +162,14 @@ gcloud secrets versions add "mkc-$ENVIRONMENT-e2b-api-key" \
 ```
 
 Update `MKC_MAIN_PREVIEW_APP_CONFIG` or `MKC_PRODUCTION_APP_CONFIG` beside its
-complete `github` object. Use the verified ID, not a mutable template alias:
+complete `github` object. Use the verified build reference, not a bare
+template ID or a mutable template alias:
 
 ```json
 {
   "builds": {
     "enabled": true,
-    "template": "RELEASED_TEMPLATE_ID",
+    "template": "RELEASED_TEMPLATE_ID:RELEASED_BUILD_ID",
     "deploymentId": "main-preview-builds",
     "perProcess": 4,
     "deniedDestinations": ["203.0.113.0/24"]
@@ -216,7 +226,7 @@ proof is separate from the repository's local checks.
 ## Rotate, Roll Back And Disable
 
 For a template rotation, publish and verify `mokly-build-v<N+1>`, change only
-the reviewed template ID, and roll the API. Keep the previous release ready
+the reviewed build reference, and roll the API. Keep the previous release ready
 for rollback. Do not change the environment deployment ID during rotation;
 the new worker must reconcile sandboxes made by the previous worker.
 
@@ -232,7 +242,7 @@ template or add a key version through Terraform.
 A provider failure retries under the build lifecycle. It does not make API
 health fail. Inspect safe worker diagnostics, build outcomes, check dead
 letters and inventory cleanup before deciding that a rollout is ready.
-Restore the previous verified template ID or key version and restart the API
+Restore the previous verified build reference or key version and restart the API
 if verification fails. Keep keys needed by old pods until recovery completes.
 
 Lease loss follows the
@@ -255,8 +265,10 @@ lifetimes bound remaining sandboxes. CI publication remains available.
 - `mokly-build-v1`, template ID `agmlidt65d7s6oo23rkb`, E2B team `firna`,
   built 2026-11-06T11:01:33Z. It failed the probe on 2026-11-24 on the exact
   `PATH` check, which the contract no longer has. It is not a release.
-- `mokly-build-v2`, template ID `f1x5cj2fgwv20p42qxnn`, build ID
-  `2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`, E2B team `firna`. It was built
+- `mokly-build-v2`, build reference
+  `f1x5cj2fgwv20p42qxnn:2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374` (template ID
+  `f1x5cj2fgwv20p42qxnn`, build ID `2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`),
+  E2B team `firna`. It was built
   2026-11-24T13:44:01Z with `e2b@2.64.0` from the Dockerfile of the change that
   removed `ENV PATH`, on base commit `c0328d917`. Node 24.21.0, checksum
   `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
@@ -264,7 +276,8 @@ lifetimes bound remaining sandboxes. CI publication remains available.
   `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
   The probe printed
   `PASS live build template: assertion completed and candidate destroyed` on
-  2026-11-24T13:46Z.
+  2026-11-24T13:46Z with the bare template ID, and again on 2026-11-25 with
+  the build reference through the adapter pinned at `5d856db`.
 
 ### Environments
 

@@ -217,7 +217,8 @@ retained output alone does not fail a build, including a successful one.
 ## Configuration
 
 The chart delivers an all-or-none builds group: `MKC_E2B_API_KEY` (secret,
-CSI-mounted), `MKC_E2B_BUILD_TEMPLATE` (the released template ID) and
+CSI-mounted), `MKC_E2B_BUILD_TEMPLATE` (the verified build reference,
+`TEMPLATE_ID:BUILD_ID`, which starts only that build) and
 `MKC_E2B_DEPLOYMENT_ID` (1–63 lowercase letters, digits and hyphens, unique
 per environment). With the group present, the GitHub App group is required;
 startup fails otherwise. The upload endpoint uses the API's existing

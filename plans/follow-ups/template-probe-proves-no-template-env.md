@@ -1,0 +1,34 @@
+# Template probe does not prove the template environment
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from review finding 9 of branch `calummoore/e2b-build-enabling-vbbo`.
+- **Location:** `infra/e2b/tests/assert_build_template.py:54`, `infra/tests/test_build_template.py:98`, `docs/protocol/cloud/cloud-build-runner.md:84-95`, `docs/ops/build-template.md:36`, `infra/e2b/build/e2b.Dockerfile`.
+- **Reason:** The recommended option needs a new credentialed E2B template release, and its first probe may fail and force a choice between two other options.
+
+- **Source:** Review.
+- **Category:** Test.
+- **Terms:**
+  - **Template probe:** the live check in `docs/ops/build-template.md` that runs `assert_build_template.py` as `user` through `stream_process` in a fresh candidate sandbox before an operator enables the template.
+  - **envd:** E2B's process service inside the sandbox. It builds each process environment.
+  - **Template environment:** the `ENV` values of `infra/e2b/build/e2b.Dockerfile`. Today that is only `HOME=/home/user`.
+- **Background:**
+  - `docs/protocol/cloud/cloud-build-runner.md:84-95` requires that a build command gets the template environment merged with its own added entries, not replaced.
+  - The probe adds `MKC_TEMPLATE_PROBE=stream-process-added-env` and requires it, the template `HOME`, and every template tool on the process `PATH`. On 2026-11-24 the branch dropped the exact `PATH` comparison, because the live process had E2B's order (`/usr/local/sbin` before `/usr/local/bin`), and removed `ENV PATH` from the Dockerfile.
+  - envd sets `HOME` from the user account and `PATH` itself (`packages/envd/internal/services/process/handler/env_unix.go:13-19` in `e2b-dev/infra` at `30723eda`). So the probe passes with provider defaults plus the request entry even if the template layer is lost.
+  - envd adds its defaults map after its base `PATH`, and the last duplicate wins (`handler.go:220-234`). So a template `PATH` should have replaced the base one. The live mismatch therefore suggests the template `ENV` layer did not reach the process. envd's `/init` also calls `ReplaceUserVars` (`packages/envd/internal/api/init.go:456-459`). The docs at `cloud-build-runner.md:94-95` and `build-template.md:36` call the mismatch harmless E2B ordering, which this evidence questions.
+- **Problem:** The probe cannot tell a merged environment from a lost template layer, and the one live signal of a lost layer was recorded as harmless.
+- **Impact if no action:** A template whose `ENV` values never reach build commands can pass the probe. Nothing breaks today, because the only template value is `HOME`, which envd supplies too. A future template variable would silently be missing.
+- **Root question:** How does the probe prove that a command kept a value supplied by the template?
+- **Options:**
+  - **A.** Limit the documented proof to the effective `HOME`, tool availability and delivery of the added entry, and drop the merge requirement from the protocol. Effort: Small.
+  - **B.** Add a harmless marker `ENV` to the template, require it and the request entry in the probe, add a regression for a missing marker, publish a new release and probe it with its build reference. Effort: Medium.
+  - **C.** Have the release script set a release-specific marker and have the probe check it against the release receipt. Effort: Medium.
+  - **D.** Require `E2B_TEMPLATE_ID` to equal the template under test. It needs no release, but it proves only envd's defaults layer, not template user variables, and envd sets it through a metadata poll that can race. Effort: Small.
+  - **E.** Make builds independent of the template environment: the runner sets `HOME` (and `PATH` if wanted) in its per-step environment (`crates/mkc-build-sandbox/src/command.rs`), the protocol drops the merge requirement, and the probe runs with the runner's real step environment. Effort: Medium.
+- **Left out:** Restoring the exact `PATH` comparison, because it depends on provider order and still uses a provider value.
+- **Wider fix:** B. E is the structural alternative if the template environment does not reach processes.
+- **Previous examples:** The pinned adapter added explicit streaming environment support in `futex-ai/sandbox` commit `86d8234`.
+- **Related:** `cloud-builds-never-ran-live.md` holds the live build proof. A release for B should also follow the build-reference rule of `docs/ops/build-template.md`.
+- **Recommendation:** B. It is the only option that directly proves a template value survives. If its first probe fails on the marker, choose between E and A, and do not weaken the probe.
+- **Action:** ask the user, because B needs a credentialed E2B release and its result can force a protocol change.
