@@ -30,5 +30,6 @@
 - **Left out:** A retry of the capture, a sleep before it, or a longer time limit. Each hides the source, and the testing rules forbid each.
 - **Wider fix:** None. The source is not known.
 - **Previous examples:** None found.
+- **Related:** The branch `calummoore/ci-speed-cloud-test-value-audit-fnzd`, the cloud test value audit, applies option B to the mockup disk suite. Its capture runs only when `MKC_MOCKUP_CAPTURES=1` is set, and CI does not set it. When that branch merges, this item keeps only the desktop captures of `packages/desktop/src/_tests_/shell.ts`.
 - **Recommendation:** A. The failure is rare and costs only a rerun, and A can name the source before anything goes.
 - **Action:** ask the user, because the source is unknown after a reproduction attempt, and each option changes a suite launch or removes a documented capture.
