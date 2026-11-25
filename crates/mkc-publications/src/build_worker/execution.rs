@@ -13,6 +13,7 @@ use mkc_github_interface::error::Error as ProviderError;
 use crate::error::{Error, ErrorResultExt, Result};
 
 use super::finalize::{AttemptFinalizer, AttemptResult, Finalizer};
+use super::reason::{mint_reason, request_reason};
 use super::service::{ClaimedBuild, DatabaseBuildWorker};
 use super::sink::AttemptSink;
 
@@ -54,9 +55,10 @@ impl DatabaseBuildWorker {
             Ok(token) => {
                 let request = match self.request(attempt, token.expose()) {
                     Ok(request) => request,
-                    Err(_) => {
+                    Err(error) => {
+                        let reason = request_reason(&error);
                         return self
-                            .finalize_attempt(attempt, AttemptResult::Infrastructure)
+                            .finalize_attempt(attempt, AttemptResult::Infrastructure(reason))
                             .await;
                     }
                 };
@@ -72,7 +74,7 @@ impl DatabaseBuildWorker {
             Err(ProviderError::Forbidden | ProviderError::NotFound) => {
                 AttemptResult::RepositoryUnavailable
             }
-            Err(_) => AttemptResult::Infrastructure,
+            Err(error) => AttemptResult::Infrastructure(mint_reason(&error)),
         };
         self.finalize_attempt(attempt, result).await
     }

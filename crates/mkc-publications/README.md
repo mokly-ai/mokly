@@ -150,6 +150,10 @@ the organization lock is the only way to make a lease live. The store enforces
 two live
 attempts per organization and one MiB of retained output. Infrastructure
 failures retry four times; a committed publication always wins over failure.
+After it commits an infrastructure retry or exhaustion, the worker logs one
+`WARN` line with the build ID, the attempt, whether it was terminal and a safe
+reason. The reason holds fixed error text, field names and exit codes, never a
+credential, a request value or provider response text.
 Publish failures follow the [lifecycle mapping](../../docs/protocol/cloud/cloud-builds.md#claims-leases-and-retries),
 including the Mokly 0.18.0 failure codes.
 The worker matches typed `MoklyCliCode` values from `mkc-build-interface`.

@@ -12,11 +12,20 @@ use crate::error::{ErrorResultExt, Result};
 use crate::transaction::Transactions;
 
 use super::outcome::{finish, infrastructure, terminal};
+use super::reason::infrastructure_reason;
 
 pub(super) enum AttemptResult {
     Runner(BuildOutcome),
     RepositoryUnavailable,
-    Infrastructure,
+    /// The attempt could not reach the runner; the safe reason says why.
+    Infrastructure(String),
+}
+
+/// Infrastructure ending that this worker committed, for one warning log line.
+struct Settled {
+    reason: String,
+    attempt: i32,
+    terminal: bool,
 }
 
 pub(super) trait AttemptFinalizer: Send + Sync {
@@ -31,7 +40,9 @@ pub(super) struct Finalizer {
 impl AttemptFinalizer for Finalizer {
     fn finish(&self, build: &Build, result: AttemptResult) -> Result<()> {
         let at = self.runtime.now();
+        let mut settled = None;
         self.transactions.run(false, &mut |queries| {
+            settled = None;
             let Some(current) = queries
                 .build(build.project_id, build.id)
                 .context("read build finalization fence")?
@@ -41,28 +52,32 @@ impl AttemptFinalizer for Finalizer {
             if current.state != BuildState::Running || current.lease_token != build.lease_token {
                 return Ok(());
             }
-            let value = if current.publication_id.is_some() {
-                terminal(BuildState::Published, None, None, at)
+            let (value, reason) = if current.publication_id.is_some() {
+                (terminal(BuildState::Published, None, None, at), None)
             } else {
                 match &result {
                     AttemptResult::Runner(outcome) => {
                         let grant = queries
                             .build_attempt_grant(build.id, current.attempt)
                             .context("read attempt upload outcome")?;
-                        finish(
-                            outcome,
-                            grant.and_then(|value| value.outcome),
-                            current.attempt,
-                            at,
+                        let upload = grant.and_then(|value| value.outcome);
+                        (
+                            finish(outcome, upload, current.attempt, at),
+                            infrastructure_reason(outcome, upload),
                         )
                     }
-                    AttemptResult::RepositoryUnavailable => terminal(
-                        BuildState::Failed,
-                        Some(BuildFailure::RepositoryUnavailable),
+                    AttemptResult::RepositoryUnavailable => (
+                        terminal(
+                            BuildState::Failed,
+                            Some(BuildFailure::RepositoryUnavailable),
+                            None,
+                            at,
+                        ),
                         None,
-                        at,
                     ),
-                    AttemptResult::Infrastructure => infrastructure(current.attempt, at),
+                    AttemptResult::Infrastructure(reason) => {
+                        (infrastructure(current.attempt, at), Some(reason.clone()))
+                    }
                 }
             };
             let finished = queries
@@ -73,7 +88,24 @@ impl AttemptFinalizer for Finalizer {
                     .fail_build_uploads(current.id, started, PublicationFailure::Expired, at)
                     .context("expire finalized build uploads")?;
             }
+            if finished && let Some(reason) = reason {
+                settled = Some(Settled {
+                    reason,
+                    attempt: current.attempt,
+                    terminal: value.state != BuildState::Queued,
+                });
+            }
             Ok(())
-        })
+        })?;
+        if let Some(settled) = settled {
+            tracing::warn!(
+                build_id = %build.id,
+                attempt = settled.attempt,
+                terminal = settled.terminal,
+                reason = %settled.reason,
+                "build attempt ended as infrastructure"
+            );
+        }
+        Ok(())
     }
 }
