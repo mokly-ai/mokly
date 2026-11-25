@@ -78,14 +78,19 @@ share one cache. Every Linux CI job that builds only `xtask` and the native
 binary shares one cache, the cloud mockup and site partitions included. The
 cloud partitions that also build `mkc-` crates, the image job, the Repository
 checks shard, the Repository test shards, and the test shards of each native
-host keep their own cache. The app shards share one cache. Of the Repository
-and native test shards, only the first saves, under the
+host keep their own cache. The Workspace checks (contracts) partition restores
+the cache of the cloud Rust partition and never saves it, and the Workspace
+checks (infrastructure) partition does the same with the Linux `xtask` cache.
+Only the partition that owns a cache saves it. A separate saved cache for these
+two partitions was rejected, because the total already passes the 10 GB limit.
+The app shards share one cache. Of the Repository and native test shards, only
+the first saves, under the
 [test unit rule](./ci-verification-repository.md#test-units), because a
-smaller shard would save an entry that lacks dependencies of the others. The native
-lint shard of each host restores the entry of the test shards of its host
-and never saves, so Clippy reuses their build scripts and procedural macros.
-A Clippy build entry for each host was rejected, because the cache is already
-at the 10 GB limit. The two Stripe catalogue jobs of the deploy workflow share one cache.
+smaller shard would save an entry that lacks dependencies of the others. The
+native lint shard of each host restores the entry of the test shards of its
+host and never saves, so Clippy reuses their build scripts and procedural
+macros. A Clippy build entry for each host was rejected, because the cache is
+already at the 10 GB limit. The two Stripe catalogue jobs of the deploy workflow share one cache.
 A separate cache for the mockup and site partitions was rejected: they held
 the same build as the Mokly jobs, and the total passed the 10 GB limit.
 

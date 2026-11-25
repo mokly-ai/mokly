@@ -16,9 +16,13 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const CI_WORKFLOW = ".github/workflows/ci.yml";
 /** The action that restores and saves Cargo's dependency builds. */
 const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
-/** Only runs on `main` may write what CI and pull requests restore. */
+/**
+ * Only runs on `main` may write what CI and pull requests restore. A job may
+ * narrow the rule with more `&&` terms, as a restore-only matrix row does,
+ * but it may not widen it with an `||` outside parentheses.
+ */
 const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
-/** A stricter save condition: `main` and a further condition of the job. */
+/** The start of a narrowed save condition: `main` and more terms. */
 const MAIN_AND = "${{ github.ref == 'refs/heads/main' && ";
 /** Testboxes run unreviewed local trees on `main`, so they never save. */
 const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
