@@ -5,3 +5,4 @@ mod fixtures;
 mod harness;
 mod keepalive_tests;
 mod route_tests;
+mod session_tests;
