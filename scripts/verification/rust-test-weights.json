@@ -375,6 +375,6 @@
     "--test working_inputs_tests": 1
   },
   "splits": {
-    "--test integration_tests": 2
+    "--test integration_tests": 3
   }
 }

@@ -237,9 +237,9 @@ fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
     .unwrap();
 }
 
-/// The embedded weights split `integration_tests` in two. One shard runs its
-/// whole units in one command and each slice in its own command, and a
-/// failed slice does not stop the next one when the shard reports every
+/// The embedded weights split `integration_tests` in three. One shard runs
+/// its whole units in one command and each slice in its own command, and a
+/// failed slice does not stop the next ones when the shard reports every
 /// failure.
 #[test]
 fn each_slice_of_a_split_unit_runs_in_its_own_command() {
@@ -250,7 +250,7 @@ fn each_slice_of_a_split_unit_runs_in_its_own_command() {
             .next_call(matching!((spec) if spec.display() == WHOLE))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((spec) if spec.display() == format!("{SLICE}1/2")))
+            .next_call(matching!((spec) if spec.display() == format!("{SLICE}1/3")))
             .answers(&|_, spec| {
                 Err(Error::CommandFailed {
                     command: spec.display(),
@@ -258,13 +258,16 @@ fn each_slice_of_a_split_unit_runs_in_its_own_command() {
                 })
             }),
         CommandRunnerRunMock
-            .next_call(matching!((spec) if spec.display() == format!("{SLICE}2/2")))
+            .next_call(matching!((spec) if spec.display() == format!("{SLICE}2/3")))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((spec) if spec.display() == format!("{SLICE}3/3")))
             .returns(Ok(())),
     ))
     .rust_test_shard(Shard::from_str("1/1").unwrap(), true);
     assert!(matches!(
         failed,
-        Err(Error::CommandFailed { command, .. }) if command == format!("{SLICE}1/2")
+        Err(Error::CommandFailed { command, .. }) if command == format!("{SLICE}1/3")
     ));
 }
 
