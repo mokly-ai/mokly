@@ -1,5 +1,6 @@
 //! Inputs compiled into one unevaluated bundle.
 
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
@@ -58,6 +59,10 @@ pub struct ViteSetupInputs {
 pub struct ViteBaseEnv {
     /// Root containing the untracked working copies.
     pub working_root: String,
-    /// Repository-relative dotenv paths tracked by the working Git index.
+    /// Repository-relative dotenv candidates and link targets in the working index.
     pub indexed: Vec<String>,
+    /// Pinned tree entries that can be final dotenv targets.
+    pub pinned: Vec<String>,
+    /// Committed link targets by repository path. An unreadable target is absent.
+    pub links: BTreeMap<String, Option<String>>,
 }

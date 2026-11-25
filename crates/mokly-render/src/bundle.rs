@@ -67,6 +67,9 @@ pub(crate) fn describe(
         .into_values()
         .filter(|state| {
             state.stamp.matches(tree.as_ref())
+                && state
+                    .stamp
+                    .vite_env_current(runtime.dependency_tree.as_ref())
                 && (physical_inputs::current(
                     &state.reuse_evidence,
                     runtime.physical_inputs.as_ref(),
@@ -224,9 +227,6 @@ fn attempt_preparation(
 }
 
 fn record_usage(runtime: &Runtime, side: &SideInputs, result: &results::Bundle) {
-    if let Some(env) = &runtime.vite_base_env {
-        env.record(&result.compiled.metadata_inputs);
-    }
     for directory in result.unmapped_dependency_directories.iter().flatten() {
         runtime.dependency_usage.unmapped(directory);
     }

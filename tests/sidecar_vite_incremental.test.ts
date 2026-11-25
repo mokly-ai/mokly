@@ -6,6 +6,7 @@ import {
   incrementalConfig,
   incrementalFixture,
 } from "./fixtures/vite_incremental.js";
+import { reviewFixture, reviewPage } from "./fixtures/vite_review.js";
 import { reportDuration } from "./helpers/durations.js";
 
 test("a Vite Serve edit transforms only the changed file and all of its query variants", async (context) => {
@@ -124,4 +125,34 @@ test("Vite Serve invalidates the full graph when a new file changes resolution o
       await fixture.sidecar.call("shutdown");
     },
   );
+});
+
+test("Vite checks rebuild files again at the next bundle after they leave the graph", async (context) => {
+  const fixture = await reviewFixture(context);
+  fixture.params.viteInputs = { rebuildFiles: ["copy.json"] };
+  await fixture.write("copy.json", '{"copy":"before"}');
+  await fixture.write(
+    "vite.config.mjs",
+    `import { readFileSync } from 'node:fs';
+const { copy } = JSON.parse(readFileSync(new URL('./copy.json', import.meta.url), 'utf8'));
+export default { define: { __COPY__: JSON.stringify(copy) } };`,
+  );
+  await fixture.write(
+    "src/review.mockup.ts",
+    reviewPage(
+      "data.copy + '|' + __COPY__",
+      'import data from "../copy.json";',
+    ),
+  );
+  const first = await fixture.compile();
+  assert.match(
+    (await fixture.render(first)).html,
+    /<body>before\|before<\/body>/,
+  );
+
+  await fixture.write("src/review.mockup.ts", reviewPage("__COPY__"));
+  await fixture.write("copy.json", '{"copy":"after"}');
+  const next = await fixture.compile();
+  assert.match((await fixture.render(next)).html, /<body>after<\/body>/);
+  await fixture.sidecar.call("shutdown");
 });

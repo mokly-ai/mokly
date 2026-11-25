@@ -5,6 +5,7 @@ import { readCatalogueIndex } from "../packages/viewer/src/catalogue/index_reade
 
 import {
   envSnapshot,
+  historicalEnvLinks,
   linkIgnoredViteEnv,
   viteEnvChangesFixture,
 } from "./fixtures/vite_env_changes.js";
@@ -110,3 +111,75 @@ test("Vite Serve refreshes a kept base when a shared dotenv file changes", async
     await server.close();
   }
 });
+
+for (const linkedDirectory of [false, true]) {
+  const title = linkedDirectory
+    ? "Vite Changes follows a committed envDir link before checking index targets"
+    : "Vite Changes preserves kept, replaced, removed, and ignored dotenv links";
+  test(title, async (context) => {
+    const root = await historicalEnvLinks(context, linkedDirectory);
+    const { index, output, stderr } = await build(root);
+    assert.equal(index.changesStatus, "ready", stderr);
+    assert.ok(index.comparisonUrl, stderr);
+    const changed = linkedDirectory
+      ? ([
+          ["kept", "committed-kept", "edited-kept"],
+          ["replaced", "missing", "staged-target"],
+        ] as const)
+      : ([
+          ["replaced", "committed-replaced", "untracked-replacement"],
+          ["removed", "committed-removed", "missing"],
+        ] as const);
+    const unchanged = linkedDirectory
+      ? ([
+          ["removed", "committed-removed"],
+          ["ignored", "shared-ignored"],
+        ] as const)
+      : ([
+          ["kept", "committed-kept"],
+          ["ignored", "shared-ignored"],
+        ] as const);
+    for (const [screen, before, after] of changed) {
+      assert.deepEqual(
+        index.screens.find(({ path }) => path === screen)?.changes,
+        {
+          status: "ready",
+          kind: "changed",
+          included: true,
+        },
+        screen,
+      );
+      assert.match(
+        await envSnapshot(
+          output,
+          `${index.comparisonUrl}/snapshots/before`,
+          screen,
+        ),
+        new RegExp(`<h1>${before}</h1>`),
+      );
+      assert.match(
+        await envSnapshot(
+          output,
+          `${index.comparisonUrl}/snapshots/after`,
+          screen,
+        ),
+        new RegExp(`<h1>${after}</h1>`),
+      );
+    }
+    for (const [screen, value] of unchanged) {
+      assert.deepEqual(
+        index.screens.find(({ path }) => path === screen)?.changes,
+        {
+          status: "ready",
+          kind: "unmodified",
+          included: false,
+        },
+        screen,
+      );
+      assert.match(
+        await envSnapshot(output, "static", screen),
+        new RegExp(`<h1>${value}</h1>`),
+      );
+    }
+  });
+}

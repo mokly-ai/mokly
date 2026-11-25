@@ -20,7 +20,8 @@ import { verifyViteInputs } from "./vite-inputs.js";
 import { snapshotViteInputs } from "./vite-invalidation.js";
 import { viteMetadata } from "./vite-metadata.js";
 import { loadVite, withVitePeers } from "./vite-peers.js";
-import { excludeRebuildFiles, setupSnapshot } from "./vite-setup.js";
+import { verifySetup } from "./vite-setup-snapshot.js";
+import { excludeRebuildFiles } from "./vite-setup.js";
 import { viteToolchain } from "./vite-toolchain.js";
 import { viteEntry, viteUrl } from "./vite-urls.js";
 
@@ -74,11 +75,7 @@ export class ViteCompiler {
           input.files,
         );
         await verifyViteInputs(input);
-        if (
-          setup.state.stamp !==
-          (await setupSnapshot(setup.files, directory, paths)).stamp
-        )
-          throw new Error("Vite setup changed during compilation");
+        await verifySetup(setup, directory, paths);
         excludeRebuildFiles(setup, new Set(physical.keys()));
         const graphFiles = new Set(physical.values());
         const metadata = await viteMetadata(input, setup.state, graphFiles);
@@ -86,7 +83,11 @@ export class ViteCompiler {
         const toolchain = await viteToolchain(version, vite.root);
         const compiled: CompiledGeneration = {
           code: "",
-          vite: { ...recipe, setupDigest: setup.state.digest },
+          vite: {
+            ...recipe,
+            setupDigest: setup.state.digest,
+            envInputs: setup.state.envInputs,
+          },
           identity: createHash("sha256")
             .update(
               JSON.stringify([
@@ -159,11 +160,7 @@ export class ViteCompiler {
           request.stylesheet,
           request.file,
         );
-        if (
-          setup.state.stamp !==
-          (await setupSnapshot(setup.files, directory, paths)).stamp
-        )
-          throw new Error("Vite setup changed during compilation");
+        await verifySetup(setup, directory, paths);
         setup.stylesheetReports.set(request.file, reports);
         return result;
       });

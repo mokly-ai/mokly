@@ -27,9 +27,6 @@ impl SideTree {
         path: &Path,
         baselines: &BTreeSet<ReadBaseline>,
     ) -> Result<()> {
-        if let Some(file) = self.dotenv_path(path) {
-            return self.dependencies.observe_inputs(&file, baselines);
-        }
         let (tree, physical, origin) = self.selected(path)?;
         if let Some(base) = &self._base
             && matches!(origin, SourceOrigin::Repository)

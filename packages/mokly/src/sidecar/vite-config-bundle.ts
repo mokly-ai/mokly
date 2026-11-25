@@ -1,6 +1,5 @@
 import { randomBytes } from "node:crypto";
 import { createRequire, isBuiltin, Module } from "node:module";
-import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { build } from "esbuild";
@@ -24,6 +23,7 @@ export async function bundleViteConfig(
   directory: string,
   file: string,
   lookup: ViteLookup,
+  record: (file: string, digest: string) => void,
 ) {
   const config = await vite.resolveConfig(
     {
@@ -69,7 +69,6 @@ export async function bundleViteConfig(
       format,
       mainFields: ["main"],
       conditions: ["node"],
-      metafile: true,
       sourcemap: "external",
       logLevel: "silent",
       keepNames: true,
@@ -125,8 +124,8 @@ export async function bundleViteConfig(
                 errors: [{ text: detail(error) }],
               })),
             );
-            builder.onLoad({ filter: /.*/ }, (args) =>
-              viteConfigSource(args.path),
+            builder.onLoad({ filter: /.*/, namespace: "file" }, (args) =>
+              viteConfigSource(args.path, record),
             );
           },
         },
@@ -178,11 +177,5 @@ export async function bundleViteConfig(
   } catch (error) {
     throw locate(error);
   }
-  return {
-    exported,
-    locate,
-    dependencies: Object.keys(compiled.metafile!.inputs).map((input) =>
-      path.resolve(directory, input),
-    ),
-  };
+  return { exported, locate };
 }

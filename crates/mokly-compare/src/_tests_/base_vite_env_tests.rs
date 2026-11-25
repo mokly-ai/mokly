@@ -22,9 +22,9 @@ fn linked_working_dotenv_stays_current_until_target_bytes_change() {
         kind: FileKind::File,
     };
     let inputs = ViteEnvInputs {
-        working_root: "/repo".into(),
         indexed: Vec::new(),
-        files: BTreeMap::from([("env/.env.local".into(), Some("original".into()))]),
+        index_patterns: Vec::new(),
+        files: BTreeMap::from([("/repo/env/.env.local".into(), Some("original".into()))]),
         consistent: true,
     };
     for (digest, expected) in [("original", true), ("edited", false)] {

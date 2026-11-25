@@ -81,6 +81,7 @@ pub mod source_digests;
 pub mod typescript;
 pub mod usage;
 pub mod vite_css;
+pub mod vite_env;
 pub mod wire;
 mod wire_decode;
 pub mod workers;

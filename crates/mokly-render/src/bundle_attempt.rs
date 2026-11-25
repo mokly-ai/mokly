@@ -115,6 +115,13 @@ pub(crate) fn modules(result: &results::Bundle) -> BTreeMap<String, Vec<String>>
 pub(crate) fn stamp(result: &results::Bundle, repository: &Path) -> InputStamp {
     let mut stamp = InputStamp::default();
     let compiled = &result.compiled;
+    if let Some(env) = compiled
+        .vite
+        .as_ref()
+        .and_then(|vite| vite.env_inputs.as_ref())
+    {
+        stamp.vite_env.extend(env.iter().cloned());
+    }
     stamp
         .memberships
         .extend(compiled.metadata_directories.iter().map(|(path, names)| {

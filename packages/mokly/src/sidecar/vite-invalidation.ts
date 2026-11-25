@@ -10,7 +10,7 @@ import type {
 import { fileDigest, missingFile } from "./file-digests.js";
 import type { viteMetadata } from "./vite-metadata.js";
 import type { ViteInputs } from "./vite-plugin.js";
-import type { SetupSnapshot } from "./vite-setup.js";
+import type { SetupSnapshot } from "./vite-setup-snapshot.js";
 import { viteFile } from "./vite-urls.js";
 
 export interface ViteSnapshot {

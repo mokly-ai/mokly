@@ -49,8 +49,9 @@ Mokly lists working-tree files with `git ls-files` for the
 [working dependency inputs](./mokly-base-dependencies.md#dependency-identity)
 and for the untracked [changed paths](#repository-and-history). Under the
 [Vite adapter](./mokly-vite-adapter-inputs.md#the-base-side), Mokly also lists
-the env files that the index tracks, with `git ls-files --cached`. These
-listings run with `core.fsmonitor=false`, so Git starts no file system monitor
+the env candidates and possible link targets that the index tracks, with
+`git ls-files --cached`. The listings run with `core.fsmonitor=false`, so Git
+starts no file system monitor
 hook or daemon for them. No other Git command changes the monitor setting.
 
 With the monitor disabled and without a promisor remote, a listing starts no
@@ -163,6 +164,10 @@ The destination must not exist. A partial extraction is removed on failure.
 Git metadata directories are never extracted. A name unsupported by the host
 is skipped with a trace: Windows cannot store colon or backslash names,
 reserved device names, or names with trailing dots or spaces.
+
+The [base dotenv lookup](./mokly-vite-adapter-inputs.md#the-base-side) reads
+committed link targets separately from extraction. A link target comes from
+the raw blob of the selected Git tree entry, without checkout conversion.
 
 The [base preparation contract](./mokly-base-preparation.md) owns base source
 reads and extraction. The [base cache](./mokly-base-cache.md) owns leases, and

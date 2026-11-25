@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::discovery::{SourceFile, SourceKind};
+use mokly_graph::types::RenderGeneration;
 use mokly_model::material::digest;
 use mokly_sidecar::bundle_params::ViteSetupInputs;
 use mokly_sidecar::methods::Bundle;
@@ -20,13 +21,7 @@ pub(crate) fn vite_setup(
     if !config.vite() {
         return None;
     }
-    let last = runtime
-        .vite_inventory
-        .lock()
-        .unwrap_or_else(|error| error.into_inner())
-        .as_ref()
-        .filter(|(file, _)| file == &config.file)
-        .and_then(|(_, generation)| generation.upgrade());
+    let last = runtime.vite_inventory(config);
     let sources = last.as_ref().map_or(&[][..], |generation| {
         generation.catalogue().model.sources.as_slice()
     });
@@ -42,6 +37,18 @@ pub(crate) fn vite_setup(
             base_env,
         })
     })
+}
+
+impl Runtime {
+    /// The source inventory used to exclude package-owned Vite rebuild matches.
+    pub fn vite_inventory(&self, config: &ResolvedConfig) -> Option<Arc<dyn RenderGeneration>> {
+        self.vite_inventory
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_ref()
+            .filter(|(file, _)| config.vite() && file == &config.file)
+            .and_then(|(_, generation)| generation.upgrade())
+    }
 }
 
 pub(crate) fn params(config: &ResolvedConfig, files: &[SourceFile], side: &SideInputs) -> Bundle {

@@ -9,6 +9,8 @@ import {
   setups,
   withSetupWatch,
 } from "./fixtures/vite_setup_watch.js";
+import { component } from "./fixtures/vite_stylesheets.js";
+import { write } from "./helpers/static_changes.js";
 
 test("a Vite rebuild rule reloads setup on input edits and membership changes", async (context) => {
   const root = await rebuildFixture(context, true);
@@ -51,6 +53,29 @@ test("Vite gives an imported helper precedence over a broad rebuild rule", async
     assert.match(await card(), /<p>helper-after\|after<\/p>/);
     assert.match(await other(), /<p>other\|after<\/p>/);
     assert.equal(await setups(root), "setup\nsetup\n");
+  });
+});
+
+test("Vite reloads setup before publishing when a rebuild match loses its last import", async (context) => {
+  const root = await broadRebuildFixture(context);
+  const entry = "src/card.mockup.tsx";
+  await write(
+    root,
+    entry,
+    component(
+      'import data from "./copy.json";',
+      "<p>{data.copy}|{__COPY__}</p>",
+    ),
+  );
+  await withSetupWatch(context, root, async ({ publish, read, write }) => {
+    const card = () => read("card/index.mobile.html");
+    assert.match(await card(), /<p>before\|before<\/p>/);
+    await publish(() => write("src/copy.json", '{"copy":"edited-as-module"}'));
+    assert.match(await card(), /<p>edited-as-module\|before<\/p>/);
+    await publish(() => write(entry, component("", "<p>{__COPY__}</p>")));
+    assert.match(await card(), /<p>edited-as-module<\/p>/);
+    await publish(() => write("src/copy.json", '{"copy":"edited-as-setup"}'));
+    assert.match(await card(), /<p>edited-as-setup<\/p>/);
   });
 });
 

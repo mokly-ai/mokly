@@ -116,9 +116,11 @@ diagnostics, and its state reaches `--debug-timings` as `render.store` records.
 Serve validates an HTML, JavaScript, or mixed catalogue before it reserves a
 loopback port, then serves it through `mokly-server` under the
 [on-demand Serve contract](../../docs/protocol/mokly-on-demand.md). Watched
-Serve attaches a `mokly-watch` observer before module evaluation. It prepares
-again before adoption only under the
-[readiness rule](../../docs/protocol/mokly-watch.md#watch-targets-and-readiness). One
+Serve attaches a `mokly-watch` observer before module evaluation. Before
+adoption, it can prepare again under the
+[watch readiness rule](../../docs/protocol/mokly-watch.md#watch-targets-and-readiness)
+or when a [Vite rebuild rule](../../docs/protocol/mokly-vite-adapter-inputs.md#inputs-and-serve)
+gains a formerly owned file. One
 serialized queue handles watch events and the rich-mode `r` shortcut under the
 [watch runtime contract](../../docs/protocol/mokly-watch-runtime.md). A valid
 candidate replaces the public state and backend with the next revision. A

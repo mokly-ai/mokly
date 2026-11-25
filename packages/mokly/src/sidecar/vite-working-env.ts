@@ -1,16 +1,20 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
+import type { Stats } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import path from "node:path";
 
 import type { ViteBaseEnv } from "../generated/sidecar/ViteBaseEnv.js";
+import type { ViteEnvInput } from "../generated/sidecar/ViteEnvInput.js";
 
 import { missingFile } from "./file-digests.js";
+import type { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import { filename, options } from "./postcss-read-options.js";
-import { setupCandidate } from "./vite-setup-input.js";
-import type { SetupInput } from "./vite-setup-input.js";
+import { ViteBaseEnv as BaseEnv } from "./vite-base-env.js";
+import type { EnvSelection } from "./vite-base-env.js";
+import { setupCandidate, setupChanged } from "./vite-setup-input.js";
 
 export function envFiles(mode: string, directory: string | false): string[] {
   return directory === false
@@ -20,119 +24,183 @@ export function envFiles(mode: string, directory: string | false): string[] {
       );
 }
 
-const active = new AsyncLocalStorage<ViteWorkingEnv>();
-export const workingEnvPrefix = "node_modules/.mokly-roots/vite-env/";
+interface Observation extends EnvSelection {
+  candidate: string;
+  stat: Stats | undefined;
+  bytes?: Buffer;
+  digest?: string;
+}
+
+const active = new AsyncLocalStorage<ViteEnv>();
+const stat = fs.statSync;
+const read = fs.readFileSync;
 let installed = false;
 
-/** Select working candidates for Vite's native synchronous dotenv reads. */
-export class ViteWorkingEnv {
-  private readonly root: string;
-  private readonly indexed: Set<string>;
+/** Serve one snapshot per dotenv candidate to the config and Vite's env loader. */
+export class ViteEnv {
+  private readonly base: BaseEnv | undefined;
   private readonly names: Set<string>;
-  private readonly candidates = new Set<string>();
-  private readonly consumed = new Map<string, string | null>();
+  private readonly observations = new Map<string, Observation>();
+  private reading = false;
 
   constructor(
-    base: ViteBaseEnv,
-    private readonly sourceRoot: string,
+    base: ViteBaseEnv | undefined,
+    private readonly paths: ModulePaths,
     mode: string,
   ) {
-    this.root = fs.realpathSync.native(base.workingRoot);
-    this.indexed = new Set(base.indexed);
+    this.base = base && new BaseEnv(base, paths.sourceRoot);
     this.names = new Set(envFiles(mode, ""));
   }
 
-  run<T>(run: () => T): T {
+  async run<T>(run: () => Promise<T>): Promise<T> {
     installHooks();
-    return active.run(this, run);
+    this.reading = true;
+    try {
+      return await active.run(this, run);
+    } finally {
+      this.reading = false;
+    }
   }
 
-  candidate(file: string | undefined): string | undefined {
+  observation(request: unknown): Observation | undefined {
+    if (!this.reading) return;
+    const candidate = filename(request);
     if (
-      !file ||
-      !this.names.has(path.basename(file)) ||
-      !inside(this.sourceRoot, file)
+      !candidate ||
+      !this.names.has(path.basename(candidate)) ||
+      (!inside(this.paths.sourceRoot, candidate) &&
+        !this.paths.dependencyDirectory(candidate))
     )
       return;
-    const name = logical(this.sourceRoot, file);
-    if (this.indexed.has(name)) return;
-    try {
-      if (fs.lstatSync(file, { throwIfNoEntry: false })) return;
-    } catch (error) {
-      if (!missingFile(error)) return;
-    }
-    this.candidates.add(name);
-    return this.workingFile(name);
+    const prior = this.observations.get(candidate);
+    if (prior) return prior;
+    const selected = this.select(candidate);
+    const observed = {
+      ...selected,
+      candidate,
+      stat: selected.file === null ? undefined : dotenvStat(selected.file),
+    };
+    this.observations.set(candidate, observed);
+    return observed;
   }
 
-  replaces(file: string): boolean {
-    return (
-      inside(this.sourceRoot, file) &&
-      this.candidates.has(logical(this.sourceRoot, file))
+  private select(candidate: string): EnvSelection {
+    return this.base?.select(candidate) ?? { file: candidate, working: false };
+  }
+
+  async snapshot(files: readonly string[]): Promise<Map<string, ViteEnvInput>> {
+    const required = new Set(files);
+    const candidates = new Set([...files, ...this.observations.keys()]);
+    return new Map(
+      await Promise.all(
+        [...candidates].map(async (candidate) => {
+          const { file, working } = this.select(candidate);
+          const root = this.paths.sourceRoot;
+          const name = inside(root, candidate)
+            ? logical(root, candidate)
+            : this.paths.metadataName(await this.paths.metadata(candidate));
+          const digest =
+            file === null ? null : (await setupCandidate(name, file)).digest;
+          return [
+            candidate,
+            {
+              name,
+              file,
+              digest,
+              working,
+              render: required.has(candidate),
+            },
+          ] as const;
+        }),
+      ),
     );
   }
 
-  observe(file: string, digest: string | null): void {
-    this.consumed.set(workingEnvPrefix + logical(this.root, file), digest);
-  }
-
-  matches(inputs: readonly SetupInput[]): boolean {
-    const digests = new Map(inputs.map(({ name, digest }) => [name, digest]));
-    return [...this.consumed].every(
-      ([name, digest]) => digests.get(name) === digest,
-    );
-  }
-
-  private workingFile(name: string): string | undefined {
-    const file = path.join(this.root, name);
-    try {
-      const stat = fs.statSync(file, { throwIfNoEntry: false });
-      if (!stat || stat.isFile()) return file;
-    } catch {
-      // Vite treats an unsuccessful dotenv stat as absence.
+  verify(inputs: ReadonlyMap<string, ViteEnvInput>): void {
+    for (const [candidate, { name, file, digest, working }] of inputs) {
+      const observed = this.observations.get(candidate);
+      if (!observed) continue;
+      if (
+        file !== observed.file ||
+        working !== observed.working ||
+        (observed.digest !== undefined
+          ? digest !== observed.digest
+          : (digest !== null) !== Boolean(observed.stat?.isFile()))
+      )
+        setupChanged(name);
+      delete observed.bytes;
     }
-  }
-
-  async snapshot(): Promise<SetupInput[]> {
-    const inputs: SetupInput[] = [];
-    for (const name of this.candidates) {
-      const file = this.workingFile(name);
-      const inputName = workingEnvPrefix + name;
-      const input = file
-        ? await setupCandidate(inputName, file)
-        : { name: inputName, file: undefined, digest: null };
-      inputs.push(input);
-    }
-    return inputs;
   }
 }
 
 function installHooks(): void {
   if (installed) return;
   installed = true;
-  const stat = fs.statSync;
-  const read = fs.readFileSync;
   Object.defineProperty(fs, "statSync", {
     value: (...args: unknown[]): unknown => {
-      const env = active.getStore();
-      const file = env?.candidate(filename(args[0]));
-      if (!file) return Reflect.apply(stat, fs, args);
-      const value: unknown = Reflect.apply(stat, fs, [file, ...args.slice(1)]);
-      if (value === undefined) env?.observe(file, null);
-      return value;
+      const observation = active.getStore()?.observation(args[0]);
+      if (!observation) return Reflect.apply(stat, fs, args);
+      const settings = args[1];
+      if (
+        settings &&
+        typeof settings === "object" &&
+        "bigint" in settings &&
+        settings.bigint &&
+        observation.file !== null
+      )
+        return Reflect.apply(stat, fs, [observation.file, ...args.slice(1)]);
+      if (
+        observation.stat ||
+        (settings &&
+          typeof settings === "object" &&
+          "throwIfNoEntry" in settings &&
+          settings.throwIfNoEntry === false)
+      )
+        return observation.stat;
+      throw absent(observation.file ?? observation.candidate);
     },
   });
   Object.defineProperty(fs, "readFileSync", {
     value: (...args: unknown[]): unknown => {
-      const env = active.getStore();
-      const file = env?.candidate(filename(args[0]));
-      const selected = file && options(args[1]);
-      if (!file || !selected) return Reflect.apply(read, fs, args);
-      const bytes: unknown = Reflect.apply(read, fs, [file, selected.raw]);
-      if (!Buffer.isBuffer(bytes)) return bytes;
-      env?.observe(file, createHash("sha256").update(bytes).digest("hex"));
-      return selected.encoding ? bytes.toString(selected.encoding) : bytes;
+      const observation = active.getStore()?.observation(args[0]);
+      if (!observation) return Reflect.apply(read, fs, args);
+      if (observation.file === null) throw absent(observation.candidate);
+      const selected = options(args[1]);
+      if (!selected || (observation.stat && !observation.stat.isFile()))
+        return Reflect.apply(read, fs, [observation.file, ...args.slice(1)]);
+      if (!observation.stat) throw absent(observation.file);
+      if (!observation.bytes) {
+        const bytes: unknown = Reflect.apply(read, fs, [
+          observation.file,
+          selected.raw,
+        ]);
+        if (!Buffer.isBuffer(bytes)) return bytes;
+        observation.bytes = bytes;
+        observation.digest = createHash("sha256").update(bytes).digest("hex");
+      }
+      return selected.encoding
+        ? observation.bytes.toString(selected.encoding)
+        : Buffer.from(observation.bytes);
     },
   });
   syncBuiltinESMExports();
+}
+
+function absent(file: string): Error {
+  return Object.assign(
+    new Error(`ENOENT: no such file or directory, '${file}'`),
+    {
+      code: "ENOENT",
+      path: file,
+    },
+  );
+}
+
+function dotenvStat(file: string): Stats | undefined {
+  try {
+    return stat(file, { throwIfNoEntry: false });
+  } catch (error) {
+    if (missingFile(error)) return;
+    throw error;
+  }
 }

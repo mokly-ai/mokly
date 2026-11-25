@@ -22,6 +22,7 @@ import {
 import { checkRecipeSize } from "./recipe-size.js";
 import { directoryFiles } from "./resolution-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
+import { setupCandidate } from "./vite-setup-input.js";
 import { currentViteToolchain } from "./vite-toolchain.js";
 
 /**
@@ -173,6 +174,11 @@ export async function reuse(
         generation.compiled.inputs,
         likelyChanged(generation, peers),
         (file) => (lastFailedInput = file),
+      )) &&
+      (await everyInput(
+        generation.compiled.vite?.envInputs ?? [],
+        async ({ file, name, digest }) =>
+          file === null || (await setupCandidate(name, file)).digest === digest,
       )) &&
       (await everyInput(
         Object.entries(generation.compiled.inputDirectories),

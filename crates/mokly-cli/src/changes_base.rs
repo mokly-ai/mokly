@@ -164,10 +164,12 @@ impl NativeBase {
             .runtime
             .for_base(tree.clone(), VERSION.into(), base.clone());
         if config.vite() && base.is_some() {
-            runtime = runtime.with_vite_base_env(
+            let index = request.sources.sources.index()?;
+            runtime = runtime.with_vite_base_env(base_vite_env::setup_sources(
                 &request.working_config.repo_root,
-                base_vite_env::indexed_paths(request.repository.as_ref())?,
-            );
+                request.repository.as_ref(),
+                &index,
+            )?);
         }
         let runtime = Arc::new(runtime);
         let builder: &dyn CatalogueBuilder = &Builder {

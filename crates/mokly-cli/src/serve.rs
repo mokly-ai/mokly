@@ -20,6 +20,8 @@ pub struct PreparedServe {
     pub generation: Arc<dyn RenderGeneration>,
     /// Validated counts and startup warnings.
     pub summary: BuildSummary,
+    /// A formerly owned watch rule match must enter the Vite setup before publication.
+    pub recheck_vite_setup: bool,
 }
 
 /// Preparation boundary shared with later watch candidates.
@@ -77,6 +79,7 @@ impl ServePreparation for CatalogueServe {
             *counts.entry(entry.content.kind()).or_default() += 1;
         }
         Ok(PreparedServe {
+            recheck_vite_setup: false,
             config,
             generation,
             summary: BuildSummary {

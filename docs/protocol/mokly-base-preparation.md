@@ -157,8 +157,8 @@ base:
   bundle both read has the same digest on both sides.
 - Under the Vite adapter, each
   [working-tree env file](./mokly-vite-adapter-inputs.md#the-base-side) that
-  the base setup reads is unchanged, present or absent. The Git index of the
-  working tree lists the same env files.
+  the base setup reads is unchanged, present or absent. The working index
+  lists the same env candidates and possible link targets.
 - The effective checkout settings of the base commit are unchanged: the Git
   configuration and the attributes of each file. A preparation samples them
   before its first base read.

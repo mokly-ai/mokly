@@ -9,6 +9,15 @@ export interface SetupInput {
   digest: string | null;
 }
 
+export interface ConfigReads {
+  files: { file: string; digest: string }[];
+  probes: Map<string, boolean>;
+}
+
+export function setupChanged(name: string): never {
+  throw new Error(`Vite setup changed during compilation at ${name}`);
+}
+
 /** Find the real location of a candidate, including one that is still absent. */
 export function candidateLocation(file: string): string {
   try {

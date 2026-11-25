@@ -108,7 +108,20 @@ pub(crate) fn derive(
         .modules
         .iter()
         .any(|module| PREVIEWS.contains(&module.path.as_str()));
-    let resolution_digests = resolution(&compiled.metadata_inputs, previewed);
+    let mut resolution_digests = resolution(&compiled.metadata_inputs, previewed);
+    if let Some(env) = compiled
+        .vite
+        .as_ref()
+        .and_then(|vite| vite.env_inputs.as_ref())
+    {
+        resolution_digests.extend(env.iter().filter(|input| input.render).filter_map(|input| {
+            let name = input.name.strip_prefix(INSTALLED).unwrap_or(&input.name);
+            input
+                .digest
+                .as_ref()
+                .map(|digest| (name.into(), digest.clone()))
+        }));
+    }
     let mut class_map_digests = BTreeMap::new();
     for (path, map) in maps {
         let bytes = match named_exports.get(path) {

@@ -5,7 +5,7 @@ import { previewCandidates } from "./bundle-entry.js";
 import { metadataDigest } from "./file-digests.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ViteInputs } from "./vite-plugin.js";
-import type { SetupSnapshot } from "./vite-setup.js";
+import type { SetupSnapshot } from "./vite-setup-snapshot.js";
 
 /** Keep live reuse and core watch inputs alongside the Vite recipe. */
 export async function viteMetadata(
@@ -37,7 +37,9 @@ export async function viteMetadata(
     paths,
     [
       ...input.files.keys(),
-      ...setup.configuration.flatMap(({ file }) => (file ? [file] : [])),
+      ...[...setup.configuration.values()].flatMap(({ file }) =>
+        file ? [file] : [],
+      ),
     ],
     inputs,
     metadataInputs,

@@ -6,13 +6,14 @@ import type { TestContext } from "node:test";
 import { consumer } from "../helpers/mokly_serve.js";
 import { git, write } from "../helpers/static_changes.js";
 
-export async function viteEnvChangesFixture(context: TestContext) {
-  const screen = (
-    name: string,
-  ) => `export const ${name.toLowerCase()} = defineScreen({
+function screen(name: string) {
+  return `export const ${name.toLowerCase()} = defineScreen({
   path: '${name.toLowerCase()}', title: '${name}', description: '', relatedDocs: [],
   render: () => <h1>{import.meta.env.VITE_TRACK_D_${name} ?? 'missing'}</h1>,
 });`;
+}
+
+export async function viteEnvChangesFixture(context: TestContext) {
   const root = await consumer(context, {
     ".gitignore": "node_modules/\n.context/\n.env.local\n",
     "package.json": '{"private":true,"type":"module"}',
@@ -73,4 +74,88 @@ export function envSnapshot(output: string, prefix: string, screen: string) {
     path.join(output, prefix, "mokly-generated", screen, "index.mobile.html"),
     "utf8",
   );
+}
+
+export async function historicalEnvLinks(
+  context: TestContext,
+  linkedDirectory: boolean,
+) {
+  const root = await consumer(context, {
+    ".gitignore": "node_modules/\n.context/\nvalues/ignored.env\n",
+    "package.json": '{"private":true,"type":"module"}',
+    "mokly.config.json": JSON.stringify({
+      vite: true,
+      roots: [{ dir: "src" }],
+      review: { base: "fixture-base" },
+    }),
+    "vite.config.ts": "export default { envDir: 'env' };",
+    "src/screens.mockup.tsx": [
+      'import { defineScreen } from "@mokly/mokly";',
+      ...["KEPT", "REPLACED", "REMOVED", "IGNORED"].map(screen),
+    ].join("\n"),
+    "values/kept.env": "VITE_TRACK_D_KEPT=committed-kept\n",
+    "values/replaced.env": "VITE_TRACK_D_REPLACED=committed-replaced\n",
+    "values/removed.env": "VITE_TRACK_D_REMOVED=committed-removed\n",
+    "values/ignored.env": "VITE_TRACK_D_IGNORED=shared-ignored\n",
+  });
+  const directory = linkedDirectory ? "dotenv" : "env";
+  await fs.mkdir(path.join(root, directory));
+  for (const [name, target] of [
+    [".env", "kept"],
+    [".env.development", "replaced"],
+    [".env.development.local", "removed"],
+    [".env.local", "ignored"],
+  ] as const)
+    await fs.symlink(
+      `../values/${target}.env`,
+      path.join(root, directory, name),
+      "file",
+    );
+  if (linkedDirectory) {
+    await fs.symlink("dotenv", path.join(root, "env"), "dir");
+    // Use a dangling link whose differently named target the head stages.
+    await fs.unlink(path.join(root, directory, ".env.development"));
+    await fs.symlink(
+      "../values/staged.txt",
+      path.join(root, directory, ".env.development"),
+      "file",
+    );
+    const external = await fs.mkdtemp(
+      path.join(os.tmpdir(), "mokly-linked-env-"),
+    );
+    context.after(() => fs.rm(external, { recursive: true, force: true }));
+    const target = path.join(external, "shared.env");
+    await fs.writeFile(target, "VITE_TRACK_D_IGNORED=shared-ignored\n");
+    await fs.unlink(path.join(root, directory, ".env.local"));
+    await fs.symlink(target, path.join(root, directory, ".env.local"), "file");
+  }
+  await git(root, "init", "-q");
+  await git(root, "config", "user.name", "Mokly Test");
+  await git(root, "config", "user.email", "test@example.com");
+  await git(root, "add", ".");
+  await git(root, "commit", "-qm", "base dotenv links");
+  await git(root, "branch", "fixture-base");
+  if (linkedDirectory) {
+    await write(root, "values/kept.env", "VITE_TRACK_D_KEPT=edited-kept\n");
+    await write(
+      root,
+      "values/staged.txt",
+      "VITE_TRACK_D_REPLACED=staged-target\n",
+    );
+    await git(root, "add", "values/staged.txt");
+  } else {
+    await git(
+      root,
+      "rm",
+      "-q",
+      "env/.env.development",
+      "env/.env.development.local",
+    );
+    await write(
+      root,
+      "env/.env.development",
+      "VITE_TRACK_D_REPLACED=untracked-replacement\n",
+    );
+  }
+  return root;
 }

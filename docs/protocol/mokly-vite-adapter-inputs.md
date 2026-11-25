@@ -26,8 +26,19 @@ These files are inputs of a Vite compile, present or absent:
 A change to one of them causes a rebuild, reloads the setup, and moves every
 [render input key](./mokly-watch.md#invalidation-through-the-render-graph). A
 file that starts or stops matching a `rebuild` rule is also a change. In
-Serve, Mokly's watcher drives every rebuild. A `bundle` request never uses a
-transform of older bytes than the bytes that the graph reports.
+Serve, Mokly prepares again before publication when a rule match stops being
+a source, module, or stylesheet input. Mokly's watcher drives rebuilds. A
+`bundle` request never uses a transform of older bytes than the bytes that the
+graph reports.
+
+Each setup uses one snapshot of the bytes or absence of each dotenv candidate.
+The config record includes the file selection probes and the bytes consumed
+by the config bundle. A compile fails with the changed input's name
+if those observations differ from the final setup snapshot. Module digests
+also describe the bytes that their transforms used.
+
+Equal setup inputs use equal render identities on both sides. Their logical
+names and digests determine identity independently of the physical read paths.
 
 Vite looks up a PostCSS config unless `css.postcss` is an inline object or
 `css.transformer` is `lightningcss`. Only a candidate inside the source root
@@ -69,23 +80,23 @@ installation, under the [dependency tiers](./mokly-comparison.md#sides). The
 imports of installed packages in the setup and every bare import of a base
 module resolve the same way.
 
-On the base side, Vite reads each env file as follows:
+An env candidate keeps its own logical path. The base resolves committed
+symbolic links at any component of that path, including `envDir`. Both sides
+can read a target outside the repository. The base applies the following
+precedence rules to the final target.
 
 - A file that the base commit holds comes from the base commit.
 - A file that the base commit lacks and the Git index of the working tree
   holds is absent, because the branch adds it.
 - Each other file comes from the working tree, present or absent.
 
-An env file can be a symbolic link to a regular file, also outside the
-repository. Both sides then read the target, as Vite does, and the input keeps
-the env file's own path. Vite merges and expands the values of these files as
-on the head side. The
-env files that the base side reads from the working tree, present or absent,
-are inputs of its setup. Serve checks them under the
+Vite merges and expands the values of these files the same way on both sides.
+The working-tree reads used by the base setup take part in the
 [freshness checks](./mokly-base-preparation.md#freshness-checks) before it
-reuses a kept base. These reads add no
-[watch input](./mokly-watch.md#watch-inputs). So an edit to an env file that
-only the base side reads shows in Changes after the next classification.
+reuses a kept base. An env read outside the configured `envDir` contributes
+only to freshness unless the file qualifies as another setup input. Reads
+that only the base side makes add no [watch input](./mokly-watch.md#watch-inputs).
+An edit to such a file shows in Changes after the next classification.
 
 Decision: the base side reads from the working tree each env file that Git
 tracks on neither side. A value that only such a file sets then gives no false

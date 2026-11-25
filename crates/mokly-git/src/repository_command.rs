@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::ffi::OsString;
 
+use crate::batches::{self, MAX_ARGUMENT_BYTES, MAX_ARGUMENTS};
 use crate::changes::fields;
 use crate::command::{DEFAULT_OUTPUT_LIMIT, DEFAULT_STDERR_LIMIT, ProcessMode, Request};
 use crate::error::Result;
@@ -36,7 +37,7 @@ impl GitRepository {
     }
 
     pub(crate) fn index_paths(&self, pathspecs: &[&str]) -> Result<Vec<RepoPath>> {
-        let mut args = vec![
+        let args = [
             "-c",
             "core.fsmonitor=false",
             "ls-files",
@@ -44,14 +45,22 @@ impl GitRepository {
             "-z",
             "--",
         ];
-        args.extend_from_slice(pathspecs);
         let mut request = self.tree_request(&args);
         request.args.retain(|arg| arg != "--literal-pathspecs");
-        let output = self.runner.run(&request)?.stdout;
-        let paths = fields(&output)?
-            .filter_map(candidate)
-            .map(RepoPath::parse)
-            .collect::<Result<BTreeSet<_>>>()?;
+        let arguments = pathspecs.iter().map(OsString::from).collect::<Vec<_>>();
+        let batches = if arguments.is_empty() {
+            vec![request.args.clone()]
+        } else {
+            batches::split(&request.args, &arguments, MAX_ARGUMENTS, MAX_ARGUMENT_BYTES)?
+        };
+        let mut paths = BTreeSet::new();
+        for args in batches {
+            request.args = args;
+            let output = self.runner.run(&request)?.stdout;
+            for path in fields(&output)?.filter_map(candidate) {
+                paths.insert(RepoPath::parse(path)?);
+            }
+        }
         Ok(paths.into_iter().collect())
     }
 

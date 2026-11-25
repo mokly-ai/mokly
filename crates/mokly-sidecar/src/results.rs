@@ -12,6 +12,7 @@ use crate::postcss_evidence::Evidence;
 use crate::render_records::{CollectedStyle, MarkerDraft};
 use crate::resolution_plan::ResolutionPlan;
 use crate::usage::{InstanceDraft, SlotDraft};
+use crate::vite_env::ViteEnvInput;
 
 /// Package version reported during hello.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -127,6 +128,10 @@ pub struct ViteCss {
     pub imported_by: BTreeMap<String, String>,
     /// Setup and resolution inputs, including missing watch candidates.
     pub metadata_inputs: BTreeMap<String, Option<String>>,
+    /// Dotenv paths used for reuse validation, with their logical identity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub env_inputs: Option<Vec<ViteEnvInput>>,
 }
 
 /// PostCSS dependency kind used by the watcher.

@@ -6,16 +6,15 @@ use std::sync::Arc;
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::ancestor_roots::dependency_directory;
-use mokly_source_interface::error::{Result, SourceError};
+use mokly_source_interface::error::Result;
 use mokly_source_interface::read_evidence::ReadBaseline;
 use mokly_source_interface::stream::SourceStream;
-use mokly_source_interface::tree::{Child, FileKind, Node, SourceTree};
+use mokly_source_interface::tree::{Child, Node, SourceTree};
 
 use crate::dependency_usage::DependencyUsage;
 use crate::runtime::Runtime;
 use crate::side::{BaseSide, SideInputs, dependency_roots};
 use crate::source_paths::{self, INSTALLED_INPUT_PREFIX};
-use crate::vite_base_env::working_candidate;
 
 /// Dependency paths retain logical names while source bytes use their own tree.
 #[derive(Clone)]
@@ -104,26 +103,7 @@ impl SideTree {
             .find_map(|root| identity.strip_prefix(root).ok())
             .map(|relative| self.root.join(relative))
     }
-    pub(crate) fn dotenv_path(&self, path: &Path) -> Option<PathBuf> {
-        let working = self
-            ._base
-            .as_ref()
-            .map_or(&self.root, |base| &base.working_root);
-        working_candidate(path, &self.root, working)
-    }
-
     pub(crate) fn selected(&self, path: &Path) -> Result<(&dyn SourceTree, PathBuf, SourceOrigin)> {
-        if let Some(file) = self.dotenv_path(path) {
-            let node = self.dependencies.project(&file)?;
-            let Some(node) = node.filter(|node| node.kind == FileKind::File) else {
-                return Err(SourceError::Changed { path: file });
-            };
-            return Ok((
-                self.dependencies.as_ref(),
-                node.identity,
-                SourceOrigin::Dependency,
-            ));
-        }
         if let Some(source) = source_paths::repository_input(&self.root, path) {
             return Ok((self.sources.as_ref(), source, SourceOrigin::Repository));
         }

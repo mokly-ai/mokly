@@ -1,14 +1,10 @@
-import { createHash } from "node:crypto";
 import path from "node:path";
 
 import type { InlineConfig, Plugin, UserConfig } from "vite";
 
 import type { ViteSetupInputs } from "../generated/sidecar/ViteSetupInputs.js";
 
-import type { ModulePaths } from "./module-paths.js";
-import { inside, logical } from "./path-scope.js";
-import { directoryFiles } from "./resolution-inputs.js";
-import { loadViteConfig, viteConfigFiles } from "./vite-config.js";
+import { loadViteConfig } from "./vite-config.js";
 import { configureViteCss, hookViteCss } from "./vite-css-hooks.js";
 import type { ViteCssTransform } from "./vite-css-transform.js";
 import type { loadVite } from "./vite-peers.js";
@@ -16,21 +12,16 @@ import { VitePostcssLookup } from "./vite-postcss-lookup.js";
 import { vitePeerPlugin } from "./vite-react-peers.js";
 import type { VitePeers } from "./vite-react-peers.js";
 import type { ViteLookup } from "./vite-resolution.js";
-import { setupCandidate } from "./vite-setup-input.js";
-import type { SetupInput } from "./vite-setup-input.js";
+import type { ConfigReads } from "./vite-setup-input.js";
 import {
-  envFiles,
-  ViteWorkingEnv,
-  workingEnvPrefix,
-} from "./vite-working-env.js";
-
-interface SetupFiles {
-  configuration: string[];
-  env: string[];
-  rebuild: string[];
-  postcss: VitePostcssLookup;
-  workingEnv: ViteWorkingEnv | undefined;
-}
+  rebuildInputs,
+  setupEvidence,
+  setupSnapshot,
+  verifyConfigReads,
+  verifyInputs,
+} from "./vite-setup-snapshot.js";
+import type { SetupFiles } from "./vite-setup-snapshot.js";
+import { envFiles, ViteEnv } from "./vite-working-env.js";
 
 const mode = "development";
 
@@ -49,10 +40,8 @@ export async function viteSetup(
   const rebuild = inputs?.rebuildFiles ?? [];
   const watched = await rebuildInputs(rebuild, paths);
   const postcss = new VitePostcssLookup(paths, diagnostic);
-  const workingEnv =
-    inputs?.baseEnv &&
-    new ViteWorkingEnv(inputs.baseEnv, paths.sourceRoot, mode);
-  const open = () =>
+  const env = new ViteEnv(inputs?.baseEnv, paths, mode);
+  const setup = await env.run(() =>
     loadSetup(
       vite,
       directory,
@@ -61,18 +50,16 @@ export async function viteSetup(
       peers,
       css,
       postcss,
-      workingEnv,
+      env,
       rebuild,
-    );
-  const setup = await (workingEnv ? workingEnv.run(open) : open());
+    ),
+  );
   try {
     const state = await setupSnapshot(setup.files, directory, paths);
-    if (
-      !matches(watched, state.inputs) ||
-      !matches(await postcss.initial, state.inputs) ||
-      (workingEnv && !workingEnv.matches(state.inputs))
-    )
-      throw new Error("Vite setup changed during compilation");
+    verifyConfigReads(setup.files.configuration, state, paths);
+    verifyInputs(watched, state.rebuild);
+    verifyInputs(await postcss.initial, state.postcss);
+    env.verify(state.env);
     return { ...setup, state, ownedRebuildFiles: new Set<string>() };
   } catch (error) {
     await setup.server.close();
@@ -88,11 +75,12 @@ async function loadSetup(
   peers: () => VitePeers,
   css: ViteCssTransform,
   postcss: VitePostcssLookup,
-  workingEnv: ViteWorkingEnv | undefined,
+  env: ViteEnv,
   rebuild: string[],
 ) {
-  const loaded = await loadViteConfig(vite, directory, lookup);
-  const config = loaded?.config ?? {};
+  const configuration: ConfigReads = { files: [], probes: new Map() };
+  const config =
+    (await loadViteConfig(vite, directory, lookup, configuration)) ?? {};
   const inline: InlineConfig = {
     ...config,
     configFile: false,
@@ -131,19 +119,12 @@ async function loadSetup(
     return vite.createServer(resolved);
   });
   lookup.bind(vite, server.environments.ssr!);
-  const configuration = [
-    ...viteConfigFiles.map((file) => path.join(directory, file)),
-    ...(loaded?.dependencies ?? []),
-  ];
-  const env = envFiles(server.config.mode, server.config.envDir).filter(
-    (file) => !workingEnv?.replaces(file),
-  );
   const files: SetupFiles = {
     configuration,
+    envFiles: envFiles(server.config.mode, server.config.envDir),
     env,
     rebuild,
     postcss,
-    workingEnv,
   };
   return { server, files };
 }
@@ -178,51 +159,6 @@ function noOptimizer(): Plugin {
   };
 }
 
-/** Snapshot setup bytes and config lookup membership before reusing a server. */
-export async function setupSnapshot(
-  files: SetupFiles,
-  directory: string,
-  paths: ModulePaths,
-) {
-  const configuration = await confinedInputs(files.configuration, paths);
-  const env = await Promise.all(
-    files.env.map(async (file) => {
-      if (!files.workingEnv && inside(paths.sourceRoot, file)) {
-        const name = workingEnvPrefix + logical(paths.sourceRoot, file);
-        return setupCandidate(name, file);
-      }
-      const physical = await paths.metadata(file);
-      return setupCandidate(paths.metadataName(physical), physical);
-    }),
-  );
-  const required = [
-    ...env,
-    ...(await files.postcss.snapshot()),
-    ...((await files.workingEnv?.snapshot()) ?? []),
-  ];
-  return setupEvidence(
-    configuration,
-    required,
-    await rebuildInputs(files.rebuild, paths),
-    await directoryFiles(directory),
-  );
-}
-
-function setupEvidence(
-  configuration: SetupInput[],
-  required: SetupInput[],
-  rebuild: SetupInput[],
-  entries: string[],
-) {
-  const inputs = [...configuration, ...required, ...rebuild];
-  const stamp = JSON.stringify([inputs, entries]);
-  const digest = createHash("sha256")
-    .update(JSON.stringify(inputs.map(({ name, digest }) => [name, digest])))
-    .digest("hex");
-  return { stamp, inputs, configuration, required, rebuild, entries, digest };
-}
-
-export type SetupSnapshot = ReturnType<typeof setupEvidence>;
 export type ViteSetup = Awaited<ReturnType<typeof viteSetup>>;
 
 /** Keep graph-owned files out of the additional setup inputs once found. */
@@ -240,39 +176,10 @@ export function excludeRebuildFiles(
   files.rebuild = rebuild;
   setup.state = setupEvidence(
     state.configuration,
-    state.required,
+    state.probes,
+    state.env,
+    state.postcss,
     state.rebuild.filter(({ name }) => !sources.has(name)),
     state.entries,
   );
-}
-
-function rebuildInputs(files: string[], paths: ModulePaths) {
-  return Promise.all(
-    files.map(async (name) =>
-      setupCandidate(
-        name,
-        await paths.metadata(path.resolve(paths.sourceRoot, name)),
-      ),
-    ),
-  );
-}
-
-async function confinedInputs(files: string[], paths: ModulePaths) {
-  return Promise.all(
-    [...new Set(files)].map(async (file) => {
-      const physical = await paths.metadata(file);
-      return setupCandidate(paths.metadataName(physical), physical);
-    }),
-  );
-}
-
-function matches(
-  previous: readonly SetupInput[],
-  current: readonly SetupInput[],
-): boolean {
-  const now = new Map(current.map((input) => [input.name, input]));
-  return previous.every(({ name, file, digest }) => {
-    const input = now.get(name);
-    return input?.file === file && input?.digest === digest;
-  });
 }

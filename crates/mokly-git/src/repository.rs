@@ -35,6 +35,8 @@ pub trait Repository: Send + Sync {
     fn digest(&self, commit: &ObjectId, entry: &Entry) -> Result<String>;
     /// Read an exact regular file after Git checkout conversion.
     fn read(&self, commit: &ObjectId, path: &RepoPath, limit: usize) -> Result<Vec<u8>>;
+    /// Read an exact symlink blob from previously listed tree metadata without checkout conversion.
+    fn read_link(&self, entry: &Entry, limit: usize) -> Result<Vec<u8>>;
     /// Read regular commit files after checkout conversion.
     fn read_many(
         &self,

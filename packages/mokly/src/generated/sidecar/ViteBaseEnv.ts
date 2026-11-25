@@ -7,6 +7,14 @@ export type ViteBaseEnv = {
  */
 workingRoot: string,
 /**
- * Repository-relative dotenv paths tracked by the working Git index.
+ * Repository-relative dotenv candidates and link targets in the working index.
  */
-indexed: Array<string>, };
+indexed: Array<string>,
+/**
+ * Pinned tree entries that can be final dotenv targets.
+ */
+pinned: Array<string>,
+/**
+ * Committed link targets by repository path. An unreadable target is absent.
+ */
+links: { [key in string]: string | null }, };

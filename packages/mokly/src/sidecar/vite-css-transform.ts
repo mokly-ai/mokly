@@ -136,6 +136,7 @@ export class ViteCssTransform {
           dependencies,
           importedBy,
           metadataInputs: metadata.metadataInputs,
+          envInputs: setup.state.envInputs,
         },
       };
     } finally {

@@ -18,7 +18,8 @@ import { moklyVitePlugin } from "./vite-plugin.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { captureReactPeers } from "./vite-react-peers.js";
 import { ViteLookup } from "./vite-resolution.js";
-import { setupSnapshot, viteSetup } from "./vite-setup.js";
+import { setupSnapshot } from "./vite-setup-snapshot.js";
+import { viteSetup } from "./vite-setup.js";
 import { ViteStyles } from "./vite-styles.js";
 
 interface Setup extends Awaited<ReturnType<typeof viteSetup>> {
@@ -86,6 +87,7 @@ export class ViteContext {
       ),
     ]);
     const previous = this.setup?.key === key ? this.setup : undefined;
+    if (entry !== undefined) previous?.ownedRebuildFiles.clear();
     const requested = params.viteInputs?.rebuildFiles ?? [];
     const requestedNames = new Set(requested);
     const ownedRebuildFiles = previous?.ownedRebuildFiles ?? new Set<string>();

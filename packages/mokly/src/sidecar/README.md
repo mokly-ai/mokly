@@ -527,15 +527,15 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   the server when roots, peers, the setup stamp, or metadata change. A change
   to a file that a stylesheet transform reported also replaces it.
   [`vite-setup.ts`](./vite-setup.ts) loads `vite.config.*` and starts Vite without
-  HTTP, file watching, hot reload, or dependency pre-bundling. `setupSnapshot`
-  digests the setup inputs: the config, its imports, the env files, the PostCSS
-  config candidates, the files of `rebuild` watch rules, and the configuration
-  file list. [`vite-setup-input.ts`](./vite-setup-input.ts) digests one
-  candidate, present or absent.
+  HTTP, file watching, hot reload, or dependency pre-bundling.
+  [`vite-setup-snapshot.ts`](./vite-setup-snapshot.ts) checks setup observations
+  and derives the setup identity from logical names and digests.
+  [`vite-setup-input.ts`](./vite-setup-input.ts) digests a candidate, present or absent.
   [`vite-postcss-lookup.ts`](./vite-postcss-lookup.ts) tracks the candidates of
   Vite's PostCSS config lookup inside the side's roots.
-  [`vite-working-env.ts`](./vite-working-env.ts) routes the base side's reads of
-  untracked env files to the working tree while the setup loads.
+  [`vite-working-env.ts`](./vite-working-env.ts) serves one dotenv byte snapshot
+  per candidate during setup. [`vite-base-env.ts`](./vite-base-env.ts) selects
+  its historical or working file and resolves committed links.
 - [`vite-config.ts`](./vite-config.ts) loads the app's config in memory on both
   sides with Vite's default loader semantics. A function export receives `serve`
   and `development`. [`vite-config-bundle.ts`](./vite-config-bundle.ts) uses
@@ -543,8 +543,9 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   result as ESM or CommonJS by config type. Installed packages stay external and
   resolve through `ViteLookup`. [`vite-config-resolution.ts`](./vite-config-resolution.ts)
   routes Node's bare imports through that lookup while the config loads.
-  [`vite-config-source.ts`](./vite-config-source.ts) sets each bundled module's
-  file values for `__dirname`, `__filename`, and `import.meta`.
+  [`vite-config-source.ts`](./vite-config-source.ts) records the bytes of each
+  bundled file and sets each script's values for `__dirname`, `__filename`, and
+  `import.meta`.
   [`vite-config-context.ts`](./vite-config-context.ts) resolves dynamic `require`
   and `import()` from their own module. [`vite-config-errors.ts`](./vite-config-errors.ts)
   names a failing config file or import from the esbuild location or source map.
