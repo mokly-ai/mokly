@@ -1120,6 +1120,11 @@
       "target": "design/canvas/props/states"
     },
     {
+      "source": "design/canvas/props/states/later-edit",
+      "name": "Try again",
+      "target": "design/canvas/props/states/later-pending"
+    },
+    {
       "source": "design/canvas/props/states/expired",
       "name": "Update preview",
       "target": "design/canvas/props/states"
@@ -1403,6 +1408,27 @@
       "within": "mbk-nav",
       "namePattern": "^Compact",
       "target": "design/canvas/components/removed/changes"
+    },
+    {
+      "source": "design/canvas/stories/storybook/added",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Menu(?:\\s*Changed)?$",
+      "target": "design/canvas/stories/failed"
+    },
+    {
+      "source": "design/canvas/stories/failed",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Menu(?:\\s*Changed)?$",
+      "target": null
+    },
+    {
+      "source": "design/canvas/stories/failed/changes",
+      "viewports": ["desktop"],
+      "within": "mbk-nav",
+      "namePattern": "^Menu(?:\\s*Changed)?$",
+      "target": null
     },
     {
       "source": "design/canvas/stage/catalogue",
@@ -1724,6 +1750,40 @@
         "onboarding": "design/canvas/overview"
       },
       "rows": ["Welcome"]
+    }
+  ],
+  "viewFacts": [
+    {
+      "path": "design/canvas/props/states/later-pending",
+      "label": "Start now",
+      "defaultPreview": "Get started"
+    },
+    {
+      "path": "design/canvas/props/states/error",
+      "alert": "Your edits are kept. The preview shows the saved props."
+    },
+    {
+      "path": "design/canvas/props/states/invalid",
+      "alert": "Check the highlighted values. The preview shows the saved props."
+    },
+    {
+      "path": "design/canvas/props/states/later-edit",
+      "alert": "Your edits are kept. The preview shows the last valid props."
+    },
+    {
+      "path": "design/canvas/stories/storybook",
+      "story": "Collapsed",
+      "storybook": true
+    },
+    {
+      "path": "design/canvas/stories/failed",
+      "story": "Expanded",
+      "storybook": true
+    },
+    {
+      "path": "design/canvas/stories/storybook/added",
+      "story": "Disabled",
+      "storybook": false
     }
   ]
 }

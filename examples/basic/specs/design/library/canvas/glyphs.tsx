@@ -10,6 +10,7 @@ export type CanvasGlyphName =
   | "dark"
   | "desktop"
   | "document"
+  | "external"
   | "fit"
   | "folder-branch"
   | "frame"
@@ -60,6 +61,12 @@ const STROKES: Record<CanvasGlyphName, () => ReactNode> = {
     <>
       <path d="M4 1.9h5l3.1 3.1v8c0 .6-.5 1.1-1.1 1.1H4c-.6 0-1.1-.5-1.1-1.1V3c0-.6.5-1.1 1.1-1.1z" />
       <path d="M9 1.9V5h3.1" />
+    </>
+  ),
+  external: () => (
+    <>
+      <path d="M9.5 2.5h4v4M13.5 2.5 7.8 8.2" />
+      <path d="M12 9.5v3a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 2 12.5v-7A1.5 1.5 0 0 1 3.5 4h3" />
     </>
   ),
   fit: () => (

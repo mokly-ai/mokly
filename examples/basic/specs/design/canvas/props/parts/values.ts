@@ -25,6 +25,16 @@ export const DEFAULT_EDITS = {
     radius: DEFAULT_SAVED.radius,
     tone: DEFAULT_SAVED.tone,
   },
+  /**
+   * A later edit of the label after the edited props rendered, whose render
+   * failed.
+   */
+  later: {
+    ...DEFAULT_SAVED,
+    label: "Start now",
+    radius: 16,
+    tone: "secondary",
+  },
   /** A corner radius above its maximum of 32. */
   invalid: { ...DEFAULT_SAVED, radius: 40 },
   /** Values that are each valid but fail together. */
