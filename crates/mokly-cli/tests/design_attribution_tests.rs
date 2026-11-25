@@ -26,7 +26,7 @@ mod changes_runtime;
 mod changes_source_admission;
 #[path = "../src/changes_static.rs"]
 mod changes_static;
-#[expect(dead_code, reason = "the fixture uses only Git helpers")]
+#[expect(dead_code, reason = "the fixture uses only helpers that write sources")]
 mod changes_support;
 #[path = "../src/changes_validation_admission.rs"]
 #[expect(dead_code, reason = "this matrix uses only static preparation")]

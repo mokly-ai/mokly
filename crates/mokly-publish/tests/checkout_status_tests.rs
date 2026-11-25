@@ -4,11 +4,10 @@
 mod checkout_support;
 
 use std::fs;
-use std::io::Write;
-use std::process::Command;
 
-use checkout_support::{checkout, git, init};
+use checkout_support::{checkout, init};
 use mokly_publish::runtime::CommandCancellation;
+use mokly_test_support::git::{git, git_input};
 
 #[test]
 fn only_exact_regular_reservation_owners_exclude_status_paths() {
@@ -90,7 +89,7 @@ fn deleted_type_changed_unmerged_and_ignored_paths_follow_git_status() {
         ["source.txt"]
     );
     git(root, &["checkout", "--", "source.txt"]);
-    let object = git(root, &["hash-object", "-w", "source.txt"]);
+    let object = String::from_utf8(git(root, &["hash-object", "-w", "source.txt"])).unwrap();
     let object = object.trim();
     git(
         root,
@@ -108,17 +107,11 @@ fn deleted_type_changed_unmerged_and_ignored_paths_follow_git_status() {
         ["source.txt"]
     );
     git(root, &["reset", "--hard", "HEAD"]);
-    let mut command = Command::new("git");
-    command
-        .current_dir(root)
-        .args(["update-index", "--index-info"])
-        .stdin(std::process::Stdio::piped());
-    let mut child = command.spawn().unwrap();
-    {
-        let mut input = child.stdin.take().unwrap();
-        write!(input,"0 {}\tsource.txt\n100644 {object} 1\tsource.txt\n100644 {object} 2\tsource.txt\n100644 {object} 3\tsource.txt\n","0".repeat(40)).unwrap();
-    }
-    assert!(child.wait().unwrap().success());
+    let input = format!(
+        "0 {}\tsource.txt\n100644 {object} 1\tsource.txt\n100644 {object} 2\tsource.txt\n100644 {object} 3\tsource.txt\n",
+        "0".repeat(40)
+    );
+    git_input(root, &["update-index", "--index-info"], input.as_bytes());
     assert_eq!(
         checkout
             .inspect(root, &[], &cancellation)

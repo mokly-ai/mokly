@@ -4,6 +4,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{Seek, SeekFrom, Write};
 
 use mokly_git::identity::ObjectId;
+use mokly_test_support::git::{git, git_input};
 
 #[expect(
     dead_code,
@@ -12,19 +13,13 @@ use mokly_git::identity::ObjectId;
 mod engine_support;
 use engine_support::Fixture;
 
-#[expect(
-    dead_code,
-    reason = "The shared host fixtures also support cache and install tests."
-)]
-mod support;
-
 #[test]
 fn a_hundred_thousand_unrelated_tracked_files_are_not_indexed() {
     let mut fixture = Fixture::new(&[(
         "specs/home.screen.html",
         "---\ntitle: Home\n---\n<p>Before</p>",
     )]);
-    let object = String::from_utf8(support::git_input(
+    let object = String::from_utf8(git_input(
         fixture.directory.path(),
         &["hash-object", "-w", "--stdin"],
         b"unrelated",
@@ -33,7 +28,7 @@ fn a_hundred_thousand_unrelated_tracked_files_are_not_indexed() {
     let index: String = (0..100_001)
         .map(|i| format!("100644 {}\tunrelated/{i}\n", object.trim()))
         .collect();
-    support::git_input(
+    git_input(
         fixture.directory.path(),
         &["update-index", "--index-info"],
         index.as_bytes(),
@@ -58,7 +53,7 @@ fn a_seventy_megabyte_video_compares_by_streamed_digest() {
         .unwrap()
         .set_len(70 * 1024 * 1024)
         .unwrap();
-    support::git(fixture.directory.path(), &["add", "movie.mp4"]);
+    git(fixture.directory.path(), &["add", "movie.mp4"]);
     fixture.refresh_base();
     let stable = fixture.compare().unwrap();
     assert!(stable.snapshot.changed_entries.is_empty());
@@ -73,7 +68,7 @@ fn a_seventy_megabyte_video_compares_by_streamed_digest() {
 
 impl Fixture {
     fn refresh_base(&mut self) {
-        support::git(
+        git(
             self.directory.path(),
             &[
                 "-c",
@@ -87,7 +82,7 @@ impl Fixture {
             ],
         );
         self.commit = ObjectId::parse(
-            String::from_utf8(support::git(self.directory.path(), &["rev-parse", "HEAD"]))
+            String::from_utf8(git(self.directory.path(), &["rev-parse", "HEAD"]))
                 .unwrap()
                 .trim(),
         )

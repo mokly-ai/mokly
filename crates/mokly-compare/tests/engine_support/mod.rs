@@ -2,9 +2,9 @@
 
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 use std::sync::Arc;
 
+use mokly_test_support::git::git;
 use unimock::Unimock;
 
 use mokly_catalogue::config::{ConfigLoader, Loader};
@@ -227,25 +227,6 @@ fn write(root: &Path, path: &str, text: &str) {
     let path = root.join(path);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, text).unwrap();
-}
-
-fn git(root: &Path, args: &[&str]) -> Vec<u8> {
-    let output = Command::new("git")
-        .current_dir(root)
-        .args(args)
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .env(
-            "GIT_CONFIG_GLOBAL",
-            if cfg!(windows) { "NUL" } else { "/dev/null" },
-        )
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "{args:?}: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    output.stdout
 }
 
 pub fn runner() -> Arc<dyn Runner> {

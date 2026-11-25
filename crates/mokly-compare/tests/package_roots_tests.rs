@@ -20,8 +20,9 @@ use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 use mokly_platform::processes::SystemProcessGroups;
 use mokly_sidecar::methods::ModuleResolution;
+use mokly_test_support::git::git;
 
-use support::{cache, git, storage};
+use support::{cache, storage};
 
 #[expect(dead_code, reason = "Host fixtures also serve cache tests.")]
 mod support;

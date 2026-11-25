@@ -1,7 +1,6 @@
 //! Local checkout failures leave independent comparison resources usable.
 
-use std::process::Command;
-
+use mokly_test_support::git::git;
 use sha2::{Digest, Sha256};
 
 #[expect(dead_code, reason = "only the comparison fixture is needed")]
@@ -24,14 +23,7 @@ fn a_failed_base_filter_warns_and_keeps_independent_changes() {
         ("filter.bad.smudge", "sh -c 'exit 42'"),
         ("filter.bad.required", "true"),
     ] {
-        assert!(
-            Command::new("git")
-                .current_dir(fixture.directory.path())
-                .args(["config", name, value])
-                .status()
-                .unwrap()
-                .success()
-        );
+        git(fixture.directory.path(), &["config", name, value]);
     }
     fixture.edit("good.png", "after");
     let result = fixture.compare().unwrap();
@@ -85,12 +77,7 @@ fn lfs_checkout_bytes_equal_the_working_resource() {
     ));
     std::fs::create_dir_all(object.parent().unwrap()).unwrap();
     std::fs::write(object, content).unwrap();
-    let installed = Command::new("git")
-        .current_dir(root)
-        .args(["lfs", "install", "--local"])
-        .output()
-        .unwrap();
-    assert!(installed.status.success());
+    git(root, &["lfs", "install", "--local"]);
     fixture.edit("image.png", content);
     let result = fixture.compare().unwrap();
     assert!(result.snapshot.changed_entries.is_empty());
@@ -112,14 +99,7 @@ fn an_unavailable_base_resource_is_not_change_proof() {
         ("filter.bad.smudge", "sh -c 'exit 42'"),
         ("filter.bad.required", "false"),
     ] {
-        assert!(
-            Command::new("git")
-                .current_dir(fixture.directory.path())
-                .args(["config", name, value])
-                .status()
-                .unwrap()
-                .success()
-        );
+        git(fixture.directory.path(), &["config", name, value]);
     }
     fixture.edit("bad.png", "different working data");
     let result = fixture.compare().unwrap();

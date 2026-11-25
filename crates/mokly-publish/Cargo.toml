@@ -31,6 +31,7 @@ webpki-root-certs = "1.0.10"
 mock = ["dep:unimock", "mokly-git/mock"]
 
 [dev-dependencies]
+mokly-test-support = { workspace = true }
 insta = "1.49.0"
 tempfile = "3.27.0"
 unimock = "0.6.8"

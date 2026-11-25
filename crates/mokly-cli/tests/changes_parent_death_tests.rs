@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::process::Stdio;
 use std::time::Duration;
 
+use mokly_test_support::git::git;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
@@ -77,8 +78,8 @@ async fn killing_build_ends_the_historical_sidecar_and_a_blocked_postcss_child()
                 "postcss.mjs",
                 "export default {plugins:[{postcssPlugin:'base-death',Once(){process.stderr.write('fixture-base-processes:'+JSON.stringify([process.ppid,process.pid])+'\\n'); while(true){} }}]};",
             );
-            changes_support::git(root.path(), &["add", "."]);
-            changes_support::git(
+            git(root.path(), &["add", "."]);
+            git(
                 root.path(),
                 &[
                     "-c",

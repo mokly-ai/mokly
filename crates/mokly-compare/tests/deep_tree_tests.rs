@@ -1,9 +1,9 @@
 //! Two Git commits compare deeply nested pages on an ordinary caller stack.
 
-use std::process::Command;
 use std::thread;
 
 use mokly_model::review::{EntryChangeReason, ReviewState};
+use mokly_test_support::git::git;
 
 #[expect(dead_code, reason = "deep fixtures only edit and move pages")]
 mod engine_support;
@@ -40,17 +40,7 @@ fn deep_two_commit_changes_preserve_material_and_move_results() {
                 "fixture head",
             ],
         ] {
-            let status = Command::new("git")
-                .current_dir(fixture.directory.path())
-                .args(args)
-                .env("GIT_CONFIG_NOSYSTEM", "1")
-                .env(
-                    "GIT_CONFIG_GLOBAL",
-                    if cfg!(windows) { "NUL" } else { "/dev/null" },
-                )
-                .status()
-                .unwrap();
-            assert!(status.success());
+            git(fixture.directory.path(), &args);
         }
         let result = fixture.compare().unwrap();
         assert_eq!(result.review.base_commit, fixture.commit.to_string());

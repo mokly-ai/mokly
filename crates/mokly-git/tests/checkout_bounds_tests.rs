@@ -3,6 +3,8 @@
 use mokly_git::error::Error;
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::Limits;
+#[cfg(unix)]
+use mokly_test_support::git::git;
 
 mod support;
 use support::Fixture;
@@ -61,8 +63,14 @@ fn expanding_filters_are_unavailable_at_the_selected_bound() {
     fixture.write(".gitattributes", b"value filter=expand\n");
     fixture.write("value", b"x");
     let base = fixture.commit();
-    fixture.git(&["config", "filter.expand.smudge", "printf 123456789"]);
-    fixture.git(&["config", "filter.expand.required", "true"]);
+    git(
+        fixture.root(),
+        &["config", "filter.expand.smudge", "printf 123456789"],
+    );
+    git(
+        fixture.root(),
+        &["config", "filter.expand.required", "true"],
+    );
     let error = fixture
         .repository()
         .read(&base, &RepoPath::parse("value").unwrap(), 8)

@@ -1,23 +1,10 @@
 //! Serve dependency warnings follow each accepted generation and cached stylesheet result.
 
 use std::fs;
-use std::path::Path;
-use std::process::Command;
+
+use mokly_test_support::git::git;
 
 use super::support::{Serve, write};
-
-fn git(root: &Path, args: &[&str]) {
-    let result = Command::new("git")
-        .args(args)
-        .current_dir(root)
-        .output()
-        .unwrap();
-    assert!(
-        result.status.success(),
-        "{}",
-        String::from_utf8_lossy(&result.stderr)
-    );
-}
 
 #[tokio::test]
 async fn html_dependency_warnings_follow_removed_and_reused_package_stylesheets() {

@@ -30,7 +30,3 @@ mod adapter_support;
 #[cfg(test)]
 #[path = "_tests_/git_adapter_support.rs"]
 mod git_adapter_support;
-
-#[cfg(test)]
-#[path = "_tests_/git_test_runner.rs"]
-mod git_test_runner;

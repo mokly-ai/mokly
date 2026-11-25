@@ -6,6 +6,7 @@ use std::fs;
 
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::Limits;
+use mokly_test_support::git::git;
 use sha2::{Digest, Sha256};
 
 mod support;
@@ -19,12 +20,21 @@ fn relative_filters_match_for_bytes_batches_digests_and_extraction() {
     fixture.write(".gitattributes", b"*.filtered filter=relative\n");
     fixture.write("a.filtered", b"a\n");
     fixture.write("dir/b.filtered", b"b\n");
-    fixture.git(&["config", "filter.relative.clean", "cat"]);
-    fixture.git(&["config", "filter.relative.smudge", "sh ./smudge.sh"]);
-    fixture.git(&["config", "filter.relative.required", "true"]);
+    git(fixture.root(), &["config", "filter.relative.clean", "cat"]);
+    git(
+        fixture.root(),
+        &["config", "filter.relative.smudge", "sh ./smudge.sh"],
+    );
+    git(
+        fixture.root(),
+        &["config", "filter.relative.required", "true"],
+    );
     let base = fixture.commit();
-    let before = fixture.git(&["status", "--porcelain", "--untracked-files=all"]);
-    let index = fixture.git(&["write-tree"]);
+    let before = git(
+        fixture.root(),
+        &["status", "--porcelain", "--untracked-files=all"],
+    );
+    let index = git(fixture.root(), &["write-tree"]);
     let repository = fixture.repository();
     let paths = [
         RepoPath::parse("a.filtered").unwrap(),
@@ -50,9 +60,12 @@ fn relative_filters_match_for_bytes_batches_digests_and_extraction() {
         .extract(&base, &destination, Limits::default())
         .unwrap();
     assert_eq!(fs::read(destination.join("a.filtered")).unwrap(), expected);
-    assert_eq!(fixture.git(&["write-tree"]), index);
+    assert_eq!(git(fixture.root(), &["write-tree"]), index);
     assert_eq!(
-        fixture.git(&["status", "--porcelain", "--untracked-files=all"]),
+        git(
+            fixture.root(),
+            &["status", "--porcelain", "--untracked-files=all"]
+        ),
         before
     );
 }
@@ -63,7 +76,10 @@ fn attribute_values_named_unset_are_still_filter_drivers() {
     fixture.write(".gitattributes", b"file filter=unset\n");
     fixture.write("file", b"input");
     let base = fixture.commit();
-    fixture.git(&["config", "filter.unset.smudge", "printf converted"]);
+    git(
+        fixture.root(),
+        &["config", "filter.unset.smudge", "printf converted"],
+    );
     assert_eq!(
         fixture
             .repository()

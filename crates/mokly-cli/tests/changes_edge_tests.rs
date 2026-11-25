@@ -2,10 +2,11 @@
 
 use std::fs;
 
+use mokly_test_support::git::git;
 use tempfile::TempDir;
 
 mod changes_support;
-use changes_support::{base, git, run, write};
+use changes_support::{base, run, write};
 
 #[test]
 fn a_catalogue_added_after_the_base_has_every_current_entry_added() {

@@ -4,6 +4,7 @@ use std::fs;
 use std::path::Path;
 use std::process::{Command, Output};
 
+use mokly_test_support::git::git;
 use serde_json::Value;
 use tempfile::TempDir;
 
@@ -19,19 +20,6 @@ fn write(root: &Path, path: &str, text: &str) {
     let path = root.join(path);
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, text).unwrap();
-}
-
-fn git(root: &Path, args: &[&str]) {
-    let result = Command::new("git")
-        .args(args)
-        .current_dir(root)
-        .output()
-        .unwrap();
-    assert!(
-        result.status.success(),
-        "{}",
-        String::from_utf8_lossy(&result.stderr)
-    );
 }
 
 fn fixture() -> TempDir {

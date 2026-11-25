@@ -1,7 +1,9 @@
 //! Tracked dependency files use their Git bytes even when tier one selects working installs.
 
+use mokly_test_support::git::git;
+
 mod changes_support;
-use changes_support::{base, git, run, write};
+use changes_support::{base, run, write};
 
 const PAGE: &str = "import {definePage} from '@mokly/mokly'; export default definePage({title:'Page',description:'',relatedDocs:[],render:()=>'<!doctype html><html><head><title>Page</title></head><body><p>'+VALUE+'</p></body></html>'});";
 

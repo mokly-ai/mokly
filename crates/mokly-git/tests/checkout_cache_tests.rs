@@ -3,6 +3,7 @@
 use std::fs;
 
 use mokly_git::identity::RepoPath;
+use mokly_test_support::git::git;
 
 mod support;
 use support::Fixture;
@@ -15,11 +16,14 @@ fn source_keys_follow_external_attribute_file_contents() {
     let external = tempfile::tempdir().unwrap();
     let attributes = external.path().join("attributes");
     fs::write(&attributes, "*.txt text eol=lf\n").unwrap();
-    fixture.git(&[
-        "config",
-        "core.attributesFile",
-        attributes.to_str().unwrap(),
-    ]);
+    git(
+        fixture.root(),
+        &[
+            "config",
+            "core.attributesFile",
+            attributes.to_str().unwrap(),
+        ],
+    );
     let repository = fixture.repository();
     let before = repository.source_key(&commit).unwrap();
     fs::write(&attributes, "*.txt text eol=crlf\n").unwrap();
@@ -42,7 +46,7 @@ fn external_filters_do_not_reuse_a_stale_source_key() {
     fixture.write(".gitattributes", b"*.txt filter=custom\n");
     fixture.write("notes.txt", b"base\n");
     let commit = fixture.commit();
-    fixture.git(&["config", "filter.custom.smudge", "cat"]);
+    git(fixture.root(), &["config", "filter.custom.smudge", "cat"]);
     let repository = fixture.repository();
     let checkout = repository.checkout_identity(&commit).unwrap();
     assert!(checkout.filtered);
@@ -63,7 +67,10 @@ fn literal_filter_state_names_do_not_reuse_a_stale_source_key() {
         );
         fixture.write("notes.txt", b"base\n");
         let commit = fixture.commit();
-        fixture.git(&["config", &format!("filter.{driver}.smudge"), "cat"]);
+        git(
+            fixture.root(),
+            &["config", &format!("filter.{driver}.smudge"), "cat"],
+        );
         let repository = fixture.repository();
         assert_ne!(
             repository.source_key(&commit).unwrap(),

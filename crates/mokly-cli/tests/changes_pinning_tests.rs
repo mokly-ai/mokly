@@ -3,8 +3,10 @@
 use std::fs;
 use std::path::Path;
 
+use mokly_test_support::git::git;
+
 mod changes_support;
-use changes_support::{base, git, run, write};
+use changes_support::{base, run, write};
 
 #[test]
 fn comparison_keeps_the_commit_selected_before_current_render_callbacks() {

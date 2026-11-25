@@ -3,9 +3,10 @@
 use std::fs;
 use std::process::Command;
 
+use mokly_test_support::git::git;
 use serde_json::Value;
 
-use super::{build, fixture, git, write};
+use super::{build, fixture, write};
 
 #[path = "large.rs"]
 mod large;

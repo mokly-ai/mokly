@@ -5,7 +5,7 @@
 - **Added:** 2026-11-19, from the complete gate of
   `calummoore/fu-build-render-once-test-ekcm`.
 - **Location:** `crates/mokly-cli/tests/changes_javascript_tests.rs:74`,
-  `crates/mokly-cli/tests/changes_support/mod.rs:54`, and
+  `crates/mokly-cli/tests/changes_support/mod.rs:34`, its `run_configured` helper, and
   `crates/mokly-static/src/fingerprint.rs:224`.
 - **Reason:** On 2026-11-20, 90 traced and untraced runs passed without a
   rejection, so the source is unknown and the next step needs the user.

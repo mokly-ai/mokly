@@ -1,10 +1,11 @@
 # mokly-test-support
 
-`mokly-test-support` gives the Rust tests of the workspace two shared tools. It
-captures `tracing` spans and events, and it creates private fixture folders for
-tests that need a durable capture. Depend on it as a dev-dependency. The crate
-is internal. Its manifest sets `publish = false`, and no production code
-depends on it. It depends on `tracing`, `tracing-subscriber`, and `tempfile`.
+`mokly-test-support` gives the Rust tests of the workspace shared tools. It
+captures `tracing` spans and events, creates private fixture folders for tests
+that need a durable capture, and runs isolated Git fixture commands. Depend on
+it as a dev-dependency. The crate is internal. Its manifest sets
+`publish = false`, and no production code depends on it. It depends on
+`tracing`, `tracing-subscriber`, and `tempfile`.
 
 The tests of `mokly-cli`, `mokly-render`, `mokly-compare`, `mokly-sidecar`,
 `mokly-graph`, and `mokly-server` use the trace capture. Six tests of
@@ -21,8 +22,31 @@ crates.
 - Install the guard before a scoped subscriber that a test builds itself.
 - Give each test that needs a durable capture its own owner folder. Then no
   other fixture changes the folders above its inputs during a capture.
+- Run Git fixtures without the developer's global or system Git settings.
+- Write piped Git input while both output pipes are drained.
 
 ## What This Crate Does
+
+### Isolated Git fixtures
+
+Every Git fixture command starts with `git::command`. It sets
+`GIT_CONFIG_GLOBAL` to `/dev/null`, or `NUL` on Windows, and sets
+`GIT_CONFIG_NOSYSTEM=1`. Repository settings and other environment variables
+stay available to the fixture.
+
+`git::git(root, args)` runs Git in the given directory, checks that the exit
+status is successful, and returns stdout as bytes. `git::git_input` also sends
+the supplied bytes to stdin. A scoped writer thread sends the input while
+`wait_with_output` drains stdout and stderr. This prevents a full output pipe
+from blocking a large input write. Both helpers panic on a process or pipe
+error. A failed exit status includes the arguments, stdout, and stderr.
+
+Use `git::command` when a fixture needs extra arguments, environment settings,
+or an exit status that it checks itself. Pass the customized command to
+`git::run` to check success and return stdout. The xtask repository fixture
+also removes its repository and secret environment variables before it calls
+`git::run`. Product Git processes use their own runners and keep their
+configuration behavior.
 
 ### Trace capture
 
@@ -149,6 +173,20 @@ Add the crate to the dev-dependencies of the crate under test:
 mokly-test-support = { workspace = true }
 ```
 
+Create a Git fixture and write an object through stdin:
+
+```rust
+use mokly_test_support::git::{git, git_input};
+
+let directory = tempfile::tempdir().unwrap();
+git(directory.path(), &["init", "--quiet"]);
+let object = git_input(
+    directory.path(),
+    &["hash-object", "-w", "--stdin"],
+    b"fixture content",
+);
+```
+
 Capture a span in one scope, and an event on a worker thread:
 
 ```rust
@@ -217,7 +255,8 @@ through real production callsites. The sidecar test
 protects the guard. It uses channels to make a thread without a capture
 register a callsite first. Then it checks that the capture still sees the span.
 It asserts no elapsed time. The durable fixture tests use real Node sidecars,
-real file system evidence, and real disk caches.
+real file system evidence, and real disk caches. The Git helpers run through
+the fixture setup and inspection of the consumer integration tests.
 
 Follow these rules when you add a capture:
 
@@ -246,6 +285,8 @@ Follow these rules when you add a durable fixture:
 
 ### Key Code
 
+- [`src/git.rs`](./src/git.rs) provides isolated Git commands, checked
+  execution, and piped input for fixture repositories.
 - [`src/capture.rs`](./src/capture.rs) defines `Trace`, which runs a closure
   under its dispatcher and returns span and event snapshots.
 - [`src/records.rs`](./src/records.rs) defines `CapturedSpan`,

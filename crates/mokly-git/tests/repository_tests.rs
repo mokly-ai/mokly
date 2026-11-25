@@ -10,6 +10,7 @@ use mokly_git::disk::{Disk, SystemDisk};
 use mokly_git::error::Error;
 use mokly_git::identity::RepoPath;
 use mokly_git::tree::Limits;
+use mokly_test_support::git::git;
 
 use support::Fixture;
 
@@ -23,15 +24,15 @@ fn merge_base_uses_history_and_diff_includes_every_working_side() {
     }
     fixture.write(".gitignore", b"ignored\n");
     let base = fixture.commit();
-    fixture.git(&["branch", "base"]);
+    git(fixture.root(), &["branch", "base"]);
     fixture.write("main-only", b"base branch");
     fixture.commit();
-    fixture.git(&["switch", "-c", "head", base.as_str()]);
+    git(fixture.root(), &["switch", "-c", "head", base.as_str()]);
     fixture.write("committed", b"new commit");
     fixture.commit();
-    fixture.git(&["mv", "rename", "renamed"]);
+    git(fixture.root(), &["mv", "rename", "renamed"]);
     fixture.write("staged", b"staged edit");
-    fixture.git(&["add", "staged"]);
+    git(fixture.root(), &["add", "staged"]);
     fixture.write("unstaged", b"unstaged edit");
     fs::remove_file(fixture.root().join("deleted")).unwrap();
     fixture.write("untracked", b"new");
@@ -189,10 +190,10 @@ fn unrelated_histories_keep_a_typed_no_merge_base_error() {
     let fixture = Fixture::new();
     fixture.write("main", b"main");
     fixture.commit();
-    fixture.git(&["switch", "--orphan", "unrelated"]);
+    git(fixture.root(), &["switch", "--orphan", "unrelated"]);
     fixture.write("other", b"other history");
     fixture.commit();
-    fixture.git(&["switch", "main"]);
+    git(fixture.root(), &["switch", "main"]);
     assert!(matches!(
         fixture.repository().merge_base("unrelated"),
         Err(Error::NoMergeBase)

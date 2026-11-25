@@ -19,6 +19,7 @@ use mokly_git::system::SystemRunner;
 use mokly_git::tree::Limits;
 #[cfg(unix)]
 use mokly_platform::processes::SystemProcessGroups;
+use mokly_test_support::git::git;
 use sha2::{Digest, Sha256};
 
 use support::Fixture;
@@ -44,8 +45,8 @@ fn base_reads_apply_the_commit_line_ending_rule() {
 #[test]
 fn base_reads_smudge_local_lfs_objects() {
     let fixture = Fixture::new();
-    fixture.git(&["lfs", "install", "--local"]);
-    fixture.git(&["lfs", "track", "*.lfs"]);
+    git(fixture.root(), &["lfs", "install", "--local"]);
+    git(fixture.root(), &["lfs", "track", "*.lfs"]);
     fixture.write("asset.lfs", b"local LFS content\n");
     let base = fixture.commit();
 
@@ -87,9 +88,12 @@ fn converted_digest_streams_files_larger_than_the_capture_limit() {
 #[test]
 fn a_failed_checkout_filter_does_not_return_pointer_bytes() {
     let fixture = Fixture::new();
-    fixture.git(&["config", "filter.fail.clean", "cat"]);
-    fixture.git(&["config", "filter.fail.smudge", "sh -c 'exit 42'"]);
-    fixture.git(&["config", "filter.fail.required", "true"]);
+    git(fixture.root(), &["config", "filter.fail.clean", "cat"]);
+    git(
+        fixture.root(),
+        &["config", "filter.fail.smudge", "sh -c 'exit 42'"],
+    );
+    git(fixture.root(), &["config", "filter.fail.required", "true"]);
     fixture.write(".gitattributes", b"*.filtered filter=fail\n");
     fixture.write("value.filtered", b"source\n");
     let base = fixture.commit();
@@ -105,9 +109,15 @@ fn a_failed_checkout_filter_does_not_return_pointer_bytes() {
 #[test]
 fn an_optional_checkout_filter_failure_does_not_return_pointer_bytes() {
     let fixture = Fixture::new();
-    fixture.git(&["config", "filter.optional.clean", "cat"]);
-    fixture.git(&["config", "filter.optional.smudge", "sh -c 'exit 42'"]);
-    fixture.git(&["config", "filter.optional.required", "false"]);
+    git(fixture.root(), &["config", "filter.optional.clean", "cat"]);
+    git(
+        fixture.root(),
+        &["config", "filter.optional.smudge", "sh -c 'exit 42'"],
+    );
+    git(
+        fixture.root(),
+        &["config", "filter.optional.required", "false"],
+    );
     fixture.write(".gitattributes", b"*.optional filter=optional\n");
     fixture.write("value.optional", b"source\n");
     let base = fixture.commit();
@@ -123,9 +133,12 @@ fn an_optional_checkout_filter_failure_does_not_return_pointer_bytes() {
 #[test]
 fn a_hanging_checkout_filter_is_bounded() {
     let fixture = Fixture::new();
-    fixture.git(&["config", "filter.wait.clean", "cat"]);
-    fixture.git(&["config", "filter.wait.smudge", "sh -c 'sleep 60'"]);
-    fixture.git(&["config", "filter.wait.required", "true"]);
+    git(fixture.root(), &["config", "filter.wait.clean", "cat"]);
+    git(
+        fixture.root(),
+        &["config", "filter.wait.smudge", "sh -c 'sleep 60'"],
+    );
+    git(fixture.root(), &["config", "filter.wait.required", "true"]);
     fixture.write(".gitattributes", b"*.wait filter=wait\n");
     fixture.write("value.wait", b"source\n");
     let base = fixture.commit();
@@ -173,9 +186,9 @@ fn base_attributes_override_staged_and_working_attributes() {
     let base = fixture.commit();
     fixture.write(".gitattributes", b"*.txt -text\n");
     fixture.write("notes.txt", b"staged\n");
-    fixture.git(&["add", "-A"]);
+    git(fixture.root(), &["add", "-A"]);
     fixture.write("notes.txt", b"working\n");
-    let staged = fixture.git(&["write-tree"]);
+    let staged = git(fixture.root(), &["write-tree"]);
     assert_eq!(
         fixture
             .repository()
@@ -183,7 +196,7 @@ fn base_attributes_override_staged_and_working_attributes() {
             .unwrap(),
         b"base\r\n"
     );
-    assert_eq!(fixture.git(&["write-tree"]), staged);
+    assert_eq!(git(fixture.root(), &["write-tree"]), staged);
     assert_eq!(
         std::fs::read(fixture.root().join("notes.txt")).unwrap(),
         b"working\n"
