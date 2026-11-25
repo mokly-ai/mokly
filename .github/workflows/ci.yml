@@ -268,13 +268,15 @@ jobs:
         run: npm ci
       # The packages of `playwright install-deps` follow the Playwright version
       # and the Ubuntu release of the image.
-      - name: Name the Chromium package cache
+      - &chromium-packages-key
+        name: Name the Chromium package cache
         id: chromium-packages
         run: |
           playwright=$(jq --raw-output --exit-status '.packages["node_modules/playwright-core"].version' package-lock.json)
           echo "key=chromium-packages-$RUNNER_OS-$RUNNER_ARCH-$ImageOS-playwright-$playwright" >> "$GITHUB_OUTPUT"
           echo "path=$HOME/.cache/mokly-chromium-packages" >> "$GITHUB_OUTPUT"
-      - name: Restore Chromium package downloads
+      - &chromium-packages-restore
+        name: Restore Chromium package downloads
         id: chromium-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
@@ -283,7 +285,8 @@ jobs:
       # apt adds only the packages that the image lacks and upgrades none, so
       # the downloads are one set on every image. It takes a restored package
       # from its archive folder instead of the mirror.
-      - name: Install Chromium
+      - &chromium-install
+        name: Install Chromium
         env:
           PACKAGES: ${{ steps.chromium-packages.outputs.path }}
         run: |
@@ -478,32 +481,10 @@ jobs:
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
-      # The packages of `playwright install-deps` follow the Playwright version
-      # and the Ubuntu release of the image.
-      - name: Name the Chromium package cache
-        id: chromium-packages
-        run: |
-          playwright=$(jq --raw-output --exit-status '.packages["node_modules/playwright-core"].version' package-lock.json)
-          echo "key=chromium-packages-$RUNNER_OS-$RUNNER_ARCH-$ImageOS-playwright-$playwright" >> "$GITHUB_OUTPUT"
-          echo "path=$HOME/.cache/mokly-chromium-packages" >> "$GITHUB_OUTPUT"
-      - name: Restore Chromium package downloads
-        id: chromium-cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ steps.chromium-packages.outputs.path }}
-          key: ${{ steps.chromium-packages.outputs.key }}
-      # apt adds only the packages that the image lacks and upgrades none, so
-      # the downloads are one set on every image. It takes a restored package
-      # from its archive folder instead of the mirror.
-      - name: Install Chromium
-        env:
-          PACKAGES: ${{ steps.chromium-packages.outputs.path }}
-        run: |
-          echo 'APT::Get::Upgrade "false";' | sudo tee /etc/apt/apt.conf.d/90-mokly-no-upgrade > /dev/null
-          if compgen -G "$PACKAGES/*.deb" > /dev/null; then
-            sudo cp "$PACKAGES"/*.deb /var/cache/apt/archives/
-          fi
-          npx playwright install --with-deps chromium
+      # The browser job defines these steps, so both jobs use one cache key.
+      - *chromium-packages-key
+      - *chromium-packages-restore
+      - *chromium-install
       - name: Build native and JavaScript packages
         run: npm run build
       - name: Check example delivery

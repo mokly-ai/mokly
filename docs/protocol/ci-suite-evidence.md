@@ -113,7 +113,7 @@ owns a fresh build. CI and the complete local gate check both static HTTP and
 direct `file://` delivery against a fresh example build. CI checks each mode in
 its own job, against that job's own build. Decision: one job per mode, because
 both modes in one job took about 8 minutes, above the
-[shard target](#shard-totals) of the other browser jobs. Remote verification
+[browser shard target](#shard-totals). Remote verification
 runs these checks as its separate
 [static-delivery command](./remote-verification-testbox.md#remote-commands).
 The sharded browser inventory stays unchanged. Selected delivery reports cannot
@@ -178,8 +178,8 @@ identify the expected failure. No sleep synchronizes an assertion.
 totals. The runtime profile job reads this file and publishes the shard matrices.
 The report aggregate and [remote verification](./remote-verification.md) read
 the same file, so a shard count change is one edit. Decision: shard the viewer
-and browser suites until each job takes about 7 to 9 minutes, including
-setup. GitHub-hosted runners for this public repository cost nothing, so a
+suite until each job takes about 7 to 9 minutes, and the browser suite until
+each job takes about 7 minutes or less, including setup. GitHub-hosted runners for this public repository cost nothing, so a
 shard adds no cost; each shard repeats about 4 minutes of setup, build, and
 browser global setup. The [worker count](#test-concurrency)
 of a shard does not change.
