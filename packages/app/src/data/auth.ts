@@ -6,14 +6,26 @@ import {
   originHeader,
 } from "../api/client";
 import type {
+  Configuration,
   Connection,
   DesktopGrantCallback,
   DesktopGrantRequest,
   DesktopGrantResult,
   MagicLinkResult,
+  PreviewSignIn,
   SessionIssued,
   User,
 } from "../api/types";
+
+/**
+ * Read which optional configuration the API has, such as the shared account
+ * that the preview password signs in. It needs no session.
+ */
+export function readConfiguration(): Promise<Configuration> {
+  return expectBody((id) =>
+    api.GET("/v1/configuration", { headers: correlationHeader(id) }),
+  );
+}
 
 /** Ask the API to send a sign-in link; the answer never reveals an account. */
 export function sendMagicLink(input: {
@@ -36,6 +48,22 @@ export function verifyMagicLink(token: string): Promise<SessionIssued> {
       params: { header: originHeader() },
       headers: correlationHeader(id),
       body: { token },
+    }),
+  );
+}
+
+/**
+ * Exchange the preview password for a session of the shared account, issuing
+ * the session cookie and its destination.
+ */
+export function exchangePreviewPassword(
+  input: PreviewSignIn,
+): Promise<SessionIssued> {
+  return expectBody((id) =>
+    api.POST("/v1/auth/preview", {
+      params: { header: originHeader() },
+      headers: correlationHeader(id),
+      body: input,
     }),
   );
 }

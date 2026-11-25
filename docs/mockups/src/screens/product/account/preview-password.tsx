@@ -3,6 +3,7 @@ import { WriteFailure } from "../../../entries/design/write-failure.mockup";
 import {
   causes,
   failureReference,
+  fieldRefusals,
   previewPassword,
   stateScreenPath,
 } from "../../../fixtures/product-states";
@@ -70,7 +71,7 @@ export function PasswordSection({
         disabled={signingIn}
         // A registered wrapper refuses an `undefined` prop, so every other
         // situation leaves the error out.
-        {...(refusedPassword ? { error: previewPassword.refused } : {})}
+        {...(refusedPassword ? { error: fieldRefusals.password } : {})}
       />
       {refusedPassword || situation === "failure" ? (
         <WriteFailure

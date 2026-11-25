@@ -2,13 +2,16 @@ import type { Owner } from "../app-regions";
 
 /**
  * Sign in's password section, which the application draws from a module of
- * its own once it reads its configuration answer. That module does not exist
- * yet, so the section's pages wait on it, and the comparison starts when it
- * lands.
+ * its own once it reads its configuration answer. The entry screen writes the
+ * rest of the panel: the GitHub action and the email form, which stay at rest
+ * on every page of the section.
  */
 const passwordSection = {
   region: "panelled",
-  pending: "screens/account/preview-password.tsx",
+  files: [
+    "screens/account/entry-screen.tsx",
+    "screens/account/preview-password.tsx",
+  ],
 } as const satisfies Owner;
 
 export const accountOwners = {

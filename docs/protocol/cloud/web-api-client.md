@@ -1,7 +1,5 @@
 # Web API Client
 
-Status: [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) adds the app's password exchange.
-
 This is the session and API client sub-contract of
 [Web application](./web-app.md). The API boundary follows
 [REST API](./rest-api.md).

@@ -1,7 +1,5 @@
 # Mokly Cloud
 
-Status: [Milestone 6](../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) adds the password section to Sign in.
-
 Mokly Cloud is the hosted companion to the open-source
 [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) mockup catalogue
 CLI. Teams keep authoring React mockups in their own repository. The cloud

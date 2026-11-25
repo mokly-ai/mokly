@@ -1,7 +1,5 @@
 # Folio Chrome: Account Entry
 
-Status: The app does not draw sign in's password section yet. [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) builds it.
-
 The account entry composition of [Folio chrome](./folio-chrome.md): the one
 panel every account screen shares. Every value comes from
 [Design tokens](./design-tokens.md); the screens that draw it are listed in

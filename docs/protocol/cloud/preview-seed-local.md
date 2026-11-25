@@ -1,7 +1,5 @@
 # Local Preview Seed
 
-Status: [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) adds the password section to Sign in.
-
 This sub-contract of [Preview seed](./preview-seed.md) defines the local
 preview account and the local capture and seed commands.
 

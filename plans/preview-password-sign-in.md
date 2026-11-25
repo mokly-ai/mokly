@@ -707,33 +707,57 @@ Depends on: 1, 4
 
 The app draws the section as the mockups show and sends the password.
 
-- [ ] Add the password call and the configuration read to
+- [x] Add the password call and the configuration read to
       `packages/app/src/data/auth.ts`.
-- [ ] Draw the section in `packages/app/src/screens/account/entry-screen.tsx`
+- [x] Draw the section in `packages/app/src/screens/account/entry-screen.tsx`
       from the `@firna/ui` and app components, as the mockups show. Keep the
       file under 300 lines.
-- [ ] Give `packages/app/src/components/field.tsx` a `password` type, as
+- [x] Give `packages/app/src/components/field.tsx` a `password` type, as
       `docs/mockups/src/components/input.tsx` draws it: masked, with
       `autoComplete="current-password"`, and without autocapitalize,
       autocorrect or spellcheck.
-- [ ] In `docs/mockups/src/_tests_/owners/account.ts`, replace the pending
+- [x] In `docs/mockups/src/_tests_/owners/account.ts`, replace the pending
       owner of the four `product/account/sign-in/preview-password` pages with
       the app file that draws the section. Move `previewPassword.refused`
       into `fieldRefusals` in `docs/mockups/src/fixtures/product-states.ts`,
       with its home in `docs/mockups/src/_tests_/app-parity-copy.test.ts`. The
       label and copy parity checks then cover the section.
-- [ ] Tests: the section shows only when the configuration answer names an
+- [x] Tests: the section shows only when the configuration answer names an
       account, the trimmed password goes to the API with the page's
       `returnTo`, a refused password marks the field, and a success leaves
       for the answer's `returnTo`.
-- [ ] Smoke-test the section against the local stack: sign in with the local
+- [x] Smoke-test the section against the local stack: sign in with the local
       password, and refuse a wrong one. Save screenshots under
       `.context/preview-password-sign-in/`.
-- [ ] Update `packages/app/README.md`, whose Responsibilities still name the
+- [x] Update `packages/app/README.md`, whose Responsibilities still name the
       preview landing, for Sign in's password section.
-- [ ] Remove or narrow each status line that links this milestone: search
+- [x] Remove or narrow each status line that links this milestone: search
       `docs/` and every `README.md` for
       `#milestone-6-sign-in-password-section`.
+
+**My calls on 2026-11-25.**
+
+- The section lives in its own module,
+  `packages/app/src/screens/account/preview-password.tsx`, and the entry
+  screen draws it. Its field names `magic-link-invalid` as its own, and the
+  sentence "This password isn’t valid." is the shared copy of that reason in
+  `packages/app/src/api/form-error.ts`. Reason: the ast-grep rule
+  `one-form-words-its-own-field` allows one form-specific field sentence, the
+  email one, and a form meets `magic-link-invalid` only as a refused password.
+- Sign in's own wait is the session guard's waiting panel, drawn as the same
+  layout element as the form that replaces it. Reason: the frame around the
+  panel, with its skip link and header, then stays in place when the answer
+  comes.
+- The parity reader compares "Continue as preview@mokly.ai" by its literal
+  "Continue as ", because the account is configured data. Its list of fixture
+  values in `docs/mockups/src/_tests_/app-parity-reads.ts` gains the
+  account.
+- The password write joins the app's write tables, which check its wait, its
+  refusal beside the control and its undo. The Mac window scroll spec runs on
+  Sign up, because the section makes the suite's Sign in longer than that
+  test assumes.
+
+The check logs and screenshots are in `.context/preview-password-sign-in/m6/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

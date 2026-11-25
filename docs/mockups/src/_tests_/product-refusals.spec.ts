@@ -132,7 +132,7 @@ const refusals: DrawnRefusal[] = [
     reference: true,
     address: true,
     resting: "Continue with email",
-    password: { kept: previewPassword.typed, marks: previewPassword.refused },
+    password: { kept: previewPassword.typed, marks: fieldRefusals.password },
   },
   {
     ...refusedSave,

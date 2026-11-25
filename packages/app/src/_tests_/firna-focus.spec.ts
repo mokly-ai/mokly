@@ -1,11 +1,11 @@
-import { expect, open, test } from "./harness";
+import { expect, openSignIn, test } from "./harness";
 
 for (const scheme of ["light", "dark"] as const)
   test(
     "live Firna controls retain the keyboard focus glow: " + scheme,
     async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
-      await open(page, "/sign-in");
+      await openSignIn(page);
       await expect(page.locator("html")).toHaveAttribute(
         "data-color-scheme",
         scheme,
