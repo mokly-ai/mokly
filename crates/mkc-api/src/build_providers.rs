@@ -6,10 +6,10 @@ use std::sync::Arc;
 use mkc_build_interface::runner::BuildRunner;
 use mkc_build_sandbox::clock::SystemBuildClock;
 use mkc_build_sandbox::policy::denied_destinations;
-use mkc_build_sandbox::runner::SandboxBuildRunner;
+use mkc_build_sandbox::runner::{BuildSandboxCapabilities, SandboxBuildRunner};
 use mkc_config::builds::BuildSettings;
 use sandbox_e2b::{E2bAdapterConfig, E2bProfile, E2bSandboxBackend};
-use sandbox_interface::{EgressDestination, SandboxBackend};
+use sandbox_interface::EgressDestination;
 
 use crate::error::{ApiError, ApiErrorResultExt, Result};
 
@@ -18,7 +18,7 @@ pub struct BuildProviders {
     /// Runner also owns cleanup when its future is dropped.
     pub runner: Arc<dyn BuildRunner>,
     /// Deployment inventory reconciliation shares the same backend.
-    pub backend: Arc<dyn SandboxBackend>,
+    pub sandbox: BuildSandboxCapabilities,
 }
 
 /// Injectable provider factory for configured applications and server smoke tests.
@@ -67,16 +67,21 @@ impl BuildProviderFactory for SystemBuildProviderFactory {
             60,
         )
         .context("configure build sandbox backend")?;
-        let backend: Arc<dyn SandboxBackend> =
+        let backend =
             Arc::new(E2bSandboxBackend::new(adapter).context("construct build sandbox backend")?);
+        let sandbox = BuildSandboxCapabilities {
+            lifecycle: backend.clone(),
+            files: backend.clone(),
+            processes: backend,
+        };
         let runner: Arc<dyn BuildRunner> = Arc::new(
             SandboxBuildRunner::new(
-                backend.clone(),
+                sandbox.clone(),
                 Arc::new(SystemBuildClock),
                 config.deployment_id.clone(),
             )
             .context("construct sandbox build runner")?,
         );
-        Ok(BuildProviders { runner, backend })
+        Ok(BuildProviders { runner, sandbox })
     }
 }

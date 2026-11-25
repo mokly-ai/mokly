@@ -4,17 +4,18 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use futures_util::stream;
+use mkc_build_sandbox::runner::BuildSandboxCapabilities;
 use sandbox_interface::{
     BackendCreateSandboxRequest, BackendSandbox, BackendStreamProcessRequest,
     BackendWriteFileRequest, Error, OperationId, ProcessStreamEvent, ProviderRef, ResourceOwner,
-    SandboxBackend, SandboxBackendMock, SandboxConsumer, SandboxId, SandboxLifetime,
-    SandboxNetworkPolicy, SandboxState,
+    SandboxConsumer, SandboxFilesMock, SandboxId, SandboxLifecycleMock, SandboxLifetime,
+    SandboxNetworkPolicy, SandboxProcessesMock, SandboxState,
 };
 use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
 
 pub(super) const SUCCESS: &[u8] =
-    b"PASS build template: tools, user, workspace, credentials and merged environment\n";
+    b"PASS build template: tools, user, workspace, credentials, HOME, PATH tools and added entry\n";
 
 pub(super) fn sandbox() -> BackendSandbox {
     BackendSandbox {
@@ -23,15 +24,25 @@ pub(super) fn sandbox() -> BackendSandbox {
     }
 }
 
+/// Serve every capability that the probe uses from one strict mock.
+pub(super) fn capabilities(backend: Unimock) -> BuildSandboxCapabilities {
+    let backend = Arc::new(backend);
+    BuildSandboxCapabilities {
+        lifecycle: backend.clone(),
+        files: backend.clone(),
+        processes: backend,
+    }
+}
+
 pub(super) fn stream_backend(
     events: Vec<ProcessStreamEvent>,
     destroy_fails: bool,
-) -> Arc<dyn SandboxBackend> {
-    Arc::new(Unimock::new((
-        SandboxBackendMock::create_sandbox
+) -> BuildSandboxCapabilities {
+    capabilities(Unimock::new((
+        SandboxLifecycleMock::create_sandbox
             .some_call(matching!(_))
             .returns(Ok(sandbox())),
-        SandboxBackendMock::write_file
+        SandboxFilesMock::write_file
             .some_call(matching!(_))
             .answers_arc(Arc::new(|_, request: BackendWriteFileRequest| {
                 assert_eq!(request.root, "/workspace");
@@ -39,7 +50,7 @@ pub(super) fn stream_backend(
                 assert!(request.bytes.starts_with(b"#!/usr/bin/env python3"));
                 Ok(())
             })),
-        SandboxBackendMock::stream_process
+        SandboxProcessesMock::stream_process
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, request: BackendStreamProcessRequest| {
                 assert_eq!(request.command, "python3");
@@ -60,7 +71,7 @@ pub(super) fn stream_backend(
                 assert_eq!(request.stderr_limit, 32768);
                 Ok(Box::pin(stream::iter(events.clone())))
             })),
-        SandboxBackendMock::destroy_sandbox
+        SandboxLifecycleMock::destroy_sandbox
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, provider: ProviderRef| {
                 assert_eq!(provider, sandbox().provider_ref);
@@ -86,5 +97,6 @@ pub(super) fn request() -> BackendCreateSandboxRequest {
         profile: "build".into(),
         network: SandboxNetworkPolicy::Open,
         snapshot_provider_ref: None,
+        size: None,
     }
 }
