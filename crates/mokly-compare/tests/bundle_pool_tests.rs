@@ -10,7 +10,7 @@ use mokly_sidecar::pool::SidecarPool;
 use mokly_test_support::durable_fixture::{self, Owner};
 
 use self::bundle_pool::{
-    Counts, bundle, cache_snapshot, capture_flags, edit, edit_fingerprint, exclusive_sidecars, pool,
+    Counts, bundle, cache_snapshot, capture_flags, edit, edit_fingerprint, pool,
 };
 use self::bundle_pool_observations::first_evidence_difference;
 
@@ -34,7 +34,6 @@ mod bundle_pool_trace;
 
 #[test]
 fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_equal_output() {
-    let _sidecars = exclusive_sidecars();
     let temporary = durable_fixture::create(Owner::CompareWarmPlan).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
@@ -92,7 +91,6 @@ fn a_warm_inexact_compilation_supplies_the_first_edit_plan_with_one_attempt_and_
 
 #[test]
 fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
-    let _sidecars = exclusive_sidecars();
     let temporary = durable_fixture::create(Owner::CompareRecipeReplacement).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");
@@ -162,7 +160,6 @@ fn fresh_sidecars_skip_esbuild_and_changed_inputs_replace_the_disk_recipe() {
 
 #[test]
 fn restarted_disk_recipes_reject_an_added_earlier_absolute_paths_target() {
-    let _sidecars = exclusive_sidecars();
     let temporary = durable_fixture::create(Owner::CompareAbsolutePaths).unwrap();
     let root = dunce::canonicalize(temporary.path()).unwrap();
     let source = root.join("source");

@@ -1,8 +1,8 @@
 //! Real sidecar composition for the disk-backed bundle pool scenarios.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use mokly_compare::bundle_store::CachedBundles;
 use mokly_platform::processes::SystemProcessGroups;
@@ -36,17 +36,6 @@ impl Diagnostics for Counts {
             self.0.fetch_add(1, Ordering::SeqCst);
         }
     }
-}
-
-/// Run one sidecar scenario at a time in this test process.
-///
-/// A Unix sidecar spawn forks. Until its exec, the child holds a copy of every open file of the
-/// process, which keeps another test's cache lock held after that test releases it. The cache
-/// takes its locks without waiting, so that test's recipe write would be skipped as contended.
-/// Hold the guard for the whole test. Under a runner with one process per test it never waits.
-pub(super) fn exclusive_sidecars() -> MutexGuard<'static, ()> {
-    static SIDECARS: Mutex<()> = Mutex::new(());
-    SIDECARS.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 /// Compose one real worker with its real disk bundle store.

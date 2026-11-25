@@ -22,10 +22,18 @@ pub trait Locks: Send + Sync {
 pub struct SystemLocks;
 
 struct HeldLock {
-    _file: File,
+    file: File,
 }
 
 impl FileLock for HeldLock {}
+
+/// Unlock before the file closes. A child that another thread starts holds a copy of every
+/// open file between its fork and its exec, and a close alone leaves the lock held by that copy.
+impl Drop for HeldLock {
+    fn drop(&mut self) {
+        let _ = self.file.unlock();
+    }
+}
 
 impl Locks for SystemLocks {
     fn try_lock(&self, path: &Path) -> Result<Box<dyn FileLock>> {
@@ -50,7 +58,7 @@ fn acquire(path: &Path, shared: bool) -> Result<Box<dyn FileLock>> {
     } else {
         file.try_lock()
     } {
-        Ok(()) => Ok(Box::new(HeldLock { _file: file })),
+        Ok(()) => Ok(Box::new(HeldLock { file })),
         Err(TryLockError::WouldBlock) => Err(Error::Locked {
             path: path.to_owned(),
         }),
