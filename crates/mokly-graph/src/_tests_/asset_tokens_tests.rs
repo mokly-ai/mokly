@@ -2,11 +2,33 @@
 
 use mokly_catalogue::html_input::DeliveredHtml;
 use mokly_html::diagnostic_code::Code;
+use mokly_html::tree::{Node, element};
 use mokly_html::{parse, serialize};
 use mokly_model::namespace;
 
 use crate::asset_tokens::rewrite;
 use crate::error::GraphError;
+
+const HOME: &str = "home/index.html";
+const IMAGE: &str = "<img src='mokly-asset:[specs/logo.png]'>";
+
+fn iframe(srcdoc: &str) -> Node {
+    element("iframe", &[("srcdoc", srcdoc)], vec![])
+}
+
+fn assert_base_error(error: GraphError, expected: &str) {
+    let GraphError::Invalid {
+        code,
+        route,
+        message,
+    } = error
+    else {
+        panic!("expected a base URL error, got {error}");
+    };
+    assert_eq!(code, Code::BuildInvalid);
+    assert_eq!(route, HOME);
+    assert_eq!(message, expected);
+}
 
 #[test]
 fn asset_tokens_rewrite_attributes_srcset_styles_and_text_at_each_document_depth() {
@@ -57,6 +79,8 @@ fn base_urls_fail_only_when_they_redirect_replaced_asset_tokens() {
         ("<base href='#top'>", asset, false),
         ("<base href='?q=1'>", asset, false),
         ("<base href='index.html'>", asset, false),
+        ("<base href='data:text/plain,ignored'>", asset, false),
+        ("<base href='javascript:void(0)'>", asset, false),
         ("<base target='_blank'>", asset, false),
         (
             "<template><base href='elsewhere/'></template>",
@@ -94,4 +118,67 @@ fn base_urls_fail_only_when_they_redirect_replaced_asset_tokens() {
         };
         assert_eq!(actual, expected, "{head} {body}");
     }
+}
+
+#[test]
+fn a_sibling_directory_base_keeps_imported_asset_destinations() {
+    let source = format!("<base href='../other/'>{IMAGE}");
+    let mut nodes = parse::html(DeliveredHtml::document(&source));
+    rewrite(&mut nodes, HOME).unwrap();
+}
+
+#[test]
+fn a_base_that_keeps_the_static_destination_can_redirect_snapshot_assets() {
+    let source = format!(
+        "<base href='../../../{}/'>{IMAGE}",
+        namespace::generated("home")
+    );
+    let mut nodes = parse::html(DeliveredHtml::document(&source));
+    assert_base_error(
+        rewrite(&mut nodes, HOME).unwrap_err(),
+        "home/index.html: <base href> redirects the imported asset URLs of this document; remove <base href>",
+    );
+}
+
+#[test]
+fn iframe_bases_are_checked_and_the_srcdoc_text_keeps_its_spelling() {
+    let unchanged =
+        "<!doctype html><base href='./'><IMG  SRC=\"mokly-asset:[specs/logo.png]?v=2#mark\">";
+    let mut nodes = [iframe(unchanged)];
+    rewrite(&mut nodes, HOME).unwrap();
+    let [Node::Element(frame)] = &nodes else {
+        panic!("expected an iframe");
+    };
+    assert_eq!(
+        frame.get("srcdoc"),
+        Some("<!doctype html><base href='./'><IMG  SRC=\"../assets/specs/logo.png?v=2#mark\">")
+    );
+
+    let mut nodes = [iframe(&format!("<base href='elsewhere/'>{IMAGE}"))];
+    assert_base_error(
+        rewrite(&mut nodes, HOME).unwrap_err(),
+        "home/index.html: <base href> in an <iframe srcdoc> document redirects its imported asset URLs; remove <base href>",
+    );
+}
+
+#[test]
+fn a_nested_srcdoc_inherits_the_enclosing_document_base() {
+    let nested = serialize::html(&[iframe(&format!("<base href='./'>{IMAGE}"))]);
+    let mut nodes = [iframe(&format!("<base href='elsewhere/'>{nested}"))];
+    assert_base_error(
+        rewrite(&mut nodes, HOME).unwrap_err(),
+        "home/index.html: <base href> in an <iframe srcdoc> document redirects its imported asset URLs; remove <base href>",
+    );
+}
+
+#[test]
+fn a_srcdoc_that_keeps_an_inherited_redirect_reports_the_outer_base() {
+    let mut nodes = [
+        element("base", &[("href", "elsewhere/index.html")], vec![]),
+        iframe(&format!("<base href='./'>{IMAGE}")),
+    ];
+    assert_base_error(
+        rewrite(&mut nodes, HOME).unwrap_err(),
+        "home/index.html: <base href> redirects the imported asset URLs of this document; remove <base href>",
+    );
 }

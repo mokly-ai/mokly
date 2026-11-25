@@ -28,9 +28,8 @@ physical identity enter the inventory, and physically installed package code
 is not inventoried.
 
 Only these extensions, matched case-sensitively, are assets; every other
-extension fails. Serve, Mokly Cloud, and a host of the static output send
-these content types under the
-[content type rule](./mokly-imported-assets.md#content-types):
+extension fails. The [content type rule](./mokly-content-types.md) gives them
+these content types:
 
 | Extension       | Content type                    |
 | --------------- | ------------------------------- |
@@ -47,6 +46,9 @@ these content types under the
 | `.ttf`          | `font/ttf`                      |
 | `.woff`         | `font/woff`                     |
 | `.woff2`        | `font/woff2`                    |
+
+Serve and a host of the static output send these types. Mokly Cloud records
+them when it accepts a publication, and it sends the recorded types.
 
 The extension of an asset is the text after the last dot of the last path
 segment. A name without a dot in its last segment has no extension, so it
@@ -94,7 +96,7 @@ the digest.
 
 Serve answers `GET` and `HEAD` for `/static/mokly-generated/styles/<route>`
 and `/static/mokly-generated/assets/<route>` with the generation's bytes, the
-content types of the [content type rule](./mokly-imported-assets.md#content-types),
+content types of the [content type rule](./mokly-content-types.md),
 and confined paths. There is no disk fallback, and a
 route absent from the current generation is not found even when an earlier
 generation had it. Transient component renders of the

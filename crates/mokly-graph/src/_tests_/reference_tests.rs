@@ -45,6 +45,19 @@ fn image(url: &str) -> Node {
 }
 
 #[test]
+fn base_href_supplies_no_resource_reference() {
+    let tree = [
+        element("base", &[("href", "elsewhere/")], vec![]),
+        image("logo.svg"),
+    ];
+    let urls: Vec<_> = references::collect(&tree)
+        .into_iter()
+        .map(|item| item.url)
+        .collect();
+    assert_eq!(urls, ["logo.svg"]);
+}
+
+#[test]
 fn collects_object_data_and_ignores_paragraph_metadata() {
     let tree = [
         element("object", &[("data", "a.pdf")], vec![]),

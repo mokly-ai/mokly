@@ -178,9 +178,6 @@ fn element_references(
         })
     };
     for attribute in &element.attributes {
-        if element.name == "base" && attribute.name == "href" {
-            continue;
-        }
         match reference_positions::kind(&element.name, &attribute.name) {
             Some(ReferenceKind::Url) => {
                 output.push(reference(attribute.value.clone()));

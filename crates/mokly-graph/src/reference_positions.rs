@@ -14,44 +14,50 @@ pub enum ReferenceKind {
 struct Position {
     element: Option<&'static str>,
     attribute: &'static str,
-    kind: ReferenceKind,
+    kind: Option<ReferenceKind>,
 }
 
+/// Read the first matching row. Specific exclusions precede general positions.
 const POSITIONS: &[Position] = &[
+    Position {
+        element: Some("base"),
+        attribute: "href",
+        kind: None,
+    },
     Position {
         element: None,
         attribute: "src",
-        kind: ReferenceKind::Url,
+        kind: Some(ReferenceKind::Url),
     },
     Position {
         element: None,
         attribute: "href",
-        kind: ReferenceKind::Url,
+        kind: Some(ReferenceKind::Url),
     },
     Position {
         element: None,
         attribute: "xlink:href",
-        kind: ReferenceKind::Url,
+        kind: Some(ReferenceKind::Url),
     },
     Position {
         element: None,
         attribute: "srcset",
-        kind: ReferenceKind::Srcset,
+        kind: Some(ReferenceKind::Srcset),
     },
     Position {
         element: None,
         attribute: "poster",
-        kind: ReferenceKind::Url,
+        kind: Some(ReferenceKind::Url),
     },
     Position {
         element: Some("object"),
         attribute: "data",
-        kind: ReferenceKind::Url,
+        kind: Some(ReferenceKind::Url),
     },
     Position {
         element: Some("iframe"),
         attribute: "srcdoc",
-        kind: ReferenceKind::EmbeddedDocument,
+        kind: Some(ReferenceKind::EmbeddedDocument),
     },
 ];
 
@@ -62,7 +68,7 @@ pub fn kind(element: &str, attribute: &str) -> Option<ReferenceKind> {
         .find(|position| {
             position.attribute == attribute && position.element.is_none_or(|name| name == element)
         })
-        .map(|position| position.kind)
+        .and_then(|position| position.kind)
 }
 
 #[cfg(test)]

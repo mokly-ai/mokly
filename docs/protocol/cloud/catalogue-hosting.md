@@ -109,9 +109,11 @@ once; reject invalid UTF-8/escapes, decoded slash/backslash, dot segments,
 controls and absolute-path tricks. Residual percent sequences are literal
 filename characters; lookup never decodes again or touches filesystem paths. Do not strip HTML
 extensions, implement a SPA fallback or interpret `_headers`/`_redirects`.
-The MIME type comes from the extension of the indexed path, under the
-[Mokly content type rule](../mokly-imported-assets.md#content-types);
-identical bytes at paths with different extensions keep distinct MIME types.
+A file response carries the MIME type that
+[ingest](./publication-ingest.md#state-and-atomic-visibility) recorded for its
+indexed path under the [Mokly content type rule](../mokly-content-types.md).
+A recorded `application/json` without parameters gets `; charset=utf-8`.
+Identical bytes at paths with different extensions keep distinct MIME types.
 Blob URLs also require publication access; hashes are never capabilities.
 
 ## Headers And Cache

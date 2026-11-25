@@ -33,13 +33,17 @@
     type. Only the stylesheet rebuild reads them.
   - In an asset plan, `key` and `document_key` hold the same value.
   - Since 2026-11-25, one rule by file extension gives the content type of
-    every file that Serve or Mokly Cloud delivers: the asset tables first,
-    then `mime_guess`. The rule is `delivered_content_type` in
+    every file that Serve delivers: the asset tables first, then
+    `mime_guess`. Mokly Cloud applies the same rule when it accepts a
+    publication, records the type of each path, and sends that recorded
+    type. The rule is `delivered_content_type` in
     `crates/mokly-model/src/content_types.rs`, and
-    `docs/protocol/mokly-imported-assets.md#content-types` states it. Serve
-    calls it through `content_type` in `crates/mokly-server/src/assets.rs`.
-    The content type of an asset plan, which `register` sets with
-    `imported_content_type` from the same file, is not read for delivery.
+    `docs/protocol/mokly-content-types.md` states it. Serve calls it through
+    `content_type` in `crates/mokly-server/src/assets.rs`. The Cloud
+    reservation calls it in
+    `crates/mkc-publications/src/reservation/reserve.rs`. The content type of
+    an asset plan, which `register` sets with `imported_content_type` from the
+    same file, is not read for delivery.
 - **Problem:** Each asset plan carries a stylesheet root, a content type, and
   a second key that nothing reads. The type also allows a plan that
   describes a stylesheet and an asset at once.

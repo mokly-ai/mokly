@@ -102,7 +102,7 @@ The [HTTP delivery](./delivery.md) page holds the guidance for the routes, the
 generated and authored assets, the cache headers, JSON compression, the
 comparison generations, and the temporary previews.
 Every route that sends a file, generated or authored, gives it the type of the
-[content type rule](../../docs/protocol/mokly-imported-assets.md#content-types),
+[content type rule](../../docs/protocol/mokly-content-types.md),
 through `delivered_content_type` in `mokly-model`.
 
 Each `GraphDocuments` captures a `dyn RenderWarnings` hook from its owning

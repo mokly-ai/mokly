@@ -65,6 +65,7 @@ pub mod viewer_fonts;
 mod worker_context;
 pub mod workers;
 
+mod asset_base;
 mod asset_tokens;
 mod background_render;
 mod component_keys;

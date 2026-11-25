@@ -1,119 +1,157 @@
 //! Document-local replacement of tokens with portable asset paths.
 
-use mokly_css::paths;
-use mokly_html::tree::Node;
-use mokly_model::{namespace, routes};
-use url::Url;
+use std::collections::VecDeque;
+use std::ops::Range;
 
-use crate::error::{Result, invalid};
+use mokly_catalogue::html_input::DeliveredHtml;
+use mokly_css::paths;
+use mokly_html::parse;
+use mokly_html::tree::{self, Node};
+use mokly_model::material::digest;
+use mokly_model::routes;
+
+use crate::asset_base::{self, DocumentAssets};
+use crate::error::Result;
+use crate::reference_positions::{self, ReferenceKind};
 
 const PREFIX: &str = "mokly-asset:[";
 
 /// Replace portable asset tokens and reject a base that redirects their URLs.
 pub(crate) fn rewrite(nodes: &mut [Node], route: &str) -> Result<()> {
-    let mut replaced = false;
+    let mut documents = vec![DocumentAssets::default()];
     let mut pending: Vec<_> = nodes.iter_mut().rev().collect();
     while let Some(node) = pending.pop() {
         match node {
             Node::Element(element) => {
                 for attribute in &mut element.attributes {
-                    replaced |= replace(&mut attribute.value, route);
+                    let changes = replacements(&attribute.value, route);
+                    if changes.is_empty() {
+                        continue;
+                    }
+                    let output = substitute(&attribute.value, &changes, "");
+                    if reference_positions::kind(&element.name, &attribute.name)
+                        == Some(ReferenceKind::EmbeddedDocument)
+                    {
+                        collect_embedded(&attribute.value, &changes, &mut documents);
+                    } else {
+                        documents[0]
+                            .urls
+                            .extend(changes.into_iter().map(|change| change.url));
+                    }
+                    attribute.value = output;
                 }
                 if let Some(records) = &mut element.style_attribution {
                     for record in records {
-                        replaced |= replace(&mut record.css, route);
+                        rewrite_text(&mut record.css, route, &mut documents[0].urls);
                     }
                 }
                 pending.extend(element.children.iter_mut().rev());
             }
             Node::Region { children, .. } => pending.extend(children.iter_mut().rev()),
-            Node::Text(value) => replaced |= replace(value, route),
+            Node::Text(value) => rewrite_text(value, route, &mut documents[0].urls),
             Node::Comment(_) | Node::Doctype(_) => {}
         }
     }
-    if replaced
-        && let Some(href) = first_base_href(nodes)
-        && redirects(href, route)
-    {
-        return Err(invalid(
-            route,
-            format!(
-                "{route}: <base href> redirects the imported asset URLs of this document; remove <base href>"
-            ),
-        ));
+    if documents.iter().all(|document| document.urls.is_empty()) {
+        return Ok(());
     }
-    Ok(())
+    documents[0].base = asset_base::first_base_href(nodes).map(str::to_owned);
+    asset_base::validate(&documents, route)
 }
 
-/// Find the first HTML base with an href outside template contents.
-fn first_base_href(nodes: &[Node]) -> Option<&str> {
-    let mut pending: Vec<_> = nodes.iter().rev().collect();
-    while let Some(node) = pending.pop() {
-        if let Node::Element(element) = node
-            && element.is_html()
-        {
-            if element.name == "base"
-                && let Some(href) = element.get("href")
-            {
-                return Some(href);
-            }
-            if element.name == "template" {
-                continue;
+/// Parse a copy whose markers track which URLs were written into the raw srcdoc text.
+fn collect_embedded(source: &str, changes: &[Replacement], documents: &mut Vec<DocumentAssets>) {
+    let marker = format!("mokly-written-{}:", digest(source.as_bytes()));
+    let mut pending = VecDeque::from([(0, substitute(source, changes, &marker))]);
+    while let Some((parent, html)) = pending.pop_front() {
+        let nodes = parse::html(DeliveredHtml::document(&html));
+        let index = documents.len();
+        let mut urls = Vec::new();
+        for node in tree::walk(&nodes) {
+            match node {
+                Node::Element(element) => {
+                    for attribute in &element.attributes {
+                        if !attribute.value.contains(&marker) {
+                            continue;
+                        }
+                        if reference_positions::kind(&element.name, &attribute.name)
+                            == Some(ReferenceKind::EmbeddedDocument)
+                        {
+                            pending.push_back((index, attribute.value.clone()));
+                        } else {
+                            urls.extend(written_urls(&attribute.value, &marker).map(str::to_owned));
+                        }
+                    }
+                }
+                Node::Text(value) | Node::Comment(value) => {
+                    urls.extend(written_urls(value, &marker).map(str::to_owned));
+                }
+                _ => {}
             }
         }
-        pending.extend(node.children().iter().rev());
+        documents.push(DocumentAssets {
+            parent: Some(parent),
+            base: asset_base::first_base_href(&nodes).map(|href| href.replace(&marker, "")),
+            urls,
+        });
     }
-    None
 }
 
-/// Check two sample origins because an explicit base can match one of them.
-fn redirects(href: &str, route: &str) -> bool {
-    let path = namespace::generated(&routes::encode(route));
-    ["https://mokly.invalid/", "http://other.mokly.invalid/"]
-        .into_iter()
-        .filter_map(|origin| {
-            Url::parse(origin)
-                .and_then(|origin| origin.join(&path))
-                .ok()
-        })
-        .any(|document| {
-            document.join(href).is_ok_and(|base| {
-                !matches!(base.scheme(), "data" | "javascript")
-                    && (base.origin() != document.origin()
-                        || directory(&base) != directory(&document))
-            })
-        })
+fn written_urls<'a>(value: &'a str, marker: &'a str) -> impl Iterator<Item = &'a str> {
+    let mut parts = value.split(marker).skip(1);
+    std::iter::from_fn(move || {
+        let url = parts.next()?;
+        parts.next()?;
+        Some(url)
+    })
 }
 
-fn directory(url: &Url) -> Option<&str> {
-    url.path().rsplit_once('/').map(|(directory, _)| directory)
-}
-
-fn replace(value: &mut String, route: &str) -> bool {
-    if !value.contains(PREFIX) {
-        return false;
+fn rewrite_text(value: &mut String, route: &str, urls: &mut Vec<String>) {
+    let changes = replacements(value, route);
+    if !changes.is_empty() {
+        *value = substitute(value, &changes, "");
+        urls.extend(changes.into_iter().map(|change| change.url));
     }
-    let mut output = String::with_capacity(value.len());
-    let mut rest = value.as_str();
-    let mut replaced = false;
+}
+
+struct Replacement {
+    range: Range<usize>,
+    url: String,
+}
+
+fn replacements(value: &str, route: &str) -> Vec<Replacement> {
+    let mut changes = Vec::new();
+    let mut rest = value;
     while let Some(start) = rest.find(PREFIX) {
+        let offset = value.len() - rest.len();
         let name = &rest[start + PREFIX.len()..];
         let Some(end) = name.find(']') else {
             break;
         };
-        output.push_str(&rest[..start]);
         let path = &name[..end];
-        if paths::portable(path, true) {
-            output.push_str(&routes::relative(route, &format!("assets/{path}")));
-            replaced = true;
-        } else {
-            output.push_str(&rest[start..start + PREFIX.len() + end + 1]);
-        }
         rest = &name[end + 1..];
+        if paths::portable(path, true) {
+            changes.push(Replacement {
+                range: offset + start..value.len() - rest.len(),
+                url: routes::relative(route, &format!("assets/{path}")),
+            });
+        }
     }
-    output.push_str(rest);
-    *value = output;
-    replaced
+    changes
+}
+
+fn substitute(value: &str, changes: &[Replacement], marker: &str) -> String {
+    let mut output = String::with_capacity(value.len());
+    let mut start = 0;
+    for change in changes {
+        output.push_str(&value[start..change.range.start]);
+        output.push_str(marker);
+        output.push_str(&change.url);
+        output.push_str(marker);
+        start = change.range.end;
+    }
+    output.push_str(&value[start..]);
+    output
 }
 
 #[cfg(test)]

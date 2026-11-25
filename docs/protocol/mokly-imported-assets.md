@@ -6,8 +6,7 @@ composed document gets the URL of the delivered file in place of the token.
 The delivered file uses the routes and the delivery of
 [stylesheet assets](./mokly-imported-styles-assets.md). The page also gives
 the order in which an import attribute and the loaders choose the value of
-each JavaScript import, and the [content type](#content-types) of each file
-that Serve or Mokly Cloud delivers.
+each JavaScript import.
 
 Decision: Mokly delivers each imported asset as a file, and it gives each
 document its own URL to that file. This reuses the delivery of stylesheet
@@ -76,35 +75,16 @@ the file, and a failure only makes the project delete the entry.
 | `.vtt`                    | `text/vtt`                  |
 | `.webmanifest`            | `application/manifest+json` |
 
-Serve and Mokly Cloud send the content types of this table under the
-[content type rule](#content-types). A stylesheet `url()` keeps the extension
-list of the stylesheet asset table. The types of this table are assets only
-when JavaScript imports them.
+Serve sends the content types of this table under the
+[content type rule](./mokly-content-types.md). Mokly Cloud records them when it
+accepts a publication, and it sends the recorded types. A stylesheet `url()`
+keeps the extension list of the stylesheet asset table. The types of this table
+are assets only when JavaScript imports them.
 
 Decision: the asset types are the types that Vite knows, without `.txt`.
 Vite and Storybook turn these imports into URLs, and a `.txt` import keeps its
 text. Rejected: the stylesheet asset list alone, because a media or PDF import
 that works in Storybook would then fail.
-
-## Content Types
-
-One rule by file extension gives the content type of each file that Serve or
-Mokly Cloud delivers. The first step that gives a type wins:
-
-1. The type of the [table of imported types](#imported-types) or of the
-   [stylesheet asset table](./mokly-imported-styles-assets.md#assets-links-and-delivery),
-   or `text/plain; charset=utf-8` for `.txt`.
-2. The common media type of the extension. A `text/*` type and
-   `application/json` get `; charset=utf-8`.
-3. `application/octet-stream`, when no type is known.
-
-The path of the file does not change the type. So a generated asset, an
-authored file, and a published file with the same extension get the same
-type. A host of the static output sends the types of the first step, under the
-[static delivery contract](./mokly-export-delivery.md#hosting-contract).
-
-Decision: the extension alone gives the type. Rejected: a lookup that knows the
-paths of generated assets, because a new path form could escape it.
 
 ## Asset Tokens
 
@@ -156,26 +136,49 @@ view again.
 
 ### Base URLs
 
-A composed document that holds an imported asset URL fails its render when its
-first `<base href>`, resolved against the document URL, has another origin or
-another directory than the document URL. The browser would resolve the asset
-URL against that base, not against the route of the document. The failure is
-`build-invalid`, with this reason, where `<route>` is the route of the
-document:
+A composed document that holds an imported asset URL fails its render when a
+base URL changes the destination of one of those URLs. The destination of an
+asset URL is the URL resolved against the effective base of the document that
+holds it. It must equal the URL resolved against the address of the composed
+document. The effective base is the document base URL that HTML defines. It
+comes from the first `<base href>` of the document, resolved against that
+address. A document without one uses its address.
+
+An `<iframe srcdoc>` document follows the same rule with its own first
+`<base href>`. That base resolves against the effective base of the document
+that holds the iframe. A `srcdoc` document without one uses that outer
+effective base. A nested `<iframe srcdoc>` document follows the rule in the
+same way.
+
+Mokly checks each destination at each address where it shows the composed
+document, on any origin:
+
+- `static/mokly-generated/<route>` in Serve and the static output, under the
+  [artifact layout](./mokly-artifact-paths.md#layout)
+- `mokly-viewer/diffs/generations/<generation>/snapshots/<side>/mokly-generated/<route>`
+  in Changes and removed previews, under the
+  [comparison and preview paths](./mokly-artifact-paths.md#comparison-and-preview-paths)
+
+The failure is `build-invalid`, where `<route>` is the route of the composed
+document. A base of the composed document gives the first reason. A base in an
+`<iframe srcdoc>` document gives the second reason:
 
 ```text
 <route>: <base href> redirects the imported asset URLs of this document; remove <base href>
+<route>: <base href> in an <iframe srcdoc> document redirects its imported asset URLs; remove <base href>
 ```
 
 Serve does not serve such a document, and `build` fails, as for other render
-failures. A base URL that keeps the directory of the document stays valid, and
-so does `<base target>`.
+failures. A base that keeps each destination stays valid. Examples are a base
+in a sibling directory at the same depth, and `./`. `<base target>` stays valid
+too.
 
-Decision: this rule fails a document only when its base redirects an imported
-asset URL, because the asset URLs of such a document are broken. Rejected: a
-failure for every `<base href>`, because it also fails documents that work.
-Rejected: asset URLs written against the base, because the shared closure would
-then resolve authored references against the base too.
+Decision: this rule fails a document only when a base changes the destination
+of an imported asset URL, because those asset URLs are broken. Rejected: a
+failure for every `<base href>`, and a failure for every base in another
+directory, because both fail documents that work. Rejected: asset URLs written
+against the base, because the shared closure would then resolve authored
+references against the base too.
 
 ## Delivery
 
@@ -224,6 +227,7 @@ conservative evidence for each view that references it, under the
 
 - [Imported Stylesheet Assets And Delivery](./mokly-imported-styles-assets.md)
 - [Imported Stylesheet Diagnostics](./mokly-imported-styles-errors.md)
+- [Content Types](./mokly-content-types.md)
 - [Document Rendering Safety](./mokly-document-safety.md)
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Changes and screen comparisons](./mokly-changes.md#resources)

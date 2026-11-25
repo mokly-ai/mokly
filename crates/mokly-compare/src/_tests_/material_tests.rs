@@ -3,6 +3,7 @@
 use std::thread;
 
 use mokly_html::tree::{self, Node, Region, RegionKind};
+use mokly_model::namespace::generated;
 use mokly_model::usage::ComponentInputOwner;
 
 use crate::material_traits::fingerprint;
@@ -47,6 +48,26 @@ fn canonical_material_normalizes_data_only_on_objects() {
     };
     assert_eq!(object, &[("data".into(), "static/a.pdf".into())]);
     assert_eq!(paragraph, &[("data".into(), "../static/a.pdf".into())]);
+}
+
+#[test]
+fn canonical_material_keeps_base_href_as_authored_after_a_move() {
+    let nodes = [tree::element("base", &[("href", "index.html")], vec![])];
+    for route in ["home/index.html", "nested/home/index.html"] {
+        let projection = Projection {
+            route: generated(route),
+            ..Projection::default()
+        };
+        let material = canonical(&nodes, &projection);
+        let [Material::Element(_, _, attributes, _)] = material.as_slice() else {
+            panic!("expected a canonical base element");
+        };
+        assert_eq!(
+            attributes,
+            &[("href".into(), "index.html".into())],
+            "{route}"
+        );
+    }
 }
 
 #[test]
