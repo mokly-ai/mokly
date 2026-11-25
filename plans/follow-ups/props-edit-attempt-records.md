@@ -16,8 +16,8 @@
     the `DefaultState` shape.
   - `examples/basic/specs/design/canvas/props/parts/values.ts:13-42`, the
     drafts.
-  - `examples/basic/specs/design/components/controls/parts/copy.ts:108-119`,
-    `SAVED_PREVIEW_COPY`.
+  - `examples/basic/specs/design/components/controls/parts/copy.ts`,
+    `CONTROLS_COPY.failedSavedBody` and `CONTROLS_COPY.invalidSaved`.
   - `docs/protocol/mokly-component-controls-design.md:50-62`, the rules of
     the edit states.
 - **Reason:** B changes the shared state shape of every Props edit state,
@@ -50,7 +50,7 @@
     failed belongs to it.
   - The alert sentence names the preview. While the saved props show, it is
     "Your edits are kept. The preview shows the saved props.", from
-    `SAVED_PREVIEW_COPY.failedBody`.
+    `CONTROLS_COPY.failedSavedBody`.
   - After an edit rendered, it is "Your edits are kept. The preview shows the
     last valid props.", from `CONTROLS_COPY.failedBody`.
   - So the form states `failed` and `failed-later` differ only in that
@@ -121,7 +121,7 @@
   also gave both failures one pending view while their drafts and previews
   differed. Commit `54e0a948e` repeated it on the Canvas design.
 - **Related:**
-  - Milestone 24a of `plans/storybook-support.md` removes
+  - Milestone 24a of `plans/storybook-support.md` removed
     `SAVED_PREVIEW_COPY`, which `editOf` read at `forms.tsx:54` and `:62`.
     `editOf` now reads the same sentences from `CONTROLS_COPY`. Both change
     the same cases of `editOf`, and no options conflict.

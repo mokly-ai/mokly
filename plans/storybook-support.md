@@ -1316,6 +1316,12 @@ These calls are mine, made on 2026-11-25 in track F, on the branch
   `docs/protocol/mokly-storybook-failures.md`, which the Storybook stories
   page links. Reason: the stories page, the setup page, and the sidecar page
   are near the 250-line cap, and track E edits the stories page in parallel.
+- F8. The Props tab names the last valid props when at least one shown frame
+  of the edited entry shows an accepted edit, and the saved props otherwise.
+  So when the Frames filter or the compact layout shows a frame that no
+  accepted render covers and its render fails, the alert still names the last
+  valid props. Reason: an edit is then on screen, and design call 29 keeps
+  that sentence after an edit has rendered.
 
 ## Tracks
 
@@ -2958,17 +2964,20 @@ Depends on: 1, 23
 The Props tab says truthfully what the preview shows after a failed or
 invalid edit, as design call 29 says.
 
-- [ ] Choose the sentence of the failure alert and of the invalid notice
+- [x] Choose the sentence of the failure alert and of the invalid notice
       from the preview that the frame shows. Until an edit renders, use "The
       preview shows the saved props."
-- [ ] Add both saved-preview sentences of `SAVED_PREVIEW_COPY` in
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Add both saved-preview sentences of `SAVED_PREVIEW_COPY` in
       `examples/basic/specs/design/components/controls/parts/copy.ts` to
       `CONTROLS_COPY` there and in
       `packages/viewer/src/shell/component_controls_copy.ts`, and remove
       `SAVED_PREVIEW_COPY`. Keep the viewer's copy equal to the copy of the
       controls mockups, which `tests/viewer_controls_copy.test.ts` compares.
-- [ ] Test both sentences under `packages/viewer/tests`, for a preview that
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [x] Test both sentences under `packages/viewer/tests`, for a preview that
       shows the saved props and for one that shows an edit.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 25: Failed stories verification, review, and pull request
 

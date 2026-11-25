@@ -1,7 +1,5 @@
 # Component Controls Design
 
-Status: Before an edit has rendered, the viewer's alerts still name the last valid props, not the saved props. The [Props sentence milestone](../../plans/storybook-support.md#milestone-24a-the-props-sentence-after-a-failed-edit) changes them.
-
 ## Controls Panel
 
 The Props and controls artboards, except the one of a screen without props,
