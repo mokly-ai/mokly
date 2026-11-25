@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use serde_json::json;
 use unimock::{MockFn, Unimock, matching};
@@ -218,16 +218,29 @@ fn runner(run: impl unimock::Clause) -> DefaultCheckRunner {
 const NEXTEST: &str = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
 
 /// The first of two shards starts with `--lib`, and the second never runs
-/// it, so each populated shard adds only its own targets to nextest.
+/// it, so each populated shard adds only its own targets to nextest. The
+/// embedded weights decide whether the first shard also runs a slice of a
+/// split unit, so the test does not fix its number of commands.
 #[test]
 fn a_test_shard_runs_only_its_units_beside_the_complete_package_selection() {
+    let commands = Arc::new(Mutex::new(Vec::new()));
+    let recorded = Arc::clone(&commands);
     runner(
         CommandRunnerRunMock
-            .next_call(matching!((spec) if spec.display().starts_with(&format!("{NEXTEST} --lib")) && spec.working_directory() == Some(Path::new("/workspace"))))
-            .returns(Ok(())),
+            .each_call(matching!((spec) if spec.display().starts_with(NEXTEST) && spec.working_directory() == Some(Path::new("/workspace"))))
+            .answers_arc(Arc::new(move |_, spec| {
+                recorded.lock().unwrap().push(spec.display());
+                Ok(())
+            }))
+            .at_least_times(1),
     )
     .rust_test_shard(Shard::from_str("1/2").unwrap(), true)
     .unwrap();
+    let first = commands.lock().unwrap();
+    assert!(
+        first[0].starts_with(&format!("{NEXTEST} --lib")),
+        "{first:?}"
+    );
     runner(
         CommandRunnerRunMock
             .each_call(matching!((spec) if spec.display().starts_with(NEXTEST) && !spec.display().contains("--lib")))
