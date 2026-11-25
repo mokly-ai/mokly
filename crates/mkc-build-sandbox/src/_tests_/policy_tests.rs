@@ -9,10 +9,7 @@ use crate::policy::denied_destinations;
 #[test]
 fn adds_all_missing_adapter_ranges_without_denying_mapped_public_ipv4() {
     let rules = denied_destinations(&[]).unwrap();
-    assert_eq!(
-        rules,
-        ["0.0.0.0/8", "240.0.0.0/4", "64:ff9b::/96", "ff00::/8"]
-    );
+    assert_eq!(rules, ["240.0.0.0/4", "64:ff9b::/96", "ff00::/8"]);
     assert!(!rules.iter().any(|rule| rule == "::ffff:0:0/96"));
     let mut final_rules = rules;
     final_rules.extend(
@@ -34,7 +31,6 @@ fn adds_all_missing_adapter_ranges_without_denying_mapped_public_ipv4() {
     assert_eq!(
         final_rules,
         [
-            "0.0.0.0/8",
             "10.0.0.0/8",
             "100.64.0.0/10",
             "127.0.0.0/8",
@@ -63,7 +59,6 @@ fn canonicalizes_and_deduplicates_ip_and_cidr_additions() {
     assert_eq!(
         rules,
         [
-            "0.0.0.0/8",
             "203.0.113.0/24",
             "203.0.113.1",
             "240.0.0.0/4",

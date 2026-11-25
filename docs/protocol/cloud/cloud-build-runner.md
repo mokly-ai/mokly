@@ -3,8 +3,8 @@
 The runner executes one [cloud build](./cloud-builds.md) attempt in a one-shot
 E2B sandbox. `mkc-build-interface` owns the `BuildRunner` trait (one `run`
 operation returning a boxed, cancellable future), `BuildRequest`, `BuildLogSink`, `BuildStep` and `BuildOutcome`.
-`mkc-build-sandbox` implements the runner over `Arc<dyn SandboxBackend>` from
-`sandbox-interface`; `mkc-api` alone constructs the `sandbox-e2b` backend.
+`mkc-build-sandbox` implements the runner over `sandbox-interface` capabilities;
+`mkc-api` alone constructs the `sandbox-e2b` backend.
 The runner knows no database, HTTP route or schedule. It runs the published
 `@mokly/mokly` CLI exactly as CI does and imports nothing from Mokly. The
 runner is a library; `infra/e2b/build` owns the template.
@@ -86,12 +86,14 @@ template satisfies the CLI's engines. The CLI is a native binary
 with no musl build and no JavaScript fallback. The template
 therefore runs Linux x64 with glibc 2.28 or newer, and the candidate assertion
 checks that floor. `docs/ops/build-template.md`
-records its release procedure. The template sets `HOME=/home/user` and
-`PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin`.
-The candidate assertion runs as `user` through `stream_process` with only
-`MKC_TEMPLATE_PROBE=stream-process-added-env` added to its environment. It
-requires that entry and the exact template `PATH` and `HOME`. A replaced,
-rather than merged, process environment must fail verification.
+records its release procedure. The template sets `HOME=/home/user`, and E2B
+sets the process `PATH`. The candidate assertion runs as `user` through
+`stream_process` with only `MKC_TEMPLATE_PROBE=stream-process-added-env` added
+to its environment. It requires that entry, the exact template `HOME` and
+every template tool on the process `PATH`, so a replaced, rather than merged,
+environment fails verification. It does not compare the exact `PATH`
+(decided 2026-11-24): E2B's order of `/usr/local/sbin` and `/usr/local/bin`
+failed that match without harm.
 
 ## Steps
 
@@ -235,7 +237,7 @@ and release renderer enforce these runtime rules.
 
 ## Verification
 
-Unit tests drive `mkc-build-sandbox` through `SandboxBackendMock`, and no test
+Unit tests drive `mkc-build-sandbox` through the capability mocks, and no test
 contacts E2B without the credentialed live feature: credential write and argv,
 cwd and environment of every process; the fetch ladder; lockfile, Yarn
 generation, local CLI discovery and the version floor; every stream outcome;

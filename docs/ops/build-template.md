@@ -7,17 +7,20 @@ PR previews always keep builds disabled. The contract is
 
 ## Release Prerequisites
 
-Use an authorized operator shell with Docker running and Linux amd64 builds
-available. Install the repository's Node and npm pins. This procedure uses
-`@e2b/cli@2.7.0`, whose Dockerfile build command publishes the candidate to E2B.
+Use an authorized operator shell. Install the repository's Node and npm pins.
+This procedure uses the `e2b@2.64.0` SDK through
+`infra/e2b/build/build-template.mjs`. E2B builds the Dockerfile remotely, so
+the shell needs no Docker. The SDK build needs only the team key. The
+`@e2b/cli` Dockerfile build uses E2B's deprecated build system and also needs
+a personal access token, so this procedure does not use it.
 Keep the team key in a mode-0600 file outside the checkout, such as
 `/secure/e2b-api-key`. Never put it in build arguments, a Dockerfile, TOML,
 Helm values, logs or a release report. Disable shell tracing.
 
 `infra/e2b/build/e2b.toml` is the release definition. It declares
 `mokly-build-v<N>`, 2 vCPU and 4096 MiB. It has no provider ID. The first build
-creates an operator-local `e2b.toml` with the real ID. Do not pass the checked-in
-definition to the CLI as an existing provider configuration.
+writes an operator-local `e2b.toml` with the real ID. Do not use the checked-in
+definition as a provider configuration.
 
 The Dockerfile uses the [runner's base-image pin](../protocol/cloud/cloud-build-runner.md#template).
 The pin was resolved from Docker Hub's `e2bdev/base:latest` tag on 2026-10-10:
@@ -29,8 +32,8 @@ tarball with its checked-in SHA-256 from Node's release `SHASUMS256.txt`.
 It enables corepack and supplies npm, git, curl, coreutils, Python 3 and CA
 certificates. The image must keep glibc 2.28 or newer, because the pinned
 CLI's native binary has no musl build and no JavaScript fallback.
-Workload `user` owns `/workspace`. Its `HOME` is `/home/user`;
-its `PATH` is `/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin`.
+Workload `user` owns `/workspace`. Its `HOME` is `/home/user`.
+The image sets no `PATH`, because E2B sets the process `PATH` itself.
 The build context admits only the Dockerfile. No cloud or checkout credential
 is baked into the image.
 
@@ -55,13 +58,13 @@ TEMPLATE_RELEASE=$(sed -n 's/^template_name = "\(.*\)"$/\1/p' infra/e2b/build/e2
 TEMPLATE_DIRECTORY=".context/e2b/$TEMPLATE_RELEASE"
 test ! -e "$TEMPLATE_DIRECTORY/e2b.toml"
 install -d -m 0700 "$TEMPLATE_DIRECTORY"
-cp infra/e2b/build/e2b.Dockerfile infra/e2b/build/.dockerignore "$TEMPLATE_DIRECTORY/"
+cp infra/e2b/build/e2b.Dockerfile "$TEMPLATE_DIRECTORY/"
+npm install --prefix "$TEMPLATE_DIRECTORY/sdk" --no-save --ignore-scripts e2b@2.64.0
 export E2B_API_KEY="$(cat /secure/e2b-api-key)"
-npm exec --yes --package=@e2b/cli@2.7.0 -- e2b template build \
-  --path "$TEMPLATE_DIRECTORY" --dockerfile e2b.Dockerfile \
-  --name "$TEMPLATE_RELEASE" \
-  --cpu-count "$(sed -n 's/^cpu_count = //p' infra/e2b/build/e2b.toml)" \
-  --memory-mb "$(sed -n 's/^memory_mb = //p' infra/e2b/build/e2b.toml)"
+node infra/e2b/build/build-template.mjs "$TEMPLATE_DIRECTORY/sdk" \
+  "$TEMPLATE_DIRECTORY" "$TEMPLATE_RELEASE" \
+  "$(sed -n 's/^cpu_count = //p' infra/e2b/build/e2b.toml)" \
+  "$(sed -n 's/^memory_mb = //p' infra/e2b/build/e2b.toml)"
 unset E2B_API_KEY
 ```
 
@@ -75,7 +78,7 @@ Include the base-image digest in that release record.
 ## Verify The Streaming Boundary
 
 Verify a fresh candidate before enabling it. The API integration probe uses
-the same pinned `SandboxBackend` adapter and public-egress build profile as
+the same pinned adapter capabilities and public-egress build profile as
 the runner. Its deployment ID is `mokly-build-template-probe`, separate from
 all environment build inventories. It creates a one-shot sandbox, writes
 `infra/e2b/tests/assert_build_template.py` below `/workspace` and calls
@@ -87,8 +90,9 @@ python3 /workspace/assert_build_template.py --node-version <.nvmrc release>
 
 The process has exactly one added environment entry:
 `MKC_TEMPLATE_PROBE=stream-process-added-env`. The caller does not supply
-`PATH` or `HOME`. The script requires the added entry and the exact template
-values, so an environment replacement fails. It also checks the tools,
+`PATH` or `HOME`. The script requires the added entry, the template `HOME`
+and each tool on the process `PATH`, so an environment replacement fails. It
+does not compare the exact `PATH` value. It also checks the tools,
 `/bin/sh`, user identity, `/workspace` ownership and writes, known credential
 environment names and credential files, and absence of cloud secret mounts.
 It also requires glibc 2.28 or newer.
@@ -246,8 +250,24 @@ lifetimes bound remaining sandboxes. CI publication remains available.
 
 ## Live Evidence
 
-No E2B candidate has been published or verified by
-[Milestone 9](https://github.com/mokly-ai/mokly-cloud/blob/06320e4f484905567fa9e06bea1a87350b59abb3/plans/cloud-builds.md#milestone-9-infrastructure-and-operations--complete)
-of the archived cloud builds plan. No cloud resource or key has been
-provisioned. Record the first main-preview and production proofs here after
-the authorized operator run.
+### Template Releases
+
+- `mokly-build-v1`, template ID `agmlidt65d7s6oo23rkb`, E2B team `firna`,
+  built 2026-11-06T11:01:33Z. It failed the probe on 2026-11-24 on the exact
+  `PATH` check, which the contract no longer has. It is not a release.
+- `mokly-build-v2`, template ID `f1x5cj2fgwv20p42qxnn`, build ID
+  `2f7ad3b2-ffae-4e31-a4e9-33f3d2d26374`, E2B team `firna`. It was built
+  2026-11-24T13:44:01Z with `e2b@2.64.0` from the Dockerfile of the change that
+  removed `ENV PATH`, on base commit `c0328d917`. Node 24.21.0, checksum
+  `fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6`,
+  2 vCPU, 4096 MiB, base digest
+  `sha256:4a369f01a820fe5e65f53c2c5727a78899daf86f0541b721097f289559c8b73f`.
+  The probe printed
+  `PASS live build template: assertion completed and candidate destroyed` on
+  2026-11-24T13:46Z.
+
+### Environments
+
+No environment has builds enabled yet. On 2026-11-24, main-preview had one
+enabled `mkc-main-preview-e2b-api-key` version, and production had no
+version. Record the first main-preview and production build proofs here.

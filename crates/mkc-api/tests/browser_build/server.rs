@@ -13,7 +13,7 @@ use clap::Parser;
 use mkc_api::application::{ApplicationFactory, ConfiguredApplicationFactory};
 use mkc_config::builds::BuildSettings;
 use mkc_config::settings::{ConfigProvider, EnvironmentConfig, ProcessEnvironment};
-use sandbox_interface::SandboxBackendMock;
+use sandbox_interface::SandboxLifecycleMock;
 use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
 use unimock::{MockFn, Unimock, matching};
@@ -47,7 +47,7 @@ pub(super) fn run() {
     });
     let signals = Arc::new(Mutex::new(Default::default()));
     let backend = Unimock::new(
-        SandboxBackendMock::list_managed_sandboxes
+        SandboxLifecycleMock::list_managed_sandboxes
             .each_call(matching!(_))
             .answers(&|_, _| Ok(Vec::new())),
     );

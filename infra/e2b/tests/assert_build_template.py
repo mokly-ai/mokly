@@ -12,7 +12,6 @@ import tempfile
 
 
 TEMPLATE_HOME = "/home/user"
-TEMPLATE_PATH = "/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
 PROBE_KEY = "MKC_TEMPLATE_PROBE"
 PROBE_VALUE = "stream-process-added-env"
 SECRET_KEYS = {
@@ -54,7 +53,6 @@ def command(argv):
 
 def verify(node_version):
     require(os.environ.get(PROBE_KEY) == PROBE_VALUE, "added environment entry is missing")
-    require(os.environ.get("PATH") == TEMPLATE_PATH, "template PATH changed")
     require(os.environ.get("HOME") == TEMPLATE_HOME, "template HOME changed")
     try:
         library = os.confstr("CS_GNU_LIBC_VERSION") or ""
