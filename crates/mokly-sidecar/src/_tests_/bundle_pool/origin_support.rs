@@ -274,7 +274,10 @@ pub(super) fn exercise(finish: Finish, kind: Seed) -> Observation {
             drop(result);
             Ok(generation)
         }
-        Err(error) => Err(error),
+        Err(error) => {
+            pool.synchronize_releases();
+            Err(error)
+        }
     };
     Observation {
         during,
