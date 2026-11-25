@@ -24,7 +24,27 @@ jobs:
       node-24-version: ${{ steps.node-version.outputs.value }}
       node-matrix: ${{ steps.profile.outputs.node-matrix }}
       verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
+      viewer-shards: ${{ steps.shards.outputs.viewer }}
+      viewer-shard-total: ${{ steps.shards.outputs.viewer-total }}
+      browser-shards: ${{ steps.shards.outputs.browser }}
+      browser-shard-total: ${{ steps.shards.outputs.browser-total }}
     steps:
+      - name: Check out shard totals
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/verification/ci-shards.json
+          sparse-checkout-cone-mode: false
+      # The viewer and browser matrices, the aggregate, and remote
+      # verification all read the shard totals from this one file.
+      - name: Read shard totals
+        id: shards
+        run: |
+          for suite in viewer browser; do
+            total=$(jq --exit-status --arg suite "$suite" '.[$suite] | select(type == "number" and . >= 1 and . == floor)' scripts/verification/ci-shards.json)
+            echo "$suite-total=$total" >> "$GITHUB_OUTPUT"
+            echo "$suite=$(jq --compact-output --null-input --argjson total "$total" '[range(1; $total + 1)]')" >> "$GITHUB_OUTPUT"
+          done
       - name: Select Node verification profile
         id: profile
         env:
@@ -106,47 +126,20 @@ jobs:
               ) && 'strict' || 'baseline'
             }}
         run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
-  shards:
-    name: Shard plan
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    outputs:
-      viewer: ${{ steps.plan.outputs.viewer }}
-      viewer-total: ${{ steps.plan.outputs.viewer-total }}
-      browser: ${{ steps.plan.outputs.browser }}
-      browser-total: ${{ steps.plan.outputs.browser-total }}
-    steps:
-      - name: Check out shard totals
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          persist-credentials: false
-          sparse-checkout: scripts/verification/ci-shards.json
-          sparse-checkout-cone-mode: false
-      # The viewer and browser matrices, the aggregate, and remote
-      # verification all read the shard totals from this one file.
-      - name: Read shard totals
-        id: plan
-        run: |
-          for suite in viewer browser; do
-            total=$(jq --exit-status --arg suite "$suite" '.[$suite] | select(type == "number" and . >= 1 and . == floor)' scripts/verification/ci-shards.json)
-            echo "$suite-total=$total" >> "$GITHUB_OUTPUT"
-            echo "$suite=$(jq --compact-output --null-input --argjson total "$total" '[range(1; $total + 1)]')" >> "$GITHUB_OUTPUT"
-          done
   viewer:
-    name: Viewer (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.shards.outputs.viewer-total }})
+    name: Viewer (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.profile.outputs.viewer-shard-total }})
     needs:
       - profile
-      - shards
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
-        shard: ${{ fromJSON(needs.shards.outputs.viewer) }}
+        shard: ${{ fromJSON(needs.profile.outputs.viewer-shards) }}
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.shards.outputs.viewer-total }}.json
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.profile.outputs.viewer-shard-total }}.json
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -179,7 +172,7 @@ jobs:
           no-cache: true
       - name: Run viewer shard
         env:
-          VIEWER_SHARD: ${{ matrix.shard }}/${{ needs.shards.outputs.viewer-total }}
+          VIEWER_SHARD: ${{ matrix.shard }}/${{ needs.profile.outputs.viewer-shard-total }}
         run: cargo xtask check --suite viewer --shard "$VIEWER_SHARD"
       - name: Retain viewer inventory and timings
         if: ${{ always() }}
@@ -192,19 +185,19 @@ jobs:
           overwrite: true
           retention-days: 14
   browser:
-    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.shards.outputs.browser-total }})
-    needs: [profile, shards]
+    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.profile.outputs.browser-shard-total }})
+    needs: [profile]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
-        shard: ${{ fromJSON(needs.shards.outputs.browser) }}
+        shard: ${{ fromJSON(needs.profile.outputs.browser-shards) }}
     env:
       PLAYWRIGHT_CHANNEL: chromium
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.shards.outputs.browser-total }}.json
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.profile.outputs.browser-shard-total }}.json
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -234,7 +227,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser shard
         env:
-          BROWSER_SHARD: ${{ matrix.shard }}/${{ needs.shards.outputs.browser-total }}
+          BROWSER_SHARD: ${{ matrix.shard }}/${{ needs.profile.outputs.browser-shard-total }}
         run: cargo xtask check --suite browser --shard "$BROWSER_SHARD"
       - name: Retain browser inventory and timings
         if: ${{ always() }}
@@ -736,7 +729,6 @@ jobs:
     needs:
       - profile
       - repository
-      - shards
       - viewer
       - browser
       - native
@@ -766,7 +758,6 @@ jobs:
         env:
           PROFILE_RESULT: ${{ needs.profile.result }}
           REPOSITORY_RESULT: ${{ needs.repository.result }}
-          SHARDS_RESULT: ${{ needs.shards.result }}
           VIEWER_RESULT: ${{ needs.viewer.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
@@ -777,7 +768,6 @@ jobs:
         run: |
           test "$PROFILE_RESULT" = success
           test "$REPOSITORY_RESULT" = success
-          test "$SHARDS_RESULT" = success
           test "$VIEWER_RESULT" = success
           test "$BROWSER_RESULT" = success
           test "$NATIVE_RESULT" = success

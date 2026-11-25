@@ -62,7 +62,6 @@ test("required CI remains independent of report-only Lighthouse", async (t) => {
   assert.deepEqual(required.needs, [
     "profile",
     "repository",
-    "shards",
     "viewer",
     "browser",
     "native",
@@ -75,7 +74,6 @@ test("required CI remains independent of report-only Lighthouse", async (t) => {
   assert.deepEqual(step.env, {
     PROFILE_RESULT: "${{ needs.profile.result }}",
     REPOSITORY_RESULT: "${{ needs.repository.result }}",
-    SHARDS_RESULT: "${{ needs.shards.result }}",
     VIEWER_RESULT: "${{ needs.viewer.result }}",
     BROWSER_RESULT: "${{ needs.browser.result }}",
     NATIVE_RESULT: "${{ needs.native.result }}",

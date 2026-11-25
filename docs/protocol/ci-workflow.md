@@ -47,7 +47,7 @@ For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
 
 `scripts/verification/ci-shards.json` holds the viewer and browser shard
-totals. The `Shard plan` job reads this file and publishes the shard matrices.
+totals. The runtime profile job reads this file and publishes the shard matrices.
 The report aggregate and [remote verification](./remote-verification.md) read
 the same file, so a shard count change is one edit. Decision: shard the viewer
 and browser suites until each job takes about 7 to 9 minutes, including
