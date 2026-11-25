@@ -24,12 +24,15 @@ function characters(count: number): string {
 /**
  * The settled copy of the Props tab's controls; the viewer follows it, and a
  * tooling test compares the two. The mockups draw the entries of the states
- * they show. The field functions also give the forms that no mockup draws:
- * one-sided bounds, steps, whole numbers, and text lengths. The Read-only
- * and recovery gallery draws the removed entry, read-only props, an entry
- * without props, merged props that fail without one field to highlight, and
- * an expired preview. The component Loading and recovery gallery draws the
- * tab while the entry's detail loads and after its load failed.
+ * they show. The alert of a failed render and the notice of an invalid value
+ * each name the props that the preview shows: the saved props until an edit
+ * has rendered, and the last valid props after one has. The field functions
+ * also give the forms that no mockup draws: one-sided bounds, steps, whole
+ * numbers, and text lengths. The Read-only and recovery gallery draws the
+ * removed entry, read-only props, an entry without props, merged props that
+ * fail without one field to highlight, and an expired preview. The component
+ * Loading and recovery gallery draws the tab while the entry's detail loads
+ * and after its load failed.
  */
 export const CONTROLS_COPY = {
   tab: "Props",
@@ -46,10 +49,17 @@ export const CONTROLS_COPY = {
   loadFailed: "Props couldn’t be loaded.",
   published: "Open this catalogue locally to edit props.",
   failedTitle: "The preview could not be updated",
+  /** A failed render's body while the preview shows an edit that rendered. */
   failedBody: "Your edits are kept. The preview shows the last valid props.",
+  /** A failed render's body while the preview shows the saved props. */
+  failedSavedBody: "Your edits are kept. The preview shows the saved props.",
   retry: "Try again",
+  /** An invalid value while the preview shows an edit that rendered. */
   invalid:
     "Check the highlighted values. The preview shows the last valid props.",
+  /** An invalid value while the preview shows the saved props. */
+  invalidSaved:
+    "Check the highlighted values. The preview shows the saved props.",
   removed: "Removed entries show their saved props.",
   readonlyProps: "These props are read-only.",
   noProps: "This entry renders without props.",
@@ -103,17 +113,4 @@ export const CONTROLS_COPY = {
   chooseValue: "Choose a value",
   chooseAvailable: "Choose an available value.",
   propsUnavailable: "Props are unavailable for this screen.",
-} as const;
-
-/**
- * The sentences of a failed or an invalid edit while no edit has rendered,
- * so that the preview still shows the saved props: a failed first render,
- * and an invalid value before any edit rendered. Once an edit has rendered,
- * `CONTROLS_COPY.failedBody` and `CONTROLS_COPY.invalid` name the last valid
- * props instead. The viewer does not choose the sentence from its frame yet,
- * so these stay outside `CONTROLS_COPY`, which the viewer's copy equals.
- */
-export const SAVED_PREVIEW_COPY = {
-  failedBody: CONTROLS_COPY.expiredBody,
-  invalid: "Check the highlighted values. The preview shows the saved props.",
 } as const;

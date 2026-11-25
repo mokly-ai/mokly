@@ -5,6 +5,7 @@ import type { ComponentRenderSuccess } from "../src/components/render_types.js";
 import type { GeneratedComponentView } from "../src/components/views.js";
 import {
   controlViewKey,
+  shownProps,
   withPreviews,
 } from "../src/shell/component_controls_state.js";
 import type { ControlTarget } from "../src/shell/control_values.js";
@@ -103,6 +104,22 @@ test("the projection keeps one array per render result, so sessions stay put", (
     withPreviews(views, previews, target("other", "screen")),
     first,
   );
+});
+
+test("the shown frames show an edit only while the editor holds an accepted render of one of their views", () => {
+  const mobile = view(undefined, "mobile");
+  const desktop = view(undefined, "desktop");
+  const rendered = new Map([[controlViewKey(mobile), preview]]);
+  // Before the first accepted render, and after Reset or an expired preview,
+  // the editor holds no render.
+  assert.equal(shownProps([mobile, desktop], new Map()), "saved");
+  assert.equal(shownProps([mobile], rendered), "edited");
+  // A frame that no accepted render covers, such as a new pick of the compact
+  // layout, shows its saved view.
+  assert.equal(shownProps([desktop], rendered), "saved");
+  // A frame that the Frames filter just showed waits for its render, and the
+  // other frame keeps the edit, the last valid props.
+  assert.equal(shownProps([mobile, desktop], rendered), "edited");
 });
 
 test("a screen swaps its own views and keeps saved views without a preview", () => {

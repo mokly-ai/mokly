@@ -142,6 +142,7 @@ test("a screen whose props have no controls shows them as its saved props", () =
       onChange: () => undefined,
       onReset: () => undefined,
       onRetry: () => undefined,
+      preview: "saved",
       state: initialComponentEditorState(screen, "s", {}),
       target: screen,
     }),

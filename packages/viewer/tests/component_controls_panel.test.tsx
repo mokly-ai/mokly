@@ -17,6 +17,7 @@ import {
   initialComponentEditorState,
   type ComponentEditorState,
   type ControlsMode,
+  type ShownProps,
 } from "../src/shell/component_controls_state.js";
 import {
   controlDraft,
@@ -46,16 +47,28 @@ const actions = {
   onStart: () => undefined,
 };
 
+/**
+ * The panel of `mode` with `state`. Its frames show the saved props unless
+ * `preview` says that they show an edit that rendered.
+ */
 function panel(
   mode: ControlsMode,
   state: Partial<ComponentEditorState> = {},
-  shown: ControlTarget = target,
-  focus?: (name: ControlsFocus) => () => undefined,
+  {
+    focus,
+    preview = "saved",
+    shown = target,
+  }: {
+    focus?: (name: ControlsFocus) => () => undefined;
+    preview?: ShownProps;
+    shown?: ControlTarget;
+  } = {},
 ) {
   return ComponentControlsPanel({
     ...actions,
     ...(focus ? { focus } : {}),
     mode,
+    preview,
     state: { ...saved, ...state },
     target: shown,
   });
@@ -84,10 +97,16 @@ function passed(node: ReactNode): Readonly<Record<string, unknown>> {
 function focusNames(mode: ControlsMode): ControlsFocus[] {
   const names: ControlsFocus[] = [];
   renderToStaticMarkup(
-    panel(mode, {}, target, (name) => {
-      names.push(name);
-      return () => undefined;
-    }),
+    panel(
+      mode,
+      {},
+      {
+        focus: (name) => {
+          names.push(name);
+          return () => undefined;
+        },
+      },
+    ),
   );
   return names.sort();
 }
@@ -143,14 +162,20 @@ test("a render in flight keeps the panel and names itself in its own region", ()
   );
 });
 
-test("a failed render keeps the edits and offers Try again", () => {
-  const node = panel("editable", { dirty: true, notice: "failed" });
+test("a failed render keeps the edits, names the props that the preview shows, and offers Try again", () => {
+  const failed = { dirty: true, notice: "failed" } as const;
+  const node = panel("editable", failed);
   assert.match(
     renderToStaticMarkup(node),
-    /<div class="mbk-control-alert mbk-reset" role="alert"><strong class="mbk-reset">The preview could not be updated<\/strong><p class="mbk-reset">Your edits are kept\. The preview shows the last valid props\.<\/p><button[^>]*>Try again<\/button><\/div>/,
+    /<div class="mbk-control-alert mbk-reset" role="alert"><strong class="mbk-reset">The preview could not be updated<\/strong><p class="mbk-reset">Your edits are kept\. The preview shows the saved props\.<\/p><button[^>]*>Try again<\/button><\/div>/,
   );
   assert.deepEqual(buttons(node), ["Reset to Default", "Try again"]);
   assert.equal(passed(node).onRetry, actions.onRetry);
+  // After an edit rendered, the frames keep it: the last valid props.
+  assert.match(
+    html("editable", failed, { preview: "edited" }),
+    /<div class="mbk-control-alert mbk-reset" role="alert"><strong class="mbk-reset">The preview could not be updated<\/strong><p class="mbk-reset">Your edits are kept\. The preview shows the last valid props\.<\/p><button[^>]*>Try again<\/button><\/div>/,
+  );
 });
 
 test("an expired preview keeps the edits and offers Update preview", () => {
@@ -163,9 +188,14 @@ test("an expired preview keeps the edits and offers Update preview", () => {
   assert.equal(passed(node).onRetry, actions.onRetry);
 });
 
-test("invalid values: highlighted fields, or values not valid together", () => {
+test("invalid values: highlighted fields with the props that the preview shows, or values not valid together", () => {
+  const invalid = { dirty: true, notice: "invalid" } as const;
   assert.match(
-    html("editable", { dirty: true, notice: "invalid" }),
+    html("editable", invalid),
+    /<p class="mbk-control-alert mbk-reset" role="alert">Check the highlighted values\. The preview shows the saved props\.<\/p>/,
+  );
+  assert.match(
+    html("editable", invalid, { preview: "edited" }),
     /<p class="mbk-control-alert mbk-reset" role="alert">Check the highlighted values\. The preview shows the last valid props\.<\/p>/,
   );
   const node = panel("editable", { dirty: true, notice: "invalid-together" });
@@ -230,7 +260,14 @@ test("an entry without controls shows read-only props and slots; without props, 
   const readOnly = html(
     "read-only",
     {},
-    { ...target, title: "Badge", controls: {}, suppliedSlots: ["header"] },
+    {
+      shown: {
+        ...target,
+        title: "Badge",
+        controls: {},
+        suppliedSlots: ["header"],
+      },
+    },
   );
   assert.match(
     readOnly,

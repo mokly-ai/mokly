@@ -23,7 +23,10 @@ function characters(count: number): string {
 
 /**
  * The settled copy of the Props section's controls. It equals the design
- * catalogue's controls copy, which a tooling test compares with it.
+ * catalogue's controls copy, which a tooling test compares with it. The alert
+ * of a failed render and the notice of an invalid value each name the props
+ * that the preview shows: the last valid props of an edit that rendered, or
+ * the saved props.
  */
 export const CONTROLS_COPY = {
   tab: "Props",
@@ -40,10 +43,17 @@ export const CONTROLS_COPY = {
   loadFailed: "Props couldn’t be loaded.",
   published: "Open this catalogue locally to edit props.",
   failedTitle: "The preview could not be updated",
+  /** A failed render's body while the preview shows an edit that rendered. */
   failedBody: "Your edits are kept. The preview shows the last valid props.",
+  /** A failed render's body while the preview shows the saved props. */
+  failedSavedBody: "Your edits are kept. The preview shows the saved props.",
   retry: "Try again",
+  /** An invalid value while the preview shows an edit that rendered. */
   invalid:
     "Check the highlighted values. The preview shows the last valid props.",
+  /** An invalid value while the preview shows the saved props. */
+  invalidSaved:
+    "Check the highlighted values. The preview shows the saved props.",
   removed: "Removed entries show their saved props.",
   readonlyProps: "These props are read-only.",
   noProps: "This entry renders without props.",

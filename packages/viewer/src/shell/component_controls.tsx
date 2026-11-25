@@ -25,6 +25,7 @@ import {
   draftNotice,
   initialComponentEditorState,
   shownEditorState,
+  shownProps,
   withExpiredPreview,
   withPreviews,
   withRenderFailure,
@@ -266,6 +267,7 @@ export function useComponentControls({
           onReset={reset}
           onRetry={retry}
           onStart={restart}
+          preview={shownProps(contexts, state.previews)}
           state={state}
           target={target}
         />
