@@ -5,7 +5,7 @@ import { BROWSER_SHARD_SHARE_LIMIT } from "./shard-balance.mjs";
  * Estimated wall time that the copied static example build adds to global
  * setup on one shard. Placement charges it once to each shard that builds it.
  */
-export const COPIED_HOST_SETUP_MS = 60_000;
+const COPIED_HOST_SETUP_MS = 60_000;
 
 /**
  * Assign the discovered whole specs by measured cost, subject to the existing

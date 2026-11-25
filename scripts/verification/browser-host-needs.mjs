@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 /** The only module that reads the copied static example of global setup. */
-export const COPIED_HOST_MODULE = "tests/browser/static_test.ts";
+const COPIED_HOST_MODULE = "tests/browser/static_test.ts";
 
 const SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(?\s*)["'](\.{1,2}\/[^"']+)["']/g;
 
