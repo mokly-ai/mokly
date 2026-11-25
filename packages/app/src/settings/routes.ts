@@ -1,5 +1,5 @@
-import { removeQueryKeys, setQueryValue } from "../navigation/address";
 import { settingsPath } from "../navigation/paths";
+import { removeQueryKeys, setQueryValue } from "../navigation/query";
 
 import type { SurfaceId } from "./panes";
 

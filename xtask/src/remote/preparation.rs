@@ -6,6 +6,7 @@ use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::error::{Error, Result};
 use crate::remote::git_identity::BaseLookup;
 use crate::remote::identity::{RunId, RunIdentity};
+use crate::remote::plan::RunCommand;
 use crate::remote::runner::DefaultRemoteRunner;
 use crate::remote::snapshot::guard::SnapshotOwner;
 
@@ -18,9 +19,10 @@ pub(super) struct PreparedRun {
 }
 
 impl DefaultRemoteRunner {
-    /// Build and compare the snapshot before identity evidence and warmup.
+    /// Build and compare the snapshot before identity evidence and warm one box per command.
     pub(super) fn prepare(
         &self,
+        plan: &[RunCommand],
         boxes: &mut Vec<String>,
         cleanup: &dyn BoxCleanup,
         owner: &dyn SnapshotOwner,
@@ -58,7 +60,7 @@ impl DefaultRemoteRunner {
             identity.base().ahead
         ));
         dependencies.logs.write_identity(&identity)?;
-        self.warmup(&reference, boxes, cleanup)?;
+        self.warmup(plan.len(), &reference, boxes, cleanup)?;
         self.probe(
             boxes,
             identity.fingerprint(),

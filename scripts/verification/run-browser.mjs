@@ -2,10 +2,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
+import { copiedHostSpecs } from "./browser-host-needs.mjs";
 import {
   browserFileArguments,
   selectBrowserShard,
 } from "./browser-partition.mjs";
+import weights from "./browser-shard-weights.json" with { type: "json" };
 import { parseShardArgument } from "./browser-shard.mjs";
 import { browserWorkerCount } from "./concurrency.mjs";
 import {
@@ -38,7 +40,16 @@ await Promise.all([
 await requirePrepared(repositoryRoot, { browser: true });
 const full = await discoverBrowserTests(repositoryRoot, { project });
 const complete = full;
-const assigned = shard ? selectBrowserShard(full, shard) : full;
+const assigned = shard
+  ? selectBrowserShard(
+      full,
+      shard,
+      weights,
+      await copiedHostSpecs(repositoryRoot, full.files),
+    )
+  : full;
+// Global setup skips the copied static example when no assigned spec needs it.
+const copiedHost = !shard || assigned.copiedHost;
 
 const args = [
   path.join(repositoryRoot, "node_modules/@playwright/test/cli.js"),
@@ -48,13 +59,14 @@ const args = [
 ];
 if (shard) args.push(...browserFileArguments(assigned.files));
 console.log(`${suite} Playwright workers: ${workers}`);
+console.log(`${suite} copied static example: ${copiedHost ? "build" : "skip"}`);
 const started = performance.now();
 let evidenceError;
 let outcome;
 try {
   outcome = await runInherited(process.execPath, args, {
     cwd: repositoryRoot,
-    env: { ...environment, MOKLY_PLAYWRIGHT_EVENT_REPORT: eventPath },
+    env: playwrightEnvironment(),
   });
 } catch (error) {
   evidenceError = error;
@@ -136,4 +148,12 @@ function requireSameIds(expected, actual, label) {
       .join("\n");
   if (!Array.isArray(actual) || ids(expected) !== ids(actual))
     throw new Error(`${label} do not match independent discovery`);
+}
+
+/** The runner alone decides whether global setup builds the copied example. */
+function playwrightEnvironment() {
+  const child = { ...environment, MOKLY_PLAYWRIGHT_EVENT_REPORT: eventPath };
+  if (copiedHost) delete child.MOKLY_PLAYWRIGHT_COPIED_HOST;
+  else child.MOKLY_PLAYWRIGHT_COPIED_HOST = "skip";
+  return child;
 }

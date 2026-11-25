@@ -50,34 +50,65 @@ pub(super) fn commands_for(
             .into_iter()
             .flat_map(Step::commands)
             .collect(),
-        VerificationSuite::Viewer => vec![
-            npm(&["run", "build"]),
-            npm(&["run", "typecheck:ci"]),
-            npm(&["run", "test:viewer:prepared"]),
-        ],
+        VerificationSuite::Viewer => viewer_commands(shard),
         VerificationSuite::Browser => vec![npm(&["run", "build"]), browser_test_command(shard)],
-        VerificationSuite::Native => vec![
-            cargo(&["xtask", "build-native"]),
-            cargo(&["fmt", "--all", "--", "--check"]),
-            rust_clippy(),
-            npm(&["run", "build", "--workspace", "@mokly/ui"]),
-            npm(&["run", "build", "--workspace", "@mokly/model"]),
-            npm(&["run", "build", "--workspace", "@mokly/frame"]),
-            npm(&["run", "build", "--workspace", "@mokly/viewer"]),
-            npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-            mokly_cargo("test").args(["--no-fail-fast"]),
-        ],
+        VerificationSuite::Native => native_commands(shard),
         cloud => cloud_commands(cloud, shard),
     }
 }
 
+/// Build, then type check once per suite: unsharded or on shard 1 only.
+fn viewer_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let mut commands = vec![npm(&["run", "build"])];
+    if shard.is_none_or(Shard::is_first) {
+        commands.push(npm(&["run", "typecheck:ci"]));
+    }
+    commands.push(sharded(npm(&["run", "test:viewer:prepared"]), shard));
+    commands
+}
+
 /// Run the already-built browser suite, optionally selecting one shard.
 pub(super) fn browser_test_command(shard: Option<Shard>) -> CommandSpec {
-    let mut test = npm(&["run", "test:browser:prepared"]);
-    if let Some(shard) = shard {
-        test = test.args(["--".to_owned(), "--shard".to_owned(), shard.to_string()]);
+    sharded(npm(&["run", "test:browser:prepared"]), shard)
+}
+
+/// Forward one validated shard to a strict runner.
+fn sharded(test: CommandSpec, shard: Option<Shard>) -> CommandSpec {
+    match shard {
+        Some(shard) => test.args(["--".to_owned(), "--shard".to_owned(), shard.to_string()]),
+        None => test,
     }
-    test
+}
+
+/// Build the host binary, then run the Rust tests or one nextest partition of
+/// them. The unsharded suite and shard 1 also check formatting and Clippy and
+/// run the doc tests, so a sharded run checks each of them once. The doc tests
+/// also run after failed tests, so one job reports both kinds of failure.
+fn native_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
+    let first = shard.is_none_or(Shard::is_first);
+    let mut commands = vec![require_nextest(), cargo(&["xtask", "build-native"])];
+    if first {
+        commands.extend([cargo(&["fmt", "--all", "--", "--check"]), rust_clippy()]);
+    }
+    commands.extend(
+        [
+            "@mokly/ui",
+            "@mokly/model",
+            "@mokly/frame",
+            "@mokly/viewer",
+            "@mokly/mokly",
+        ]
+        .map(|package| npm(&["run", "build", "--workspace", package])),
+    );
+    let [mut tests, doc] = mokly_tests(&["--no-fail-fast"]);
+    if let Some(shard) = shard {
+        tests = tests.args(["--partition".to_owned(), format!("slice:{shard}")]);
+    }
+    commands.push(tests.keep_going());
+    if first {
+        commands.push(doc);
+    }
+    commands
 }
 
 /// The read-only source checks run in three concurrent lanes, because Prettier
@@ -93,6 +124,7 @@ fn repository_steps(dependency_audit: DependencyAudit) -> Vec<Step> {
         audit,
         npm(&["ci"]),
         npm(&["run", "dependencies:check:rust"]),
+        require_nextest(),
         cargo(&["xtask", "boundary"]),
         cargo(&["xtask", "whitespace"]),
         cargo(&["xtask", "check-generated-types"]),
@@ -127,23 +159,39 @@ fn repository_steps(dependency_audit: DependencyAudit) -> Vec<Step> {
         npm(&["run", "build", "--workspace", "@mokly/frame"]),
         npm(&["run", "build", "--workspace", "@mokly/viewer"]),
         npm(&["run", "build", "--workspace", "@mokly/mokly"]),
-        mokly_cargo("test"),
     ];
+    let tests = mokly_tests(&[]);
     before
         .into_iter()
         .map(Step::Run)
         .chain([source_checks])
-        .chain(after.into_iter().map(Step::Run))
+        .chain(after.into_iter().chain(tests).map(Step::Run))
         .collect()
 }
 
+/// Fail early, with install steps, when the Rust test runner is missing.
+pub(super) fn require_nextest() -> CommandSpec {
+    node(&["xtask/scripts/require-nextest.mjs"])
+}
+
+/// Run every Mokly test target in parallel with nextest, then the doc tests,
+/// which nextest does not run.
+fn mokly_tests(options: &[&str]) -> [CommandSpec; 2] {
+    [
+        mokly_cargo(&["nextest", "run"]).args(options.iter().copied()),
+        mokly_cargo(&["test"])
+            .args(["--doc"])
+            .args(options.iter().copied()),
+    ]
+}
+
 fn rust_clippy() -> CommandSpec {
-    mokly_cargo("clippy").args(["--all-targets", "--", "-D", "warnings"])
+    mokly_cargo(&["clippy"]).args(["--all-targets", "--", "-D", "warnings"])
 }
 
 /// Restrict native and MIT Rust work to the app-independent crates.
-fn mokly_cargo(operation: &str) -> CommandSpec {
-    cargo(&[operation, "--locked", "-p", "mokly-*", "-p", "xtask"])
+fn mokly_cargo(operation: &[&str]) -> CommandSpec {
+    cargo(operation).args(["--locked", "-p", "mokly-*", "-p", "xtask"])
 }
 
 /// Lint the feature-gated design matrix target that the workspace lint skips.

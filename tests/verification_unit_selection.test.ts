@@ -228,7 +228,7 @@ for (const args of [["--shard"], ["--shard", "1/4"], ["--shard=1/4"]]) {
       await assert.rejects(parseViewerSelection(root, args), (error: Error) => {
         assert.match(
           error.message,
-          /does not accept --shard.*cargo xtask check --suite browser --shard/u,
+          /does not accept --shard.*cargo xtask check --suite viewer --shard/u,
         );
         return true;
       });

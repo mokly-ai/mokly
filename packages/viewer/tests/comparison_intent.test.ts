@@ -25,6 +25,7 @@ import { hostRoute, withHostRoute } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import type { ShellState } from "../src/shell/store_state.js";
 
+import { unregisterDom } from "./dom_teardown.js";
 import { catalogue, context } from "./shell_state_fixture.js";
 
 const HOME = "https://example.test/view/product/browse/home/";
@@ -110,7 +111,7 @@ test("a publication that rebinds the route keeps the settled intent", () => {
 
 test("an honoured intent selects the Changes tab, and an intent for an ineligible view leaves the tab as it was", (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   for (const [eligible, before, after, selected] of [
     [true, "inspect", "changes", 1],
     [false, "inspect", "inspect", 0],

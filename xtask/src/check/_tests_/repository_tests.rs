@@ -56,6 +56,7 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             one("npm run dependencies:check -- --baseline"),
             one("npm ci"),
             one("npm run dependencies:check:rust"),
+            one("node xtask/scripts/require-nextest.mjs"),
             one("cargo xtask boundary"),
             one("cargo xtask whitespace"),
             one("cargo xtask check-generated-types"),
@@ -82,7 +83,8 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             one("npm run build --workspace \"@mokly/frame\""),
             one("npm run build --workspace \"@mokly/viewer\""),
             one("npm run build --workspace \"@mokly/mokly\""),
-            one("cargo test --locked -p \"mokly-*\" -p xtask"),
+            one("cargo nextest run --locked -p \"mokly-*\" -p xtask"),
+            one("cargo test --locked -p \"mokly-*\" -p xtask --doc"),
         ]
     );
 }

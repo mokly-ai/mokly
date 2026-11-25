@@ -1,11 +1,15 @@
+import ciShards from "../verification/ci-shards.json" with { type: "json" };
+
 const CI_WORKFLOW_PATH = ".github/workflows/ci.yml";
 export const REQUIRED_CI_JOB_NAME = "Required CI";
 export const VERIFICATION_ARTIFACT_PATTERN = /^verification-/;
-export const VERIFICATION_REPORT_COUNT = 10;
 export const RELEASE_VERIFICATION_RUNTIMES = Object.freeze([
   "node-22.15.0",
   "node-24",
 ]);
+/** One report per viewer and browser shard on each release runtime. */
+export const VERIFICATION_REPORT_COUNT =
+  RELEASE_VERIFICATION_RUNTIMES.length * (ciShards.viewer + ciShards.browser);
 
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
 

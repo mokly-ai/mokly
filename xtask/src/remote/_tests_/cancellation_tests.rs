@@ -1,6 +1,7 @@
 //! Cancellation diagnostics depend on typed run state rather than error text.
 
 use crate::check::request::DependencyAudit;
+use crate::remote::plan::plan_support::plan_counts;
 use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
@@ -25,7 +26,7 @@ fn failed_cancellation_of_a_completed_run_prints_information() {
             .filter(|event| *event
                 == "message:information: GitHub run=123 already ended; cancellation not needed")
             .count(),
-        14
+        plan_counts().commands
     );
 }
 
@@ -43,14 +44,14 @@ fn failed_cancellation_reads_the_run_state_before_warning() {
             .iter()
             .filter(|event| *event == "run-state:123")
             .count(),
-        14
+        plan_counts().commands
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.contains("warning: cancellation for 123 failed:"))
             .count(),
-        14
+        plan_counts().commands
     );
 }
 
@@ -68,13 +69,13 @@ fn a_failed_run_state_read_keeps_the_cancellation_warning() {
             .iter()
             .filter(|event| *event == "run-state:123")
             .count(),
-        14
+        plan_counts().commands
     );
     assert_eq!(
         events
             .iter()
             .filter(|event| event.contains("warning: cancellation for 123 failed:"))
             .count(),
-        14
+        plan_counts().commands
     );
 }

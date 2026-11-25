@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { readQuery } from "../../navigation/address";
+import { readQuery } from "../../navigation/query";
 import type { ViewerSelection } from "../../viewer/host";
 import {
   carriedQuery,

@@ -11,6 +11,7 @@ mod unix {
     use std::env;
     use std::io::{BufRead, BufReader, Read};
     use std::process::{Command, Stdio};
+    use std::sync::atomic::{AtomicBool, Ordering};
 
     use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
 
@@ -68,7 +69,18 @@ mod unix {
         }
     }
 
+    /// The tree receives SIGTERM through its group and directly, so two helper
+    /// threads can each run this handler. Only the first one reports and exits.
+    static LEAF_STOPPING: AtomicBool = AtomicBool::new(false);
+
     extern "C" fn leaf_stopped(_: i32) {
+        if LEAF_STOPPING.swap(true, Ordering::SeqCst) {
+            loop {
+                // SAFETY: pause accesses no memory. The first handler's _exit
+                // ends this thread with the process.
+                unsafe { libc::pause() };
+            }
+        }
         // SAFETY: write and _exit are async-signal-safe. fd 3 is the owned
         // readiness pipe. Exiting stops every helper thread without Rust locks.
         unsafe {

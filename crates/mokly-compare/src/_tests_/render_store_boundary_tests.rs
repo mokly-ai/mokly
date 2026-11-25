@@ -18,12 +18,12 @@ use crate::render_segment_buffer::{Append, SegmentBuffer};
 use crate::render_store::{CachedDocuments, DocumentBackend, SegmentCacheMock};
 
 #[derive(Clone)]
-struct Record {
-    key: StoreKey,
-    document: Arc<EncodedView>,
+pub(super) struct Record {
+    pub(super) key: StoreKey,
+    pub(super) document: Arc<EncodedView>,
 }
 
-fn encode(records: &[Record], version: &str) -> Option<Vec<u8>> {
+pub(super) fn encode(records: &[Record], version: &str) -> Option<Vec<u8>> {
     let mut buffer = SegmentBuffer::new(1024 * 1024)?;
     for record in records {
         assert_eq!(
@@ -34,7 +34,7 @@ fn encode(records: &[Record], version: &str) -> Option<Vec<u8>> {
     Some(buffer.finish(version)?.bytes().to_vec())
 }
 
-fn records(count: usize) -> Vec<Record> {
+pub(super) fn records(count: usize) -> Vec<Record> {
     let artifact = Artifact {
         bytes: b"complete".to_vec(),
         content_type: "text/html".into(),
@@ -57,7 +57,7 @@ fn records(count: usize) -> Vec<Record> {
         .collect()
 }
 
-fn entry(bytes: Vec<u8>) -> RawRead {
+pub(super) fn entry(bytes: Vec<u8>) -> RawRead {
     RawRead::Entry(RawEntry {
         bytes: bytes.len() as u64,
         input: Box::new(Cursor::new(bytes)),

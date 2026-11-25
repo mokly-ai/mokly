@@ -24,7 +24,27 @@ jobs:
       node-24-version: ${{ steps.node-version.outputs.value }}
       node-matrix: ${{ steps.profile.outputs.node-matrix }}
       verification-runtimes: ${{ steps.profile.outputs.verification-runtimes }}
+      viewer-shards: ${{ steps.shards.outputs.viewer }}
+      viewer-shard-total: ${{ steps.shards.outputs.viewer-total }}
+      browser-shards: ${{ steps.shards.outputs.browser }}
+      browser-shard-total: ${{ steps.shards.outputs.browser-total }}
     steps:
+      - name: Check out shard totals
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/verification/ci-shards.json
+          sparse-checkout-cone-mode: false
+      # The viewer and browser matrices, the aggregate, and remote
+      # verification all read the shard totals from this one file.
+      - name: Read shard totals
+        id: shards
+        run: |
+          for suite in viewer browser; do
+            total=$(jq --exit-status --arg suite "$suite" '.[$suite] | select(type == "number" and . >= 1 and . == floor)' scripts/verification/ci-shards.json)
+            echo "$suite-total=$total" >> "$GITHUB_OUTPUT"
+            echo "$suite=$(jq --compact-output --null-input --argjson total "$total" '[range(1; $total + 1)]')" >> "$GITHUB_OUTPUT"
+          done
       - name: Select Node verification profile
         id: profile
         env:
@@ -86,6 +106,11 @@ jobs:
           cache-directories: .context/rust-audit-tool
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       - name: Restore npm download cache
         id: npm-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -109,7 +134,7 @@ jobs:
             }}
         run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
   viewer:
-    name: Viewer (Node ${{ matrix.node }})
+    name: Viewer (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.profile.outputs.viewer-shard-total }})
     needs:
       - profile
     runs-on: ubuntu-24.04
@@ -118,9 +143,10 @@ jobs:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
+        shard: ${{ fromJSON(needs.profile.outputs.viewer-shards) }}
     env:
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-full.json
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/viewer-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.profile.outputs.viewer-shard-total }}.json
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -161,20 +187,22 @@ jobs:
         with:
           bun-version-file: .bun-version
           no-cache: true
-      - name: Run viewer verification
-        run: cargo xtask check --suite viewer
+      - name: Run viewer shard
+        env:
+          VIEWER_SHARD: ${{ matrix.shard }}/${{ needs.profile.outputs.viewer-shard-total }}
+        run: cargo xtask check --suite viewer --shard "$VIEWER_SHARD"
       - name: Retain viewer inventory and timings
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: verification-viewer-node-${{ matrix.node }}
+          name: verification-viewer-node-${{ matrix.node }}-shard-${{ matrix.shard }}
           path: ${{ env.MOKLY_VERIFICATION_REPORT }}
           if-no-files-found: error
           include-hidden-files: true
           overwrite: true
           retention-days: 14
   browser:
-    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
+    name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/${{ needs.profile.outputs.browser-shard-total }})
     needs: [profile]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -182,11 +210,11 @@ jobs:
       fail-fast: false
       matrix:
         node: ${{ fromJSON(needs.profile.outputs.node-matrix) }}
-        shard: [1, 2, 3, 4]
+        shard: ${{ fromJSON(needs.profile.outputs.browser-shards) }}
     env:
       PLAYWRIGHT_CHANNEL: chromium
       MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
-      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-4.json
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/browser-node-${{ matrix.node }}-shard-${{ matrix.shard }}-of-${{ needs.profile.outputs.browser-shard-total }}.json
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -220,7 +248,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser shard
         env:
-          BROWSER_SHARD: ${{ matrix.shard }}/4
+          BROWSER_SHARD: ${{ matrix.shard }}/${{ needs.profile.outputs.browser-shard-total }}
         run: cargo xtask check --suite browser --shard "$BROWSER_SHARD"
       - name: Retain browser inventory and timings
         if: ${{ always() }}
@@ -241,7 +269,7 @@ jobs:
           include-hidden-files: true
           retention-days: 14
   native:
-    name: Native (${{ matrix.runner }})
+    name: Native (${{ matrix.runner }}${{ matrix.shard && format(', shard {0}', matrix.shard) || '' }})
     needs:
       - profile
     runs-on: ${{ matrix.runner }}
@@ -249,9 +277,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner:
-          - macos-26
-          - windows-2025
+        # macOS runs its Rust tests in two nextest partitions and Windows in
+        # four. Shard 1 also checks formatting and Clippy and runs the doc tests.
+        include:
+          - runner: macos-26
+            shard: 1/2
+          - runner: macos-26
+            shard: 2/2
+          - runner: windows-2025
+            shard: 1/4
+          - runner: windows-2025
+            shard: 2/4
+          - runner: windows-2025
+            shard: 3/4
+          - runner: windows-2025
+            shard: 4/4
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -272,6 +312,11 @@ jobs:
         with:
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       # The Windows runner image moves npm's cache out of the home folder.
       - name: Locate npm download cache
         id: npm-cache-path
@@ -302,7 +347,13 @@ jobs:
       - name: Build sidecar package
         run: npm run build --workspace @mokly/mokly
       - name: Run native verification
-        run: cargo xtask check --suite native
+        shell: bash
+        env:
+          NATIVE_SHARD: ${{ matrix.shard }}
+        run: |
+          shard=()
+          [[ -z "$NATIVE_SHARD" ]] || shard=(--shard "$NATIVE_SHARD")
+          cargo xtask check --suite native "${shard[@]}"
   static-delivery:
     name: Static delivery (Node ${{ matrix.node }})
     needs: [profile]
@@ -392,47 +443,131 @@ jobs:
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 1/4
+          - name: App checks 1/8
             command: cloud-app
-            app_shard: "1/4"
+            shard: "1/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 2/4
+          - name: App checks 2/8
             command: cloud-app
-            app_shard: "2/4"
+            shard: "2/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 3/4
+          - name: App checks 3/8
             command: cloud-app
-            app_shard: "3/4"
+            shard: "3/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: App checks 4/4
+          - name: App checks 4/8
             command: cloud-app
-            app_shard: "4/4"
+            shard: "4/8"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/app"
             postgres: true
             infrastructure: false
             rust_cache: true
-          - name: Mockup checks
+          - name: App checks 5/8
+            command: cloud-app
+            shard: "5/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 6/8
+            command: cloud-app
+            shard: "6/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 7/8
+            command: cloud-app
+            shard: "7/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          - name: App checks 8/8
+            command: cloud-app
+            shard: "8/8"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/app"
+            postgres: true
+            infrastructure: false
+            rust_cache: true
+          # Mockup shard 1 runs the checks without a browser, shard 2 the policy
+          # and served suites, and shards 3 to 6 split the disk browser suite.
+          - name: Mockup checks 1/6
             command: cloud-mockups
+            shard: "1/6"
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 2/6
+            command: cloud-mockups
+            shard: "2/6"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/mockups"
             postgres: false
             infrastructure: false
             rust_cache: true
-          - name: Site checks
+          - name: Mockup checks 3/6
+            command: cloud-mockups
+            shard: "3/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 4/6
+            command: cloud-mockups
+            shard: "4/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 5/6
+            command: cloud-mockups
+            shard: "5/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Mockup checks 6/6
+            command: cloud-mockups
+            shard: "6/6"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/mockups"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Site checks 1/2
             command: cloud-site
+            shard: "1/2"
+            install_dependencies: true
+            browser_workspace: "@mokly-cloud/site"
+            postgres: false
+            infrastructure: false
+            rust_cache: true
+          - name: Site checks 2/2
+            command: cloud-site
+            shard: "2/2"
             install_dependencies: true
             browser_workspace: "@mokly-cloud/site"
             postgres: false
@@ -467,6 +602,12 @@ jobs:
           shared-key: ${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install cargo-nextest
+        if: matrix.command == 'cloud-rust'
+        uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
+        with:
+          tool: cargo-nextest@0.9.152
+          fallback: none
       - name: Restore Electron download
         if: matrix.command == 'cloud-desktop'
         id: electron-cache
@@ -516,11 +657,11 @@ jobs:
       - name: Verify the partition
         env:
           XTASK_COMMAND: ${{ matrix.command }}
-          APP_SHARD: ${{ matrix.app_shard }}
+          SHARD: ${{ matrix.shard }}
           ADDITIONAL_SUITES: ${{ matrix.additional_suites }}
         run: |
           shard=()
-          [[ -z "$APP_SHARD" ]] || shard=(--shard "$APP_SHARD")
+          [[ -z "$SHARD" ]] || shard=(--shard "$SHARD")
           cargo xtask check --suite "$XTASK_COMMAND" "${shard[@]}"
           for suite in $ADDITIONAL_SUITES; do
             cargo xtask check --suite "$suite"
