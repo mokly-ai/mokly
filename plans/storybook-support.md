@@ -2945,23 +2945,25 @@ Monorepos keep the preview file of their own Storybook, as decision 9 says.
 
 Depends on: 19
 
-- [ ] For a root that names a Storybook folder and has no `dir`, run its
+- [x] For a root that names a Storybook folder and has no `dir`, run its
       `main.*` in the sidecar before discovery with Storybook's loader, as
       decision 20 chose. Turn each `stories` entry into a root, and convert
       Storybook's pattern syntax, such as `*.@(ts|tsx)`, to Mokly's globs.
-- [ ] On the base side, run the base commit's `main.*` after its extraction
-      and its install.
-- [ ] Watch `main.*` and its imports as configuration inputs, so that an edit
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] On the base side, run the base commit's `main.*` after its extraction
+      and its install. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Watch `main.*` and its imports as configuration inputs, so that an edit
       runs discovery again in Serve.
-- [ ] When `main.*` fails, fail discovery with a configuration error that
-      names the file.
-- [ ] Keep configuration and discovery free of Node for every other root and
-      catalogue.
+      Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] When `main.*` fails, fail discovery with a configuration error that
+      names the file. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
+- [x] Keep configuration and discovery free of Node for every other root and
+      catalogue. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 - [ ] Update `docs/protocol/mokly-storybook.md`,
       `docs/protocol/mokly-configuration.md`, and
       `docs/protocol/mokly-root-discovery.md` with that answer.
-- [ ] Test a root with `storybook` and without `dir`, on the head and the
-      base side.
+- [x] Test a root with `storybook` and without `dir`, on the head and the
+      base side. Branch: `calummoore/storybook-track-e-storybook-folders-87sk`.
 - [ ] Update `docs/guides/authoring/config.md`.
 
 ## Milestone 21: Preview CSS in story documents

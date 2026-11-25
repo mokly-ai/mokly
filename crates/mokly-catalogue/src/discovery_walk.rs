@@ -24,11 +24,13 @@ pub(crate) struct Walk<'a> {
     pub(crate) config: &'a ResolvedConfig,
     pub(crate) root: &'a ResolvedRoot,
     pub(crate) index: usize,
+    pub(crate) configured: usize,
     pub(crate) globs: GlobSet,
     pub(crate) output: Option<&'a Path>,
     pub(crate) not_searched: Vec<String>,
     pub(crate) candidates: &'a mut BTreeMap<PathBuf, Option<Node>>,
     pub(crate) owners: &'a mut BTreeMap<PathBuf, (String, usize)>,
+    pub(crate) folder_globs: &'a mut BTreeMap<PathBuf, GlobSet>,
     pub(crate) inventory: &'a mut Inventory,
 }
 
@@ -69,6 +71,9 @@ impl Walk<'_> {
                 }
                 Work::Child(path, FileKind::File) => {
                     if path.file_name().is_none_or(|name| name != "_folder.json")
+                        && (!self.root.from_storybook_main()
+                            || SourceKind::from_path(&path.to_string_lossy())
+                                == SourceKind::Stories)
                         && self
                             .globs
                             .is_match(path.strip_prefix(&self.root.directory).unwrap_or(&path))
@@ -118,7 +123,7 @@ impl Walk<'_> {
         Ok(())
     }
 
-    fn project_file(&mut self, path: &Path) -> Result<Option<PathBuf>> {
+    fn project_file(&mut self, path: &Path) -> Result<Option<(PathBuf, bool)>> {
         let node = if let Some(node) = self.candidates.get(path) {
             node.clone()
         } else {
@@ -147,23 +152,29 @@ impl Walk<'_> {
             return Err(invalid(format!(
                 "file {} resolves outside repoRoot; matched roots[{}].files",
                 relative(path, &self.config.repo_root),
-                self.index
+                self.configured
             )));
         }
         if let Some((first, owner)) = self.owners.get(&node.identity) {
+            if *owner == self.configured && self.root.from_storybook_main() {
+                self.inventory
+                    .sources
+                    .push(relative(path, &self.config.repo_root));
+                return Ok(Some((node.identity, false)));
+            }
             return Err(invalid(format!(
                 "file {first} is matched by roots[{owner}] and roots[{}]",
-                self.index
+                self.configured
             )));
         }
         self.owners.insert(
             node.identity.clone(),
-            (relative(path, &self.config.repo_root), self.index),
+            (relative(path, &self.config.repo_root), self.configured),
         );
-        Ok(Some(node.identity))
+        Ok(Some((node.identity, true)))
     }
     fn file(&mut self, path: &Path, exclusions: &[(PathBuf, GlobSet)]) -> Result<()> {
-        let Some(identity) = self.project_file(path)? else {
+        let Some((identity, true)) = self.project_file(path)? else {
             return Ok(());
         };
         let relative_path = relative(path, &self.config.repo_root);
@@ -181,9 +192,15 @@ impl Walk<'_> {
     }
     fn folder(&mut self, directory: &Path, exclusions: &mut Vec<(PathBuf, GlobSet)>) -> Result<()> {
         let file = directory.join("_folder.json");
-        let Some(identity) = self.project_file(&file)? else {
+        let Some((identity, first)) = self.project_file(&file)? else {
             return Ok(());
         };
+        if !first {
+            if let Some(globs) = self.folder_globs.get(&identity) {
+                exclusions.push((directory.into(), globs.clone()));
+            }
+            return Ok(());
+        }
         let path = relative(&file, &self.config.repo_root);
         let bytes = match self.tree.read(&file) {
             Ok(bytes) => bytes,
@@ -227,6 +244,9 @@ impl Walk<'_> {
             Ok(globs) => globs,
             Err(reason) => return Err(invalid(reason)),
         };
+        if self.root.from_storybook_main() {
+            self.folder_globs.insert(identity.clone(), globs.clone());
+        }
         exclusions.push((directory.into(), globs));
         self.inventory
             .sources

@@ -150,6 +150,12 @@ impl InputTree for CapturedTree {
     #[tracing::instrument(name = "output.fingerprint", skip_all, err, fields(input_paths = tracing::field::Empty, retained_bytes = tracing::field::Empty))]
     fn begin(&self, config: &ResolvedConfig, excluded: &[PathBuf]) -> Result<()> {
         let selection = Selection::new(config, excluded)?;
+        for (path, digest) in config.storybook_inputs() {
+            let path = config.repo_root.join(path);
+            if self.digest(&path).as_deref().ok() != Some(digest) {
+                return Err(Error::InputsChanged { path });
+            }
+        }
         for root in &config.roots {
             let _ = self.project(&root.directory);
         }

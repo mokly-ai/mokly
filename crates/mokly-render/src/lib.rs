@@ -43,6 +43,7 @@ mod source_evidence;
 mod source_lease;
 mod source_paths;
 mod sources;
+mod storybook_roots;
 mod stylesheet_cache;
 mod stylesheet_capture;
 mod stylesheet_class_maps;

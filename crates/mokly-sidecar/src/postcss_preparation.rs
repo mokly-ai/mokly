@@ -58,6 +58,7 @@ impl Call {
             Self::Hello(_)
             | Self::RestoreGeneration(_)
             | Self::Describe(_)
+            | Self::ReadStorybook(_)
             | Self::Bindings(_)
             | Self::RenderScreen(_)
             | Self::RenderComponent(_)

@@ -186,6 +186,7 @@ pub(super) fn generation(call: &Call) -> Option<&str> {
         Call::RenderPage(value) => Some(&value.generation),
         Call::CssModules(value) => Some(&value.generation),
         Call::Hello(_)
+        | Call::ReadStorybook(_)
         | Call::Bundle(_)
         | Call::RestoreGeneration(_)
         | Call::ProcessCss(_)

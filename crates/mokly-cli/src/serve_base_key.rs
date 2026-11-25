@@ -42,6 +42,7 @@ impl BaseKey {
             &config.repo_root,
             roots,
             &config.authored_inputs,
+            config.storybook_inputs(),
         )) {
             Ok(bytes) => bytes,
             Err(source) => return Err(InternalError::Json { source }.into()),

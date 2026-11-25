@@ -21,6 +21,7 @@ import { PostcssWorkers } from "./postcss.js";
 import { checkRecipeSize } from "./recipe-size.js";
 import { renderSession } from "./render-session.js";
 import { render } from "./render.js";
+import { readStorybook } from "./storybook-main.js";
 import { ViteCompiler } from "./vite-compiler.js";
 import { evaluateVite } from "./vite-evaluate.js";
 import { withViteNodePeers } from "./vite-node-peers.js";
@@ -82,6 +83,8 @@ export class Session {
     }
     if (request.method === "hello") protocol("hello already completed");
     switch (request.method) {
+      case "readStorybook":
+        return readStorybook(request.params);
       case "bundle": {
         const {
           capture = "full",

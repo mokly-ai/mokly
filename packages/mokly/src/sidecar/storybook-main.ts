@@ -2,21 +2,25 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import { createRequire, findPackageJSON } from "node:module";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
+import type { ReadStorybookParams } from "../generated/sidecar/ReadStorybookParams.js";
+import type { ReadStorybookResult } from "../generated/sidecar/ReadStorybookResult.js";
 
 import { detail } from "./errors.js";
 import { fileDigest } from "./file-digests.js";
-import { missingModule } from "./importer-resolution.js";
-import type { ModulePaths } from "./module-paths.js";
+import { dependencyDirectory, missingModule } from "./importer-resolution.js";
+import { ModulePaths } from "./module-paths.js";
 import { inside, logical } from "./path-scope.js";
 import {
   regularFile,
   storybookCandidates,
   storybookFolders,
 } from "./storybook-folders.js";
+import { viteMissingImport } from "./vite-lookup-paths.js";
+import { ViteLookup } from "./vite-resolution.js";
 
 // The workspace devDependency pins the Storybook versions used by the tests.
 const testedRange = "^10.6.2";
@@ -24,16 +28,78 @@ const testedRange = "^10.6.2";
 export interface MainRequest {
   common: string;
   base: string;
+  stories?: ReadStorybookParams;
 }
 
 export interface MainResult {
   framework?: string;
+  entries?: ReadStorybookResult["entries"];
   error?: string;
   inputs: Array<[string, string | null]>;
 }
 
 type Lookup = (name: string, directory: string) => Promise<string | Error>;
 export type StorybookMainCache = Map<string, Promise<MainResult>>;
+
+/** Read the selected main file with the package lookup of this source side. */
+export async function readStorybook(
+  params: ReadStorybookParams,
+): Promise<ReadStorybookResult> {
+  const paths = await ModulePaths.create(params);
+  const directory = path.resolve(paths.sourceRoot, params.folder);
+  const main = await findMain(paths.sourceRoot, params.folder, new Map());
+  if (!main)
+    throw new Error(
+      `${path.posix.join(params.folder, "main.*")}: no main file found`,
+    );
+
+  const config = path.resolve(paths.sourceRoot, params.configurationDirectory);
+  const lookup = new ViteLookup(paths, config);
+  const resolve = (from: string) =>
+    fileURLToPath(
+      lookup.sync(
+        "storybook/package.json",
+        path.join(from, "package.json"),
+        (specifier, parent) =>
+          pathToFileURL(createRequire(parent).resolve(specifier)).href,
+      ),
+    );
+  let manifest: string;
+  try {
+    try {
+      manifest = resolve(config);
+    } catch (error) {
+      if (!viteMissingImport(error)) throw error;
+      manifest = resolve(path.dirname(directory));
+    }
+  } catch (error) {
+    throw new Error(`${logical(paths.sourceRoot, main)}: ${detail(error)}`, {
+      cause: error,
+    });
+  }
+  const result = await loadMain(
+    main,
+    directory,
+    manifest,
+    paths.sourceRoot,
+    params,
+  );
+  const inputs = new Map<string, string>();
+  const dependencies = new Set<string>();
+  const dependencyRoot = paths.dependencyRoot ?? paths.sourceRoot;
+  for (const [file, digest] of result.inputs) {
+    if (digest !== null && paths.repositoryOwned(file))
+      inputs.set(logical(paths.sourceRoot, file), digest);
+    const dependency = dependencyDirectory(dependencyRoot, file);
+    if (dependency) dependencies.add(logical(dependencyRoot, dependency));
+  }
+  return {
+    main: logical(paths.sourceRoot, main),
+    entries: result.entries ?? [],
+    inputs: Object.fromEntries(inputs),
+    dependencyDirectories: [...dependencies].sort(),
+  };
+}
 
 /** Resolve the portable renderer through each folder's framework when needed. */
 export async function storybookFrameworks(
@@ -94,6 +160,7 @@ async function loadMain(
   directory: string,
   manifest: string,
   root: string,
+  stories?: ReadStorybookParams,
 ): Promise<MainResult> {
   let version = "unknown";
   try {
@@ -107,6 +174,7 @@ async function loadMain(
     const result = await runMain({
       common,
       base: path.join(directory, "main"),
+      ...(stories && { stories }),
     });
     if (result.error !== undefined) throw new Error(result.error);
     result.inputs.push([

@@ -14,6 +14,7 @@ use crate::discovery_walk::Walk;
 use crate::error::Result;
 use crate::folder_input::FolderInput;
 use crate::globs::{self, DEFAULT_GLOBS};
+use crate::storybook_roots::display_folder;
 
 /// Source file classification, independent of JavaScript evaluation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -68,7 +69,7 @@ pub struct SourceFile {
     pub absolute: PathBuf,
     /// Repository-relative physical identity, protecting root aliases.
     pub identity: String,
-    /// Root index in configured order.
+    /// Effective root index after Storybook expansion.
     pub root_index: usize,
     /// Entry parser or sidecar classification.
     pub kind: SourceKind,
@@ -124,7 +125,15 @@ impl Discovery for Discoverer {
         };
         let mut owners = BTreeMap::new();
         let mut candidates = BTreeMap::new();
+        let mut folder_globs = BTreeMap::new();
+        let mut group_start = 0;
+        let mut not_searched = Vec::new();
         for (index, root) in config.roots.iter().enumerate() {
+            let configured = root.configured_index(index);
+            if root.pending_storybook() {
+                let folder = display_folder(root.storybook.as_str());
+                return Err(invalid(format!("{folder}/main.* has not been loaded")));
+            }
             let patterns = root
                 .input
                 .files
@@ -132,38 +141,53 @@ impl Discovery for Discoverer {
                 .unwrap_or_else(|| DEFAULT_GLOBS.iter().map(|s| (*s).into()).collect());
             let globs = match globs::compile(&patterns) {
                 Ok(globs) => globs,
-                Err(reason) => return Err(invalid(format!("roots[{index}].files: {reason}"))),
+                Err(reason) => return Err(invalid(format!("roots[{configured}].files: {reason}"))),
             };
             let mut walk = Walk {
                 tree: self.tree.as_ref(),
                 config,
                 root,
                 index,
+                configured,
                 globs,
                 output: output.as_deref(),
                 not_searched: Vec::new(),
                 owners: &mut owners,
+                folder_globs: &mut folder_globs,
                 candidates: &mut candidates,
                 inventory: &mut inventory,
             };
-            let before = walk.inventory.files.len();
             walk.directory(&root.directory, &[])?;
-            if !walk.inventory.files[before..]
+            not_searched.extend(walk.not_searched);
+            if config
+                .roots
+                .get(index + 1)
+                .is_some_and(|next| next.configured_index(index + 1) == configured)
+            {
+                continue;
+            }
+            if !inventory.files[group_start..]
                 .iter()
                 .any(|file| !file.excluded)
             {
-                walk.not_searched.sort_by(|a, b| compare_utf16(a, b));
-                walk.not_searched.dedup();
-                let suffix = if walk.not_searched.is_empty() {
+                not_searched.sort_by(|a, b| compare_utf16(a, b));
+                not_searched.dedup();
+                let suffix = if not_searched.is_empty() {
                     String::new()
                 } else {
-                    format!("; not searched: {}", walk.not_searched.join(", "))
+                    format!("; not searched: {}", not_searched.join(", "))
+                };
+                let directory = if root.from_storybook_main() {
+                    display_folder(root.storybook.as_str())
+                } else {
+                    &root.input.dir
                 };
                 return Err(invalid(format!(
-                    "root matches no file: {}{suffix}",
-                    root.input.dir
+                    "root matches no file: {directory}{suffix}"
                 )));
             }
+            group_start = inventory.files.len();
+            not_searched.clear();
         }
         inventory
             .files

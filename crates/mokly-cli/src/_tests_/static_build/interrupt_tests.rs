@@ -41,6 +41,9 @@ impl Transaction for Interrupting {
     fn protect(&mut self, paths: Vec<PathBuf>) -> Result<()> {
         self.inner.protect(paths)
     }
+    fn protect_roots(&mut self, roots: Vec<PathBuf>, inputs: Vec<PathBuf>) -> Result<()> {
+        self.inner.protect_roots(roots, inputs)
+    }
     fn stage(
         &self,
         artifact: &Artifact,

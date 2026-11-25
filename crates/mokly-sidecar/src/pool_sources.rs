@@ -14,6 +14,7 @@ impl Pool {
         let state = self.lock();
         let source = match call {
             Call::Bundle(request) => Some(request.params.source_root.clone()),
+            Call::ReadStorybook(params) => Some(params.source_root.clone()),
             Call::RestoreGeneration(params) => Some(params.params.source_root.clone()),
             Call::ProcessCss(params) => Some(params.source_root.clone()),
             Call::TransformViteCss(params) => Some(params.setup.source_root.clone()),

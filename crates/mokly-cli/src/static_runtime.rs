@@ -24,6 +24,7 @@ use mokly_graph::cache::RenderCache;
 use mokly_model::output::artifact::Artifact;
 use mokly_model::output::upload::Publication;
 use mokly_platform::rename::{Rename, SystemRename};
+use mokly_render::runtime::Runtime;
 use mokly_sidecar::pool::SidecarPool;
 use mokly_source_interface::tree::SourceTree;
 use mokly_static::assembly::CatalogueAssembler;
@@ -126,20 +127,7 @@ fn prepare(
         pinned,
     } = match setup {
         Ok(value) => value,
-        Err(primary) => {
-            let _protection = context
-                .cancellation
-                .protect_output()
-                .ok_or(BuildError::Cancelled)?;
-            return match transaction.abandon() {
-                Ok(()) => Err(primary),
-                Err(cleanup) => Err(BuildError::Cleanup {
-                    primary: Box::new(primary),
-                    cleanup: Box::new(cleanup),
-                    path: transaction.recovery_path().into(),
-                }),
-            };
-        }
+        Err(primary) => return abandon(context, transaction, primary),
     };
     *context
         .pool
@@ -149,6 +137,22 @@ fn prepare(
         pool: services.pool,
         stopped: Mutex::new(false),
     });
+    let config = match pre_installation::settle(
+        expand(config.clone(), services.runtime.as_ref(), transaction),
+        context.cancellation.as_ref(),
+    ) {
+        Ok(config) => config,
+        Err(primary) => {
+            let primary = match drain.stop() {
+                Ok(()) => primary,
+                Err(shutdown) => BuildError::Shutdown {
+                    primary: Box::new(primary),
+                    shutdown: Box::new(shutdown),
+                },
+            };
+            return abandon(context, transaction, primary);
+        }
+    };
     let render: Arc<dyn BuildService> = Arc::new(CatalogueBuild {
         inputs: Some(captured.clone()),
         changes: changes_runtime::service(
@@ -188,7 +192,7 @@ fn prepare(
         .build(
             Request {
                 cwd,
-                config,
+                config: &config,
                 options,
                 viewer,
                 repository,
@@ -197,6 +201,47 @@ fn prepare(
             transaction,
         )
         .map(|(artifact, _summary)| artifact)
+}
+
+fn expand(
+    mut config: ResolvedConfig,
+    runtime: &Runtime,
+    transaction: &mut dyn Transaction,
+) -> Result<ResolvedConfig, BuildError> {
+    if config.needs_storybook() {
+        runtime
+            .expand_storybook_roots(&mut config)
+            .map_err(|source| BuildError::Catalogue { source })?;
+        let roots = config
+            .roots
+            .iter()
+            .filter(|root| root.from_storybook_main())
+            .flat_map(|root| [root.directory.clone(), root.identity.clone()])
+            .collect();
+        transaction
+            .protect_roots(roots, config.authored_inputs.clone())
+            .map_err(|source| BuildError::Static { source })?;
+    }
+    Ok(config)
+}
+
+fn abandon<T>(
+    context: &Context,
+    transaction: &mut dyn Transaction,
+    primary: BuildError,
+) -> Result<T, BuildError> {
+    let _protection = context
+        .cancellation
+        .protect_output()
+        .ok_or(BuildError::Cancelled)?;
+    match transaction.abandon() {
+        Ok(()) => Err(primary),
+        Err(cleanup) => Err(BuildError::Cleanup {
+            primary: Box::new(primary),
+            cleanup: Box::new(cleanup),
+            path: transaction.recovery_path().into(),
+        }),
+    }
 }
 
 struct LoadedConfig(ResolvedConfig);

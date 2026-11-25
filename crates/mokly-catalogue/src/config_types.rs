@@ -7,6 +7,7 @@ use mokly_model::axes::ColorScheme;
 use serde::{Deserialize, Serialize};
 
 use crate::discovery::{SourceFile, SourceKind};
+use crate::storybook_roots::ResolvedStorybook;
 
 /// Storybook folder used by roots without an explicit setting.
 pub const DEFAULT_STORYBOOK_FOLDER: &str = ".storybook";
@@ -45,7 +46,8 @@ pub struct Config {
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct RootConfig {
-    /// Config-relative existing directory.
+    /// Config-relative existing directory, empty when Storybook supplies it.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub dir: String,
     /// Safe relative POSIX globs, or the default entry globs.
     pub files: Option<Vec<String>>,
@@ -232,7 +234,7 @@ impl ResolvedConfig {
             .map(|file| {
                 (
                     file.path.clone(),
-                    self.roots[file.root_index].storybook.clone(),
+                    self.roots[file.root_index].storybook.as_str().to_owned(),
                 )
             })
             .collect()
@@ -257,8 +259,8 @@ pub struct ResolvedRoot {
     pub directory: PathBuf,
     /// Canonical root identity.
     pub identity: PathBuf,
-    /// Storybook folder as a repository-relative POSIX path, empty for the repository root.
-    pub storybook: String,
+    /// Storybook folder and the origin of roots selected by its main file.
+    pub storybook: ResolvedStorybook,
 }
 
 #[cfg(test)]

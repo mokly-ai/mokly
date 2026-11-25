@@ -7,8 +7,7 @@ use std::sync::Arc;
 use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::config_inputs::validate_inputs;
-use crate::config_links;
-use crate::config_paths::{configuration_alias, confined_to_repository, storybook_folder};
+use crate::config_paths::{configuration_alias, root_directory, storybook_folder};
 use crate::config_types::{DEFAULT_STORYBOOK_FOLDER, ResolvedConfig, ResolvedRoot, RootConfig};
 use crate::config_validation::{invalid, parse};
 use crate::error::{CatalogueError, Result};
@@ -113,6 +112,10 @@ impl ConfigLoader for Loader {
         let mut projected = Vec::new();
         let mut directories = BTreeSet::new();
         for root in configured {
+            if root.dir.is_empty() {
+                projected.push((root, None));
+                continue;
+            }
             if invalid_path_text(&root.dir) {
                 return Err(invalid(format!(
                     "roots[{}].dir: path traversal {}",
@@ -134,31 +137,22 @@ impl ConfigLoader for Loader {
                 &relative(&path, &repo_node.identity),
                 &mut identities,
             )?;
-            projected.push((root, path, node));
+            projected.push((root, Some((path, node))));
         }
         let mut roots = Vec::new();
-        for (index, (root, path, node)) in projected.into_iter().enumerate() {
-            let Some(node) = node.filter(|node| node.kind == FileKind::Directory) else {
-                if let Some(error) = config_links::link_error(
+        for (index, (root, projection)) in projected.into_iter().enumerate() {
+            let resolved = match projection {
+                Some((path, node)) => Some(root_directory(
                     self.tree.as_ref(),
-                    &path,
+                    path,
+                    node,
                     &repository,
-                    &format!("roots[{index}].dir"),
+                    &repo_node.identity,
+                    index,
                     &root.dir,
-                ) {
-                    return Err(error);
-                }
-                return Err(invalid(format!(
-                    "roots[{index}].dir: root is not an existing directory: {}",
-                    root.dir
-                )));
+                )?),
+                None => None,
             };
-            if !confined_to_repository(&repo_node.identity, &[&path, &node.identity]) {
-                return Err(invalid(format!(
-                    "roots[{index}].dir: {} is outside repoRoot",
-                    root.dir
-                )));
-            }
             let storybook = match &root.storybook {
                 Some(value) => storybook_folder(
                     self.tree.as_ref(),
@@ -169,11 +163,15 @@ impl ConfigLoader for Loader {
                 )?,
                 None => DEFAULT_STORYBOOK_FOLDER.into(),
             };
+            let (directory, identity) = resolved.unwrap_or_else(|| {
+                let path = repo_node.identity.join(&storybook);
+                (path.clone(), path)
+            });
             roots.push(ResolvedRoot {
                 input: root,
-                directory: path,
-                identity: node.identity,
-                storybook,
+                directory,
+                identity,
+                storybook: storybook.into(),
             });
         }
         let mut config = ResolvedConfig {

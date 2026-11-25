@@ -49,6 +49,9 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
                     format!("unknown configuration field: {name}"),
                 )
             }
+            ValidationErrorKind::FalseSchema if pointer.ends_with("/files") => {
+                (pointer.into(), format!("{} requires dir", setting(pointer)))
+            }
             _ => (pointer.into(), format!("{}: {error}", setting(pointer))),
         };
         return Err(CatalogueError::Config(
@@ -66,7 +69,7 @@ pub fn parse(text: &str, path: &str) -> Result<Config> {
     if let Some(roots) = &config.roots {
         let mut directories = BTreeSet::new();
         for (index, root) in roots.iter().enumerate() {
-            if !directories.insert(&root.dir) {
+            if !root.dir.is_empty() && !directories.insert(&root.dir) {
                 return Err(invalid(format!(
                     "roots[{index}].dir: duplicate directory {}",
                     root.dir

@@ -218,15 +218,19 @@ impl ServePreparation for AttemptPreparation {
             self.discard();
             return Err(error);
         }
-        if let Some(eager) = &self.eager {
-            eager.start(&config);
-        }
         let mut runtime = self.runtime.with_tree(tree.clone());
         runtime.bundle_capture = if self.head_published.load(Ordering::Acquire) {
             BundleCapture::ServeEdit
         } else {
             BundleCapture::Full
         };
+        if let Err(source) = runtime.expand_storybook_roots(&mut config) {
+            self.discard();
+            return Err(BuildError::Catalogue { source });
+        }
+        if let Some(eager) = &self.eager {
+            eager.start(&config);
+        }
         let runtime = Arc::new(runtime);
         let preparation: &dyn ServePreparation = &CatalogueServe {
             config: Arc::new(PreparedConfig(config)),

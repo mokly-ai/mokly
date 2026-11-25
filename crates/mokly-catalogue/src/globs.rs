@@ -45,7 +45,7 @@ pub(crate) fn compile(patterns: &[String]) -> Result<GlobSet, String> {
     }
 }
 
-fn validate(pattern: &str) -> Result<(), String> {
+pub(crate) fn validate(pattern: &str) -> Result<(), String> {
     if pattern.trim().is_empty()
         || pattern.starts_with(['!', '#', '/'])
         || pattern

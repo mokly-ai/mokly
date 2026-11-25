@@ -104,7 +104,11 @@ fn eager_complete_source_lease_reaches_admission_before_discovery() {
             None,
             Some(admission),
         );
-        assert_eq!(result.unwrap().inventory.files.len(), 1);
+        let inventory = result
+            .unwrap()
+            .inventory
+            .expect("explicit roots were discovered");
+        assert_eq!(inventory.files.len(), 1);
         assert_eq!(
             *states.lock().unwrap(),
             [expected_cache],

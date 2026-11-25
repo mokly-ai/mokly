@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use mokly_source_interface::tree::{FileKind, SourceTree};
+use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::config::{invalid_path_text, normalize, relative};
 use crate::config_links;
@@ -13,6 +13,31 @@ use crate::error::Result;
 /// Check lexical and projected paths against the resolved repository root.
 pub(crate) fn confined_to_repository(repo_root: &Path, paths: &[&Path]) -> bool {
     paths.iter().all(|path| path.starts_with(repo_root))
+}
+
+pub(crate) fn root_directory(
+    tree: &dyn SourceTree,
+    path: PathBuf,
+    node: Option<Node>,
+    repository: &Path,
+    identity: &Path,
+    index: usize,
+    dir: &str,
+) -> Result<(PathBuf, PathBuf)> {
+    let setting = format!("roots[{index}].dir");
+    let Some(node) = node.filter(|node| node.kind == FileKind::Directory) else {
+        return Err(
+            config_links::link_error(tree, &path, repository, &setting, dir).unwrap_or_else(|| {
+                invalid(format!(
+                    "{setting}: root is not an existing directory: {dir}"
+                ))
+            }),
+        );
+    };
+    if !confined_to_repository(identity, &[&path, &node.identity]) {
+        return Err(invalid(format!("{setting}: {dir} is outside repoRoot")));
+    }
+    Ok((path, node.identity))
 }
 
 pub(crate) fn storybook_folder(

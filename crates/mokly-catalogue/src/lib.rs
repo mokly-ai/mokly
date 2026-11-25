@@ -57,6 +57,8 @@ mod registry;
 mod relationships;
 pub mod render_sources;
 mod schema_warnings;
+mod storybook_globs;
+pub mod storybook_roots;
 mod template_role;
 pub mod template_types;
 mod templates;

@@ -12,6 +12,7 @@ use crate::capture_hint::CaptureHint;
 use crate::compiled::RestoreGeneration;
 use crate::postcss_preparation::{PostcssPreparation, PrepareContext};
 use crate::resolution_plan::ResolutionPlan;
+use crate::storybook::ReadStorybookParams;
 use crate::vite_css::TransformViteCss;
 
 /// A request with no method parameters.
@@ -251,6 +252,8 @@ pub struct Hello {
 pub enum Call {
     /// Exchange package versions.
     Hello(Hello),
+    /// Read the stories configuration of one Storybook folder.
+    ReadStorybook(ReadStorybookParams),
     /// Compile without evaluating consumer modules.
     Bundle(BundleRequest),
     /// Restore an immutable compiled generation in another worker.
@@ -281,17 +284,6 @@ pub enum Call {
     DisposeContext(DisposeContext),
     /// Drain in-flight work and exit.
     Shutdown(Empty),
-}
-
-impl Call {
-    /// Protocol default deadline; the process pool applies environment overrides.
-    pub fn timeout_ms(&self) -> u64 {
-        match self {
-            Self::Bundle(_) | Self::Describe(_) => 120_000,
-            Self::ProcessCss(_) | Self::TransformViteCss(_) => 60_000,
-            _ => 30_000,
-        }
-    }
 }
 
 #[cfg(test)]

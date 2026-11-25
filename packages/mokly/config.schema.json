@@ -68,7 +68,16 @@
             }
           }
         },
-        "required": ["dir"]
+        "if": { "required": ["dir"] },
+        "else": {
+          "allOf": [
+            { "properties": { "files": false } },
+            {
+              "if": { "not": { "required": ["storybook"] } },
+              "then": { "required": ["dir"] }
+            }
+          ]
+        }
       },
       "minItems": 1
     },
