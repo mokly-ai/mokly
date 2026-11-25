@@ -13,6 +13,7 @@ const execute = promisify(execFile);
 const resultVariables = [
   "PROFILE_RESULT",
   "REPOSITORY_RESULT",
+  "SHARDS_RESULT",
   "VIEWER_RESULT",
   "BROWSER_RESULT",
   "NATIVE_RESULT",
