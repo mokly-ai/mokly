@@ -13,9 +13,9 @@ main: string,
  */
 entries: Array<StorybookEntry>,
 /**
- * Digests keyed by repository-relative source path.
+ * Source digests by repository-relative path, with null for absent candidates.
  */
-inputs: { [key in string]: string },
+inputs: { [key in string]: string | null },
 /**
  * Installation directories used by the loader, relative to the dependency root.
  */

@@ -107,3 +107,28 @@ export default { stories: [directory${tail}] };
   );
   await running.close();
 });
+
+test("Serve rediscovers stories when a higher-priority main file appears", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": '{"roots":[{"storybook":".storybook"}]}',
+    ".storybook/main.ts": 'export default { stories: ["../first"] };',
+    "first/one.stories.tsx": story,
+    "second/two.stories.tsx": story,
+  });
+  const running = await serve(context, root, process.env, [], true);
+  const url = await running.ready();
+  const initial = await completed(url, running.signal, "one");
+  await write(
+    root,
+    ".storybook/main.js",
+    'export default { stories: ["../second"] };',
+  );
+  const updated = await completed(url, running.signal, "two", fetch, {
+    afterRevision: initial.index.revision,
+  });
+  assert.deepEqual(
+    updated.index.components.map(({ path }: { path: string }) => path),
+    ["two"],
+  );
+  await running.close();
+});

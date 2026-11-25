@@ -2,11 +2,10 @@
 
 use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_catalogue::diagnostic::{Code, Issue};
-use mokly_catalogue::error::{CatalogueError, Result};
+use mokly_catalogue::error::{CatalogueError, InternalError, Result};
 use mokly_catalogue::storybook_roots::{self, StorybookEntry, StorybookReader, StorybookStories};
-use mokly_sidecar::error::Error;
 use mokly_sidecar::methods::Call;
-use mokly_sidecar::storybook::ReadStorybookParams;
+use mokly_sidecar::storybook::{ReadStorybookParams, ReadStorybookReply};
 use mokly_sidecar::wire::MethodResult;
 
 use crate::runtime::Runtime;
@@ -33,18 +32,29 @@ impl StorybookReader for Runtime {
             module_resolution: side.module_resolution,
             folder: folder.into(),
         };
-        let main = if folder.is_empty() {
-            "main.*".into()
-        } else {
-            format!("{folder}/main.*")
-        };
         let result = match self.pool.request(Call::ReadStorybook(params)) {
-            Ok(MethodResult::Storybook(result)) => result,
-            Ok(_) => {
-                return Err(invalid(format!("{main}: unexpected sidecar result")));
+            Ok(MethodResult::Storybook(ReadStorybookReply::Loaded(result))) => result,
+            Ok(MethodResult::Storybook(ReadStorybookReply::Failed { main_error })) => {
+                return Err(CatalogueError::Config(Issue::new(
+                    Code::ConfigInvalid,
+                    main_error,
+                )));
             }
-            Err(Error::Remote { message, .. }) => return Err(invalid(message)),
-            Err(source) => return Err(invalid(format!("{main}: {source}"))),
+            Ok(_) => {
+                return Err(InternalError::Provider {
+                    source: Box::new(std::io::Error::other("expected a readStorybook result")),
+                }
+                .into());
+            }
+            Err(source) => {
+                return Err(match source.diagnostic() {
+                    Some(source) => CatalogueError::Runtime { source },
+                    None => InternalError::Provider {
+                        source: Box::new(source),
+                    }
+                    .into(),
+                });
+            }
         };
         for directory in &result.dependency_directories {
             self.dependency_usage.unmapped(directory);
@@ -62,8 +72,4 @@ impl StorybookReader for Runtime {
             inputs: result.inputs,
         })
     }
-}
-
-fn invalid(message: String) -> CatalogueError {
-    CatalogueError::Config(Issue::new(Code::ConfigInvalid, message))
 }

@@ -32,6 +32,20 @@ pub struct StorybookEntry {
     pub files: String,
 }
 
+/// The outcome of loading a Storybook main file for discovery.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(untagged)]
+pub enum ReadStorybookReply {
+    /// A loaded main file and its normalized entries.
+    Loaded(ReadStorybookResult),
+    /// The selected main file could not supply valid stories.
+    Failed {
+        /// The main file path and the reason it failed.
+        #[serde(rename = "mainError")]
+        main_error: String,
+    },
+}
+
 /// The selected main file, its stories entries, and the inputs that it used.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -40,8 +54,8 @@ pub struct ReadStorybookResult {
     pub main: String,
     /// Entries in authored order.
     pub entries: Vec<StorybookEntry>,
-    /// Digests keyed by repository-relative source path.
-    pub inputs: BTreeMap<String, String>,
+    /// Source digests by repository-relative path, with null for absent candidates.
+    pub inputs: BTreeMap<String, Option<String>>,
     /// Installation directories used by the loader, relative to the dependency root.
     pub dependency_directories: Vec<String>,
 }

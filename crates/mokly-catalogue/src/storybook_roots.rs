@@ -18,7 +18,19 @@ use crate::storybook_globs;
 pub struct ResolvedStorybook {
     folder: String,
     configured_index: Option<usize>,
-    inputs: Option<Arc<BTreeMap<String, String>>>,
+    entry: Option<MainEntry>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct MainEntry {
+    main: Arc<MainFile>,
+    index: usize,
+}
+
+#[derive(Debug, PartialEq)]
+struct MainFile {
+    path: String,
+    inputs: BTreeMap<String, Option<String>>,
 }
 
 impl ResolvedStorybook {
@@ -39,7 +51,7 @@ impl From<String> for ResolvedStorybook {
         Self {
             folder,
             configured_index: None,
-            inputs: None,
+            entry: None,
         }
     }
 }
@@ -47,7 +59,7 @@ impl From<String> for ResolvedStorybook {
 impl ResolvedRoot {
     /// Whether this root comes from an entry of the main file's stories array.
     pub fn from_storybook_main(&self) -> bool {
-        self.storybook.inputs.is_some()
+        self.storybook.entry.is_some()
     }
 
     /// Whether this root still needs its main file evaluated.
@@ -59,6 +71,12 @@ impl ResolvedRoot {
     pub(crate) fn configured_index(&self, effective_index: usize) -> usize {
         self.storybook.configured_index.unwrap_or(effective_index)
     }
+
+    /// Main file path and authored stories index of an expanded root.
+    pub(crate) fn storybook_entry(&self) -> Option<(&str, usize)> {
+        let entry = self.storybook.entry.as_ref()?;
+        Some((&entry.main.path, entry.index))
+    }
 }
 
 impl ResolvedConfig {
@@ -67,17 +85,19 @@ impl ResolvedConfig {
         self.roots.iter().any(ResolvedRoot::pending_storybook)
     }
 
-    /// Digests of the local configuration files that selected the effective roots.
-    pub fn storybook_inputs(&self) -> BTreeMap<&str, &str> {
+    /// Local configuration digests and absent main candidates of the effective roots.
+    pub fn storybook_inputs(&self) -> BTreeMap<&str, Option<&str>> {
         self.roots
             .chunk_by(|left, right| {
                 left.storybook.configured_index == right.storybook.configured_index
             })
-            .filter_map(|roots| roots.first()?.storybook.inputs.as_deref())
-            .flat_map(|inputs| {
-                inputs
+            .filter_map(|roots| roots.first()?.storybook.entry.as_ref())
+            .flat_map(|entry| {
+                entry
+                    .main
+                    .inputs
                     .iter()
-                    .map(|(path, digest)| (path.as_str(), digest.as_str()))
+                    .map(|(path, digest)| (path.as_str(), digest.as_deref()))
             })
             .collect()
     }
@@ -97,8 +117,8 @@ pub struct StorybookStories {
     pub main: String,
     /// Entries in authored order.
     pub entries: Vec<StorybookEntry>,
-    /// Content digests under repository-relative POSIX paths.
-    pub inputs: BTreeMap<String, String>,
+    /// Content digests and absent candidates under repository-relative POSIX paths.
+    pub inputs: BTreeMap<String, Option<String>>,
 }
 
 /// Read Storybook configuration with the runtime of the selected source side.
@@ -128,32 +148,35 @@ pub fn expand(
         }
 
         let folder = root.storybook.as_str();
-        let (stories, inputs) = match loaded.entry(folder.to_owned()) {
+        let (entries, main) = match loaded.entry(folder.to_owned()) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
-                let mut stories = reader.read(config, folder)?;
-                let inputs = Arc::new(std::mem::take(&mut stories.inputs));
-                entry.insert((stories, inputs))
+                let stories = reader.read(config, folder)?;
+                let main = Arc::new(MainFile {
+                    path: stories.main,
+                    inputs: stories.inputs,
+                });
+                entry.insert((stories.entries, main))
             }
         };
-        if stories.entries.is_empty() {
+        if entries.is_empty() {
             return Err(invalid(format!(
                 "root matches no file: {}",
                 display_folder(folder)
             )));
         }
-        root.storybook.inputs = Some(inputs.clone());
-        for (entry_index, entry) in stories.entries.iter().enumerate() {
+        for (entry_index, entry) in entries.iter().enumerate() {
             let error = |reason: String| {
-                invalid(format!(
-                    "{}: stories[{entry_index}]: {reason}",
-                    stories.main
-                ))
+                invalid(format!("{}: stories[{entry_index}]: {reason}", main.path))
             };
             let (directory, identity) =
                 project(tree, &config.repo_root, &entry.directory).map_err(error)?;
             let patterns = storybook_globs::patterns(&entry.files).map_err(error)?;
             let mut effective = root.clone();
+            effective.storybook.entry = Some(MainEntry {
+                main: main.clone(),
+                index: entry_index,
+            });
             effective.input.files = Some(patterns);
             effective.directory = directory;
             effective.identity = identity;
@@ -161,8 +184,8 @@ pub fn expand(
         }
     }
     let mut known: BTreeSet<_> = config.authored_inputs.iter().cloned().collect();
-    for (_, inputs) in loaded.values() {
-        for path in inputs.keys() {
+    for (_, main) in loaded.values() {
+        for (path, _) in main.inputs.iter().filter(|(_, digest)| digest.is_some()) {
             let path = config.repo_root.join(path);
             if known.insert(path.clone()) {
                 config.authored_inputs.push(path);

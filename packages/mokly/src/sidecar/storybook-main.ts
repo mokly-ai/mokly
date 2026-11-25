@@ -7,6 +7,7 @@ import { Worker } from "node:worker_threads";
 
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 import type { ReadStorybookParams } from "../generated/sidecar/ReadStorybookParams.js";
+import type { ReadStorybookReply } from "../generated/sidecar/ReadStorybookReply.js";
 import type { ReadStorybookResult } from "../generated/sidecar/ReadStorybookResult.js";
 
 import { detail } from "./errors.js";
@@ -44,15 +45,17 @@ export type StorybookMainCache = Map<string, Promise<MainResult>>;
 /** Read the selected main file with the package lookup of this source side. */
 export async function readStorybook(
   params: ReadStorybookParams,
-): Promise<ReadStorybookResult> {
+): Promise<ReadStorybookReply> {
   const paths = await ModulePaths.create(params);
   const directory = path.resolve(paths.sourceRoot, params.folder);
-  const main = await findMain(paths.sourceRoot, params.folder, new Map());
+  const reads = new Map<string, string | null>();
+  const main = await findMain(paths.sourceRoot, params.folder, reads);
   if (!main)
-    throw new Error(
-      `${path.posix.join(params.folder, "main.*")}: no main file found`,
-    );
+    return {
+      mainError: `${path.posix.join(params.folder, "main.*")}: no main file found`,
+    };
 
+  const name = logical(paths.sourceRoot, main);
   const config = path.resolve(paths.sourceRoot, params.configurationDirectory);
   const lookup = new ViteLookup(paths, config);
   const resolve = (from: string) =>
@@ -73,9 +76,7 @@ export async function readStorybook(
       manifest = resolve(path.dirname(directory));
     }
   } catch (error) {
-    throw new Error(`${logical(paths.sourceRoot, main)}: ${detail(error)}`, {
-      cause: error,
-    });
+    return { mainError: `${name}: ${detail(error)}` };
   }
   const result = await loadMain(
     main,
@@ -84,19 +85,22 @@ export async function readStorybook(
     paths.sourceRoot,
     params,
   );
-  const inputs = new Map<string, string>();
+  if (result.error !== undefined) return { mainError: result.error };
   const dependencies = new Set<string>();
   const dependencyRoot = paths.dependencyRoot ?? paths.sourceRoot;
   for (const [file, digest] of result.inputs) {
-    if (digest !== null && paths.repositoryOwned(file))
-      inputs.set(logical(paths.sourceRoot, file), digest);
+    if (digest !== null) reads.set(file, digest);
     const dependency = dependencyDirectory(dependencyRoot, file);
     if (dependency) dependencies.add(logical(dependencyRoot, dependency));
   }
   return {
-    main: logical(paths.sourceRoot, main),
+    main: name,
     entries: result.entries ?? [],
-    inputs: Object.fromEntries(inputs),
+    inputs: Object.fromEntries(
+      [...reads]
+        .filter(([file]) => paths.repositoryOwned(file))
+        .map(([file, digest]) => [logical(paths.sourceRoot, file), digest]),
+    ),
     dependencyDirectories: [...dependencies].sort(),
   };
 }
@@ -127,6 +131,7 @@ export async function storybookFrameworks(
       cache.set(main, loaded);
     }
     const result = await loaded;
+    if (result.error !== undefined) throw new Error(result.error);
     for (const [file, digest] of result.inputs) inputs.set(file, digest);
     if (!result.framework) throw missing;
     const framework = await lookup(result.framework, absolute);
@@ -148,11 +153,14 @@ async function findMain(
   folder: string,
   inputs: Map<string, string | null>,
 ) {
+  let main: string | undefined;
   for (const candidate of storybookCandidates(folder, "main")) {
     const file = path.resolve(root, candidate);
-    if (await regularFile(file)) return file;
-    inputs.set(file, null);
+    const present = await regularFile(file);
+    if (present && main === undefined) main = file;
+    else inputs.set(file, present ? await fileDigest(file) : null);
   }
+  return main;
 }
 
 async function loadMain(
@@ -163,31 +171,35 @@ async function loadMain(
   stories?: ReadStorybookParams,
 ): Promise<MainResult> {
   let version = "unknown";
+  const failure = (error: unknown) =>
+    `${logical(root, file)}: Storybook ${version} (tested ${testedRange}): ${detail(error)}`;
+  let bytes: Buffer;
+  let common: string;
   try {
-    const bytes = await fs.readFile(manifest);
+    bytes = await fs.readFile(manifest);
     const json: unknown = JSON.parse(bytes.toString());
     if (isRecord(json) && typeof json.version === "string")
       version = json.version;
-    const common = createRequire(manifest).resolve("storybook/internal/common");
+    common = createRequire(manifest).resolve("storybook/internal/common");
     if (!inside(root, await fs.realpath(file)))
       throw new Error("source is outside sourceRoot");
-    const result = await runMain({
-      common,
-      base: path.join(directory, "main"),
-      ...(stories && { stories }),
-    });
-    if (result.error !== undefined) throw new Error(result.error);
-    result.inputs.push([
-      manifest,
-      createHash("sha256").update(bytes).digest("hex"),
-    ]);
-    return result;
   } catch (error) {
-    throw new Error(
-      `${logical(root, file)}: Storybook ${version} (tested ${testedRange}): ${detail(error)}`,
-      { cause: error },
-    );
+    return { error: failure(error), inputs: [] };
   }
+  const result = await runMain({
+    common,
+    base: path.join(directory, "main"),
+    ...(stories && { stories }),
+  }).catch((error: unknown) => {
+    throw new Error(failure(error), { cause: error });
+  });
+  if (result.error !== undefined)
+    return { error: failure(result.error), inputs: [] };
+  result.inputs.push([
+    manifest,
+    createHash("sha256").update(bytes).digest("hex"),
+  ]);
+  return result;
 }
 
 async function resolveReact(

@@ -5,9 +5,9 @@ import type { CssResult } from "./CssResult.js";
 import type { Definitions } from "./Definitions.js";
 import type { HelloResult } from "./HelloResult.js";
 import type { PageResult } from "./PageResult.js";
-import type { ReadStorybookResult } from "./ReadStorybookResult.js";
+import type { ReadStorybookReply } from "./ReadStorybookReply.js";
 import type { RenderResult } from "./RenderResult.js";
 import type { ViteCssResult } from "./ViteCssResult.js";
 
 // prettier-ignore
-export type MethodResult = HelloResult | ReadStorybookResult | BundleResult | Definitions | RenderResult | PageResult | CssResult | ViteCssResult | null;
+export type MethodResult = HelloResult | ReadStorybookReply | BundleResult | Definitions | RenderResult | PageResult | CssResult | ViteCssResult | null;

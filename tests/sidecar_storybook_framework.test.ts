@@ -36,6 +36,9 @@ for (const adapter of ["esbuild", "Vite"]) {
         .digest("hex");
       assert.equal(first.compiled.metadataInputs[input], digest, input);
     }
+    const laterCandidate = `${folder}/main.tsx`;
+    assert.equal(first.compiled.metadataInputs[`${folder}/main.js`], null);
+    assert.equal(first.compiled.metadataInputs[laterCandidate], null);
     await sidecar.call("cssModules", {
       generation: first.generation,
       classMaps: {},
@@ -55,6 +58,18 @@ for (const adapter of ["esbuild", "Vite"]) {
     assert.match(
       edited.compiled.storybookReact?.[folder] ?? "",
       /other-framework[/\\]node_modules[/\\]@storybook[/\\]react/,
+    );
+    const laterSource = 'throw new Error("main.ts still takes precedence");';
+    await fs.writeFile(path.join(root, laterCandidate), laterSource);
+    const added = await sidecar.call<BundleResult>("bundle", params);
+    assert.notEqual(added.generation, edited.generation);
+    assert.equal(
+      added.compiled.metadataInputs[laterCandidate],
+      createHash("sha256").update(laterSource).digest("hex"),
+    );
+    assert.deepEqual(
+      added.compiled.storybookReact,
+      edited.compiled.storybookReact,
     );
   });
 }

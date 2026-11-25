@@ -79,7 +79,8 @@ inputs changes, and only then:
   React. These move every key. Such a package other than React counts
   through its path only, and its manifest only on a closure module's
   directory chain, because only some sides read that manifest;
-- the `main.*` file of a Storybook folder and the files that it loads, when
+- the `main.*` file of a Storybook folder, its other candidate names, and the
+  files that it loads, when
   Mokly reads `main.*` to resolve `@storybook/react` under the
   [Storybook folder rules](./mokly-storybook.md#storybook-folders). These move
   every key.

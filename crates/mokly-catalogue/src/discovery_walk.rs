@@ -149,10 +149,18 @@ impl Walk<'_> {
             return Ok(None);
         };
         if !node.identity.starts_with(&self.config.repo_root) {
+            let owner = match self.root.storybook_entry() {
+                Some((main, entry)) => {
+                    format!(
+                        "roots[{}].storybook ({main} stories[{entry}])",
+                        self.configured
+                    )
+                }
+                None => format!("roots[{}].files", self.configured),
+            };
             return Err(invalid(format!(
-                "file {} resolves outside repoRoot; matched roots[{}].files",
-                relative(path, &self.config.repo_root),
-                self.configured
+                "file {} resolves outside repoRoot; matched {owner}",
+                relative(path, &self.config.repo_root)
             )));
         }
         if let Some((first, owner)) = self.owners.get(&node.identity) {

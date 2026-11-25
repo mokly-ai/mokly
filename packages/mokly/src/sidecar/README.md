@@ -656,7 +656,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
 - [`vite-inputs.ts`](./vite-inputs.ts) records consumed bytes, rejects inconsistent
   reads, and verifies the files again after compilation. [`vite-metadata.ts`](./vite-metadata.ts)
   builds digests for setup files, plugin inputs, React manifests, the preview
-  candidates of each Storybook folder, the files of the `main.*` read, package
+  candidates of each Storybook folder, the files and the other `main.*`
+  candidates of the `main.*` read, package
   and TypeScript config candidates, and consumed files outside the graph.
   [`vite-invalidation.ts`](./vite-invalidation.ts) compares the last input snapshot
   with the disk. It invalidates virtual, changed, and unsnapshotted modules, or

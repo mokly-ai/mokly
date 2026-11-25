@@ -11,6 +11,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::config_types::{Config, ResolvedConfig, ResolvedRoot, RootConfig};
 use crate::discovery::{Discoverer, Discovery};
 use crate::error::CatalogueError;
+use crate::storybook_roots::{self, StorybookEntry, StorybookReaderMock, StorybookStories};
 
 fn config() -> ResolvedConfig {
     ResolvedConfig {
@@ -142,6 +143,57 @@ fn physical_aliases_cannot_escape_the_repository() {
     error(
         "file specs/home.md resolves outside repoRoot; matched roots[0].files",
         discovery.discover(&config(), None),
+    );
+}
+
+#[test]
+fn an_escaping_story_names_the_configured_root_and_stories_entry() {
+    let tree = Arc::new(Unimock::new((
+        SourceTreeMock::project
+            .each_call(matching!((path) if path.ends_with("specs")))
+            .answers(&|_, path| {
+                Ok(Some(Node {
+                    identity: path.into(),
+                    kind: FileKind::Directory,
+                    lexical_kind: FileKind::Directory,
+                }))
+            }),
+        SourceTreeMock::children
+            .each_call(matching!((path) if path.ends_with("specs")))
+            .answers(&|_, _| {
+                Ok(vec![Child {
+                    name: "home.stories.tsx".into(),
+                    kind: FileKind::File,
+                }])
+            }),
+        SourceTreeMock::project
+            .some_call(matching!((path) if path.ends_with("home.stories.tsx")))
+            .returns(Ok(Some(Node {
+                identity: "/outside/home.stories.tsx".into(),
+                kind: FileKind::File,
+                lexical_kind: FileKind::File,
+            }))),
+    )));
+    let reader = Unimock::new(
+        StorybookReaderMock::read
+            .some_call(matching!(_))
+            .returns(Ok(StorybookStories {
+                main: ".storybook/main.ts".into(),
+                entries: ["other.stories.tsx", "home.stories.tsx"]
+                    .map(|files| StorybookEntry {
+                        directory: "specs".into(),
+                        files: files.into(),
+                    })
+                    .into(),
+                inputs: Default::default(),
+            })),
+    );
+    let mut config = config();
+    config.roots[0].input.dir.clear();
+    storybook_roots::expand(&mut config, tree.as_ref(), &reader).unwrap();
+    error(
+        "file specs/home.stories.tsx resolves outside repoRoot; matched roots[0].storybook (.storybook/main.ts stories[1])",
+        Discoverer { tree }.discover(&config, None),
     );
 }
 

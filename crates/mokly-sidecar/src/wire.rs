@@ -14,7 +14,7 @@ use crate::methods::Call;
 use crate::operations::Operation;
 use crate::postcss_failure::PostcssFailure;
 use crate::results;
-use crate::storybook::ReadStorybookResult;
+use crate::storybook::ReadStorybookReply;
 
 /// A client request; params are present even for no-argument methods.
 #[derive(Clone, Debug, Deserialize, Serialize, TS)]
@@ -102,8 +102,8 @@ pub enum Frame {
 pub enum MethodResult {
     /// Hello package version.
     Hello(results::Hello),
-    /// Normalized entries from a Storybook main file.
-    Storybook(ReadStorybookResult),
+    /// The discovery outcome for a Storybook main file.
+    Storybook(ReadStorybookReply),
     /// Bundle generation and module graph.
     Bundle(Box<results::Bundle>),
     /// Exported definitions.
