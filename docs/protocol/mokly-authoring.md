@@ -207,8 +207,9 @@ the core rejects that combination during final validation and accepts
 [catalogue navigation contract](./mokly-navigation.md). `MockLink asChild`
 explicitly adapts one consumer-styled control into that native-link contract
 under [Styled catalogue link controls](./mokly-link-controls.md). Local
-resource URLs in HTML source attributes, `srcset`, inline/style-block CSS,
-and transitively referenced HTML/CSS must likewise resolve to regular,
+resource URLs at the reference positions of the
+[comparison resource rule](./mokly-comparison.md#resources), also in
+transitively referenced HTML and CSS, must likewise resolve to regular,
 unprotected files in the referenced closure of the
 [public closure policy](./mokly-public-closure.md). Rewritten
 links target the served or built documents under the

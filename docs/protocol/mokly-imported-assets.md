@@ -1,6 +1,6 @@
 # JavaScript Asset Imports
 
-Status: Mokly Cloud does not send the asset content types of this page yet. The [content type rule item](../../plans/follow-ups/asset-content-type-rule.md) adds them. Under the Vite adapter, the asset token and delivery rules of this page are not available yet. The [Vite asset milestone](../../plans/storybook-support.md#milestone-31-imported-assets-on-the-vite-adapter) adds them.
+Status: Under the Vite adapter, the asset token and delivery rules of this page are not available yet. The [Vite asset milestone](../../plans/storybook-support.md#milestone-31-imported-assets-on-the-vite-adapter) adds them.
 
 This page defines the files that JavaScript imports as assets, such as
 `import logo from "./logo.png"`. Such an import gives an asset token. Each
@@ -80,12 +80,11 @@ the file, and a failure only makes the project delete the entry.
 | `.vtt`                    | `text/vtt`                  |
 | `.webmanifest`            | `application/manifest+json` |
 
-Serve sends the content types of this table and of the stylesheet asset table.
-It sends `text/plain; charset=utf-8` for a `.txt` asset. A host of the static
-output sends the same types, under the
-[static delivery contract](./mokly-export-delivery.md#hosting-contract). A stylesheet `url()` keeps the extension list of the
-stylesheet asset table. The types of this table are assets only when
-JavaScript imports them.
+Serve sends the content types of this table under the
+[content type rule](./mokly-content-types.md). Mokly Cloud records them when it
+accepts a publication, and it sends the recorded types. A stylesheet `url()`
+keeps the extension list of the stylesheet asset table. The types of this table
+are assets only when JavaScript imports them.
 
 Decision: the asset types are the types that Vite knows, without `.txt`.
 Vite and Storybook turn these imports into URLs, and a `.txt` import keeps its
@@ -140,6 +139,52 @@ Rejected: a replacement only for the delivered paths, because the key of each
 document would then hold the asset list, and one new import would render every
 view again.
 
+### Base URLs
+
+A composed document that holds an imported asset URL fails its render when a
+base URL changes the destination of one of those URLs. The destination of an
+asset URL is the URL resolved against the effective base of the document that
+holds it. It must equal the URL resolved against the address of the composed
+document. The effective base is the document base URL that HTML defines. It
+comes from the first `<base href>` of the document, resolved against that
+address. A document without one uses its address.
+
+An `<iframe srcdoc>` document follows the same rule with its own first
+`<base href>`. That base resolves against the effective base of the document
+that holds the iframe. A `srcdoc` document without one uses that outer
+effective base. A nested `<iframe srcdoc>` document follows the rule in the
+same way.
+
+Mokly checks each destination at each address where it shows the composed
+document, on any origin:
+
+- `static/mokly-generated/<route>` in Serve and the static output, under the
+  [artifact layout](./mokly-artifact-paths.md#layout)
+- `mokly-viewer/diffs/generations/<generation>/snapshots/<side>/mokly-generated/<route>`
+  in Changes and removed previews, under the
+  [comparison and preview paths](./mokly-artifact-paths.md#comparison-and-preview-paths)
+
+The failure is `build-invalid`, where `<route>` is the route of the composed
+document. A base of the composed document gives the first reason. A base in an
+`<iframe srcdoc>` document gives the second reason:
+
+```text
+<route>: <base href> redirects the imported asset URLs of this document; remove <base href>
+<route>: <base href> in an <iframe srcdoc> document redirects its imported asset URLs; remove <base href>
+```
+
+Serve does not serve such a document, and `build` fails, as for other render
+failures. A base that keeps each destination stays valid. Examples are a base
+in a sibling directory at the same depth, and `./`. `<base target>` stays valid
+too.
+
+Decision: this rule fails a document only when a base changes the destination
+of an imported asset URL, because those asset URLs are broken. Rejected: a
+failure for every `<base href>`, and a failure for every base in another
+directory, because both fail documents that work. Rejected: asset URLs written
+against the base, because the shared closure would then resolve authored
+references against the base too.
+
 ## Delivery
 
 Each imported asset of the [module graph](./mokly-sidecar.md#bundling) of a
@@ -187,6 +232,7 @@ conservative evidence for each view that references it, under the
 
 - [Imported Stylesheet Assets And Delivery](./mokly-imported-styles-assets.md)
 - [Imported Stylesheet Diagnostics](./mokly-imported-styles-errors.md)
+- [Content Types](./mokly-content-types.md)
 - [Document Rendering Safety](./mokly-document-safety.md)
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Changes and screen comparisons](./mokly-changes.md#resources)

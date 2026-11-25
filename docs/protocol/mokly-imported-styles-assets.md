@@ -1,7 +1,5 @@
 # Imported Stylesheet Assets And Delivery
 
-Status: Mokly Cloud does not send the asset content types of this page yet. The [content type rule item](../../plans/follow-ups/asset-content-type-rule.md) adds them.
-
 Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 
 ## Assets, Links And Delivery
@@ -30,9 +28,8 @@ physical identity enter the inventory, and physically installed package code
 is not inventoried.
 
 Only these extensions, matched case-sensitively, are assets; every other
-extension fails. Serve sends these content types, and a host of the static
-output sends the same types, under the
-[static delivery contract](./mokly-export-delivery.md#hosting-contract):
+extension fails. The [content type rule](./mokly-content-types.md) gives them
+these content types:
 
 | Extension       | Content type                    |
 | --------------- | ------------------------------- |
@@ -49,6 +46,14 @@ output sends the same types, under the
 | `.ttf`          | `font/ttf`                      |
 | `.woff`         | `font/woff`                     |
 | `.woff2`        | `font/woff2`                    |
+
+Serve and a host of the static output send these types. Mokly Cloud records
+them when it accepts a publication, and it sends the recorded types.
+
+The extension of an asset is the text after the last dot of the last path
+segment. A name without a dot in its last segment has no extension, so it
+fails with the
+[unsupported extension diagnostic](./mokly-imported-styles-errors.md#build-build-invalid).
 
 Assets that JavaScript imports share this delivery and its routes, and they
 can have more types. [JavaScript Asset Imports](./mokly-imported-assets.md)
@@ -91,7 +96,8 @@ the digest.
 
 Serve answers `GET` and `HEAD` for `/static/mokly-generated/styles/<route>`
 and `/static/mokly-generated/assets/<route>` with the generation's bytes, the
-content types above, and confined paths. There is no disk fallback, and a
+content types of the [content type rule](./mokly-content-types.md),
+and confined paths. There is no disk fallback, and a
 route absent from the current generation is not found even when an earlier
 generation had it. Transient component renders of the
 [component controls contract](./mokly-component-controls.md) use the same

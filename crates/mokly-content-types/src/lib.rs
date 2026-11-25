@@ -1,4 +1,4 @@
-//! Content types for stylesheet assets and additional JavaScript imports.
+//! Content types for delivered files and imported assets.
 
 const STYLESHEET_TYPES: &[(&str, &str)] = &[
     (".avif", "image/avif"),
@@ -41,26 +41,48 @@ const IMPORT_ONLY_TYPES: &[(&str, &str)] = &[
 
 const FILE_LOADER_ONLY_TYPES: &[(&str, &str)] = &[(".txt", "text/plain; charset=utf-8")];
 
-/// Content type for an imported opaque asset without decoding its contents.
-pub fn content_type(path: &str) -> Option<&'static str> {
-    let (_, extension) = path.rsplit_once('.')?;
+/// Look up the declared type of an imported asset by its case-sensitive file extension.
+pub fn imported_content_type(path: &str) -> Option<&'static str> {
+    let extension = file_extension(path)?;
     find_content_type(STYLESHEET_TYPES, extension)
         .or_else(|| find_content_type(IMPORT_ONLY_TYPES, extension))
         .or_else(|| find_content_type(FILE_LOADER_ONLY_TYPES, extension))
 }
 
-/// Content type of a CSS `url()` target, with the existing bare-name fallback.
-pub(crate) fn stylesheet_content_type(path: &str) -> Option<&'static str> {
-    find_content_type(STYLESHEET_TYPES, path.rsplit('.').next()?)
+/// Look up the type of a CSS `url()` target by its case-sensitive file extension.
+pub fn stylesheet_content_type(path: &str) -> Option<&'static str> {
+    find_content_type(STYLESHEET_TYPES, file_extension(path)?)
 }
 
-/// List the supported CSS extensions for the unsupported-extension diagnostic.
-pub(crate) fn stylesheet_extensions() -> String {
+/// Format the supported CSS asset extensions for an unsupported-extension diagnostic.
+pub fn stylesheet_extensions() -> String {
     let Some(((last, _), preceding)) = STYLESHEET_TYPES.split_last() else {
         return String::new();
     };
     let extensions: Vec<_> = preceding.iter().map(|(extension, _)| *extension).collect();
     format!("{} or {last}", extensions.join(", "))
+}
+
+/// Use the declared asset type, or guess a type and add UTF-8 for text and JSON.
+pub fn delivered_content_type(path: &str) -> String {
+    if let Some(mime) = imported_content_type(path) {
+        return mime.into();
+    }
+    let mime = mime_guess::from_path(path)
+        .first_or_octet_stream()
+        .to_string();
+    if mime.starts_with("text/") || mime == "application/json" {
+        format!("{mime}; charset=utf-8")
+    } else {
+        mime
+    }
+}
+
+fn file_extension(path: &str) -> Option<&str> {
+    path.rsplit('/')
+        .next()?
+        .rsplit_once('.')
+        .map(|(_, extension)| extension)
 }
 
 fn find_content_type(types: &[(&str, &'static str)], extension: &str) -> Option<&'static str> {
@@ -70,5 +92,9 @@ fn find_content_type(types: &[(&str, &'static str)], extension: &str) -> Option<
 }
 
 #[cfg(test)]
-#[path = "_tests_/imported_assets_tests.rs"]
-mod imported_assets_tests;
+#[path = "_tests_/content_types_tests.rs"]
+mod content_types_tests;
+
+#[cfg(test)]
+#[path = "_tests_/imported_content_types_tests.rs"]
+mod imported_content_types_tests;

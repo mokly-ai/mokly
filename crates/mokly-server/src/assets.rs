@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use axum::body::Bytes;
 use axum::http::HeaderValue;
-use mokly_css::imported_assets;
+use mokly_content_types::delivered_content_type;
 use mokly_model::namespace::{FONT_FACES, viewer};
 use mokly_source_interface::tree::{FileKind, SourceTree};
 use serde::Deserialize;
@@ -103,18 +103,14 @@ impl ViewerAssets for PackageAssets {
                 viewer(&format!("client/{name}")),
                 File {
                     bytes: bytes.into(),
-                    content_type: "text/javascript; charset=utf-8".into(),
+                    content_type: delivered_content_type(&name),
                 },
             );
         }
-        let faces = FONT_FACES.map(|face| (format!("assets/{face}"), face, "font/woff2"));
-        for (source, route, mime) in [
-            ("shell.css".into(), "shell.css", "text/css; charset=utf-8"),
-            (
-                "assets/brand.svg".into(),
-                "client/brand.svg",
-                "image/svg+xml",
-            ),
+        let faces = FONT_FACES.map(|face| (format!("assets/{face}"), face));
+        for (source, route) in [
+            ("shell.css".into(), "shell.css"),
+            ("assets/brand.svg".into(), "client/brand.svg"),
         ]
         .into_iter()
         .chain(faces)
@@ -127,36 +123,10 @@ impl ViewerAssets for PackageAssets {
                 viewer(route),
                 File {
                     bytes: bytes.into(),
-                    content_type: mime.into(),
+                    content_type: delivered_content_type(route),
                 },
             );
         }
         Ok(routes)
     }
 }
-
-/// MIME fallback for public authored files; never use a caller-supplied type.
-pub fn content_type(path: &str) -> String {
-    if path.starts_with("static/mokly-generated/assets/")
-        && let Some(mime) = imported_assets::content_type(path)
-    {
-        return mime.into();
-    }
-    let mime = mime_guess::from_path(path)
-        .first_or_octet_stream()
-        .to_string();
-    if mime.starts_with("text/") || mime == "application/json" {
-        format!("{mime}; charset=utf-8")
-    } else {
-        mime
-    }
-}
-
-/// Content type of a planned generated resource, with the imported asset table.
-pub(crate) fn generated_content_type(path: &str) -> String {
-    imported_assets::content_type(path).map_or_else(|| content_type(path), str::to_owned)
-}
-
-#[cfg(test)]
-#[path = "_tests_/imported_asset_types_tests.rs"]
-mod imported_asset_types_tests;

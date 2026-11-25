@@ -43,7 +43,9 @@ Failure is `build-invalid` with
 
 - `element <tag> is not allowed`;
 - `attribute <name> on <tag> is not allowed`;
-- `<attribute> on <tag> is not an allowed URL: <JSON-quoted URL>`;
+- `<attribute> on <tag> is not an allowed URL: <JSON-quoted URL>`, which for
+  a `data:` URL ends with
+  `; remove the dataurl loader from moduleResolution.loaders so that Mokly delivers the imported file`;
 - `<input> must be disabled` or `<input> must have checkbox type`;
 - `the template must contain one owned stylesheet`.
 
@@ -65,8 +67,10 @@ trailing whitespace, root-absolute URLs and protocol-relative `//` URLs.
 Shared link and resource validation still checks portable paths, targets,
 fragments and confinement. URL failures use the diagnostic above.
 
-This attribute allowlist covers `href` and `src`. HTML `srcset` and `poster`
-use the resource URL rules of the [public closure](./mokly-public-closure.md):
+This attribute allowlist covers `href` and `src`. The other URLs at the
+reference positions of the
+[comparison resource rule](./mokly-comparison.md#resources) use the resource
+URL rules of the [public closure](./mokly-public-closure.md):
 local references are checked, and external and data references are not copied.
 They are resource inputs outside the Markdown attribute allowlist.
 

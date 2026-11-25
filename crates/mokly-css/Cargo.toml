@@ -15,6 +15,7 @@ cssparser = "0.37.0"
 cssparser-next = { version = "0.38.0", package = "cssparser" }
 jsonc-parser = { version = "0.34.0", features = ["serde"] }
 lightningcss = { version = "1.0.0-alpha.72", default-features = false, features = ["bundler"] }
+mokly-content-types = { workspace = true }
 mokly-model = { workspace = true }
 mokly-source-interface = { workspace = true }
 precomputed-hash = "0.1.1"

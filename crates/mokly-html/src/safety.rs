@@ -1,7 +1,5 @@
 //! Independent final allowlist for composed Markdown documents.
 
-use serde_json::Value;
-
 use crate::diagnostic_code::Code;
 use crate::error::{Result, invalid};
 use crate::tree::{Element, Node};
@@ -179,11 +177,7 @@ fn url_attribute(element: &Element, name: &str) -> Result<()> {
     {
         return Err(invalid(
             Code::BuildInvalid,
-            format!(
-                "unsafe rendered document: {name} on <{}> is not an allowed URL: {}",
-                element.name,
-                Value::String(url.into())
-            ),
+            url_safety::rejection_reason(name, &element.name, url),
         ));
     }
     Ok(())
