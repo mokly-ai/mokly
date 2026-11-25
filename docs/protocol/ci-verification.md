@@ -22,7 +22,7 @@ cargo xtask check --suite viewer
 cargo xtask check --suite viewer --shard 1/2
 cargo xtask check --suite native
 cargo xtask check --suite browser
-cargo xtask check --suite browser --shard 1/12
+cargo xtask check --suite browser --shard 1/14
 ```
 
 `--shard INDEX/TOTAL` is valid with `repository`, `viewer`, `browser`, `native`, `cloud-app`, `cloud-mockups`, and `cloud-site`. Both values are one-based
