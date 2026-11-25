@@ -20,9 +20,9 @@ pub(super) struct Buffered {
 /// Run each lane's commands in order, with all lanes at the same time.
 ///
 /// A lane stops at its first failed command; the other lanes run to their end.
-/// Each finished command writes its display line and its output to `out` as one
-/// block, so blocks of different lanes never mix. The first failure in lane
-/// order is the result.
+/// Each command writes a start line to `out`. When it ends, it writes its display
+/// line and its output as one block, so blocks of different lanes never mix. The
+/// first failure in lane order is the result.
 pub(super) fn run_lanes(
     lanes: &[Vec<CommandSpec>],
     run: &(dyn Fn(&CommandSpec) -> Buffered + Sync),
@@ -47,21 +47,25 @@ fn run_lane(
     out: &Mutex<dyn Write + Send>,
 ) -> Result<()> {
     for command in lane {
+        let started = format!("[xtask/command] started: {}\n", command.display());
+        write_block(out, started.as_bytes())?;
         let finished = run(command);
         let mut block = format!("$ {}\n", command.display()).into_bytes();
         block.extend_from_slice(&finished.output);
         if !block.ends_with(b"\n") {
             block.push(b'\n');
         }
-        {
-            let mut writer = out.lock().unwrap_or_else(PoisonError::into_inner);
-            writer
-                .write_all(&block)
-                .context("write concurrent command output")?;
-        }
+        write_block(out, &block)?;
         finished.result?;
     }
     Ok(())
+}
+
+fn write_block(out: &Mutex<dyn Write + Send>, block: &[u8]) -> Result<()> {
+    let mut writer = out.lock().unwrap_or_else(PoisonError::into_inner);
+    writer
+        .write_all(block)
+        .context("write concurrent command output")
 }
 
 /// Run one command with both output streams sent to one buffer.
@@ -72,7 +76,7 @@ pub(super) fn buffered(spec: &CommandSpec) -> Buffered {
 }
 
 fn run_into(spec: &CommandSpec, output: &mut Vec<u8>) -> Result<()> {
-    let (mut reader, writer) = io::pipe().context("create command output pipe")?;
+    let (reader, writer) = io::pipe().context("create command output pipe")?;
     let mut child = {
         let mut command = build_command(spec);
         command
@@ -89,7 +93,10 @@ fn run_into(spec: &CommandSpec, output: &mut Vec<u8>) -> Result<()> {
             }
         }
     };
-    let read = reader.read_to_end(output).context("read command output");
+    let read = {
+        let mut reader = reader;
+        reader.read_to_end(output).context("read command output")
+    };
     let status = child.wait().context("wait for command")?;
     read?;
     if status.success() {

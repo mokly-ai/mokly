@@ -75,11 +75,12 @@ covers the runner platform, the toolchain, the Cargo environment, the
 lockfile, and the workspace manifests. The Repository job's key also covers
 the audit tool lockfile and installer. Jobs that build the same artifacts
 share one cache. Every Linux CI job that builds only `xtask` and the native
-binary shares one cache, the cloud partitions included. The cloud workspace
-partition, the image job, the Repository job, and each native host keep their
-own cache. The two Stripe catalogue jobs of the deploy workflow share one
-cache. One cache for each cloud partition was rejected: four partitions held
-the same build in four entries, and the total passed the 10 GB limit.
+binary shares one cache, the cloud mockup and site partitions included. The
+cloud partitions that also build `mkc-` crates, the image job, the Repository
+job, and each native host keep their own cache. The four app shards share one
+cache. The two Stripe catalogue jobs of the deploy workflow share one cache.
+A separate cache for the mockup and site partitions was rejected: they held
+the same build as the Mokly jobs, and the total passed the 10 GB limit.
 
 The Rust build cache follows the `main`-only save rule above. Testboxes restore with
 the cache options of the CI viewer, browser, and static-delivery jobs and never

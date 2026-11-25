@@ -220,7 +220,7 @@ pub(super) fn validate(text: &str) -> Vec<Violation> {
                     == Some("Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0")
                 && step.with.shared_key.as_deref()
                     == Some(
-                        "${{ matrix.command == 'cloud-rust' && 'cloud-rust' || 'native-binary' }}",
+                        "${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}",
                     )
         })
     {

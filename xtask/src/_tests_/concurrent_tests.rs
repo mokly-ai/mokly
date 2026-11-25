@@ -71,7 +71,17 @@ fn lanes_run_at_the_same_time_and_print_each_command_as_one_block() {
     assert_eq!(result.map_err(|error| error.to_string()), Ok(()));
 
     let printed = String::from_utf8(out.into_inner().unwrap()).unwrap();
-    let mut sorted = printed
+    let mut started: Vec<_> = printed
+        .lines()
+        .filter_map(|line| line.strip_prefix("[xtask/command] started: "))
+        .collect();
+    started.sort_unstable();
+    assert_eq!(started, ["clippy", "eslint", "prettier"]);
+    let blocks: String = printed
+        .split_inclusive('\n')
+        .filter(|line| !line.starts_with("[xtask/command] started: "))
+        .collect();
+    let mut sorted = blocks
         .split("$ ")
         .filter(|block| !block.is_empty())
         .collect::<Vec<_>>();

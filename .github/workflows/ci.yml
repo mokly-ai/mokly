@@ -272,11 +272,16 @@ jobs:
         with:
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      # The Windows runner image moves npm's cache out of the home folder.
+      - name: Locate npm download cache
+        id: npm-cache-path
+        shell: bash
+        run: echo "path=$(npm config get cache)" >> "$GITHUB_OUTPUT"
       - name: Restore npm download cache
         id: npm-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: ${{ runner.os == 'Windows' && '~/AppData/Local/npm-cache' || '~/.npm' }}
+          path: ${{ steps.npm-cache-path.outputs.path }}
           key: npm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
       - name: Install dependencies
         run: npm ci
@@ -284,7 +289,7 @@ jobs:
         if: github.ref == 'refs/heads/main' && steps.npm-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: ${{ runner.os == 'Windows' && '~/AppData/Local/npm-cache' || '~/.npm' }}
+          path: ${{ steps.npm-cache-path.outputs.path }}
           key: ${{ steps.npm-cache.outputs.cache-primary-key }}
       - name: Build UI package
         run: npm run build --workspace @mokly/ui
@@ -456,10 +461,10 @@ jobs:
         if: matrix.rust_cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
-          # The workspace partition builds and tests the mkc- crates. Every
-          # other partition builds only xtask and the native binary, as the
-          # Mokly jobs do, so it shares their cache.
-          shared-key: ${{ matrix.command == 'cloud-rust' && 'cloud-rust' || 'native-binary' }}
+          # The mockup and site partitions build only xtask and the native
+          # binary, as the Mokly jobs do, so they share their cache. The other
+          # partitions also build mkc- crates and keep a cache each.
+          shared-key: ${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}
           cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Restore Electron download

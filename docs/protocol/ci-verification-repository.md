@@ -36,8 +36,9 @@ The repository suite runs these checks in this order:
 
 A lane stops at its first failed check. The other lanes run to their end, so
 one run reports each failed lane. The suite then fails with the first failure
-in lane order and runs no later step. Each finished check prints its output as
-one block, so the output of different lanes does not mix. No check of a lane
+in lane order and runs no later step. Each check prints a line when it starts.
+When it ends, it prints its output as one block, so the output of different
+lanes does not mix. No check of a lane
 writes a file that a check of another lane reads. The lanes save about a
 minute, because Prettier and ESLint each use one core while Clippy uses the
 others. Faster tool modes were rejected: Prettier's experimental CLI reports
