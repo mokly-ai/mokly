@@ -223,6 +223,19 @@ follow them. An HTTP or HTTPS URL stays external and is never fetched during
 a build. A page and a Markdown document receive no configured links. A page
 links its own CSS; a Markdown document uses Mokly's document styles.
 
+A rule links its sheets into every entry that it applies to. Keep a rule for
+CSS that all of those entries need, such as fonts. Import other CSS from the
+module of the screen or component that uses it, so that it loads only in the
+entries that import it. Some CSS needs a rule because a module cannot import
+it. An HTML screen or component has no module, so a rule gives it its CSS. A
+sheet for one color scheme loads from `lightStylesheets` or `darkStylesheets`.
+An import names a local file, so an HTTP or HTTPS stylesheet loads from a rule.
+
+In Changes, the comparison details name the bundle that holds each changed
+rule. A configured or declared local stylesheet is a bundle of its own.
+Imported CSS is part of its entry's or the renderer's bundle, so the details
+name that bundle, not the imported file that changed.
+
 With the [Vite adapter](/docs/authoring/vite/), configured and component-declared
 local stylesheets must use a lowercase suffix that Vite supports. For example,
 use `Action.css`, not `Action.CSS`. Without the adapter, Mokly accepts `Action.CSS`.

@@ -5,6 +5,9 @@
  * the Browse, Review and Edit frames and the open foundation.
  */
 
+import "./styles/shared.js";
+import "./styles/home.js";
+
 import { HomeHero } from "./home/hero.js";
 import { HomeWorkspace } from "./home/workspace.js";
 import { SiteLayout } from "./parts/chrome.js";
