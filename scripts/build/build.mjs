@@ -1,0 +1,43 @@
+/** `npm run build`: the native binary and the workspace packages. */
+import { spawn } from "node:child_process";
+import path from "node:path";
+
+import { ExpectedFailure } from "../verification/expected-failure.mjs";
+
+import { runWorkspaceBuild } from "./workspace-build.mjs";
+
+const repositoryRoot = path.resolve(import.meta.dirname, "../..");
+
+/** Run one command at the repository root and resolve its exit status. */
+function run([command, ...args]) {
+  // npm runs through the Node that started this script, so Windows needs no
+  // shell and the build uses the npm of `npm run build`.
+  const npm = process.env.npm_execpath;
+  if (command === "npm" && !npm)
+    throw new ExpectedFailure("Start the build with npm run build.");
+  const [program, programArgs] =
+    command === "npm" ? [process.execPath, [npm, ...args]] : [command, args];
+  return new Promise((resolve, reject) => {
+    const child = spawn(program, programArgs, {
+      cwd: repositoryRoot,
+      stdio: "inherit",
+    });
+    child.once("error", reject);
+    child.once("exit", (code) => resolve(code ?? 1));
+  });
+}
+
+try {
+  const failed = await runWorkspaceBuild(repositoryRoot, {
+    run,
+    report: (message) => console.error(`build: ${message}`),
+  });
+  if (failed.length) {
+    console.error(`build: failed: ${failed.join(", ")}`);
+    process.exitCode = 1;
+  }
+} catch (error) {
+  if (!(error instanceof ExpectedFailure)) throw error;
+  console.error(error.message);
+  process.exitCode = 1;
+}
