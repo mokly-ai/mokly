@@ -29,22 +29,31 @@ export function parseBudgets(value) {
       minutes: positive(budget.minutes, `jobs[${index}].minutes`),
     };
   });
-  // The cache report checks its own budget, so a bad cache field never stops
-  // the duration report.
+  // The cache and shard balance reports check their own fields, so a bad
+  // field never stops the duration report.
   return {
     mode: value.mode,
     wallClockMinutes,
     slowestTests,
     jobs,
     cache: value.cache,
+    shardGroups: value.shardGroups,
   };
 }
 
 /** The first budget whose pattern matches the whole job name, or null. */
 export function matchBudget(name, budgets) {
   return (
-    budgets.jobs.find((budget) => pattern(budget.pattern).test(name)) ?? null
+    budgets.jobs.find((budget) => matchesPattern(name, budget.pattern)) ?? null
   );
+}
+
+/**
+ * Whether a pattern matches the whole job name. `*` matches any run of
+ * characters, also an empty one, and every other character only itself.
+ */
+export function matchesPattern(name, source) {
+  return pattern(source).test(name);
 }
 
 /**
