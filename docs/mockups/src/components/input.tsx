@@ -59,7 +59,7 @@ export const inputInput = componentInput({
     properties: {
       label: { type: "string" },
       name: { type: "string" },
-      type: { enum: ["email", "text", "identifier"] },
+      type: { enum: ["email", "text", "identifier", "password"] },
       value: { type: "string" },
       placeholder: { type: "string" },
       helper: { type: "string" },
@@ -100,6 +100,7 @@ export const inputInput = componentInput({
         { label: "Email", value: "email" },
         { label: "Text", value: "text" },
         { label: "Identifier", value: "identifier" },
+        { label: "Password", value: "password" },
       ],
     },
     waiting: { kind: "boolean" },
@@ -121,6 +122,9 @@ export const inputInput = componentInput({
     { viewport },
   ) => {
     const identifier = type === "identifier";
+    // A password is masked and filled by a password manager, and like an
+    // identifier it is never rewritten by the keyboard.
+    const password = type === "password";
     const size = viewport === "mobile" ? "lg" : "md";
     const waits = waiting === true;
     const named = waits && hold !== undefined;
@@ -152,8 +156,11 @@ export const inputInput = componentInput({
         value={waits ? "" : value}
         onChangeText={staticNoop}
         keyboardType={type === "email" ? "email-address" : "default"}
-        autoComplete={type === "email" ? "email" : "off"}
-        {...(identifier
+        autoComplete={
+          type === "email" ? "email" : password ? "current-password" : "off"
+        }
+        {...(password ? { secureTextEntry: true } : {})}
+        {...(identifier || password
           ? {
               autoCapitalize: "none" as const,
               autoCorrect: false,

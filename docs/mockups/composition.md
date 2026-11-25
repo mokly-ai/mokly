@@ -68,7 +68,9 @@ variants. A situation none of those four describes is a further variant while
 the screen stays within four, and otherwise a screen beside it in its folder:
 the entry screens' `github-refused`, `github-opens-soon` and
 `address-refused`, and the desktop app's window entry, `desktop`, with its
-`waiting` variant, each drawn on both sign in and sign up, the populated
+`waiting` variant, each drawn on both sign in and sign up, sign in's password
+section, `preview-password`, with its refused password and its failure as
+variants and its write as a screen beside it, the populated
 workspace and repository forms while their address suggestions load,
 Create workspace's write, the workspace and project address editors,
 `product/settings/project/visibility`, `product/settings/members/identity`,
@@ -127,26 +129,27 @@ nonfunctional token example are documented in
 
 The shared sign-in callback is the deliberate exception to the four-state
 shape. Its callback directory holds the pending sign-in screen, then an
-Email and a Preview screen whose variants are the exact invalid, expired, used
-and generic failures in
+Email screen whose variants are the exact invalid, expired, used and generic
+failures in
 [Authentication callbacks](../protocol/cloud/auth-callbacks.md), so no screen carries
 more than four variants and no protocol outcome is relabelled as an empty or
 loading state. The directory owner keeps `Sign-in link · Pending` as its title;
 its index replaces the old `Sign-in link landing` folder label.
 Its wait is one state card in placeholder form, and its name is for screen
-readers only because the account heading already names the operation. Preview failures use
-the shared error state with hidden announced copy, so their problem glyph and
-alert semantics do not add a second visible title. Rendered policy checks reject
+readers only because the account heading already names the operation. A
+failure with no line of its own uses the shared error state with hidden
+announced copy, so its problem glyph and alert semantics do not add a second
+visible title. Rendered policy checks reject
 either an error state with no announced copy or a visible pending label that
 repeats its screen heading.
 
-The callback directory's fourth screen,
+The callback directory's third screen,
 `product/account/callback/desktop-expired`, draws the desktop landing in the
 app's window, as
 [Authentication callbacks](../protocol/cloud/auth-callbacks.md#desktop-callback)
 defines: its expired sign-in, with its generic failure as its variant. Both
-use the preview landing's shared error state and offer only **Back to sign
-in**, which leads to the window's entry screen, and neither draws any part of
+use that shared error state and offer only **Back to sign in**, which leads
+to the window's entry screen, and neither draws any part of
 the grant or the verifier. Its pending state is the directory's pending
 screen. The GitHub installation landings follow as five screens without
 variants: the request a GitHub organization owner approves,

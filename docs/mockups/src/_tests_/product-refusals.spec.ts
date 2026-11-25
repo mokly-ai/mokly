@@ -6,6 +6,7 @@ import {
   failureReference,
   fieldRefusals,
   onboarding,
+  previewPassword,
 } from "../fixtures/product-states";
 
 import { productRun, productSchemes, productViewports } from "./product-runs";
@@ -62,6 +63,11 @@ interface DrawnRefusal {
   resting?: string;
   /** The sentence this form's own field draws, when the address was refused. */
   marks?: string;
+  /**
+   * Sign in's Password field: the password it keeps, and the sentence it
+   * draws when the password itself was refused.
+   */
+  password?: { kept: string; marks?: string };
 }
 
 /**
@@ -115,6 +121,25 @@ const refusals: DrawnRefusal[] = [
     back: "Continue with email",
     reference: true,
     marks: fieldRefusals.email,
+  },
+  // Sign in's password section. A refused password is said on its field and
+  // the control keeps its own label, as a refused address does; any other
+  // refusal is said beside the control, with the password kept and unmarked.
+  // Nothing about either reaches the email form.
+  {
+    id: "product/account/sign-in/preview-password/password-refused",
+    back: "Continue as preview@mokly.ai",
+    reference: true,
+    address: true,
+    resting: "Continue with email",
+    password: { kept: previewPassword.typed, marks: previewPassword.refused },
+  },
+  {
+    ...refusedSave,
+    id: "product/account/sign-in/preview-password/failure",
+    address: true,
+    resting: "Continue with email",
+    password: { kept: previewPassword.typed },
   },
   // The connect page's grant request. Use another account sent nothing, but
   // it is a link here, so it is not read back as a resting button.
@@ -228,6 +253,26 @@ for (const viewport of productViewports)
               page.locator('[data-testid="firna-button-secondary"]'),
               where,
             ).toHaveText("Continue with GitHub");
+          }
+          if (refusal.password !== undefined) {
+            // A password field has no textbox role, so its label finds it.
+            const field = page.getByLabel("Password", { exact: true });
+            await expect(field, where).toHaveValue(refusal.password.kept);
+            if (refusal.password.marks === undefined)
+              await expect(field, where).not.toHaveAttribute(
+                "aria-invalid",
+                "true",
+              );
+            else {
+              await expect(field, where).toHaveAttribute(
+                "aria-invalid",
+                "true",
+              );
+              await expect(
+                page.getByText(refusal.password.marks),
+                where,
+              ).toHaveCount(1);
+            }
           }
           if (!refusal.address) continue;
           // The address is not what this refusal was about, so it is neither

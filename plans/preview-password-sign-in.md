@@ -2,8 +2,8 @@
 
 Status: Active. On branch `calummoore/preview-password-sign-in-jofl`, no pull
 request yet. The pull request that completes the work deletes this plan, as
-the `plans` skill says. Every decision has its answer. Implementation starts
-when Cal approves the plan.
+the `plans` skill says. Every decision has its answer. Cal approved the plan
+on 2026-11-25, and the milestones are in progress.
 
 A PR preview is a temporary deployment of one pull request at
 `https://pr-N.preview.mokly.ai`, with its own namespace `mkc-preview-pr-N` and
@@ -157,6 +157,32 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   the page does. The app trims leading and trailing white space before it
   sends the password, as it trims the email. The mockups settle the final
   layout and copy.
+- **Mockup pages.** The mockups draw the section on four pages under
+  `product/account/sign-in/preview-password`: the section at rest, its
+  `password-refused` and `failure` variants, and `signing-in` beside them.
+  Sign in's other pages, Sign up and the desktop window draw no section. On
+  each page the email form stays at rest with Cal's address, as the GitHub
+  pages draw it. While it signs in, the action reads "Signing in…" with the
+  busy spinner, screen readers hear "Signing you in", and the Password field
+  waits disabled. A refused password keeps the action's label, and the
+  fragment around the action holds only the Details disclosure, as for a
+  refused address. The failure page draws the busy cause above Try again. The
+  product writes "This password isn’t valid." with a typographic apostrophe,
+  as "This link isn’t valid". The field asks for `current-password` and turns
+  off autocapitalize, autocorrect and spellcheck.
+- **Panel movement, found by the mockups.** The section adds 184px to the
+  panel on desktop and 192px on a 390px phone. The desktop panel is centred,
+  so in a preview the title and every control above the section move up 92px
+  when the configuration answer adds the section after the wait. The phone's
+  panel is top-aligned, so only the line under the panel moves down.
+  Production draws no section, so its panel does not move. If the wait held
+  the section's place, every production Sign in would move instead, and the
+  Wait composition draws a layout's most common form. So "the panel does not
+  move" in **Configuration answer** holds for production only.
+  My call, 2026-11-25: accept this move in previews. Reason: it happens
+  once, only in previews, and before the reader can type. Keeping the last
+  answer in the browser still moves on a first visit, and a top-aligned
+  desktop panel changes a rule for every account screen.
 - **Deploy.** The release job reads the verifier with
   `gcloud secrets versions access` into a private mode-0600 runner-temporary
   file, as it reads the DNS token. It writes Secret `preview-sign-in` when the
@@ -442,23 +468,23 @@ Depends on: none
 The Sign-in screen gains the password section in the cloud mockup catalogue
 under `docs/mockups`. Each page draws its mobile and desktop variants.
 
-- [ ] Add the password section to the Sign-in screen component under
+- [x] Add the password section to the Sign-in screen component under
       `docs/mockups/src/screens/product/account/`, as a prop that the default
       Sign-in page leaves off.
-- [ ] Add the pages under
+- [x] Add the pages under
       `docs/mockups/src/entries/product/account/sign-in/preview-password/`:
       the section at rest, the refused password on the field, the action
       while it signs in, and a failure beside the action. Keep each page at
       five screens or fewer.
-- [ ] Link the new pages from the Sign-in page, so that a reader reaches them
+- [x] Link the new pages from the Sign-in page, so that a reader reaches them
       from the existing account pages.
-- [ ] Delete the mockup `product/account/callback/preview-invalid` and its
+- [x] Delete the mockup `product/account/callback/preview-invalid` and its
       cases in the callback landing tests, because the page
       `/auth/preview/callback` goes.
-- [ ] Run the mockup check that `docs/mockups/README.md` gives. Smoke-test the
+- [x] Run the mockup check that `docs/mockups/README.md` gives. Smoke-test the
       changed pages in a browser, and save screenshots under
       `.context/preview-password-sign-in/`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -492,6 +518,10 @@ below. History stays in this plan.
 - [ ] Update `preview-seed-local.md` for the local password.
 - [ ] Update `product-mockups-account.md` and `folio-chrome-account.md` for
       the new section and pages.
+- [ ] Remove the preview landing from `product-mockups-account.md`: the
+      callback row, the Preview invalid sentences, the Callback Landings
+      sentence, and the count of callback states, which becomes twelve.
+      Remove its row from the Variant Slugs table of `mockup-tooling.md`.
 - [ ] Update `docs/ops/preview.md`: review step 3 uses the password, the log
       reader serves other addresses, and the steps to create and rotate the
       password.
@@ -599,6 +629,16 @@ The app draws the section as the mockups show and sends the password.
 - [ ] Draw the section in `packages/app/src/screens/account/entry-screen.tsx`
       from the `@firna/ui` and app components, as the mockups show. Keep the
       file under 300 lines.
+- [ ] Give `packages/app/src/components/field.tsx` a `password` type, as
+      `docs/mockups/src/components/input.tsx` draws it: masked, with
+      `autoComplete="current-password"`, and without autocapitalize,
+      autocorrect or spellcheck.
+- [ ] In `docs/mockups/src/_tests_/owners/account.ts`, replace the pending
+      owner of the four `product/account/sign-in/preview-password` pages with
+      the app file that draws the section. Move `previewPassword.refused`
+      into `fieldRefusals` in `docs/mockups/src/fixtures/product-states.ts`,
+      with its home in `docs/mockups/src/_tests_/app-parity-copy.test.ts`. The
+      label and copy parity checks then cover the section.
 - [ ] Tests: the section shows only when the configuration answer names an
       account, the trimmed password goes to the API with the page's
       `returnTo`, a refused password marks the field, and a success leaves

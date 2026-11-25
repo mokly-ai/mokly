@@ -126,6 +126,20 @@ export const fieldRefusals = {
   tokenName: "Check the values and try again.",
 } as const;
 
+/**
+ * Sign in's password section, which a deployment draws when its configuration
+ * answer names a shared account: that account, the password the reader typed,
+ * which is visibly not a credential, and what the Password field says when the
+ * API refused it. That sentence joins `fieldRefusals` when the application
+ * first writes it, because every sentence there is one the product already
+ * says.
+ */
+export const previewPassword = {
+  account: "preview@mokly.ai",
+  typed: "mockup-password-not-a-credential",
+  refused: "This password isn’t valid.",
+} as const;
+
 /** Address-field recoveries that land with the readable-address UI milestone. */
 export const slugRefusals = {
   createWorkspaceTaken: "This address is already in use. Try mokly-team-2.",

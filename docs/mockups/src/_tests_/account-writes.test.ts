@@ -1,16 +1,16 @@
 /**
  * The writes of the account family: sign in, sign up and Check your email send
- * a sign-in link, sign in and sign up connect GitHub, and the onboarding steps
- * create a workspace, create a project with the CLI, install the App and
- * connect an installation. While a write runs, the pressed control carries the
- * wait, as Write in progress in `folio-chrome.md` defines. The form inserts
- * nothing.
+ * a sign-in link, sign in and sign up connect GitHub, sign in's password
+ * section signs in the shared account, and the onboarding steps create a
+ * workspace, create a project with the CLI, install the App and connect an
+ * installation. While a write runs, the pressed control carries the wait, as
+ * Write in progress in `folio-chrome.md` defines. The form inserts nothing.
  */
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { onboarding } from "../fixtures/product-states";
+import { onboarding, previewPassword } from "../fixtures/product-states";
 
 import type { Viewport } from "./catalogue-paths";
 import {
@@ -61,6 +61,14 @@ const writes = [
     working: "Connecting…",
     heard: "Connecting to GitHub…",
     typed: [onboarding.email],
+  },
+  {
+    resting: "product/account/sign-in/preview-password",
+    running: "product/account/sign-in/preview-password/signing-in",
+    control: "Continue as preview@mokly.ai",
+    working: "Signing in…",
+    heard: "Signing you in…",
+    typed: [onboarding.email, previewPassword.typed],
   },
   {
     resting: "product/account/magic-link",

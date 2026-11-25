@@ -115,4 +115,40 @@ export const accountEntrySituations = [
     name: "address-refused",
     states: ["default"],
   },
+  // Sign in's password section, where the configuration answer names a shared
+  // account: a screen beside sign in. Its refused password and its refused
+  // write are its variants, and its write is a screen beside it.
+  {
+    path: "product/account/sign-in/preview-password",
+    family: "account",
+    screen: "sign-in",
+    name: "preview-password",
+    states: ["default"],
+  },
+  {
+    path: "product/account/sign-in/preview-password/password-refused",
+    family: "account",
+    screen: "sign-in",
+    name: "password-refused",
+    parent: "product/account/sign-in/preview-password",
+    states: ["default"],
+  },
+  {
+    path: "product/account/sign-in/preview-password/failure",
+    family: "account",
+    screen: "sign-in",
+    name: "failure",
+    parent: "product/account/sign-in/preview-password",
+    states: ["default"],
+  },
+  {
+    path: "product/account/sign-in/preview-password/signing-in",
+    family: "account",
+    screen: "sign-in",
+    name: "signing-in",
+    parent: "product/account/sign-in/preview-password",
+    sibling: true,
+    states: ["default"],
+    pending: true,
+  },
 ] as const satisfies readonly ProductSituation[];
