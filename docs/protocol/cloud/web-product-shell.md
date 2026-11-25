@@ -154,10 +154,12 @@ follow that same condition. Opening one changes the stage's geometry and
 preserved. The hidden ancestor gives up its accessible landmark and heading
 while the panel, the dialog or the **More** sheet owns the document.
 
-Query-only Back can reconstruct an Expo route. The browser document keeps one
-active origin/credential source and its version error across that
-reconstruction; a new origin or credential policy replaces the source and
-clears the error. The source keeps the catalogue index it read, so a
+A Back or Forward step that changes only the query of the current route
+keeps that route mounted, with its reads, its chrome and its stage, so it
+draws no waiting state. Another traversal can reconstruct an Expo route. The
+browser document keeps one active origin/credential source and its version
+error across that reconstruction; a new origin or credential policy replaces
+the source and clears the error. The source keeps the catalogue index it read, so a
 reconstruction does not read it again. A reload creates a new
 document scope and starts fresh.
 

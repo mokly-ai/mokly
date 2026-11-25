@@ -1,8 +1,9 @@
 /**
  * The copy control every code panel on a documentation page carries. One
- * island places a control in each panel when the browser is idle and copies
- * that panel's own text, so the page holds no second copy of the source and
- * the reader always copies what is on screen.
+ * island places a control in each panel when the browser is idle, or a
+ * second after the page reaches it at the latest, and copies that panel's own
+ * text, so the page holds no second copy of the source and the reader always
+ * copies what is on screen.
  */
 
 import { useEffect, useState } from "react";

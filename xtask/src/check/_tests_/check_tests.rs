@@ -1,24 +1,23 @@
 //! Verification ordering, selection, and fail-closed subprocess coverage.
 
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::command::{CommandRunnerRunMock, CommandSpec};
+use crate::command::{CommandRunnerRunConcurrentlyMock, CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
-use super::commands::commands_for;
-use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
+use super::request::{CheckRequest, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
 fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
     let observed = Arc::new(Mutex::new(Vec::new()));
     let captured = observed.clone();
-    let command_runner = Arc::new(Unimock::new(
+    let grouped = observed.clone();
+    let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, command: &CommandSpec| {
@@ -26,7 +25,16 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
                 captured.lock().unwrap().push(command.display());
                 Ok(())
             })),
-    ));
+        CommandRunnerRunConcurrentlyMock
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, lanes: &[Vec<CommandSpec>]| {
+                for command in lanes.iter().flatten() {
+                    assert_eq!(command.working_directory(), Some(Path::new("/workspace")));
+                    grouped.lock().unwrap().push(command.display());
+                }
+                Ok(())
+            })),
+    )));
     let auditor = Arc::new(Unimock::new(
         RustFileLengthAuditorRunMock
             .some_call(matching!(_))
@@ -38,7 +46,8 @@ fn complete_gate_covers_the_native_build_and_tests_without_repeating_them() {
         .unwrap();
     let commands = observed.lock().unwrap();
     for required in [
-        "cargo test --locked -p \"mokly-*\" -p xtask",
+        "cargo nextest run --locked -p \"mokly-*\" -p xtask",
+        "cargo test --locked -p \"mokly-*\" -p xtask --doc",
         "npm run test:viewer:prepared",
         "npm run test:browser:prepared",
         "npm run test:delivery:prepared",
@@ -90,58 +99,6 @@ fn selected_viewer_builds_then_checks_and_tests() {
     let request = CheckRequest::new(Some(VerificationSuite::Viewer), None, None)
         .expect("viewer suite is valid");
     runner.run(request).expect("viewer suite succeeds");
-}
-
-#[test]
-fn repository_suite_runs_audit_first_and_includes_file_length() {
-    let observed = Arc::new(Mutex::new(Vec::new()));
-    let captured = observed.clone();
-    let command_runner = Arc::new(Unimock::new(
-        CommandRunnerRunMock
-            .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, command: &CommandSpec| {
-                captured.lock().unwrap().push(command.display());
-                Ok(())
-            })),
-    ));
-    let auditor = Arc::new(Unimock::new(
-        RustFileLengthAuditorRunMock
-            .some_call(matching!(_))
-            .returns(Ok(())),
-    ));
-    let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    runner
-        .run(CheckRequest::new(Some(VerificationSuite::Repository), None, None).unwrap())
-        .unwrap();
-    assert_eq!(
-        *observed.lock().unwrap(),
-        [
-            "npm run dependencies:check -- --baseline",
-            "npm ci",
-            "npm run dependencies:check:rust",
-            "cargo xtask boundary",
-            "cargo xtask whitespace",
-            "cargo xtask check-generated-types",
-            "npm run palette:check",
-            "npm run format:check",
-            "npm run lint",
-            "node_modules/.bin/ast-grep test --skip-snapshot-tests",
-            "node_modules/.bin/ast-grep scan crates xtask packages apps",
-            "node --test xtask/scripts/boundary-imports.test.mjs xtask/scripts/strict-command.test.mjs xtask/scripts/isolated-postgres.test.mjs",
-            "node scripts/verification/source-file-length.mjs",
-            "node scripts/verification/repository-ratchets.mjs",
-            "cargo fmt --all -- --check",
-            "cargo clippy --locked -p \"mokly-*\" -p xtask --all-targets -- -D warnings",
-            "cargo clippy --locked -p mokly-cli --features design-matrix --all-targets -- -D warnings",
-            "cargo xtask build-native",
-            "npm run build --workspace \"@mokly/ui\"",
-            "npm run build --workspace \"@mokly/model\"",
-            "npm run build --workspace \"@mokly/frame\"",
-            "npm run build --workspace \"@mokly/viewer\"",
-            "npm run build --workspace \"@mokly/mokly\"",
-            "cargo test --locked -p \"mokly-*\" -p xtask",
-        ]
-    );
 }
 
 #[test]
@@ -203,69 +160,6 @@ fn subprocess_failure_is_propagated_from_a_selected_suite() {
         Err(Error::CommandFailed { command, status })
             if command == "npm run build" && status == "9"
     ));
-}
-
-#[test]
-fn malformed_and_out_of_range_shards_fail() {
-    for value in [
-        "",
-        "1",
-        "1/",
-        "/4",
-        "0/4",
-        "5/4",
-        "1/0",
-        "1/2/3",
-        "1/9007199254740992",
-        "9007199254740992/9007199254740992",
-    ] {
-        assert!(
-            matches!(Shard::from_str(value), Err(Error::InvalidShard { shard }) if shard == value),
-            "{value:?} should fail",
-        );
-    }
-    assert!(Shard::from_str("1/9007199254740991").is_ok());
-}
-
-#[test]
-fn shard_requires_a_supported_selected_suite() {
-    let shard = Shard::from_str("1/4").expect("valid shard");
-    assert!(matches!(
-        CheckRequest::new(None, Some(shard), None),
-        Err(Error::ShardRequiresSuite)
-    ));
-    for suite in [
-        Some(VerificationSuite::Repository),
-        Some(VerificationSuite::Viewer),
-        Some(VerificationSuite::Native),
-    ] {
-        assert!(matches!(
-            CheckRequest::new(suite, Some(shard), None),
-            Err(Error::UnsupportedShard { .. })
-        ));
-    }
-}
-
-#[test]
-fn browser_selection_builds_and_forwards_only_validated_shards() {
-    let shard = Shard::from_str("2/4").expect("valid shard");
-    CheckRequest::new(Some(VerificationSuite::Browser), Some(shard), None)
-        .expect("browser supports shards");
-    let commands = commands_for(
-        VerificationSuite::Browser,
-        Some(shard),
-        DependencyAudit::Baseline,
-    );
-    assert_eq!(
-        commands
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>(),
-        [
-            "npm run build",
-            "npm run test:browser:prepared -- --shard 2/4"
-        ]
-    );
 }
 
 fn workspace() -> PathBuf {

@@ -30,6 +30,7 @@
   - CI run 44386980398 of the next branch commit, `6704dc72`, passed the test.
   - CI run 44392544275 of branch commit `091b90a7` failed it on both tries. A rerun of the failed jobs failed it the same way.
   - Locally, with `--repeat-each 30 --retries 0 --project desktop --workers 1`, it failed 15 of 30 runs on `origin/main` at `55972c86` and 14 of 30 on the branch. An earlier set of 10 runs failed 2 on `main` and 4 on the branch. So the branch does not change the rate.
+  - On 2026-11-25, branch `calummoore/header-bar-loading-issue-mqph` traced each `pushState`, `replaceState`, `go`, `back`, `forward` and `popstate` in 20 runs, and 11 failed. No failed run had a `popstate` or a history traversal. Each one wrote only `replaceState`, and its last write put `&settings=project` back, 50 to 160 ms after the write before it. So in these runs the address arrived late, after the two animation frames, and no write dropped it. The rate followed the machine load: `main` failed 1 of 20 runs on a quiet machine and 6 of 20 on a busy one.
 
 - **Impact if no action:** The test fails about half of its local runs, on `main` too, and the one retry of CI often fails as well. So the required app checks fail and block pull requests until a rerun passes. If the race is in the product, a reader who quickly resizes a window across the breakpoint loses the open settings dialog.
 - **Root question:** How does a quick series of surface changes always leave the address of the newest surface?

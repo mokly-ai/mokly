@@ -20,6 +20,7 @@ import type { ComparisonFramePlan } from "../src/shell/comparison_rows.js";
 import { comparedFrames } from "../src/shell/comparison_selection.js";
 import type { ComparisonController } from "../src/shell/use_comparison.js";
 
+import { unregisterDom } from "./dom_teardown.js";
 import { ShellStoreFixture } from "./shell_markup.js";
 
 const ORIGIN = "https://catalogue.test";
@@ -128,7 +129,7 @@ const environment: ComparisonEnvironment = {
 
 test("a Dark frame that shows its Light view names its own frame in its panes' titles", async (t) => {
   GlobalRegistrator.register();
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   stubDocumentFonts();
   // Home has no Dark view of its desktop viewport, so its Dark frame
   // compares the Light view.

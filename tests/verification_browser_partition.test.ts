@@ -176,3 +176,44 @@ test("file filters escape metacharacters and select only the exact spec", () => 
   ])
     assert.equal(matches.test(file), false, file);
 });
+
+test("specs go by their larger cost or test share, so a many-test spec is placed early", () => {
+  // Cost-first order would end at shard costs 17 and 14 here.
+  const full = inventory({ a: 1, b: 1, c: 1, d: 2, e: 1 });
+  const weights = { a: 6, b: 9, c: 7, d: 2, e: 5 };
+  const parts = [1, 2].map((index) =>
+    selectBrowserShard(full, { index, total: 2 }, weights),
+  );
+  assert.deepEqual(
+    parts.map((part) => part.files),
+    [
+      ["c", "d", "e"],
+      ["a", "b"],
+    ],
+  );
+});
+
+test("copied-host specs share the fewest shards and only those shards build the copy", () => {
+  // The count cap is 4 tests. One copy shard holds c and d; a second copy
+  // shard would put b beside a copied build, so one stays best at any cost.
+  const full = inventory({ a: 1, b: 1, c: 2, d: 2, e: 1, f: 1 });
+  const weights = {
+    a: 1_000_000,
+    b: 900_000,
+    c: 100_000,
+    d: 100_000,
+    e: 100_000,
+    f: 100_000,
+  };
+  const parts = [1, 2, 3].map((index) =>
+    selectBrowserShard(full, { index, total: 3 }, weights, new Set(["c", "d"])),
+  );
+  assert.deepEqual(
+    parts.map((part) => [part.files, part.copiedHost]),
+    [
+      [["c", "d"], true],
+      [["a", "f"], false],
+      [["b", "e"], false],
+    ],
+  );
+});

@@ -1,11 +1,13 @@
 //! Pure remote command, identifier and output contract regressions.
 
+use std::num::NonZeroU8;
+
 use crate::check::request::DependencyAudit;
 use crate::executor::{Executor, resolve_executor};
 use crate::remote::parse::{
     box_is_completed, probe_identity, require_warmup_id, run_id_from_status, warmup_ids,
 };
-use crate::remote::plan::commands;
+use crate::remote::plan::{ShardTotals, commands_for};
 
 #[test]
 fn mode_precedence_uses_the_flag_before_the_environment() {
@@ -46,11 +48,30 @@ fn completed_status_requires_one_matching_table_row() {
 }
 
 #[test]
-fn command_inventory_has_fourteen_unique_commands_and_five_reports() {
-    let baseline = commands(DependencyAudit::Baseline);
-    let commands = commands(DependencyAudit::Strict);
-    assert_eq!(commands.len(), 14);
-    assert_eq!(commands.iter().filter(|command| command.report).count(), 5);
+fn command_inventory_has_one_box_per_viewer_and_browser_shard_and_their_reports() {
+    let totals = ShardTotals {
+        viewer: NonZeroU8::new(2).unwrap(),
+        browser: NonZeroU8::new(5).unwrap(),
+    };
+    let baseline = commands_for(totals, DependencyAudit::Baseline);
+    let commands = commands_for(totals, DependencyAudit::Strict);
+    assert_eq!(commands.len(), 16);
+    assert_eq!(
+        commands
+            .iter()
+            .filter(|command| command.report)
+            .map(|command| command.name.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "viewer-1-of-2",
+            "viewer-2-of-2",
+            "browser-1-of-5",
+            "browser-2-of-5",
+            "browser-3-of-5",
+            "browser-4-of-5",
+            "browser-5-of-5"
+        ]
+    );
     assert_eq!(
         commands
             .iter()
@@ -58,11 +79,13 @@ fn command_inventory_has_fourteen_unique_commands_and_five_reports() {
             .collect::<Vec<_>>(),
         [
             "repository",
-            "viewer",
-            "browser-1-of-4",
-            "browser-2-of-4",
-            "browser-3-of-4",
-            "browser-4-of-4",
+            "viewer-1-of-2",
+            "viewer-2-of-2",
+            "browser-1-of-5",
+            "browser-2-of-5",
+            "browser-3-of-5",
+            "browser-4-of-5",
+            "browser-5-of-5",
             "static-delivery",
             "cloud-rust",
             "cloud-app-1-of-4",
@@ -74,11 +97,6 @@ fn command_inventory_has_fourteen_unique_commands_and_five_reports() {
         ]
     );
     assert!(
-        commands[1]
-            .shell_command("sha256:abc")
-            .ends_with("--suite viewer")
-    );
-    assert!(
         commands[0]
             .shell_command("sha256:abc")
             .ends_with("--suite repository --dependency-audit strict")
@@ -88,21 +106,25 @@ fn command_inventory_has_fourteen_unique_commands_and_five_reports() {
             .shell_command("sha256:abc")
             .contains("--dependency-audit")
     }));
-    for (offset, command) in commands[2..6].iter().enumerate() {
-        assert_eq!(
-            command.shell_command("sha256:abc"),
-            format!(
-                "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite browser --shard {}/4",
-                offset + 1
-            )
-        );
-    }
+    let wrapper = "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:abc";
     assert_eq!(
-        commands[6].shell_command("sha256:abc"),
-        "node scripts/verification/refresh-source-mtimes.mjs && node scripts/verification/testbox-suite.mjs --expect sha256:abc --suite static-delivery"
+        commands[1..9]
+            .iter()
+            .map(|command| command.shell_command("sha256:abc"))
+            .collect::<Vec<_>>(),
+        [
+            "--suite viewer --shard 1/2",
+            "--suite viewer --shard 2/2",
+            "--suite browser --shard 1/5",
+            "--suite browser --shard 2/5",
+            "--suite browser --shard 3/5",
+            "--suite browser --shard 4/5",
+            "--suite browser --shard 5/5",
+            "--suite static-delivery"
+        ]
+        .map(|arguments| format!("{wrapper} {arguments}"))
     );
-    assert!(!commands[6].report);
-    assert!(commands[7..].iter().all(|command| !command.report));
+    assert!(commands[8..].iter().all(|command| !command.report));
     assert!(
         baseline[0]
             .shell_command("sha256:abc")

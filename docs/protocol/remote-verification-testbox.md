@@ -18,7 +18,7 @@ Set `timeout-minutes: 30`.
 
 The job matches the CI suite jobs in Cargo settings and Rust cache options, but
 not in runner. CI saves its cache on GitHub-hosted runners, so no job refreshes
-the cache that a box restores. One job serves all fourteen commands. The
+the cache that a box restores. One job serves every remote command. The
 repository command uses the cache options of the other suites, not those of its
 CI job.
 
@@ -37,7 +37,8 @@ Run the steps in this order:
    toolchain for every command in the checkout.
 5. Restore the Rust build cache with the action and options that the CI viewer,
    browser, and static-delivery jobs share. Set `save-if: false`. Boxes run
-   unreviewed local trees, so they never save.
+   unreviewed local trees, so they never save. Then install the pinned
+   cargo-nextest with the CI install step.
 6. Run `npm ci`.
 7. Run `cargo xtask build-native` to build the host native artifact.
 8. Write the lowercase SHA-256 digest of `package-lock.json`
@@ -73,15 +74,16 @@ Each box runs `node scripts/verification/testbox-suite.mjs` with
 repository root. Derive the command name from the suite and optional shard.
 Use that name for its report and log.
 
-| Command name      | Wrapper arguments                              |
-| ----------------- | ---------------------------------------------- |
-| `repository`      | `--suite repository --dependency-audit <mode>` |
-| `viewer`          | `--suite viewer`                               |
-| `browser-1-of-4`  | `--suite browser --shard 1/4`                  |
-| `browser-2-of-4`  | `--suite browser --shard 2/4`                  |
-| `browser-3-of-4`  | `--suite browser --shard 3/4`                  |
-| `browser-4-of-4`  | `--suite browser --shard 4/4`                  |
-| `static-delivery` | `--suite static-delivery`                      |
+| Command name         | Wrapper arguments                              |
+| -------------------- | ---------------------------------------------- |
+| `repository`         | `--suite repository --dependency-audit <mode>` |
+| `viewer-INDEX-of-V`  | `--suite viewer --shard INDEX/V`               |
+| `browser-INDEX-of-B` | `--suite browser --shard INDEX/B`              |
+| `static-delivery`    | `--suite static-delivery`                      |
+
+`scripts/verification/ci-shards.json` holds the viewer total `V` and the browser
+total `B` that CI also uses. Each `INDEX` from 1 to its total runs on its own
+box with `--shard`, also for a total of 1. Its 2 viewer and 10 browser shards give 21 commands.
 
 The wrapper accepts the suite and shard forms from
 [CI verification](./ci-verification.md#verification-boundary), plus the
@@ -95,7 +97,7 @@ the fingerprint script. Each script follows that error with its own usage line.
 
 Static delivery runs on its own box. It builds the source and checks the
 example through static HTTP and file URLs. Both modes must pass.
-These selected delivery checks do not replace any of the five suite reports.
+These selected delivery checks do not replace any viewer or browser report.
 No browser shard runs delivery after its ordinary specs. Browser work and portable
 delivery use separate 30-minute Testbox job guards.
 
@@ -144,7 +146,7 @@ The suite wrapper runs these steps on each box, in this order:
    `npx playwright install chromium`, and fails if either command fails. It
    writes the new digest stamp only after both commands succeed. An equal
    digest requires neither command.
-5. For the viewer command only, it reads the
+5. For viewer commands only, it reads the
    [Bun pin](./developer-type-checks.md#required-type-check) from the synced
    `.bun-version`. It runs `npm install --global --prefix <prefix> bun@<pin>`
    with a private `<prefix>` under the repository's `.context/`. npm checks the
@@ -154,7 +156,7 @@ The suite wrapper runs these steps on each box, in this order:
 6. It sets `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json` and runs
    `cargo xtask check --executor local --suite <suite>`, with
-   `--shard INDEX/4` for a browser shard. Explicit local mode prevents
+   `--shard INDEX/TOTAL` for a viewer or browser shard. Explicit local mode prevents
    recursive remote execution. For `static-delivery`, it runs
    `npm run build`, then `npm run test:delivery:prepared` instead. A failed or
    interrupted build prevents delivery. The wrapper validates both delivery
@@ -208,8 +210,8 @@ nonzero. The probe checks that SHA independently from the digest.
 
 The suite wrapper writes each report on its box to
 `.context/verification-reports/remote/<command>.json`.
-Only the viewer command and browser shards 1 through 4 produce the five
-required reports. Repository and static-delivery outcomes use their command exits.
+Only the viewer and browser commands produce the required reports, one for each
+shard. Repository, static-delivery and cloud outcomes use their command exits.
 
 Allocate a new local report directory for each run:
 `.context/verification-reports/remote/<run>/`.
@@ -233,9 +235,9 @@ node scripts/verification/aggregate.mjs --reports .context/verification-reports/
 ```
 
 The [evidence rules](./ci-verification.md#inventory-and-report-evidence)
-apply. The aggregate must accept
-exactly five reports for the expected commit and runtime profile.
-It must prove complete browser shard coverage.
+apply. The aggregate must accept exactly one report for each viewer and browser
+shard, 12 now, for the expected commit and runtime profile. It must prove
+complete viewer and browser shard coverage.
 The box `HEAD` and reports name the base; the
 [identity contract](./remote-verification-base.md#identity-output-and-file) records
 checkout `HEAD`. Fingerprints cover source changes and reject edits during the run.

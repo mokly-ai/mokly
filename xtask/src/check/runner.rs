@@ -7,7 +7,7 @@ use crate::command::{CommandRunner, CommandSpec};
 use crate::error::Result;
 use crate::rust_file_length::RustFileLengthAuditor;
 
-use super::commands::{browser_test_command, commands_for};
+use super::commands::{Step, browser_test_command, commands_for, steps_for};
 use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::tasks::{Task, task_commands};
 
@@ -43,7 +43,9 @@ impl DefaultCheckRunner {
         }
     }
 
-    /// Runs the suite's commands in order. The repository suite then runs the
+    /// Runs the suite's steps in order. A failed command stops the suite
+    /// unless it keeps going; the suite then fails with the first failure
+    /// after its later steps ran. The repository suite then runs the
     /// Rust file-length audit in this process, not as a subprocess; a failed
     /// audit fails the suite like a failed command.
     fn run_suite(
@@ -52,17 +54,42 @@ impl DefaultCheckRunner {
         shard: Option<Shard>,
         dependency_audit: DependencyAudit,
     ) -> Result<()> {
-        let mut commands = commands_for(suite, shard, dependency_audit);
-        if matches!(
+        let steps = if matches!(
             suite,
             VerificationSuite::CloudRust
                 | VerificationSuite::CloudApp
                 | VerificationSuite::CloudDesktop
         ) {
-            commands = vec![CommandSpec::isolated_database(suite.as_str(), commands)];
+            let commands = commands_for(suite, shard, dependency_audit);
+            vec![Step::Run(CommandSpec::isolated_database(
+                suite.as_str(),
+                commands,
+            ))]
+        } else {
+            steps_for(suite, shard, dependency_audit)
+        };
+        let mut first_failure = None;
+        for step in steps {
+            match step {
+                Step::Run(command) => {
+                    let keep_going = command.keeps_going();
+                    match self.run_command(command) {
+                        Err(error) if keep_going => {
+                            first_failure.get_or_insert(error);
+                        }
+                        Err(error) => return Err(first_failure.unwrap_or(error)),
+                        Ok(()) => {}
+                    }
+                }
+                Step::Concurrent(lanes) => {
+                    if let Err(error) = self.run_lanes(lanes) {
+                        return Err(first_failure.unwrap_or(error));
+                    }
+                }
+            }
         }
-        for command in commands {
-            self.run_command(command)?;
+        if let Some(error) = first_failure {
+            return Err(error);
         }
         if suite == VerificationSuite::Repository {
             self.rust_file_length_auditor.run(&self.workspace)?;
@@ -73,6 +100,18 @@ impl DefaultCheckRunner {
     fn run_command(&self, command: CommandSpec) -> Result<()> {
         self.command_runner
             .run(&command.in_directory(self.workspace.clone()))
+    }
+
+    fn run_lanes(&self, lanes: Vec<Vec<CommandSpec>>) -> Result<()> {
+        let lanes: Vec<Vec<_>> = lanes
+            .into_iter()
+            .map(|lane| {
+                lane.into_iter()
+                    .map(|command| command.in_directory(self.workspace.clone()))
+                    .collect()
+            })
+            .collect();
+        self.command_runner.run_concurrently(&lanes)
     }
 }
 

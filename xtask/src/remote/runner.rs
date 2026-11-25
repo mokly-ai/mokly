@@ -9,6 +9,7 @@ use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
+use crate::remote::plan::{RunCommand, commands};
 use crate::remote::preparation::PreparedRun;
 use crate::remote::reporting::warning;
 use crate::remote::snapshot::guard::{SnapshotGuard, SnapshotOwner};
@@ -44,10 +45,14 @@ pub(crate) struct DefaultRemoteRunner {
 
 impl RemoteRunner for DefaultRemoteRunner {
     fn run(&self, dependency_audit: DependencyAudit) -> RunResult {
+        let plan = match commands(dependency_audit) {
+            Ok(plan) => plan,
+            Err(source) => return Err(Failure::Unavailable(source)),
+        };
         let snapshot = SnapshotGuard::new(&self.dependencies);
         let cleanup = CleanupGuard::new(&self.dependencies);
         let mut boxes = Vec::new();
-        let preparation = self.prepare(&mut boxes, &cleanup, &snapshot);
+        let preparation = self.prepare(&plan, &mut boxes, &cleanup, &snapshot);
         let prepared = match preparation {
             Ok(identity) => identity,
             Err(source) => {
@@ -68,7 +73,7 @@ impl RemoteRunner for DefaultRemoteRunner {
                 return Err(Failure::Unavailable(source));
             }
         };
-        let result = match self.finish(&boxes, &prepared, &cleanup, dependency_audit) {
+        let result = match self.finish(&plan, &boxes, &prepared, &cleanup) {
             Ok(()) => Ok(()),
             Err(source) => Err(Failure::Failed(source)),
         };
@@ -81,28 +86,22 @@ impl DefaultRemoteRunner {
     /// Execute the complete remote gate after the fallback boundary.
     fn finish(
         &self,
+        plan: &[RunCommand],
         boxes: &[String],
         prepared: &PreparedRun,
         cleanup: &dyn BoxCleanup,
-        dependency_audit: DependencyAudit,
     ) -> Result<()> {
         let dependencies = &self.dependencies;
         let identity = &prepared.identity;
         let run = identity.run().as_str();
-        let completed = self.execute(
-            boxes,
-            identity,
-            &prepared.snapshot,
-            cleanup,
-            dependency_audit,
-        );
+        let completed = self.execute(plan, boxes, identity, &prepared.snapshot, cleanup);
         let reports = dependencies
             .workspace
             .join(".context/verification-reports/remote")
             .join(run);
         let cleanup = cleanup.finish();
         let evidence = (!dependencies.interrupt.requested())
-            .then(|| self.evidence(&completed, &reports, identity, cleanup));
+            .then(|| self.evidence(plan, &completed, &reports, identity, cleanup));
         conclude(cleanup, dependencies.interrupt.requested(), evidence)
     }
 }

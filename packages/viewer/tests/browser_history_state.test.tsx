@@ -14,6 +14,7 @@ import {
   initialState,
   shellCatalogue,
 } from "./disclosure_evidence_fixture.js";
+import { unregisterDom } from "./dom_teardown.js";
 
 const ORIGIN = "https://example.test";
 const HOME = "product/browse/home";
@@ -33,7 +34,7 @@ function shownPath(state: ShellState): string {
 
 test("history entries that an earlier viewer wrote load and navigate", async (t) => {
   GlobalRegistrator.register({ url: `${ORIGIN}/view/${HOME}/` });
-  t.after(() => GlobalRegistrator.unregister());
+  t.after(unregisterDom);
   const model = baseModel();
   const catalogue = shellCatalogue(model);
   const other = [...catalogue.byPath.keys()].find(

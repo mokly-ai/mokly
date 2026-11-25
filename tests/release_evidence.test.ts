@@ -7,6 +7,7 @@ import { runReleaseEvidence } from "../scripts/release/evidence.mjs";
 import {
   classifyEvidence,
   selectCandidateRuns,
+  VERIFICATION_REPORT_COUNT,
 } from "../scripts/release/evidence_contract.mjs";
 import { validateCiReports } from "../scripts/verification/aggregate.mjs";
 
@@ -170,7 +171,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
     selectedRunId: run.id,
     selectedRunUrl: run.html_url,
     evidenceCommit: TAG_COMMIT,
-    reportCount: 10,
+    reportCount: VERIFICATION_REPORT_COUNT,
     reason: `run ${run.id} proves tagged tree ${TAG_TREE}`,
   });
   assert.deepEqual(

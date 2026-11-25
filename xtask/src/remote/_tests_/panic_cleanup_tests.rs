@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
 use crate::check::request::DependencyAudit;
+use crate::remote::plan::plan_support::plan_counts;
 use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
@@ -20,7 +21,7 @@ fn suite_panic_and_cleanup_reporter_panics_still_stop_every_warmed_box() {
         .iter()
         .filter_map(|event| event.strip_prefix("warm:"))
         .collect();
-    assert_eq!(warmed.len(), 14);
+    assert_eq!(warmed.len(), plan_counts().commands);
     for id in warmed {
         let status = events
             .iter()
@@ -41,6 +42,6 @@ fn suite_panic_and_cleanup_reporter_panics_still_stop_every_warmed_box() {
     }
     assert_eq!(
         events.iter().filter(|event| *event == "cancel:123").count(),
-        14
+        plan_counts().commands
     );
 }
