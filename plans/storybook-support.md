@@ -3025,8 +3025,9 @@ Depends on: 23, 24, 24a
       Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 - [x] Run the targeted tests and `cargo xtask check`.
       Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [ ] Commit, push, review against this branch, give the findings to the
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
 
 ## Milestone 26: Storybook links documentation
 
