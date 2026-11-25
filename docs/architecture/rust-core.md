@@ -1,6 +1,6 @@
 # Rust Core Architecture
 
-Status: The sidecar release thread and finite file response bodies do not tell the render store that Serve is busy yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them.
+Status: The sidecar release thread and finite file response bodies do not tell the render store that Serve is busy yet. The [remaining writer activity owners item](../../plans/follow-ups/render-store-idle-work-owners.md) adds them. `mokly-catalogue` and `mokly-html` do not use `mokly-template` yet. [Milestone 3](../../plans/mokly-html-minijinja-templates.md#milestone-3-discovery-checks) and [Milestone 4](../../plans/mokly-html-minijinja-templates.md#milestone-4-render-before-the-parse) add that use, and [Milestone 6](../../plans/mokly-html-minijinja-templates.md#milestone-6-parse-cache-and-timings) adds the parse cache.
 
 Mokly is a Rust core, a Node render sidecar, and a browser viewer. This page is
 the map: the processes, the components and their responsibilities, the
@@ -43,8 +43,9 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 | `mokly-platform`         | Operating-system services: exclusive rename, process trees, file locks, and durable writes.                           | nothing internal                                                                                                                                            |
 | `mokly-git`              | Git commands: the merge base, changed paths, bounded tree reads, and archive extraction.                              | `platform`                                                                                                                                                  |
 | `mokly-sidecar`          | The sidecar pool: process lifetime, framing, requests, deadlines, and recycling.                                      | `model`, `platform`                                                                                                                                         |
-| `mokly-catalogue`        | Configuration, roots, discovery, front matter, paths, folders, variants, documents, and the catalogue model.          | `model`, `source-interface`                                                                                                                                 |
-| `mokly-html`             | HTML components and screens: parsing, substitution, slots, composition, markers, links, and document assembly.        | `model`, `catalogue`, `source-interface`                                                                                                                    |
+| `mokly-template`         | The template language of HTML bodies: source analysis and the render to text with source positions.                   | `model`                                                                                                                                                     |
+| `mokly-catalogue`        | Configuration, roots, discovery, front matter, paths, folders, variants, documents, and the catalogue model.          | `model`, `source-interface`, `template`                                                                                                                     |
+| `mokly-html`             | HTML components and screens: template renders, parsing, slots, composition, markers, links, and document assembly.    | `model`, `catalogue`, `source-interface`, `template`                                                                                                        |
 | `mokly-css`              | Stylesheet bundling, rule collection and diffing, selector matching, and attribution.                                 | `model`, `source-interface`                                                                                                                                 |
 | `mokly-graph`            | The content-addressed render graph, the render cache, the render store boundary, and the referenced asset closure.    | `model`, `catalogue`, `source-interface`, `html`, `css`                                                                                                     |
 | `mokly-render`           | JavaScript rendering through the sidecar: definitions, fragments, consumer PostCSS, and CSS Modules.                  | `catalogue`, `model`, `html`, `css`, `graph`, `sidecar`, `source-interface`, `compare`                                                                      |
@@ -107,15 +108,18 @@ composed documents, one per view, kept in the render cache
    glob.
 2. Discovery walks each root once. A file's suffix gives its kind, and its
    place in the root gives its [path](../protocol/mokly-paths.md). The core
-   parses HTML, YAML, and Markdown. The sidecar bundles the JavaScript inputs
-   into one generation and describes their definitions. HTML and JavaScript
-   components join one registry keyed by element name. Validation reports
-   every diagnostic before any render starts.
+   parses HTML, YAML, and Markdown, and it checks each HTML body as a
+   [template](../protocol/mokly-html-templates.md). The sidecar bundles the
+   JavaScript inputs into one generation and describes their definitions.
+   HTML and JavaScript components join one registry keyed by element name.
+   Validation reports every diagnostic before any render starts.
 3. The core composes one document per view, that is per viewport and colour
-   scheme. It renders HTML components itself. The sidecar renders JavaScript
-   components, React screens, stories, and JavaScript pages, and returns each
-   fragment with its collected styles. The core grafts the fragments, places
-   the styles, rewrites `mock:` links, and assembles the document under the
+   scheme. It renders each HTML body as a template to text, parses that text,
+   and renders HTML components itself. The views of an entry share the parse
+   of one rendered text. The sidecar renders JavaScript components, React
+   screens, stories, and JavaScript pages, and returns each fragment with its
+   collected styles. The core grafts the fragments, places the styles,
+   rewrites `mock:` links, and assembles the document under the
    [document safety rules](../protocol/mokly-document-safety.md).
 4. Serve reads composed documents from the render cache, then from the render
    store. `build` and `publish` render and retain a bounded head capture during
@@ -219,11 +223,11 @@ Comparison works on trees, never on text offsets. The
   build result also holds one head capture with its own 256 MiB bound.
   Inputs above a side's budget read that side's sources: the pinned base
   sources for the base, and the head sources for the head.
-- Parsed CSS, the render cache, the base-side extraction cache, the
-  dependency cache, the bundle cache, and the render store are bounded by
-  bytes. The render cache keeps the documents that its full tier evicts in a
-  compact tier inside the same bound, and render store writes stay inside it
-  too. A dependency install has a time limit.
+- Parsed CSS, the parse cache of rendered HTML bodies, the render cache, the
+  base-side extraction cache, the dependency cache, the bundle cache, and the
+  render store are bounded by bytes. The render cache keeps the documents
+  that its full tier evicts in a compact tier inside the same bound, and
+  render store writes stay inside it too. A dependency install has a time limit.
 - Sidecars are recycled after a fixed number of renders or when their
   resident size passes a fixed cap. The fragment cache makes a recycle cheap.
   The [sidecar memory contract](../protocol/mokly-sidecar-memory.md) owns

@@ -1,5 +1,7 @@
 # Pages In The Catalogue
 
+Status: A page body is not a template yet. [Milestone 4](../../plans/mokly-html-minijinja-templates.md#milestone-4-render-before-the-parse) builds it.
+
 ## Purpose And Boundary
 
 A page is one complete authored HTML document that belongs to the same
@@ -24,9 +26,10 @@ front matter block of the
 required, and `description`, `tags`, `path`, `movedFrom`, `rationale`,
 and `relatedDocs` are accepted; every other key is unknown for
 a page. The body after the closing `---` is the complete document. It may use
-component elements with literal attribute values, `to` link controls, `mock:`
-links, and `mokly-ignore` markers like a screen body. A page has no props, so
-a `$name`, `{{name}}`, or `mokly-if` reference fails with `html-props`.
+the [template language](./mokly-html-templates.md) with an empty context,
+component elements, `to` link controls, `mock:` links, and `mokly-ignore`
+markers like a screen body. A page has no props, so a `$name`, `{{name}}`, or
+`mokly-if` reference to a prop fails with `html-props`.
 The slug is the file name with `.page.html` removed. The core composes an
 HTML page without JavaScript; no sidecar starts for it.
 

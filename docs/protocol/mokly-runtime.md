@@ -1,6 +1,6 @@
 # Mokly Build And Browse Runtime
 
-Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md).
+Status: Follow-up work remains in the [macOS mid-walk orphan item](../../plans/follow-ups/macos-stop-mid-walk-orphans.md). The parse cache of rendered HTML bodies does not exist yet. [Milestone 6](../../plans/mokly-html-minijinja-templates.md#milestone-6-parse-cache-and-timings) adds it.
 
 This page is the runtime contract of `mokly serve` and `mokly build`: how a
 catalogue is discovered, rendered, cached, served, written, and shut down. The
@@ -61,6 +61,12 @@ promotes. A document that compact cannot keep or restore leaves the cache.
 Decision: keep evicted documents compact. Rejected: a larger bound that still thrashes, a fixed tier split
 that reduces room for fitting catalogues, a scan-resistant order that still misses when the head exceeds
 the bound, and a Serve head capture read by the base, because it only serves Changes and adds a copy.
+
+The parse cache keeps the parsed tree and the output check results of each
+distinct rendered [HTML body](./mokly-html-templates.md), so the views of an
+entry share one parse. Documents and threads share it. It is bounded by bytes
+and evicts the least recently used tree first. A cache hit gives the same tree,
+the same check results, and the same reported locations as a new parse.
 
 Both sides share equal keys with no side warning. Serve reads the head from the cache. A missing head
 document comes from the [render store](./mokly-render-store.md) or renders again on the head root. Each

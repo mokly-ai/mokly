@@ -1,6 +1,6 @@
 # MiniJinja Templates In Mokly HTML
 
-Status: Active. On branch `calummoore/mokly-html-templates-with-minijinja-41t4`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. Decision 2 waits for the user, and no milestone starts before it is answered.
+Status: Active. On branch `calummoore/mokly-html-templates-with-minijinja-41t4`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. Cal approved the plan on 2026-11-26. Decision 2 waits for the user. Only the TODOs marked "Waits for decision 2" wait for it.
 
 Mokly HTML bodies (`.screen.html`, `.component.html`, `.page.html`) can only insert a prop with `{{name}}`, pass a prop to a component with `$name`, and keep or drop an element with `mokly-if="$name"`. The protocol says that an HTML component "cannot run code, loop, or compute". A real product catalogue needs lists, computed text such as plurals, and branches on enum states. A count of Conductive's React mockups, used only as a reference, found 106 files that map over lists, 305 inserts (264 plain value reads, 6 plurals, and about 14 function calls), and 144 enum schemas.
 
@@ -94,32 +94,35 @@ Benchmark of 2026-11-25 in this workspace, three runs: today's check and parse t
 
 Depends on: none
 
-This milestone starts after Cal answers decision 2. Write the requirements and the decisions in force for the work below. Each changed page gets a status line that links the milestone that builds its missing behaviour.
+Write the requirements and the decisions in force for the work below. Each changed page gets a status line that links the milestone that builds its missing behaviour.
 
-- [ ] Add `docs/protocol/mokly-html-templates.md`: the MiniJinja subset, the context, escaping, undefined values, the absent value, current forms, `$path` under decision 2, `plural`, limits, no input, determinism, the three check places, `html-template` and `html-repair`, and locations. Keep it under the 250-line cap, and split it if it grows.
-- [ ] Update `mokly-html-screens.md`: replace the template rules of "Screen Body" with a link to the new page, and update "Diagnostics" and the unused-props rule.
-- [ ] Update `mokly-html-components.md`: drop "cannot run code, loop, or compute" and "no computed values", and update "Body".
-- [ ] Update `mokly-instances.md` with the loop rule for instance ids, `mokly-rendering.md` with the render before the parse, and `mokly-runtime.md` with the parse-cache bound.
-- [ ] Update `docs/architecture/rust-core.md`: the new crate, the data flow, and the memory bounds.
+- [x] Add `docs/protocol/mokly-html-templates.md`: the MiniJinja subset, the context, escaping, undefined values, the absent value, current forms, `plural`, limits, no input, determinism, the three check places, `html-template` and `html-repair`, and locations. Keep it under the 250-line cap, and split it if it grows.
+- [x] Update `mokly-html-screens.md`: replace the template rules of "Screen Body" with a link to the new page, and update "Diagnostics" and the unused-props rule.
+- [x] Update `mokly-html-components.md`: drop "cannot run code, loop, or compute" and "no computed values", and update "Body".
+- [x] Update `mokly-instances.md` with the loop rule for instance ids, `mokly-rendering.md` with the render before the parse, and `mokly-runtime.md` with the parse-cache bound.
+- [x] Update `docs/architecture/rust-core.md`: the new crate, the data flow, and the memory bounds.
+- [ ] Waits for decision 2: state how a value that exists only during the render, such as a loop variable, reaches component props and `mokly-if`.
 
 ## Milestone 2: The `mokly-template` crate
 
-Depends on: 1
+Depends on: none. The design section of this plan specifies the crate, and no product code uses it in this milestone. My call of 2026-11-26, so that it runs beside Milestone 1.
 
 Build the engine alone. No catalogue path uses it yet, so the product does not change.
 
-- [ ] Create the crate with its README, the MiniJinja pin, and the features of the design. Build it.
-- [ ] Configure the environment: `SemiStrict`, auto-escape, the formatter, no `safe`, no loader, fuel, the recursion limit, and `plural`.
-- [ ] Add the absent value and the conversion from `mokly_model::data::Props`.
-- [ ] Add the blanked source, the lowering of current forms and of `$path` under decision 2, and the offset table.
-- [ ] Add the static analysis: free names with spans, schema paths, and forbidden constructs.
-- [ ] Add the render API: rendered text, value handles, and output spans mapped to source offsets.
-- [ ] Test each rule, including the fuel stop and the deepest render on a 2 MiB thread.
-- [ ] Run `npm run dependencies:check:rust`.
+- [x] Create the crate with its README, the MiniJinja pin, and the features of the design. Build it.
+- [x] Configure the environment: `SemiStrict`, auto-escape, the formatter, no `safe`, no loader, fuel, the recursion limit, and `plural`.
+- [x] Add the absent value and the conversion from `mokly_model::data::Props`.
+- [x] Add the blanked source, the lowering of current forms, and the offset table.
+- [ ] Waits for decision 2: lower `$path` for values that exist only during the render.
+- [x] Add the static analysis: free names with spans, schema paths, and forbidden constructs.
+- [x] Add the render API: rendered text and output spans mapped to source offsets.
+- [ ] Waits for decision 2: carry render-only values to the tree pass.
+- [x] Test each rule, including the fuel stop and the deepest render on a 2 MiB thread.
+- [x] Run `npm run dependencies:check:rust`.
 
 ## Milestone 3: Discovery checks
 
-Depends on: 2
+Depends on: 1 and 2
 
 Discovery compiles each body and saved slot and checks it before any render.
 
@@ -138,6 +141,7 @@ Composition renders each body as text, then parses it. Every current test keeps 
 - [ ] Resolve value handles, `mokly-if` results, and removed attributes on the tree.
 - [ ] Map element positions through the output spans, so that each component call site and each error names its source line and column.
 - [ ] Delete tree substitution and tree `mokly-if` evaluation, as "Replaced ways" lists. Move their tests to the new path, with every assertion.
+- [ ] Make the duplicate-id error of a component instance name the `mokly-instance` fix for loops.
 - [ ] Add tests for loops, branches, computed text, tags across branches, loops in `<style>` and `<title>`, nested components in loops, and recursive macros.
 
 ## Milestone 5: Exact locations and output checks

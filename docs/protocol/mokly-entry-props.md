@@ -1,5 +1,7 @@
 # Entry Props And Variants
 
+Status: HTML bodies do not branch on props as templates yet. [Milestone 4](../../plans/mokly-html-minijinja-templates.md#milestone-4-render-before-the-parse) builds it.
+
 ## One Model
 
 Every screen and component is a render over props:
@@ -131,8 +133,8 @@ A screen without `props` and without `variants` renders once per view with
 the empty map. A React screen variant has no `mobile` or `desktop` of its
 own; a state such as empty, error, or loading is a conditional inside the
 render. An HTML screen variant shares the body; it changes what the body shows
-through `$name` references, `{{name}}` substitution, and `mokly-if`, and a
-variant that needs another tree is a separate file.
+through the props that its [template](./mokly-html-templates.md) reads, also
+when a branch of the body draws another tree.
 
 ## Titles And Defaults
 

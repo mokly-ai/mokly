@@ -1,5 +1,7 @@
 # Component Instance Identity
 
+Status: HTML bodies cannot loop yet, and the duplicate-id error does not name the loop fix yet. [Milestone 4](../../plans/mokly-html-minijinja-templates.md#milestone-4-render-before-the-parse) adds both.
+
 ## Identity And Scope
 
 An instance is one logical use of a registered component inside an entry's
@@ -84,6 +86,12 @@ Duplicate local ids in the same input scope and placement are build errors.
 Repeated placement comes only from slot content that a component renders more
 than once with the same logical inputs. Never repair collisions with
 positional suffixes: that would break stability under reordering.
+
+A [template](./mokly-html-templates.md) loop that repeats a component element
+sets `mokly-instance` from its data, such as
+`mokly-instance="row-{{ row.id }}"`. Each rendered id follows the explicit id
+grammar. A loop that gives two elements one id fails with the duplicate-id
+error, and its message names `mokly-instance` from the loop data as the fix.
 
 ## Record-Only Resolution
 

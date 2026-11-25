@@ -10,6 +10,7 @@ authors = ["Mokly"]
 rust-version = "1.98.1"
 
 [workspace.dependencies]
+minijinja = { version = "=3.1.0", default-features = false, features = ["builtins", "serde", "debug", "fuel", "macros", "loop_controls", "adjacent_loop_items", "unstable_machinery"] }
 mokly-test-support = { path = "crates/mokly-test-support" }
 mokly-model = { path = "crates/mokly-model" }
 mokly-platform = { path = "crates/mokly-platform" }
@@ -21,6 +22,7 @@ mokly-publish = { path = "crates/mokly-publish" }
 mokly-source-interface = { path = "crates/mokly-source-interface" }
 mokly-catalogue = { path = "crates/mokly-catalogue" }
 mokly-html = { path = "crates/mokly-html" }
+mokly-template = { path = "crates/mokly-template" }
 mokly-css = { path = "crates/mokly-css" }
 mokly-graph = { path = "crates/mokly-graph" }
 

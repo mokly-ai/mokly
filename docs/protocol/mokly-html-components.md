@@ -1,15 +1,19 @@
 # HTML Components
 
+Status: Component bodies do not render as templates yet. [Milestone 4](../../plans/mokly-html-minijinja-templates.md#milestone-4-render-before-the-parse) adds the render before the parse.
+
 ## Purpose And Boundary
 
 An HTML component is one `.component.html` file: front matter that declares
 the element name, the props, the slots, and the saved variants, then a body
-that renders them by substitution. Mokly renders it without JavaScript. It
+that renders them as a [template](./mokly-html-templates.md). Mokly renders
+it without JavaScript. It
 joins the same registry as JavaScript components, so an HTML
 screen can use either kind, a component page shows its variants, and Changes
 attributes rules and resources to it like any registered component. An HTML
-component cannot run code, loop, or compute, and it branches only through
-`mokly-if`; a component that needs more stays JavaScript.
+component can loop, branch, and compute text through the template language.
+It runs no JavaScript and reads no input other than its props. A component
+that needs JavaScript stays a JavaScript component.
 
 ## Front Matter
 
@@ -62,15 +66,17 @@ propSchema:
       properties: { count: { type: integer } }
 ```
 
-A prop absent from `required` is optional. There are no defaults, coercions,
-or computed values. Controls for live editing derive from the schema under the
+A prop absent from `required` is optional. The schema gives no defaults or
+coercions. The body can compute text from the props under the
+[template language](./mokly-html-templates.md). Controls for live editing
+derive from the schema under the
 [entry props contract](./mokly-entry-props.md).
 
 ## Body
 
-The body is an HTML fragment in the
-[template language](./mokly-html-screens.md#screen-body) of the screen body,
-reading the component's own props: `{{name}}` substitution, `mokly-if`,
+The body is a [template](./mokly-html-templates.md) that renders to an HTML
+fragment, with the component's own props as its context. It follows the
+[screen body](./mokly-html-screens.md#screen-body) rules: `mokly-if`,
 `mokly-viewport`, and the
 [component element rules](./mokly-html-screens.md#component-elements) for the
 components it nests, with the same diagnostics. A component body adds:
@@ -88,7 +94,8 @@ Each `variants` entry declares `slug`, `title`, `props`, and may declare
 `description`, `tags`, `movedFrom`, and `slots`. `props` replace top-level
 keys of the component's own props, and the merged props must satisfy the
 schema. `slots` maps declared slot names to HTML fragments that fill them on
-the variant's page. A variant flattens into an entry of kind `component` at
+the variant's page. Each saved slot is a template that renders with the
+variant's props. A variant flattens into an entry of kind `component` at
 the parent's path plus the slug, parent first, under the
 [variant contract](./mokly-variants.md). Variants are optional: the
 component's own `props` render first on its page, under the
@@ -96,8 +103,8 @@ component's own `props` render first on its page, under the
 
 ## Rendering And Ownership
 
-Rendering a component element substitutes the coerced props, fills the slots
-with the supplied content, and renders nested components the same way. Each
+Rendering a component element renders the body with the coerced props, fills
+the slots with the supplied content, and renders nested components the same way. Each
 rendered instance is an ownership region of the composed tree under the
 [comparison contract](./mokly-comparison.md), carrying the component path, the
 instance id, and the props key, so usage derives from the output rather than
@@ -164,5 +171,6 @@ class="btn-label">Save</span></button>` as an ownership region. The entry
 
 - [Entry props and variants](./mokly-entry-props.md)
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
+- [HTML body templates](./mokly-html-templates.md)
 - [Registered components](./mokly-components.md) for the JavaScript form
 - [Component prop schema](./mokly-component-props.md)

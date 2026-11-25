@@ -1,5 +1,7 @@
 # HTML Screens, Pages, And Use Cases
 
+Status: HTML bodies are not templates yet, and `html-template` and `html-repair` do not exist yet. [Milestone 3](../../plans/mokly-html-minijinja-templates.md#milestone-3-discovery-checks) adds the template checks and `html-template`, [Milestone 4](../../plans/mokly-html-minijinja-templates.md#milestone-4-render-before-the-parse) adds the render before the parse, and [Milestone 5](../../plans/mokly-html-minijinja-templates.md#milestone-5-exact-locations-and-output-checks) adds `html-repair`.
+
 ## File Kinds Without JavaScript
 
 | Kind      | File suffix       | Body                                              |
@@ -44,34 +46,27 @@ is required because `title` is required; a missing block fails with
 
 An unknown key fails with `unknown field <field>`. Keys that do not apply to
 a kind are unknown for that kind. A prop name matches
-`^[A-Za-z][A-Za-z0-9_-]*$`; a prop that no `$name`, `{{name}}`, or `mokly-if`
-reference in the body reads is the `html-unused-props` warning. Props, schema inference, and variants follow the
+`^[A-Za-z][A-Za-z0-9_-]*$`; a prop that no expression of the body reads, under
+the [template checks](./mokly-html-templates.md#checks), is the
+`html-unused-props` warning. Props, schema inference, and variants follow the
 [entry props contract](./mokly-entry-props.md).
 
 ## Screen Body
 
-The body after the closing `---` is an HTML fragment parsed by the HTML
-fragment algorithm with `body` as the context element. Raw HTML elements pass
-through unchanged. `script`, `html`, `head`, `body`, and `base` elements fail
+The body after the closing `---` is a [template](./mokly-html-templates.md)
+that renders to an HTML fragment. The core parses the rendered text with the
+HTML fragment algorithm, with `body` as the context element. The template
+page owns `{{ }}`, `{% %}`, escaping, values, and the template checks. Raw
+HTML elements pass through unchanged. `script`, `html`, `head`, `body`, and `base` elements fail
 with `html-element`, under the [document safety](./mokly-document-safety.md)
 script policy. One body renders both viewports; an element with
 `mokly-viewport="mobile"` or `mokly-viewport="desktop"` is kept in that
 viewport only and removed from the other. An element with `mokly-if="$name"`
 names a prop whose schema `type` is exactly `boolean`; it is kept when the
-prop is true and removed when it is false or absent. `{{name}}` in text or in
-an attribute value substitutes a prop, HTML-escaped, with no raw form; a
-dotted path such as `{{badge.count}}` reads into an object prop; a `boolean`
-prop in an attribute whose value is exactly `{{name}}` keeps the attribute
-when true and removes it when false; an absent optional prop substitutes the
-empty string in text and removes such an attribute; `{{…}}` naming an
-undeclared prop, an array, or an object without a path fails with
-`html-props`; `{{` that does not close is ordinary text. Every other
+prop is true and removed when it is false or absent. Every other
 attribute is ordinary HTML and is never interpreted. A component body uses
-this template language with its own props and adds slot placeholders under the [HTML components contract](./mokly-html-components.md#body).
+the same template language with its own props and adds slot placeholders under the [HTML components contract](./mokly-html-components.md#body).
 Checks and warnings read each body in the parser's text modes, with scripting disabled, so raw text holds no elements.
-
-Substitutions accept ASCII whitespace around the prop path: `{{ name }}` equals
-`{{name}}` in text and attributes. Whitespace inside a dotted path fails.
 
 A hyphenated name resolves against the component registry. Its name comes from
 the `element` of an HTML component or JavaScript component; the sidecar
@@ -103,8 +98,10 @@ name is reserved: `mokly-ignore` and `mokly-ignore-scope` are defined below,
   Content for a slot the component does not declare fails with `html-slot`.
 - `mokly-instance` names the instance for comparison and inspection, under
   the [instance contract](./mokly-instances.md); it defaults to the slug rule.
-- HTML5 parsing can move a component or its output, including direct table
-  use, blocks in `p`, and nested anchors. Mokly uses the re-parsed browser tree.
+- A component element that the parser moves out of the rendered body, such as
+  one directly in a table, fails with `html-repair`. HTML5 parsing of the
+  composed document can still move a component's output, such as blocks in
+  `p` and nested anchors. Mokly uses the re-parsed browser tree.
   `html-foster-parented` names the component and parent. Split instance, slot,
   and ignore regions lose their regions; their nodes belong to the enclosing
   region, and ignored content then compares normally. Use a parent that permits
@@ -151,8 +148,8 @@ A screen `variants` entry declares `slug` and `title` and may declare
 map replaces matching top-level keys and never deep merges, under the
 [entry props contract](./mokly-entry-props.md). Metadata inheritance follows the
 [variant contract](./mokly-variants.md). The body is shared: a variant changes
-what it shows through `$name`, `{{name}}`, and `mokly-if`, and a variant that
-needs another tree is a separate file.
+what it shows through the props that the body reads, also when a branch of
+the body draws another tree.
 
 ## Pages And Use Cases
 
@@ -165,7 +162,7 @@ including a variant.
 
 ## Rendering
 
-HTML components render by substitution and slot filling, recursively.
+HTML components render as templates and then by slot filling, recursively.
 JavaScript components render through the [sidecar](./mokly-sidecar.md), with
 slot placeholders that report their scope state. The
 [rendering contract](./mokly-rendering.md) owns document composition and
@@ -175,16 +172,18 @@ starts a sidecar.
 
 ## Diagnostics
 
-| Code                    | Meaning                                                                                                                                                                                 |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `html-front-matter`     | missing block, YAML error, unknown or invalid key                                                                                                                                       |
-| `html-element`          | forbidden element, unknown hyphenated element, component cycle                                                                                                                          |
-| `html-attribute`        | a value the prop schema rejects, or a reserved prop name                                                                                                                                |
-| `html-props`            | a `$name`, `{{name}}`, or `mokly-if` reference to an undeclared prop, `{{name}}` on an array or an object without a path, or `mokly-if` on a prop whose `type` is not exactly `boolean` |
-| `html-slot`             | content for an undeclared slot, or an unrendered placeholder                                                                                                                            |
-| `html-unused-props`     | warning: a prop no reference in the body reads                                                                                                                                          |
-| `html-foster-parented`  | warning: HTML5 parsing moved component content                                                                                                                                          |
-| `html-ignore-attribute` | warning: an unknown attribute or a reserved navigation name on an ignore wrapper                                                                                                        |
+| Code                    | Meaning                                                                                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `html-front-matter`     | missing block, YAML error, unknown or invalid key                                                                                                                  |
+| `html-element`          | forbidden element, unknown hyphenated element, component cycle                                                                                                     |
+| `html-attribute`        | a value the prop schema rejects, or a reserved prop name                                                                                                           |
+| `html-props`            | a read of an undeclared name, a path that the prop schema does not have, printing an array or a map, or `mokly-if` on a prop whose `type` is not exactly `boolean` |
+| `html-template`         | a template syntax error, a forbidden construct, a render failure, or a passed render limit                                                                         |
+| `html-repair`           | the HTML parser repaired the rendered text of a body                                                                                                               |
+| `html-slot`             | content for an undeclared slot, or an unrendered placeholder                                                                                                       |
+| `html-unused-props`     | warning: a prop that no expression of the body reads                                                                                                               |
+| `html-foster-parented`  | warning: HTML5 parsing of the composed document moved component content                                                                                            |
+| `html-ignore-attribute` | warning: an unknown attribute or a reserved navigation name on an ignore wrapper                                                                                   |
 
 The warning messages are exactly
 `prop "<name>" is not read by the body` for `html-unused-props` and
@@ -197,10 +196,8 @@ parent entry, including for variants, and equal warnings are reported once.
 Component bodies use a component subject; screen bodies use an entry subject.
 
 Errors are `build-invalid` failures with the repository-relative file and
-one-based line and column. Warnings use the [build warning record](./mokly-build-warnings.md).
-In a body, a `{{…}}` failure names the line and column of its own `{{`, also in an attribute value, after character references, and after CRLF or CR line ends.
-When a character reference produces the first brace, the location is the `&` that starts that reference.
-Other failures in an attribute value name the start of the attribute. When only rendering finds the failure, such as a value the prop schema rejects, it names the start of the element.
+one-based line and column under the [template locations](./mokly-html-templates.md#locations).
+Warnings use the [build warning record](./mokly-build-warnings.md).
 
 ## Example
 
@@ -241,6 +238,7 @@ boolean schema. The paragraph fills the card's `children` slot.
 ## Related Docs
 
 - [HTML components](./mokly-html-components.md)
+- [HTML body templates](./mokly-html-templates.md)
 - [Entry props and variants](./mokly-entry-props.md)
 - [Paths, roots, and identity](./mokly-paths.md)
 - [Entry modules](./mokly-entry-modules.md) for the JavaScript form

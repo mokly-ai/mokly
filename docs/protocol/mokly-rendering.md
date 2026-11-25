@@ -1,10 +1,13 @@
 # Rendering And Document Assembly
 
+Status: The core does not render HTML bodies as templates yet. [Milestone 4](../../plans/mokly-html-minijinja-templates.md#milestone-4-render-before-the-parse) adds the render before the parse.
+
 This contract defines how the Rust core turns one view of an entry into a
 document: the boundary between the core and the sidecar, the renderer module,
 the stylesheet list of a document and its order, and document assembly. The
-[HTML screens contract](./mokly-html-screens.md) owns the template language,
-the [sidecar contract](./mokly-sidecar.md) owns the JavaScript renders, the
+[HTML templates contract](./mokly-html-templates.md) owns the template
+language, the [HTML screens contract](./mokly-html-screens.md) owns the body
+rules, the [sidecar contract](./mokly-sidecar.md) owns the JavaScript renders, the
 [comparison contract](./mokly-comparison.md) owns ownership and ignore
 regions, and the [artifact path contract](./mokly-artifact-paths.md) owns the
 routes. Public-resource eligibility follows
@@ -15,9 +18,11 @@ routes. Public-resource eligibility follows
 
 The core composes every document in memory and owns its tree. It renders HTML
 screens, HTML components, `.page.html` pages, and Markdown documents without
-JavaScript. JavaScript runs only in the sidecar: `renderScreen` renders a
-React screen, `renderComponent` one React component instance, `renderStory`
-one story, and `renderPage` one `definePage` callback. A render returns an
+JavaScript. It renders each HTML body as a template to text first, and then
+parses that text as HTML. Composition, its checks, and the ownership regions
+use the tree of the rendered text. JavaScript runs only in the sidecar:
+`renderScreen` renders a React screen, `renderComponent` one React component
+instance, `renderStory` one story, and `renderPage` one `definePage` callback. A render returns an
 HTML fragment, the styles the render produced, the resources the renderer
 declared, and warnings. The core parses the fragment with a spec-compliant
 HTML parser, reads its comment markers into ownership and ignore regions, and
@@ -192,8 +197,8 @@ written into the repository:
   path. The [artifact path contract](./mokly-artifact-paths.md) names the
   routes.
 
-A build warning that a render raises, such as a link control tier or a
-foster-parented component element, follows the
+A build warning that a render raises, such as a link control tier or
+component output that HTML parsing moves, follows the
 [build warning record](./mokly-build-warnings.md); it never enters the
 document bytes.
 
