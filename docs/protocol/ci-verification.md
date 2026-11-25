@@ -22,7 +22,7 @@ cargo xtask check --suite viewer
 cargo xtask check --suite viewer --shard 1/2
 cargo xtask check --suite native
 cargo xtask check --suite browser
-cargo xtask check --suite browser --shard 1/10
+cargo xtask check --suite browser --shard 1/12
 ```
 
 `--shard INDEX/TOTAL` is valid with `repository`, `viewer`, `browser`, `native`, `cloud-app`, `cloud-mockups`, and `cloud-site`. Both values are one-based
@@ -44,7 +44,7 @@ before any subprocess starts.
 | Browser          | Every Playwright spec against one `mokly serve` of the example catalogue per worker, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), the configured Playwright timeouts, and zero retries. A shard runs its whole-file partition.                                                                                                                |
 | Native platforms | On macOS and Windows, build the `mokly` binary once, check Rust formatting, run Clippy with warnings denied, and run the Rust tests, for the `mokly-*` crates and `xtask` only.                                                                                                                                                                                                                   |
 | Cloud suites     | The cloud checks that no Mokly suite runs, under [Cloud Suites](#cloud-suites).                                                                                                                                                                                                                                                                                                                   |
-| Required CI      | Evaluate the results of the runtime profile job, every repository shard, every viewer and browser shard, and the static-delivery job on each runtime selected for the event, of every native job and shard, and of every cloud job. Validate the viewer and browser report evidence.                                                                                                              |
+| Required CI      | Evaluate the results of the runtime profile job, every repository shard, every viewer and browser shard, and every static-delivery job on each runtime selected for the event, of every native job and shard, and of every cloud job. Validate the viewer and browser report evidence.                                                                                                            |
 
 Complete and selected local suites share gate definitions. Every Native
 command has local coverage; `npm run build` covers `cargo xtask build-native`.

@@ -108,7 +108,10 @@ explicit directory is also the input of the suite's isolated current-only copy.
 Its index must have `changesStatus: "disabled"`; otherwise setup rejects it with
 an instruction to build with `--no-changes`. The comparison fixture always
 owns a fresh build. CI and the complete local gate check both static HTTP and
-direct `file://` delivery against a fresh example build. Remote verification
+direct `file://` delivery against a fresh example build. CI checks each mode in
+its own job, against that job's own build. Decision: one job per mode, because
+both modes in one job took about 8 minutes, above the
+[shard target](#shard-totals) of the other browser jobs. Remote verification
 runs these checks as its separate
 [static-delivery command](./remote-verification-testbox.md#remote-commands).
 The sharded browser inventory stays unchanged. Selected delivery reports cannot

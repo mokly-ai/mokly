@@ -79,6 +79,8 @@ use the two-commit copies of the
 
 `npm run test:delivery:prepared` builds a fresh example with `--no-changes`.
 It runs `playwright.delivery.config.ts` through static HTTP and `file://`.
+`-- --mode static-http` or `-- --mode file` selects one mode, and CI runs
+each mode in its own job.
 The private slot and saved-variant fixture builds its own output, removes its
 source, and checks every viewport and scheme through standalone links. Disk
 mode requires `file://` navigation without HTTP requests. The delivery reporter

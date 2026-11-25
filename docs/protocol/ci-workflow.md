@@ -40,14 +40,14 @@ directory from another job.
 For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
 - five repository shards on Node 24;
-- two viewer shards and ten browser shards on Node 22.15.0;
-- one static-delivery job on Node 22.15.0; and
+- two viewer shards and twelve browser shards on Node 22.15.0;
+- two static-delivery jobs, one per delivery mode, on Node 22.15.0; and
 - six native shards on macOS and seven on Windows at Node 22.15.0.
 
 The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux. The [shard totals](./ci-suite-evidence.md#shard-totals) set the shard counts.
 
 For a same-repository Release Please pull request, every viewer and browser
-shard and the static-delivery job also run on Node 24. A release pull request selects this profile
+shard and both static-delivery jobs also run on Node 24. A release pull request selects this profile
 only when its head repository is this repository and either its head ref
 starts with `release-please--` or it has an `autorelease:` label. A fork cannot
 opt into the more expensive profile by choosing a matching branch name.
