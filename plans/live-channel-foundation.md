@@ -250,7 +250,7 @@ Depends on: 4
 
 Depends on: every other milestone
 
-- [ ] Smoke-test a build locally with two API replicas on one Postgres: the
+- [x] Smoke-test a build locally with two API replicas on one Postgres: the
       build runs on one replica, the app's socket is on the other, its steps
       show without the 3-second wait, and a stopped socket falls back to
       polling.
