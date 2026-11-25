@@ -19,17 +19,16 @@ const shardFiles =
     shard,
   );
 
-/** Exact patterns for the shard's files of one project. */
-function shardMatch(mobile: boolean): RegExp[] | undefined {
-  return shardFiles
-    ?.filter((file) => file.endsWith("-mobile.spec.ts") === mobile)
-    .map(
-      (file) =>
-        new RegExp(
-          `^${join(__dirname, file).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
-        ),
-    );
-}
+/**
+ * Exact patterns for the shard's files. Both projects take the same list, and
+ * each project's own ignore rule then keeps its desktop or mobile specs.
+ */
+const shardMatch = shardFiles?.map(
+  (file) =>
+    new RegExp(
+      `^${join(__dirname, file).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+    ),
+);
 
 /**
  * The browser suite runs the exported web build the way a deployment serves it,
@@ -64,8 +63,8 @@ export default defineConfig({
   projects: [
     {
       name: "desktop",
+      testMatch: shardMatch ?? "**/*.spec.ts",
       testIgnore: "**/*-mobile.spec.ts",
-      testMatch: shardMatch(false) ?? "**/*.spec.ts",
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1440, height: 900 },
@@ -73,7 +72,8 @@ export default defineConfig({
     },
     {
       name: "mobile",
-      testMatch: shardMatch(true) ?? "**/*-mobile.spec.ts",
+      testMatch: shardMatch ?? "**/*.spec.ts",
+      testIgnore: /(?<!-mobile)\.spec\.ts$/,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 390, height: 844 },
