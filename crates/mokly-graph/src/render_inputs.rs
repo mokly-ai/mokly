@@ -14,15 +14,19 @@ use crate::render_calculation::{self, Built, Mode};
 use crate::render_reuse::Facts;
 use crate::workers::RenderWorkers;
 
-/// Storybook preview candidates in the sidecar's selection order.
-pub const PREVIEWS: [&str; 6] = [
-    ".storybook/preview.tsx",
-    ".storybook/preview.ts",
-    ".storybook/preview.jsx",
-    ".storybook/preview.js",
-    ".storybook/preview.mjs",
-    ".storybook/preview.cjs",
-];
+/// Storybook preview candidates of one repository-relative folder in selection order.
+pub fn preview_candidates(folder: &str) -> impl Iterator<Item = String> {
+    let prefix = if folder.is_empty() {
+        String::new()
+    } else {
+        format!("{folder}/")
+    };
+    [
+        "js", "ts", "jsx", "tsx", "mjs", "mts", "mtsx", "cjs", "cts", "ctsx",
+    ]
+    .into_iter()
+    .map(move |extension| format!("{prefix}preview.{extension}"))
+}
 
 /// The inputs of one side's render input keys.
 pub struct RenderInputs<'a> {
@@ -35,6 +39,8 @@ pub struct RenderInputs<'a> {
     /// Rendering recipes by entry path. A story recipe's module renders with the
     /// Storybook preview and without the renderer.
     pub entries: &'a BTreeMap<String, RenderSource>,
+    /// Compiled stories files and their owning roots' Storybook folders.
+    pub storybook_folders: &'a BTreeMap<String, String>,
     /// Definition handle to the module that declares the definition. A module that
     /// imports the declaring module reads the binding of a definition that an entry
     /// module only re-exports.
@@ -64,7 +70,7 @@ impl RenderKeys {
     /// Every key of the side shares the environment, the resolution files on no module
     /// chain, and the bindings of the unattributed definitions, because no closure shows
     /// which modules read them. A preview digest stays only for a preview that the graph
-    /// does not name. The stories then use `fallback`, which covers the preview, and the
+    /// does not name. Its stories then use `fallback`, which covers the preview, and the
     /// shared part leaves the digest out.
     pub fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> Self {
         Self::build_keys(inputs, fallback, None, Mode::Full)
@@ -187,6 +193,7 @@ pub fn with_catalogue_inputs<T>(
         bindings: &catalogue.javascript.bindings,
         renderer: renderer.as_deref(),
         entries: &catalogue.javascript.entries,
+        storybook_folders: &config.storybook_folders(&catalogue.inventory.files),
         declarations: &declarations,
     })
 }

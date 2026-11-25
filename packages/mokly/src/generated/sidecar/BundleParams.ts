@@ -21,9 +21,13 @@ entryFiles: Array<string>,
  */
 renderer: string | null,
 /**
- * Storybook files.
+ * Repository-relative stories files in compile order.
  */
 storiesFiles: Array<string>,
+/**
+ * Stories file to the repository-relative POSIX folder on this side. Missing entries use `.storybook`.
+ */
+storybookFolders?: { [key in string]: string },
 /**
  * Consumer resolution policy.
  */

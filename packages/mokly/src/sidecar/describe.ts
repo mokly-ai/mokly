@@ -187,7 +187,7 @@ export async function describe(
           generation,
           file,
           module,
-          exports.preview,
+          exports.previews,
           result,
           cache,
         ),

@@ -8,8 +8,8 @@ use mokly_source_interface::tree::{FileKind, Node, SourceTree};
 
 use crate::config_inputs::validate_inputs;
 use crate::config_links;
-use crate::config_paths::{configuration_alias, confined_to_repository};
-use crate::config_types::{ResolvedConfig, ResolvedRoot, RootConfig};
+use crate::config_paths::{configuration_alias, confined_to_repository, storybook_folder};
+use crate::config_types::{DEFAULT_STORYBOOK_FOLDER, ResolvedConfig, ResolvedRoot, RootConfig};
 use crate::config_validation::{invalid, parse};
 use crate::error::{CatalogueError, Result};
 
@@ -107,6 +107,7 @@ impl ConfigLoader for Loader {
                 files: None,
                 path: None,
                 transparent: None,
+                storybook: None,
             }]
         });
         let mut projected = Vec::new();
@@ -158,10 +159,21 @@ impl ConfigLoader for Loader {
                     root.dir
                 )));
             }
+            let storybook = match &root.storybook {
+                Some(value) => storybook_folder(
+                    self.tree.as_ref(),
+                    directory,
+                    &repo_node.identity,
+                    index,
+                    value.folder(),
+                )?,
+                None => DEFAULT_STORYBOOK_FOLDER.into(),
+            };
             roots.push(ResolvedRoot {
                 input: root,
                 directory: path,
                 identity: node.identity,
+                storybook,
             });
         }
         let mut config = ResolvedConfig {

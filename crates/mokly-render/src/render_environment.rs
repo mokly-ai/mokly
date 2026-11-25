@@ -3,7 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use mokly_graph::render_inputs::PREVIEWS;
+use mokly_catalogue::config_types::DEFAULT_STORYBOOK_FOLDER;
+use mokly_graph::render_inputs::preview_candidates;
 use mokly_model::material::digest;
 use mokly_sidecar::methods::{Bundle, ModuleResolution};
 use mokly_sidecar::results;
@@ -37,6 +38,8 @@ struct Settings {
     repository_roots: Vec<String>,
     dependency_roots: Vec<String>,
     peers: BTreeMap<String, Option<String>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    storybook_react: BTreeMap<String, String>,
 }
 
 /// Convert physical settings to names that are stable across equivalent checkouts.
@@ -103,11 +106,17 @@ pub(crate) fn derive(
     let mut paths = PathMapper::new(working_root, cache_namespace);
     let settings = settings(params, result, &mut paths);
     paths.report_external();
-    let previewed = result
-        .modules
+    let folders: BTreeSet<_> = params
+        .stories_files
         .iter()
-        .any(|module| PREVIEWS.contains(&module.path.as_str()));
-    let resolution_digests = resolution(&compiled.metadata_inputs, previewed);
+        .map(|file| {
+            params
+                .storybook_folders
+                .get(file)
+                .map_or(DEFAULT_STORYBOOK_FOLDER, String::as_str)
+        })
+        .collect();
+    let resolution_digests = resolution(&compiled.metadata_inputs, folders, &result.modules);
     let mut class_map_digests = BTreeMap::new();
     for (path, map) in maps {
         let bytes = serde_json::to_vec(map)
@@ -161,6 +170,12 @@ fn settings(params: &Bundle, result: &results::Bundle, paths: &mut PathMapper<'_
             .iter()
             .map(|(name, path)| (name.clone(), path.as_deref().map(|path| paths.map(path))))
             .collect(),
+        storybook_react: result
+            .compiled
+            .storybook_react
+            .iter()
+            .map(|(folder, file)| (folder.clone(), paths.map(file)))
+            .collect(),
     }
 }
 
@@ -177,16 +192,24 @@ fn package(specifier: &str) -> String {
 
 /// Keep present resolution files under the names that both sides give them.
 ///
-/// The preview candidates leave only when the module graph names the preview, because
-/// story keys then cover it through its closure. A preview that the graph does not
-/// name stays, so that story keys fall back to the whole bundle.
-pub(crate) fn resolution(
+/// Omit a folder's candidates when its selected preview has a module closure.
+fn resolution<'a>(
     inputs: &BTreeMap<String, Option<String>>,
-    previewed: bool,
+    folders: impl IntoIterator<Item = &'a str>,
+    modules: &[results::Module],
 ) -> BTreeMap<String, String> {
+    let graph: BTreeSet<_> = modules.iter().map(|module| module.path.as_str()).collect();
+    let mut named = BTreeSet::new();
+    for folder in folders {
+        let selected =
+            preview_candidates(folder).find(|path| inputs.get(path).is_some_and(Option::is_some));
+        if selected.is_some_and(|path| graph.contains(path.as_str())) {
+            named.extend(preview_candidates(folder));
+        }
+    }
     inputs
         .iter()
-        .filter(|(name, _)| !previewed || !PREVIEWS.contains(&name.as_str()))
+        .filter(|(name, _)| !named.contains(*name))
         .filter_map(|(name, value)| {
             let name = name.strip_prefix(INSTALLED).unwrap_or(name);
             value.as_ref().map(|value| (name.to_owned(), value.clone()))

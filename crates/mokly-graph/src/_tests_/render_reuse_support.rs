@@ -10,7 +10,7 @@ use mokly_catalogue::render_sources::{
 use unimock::{MockFn, Unimock, matching};
 
 use crate::key::{NodeKey, NodeKind, key};
-use crate::render_inputs::{PREVIEWS, RenderInputs, RenderKeys, render_reference};
+use crate::render_inputs::{RenderInputs, RenderKeys, render_reference};
 use crate::workers::RenderWorkersMock;
 
 pub(super) const A: &str = "specs/a.tsx";
@@ -26,6 +26,7 @@ pub(super) struct Fixture {
     pub(super) entries: BTreeMap<String, RenderSource>,
     pub(super) declarations: BTreeMap<String, String>,
     pub(super) renderer: Option<String>,
+    pub(super) storybook_folders: BTreeMap<String, String>,
     workers: Arc<Unimock>,
     jobs: Arc<AtomicUsize>,
 }
@@ -50,8 +51,8 @@ impl Fixture {
             ("styles/plain.css", &[]),
             (RENDERER, &["runtime/theme.ts"]),
             ("runtime/theme.ts", &[]),
-            (PREVIEWS[0], &[PREVIEWS[1]]),
-            (PREVIEWS[1], &["preview/setup.ts"]),
+            (".storybook/preview.js", &[".storybook/preview.ts"]),
+            (".storybook/preview.ts", &["preview/setup.ts"]),
             ("preview/setup.ts", &[]),
         ];
         let mut generation = JavaScriptGeneration {
@@ -115,6 +116,7 @@ impl Fixture {
             )]),
             declarations: BTreeMap::from([(format!("{C}#default"), "lib/declared.ts".into())]),
             renderer: Some(RENDERER.into()),
+            storybook_folders: BTreeMap::from([(STORY.into(), ".storybook".into())]),
             workers,
             jobs,
         }
@@ -126,6 +128,7 @@ impl Fixture {
             bindings: &self.bindings,
             renderer: self.renderer.as_deref(),
             entries: &self.entries,
+            storybook_folders: &self.storybook_folders,
             declarations: &self.declarations,
         }
     }

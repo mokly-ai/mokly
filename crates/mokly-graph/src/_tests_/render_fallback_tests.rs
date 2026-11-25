@@ -57,6 +57,7 @@ fn keys(renderer: &str, preview: &str, resolution: &[(&str, &str)]) -> RenderKey
             bindings: &bindings,
             renderer: Some(renderer),
             entries: &entries,
+            storybook_folders: &BTreeMap::new(),
             declarations: &BTreeMap::new(),
         },
         fallback(),

@@ -50,7 +50,9 @@ fn root(name: &str) -> ResolvedRoot {
             files: Some(vec!["**/*.html".into(), "**/target".into()]),
             path: None,
             transparent: None,
+            storybook: None,
         },
+        storybook: ".storybook".into(),
     }
 }
 fn event(path: &str, kind: Kind) -> Event {

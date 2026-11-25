@@ -60,7 +60,9 @@ fn declared_numeric_controls_publish_effective_bounds_for_parents_and_variants()
             files: None,
             path: None,
             transparent: None,
+            storybook: None,
         },
+        storybook: ".storybook".into(),
         directory: "/repo/specs".into(),
         identity: "/repo/specs".into(),
     };

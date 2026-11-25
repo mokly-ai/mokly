@@ -11,8 +11,9 @@ import type { CompiledGeneration } from "../generated/sidecar/CompiledGeneration
 import type { Definitions } from "../generated/sidecar/Definitions.js";
 import type { EntryBinding } from "../generated/sidecar/EntryBinding.js";
 import type { Module } from "../generated/sidecar/Module.js";
-import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 
+import { startCapture } from "./bundle-capture.js";
+import type { BundleCaptureState } from "./bundle-capture.js";
 import { entryModule } from "./bundle-entry.js";
 import { bundleDetail } from "./bundle-errors.js";
 import type { VirtualOrigin } from "./bundle-errors.js";
@@ -22,7 +23,6 @@ import type { CaptureDurability } from "./capture-durability.js";
 import { SidecarError } from "./errors.js";
 import { unmeasured } from "./measurements.js";
 import type { Measurements } from "./measurements.js";
-import { metadataRuntime } from "./metadata-proof.js";
 import { ModulePaths } from "./module-paths.js";
 import { planNative, type NativeOutcome } from "./native-plan.js";
 import { nativeResolveFilter } from "./native-resolution.js";
@@ -58,25 +58,13 @@ export interface BundleExports {
   entries: Record<string, Record<string, unknown>>;
   stories: Record<string, Record<string, unknown>>;
   renderer?: { default?: unknown };
-  preview?: Record<string, unknown>;
+  previews?: Record<string, unknown>;
   styleAdapters?: { styled?: unknown; native?: unknown; emotion?: unknown };
 }
 
 export interface Bundled {
   generation: Generation;
   result: BundleResult;
-}
-
-interface BundleCaptureState {
-  started: bigint;
-  mode: BundleCapture;
-  reads: Map<string, Uint8Array>;
-  durability?: CaptureDurability | undefined;
-  evidence?: ResolutionEvidence;
-  preview?: string | null | undefined;
-  plan?: ResolutionPlan;
-  editImports?: ServeEditImports;
-  guardedCompile?: typeof build | undefined;
 }
 
 /**
@@ -94,13 +82,7 @@ export async function bundle(
   requestedPlan?: BundleResult["plan"],
   guardedCompile?: typeof build,
 ): Promise<Bundled> {
-  const capture: BundleCaptureState = {
-    started: metadataRuntime.now(),
-    mode: captureMode,
-    reads: new Map(),
-    guardedCompile,
-    ...(captureMode === "full" ? { durability } : {}),
-  };
+  const capture = startCapture(captureMode, durability, guardedCompile);
   if (captureMode === "serveEdit" && requestedPlan)
     return bundleAttempt(
       params,
@@ -151,11 +133,13 @@ export async function bundleWith(
   measurements: Measurements,
   resolution: Resolution,
 ): Promise<Bundled | NativeOutcome> {
-  return bundleAttempt(params, compile, measurements, resolution, {
-    started: metadataRuntime.now(),
-    mode: "full",
-    reads: new Map(),
-  });
+  return bundleAttempt(
+    params,
+    compile,
+    measurements,
+    resolution,
+    startCapture("full"),
+  );
 }
 
 async function bundleAttempt(
@@ -196,24 +180,27 @@ async function bundleAttempt(
         paths,
         capture.durability,
       );
-      capture.preview = await evidence.prepare();
+      capture.previews = await evidence.prepare();
       capture.evidence = evidence;
     }
     const { evidence } = capture;
     if (capture.mode === "serveEdit")
       capture.editImports ??= new ServeEditImports(params, paths);
-    const require = await consumerRequire(params, paths);
+    const require = await consumerRequire(
+      params,
+      paths,
+      (capture.mains ??= new Map()),
+    );
     const inputs = {
       files: new Map<string, Uint8Array>(),
       cssModules: new Set<string>(),
       virtualOrigins,
     };
-    const { contents, inputPaths, preview } = await entryModule(
+    const { contents, inputPaths, previews } = await entryModule(
       params,
-      capture.preview,
-      capture.mode,
+      capture.previews,
     );
-    capture.preview = preview ?? null;
+    capture.previews = previews;
     const relative =
       capture.mode === "serveEdit" &&
       resolution.mode === "planned" &&
@@ -239,7 +226,7 @@ async function bundleAttempt(
       resolution,
       reads: capture.reads,
       contents,
-      preview,
+      previews,
       evidence,
       editImports,
       resolveFilters: nativeRelatives
@@ -282,7 +269,7 @@ async function bundleAttempt(
         inputs,
         compiled,
         inputPaths,
-        preview,
+        previews,
         runtimeKey,
         evidence,
         editImports,

@@ -30,6 +30,7 @@ pub(super) fn bundle(root: &str) -> Bundle {
         entry_files: vec!["page.ts".into()],
         renderer: None,
         stories_files: vec![],
+        storybook_folders: Default::default(),
         module_resolution: Default::default(),
         source_root: root.into(),
         configuration_directory: ".".into(),

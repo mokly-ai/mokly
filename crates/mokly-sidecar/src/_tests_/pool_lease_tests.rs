@@ -22,6 +22,7 @@ fn bundle() -> Call {
             evaluation: None,
             entry_files: vec![],
             stories_files: vec![],
+            storybook_folders: Default::default(),
             renderer: None,
             source_root: "/repo".into(),
             configuration_directory: ".".into(),

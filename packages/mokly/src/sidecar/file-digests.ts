@@ -43,7 +43,9 @@ async function digestFile(
       fs.constants.O_RDONLY | fs.constants.O_NONBLOCK,
     );
     try {
-      if (!fs.fstatSync(handle).isFile()) throw new Error("not a regular file");
+      const stat = fs.fstatSync(handle);
+      if (stat.isDirectory()) return null;
+      if (!stat.isFile()) throw new Error("not a regular file");
       const hash = createHash("sha256");
       let first = overlapFirstRead;
       for (;;) {

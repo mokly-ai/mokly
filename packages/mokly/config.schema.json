@@ -19,6 +19,20 @@
             "minLength": 1,
             "pattern": "\\S"
           },
+          "storybook": {
+            "type": ["string", "object"],
+            "minLength": 1,
+            "pattern": "\\S",
+            "additionalProperties": false,
+            "required": ["config"],
+            "properties": {
+              "config": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            }
+          },
           "files": {
             "type": "array",
             "items": {

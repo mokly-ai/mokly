@@ -10,7 +10,6 @@ import type { ResolutionPlan } from "../generated/sidecar/ResolutionPlan.js";
 import type { ReuseEvidence } from "../generated/sidecar/ReuseEvidence.js";
 
 import { importedAssetPaths } from "./asset-imports.js";
-import { previewCandidates } from "./bundle-entry.js";
 import { moduleGraph } from "./bundle-graph.js";
 import type { Bundled } from "./bundle.js";
 import { capturedPlan } from "./captured-plan.js";
@@ -23,6 +22,8 @@ import { prepareRecipeEncoding } from "./recipe-encoding.js";
 import type { ResolutionEvidence } from "./resolution-evidence.js";
 import { resolutionInputs } from "./resolution-inputs.js";
 import type { ServeEditImports } from "./serve-edit-imports.js";
+import { previewCandidates } from "./storybook-folders.js";
+import { recordStorybookInputs } from "./storybook-inputs.js";
 import { toolchainIdentity } from "./toolchain.js";
 
 /** One finished compile and the state that its plugins recorded. */
@@ -33,7 +34,7 @@ export interface CompiledBundle {
   inputs: { files: Map<string, Uint8Array>; cssModules: Set<string> };
   compiled: Pick<BuildResult, "metafile" | "outputFiles">;
   inputPaths: Map<string, string>;
-  preview: string | null | undefined;
+  previews: ReadonlyMap<string, string>;
   runtimeKey: string;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
@@ -49,7 +50,7 @@ export async function bundleRecipe(
     inputs,
     compiled,
     inputPaths,
-    preview,
+    previews,
     runtimeKey,
     evidence,
     editImports,
@@ -77,6 +78,7 @@ export async function bundleRecipe(
   const hash = createHash("sha256");
   const physicalInputs: Record<string, string | null> = {};
   const metadataInputs: Record<string, string | null> = {};
+  const storybook = require.storybook();
   const importedAssets = importedAssetPaths(inputs.files);
   measurements.runSync("sidecar.bundle.inputs", () => {
     for (const module of graph) {
@@ -102,13 +104,20 @@ export async function bundleRecipe(
       }
     }
   });
-  for (const file of params.storiesFiles.length ? previewCandidates : []) {
+  for (const file of previewCandidates(params)) {
     const absolute = path.resolve(params.sourceRoot, file);
     metadataInputs[file] = physicalInputs[absolute] = await metadataDigest(
       absolute,
       physicalInputs,
     );
   }
+  recordStorybookInputs(
+    paths,
+    storybook?.inputs,
+    physicalInputs,
+    metadataInputs,
+    evidence?.physical,
+  );
   for (const root of paths.dependencyRoots) {
     const file = path.join(root, "react/package.json");
     metadataInputs[paths.name(file)] = physicalInputs[file] =
@@ -165,7 +174,9 @@ export async function bundleRecipe(
       paths.dependencyRoots,
       params.entryFiles,
       params.storiesFiles,
-      preview,
+      params.storybookFolders,
+      [...previews],
+      storybook?.peers,
       params.renderer,
       params.configurationDirectory,
       params.repositoryRoots,
@@ -207,6 +218,7 @@ export async function bundleRecipe(
       ]),
     ),
     peers,
+    ...(storybook && { storybookReact: storybook.peers }),
     unmappedDependencyDirectories: [...paths.dependencyUsage.unmapped].sort(),
     ...directories,
     inputs: physicalInputs,

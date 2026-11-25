@@ -128,11 +128,23 @@ test("an imported manifest restored during compilation keeps its consumed digest
 
 test("uncaptured Storybook discovery selects a regular preview file", async (context) => {
   const { root, preview, params } = await source(context);
-  await fs.mkdir(path.join(root, ".storybook/preview.tsx"));
+  await fs.mkdir(path.join(root, ".storybook/preview.js"));
   await fs.writeFile(preview, "export default {};");
-  const entry = await entryModule(params, undefined, "serveEdit");
-  assert.equal(entry.preview, ".storybook/preview.ts");
-  assert.match(entry.contents, /preview\.ts"; export \{ preview \}/);
+  const entry = await entryModule(params);
+  assert.deepEqual(
+    [...entry.previews],
+    [[".storybook", ".storybook/preview.ts"]],
+  );
+  assert.match(entry.contents, /require\(".*\/preview\.ts"\)/);
+  const result = await bundle(params, build, undefined, undefined, "serveEdit");
+  assert.equal(
+    result.result.compiled.metadataInputs[".storybook/preview.js"],
+    null,
+  );
+  assert.deepEqual(
+    result.result.modules.map((module) => module.path),
+    [".storybook/preview.ts", "story.stories.tsx"],
+  );
 });
 
 test("uncaptured Storybook selection survives a failed native compile", async (context) => {
@@ -161,14 +173,45 @@ test("uncaptured Storybook selection survives a failed native compile", async (c
     "serveEdit",
   );
   assert.equal(attempts, 2);
-  assert.ok(
-    entries.every((entry) =>
-      entry?.includes('preview.ts"; export { preview }'),
-    ),
-  );
+  assert.ok(entries.every((entry) => entry?.includes('preview.ts")')));
   assert.deepEqual(
     compiled.result.modules.map((module) => module.path),
     [".storybook/preview.ts", "story.stories.tsx"],
   );
   assert.equal(compiled.result.compiled.reuseEvidence.uncaptured, "serveEdit");
+});
+
+test("adding a higher priority preview in the second folder invalidates the compiled recipe", async (context) => {
+  const { root, preview, params } = await source(context);
+  const folder = "packages/ui/.storybook";
+  const second = "ui.stories.tsx";
+  params.storiesFiles.push(second);
+  params.storybookFolders = { [second]: folder };
+  await fs.mkdir(path.join(root, folder), { recursive: true });
+  await fs.writeFile(
+    preview,
+    "export default { initialGlobals: { location: 'root' } };",
+  );
+  await fs.writeFile(path.join(root, second), "export const Example = {};");
+  await fs.writeFile(
+    path.join(root, folder, "preview.ts"),
+    "export default { initialGlobals: { location: 'old' } };",
+  );
+  const first = await bundle(params, build);
+  const candidate = `${folder}/preview.js`;
+  assert.equal(first.result.compiled.metadataInputs[candidate], null);
+  assert.equal(
+    (await reuse([first.generation], params))?.id,
+    first.generation.id,
+  );
+  await fs.writeFile(
+    path.join(root, candidate),
+    "export default { initialGlobals: { location: 'new' } };",
+  );
+  assert.equal(await reuse([first.generation], params), undefined);
+  const updated = await bundle(params, build);
+  assert.deepEqual(
+    updated.result.modules.map((module) => module.path),
+    [".storybook/preview.ts", candidate, "story.stories.tsx", second],
+  );
 });

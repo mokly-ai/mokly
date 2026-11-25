@@ -54,6 +54,10 @@ sources: { [key in string]: string },
  */
 peers: { [key in string]: string | null },
 /**
+ * Physical `@storybook/react` entry selected through each folder's framework.
+ */
+storybookReact?: { [key in string]: string },
+/**
  * Physical digest-only compilation and peer inputs, including absent preview candidates.
  */
 inputs: { [key in string]: string | null },

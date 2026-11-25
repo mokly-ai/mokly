@@ -23,6 +23,7 @@ pub(crate) fn compiled(identity: &str) -> CompiledGeneration {
         css_modules: Vec::new(),
         sources: BTreeMap::new(),
         peers: BTreeMap::new(),
+        storybook_react: Default::default(),
         inputs: BTreeMap::new(),
         metadata_inputs: BTreeMap::new(),
         input_directories: BTreeMap::new(),

@@ -105,6 +105,7 @@ impl Fixture {
                 bindings: &self.bindings,
                 renderer: Some("renderer.tsx"),
                 entries: &entries,
+                storybook_folders: &BTreeMap::new(),
                 declarations: &BTreeMap::new(),
             },
             fallback(),

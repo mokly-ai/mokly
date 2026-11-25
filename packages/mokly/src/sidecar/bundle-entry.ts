@@ -1,29 +1,26 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { BundleCapture } from "../generated/sidecar/BundleCapture.js";
 import type { BundleParams } from "../generated/sidecar/BundleParams.js";
 
 import { logical } from "./path-scope.js";
 import { confinedFile } from "./paths.js";
+import {
+  previewCandidates,
+  regularFile,
+  selectPreviews,
+} from "./storybook-folders.js";
 
 export const virtualEntry = "mokly-entry";
-
-/** Storybook preview candidates, also absent ones, which the recipe hashes. */
-export const previewCandidates = ["tsx", "ts", "jsx", "js", "mjs", "cjs"].map(
-  (extension) => `.storybook/preview.${extension}`,
-);
 
 /**
  * The virtual entry module: it imports every entry, story, and renderer file
  * and exports them by logical path. `inputPaths` maps each logical path to its
- * confined real file. A captured preview supplies the selection. Missing
+ * confined real file. Captured previews supply the selection. Missing
  * evidence uses the file probes.
  */
 export async function entryModule(
   params: BundleParams,
-  capturedPreview: string | null | undefined,
-  capture: BundleCapture = "full",
+  capturedPreviews?: ReadonlyMap<string, string>,
 ) {
   const files = [
     ...params.entryFiles,
@@ -36,33 +33,25 @@ export async function entryModule(
       logical(params.sourceRoot, path.resolve(params.sourceRoot, file)),
       await confinedFile(params.sourceRoot, file),
     );
-  let preview = capturedPreview;
-  if (preview === undefined)
-    preview = params.storiesFiles.length
-      ? (
-          await Promise.all(
-            previewCandidates.map(async (file) =>
-              capture === "serveEdit"
-                ? await fs.stat(path.resolve(params.sourceRoot, file)).then(
-                    (stat) => (stat.isFile() ? file : null),
-                    () => null,
-                  )
-                : await fs.access(path.resolve(params.sourceRoot, file)).then(
-                    () => file,
-                    () => null,
-                  ),
-            ),
-          )
-        ).find(Boolean)
-      : null;
+  const previews = capturedPreviews ?? (await probePreviews(params));
   const imports = files.map(
     (file, index) =>
       `import * as m${index} from ${JSON.stringify(path.resolve(params.sourceRoot, file))};`,
   );
-  if (preview)
-    imports.push(
-      `import * as preview from ${JSON.stringify(path.resolve(params.sourceRoot, preview))}; export { preview };`,
-    );
+  if (previews.size) {
+    const bindings: string[] = [];
+    for (const [folder, file] of previews) {
+      const name = `p${bindings.length}`;
+      const specifier = JSON.stringify(path.resolve(params.sourceRoot, file));
+      imports.push(
+        params.vite
+          ? `import * as ${name} from ${specifier};`
+          : `const ${name} = require(${specifier});`,
+      );
+      bindings.push(`[${JSON.stringify(folder)}]:${name}`);
+    }
+    imports.push(`export const previews = {${bindings.join(",")}};`);
+  }
   imports.push(
     `export const entries = {${params.entryFiles.map((file, index) => `${JSON.stringify(logical(params.sourceRoot, path.resolve(params.sourceRoot, file)))}:m${index}`).join(",")}};`,
   );
@@ -71,5 +60,17 @@ export async function entryModule(
   );
   if (params.renderer)
     imports.push(`export const renderer = m${files.length - 1};`);
-  return { contents: imports.join("\n"), inputPaths, preview };
+  return { contents: imports.join("\n"), inputPaths, previews };
+}
+
+async function probePreviews(params: BundleParams) {
+  const files = await Promise.all(
+    previewCandidates(params).map(async (file) =>
+      (await regularFile(path.resolve(params.sourceRoot, file)))
+        ? file
+        : undefined,
+    ),
+  );
+  const present = new Set(files);
+  return selectPreviews(params, (file) => present.has(file));
 }

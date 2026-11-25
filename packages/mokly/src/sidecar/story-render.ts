@@ -27,7 +27,7 @@ export async function renderStory(
   const cleanups: CleanupCallback[] = [];
   let renderFailed = false;
   try {
-    await setupStories(generation, stored.beforeAll);
+    await setupStories(generation, stored.folder, stored.beforeAll);
     let prepared: PreparedContext | undefined;
     const story = stored.compose(cleanups, (context) => {
       prepared = context;

@@ -38,6 +38,7 @@ fn prepared(context: &str) -> Call {
             entry_files: vec![],
             renderer: None,
             stories_files: vec![],
+            storybook_folders: Default::default(),
             source_root: "/repo".into(),
             configuration_directory: ".".into(),
             repository_roots: vec![],

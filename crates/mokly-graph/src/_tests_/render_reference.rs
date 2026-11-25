@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
 
+use mokly_catalogue::config_types::DEFAULT_STORYBOOK_FOLDER;
 use mokly_catalogue::render_sources::{JavaScriptGeneration, RenderMethod};
 use mokly_model::material::digest;
 use serde_json::{Value, json};
@@ -10,17 +11,32 @@ use serde_json::{Value, json};
 use crate::key::{NodeKey, NodeKind, data_key};
 use crate::render_closure::{chain, handle_module};
 
-use super::{PREVIEWS, RenderInputs, RenderKeys};
+use super::{RenderInputs, RenderKeys, preview_candidates};
 
 /// Run the original per-entry closure, resolution union, and JSON hashing algorithm.
 pub(super) fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> RenderKeys {
     let generation = inputs.generation;
     let graph = &generation.modules;
-    let stories: BTreeSet<_> = inputs
+    let stories: BTreeMap<_, _> = inputs
         .entries
         .values()
         .filter(|source| source.method == RenderMethod::Story)
         .filter_map(|source| handle_module(graph, &source.handle))
+        .map(|module| {
+            (
+                module,
+                inputs
+                    .storybook_folders
+                    .get(module)
+                    .map_or(DEFAULT_STORYBOOK_FOLDER, String::as_str),
+            )
+        })
+        .collect();
+    let candidates: BTreeSet<_> = stories
+        .values()
+        .copied()
+        .chain(inputs.storybook_folders.values().map(String::as_str))
+        .flat_map(preview_candidates)
         .collect();
     let records = records(generation);
     let chains: BTreeMap<_, _> = graph.keys().map(|path| (path, chain(path))).collect();
@@ -31,7 +47,7 @@ pub(super) fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> RenderKeys 
         .filter(|(name, _)| {
             !chained.contains(name)
                 && !runtime_manifest(generation, name)
-                && !PREVIEWS.contains(&name.as_str())
+                && !candidates.contains(*name)
         })
         .collect();
     let unattributed: Vec<_> = inputs
@@ -41,10 +57,6 @@ pub(super) fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> RenderKeys 
         .map(|(handle, binding)| json!([handle, binding.path, binding.title]))
         .collect();
     let shared = text_digest(&json!([generation.environment, shared, unattributed]));
-    let preview = PREVIEWS
-        .iter()
-        .find(|candidate| graph.contains_key(**candidate))
-        .map(|candidate| closure(graph, [(*candidate).to_owned()]));
     let renderer = inputs
         .renderer
         .map(|renderer| closure(graph, [renderer.to_owned()]));
@@ -53,9 +65,6 @@ pub(super) fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> RenderKeys 
     let unnamed_renderer = inputs
         .renderer
         .is_some_and(|renderer| !graph.contains_key(renderer));
-    let unnamed_preview = PREVIEWS
-        .iter()
-        .any(|candidate| generation.resolution_digests.contains_key(*candidate));
     let mut bindings: BTreeMap<&str, Vec<Value>> = BTreeMap::new();
     let mut exporters = BTreeSet::new();
     for (handle, binding) in inputs.bindings {
@@ -77,14 +86,23 @@ pub(super) fn build(inputs: &RenderInputs<'_>, fallback: NodeKey) -> RenderKeys 
     }
     let mut modules = BTreeMap::new();
     for module in exporters {
-        if (stories.contains(module) && unnamed_preview)
-            || (!stories.contains(module) && unnamed_renderer)
-        {
-            continue;
-        }
-        let extra = if stories.contains(module) {
+        let preview;
+        let extra = if let Some(folder) = stories.get(module) {
+            let selected = preview_candidates(folder).find(|path| {
+                graph.contains_key(path) || generation.resolution_digests.contains_key(path)
+            });
+            if selected
+                .as_ref()
+                .is_some_and(|path| !graph.contains_key(path))
+            {
+                continue;
+            }
+            preview = selected.map(|path| closure(graph, [path]));
             preview.as_ref()
         } else {
+            if unnamed_renderer {
+                continue;
+            }
             renderer.as_ref()
         };
         let mut members = closure(graph, [module.to_owned()]);

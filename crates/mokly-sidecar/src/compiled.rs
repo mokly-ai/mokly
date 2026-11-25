@@ -141,6 +141,10 @@ pub struct CompiledGeneration {
     pub sources: BTreeMap<String, String>,
     /// Resolved external peers, under the original resolution policy.
     pub peers: BTreeMap<String, Option<String>>,
+    /// Physical `@storybook/react` entry selected through each folder's framework.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(optional, as = "Option<BTreeMap<String, String>>")]
+    pub storybook_react: BTreeMap<String, String>,
     /// Physical digest-only compilation and peer inputs, including absent preview candidates.
     pub inputs: BTreeMap<String, Option<String>>,
     /// Logical extra inputs for the Rust reuse check.

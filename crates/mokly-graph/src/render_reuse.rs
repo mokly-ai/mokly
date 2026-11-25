@@ -7,22 +7,22 @@ use serde_json::to_vec;
 use sha2::{Digest, Sha256};
 
 use crate::render_closure::{Parts, Records};
-use crate::render_preparation::Prepared;
+use crate::render_preparation::{Common, Prepared};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Facts {
     modules: Vec<(String, [u8; 32])>,
-    stories: Vec<String>,
+    stories: Vec<(String, Option<String>)>,
     shared: [u8; 32],
     renderer: [u8; 32],
-    preview: [u8; 32],
+    previews: Vec<(String, [u8; 32])>,
 }
 
 impl Facts {
     pub(crate) fn new(
         prepared: &Prepared<'_>,
         renderer: &Parts<'_>,
-        preview: &Parts<'_>,
+        previews: &BTreeMap<&str, Parts<'_>>,
     ) -> serde_json::Result<Self> {
         let records = &prepared.records;
         let modules = records
@@ -32,15 +32,20 @@ impl Facts {
             .collect();
         let stories = prepared
             .exporters()
-            .filter(|(_, story)| *story)
-            .map(|(module, _)| module.to_owned())
+            .filter_map(|(module, closure)| match closure {
+                Common::Renderer => None,
+                Common::Preview(root) => Some((module.to_owned(), root.map(str::to_owned))),
+            })
             .collect();
         Ok(Self {
             modules,
             stories,
             shared: Sha256::digest(prepared.shared.as_bytes()).into(),
             renderer: common(prepared.renderer, renderer)?,
-            preview: common(prepared.preview, preview)?,
+            previews: previews
+                .iter()
+                .map(|(&root, parts)| Ok((root.to_owned(), common(Some(root), parts)?)))
+                .collect::<serde_json::Result<_>>()?,
         })
     }
 
@@ -83,23 +88,32 @@ impl Facts {
         affected
     }
 
-    pub(crate) fn same_common(&self, previous: &Self, story: bool) -> bool {
+    /// Shared records must agree before any previous key can be reused.
+    pub(crate) fn same_shared(&self, previous: &Self) -> bool {
         self.shared == previous.shared
-            && if story {
-                self.preview == previous.preview
-            } else {
-                self.renderer == previous.renderer
-            }
     }
 
-    pub(crate) fn same_mode(&self, previous: &Self, module: &str) -> bool {
-        self.stories
-            .binary_search_by(|name| name.as_str().cmp(module))
-            .is_ok()
-            == previous
-                .stories
-                .binary_search_by(|name| name.as_str().cmp(module))
-                .is_ok()
+    /// The exporter must still use the same renderer or preview closure.
+    pub(crate) fn same_common(&self, previous: &Self, module: &str, closure: Common<'_>) -> bool {
+        let old_story = previous
+            .stories
+            .binary_search_by(|(name, _)| name.as_str().cmp(module))
+            .ok();
+        match closure {
+            Common::Renderer => old_story.is_none() && self.renderer == previous.renderer,
+            Common::Preview(root) => {
+                old_story.is_some_and(|index| previous.stories[index].1.as_deref() == root)
+                    && root.is_none_or(|root| self.preview(root) == previous.preview(root))
+            }
+        }
+    }
+
+    fn preview(&self, root: &str) -> Option<[u8; 32]> {
+        let index = self
+            .previews
+            .binary_search_by(|(name, _)| name.as_str().cmp(root))
+            .ok()?;
+        Some(self.previews[index].1)
     }
 
     /// Heap capacities; the owning lazy cell accounts for the inline facts storage.
@@ -110,8 +124,18 @@ impl Facts {
                 .iter()
                 .map(|(path, _)| path.capacity())
                 .sum::<usize>()
-            + self.stories.capacity() * size_of::<String>()
-            + self.stories.iter().map(String::capacity).sum::<usize>()
+            + self.stories.capacity() * size_of::<(String, Option<String>)>()
+            + self
+                .stories
+                .iter()
+                .map(|(path, root)| path.capacity() + root.as_ref().map_or(0, String::capacity))
+                .sum::<usize>()
+            + self.previews.capacity() * size_of::<(String, [u8; 32])>()
+            + self
+                .previews
+                .iter()
+                .map(|(root, _)| root.capacity())
+                .sum::<usize>()
     }
 }
 

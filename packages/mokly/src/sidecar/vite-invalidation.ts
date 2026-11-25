@@ -8,6 +8,7 @@ import type {
 } from "vite";
 
 import { fileDigest, missingFile } from "./file-digests.js";
+import { inside } from "./path-scope.js";
 import type { viteMetadata } from "./vite-metadata.js";
 import type { ViteInputs } from "./vite-plugin.js";
 import { viteFile } from "./vite-urls.js";
@@ -22,11 +23,15 @@ export async function snapshotViteInputs(
   input: ViteInputs,
   metadata: Awaited<ReturnType<typeof viteMetadata>>,
 ): Promise<ViteSnapshot> {
+  const { paths } = input;
   return {
     files: new Map(input.files),
     metadata: Object.fromEntries(
-      Object.entries(metadata.inputs).filter(([file]) =>
-        Object.hasOwn(metadata.metadataInputs, input.paths.metadataName(file)),
+      Object.entries(metadata.inputs).filter(
+        ([file]) =>
+          (!inside(paths.sourceRoot, file) &&
+            !paths.dependencyDirectory(file)) ||
+          Object.hasOwn(metadata.metadataInputs, paths.metadataName(file)),
       ),
     ),
     directories: new Map(

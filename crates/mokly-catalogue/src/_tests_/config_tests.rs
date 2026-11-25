@@ -37,6 +37,8 @@ fn schema_and_core_reject_every_invalid_structural_setting() {
         json!({"roots":[]}),
         json!({"roots":[{}]}),
         json!({"roots":[{"dir":"specs","unknown":true}]}),
+        json!({"roots":[{"dir":"specs","storybook":{"config":".storybook","url":"https://example.com"}}]}),
+        json!({"roots":[{"storybook":".storybook"}]}),
         json!({"roots":[{"dir":"specs","files":[]}]}),
         json!({"roots":[{"dir":"specs","path":"safe/COM1/child"}]}),
         json!({"roots":[{"dir":"specs","files":["../*.md"]}]}),

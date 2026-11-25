@@ -5,6 +5,7 @@ export interface RootConfig {
   files?: readonly string[];
   path?: string;
   transparent?: readonly string[];
+  storybook?: string | { config: string };
 }
 export type ModuleLoader =
   | "js"

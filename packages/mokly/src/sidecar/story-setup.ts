@@ -3,18 +3,22 @@ import type { StoredStory } from "./story-reader.js";
 
 interface ActiveSetup {
   generation: Generation;
+  folder: string;
   cleanup: Awaited<ReturnType<StoredStory["beforeAll"]>>;
 }
 
 let activeSetup: ActiveSetup | undefined;
-const failures = new WeakMap<Generation, unknown>();
+const failures = new WeakMap<Generation, Map<string, unknown>>();
 
 export async function setupStories(
   generation: Generation,
+  folder: string,
   beforeAll: StoredStory["beforeAll"],
 ): Promise<void> {
-  if (failures.has(generation)) throw failures.get(generation);
-  if (activeSetup?.generation === generation) return;
+  const generationFailures = failures.get(generation);
+  if (generationFailures?.has(folder)) throw generationFailures.get(folder);
+  if (activeSetup?.generation === generation && activeSetup.folder === folder)
+    return;
 
   const previous = activeSetup;
   activeSetup = undefined;
@@ -22,9 +26,10 @@ export async function setupStories(
 
   try {
     const cleanup = await beforeAll();
-    activeSetup = { generation, cleanup };
+    activeSetup = { generation, folder, cleanup };
   } catch (error) {
-    failures.set(generation, error);
+    if (generationFailures) generationFailures.set(folder, error);
+    else failures.set(generation, new Map([[folder, error]]));
     throw error;
   }
 }

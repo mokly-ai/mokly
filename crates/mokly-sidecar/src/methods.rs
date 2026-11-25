@@ -61,7 +61,7 @@ pub struct ModuleResolution {
 #[ts(rename = "BundleParams")]
 pub struct Bundle {
     /// Opt-in project Vite compilation; omission preserves esbuild settings bytes.
-    #[serde(default, skip_serializing_if = "disabled")]
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[ts(optional, as = "Option<bool>")]
     pub vite: bool,
     /// Core input digest that isolates resolved bindings and CSS Modules lifetimes.
@@ -72,8 +72,12 @@ pub struct Bundle {
     pub entry_files: Vec<String>,
     /// Optional consumer renderer module as a repository-relative path without `.` or `..` segments.
     pub renderer: Option<String>,
-    /// Storybook files.
+    /// Repository-relative stories files in compile order.
     pub stories_files: Vec<String>,
+    /// Stories file to the repository-relative POSIX folder on this side. Missing entries use `.storybook`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(optional, as = "Option<BTreeMap<String, String>>")]
+    pub storybook_folders: BTreeMap<String, String>,
     /// Consumer resolution policy.
     pub module_resolution: ModuleResolution,
     /// Source checkout or extracted base root.
@@ -236,13 +240,9 @@ pub struct Hello {
     #[ts(optional)]
     pub capture: Option<CaptureHint>,
     /// Enable process-local timing records on standard error for this session.
-    #[serde(default, skip_serializing_if = "disabled")]
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[ts(optional, as = "Option<bool>")]
     pub timings: bool,
-}
-
-fn disabled(value: &bool) -> bool {
-    !value
 }
 
 /// Every protocol method, encoded as method and params.

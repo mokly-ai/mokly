@@ -6,6 +6,11 @@ use std::path::PathBuf;
 use mokly_model::axes::ColorScheme;
 use serde::{Deserialize, Serialize};
 
+use crate::discovery::{SourceFile, SourceKind};
+
+/// Storybook folder used by roots without an explicit setting.
+pub const DEFAULT_STORYBOOK_FOLDER: &str = ".storybook";
+
 /// Data-only JSON configuration, validated before resolution.
 #[derive(Clone, Debug, PartialEq, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -48,6 +53,30 @@ pub struct RootConfig {
     pub path: Option<String>,
     /// Directory names omitted from derived paths.
     pub transparent: Option<Vec<String>>,
+    /// Config-relative existing Storybook folder, or the repository default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub storybook: Option<StorybookConfig>,
+}
+
+/// Authored forms of a Storybook folder.
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[serde(untagged, deny_unknown_fields)]
+pub enum StorybookConfig {
+    /// Folder path relative to the configuration file.
+    Folder(String),
+    /// Object form of the folder setting.
+    Options {
+        /// Folder path relative to the configuration file.
+        config: String,
+    },
+}
+
+impl StorybookConfig {
+    pub(crate) fn folder(&self) -> &str {
+        match self {
+            Self::Folder(folder) | Self::Options { config: folder } => folder,
+        }
+    }
 }
 
 /// The opt-in Vite adapter switch or its currently empty options.
@@ -194,6 +223,20 @@ impl ResolvedConfig {
     pub fn vite(&self) -> bool {
         !vite_disabled(&self.input.vite)
     }
+
+    /// Give each compiled stories file the Storybook folder of its discovered root.
+    pub fn storybook_folders(&self, files: &[SourceFile]) -> BTreeMap<String, String> {
+        files
+            .iter()
+            .filter(|file| file.kind == SourceKind::Stories)
+            .map(|file| {
+                (
+                    file.path.clone(),
+                    self.roots[file.root_index].storybook.clone(),
+                )
+            })
+            .collect()
+    }
 }
 
 /// Configured module identities after lexical normalization and source-tree projection.
@@ -214,6 +257,8 @@ pub struct ResolvedRoot {
     pub directory: PathBuf,
     /// Canonical root identity.
     pub identity: PathBuf,
+    /// Storybook folder as a repository-relative POSIX path, empty for the repository root.
+    pub storybook: String,
 }
 
 #[cfg(test)]

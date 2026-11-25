@@ -45,7 +45,8 @@ export class ViteCompiler {
       return await withVitePeers(params, compile, async (require) => {
         const vite = await loadVite(require);
         version = vite.api.version;
-        const entry = await entryModule(params, undefined, capture);
+        const entry = await entryModule(params);
+        for (const file of entry.previews.values()) paths.addConfigured(file);
         const { setup, input, directory } = await this.context.open(
           vite.api,
           require,
@@ -77,7 +78,13 @@ export class ViteCompiler {
         if (setup.stamp !== (await setupStamp(setup.files, directory)))
           throw new Error("Vite setup changed during compilation");
         const graphFiles = new Set(physical.values());
-        const metadata = await viteMetadata(input, setup.files, graphFiles);
+        const storybook = require.storybook();
+        const metadata = await viteMetadata(
+          input,
+          setup.files,
+          graphFiles,
+          storybook?.inputs,
+        );
         setup.snapshot = await snapshotViteInputs(input, metadata);
         const toolchain = await viteToolchain(version, vite.root);
         const compiled: CompiledGeneration = {
@@ -89,6 +96,7 @@ export class ViteCompiler {
                 params,
                 modules,
                 metadata.metadataInputs,
+                storybook?.peers,
                 toolchain,
                 input.runtimeKey,
               ]),
@@ -113,6 +121,7 @@ export class ViteCompiler {
             ]),
           ),
           peers: { ...require.snapshot(), ...input.peers },
+          ...(storybook && { storybookReact: storybook.peers }),
           unmappedDependencyDirectories: [
             ...paths.dependencyUsage.unmapped,
           ].sort(),

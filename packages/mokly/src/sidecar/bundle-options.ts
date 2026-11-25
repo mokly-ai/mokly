@@ -25,7 +25,7 @@ interface BundleBuild {
   resolution: Resolution;
   reads: Map<string, Uint8Array>;
   contents: string;
-  preview: string | null | undefined;
+  previews: ReadonlyMap<string, string>;
   evidence: ResolutionEvidence | undefined;
   editImports: ServeEditImports | undefined;
   resolveFilters: readonly RegExp[] | undefined;
@@ -42,14 +42,14 @@ export function bundleOptions({
   resolution,
   reads,
   contents,
-  preview,
+  previews,
   evidence,
   editImports,
   resolveFilters,
   handledImports,
 }: BundleBuild) {
   const settings = params.moduleResolution;
-  if (preview) paths.addConfigured(preview);
+  for (const file of previews.values()) paths.addConfigured(file);
   if (evidence) paths.workspaceLookups.recordInto(evidence.physical);
   const loaders = Object.fromEntries(
     Object.entries(settings.loaders).filter(

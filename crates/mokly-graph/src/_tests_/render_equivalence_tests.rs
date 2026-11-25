@@ -145,6 +145,7 @@ fn shared_closures_and_fallbacks_keep_reference_keys() {
                 bindings: &bindings,
                 renderer,
                 entries: &entries,
+                storybook_folders: &BTreeMap::new(),
                 declarations: &declarations,
             };
             let fallback = key(NodeKind::RenderInputs, &[b"whole bundle"]);
