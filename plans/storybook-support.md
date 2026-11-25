@@ -1302,6 +1302,11 @@ These calls are mine, made on 2026-11-25 in track F, on the branch
   source root reads relative to it. A path inside a selected dependency root
   reads as its logical name, such as `node_modules/pkg/index.js`. Each other
   absolute path or `file:` URL becomes `…`. Reason: design call 26.
+  Changed on 2026-11-25 by review fix round 1: a path under the home or
+  temp folder also becomes `…`, wherever it starts in the message. When
+  the value, its message, or its name cannot become text, the reason is
+  `Unknown error`. Each lone surrogate becomes U+FFFD. Reason: delimiters
+  vary, and one unreadable value must not stop the build.
 - F5. The warning message gives the JSON-quoted story id, then "could not
   render; add the "!mokly" tag to leave it out:", then the reason, with the
   line breaks of the reason joined by spaces. The failure page gives the
@@ -1318,10 +1323,19 @@ These calls are mine, made on 2026-11-25 in track F, on the branch
   are near the 250-line cap, and track E edits the stories page in parallel.
 - F8. The Props tab names the last valid props when at least one shown frame
   of the edited entry shows an accepted edit, and the saved props otherwise.
-  So when the Frames filter or the compact layout shows a frame that no
-  accepted render covers and its render fails, the alert still names the last
-  valid props. Reason: an edit is then on screen, and design call 29 keeps
-  that sentence after an edit has rendered.
+  The rule lives in `docs/protocol/mokly-component-controls-design.md`.
+  So when the Frames filter shows another frame beside a frame with an
+  accepted edit, and its render fails, the alert names the last valid
+  props. When the compact layout shows only a frame that no accepted render
+  covers, the alert names the saved props. Reason: the alert names what is
+  on screen. Changed on 2026-11-25 by review fix round 1, which corrected
+  the compact-layout example.
+- F9. Made in review fix round 1. An error that Mokly raises with its own
+  code while a story renders, such as `component-props`, keeps that code
+  and stops the build. Mokly's own checks of the rendered output, such as
+  the check of reserved markers, keep the fatal `render-failed`. Reason:
+  these errors ask for a fix in the catalogue or protect Mokly's records,
+  so the `!mokly` hint of an error document would point at the wrong fix.
 
 ## Tracks
 

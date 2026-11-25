@@ -6,7 +6,33 @@ import type { RenderSession } from "../authoring/runtime.js";
 import type { RenderContext } from "../authoring/types.js";
 
 import type { Generation } from "./bundle.js";
-import { SidecarError } from "./errors.js";
+import { SidecarError, detail, handleLocation } from "./errors.js";
+
+export async function withRenderSession<T>(
+  generation: Generation,
+  handle: string,
+  {
+    viewport,
+    colorScheme,
+  }: { viewport: string; colorScheme: RenderContext["colorScheme"] },
+  render: (session: RenderSession) => T | Promise<T>,
+): Promise<T> {
+  const location = handleLocation(handle);
+  try {
+    const session = renderSession(
+      generation,
+      { viewport: viewport as RenderContext["viewport"], colorScheme },
+      location,
+    );
+    return await generation.runtime.withSession(session, () => render(session));
+  } catch (error) {
+    if (error instanceof SidecarError) throw error;
+    throw new SidecarError(
+      "render-failed",
+      `${location} (${viewport}, ${colorScheme}): ${detail(error)}`,
+    );
+  }
+}
 
 export function renderSession(
   generation: Generation,

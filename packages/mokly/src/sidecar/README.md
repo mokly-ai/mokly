@@ -89,9 +89,10 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   `setupStories`, which keeps one active `beforeAll` setup, cleans it up before
   a generation switch, and remembers setup failures.
 - [`src/sidecar/render.ts`](./render.ts) holds `render`, which
-  renders entries to static markup, and sends each story render to
-  `renderStory`. Its story result carries the export ID, display name, and
-  reason in logical source space when story work throws.
+  renders screens and Mokly components.
+- [`src/sidecar/render-markup.ts`](./render-markup.ts) holds `renderMarkup`,
+  which renders React to static markup, collects styles, and checks the
+  markup for invalid markers and reserved elements.
 - [`src/sidecar/story-render.ts`](./story-render.ts) holds `renderStory`.
   It first awaits `setupStories`, so that the generation's `beforeAll` setup is
   active before it composes a fresh portable story. Then it puts the requested
@@ -101,7 +102,10 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   context that `load()` prepared, so that the loaders, the hooks, the
   decorators, and the markup share one context. A Storybook without that
   function keeps the portable story call. Then it runs the render's
-  `beforeEach` cleanups in reverse order in a `finally` block.
+  `beforeEach` cleanups in reverse order in a `finally` block. A story error
+  result carries the export ID, display name, and reason in logical source
+  space. Mokly's coded errors and errors from its output checks fail the
+  request.
 
 ### esbuild Compilation and Reuse
 

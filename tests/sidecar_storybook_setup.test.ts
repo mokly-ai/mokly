@@ -5,7 +5,6 @@ import { startSidecar } from "./helpers/sidecar.js";
 import {
   callStory,
   prepare,
-  renderFirstStoryPage,
   renderScreen,
   renderStory,
 } from "./helpers/storybook_setup.js";
@@ -40,7 +39,7 @@ test("story loaders prepare data for every render of the first story", async (co
     "<output>Loaded 2:desktop:dark</output>",
   );
   assert.equal(
-    (await renderFirstStoryPage(sidecar, generation)).html,
+    (await renderStory(sidecar, generation, "default")).html,
     "<output>Loaded 3:mobile:light</output>",
   );
 });
@@ -86,7 +85,7 @@ test("beforeEach prepares markup and cleans up after each render without play or
     `<output>story|${setup},${clean},${setup}</output>`,
   );
   assert.equal(
-    (await renderFirstStoryPage(sidecar, generation)).html,
+    (await renderStory(sidecar, generation, "default")).html,
     `<output>story|${setup},${clean},${setup},${clean},${setup}</output>`,
   );
 });
@@ -104,7 +103,7 @@ test("beforeAll stays active for repeated renders and cleans up before another g
     assert.equal((await renderStory(sidecar, generation)).html, expected);
     assert.equal((await renderStory(sidecar, generation)).html, expected);
     assert.equal(
-      (await renderFirstStoryPage(sidecar, generation)).html,
+      (await renderStory(sidecar, generation, "default")).html,
       expected,
     );
   }
@@ -128,9 +127,10 @@ test("a throwing beforeAll fails every story render with its first error and run
     (await renderStory(sidecar, healthy)).html,
     "<button>Healthy</button>",
   );
-  await assert.rejects(renderFirstStoryPage(sidecar, generation), {
-    code: "render-failed",
-    message: /beforeAll failed on attempt 1/,
+  assert.deepEqual(await callStory(sidecar, generation, "default"), {
+    storyId: "entry.stories.tsx#Prepared",
+    name: "Prepared",
+    reason: "beforeAll failed on attempt 1",
   });
 });
 

@@ -23,7 +23,7 @@ use crate::workers::ArtifactWorker;
 
 /// Render one view with validated transient props through the catalogue's document
 /// pipeline. Its fragments use the shared memo cache under the normal fragment key, and
-/// saved props reuse the cached saved document, so a repeat render costs a cache hit.
+/// saved props can reuse a successful cached saved document.
 pub(crate) fn render(session: &Session, route: &str, props: &Props) -> Result<TemporaryDocument> {
     let job = PropsJob { session, props };
     let artifact = session.state.workers.document(route, &job)?;
@@ -123,6 +123,11 @@ impl ArtifactWorker for PropsJob<'_> {
         }
         if &visual.props == self.props
             && let Some(artifact) = self.session.state.cache.get(&plan.key)
+            && artifact
+                .document
+                .as_ref()
+                .and_then(Composed::story_render_failure)
+                .is_none()
         {
             return Ok(artifact);
         }

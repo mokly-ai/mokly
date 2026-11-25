@@ -281,7 +281,8 @@ warning:
 ```
 
 `mokly build --strict` and `mokly publish --strict` fail on this warning. A
-render timeout or crash stops the build.
+render timeout or crash stops the build. An error that Mokly reports with its
+own code, such as invalid props for a Mokly component, still stops the build.
 
 Use code that can render on the server without browser APIs such as `window`
 or `document`.
@@ -290,5 +291,6 @@ In `mokly serve`, the story's frames show the error document. If rendering
 edited props fails, the Props tab shows a failure alert.
 
 In Changes, a failed view counts as a change if it rendered on the other
-side. If both sides fail for the same reason, Changes treats the views as
-equal.
+side. If the two error documents are equal, for example because the story
+keeps its name and fails again with the same reason, Changes shows the view
+as unchanged.

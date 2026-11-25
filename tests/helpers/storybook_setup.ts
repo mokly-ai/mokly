@@ -50,22 +50,6 @@ export async function renderStory(...params: Parameters<typeof callStory>) {
   return result;
 }
 
-export function renderFirstStoryPage(
-  sidecar: ReturnType<typeof startSidecar>,
-  generation: string,
-) {
-  return sidecar.call<RenderResult>("renderComponent", {
-    generation,
-    handle: "entry.stories.tsx#default",
-    entry: { path: "entry", title: "Setup" },
-    slots: {},
-    ignoreScope: "enabled",
-    props: {},
-    viewport: "mobile",
-    colorScheme: "light",
-  });
-}
-
 export function renderScreen(
   sidecar: ReturnType<typeof startSidecar>,
   generation: string,

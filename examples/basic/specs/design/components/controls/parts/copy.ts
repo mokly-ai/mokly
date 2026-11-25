@@ -25,14 +25,13 @@ function characters(count: number): string {
  * The settled copy of the Props tab's controls; the viewer follows it, and a
  * tooling test compares the two. The mockups draw the entries of the states
  * they show. The alert of a failed render and the notice of an invalid value
- * each name the props that the preview shows: the saved props until an edit
- * has rendered, and the last valid props after one has. The field functions
- * also give the forms that no mockup draws: one-sided bounds, steps, whole
- * numbers, and text lengths. The Read-only and recovery gallery draws the
- * removed entry, read-only props, an entry without props, merged props that
- * fail without one field to highlight, and an expired preview. The component
- * Loading and recovery gallery draws the tab while the entry's detail loads
- * and after its load failed.
+ * each name the props that the preview shows. The field functions also give
+ * the forms that no mockup draws: one-sided bounds, steps, whole numbers, and
+ * text lengths. The Read-only and recovery gallery draws the removed entry,
+ * read-only props, an entry without props, merged props that fail without one
+ * field to highlight, and an expired preview. The component Loading and
+ * recovery gallery draws the tab while the entry's detail loads and after its
+ * load failed.
  */
 export const CONTROLS_COPY = {
   tab: "Props",

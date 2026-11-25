@@ -1,11 +1,15 @@
-//! Saved story failures remain failures on the temporary props route.
+//! Temporary props surface story failures and let the next render try again.
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use mokly_catalogue::diagnostic::{STORY_RENDER_FAILED, Warning, WarningSubject};
+use mokly_catalogue::preparation::PreparedCatalogue;
 use mokly_catalogue::render_sources::{RenderMethod, RenderSource};
 use mokly_html::error::HtmlError;
-use mokly_html::fragment::{Fragment, FragmentRendererMock, RenderKind, StoryRenderFailure};
+use mokly_html::fragment::{
+    Fragment, FragmentRenderer, FragmentRendererMock, RenderKind, StoryRenderFailure,
+};
 use mokly_model::catalogue::EntryContent;
 use mokly_model::diagnostic::{AuthoringKind, Context};
 use mokly_model::runtime_diagnostic::RuntimeCode;
@@ -19,8 +23,10 @@ use crate::types::RenderGeneration;
 
 use super::support::{catalogue, session};
 
-#[test]
-fn a_failed_story_rejects_live_props_with_a_render_failure() {
+const ROUTE: &str = "caller/index.mobile.html";
+const WARNING: &str = "story \"caller.stories.tsx#Default\" could not render; add the \"!mokly\" tag to leave it out: document is not defined";
+
+fn story_catalogue() -> PreparedCatalogue {
     let mut catalogue = catalogue();
     catalogue.model.entries.truncate(1);
     let entry = &mut catalogue.model.entries[0];
@@ -58,41 +64,48 @@ fn a_failed_story_rejects_live_props_with_a_render_failure() {
             ..Default::default()
         },
     );
+    catalogue
+}
+
+fn failed_fragment() -> Fragment {
+    Fragment {
+        story_failure: Some(Box::new(StoryRenderFailure {
+            story_id: "caller.stories.tsx#Default".into(),
+            name: "Menu".into(),
+            reason: "document is not defined".into(),
+        })),
+        ..Default::default()
+    }
+}
+
+#[test]
+fn a_failed_story_rejects_live_props_with_a_render_failure() {
     let renderer = Unimock::new(
         FragmentRendererMock::render
             .each_call(matching!(_))
             .answers(&|_, request| {
                 assert_eq!(request.kind, RenderKind::Story);
-                Ok(Fragment {
-                    story_failure: Some(Box::new(StoryRenderFailure {
-                        story_id: "caller.stories.tsx#Default".into(),
-                        name: "Menu".into(),
-                        reason: "document is not defined".into(),
-                    })),
-                    ..Default::default()
-                })
+                Ok(failed_fragment())
             }),
     );
     let (session, _) = session(
-        catalogue,
+        story_catalogue(),
         Arc::new(renderer),
         Arc::new(MemoryCache::new(1 << 20, 0)),
     );
-    let route = "caller/index.mobile.html";
-    let saved = session.render(route).unwrap();
-    let message = "story \"caller.stories.tsx#Default\" could not render; add the \"!mokly\" tag to leave it out: document is not defined";
+    let saved = session.render(ROUTE).unwrap();
     assert_eq!(
         saved.document.as_ref().unwrap().warnings,
         [Warning {
             code: STORY_RENDER_FAILED,
-            subject: WarningSubject::Route(route.into()),
-            message: message.into(),
+            subject: WarningSubject::Route(ROUTE.into()),
+            message: WARNING.into(),
         }]
     );
     for open in [false, true] {
         let props = serde_json::from_value(json!({"open":open})).unwrap();
         let failure = session
-            .render_props(route, &props)
+            .render_props(ROUTE, &props)
             .err()
             .and_then(|error| match error {
                 GraphError::Html {
@@ -102,8 +115,71 @@ fn a_failed_story_rejects_live_props_with_a_render_failure() {
             });
         assert_eq!(
             failure,
-            Some((RuntimeCode::Render, message.into())),
+            Some((RuntimeCode::Render, WARNING.into())),
             "open={open}"
         );
     }
+}
+
+fn fails_once_during_render() -> Arc<dyn FragmentRenderer> {
+    let rendered = AtomicBool::new(false);
+    Arc::new(Unimock::new(
+        FragmentRendererMock::render
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, request| {
+                assert_eq!(request.kind, RenderKind::Story);
+                if rendered.swap(true, Ordering::Relaxed) {
+                    Ok(Fragment {
+                        html: "<button>Ready</button>".into(),
+                        ..Default::default()
+                    })
+                } else {
+                    Ok(failed_fragment())
+                }
+            })),
+    ))
+}
+
+#[test]
+fn identical_live_props_render_again_after_a_story_failure() {
+    let (session, _) = session(
+        story_catalogue(),
+        fails_once_during_render(),
+        Arc::new(MemoryCache::new(1 << 20, 0)),
+    );
+    let props = serde_json::from_value(json!({"open":true})).unwrap();
+    assert!(matches!(
+        session.render_props(ROUTE, &props),
+        Err(GraphError::Html {
+            source: HtmlError::Runtime { source },
+        }) if source.code == RuntimeCode::Render && source.message == WARNING
+    ));
+    let preview = session.render_props(ROUTE, &props).unwrap();
+    assert!(String::from_utf8_lossy(&preview.artifact.bytes).contains("<button>Ready</button>"));
+}
+
+#[test]
+fn live_saved_props_render_again_but_the_saved_view_keeps_its_warning() {
+    let (session, _) = session(
+        story_catalogue(),
+        fails_once_during_render(),
+        Arc::new(MemoryCache::new(1 << 20, 0)),
+    );
+    let saved = session.render(ROUTE).unwrap();
+    assert_eq!(
+        saved.document.as_ref().unwrap().warnings,
+        [Warning {
+            code: STORY_RENDER_FAILED,
+            subject: WarningSubject::Route(ROUTE.into()),
+            message: WARNING.into(),
+        }]
+    );
+    let props = serde_json::from_value(json!({"open":false})).unwrap();
+    let preview = session.render_props(ROUTE, &props).unwrap();
+    assert!(String::from_utf8_lossy(&preview.artifact.bytes).contains("<button>Ready</button>"));
+    let reused = session.render(ROUTE).unwrap();
+    assert_eq!(
+        reused.document.as_ref().unwrap().warnings,
+        saved.document.as_ref().unwrap().warnings,
+    );
 }

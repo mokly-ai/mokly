@@ -40,6 +40,19 @@ a crash replaces the sidecar process. A failed view for a timeout was
 rejected, because a story that hangs would then cost the deadline twice for
 each of its views.
 
+An error that Mokly raises with its own code while the story renders is not
+the story's own work. It keeps that code and its outcome. Examples are
+`component-props`, for props that fail the schema of a registered component,
+and `unknown-link-definition`, for a link to a definition that no entry
+module exports. A failure of Mokly's own checks of the rendered output, such
+as the check of [reserved markers](./mokly-link-validation.md#document-checks),
+also keeps the fatal `render-failed`.
+
+Decision: these errors stop the build, because the author fixes them in the
+catalogue, or because they protect Mokly's records. A failed view for them was
+rejected, because the `!mokly` hint of its error document would then point at
+the wrong fix.
+
 ## Live Props Renders
 
 A live props render is a render of edited props for the Props tab, through the
@@ -92,8 +105,13 @@ the reason comes last, because its length varies.
 
 The reason is the message of the thrown error. For a thrown value that is not
 an error, the reason is the string of that value. When the message is empty,
-the reason is the name of the error, such as `Error`. The reason holds no
-stack.
+the reason is the name of the error, such as `Error`. When Mokly cannot turn
+the thrown value, its message, or its name into text, the reason is
+`Unknown error`. The reason holds no stack.
+
+The reason is well-formed text. Mokly replaces each lone surrogate with
+U+FFFD, the replacement character. A lone surrogate is one half of a UTF-16
+surrogate pair without the other half.
 
 The reason holds no absolute path. Mokly changes each absolute path and each
 `file:` URL in it:
@@ -106,8 +124,8 @@ The reason holds no absolute path. Mokly changes each absolute path and each
   `node_modules/pkg/index.js`.
 - Each other absolute path or `file:` URL becomes `…`.
 
-So one failure gives the same reason, and the same error document, on both
-sides of Changes and on every machine.
+So one failure gives the same reason on both sides of Changes and on every
+machine.
 
 Decision: the reason holds no absolute path, because the checkout folder is
 not an input, and identical inputs give identical bytes.
@@ -177,8 +195,9 @@ Changes compares the error document as the document of the failed view,
 under the [view rules of Changes](./mokly-changes.md#entries-and-views). So a
 story that renders at the branch point and fails on the branch is an ordinary
 changed view: Before shows the base render, and Current shows the error
-document. When both sides fail with the same reason, the two error documents
-are equal, so the view is unchanged.
+document. The view is unchanged when its two error documents are equal, such
+as when the entry keeps its title, and the story keeps its name and fails
+again with the same reason.
 
 A failed view on the base side does not make Changes unavailable. Every other
 failure of a base render keeps its outcome under
