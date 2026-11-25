@@ -144,8 +144,8 @@ A branch from this branch applies each answer and deletes the file.
 - [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): B.
 - [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
   F.
-- [design-external-link-check.md](follow-ups/design-external-link-check.md):
-  E.
+- `design-external-link-check.md`: E. Milestone 1a applied it and deleted
+  the file.
 
 ### Decisions that wait for the user
 
@@ -1262,6 +1262,20 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     "Render failed" mockup, "Later edit failed", shows a failure after an
     earlier edit rendered. Reason: each sentence of design call 29 then has a
     mockup whose preview matches it.
+33. Made on 2026-11-25 in Milestone 1a. The Storybook mockups live in their
+    own Canvas folder, `design/canvas/stories`, "Storybook stories", because
+    the Component explorer folder already holds five screens. One branch
+    depicts every state: the Menu stories file, whose first story,
+    Collapsed, renders the parent page, whose Expanded story no longer
+    renders, and whose Disabled story the branch adds. The panel of a story
+    opens at its head, so the Story and Storybook rows show. The two
+    saved-props sentences of design calls 29 and 32 stay in
+    `SAVED_PREVIEW_COPY` of the controls copy, outside `CONTROLS_COPY`,
+    until Milestone 24a moves them into `CONTROLS_COPY` and the viewer's
+    copy together. Reason: the merge of `main` on 2026-11-25 dropped the
+    sentence of design call 32 from the viewer's copy, so the second TODO of
+    Milestone 24a no longer holds, and `tests/viewer_controls_copy.test.ts`
+    requires both copies to hold the same keys.
 
 ## Tracks
 
@@ -1331,8 +1345,9 @@ Storybook.
       mockup, as design call 32 says, and add it to the frozen design lists
       and to the route table of `docs/protocol/mokly-component-controls-design.md`.
       Branch: `conductor/storybook-support-a-mockups`.
-- [ ] Update the mockups for the answer to decision 27. Milestone 1a does
-      this TODO on the Canvas design, and ticks it.
+- [x] Update the mockups for the answer to decision 27. Milestone 1a does
+      this TODO on the Canvas design, and ticks it. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
 - [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
       Branch: `conductor/storybook-support-a-mockups`.
@@ -1357,31 +1372,39 @@ This milestone draws them again on the Canvas design, with the answers of
 `.context/storybook-support/merge-main-justifications.md` of the primary
 workspace.
 
-- [ ] Draw the state of a story that could not render on the Canvas
+- [x] Draw the state of a story that could not render on the Canvas
       component page, desktop and mobile, and in Changes: the error document
       in Current, and the last successful render in Before. The error
       document names the story, says that it could not render, gives the
       reason in a secondary place, and gives the `!mokly` tag. It carries
       only its own styles, with system colors that follow the view's scheme,
-      as decision 26 says. Draw it in a dark view too.
-- [ ] Draw the Story row of design call 30 and the Storybook link in the
+      as decision 26 says. Draw it in a dark view too. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Draw the Story row of design call 30 and the Storybook link in the
       Details of a stories entry. The link opens in a new tab, with an icon
       and a screen-reader label, as decision 27 says. Draw it without an
       address, because a design link opens a design entry. The page of an
       added entry in Changes has no Storybook link, as decision 23 says.
-- [ ] Draw the saved-props sentences of design call 29 in the "Render
+      Branch: `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Draw the saved-props sentences of design call 29 in the "Render
       failed" and the "Invalid prop value" controls mockups, and the "Later
-      edit failed" state of design call 32.
-- [ ] Add each new state to the component and controls design inventories,
-      the screen and browser inventories, and the design snapshots.
-- [ ] Follow the copy rules and the forbidden patterns of the `product-ui`
-      skill.
-- [ ] Run the mockup check named in `AGENTS.md`. Smoke-test the changed
-      pages through `npm run dev`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
-      mockups show.
-- [ ] Commit, push, review against this branch, give the findings to the
+      edit failed" state of design call 32. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Add each new state to the component and controls design inventories,
+      the screen and browser inventories, and the design snapshots. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Follow the copy rules and the forbidden patterns of the `product-ui`
+      skill. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Run the mockup check named in `AGENTS.md`. Smoke-test the changed
+      pages through `npm run dev`. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Update the design and the TODOs of this plan for each problem that the
+      mockups show. Branch:
+      `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-milestone-1a-canvas-mockups-omnr`.
 
 ## Milestone 2: Story reading documentation
 

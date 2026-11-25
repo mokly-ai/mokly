@@ -7,6 +7,7 @@ import { OUTCOME_NAVIGATION_STATES } from "../outcomes/parts/navigation.js";
 import { PROPS_NAVIGATION_STATES } from "../props/parts/navigation.js";
 import { SEARCH_NAVIGATION_STATES } from "../search/parts/navigation.js";
 import { TAG_FILTERS } from "../search/parts/tags.js";
+import { STORY_NAVIGATION_STATES } from "../stories/parts/navigation.js";
 
 import { CANVAS_PAGES as C, type CanvasDestination } from "./destinations.js";
 
@@ -79,6 +80,7 @@ export const CANVAS_NAVIGATION_STATES = {
   ...PROPS_NAVIGATION_STATES,
   ...EVIDENCE_NAVIGATION_STATES,
   ...FLOW_NAVIGATION_STATES,
+  ...STORY_NAVIGATION_STATES,
   [C.overview]: {
     changes: C.catalogue,
     tags: { active: null, picker: false, artboards: TAG_FILTERS },

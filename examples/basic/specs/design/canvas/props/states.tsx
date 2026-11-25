@@ -35,12 +35,35 @@ const TOGETHER: DefaultState = {
   preview: DEFAULT_SAVED,
 };
 
-/** The edits after their render failed: the last valid props stay. */
+/** The edits after their first render failed: the saved props stay. */
 const FAILED: DefaultState = {
   design: P.propsError,
   form: "failed",
   values: DEFAULT_EDITS.edited,
   preview: DEFAULT_SAVED,
+};
+
+/**
+ * Try again of the later edit: its render is in flight, and the frames keep
+ * the earlier edit while the fields keep the later one.
+ */
+const LATER_PENDING: DefaultState = {
+  design: P.propsLaterPending,
+  form: "pending-later",
+  values: DEFAULT_EDITS.later,
+  preview: DEFAULT_EDITS.edited,
+  pending: true,
+};
+
+/**
+ * A later edit after the edited props rendered, whose render failed: the
+ * frames keep the earlier edit, the last valid props.
+ */
+const LATER: DefaultState = {
+  design: P.propsLaterEdit,
+  form: "failed-later",
+  values: DEFAULT_EDITS.later,
+  preview: DEFAULT_EDITS.edited,
 };
 
 /** The edits after Serve discarded their preview: the saved props show. */
@@ -66,7 +89,7 @@ export const canvasPropsStatesScreen = defineScreen({
       propsState(
         "invalid",
         "Invalid value",
-        "Corner radius set to 40, above its maximum of 32: the field keeps the entered value with its error, the alert asks to check the highlighted values, and the frames keep the last valid preview.",
+        "Corner radius set to 40, above its maximum of 32: the field keeps the entered value with its error, the alert asks to check the highlighted values, and the frames keep the saved props, because no edit has rendered.",
         (viewport) => (
           <DefaultStateArtboard state={INVALID} viewport={viewport} />
         ),
@@ -82,9 +105,25 @@ export const canvasPropsStatesScreen = defineScreen({
       propsState(
         "error",
         "Render failed",
-        "The render of the edits failed: the edits stay, the frames keep the last valid preview, and Try again renders the edits again through Updating preview. Reset to Default stays available.",
+        "The first render of the edits failed: the edits stay, the frames keep the saved props, as the alert says, and Try again renders the edits again through Updating preview. Reset to Default stays available.",
         (viewport) => (
           <DefaultStateArtboard state={FAILED} viewport={viewport} />
+        ),
+      ),
+      propsState(
+        "later-edit",
+        "Later edit failed",
+        "The edited props rendered, then a later edit of the label failed: the fields keep the later edit, and the frames keep the earlier edit, the last valid props, as the alert says.",
+        (viewport) => (
+          <DefaultStateArtboard state={LATER} viewport={viewport} />
+        ),
+      ),
+      propsState(
+        "later-pending",
+        "Updating the later edit",
+        "Try again of the later edit: the later edit renders again, so Updating preview stands at the top of each Default frame, which keeps the earlier edit, the last valid props, and the fields keep the later edit.",
+        (viewport) => (
+          <DefaultStateArtboard state={LATER_PENDING} viewport={viewport} />
         ),
       ),
       propsState(
