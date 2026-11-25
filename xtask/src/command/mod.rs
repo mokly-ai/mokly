@@ -20,6 +20,7 @@ pub(crate) struct CommandSpec {
     cwd: Option<PathBuf>,
     input: Option<String>,
     environment: Vec<(String, Option<String>)>,
+    keep_going: bool,
 }
 
 impl CommandSpec {
@@ -31,6 +32,7 @@ impl CommandSpec {
             cwd: None,
             input: None,
             environment: Vec::new(),
+            keep_going: false,
         }
     }
 
@@ -85,6 +87,18 @@ impl CommandSpec {
         self.environment
             .push((name.to_owned(), value.map(str::to_owned)));
         self
+    }
+
+    /// Let the later commands of a suite run after this command fails. The
+    /// suite still fails with this command's error.
+    pub(crate) fn keep_going(mut self) -> Self {
+        self.keep_going = true;
+        self
+    }
+
+    /// Whether the later commands of a suite run after this command fails.
+    pub(crate) fn keeps_going(&self) -> bool {
+        self.keep_going
     }
 
     /// Inspect the working directory without changing the display command.

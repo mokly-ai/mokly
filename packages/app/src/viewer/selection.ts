@@ -1,5 +1,5 @@
-import { removeQueryKeys } from "../navigation/address";
-import type { Query } from "../navigation/address";
+import { removeQueryKeys } from "../navigation/query";
+import type { Query } from "../navigation/query";
 
 import type {
   ViewerScheme,

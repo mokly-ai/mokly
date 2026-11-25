@@ -149,7 +149,10 @@ runners. The deterministic accessibility rules above are the required gate.
 
 The site gate runs the build, the typecheck, the unit tests, the link check
 and the browser check, in that order; the Lighthouse budget runs apart from
-it. Missing or stale site output fails rather than skips.
+it. In CI the gate runs as shards, and each shard builds the site before its
+checks. A browser shard does not wait for the typecheck, the unit tests, or
+the link check of another shard, so a failure in one shard does not stop the
+others. Missing or stale site output fails rather than skips.
 
 - The build fails when a setting is invalid, when a package document is
   missing or malformed, or when the generated site-segment inventory or a
@@ -174,7 +177,8 @@ it. Missing or stale site output fails rather than skips.
 ## Continuous Integration
 
 The site gate runs in the required aggregate through its own parallel CI
-job. A separate Lighthouse job uses the same pinned Node, npm, lockfile
+jobs, one for each
+[site shard](./repository-verification.md#mockup-and-site-shards). A separate Lighthouse job uses the same pinned Node, npm, lockfile
 and Chromium installation, builds the site, and runs the report-only budget,
 keeping its results on failure. The required aggregate does not depend on
 that job.
