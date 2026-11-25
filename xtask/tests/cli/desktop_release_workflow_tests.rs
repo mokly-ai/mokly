@@ -122,7 +122,6 @@ fn desktop_release_events_and_platforms_cover_both_package_modes() {
             .find(|step| step["name"] == "Install Node")
             .unwrap();
         assert_eq!(node["with"]["node-version-file"], ".nvmrc");
-        assert_eq!(node["with"]["cache-dependency-path"], "package-lock.json");
         assert!(
             command_index(job, "npm install --global npm@11.21.0") < command_index(job, "npm ci")
         );

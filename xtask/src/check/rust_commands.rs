@@ -59,19 +59,9 @@ fn package_builds() -> [CommandSpec; 5] {
 }
 
 /// Build the inputs of the Rust tests, then run one nextest partition of them.
-/// The first test shard also runs the doc tests. With `no_fail_fast`, both
-/// commands report every failure, and the doc tests run after failed tests.
+/// The first test shard also runs the doc tests.
 pub(super) fn test_shard(shard: Shard, no_fail_fast: bool) -> Vec<CommandSpec> {
-    let options: &[&str] = if no_fail_fast {
-        &["--no-fail-fast"]
-    } else {
-        &[]
-    };
-    let [tests, doc] = mokly_tests(options);
-    let mut tests = tests.args(["--partition".to_owned(), format!("slice:{shard}")]);
-    if no_fail_fast {
-        tests = tests.keep_going();
-    }
+    let [tests, doc] = rust_tests(Some(shard), no_fail_fast);
     let mut commands = vec![require_nextest()];
     commands.extend(test_builds());
     commands.push(tests);
@@ -79,6 +69,29 @@ pub(super) fn test_shard(shard: Shard, no_fail_fast: bool) -> Vec<CommandSpec> {
         commands.push(doc);
     }
     commands
+}
+
+/// Run every Mokly test target in parallel with nextest, or one partition of
+/// them, then the doc tests, which nextest does not run. With `no_fail_fast`,
+/// both commands report every failure, and the doc tests run after failed
+/// tests.
+pub(super) fn rust_tests(partition: Option<Shard>, no_fail_fast: bool) -> [CommandSpec; 2] {
+    let options: &[&str] = if no_fail_fast {
+        &["--no-fail-fast"]
+    } else {
+        &[]
+    };
+    let mut tests = mokly_cargo(&["nextest", "run"]).args(options.iter().copied());
+    if let Some(shard) = partition {
+        tests = tests.args(["--partition".to_owned(), format!("slice:{shard}")]);
+    }
+    if no_fail_fast {
+        tests = tests.keep_going();
+    }
+    let doc = mokly_cargo(&["test"])
+        .args(["--doc"])
+        .args(options.iter().copied());
+    [tests, doc]
 }
 
 /// Build the host binary, then run the Rust tests. A sharded suite runs the
@@ -92,8 +105,7 @@ pub(super) fn native_commands(shard: Option<Shard>) -> Vec<CommandSpec> {
             let mut commands = vec![require_nextest(), build_native()];
             commands.extend(rust_lints());
             commands.extend(package_builds());
-            let [tests, doc] = mokly_tests(&["--no-fail-fast"]);
-            commands.extend([tests.keep_going(), doc]);
+            commands.extend(rust_tests(None, true));
             commands
         }
         RustPart::Checks => rust_lints().into(),
@@ -109,17 +121,6 @@ pub(super) fn rust_lints() -> [CommandSpec; 2] {
 /// Fail early, with install steps, when the Rust test runner is missing.
 pub(super) fn require_nextest() -> CommandSpec {
     CommandSpec::new("node").args(["xtask/scripts/require-nextest.mjs"])
-}
-
-/// Run every Mokly test target in parallel with nextest, then the doc tests,
-/// which nextest does not run.
-pub(super) fn mokly_tests(options: &[&str]) -> [CommandSpec; 2] {
-    [
-        mokly_cargo(&["nextest", "run"]).args(options.iter().copied()),
-        mokly_cargo(&["test"])
-            .args(["--doc"])
-            .args(options.iter().copied()),
-    ]
 }
 
 /// Lint the feature-gated design matrix target that the workspace lint skips.

@@ -5,7 +5,7 @@ use crate::command::CommandSpec;
 use super::cloud_commands::cloud_commands;
 use super::request::{DependencyAudit, Shard, VerificationSuite};
 use super::rust_commands::{
-    RustPart, design_matrix_clippy, mokly_tests, native_commands, require_nextest, rust_lints,
+    RustPart, design_matrix_clippy, native_commands, require_nextest, rust_lints, rust_tests,
     test_builds, test_shard,
 };
 
@@ -95,7 +95,7 @@ fn repository_steps(shard: Option<Shard>, dependency_audit: DependencyAudit) -> 
             steps.extend(
                 test_builds()
                     .into_iter()
-                    .chain(mokly_tests(&[]))
+                    .chain(rust_tests(None, false))
                     .map(Step::Run),
             );
             steps

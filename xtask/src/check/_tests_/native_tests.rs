@@ -1,6 +1,7 @@
 //! Native hosted jobs build once before they run every Rust test.
 
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
@@ -9,7 +10,7 @@ use crate::command::{CommandRunnerRunMock, CommandSpec};
 use crate::error::Error;
 
 use super::commands::commands_for;
-use super::request::{CheckRequest, DependencyAudit, VerificationSuite};
+use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
 use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
@@ -122,37 +123,43 @@ fn native_build_failure_prevents_tests() {
     ));
 }
 
+/// The complete suite and the first test shard both keep going after failed tests.
 #[test]
 fn failed_native_tests_still_run_the_doc_tests_and_fail_the_suite() {
-    let observed = Arc::new(Mutex::new(Vec::new()));
-    let captured = observed.clone();
-    let nextest = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
-    let runner = DefaultCheckRunner::new(
-        Arc::new(Unimock::new(
-            CommandRunnerRunMock
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, command: &CommandSpec| {
-                    let command = command.display();
-                    captured.lock().unwrap().push(command.clone());
-                    if command == nextest {
-                        Err(Error::CommandFailed {
-                            command,
-                            status: "100".into(),
-                        })
-                    } else {
-                        Ok(())
-                    }
-                })),
-        )),
-        Arc::new(Unimock::new(())),
-        PathBuf::from("/workspace"),
-    );
-    assert!(matches!(
-        runner.run(CheckRequest::new(Some(VerificationSuite::Native), None, None).unwrap()),
-        Err(Error::CommandFailed { command, status }) if command == nextest && status == "100"
-    ));
-    assert_eq!(
-        observed.lock().unwrap().last().map(String::as_str),
-        Some("cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast")
-    );
+    let complete = "cargo nextest run --locked -p \"mokly-*\" -p xtask --no-fail-fast";
+    let first = format!("{complete} --partition slice:1/2");
+    for (shard, nextest) in [(None, complete.to_owned()), (Some("2/3"), first)] {
+        let observed = Arc::new(Mutex::new(Vec::new()));
+        let captured = observed.clone();
+        let failing = nextest.clone();
+        let runner = DefaultCheckRunner::new(
+            Arc::new(Unimock::new(
+                CommandRunnerRunMock
+                    .each_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, command: &CommandSpec| {
+                        let command = command.display();
+                        captured.lock().unwrap().push(command.clone());
+                        if command == failing {
+                            Err(Error::CommandFailed {
+                                command,
+                                status: "100".into(),
+                            })
+                        } else {
+                            Ok(())
+                        }
+                    })),
+            )),
+            Arc::new(Unimock::new(())),
+            PathBuf::from("/workspace"),
+        );
+        let shard = shard.map(|shard| Shard::from_str(shard).unwrap());
+        assert!(matches!(
+            runner.run(CheckRequest::new(Some(VerificationSuite::Native), shard, None).unwrap()),
+            Err(Error::CommandFailed { command, status }) if command == nextest && status == "100"
+        ));
+        assert_eq!(
+            observed.lock().unwrap().last().map(String::as_str),
+            Some("cargo test --locked -p \"mokly-*\" -p xtask --doc --no-fail-fast")
+        );
+    }
 }

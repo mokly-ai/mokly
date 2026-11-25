@@ -78,7 +78,7 @@ share one cache. Every Linux CI job that builds only `xtask` and the native
 binary shares one cache, the cloud mockup and site partitions included. The
 cloud partitions that also build `mkc-` crates, the image job, the Repository
 checks shard, the Repository test shards, and the test shards of each native
-host keep their own cache. The four app shards share one cache. The native
+host keep their own cache. The app shards share one cache. The native
 lint shard of each host caches the Cargo registry alone. A Clippy build entry
 for each host was rejected, because it would bring the total close to the
 10 GB limit, and the lint shard is not the slowest shard. The two Stripe catalogue jobs of the deploy workflow share one cache.
