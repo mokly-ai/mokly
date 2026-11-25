@@ -35,6 +35,13 @@ Public test commands and strict evidence rules live in the
   [`audit-rust.mjs`](./audit-rust.mjs) run the npm and Rust dependency audits.
 - [`aggregate.mjs`](./aggregate.mjs) holds `validateCiReports`, which checks
   that a commit has every CI suite report for each runtime profile.
+- [`ci-timing.mjs`](./ci-timing.mjs) holds `runCiTiming`, which the `CI timing`
+  job runs. It reads the jobs of the run, compares each run time with
+  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, and lists
+  the slowest tests of the downloaded reports, under the
+  [CI duration budgets](../../docs/protocol/ci-duration-budgets.md) contract.
+  Run it locally on a saved API response with
+  `node scripts/verification/ci-timing.mjs --jobs-file {file} --reports {directory}`.
 - [`repository-ratchets.mjs`](./repository-ratchets.mjs) holds
   `runRepositoryRatchets`, which runs every maintainability ratchet of the
   Repository suite.
@@ -191,10 +198,11 @@ and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.
 
-| Action                        | Commit                                     | Comment    |
-| ----------------------------- | ------------------------------------------ | ---------- |
-| `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`     |
-| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`     |
-| `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0` |
-| `Swatinem/rust-cache`         | `d1527c8f67ef9af357290475d4af4b0fab8f12e0` | `# v2.9.3` |
-| `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`     |
+| Action                        | Commit                                     | Comment     |
+| ----------------------------- | ------------------------------------------ | ----------- |
+| `useblacksmith/checkout`      | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1`      |
+| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2`      |
+| `actions/setup-node`          | `249970729cb0ef3589644e2896645e5dc5ba9c38` | `# v6.5.0`  |
+| `Swatinem/rust-cache`         | `d1527c8f67ef9af357290475d4af4b0fab8f12e0` | `# v2.9.3`  |
+| `taiki-e/install-action`      | `fe3acb53a98b62c772db35de75ce0e4595e7ca8c` | `# v2.90.8` |
+| `useblacksmith/run-testbox`   | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2`      |

@@ -36,9 +36,10 @@ export const SITE_OUTPUT_FIRST_SEGMENTS = Object.freeze([
 export type SitePath = (typeof SITE_PATHS)[keyof typeof SITE_PATHS];
 
 /**
- * The one application route that the pricing page's plan actions open.
- * This relative path shares the site origin, and the origin router sends it
- * to the app. The link check accepts it without a site file.
+ * The one application route that the site links: Get started and the
+ * pricing page's cloud plan actions open it. This relative path shares the
+ * site origin, and the origin router sends it to the app. The link check
+ * accepts it without a site file.
  */
 export const APP_PATHS = { signUp: "/sign-up" } as const;
 
@@ -64,10 +65,10 @@ export const EXTERNAL_LINKS = {
 } as const;
 
 /**
- * Where Get started goes: the first Getting started guide, which the
- * installed `@mokly/mokly` package publishes under the documentation.
+ * Where the site's main Get started goes, in the header, the menu and the
+ * home hero: the app's sign-up route.
  */
-export const GET_STARTED_PATH = "/docs/start/install/";
+export const GET_STARTED_PATH: AppPath = APP_PATHS.signUp;
 
 /** Documentation routes all live under the documentation landing page. */
 export function isDocsRoute(route: string): boolean {

@@ -23,6 +23,7 @@ import {
   textContent,
   type Element,
 } from "./design-site-test-helpers";
+import { type SiteScreenPath } from "./site-stylesheets";
 
 /** The installed package, which the site reads its guides from. */
 const PACKAGE = "node_modules/@mokly/mokly";
@@ -100,8 +101,11 @@ export interface SiteRule {
   selectors: string[];
 }
 
-/** Every rule of the site styles, each with the width query that holds it. */
-export function siteRules(): SiteRule[] {
+/**
+ * Every rule of the site styles, or of the styles of one screen, each with
+ * the width query that holds it.
+ */
+export function siteRules(screen?: SiteScreenPath): SiteRule[] {
   const found: SiteRule[] = [];
   const read = (source: string, at: string | null) => {
     let index = 0;
@@ -129,7 +133,7 @@ export function siteRules(): SiteRule[] {
       index = end + 1;
     }
   };
-  read(siteStyles().replace(/\/\*[\s\S]*?\*\//g, ""), null);
+  read(siteStyles(screen).replace(/\/\*[\s\S]*?\*\//g, ""), null);
   return found;
 }
 

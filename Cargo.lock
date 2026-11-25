@@ -3142,6 +3142,7 @@ dependencies = [
  "mkc-domain",
  "mkc-store-interface",
  "mkc-test-pg",
+ "scheduled-thread-pool",
  "thiserror",
  "unimock",
  "uuid",
@@ -5024,7 +5025,7 @@ dependencies = [
 [[package]]
 name = "sandbox-e2b"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/sandbox.git?rev=86d82340715ed443b596565f3509ced58c299fc2#86d82340715ed443b596565f3509ced58c299fc2"
+source = "git+https://github.com/futex-ai/sandbox.git?rev=5d856dbc03956a622a04d43e83198e519b390c84#5d856dbc03956a622a04d43e83198e519b390c84"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -5034,6 +5035,7 @@ dependencies = [
  "internal-error",
  "reqwest",
  "sandbox-interface",
+ "sandbox-runtime-assets",
  "serde",
  "serde_json",
  "sha2",
@@ -5048,7 +5050,7 @@ dependencies = [
 [[package]]
 name = "sandbox-interface"
 version = "0.2.0"
-source = "git+https://github.com/futex-ai/sandbox.git?rev=86d82340715ed443b596565f3509ced58c299fc2#86d82340715ed443b596565f3509ced58c299fc2"
+source = "git+https://github.com/futex-ai/sandbox.git?rev=5d856dbc03956a622a04d43e83198e519b390c84#5d856dbc03956a622a04d43e83198e519b390c84"
 dependencies = [
  "async-trait",
  "chrono",
@@ -5062,6 +5064,11 @@ dependencies = [
  "url",
  "uuid",
 ]
+
+[[package]]
+name = "sandbox-runtime-assets"
+version = "0.2.0"
+source = "git+https://github.com/futex-ai/sandbox.git?rev=5d856dbc03956a622a04d43e83198e519b390c84#5d856dbc03956a622a04d43e83198e519b390c84"
 
 [[package]]
 name = "schannel"
@@ -5609,7 +5616,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

@@ -23,6 +23,9 @@ pub(crate) enum Error {
     /// Captured subprocess input writer stopped unexpectedly.
     #[error("[xtask/command] input writer panicked")]
     InputWriterPanicked,
+    /// A lane of concurrent commands stopped unexpectedly.
+    #[error("[xtask/command] a concurrent command lane panicked")]
+    ConcurrentLanePanicked,
     /// File policy violations with their actionable diagnostics.
     #[error("[xtask/policy] repository violations:\n{}", .0.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n"))]
     Violations(Vec<Violation>),
@@ -80,7 +83,7 @@ pub(crate) enum Error {
         shard: String,
     },
     /// Sharding was requested without selecting a suite.
-    #[error("[xtask/check] --shard is valid only for the browser and cloud-app suites")]
+    #[error("[xtask/check] --shard is valid only for the browser, native, and cloud-app suites")]
     ShardRequiresSuite,
     /// Sharding was requested for an unsupported suite.
     #[error("[xtask/check] --shard is not supported with suite {suite}")]

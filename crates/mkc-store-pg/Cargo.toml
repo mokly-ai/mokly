@@ -24,6 +24,7 @@ workspace = true
 
 [dev-dependencies]
 mkc-test-pg = { workspace = true }
+scheduled-thread-pool = "0.2.7"
 uuid = { version = "1.26.1", features = ["v7"] }
 
 [[test]]

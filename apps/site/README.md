@@ -18,8 +18,9 @@ chrome and delivery. Product and account routes remain in `packages/app`.
 - Render Mokly Cloud and Review documentation from this repository's Markdown.
 - Draw the home page's spread and demos of a fictional demo app as static
   components at build time.
-- Link every page's shared header to the public Mokly GitHub repository, and
-  the Pricing page's plan actions to the app's `/sign-up`.
+- Link every page's shared header to the public Mokly GitHub repository.
+  Link Get started in the header, the menu and the home hero, and the
+  Pricing page's cloud plan actions, to the app's `/sign-up`.
 - Produce a static site with no runtime API calls, cookies or third-party
   scripts. The footer's scheme control keeps the reader's choice in
   `localStorage`, and each page applies a kept choice before it first
@@ -85,7 +86,10 @@ static components at build time: the hero's heading as a selected text
 layer, the spread of the app's screens and component sets, and the depicted
 product in the Browse, Review and Edit frames and the open foundation. The
 home demos island plays each frame's demo once when it comes into view, and
-marks the section in view in the Specs panel. The built page draws each demo
+marks the section in view in the Specs panel. A reader's pointer that moves
+over the Browse frame's compared screens pauses its sweep, and a grab slides
+the Swipe divider.
+The built page draws each demo
 in its finished state, so a reader without script or with reduced motion
 sees that state.
 
@@ -146,10 +150,12 @@ environment and are read once:
 | `SITE_ORIGIN` | `http://localhost:4321` | Canonical metadata, sitemap and feed origin |
 
 The origin must be an absolute HTTP(S) origin without credentials, path, query or
-fragment. Explicit empty values fail the build. Get started uses the relative
-path `/docs/start/install/`. The Pricing page's Create an account and Start a
-7-day trial use the app's relative path `/sign-up`, and the link check accepts
-that app path.
+fragment. Explicit empty values fail the build. Get started in the header,
+the menu and the home hero uses the app's relative path `/sign-up`, as do the
+Pricing page's Create an account and Start a 7-day trial. The link check
+accepts that app path. Docs in the home's open foundation and the Pricing
+page's Open source plan uses the relative path `/docs/`, as the header's Docs
+does.
 [Marketing site](../../docs/protocol/cloud/marketing-site.md) names every link
 from the site to the app.
 
@@ -309,7 +315,7 @@ Pages project and attach the domain are in the
 
 ### Key Code
 
-- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the Install guide that Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
+- `src/navigation.ts` — `SITE_PATHS`, the root asset segments, `GET_STARTED_PATH` (the app's `/sign-up`, which Get started opens), `APP_PATHS` (the app's `/sign-up`, the one application route that the site links) and `currentPage`; the header, menu, footer, sitemap, route generator, link check and browser walk all read this one table.
 - `scripts/generate-site-segments.ts` — derives the site's first segments from `src/navigation.ts` and writes or checks the Worker's committed `site-segments.ts` module (`site:routes` and `routes:check`).
 - `src/settings.ts` — reads `SITE_ORIGIN` once from the process environment and validates it.
 - `src/mokly-package.ts` — locates the installed `@mokly/mokly`, verifies its name and version, and keeps every package file read inside that root.

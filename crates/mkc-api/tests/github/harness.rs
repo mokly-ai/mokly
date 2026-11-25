@@ -17,7 +17,7 @@ use mkc_store_pg::runtime::SystemRuntime;
 use mkc_test_pg::scratch_schema::ScratchSchema;
 use reqwest::Method;
 use reqwest::blocking::Client;
-use sandbox_interface::SandboxBackendMock;
+use sandbox_interface::SandboxLifecycleMock;
 use serde_json::Value;
 use unimock::{MockFn, Unimock, matching};
 use uuid::Uuid;
@@ -103,7 +103,7 @@ impl Harness {
         let build_requests = Arc::new(Mutex::new(Vec::new()));
         let build_backend = if configured {
             Unimock::new(
-                SandboxBackendMock::list_managed_sandboxes
+                SandboxLifecycleMock::list_managed_sandboxes
                     .each_call(matching!(_))
                     .answers(&|_, _| Ok(Vec::new())),
             )

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use sandbox_interface::{BackendCreateSandboxRequest, ProviderRef, SandboxBackend};
+use sandbox_interface::{BackendCreateSandboxRequest, ProviderRef, SandboxLifecycle};
 use tokio::runtime::Handle;
 use tokio::time::{Duration, timeout};
 
@@ -10,7 +10,7 @@ use crate::failure::Failure;
 
 /// Owns an ambiguous create or a known sandbox until explicit destruction.
 pub(crate) struct Cleanup {
-    backend: Arc<dyn SandboxBackend>,
+    lifecycle: Arc<dyn SandboxLifecycle>,
     runtime: Handle,
     request: Option<BackendCreateSandboxRequest>,
     provider: Option<ProviderRef>,
@@ -18,12 +18,12 @@ pub(crate) struct Cleanup {
 
 impl Cleanup {
     pub(crate) fn new(
-        backend: Arc<dyn SandboxBackend>,
+        lifecycle: Arc<dyn SandboxLifecycle>,
         runtime: Handle,
         request: BackendCreateSandboxRequest,
     ) -> Self {
         Self {
-            backend,
+            lifecycle,
             runtime,
             request: Some(request),
             provider: None,
@@ -43,7 +43,7 @@ impl Cleanup {
         if let Some(provider) = &self.provider {
             let result = timeout(
                 Duration::from_secs(120),
-                self.backend.destroy_sandbox(provider.clone()),
+                self.lifecycle.destroy_sandbox(provider.clone()),
             )
             .await;
             self.provider = None;
@@ -62,13 +62,13 @@ impl Drop for Cleanup {
         if provider.is_none() && request.is_none() {
             return;
         }
-        let backend = self.backend.clone();
+        let lifecycle = self.lifecycle.clone();
         self.runtime.spawn(async move {
             let cleanup = async {
                 let provider = match provider {
                     Some(provider) => Some(provider),
                     None => match request {
-                        Some(request) => match backend.recover_sandbox_create(request).await {
+                        Some(request) => match lifecycle.recover_sandbox_create(request).await {
                             Ok(Some(sandbox)) => Some(sandbox.provider_ref),
                             _ => None,
                         },
@@ -76,7 +76,7 @@ impl Drop for Cleanup {
                     },
                 };
                 if let Some(provider) = provider {
-                    let _ = backend.destroy_sandbox(provider).await;
+                    let _ = lifecycle.destroy_sandbox(provider).await;
                 }
             };
             let _ = timeout(Duration::from_secs(120), cleanup).await;

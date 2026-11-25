@@ -8,7 +8,7 @@ use futures_util::stream;
 use mkc_build_interface::log::{BuildLogSink, BuildLogSinkMock};
 use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use mkc_build_interface::runner::BuildRunner;
-use sandbox_interface::{SandboxBackend, SandboxBackendMock};
+use sandbox_interface::{SandboxFilesMock, SandboxLifecycleMock, SandboxProcessesMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::clock::{BuildClock, BuildClockMock};
@@ -16,20 +16,21 @@ use crate::runner::SandboxBuildRunner;
 
 use super::fixtures::{INSTALLATION, create, now, provider, request, sandbox};
 use super::script::events;
+use super::support::capabilities;
 
 #[tokio::test]
 async fn creation_credentials_and_progress_share_the_attempt_deadline() {
     let request = request();
     let expected_create = create(&request, 1020);
     let attempt = request.attempt_operation_id;
-    let backend: Arc<dyn SandboxBackend> = Arc::new(Unimock::new((
-        SandboxBackendMock::create_sandbox
+    let backend: Arc<Unimock> = Arc::new(Unimock::new((
+        SandboxLifecycleMock::create_sandbox
             .next_call(matching!(_))
             .answers_arc(Arc::new(move |_, actual| {
                 assert_eq!(actual, expected_create);
                 Ok(sandbox())
             })),
-        SandboxBackendMock::write_file
+        SandboxFilesMock::write_file
             .next_call(matching!(_))
             .answers_arc(Arc::new(|_, actual| {
                 assert_eq!(actual.root, "/home/user");
@@ -40,7 +41,7 @@ async fn creation_credentials_and_progress_share_the_attempt_deadline() {
                 );
                 Ok(())
             })),
-        SandboxBackendMock::stream_process
+        SandboxProcessesMock::stream_process
             .next_call(matching!(_))
             .answers_arc(Arc::new(|_, actual| {
                 assert_eq!(actual.command, "git");
@@ -50,7 +51,7 @@ async fn creation_credentials_and_progress_share_the_attempt_deadline() {
                 assert_eq!(actual.idle_timeout, Duration::from_secs(120));
                 Ok(Box::pin(stream::iter(events(9, "", ""))))
             })),
-        SandboxBackendMock::destroy_sandbox
+        SandboxLifecycleMock::destroy_sandbox
             .next_call(matching!(_))
             .answers_arc(Arc::new(|_, actual| {
                 assert_eq!(actual, provider());
@@ -82,7 +83,7 @@ async fn creation_credentials_and_progress_share_the_attempt_deadline() {
             .answers_arc(Arc::new(|_, _| Ok(()))),
     )));
     let runner: &dyn BuildRunner =
-        &SandboxBuildRunner::new(backend, clock, "test-builds".into()).unwrap();
+        &SandboxBuildRunner::new(capabilities(backend), clock, "test-builds".into()).unwrap();
     assert!(matches!(
         runner.run(request, sink).await,
         BuildOutcome::StepFailed {

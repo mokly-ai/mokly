@@ -68,5 +68,6 @@ pub(super) fn create(request: &BuildRequest, lifetime: u64) -> BackendCreateSand
         profile: "build".into(),
         network: SandboxNetworkPolicy::Open,
         snapshot_provider_ref: None,
+        size: None,
     }
 }

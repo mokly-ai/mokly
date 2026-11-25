@@ -9,6 +9,9 @@
  * steps show them in place of the panels.
  */
 
+import "./styles/shared.js";
+import "./styles/docs.js";
+
 import { SiteLayout } from "./parts/chrome.js";
 import {
   FIRST_SCREEN_DESKTOP_PAGE,
@@ -62,7 +65,7 @@ function SiteDocs({
   );
 }
 
-/** The Install guide, where Get started leads. */
+/** The Install guide, where Docs leads. */
 export function SiteDocsScreen({ viewport }: { viewport: Viewport }) {
   return <SiteDocs page={INSTALL_PAGE} viewport={viewport} />;
 }

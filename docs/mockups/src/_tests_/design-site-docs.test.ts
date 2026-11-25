@@ -22,9 +22,9 @@ import {
   elements,
   label,
   siteDocument,
-  siteScreens,
   siteStyles,
 } from "./design-site-test-helpers";
+import { siteScreens } from "./site-stylesheets";
 
 const sections = SECTION_IDS.map((id) => SECTION_TITLES[id]);
 
@@ -218,20 +218,23 @@ test("the sub-bar names the page and opens the tree sheet, open only in the mobi
 });
 
 test("every promised documentation control changes more than color on hover", () => {
-  assertHoverChangesMoreThanColor(hoverClasses);
+  assertHoverChangesMoreThanColor(hoverClasses, "design/site/docs");
 });
 
 test("documentation control boundaries use the strong border role", () => {
-  assertStrongBoundaries([
-    ".site-search",
-    ".site-docs-outline",
-    ".site-docs-edit",
-    ".site-pager-item",
-  ]);
+  assertStrongBoundaries(
+    [
+      ".site-search",
+      ".site-docs-outline",
+      ".site-docs-edit",
+      ".site-pager-item",
+    ],
+    "design/site/docs",
+  );
 });
 
 test("the Layers and Inspect panels stick below the tool bar and the tree scrolls in its panel", () => {
-  const parsed = cssRules(siteStyles());
+  const parsed = cssRules(siteStyles("design/site/docs"));
   const exact = (selector: string) => {
     const rule = parsed.find(
       (candidate) => candidate.selector.trim() === selector,
@@ -253,7 +256,7 @@ test("the Layers and Inspect panels stick below the tool bar and the tree scroll
 });
 
 test("below 1280px the desktop document trades Inspect for the disclosure, and below 1024px Layers for the sub-bar", () => {
-  const rules = siteRules();
+  const rules = siteRules("design/site/docs");
   const display = (at: string | null, part: string) =>
     rules
       .filter(
@@ -273,5 +276,8 @@ test("below 1280px the desktop document trades Inspect for the disclosure, and b
 });
 
 test("split site styles own the documentation compositions", () => {
-  assert.ok(siteStyles().includes(".site-doc-tree {"), ".site-doc-tree");
+  assert.ok(
+    siteStyles("design/site/docs").includes(".site-doc-tree {"),
+    ".site-doc-tree",
+  );
 });
