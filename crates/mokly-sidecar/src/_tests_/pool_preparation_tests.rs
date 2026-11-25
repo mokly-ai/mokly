@@ -20,6 +20,7 @@ fn fixture() -> (State, Slot) {
         "g".into(),
         Bundle {
             vite: false,
+            vite_inputs: None,
             evaluation: Some("evaluation".into()),
             entry_files: vec!["entry.ts".into()],
             renderer: None,
@@ -70,6 +71,7 @@ fn fixture() -> (State, Slot) {
         "g".into(),
         CssModules {
             generation: "g".into(),
+            named_exports: None,
             class_maps: BTreeMap::from([(
                 "entry.module.css".into(),
                 BTreeMap::from([("class".into(), "scoped".into())]),

@@ -12,6 +12,7 @@ use mokly_compare::dependency_types::{Resolved, Tier};
 use mokly_graph::types::{GraphFactory, RenderGeneration};
 use mokly_render::runtime::Runtime;
 use mokly_render::side::BaseSide;
+use mokly_sidecar::bundle_params::ViteBaseEnv;
 use mokly_sidecar::methods::{Call, ModuleResolution};
 use unimock::Unimock;
 
@@ -156,6 +157,53 @@ fn an_unchanged_base_reuses_head_renders_and_a_changed_entry_renders_on_its_side
         })
         .collect();
     assert_eq!(renders, [generation_id(changed.as_ref())]);
+}
+
+#[test]
+fn an_unchanged_vite_base_with_a_tracked_env_reuses_head_renders() {
+    let head = consumer();
+    let base = base();
+    for side in [&head, &base] {
+        side.replace(
+            "mokly.config.json",
+            "\"roots\":",
+            "\"vite\": true,\n  \"roots\":",
+        );
+        side.write(
+            "vite.config.ts",
+            "import react from '@vitejs/plugin-react'; export default { plugins: [react()] };\n",
+        );
+        side.write(".env", "VITE_LABEL=shared label\n");
+        side.replace(
+            "specs/u/u.mockup.tsx",
+            ">U</main>",
+            ">{import.meta.env.VITE_LABEL}</main>",
+        );
+    }
+    let head_generation = head.generation(head.prepare().unwrap());
+    let document = head_generation.render("u/u/index.mobile.html").unwrap();
+    assert!(String::from_utf8_lossy(&document.bytes).contains("shared label"));
+    render_all(head_generation.as_ref());
+    let runtime = Arc::new(
+        base_runtime(&head, &base, &head.repository(), None)
+            .as_ref()
+            .clone()
+            .with_vite_base_env(ViteBaseEnv {
+                working_root: head.repository().to_string_lossy().into_owned(),
+                indexed: vec![".env".into()],
+                pinned: vec![".env".into()],
+                links: BTreeMap::new(),
+            }),
+    );
+    let unchanged = base_generation(&runtime, &base);
+    assert_eq!(keys(unchanged.as_ref()), keys(head_generation.as_ref()));
+    assert_ne!(
+        generation_id(unchanged.as_ref()),
+        generation_id(head_generation.as_ref())
+    );
+    let calls = render_calls(&head).len();
+    render_all(unchanged.as_ref());
+    assert_eq!(render_calls(&head).split_off(calls), []);
 }
 
 #[test]

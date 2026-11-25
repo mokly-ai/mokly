@@ -4,6 +4,7 @@
 
 pub mod bindings;
 pub mod bundle_outcomes;
+pub mod bundle_params;
 pub mod bundle_reply;
 mod bundle_reply_decode;
 pub mod bundle_store;
@@ -80,6 +81,7 @@ pub mod source_digests;
 pub mod typescript;
 pub mod usage;
 pub mod vite_css;
+pub mod vite_env;
 pub mod wire;
 mod wire_decode;
 pub mod workers;

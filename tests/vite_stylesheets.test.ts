@@ -75,6 +75,31 @@ test("Vite transforms a component's Sass imports and declared stylesheet", async
   );
 });
 
+test("Vite renders its own CSS Module named bindings", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig([]),
+    "src/card.mockup.tsx": component(
+      'import styles, { class as className, __esModule as esmClass } from "./card.module.css"; import * as bindings from "./card.module.css";',
+      '<p className={className} data-esm={esmClass} data-default={styles["btn-primary"]} data-named={"btn-primary" in bindings}>Card</p>',
+    ),
+    "src/card.module.css":
+      ".class { color: teal } .btn-primary { display: block } .__esModule { display: inline }",
+  });
+  const built = await stylesheetBuild(root);
+  assert.equal(built.code, 0, built.stderr);
+  const html = await generated(root, "card/index.mobile.html");
+  const scoped = /<p class="(mokly_[a-f0-9]{12}_class)"/.exec(html)?.[1];
+  assert.ok(scoped, html);
+  assert.match(
+    html,
+    /data-esm="mokly_[a-f0-9]{12}___esModule" data-default="mokly_[a-f0-9]{12}_btn-primary" data-named="false"/,
+  );
+  assert.match(
+    await generated(root, "styles/src/card.mockup.tsx.css"),
+    new RegExp("\\." + scoped + "\\s*\\{[^}]*color:\\s*teal"),
+  );
+});
+
 test("Vite delivers Tailwind utilities used by a component", async (context) => {
   const root = await consumer(context, {
     "mokly.config.json": stylesheetConfig(["theme.css"]),

@@ -103,8 +103,6 @@ jobs:
         with:
           node-version: 24.21.0
           package-manager-cache: false
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Validate Cloudflare configuration
         id: credentials
         run: |

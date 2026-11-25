@@ -82,6 +82,7 @@ fn settings(root: &Path) -> Bundle {
     let root = dunce::canonicalize(root).unwrap();
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec!["entry.ts".into()],
         stories_files: Vec::new(),

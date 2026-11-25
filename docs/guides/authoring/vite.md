@@ -50,16 +50,27 @@ A `react` or `react-dom` alias in `resolve.alias` selects the React
 installation that every module, dependency, and render uses.
 Without a matching alias, React and React DOM come from the project.
 
+In Changes, the base side reads Git-tracked env files from the base commit.
+Both sides share local values from untracked env files in the working tree,
+such as a Git-ignored `.env.local`. A new env file you add to Git supplies
+values only to the working-tree side. Changes can show the effect of those
+values.
+
 ## Module settings
 
-Vite resolves JavaScript imports when the adapter is enabled.
-These `moduleResolution` fields do not apply to JavaScript:
+Vite resolves JavaScript imports when you enable the adapter. Its setup
+replaces these `moduleResolution` fields in `mokly.config.json`.
 
 - `aliases`
 - `conditions`
 - `mainFields`
 - `resolveExtensions`
-- `loaders`
+
+Mokly reports a `vite-replaced-setting` warning for each field you set from
+this list, even with an empty list or map. Mokly reports the same warning
+for `loaders` only if it has a key other than `.css` or `.module.css`.
+Remove the field or keys named in the warning, or move the settings to your
+Vite setup. A build with `--strict` fails on `vite-replaced-setting`.
 
 `packageRoots` still selects dependency roots.
 The project's Vite setup resolves imports first, including its aliases.
@@ -74,11 +85,13 @@ See [configuration](/docs/authoring/config/).
 
 ## Imported styles
 
-The project's Vite setup transforms local stylesheets instead of the module
-in the `postcss` field of `mokly.config.json`. Vite applies its `css` options
-and the stylesheet's preprocessor. The default CSS transformer also uses the
-PostCSS config that Vite loads. Vite runs stylesheet transforms from plugins
-such as `@tailwindcss/vite`.
+The project's Vite setup transforms local stylesheets. Mokly reports a
+`vite-replaced-setting` warning if you set `postcss` in `mokly.config.json`.
+Remove the field or move your PostCSS settings to the Vite setup.
+
+Vite applies its `css` options and the stylesheet's preprocessor. The default
+CSS transformer also uses the PostCSS config that Vite loads. Vite runs
+stylesheet transforms from plugins such as `@tailwindcss/vite`.
 
 Import, configure, or declare local stylesheets with these lowercase suffixes,
 as in your project's own Vite build:
@@ -134,11 +147,26 @@ Mokly writes no file into the project when it loads and runs the Vite setup.
 Vite runs without a dev server, hot reload, or dependency pre-bundling.
 Mokly's Serve command serves the catalogue and watches its inputs.
 
-An edit to the Vite config file reloads the setup in Serve.
-An edit to a file it imports or an `.env` file also reloads the setup.
+Serve reloads the Vite setup when the Vite config file, a file it imports, or
+an env file changes. Serve also reloads when you add, change, or remove a
+PostCSS config file that Vite looks up.
 
 Serve renders again when a file that the stylesheet transform reports as a
 dependency changes. This includes files that `composes` uses.
+
+For other files that your setup or its plugins read directly, add a
+`rebuild` rule in `watch.rules`. Serve reloads the Vite setup when a file
+that matches the rule changes. Use paths relative to the repository root.
+For example, add this rule to `mokly.config.json` if your Vite config reads
+`config/theme.json` with `fs`.
+
+```json
+{
+  "watch": {
+    "rules": [{ "action": "rebuild", "paths": ["config/theme.json"] }]
+  }
+}
+```
 
 ## Build errors
 

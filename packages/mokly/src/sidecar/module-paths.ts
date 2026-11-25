@@ -8,7 +8,7 @@ import { missingFile } from "./file-digests.js";
 import { dependencyDirectory } from "./importer-resolution.js";
 import { moduleRoots, moduleRootsSync } from "./module-roots.js";
 import type { ModuleRoots } from "./module-roots.js";
-import { inside, logical } from "./path-scope.js";
+import { inside, logical, repositoryOwned } from "./path-scope.js";
 import type { SourceDependencyRoot } from "./source-dependencies.js";
 import {
   INSTALLED_INPUT_PREFIX,
@@ -161,11 +161,7 @@ export class ModulePaths {
   }
 
   repositoryOwned(file: string): boolean {
-    return (
-      inside(this.sourceRoot, file) &&
-      !this.dependencyRoots.some((root) => inside(root, file)) &&
-      !logical(this.sourceRoot, file).split("/").includes("node_modules")
-    );
+    return repositoryOwned(this.sourceRoot, this.dependencyRoots, file);
   }
 
   location(real: string): {

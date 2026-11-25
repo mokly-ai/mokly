@@ -4,6 +4,10 @@ use std::path::Path;
 
 use mokly_catalogue::diagnostic::{self, Issue, Warning, WarningSubject};
 use mokly_catalogue::error::CatalogueError;
+use mokly_graph::cache::Artifact;
+use mokly_graph::document_codec::EncodedView;
+use mokly_html::composition::Composed;
+use mokly_model::usage::CatalogueUsage;
 
 use crate::build::BuildError;
 use crate::build_output::{failure, warnings};
@@ -133,8 +137,7 @@ fn build_warning_strict_failures_count_all_but_base_dependencies_in_both_numbers
     }
 }
 
-#[test]
-fn stylesheet_extglob_warning_has_exact_plain_and_rich_terminal_text() {
+fn assert_warning_terminal_text(records: &[Warning], line: &str) {
     for (mode, prefix) in [(Mode::Plain, "[mokly/warning]"), (Mode::Rich, "  !")] {
         let style = Style {
             mode,
@@ -142,16 +145,55 @@ fn stylesheet_extglob_warning_has_exact_plain_and_rich_terminal_text() {
             ascii: false,
             columns: 240,
         };
-        let warning = Warning {
-            code: "stylesheet-extglob",
-            subject: WarningSubject::Configuration("tools/mokly.json".into()),
-            message: "stylesheet match \"@(a|b)\" uses unsupported extglob syntax. Use brace alternatives such as \"{a,b}\" instead.".into(),
-        };
         assert_eq!(
-            warnings(&style, &[warning], &Redactor::default()),
-            format!(
-                "{prefix} configuration \"tools/mokly.json\": stylesheet match \"@(a|b)\" uses unsupported extglob syntax. Use brace alternatives such as \"{{a,b}}\" instead.\n"
-            )
+            warnings(&style, records, &Redactor::default()),
+            format!("{prefix} {line}\n")
         );
     }
+}
+
+#[test]
+fn stylesheet_extglob_warning_has_exact_plain_and_rich_terminal_text() {
+    let warning = Warning {
+        code: "stylesheet-extglob",
+        subject: WarningSubject::Configuration("tools/mokly.json".into()),
+        message: "stylesheet match \"@(a|b)\" uses unsupported extglob syntax. Use brace alternatives such as \"{a,b}\" instead.".into(),
+    };
+    assert_warning_terminal_text(
+        &[warning],
+        "configuration \"tools/mokly.json\": stylesheet match \"@(a|b)\" uses unsupported extglob syntax. Use brace alternatives such as \"{a,b}\" instead.",
+    );
+}
+
+#[test]
+fn stored_vite_replaced_setting_warning_has_exact_plain_and_rich_terminal_text() {
+    let warning = Warning {
+        code: "vite-replaced-setting",
+        subject: WarningSubject::Configuration("tools/mokly.json".into()),
+        message: "setting \"moduleResolution.conditions\" has no effect under the Vite adapter, because the Vite setup replaces it. Remove it, or move it to the Vite setup.".into(),
+    };
+    let artifact = Artifact {
+        bytes: Vec::new(),
+        content_type: "text/html; charset=utf-8".into(),
+        fragment: None,
+        document: Some(Composed {
+            tree: Vec::new(),
+            usage: CatalogueUsage::Unavailable,
+            warnings: vec![warning.clone()],
+            resources: Vec::new(),
+            components: Vec::new(),
+            links: Vec::new(),
+        }),
+    };
+    let encoded = EncodedView::encode(&artifact).unwrap();
+    let mut record = [0; 4096];
+    let length = encoded.write_stored(&mut record, None).unwrap();
+    assert!(length.is_some(), "the warning must allow document storage");
+    let restored = EncodedView::from_stored(&record[..length.unwrap()]).unwrap();
+    let restored_warnings = restored.restore().unwrap().document.unwrap().warnings;
+    assert_eq!(restored_warnings, [warning]);
+    assert_warning_terminal_text(
+        &restored_warnings,
+        "configuration \"tools/mokly.json\": setting \"moduleResolution.conditions\" has no effect under the Vite adapter, because the Vite setup replaces it. Remove it, or move it to the Vite setup.",
+    );
 }

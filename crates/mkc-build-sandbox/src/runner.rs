@@ -12,8 +12,8 @@ use mkc_build_interface::request::BuildRequest;
 use mkc_build_interface::runner::BuildRunner;
 use sandbox_interface::{
     BackendCreateSandboxRequest, BackendSandbox, BackendWriteFileRequest, Error as SandboxError,
-    OperationId, ResourceOwner, SandboxBackend, SandboxConsumer, SandboxId, SandboxLifetime,
-    SandboxNetworkPolicy,
+    OperationId, ResourceOwner, SandboxConsumer, SandboxFiles, SandboxId, SandboxLifecycle,
+    SandboxLifetime, SandboxNetworkPolicy, SandboxProcesses,
 };
 use tokio::runtime::Handle;
 use tokio::time::timeout;
@@ -27,9 +27,20 @@ use crate::process::{ProcessDriver, ProcessExecutor, remaining};
 use crate::publish::Publisher;
 use crate::session::{BuildSession, Session};
 
+/// The sandbox capabilities that a build attempt uses, usually one shared backend.
+#[derive(Clone)]
+pub struct BuildSandboxCapabilities {
+    /// Create, ambiguous-create recovery and destruction.
+    pub lifecycle: Arc<dyn SandboxLifecycle>,
+    /// Delivery of the checkout credential file.
+    pub files: Arc<dyn SandboxFiles>,
+    /// Streaming build commands.
+    pub processes: Arc<dyn SandboxProcesses>,
+}
+
 /// Runs builds against the caller's preconfigured build profile and backend.
 pub struct SandboxBuildRunner {
-    backend: Arc<dyn SandboxBackend>,
+    sandbox: BuildSandboxCapabilities,
     clock: Arc<dyn BuildClock>,
     deployment_id: String,
 }
@@ -37,7 +48,7 @@ pub struct SandboxBuildRunner {
 impl SandboxBuildRunner {
     /// Compose the runner; the caller configures the backend's build profile.
     pub fn new(
-        backend: Arc<dyn SandboxBackend>,
+        sandbox: BuildSandboxCapabilities,
         clock: Arc<dyn BuildClock>,
         deployment_id: String,
     ) -> Result<Self> {
@@ -49,7 +60,7 @@ impl SandboxBuildRunner {
             return Err(Error::internal(Failure::Deployment));
         }
         Ok(Self {
-            backend,
+            sandbox,
             clock,
             deployment_id,
         })
@@ -86,34 +97,39 @@ impl BuildRunner for SandboxBuildRunner {
                 profile: "build".into(),
                 network: SandboxNetworkPolicy::Open,
                 snapshot_provider_ref: None,
+                size: None,
             };
-            let mut cleanup = Cleanup::new(self.backend.clone(), runtime, create.clone());
-            let sandbox: BackendSandbox =
-                match timeout(budget, self.backend.create_sandbox(create.clone())).await {
-                    Ok(Ok(sandbox)) => sandbox,
-                    Ok(Err(SandboxError::BackendUnavailable { .. })) | Err(_) => {
-                        match timeout(
-                            remaining(request.deadline_at, self.clock.now()),
-                            self.backend.recover_sandbox_create(create),
-                        )
-                        .await
-                        {
-                            Ok(Ok(Some(sandbox))) => sandbox,
-                            _ => {
-                                cleanup.resolved();
-                                return Failure::Recovery.outcome();
-                            }
+            let mut cleanup = Cleanup::new(self.sandbox.lifecycle.clone(), runtime, create.clone());
+            let sandbox: BackendSandbox = match timeout(
+                budget,
+                self.sandbox.lifecycle.create_sandbox(create.clone()),
+            )
+            .await
+            {
+                Ok(Ok(sandbox)) => sandbox,
+                Ok(Err(SandboxError::BackendUnavailable { .. })) | Err(_) => {
+                    match timeout(
+                        remaining(request.deadline_at, self.clock.now()),
+                        self.sandbox.lifecycle.recover_sandbox_create(create),
+                    )
+                    .await
+                    {
+                        Ok(Ok(Some(sandbox))) => sandbox,
+                        _ => {
+                            cleanup.resolved();
+                            return Failure::Recovery.outcome();
                         }
                     }
-                    Ok(Err(_)) => {
-                        cleanup.resolved();
-                        return Failure::Create.outcome();
-                    }
-                };
+                }
+                Ok(Err(_)) => {
+                    cleanup.resolved();
+                    return Failure::Create.outcome();
+                }
+            };
             cleanup.acquired(sandbox.provider_ref.clone());
             let outcome = match timeout(
                 remaining(request.deadline_at, self.clock.now()),
-                self.backend.write_file(BackendWriteFileRequest {
+                self.sandbox.files.write_file(BackendWriteFileRequest {
                     sandbox_provider_ref: sandbox.provider_ref.clone(),
                     root: "/home/user".into(),
                     path: ".mokly-git-credentials".into(),
@@ -129,7 +145,7 @@ impl BuildRunner for SandboxBuildRunner {
                 Ok(Ok(())) => {
                     let process: &dyn ProcessDriver = &ProcessExecutor {
                         request: &request,
-                        backend: self.backend.clone(),
+                        processes: self.sandbox.processes.clone(),
                         clock: self.clock.clone(),
                         sink: sink.clone(),
                         provider: sandbox.provider_ref,

@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import type { Alias, DevEnvironment, Rollup } from "vite";
+import type { DevEnvironment, Rollup } from "vite";
 
 import { missingFile } from "./file-digests.js";
 import type { ModulePaths } from "./module-paths.js";
@@ -28,7 +28,6 @@ export interface ViteResolution {
 
 /** The setup, modules, peers, and native packages share one lookup policy. */
 export class ViteLookup {
-  aliases: Alias[] = [];
   private alias: (
     source: string,
     importer?: string,
@@ -56,21 +55,12 @@ export class ViteLookup {
       ...environment.getTopLevelConfig(),
       ...environment.config,
     };
-    const aliasEnvironment = {
-      name: environment.name,
-      logger: environment.logger,
-      getTopLevelConfig: () => environment.getTopLevelConfig(),
-      config: {
-        ...config,
-        resolve: { ...config.resolve, alias: this.aliases },
-      },
-    };
     const alias = vite.createIdResolver(config);
     this.alias = (source, importer) =>
-      alias(aliasEnvironment, source, importer, true);
+      alias(environment, source, importer, true);
     const skip = new Set(
       environment.plugins.filter((plugin) =>
-        ["mokly", "alias"].includes(plugin.name),
+        ["mokly-first", "mokly", "alias"].includes(plugin.name),
       ),
     );
     this.module = (source, importer) =>
@@ -209,7 +199,8 @@ export class ViteLookup {
       try {
         const url = resolve(source, pathToFileURL(candidate).href);
         if (!url.startsWith("file:")) return url;
-        const file = fileURLToPath(url);
+        const target = new URL(url);
+        const file = fileURLToPath(target);
         if (
           index === 0 &&
           candidates.length > 1 &&
@@ -218,7 +209,10 @@ export class ViteLookup {
           !viteSourceResolution(this.paths, file)
         )
           continue;
-        return pathToFileURL(this.paths.resolveSync(file)).href;
+        const confined = pathToFileURL(this.paths.resolveSync(file));
+        confined.search = target.search;
+        confined.hash = target.hash;
+        return confined.href;
       } catch (error) {
         if (!viteMissingImport(error)) throw error;
         failure = error;

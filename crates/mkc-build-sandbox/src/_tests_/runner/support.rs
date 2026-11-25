@@ -11,18 +11,29 @@ use mkc_build_interface::log::{BuildLogChunk, BuildLogSink, BuildLogSinkMock};
 use mkc_build_interface::outcome::{BuildOutcome, BuildStep};
 use mkc_build_interface::request::BuildRequest;
 use mkc_build_interface::runner::BuildRunner;
-use sandbox_interface::{Error as SandboxError, SandboxBackend, SandboxBackendMock};
+use sandbox_interface::{
+    Error as SandboxError, SandboxFilesMock, SandboxLifecycleMock, SandboxProcessesMock,
+};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::clock::{BuildClock, BuildClockMock};
-use crate::runner::SandboxBuildRunner;
+use crate::runner::{BuildSandboxCapabilities, SandboxBuildRunner};
 
 use super::fixtures::{INSTALLATION, UPLOAD, create, now, provider, sandbox};
 use super::script::Call;
 
+/// Serve every capability that the runner uses from one strict mock.
+pub(super) fn capabilities(backend: Arc<Unimock>) -> BuildSandboxCapabilities {
+    BuildSandboxCapabilities {
+        lifecycle: backend.clone(),
+        files: backend.clone(),
+        processes: backend,
+    }
+}
+
 pub(super) struct Harness {
     pub(super) request: BuildRequest,
-    pub(super) backend: Arc<dyn SandboxBackend>,
+    pub(super) backend: Arc<Unimock>,
     pub(super) sink: Arc<dyn BuildLogSink>,
     pub(super) clock: Arc<dyn BuildClock>,
     pub(super) chunks: Arc<Mutex<Vec<BuildLogChunk>>>,
@@ -70,13 +81,13 @@ impl Harness {
         let operation = request.attempt_operation_id;
         let project_id = request.project_id;
         let common = (
-            SandboxBackendMock::create_sandbox
+            SandboxLifecycleMock::create_sandbox
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, actual| {
                     assert_eq!(actual, expected_create);
                     Ok(sandbox())
                 })),
-            SandboxBackendMock::write_file
+            SandboxFilesMock::write_file
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(|_, actual| {
                     assert_eq!(actual.sandbox_provider_ref, provider());
@@ -89,7 +100,7 @@ impl Harness {
                     assert!(!format!("{actual:?}").contains(INSTALLATION));
                     Ok(())
                 })),
-            SandboxBackendMock::destroy_sandbox
+            SandboxLifecycleMock::destroy_sandbox
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, actual| {
                     assert_eq!(actual, provider());
@@ -101,7 +112,7 @@ impl Harness {
                     }
                 })),
         );
-        let processes = SandboxBackendMock::stream_process
+        let processes = SandboxProcessesMock::stream_process
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, actual| {
                 let call = script
@@ -154,7 +165,7 @@ impl Harness {
                         .unwrap_or_else(|| Box::pin(stream::iter(call.events)))),
                 }
             }));
-        let backend: Arc<dyn SandboxBackend> = if has_process {
+        let backend: Arc<Unimock> = if has_process {
             Arc::new(Unimock::new((common, processes)))
         } else {
             Arc::new(Unimock::new(common))
@@ -207,7 +218,7 @@ impl Harness {
 
     pub(super) async fn run(&self) -> BuildOutcome {
         let runner: &dyn BuildRunner = &SandboxBuildRunner::new(
-            self.backend.clone(),
+            capabilities(self.backend.clone()),
             self.clock.clone(),
             "test-builds".into(),
         )

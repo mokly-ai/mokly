@@ -15,7 +15,7 @@ the checkout with it.
 - Split path arguments into ordered, bounded batches.
 - Preserve binary input, output, and typed process failures.
 - Validate the checkout root before resolving a merge base.
-- Read changed paths, tree metadata, and checkout-converted regular source files.
+- Read changed paths, tree metadata, raw link targets, and checkout-converted source files.
 - Extract exact commit sources with the pinned commit's checkout attributes.
 - Identify the effective checkout settings of a commit for source cache keys
   and base freshness checks.
@@ -36,13 +36,12 @@ keep their own category.
 Each `Request` selects a typed `ProcessMode`. Its default is `FullTree`.
 Audited helper-free calls select `PlainGroup`: `rev-parse`, `merge-base`,
 `rev-list` with lazy fetch disabled, read-only `config`, `check-attr`,
-`ls-tree`, and the two `ls-files` listings. `ls-tree` and the listings select
-it only in a repository without a promisor remote.
+`ls-tree`, `cat-file blob` for link targets, and the `ls-files` listings. The
+tree, link, and file listings select it in repositories without promisor remotes.
 
-The two listings are the working-path candidates and the untracked changed
-paths. Both pass `-c core.fsmonitor=false`, so Git starts no file system
-monitor hook or daemon for them. One listing request builds both, so the
-override and the mode stay together. The
+The file listings cover working-path candidates, untracked changes, and
+index membership. They pass `-c core.fsmonitor=false`, so Git starts no file
+system monitor hook or daemon for them. The
 [file listing rule](../../docs/protocol/mokly-git.md#file-listings) gives the
 reason and the Git source evidence.
 
@@ -50,7 +49,7 @@ The runner sets `GIT_NO_LAZY_FETCH=1` for ordinary commands. Promisor base reads
 first list metadata without blob sizes. They fetch missing requested blobs and
 attribute files before listing sizes. A Git build that ignores the lazy-fetch
 control can still fetch a missing tree during a tree query or sparse-index
-listing. So `ls-tree` and both listings keep `FullTree` when the repository has
+listing. So `ls-tree` and the listings keep `FullTree` when the repository has
 a promisor remote. `GitRepositories::open` reads `remote.*.promisor` and
 `extensions.partialClone` with one plain `config` command. The opened
 repository keeps the promisor remotes for its tree reads, its listings, and its
@@ -83,6 +82,8 @@ disabled. One serialized `fetch --stdin` request retrieves each missing set
 before conversion. Failed fetches name the remote and a recovery command. Tree
 listings retain directory and link modes. Regular files and all metadata nodes
 have independent count bounds.
+`Repository::read_link` reads the raw target of a listed link entry within the
+requested byte bound.
 
 Byte reads, extraction, and digests share a commit-pinned `cat-file --filters`
 context in the real repository. `--attr-source` selects the base attributes,

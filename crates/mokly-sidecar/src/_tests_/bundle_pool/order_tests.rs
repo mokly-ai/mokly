@@ -67,6 +67,7 @@ fn incomplete_memory_allows_disk_fallback_and_explicit_old_lease_restoration() {
     assert_eq!(bundle(&pool).cache, Some(CacheOutcome::Hit));
     pool.request(Call::CssModules(CssModules {
         generation: "incomplete".into(),
+        named_exports: None,
         class_maps: Default::default(),
     }))
     .unwrap();

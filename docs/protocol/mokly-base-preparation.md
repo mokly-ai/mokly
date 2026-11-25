@@ -40,8 +40,8 @@ content manifest in the cache entry, because it changes the cache format. A
 complete cache entry is trusted when the process first leases it, as the
 sidecar trusts it. Before it loads the base
 configuration, a preparation leases an existing complete extraction when the
-working configuration names a renderer or a PostCSS module. Under the Vite
-adapter, a local stylesheet that the working configuration names also selects
+working configuration names a renderer, or a PostCSS module on the default
+compiler. Under the Vite adapter, a local stylesheet that the working configuration names also selects
 that lease. That lookup never builds an extraction. Decision: lease only an
 existing extraction before the configuration loads. Rejected: a build at that
 point, because a base that needs no sidecar would then get an extraction.
@@ -155,6 +155,10 @@ base:
   A tier-2 base reads its own install.
 - For such a base, each installed module that the base bundle and the head
   bundle both read has the same digest on both sides.
+- Under the Vite adapter, each
+  [working-tree env file](./mokly-vite-adapter-inputs.md#the-base-side) that
+  the base setup reads is unchanged, present or absent. The working index
+  lists the same env candidates and possible link targets.
 - The effective checkout settings of the base commit are unchanged: the Git
   configuration and the attributes of each file. A preparation samples them
   before its first base read.
@@ -162,8 +166,8 @@ base:
 A failed check releases the kept base, and the classification prepares a new
 base. The checks do not see these changes:
 
-- A change to a package stylesheet, an asset, or a file that only the base
-  reads, while the install record and the entry list stay equal.
+- A change to a package stylesheet, an asset, or another installed file that
+  only the base reads, while the install record and the entry list stay equal.
 - A Bun install, or a hand edit inside `node_modules`, while the entry lists
   stay equal and the current head bundle shows no change in a module that
   both bundles read.

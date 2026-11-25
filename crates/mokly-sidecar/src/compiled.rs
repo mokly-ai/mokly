@@ -8,6 +8,7 @@ use ts_rs::TS;
 
 use crate::methods::{Bundle, BundleCapture};
 use crate::results::Module;
+use crate::vite_env::ViteEnvInput;
 
 /// One physical filesystem observation used only to validate compilation reuse.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, TS)]
@@ -156,6 +157,18 @@ pub struct CompiledGeneration {
 pub struct ViteRecipe {
     /// Installed Vite version for replay diagnostics.
     pub version: String,
+    /// Digest of all setup inputs shared by the side's render keys.
+    #[serde(
+        rename = "setupDigest",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub setup_digest: Option<String>,
+    /// Dotenv paths used for reuse validation, with their logical identity.
+    #[serde(rename = "envInputs", default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub env_inputs: Option<Vec<ViteEnvInput>>,
     /// Virtual entry URL used by the module runner.
     pub entry: String,
     /// Each fetch indexed by the requested URL and importer.

@@ -26,6 +26,9 @@
     (attempt 3, job 137193247265), and the same job passed on the CI of PR
     #471 and on a manual CI run of an earlier commit of PR #472. So the
     failure does not happen on every run.
+  - 2026-11-24, the CI of PR #495 at `54a1c4eea` (run 45436324744): the same
+    two lines. The one rerun of the failed job passed. The branch changes no
+    `mokly-*` crate.
   - The test gives Serve its own cache home since #394
     (`crates/mokly-cli/tests/serve_process_tests.rs:63` and `:68`), and
     `SystemLocations::repository` in `crates/mokly-compare/src/locations.rs:48`

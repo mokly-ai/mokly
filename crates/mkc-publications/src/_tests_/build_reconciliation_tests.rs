@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use mkc_store_interface::build::BuildsMock;
 use sandbox_interface::{
-    BackendManagedSandbox, OperationId, ProviderRef, SandboxBackendMock, SandboxId, SandboxState,
+    BackendManagedSandbox, OperationId, ProviderRef, SandboxId, SandboxLifecycleMock, SandboxState,
 };
 use unimock::{MockFn, Unimock, matching};
 
@@ -26,11 +26,11 @@ async fn reconciliation_destroys_unknown_terminal_replaced_and_missing_ids() {
             lifetime: None,
         })
         .collect();
-    let backend = Unimock::new((
-        SandboxBackendMock::list_managed_sandboxes
+    let lifecycle = Unimock::new((
+        SandboxLifecycleMock::list_managed_sandboxes
             .some_call(matching!(_))
             .returns(Ok(inventory)),
-        SandboxBackendMock::destroy_sandbox
+        SandboxLifecycleMock::destroy_sandbox
             .each_call(matching!(_))
             .answers(&|_, provider| {
                 assert_ne!(provider.as_str(), "sandbox-0");
@@ -44,7 +44,7 @@ async fn reconciliation_destroys_unknown_terminal_replaced_and_missing_ids() {
             .answers(&|_, _| Ok(Some(OPERATION))),
     );
     let reconciler: &dyn BuildReconciler = &SandboxBuildReconciler {
-        backend: Arc::new(backend),
+        lifecycle: Arc::new(lifecycle),
         transactions: transactions(queries),
         deployment_id: "builds-test".into(),
     };

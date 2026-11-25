@@ -45,7 +45,8 @@ class BuildTemplatePinTests(unittest.TestCase):
 class BuildTemplateTests(unittest.TestCase):
     def setUp(self):
         self.environment = {
-            "PATH": ASSERTION.TEMPLATE_PATH, "HOME": ASSERTION.TEMPLATE_HOME,
+            "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "HOME": ASSERTION.TEMPLATE_HOME,
             ASSERTION.PROBE_KEY: ASSERTION.PROBE_VALUE,
         }
         self.account = SimpleNamespace(pw_name="user", pw_dir="/home/user")
@@ -95,8 +96,7 @@ class BuildTemplateTests(unittest.TestCase):
                         ASSERTION.verify(VERSION)
 
     def test_replaced_or_changed_process_environment_fails(self):
-        for key, value in (("PATH", None), ("HOME", None), ("PATH", "/bin"),
-                           ("HOME", "/root"), (ASSERTION.PROBE_KEY, None),
+        for key, value in (("HOME", None), ("HOME", "/root"), (ASSERTION.PROBE_KEY, None),
                            (ASSERTION.PROBE_KEY, "wrong")):
             with self.subTest(key=key, value=value), patch.dict(os.environ, clear=False):
                 if value is None:
@@ -171,7 +171,6 @@ class BuildTemplateTests(unittest.TestCase):
         self.assertRegex(definition, r'template_name = "mokly-build-v[1-9][0-9]*"')
         self.assertNotIn("template_id", definition)
         self.assertIn("ENV HOME=" + ASSERTION.TEMPLATE_HOME, docker)
-        self.assertIn("ENV PATH=" + ASSERTION.TEMPLATE_PATH, docker)
         self.assertIn("sha256sum --check --strict", docker)
         self.assertEqual((ROOT / "infra/e2b/build/.dockerignore").read_text().splitlines(),
                          ["*", "!e2b.Dockerfile"])

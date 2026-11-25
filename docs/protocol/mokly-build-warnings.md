@@ -64,6 +64,7 @@ order, the operating system, or the absolute checkout path.
 | `storybook-parameter-ignored`    | A malformed value of a story's `mokly` parameter that Mokly ignores ([Storybook stories](./mokly-storybook-setup.md#globals-for-views))                                                                                                             |
 | `stylesheet-extglob`             | A configuration stylesheet matcher with unsupported extglob syntax ([configuration](./mokly-configuration.md#shape))                                                                                                                                |
 | `stylesheet-owner`               | A renderer `resources` seed that names a stylesheet ([rendering](./mokly-rendering.md#renderer-module))                                                                                                                                             |
+| `vite-replaced-setting`          | A configuration setting that the Vite setup replaces ([Vite adapter](./mokly-vite-adapter.md#replaced-settings))                                                                                                                                    |
 
 Each producing contract defines its own message. A new producer adds a row
 here and defines its message in its own contract.

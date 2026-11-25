@@ -75,8 +75,17 @@ impl RenderGraph for JavaScriptGraph {
             }
         };
         let warnings = catalogue.warnings.clone();
+        let vite_config = config.vite().then(|| config.file.clone());
         match graph.prepare(config, catalogue, output) {
             Ok(generation) => {
+                if let Some(file) = vite_config {
+                    *self
+                        .runtime
+                        .vite_inventory
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner()) =
+                        Some((file, Arc::downgrade(&generation)));
+                }
                 if self.runtime.serve_head() {
                     attempt.retire_used();
                 }

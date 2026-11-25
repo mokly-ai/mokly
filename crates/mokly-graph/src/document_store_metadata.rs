@@ -88,6 +88,7 @@ fn warning_code(code: &str) -> Option<&'static str> {
         "duplicate-component-stylesheet" => Some("duplicate-component-stylesheet"),
         "stylesheet-extglob" => Some("stylesheet-extglob"),
         STORY_RENDER_FAILED => Some(STORY_RENDER_FAILED),
+        "vite-replaced-setting" => Some("vite-replaced-setting"),
         _ => None,
     }
 }

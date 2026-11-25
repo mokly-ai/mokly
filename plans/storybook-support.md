@@ -94,19 +94,22 @@ merged into this branch. On 2026-11-25 the user answered most of the open
 decisions and follow-up items. The same day the user asked to continue, and
 this branch merged `main`, with the Canvas redesign of pull request #488.
 Milestone 1a draws the Storybook mockups again on Canvas. Pull request #506
-merged Milestone 1a, and pull request #508 finished track B. This section
+merged Milestone 1a, pull request #508 finished track B, pull request #509
+applied the asset follow-up answers, and pull request #511 finished track D.
+Tracks E and F run on their own branches. This section
 tells the next agent what is done, what waits for the user, and how to
 continue.
 
-| Track                    | Pull request          | Done                 | Open                                                                                  |
-| ------------------------ | --------------------- | -------------------- | ------------------------------------------------------------------------------------- |
-| A. Mockups               | #339 and #506, merged | Milestones 1 and 1a  | None                                                                                  |
-| B. Story reading         | #492 and #508, merged | Milestones 2 to 8    | None                                                                                  |
-| C. Imported assets       | #453, merged          | Milestones 9 to 12   | None                                                                                  |
-| D. Vite adapter          | #493, merged          | Milestones 13 and 16 | One TODO of Milestone 14, one TODO of Milestone 15, and Milestone 17                  |
-| J. Spike for decision 18 | #349, merged          | Milestone 37         | None                                                                                  |
-| E to I                   | None                  | Nothing              | Milestones 18 to 36. The [Tracks](#tracks) table gives the order in which they start. |
-| All                      | None                  | Nothing              | Milestone 38, which ends with the pull request into `main`                            |
+| Track                    | Pull request          | Done                | Open                                                                                  |
+| ------------------------ | --------------------- | ------------------- | ------------------------------------------------------------------------------------- |
+| A. Mockups               | #339 and #506, merged | Milestones 1 and 1a | None                                                                                  |
+| B. Story reading         | #492 and #508, merged | Milestones 2 to 8   | None                                                                                  |
+| C. Imported assets       | #453, merged          | Milestones 9 to 12  | None                                                                                  |
+| D. Vite adapter          | #493 and #511, merged | Milestones 13 to 17 | Track D decision 6                                                                    |
+| J. Spike for decision 18 | #349, merged          | Milestone 37        | None                                                                                  |
+| E and F                  | Not yet               | In progress         | Milestones 18 to 25                                                                   |
+| G to I                   | None                  | Nothing             | Milestones 26 to 36. The [Tracks](#tracks) table gives the order in which they start. |
+| All                      | None                  | Nothing             | Milestone 38, which ends with the pull request into `main`                            |
 
 ### Answers of 2026-11-25
 
@@ -152,6 +155,9 @@ option. None has an answer yet, so no option applies.
   [decision 18c](#18c-a-root-whose-storybook-folder-lies-elsewhere): mocks of
   modules that another setup owns, and roots whose Storybook folder lies
   elsewhere. They block Milestones 30 and 32.
+- [Track D decision 6](#track-d-decision-6-workspace-package-sources-under-vite):
+  workspace package sources under Vite, raised on 2026-11-25. A branch from
+  this branch applies its answer.
 
 ### Follow-up items that wait for the user
 
@@ -162,6 +168,21 @@ holds the full item and its recommended option. They block no milestone.
   a lone surrogate in authored text stops the whole build.
 - [screen-renders-skip-story-setup.md](follow-ups/screen-renders-skip-story-setup.md):
   a screen render depends on an earlier story render.
+
+The review of track D found these problems in the Vite adapter. Each file
+holds the full item and its recommended option. They block no milestone.
+
+- [vite-env-link-target-watch.md](follow-ups/vite-env-link-target-watch.md)
+- [vite-replay-computed-imports.md](follow-ups/vite-replay-computed-imports.md)
+- [vite-sass-outside-root-reads.md](follow-ups/vite-sass-outside-root-reads.md)
+- [vite-renderer-pruning-css-modules.md](follow-ups/vite-renderer-pruning-css-modules.md)
+- [vite-composed-stylesheet-assets.md](follow-ups/vite-composed-stylesheet-assets.md)
+- [vite-tailwind-scan-scopes.md](follow-ups/vite-tailwind-scan-scopes.md)
+- [vite-css-url-resolution.md](follow-ups/vite-css-url-resolution.md)
+- [vite-static-build-input-evidence.md](follow-ups/vite-static-build-input-evidence.md)
+- [vite-outside-env-directory.md](follow-ups/vite-outside-env-directory.md)
+- [base-extraction-committed-links.md](follow-ups/base-extraction-committed-links.md)
+- [vite-lazy-css-order.md](follow-ups/vite-lazy-css-order.md)
 
 ### Defects in merged code
 
@@ -2405,6 +2426,41 @@ own lines of this plan.
   a `composes ... from` is an import of that file by the CSS Module, and its
   CSS is delivered inside the module's stylesheet, so no new message is
   needed.
+- D28. Made on 2026-11-25 by the orchestrator of
+  `calummoore/storybook-track-d-finish-nkpi`. For the answer B to track D
+  decision 4, a `moduleResolution.loaders` key `.css` or `.module.css` is not
+  a replaced setting. Every other `loaders` key is a replaced setting. Reason:
+  those two keys accept only `"empty"`, and design call D9 keeps the
+  `"empty"` opt-outs under the adapter, so they still have an effect.
+- D29. Made on 2026-11-25 by the same orchestrator. A replaced field counts
+  as set when the configuration holds it, also when its list or map is
+  empty. `loaders` is the exception: D28 judges it key by key. Reason: the
+  warning reports the field that the author wrote, not what a compiler does
+  with its value. The warnings contract reports each ignored input so that
+  the author can decide. An empty field that the author wrote is such an
+  input, and one rule then covers every field.
+- D30. Made on 2026-11-25 by the same orchestrator. For the answer C to track
+  D decision 3, an env file is tracked when the working tree's Git index
+  holds it. A candidate that the base commit holds comes from the base
+  commit. A candidate that the base commit lacks and the index holds stays
+  absent on the base side. Every other candidate comes from the working tree,
+  also through a symbolic link, as Vite reads it on the head side. Reason: a
+  branch addition or removal of a tracked env file then still shows, and a
+  local file gives no false change.
+- D31. Made on 2026-11-25 by the same orchestrator. A working-tree env file
+  that only the base side reads adds no watch input. An edit to it shows in
+  Changes after the next classification. Reason: the head side normally reads
+  the same file and watches it, and a separate watch registration for the
+  base side adds a watcher for a rare case.
+- D32. Made on 2026-11-25 by the same orchestrator. For the answer D to track
+  D decision 2, a PostCSS config candidate outside the source root and the
+  selected dependency roots is not an input, and Vite does not load it.
+  Reason: the confinement rules of the adapter already deny such files.
+- D33. Made on 2026-11-25 by the same orchestrator. Under the adapter, the
+  files that a `rebuild` rule matches are setup inputs, except the files that
+  Mokly already classifies as sources, modules, or stylesheet inputs. Reason:
+  the watch rule that package-owned classifications take precedence over
+  rules then holds on both compile paths.
 
 Decisions of track D. Decisions 1 and 5 have answers. Decisions 2, 3, and 4
 wait for the user.
@@ -2736,6 +2792,101 @@ wait for the user.
   decision 16 settles it: the setup transforms stylesheets, and Mokly keeps
   no copy of Vite's CSS rules. It replaces design call D10.
 
+#### Track D decision 6: Workspace package sources under Vite
+
+Raised on 2026-11-25 by the second merge of `main`, which brought pull
+request #501. Track D owns it. The options check of 2026-11-25 rebuilt the
+probe, rewrote the root question, and added options D, E, and F.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation, from the audit of the second `origin/main`
+  merge.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/mokly-comparison-packages.md`, section
+  "Workspace Package Sources", `docs/protocol/mokly-sidecar-modules.md`,
+  section "Source And Dependency Files", and
+  `docs/protocol/mokly-vite-adapter.md`, section "Replaced Settings".
+- **Terms:**
+  - **Workspace package:** a named package whose source lives in the same
+    repository as the catalogue.
+  - **Workspace source recovery:** the rule of #501 that loads the matching
+    source file, such as `src/value.ts`, when a package export points to a
+    build file, such as `dist/value.js`.
+- **Background:**
+  - #501 added workspace source recovery. The comparison packages page, the
+    sidecar modules page, and the configuration guide state it for every
+    compile path.
+  - Under the Vite adapter, the project's Vite setup alone resolves imports,
+    as design call D9 says. The Vite code does not apply the recovery.
+  - A probe used a package that exports `dist/value.js`. Both sides had
+    `src/value.ts`, and only the working tree had `dist/value.js`. Esbuild
+    used `src/value.ts` on both sides.
+  - Vite used `dist/value.js` on the head side. On the base side, a catalogue
+    import, an import in `vite.config.mjs`, a JavaScript import of a package
+    CSS file, and a stylesheet `@import` of it all failed with
+    `module packages/local/dist/value.js has no source in this side`.
+  - Without `dist` in the working tree, Vite failed on both sides with
+    `Failed to resolve entry for package`, before any Mokly step.
+  - A `development` export condition, or an alias in the Vite setup, made
+    both sides compile `src/*` in every case of the probe.
+- **Problem:** The pages state workspace source recovery for every compile
+  path, but the adapter does not apply it. A Vite comparison can lose its
+  base render, and the two sides can compile different files for one
+  import.
+- **Impact if no action:** A Vite comparison of a repository whose workspace
+  packages export Git-ignored build files has no base render, and its
+  failure does not say how to fix it.
+- **Root question:** Under the Vite adapter, how does each side compile the
+  same kind of file for a workspace package whose build file is not in Git?
+- **Options:**
+  - **A.** Keep Vite resolution. Document that #501's recovery covers the
+    esbuild path, default CSS, and Mokly's PostCSS step only. Projects can
+    expose source exports, or add aliases to the Vite setup. Effort: Small.
+  - **B.** Recover after target selection. Use the matching source when Vite
+    or its setup loader selects a physical workspace build target. This
+    covers the probe case, but not a working tree without the build. It
+    changes design call D9. Effort: Medium.
+  - **C.** Add full recovery. Also recover when lookup selects no physical
+    target. Honor Vite's export conditions and extension order, and track
+    the source candidates as inputs. It copies Vite's export rules, against
+    decision 16. Effort: Large.
+  - **D.** Do A, and make the failure say what to do. When a side lacks a
+    mapped workspace build file that has a source, the `bundle-failed`
+    detail and the stylesheet failure name the package and the two routes:
+    an export condition such as `development`, or an alias in the Vite
+    setup. `module-paths.ts` has 298 lines, so it likely needs a split
+    first. Effort: Medium.
+  - **E.** Use the matching source only when the side lacks the build file
+    that the setup selected, as #501 does for requires that Node loads. The
+    head keeps its build file, and the base renders. The two sides then
+    compile different kinds of files, so a stale head build shows as a
+    change. It changes design call D9 on the base side. Effort: Medium.
+  - **F.** Do A, and give the base its own build output through the base
+    prepare command, which the plan on branch
+    `calummoore/mokly-base-prepare-command-7jlm` proposes. It works for any
+    package layout and for generated output. That plan has nine open
+    decisions. Effort: Large.
+- **Left out:**
+  - Read the head's build file on the base side when the base lacks it: it
+    fails the goal, because Changes then hides each branch change to the
+    package.
+  - Setup aliases that Mokly makes from the package exports: the same walk
+    of the exports as C, in another place.
+  - An export condition that Mokly adds to the setup: it changes every
+    package that declares the condition, against design call D9.
+- **Wider fix:** F. C must know the build-to-source layout and copy Vite's
+  export rules, so it is a direct fix.
+- **Previous examples:** #501 added workspace source recovery to the default
+  compiler.
+  [workspace-bundle-export-conditions.md](follow-ups/workspace-bundle-export-conditions.md)
+  records limits in that recovery.
+- **Recommendation:** D. The first recommendation was A. The probe shows that
+  both routes work on both sides, also where B fails, and D tells the user
+  about them in the failure itself.
+- **Action:** ask the user, because A and D narrow a rule that three pages
+  state, and B, C, and E change design call D9. No user decision covers
+  either change.
+
 - [x] Add `docs/protocol/mokly-vite-adapter.md`: the `vite` field, the setup
       for a catalogue without a Storybook folder, the optional file, the
       duties of Mokly's plugin, one React runtime, the base side,
@@ -2785,8 +2936,9 @@ The project's Vite setup compiles JavaScript, as decision 16 says.
 - [x] Add the rule of the answer to decision 22 to
       `docs/protocol/mokly-vite-adapter.md`. Branch:
       `conductor/storybook-support-d-vite-adapter`.
-- [ ] Apply the answer to track D decision 4 to the configuration check and
-      to `docs/protocol/mokly-vite-adapter.md`.
+- [x] Apply the answer to track D decision 4 to the configuration check and
+      to `docs/protocol/mokly-vite-adapter.md`. Branch:
+      `calummoore/storybook-track-d-finish-nkpi`.
 - [x] Name the `vite` setting in the `bundle` row of
       `docs/protocol/mokly-sidecar.md`, which is at its 250-line cap, and
       scope the esbuild "metafile" sentence of
@@ -2801,7 +2953,8 @@ Depends on: 14
 - [x] Invalidate changed modules from Mokly's watcher in Serve. Branch: `conductor/storybook-support-d-vite-adapter`.
 - [x] Test Changes between two commits of a Vite fixture, and a Serve edit.
       Branch: `conductor/storybook-support-d-vite-adapter`.
-- [ ] Apply the answers to track D decisions 2 and 3.
+- [x] Apply the answers to track D decisions 2 and 3. Branch:
+      `calummoore/storybook-track-d-finish-nkpi`.
 - [x] Add the Vite inputs to the table of `docs/protocol/mokly-watch.md`. The
       early extraction lease of `docs/protocol/mokly-base-preparation.md`
       needs no change: it covers only a renderer or a PostCSS module, and a
@@ -2850,10 +3003,12 @@ track D merges of this branch. No review has read Milestone 16 or the last
 merges. The review TODO below reviews the merged code.
 
 - [x] Remove each status line whose page this track completes. Branch: `conductor/storybook-support-d-vite-adapter`.
-- [x] Run the targeted tests and `cargo xtask check`.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [ ] Commit, push, review against this branch, give the findings to the
+- [x] Run the targeted tests and `cargo xtask check`. Branch:
+      `calummoore/storybook-track-d-finish-nkpi`.
+- [x] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
+      Branch: `calummoore/storybook-track-d-finish-nkpi`. The open findings
+      of the review are follow-up items under `plans/follow-ups/`.
 
 ## Milestone 18: Storybook folders documentation
 
@@ -2934,10 +3089,8 @@ The CSS that a preview file imports reaches its stories, as decision 4 says.
 
 Depends on: 18, 19, 20, 21
 
-- [x] Remove each status line whose page this track completes.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [x] Run the targeted tests and `cargo xtask check`.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -3082,10 +3235,8 @@ Depends on: 27
 
 Depends on: 26, 27, 28
 
-- [x] Remove each status line whose page this track completes.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [x] Run the targeted tests and `cargo xtask check`.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -3197,10 +3348,8 @@ Depends on: 30
 
 Depends on: 30, 31, 32
 
-- [x] Remove each status line whose page this track completes.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [x] Run the targeted tests and `cargo xtask check`.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 
@@ -3248,10 +3397,8 @@ Screens that render a story component record its use, as decision 13 says.
 
 Depends on: 34, 35
 
-- [x] Remove each status line whose page this track completes.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
-- [x] Run the targeted tests and `cargo xtask check`.
-      Branch: `calummoore/storybook-track-f-failed-stories-omid`.
+- [ ] Remove each status line whose page this track completes.
+- [ ] Run the targeted tests and `cargo xtask check`.
 - [ ] Commit, push, review against this branch, give the findings to the
       user, apply the fix rule, and open a pull request into this branch.
 

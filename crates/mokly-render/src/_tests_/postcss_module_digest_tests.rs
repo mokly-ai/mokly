@@ -24,6 +24,7 @@ fn side() -> SideInputs {
         repository_roots: vec!["/repo".into()],
         dependency_roots: vec!["/repo/node_modules".into()],
         dependency_aliases: BTreeMap::new(),
+        vite_inputs: None,
         configuration_directory: String::new(),
         module_resolution: ModuleResolution::default(),
         context: "head".into(),

@@ -26,6 +26,7 @@ pub(super) enum Loaded {
 pub(super) fn bundle(root: &str) -> Bundle {
     Bundle {
         vite: false,
+        vite_inputs: None,
         evaluation: None,
         entry_files: vec!["page.ts".into()],
         renderer: None,
@@ -40,6 +41,7 @@ pub(super) fn bundle(root: &str) -> Bundle {
 pub(super) fn maps() -> CssModules {
     CssModules {
         generation: "g".into(),
+        named_exports: None,
         class_maps: BTreeMap::new(),
     }
 }

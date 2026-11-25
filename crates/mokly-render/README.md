@@ -528,10 +528,13 @@ view after the edit and counts real process starts and hello calls.
   through that root's tree and resolver. The root still shares the PostCSS
   state of its attempt. `ViteRootCompiler` works the same way, but it bundles
   the root through `mokly_css::vite::bundle` with its `Transform`.
+- [`src/vite_base_env.rs`](./src/vite_base_env.rs) passes dotenv selection to
+  the base setup. It validates the recorded physical read paths for bundle
+  and stylesheet reuse and retains the working reads for base freshness.
 - [`src/vite_stylesheets.rs`](./src/vite_stylesheets.rs) defines
   `ViteStylesheets`, the `mokly_css::vite::Transform` of one side. It sends a
   `transformViteCss` request with the side's bundle settings and the selected
-  physical file. It caches each result by stylesheet path.
+  physical file. It caches each result and its dotenv inputs by stylesheet path.
 - [`src/stylesheet_capture.rs`](./src/stylesheet_capture.rs) defines
   `RecordingTree`, the source tree of one compilation, which keeps each read
   digest and projection. It also defines `Capture`, the stamp entries and the

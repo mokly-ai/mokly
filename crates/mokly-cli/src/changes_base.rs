@@ -13,6 +13,7 @@ use mokly_compare::base_render::{
     BasePreparationError, BasePreparationResult, BaseProvider, BaseRequest, PreparedBase,
 };
 use mokly_compare::base_sources::BaseSourcesRequest;
+use mokly_compare::base_vite_env;
 use mokly_compare::comparison_steps::Step;
 use mokly_compare::dependency_types::Tier;
 use mokly_compare::error::{Error, Result};
@@ -159,10 +160,18 @@ impl NativeBase {
             })?;
         }
         request.steps.step(Step::Rendering);
-        let runtime = Arc::new(
-            self.runtime
-                .for_base(tree.clone(), VERSION.into(), base.clone()),
-        );
+        let mut runtime = self
+            .runtime
+            .for_base(tree.clone(), VERSION.into(), base.clone());
+        if config.vite() && base.is_some() {
+            let index = request.sources.sources.index()?;
+            runtime = runtime.with_vite_base_env(base_vite_env::setup_sources(
+                &request.working_config.repo_root,
+                request.repository.as_ref(),
+                &index,
+            )?);
+        }
+        let runtime = Arc::new(runtime);
         let builder: &dyn CatalogueBuilder = &Builder {
             tree,
             discovery: Arc::new(Discovered(inventory)),
@@ -221,7 +230,10 @@ impl NativeBase {
                     roots.as_deref(),
                     generation.catalogue(),
                 ) {
-                    Ok(inputs) => inputs,
+                    Ok(inputs) => inputs.map(|mut inputs| {
+                        inputs.vite_env = runtime.vite_base_env_inputs();
+                        inputs
+                    }),
                     Err(Error::Cancelled) => return Err(Error::Cancelled),
                     Err(error) => {
                         tracing::debug!(%error, "base freshness evidence is unavailable");

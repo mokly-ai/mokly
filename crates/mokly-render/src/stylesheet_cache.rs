@@ -12,6 +12,7 @@ use mokly_source_interface::tree::SourceTree;
 use crate::stylesheet_compiler::{Compilation, RootCompiler};
 use crate::stylesheet_record::{ContextEvidence, Record};
 use crate::stylesheet_store::{Miss, StylesheetCache};
+use crate::vite_base_env::StylesheetEnv;
 
 /// One attempt's stylesheet bundler: an attempt-local store in front of the shared store.
 pub(crate) struct CachedStylesheets {
@@ -19,6 +20,7 @@ pub(crate) struct CachedStylesheets {
     pub(super) inner: Arc<dyn RootCompiler>,
     /// Ordered record stamps and observations use the original attempt tree.
     pub(super) tree: Arc<dyn SourceTree>,
+    pub(crate) vite_env: Option<StylesheetEnv>,
     /// Logical paths in records are relative to this repository root.
     pub(super) root: PathBuf,
     /// Every root key starts with these effective configuration settings.
@@ -51,6 +53,7 @@ impl CachedStylesheets {
         Self {
             inner,
             tree,
+            vite_env: None,
             root,
             settings,
             shared,
@@ -89,6 +92,10 @@ impl CachedStylesheets {
             let record = lock(&source).record(key);
             if let Some(record) = record {
                 if record.stamp.matches(self.tree.as_ref())
+                    && self
+                        .vite_env
+                        .as_ref()
+                        .is_none_or(|env| env.current(&record.stamp))
                     && record
                         .context
                         .as_ref()
@@ -187,6 +194,9 @@ impl CachedStylesheets {
             }
         }
         let mut bundle = record.complete();
+        if let Some(env) = &self.vite_env {
+            env.deliver(&record.stamp, &mut bundle)?;
+        }
         let watched = self.inner.watch_files(&bundle.resolution_files)?;
         bundle.resolution_files = watched.files;
         bundle.resolution_roots = watched.dependency_roots;

@@ -85,8 +85,10 @@ impl ManualRebuilds {
         } else {
             None
         };
-        if let Some(candidate) = &mut candidate
-            && candidate.recheck
+        if prepared.recheck_vite_setup
+            || candidate
+                .as_ref()
+                .is_some_and(|candidate| candidate.recheck)
         {
             let first_warnings = prepared.summary.warnings.clone();
             if let Some(watch) = &self.watching {
@@ -101,6 +103,7 @@ impl ManualRebuilds {
                 }
             };
             if let Some(watch) = &self.watching
+                && let Some(candidate) = &mut candidate
                 && let Err(error) = watch.recheck(candidate, &prepared)
             {
                 attempt.report(&first_warnings, false);

@@ -249,6 +249,7 @@ evidence, costs and cleanup.
 - `docker/mkc-api.Dockerfile`, `docker/mkc-catalogue-server.Dockerfile` and `docker/app.Dockerfile` — the three workload images; the `MKC_BUILD_SHA` build argument bakes the revision, and `docker/entrypoint.sh` and `docker/catalogue-entrypoint.sh` export each mounted secret file as its environment variable before they exec the binary.
 - `docker/app-server.mjs` and `docker/app-build-config.mjs` — the Node server for the Expo export, which asserts the baked origins, serves `/`, `/_health` and `/_config`, marks every document `noindex` and sends the Content Security Policy whose catalogue sources come from the `MKC_CATALOGUE_BASE_DOMAIN` that the build configuration records beside the baked origins.
 - `e2b/build/e2b.Dockerfile` and `e2b/build/e2b.toml` — the credential-free cloud build sandbox image and its versioned template definition.
+- [e2b/build/build-template.mjs](./e2b/build/build-template.mjs) — the operator script that builds one template release through the E2B SDK with the team key and writes its local `e2b.toml`.
 - `e2b/tests/assert_build_template.py` — the candidate assertion that checks a fresh build template through the workload's streaming-process boundary.
 - `scripts/environment.sh` — the stable environment names: the namespace, hosts and Terraform variables of `production` and `main-preview`.
 - `scripts/render-values.py` — validates release inputs and writes the nonsecret Helm values; `--origins` and `--domain-layout` print the derived hosts.

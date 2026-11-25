@@ -159,6 +159,7 @@ pub(super) fn bundle(root: &str, generation: &str) -> Call {
             repository_roots: vec![],
             module_resolution: Default::default(),
             vite: false,
+            vite_inputs: None,
             evaluation: None,
         },
         capture: None,
@@ -168,6 +169,7 @@ pub(super) fn bundle(root: &str, generation: &str) -> Call {
 pub(super) fn install(pool: &dyn SidecarPool, generation: &str) {
     pool.request(Call::CssModules(CssModules {
         generation: generation.into(),
+        named_exports: None,
         class_maps: Default::default(),
     }))
     .unwrap();

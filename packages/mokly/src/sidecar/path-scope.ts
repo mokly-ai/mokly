@@ -20,6 +20,18 @@ export function inside(root: string, file: string): boolean {
   );
 }
 
+export function repositoryOwned(
+  sourceRoot: string,
+  dependencyRoots: readonly string[],
+  file: string,
+): boolean {
+  return (
+    inside(sourceRoot, file) &&
+    !dependencyRoots.some((root) => inside(root, file)) &&
+    !logical(sourceRoot, file).split("/").includes("node_modules")
+  );
+}
+
 function normalized(file: string): boolean {
   return (
     file.startsWith("/") &&

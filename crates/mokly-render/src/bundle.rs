@@ -67,6 +67,9 @@ pub(crate) fn describe(
         .into_values()
         .filter(|state| {
             state.stamp.matches(tree.as_ref())
+                && state
+                    .stamp
+                    .vite_env_current(runtime.dependency_tree.as_ref())
                 && (physical_inputs::current(
                     &state.reuse_evidence,
                     runtime.physical_inputs.as_ref(),
@@ -121,6 +124,7 @@ pub(crate) fn describe(
         &params,
         &result,
         &maps.maps,
+        &maps.named_exports,
         runtime
             .base
             .as_ref()
@@ -165,6 +169,7 @@ pub(crate) fn describe(
     match runtime.pool.request(Call::CssModules(CssModules {
         generation: lease.id.clone(),
         class_maps: maps.maps,
+        named_exports: params.vite.then_some(maps.named_exports),
     })) {
         Ok(_) => {}
         Err(source) => return Err(RenderError::Sidecar { source }),

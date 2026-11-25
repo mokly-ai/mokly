@@ -69,6 +69,7 @@ impl Compiler {
                 css: String::new(),
                 assets: BTreeMap::new(),
                 css_modules: BTreeMap::new(),
+                css_module_named_exports: BTreeMap::new(),
                 inputs: BTreeMap::new(),
                 imported_by: BTreeMap::new(),
                 repository_aliases: Default::default(),

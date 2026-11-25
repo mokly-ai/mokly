@@ -17,6 +17,8 @@ pub struct Stylesheet {
     pub text: String,
     /// The native CSS Modules exports.
     pub class_map: BTreeMap<String, String>,
+    /// The named bindings in Vite's stylesheet module.
+    pub named_exports: BTreeMap<String, String>,
     /// Digest of the physical file transformed by Vite.
     pub source_digest: String,
     /// Files read or reported by the transform.
@@ -91,6 +93,10 @@ pub fn bundle(
                 .result
                 .css_modules
                 .insert(path.clone(), source.class_map.clone());
+            prepared
+                .result
+                .css_module_named_exports
+                .insert(path.clone(), source.named_exports.clone());
         }
         let origin = PluginInput {
             plugin: "unknown".into(),

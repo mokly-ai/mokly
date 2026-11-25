@@ -1,8 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { Plugin } from "vite";
-
 import { missingFile } from "./file-digests.js";
 import { viteExternal } from "./vite-external.js";
 import type { ViteLookup } from "./vite-resolution.js";
@@ -11,41 +9,16 @@ import { viteFile, viteJsx } from "./vite-urls.js";
 export type VitePeers = Record<string, string | null>;
 const reactImport = /^(react|react-dom)(?:\/.*)?$/;
 
-/** The first alias reaches React before the setup can rewrite its specifier. */
-export function vitePeerPlugin(
-  lookup: ViteLookup,
-  peers: () => VitePeers,
-): Plugin {
-  const intercept = {
-    find: reactImport,
-    replacement: "$&",
-    customResolver(source: string) {
-      if (source === "react/jsx-dev-runtime") return viteJsx;
-      const file = peers()[source];
-      if (typeof file !== "string") throw missingPeer(source);
-      return viteExternal(file);
-    },
-  };
-  return {
-    name: "mokly-vite-peers",
-    enforce: "post",
-    config(config) {
-      const configured = config.resolve?.alias ?? [];
-      const aliases = Array.isArray(configured)
-        ? configured
-        : Object.entries(configured).map(([find, replacement]) => ({
-            find,
-            replacement,
-          }));
-      lookup.aliases = aliases;
-      config.resolve = { ...config.resolve, alias: [intercept, ...aliases] };
-    },
-    configResolved(config) {
-      lookup.aliases = config.resolve.alias.filter(
-        (alias) => alias.customResolver !== intercept.customResolver,
-      );
-    },
-  };
+/** Claim React specifiers using the copies selected by the setup. */
+export function viteReactImport(
+  source: string,
+  peers: VitePeers,
+): string | undefined {
+  if (!reactImport.test(source)) return;
+  if (source === "react/jsx-dev-runtime") return viteJsx;
+  const file = peers[source];
+  if (typeof file !== "string") throw missingPeer(source);
+  return viteExternal(file);
 }
 
 /** Resolve every public React entry after the setup selects the package copies. */

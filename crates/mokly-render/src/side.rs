@@ -9,6 +9,7 @@ use mokly_catalogue::config_types::ResolvedConfig;
 use mokly_compare::ancestor_roots;
 use mokly_compare::cache_types::Lease;
 use mokly_compare::dependency_types::Resolved;
+use mokly_sidecar::bundle_params::ViteSetupInputs;
 use mokly_sidecar::methods::ModuleResolution;
 use mokly_source_interface::error::Result;
 use mokly_source_interface::tree::SourceTree;
@@ -49,6 +50,7 @@ pub struct SideInputs {
     pub context: String,
     pub(crate) dependency_aliases: BTreeMap<String, String>,
     pub(crate) dependency_roots: Vec<PathBuf>,
+    pub(crate) vite_inputs: Option<Arc<ViteSetupInputs>>,
 }
 
 pub(crate) fn inputs(
@@ -102,6 +104,7 @@ pub(crate) fn inputs(
     SideInputs {
         dependency_roots: selected_roots,
         dependency_aliases: BTreeMap::new(),
+        vite_inputs: None,
         source_root,
         repository_roots,
         module_resolution,

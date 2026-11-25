@@ -98,6 +98,7 @@ fn sharing_code_keeps_different_unmapped_directory_records() {
             plan: None,
             params: Bundle {
                 vite: false,
+                vite_inputs: None,
                 evaluation: Some(evaluation.into()),
                 entry_files: vec![],
                 renderer: None,

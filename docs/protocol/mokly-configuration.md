@@ -128,6 +128,7 @@ naming the setting and the path:
 - path traversal: a `dir`, `renderer`, `postcss`, `vite.config`, package
   root, or local stylesheet whose lexical path or real path is outside the
   real path of `repoRoot`; `..` segments that resolve inside it are accepted;
+  under the Vite adapter, `postcss` keeps only the lexical check;
 - duplicate stylesheet `match` values and duplicate watch paths;
 - a `$`-prefixed stylesheet string other than `$componentStylesheets`, or that
   token in a scheme-specific list or more than once;

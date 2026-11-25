@@ -22,6 +22,7 @@ use crate::stylesheet_capture::{Capture, RecordingTree};
 use crate::stylesheet_class_maps::ClassMapCompiler;
 use crate::stylesheet_usage::BufferedUsage;
 use crate::stylesheet_watch;
+use crate::vite_stylesheets::ViteStylesheets;
 
 pub(crate) struct Compilation {
     pub(crate) bundle: Bundle,
@@ -108,12 +109,16 @@ impl RootCompiler for CapturingCompiler {
 
 pub(crate) struct ViteRootCompiler {
     pub(crate) base: CapturingCompiler,
-    pub(crate) transform: Arc<dyn Transform>,
+    pub(crate) transform: Arc<ViteStylesheets>,
 }
 
 impl RootCompiler for ViteRootCompiler {
     fn compile(&self, root: &StylesheetRoot) -> Result<Compilation> {
-        self.base.compile_with(root, Some(self.transform.as_ref()))
+        let mut compilation = self
+            .base
+            .compile_with(root, Some(self.transform.as_ref()))?;
+        compilation.capture.stamp.vite_env = self.transform.env_inputs(root);
+        Ok(compilation)
     }
 
     fn watch_files(&self, files: &BTreeSet<String>) -> Result<WatchInputs> {
