@@ -67,13 +67,15 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It gives
   Storybook the whole preview module, so that Storybook reads each preview
   setting from the default export and then from the named exports, or the
-  composed settings of a `definePreview` preview. It selects stories by their
-  tags and keeps Storybook names, tags, descriptions, and the preview's
-  composed `beforeAll` hook. It passes the cache from `describeStoryFile` to
-  `orderedExports`. For a render, it wraps the `beforeEach` hooks of the
-  project, the meta, and the story, so that each returned cleanup goes to the
-  cleanup list of that render. It also adds a first project loader that gives
-  the render the context that `load()` prepares.
+  composed settings of a `definePreview` preview. When esbuild's wrapper puts
+  the exports of a CommonJS preview, with their own `default`, under a
+  read-only `default`, its `unwrapPreview` gives Storybook those exports. It
+  selects stories by their tags and keeps Storybook names, tags, descriptions,
+  and the preview's composed `beforeAll` hook. It passes the cache from
+  `describeStoryFile` to `orderedExports`. For a render, it wraps the
+  `beforeEach` hooks of the project, the meta, and the story, so that each
+  returned cleanup goes to the cleanup list of that render. It also adds a first
+  project loader that gives the render the context that `load()` prepares.
 - [`src/sidecar/stories.ts`](./stories.ts) holds `describeStoryFile`,
   which collects one stories file. It makes the first included story the
   parent and the other stories its variants. It records each story's data
@@ -90,10 +92,11 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   renders entries to static markup, and sends each story render to
   `renderStory`.
 - [`src/sidecar/story-render.ts`](./story-render.ts) holds `renderStory`.
-  Before story setup, it puts the requested data props on a fresh portable
-  story's args, removes each data arg that the request leaves out, and sets
-  the view globals from the story's `mokly` parameter and the view. It awaits
-  story setup and `load()`, and renders the story's `unboundStoryFn` on the
+  It first awaits `setupStories`, so that the generation's `beforeAll` setup is
+  active before it composes a fresh portable story. Then it puts the requested
+  data props on the story's args, removes each data arg that the request
+  leaves out, and sets the view globals from the story's `mokly` parameter and
+  the view. It awaits `load()`, and renders the story's `unboundStoryFn` on the
   context that `load()` prepared, so that the loaders, the hooks, the
   decorators, and the markup share one context. A Storybook without that
   function keeps the portable story call. Then it runs the render's

@@ -183,6 +183,43 @@ test("a throwing beforeAll fails every story render with its first error and run
   });
 });
 
+for (const { name, directory } of [
+  {
+    name: "beforeAll fills dark view globals before the first story render",
+    directory: "story-setup-view-globals",
+  },
+  {
+    name: "beforeAll runs before the render reads a preview parameters getter",
+    directory: "story-setup-parameters-getter",
+  },
+]) {
+  test(name, async (context) => {
+    const sidecar = startSidecar(context);
+    await sidecar.call("hello");
+    const generation = await prepare(sidecar, directory);
+    const first = await renderStory(
+      sidecar,
+      generation,
+      "Prepared",
+      {},
+      "mobile",
+      "dark",
+    );
+    const repeat = await renderStory(
+      sidecar,
+      generation,
+      "Prepared",
+      {},
+      "mobile",
+      "dark",
+    );
+    assert.deepEqual(
+      [first.html, repeat.html],
+      ["<output>ready</output>", "<output>ready</output>"],
+    );
+  });
+}
+
 test("loader, beforeEach, and markup errors fail the render and release completed setup", async (context) => {
   const sidecar = startSidecar(context);
   await sidecar.call("hello");

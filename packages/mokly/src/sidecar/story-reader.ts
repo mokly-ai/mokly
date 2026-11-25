@@ -58,10 +58,11 @@ export function readStories(
   const factory = Object.values(module).find(csf.isStory);
   const meta = record(module.default ?? factory?.meta.input);
   const factoryPreview = factory?.meta.preview;
-  const previewConfig = factoryPreview ?? preview?.default;
+  const previewModule = factoryPreview ? undefined : unwrapPreview(preview);
+  const previewConfig = factoryPreview ?? previewModule?.default;
   const annotations = csf.isPreview(previewConfig)
     ? previewConfig.composed
-    : record(factoryPreview ?? preview);
+    : record(factoryPreview ?? previewModule);
   const title = entryTitle(meta, file, factory !== undefined);
   // Storybook's runtime also accepts factory modules without a default export.
   const composeStories = storybook.composeStories as (
@@ -156,6 +157,20 @@ export function readStories(
     beforeAll,
     stories,
   };
+}
+
+function unwrapPreview(
+  preview: BundleExports["preview"],
+): BundleExports["preview"] {
+  if (!preview) return;
+  // esbuild stores the CommonJS exports in a read-only default data property.
+  const defaultExport = Object.getOwnPropertyDescriptor(preview, "default");
+  const wrapped: unknown = defaultExport?.value;
+  return defaultExport?.writable === false &&
+    isRecord(wrapped) &&
+    Object.hasOwn(wrapped, "default")
+    ? wrapped
+    : preview;
 }
 
 interface HookAnnotations {

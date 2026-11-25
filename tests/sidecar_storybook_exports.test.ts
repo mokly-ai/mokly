@@ -93,6 +93,37 @@ test("CSF 3 stories use the composed definePreview settings", async (context) =>
   );
 });
 
+for (const { name, directory, html } of [
+  {
+    name: "CommonJS previews apply loaders and globals from exports.default",
+    directory: "preview-commonjs-default",
+    html: "<output>Loaded:default-theme</output>",
+  },
+  {
+    name: "CommonJS previews apply named parameters beside exports.default",
+    directory: "preview-commonjs-mixed",
+    html: "<output>Loaded:preview-locale:dark-theme</output>",
+  },
+]) {
+  test(name, async (context) => {
+    const file = "entry.stories.tsx";
+    const { sidecar, generation } = await describeStoryFile(
+      context,
+      file,
+      directory,
+    );
+    await installBindings(sidecar, generation);
+    const story = await sidecar.call<RenderResult>("renderStory", {
+      generation,
+      storyId: `${file}#Primary`,
+      props: {},
+      viewport: "mobile",
+      colorScheme: "dark",
+    });
+    assert.equal(story.html, html);
+  });
+}
+
 test("non-factory stories without a default export compose with empty meta", async (context) => {
   const file = "meta-less.stories.tsx";
   const { definitions } = await describeStoryFile(context, file);

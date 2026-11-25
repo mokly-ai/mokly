@@ -27,6 +27,7 @@ export async function renderStory(
   const cleanups: CleanupCallback[] = [];
   let renderFailed = false;
   try {
+    await setupStories(generation, stored.beforeAll);
     let prepared: PreparedContext | undefined;
     const story = stored.compose(cleanups, (context) => {
       prepared = context;
@@ -51,7 +52,6 @@ export async function renderStory(
         moklyColorScheme: params.colorScheme,
       }),
     );
-    await setupStories(generation, stored.beforeAll);
     await story.load();
     const context = prepared;
     const unboundStoryFn = context?.unboundStoryFn;
