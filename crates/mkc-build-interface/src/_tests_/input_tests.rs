@@ -90,6 +90,7 @@ fn credential_validation_never_echoes_its_value() {
         "secret:credential",
         "secret@credential",
         "secret/credential",
+        "secret%3Acredential",
         "secret\0credential",
         "secret\x1bcredential",
         "padded secret",
