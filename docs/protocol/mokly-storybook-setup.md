@@ -35,26 +35,32 @@ such a late cleanup throws, it fails the render of the wrong story. Until it
 runs, the state that it undoes stays in later screen and component renders.
 Without the coordinator, such a cleanup can also undo a newer `beforeAll` setup.
 
-Each sidecar keeps at most one active setup from the preview's `beforeAll` hook.
-Before the sidecar composes a story, it makes the setup of the story's
-generation active, so the composition, the view globals, and `load()` see the
-setup. When the active setup belongs to another generation, the sidecar runs its
-cleanup first. Then it runs the `beforeAll` hook of the story's generation, and
-that setup becomes the active one. So a sidecar runs the hook once for each
-generation, and again only after the setup of another generation replaced it.
-The last setup gets no cleanup when the sidecar exits. A loader, a hook, a
-cleanup, or a render that throws fails the render with
-[`render-failed`](./mokly-sidecar.md#fail-closed-rules). When the `beforeAll`
-hook throws, it does not run again for that generation, and each story render of
-that generation fails with its error. Mokly runs no `play` function and no
-`afterEach` hook.
+Each sidecar keeps at most one active setup from a preview's `beforeAll` hook.
+A setup belongs to one generation and one
+[Storybook folder](./mokly-storybook.md#storybook-folders). Before the sidecar
+composes a story, it makes the setup of the story's generation and folder
+active, so the composition, the view globals, and `load()` see the setup. When
+the active setup belongs to another generation or another folder, the sidecar
+runs its cleanup first. Then it runs the `beforeAll` hook of the story's
+preview, and that setup becomes the active one. So a sidecar runs the hook of
+each folder once for each generation, and again only after the setup of
+another generation or folder replaced it. The release of a generation runs no
+cleanup. The last setup gets no cleanup when the sidecar exits. A loader, a
+hook, a cleanup, or a render that throws fails the render with
+[`render-failed`](./mokly-sidecar.md#fail-closed-rules). When a `beforeAll`
+hook throws, it does not run again for that generation and folder. Each later
+story render of that generation and folder fails with its error, and the
+active setup stays active. The stories of other folders still render. Mokly
+runs no `play` function and no `afterEach` hook.
 
 Decision: Mokly also runs the preview's `beforeAll` hook, as Storybook's test
 runners do. Running only the loaders and the `beforeEach` hooks was rejected.
-Decision: one setup at a time is active in a sidecar, as in Storybook's own
-preview after a reload, because a setup changes globals that the whole process
-shares. A cleanup when the sidecar releases a generation was rejected, because
-two loaded generations would then keep two setups.
+Decision: one setup at a time is active in a sidecar, across generations and
+Storybook folders, as in Storybook's own preview after a reload, because a
+setup changes globals that the whole process shares. A cleanup when the
+sidecar releases a generation was rejected, because two loaded generations
+would then keep two setups. One active setup for each folder was rejected,
+because the setups of two folders would then share the process globals.
 
 ## Globals For Views
 

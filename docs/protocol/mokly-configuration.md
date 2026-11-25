@@ -1,6 +1,6 @@
 # Mokly Configuration Contract
 
-Status: The `vite.config` and `roots[].storybook` fields and roots without `dir` are not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds `vite.config`, the [Storybook folder milestone](../../plans/storybook-support.md#milestone-19-a-storybook-folder-for-each-root) adds `roots[].storybook`, and the [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds roots without `dir`.
+Status: The `vite.config` field and roots without `dir` are not available yet. The [Storybook setup milestone](../../plans/storybook-support.md#milestone-32-storybooks-setup-on-the-vite-adapter) adds `vite.config`, and the [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds roots without `dir`.
 
 This is the detailed configuration boundary of the
 [package contract](./mokly-package.md). It names every field, where each path

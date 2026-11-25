@@ -59,8 +59,10 @@ rejected, because it adds a new error.
 ## The Setup
 
 One setup compiles every JavaScript entry of a side: each entry module, each
-stories file, the renderer, and the Storybook preview. With a Storybook
-folder, Mokly loads Storybook's merged Vite setup for every JavaScript entry.
+stories file, the renderer, and the selected preview file of each
+[Storybook folder](./mokly-storybook.md#storybook-folders) of the stories
+files. With a Storybook folder, Mokly loads Storybook's merged Vite setup for
+every JavaScript entry.
 
 Without a Storybook folder, Mokly loads the app setup for every JavaScript
 entry. The app setup comes from the first Vite config file that Vite's own
@@ -118,7 +120,7 @@ except the class map of a CSS Module. The plugin handles each import in this
 list before every plugin of the setup:
 
 - the virtual entry, which exports every entry module, stories file, the
-  renderer, and the Storybook preview, under the
+  renderer, and the selected preview file of each Storybook folder, under the
   [module source rules](./mokly-sidecar-modules.md#authoring-and-evaluation);
 - the attributed authoring facade for repository-owned importers of
   `@mokly/mokly`, and the unattributed API for installed packages, under the

@@ -62,8 +62,10 @@ inputs changes, and only then:
 - the consumed bytes or the ordered imports of a module in its closure: the
   entry module and every module that it imports, directly or through other
   modules;
-- the closure of the renderer module, for an entry module, or of the
-  Storybook preview, for a stories file;
+- the closure of the renderer module, for an entry module, or the closure of
+  the preview file of the stories file's
+  [Storybook folder](./mokly-storybook.md#storybook-folders), for a stories
+  file;
 - the class map of a CSS Module in the closure. A stylesheet edit that keeps
   every class map moves only stylesheet keys;
 - the path or title of a definition that a closure module exports or
@@ -76,14 +78,19 @@ inputs changes, and only then:
   resolved path of a package that the sidecar loads at render time, such as
   React. These move every key. Such a package other than React counts
   through its path only, and its manifest only on a closure module's
-  directory chain, because only some sides read that manifest.
+  directory chain, because only some sides read that manifest;
+- the `main.*` file of a Storybook folder and the files that it loads, when
+  Mokly reads `main.*` to resolve `@storybook/react` under the
+  [Storybook folder rules](./mokly-storybook.md#storybook-folders). These move
+  every key.
 
 When the module graph does not name the configured renderer, every entry
-module uses the whole bundle as its key. When it does not name the Storybook
-preview, every stories file does. The path or title of a definition that an
-installed package makes through the unattributed API moves every key. The
-sidecar does not report which module declares such a definition, so no
-closure shows which renders read it.
+module uses the whole bundle as its key. When it does not name the preview
+file of a stories file's Storybook folder, that stories file uses the whole
+bundle as its key. The path or title of a definition that an installed
+package makes through the unattributed API moves every key. The sidecar does
+not report which module declares such a definition, so no closure shows which
+renders read it.
 
 A render reads only its imports, its props and slots, and its render
 context. A module side effect of one entry module that changes another entry

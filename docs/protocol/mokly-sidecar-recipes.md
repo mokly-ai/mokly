@@ -38,7 +38,8 @@ reuse evidence of the next section. A `serveEdit` request records no capture
 witnesses. A marked compilation keeps the
 [private lookup files](./mokly-sidecar-folder-reuse.md#private-folder-files).
 Every request still records consumed source digests, the module graph,
-metadata digests, directory lists, and the preview selection.
+metadata digests, directory lists, and the preview selection of each Storybook
+folder.
 
 Serve switches its head to `serveEdit` after it publishes its first state,
 before it reports readiness. Each head preparation that starts after the
@@ -77,12 +78,14 @@ rejected, because it keeps that cost on every edit.
 A compilation is reused only while its inputs stay unchanged. These inputs
 include the ancestor `package.json` and `tsconfig.json` candidates of each
 consumed module up to its source or selected dependency root, the resolved
-`react/package.json`, and the Storybook preview candidates, each including
-absent files. Added or removed files in a consumed-module directory invalidate
-reuse, so a higher-priority module in that directory cannot remain hidden.
-Manual `r` uses these same input checks. Resolution metadata and directory
-membership remain observable. CSS bytes belong to stylesheet processing rather
-than the JavaScript compilation.
+`react/package.json`, the preview candidates of each
+[Storybook folder](./mokly-storybook.md#storybook-folders) of the stories
+files, and the files that Mokly reads to resolve `@storybook/react` through a
+framework package, each including absent files. Added or removed files in a
+consumed-module directory invalidate reuse, so a higher-priority module in
+that directory cannot remain hidden. Manual `r` uses these same input checks.
+Resolution metadata and directory membership remain observable. CSS bytes
+belong to stylesheet processing rather than the JavaScript compilation.
 
 Reuse of a captured compilation also requires an equal toolchain identity and
 unchanged reuse evidence. The toolchain identity digests the Mokly, esbuild, and
@@ -96,6 +99,8 @@ or a peer resolves:
 - the `jsconfig.json` candidate beside each `tsconfig.json` candidate, and
   each file that a tsconfig `extends` chain names;
 - the package manifest of each resolved peer;
+- the files that Mokly reads to resolve `@storybook/react` through a framework
+  package;
 - each directory where the resolver can look for a candidate before it finds
   its result: relative paths with their extensions and index files, `paths`
   targets, `baseUrl`, each `node_modules` level, and each configured lookup
@@ -113,13 +118,14 @@ result without a `bundle` request, it checks the same evidence. Reuse evidence
 moves no render input key and is not a watch input. The compilation identity
 includes the toolchain identity, the content of the recorded `jsconfig.json` and
 `extends` files, the real path and the manifest content of each resolved peer,
-and the content of each present `tsconfig.json` and `package.json` candidate
-above the source root. So a change to one of them gives a new generation id. The
-other reuse evidence stays out of the identity. An incomplete compilation,
-marked or not, gets a fresh identity at each compile, also when the sidecar
-drops its evidence to fit the frame limit. The binary then never reuses the
-definitions of an earlier generation for it. A complete compilation keeps a
-deterministic identity.
+the content of the files that Mokly reads to resolve `@storybook/react` through
+a framework package, and the content of each present `tsconfig.json` and
+`package.json` candidate above the source root. So a change to one of them
+gives a new generation id. The other reuse evidence stays out of the identity.
+An incomplete compilation, marked or not, gets a fresh identity at each
+compile, also when the sidecar drops its evidence to fit the frame limit. The
+binary then never reuses the definitions of an earlier generation for it. A
+complete compilation keeps a deterministic identity.
 Decision: a reuse check of a compilation compares recorded digests, whole
 directory entries, and link targets with the filesystem, so it copies no
 resolver rule. A second resolve with esbuild was rejected, because it runs an

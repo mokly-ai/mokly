@@ -1,6 +1,6 @@
 # Storybook Stories
 
-Status: The `storybook` root field, Storybook's full order of preview extensions, and the reading of `main.*` are not available yet. The [Storybook folder milestone](../../plans/storybook-support.md#milestone-19-a-storybook-folder-for-each-root) adds them. Roots without `dir` are not available yet. The [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds them.
+Status: Roots without `dir`, which take their directories from the `stories` field of `main.*`, are not available yet. The [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds them.
 
 ## Stories Files
 
@@ -40,9 +40,16 @@ one of these extensions that exists in the folder, in this order: `.js`, `.ts`,
 Storybook's own order. A root without a Storybook folder, and a folder without
 a preview file, give their stories no preview annotations, and Mokly gives no
 warning. The stories of a root get the preview of that root's folder, so two
-roots with different folders give their stories different previews. Mokly
-gives Storybook each preview module in the form that Storybook reads. So Storybook reads the same default and named
-settings from an ES module and from a CommonJS file.
+roots with different folders give their stories different previews.
+
+On the esbuild path, Mokly compiles a preview file with any of the extensions
+above, and it gives Storybook each preview module in the form that Storybook
+reads. So Storybook reads the same default and named settings from an ES
+module and from a CommonJS file. Under the
+[Vite adapter](./mokly-vite-adapter.md), the project's Vite setup compiles each
+preview file as it compiles every other module. A preview file that the setup
+cannot compile or evaluate fails with `bundle-failed`, as every other module
+does.
 
 Mokly finds the `main.*` file of a Storybook folder as Storybook does. It reads
 the file with Storybook's own loader from the project's installed `storybook`

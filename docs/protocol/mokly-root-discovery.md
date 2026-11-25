@@ -1,6 +1,6 @@
 # Root Discovery And Source Membership
 
-Status: The `storybook` root field and roots without `dir` are not available yet. The [Storybook folder milestone](../../plans/storybook-support.md#milestone-19-a-storybook-folder-for-each-root) adds the field, and the [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds roots without `dir`.
+Status: Roots without `dir` are not available yet. The [roots from `main.*` milestone](../../plans/storybook-support.md#milestone-20-roots-from-the-stories-field-of-main) adds them.
 
 This page complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary that Serve, `build`, `publish`, and

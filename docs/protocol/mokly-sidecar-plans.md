@@ -80,9 +80,10 @@ restoration. Plan copies installed in workers were rejected, because they add
 installed-state bookkeeping.
 
 The resolution settings of a request are its bundle settings without the
-entry files, the stories files, the renderer, and the evaluation digest. The
-core keeps the last record of each set of resolution settings. Compiled reuse
-and the bundle cache keep their own comparison of bundle settings.
+entry files, the stories files and their Storybook folders, the renderer, and
+the evaluation digest. The core keeps the last record of each set of
+resolution settings. Compiled reuse and the bundle cache keep their own
+comparison of bundle settings.
 Decision: the core keeps a record by its resolution settings, because the
 settings that it leaves out cannot change the target of a planned import. A
 key of every bundle setting except the evaluation digest was rejected,

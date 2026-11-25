@@ -64,15 +64,16 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   `orderedExports` and `describeStoryFile`. Each call reads the current
   namespace values.
 - [`src/sidecar/story-reader.ts`](./story-reader.ts) holds
-  `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It gives
-  Storybook the whole preview module, so that Storybook reads each preview
-  setting from the default export and then from the named exports, or the
-  composed settings of a `definePreview` preview. When esbuild's wrapper puts
-  the exports of a CommonJS preview, with their own `default`, under a
-  read-only `default`, its `unwrapPreview` gives Storybook those exports. It
+  `readStories`, which composes CSF 2, CSF 3, and CSF Factories. It takes the
+  preview of the stories file's Storybook folder from the `previews` export of
+  the virtual entry. It gives Storybook that whole preview module, so that
+  Storybook reads each preview setting from the default export and then from
+  the named exports, or the composed settings of a `definePreview` preview. It
+  loads `@storybook/react` from the entry that `storybookReact` of the compiled
+  recipe gives for the folder, else from the configuration directory. It
   selects stories by their tags and keeps Storybook names, tags, descriptions,
-  and the preview's composed `beforeAll` hook. It passes the cache from
-  `describeStoryFile` to `orderedExports`. For a render, it wraps the
+  the folder, and the preview's composed `beforeAll` hook. It passes the cache
+  from `describeStoryFile` to `orderedExports`. For a render, it wraps the
   `beforeEach` hooks of the project, the meta, and the story, so that each
   returned cleanup goes to the cleanup list of that render. It also adds a first
   project loader that gives the render the context that `load()` prepares.
@@ -86,29 +87,68 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   globals of each viewport and colour scheme, and into the ignored values with
   their paths and reasons.
 - [`src/sidecar/story-setup.ts`](./story-setup.ts) holds
-  `setupStories`, which keeps one active `beforeAll` setup, cleans it up before
-  a generation switch, and remembers setup failures.
+  `setupStories`, which keeps one active `beforeAll` setup for the process,
+  keyed by its generation and its Storybook folder. Before a story of another
+  generation or folder sets up, it runs the cleanup of the active setup. It
+  remembers each setup failure by its generation and folder, and it throws
+  that failure again for each later story of that pair.
 - [`src/sidecar/render.ts`](./render.ts) holds `render`, which
   renders entries to static markup, and sends each story render to
   `renderStory`.
 - [`src/sidecar/story-render.ts`](./story-render.ts) holds `renderStory`.
-  It first awaits `setupStories`, so that the generation's `beforeAll` setup is
-  active before it composes a fresh portable story. Then it puts the requested
-  data props on the story's args, removes each data arg that the request
-  leaves out, and sets the view globals from the story's `mokly` parameter and
-  the view. It awaits `load()`, and renders the story's `unboundStoryFn` on the
-  context that `load()` prepared, so that the loaders, the hooks, the
-  decorators, and the markup share one context. A Storybook without that
-  function keeps the portable story call. Then it runs the render's
-  `beforeEach` cleanups in reverse order in a `finally` block.
+  It first awaits `setupStories`, so that the `beforeAll` setup of the story's
+  generation and Storybook folder is active before it composes a fresh portable
+  story. Then it puts the requested data props on the story's args, removes
+  each data arg that the request leaves out, and sets the view globals from the
+  story's `mokly` parameter and the view. It awaits `load()`, and renders the
+  story's `unboundStoryFn` on the context that `load()` prepared, so that the
+  loaders, the hooks, the decorators, and the markup share one context. A
+  Storybook without that function keeps the portable story call. Then it runs
+  the render's `beforeEach` cleanups in reverse order in a `finally` block.
+- [`src/sidecar/storybook-folders.ts`](./storybook-folders.ts) holds
+  `storybookFolder`, which gives the Storybook folder of a stories file from
+  the `storybookFolders` bundle param, with `.storybook` for a file without
+  one, and `storybookFolders`, the sorted folders of the stories files.
+  `storybookCandidates` gives the `main` or `preview` file names of a folder in
+  Storybook's extension order. `previewCandidates` lists the preview
+  candidates of every folder, also absent ones, which the recipe hashes, and
+  `selectPreviews` takes the first present preview of each folder.
+- [`src/sidecar/storybook-main.ts`](./storybook-main.ts) holds
+  `storybookFrameworks`, which `consumerRequire` in
+  [`src/sidecar/paths.ts`](./paths.ts) calls when the configuration directory
+  does not resolve `@storybook/react`. For each folder, it finds `main.*` in
+  Storybook's order and reads its `framework` with Storybook's own loader from
+  the project's `storybook` package. Then it resolves `@storybook/react` from
+  the framework package. When a step finds no file or package, it throws the
+  error that the lookup of `@storybook/react` from the configuration directory
+  gave. The loader runs in a worker thread from
+  [`src/sidecar/storybook-main-worker.ts`](./storybook-main-worker.ts), so
+  that the TypeScript loader that Storybook registers and the module cache of
+  `main.*` stay local to one read, also across edits in Serve. The worker
+  returns the files that the read resolved or read, with their digests. A
+  loader failure names the file, the installed Storybook version, and the
+  tested range. The result gives the `@storybook/react` entry of each folder,
+  which the compiled recipe keeps as `storybookReact`.
+- [`src/sidecar/storybook-inputs.ts`](./storybook-inputs.ts) holds
+  `recordStorybookInputs`, which `bundleRecipe` and `viteMetadata` call. It
+  adds the files that `storybookFrameworks` read to the physical inputs, and
+  to the metadata inputs when they lie inside the source root or a dependency
+  directory. With complete reuse evidence, it also records each file there as
+  an identity input, and a file whose evidence differs makes the evidence
+  incomplete.
 
 ### esbuild Compilation and Reuse
 
 - [`src/sidecar/bundle.ts`](./bundle.ts) holds `bundle`, which
   compiles the catalogue modules. Each call shares its read bytes across
   attempts, while each attempt keeps its own consumed-file and CSS-module
-  records. Each attempt takes its esbuild options and plugin order from
-  `bundleOptions` in [`src/sidecar/bundle-options.ts`](./bundle-options.ts).
+  records. `startCapture` in
+  [`src/sidecar/bundle-capture.ts`](./bundle-capture.ts) creates that shared
+  state. It also keeps the preview selection of each Storybook folder and the
+  `main.*` reads, so every attempt of a call uses the same previews and reads
+  each `main.*` once. Each attempt takes its esbuild options and plugin order
+  from `bundleOptions` in
+  [`src/sidecar/bundle-options.ts`](./bundle-options.ts).
   Only a native compile gets its log override, which makes a handled
   `require` failure an error. esbuild resolves most imports itself, and
   [`src/sidecar/native-plan.ts`](./native-plan.ts) classifies the
@@ -133,12 +173,16 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   plugin, and no durability check. It still records the consumed sources, the
   module graph, the metadata digests, and the directory lists.
   [`src/sidecar/bundle-entry.ts`](./bundle-entry.ts) builds the
-  virtual entry module. `configuredFiles` in
+  virtual entry module. Its `previews` export holds the selected preview of
+  each Storybook folder, keyed by the folder. On esbuild, the entry loads each
+  preview with `require`, so a CommonJS preview and an ES module preview give
+  Storybook the same exports. On Vite, it imports each preview as a namespace.
+  `configuredFiles` in
   [`src/sidecar/configured-files.ts`](./configured-files.ts), the
   first plugin of each attempt, resolves each of its imports to the canonical
   configured file or selected preview file, so TypeScript `paths` never apply
-  to it. Without a captured preview selection, a `serveEdit` call selects only
-  a regular preview file.
+  to it. Without captured preview selections, every call selects only regular
+  preview files.
 - For a `serveEdit` call with a plan, `bundle` runs no native compile. It
   starts with a guarded planned compile, in which esbuild itself resolves the
   selected safe relative specifiers of the plan. `PlannedRelative.create` in
@@ -603,7 +647,8 @@ sidecar. The `tests/sidecar_vite*.test.ts` files test the Vite compile path.
   another edge already names the file.
 - [`vite-inputs.ts`](./vite-inputs.ts) records consumed bytes, rejects inconsistent
   reads, and verifies the files again after compilation. [`vite-metadata.ts`](./vite-metadata.ts)
-  builds digests for setup files, plugin inputs, React manifests, preview, package
+  builds digests for setup files, plugin inputs, React manifests, the preview
+  candidates of each Storybook folder, the files of the `main.*` read, package
   and TypeScript config candidates, and consumed files outside the graph.
   [`vite-invalidation.ts`](./vite-invalidation.ts) compares the last input snapshot
   with the disk. It invalidates virtual, changed, and unsnapshotted modules, or
