@@ -5,14 +5,51 @@ use crate::command::CommandSpec;
 use super::cloud_commands::cloud_commands;
 use super::request::{DependencyAudit, Shard, VerificationSuite};
 
-/// Commands in dependency order for one validated suite.
+/// One step of a suite plan.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(super) enum Step {
+    /// Run one command.
+    Run(CommandSpec),
+    /// Run the lanes at the same time and each lane's commands in order.
+    Concurrent(Vec<Vec<CommandSpec>>),
+}
+
+impl Step {
+    /// The commands of this step, lane by lane.
+    fn commands(self) -> Vec<CommandSpec> {
+        match self {
+            Self::Run(command) => vec![command],
+            Self::Concurrent(lanes) => lanes.into_iter().flatten().collect(),
+        }
+    }
+}
+
+/// The steps of one validated suite, in dependency order.
+pub(super) fn steps_for(
+    suite: VerificationSuite,
+    shard: Option<Shard>,
+    dependency_audit: DependencyAudit,
+) -> Vec<Step> {
+    match suite {
+        VerificationSuite::Repository => repository_steps(dependency_audit),
+        other => commands_for(other, shard, dependency_audit)
+            .into_iter()
+            .map(Step::Run)
+            .collect(),
+    }
+}
+
+/// Every command of one validated suite, in dependency order and lane by lane.
 pub(super) fn commands_for(
     suite: VerificationSuite,
     shard: Option<Shard>,
     dependency_audit: DependencyAudit,
 ) -> Vec<CommandSpec> {
     match suite {
-        VerificationSuite::Repository => repository_commands(dependency_audit),
+        VerificationSuite::Repository => repository_steps(dependency_audit)
+            .into_iter()
+            .flat_map(Step::commands)
+            .collect(),
         VerificationSuite::Viewer => viewer_commands(shard),
         VerificationSuite::Browser => vec![npm(&["run", "build"]), browser_test_command(shard)],
         VerificationSuite::Native => vec![
@@ -53,12 +90,16 @@ fn sharded(test: CommandSpec, shard: Option<Shard>) -> CommandSpec {
     }
 }
 
-fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
+/// The read-only source checks run in three concurrent lanes, because Prettier
+/// and ESLint each use one core while Clippy uses the rest. No lane writes a
+/// file that another lane reads; Clippy writes only under `target/`, which
+/// Prettier and ESLint ignore. The builds and tests run after the lanes.
+fn repository_steps(dependency_audit: DependencyAudit) -> Vec<Step> {
     let audit = match dependency_audit {
         DependencyAudit::Baseline => npm(&["run", "dependencies:check", "--", "--baseline"]),
         DependencyAudit::Strict => npm(&["run", "dependencies:check"]),
     };
-    vec![
+    let before = [
         audit,
         npm(&["ci"]),
         npm(&["run", "dependencies:check:rust"]),
@@ -66,22 +107,30 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         cargo(&["xtask", "whitespace"]),
         cargo(&["xtask", "check-generated-types"]),
         npm(&["run", "palette:check"]),
-        npm(&["run", "format:check"]),
-        npm(&["run", "lint"]),
-        CommandSpec::new("node_modules/.bin/ast-grep").args(["test", "--skip-snapshot-tests"]),
-        CommandSpec::new("node_modules/.bin/ast-grep")
-            .args(["scan", "crates", "xtask", "packages", "apps"]),
-        node(&[
-            "--test",
-            "xtask/scripts/boundary-imports.test.mjs",
-            "xtask/scripts/strict-command.test.mjs",
-            "xtask/scripts/isolated-postgres.test.mjs",
-        ]),
-        CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
-        node(&["scripts/verification/repository-ratchets.mjs"]),
-        cargo(&["fmt", "--all", "--", "--check"]),
-        rust_clippy(),
-        design_matrix_clippy(),
+    ];
+    let source_checks = Step::Concurrent(vec![
+        vec![npm(&["run", "format:check"])],
+        vec![
+            npm(&["run", "lint"]),
+            CommandSpec::new("node_modules/.bin/ast-grep").args(["test", "--skip-snapshot-tests"]),
+            CommandSpec::new("node_modules/.bin/ast-grep")
+                .args(["scan", "crates", "xtask", "packages", "apps"]),
+            node(&[
+                "--test",
+                "xtask/scripts/boundary-imports.test.mjs",
+                "xtask/scripts/strict-command.test.mjs",
+                "xtask/scripts/isolated-postgres.test.mjs",
+            ]),
+            CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
+            node(&["scripts/verification/repository-ratchets.mjs"]),
+        ],
+        vec![
+            cargo(&["fmt", "--all", "--", "--check"]),
+            rust_clippy(),
+            design_matrix_clippy(),
+        ],
+    ]);
+    let after = [
         cargo(&["xtask", "build-native"]),
         npm(&["run", "build", "--workspace", "@mokly/ui"]),
         npm(&["run", "build", "--workspace", "@mokly/model"]),
@@ -89,7 +138,13 @@ fn repository_commands(dependency_audit: DependencyAudit) -> Vec<CommandSpec> {
         npm(&["run", "build", "--workspace", "@mokly/viewer"]),
         npm(&["run", "build", "--workspace", "@mokly/mokly"]),
         mokly_cargo("test"),
-    ]
+    ];
+    before
+        .into_iter()
+        .map(Step::Run)
+        .chain([source_checks])
+        .chain(after.into_iter().map(Step::Run))
+        .collect()
 }
 
 fn rust_clippy() -> CommandSpec {

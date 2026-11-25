@@ -165,10 +165,22 @@ URL. Sandbox denials, synthetic console sentinels, and page errors can omit the
 URL when their location is unstable or absent; their exact message must
 identify the expected failure. No sleep synchronizes an assertion.
 
+## Shard Totals
+
+`scripts/verification/ci-shards.json` holds the viewer and browser shard
+totals. The runtime profile job reads this file and publishes the shard matrices.
+The report aggregate and [remote verification](./remote-verification.md) read
+the same file, so a shard count change is one edit. Decision: shard the viewer
+and browser suites until each job takes about 7 to 9 minutes, including
+setup. GitHub-hosted runners for this public repository cost nothing, so a
+shard adds no cost; each shard repeats about 4 minutes of setup, build, and
+browser global setup. The [worker count](#test-concurrency)
+of a shard does not change.
+
 ## Browser Shard Balance
 
 Hosted CI and remote verification assign whole spec files to the
-[browser shard total](./ci-workflow.md#runtime-profiles) of `chromium`
+[browser shard total](#shard-totals) of `chromium`
 shards using measured per-test costs. A spec's per-test cost includes the
 hooks and fixtures that run before its tests, because they take a large part
 of a shard's time. The evidence aggregate requires file
@@ -198,7 +210,7 @@ describes the scheduling inputs and discovery boundary.
 ## Viewer Shard Balance
 
 Hosted CI and remote verification assign whole Node test files to the
-[viewer shard total](./ci-workflow.md#runtime-profiles) of shards using
+[viewer shard total](#shard-totals) of shards using
 measured per-file durations. The aggregate requires the file assignments of
 the viewer shards to be pairwise disjoint and their union to equal
 independent discovery. A file without a duration sample also runs. Each

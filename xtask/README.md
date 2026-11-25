@@ -310,8 +310,8 @@ code.
 - [`src/check/request.rs`](./src/check/request.rs) validates suite, shard,
   and dependency audit selections before subprocesses start.
   [`src/check/commands.rs`](./src/check/commands.rs) defines the shared suite
-  commands, and [`src/check/runner.rs`](./src/check/runner.rs) runs them
-  through injected process and file auditors.
+  steps: single commands and groups of concurrent lanes. [`src/check/runner.rs`](./src/check/runner.rs)
+  runs them through injected process and file auditors.
 - [`src/check/cloud_commands.rs`](./src/check/cloud_commands.rs) maps cloud
   suites to combined-workspace commands. [`src/check/tasks.rs`](./src/check/tasks.rs)
   defines fixture generation, email generation, and the Stripe subprocess.
@@ -331,7 +331,9 @@ code.
   constant live in [`mkc-domain`](../crates/mkc-domain/tests/preview_workflow_comments.rs).
 - [`src/rust_file_length.rs`](./src/rust_file_length.rs) is the Rust
   file-length auditor. [`src/command/mod.rs`](./src/command/mod.rs) defines the
-  injected command-runner boundary, and
+  injected command-runner boundary.
+  [`src/command/concurrent.rs`](./src/command/concurrent.rs) runs concurrent
+  lanes and prints each finished command's output as one block, and
   [`src/child_environment.rs`](./src/child_environment.rs) defines the secret
   and Git repository variable lists that every child drops.
 - The [remote verification reference](./remote/README.md#key-code) lists the

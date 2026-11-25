@@ -4,11 +4,38 @@ Continuation of [CI Verification](./ci-verification.md).
 
 ## Dependency Cache And Security
 
-CI caches npm's download cache and Rust dependency builds. `actions/setup-node`
-keys the npm cache from the committed `package-lock.json`. `npm ci` always
+CI caches npm's download cache and Rust dependency builds. `npm ci` always
 runs, including after a cache hit, and every platform's optional native
 package remains available. A cache miss is an ordinary cold install or build
 and never permits a skipped command.
+
+The Actions cache of the repository holds at most 10 GB. Above that limit
+GitHub evicts the least recently used entries, so every cache that CI saves
+must fit beside the others. Only workflow runs on `main` save a cache. Pull
+requests, including fork pull requests, restore the `main` copy and never
+save. A pull request entry would push `main` entries out, and an evicted
+`main` entry makes every later run build cold.
+
+### npm Download Cache
+
+Every CI job that installs dependencies restores npm's download cache before
+`npm ci`. The key covers the runner platform, the architecture, and the
+checked-out `package-lock.json`, and only an exact key matches. A partial
+match was rejected, because each save would then keep the old packages and
+the entry would grow with every lockfile change. On `main`, one Linux job and
+each native job save the entry after `npm ci` when their key missed. The
+other jobs only restore it.
+
+Workflows other than CI use no npm cache. Their deploy, preview, and nightly
+jobs run uncached installs, so they add no entry and restore nothing into a
+job that holds credentials.
+
+The desktop partition restores the Electron download that its tests start.
+Only a run on `main` saves it, after the tests.
+
+The cloud browser jobs keep no cache of the Playwright system packages. Its
+index refresh and restore took as long as the download that it saved, about
+25 seconds with the cache and without it.
 
 The Bun setup of the CI viewer jobs and of release preparation sets
 `no-cache: true`, so it neither restores nor saves a workflow cache. It can
@@ -47,10 +74,15 @@ Repository job's cache also holds the installed Rust audit tool. Each key
 covers the runner platform, the toolchain, the Cargo environment, the
 lockfile, and the workspace manifests. The Repository job's key also covers
 the audit tool lockfile and installer. Jobs that build the same artifacts
-share one cache.
+share one cache. Every Linux CI job that builds only `xtask` and the native
+binary shares one cache, the cloud mockup and site partitions included. The
+cloud partitions that also build `mkc-` crates, the image job, the Repository
+job, and each native host keep their own cache. The four app shards share one
+cache. The two Stripe catalogue jobs of the deploy workflow share one cache.
+A separate cache for the mockup and site partitions was rejected: they held
+the same build as the Mokly jobs, and the total passed the 10 GB limit.
 
-Only CI runs on `main` save a Rust build cache. Pull requests, including fork
-pull requests, restore the `main` copy and never save. Testboxes restore with
+The Rust build cache follows the `main`-only save rule above. Testboxes restore with
 the cache options of the CI viewer, browser, and static-delivery jobs and never
 save, because they run unreviewed local trees, even when their workflow runs on
 `main`. CI saves on GitHub-hosted runners, so no job refreshes the cache that

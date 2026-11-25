@@ -213,7 +213,7 @@ entry.
 
 For an unsharded report for a complete suite, the observed file set must equal
 independent discovery exactly. For each sharded suite, the aggregate requires
-one report per shard of the [CI shard totals](./ci-workflow.md#runtime-profiles)
+one report per shard of the [CI shard totals](./ci-suite-evidence.md#shard-totals)
 for each runtime, proves assignments are non-empty and pairwise disjoint, and
 compares their union and observed execution against a separately discovered
 complete suite inventory. Browser evidence also requires the observed test IDs

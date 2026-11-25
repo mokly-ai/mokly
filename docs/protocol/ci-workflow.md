@@ -39,22 +39,11 @@ directory from another job.
 
 For ordinary pull requests, pushes to `main`, and manual dispatch, the workflow fans out to:
 
-- two viewer shards on Node 22.15.0;
-- ten browser shards on Node 22.15.0;
+- two viewer shards and ten browser shards on Node 22.15.0;
 - one static-delivery job on Node 22.15.0; and
 - native jobs on macOS and Windows at Node 22.15.0.
 
-The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux.
-
-`scripts/verification/ci-shards.json` holds the viewer and browser shard
-totals. The runtime profile job reads this file and publishes the shard matrices.
-The report aggregate and [remote verification](./remote-verification.md) read
-the same file, so a shard count change is one edit. Decision: shard the viewer
-and browser suites until each job takes about 7 to 9 minutes, including
-setup. GitHub-hosted runners for this public repository cost nothing, so a
-shard adds no cost; each shard repeats about 4 minutes of setup, build, and
-browser global setup. The [worker count](./ci-suite-evidence.md#test-concurrency)
-of a shard does not change.
+The [cloud jobs](./ci-workflow-cloud.md) run beside them on Linux. The [shard totals](./ci-suite-evidence.md#shard-totals) set the shard counts.
 
 For a same-repository Release Please pull request, every viewer and browser
 shard and the static-delivery job also run on Node 24. A release pull request selects this profile
@@ -109,16 +98,24 @@ integration tests use matching sidecar sources. Every
 cargo-running CI and release job runs `rustup toolchain install`
 before cargo. rustup installs the `rust-toolchain.toml` pin, Rust 1.98.1 with
 rustfmt and Clippy, and that file selects the toolchain for every cargo command
-in the checkout.
+in the checkout. No CI job installs Rust a second way, such as with a
+toolchain action.
 Native jobs run their Rust tests with `--no-fail-fast` so one job reports every
 failing test binary.
 
+Jobs that need Postgres 16, `libpq`, or e2fsprogs use the packages of the
+runner image. They refresh the package index and install a package only when
+the image lacks it.
+
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
-version in `package.json`, and runs `npm ci`. The scheduled audit installs no
+version in `package.json`, and runs `npm ci`. The repository job runs it inside
+its suite, after the lockfile-only audit, and not a second time before. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
 `npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI
 caches npm downloads and Rust dependency builds. Every cached CI job keys npm's
-download cache from the checked-out `package-lock.json`. Only the repository
+download cache from the checked-out `package-lock.json`. Every CI job sets up
+Node.js with the same `actions/setup-node` release and without its built-in
+package cache. Only the repository
 audit reads a comparison-commit lockfile, for baseline evaluation rather than a
 cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
@@ -172,8 +169,7 @@ workflows contain no `${{` expression.
 The stable `Required CI` branch-rule status uses `if: always()` and fails closed
 unless every prerequisite result is exactly `success`. It validates the report
 aggregate against the runtime profile job's selection: one report per viewer
-and browser shard on each selected runtime, which is twelve reports for
-ordinary events and twenty-four for a Release Please pull request. Every cloud verification partition is also required. The
+and browser shard on each selected runtime. Every cloud verification partition is also required. The
 [cloud plan result](./ci-workflow-cloud.md#provider-plan) requires the real
 provider plan only when its trusted main-push guard permits it.
 
@@ -199,6 +195,14 @@ The [CI verification contract](./ci-verification.md) defines suite ownership,
 report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
+
+## CI Timing Report
+
+The `CI timing` job reports each job's run time against its budget, the
+critical path, and the slowest tests in the job summary of every run. It runs
+after every other job and is not a prerequisite of `Required CI`. The
+[CI duration budgets](./ci-duration-budgets.md) contract defines its budgets,
+its warnings, and its failing mode.
 
 ## Cloud Jobs And Workflows
 
@@ -238,6 +242,7 @@ hosted CI graph and its release profile keep their required jobs.
 
 - [Protocol index](./README.md)
 - [CI verification](./ci-verification.md)
+- [CI duration budgets](./ci-duration-budgets.md)
 - [CI workflow: cloud jobs](./ci-workflow-cloud.md)
 - [Repository layout](./repository-layout.md)
 - [Remote verification](./remote-verification.md)
