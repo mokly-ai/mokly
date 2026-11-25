@@ -201,6 +201,37 @@ fn a_hand_written_asset_token_without_an_import_fails_as_a_missing_target() {
 }
 
 #[test]
+fn page_render_rejects_a_base_that_redirects_an_imported_asset() {
+    let directory = fixture("<p>Asset</p>", false);
+    let root = directory.path();
+    fs::write(
+        root.join("specs/asset-page.page.html"),
+        concat!(
+            "---\ntitle: Asset page\n---\n",
+            "<!doctype html><html><head><base href='elsewhere/'></head>",
+            "<body><img src='mokly-asset:[media/logo.png]'></body></html>",
+        ),
+    )
+    .unwrap();
+    let (generation, _) = support::prepare_with_inputs(root, 1024 * 1024, 1, inputs(root));
+    let result = generation.unwrap().render("asset-page/index.html");
+    let GraphError::Document { source, .. } = result.unwrap_err() else {
+        panic!("expected a page render failure");
+    };
+    let GraphError::Attempt { failures, .. } = source.as_ref() else {
+        panic!("expected a render attempt failure, got {source}");
+    };
+    assert!(
+        matches!(
+            failures.as_slice(),
+            [GraphError::Invalid { code: Code::BuildInvalid, route, .. }]
+                if route == "asset-page/index.html"
+        ),
+        "{failures:?}"
+    );
+}
+
+#[test]
 fn nonportable_imported_assets_report_build_invalid_and_the_first_importing_module() {
     let directory = fixture("<p>Asset</p>", false);
     let mut delivery = inputs(directory.path());

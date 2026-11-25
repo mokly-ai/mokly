@@ -24,30 +24,42 @@ async fn bytes(catalogue: &dyn Catalogue, body: Option<FileBody>) -> Vec<u8> {
 #[tokio::test]
 async fn exact_files_and_directory_indexes_preserve_bytes_extensions_and_mime() {
     for (path, expected, mime) in [
-        ("/", "index.html", "text/html"),
-        ("/index.html", "index.html", "text/html"),
-        ("/view/a.html", "view/a.html", "text/html"),
+        ("/", "index.html", "text/html; charset=utf-8"),
+        ("/index.html", "index.html", "text/html; charset=utf-8"),
+        ("/view/a.html", "view/a.html", "text/html; charset=utf-8"),
         ("/view/legacy.htm", "view/legacy.htm", "text/html"),
-        ("/id/a/", "id/a/index.html", "text/html"),
+        ("/id/a/", "id/a/index.html", "text/html; charset=utf-8"),
         (
             "/view/Product/Screen_1/",
             "view/Product/Screen_1/index.html",
-            "text/html",
+            "text/html; charset=utf-8",
         ),
         (
             "/view/Product/Screen_1/index.html",
             "view/Product/Screen_1/index.html",
-            "text/html",
+            "text/html; charset=utf-8",
         ),
         (
             "/static/mokly-generated/Product/Screen_1/index.desktop.html",
             "static/mokly-generated/Product/Screen_1/index.desktop.html",
-            "text/html",
+            "text/html; charset=utf-8",
         ),
-        ("/nested/path/", "nested/path/index.html", "text/html"),
-        ("/static/screen.html", "static/screen.html", "text/html"),
-        ("/static/app.js", "static/app.js", "text/javascript"),
-        ("/static/a.css", "static/a.css", "text/css"),
+        (
+            "/nested/path/",
+            "nested/path/index.html",
+            "text/html; charset=utf-8",
+        ),
+        (
+            "/static/screen.html",
+            "static/screen.html",
+            "text/html; charset=utf-8",
+        ),
+        (
+            "/static/app.js",
+            "static/app.js",
+            "text/javascript; charset=utf-8",
+        ),
+        ("/static/a.css", "static/a.css", "text/css; charset=utf-8"),
         ("/static/font.woff2", "static/font.woff2", "font/woff2"),
         (
             "/static/unknown",
@@ -67,7 +79,7 @@ async fn exact_files_and_directory_indexes_preserve_bytes_extensions_and_mime() 
         (
             "/mokly-viewer/diffs/generations/abc/snapshots/before/mokly-generated/Product/Screen_1/index.desktop.html",
             "mokly-viewer/diffs/generations/abc/snapshots/before/mokly-generated/Product/Screen_1/index.desktop.html",
-            "text/html",
+            "text/html; charset=utf-8",
         ),
     ] {
         let mut input = request(path);

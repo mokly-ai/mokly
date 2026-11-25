@@ -9,6 +9,7 @@ use mokly_source_interface::tree::{FileKind, Node, SourceTreeMock};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::compiler::Compiler;
+use crate::error::{AssetFailure, CssError};
 use crate::resolver::{ImportResolverMock, SourceResolver};
 use crate::types::{
     CssProcessorMock, IdentityProcessor, ProcessedCss, StylesheetBundler, StylesheetRoot,
@@ -126,6 +127,28 @@ fn invalid_css_assets_and_late_imports_fail_with_authored_paths() {
         assert!(error.contains("css/base.css"), "{error}");
         assert!(!error.contains("/repo/"));
     }
+}
+
+#[test]
+fn extensionless_asset_fails_with_the_unsupported_extension_diagnostic() {
+    let root = StylesheetRoot {
+        path: "base.css".into(),
+        stylesheets: vec!["base.css".into()],
+        ..root()
+    };
+    let compiler = compiler(
+        &[("base.css", ".x { background:url(png) }"), ("png", "image")],
+        false,
+    );
+    let error = compiler.bundle(&root).unwrap_err();
+    let CssError::Asset { kind, message } = error else {
+        panic!("expected an asset failure, got {error}");
+    };
+    assert_eq!(kind, AssetFailure::Extension);
+    assert_eq!(
+        message,
+        "unsupported CSS asset extension in base.css: png; use .avif, .bmp, .gif, .ico, .jpeg, .jpg, .png, .svg, .webp, .eot, .otf, .ttf, .woff or .woff2"
+    );
 }
 
 #[test]

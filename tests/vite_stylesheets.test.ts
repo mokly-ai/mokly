@@ -11,6 +11,32 @@ import {
 } from "./fixtures/vite_stylesheets.js";
 import { consumer } from "./helpers/mokly_serve.js";
 
+test("a CSS import attribute gives an empty object and a document stylesheet", async (context) => {
+  const root = await consumer(context, {
+    "mokly.config.json": stylesheetConfig([], { vite: false }),
+    "src/card.mockup.tsx": component(
+      'import sheet from "./attribute.css" with { type: "css" };',
+      `<p className="attributed">{Object.getPrototypeOf(sheet) === Object.prototype &&
+        Reflect.ownKeys(sheet).length === 0 ? "Empty object" : "Unexpected value"}</p>`,
+    ),
+    "src/attribute.css": ".attributed { color: teal }",
+  });
+  const built = await stylesheetBuild(root);
+  assert.equal(built.code, 0, built.stderr);
+  const html = await generated(root, "card/index.mobile.html");
+  assert.match(html, /<p class="attributed">Empty object<\/p>/u);
+  const head = /<head>[\s\S]*?<\/head>/u.exec(html)?.[0] ?? "";
+  const stylesheet =
+    /<link rel="stylesheet" href="(\.\.\/styles\/[^"\s]+\.css)">/u.exec(
+      head,
+    )?.[1];
+  assert.ok(stylesheet, head);
+  assert.match(
+    await generated(root, `card/${stylesheet}`),
+    /\.attributed\s*\{[^}]*color:\s*teal/u,
+  );
+});
+
 test("Vite transforms a component's Sass imports and declared stylesheet", async (context) => {
   const root = await consumer(context, {
     "mokly.config.json": stylesheetConfig([], { postcss: "mokly-postcss.cjs" }),

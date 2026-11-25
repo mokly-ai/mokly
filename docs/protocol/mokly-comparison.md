@@ -106,9 +106,26 @@ own-page reason to a component.
 
 ## Resources
 
-References are read from the tree with the owner of the referencing element:
-`src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet `url()`
-and `@import` chains. The closure follows them through the [public closure
+References are read from the tree with the owner of the referencing element.
+The referenced closure and Changes use these reference positions:
+
+| Element       | Reference attributes                            |
+| ------------- | ----------------------------------------------- |
+| Every element | `src`, `href`, `xlink:href`, `srcset`, `poster` |
+| `<object>`    | `data`                                          |
+| `<iframe>`    | `srcdoc`, whose value is an embedded document   |
+
+The `url()` values of an inline `style` attribute and of `<style>` text, and
+the `url()` and `@import` chains of stylesheets, are references too. The
+`href` of `<base>` is not a reference. Every other attribute is not a
+reference. This includes `data` on another element, and `data-nav-href`, which
+is navigation metadata under the [navigation contract](./mokly-navigation.md).
+Decision: the table decides by element and attribute. Rejected: `data` on
+every element, because only `<object>` loads it. Rejected: `src` and the other
+attributes only on their HTML elements, because custom elements load files
+from them.
+
+The closure follows the references through the [public closure
 policy](./mokly-public-closure.md) and embedded documents; the head side reads
 files from the working tree, the base side from checkout-converted Git blobs,
 and bytes are compared. A changed referenced resource is conservative evidence

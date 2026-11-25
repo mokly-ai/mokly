@@ -116,7 +116,6 @@ fn validate(
         Ok(warnings) => document.warnings.extend(warnings),
         Err(source) => return Err(GraphError::Html { source }),
     }
-    asset_tokens::rewrite(&mut document.tree, &plan.route);
     document.links = match links::rewrite(
         &mut document.tree,
         &catalogue.model.entries,
@@ -131,6 +130,7 @@ fn validate(
     if let Err(source) = normalization::composed(document, entry, catalogue) {
         return Err(GraphError::Html { source });
     }
+    asset_tokens::rewrite(&mut document.tree, &plan.route)?;
     if let Err(source) = url_safety::validate(&document.tree, &entry.metadata.source) {
         return Err(GraphError::Html { source });
     }

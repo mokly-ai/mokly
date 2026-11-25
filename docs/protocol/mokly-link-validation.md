@@ -23,7 +23,10 @@ An authored reserved marker and a duplicate navigation attribute fail
 validation. Callback output, the HTML that a JavaScript render returns, fails
 on every duplicate attribute on one element, although HTML parsing would keep
 only the first value. A document with an activatable logical link cannot contain
-`<base href>`; `<base target>` is supported. Markers never grant source or
+`<base href>`; `<base target>` is supported. A document that holds an imported
+asset URL also follows the
+[base URL rule of asset imports](./mokly-imported-assets.md#base-urls).
+Markers never grant source or
 resource access: a rewritten target is a document route of the
 [shell delivery contract](./mokly-shell-delivery.md#routes) or a file of the
 checked [public closure](./mokly-public-closure.md), and nothing else.

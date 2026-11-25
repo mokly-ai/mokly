@@ -5,11 +5,11 @@
 - **Added:** 2026-11-21, from the branch
   `conductor/storybook-support-c-imported-assets`, track C of the Storybook
   support plan: the wider fix of review finding 8 of round 2.
-- **Location:** `crates/mokly-css/src/imported_assets.rs`,
+- **Location:** `crates/mokly-content-types/src/lib.rs`,
   `packages/mokly/src/sidecar/asset-imports.ts:3`, and
   `tests/sidecar_imported_assets.test.ts`.
-- **Reason:** The fix moves a table into a shared crate and adds it to the
-  shared code generation, outside the files of that branch.
+- **Reason:** The fix adds the table to the shared code generation, outside
+  the files of that branch.
 
 - **Source:** Review.
 - **Category:** Code structure.
@@ -21,8 +21,11 @@
     `packages/mokly/src/sidecar/asset-imports.ts` decides there which imports
     give an asset token.
 - **Background:**
-  - Since 2026-11-21, the Rust tables in `crates/mokly-css/src/imported_assets.rs`
-    hold the stylesheet asset types and the import-only types once each.
+  - The Rust tables in `crates/mokly-content-types/src/lib.rs` hold the
+    stylesheet asset types, the import-only types, and the `.txt` type once
+    each. They are a documented export of `mokly-content-types`, and
+    `mokly-css`, `mokly-graph`, `mokly-server`, and the Mokly Cloud crate
+    `mkc-publications` read them.
   - The sidecar keeps its own TypeScript list of the same extensions.
   - A Node test reads the Rust rows with a regular expression and compares
     them with the TypeScript list.
@@ -38,20 +41,18 @@
 - **Options:**
   - **C.** Generate the TypeScript list from the Rust table with
     `cargo xtask generate-types`, and let the generated-file check replace
-    the text match. `xtask` does not depend on `mokly-css`, so the generator
-    must reach the table. Effort: Medium.
-  - **E.** C, with the table moved to `crates/mokly-model` as a documented
-    export. `mokly-css`, `mokly-graph`, and `mokly-server` read it, and a
-    Mokly Cloud crate can read it without `lightningcss`. Effort: Medium.
+    the text match. Effort: Medium.
+  - **E.** C, with the table in `crates/mokly-content-types` as a documented
+    export. The export is in place, so E now has the same work as C.
+    Effort: Medium.
 - **Left out:** A parity test of two lists keeps the copy. Sending the list in
   each bundle request changes the persisted bundle settings in about 30 Rust
   files.
 - **Wider fix:** E. One export serves the generator, Serve, the stylesheet
-  check, and the content type rule of
-  [asset-content-type-rule.md](asset-content-type-rule.md).
+  check, and the content type rule that Serve and Mokly Cloud share.
 - **Previous examples:** None found.
-- **Related:** [asset-content-type-rule.md](asset-content-type-rule.md) needs
-  the same table as an export for Mokly Cloud. One branch can do both.
+- **Related:** None. The content type rule that needed the same export
+  for Mokly Cloud was done on 2026-11-25.
 - **Recommendation:** E. It removes the second list and serves the Cloud too.
 - **Action:** fix after merge, apply E, because it changes a shared crate and
   the shared code generation outside the branch that found it.

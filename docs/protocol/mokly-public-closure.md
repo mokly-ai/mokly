@@ -42,16 +42,14 @@ documents of a generation, the pending bundled stylesheets and assets of the
 that the renderer declared, and the policy above. In watched Serve, the
 repair of an invalid target starts another pass.
 
-References are read from the composed tree, each with the owner of the
-referencing element under the
-[comparison contract](./mokly-comparison.md#resources): `<a href>`,
-`data-nav-href`, resource hints such as `preload`, `<iframe>`, `src`,
-`srcset`, `poster`, inline style `url()`, and CSS `@import` and `url()`
-chains, including inside embedded documents. Composed `href` and `src` first
-pass the [document URL policy](./mokly-document-safety.md#url-policy): `data:`
-and protocol-relative `//` URLs fail there. The closure skips permitted
-external references. For other resource inputs, including `srcset`, `poster`,
-and CSS URLs, it skips external and data references. A relative reference resolves against
+References are read from the composed tree, including inside embedded
+documents, at the reference positions of the
+[comparison resource rule](./mokly-comparison.md#resources), each with the
+owner of the referencing element. Composed `href` and `src` first pass the
+[document URL policy](./mokly-document-safety.md#url-policy): `data:` and
+protocol-relative `//` URLs fail there. The closure skips permitted external
+references. At every reference position other than `href` and `src`, it skips
+external and data references. A relative reference resolves against
 the referencing document's route: a result under `static/mokly-generated/`
 names a rendered document or resource of the generation, and any other
 result under `static/` names the authored file at that repository-relative

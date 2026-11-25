@@ -32,8 +32,18 @@
     asset bytes through `open_asset` before it reads the root or the content
     type. Only the stylesheet rebuild reads them.
   - In an asset plan, `key` and `document_key` hold the same value.
-  - Serve takes the type of a generated asset from the route, in
-    `crates/mokly-server/src/assets.rs`.
+  - Since 2026-11-25, one rule by file extension gives the content type of
+    every file that Serve delivers: the asset tables first, then
+    `mime_guess`. Mokly Cloud applies the same rule when it accepts a
+    publication, records the type of each path, and sends that recorded
+    type. The rule is `delivered_content_type` in
+    `crates/mokly-content-types/src/lib.rs`, and
+    `docs/protocol/mokly-content-types.md` states it. Each Serve route that
+    sends a file calls it directly. Serve has no content type lookup of its
+    own. The Cloud reservation calls it in
+    `crates/mkc-publications/src/reservation/reserve.rs`. The content type of
+    an asset plan, which `register` sets with `imported_content_type` from the
+    same file, is not read for delivery.
 - **Problem:** Each asset plan carries a stylesheet root, a content type, and
   a second key that nothing reads. The type also allows a plan that
   describes a stylesheet and an asset at once.
@@ -60,9 +70,10 @@
 - **Wider fix:** D. The type then cannot hold an asset with a stylesheet root.
 - **Previous examples:** Commit `d935e6a6` used the same plan shape for
   stylesheet bundles and stylesheet assets.
-- **Related:** [asset-content-type-rule.md](asset-content-type-rule.md)
-  chooses the rule that gives an asset its type. D drops the plan's copy, so
-  it follows that rule.
+- **Related:** The content type rule of 2026-11-25, in
+  `crates/mokly-content-types/src/lib.rs`, gives each asset its type from
+  its extension. D drops the plan's copy of the type, so delivery keeps
+  that rule. Each option must keep it.
 - **Recommendation:** D. It removes the leftover fields without a second
   lookup.
 - **Action:** fix after merge, apply D, because the change reaches shared

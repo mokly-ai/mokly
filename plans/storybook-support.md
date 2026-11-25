@@ -133,17 +133,13 @@ Apply each answer in the milestone that waits for it.
 The user also answered these follow-up items. Each file records its answer.
 A branch from this branch applies each answer and deletes the file.
 
-- [imported-asset-base-url.md](follow-ups/imported-asset-base-url.md): A.
-  Severity High.
-- [asset-content-type-rule.md](follow-ups/asset-content-type-rule.md): E.
 - [vite-setups-split-module-identity.md](follow-ups/vite-setups-split-module-identity.md):
   B. Milestone 32 applies it, because the code with several setups does not
   exist yet.
-- [css-extensionless-asset.md](follow-ups/css-extensionless-asset.md): A.
-- [css-import-type-attribute.md](follow-ups/css-import-type-attribute.md): A.
-- [data-url-loader-hint.md](follow-ups/data-url-loader-hint.md): B.
-- [asset-reference-positions.md](follow-ups/asset-reference-positions.md):
-  F.
+- `imported-asset-base-url.md` A, `asset-content-type-rule.md` E,
+  `css-extensionless-asset.md` A, `css-import-type-attribute.md` A,
+  `data-url-loader-hint.md` B, and `asset-reference-positions.md` F: pull
+  request #509 applied them and deleted the files.
 - `design-external-link-check.md`: E. Milestone 1a applied it and deleted
   the file.
 
