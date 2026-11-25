@@ -42,7 +42,7 @@ Public test commands and strict evidence rules live in the
   that a commit has every CI suite report for each runtime profile.
 - [`ci-timing.mjs`](./ci-timing.mjs) holds `runCiTiming`, which the `CI timing`
   job runs. It reads the jobs of the run, compares each run time with
-  [`ci-budgets.json`](./ci-budgets.json), finds the critical path, lists
+  [`ci-budgets.json`](./ci-budgets.json), finds the critical path,
   compares the shards of each shard group, lists the slowest tests of the
   downloaded reports, and compares the Actions cache total with its budget,
   under the

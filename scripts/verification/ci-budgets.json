@@ -27,16 +27,19 @@
     {
       "name": "Repository",
       "patterns": ["Repository (shard */*)"],
+      "exclude": ["Repository (shard 1/*)"],
       "spreadMinutes": 2
     },
     {
       "name": "Native macOS",
       "patterns": ["Native (macos-*, shard */*)"],
+      "exclude": ["Native (macos-*, shard 1/*)"],
       "spreadMinutes": 2
     },
     {
       "name": "Native Windows",
       "patterns": ["Native (windows-*, shard */*)"],
+      "exclude": ["Native (windows-*, shard 1/*)"],
       "spreadMinutes": 2
     },
     {
@@ -52,12 +55,8 @@
     { "name": "App", "patterns": ["App checks */*"], "spreadMinutes": 2 },
     {
       "name": "Mockup disk suite",
-      "patterns": [
-        "Mockup checks 3/6",
-        "Mockup checks 4/6",
-        "Mockup checks 5/6",
-        "Mockup checks 6/6"
-      ],
+      "patterns": ["Mockup checks */*"],
+      "exclude": ["Mockup checks 1/*", "Mockup checks 2/*"],
       "spreadMinutes": 2,
       "weighted": false
     }

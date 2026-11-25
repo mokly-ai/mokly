@@ -75,10 +75,12 @@ so an npm install in the report job. The times give the same chain.
 ## Shard Balance
 
 A shard group is the set of jobs that split one suite. Each entry of
-`shardGroups` has a `name`, a list of job-name `patterns`, a
-`spreadMinutes` budget, and an optional `weighted` flag. The patterns match
-as job budget patterns do, and a job that matches one of them is a shard of
-the group. `weighted` is `false` for a group that no committed weight file
+`shardGroups` has a `name`, a list of job-name `patterns`, an optional
+`exclude` list of job-name patterns, a `spreadMinutes` budget, and an
+optional `weighted` flag. The patterns match as job budget patterns do. A job
+that matches one of `patterns` and none of `exclude` is a shard of the group.
+`exclude` leaves out a matching job that runs other work, such as a shard
+that runs only the lints. `weighted` is `false` for a group that no committed weight file
 balances, such as shards that Playwright splits by test count. It is `true`
 when it is missing.
 

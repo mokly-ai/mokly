@@ -46,7 +46,8 @@ const SHARD_GROUPS = [
   { name: "App", patterns: ["App checks */*"], spreadMinutes: 1 },
   {
     name: "Mockup disk suite",
-    patterns: ["Mockup checks 3/4", "Mockup checks 4/4"],
+    patterns: ["Mockup checks */*"],
+    exclude: ["Mockup checks 1/*"],
     spreadMinutes: 2,
     weighted: false,
   },

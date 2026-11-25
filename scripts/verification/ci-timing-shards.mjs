@@ -5,8 +5,9 @@ const REFRESH_COMMAND = "npm run ci:refresh-shard-weights";
 
 /**
  * Narrow the `shardGroups` field of the budget file. Each group has a name,
- * the job-name patterns of its shards, a spread budget in minutes, and
- * `weighted`, which is false for a group that no weight file balances.
+ * the job-name patterns of its shards, the patterns of the matching jobs that
+ * run other work, a spread budget in minutes, and `weighted`, which is false
+ * for a group that no weight file balances.
  */
 export function parseShardGroups(value) {
   if (!Array.isArray(value) || value.length === 0)
@@ -15,13 +16,11 @@ export function parseShardGroups(value) {
     const at = `shardGroups[${index}]`;
     if (!isRecord(group) || typeof group.name !== "string" || !group.name)
       throw new Error(`${at} needs a name`);
-    const { patterns, spreadMinutes, weighted = true } = group;
-    if (
-      !Array.isArray(patterns) ||
-      patterns.length === 0 ||
-      !patterns.every((pattern) => typeof pattern === "string" && pattern)
-    )
+    const { patterns, exclude = [], spreadMinutes, weighted = true } = group;
+    if (!isPatternList(patterns) || patterns.length === 0)
       throw new Error(`${at}.patterns must list at least one job-name pattern`);
+    if (!isPatternList(exclude))
+      throw new Error(`${at}.exclude must list job-name patterns`);
     if (
       typeof spreadMinutes !== "number" ||
       !Number.isFinite(spreadMinutes) ||
@@ -30,7 +29,7 @@ export function parseShardGroups(value) {
       throw new Error(`${at}.spreadMinutes must be a positive number`);
     if (typeof weighted !== "boolean")
       throw new Error(`${at}.weighted must be true or false`);
-    return { name: group.name, patterns, spreadMinutes, weighted };
+    return { name: group.name, patterns, exclude, spreadMinutes, weighted };
   });
 }
 
@@ -42,8 +41,10 @@ export function parseShardGroups(value) {
  */
 export function evaluateShards(rows, groups) {
   return groups.map((group) => {
-    const matched = rows.filter((row) =>
-      group.patterns.some((pattern) => matchesPattern(row.job.name, pattern)),
+    const matches = (patterns, row) =>
+      patterns.some((pattern) => matchesPattern(row.job.name, pattern));
+    const matched = rows.filter(
+      (row) => matches(group.patterns, row) && !matches(group.exclude, row),
     );
     const passed = matched
       .filter((row) => row.job.conclusion === "success" && row.seconds !== null)
@@ -126,6 +127,13 @@ function hint(group) {
   return group.weighted
     ? `Run \`${REFRESH_COMMAND}\` to refresh the shard weights.`
     : "No weight file balances this group, so move tests between its spec files or change its shard count.";
+}
+
+function isPatternList(value) {
+  return (
+    Array.isArray(value) &&
+    value.every((pattern) => typeof pattern === "string" && pattern)
+  );
 }
 
 function isRecord(value) {
