@@ -116,11 +116,13 @@ does not run doc tests. A test shard runs one nextest partition under the
 [shard rule](#suite-shards). Native passes `--no-fail-fast` to both commands.
 Cloud Rust sets `CI=1` for both and rejects their reported skips.
 
-The repository, native, Workspace checks, and Testbox jobs install the
+The repository, native, and Testbox jobs, and the Workspace checks
+partitions that run cloud Rust or the toolchain pins, install the
 pinned nextest version as a prebuilt binary with `taiki-e/install-action`,
 right after the Rust build cache restore.
-`.config/nextest.toml` requires at least that version. Each of these suites
-runs `xtask/scripts/require-nextest.mjs` before its Rust builds. When
+`.config/nextest.toml` requires at least that version. The Repository, Native,
+and cloud Rust suites run `xtask/scripts/require-nextest.mjs` before their Rust
+builds. When
 `cargo nextest` is missing or older than the requirement, the preflight fails
 and prints `cargo install cargo-nextest --locked --version {version}` and the
 prebuilt binary page. In Native, the doc tests also run after failed nextest

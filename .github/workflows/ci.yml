@@ -452,14 +452,39 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Workspace checks
+          # The workspace suites run in three rows, grouped by what they need:
+          # the cloud Rust tests with Postgres, the suites that use the
+          # workspace build, and the infrastructure and policy suites. A row
+          # with rust_cache_key restores that key of another row and never
+          # saves it, so the split adds no cache entry.
+          - name: Workspace checks (Rust)
             command: cloud-rust
-            additional_suites: cloud-migrations cloud-typecheck cloud-openapi cloud-fixtures cloud-emails cloud-openapi-lint cloud-terraform cloud-origin-router cloud-helm cloud-toolchain-pins
             install_dependencies: true
             browser_workspace: ""
             postgres: true
-            infrastructure: true
+            infrastructure: false
+            nextest: true
             rust_cache: true
+          - name: Workspace checks (contracts)
+            command: cloud-typecheck
+            additional_suites: cloud-openapi cloud-fixtures cloud-emails cloud-origin-router
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: false
+            libpq: true
+            infrastructure: false
+            rust_cache: true
+            rust_cache_key: cloud-rust
+          - name: Workspace checks (infrastructure)
+            command: cloud-migrations
+            additional_suites: cloud-openapi-lint cloud-terraform cloud-helm cloud-toolchain-pins
+            install_dependencies: true
+            browser_workspace: ""
+            postgres: false
+            infrastructure: true
+            nextest: true
+            rust_cache: true
+            rust_cache_key: native-binary
           - name: Desktop checks
             command: cloud-desktop
             install_dependencies: true
@@ -622,12 +647,13 @@ jobs:
         with:
           # The mockup and site partitions build only xtask and the native
           # binary, as the Mokly jobs do, so they share their cache. The other
-          # partitions also build mkc- crates and keep a cache each.
-          shared-key: ${{ (matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command }}
+          # partitions also build mkc- crates and keep a cache each, unless
+          # rust_cache_key restores the cache of another partition.
+          shared-key: ${{ matrix.rust_cache_key || ((matrix.command == 'cloud-mockups' || matrix.command == 'cloud-site') && 'native-binary' || matrix.command) }}
           cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: ${{ github.ref == 'refs/heads/main' && !matrix.rust_cache_key }}
       - name: Install cargo-nextest
-        if: matrix.command == 'cloud-rust'
+        if: matrix.nextest
         uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2.90.8
         with:
           tool: cargo-nextest@0.9.152
@@ -657,6 +683,13 @@ jobs:
       - name: Install virtual display
         if: matrix.command == 'cloud-desktop'
         run: sudo apt-get install -y xvfb
+      # A partition that builds mkc- crates without database tests needs only
+      # libpq. The runner image ships it; install it only when it is missing.
+      - name: Install libpq
+        if: matrix.libpq
+        run: |
+          dpkg-query --show --showformat='${db:Status-Status}' libpq-dev 2>/dev/null |
+            grep -qx installed || { sudo apt-get update && sudo apt-get install -y libpq-dev; }
       - name: Start Postgres 16 for integration tests
         if: matrix.postgres
         run: |
