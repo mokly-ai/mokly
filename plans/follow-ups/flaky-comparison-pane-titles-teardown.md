@@ -37,6 +37,12 @@
     `npx tsx --test packages/viewer/tests/comparison_pane_titles.test.tsx`
     on the same commit passed. An earlier full suite run on the same branch
     also passed it.
+  - On 2026-11-25 the same failure, with the same text, failed one full
+    `viewer` suite run on the branch
+    `calummoore/live-channel-foundation-implementation-n1hi`, which does not
+    change `packages/viewer`. Three runs of
+    `npm test -- packages/viewer/tests/comparison_pane_titles.test.tsx`
+    passed, and the next full suite run passed it.
 - **Problem:** Suspected source: render work that the scheduler queued
   before `unmount()` runs in a later `setImmediate`, after the `t.after`
   hook has already removed `window`.
