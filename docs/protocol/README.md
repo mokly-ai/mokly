@@ -217,6 +217,7 @@ The design catalogue that depicts the shell, its inventories, and the shared des
 
 The repository gate, remote verification, dependency audits, test rules, and the npm release contracts.
 
+- [CI Duration Budgets](./ci-duration-budgets.md)
 - [CI Suite Evidence](./ci-suite-evidence.md)
 - [CI Test Timing](./ci-test-timing.md)
 - [CI Verification](./ci-verification.md)
