@@ -2,6 +2,7 @@ import { tokens } from "@mokly-cloud/tokens/tokens";
 import { type Locator, type Page, expect, test } from "@playwright/test";
 
 import { openLargeText } from "./large-text.js";
+import { openSearch } from "./search.js";
 
 const PAGE = "/docs/start/your-first-screen/";
 
@@ -68,6 +69,30 @@ test("Copy sits beside the sample's language at the end of its tab bar", async (
         : undefined;
     })
     .toBe(4);
+});
+
+test("Copy and search start on a browser that never goes idle", async ({
+  page,
+}) => {
+  // A page that stays busy gives the browser no idle period, and no user
+  // action arranges that on demand. In this browser an idle callback runs
+  // only when the deadline that its caller set has passed.
+  await page.addInitScript(() => {
+    let handles = 0;
+    window.requestIdleCallback = (callback, options) => {
+      if (options?.timeout === undefined) return (handles += 1);
+      return window.setTimeout(
+        () => callback({ didTimeout: true, timeRemaining: () => 0 }),
+        options.timeout,
+      );
+    };
+  });
+  await page.goto(PAGE);
+  const panel = page.locator(".site-code", {
+    hasText: "npx mokly build --out mokly-static",
+  });
+  await expect(panel.getByRole("button")).toHaveText("Copy");
+  await expect(await openSearch(page)).toBeVisible();
 });
 
 /**

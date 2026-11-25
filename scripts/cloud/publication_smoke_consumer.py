@@ -15,15 +15,35 @@ class PublishedCli:
     version: str
 
 
+REGISTRY = "--registry=https://registry.npmjs.org"
+
+
+def _latest_release(installation, environment):
+    """The version that npm `latest` names now, and the time npm published it."""
+    result = subprocess.run(
+        ["npm", "view", REGISTRY, "--json", "@mokly/mokly@latest", "version", "time"],
+        cwd=installation, env=environment, capture_output=True, text=True, timeout=120,
+    )
+    if result.returncode:
+        raise AssertionError("Published CLI lookup failed:\n" + cli_result(result))
+    metadata = json.loads(result.stdout)
+    return metadata["version"], metadata["time"][metadata["version"]]
+
+
 def install_published_cli(workspace):
     installation = workspace / "consumer"
     installation.mkdir(parents=True)
     (installation / "package.json").write_text(json.dumps({"private": True, "type": "module"}) + "\n")
+    environment = fixture_environment(workspace)
+    version, published = _latest_release(installation, environment)
+    # The CLI publishes last in a release, so the cutoff admits its own
+    # packages. Every other dependency resolves as it stood at that moment, not
+    # to a third-party release that npm publishes while the install runs.
     result = subprocess.run([
         "npm", "install", "--prefix", str(installation), "--workspaces=false",
-        "--ignore-scripts", "--no-audit", "--no-fund", "--registry=https://registry.npmjs.org",
-        "@mokly/mokly@latest", "react@19", "react-dom@19",
-    ], cwd=installation, env=fixture_environment(workspace), capture_output=True, text=True, timeout=480)
+        "--ignore-scripts", "--no-audit", "--no-fund", REGISTRY, "--before=" + published,
+        "@mokly/mokly@" + version, "react@19", "react-dom@19",
+    ], cwd=installation, env=environment, capture_output=True, text=True, timeout=480)
     if result.returncode:
         raise AssertionError("Published CLI installation failed:\n" + cli_result(result))
     package = installation / "node_modules/@mokly/mokly"

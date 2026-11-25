@@ -1,0 +1,33 @@
+# Chromium screenshot capture fails at random
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** Low. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`, the cloud flaky-test work of the CI speed task.
+- **Location:** `docs/mockups/src/_tests_/disk.spec.ts:239-243`, the full-page capture of each disk test. `packages/desktop/src/_tests_/shell.ts:84-86`, the `screenshot` helper, and its first caller `packages/desktop/src/_tests_/global-setup.ts:34`.
+- **Reason:** The source is not known after a code reading and 200 local repeats, so the next step needs diagnostics in CI or a removal, and both need the user.
+
+- **Category:** Test.
+- **Terms:**
+  - **Disk test:** one test of `disk.spec.ts`, which opens one generated mockup document from disk, checks its policies, and saves a full-page capture under `.context/mockups-smoke`.
+  - **Surface copy:** Chromium's read of the compositor output of a page. A DevTools screenshot is one surface copy.
+- **Background:**
+  - The `Mockup checks` job runs 2076 disk tests. The `Desktop checks` job saves screenshots of the Electron shell under `.context/m5`. No check reads either set of images. `docs/mockups/README.md` documents the mockup captures for people who compose design sheets from them.
+  - Three CI runs failed with `page.screenshot: Protocol error (Page.captureScreenshot): Unable to capture screenshot`. Mockup checks run 45017138714, attempt 1, at the disk test of `product/viewer/standalone/publish-refused/index.desktop.html`. Mockup checks run 45212667020, attempt 1, at `product/account/choose-repository/slug-taken/index.mobile.html`. Desktop checks run 44782121767, attempt 1, at `global-setup.ts:34`, the first screenshot after the shell window opens offline.
+  - In each run the call log reached `fonts loaded`, and the failed disk tests took about 0.5 seconds. The tests before and after them were fast, so the machine was not slow.
+  - Chromium 149, which Playwright 1.61.1 uses, sends this error when its surface copy returns an empty image. Playwright turns on the feature `CDPScreenshotNewSurface`. In that path Chromium asks for a repaint and retries an empty copy 5 times at once (`content/browser/renderer_host/render_widget_host_impl.cc`, `OnSnapshotFromSurfaceReceived`).
+  - A copy is dropped at once when the page has no valid surface (`content/browser/renderer_host/delegated_frame_host.cc`, `CanCopyFromCompositingSurface`). That is the case between the start of a main-frame navigation commit and the first frame of the new document.
+- **Checked:**
+  - The two mockup pages measure 1440 by 900 and 390 by 1035 pixels. They hold no frame. Neither navigates after `load`. The 1440 by 900 page fits its viewport, so its capture did not resize the view.
+  - The two pages ran 100 times each with `--repeat-each 100`, beside another browser suite. All 200 passed.
+- **Problem:** A screenshot that no check reads fails a required CI job at random. The source is not known.
+- **Impact if no action:** In 300 CI runs between 2026-11-20 and 2026-11-25, this error failed Mockup checks twice and Desktop checks once. Each failure needed a rerun.
+- **Root question:** How do the mockup and desktop suites keep their captures without a random failure?
+- **Options:**
+  - **A.** Collect evidence first. Launch the browser of the two suites with its standard error in the job log, for example with `DEBUG=pw:browser`, and read the next failure for a GPU process exit or a lost context. Then fix the source that the log names. It changes the Playwright launch of two suites. Effort: Medium.
+  - **B.** Stop saving the captures in CI, and keep them for local runs. CI then cannot fail on them. The design sheets come from local runs, as `docs/mockups/README.md` describes. Effort: Small.
+  - **C.** Remove the captures from both suites. The documented design-sheet input then goes away. Effort: Small.
+- **Left out:** A retry of the capture, a sleep before it, or a longer time limit. Each hides the source, and the testing rules forbid each.
+- **Wider fix:** None. The source is not known.
+- **Previous examples:** None found.
+- **Recommendation:** A. The failure is rare and costs only a rerun, and A can name the source before anything goes.
+- **Action:** ask the user, because the source is unknown after a reproduction attempt, and each option changes a suite launch or removes a documented capture.

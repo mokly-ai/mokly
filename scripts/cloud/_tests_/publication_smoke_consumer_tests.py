@@ -17,6 +17,11 @@ import publication_smoke_consumer as consumer
 class ConsumerInstallationTests(unittest.TestCase):
     def install(self, workspace, mutate=lambda _package, _shim: None):
         def npm(command, **_options):
+            if command[:2] == ["npm", "view"]:
+                return subprocess.CompletedProcess(command, 0, json.dumps({
+                    "version": "9.8.7",
+                    "time": {"9.8.6": "2026-01-01T00:00:00.000Z", "9.8.7": "2026-02-03T04:05:06.789Z"},
+                }), "")
             prefix = Path(command[command.index("--prefix") + 1])
             package = prefix / "node_modules/@mokly/mokly"
             shim = package / "bin/mokly.mjs"
@@ -32,7 +37,7 @@ class ConsumerInstallationTests(unittest.TestCase):
             installed = consumer.install_published_cli(workspace)
         return installed, run
 
-    def test_latest_install_has_its_own_prefix_and_records_the_resolved_version(self):
+    def test_latest_install_has_its_own_prefix_resolves_as_of_its_release_and_records_the_version(self):
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
             output = io.StringIO()
@@ -40,10 +45,13 @@ class ConsumerInstallationTests(unittest.TestCase):
                 installed, run = self.install(workspace)
             self.assertEqual(installed.version, "9.8.7")
             self.assertNotEqual(installed.installation, workspace)
-            command = run.call_args.args[0]
-            self.assertEqual(command[:2], ["npm", "install"])
+            commands = [call.args[0] for call in run.call_args_list]
+            self.assertEqual([command[:2] for command in commands], [["npm", "view"], ["npm", "install"]])
+            self.assertIn("@mokly/mokly@latest", commands[0])
+            command = commands[1]
             self.assertEqual(command[command.index("--prefix") + 1], str(installed.installation))
-            self.assertIn("@mokly/mokly@latest", command)
+            self.assertIn("@mokly/mokly@9.8.7", command)
+            self.assertIn("--before=2026-02-03T04:05:06.789Z", command)
             self.assertIn("--workspaces=false", command)
             self.assertEqual(run.call_args.kwargs["cwd"], installed.installation)
             self.assertTrue(installed.executable.is_relative_to(installed.installation))

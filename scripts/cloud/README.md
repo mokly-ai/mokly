@@ -27,8 +27,9 @@ format dependency.
   from `checksums.json`. Fixture consumers use that metadata, not a release pin.
 - `publication_smoke_fixture.py` strictly validates two source-only revisions
   of the [frozen fixture](./fixtures/publication-smoke-v0.19/README.md).
-- `publication_smoke_consumer.py` installs npm `latest`, rejects linked or
-  escaped package paths, and records the installed version.
+- `publication_smoke_consumer.py` installs npm `latest` with the dependencies
+  that npm held when that release published, rejects linked or escaped
+  package paths, and records the installed version.
 - `publication_smoke_cli.py` publishes with that installation's executable,
   compares every served file with a strict build of the same checkout and
   base, checks replay, and compares the real dirty refusal with its recording.

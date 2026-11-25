@@ -1,0 +1,31 @@
+# Install way back opens the first workspace
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-25, from the branch `calummoore/ci-speed-fix-cloud-flaky-tests-9c37`. It replaces the deleted item `connect-refusal-way-back-flakes.md`, whose flaky test that branch fixed.
+- **Location:** `packages/app/src/screens/account/github-callback-screen.tsx:32-38` (`recoveryHref`), `packages/app/src/screens/app/workspace-route.tsx:41-48` (`loadWorkspace`), `packages/app/src/screens/account/install-screen.tsx:243`, and `docs/protocol/cloud/auth-callbacks.md:189-191` and `:222-223`.
+- **Reason:** The fix changes the recovery destination that the protocol doc sets, so the user must choose it.
+
+- **Category:** Product bug.
+- **Terms:**
+  - **Refusal page:** the GitHub callback page that says "This GitHub account is connected to another workspace", "Remove it from that workspace first." and offers **Back to install**.
+  - **Install step:** the setup page at `/install?workspaceId={id}` that installs the GitHub App for one workspace.
+  - **Repository step:** the setup page at `/{workspace-slug}/-/new`, with the heading "Choose a repository".
+- **Background:**
+  - A reader can connect a GitHub account to a workspace from the install step. When another workspace already holds that account, the API refuses, and the app shows the refusal page.
+  - `docs/protocol/cloud/auth-callbacks.md` sets the destination of **Back to install** to the bare path `/install` for each installation refusal.
+  - A bare `/install` opens the first workspace of the reader's list (`workspace-route.tsx:47`). The API sorts that list by workspace ID, and IDs are UUIDv7, so the oldest workspace comes first.
+  - The install step hands a workspace whose account is connected on to its repository step (`install-screen.tsx:243`).
+  - The browser test `an account another workspace holds is refused with the way back`, in `packages/app/src/_tests_/connect.spec.ts`, walks this path. It creates "Holder Org", which holds the account, then "Asker Org", which asks for it. A recorded run on 2026-11-25 saw the addresses `/install`, then `/holder-org/-/new`.
+- **Problem:** When the reader's oldest workspace holds the account, **Back to install** sends the reader to that workspace's repository step. The reader asked to connect the account to another workspace, and lands in the wrong one.
+- **Impact if no action:** A reader who presses **Back to install** must find the workspace that they were setting up again. The page does not say that it changed the workspace.
+- **Root question:** Where does the way back from a refused installation take the reader?
+- **Options:**
+  - **A.** Change nothing. The way back stays `/install`, and the first workspace decides the page. Effort: Small.
+  - **B.** Store the workspace of each installation trip with its state in the tab, and send **Back to install** to `/install?workspaceId={id}` of that workspace. Update the recovery table of `docs/protocol/cloud/auth-callbacks.md`. A test then checks that the reader stays on Asker Org's install step. Effort: Small.
+  - **C.** Send the way back to the page that started the trip: the connect situation, `/install?workspaceId={id}&installationId={n}`, or the plain install step. The reader can then choose another workspace for the same account. It needs the start address in the tab record and a protocol change. Effort: Medium.
+- **Left out:** Reading the workspace from the callback address. The callback address holds only the GitHub `code` and `state`, and the protocol forbids trusting a query value there.
+- **Wider fix:** None. The recovery mapping is one small table, so the fix is local.
+- **Previous examples:** None found.
+- **Recommendation:** B. It keeps the reader in the workspace that they chose, with the smallest change to the recovery table.
+- **Action:** ask the user, because the recommended option changes the recovery destination that `docs/protocol/cloud/auth-callbacks.md` sets.
