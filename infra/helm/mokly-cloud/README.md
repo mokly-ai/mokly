@@ -1,5 +1,7 @@
 # Mokly Cloud Helm Chart
 
+Status: The chart still mounts `preview-sign-in` as required, the entrypoint still exports it as a random link value, and the preview plan setting still needs that value. [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) builds the optional mount and the verifier export, and [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) the email-only plan rule.
+
 This chart deploys the API, isolated catalogue server and Expo app as release
 `mokly-cloud` in `mkc-<environment>`. Use reviewed immutable images and derived
 origins from the release renderer. Publication HTML is served only on the
@@ -28,7 +30,7 @@ the shared platform and lifecycle scripts are in `infra/scripts/`.
 | Migration          | Ordered pre-install/pre-upgrade Job | API `wait-for-postgres`, then `migrate` init               |
 | Catalogue start    | After migration Job                 | `wait-for-api` init, exact revision and current migrations |
 | Signing key        | Managed CSI                         | Namespace Secret `catalogue-signing-key`, same-named key   |
-| Preview sign-in    | Not rendered                        | API-only Secret `preview-sign-in`, same-named key          |
+| Preview sign-in    | Not rendered                        | API-only optional Secret `preview-sign-in`, same-named key |
 | Service accounts   | Google-account annotations          | Direct Kubernetes identities; no annotations               |
 | Ingress            | GCE, global IP, Cloud Armor         | `ingressClassName: mkc-preview`, shared regional IP        |
 | Replicas           | Stable autoscaling/PDB values       | One each, no HPA or PDB                                    |
@@ -85,8 +87,9 @@ and `MKC_CATALOGUE_ORIGIN=https://pr-N.preview.C`. The API log mailer requires
 `MKC_ENV=preview`. The prefix and namespace database have one lifetime: preview
 cleanup removes both, while the shared bucket has no live-object age rule. The
 API's projected read-only secret volume combines the catalogue signing key with
-API-only `preview-sign-in`; the entrypoint exports the latter as
-`MKC_PREVIEW_SIGN_IN_SECRET`, while the chart sets
+the API-only optional `preview-sign-in`, which holds the preview password's
+verifier when the deploy found one; the entrypoint exports it as
+`MKC_PREVIEW_SIGN_IN_VERIFIER` when the file exists, while the chart sets
 `MKC_PREVIEW_SIGN_IN_EMAIL=preview@mokly.ai` and `MKC_PREVIEW_SIGN_IN_PLAN=team`.
 Stable renders include none of these settings. The plan is fixed by namespace
 mode, not a configurable chart value. It makes new workspaces created by
@@ -94,8 +97,8 @@ the configured account start on Team. Projects default to private and private
 uploads are allowed. It creates no subscription, leaves seat counting unchanged
 and leaves the unconfigured Billing pane at “Billing opens soon”. Existing
 workspaces keep their plan. Runtime validation accepts `free` (the absent
-default) or `team` only with the sign-in pair and capability; see
-[Preview sign-in](../../../docs/protocol/cloud/auth-sessions.md#preview-sign-in).
+default) or `team` only with the sign-in email and capability; see
+[Preview sign-in](../../../docs/protocol/cloud/preview-sign-in.md).
 The app image is baked with the exact public app and API origins; runtime
 settings assert them and cannot retarget it.
 

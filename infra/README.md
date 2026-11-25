@@ -1,5 +1,7 @@
 # Infrastructure
 
+Status: Foundation does not declare `mkc-preview-sign-in-password` yet, and the deploy does not copy the preview verifier yet. [Milestone 5](../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) builds both.
+
 Mokly Cloud's infrastructure targets GCP project `mokly-508518`: regional GKE
 Autopilot, stable private Cloud SQL Postgres, namespace Postgres for PRs, GCS blobs, Secret Manager and GitHub
 workload identity. Cloudflare owns DNS/TLS transport for the shared public
@@ -203,7 +205,8 @@ run in CI and locally when standalone BuildKit and crane are available.
 
 The [preview contracts](../docs/protocol/cloud/pr-preview-environments.md) describe
 the platform. Foundation owns the regional address, shared preview bucket, two
-wildcard A records and three shared Secret Manager IDs. Deploy gains
+wildcard A records and four shared Secret Manager IDs, the preview password's
+verifier among them. Deploy gains
 `roles/storage.admin` only on that bucket and secretAccessor only on the named
 preview IDs; PR Kubernetes identities get prefix conditions. The renderer,
 Helm and Worker use `app-origin-pr-N.preview.D` for PRs. The stable
@@ -211,9 +214,10 @@ Terraform/rollout wrappers reject PR inputs. The main deploy runs
 `preview-platform.sh` and `preview-platform-ready.sh` with the checked-in
 platform values before planning main-preview; the installer inventories and
 authorizes every cluster-scoped chart object before its idempotent upgrades.
-`preview-deploy.sh` creates and validates generated Secrets, reconciles
-DNS/IAM, installs Helm, waits for TLS and smokes; `preview-destroy.sh` deletes
-the namespace before external state; `preview-link.py` reads exact-address
+`preview-deploy.sh` creates and validates generated Secrets, copies the
+preview verifier, reconciles DNS/IAM, installs Helm, waits for TLS and
+smokes; `preview-destroy.sh` deletes the namespace before external state;
+`preview-link.py` reads exact-address
 links from API logs. The parallel, credential-free capture job checks out the
 PR with full history and runs the PR's own `capture-catalogue.py`,
 which installs the PR's locked packages, runs the PR's workspace Mokly
@@ -240,8 +244,8 @@ An installed local checkout can capture and seed its own private sample
 project. `scripts/cloud/dev-api.sh preview-seed` stages the captured catalogue in
 the local store and runs the API's seed command. The
 [workspace README](../docs/development/cloud.md#local-preview-stack) gives the commands. The
-[runbook](../docs/ops/preview.md) covers sign-in links, the PR comment,
-evidence, costs and cleanup.
+[runbook](../docs/ops/preview.md) covers the preview password, sign-in links,
+the PR comment, evidence, costs and cleanup.
 
 ### Key Code
 
@@ -266,8 +270,8 @@ evidence, costs and cleanup.
 - `scripts/preview-platform.sh`, `scripts/preview-platform-ready.sh` and `scripts/preview-platform-common.sh` — the shared platform installer, the read-only readiness gate and their shared shell helpers. The helpers hold the one origin certificate validator that installation and readiness use.
 - `scripts/preview-platform-helper.py` — validates the platform inputs, reads the Cloudflare CIDR list from the workload chart, inventories the rendered cluster-scoped objects and checks the Origin CA SANs. Its `tls-secret` command decodes the cluster TLS Secret into private files for the shared validator.
 - `helm/platform/cert-manager-values.yaml`, `helm/platform/ingress-nginx-values.yaml` and `helm/platform/cluster-issuer.yaml` — the static platform chart values and the issuer template with its one catalogue-domain placeholder.
-- `scripts/preview-common.sh`, `scripts/preview-deploy.sh` and `scripts/preview-destroy.sh` — the PR shell helpers for generated Secrets and the DNS token, and the deploy and cleanup entry points.
-- `scripts/preview-lifecycle.py` — the namespace Secret validation and the cloud lifecycle commands; `preview_lifecycle_core.py` holds `preview_parts()` and `PreviewInputError`, `preview_lifecycle_cloud.py` the Cloudflare record upsert and delete, and `preview_lifecycle_gcp.py` the conditional bucket IAM with etag retries and the batched object removal.
+- `scripts/preview-common.sh`, `scripts/preview-deploy.sh` and `scripts/preview-destroy.sh` — the PR shell helpers for generated Secrets, the DNS token and the preview verifier, and the deploy and cleanup entry points.
+- `scripts/preview-lifecycle.py` — the namespace Secret validation, the cloud lifecycle commands and `preview-verifier`, which makes the preview password's verifier; `preview_lifecycle_core.py` holds `preview_parts()` and `PreviewInputError`, `preview_lifecycle_cloud.py` the Cloudflare record upsert and delete, and `preview_lifecycle_gcp.py` the conditional bucket IAM with etag retries and the batched object removal.
 - `scripts/preview-link.py` and `scripts/preview_link_sources.py` — the sign-in log reader and its kubectl pod-log source.
 - `scripts/capture-catalogue.py` — the unprivileged catalogue capture; `catalogue_capture_endpoint.py` is the loopback receiver, `catalogue_capture_plan.py` the gzip framing check and bounded plan reader, and `catalogue_capture_state.py` the exchange state.
 - `scripts/record-catalogue-capture.py` — rebuilds the isolated smoke fixture and records the real workspace CLI outcomes. Its `--check` mode compares raw streams while reading variable paths and timing values separately. `catalogue_recording_cases.py` owns the real receiver cases, and `catalogue_recording_streams.py` owns the comparison.

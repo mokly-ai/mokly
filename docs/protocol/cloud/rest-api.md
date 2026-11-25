@@ -1,5 +1,7 @@
 # REST API
 
+Status: The preview exchange does not check a password yet. [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds it.
+
 The REST API serves the [OpenAPI 3.1 operations](../../api/openapi.json) under `/v1`.
 The application and published catalogues are served by other origins; this
 API never serves publication HTML.
@@ -79,7 +81,7 @@ implemented operation.
 | `slug-reserved`                | `bad-request`         | 400  | Submitted workspace slug is reserved                                                                                             | `{field: "slug", suggestedSlug: string}` |
 | `last-owner`                   | `failed-precondition` | 400  | Mutation would remove the last workspace owner                                                                                   | —                                        |
 | `csrf-rejected`                | `permission-denied`   | 403  | Missing or mismatched Origin or CSRF token                                                                                       | —                                        |
-| `magic-link-invalid`           | `bad-request`         | 400  | Malformed or unknown magic-link or preview sign-in credential                                                                    | —                                        |
+| `magic-link-invalid`           | `bad-request`         | 400  | Malformed or unknown magic link, or a preview password that the preview's verifier does not accept                               | —                                        |
 | `magic-link-expired`           | `failed-precondition` | 400  | Unused link reached its expiry deadline                                                                                          | —                                        |
 | `magic-link-used`              | `failed-precondition` | 400  | Previously consumed magic link, including a concurrent loser                                                                     | —                                        |
 | `desktop-grant-invalid`        | `bad-request`         | 400  | Desktop grant, challenge or verifier is malformed, unknown, expired, used or mismatched                                          | —                                        |

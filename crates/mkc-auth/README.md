@@ -1,5 +1,7 @@
 # mkc-auth
 
+Status: Preview sign-in still compares a random link value, not a typed password with its verifier. [Milestone 3](../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds the password check.
+
 Magic-link, preview, desktop grant and session authentication for Mokly Cloud. The crate
 owns the sign-in policy: it decides who is admitted, what a link or a session
 means and when it expires. It depends on the `mkc-store-interface` queries,
@@ -45,9 +47,11 @@ sign-out.
 
 `preview` is available only when a `PreviewSignIn` is configured, which
 `preview_sign_in_available` reports for the API's optional-operation gate. It
-admits the peer before every credential outcome, compares digests in constant
-time, finds or creates the configured account and issues a session like a
-link exchange; an unconfigured call returns `Error::PreviewSignInUnavailable`.
+admits the peer before every credential outcome, checks the typed preview
+password against the optional scrypt verifier and compares the hashes in
+constant time, finds or creates the configured account and issues a session
+like a link exchange. Without a verifier every password is refused, and an
+unconfigured call returns `Error::PreviewSignInUnavailable`.
 
 `preview_account` finds or creates that configured account for the API's
 one-time preview seed. It shares the account policy with sign-in. It issues
@@ -132,10 +136,10 @@ returns `Option` for absence, and this crate decides what absence means.
 
 ### Key Code
 
-- [service.rs](./src/service.rs) — `Authenticator`, the trait the API calls; `AuthService`, its implementation with the injected store, mailer, runtime and admitted origins; `PreviewSignIn`, the hashed preview configuration; and the results `LinkIssued`, `LinkVerified`, `SessionIssued` and `Identity`.
+- [service.rs](./src/service.rs) — `Authenticator`, the trait the API calls; `AuthService`, its implementation with the injected store, mailer, runtime and admitted origins; `PreviewSignIn`, the preview configuration with its optional verifier; and the results `LinkIssued`, `LinkVerified`, `SessionIssued` and `Identity`.
 - [error.rs](./src/error.rs) — the authentication outcome contract: invalid, expired and used links, expired sessions, CSRF rejection and rate limits, with `Internal` keeping a query failure's source.
 - [links.rs](./src/links.rs) — magic-link issue and exchange with one public app landing for every admitted Origin; `LINK_LIFETIME_MINUTES` names the 15-minute lifetime once for the stored link and the email copy.
-- [preview.rs](./src/preview.rs) — preview sign-in and the seed account method; both reuse the account policy, and only sign-in admits a peer, checks the secret and issues a session.
+- [preview.rs](./src/preview.rs) — preview sign-in and the seed account method; both reuse the account policy, and only sign-in admits a peer, checks the password and issues a session.
 - [desktop_grant.rs](./src/desktop_grant.rs) — desktop grant issue and exchange, separate persistent peer admission for each endpoint, constant-time challenge comparison under the grant lock, and session replacement with the stored absolute deadline.
 - [desktop_grant_policy.rs](./src/desktop_grant_policy.rs) — desktop credential forms and the unpadded base64url S256 challenge of the verifier's text.
 - [sessions.rs](./src/sessions.rs) — session authentication, rotation and revocation, and the Origin and CSRF checks, which return the admitted `ClientOrigin` and compare tokens in constant time with `subtle::ConstantTimeEq`.
@@ -146,6 +150,7 @@ returns `Option` for absence, and this crate decides what absence means.
 ### Related Docs
 
 - [Authentication](../../docs/protocol/cloud/auth-sessions.md)
+- [Preview sign-in](../../docs/protocol/cloud/preview-sign-in.md)
 - [Authentication callback landings](../../docs/protocol/cloud/auth-callbacks.md)
 - [GitHub sign-in](../../docs/protocol/cloud/github-sign-in.md)
 - [Desktop application](../../docs/protocol/cloud/desktop-app.md)

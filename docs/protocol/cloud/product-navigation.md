@@ -1,5 +1,7 @@
 # Product Navigation
 
+Status: The app still serves the preview landing at `/auth/preview/callback`. [Milestone 6](../../../plans/preview-password-sign-in.md#milestone-6-sign-in-password-section) removes it.
+
 The product's routes, their resolution and fallbacks, and the navigation shell
 around the hosted viewer. Accounts, onboarding, roles and settings are in
 [Product accounts and roles](./product-accounts-and-roles.md). See
@@ -25,7 +27,6 @@ workspace slugs. See [Marketing site](./marketing-site.md).
 | `/auth/email`                                             | Magic link sent; resend or change address                           |
 | `/auth/email/callback`                                    | Consume a one-use email link; restore the stored return destination |
 | `/workspaces/:uuid/invitations/:uuid/accept`              | Accept a pending invitation for the signed-in address               |
-| `/auth/preview/callback`                                  | Exchange a preview's shared sign-in link; open `/dashboard`         |
 | `/auth/github/callback`, `/auth/github/install`           | Complete GitHub authorization or installation                       |
 | `/connect/desktop`                                        | Sign the desktop app in from the browser; issue a desktop grant     |
 | `/auth/desktop/callback`                                  | Exchange a desktop grant in the app; restore the stored destination |

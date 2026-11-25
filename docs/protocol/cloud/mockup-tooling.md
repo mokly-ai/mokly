@@ -165,7 +165,6 @@ filename suffixes do not determine them.
 | `product/account/callback/email-invalid`     | `expired`        |
 | `product/account/callback/email-invalid`     | `used`           |
 | `product/account/callback/email-invalid`     | `failure`        |
-| `product/account/callback/preview-invalid`   | `failure`        |
 | `product/settings/project/visibility`        | `plan`           |
 | `product/settings/project/visibility`        | `plan-admin`     |
 | `product/settings/tokens/create`             | `reveal`         |

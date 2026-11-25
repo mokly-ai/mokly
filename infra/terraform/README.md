@@ -1,5 +1,7 @@
 # Terraform And State Bootstrap
 
+Status: Foundation does not declare `mkc-preview-sign-in-password` or its deploy grant yet. [Milestone 5](../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) adds them.
+
 Use Terraform 1.16.2. `bootstrap/` owns the state bucket, `foundation/` owns the
 shared platform and `environment/` is instantiated only for production/main-preview using
 separate backend prefixes. Modules have independent mock-provider tests and
@@ -285,13 +287,14 @@ bucket `mokly-508518-preview-blobs` (uniform access, public-access prevention,
 no versioning or live-object age rule, seven-day soft deletion), A wildcards
 `*.preview.D` and `*.preview.api.D`, and Secret Manager IDs
 `mkc-preview-origin-tls-key`, `mkc-preview-origin-tls-cert`,
-`mkc-catalogue-dns-token`. Outputs `preview_ingress_ip` / `preview_blobs_bucket`
+`mkc-catalogue-dns-token` and `mkc-preview-sign-in-password`, which holds the
+preview password's verifier. Outputs `preview_ingress_ip` / `preview_blobs_bucket`
 supply the matching repository variables. Secret values never enter Terraform state.
 The Foundation workflow applies these resources. An operator supplies the
 secret versions before the platform and PR lifecycle scripts run; local
 mock-provider checks do not provision resources.
 
-Deploy gets `roles/secretmanager.secretAccessor` on those three IDs and the
+Deploy gets `roles/secretmanager.secretAccessor` on those four IDs and the
 dedicated `mkc-cloudflare-worker-token`, plus `roles/storage.admin` on that one
 bucket. PR `api`/`catalogue` direct Kubernetes
 principals receive conditional objectUser/objectViewer from the workflow,
@@ -372,7 +375,8 @@ CLI output; credential-free recordings and their provenance live in
 `infra/tests/fixtures/README.md`.
 
 For shared preview IDs, substitute exactly `mkc-preview-origin-tls-key`,
-`mkc-preview-origin-tls-cert` or `mkc-catalogue-dns-token` for `SECRET_ID`.
+`mkc-preview-origin-tls-cert`, `mkc-catalogue-dns-token` or
+`mkc-preview-sign-in-password` for `SECRET_ID`.
 
 The retired Origin CA Key ID above is unused but exists in the applied
 foundation state with `deletion_protection = true`; preserve that resource and

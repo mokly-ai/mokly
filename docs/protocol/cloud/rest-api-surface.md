@@ -1,5 +1,7 @@
 # REST API Surface
 
+Status: The API gives no configuration answer yet, and the preview exchange does not check a password yet. [Milestone 4](../../../plans/preview-password-sign-in.md#milestone-4-configuration-answer) builds the answer, and [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) the password exchange.
+
 This is the operation and response sub-contract of [REST API](./rest-api.md).
 
 ## Implemented Surface
@@ -30,8 +32,9 @@ absent configuration returns the same unavailable response.
 A callback for an installation that another workspace owns returns
 `github-installation-conflict` with the description "Installation already
 belongs to another workspace".
-[Preview sign-in](./auth-sessions.md#preview-sign-in) returns HTTP 503
-`operation-unavailable` without its configuration. The three-request
+The [preview password exchange](./preview-sign-in.md#password-exchange)
+returns HTTP 503 `operation-unavailable` without the shared account's
+configuration. The three-request
 [publication upload exchange](./publication-upload-exchange.md) and
 authenticated one-use catalogue grants are implemented. The API also
 implements the [viewer reads](./viewer-read-model.md). Current-only
@@ -146,3 +149,20 @@ An unsupported artifact version returns HTTP 426 with the
 **Update Mokly to 0.18.0 and publish again.** The artifact kind
 and the received version appear in internal diagnostics and logs, never in
 the response text or `data`. There is no per-artifact response message.
+
+## Configuration Answer
+
+`GET /v1/configuration` says which optional configuration this API has, so
+the app can draw a feature before a reader acts. Like `GET /v1/health`, it has
+explicit OpenAPI `security: []`, needs no session or token and never sets a
+session cookie. Its 200 JSON has one required field for each optional
+configuration of the operation gate that answers 503 `operation-unavailable`:
+`github` and `billing` are true when that configuration is present, and
+`previewPassword` follows [Preview sign-in](./preview-sign-in.md#configuration-answer).
+A PR preview with a verifier answers
+`{"github": false, "billing": false, "previewPassword": {"account": "preview@mokly.ai"}}`.
+Each field reads the same configuration as the gate, so the answer never
+names a configuration that the gate refuses, and a new optional
+configuration adds a field. The answer holds nothing secret. An untyped map
+of flag names was rejected, because the generated types could not check a
+name.

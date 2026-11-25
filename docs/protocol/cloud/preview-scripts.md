@@ -1,5 +1,7 @@
 # Preview Script Interfaces
 
+Status: The deploy does not copy a verifier yet, `preview-verifier` does not exist yet, and the comment still takes the link inputs. [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) builds them and removes the link.
+
 These scripts implement [PR previews](./pr-preview-environments.md).
 `capture-catalogue.py` runs from the PR checkout in the unprivileged capture
 job. All other scripts run from trusted `main`.
@@ -16,6 +18,7 @@ Never evaluate PR titles, branch names, labels or provider output as shell code.
 | `bash infra/scripts/preview-deploy.sh preview-pr-N`                  | Exactly one environment; deploys and smokes       |
 | `bash infra/scripts/preview-destroy.sh preview-pr-N`                 | Exactly one environment; removes all PR resources |
 | `python3 infra/scripts/preview-link.py preview-pr-N --email ADDRESS` | Prints newest matching sign-in URL only           |
+| `python3 infra/scripts/preview-lifecycle.py preview-verifier`        | Reads a password on stdin; prints its verifier    |
 | `python3 infra/scripts/capture-catalogue.py preview-pr-N`            | Unprivileged; captures the PR's catalogue upload  |
 | `python3 infra/scripts/preview-seed-job.py preview-pr-N`             | Runs the seed Job and collects its result         |
 
@@ -26,8 +29,10 @@ validation, but no Google/Cloudflare credential or other deployment input.
 All environment arguments require the complete `preview-pr-[1-9][0-9]{0,8}`
 grammar; `production`, `main-preview` and arbitrary namespaces are invalid.
 [Preview seed Job](./preview-seed-job.md) defines the seed script's
-arguments, inputs and outputs, and [Preview capture](./preview-capture.md)
-defines those of capture. Capture's `--local` mode, which replaces the
+arguments, inputs and outputs, [Preview capture](./preview-capture.md)
+defines those of capture, and
+[Preview sign-in](./preview-sign-in.md#password-and-rotation) those of
+`preview-verifier`. Capture's `--local` mode, which replaces the
 environment argument for a local stack, is in
 [Local preview seed](./preview-seed-local.md).
 
@@ -72,15 +77,13 @@ assertions fail instead of copying secrets or silently choosing another origin.
 ## Deploy And Redeploy
 
 1. Authenticate/select the fixed GKE cluster; verify platform readiness.
-2. Ensure `mkc-preview-pr-N` exists. Create `postgres-credentials`,
-   `catalogue-signing-key` and `preview-sign-in` only when absent. Validate
-   existing keys/format and the URL/password match; never overwrite them on a
-   push. A create conflict re-reads and validates the winner. If
-   `PVC/data-postgres-0` exists while either of the first two Secrets is
-   absent, fail with a diagnostic to restore that original Secret or delete the
-   namespace; never generate replacement database or catalogue signing
-   material beside retained data. `preview-sign-in` protects no data, so it
-   may be created beside a retained PVC; a new value only retires older links.
+2. Ensure `mkc-preview-pr-N` exists. Create `postgres-credentials` and
+   `catalogue-signing-key` only when absent. Validate existing keys/format and
+   the URL/password match; never overwrite them on a push. A create conflict
+   re-reads and validates the winner. If `PVC/data-postgres-0` exists while
+   either Secret is absent, fail with a diagnostic to restore that original
+   Secret or delete the namespace; never generate replacement database or
+   catalogue signing material beside retained data.
 3. Read the catalogue DNS token from `mkc-catalogue-dns-token` into private
    storage and send it only in the Cloudflare authorization header. Create or
    update the exact A record `*.pr-N.preview.C` with `content` equal to the
@@ -91,12 +94,16 @@ assertions fail instead of copying secrets or silently choosing another origin.
 4. Upsert the two exact principal/role/condition tuples in the bucket's IAM
    policy. Preserve unrelated bindings; retry a concurrent-change conflict at
    most five times with bounded backoff, then fail.
-5. Render values, then install or upgrade release `mokly-cloud` in
+5. Copy the verifier privately into Secret `preview-sign-in`, or warn and
+   delete that copy when the verifier is missing or malformed, as
+   [Preview sign-in](./preview-sign-in.md#deploy) defines.
+6. Render values, then install or upgrade release `mokly-cloud` in
    `mkc-preview-pr-N` from the chart's PR overlay and the rendered values,
-   waiting at most 15 minutes.
-6. Wait at most 900s for `Certificate/catalogue-tls` Ready; never disable TLS
+   waiting at most 15 minutes. When step 5 wrote or deleted the verifier and
+   the upgrade did not replace the API pod, restart the API and wait for it.
+7. Wait at most 900s for `Certificate/catalogue-tls` Ready; never disable TLS
    validation or fall back to the Origin CA default on catalogue hosts.
-7. Run `python3 infra/scripts/smoke.py` with the derived app/API/catalogue
+8. Run `python3 infra/scripts/smoke.py` with the derived app/API/catalogue
    origins and intended revision. First-install budget is 900s; upgrades 60s.
 
 Save the prior deployed Helm revision before changing it. On Helm, certificate
@@ -145,9 +152,10 @@ timeout.
 
 ## Sign-In Log Reader
 
-This reader serves every address. The shared preview account uses it too,
-because only the comment of a private repository carries its sign-in link.
-The reviewer first requests a link in `/sign-in` or `/sign-up`.
+This reader serves every address. The shared account signs in with the
+[preview password](./preview-sign-in.md), and with this reader where its
+preview has no verifier. The reviewer first requests a link in `/sign-in` or
+`/sign-up`.
 `preview-link.py` normalizes the full email as the API does and matches exact
 addresses, never substrings. Select API pods by `app.kubernetes.io/name=api`
 and read container `api` with timestamps since the requested time. Parse only
@@ -183,10 +191,9 @@ it in workflow logs/comments/artifacts.
 `synchronize`, `reopened`, `closed`, and same-repository-only policy. Deploy
 requires an open PR with `preview`; close or removal of that label selects
 destroy even after a failed build. Forks and unrelated label events explicitly
-skip. `preview-event.py` validates the event's Boolean `repository.private`
-and exposes it as `repository_private=true|false` beside the action,
-environment and revision. The unprivileged build and capture jobs get only
-`contents: read`, no environment, secrets or OIDC. They persist no checkout
+skip. `preview-event.py` exposes the action, environment and revision. The
+unprivileged build and capture jobs get only `contents: read`, no
+environment, secrets or OIDC. They persist no checkout
 credentials and never restore or save an Actions cache. Privileged release runs
 trusted-main scripts and handles only image archives and the captured catalogue
 plan archive and blobs, which it copies unopened to the PR's bucket prefix. PR
@@ -201,28 +208,17 @@ comments, never edit a human comment, and include the current tested SHA,
 pattern `https://p-<publication-id>.pr-N.preview.C` and the workflow evidence
 URL. The base catalogue suffix is not a working publication link. The exact
 outcome/link matrix is in [Preview seed](./preview-seed.md); status never
-implicitly enables a link. Never include mail links, tokens or raw API logs;
-the private-repository-gated preview sign-in link is the one credential the
-comment may carry.
+implicitly enables a link. The comment carries no credential: no password,
+verifier, mail link, token or raw API log.
 
 `preview-comment.py` requires `--state`, `--environment`, `--revision`,
-`--domain`, `--catalogue-domain`, `--run-url` and
-`--repository-private true|false`. After a completed deploy, release also
-passes `--secret-file PATH` (mode 0600) and
-`--seed-status .context/seed-status.json`; it passes
+`--domain`, `--catalogue-domain` and `--run-url`. After a completed deploy,
+release also passes `--seed-status .context/seed-status.json`; it passes
 `--seed-proof .context/seed-proof.json` only when the nonempty proof exists.
 The script parses status, uses proof only as a presence flag, validates the
-matrix and derives both links from the other trusted inputs. It reads the
-secret only when rendering Open preview. The trusted release job posts a
-running comment before deployment and a final comment even after a failed
-build, capture, seed or cleanup.
-
-After smoke, release reads the generated `preview-sign-in` value only for the
-comment's **Open preview** link; it never passes the value to the seed.
-Release keeps the value only in a private mode-0600 runner-temporary file,
-with the value masked in the workflow log. The private file is neither
-retained nor placed under `.context/` and is removed after the final comment
-is prepared.
+matrix and derives the Sample project link from the other trusted inputs. The
+trusted release job posts a running comment before deployment and a final
+comment even after a failed build, capture, seed or cleanup.
 
 **Require deploy evidence** checks only smoke and its report. The seed step
 then runs `preview-seed-job.py` as [Preview seed Job](./preview-seed-job.md)

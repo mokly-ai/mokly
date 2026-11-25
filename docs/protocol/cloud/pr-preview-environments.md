@@ -1,5 +1,7 @@
 # PR Preview Environments
 
+Status: The API reads no verifier yet, and the deploy still generates a random `preview-sign-in` value in place of copying the verifier. [Milestone 3](../../../plans/preview-password-sign-in.md#milestone-3-api-password-exchange) builds the setting, and [Milestone 5](../../../plans/preview-password-sign-in.md#milestone-5-store-deploy-comment-and-local-stack) the store, the copy and the mount.
+
 This contract defines the environment that every labelled pull request gets:
 its namespace, data, hosts, TLS, identity and network boundaries. The
 [reviewer runbook](../../ops/preview.md) describes its operation. Stable
@@ -22,11 +24,13 @@ environments keep Cloud SQL, GCE ingress, Origin CA and their Terraform states.
 | App/API edge certificate   | Existing pack: `D`, `*.preview.D`, `*.preview.api.D`                       | Foundation Terraform                            |
 | App/API origin certificate | Secret Manager `mkc-preview-origin-tls-key`, `mkc-preview-origin-tls-cert` | Operator values; foundation IDs/IAM             |
 | Catalogue DNS token        | Secret Manager `mkc-catalogue-dns-token`                                   | Operator value; foundation ID/IAM               |
+| Preview password verifier  | Secret Manager `mkc-preview-sign-in-password`                              | Operator value; foundation ID/IAM               |
 | Catalogue certificate      | `Certificate/catalogue-tls`, `Secret/catalogue-tls` in PR namespace        | Helm declaration; cert-manager issuance/renewal |
 | Postgres                   | `StatefulSet/postgres`, `Service/postgres`, `PVC/data-postgres-0`          | PR Helm release; namespace deletion removes PVC |
 | Seed Job template          | `CronJob/preview-seed`, suspended                                          | PR Helm release                                 |
 | Seed Jobs                  | `Job/preview-seed-<run>`, one for each workflow run attempt                | Preview workflow creates and deletes each       |
-| Generated secrets          | `postgres-credentials`, `catalogue-signing-key`, `preview-sign-in`         | Preview deploy script; namespace lifetime       |
+| Generated secrets          | `postgres-credentials`, `catalogue-signing-key`                            | Preview deploy script; namespace lifetime       |
+| Verifier copy              | `preview-sign-in` in PR namespace                                          | Preview deploy script; copied on each deploy    |
 | Bucket access and objects  | Two conditional IAM members, prefix `pr-N/`                                | Preview deploy/destroy scripts                  |
 
 Terraform accepts only `production` and `main-preview` environments. No PR
@@ -111,11 +115,13 @@ Both Rust services use `MKC_ENV=preview`, `MKC_FILE_STORE=gcs`,
 `MKC_GCS_BUCKET=mokly-508518-preview-blobs`, `MKC_GCS_PREFIX=pr-N`, the exact
 public `MKC_APP_ORIGIN` and catalogue-base `MKC_CATALOGUE_ORIGIN` above.
 The API uses `MKC_MAILER=log`; no Postmark/GitHub secret is mounted. It mounts
-`preview-sign-in` read-only at `/var/run/mokly-secrets/preview-sign-in`, from
-which it reads `MKC_PREVIEW_SIGN_IN_SECRET`, and sets
+the optional Secret `preview-sign-in` read-only at
+`/var/run/mokly-secrets/preview-sign-in`, from which it reads
+`MKC_PREVIEW_SIGN_IN_VERIFIER` when the verifier exists, and sets
 `MKC_PREVIEW_SIGN_IN_EMAIL=preview@mokly.ai` and `MKC_PREVIEW_SIGN_IN_PLAN=team`.
+[Preview sign-in](./preview-sign-in.md) defines the verifier and its copy.
 Stable releases render none of these settings. The optional plan defaults to
-`free`, accepts only `free` and `team`, and requires the pair and the same
+`free`, accepts only `free` and `team`, and requires the email and the same
 preview sign-in capability. New workspaces created by that normalized
 account email start on Team; other and existing workspaces keep their plan.
 Team permits private uploads and defaults new projects to private, without a

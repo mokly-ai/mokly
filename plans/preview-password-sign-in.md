@@ -183,6 +183,35 @@ Each item marked **my call** is a design call that I made on 2026-11-24 or
   once, only in previews, and before the reader can type. Keeping the last
   answer in the browser still moves on a first visit, and a top-aligned
   desktop panel changes a rule for every account screen.
+- **Docs design calls, 2026-11-25.** The docs implementor made these calls
+  in Milestone 2, and I accepted them:
+  - Status lines go on protocol and README pages only, because the rules
+    name only those. The runbooks read correctly before and after the change,
+    because step 3 of the preview runbook falls back to the log reader.
+  - The verifier is a PHC string: the salt and the hash are unpadded standard
+    base64, and the hash covers the password's UTF-8 bytes. Reason: both
+    sides must agree on each byte.
+  - `preview-verifier` trims leading and trailing white space, because Sign
+    in trims the password before it sends it.
+  - A store read that fails for a cause other than a missing version warns
+    and leaves the namespace copy unchanged, because a provider error is no
+    proof of absence.
+  - The deploy treats a value outside the API's bounds as malformed, because
+    the API would not start with it.
+  - `previewPassword` is always present: an object with `account`, or
+    `null`, as the REST contract keeps always-present fields required.
+  - A rotation keeps existing sessions, and a label cycle ends them, because
+    the plan does not change sessions.
+  - The general rules of `GET /v1/configuration` live in
+    `rest-api-surface.md`, because the endpoint also serves GitHub and
+    billing. The precise rule is that the answer never names a configuration
+    that the gate refuses.
+  - The runbook steps use private files and strip the newline, as the
+    signing-key steps of the secrets runbook do.
+- **Empty password, my call, 2026-11-25.** The action is disabled while the
+  trimmed password is empty, as Continue with email is while the address is
+  empty. Reason: an empty password cannot match, and the page already uses
+  this rule.
 - **Deploy.** The release job reads the verifier with
   `gcloud secrets versions access` into a private mode-0600 runner-temporary
   file, as it reads the DNS token. It writes Secret `preview-sign-in` when the
@@ -494,46 +523,55 @@ Depends on: 1
 The docs state the requirements and the decisions in force for the work
 below. History stays in this plan.
 
-- [ ] Create `docs/protocol/cloud/preview-sign-in.md` from the Preview
+- [x] Create `docs/protocol/cloud/preview-sign-in.md` from the Preview
       Sign-In section of `auth-sessions.md`. Add the verifier, its setting
       and its bounds, the exchange of decision 9, the configuration answer of
       decision 4, the security statement, and rotation. Remove the `{secret}`
       exchange and its setting. Leave a short section with a link in
       `auth-sessions.md`.
-- [ ] Narrow the sentence "Human passwords are not accepted" in
+- [x] Narrow the sentence "Human passwords are not accepted" in
       `auth-sessions.md` to name the preview password as the one exception.
-- [ ] Update `rest-api.md` and `rest-api-surface.md` for the exchange body and
+- [x] Update `rest-api.md` and `rest-api-surface.md` for the exchange body and
       the configuration endpoint.
-- [ ] Remove the preview callback from `auth-callbacks.md`,
+- [x] Remove the preview callback from `auth-callbacks.md`,
       `product-navigation.md`, `web-app.md` and `web-api-client.md`.
-- [ ] Update `preview-seed.md`: the Secret rows, the verifier format in
+- [x] Update `preview-seed.md`: the Secret rows, the verifier format in
       Contract With Main, because `main` makes it and the PR's API reads it,
       the `signIn` status, and the outcome table without its Open preview
       column. Remove the exposure paragraph of the link.
-- [ ] Update `preview-scripts.md`: deploy step 2, the verifier read, the
+- [x] Update `preview-scripts.md`: deploy step 2, the verifier read, the
       missing-verifier warning, the comment without the link and its inputs,
       and the Sign-In Log Reader introduction.
-- [ ] Update `pr-preview-environments.md`: the resource table, the Secret
+- [x] Update `pr-preview-environments.md`: the resource table, the Secret
       Manager ID, and the API mount paragraph.
-- [ ] Update `preview-seed-local.md` for the local password.
-- [ ] Update `product-mockups-account.md` and `folio-chrome-account.md` for
+- [x] Update `preview-seed-local.md` for the local password.
+- [x] Update `product-mockups-account.md` and `folio-chrome-account.md` for
       the new section and pages.
-- [ ] Remove the preview landing from `product-mockups-account.md`: the
+- [x] Remove the preview landing from `product-mockups-account.md`: the
       callback row, the Preview invalid sentences, the Callback Landings
       sentence, and the count of callback states, which becomes twelve.
       Remove its row from the Variant Slugs table of `mockup-tooling.md`.
-- [ ] Update `docs/ops/preview.md`: review step 3 uses the password, the log
+- [x] Update `docs/ops/preview.md`: review step 3 uses the password, the log
       reader serves other addresses, and the steps to create and rotate the
       password.
-- [ ] Update `docs/ops/secrets.md`, `docs/ops/environment.md`,
+- [x] Update `docs/ops/secrets.md`, `docs/ops/environment.md`,
       `docs/development/cloud.md`, `infra/README.md` and
       `infra/terraform/README.md` for the store and the verifier.
-- [ ] Update `crates/mkc-config/README.md` and `crates/mkc-api/README.md`.
-- [ ] Check every changed protocol page against the 250-line cap.
-- [ ] Update `plans/follow-ups/preview-sample-project-needs-log-access.md`:
+- [x] Update `crates/mkc-config/README.md` and `crates/mkc-api/README.md`.
+- [x] Check every changed protocol page against the 250-line cap.
+- [x] Update `plans/follow-ups/preview-sample-project-needs-log-access.md`:
       the password removes its need for log access to sign in, and its
       private Changes limit stays. Drop its option B, which used the random
       link value.
+- [x] Update the other live references that the searches found:
+      `crates/mkc-auth/README.md` and `infra/helm/mokly-cloud/README.md`,
+      which the replaced ways name as crate and chart READMEs, the plan rule
+      in `billing.md`, the account link in `platform-model.md`, the cloud
+      protocol index, and the cutover check in
+      `docs/ops/repository-cutover.md`.
+- [x] Move the shared error state of failed callback landings from the
+      removed Preview Callback section into the Desktop Callback section of
+      `auth-callbacks.md`, because the desktop landing uses it.
 
 ## Milestone 3: API password exchange
 
@@ -553,6 +591,8 @@ exchange and its setting go.
       checks.
 - [ ] Regenerate `docs/api/openapi.json` and
       `packages/app/src/api/generated/schema.ts`.
+- [ ] Remove or narrow each status line that links this milestone: search
+      `docs/` and every `README.md` for `#milestone-3-api-password-exchange`.
 - [ ] Tests, each at the lowest level that fails without the change:
   - [ ] Configuration: a verifier without the email, without the capability,
         malformed, or outside the bounds fails startup with a typed error
@@ -580,6 +620,8 @@ password and its account included.
 - [ ] Tests: each field follows its configuration, the preview password
       answer names the account only with a verifier, and production settings
       give no preview password.
+- [ ] Remove or narrow each status line that links this milestone: search
+      `docs/` and every `README.md` for `#milestone-4-configuration-answer`.
 
 ## Milestone 5: Store, deploy, comment and local stack
 
@@ -613,6 +655,14 @@ this on 2026-11-24: "I don't care about backwards compat".
       check accepts, and it warns on a short password. Shell tests in
       `infra/tests/` cover the write, the unchanged value, the restart rule,
       the deletion, and the missing and malformed verifier.
+- [ ] Build and test the two rules that the Deploy and Password And Rotation
+      sections of `docs/protocol/cloud/preview-sign-in.md` add: the command
+      removes leading and trailing white space from the password, as Sign in
+      does, and a read that fails for a cause other than a missing version
+      warns and leaves Secret `preview-sign-in` unchanged.
+- [ ] Remove or narrow each status line that links this milestone: search
+      `docs/` and every `README.md` for
+      `#milestone-5-store-deploy-comment-and-local-stack`.
 
 ## Milestone 6: Sign-in password section
 
@@ -646,6 +696,13 @@ The app draws the section as the mockups show and sends the password.
 - [ ] Smoke-test the section against the local stack: sign in with the local
       password, and refuse a wrong one. Save screenshots under
       `.context/preview-password-sign-in/`.
+- [ ] Update `packages/app/README.md`, whose Responsibilities still name the
+      preview landing, for Sign in's password section.
+- [ ] Remove `preview-callback.spec.ts` from the test list of the active plan
+      `plans/loading-states-match-content.md` when the spec goes.
+- [ ] Remove or narrow each status line that links this milestone: search
+      `docs/` and every `README.md` for
+      `#milestone-6-sign-in-password-section`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
@@ -661,6 +718,9 @@ Depends on: every other milestone
 - [ ] Add a follow-up item: the GitHub sign-in notice, the App install
       screen and the Billing pane read `GET /v1/configuration` before a
       press, in place of a refused request.
+- [ ] Update `plans/follow-ups/preview-proof-runs-not-recorded.md`: no
+      comment carries an Open preview link, and the shared account signs in
+      with the preview password.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
