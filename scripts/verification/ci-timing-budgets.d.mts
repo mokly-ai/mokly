@@ -1,8 +1,7 @@
 import type { TimedJob, TimedStep } from "./ci-timing-jobs.mjs";
 
-export const BUDGET_MODES: readonly ["warn", "fail"];
-
-export type BudgetMode = (typeof BUDGET_MODES)[number];
+/** `warn` reports budget overruns as warnings; `fail` also fails the step. */
+export type BudgetMode = "warn" | "fail";
 
 export interface JobBudget {
   pattern: string;

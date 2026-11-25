@@ -761,7 +761,9 @@ jobs:
     name: CI timing
     # Report only: Required CI does not need this job, so it never delays or
     # gates the branch rule. It runs after every other job, also after a failure.
+    # A failure of this job never fails the run, so release evidence keeps it.
     if: ${{ always() }}
+    continue-on-error: true
     needs:
       - required
       - site-lighthouse

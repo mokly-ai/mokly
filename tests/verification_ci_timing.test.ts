@@ -210,3 +210,38 @@ test("the slowest tests come from browser tests and viewer files", async () => {
     ],
   );
 });
+
+test("on a completion tie the job created later blocks the next job", () => {
+  const job = (
+    id: number,
+    name: string,
+    created: string,
+    completed: string,
+  ) => ({
+    id,
+    name,
+    status: "completed",
+    conclusion: "success",
+    created_at: `2026-11-25T00:${created}Z`,
+    started_at: `2026-11-25T00:${created}Z`,
+    completed_at: `2026-11-25T00:${completed}Z`,
+  });
+  const { jobs } = parseJobs([
+    job(1, "Root report", "00:00", "05:00"),
+    job(2, "Runtime profile", "00:00", "00:10"),
+    job(3, "Native", "00:10", "05:00"),
+    job(4, "Required CI", "05:00", "05:10"),
+  ]);
+  assert.deepEqual(
+    criticalPath(jobs)?.segments.map((segment) => segment.job.name),
+    ["Runtime profile", "Native", "Required CI"],
+  );
+});
+
+test("the committed budget file parses", async () => {
+  const source = await fs.readFile(
+    path.join(repositoryRoot, "scripts/verification/ci-budgets.json"),
+    "utf8",
+  );
+  assert.doesNotThrow(() => parseBudgets(JSON.parse(source)));
+});

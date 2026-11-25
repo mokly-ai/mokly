@@ -1,7 +1,7 @@
 import { jobSeconds } from "./ci-timing-jobs.mjs";
 
 /** `warn` reports budget overruns as warnings; `fail` also fails the step. */
-export const BUDGET_MODES = ["warn", "fail"];
+const BUDGET_MODES = ["warn", "fail"];
 
 /**
  * Narrow the budget file. Patterns match whole job names, `*` matches any

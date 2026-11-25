@@ -12,7 +12,10 @@ durations stay report text under the
 The `CI timing` job of `.github/workflows/ci.yml` runs the report. It runs
 after every other job of the run, with `if: always()`, so it also reports
 runs in which a job failed. `Required CI` does not need it, so the report
-never delays or gates the branch-rule status.
+never delays or gates the branch-rule status. The job continues on error: a
+failure of the job shows on its own check but never fails the run. The run
+conclusion, and so the
+[release evidence](./npm-release-evidence.md), never depend on it.
 
 The job reads job and step times from the GitHub API with the run's own
 token. It is the only CI job with `actions: read`. It keeps `contents: read`
@@ -55,7 +58,9 @@ targets and are values to tune as the measured times change.
 - The critical path is the chain of jobs that sets the wall clock. GitHub
   creates a job when the last job that it needs completes. The blocking job
   of a job is therefore the job that completed last at or before that
-  creation. A skipped job never blocks another job on the path. For each job
+  creation. Times have a precision of one second. When two jobs completed in
+  the same second, the job that was created later is the blocking job. A
+  skipped job never blocks another job on the path. For each job
   on the path, the summary gives its wait, its run time, and its end time
   from the start of the attempt.
 
@@ -109,8 +114,8 @@ summary lists all of them.
 
 The budget file is in `warn` mode. A failing check needs the user's approval,
 because a new failing gate needs it. Even in `fail` mode, the job stays
-outside `Required CI`, so a failure blocks a merge only after the branch rule
-or `Required CI` requires it.
+outside `Required CI` and the run stays green, so a failure blocks a merge
+only after the branch rule or `Required CI` requires the check.
 
 ## Related Docs
 

@@ -14,6 +14,7 @@ interface Scenario {
   mode: "warn" | "fail";
   status?: number;
   extraJobs?: unknown[];
+  budgets?: unknown;
 }
 
 async function run(context: TestContext, scenario: Scenario) {
@@ -22,20 +23,22 @@ async function run(context: TestContext, scenario: Scenario) {
   const budgets = path.join(directory, "budgets.json");
   await fs.writeFile(
     budgets,
-    JSON.stringify({
-      mode: scenario.mode,
-      wallClockMinutes: 13,
-      slowestTests: 1,
-      jobs: [
-        { pattern: "Native *", minutes: 12 },
-        { pattern: "Viewer *", minutes: 12 },
-        { pattern: "Browser *", minutes: 20 },
-        { pattern: "Site Lighthouse", minutes: 10 },
-        { pattern: "Required CI", minutes: 3 },
-        { pattern: "Runtime profile", minutes: 2 },
-        { pattern: "Cloud provider plan result", minutes: 2 },
-      ],
-    }),
+    JSON.stringify(
+      scenario.budgets ?? {
+        mode: scenario.mode,
+        wallClockMinutes: 13,
+        slowestTests: 1,
+        jobs: [
+          { pattern: "Native *", minutes: 12 },
+          { pattern: "Viewer *", minutes: 12 },
+          { pattern: "Browser *", minutes: 20 },
+          { pattern: "Site Lighthouse", minutes: 10 },
+          { pattern: "Required CI", minutes: 3 },
+          { pattern: "Runtime profile", minutes: 2 },
+          { pattern: "Cloud provider plan result", minutes: 2 },
+        ],
+      },
+    ),
   );
   const reports = path.join(directory, "reports/verification-viewer");
   await fs.mkdir(reports, { recursive: true });
@@ -53,9 +56,12 @@ async function run(context: TestContext, scenario: Scenario) {
       url: String(input),
       authorization: new Headers(init?.headers).get("Authorization"),
     });
-    return new Response(JSON.stringify(body), {
-      status: scenario.status ?? 200,
-    });
+    const page = Number(new URL(String(input)).searchParams.get("page"));
+    const jobs = body.jobs.slice((page - 1) * 100, page * 100);
+    return new Response(
+      JSON.stringify({ total_count: body.jobs.length, jobs }),
+      { status: scenario.status ?? 200 },
+    );
   };
   const summary = path.join(directory, "summary.md");
   let stdout = "";
@@ -152,7 +158,7 @@ test("an unreadable jobs API warns in warn mode and fails in fail mode", async (
 });
 
 test("job names cannot add workflow commands or break the summary table", async (context) => {
-  const name = "Odd | job\n::error::injected <b>";
+  const name = "Odd \\| job\n::error::injected <b>";
   const result = await run(context, {
     mode: "warn",
     extraJobs: [
@@ -169,12 +175,61 @@ test("job names cannot add workflow commands or break the summary table", async 
   });
   assert.ok(
     result.annotations.includes(
-      "::warning title=CI duration budget::Odd | job%0A::error::injected <b> has no budget. Add a matching pattern to scripts/verification/ci-budgets.json.",
+      "::warning title=CI duration budget::Odd \\| job%0A::error::injected <b> has no budget. Add a matching pattern to scripts/verification/ci-budgets.json.",
     ),
   );
   assert.ok(
     result.markdown.includes(
-      "| Odd \\| job ::error::injected &lt;b&gt; | success | 1m 00s | none | ⚠️ no budget | – |",
+      "| Odd \\\\\\| job ::error::injected &lt;b&gt; | success | 1m 00s | none | ⚠️ no budget | – |",
     ),
+  );
+});
+
+const completed = (name: string, id: number) => ({
+  id,
+  name,
+  status: "completed",
+  conclusion: "success",
+  created_at: "2026-11-24T23:33:56Z",
+  started_at: "2026-11-24T23:33:57Z",
+  completed_at: "2026-11-24T23:34:57Z",
+});
+
+test("jobs past the first page count, and annotations stop at the GitHub limit", async (context) => {
+  const extraJobs = Array.from({ length: 120 }, (_, index) =>
+    completed(`Extra ${String(index).padStart(3, "0")}`, 1000 + index),
+  );
+  const result = await run(context, { mode: "warn", extraJobs });
+  assert.deepEqual(
+    result.requests.map((request) =>
+      new URL(request.url).searchParams.get("page"),
+    ),
+    ["1", "2"],
+  );
+  assert.ok(
+    result.markdown.includes(
+      "| Extra 119 | success | 1m 00s | none | ⚠️ no budget | – |",
+    ),
+  );
+  assert.equal(result.annotations.length, 10);
+  assert.equal(
+    result.annotations[8],
+    "::warning title=CI duration budget::Extra 007 has no budget. Add a matching pattern to scripts/verification/ci-budgets.json.",
+  );
+  assert.equal(
+    result.annotations[9],
+    "::warning title=CI duration budget::113 more findings are in the job summary.",
+  );
+});
+
+test("a fail-mode budget file that does not parse fails the step", async (context) => {
+  const result = await run(context, {
+    mode: "fail",
+    budgets: { mode: "fail", wallClockMinutes: 0, slowestTests: 1, jobs: [] },
+  });
+  assert.equal(result.status, 1);
+  assert.match(
+    result.annotations[0]!,
+    /^::error title=CI timing report::wallClockMinutes must be a positive number/,
   );
 });

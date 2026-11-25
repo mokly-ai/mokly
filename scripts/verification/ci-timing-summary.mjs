@@ -3,7 +3,7 @@ const BUDGET_FILE = "scripts/verification/ci-budgets.json";
 const ANNOTATION_LIMIT = 10;
 
 /** Format whole seconds as `28m 05s`, or `42s` below one minute. */
-export function formatSeconds(seconds) {
+function formatSeconds(seconds) {
   if (seconds < 60) return `${seconds}s`;
   const rest = String(seconds % 60).padStart(2, "0");
   return `${Math.floor(seconds / 60)}m ${rest}s`;
@@ -179,6 +179,7 @@ function milliseconds(ms) {
 
 function cell(text) {
   return text
+    .replace(/\\/g, "\\\\")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

@@ -14,8 +14,6 @@ export interface TimingReport {
   issues: string[];
 }
 
-export function formatSeconds(seconds: number): string;
-
 export function annotationLines(report: TimingReport): string[];
 
 export function renderSummary(report: TimingReport): string;

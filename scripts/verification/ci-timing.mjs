@@ -24,7 +24,10 @@ export async function runCiTiming({ argv, env, fetch, write }) {
   let mode = "warn";
   try {
     const options = parseOptions(argv);
-    const budgets = parseBudgets(await readJson(options.budgets));
+    const source = await readJson(options.budgets);
+    // A budget file that names `fail` mode but has another error still fails.
+    if (source?.mode === "fail") mode = "fail";
+    const budgets = parseBudgets(source);
     mode = budgets.mode;
     const entries = options.jobsFile
       ? jobEntries(await readJson(options.jobsFile))

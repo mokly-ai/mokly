@@ -59,14 +59,21 @@ function blocker(job, candidates) {
   );
 }
 
+/**
+ * The job that completed last. Times have whole-second precision, so on a tie
+ * the job created later wins: a job that waited for its own needs is more
+ * likely to be on the path than a job that started with the run.
+ */
 function latest(jobs) {
   return jobs.reduce(
-    (found, job) =>
-      found === null ||
-      job.completedMs > found.completedMs ||
-      (job.completedMs === found.completedMs && job.startedMs < found.startedMs)
-        ? job
-        : found,
+    (found, job) => (found === null || later(job, found) ? job : found),
     null,
   );
+}
+
+function later(job, other) {
+  if (job.completedMs !== other.completedMs)
+    return job.completedMs > other.completedMs;
+  if (job.createdMs !== other.createdMs) return job.createdMs > other.createdMs;
+  return job.startedMs < other.startedMs;
 }
