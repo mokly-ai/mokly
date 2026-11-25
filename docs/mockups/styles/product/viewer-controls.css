@@ -182,13 +182,17 @@
 
 /* The account control: the avatar laid over the registered Button that is
    the control, which keeps its box and its focus outline. The box is 34px
-   wide, a 3px ring around the avatar, and its label stays under the avatar. */
+   wide, a 3px ring around the avatar, and its label stays under the avatar.
+   In the Mac app the whole control takes the press. The avatar takes the
+   bar's drag region from its parent, and it lies over the Button, so without
+   this a press on the avatar moves the window instead. */
 [data-color-scheme] .fo-canvas-account {
   position: relative;
   display: flex;
   flex: none;
   width: 34px;
   margin-inline-start: var(--mk-space-1);
+  -webkit-app-region: no-drag;
 }
 [data-color-scheme] .fo-canvas-account .fo-canvas-avatar {
   position: absolute;

@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { publicationPathFor } from "../../../app/src/_tests_/addresses";
+import { expectTakesClicksThroughout } from "../../../app/src/_tests_/mac-window/regions";
 import { createProject } from "../../../app/src/_tests_/project-setup";
 import { createToken, publish } from "../../../app/src/_tests_/publish";
 import { makePrivate } from "../../../app/src/_tests_/visibility";
@@ -29,6 +30,13 @@ export async function viewerProof(page: Page): Promise<string> {
   );
   await expect(page.getByTestId("viewer-project")).toBeVisible();
   await expect(page.getByTestId("viewer-share")).toBeVisible();
+  // The avatar lies over the account Button. This Chromium passes the bar's
+  // drag region down to it, so the Mac window must not move on any press there.
+  await expectTakesClicksThroughout(
+    page,
+    page.getByTestId("viewer-account"),
+    "the account control",
+  );
   // This assertion must change after the upstream pin bump fixes desktop hosts.
   // The failed line also offers Try again, so it is found by its role.
   await expect(
