@@ -4,21 +4,16 @@ import { expect } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerDesignTopBar(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerDesignTopBar() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl =
-    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
+  const designFileUrl = servedDesignFileUrl;
   const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
 
   /** The Canvas tag search states whose picker is open under the field. */

@@ -5,23 +5,18 @@ import { expect } from "@playwright/test";
 import { canvasColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { test as baseTest } from "./browser_test.js";
+import { test } from "./browser_test.js";
 import { registerCanvasCases } from "./design_canvas_cases.js";
 import { designFileUrl as servedDesignFileUrl } from "./design_fixture.js";
 import { CATALOGUE_LINKS } from "./design_links_cases.js";
 import { documentFavicon } from "./document_error_allowance.js";
-import { copiedDesignFileUrl } from "./static_test.js";
 
 /** Run the same assertions against each catalogue delivery. */
-export function registerDesignPortable(
-  test = baseTest,
-  mode: "serve" | "static" = "serve",
-) {
+export function registerDesignPortable() {
   test.beforeEach(({ allowBrowserError, baseURL }) => {
     documentFavicon(allowBrowserError, baseURL!);
   });
-  const designFileUrl =
-    mode === "static" ? copiedDesignFileUrl : servedDesignFileUrl;
+  const designFileUrl = servedDesignFileUrl;
   const design = (entryPath: string, viewport: string) =>
     designFileUrl(
       path.join(

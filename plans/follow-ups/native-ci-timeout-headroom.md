@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from the branch `calummoore/ci-provider`, review finding 3.
-- **Location:** `timeout-minutes` of the `native` job in `.github/workflows/ci.yml`, the native job limit in the section "Job Execution" of `docs/protocol/ci-workflow.md`, and `tests/ci_timing_policy.test.ts`.
+- **Location:** `timeout-minutes` of the `native` job in `.github/workflows/ci.yml`, and the native job limit in the section "Job Execution" of `docs/protocol/ci-workflow.md`.
 - **Reason:** Each fix raises a time limit or changes the three-times rule, and both need the user's approval.
 
 - **Source:** Review.
@@ -20,16 +20,16 @@
   - With a warm cache, an estimate from the Blacksmith compile times gives 20 to 25 minutes for Windows and 16 to 18 minutes for macOS. On Blacksmith the same jobs took 19.1 and 6.2 minutes in run 44362973486.
   - Cold runs come back after each image Rust update, each toolchain pin change, and each cache eviction, because the cache key covers the installed toolchains.
   - The tests run one test binary at a time. The workspace has 192 test binaries, and the slowest took 163 seconds.
-  - `tests/ci_timing_policy.test.ts` copies every `timeout-minutes` value of `ci.yml`. It reads no duration, so it cannot check the rule. The `testing` skill lists workflow YAML literals under "What never gets a test".
+  - No test copies the `timeout-minutes` values of `ci.yml` any more, so a guard change needs no test edit.
   - On 2026-10-21 the user set the Repository and Viewer guards to three times their measured medians: 75 and 40 minutes.
 - **Problem:** The 60-minute guards of the native jobs give less than three times their duration on the new runners. This holds for every cold run, and for Windows probably also for warm runs.
 - **Impact if no action:** A slow runner can stop a healthy required job. `Required CI` then fails, and the pull request needs a rerun.
 - **Root question:** What hang guard keeps each native job at three times its typical duration on free GitHub-hosted runners, where most runs restore a warm cache and some run cold?
 - **Options:**
-  - **A.** Raise the native guard to 90 minutes, and update the doc. Delete `tests/ci_timing_policy.test.ts` under rule 3 of "Remove a test" in the `testing` skill, instead of copying the new value into it. A hung job runs 30 minutes longer, on free runners. Effort: Small.
+  - **A.** Raise the native guard to 90 minutes, and update the doc. A hung job runs 30 minutes longer, on free runners. Effort: Small.
   - **B.** Split the native verification into smaller parallel jobs that each fit their guard. Keep every check. This adds job coordination and can repeat build work. Effort: Medium.
   - **C.** Profile and cut both jobs to 20 minutes or less, and keep the 60-minute guard. The possible saving is unknown. Effort: Large.
-  - **D.** Give each runner its own guard through the matrix: 90 minutes for Windows and 70 for macOS. Update the doc and delete the timing test, as in A. Effort: Small.
+  - **D.** Give each runner its own guard through the matrix: 90 minutes for Windows and 70 for macOS. Update the doc, as in A. Effort: Small.
   - **E.** Keep 60 minutes until `main` has saved its cache and each runner has five warm runs. Then set each guard to three times its median, rounded up. A cold Windows run keeps only 2.1 times headroom until then, and a second change needs the user's approval. Effort: Small.
   - **F.** Keep 60 minutes, and record the native jobs as an accepted exception to the three-times rule in `docs/protocol/ci-test-timing.md`. This changes a protocol requirement. Effort: Small.
   - **G.** Cut the test phase. Run the test binaries in parallel, with `cargo nextest` or with xtask workers, and drop the npm package builds that the suite repeats. This also shortens every CI wait, because the Windows job finishes last. Effort: Medium.
@@ -44,6 +44,6 @@
   - The Repository and Viewer guards were raised to three times their medians on 2026-10-21.
   - `plans/follow-ups/remote-testbox-timeout.md` records a healthy Testbox run that its guard stopped.
   - The `darwin-x64` release rows on `macos-26-intel` take about 22.7 minutes against a 60-minute guard.
-- **Related:** `plans/follow-ups/native-jobs-runner-choice.md` decides which native jobs run on free runners. Its option A closes this item, and its option B keeps this item for macOS only. `plans/follow-ups/ci-timeout-duration-report.md` holds wider fix H for the whole class. `plans/follow-ups/ci-timing-policy-literal-test.md` deletes the timing test when no option here does.
+- **Related:** `plans/follow-ups/native-jobs-runner-choice.md` decides which native jobs run on free runners. Its option A closes this item, and its option B keeps this item for macOS only. `plans/follow-ups/ci-timeout-duration-report.md` holds wider fix H for the whole class.
 - **Recommendation:** A. It is the only Small option that gives three times the duration now, for cold and warm runs on both runners.
 - **Action:** ask the user, because A raises a time limit, and a higher limit needs the user's approval.

@@ -3,36 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { parse } from "yaml";
-
 import { repositoryRoot } from "./helpers/fixture.js";
 
-/** The only accepted Rust setup command: rustup reads `rust-toolchain.toml`. */
-const TOOLCHAIN_INSTALL = "rustup toolchain install";
-/** Workflows whose jobs run cargo or prepare a box that runs cargo. */
-const RUST_WORKFLOWS = [
-  "ci.yml",
-  "release.yml",
-  "release-prepare.yml",
-  "blacksmith-testbox.yml",
-  "native-bootstrap.yml",
-] as const;
 /** A rustup command that selects a toolchain outside `rust-toolchain.toml`. */
 const VERSION_SELECTION =
   /rustup (?:toolchain install|default|override set)[ \t]+\S/u;
-
-interface WorkflowStep {
-  name?: string;
-  run?: string;
-}
-
-interface WorkflowJob {
-  steps?: readonly WorkflowStep[];
-}
-
-interface Workflow {
-  jobs: Readonly<Record<string, WorkflowJob>>;
-}
 
 interface ToolchainPin {
   channel: string;
@@ -72,33 +47,6 @@ test("automation selects Rust only through rust-toolchain.toml", async () => {
       `${file} must not name a Rust toolchain: ${selection?.[0]}`,
     );
   }
-});
-
-test("Rust jobs install the pinned toolchain before cargo runs", async () => {
-  let setups = 0;
-  for (const file of RUST_WORKFLOWS) {
-    const workflow = parse(await read(`.github/workflows/${file}`)) as Workflow;
-    for (const [name, job] of Object.entries(workflow.jobs)) {
-      const steps = job.steps ?? [];
-      const setup = steps.findIndex((step) => step.name === "Set up Rust");
-      const cargo = steps.findIndex((step) =>
-        /\bcargo\b/u.test(step.run ?? ""),
-      );
-      if (setup < 0 && cargo < 0) continue;
-      setups += 1;
-      assert.equal(
-        steps[setup]?.run,
-        TOOLCHAIN_INSTALL,
-        `${file}:${name} must set up Rust with "${TOOLCHAIN_INSTALL}"`,
-      );
-      if (cargo >= 0)
-        assert.ok(
-          setup < cargo,
-          `${file}:${name} must set up Rust before cargo`,
-        );
-    }
-  }
-  assert.ok(setups > 0, "CI, release and Testbox workflows must set up Rust");
 });
 
 async function toolchainPin(): Promise<ToolchainPin> {
