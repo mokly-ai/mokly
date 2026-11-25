@@ -286,19 +286,21 @@ jobs:
       fail-fast: false
       matrix:
         # Shard 1 checks formatting and Clippy. Each later shard builds and
-        # runs one weighted share of the Rust test targets: four on macOS and
+        # runs one weighted share of the Rust test targets: five on macOS and
         # six on Windows. Shard 2 also runs the doc tests.
         include:
           - runner: macos-26
-            shard: 1/5
+            shard: 1/6
           - runner: macos-26
-            shard: 2/5
+            shard: 2/6
           - runner: macos-26
-            shard: 3/5
+            shard: 3/6
           - runner: macos-26
-            shard: 4/5
+            shard: 4/6
           - runner: macos-26
-            shard: 5/5
+            shard: 5/6
+          - runner: macos-26
+            shard: 6/6
           - runner: windows-2025
             shard: 1/7
           - runner: windows-2025

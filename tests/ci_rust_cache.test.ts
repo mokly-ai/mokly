@@ -18,6 +18,8 @@ const CI_WORKFLOW = ".github/workflows/ci.yml";
 const RUST_CACHE_ACTION = "Swatinem/rust-cache@";
 /** Only runs on `main` may write what CI and pull requests restore. */
 const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' }}";
+/** A stricter save condition: `main` and a further condition of the job. */
+const MAIN_AND = "${{ github.ref == 'refs/heads/main' && ";
 /** Testboxes run unreviewed local trees on `main`, so they never save. */
 const RESTORE_ONLY_WORKFLOWS = [".github/workflows/blacksmith-testbox.yml"];
 /** The installer whose pinned release is part of the audit tool identity. */
@@ -63,10 +65,9 @@ test("Rust build caches save only from main, and Testboxes never save", async ()
           `${file} must never save its Rust build cache`,
         );
       else
-        assert.equal(
-          step.with?.["save-if"],
-          MAIN_ONLY,
-          `${file} must save its Rust build cache only from main`,
+        assert.ok(
+          savesOnlyFromMain(step.with?.["save-if"]),
+          `${file} must save its Rust build cache only from main, not ${String(step.with?.["save-if"])}`,
         );
     }
   }
@@ -104,6 +105,17 @@ test("the Rust audit tool cache follows the tool identity", async () => {
     assert.ok(key.includes(`'${input}'`), `the cache key must hash ${input}`);
   }
 });
+
+/** The condition is `main` alone, or `main` and a condition without `||`. */
+function savesOnlyFromMain(condition: unknown): boolean {
+  if (condition === MAIN_ONLY) return true;
+  return (
+    typeof condition === "string" &&
+    condition.startsWith(MAIN_AND) &&
+    condition.endsWith(" }}") &&
+    !condition.includes("||")
+  );
+}
 
 function isRustCache(step: WorkflowStep | undefined): boolean {
   return step?.uses?.startsWith(RUST_CACHE_ACTION) ?? false;
