@@ -121,10 +121,10 @@
   also gave both failures one pending view while their drafts and previews
   differed. Commit `54e0a948e` repeated it on the Canvas design.
 - **Related:**
-  - [storybook-plan-saved-props-copy.md](storybook-plan-saved-props-copy.md)
-    plans the removal of `SAVED_PREVIEW_COPY`, which `editOf` reads at
-    `forms.tsx:54` and `:62`. Both change the same cases of `editOf`, and no
-    options conflict. The branch that comes second adapts them.
+  - Milestone 24a of `plans/storybook-support.md` removes
+    `SAVED_PREVIEW_COPY`, which `editOf` read at `forms.tsx:54` and `:62`.
+    `editOf` now reads the same sentences from `CONTROLS_COPY`. Both change
+    the same cases of `editOf`, and no options conflict.
   - [props-first-retry-values-unchecked.md](props-first-retry-values-unchecked.md)
     records that no check covers the values of the first attempt's pending
     view, `design/canvas/props/states`. Its option A adds a `viewFacts` row

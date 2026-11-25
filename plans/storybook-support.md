@@ -1257,7 +1257,9 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     props.", which both copy files of the controls hold. A second state of the
     "Render failed" mockup, "Later edit failed", shows a failure after an
     earlier edit rendered. Reason: each sentence of design call 29 then has a
-    mockup whose preview matches it.
+    mockup whose preview matches it. Changed on 2026-11-25 by design call 33:
+    only `SAVED_PREVIEW_COPY` of the design copy holds the new sentence, until
+    Milestone 24a moves it into both `CONTROLS_COPY` objects.
 33. Made on 2026-11-25 in Milestone 1a. The Storybook mockups live in their
     own Canvas folder, `design/canvas/stories`, "Storybook stories", because
     the Component explorer folder already holds five screens. One branch
@@ -1272,6 +1274,47 @@ These calls are mine, made on 2026-11-06 unless a call gives another date.
     sentence of design call 32 from the viewer's copy, so the second TODO of
     Milestone 24a no longer holds, and `tests/viewer_controls_copy.test.ts`
     requires both copies to hold the same keys.
+
+### Track F design calls
+
+These calls are mine, made on 2026-11-25 in track F, on the branch
+`calummoore/storybook-track-f-failed-stories-omid`.
+
+- F1. A failed story view comes only from the story's own work: its
+  composition, the preview's `beforeAll` hook, its loaders and `beforeEach`
+  hooks, their cleanups, and the render. `render-timeout`, `sidecar-crashed`,
+  and the bundle and protocol failures keep their codes and stop the build.
+  Reason: decision 5 names a render failure, and a timeout or a crash
+  replaces the sidecar process. A hung story would also cost the deadline
+  twice for each view.
+- F2. Only a saved view whose root is the story gets the error document: in
+  `build`, `publish`, Serve, and both sides of Changes. A live props render of
+  a story keeps the generic `render-failed` preview failure, and the Props tab
+  shows its alert. Reason: decision 24 chose E, not C, which would have given
+  the live route the error document.
+- F3. The sidecar returns a failed story render as a result with the story's
+  name and its reason, not as an error. The core then writes the document and
+  the warning. Reason: the sidecar holds the story names and the source and
+  dependency roots that give logical paths, and the core owns documents,
+  usage, and warnings.
+- F4. The reason is the message of the thrown error, or the string of a
+  thrown value that is not an error, with no stack. A path inside the side's
+  source root reads relative to it. A path inside a selected dependency root
+  reads as its logical name, such as `node_modules/pkg/index.js`. Each other
+  absolute path or `file:` URL becomes `…`. Reason: design call 26.
+- F5. The warning message is `story <JSON-quoted-story-id> could not render;
+  add the "!mokly" tag to leave it out: <reason>`, with the line breaks of the
+  reason joined by spaces. Reason: design call 9 names these parts, the route
+  names the view, and the reason comes last because its length varies.
+- F6. The error document keeps the head of a story document without any
+  stylesheet: no configured, component, renderer, entry-module, collected, or
+  preview CSS. It carries its own style element and the colour scheme of its
+  view. Its body holds the empty root region, then the error text. Reason:
+  decision 26 and design call 27.
+- F7. The failure rules get their own page,
+  `docs/protocol/mokly-storybook-failures.md`, which the Storybook stories
+  page links. Reason: the stories page, the setup page, and the sidecar page
+  are near the 250-line cap, and track E edits the stories page in parallel.
 
 ## Tracks
 
@@ -2864,7 +2907,10 @@ Depends on: 1, 8, and the answer to decision 26
 
 Track F. The protocol states the failure rules of decision 5.
 
-- [ ] Add the render failure rules to `docs/protocol/mokly-storybook.md`.
+- [ ] Add the render failure rules to a new page,
+      `docs/protocol/mokly-storybook-failures.md`, which
+      `docs/protocol/mokly-storybook.md` links, as track F design call F7
+      says.
 - [ ] State there the reason rule of design call 26, the usage rule of
       design call 27, and the answer to decision 26.
 - [ ] State the sentence rule of design call 29 in
@@ -2908,9 +2954,12 @@ invalid edit, as design call 29 says.
 - [ ] Choose the sentence of the failure alert and of the invalid notice
       from the preview that the frame shows. Until an edit renders, use "The
       preview shows the saved props."
-- [ ] Keep the viewer's copy equal to the copy of the controls mockups, which
-      `tests/viewer_controls_copy.test.ts` compares. The viewer's copy
-      already holds the new sentence of design call 32.
+- [ ] Add both saved-preview sentences of `SAVED_PREVIEW_COPY` in
+      `examples/basic/specs/design/components/controls/parts/copy.ts` to
+      `CONTROLS_COPY` there and in
+      `packages/viewer/src/shell/component_controls_copy.ts`, and remove
+      `SAVED_PREVIEW_COPY`. Keep the viewer's copy equal to the copy of the
+      controls mockups, which `tests/viewer_controls_copy.test.ts` compares.
 - [ ] Test both sentences under `packages/viewer/tests`, for a preview that
       shows the saved props and for one that shows an edit.
 
