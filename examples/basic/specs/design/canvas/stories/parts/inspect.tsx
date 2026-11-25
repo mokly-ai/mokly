@@ -17,7 +17,12 @@ import { InspectFrameSelected } from "../../parts/inspect_selection.js";
 import { SET_FILTER } from "../../parts/inspect_sets.js";
 import { InspectVariants } from "../../parts/inspect_variants.js";
 
-import { MENU, MENU_STORIES, type MenuStory } from "./branch.js";
+import {
+  MENU,
+  MENU_STORIES,
+  linksStorybook,
+  type MenuStory,
+} from "./branch.js";
 import { STORY_PAGES as S, type StoryDestination } from "./destinations.js";
 
 /**
@@ -55,7 +60,7 @@ export function StoryHead({ story }: { story: MenuStory }) {
           <MetaRow name="story" label="Story">
             {story.story}
           </MetaRow>
-          {story.storybook ? (
+          {linksStorybook(story) ? (
             <MetaRow name="storybook" label="Storybook">
               <StorybookLink />
             </MetaRow>

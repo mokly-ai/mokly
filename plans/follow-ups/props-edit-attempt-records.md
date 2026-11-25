@@ -55,6 +55,14 @@
     last valid props.", from `CONTROLS_COPY.failedBody`.
   - So the form states `failed` and `failed-later` differ only in that
     sentence and in their Try again address.
+  - On 2026-11-25 the branch also added the `viewFacts` rows of
+    `tests/fixtures/design/expectations.json`. The design catalogue test
+    "Props retries and Storybook Details show the expected values" reads
+    them through `tests/helpers/design_view_facts.ts`.
+  - The rows require "Start now" in the Label field and "Get started" in
+    both Default frames of `later-pending`. They also require the alert
+    sentence of `error`, `invalid`, and `later-edit`. No row names the
+    pending view of the first attempt.
 - **Problem:** Four facts of one attempt live in three places. The facts are
   the draft, the preview, the sentence, and the Try again address. The places
   are the state constant, the case of `editOf`, and the destinations. Before
@@ -98,7 +106,8 @@
   - **D.** Add a design catalogue check. Each Props alert action that opens
     another design entry must open one with the same field values and Default
     frames. It is a new check, so the user must approve it. It fixes nothing
-    alone. Effort: Medium.
+    alone. The finding check of round 2 proposed the same check again, for
+    the later attempt. D also covers the first attempt. Effort: Medium.
 - **Left out:**
   - Keeping the address of the first attempt: it drops both values.
   - Making the later edit the canonical pending view: it moves the mismatch
@@ -111,10 +120,16 @@
 - **Previous examples:** The earlier Storybook mockups, commit `986ba28d2`,
   also gave both failures one pending view while their drafts and previews
   differed. Commit `54e0a948e` repeated it on the Canvas design.
-- **Related:** [storybook-plan-saved-props-copy.md](storybook-plan-saved-props-copy.md)
-  plans the removal of `SAVED_PREVIEW_COPY`, which `editOf` reads at
-  `forms.tsx:54` and `:62`. Both change the same cases of `editOf`, and no
-  options conflict. The branch that comes second adapts them.
+- **Related:**
+  - [storybook-plan-saved-props-copy.md](storybook-plan-saved-props-copy.md)
+    plans the removal of `SAVED_PREVIEW_COPY`, which `editOf` reads at
+    `forms.tsx:54` and `:62`. Both change the same cases of `editOf`, and no
+    options conflict. The branch that comes second adapts them.
+  - [props-first-retry-values-unchecked.md](props-first-retry-values-unchecked.md)
+    records that no check covers the values of the first attempt's pending
+    view, `design/canvas/props/states`. Its option A adds a `viewFacts` row
+    for it, and B of this item keeps those values in one record. No options
+    conflict. B keeps that row passing.
 - **Recommendation:** B. One record per attempt sets the values, the sentence,
   and Try again of its views. So a new attempt cannot open the pending view of
   another attempt.

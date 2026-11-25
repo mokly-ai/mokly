@@ -24,6 +24,7 @@ import {
   scriptViolations,
 } from "./helpers/design_rules.js";
 import { bypassViolations } from "./helpers/design_sources.js";
+import { viewFactViolations } from "./helpers/design_view_facts.js";
 import { fileFixture } from "./helpers/file_fixture.js";
 import {
   serveExample,
@@ -228,6 +229,14 @@ test(
   setup,
   async () => {
     assert.deepEqual(tagViolations(await served()), []);
+  },
+);
+
+test(
+  "Props retries and Storybook Details show the expected values",
+  setup,
+  async () => {
+    assert.deepEqual(viewFactViolations(await served()), []);
   },
 );
 

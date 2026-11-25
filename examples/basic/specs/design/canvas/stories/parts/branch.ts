@@ -38,8 +38,15 @@ export interface MenuStory {
   /** The row's title on the variant set and in the Variants list. */
   title: string;
   entry: CanvasEntry;
-  /** The page of an added entry has no Storybook link. */
-  storybook: boolean;
+}
+
+/**
+ * Whether a story's page links the story in the published Storybook. The
+ * published Storybook does not hold a story that the branch adds yet, so
+ * the page of an added entry has no link; a changed story keeps its link.
+ */
+export function linksStorybook(story: MenuStory): boolean {
+  return story.entry.status !== "added";
 }
 
 /** The Menu's three stories, in source order. */
@@ -48,7 +55,6 @@ export const MENU_STORIES = {
     slug: "menu",
     story: "Collapsed",
     title: MENU.title,
-    storybook: true,
     entry: {
       title: MENU.title,
       slug: "menu",
@@ -63,7 +69,6 @@ export const MENU_STORIES = {
     slug: "expanded",
     story: "Expanded",
     title: "Expanded",
-    storybook: true,
     entry: {
       title: MENU.title,
       slug: "menu",
@@ -77,7 +82,6 @@ export const MENU_STORIES = {
     slug: "disabled",
     story: "Disabled",
     title: "Disabled",
-    storybook: false,
     entry: {
       title: MENU.title,
       slug: "menu",
